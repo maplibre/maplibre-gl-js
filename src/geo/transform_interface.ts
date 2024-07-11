@@ -263,23 +263,23 @@ export interface ITransform extends ITransformGetters {
      * @param terrain - optional terrain
      * @returns screen point
      */
-    locationPoint(lnglat: LngLat, terrain?: Terrain): Point;
+    locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point;
 
     /**
-     * Given a point on screen, return its lnglat.
+     * Given a point on screen, return its LngLat location.
      * @param p - screen point
      * @param terrain - optional terrain
      * @returns lnglat location
      */
-    pointLocation(p: Point, terrain?: Terrain): LngLat;
+    screenPointToLocation(p: Point, terrain?: Terrain): LngLat;
 
     /**
-     * Given a Point, return its mercator coordinate.
+     * Given a point on screen, return its mercator coordinate.
      * @param p - the point
      * @param terrain - optional terrain
      * @returns lnglat
      */
-    pointCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate;
+    screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate;
 
     /**
      * Returns the map's geographical bounds. When the bearing or pitch is non-zero, the visible region is not
@@ -295,9 +295,9 @@ export interface ITransform extends ITransformGetters {
     getMaxBounds(): LngLatBounds | null;
 
     /**
-     * Returns whether the specified screen pixel lies on the map.
+     * Returns whether the specified screen point lies on the map.
      * May return false if, for example, the point is above the map's horizon, or if doesn't lie on the planet's surface if globe is enabled.
-     * @param p - The pixel's coordinates.
+     * @param p - The point's coordinates.
      * @param terrain - Optional terrain.
      */
     isPointOnMapSurface(p: Point, terrain?: Terrain): boolean;

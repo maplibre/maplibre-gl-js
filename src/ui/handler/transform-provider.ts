@@ -38,6 +38,6 @@ export class TransformProvider {
     }
 
     unproject(point: PointLike): LngLat {
-        return this.transform.pointLocation(Point.convert(point), this._map.terrain);
+        return this.transform.screenPointToLocation(Point.convert(point), this._map.terrain);
     }
 }

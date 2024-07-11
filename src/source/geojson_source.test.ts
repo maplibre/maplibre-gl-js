@@ -191,7 +191,7 @@ describe('GeoJSONSource#update', () => {
     const transform = new MercatorTransform();
     transform.resize(200, 200);
     const lngLat = LngLat.convert([-122.486052, 37.830348]);
-    const point = transform.locationPoint(lngLat);
+    const point = transform.locationToScreenPoint(lngLat);
     transform.setZoom(15);
     transform.setLocationAtPoint(lngLat, point);
 

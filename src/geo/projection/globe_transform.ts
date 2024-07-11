@@ -931,9 +931,9 @@ export class GlobeTransform implements ITransform {
         this.setZoom(this.zoom + getZoomAdjustment(oldLat, this.center.lat));
     }
 
-    locationPoint(lnglat: LngLat, terrain?: Terrain): Point {
+    locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
         if (!this._globeRendering) {
-            return this._mercatorTransform.locationPoint(lnglat, terrain);
+            return this._mercatorTransform.locationToScreenPoint(lnglat, terrain);
         }
 
         const pos = angularCoordinatesToSurfaceVector(lnglat);
@@ -961,20 +961,20 @@ export class GlobeTransform implements ITransform {
         );
     }
 
-    pointCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
+    screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
         if (!this._globeRendering || terrain) {
             // Mercator has terrain handling implemented properly and since terrain
             // simply draws tile coordinates into a special framebuffer, this works well even for globe.
-            return this._mercatorTransform.pointCoordinate(p, terrain);
+            return this._mercatorTransform.screenPointToMercatorCoordinate(p, terrain);
         }
         return MercatorCoordinate.fromLngLat(this.unprojectScreenPoint(p));
     }
 
-    pointLocation(p: Point, terrain?: Terrain): LngLat {
+    screenPointToLocation(p: Point, terrain?: Terrain): LngLat {
         if (!this._globeRendering || terrain) {
             // Mercator has terrain handling implemented properly and since terrain
             // simply draws tile coordinates into a special framebuffer, this works well even for globe.
-            return this._mercatorTransform.pointLocation(p, terrain);
+            return this._mercatorTransform.screenPointToLocation(p, terrain);
         }
         return this.unprojectScreenPoint(p);
     }

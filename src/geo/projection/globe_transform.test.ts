@@ -169,28 +169,28 @@ describe('GlobeTransform', () => {
 
             test('basic test', () => {
                 globeTransform.setCenter(new LngLat(0, 0));
-                let projected = globeTransform.locationPoint(globeTransform.center);
+                let projected = globeTransform.locationToScreenPoint(globeTransform.center);
                 expect(projected.x).toBeCloseTo(screenCenter.x, precisionDigits);
                 expect(projected.y).toBeCloseTo(screenCenter.y, precisionDigits);
 
                 globeTransform.setCenter(new LngLat(70, 50));
-                projected = globeTransform.locationPoint(globeTransform.center);
+                projected = globeTransform.locationToScreenPoint(globeTransform.center);
                 expect(projected.x).toBeCloseTo(screenCenter.x, precisionDigits);
                 expect(projected.y).toBeCloseTo(screenCenter.y, precisionDigits);
 
                 globeTransform.setCenter(new LngLat(0, 84));
-                projected = globeTransform.locationPoint(globeTransform.center);
+                projected = globeTransform.locationToScreenPoint(globeTransform.center);
                 expect(projected.x).toBeCloseTo(screenCenter.x, precisionDigits);
                 expect(projected.y).toBeCloseTo(screenCenter.y, precisionDigits);
             });
 
             test('project a location that is slightly above and below map\'s center point', () => {
                 globeTransform.setCenter(new LngLat(0, 0));
-                let projected = globeTransform.locationPoint(new LngLat(0, 1));
+                let projected = globeTransform.locationToScreenPoint(new LngLat(0, 1));
                 expect(projected.x).toBeCloseTo(screenCenter.x, precisionDigits);
                 expect(projected.y).toBeLessThan(screenCenter.y);
 
-                projected = globeTransform.locationPoint(new LngLat(0, -1));
+                projected = globeTransform.locationToScreenPoint(new LngLat(0, -1));
                 expect(projected.x).toBeCloseTo(screenCenter.x, precisionDigits);
                 expect(projected.y).toBeGreaterThan(screenCenter.y);
             });
@@ -201,20 +201,20 @@ describe('GlobeTransform', () => {
                 const precisionDigits = 10;
                 const globeTransform = createGlobeTransform(globeProjectionMock);
                 globeTransform.newFrameUpdate();
-                let unprojected = globeTransform.pointLocation(screenCenter);
+                let unprojected = globeTransform.screenPointToLocation(screenCenter);
                 expect(unprojected.lng).toBeCloseTo(globeTransform.center.lng, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(globeTransform.center.lat, precisionDigits);
 
                 globeTransform.center.lng = 90.0;
                 globeTransform.newFrameUpdate();
-                unprojected = globeTransform.pointLocation(screenCenter);
+                unprojected = globeTransform.screenPointToLocation(screenCenter);
                 expect(unprojected.lng).toBeCloseTo(globeTransform.center.lng, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(globeTransform.center.lat, precisionDigits);
 
                 globeTransform.center.lng = 0.0;
                 globeTransform.center.lat = 60.0;
                 globeTransform.newFrameUpdate();
-                unprojected = globeTransform.pointLocation(screenCenter);
+                unprojected = globeTransform.screenPointToLocation(screenCenter);
                 expect(unprojected.lng).toBeCloseTo(globeTransform.center.lng, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(globeTransform.center.lat, precisionDigits);
             });
@@ -228,20 +228,20 @@ describe('GlobeTransform', () => {
                 let unprojected: LngLat;
 
                 coords = new LngLat(0, 0);
-                projected = globeTransform.locationPoint(coords);
-                unprojected = globeTransform.pointLocation(projected);
+                projected = globeTransform.locationToScreenPoint(coords);
+                unprojected = globeTransform.screenPointToLocation(projected);
                 expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
 
                 coords = new LngLat(10, 20);
-                projected = globeTransform.locationPoint(coords);
-                unprojected = globeTransform.pointLocation(projected);
+                projected = globeTransform.locationToScreenPoint(coords);
+                unprojected = globeTransform.screenPointToLocation(projected);
                 expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
 
                 coords = new LngLat(15, -2);
-                projected = globeTransform.locationPoint(coords);
-                unprojected = globeTransform.pointLocation(projected);
+                projected = globeTransform.locationToScreenPoint(coords);
+                unprojected = globeTransform.screenPointToLocation(projected);
                 expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
             });
@@ -265,8 +265,8 @@ describe('GlobeTransform', () => {
                 let unprojected: LngLat;
 
                 coords = new LngLat(179.9, 71);
-                projected = globeTransform.locationPoint(coords);
-                unprojected = globeTransform.pointLocation(projected);
+                projected = globeTransform.locationToScreenPoint(coords);
+                unprojected = globeTransform.screenPointToLocation(projected);
                 expect(projected.x).toBeCloseTo(256.2434702034287, precisionDigits);
                 expect(projected.y).toBeCloseTo(48.27080146399297, precisionDigits);
                 expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
@@ -274,8 +274,8 @@ describe('GlobeTransform', () => {
 
                 // Near the pole
                 coords = new LngLat(179.9, 89.0);
-                projected = globeTransform.locationPoint(coords);
-                unprojected = globeTransform.pointLocation(projected);
+                projected = globeTransform.locationToScreenPoint(coords);
+                unprojected = globeTransform.screenPointToLocation(projected);
                 expect(projected.x).toBeCloseTo(256.0140972925064, precisionDigits);
                 expect(projected.y).toBeCloseTo(167.69159699932908, precisionDigits);
                 expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
@@ -289,7 +289,7 @@ describe('GlobeTransform', () => {
                 globeTransform.setPitch(60);
                 globeTransform.setBearing(-90);
                 globeTransform.newFrameUpdate();
-                const unprojected = globeTransform.pointLocation(screenTopEdgeCenter);
+                const unprojected = globeTransform.screenPointToLocation(screenTopEdgeCenter);
                 expect(unprojected.lng).toBeCloseTo(-34.699626794124015, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(0.0, precisionDigits);
             });
@@ -310,8 +310,8 @@ describe('GlobeTransform', () => {
                 coords = new LngLat(0, 0);
                 point = new Point(320, 240);
                 globeTransform.setLocationAtPoint(coords, point);
-                unprojected = globeTransform.pointLocation(point);
-                projected = globeTransform.locationPoint(coords);
+                unprojected = globeTransform.screenPointToLocation(point);
+                projected = globeTransform.locationToScreenPoint(coords);
                 expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
                 expect(projected.x).toBeCloseTo(point.x, precisionDigits);
@@ -322,8 +322,8 @@ describe('GlobeTransform', () => {
                 coords = new LngLat(5, 10);
                 point = new Point(320, 240);
                 globeTransform.setLocationAtPoint(coords, point);
-                unprojected = globeTransform.pointLocation(point);
-                projected = globeTransform.locationPoint(coords);
+                unprojected = globeTransform.screenPointToLocation(point);
+                projected = globeTransform.locationToScreenPoint(coords);
                 expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
                 expect(projected.x).toBeCloseTo(point.x, precisionDigits);
@@ -334,8 +334,8 @@ describe('GlobeTransform', () => {
                 coords = new LngLat(5, 10);
                 point = new Point(330, 240); // 10 pixels to the right
                 globeTransform.setLocationAtPoint(coords, point);
-                unprojected = globeTransform.pointLocation(point);
-                projected = globeTransform.locationPoint(coords);
+                unprojected = globeTransform.screenPointToLocation(point);
+                projected = globeTransform.locationToScreenPoint(coords);
                 expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
                 expect(projected.x).toBeCloseTo(point.x, precisionDigits);
@@ -346,8 +346,8 @@ describe('GlobeTransform', () => {
                 coords = new LngLat(30, -2);
                 point = new Point(250, 180);
                 globeTransform.setLocationAtPoint(coords, point);
-                unprojected = globeTransform.pointLocation(point);
-                projected = globeTransform.locationPoint(coords);
+                unprojected = globeTransform.screenPointToLocation(point);
+                projected = globeTransform.locationToScreenPoint(coords);
                 expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
                 expect(projected.x).toBeCloseTo(point.x, precisionDigits);
@@ -363,8 +363,8 @@ describe('GlobeTransform', () => {
                     coords = new LngLat(0, 0);
                     point = new Point(320, 240);
                     globeTransform.setLocationAtPoint(coords, point);
-                    unprojected = globeTransform.pointLocation(point);
-                    projected = globeTransform.locationPoint(coords);
+                    unprojected = globeTransform.screenPointToLocation(point);
+                    projected = globeTransform.locationToScreenPoint(coords);
                     expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
                     expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
                     expect(projected.x).toBeCloseTo(point.x, precisionDigits);
@@ -374,8 +374,8 @@ describe('GlobeTransform', () => {
                     coords = new LngLat(5, 0);
                     point = new Point(320, 240);
                     globeTransform.setLocationAtPoint(coords, point);
-                    unprojected = globeTransform.pointLocation(point);
-                    projected = globeTransform.locationPoint(coords);
+                    unprojected = globeTransform.screenPointToLocation(point);
+                    projected = globeTransform.locationToScreenPoint(coords);
                     expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
                     expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
                     expect(projected.x).toBeCloseTo(point.x, precisionDigits);
@@ -385,8 +385,8 @@ describe('GlobeTransform', () => {
                     coords = new LngLat(0, 10);
                     point = new Point(350, 240); // 30 pixels to the right
                     globeTransform.setLocationAtPoint(coords, point);
-                    unprojected = globeTransform.pointLocation(point);
-                    projected = globeTransform.locationPoint(coords);
+                    unprojected = globeTransform.screenPointToLocation(point);
+                    projected = globeTransform.locationToScreenPoint(coords);
                     expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
                     expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
                     expect(projected.x).toBeCloseTo(point.x, precisionDigits);
@@ -447,15 +447,15 @@ describe('GlobeTransform', () => {
 
         coords = new LngLat(0, 0);
         coordsMercator = MercatorCoordinate.fromLngLat(coords);
-        projected = globeTransform.locationPoint(coords);
-        unprojectedCoordinates = globeTransform.pointCoordinate(projected);
+        projected = globeTransform.locationToScreenPoint(coords);
+        unprojectedCoordinates = globeTransform.screenPointToMercatorCoordinate(projected);
         expect(unprojectedCoordinates.x).toBeCloseTo(coordsMercator.x, precisionDigits);
         expect(unprojectedCoordinates.y).toBeCloseTo(coordsMercator.y, precisionDigits);
 
         coords = new LngLat(10, 20);
         coordsMercator = MercatorCoordinate.fromLngLat(coords);
-        projected = globeTransform.locationPoint(coords);
-        unprojectedCoordinates = globeTransform.pointCoordinate(projected);
+        projected = globeTransform.locationToScreenPoint(coords);
+        unprojectedCoordinates = globeTransform.screenPointToMercatorCoordinate(projected);
         expect(unprojectedCoordinates.x).toBeCloseTo(coordsMercator.x, precisionDigits);
         expect(unprojectedCoordinates.y).toBeCloseTo(coordsMercator.y, precisionDigits);
     });

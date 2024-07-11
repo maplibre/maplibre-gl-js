@@ -242,7 +242,7 @@ export class ScrollZoomHandler implements Handler {
             this._around = LngLat.convert(tr.center);
         }
 
-        this._aroundPoint = tr.transform.locationPoint(this._around);
+        this._aroundPoint = tr.transform.locationToScreenPoint(this._around);
         if (!this._frameId) {
             this._frameId = true;
             this._triggerRenderFrame();
