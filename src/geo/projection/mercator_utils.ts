@@ -30,7 +30,7 @@ export function tileCoordinatesToMercatorCoordinates(inTileX: number, inTileY: n
  * @param lnglat - the location
  * @returns The mercator coordinate
  */
-export function locationCoordinate(lnglat: LngLat): MercatorCoordinate {
+export function locationToMercatorCoordinate(lnglat: LngLat): MercatorCoordinate {
     return MercatorCoordinate.fromLngLat(lnglat);
 }
 
@@ -39,7 +39,7 @@ export function locationCoordinate(lnglat: LngLat): MercatorCoordinate {
  * @param coord - mercator coordinates
  * @returns lng and lat
  */
-export function coordinateLocation(coord: MercatorCoordinate): LngLat {
+export function mercatorCoordinateToLocation(coord: MercatorCoordinate): LngLat {
     return coord && coord.toLngLat();
 }
 

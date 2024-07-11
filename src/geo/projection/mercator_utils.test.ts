@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
-import {getBasicProjectionData, getMercatorHorizon, locationCoordinate, projectToWorldCoordinates} from './mercator_utils';
+import {getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates} from './mercator_utils';
 import {MercatorTransform} from './mercator_transform';
 import {MAX_VALID_LATITUDE} from '../transform_helper';
 import {mat4} from 'gl-matrix';
@@ -24,7 +24,7 @@ describe('mercator utils', () => {
     });
 
     test('locationCoordinate', () => {
-        expect(locationCoordinate(new LngLat(0, 0))).toEqual({x: 0.5, y: 0.5, z: 0});
+        expect(locationToMercatorCoordinate(new LngLat(0, 0))).toEqual({x: 0.5, y: 0.5, z: 0});
     });
 
     test('getMercatorHorizon', () => {
