@@ -1,8 +1,6 @@
 import Point from '@mapbox/point-geometry';
 
-import mvt from '@mapbox/vector-tile';
-import type {VectorTileFeature, VectorTileLayer, VectorTile} from '@mapbox/vector-tile';
-const toGeoJSON = mvt.VectorTileFeature.prototype.toGeoJSON;
+import {VectorTileFeature, type VectorTileLayer, type VectorTile} from '@mapbox/vector-tile';
 import {EXTENT} from '../data/extent';
 import type {TileFeature, AnyProps} from 'supercluster';
 import type {Feature as GeoJSONVTFeature} from 'geojson-vt';
@@ -56,7 +54,7 @@ class FeatureWrapper implements VectorTileFeature {
     }
 
     toGeoJSON(x: number, y: number, z: number) {
-        return toGeoJSON.call(this, x, y, z);
+        return VectorTileFeature.prototype.toGeoJSON.call(this, x, y, z);
     }
 }
 
