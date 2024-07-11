@@ -31,7 +31,7 @@ The examples section of the locally run documentation will use the GL JS version
 
 ## Writing API Documentation
 
-API documentation is written as [TSDoc comments](https://tsdoc.org/) and processed with [typedoc](https://typedoc.org/)
+API documentation is written as [TSDoc comments](https://tsdoc.org/) and processed with [TypeDoc](https://typedoc.org/)
 
 * Classes, methods, events, and anything else in the public interface must be documented with TSDoc comments, and the typescript `public` can be used to indicate that it's public API.
 * The `@internal` tag can be used to indicate that a class, method, or event is not part of the public interface and should not be documented.
@@ -51,7 +51,7 @@ API documentation is written as [TSDoc comments](https://tsdoc.org/) and process
 
 ## Writing Examples
 
-Examples are written as regular html files in `test/examples`. Each example should have a title and a og:description.
+Examples are written as regular HTML files in `test/examples`. Each example should have a title and a og:description.
 
 * `title`: A short title for the example in **sentence case** as a **verb phrase**.
 * `description`: A one sentence description of the example in plain text. This description will appear alongside a thumbnail and title on the examples page.
@@ -59,7 +59,7 @@ Examples are written as regular html files in `test/examples`. Each example shou
 When you create a new example, you **must** make an accompanying image.
 
 1. Run `npm run generate-images <example-file-name>`. The script will take a screenshot of the map in the example and save it to `docs/assets/examples/`.
-2. Optimize the image with [Squoosh](https://squoosh.app/) to reduce the file size. (Optional)
+2. Optimize the image with [compresspng](https://compresspng.com/) to reduce the file size. (Optional)
 3. Commit the image.
 
 For some examples, `npm run generate-images` does not generate an ideal image. In these cases, you can interact with the map after running the command before the screenshot is taken, or take a screenshot yourself by running the site locally with `npm start`, take a screenshot and save it in the `docs/assets/examples/` folder.
