@@ -337,7 +337,6 @@ export class GlobeTransform implements ITransform {
 
     /**
      * Should be called at the beginning of every frame to synchronize the transform with the underlying projection.
-     * May change the transform's state - do not call on cloned transforms that should behave immutably!
      */
     newFrameUpdate(): TransformUpdateResult {
         if (this._projectionInstance) {
