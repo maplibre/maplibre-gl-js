@@ -7,6 +7,8 @@ import {GeoJSONWorkerSource, LoadGeoJSONParameters} from './geojson_worker_sourc
 import {isWorker} from '../util/util';
 import {addProtocol, removeProtocol} from './protocol_crud';
 import {PluginState} from './rtl_text_plugin_status';
+import {WorkerTile} from './worker_tile';
+
 import type {
     WorkerSource,
     WorkerSourceConstructor,
@@ -24,6 +26,7 @@ import {
     type RemoveSourceParams,
     type UpdateLayersParamaeters
 } from '../util/actor_messages';
+import type {FeaturePropertiesTransform} from './feature_properties_transform';
 
 /**
  * The Worker class responsible for background thread related execution
@@ -87,6 +90,10 @@ export default class Worker {
                 throw new Error('RTL text plugin already registered.');
             }
             rtlWorkerPlugin.setMethods(rtlTextPlugin);
+        };
+
+        this.self.setFeaturePropertiesTransform = (featurePropertiesTransform: FeaturePropertiesTransform) => {
+            WorkerTile.featurePropertiesTransform = featurePropertiesTransform;
         };
 
         this.actor.registerMessageHandler(MessageType.loadDEMTile, (mapId: string, params: WorkerDEMTileParameters) => {
