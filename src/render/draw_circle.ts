@@ -17,6 +17,7 @@ import type {UniformValues} from './uniform_binding';
 import type {CircleUniformsType} from './program/circle_program';
 import type {TerrainData} from '../render/terrain';
 import {ProjectionData} from './program/projection_program';
+import {translatePosition} from '../util/util';
 
 type TileRenderState = {
     programConfiguration: ProgramConfiguration;
@@ -70,7 +71,7 @@ export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: C
 
         const styleTranslate = layer.paint.get('circle-translate');
         const styleTranslateAnchor = layer.paint.get('circle-translate-anchor');
-        const translateForUniforms = transform.translatePosition(tile, styleTranslate, styleTranslateAnchor);
+        const translateForUniforms = translatePosition(transform, tile, styleTranslate, styleTranslateAnchor);
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram('circle', programConfiguration);

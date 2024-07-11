@@ -14,7 +14,6 @@ import {FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import {drawFill} from './draw_fill';
 import {FillBucket} from '../data/bucket/fill_bucket';
 import {ProgramConfiguration, ProgramConfigurationSet} from '../data/program_configuration';
-import {translatePosition} from '../geo/projection/mercator_utils';
 
 jest.mock('./painter');
 jest.mock('./program');
@@ -97,9 +96,6 @@ describe('drawFill', () => {
                     'u_projection_fallback_matrix': fallback,
                 };
             },
-            translatePosition(tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
-                return translatePosition({angle: 0, zoom: 0}, tile, translate, translateAnchor);
-            }
         } as any as ITransform;
         painterMock.options = {} as any;
         painterMock.style = {

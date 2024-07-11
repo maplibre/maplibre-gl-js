@@ -14,7 +14,7 @@ import {PointProjection, xyTransformMat4} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
 import {ITransform} from '../transform_interface';
 import {PaddingOptions} from '../edge_insets';
-import {mercatorCoordinateToLocation, getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, translatePosition, unprojectFromWorldCoordinates} from './mercator_utils';
+import {mercatorCoordinateToLocation, getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils';
 
 export class MercatorTransform implements ITransform {
     private _helper: TransformHelper;
@@ -840,10 +840,6 @@ export class MercatorTransform implements ITransform {
         return {
             forcePlacementUpdate: false
         };
-    }
-
-    translatePosition(tile: { tileID: OverscaledTileID; tileSize: number }, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
-        return translatePosition(this, tile, translate, translateAnchor);
     }
 
     transformLightDirection(dir: vec3): vec3 {

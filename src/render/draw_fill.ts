@@ -16,6 +16,7 @@ import type {FillBucket} from '../data/bucket/fill_bucket';
 import type {OverscaledTileID} from '../source/tile_id';
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
 import {StencilMode} from '../gl/stencil_mode';
+import {translatePosition} from '../util/util';
 
 export function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>) {
     const color = layer.paint.get('fill-color');
@@ -108,7 +109,7 @@ function drawFillTiles(
 
         const projectionData = transform.getProjectionData(coord);
 
-        const translateForUniforms = transform.translatePosition(tile, propertyFillTranslate, propertyFillTranslateAnchor);
+        const translateForUniforms = translatePosition(transform, tile, propertyFillTranslate, propertyFillTranslateAnchor);
 
         if (!isOutline) {
             indexBuffer = bucket.indexBuffer;

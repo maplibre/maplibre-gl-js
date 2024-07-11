@@ -4,6 +4,39 @@ import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';
 import type {Size} from './image';
 import type {WorkerGlobalScopeInterface} from './web_worker';
 import {vec3, vec4} from 'gl-matrix';
+import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
+import {OverscaledTileID} from '../source/tile_id';
+
+/**
+ * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.
+ * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
+ */
+export function translatePosition(
+    transform: { angle: number; zoom: number },
+    tile: { tileID: OverscaledTileID; tileSize: number },
+    translate: [number, number],
+    translateAnchor: 'map' | 'viewport',
+    inViewportPixelUnitsUnits: boolean = false
+): [number, number] {
+    if (!translate[0] && !translate[1]) return [0, 0];
+
+    const angle = inViewportPixelUnitsUnits ?
+        (translateAnchor === 'map' ? transform.angle : 0) :
+        (translateAnchor === 'viewport' ? -transform.angle : 0);
+
+    if (angle) {
+        const sinA = Math.sin(angle);
+        const cosA = Math.cos(angle);
+        translate = [
+            translate[0] * cosA - translate[1] * sinA,
+            translate[0] * sinA + translate[1] * cosA
+        ];
+    }
+
+    return [
+        inViewportPixelUnitsUnits ? translate[0] : pixelsToTileUnits(tile, translate[0], transform.zoom),
+        inViewportPixelUnitsUnits ? translate[1] : pixelsToTileUnits(tile, translate[1], transform.zoom)];
+}
 
 /**
  * Returns the signed distance between a point and a plane.

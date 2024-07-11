@@ -1,6 +1,6 @@
 import {Uniform1i, Uniform1f, Uniform2f, Uniform3f} from '../uniform_binding';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
-import {extend} from '../../util/util';
+import {extend, translatePosition} from '../../util/util';
 
 import type {Context} from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
@@ -187,7 +187,8 @@ function calculateTileRatio(tile: Tile, transform: ITransform) {
 
 function calculateTranslation(painter: Painter, tile: Tile, layer: LineStyleLayer): [number, number] {
     // Translate line points prior to any transformation
-    return painter.transform.translatePosition(
+    return translatePosition(
+        painter.transform,
         tile,
         layer.paint.get('line-translate'),
         layer.paint.get('line-translate-anchor')

@@ -7,7 +7,6 @@ import {MAX_VALID_LATITUDE} from '../transform_helper';
 import {LngLat} from '../lng_lat';
 import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat} from '../mercator_coordinate';
 import Point from '@mapbox/point-geometry';
-import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 
 /**
  * Returns mercator coordinates in range 0..1 for given coordinates inside a specified tile.
@@ -74,37 +73,6 @@ export function unprojectFromWorldCoordinates(worldSize: number, point: Point): 
  */
 export function getMercatorHorizon(transform: {pitch: number; cameraToCenterDistance: number}): number {
     return Math.tan(Math.PI / 2 - transform.pitch * Math.PI / 180.0) * transform.cameraToCenterDistance * 0.85;
-}
-
-/**
- * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.
- * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
- */
-export function translatePosition(
-    transform: { angle: number; zoom: number },
-    tile: { tileID: OverscaledTileID; tileSize: number },
-    translate: [number, number],
-    translateAnchor: 'map' | 'viewport',
-    inViewportPixelUnitsUnits: boolean = false
-): [number, number] {
-    if (!translate[0] && !translate[1]) return [0, 0];
-
-    const angle = inViewportPixelUnitsUnits ?
-        (translateAnchor === 'map' ? transform.angle : 0) :
-        (translateAnchor === 'viewport' ? -transform.angle : 0);
-
-    if (angle) {
-        const sinA = Math.sin(angle);
-        const cosA = Math.cos(angle);
-        translate = [
-            translate[0] * cosA - translate[1] * sinA,
-            translate[0] * sinA + translate[1] * cosA
-        ];
-    }
-
-    return [
-        inViewportPixelUnitsUnits ? translate[0] : pixelsToTileUnits(tile, translate[0], transform.zoom),
-        inViewportPixelUnitsUnits ? translate[1] : pixelsToTileUnits(tile, translate[1], transform.zoom)];
 }
 
 export function getBasicProjectionData(overscaledTileID: OverscaledTileID, tilePosMatrix?: mat4, ignoreTerrainMatrix?: boolean): ProjectionData {

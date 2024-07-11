@@ -14,6 +14,7 @@ import type {FillExtrusionBucket} from '../data/bucket/fill_extrusion_bucket';
 import type {OverscaledTileID} from '../source/tile_id';
 
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
+import {translatePosition} from '../util/util';
 
 export function drawFillExtrusion(painter: Painter, source: SourceCache, layer: FillExtrusionStyleLayer, coords: Array<OverscaledTileID>) {
     const opacity = layer.paint.get('fill-extrusion-opacity');
@@ -82,7 +83,8 @@ function drawExtrusionTiles(
         const projectionData = transform.getProjectionData(coord);
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        const translate = transform.translatePosition(
+        const translate = translatePosition(
+            transform,
             tile,
             layer.paint.get('fill-extrusion-translate'),
             layer.paint.get('fill-extrusion-translate-anchor')

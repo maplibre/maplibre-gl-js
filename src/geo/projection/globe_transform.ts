@@ -1,6 +1,5 @@
 import {mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {MAX_VALID_LATITUDE, TransformHelper, TransformUpdateResult} from '../transform_helper';
-import {Tile} from '../../source/tile';
 import {MercatorTransform} from './mercator_transform';
 import {LngLat, earthRadius} from '../lng_lat';
 import {angleToRotateBetweenVectors2D, clamp, differenceOfAnglesDegrees, distanceOfAnglesRadians, easeCubicInOut, lerp, pointPlaneSignedDistance, warnOnce} from '../../util/util';
@@ -15,7 +14,7 @@ import {PointProjection} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
 import {ITransform} from '../transform_interface';
 import {PaddingOptions} from '../edge_insets';
-import {tileCoordinatesToMercatorCoordinates, translatePosition} from './mercator_utils';
+import {tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 import {angularCoordinatesRadiansToVector, angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
 
 /**
@@ -325,19 +324,15 @@ export class GlobeTransform implements ITransform {
      * @param animateTransition - Controls whether the transition between globe view and mercator (if triggered by this call) should be animated. True by default.
      */
     public setGlobeViewAllowed(allow: boolean, animateTransition: boolean = true) {
-        if (allow !== this._globeProjectionEnabled) {
-            if (!animateTransition) {
-                this._skipNextAnimation = true;
-            }
-            this._globeProjectionEnabled = allow;
-            this._lastGlobeChangeTime = browser.now();
+        if (allow === this._globeProjectionEnabled) {
+            return;
         }
-    }
 
-    translatePosition(tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
-        // In the future, some better translation for globe and other weird projections should be implemented here,
-        // especially for the translateAnchor==='viewport' case.
-        return translatePosition(this, tile, translate, translateAnchor);
+        if (!animateTransition) {
+            this._skipNextAnimation = true;
+        }
+        this._globeProjectionEnabled = allow;
+        this._lastGlobeChangeTime = browser.now();
     }
 
     /**

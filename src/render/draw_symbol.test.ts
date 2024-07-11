@@ -15,7 +15,6 @@ import type {EvaluationParameters} from '../style/evaluation_parameters';
 import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {Style} from '../style/style';
 import {MercatorProjection} from '../geo/projection/mercator';
-import {translatePosition} from '../geo/projection/mercator_utils';
 
 jest.mock('./painter');
 jest.mock('./program');
@@ -41,9 +40,6 @@ function createMockTransform() {
                 'u_projection_fallback_matrix': fallback,
             };
         },
-        translatePosition(tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
-            return translatePosition({angle: 0, zoom: 0}, tile, translate, translateAnchor);
-        }
     } as any as ITransform;
 }
 

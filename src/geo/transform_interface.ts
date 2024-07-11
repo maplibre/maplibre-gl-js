@@ -408,12 +408,6 @@ export interface ITransform extends ITransformGetters {
     getPitchedTextCorrection(textAnchor: Point, tileID: UnwrappedTileID): number;
 
     /**
-     * @internal
-     * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.
-     */
-    translatePosition(tile: { tileID: OverscaledTileID; tileSize: number }, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number];
-
-    /**
      * Signals to the transform that a new frame is starting.
      * The transform might update some of its internal variables and animations based on this.
      */
