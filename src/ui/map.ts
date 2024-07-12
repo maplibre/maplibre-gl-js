@@ -1368,6 +1368,18 @@ export class Map extends Camera {
         listener: (ev: MapLayerEventType[T] & Object) => void,
     ): Map;
     /**
+     * Overload of the `on` method that allows to listen to events specifying multiple layers.
+     * @event
+     * @param type - The type of the event.
+     * @param layerIds - The array of style layer IDs.
+     * @param listener - The listener callback.
+     */
+    on<T extends keyof MapLayerEventType>(
+        type: T,
+        layerIds: string[],
+        listener: (ev: MapLayerEventType[T] & Object) => void
+    ): this;
+    /**
      * Overload of the `on` method that allows to listen to events without specifying a layer.
      * @event
      * @param type - The type of the event.
@@ -1381,9 +1393,16 @@ export class Map extends Camera {
      * @param listener - The listener callback.
      */
     on(type: keyof MapEventType | string, listener: Listener): this;
-    on(type: keyof MapEventType | string, layerIdOrListener: string | Listener, listener?: Listener): this {
+    on(type: keyof MapEventType | string, layerIdOrListener: string | string[] | Listener, listener?: Listener): this {
         if (listener === undefined) {
             return super.on(type, layerIdOrListener as Listener);
+        }
+
+        if (Array.isArray(layerIdOrListener)) {
+            for (const layerId of layerIdOrListener) {
+                this.on(type as keyof MapLayerEventType, layerId, listener);
+            }
+            return this;
         }
 
         const delegatedListener = this._createDelegatedListener(type, layerIdOrListener as string, listener);
@@ -1421,6 +1440,18 @@ export class Map extends Camera {
         listener?: (ev: MapLayerEventType[T] & Object) => void,
     ): this | Promise<MapLayerEventType[T] & Object>;
     /**
+     * Overload of the `once` method that allows to listen to events specifying multiple layers.
+     * @event
+     * @param type - The type of the event.
+     * @param layerIds - The array of style layer IDs.
+     * @param listener - The listener callback.
+     */
+    once<T extends keyof MapLayerEventType>(
+        type: T,
+        layerIds: string[],
+        listener?: (ev: MapLayerEventType[T] & Object) => void
+    ): this | Promise<any>;
+    /**
      * Overload of the `once` method that allows to listen to events without specifying a layer.
      * @event
      * @param type - The type of the event.
@@ -1434,10 +1465,16 @@ export class Map extends Camera {
      * @param listener - The listener callback.
      */
     once(type: keyof MapEventType | string, listener?: Listener): this | Promise<any>;
-    once(type: keyof MapEventType | string, layerIdOrListener: string | Listener, listener?: Listener): this | Promise<any> {
-
+    once(type: keyof MapEventType | string, layerIdOrListener: string | string[] | Listener, listener?: Listener): this | Promise<any> {
         if (listener === undefined) {
             return super.once(type, layerIdOrListener as Listener);
+        }
+
+        if (Array.isArray(layerIdOrListener)) {
+            for (const layerId of layerIdOrListener) {
+                this.on(type as keyof MapLayerEventType, layerId, listener);
+            }
+            return this;
         }
 
         const delegatedListener = this._createDelegatedListener(type, layerIdOrListener as string, listener);
@@ -1463,6 +1500,18 @@ export class Map extends Camera {
         listener: (ev: MapLayerEventType[T] & Object) => void,
     ): this;
     /**
+     * Overload of the `off` method that allows to listen to events specifying multiple layers.
+     * @event
+     * @param type - The type of the event.
+     * @param layers - The layer IDs preciously used to install the listener.
+     * @param listener - The function previously installed as a listener.
+     */
+    off<T extends keyof MapLayerEventType>(
+        type: T,
+        layers: string[],
+        listener: (ev: MapLayerEventType[T] & Object) => void,
+    ): this;
+    /**
      * Overload of the `off` method that allows to listen to events without specifying a layer.
      * @event
      * @param type - The type of the event.
@@ -1476,9 +1525,16 @@ export class Map extends Camera {
      * @param listener - The function previously installed as a listener.
      */
     off(type: keyof MapEventType | string, listener: Listener): this;
-    off(type: keyof MapEventType | string, layerIdOrListener: string | Listener, listener?: Listener): this {
+    off(type: keyof MapEventType | string, layerIdOrListener: string | string[] | Listener, listener?: Listener): this {
         if (listener === undefined) {
             return super.off(type, layerIdOrListener as Listener);
+        }
+
+        if (Array.isArray(layerIdOrListener)) {
+            for (const layerId of layerIdOrListener) {
+                this.off(type as keyof MapLayerEventType, layerId, listener);
+            }
+            return this;
         }
 
         const removeDelegatedListener = (delegatedListeners) => {
