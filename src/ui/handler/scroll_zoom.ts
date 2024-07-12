@@ -288,9 +288,11 @@ export class ScrollZoomHandler implements Handler {
 
         let finished = false;
         let zoom;
-        if (this._type === 'wheel' && startZoom && easing) {
 
-            const t = Math.min((browser.now() - this._lastWheelEventTime) / 200, 1);
+        const lastWheelEventTimeDiff = browser.now() - this._lastWheelEventTime;
+        if (this._type === 'wheel' && startZoom && easing && lastWheelEventTimeDiff) {
+            const t = Math.min(lastWheelEventTimeDiff / 200, 1);
+
             const k = easing(t);
             zoom = interpolates.number(startZoom, targetZoom, k);
             if (t < 1) {
