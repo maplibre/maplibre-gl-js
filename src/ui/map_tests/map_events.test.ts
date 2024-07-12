@@ -63,6 +63,33 @@ describe('map events', () => {
         expect(spy).toHaveBeenCalledTimes(1);
     });
 
+    test('Map#on adds a listener for an event on multiple layers', () => {
+        const map = createMap();
+        const features = [{} as MapGeoJSONFeature];
+
+        jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        jest.spyOn(map, 'queryRenderedFeatures')
+            .mockImplementationOnce((_point, options) => {
+                expect(options).toEqual({layers: ['layer1']});
+                return features;
+            })
+            .mockImplementationOnce((_point, options) => {
+                expect(options).toEqual({layers: ['layer2']});
+                return features;
+            });
+
+        const spy = jest.fn(function (e) {
+            expect(this).toBe(map);
+            expect(e.type).toBe('click');
+            expect(e.features).toBe(features);
+        });
+
+        map.on('click', ['layer1', 'layer2'], spy);
+        simulate.click(map.getCanvas());
+
+        expect(spy).toHaveBeenCalledTimes(2);
+    });
+
     test('Map#on adds a listener not triggered for events not matching any features', () => {
         const map = createMap();
         const features = [];
@@ -203,7 +230,21 @@ describe('map events', () => {
         simulate.click(map.getCanvas());
 
         expect(spy).not.toHaveBeenCalled();
+    });
 
+    test('Map#off removes a delegated event listener for multiple layers', () => {
+        const map = createMap();
+
+        jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
+
+        const spy = jest.fn();
+
+        map.on('click', ['layer1', 'layer2'], spy);
+        map.off('click', ['layer1', 'layer2'], spy);
+        simulate.click(map.getCanvas());
+
+        expect(spy).not.toHaveBeenCalled();
     });
 
     test('Map#off distinguishes distinct event types', () => {
@@ -241,6 +282,27 @@ describe('map events', () => {
         map.on('click', 'A', spy);
         map.on('click', 'B', spy);
         map.off('click', 'B', spy);
+        simulate.click(map.getCanvas());
+
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    test('Map#off distinguishes distinct layers, when multiple layers provided', () => {
+        const map = createMap();
+        const featuresB = [{} as MapGeoJSONFeature];
+
+        jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        jest.spyOn(map, 'queryRenderedFeatures').mockImplementation((point, options) => {
+            expect(options).toEqual({layers: ['B']});
+            return featuresB;
+        });
+
+        const spy = jest.fn((e) => {
+            expect(e.features).toBe(featuresB);
+        });
+
+        map.on('click', ['A', 'B', 'C'], spy);
+        map.off('click', ['A', 'C'], spy);
         simulate.click(map.getCanvas());
 
         expect(spy).toHaveBeenCalledTimes(1);
