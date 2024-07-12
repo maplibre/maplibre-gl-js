@@ -1,17 +1,39 @@
 import {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {warnOnce} from '../../util/util';
+import {Projection} from './projection';
 import {GlobeProjection} from './globe';
 import {MercatorProjection} from './mercator';
-import {Projection} from './projection';
+import {ITransform} from '../transform_interface';
+import {MercatorTransform} from './mercator_transform';
+import {GlobeTransform} from './globe_transform';
 
-export function createProjectionFromName(name: ProjectionSpecification['type']): Projection {
+export function createProjectionFromName(name: ProjectionSpecification['type']): {
+    projection: Projection;
+    transform: ITransform;
+} {
     switch (name) {
         case 'mercator':
-            return new MercatorProjection();
+        {
+            return {
+                projection: new MercatorProjection(),
+                transform: new MercatorTransform()
+            };
+        }
         case 'globe':
-            return new GlobeProjection();
+        {
+            const proj = new GlobeProjection();
+            return {
+                projection: proj,
+                transform: new GlobeTransform(proj)
+            };
+        }
         default:
+        {
             warnOnce(`Unknown projection name: ${name}. Falling back to mercator projection.`);
-            return new MercatorProjection();
+            return {
+                projection: new MercatorProjection(),
+                transform: new MercatorTransform()
+            };
+        }
     }
 }

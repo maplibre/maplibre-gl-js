@@ -1,5 +1,4 @@
 import {Camera, CameraOptions} from '../ui/camera';
-import {Transform} from '../geo/transform';
 import {TaskQueue, TaskID} from '../util/task_queue';
 import {browser} from '../util/browser';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
@@ -9,6 +8,7 @@ import {Terrain} from '../render/terrain';
 import {LngLat, LngLatLike} from '../geo/lng_lat';
 import {Event} from '../util/evented';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 beforeEach(() => {
     setMatchMedia();
@@ -37,7 +37,7 @@ function attachSimulateFrame(camera) {
 function createCamera(options?) {
     options = options || {};
 
-    const transform = new Transform(0, 20, 0, 60, options.renderWorldCopies);
+    const transform = new MercatorTransform(0, 20, 0, 60, options.renderWorldCopies);
     transform.resize(512, 512);
 
     const camera = attachSimulateFrame(new CameraMock(transform, {} as any))
@@ -1100,7 +1100,7 @@ describe('#flyTo', () => {
     });
 
     test('does not throw when cameras current zoom is above maxzoom and an offset creates infinite zoom out factor', () => {
-        const transform = new Transform(0, 20.9999, 0, 60, true);
+        const transform = new MercatorTransform(0, 20.9999, 0, 60, true);
         transform.resize(512, 512);
         const camera = attachSimulateFrame(new CameraMock(transform, {} as any))
             .jumpTo({zoom: 21, center: [0, 0]});
@@ -1656,7 +1656,7 @@ describe('#flyTo', () => {
     });
 
     test('respects transform\'s maxZoom', done => {
-        const transform = new Transform(2, 10, 0, 60, false);
+        const transform = new MercatorTransform(2, 10, 0, 60, false);
         transform.resize(512, 512);
 
         const camera = attachSimulateFrame(new CameraMock(transform, {} as any));
@@ -1681,7 +1681,7 @@ describe('#flyTo', () => {
     });
 
     test('respects transform\'s minZoom', done => {
-        const transform = new Transform(2, 10, 0, 60, false);
+        const transform = new MercatorTransform(2, 10, 0, 60, false);
         transform.resize(512, 512);
 
         const camera = attachSimulateFrame(new CameraMock(transform, {} as any));
@@ -1784,7 +1784,9 @@ describe('#flyTo', () => {
         };
         camera.transform = {
             elevation: 0,
-            recalculateZoom: () => true
+            recalculateZoom: () => true,
+            setMinElevationForCurrentTile: (_a) => true,
+            setElevation: (e) => { camera.transform.elevation = e; }
         };
 
         camera._prepareElevation([10, 0]);
@@ -2040,7 +2042,7 @@ describe('#cameraForBounds', () => {
     });
 
     test('asymmetrical transform using LngLatBounds instance', () => {
-        const transform = new Transform(2, 10, 0, 60, false);
+        const transform = new MercatorTransform(2, 10, 0, 60, false);
         transform.resize(2048, 512);
 
         const camera = attachSimulateFrame(new CameraMock(transform, {} as any));
@@ -2153,8 +2155,8 @@ describe('queryTerrainElevation', () => {
 
     test('should return the correct elevation', () => {
         // Set up mock transform and terrain objects
-        const transform = new Transform(0, 22, 0, 60, true);
-        transform.elevation = 50;
+        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        transform.setElevation(50);
         const terrain = {
             getElevationForLngLatZoom: jest.fn().mockReturnValue(200)
         } as any as Terrain;

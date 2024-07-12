@@ -71,6 +71,7 @@ function drawTiles(
     const context = painter.context;
     const gl = context.gl;
     const program = painter.useProgram('raster');
+    const transform = painter.transform;
 
     const projection = painter.style.projection;
 
@@ -112,10 +113,7 @@ function drawTiles(
         }
 
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
-
-        const terrainCoord = terrainData ? coord : null;
-        const posMatrix = terrainCoord ? terrainCoord.posMatrix : painter.transform.calculatePosMatrix(coord.toUnwrapped(), align);
-        const projectionData = projection.getProjectionData(coord.canonical, posMatrix);
+        const projectionData = transform.getProjectionData(coord, align);
         const uniformValues = rasterUniformValues(parentTL || [0, 0], parentScaleBy || 1, fade, layer, corners);
 
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, allowPoles);

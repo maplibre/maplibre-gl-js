@@ -14,6 +14,7 @@ import type {FillExtrusionBucket} from '../data/bucket/fill_extrusion_bucket';
 import type {OverscaledTileID} from '../source/tile_id';
 
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
+import {translatePosition} from '../util/util';
 
 export function drawFillExtrusion(painter: Painter, source: SourceCache, layer: FillExtrusionStyleLayer, coords: Array<OverscaledTileID>) {
     const opacity = layer.paint.get('fill-extrusion-opacity');
@@ -61,8 +62,8 @@ function drawExtrusionTiles(
     const crossfade = layer.getCrossfadeParameters();
     const opacity = layer.paint.get('fill-extrusion-opacity');
     const constantPattern = patternProperty.constantOr(null);
-    const projection = painter.style.projection;
-    const globeCameraPosition = projection.cameraPosition;
+    const transform = painter.transform;
+    const globeCameraPosition = transform.cameraPosition;
 
     for (const coord of coords) {
         const tile = source.getTile(coord);
@@ -79,11 +80,11 @@ function drawExtrusionTiles(
             programConfiguration.updatePaintBuffers(crossfade);
         }
 
-        const projectionData = projection.getProjectionData(coord.canonical, coord.posMatrix);
+        const projectionData = transform.getProjectionData(coord);
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        const translate = projection.translatePosition(
-            painter.transform,
+        const translate = translatePosition(
+            transform,
             tile,
             layer.paint.get('fill-extrusion-translate'),
             layer.paint.get('fill-extrusion-translate-anchor')
@@ -91,8 +92,8 @@ function drawExtrusionTiles(
 
         const shouldUseVerticalGradient = layer.paint.get('fill-extrusion-vertical-gradient');
         const uniformValues = image ?
-            fillExtrusionPatternUniformValues(painter, shouldUseVerticalGradient, opacity, translate, projection, globeCameraPosition, coord, crossfade, tile) :
-            fillExtrusionUniformValues(painter, shouldUseVerticalGradient, opacity, translate, projection, globeCameraPosition);
+            fillExtrusionPatternUniformValues(painter, shouldUseVerticalGradient, opacity, translate, globeCameraPosition, coord, crossfade, tile) :
+            fillExtrusionUniformValues(painter, shouldUseVerticalGradient, opacity, translate, globeCameraPosition);
 
         program.draw(context, context.gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
             uniformValues, terrainData, projectionData, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,

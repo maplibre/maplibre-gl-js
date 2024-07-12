@@ -33,9 +33,9 @@ import {drawDepth, drawCoords} from './draw_terrain';
 import {OverscaledTileID} from '../source/tile_id';
 import {drawSky, drawAtmosphere} from './draw_sky';
 import {Mesh} from './mesh';
-import {translatePosMatrix as mercatorTranslatePosMatrix, MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator';
+import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator';
 
-import type {Transform} from '../geo/transform';
+import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {Style} from '../style/style';
 import type {StyleLayer} from '../style/style_layer';
 import type {CrossFaded} from '../style/properties';
@@ -46,7 +46,6 @@ import type {VertexBuffer} from '../gl/vertex_buffer';
 import type {IndexBuffer} from '../gl/index_buffer';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
-import type {Tile} from '../source/tile';
 import type {ProjectionData} from './program/projection_program';
 import type {RenderToTexture} from './render_to_texture';
 
@@ -68,7 +67,7 @@ type PainterOptions = {
  */
 export class Painter {
     context: Context;
-    transform: Transform;
+    transform: IReadonlyTransform;
     renderToTexture: RenderToTexture;
     _tileTextures: {
         [_: number]: Array<Texture>;
@@ -118,7 +117,7 @@ export class Painter {
     // every time the camera-matrix changes the terrain-facilitators will be redrawn.
     terrainFacilitator: {dirty: boolean; matrix: mat4; renderTime: number};
 
-    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext, transform: Transform) {
+    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext, transform: IReadonlyTransform) {
         this.context = new Context(gl);
         this.transform = transform;
         this._tileTextures = {};
@@ -287,6 +286,7 @@ export class Painter {
         const context = this.context;
         const gl = context.gl;
         const projection = this.style.projection;
+        const transform = this.transform;
 
         const program = this.useProgram('clippingMask');
 
@@ -297,7 +297,7 @@ export class Painter {
 
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true);
 
-            const projectionData = projection.getProjectionData(tileID.canonical, tileID.posMatrix);
+            const projectionData = transform.getProjectionData(tileID);
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.
@@ -626,21 +626,6 @@ export class Painter {
                 drawCustom(painter, sourceCache, layer as any);
                 break;
         }
-    }
-
-    /**
-     * Temporary function - translate & translate-anchor handling will be moved to projection classes,
-     * since it is inherently projection dependent. Most translations will not be handled by the
-     * projection matrix (like the one this function produces), but by specialized code in the vertex shader.
-     */
-    translatePosMatrix(
-        matrix: mat4,
-        tile: Tile,
-        translate: [number, number],
-        translateAnchor: 'map' | 'viewport',
-        inViewportPixelUnitsUnits: boolean = false
-    ): mat4 {
-        return mercatorTranslatePosMatrix(this.transform, tile, matrix, translate, translateAnchor, inViewportPixelUnitsUnits);
     }
 
     saveTileTexture(texture: Texture) {

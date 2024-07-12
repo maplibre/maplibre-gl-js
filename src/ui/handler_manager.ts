@@ -500,10 +500,10 @@ export class HandlerManager {
         map._stop(true);
 
         around = around || map.transform.centerPoint;
-        const loc = tr.pointLocation(panDelta ? around.sub(panDelta) : around);
-        if (bearingDelta) tr.bearing += bearingDelta;
-        if (pitchDelta) tr.pitch += pitchDelta;
-        if (zoomDelta) tr.zoom += zoomDelta;
+        const loc = tr.screenPointToLocation(panDelta ? around.sub(panDelta) : around);
+        if (bearingDelta) tr.setBearing(tr.bearing + bearingDelta);
+        if (pitchDelta) tr.setPitch(tr.pitch + pitchDelta);
+        if (zoomDelta) tr.setZoom(tr.zoom + zoomDelta);
 
         if (!terrain) {
             tr.setLocationAtPoint(loc, around);
@@ -521,7 +521,7 @@ export class HandlerManager {
                 tr.setLocationAtPoint(loc, around);
             } else if (combinedEventsInProgress.drag && this._terrainMovement) {
                 // drag map
-                tr.center = tr.pointLocation(tr.centerPoint.sub(panDelta));
+                tr.setCenter(tr.screenPointToLocation(tr.centerPoint.sub(panDelta)));
             } else {
                 tr.setLocationAtPoint(loc, around);
             }

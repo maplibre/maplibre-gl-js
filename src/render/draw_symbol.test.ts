@@ -10,7 +10,7 @@ import {drawSymbols} from './draw_symbol';
 import * as symbolProjection from '../symbol/projection';
 import type {ZoomHistory} from '../style/zoom_history';
 import type {Map} from '../ui/map';
-import {Transform} from '../geo/transform';
+import {IReadonlyTransform} from '../geo/transform_interface';
 import type {EvaluationParameters} from '../style/evaluation_parameters';
 import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {Style} from '../style/style';
@@ -22,6 +22,26 @@ jest.mock('../source/source_cache');
 jest.mock('../source/tile');
 jest.mock('../data/bucket/symbol_bucket');
 jest.mock('../symbol/projection');
+(symbolProjection.getPitchedLabelPlaneMatrix as jest.Mock).mockReturnValue(mat4.create());
+
+function createMockTransform() {
+    return {
+        pitch: 0,
+        labelPlaneMatrix: mat4.create(),
+        getCircleRadiusCorrection: () => 1,
+        angle: 0,
+        zoom: 0,
+        getProjectionData(_canonical, fallback) {
+            return {
+                'u_projection_matrix': fallback,
+                'u_projection_tile_mercator_coords': [0, 0, 1, 1],
+                'u_projection_clipping_plane': [0, 0, 0, 0],
+                'u_projection_transition': 0.0,
+                'u_projection_fallback_matrix': fallback,
+            };
+        },
+    } as any as IReadonlyTransform;
+}
 
 describe('drawSymbol', () => {
     test('should not do anything', () => {
@@ -34,7 +54,6 @@ describe('drawSymbol', () => {
     });
 
     test('should call program.draw', () => {
-
         const painterMock = new Painter(null, null);
         painterMock.context = {
             gl: {},
@@ -43,7 +62,7 @@ describe('drawSymbol', () => {
             }
         } as any;
         painterMock.renderPass = 'translucent';
-        painterMock.transform = {pitch: 0, labelPlaneMatrix: mat4.create()} as any as Transform;
+        painterMock.transform = createMockTransform();
         painterMock.options = {} as any;
         painterMock.style = {
             map: {},
@@ -63,7 +82,7 @@ describe('drawSymbol', () => {
         layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
-        tileId.posMatrix = mat4.create();
+        tileId.terrainRttPosMatrix = mat4.create();
         const programMock = new Program(null, null, null, null, null, null, null, null);
         (painterMock.useProgram as jest.Mock).mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);
@@ -81,14 +100,14 @@ describe('drawSymbol', () => {
             layoutSize: 1
         };
         const tile = new Tile(tileId, 256);
-        tile.tileID = tileId;
         tile.imageAtlasTexture = {
             bind: () => { }
         } as any;
-        (tile.getBucket as jest.Mock).mockReturnValue(bucketMock);
+        tile.getBucket = () => bucketMock;
+        tile.tileID = tileId;
         const sourceCacheMock = new SourceCache(null, null, null);
-        (sourceCacheMock.getTile as jest.Mock).mockReturnValue(tile);
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
+        sourceCacheMock.getTile = (_a) => tile;
 
         drawSymbols(painterMock, sourceCacheMock, layer, [tileId], null);
 
@@ -105,7 +124,7 @@ describe('drawSymbol', () => {
             }
         } as any;
         painterMock.renderPass = 'translucent';
-        painterMock.transform = {pitch: 0, labelPlaneMatrix: mat4.create()} as any as Transform;
+        painterMock.transform = createMockTransform();
         painterMock.options = {} as any;
 
         const layerSpec = {
@@ -125,7 +144,7 @@ describe('drawSymbol', () => {
         layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
-        tileId.posMatrix = mat4.create();
+        tileId.terrainRttPosMatrix = mat4.create();
         const programMock = new Program(null, null, null, null, null, null, null, null);
         (painterMock.useProgram as jest.Mock).mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);
@@ -159,7 +178,7 @@ describe('drawSymbol', () => {
         const spy = jest.spyOn(symbolProjection, 'updateLineLabels');
         drawSymbols(painterMock, sourceCacheMock, layer, [tileId], null);
 
-        expect(spy.mock.calls[0][8]).toBeFalsy(); // rotateToLine === false
+        expect(spy.mock.calls[0][7]).toBeFalsy(); // rotateToLine === false
     });
 
     test('transparent tile optimization should prevent program.draw from being called', () => {
@@ -172,7 +191,7 @@ describe('drawSymbol', () => {
             }
         } as any;
         painterMock.renderPass = 'translucent';
-        painterMock.transform = {pitch: 0, labelPlaneMatrix: mat4.create()} as any as Transform;
+        painterMock.transform = createMockTransform();
         painterMock.options = {} as any;
         painterMock.style = {
             projection: new MercatorProjection()
@@ -191,7 +210,7 @@ describe('drawSymbol', () => {
         layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
-        tileId.posMatrix = mat4.create();
+        tileId.terrainRttPosMatrix = mat4.create();
         const programMock = new Program(null, null, null, null, null, null, null, null);
         (painterMock.useProgram as jest.Mock).mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);
@@ -222,5 +241,4 @@ describe('drawSymbol', () => {
 
         expect(programMock.draw).toHaveBeenCalledTimes(0);
     });
-
 });

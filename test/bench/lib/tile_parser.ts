@@ -3,7 +3,7 @@ import VT from '@mapbox/vector-tile';
 
 import {derefLayers as deref} from '@maplibre/maplibre-gl-style-spec';
 import {Style} from '../../../src/style/style';
-import {Transform} from '../../../src/geo/transform';
+import {IReadonlyTransform} from '../../../src/geo/transform_interface';
 import {Evented} from '../../../src/util/evented';
 import {RequestManager} from '../../../src/util/request_manager';
 import {WorkerTile} from '../../../src/source/worker_tile';
@@ -17,16 +17,17 @@ import type {Map} from '../../../src/ui/map';
 import type {IActor} from '../../../src/util/actor';
 import {SubdivisionGranularitySetting} from '../../../src/render/subdivision_granularity_settings';
 import {MessageType} from '../../../src/util/actor_messages';
+import {MercatorTransform} from '../../../src/geo/projection/mercator_transform';
 
 class StubMap extends Evented {
     style: Style;
     _requestManager: RequestManager;
-    transform: Transform;
+    transform: IReadonlyTransform;
 
     constructor() {
         super();
         this._requestManager = new RequestManager();
-        this.transform = new Transform();
+        this.transform = new MercatorTransform();
     }
 
     getPixelRatio() {

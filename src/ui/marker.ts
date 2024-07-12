@@ -552,7 +552,7 @@ export class Marker extends Evented {
             return;
         }
         // If the base is obscured, use the offset to check if the marker's center is obscured.
-        const metersToCenter = -this._offset.y / map.transform._pixelPerMeter;
+        const metersToCenter = -this._offset.y / map.transform.pixelsPerMeter;
         const elevationToCenter = Math.sin(map.getPitch() * Math.PI / 180) * metersToCenter;
         const terrainDistanceCenter = map.terrain.depthAtPoint(new Point(this._pos.x, this._pos.y - this._offset.y));
         const markerDistanceCenter = map.transform.lngLatToCameraDepth(this._lngLat, elevation + elevationToCenter);
@@ -580,7 +580,7 @@ export class Marker extends Evented {
         this._flatPos = this._pos = this._map.project(this._lngLat)._add(this._offset);
         if (this._map.terrain) {
             // flat position is saved because smartWrap needs non-elevated points
-            this._flatPos = this._map.transform.locationPoint(this._lngLat)._add(this._offset);
+            this._flatPos = this._map.transform.locationToScreenPoint(this._lngLat)._add(this._offset);
         }
 
         let rotation = '';

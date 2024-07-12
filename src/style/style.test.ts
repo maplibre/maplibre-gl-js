@@ -1,10 +1,8 @@
 import {Style} from './style';
 import {SourceCache} from '../source/source_cache';
 import {StyleLayer} from './style_layer';
-import {Transform} from '../geo/transform';
 import {extend} from '../util/util';
-import {RequestManager} from '../util/request_manager';
-import {Event, Evented} from '../util/evented';
+import {Event} from '../util/evented';
 import {RGBAImage} from '../util/image';
 import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread';
 import {browser} from '../util/browser';
@@ -12,11 +10,12 @@ import {OverscaledTileID} from '../source/tile_id';
 import {fakeServer, type FakeServer} from 'nise';
 
 import {EvaluationParameters} from './evaluation_parameters';
-import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification, StyleSpecification, SymbolLayerSpecification, TerrainSpecification, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
+import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification, StyleSpecification, SymbolLayerSpecification, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
 import {GeoJSONSource} from '../source/geojson_source';
-import {sleep} from '../util/test/util';
+import {StubMap, sleep} from '../util/test/util';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
 import {MessageType} from '../util/actor_messages';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 function createStyleJSON(properties?): StyleSpecification {
     return extend({
@@ -44,30 +43,6 @@ function createGeoJSONSource() {
             'features': []
         }
     };
-}
-
-class StubMap extends Evented {
-    style: Style;
-    transform: Transform;
-    private _requestManager: RequestManager;
-    _terrain: TerrainSpecification;
-
-    constructor() {
-        super();
-        this.transform = new Transform();
-        this._requestManager = new RequestManager();
-    }
-
-    _getMapId() {
-        return 1;
-    }
-
-    getPixelRatio() {
-        return 1;
-    }
-
-    setTerrain(terrain) { this._terrain = terrain; }
-    getTerrain() { return this._terrain; }
 }
 
 const getStubMap = () => new StubMap() as any;
@@ -1720,7 +1695,7 @@ describe('Style#setPaintProperty', () => {
             ]
         }));
 
-        const tr = new Transform();
+        const tr = new MercatorTransform();
         tr.resize(512, 512);
 
         style.once('style.load', () => {
@@ -2186,7 +2161,7 @@ describe('Style#queryRenderedFeatures', () => {
 
     beforeEach((callback) => {
         style = new Style(getStubMap());
-        transform = new Transform();
+        transform = new MercatorTransform();
         transform.resize(512, 512);
         function queryMapLibreFeatures(layers, serializedLayers, getFeatureState, queryGeom, cameraQueryGeom, scale, params) {
             const features = {
@@ -2419,7 +2394,7 @@ describe('Style#query*Features', () => {
     let transform;
 
     beforeEach((callback) => {
-        transform = new Transform();
+        transform = new MercatorTransform();
         transform.resize(100, 100);
         style = new Style(getStubMap());
         style.loadJSON({

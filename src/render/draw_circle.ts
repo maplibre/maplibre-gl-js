@@ -17,6 +17,7 @@ import type {UniformValues} from './uniform_binding';
 import type {CircleUniformsType} from './program/circle_program';
 import type {TerrainData} from '../render/terrain';
 import {ProjectionData} from './program/projection_program';
+import {translatePosition} from '../util/util';
 
 type TileRenderState = {
     programConfiguration: ProgramConfiguration;
@@ -48,7 +49,6 @@ export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: C
 
     const context = painter.context;
     const gl = context.gl;
-    const projection = painter.style.projection;
     const transform = painter.transform;
 
     const depthMode = painter.depthModeForSublayer(0, DepthMode.ReadOnly);
@@ -60,7 +60,7 @@ export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: C
     const segmentsRenderStates: Array<SegmentsTileRenderState> = [];
 
     // Note: due to how the shader is written, this value only has effect when globe rendering is enabled and `circle-pitch-alignment` is set to 'map'.
-    const radiusCorrectionFactor = projection.getCircleRadiusCorrection(transform);
+    const radiusCorrectionFactor = transform.getCircleRadiusCorrection();
 
     for (let i = 0; i < coords.length; i++) {
         const coord = coords[i];
@@ -71,7 +71,7 @@ export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: C
 
         const styleTranslate = layer.paint.get('circle-translate');
         const styleTranslateAnchor = layer.paint.get('circle-translate-anchor');
-        const translateForUniforms = projection.translatePosition(transform, tile, styleTranslate, styleTranslateAnchor);
+        const translateForUniforms = translatePosition(transform, tile, styleTranslate, styleTranslateAnchor);
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram('circle', programConfiguration);
@@ -80,8 +80,7 @@ export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: C
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
         const uniformValues = circleUniformValues(painter, tile, layer, translateForUniforms, radiusCorrectionFactor);
 
-        const matrix = coord.posMatrix;
-        const projectionData = projection.getProjectionData(coord.canonical, matrix);
+        const projectionData = transform.getProjectionData(coord);
 
         const state: TileRenderState = {
             programConfiguration,

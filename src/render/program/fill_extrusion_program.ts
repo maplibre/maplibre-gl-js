@@ -15,7 +15,6 @@ import type {OverscaledTileID} from '../../source/tile_id';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters';
 import type {Tile} from '../../source/tile';
-import {Projection} from '../../geo/projection/projection';
 
 export type FillExtrusionUniformsType = {
     'u_lightpos': Uniform3f;
@@ -82,7 +81,6 @@ const fillExtrusionUniformValues = (
     shouldUseVerticalGradient: boolean,
     opacity: number,
     translate: [number, number],
-    projection: Projection,
     cameraPosGlobe: vec3
 ): UniformValues<FillExtrusionUniformsType> => {
     const light = painter.style.light;
@@ -93,7 +91,7 @@ const fillExtrusionUniformValues = (
         mat3.fromRotation(lightMat, -painter.transform.angle);
     }
     vec3.transformMat3(lightPos, lightPos, lightMat);
-    const transformedLightPos = projection.transformLightDirection(painter.transform, lightPos);
+    const transformedLightPos = painter.transform.transformLightDirection(lightPos);
 
     const lightColor = light.properties.get('color');
 
@@ -114,13 +112,12 @@ const fillExtrusionPatternUniformValues = (
     shouldUseVerticalGradient: boolean,
     opacity: number,
     translate: [number, number],
-    projection: Projection,
     cameraPosGlobe: vec3,
     coord: OverscaledTileID,
     crossfade: CrossfadeParameters,
     tile: Tile
 ): UniformValues<FillExtrusionPatternUniformsType> => {
-    return extend(fillExtrusionUniformValues(painter, shouldUseVerticalGradient, opacity, translate, projection, cameraPosGlobe),
+    return extend(fillExtrusionUniformValues(painter, shouldUseVerticalGradient, opacity, translate, cameraPosGlobe),
         patternUniformValues(crossfade, painter, tile),
         {
             'u_height_factor': -Math.pow(2, coord.overscaledZ) / tile.tileSize / 8

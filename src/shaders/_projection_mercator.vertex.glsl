@@ -22,3 +22,10 @@ vec4 projectTileWithElevation(vec2 posInTile, float elevation) {
     // so no need to detect them.
     return u_projection_matrix * vec4(posInTile, elevation, 1.0);
 }
+
+vec4 projectTileFor3D(vec2 posInTile, float elevation) {
+    // In globe the `projectTileWithElevation` and `projectTileFor3D` functions differ
+    // on what Z value they output. There is no need for this in mercator though,
+    // thus here they are the same function.
+    return projectTileWithElevation(posInTile, elevation);
+}

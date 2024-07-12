@@ -38,7 +38,7 @@ const emitValidationErrors = (evented: Evented, errors?: ReadonlyArray<{
     _emitValidationErrors(evented, errors && errors.filter(error => error.identifier !== 'source.canvas'));
 
 import type {Map} from '../ui/map';
-import type {Transform} from '../geo/transform';
+import type {IReadonlyTransform, ITransform} from '../geo/transform_interface';
 import type {StyleImage} from './style_image';
 import type {EvaluationParameters} from './evaluation_parameters';
 import type {Placement} from '../symbol/placement';
@@ -344,7 +344,7 @@ export class Style extends Evented {
         this._createLayers();
 
         this.light = new Light(this.stylesheet.light);
-        this.projection = createProjectionFromName(this.stylesheet.projection?.type || 'mercator');
+        this._setProjectionInternal(this.stylesheet.projection?.type || 'mercator');
 
         this.sky = new Sky(this.stylesheet.sky);
 
@@ -1398,7 +1398,7 @@ export class Style extends Evented {
         return features;
     }
 
-    queryRenderedFeatures(queryGeometry: any, params: QueryRenderedFeaturesOptions, transform: Transform) {
+    queryRenderedFeatures(queryGeometry: any, params: QueryRenderedFeaturesOptions, transform: IReadonlyTransform) {
         if (params && params.filter) {
             this._validate(validateStyle.filter, 'queryRenderedFeatures.filter', params.filter, null, params);
         }
@@ -1510,7 +1510,7 @@ export class Style extends Evented {
             delete this.projection;
         }
         this.stylesheet.projection = projection;
-        this.projection = createProjectionFromName(projection.type);
+        this._setProjectionInternal(projection.type);
     }
 
     getSky(): SkySpecification {
@@ -1546,6 +1546,15 @@ export class Style extends Evented {
         this.stylesheet.sky = skyOptions;
         this.sky.setSky(skyOptions, options);
         this.sky.updateTransitions(parameters);
+    }
+
+    _setProjectionInternal(name: ProjectionSpecification['type']) {
+        const projTransform = createProjectionFromName(name);
+        this.projection = projTransform.projection;
+        this.map.migrateProjection(projTransform.transform);
+        for (const key in this.sourceCaches) {
+            this.sourceCaches[key].reload();
+        }
     }
 
     _validate(validate: Validator, key: string, value: any, props: any, options: {
@@ -1602,7 +1611,7 @@ export class Style extends Evented {
         this.sourceCaches[id].reload();
     }
 
-    _updateSources(transform: Transform) {
+    _updateSources(transform: ITransform) {
         for (const id in this.sourceCaches) {
             this.sourceCaches[id].update(transform, this.map.terrain);
         }
@@ -1614,10 +1623,7 @@ export class Style extends Evented {
         }
     }
 
-    _updatePlacement(transform: Transform, showCollisionBoxes: boolean, fadeDuration: number, crossSourceCollisions: boolean, forceFullPlacement: boolean = false) {
-
-        // This projection update should happen *before* placement update
-        this.projection.updateProjection(transform);
+    _updatePlacement(transform: ITransform, showCollisionBoxes: boolean, fadeDuration: number, crossSourceCollisions: boolean, forceFullPlacement: boolean = false) {
         let symbolBucketsChanged = false;
         let placementCommitted = false;
 
@@ -1648,7 +1654,7 @@ export class Style extends Evented {
         forceFullPlacement = forceFullPlacement || this._layerOrderChanged || fadeDuration === 0;
 
         if (forceFullPlacement || !this.pauseablePlacement || (this.pauseablePlacement.isDone() && !this.placement.stillRecent(browser.now(), transform.zoom))) {
-            this.pauseablePlacement = new PauseablePlacement(transform, this.projection, this.map.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
+            this.pauseablePlacement = new PauseablePlacement(transform, this.map.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
             this._layerOrderChanged = false;
         }
 
@@ -1716,14 +1722,14 @@ export class Style extends Evented {
     }
 
     async getGlyphs(mapId: string | number, params: GetGlyphsParamerters): Promise<GetGlyphsResponse> {
-        const glypgs = await this.glyphManager.getGlyphs(params.stacks);
+        const glyphs = await this.glyphManager.getGlyphs(params.stacks);
         const sourceCache = this.sourceCaches[params.source];
         if (sourceCache) {
             // we are not setting stacks as dependencies since for now
             // we just need to know which tiles have glyph dependencies
             sourceCache.setDependencies(params.tileID.key, params.type, ['']);
         }
-        return glypgs;
+        return glyphs;
     }
 
     getGlyphsUrl() {

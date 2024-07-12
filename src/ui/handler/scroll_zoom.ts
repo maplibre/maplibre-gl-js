@@ -10,6 +10,7 @@ import type {Map} from '../map';
 import type Point from '@mapbox/point-geometry';
 import type {AroundCenterOptions} from './two_fingers_touch';
 import {Handler} from '../handler_manager';
+import {scaleZoom, zoomScale} from '../../geo/transform_helper';
 
 // deltaY value for mouse scroll wheel identification
 const wheelZoomDelta = 4.000244140625;
@@ -233,7 +234,7 @@ export class ScrollZoomHandler implements Handler {
         const pos = DOM.mousePos(this._map.getCanvas(), e);
         const tr = this._tr;
 
-        if (pos.y > tr.transform.height / 2 - tr.transform.getHorizon()) {
+        if (tr.transform.isPointOnMapSurface(pos)) {
             this._around = LngLat.convert(this._aroundCenter ? tr.center : tr.unproject(pos));
         } else {
             // Do not use current cursor position if above the horizon to avoid 'unproject' this point
@@ -241,7 +242,7 @@ export class ScrollZoomHandler implements Handler {
             this._around = LngLat.convert(tr.center);
         }
 
-        this._aroundPoint = tr.transform.locationPoint(this._around);
+        this._aroundPoint = tr.transform.locationToScreenPoint(this._around);
         if (!this._frameId) {
             this._frameId = true;
             this._triggerRenderFrame();
@@ -267,8 +268,8 @@ export class ScrollZoomHandler implements Handler {
                 scale = 1 / scale;
             }
 
-            const fromScale = typeof this._targetZoom === 'number' ? tr.zoomScale(this._targetZoom) : tr.scale;
-            this._targetZoom = Math.min(tr.maxZoom, Math.max(tr.minZoom, tr.scaleZoom(fromScale * scale)));
+            const fromScale = typeof this._targetZoom === 'number' ? zoomScale(this._targetZoom) : tr.scale;
+            this._targetZoom = Math.min(tr.maxZoom, Math.max(tr.minZoom, scaleZoom(fromScale * scale)));
 
             // if this is a mouse wheel, refresh the starting zoom and easing
             // function we're using to smooth out the zooming between wheel

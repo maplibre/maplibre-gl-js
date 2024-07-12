@@ -1,10 +1,10 @@
 import {Uniform1i, Uniform1f, Uniform2f, Uniform3f} from '../uniform_binding';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
-import {extend} from '../../util/util';
+import {extend, translatePosition} from '../../util/util';
 
 import type {Context} from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
-import type {Transform} from '../../geo/transform';
+import type {IReadonlyTransform} from '../../geo/transform_interface';
 import type {Tile} from '../../source/tile';
 import type {CrossFaded} from '../../style/properties';
 import type {LineStyleLayer} from '../../style/style_layer/line_style_layer';
@@ -181,13 +181,13 @@ const lineSDFUniformValues = (
     });
 };
 
-function calculateTileRatio(tile: Tile, transform: Transform) {
+function calculateTileRatio(tile: Tile, transform: IReadonlyTransform) {
     return 1 / pixelsToTileUnits(tile, 1, transform.tileZoom);
 }
 
 function calculateTranslation(painter: Painter, tile: Tile, layer: LineStyleLayer): [number, number] {
     // Translate line points prior to any transformation
-    return painter.style.projection.translatePosition(
+    return translatePosition(
         painter.transform,
         tile,
         layer.paint.get('line-translate'),

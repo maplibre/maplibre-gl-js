@@ -16,7 +16,7 @@ import type {Source} from './source';
 import type {Map} from '../ui/map';
 import type {Style} from '../style/style';
 import type {Dispatcher} from '../util/dispatcher';
-import type {Transform} from '../geo/transform';
+import type {IReadonlyTransform, ITransform} from '../geo/transform_interface';
 import type {TileState} from './tile';
 import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapSourceDataEvent} from '../ui/events';
@@ -64,7 +64,7 @@ export class SourceCache extends Evented {
     _paused: boolean;
     _shouldReloadOnResume: boolean;
     _coveredTiles: {[_: string]: boolean};
-    transform: Transform;
+    transform: ITransform;
     terrain: Terrain;
     used: boolean;
     usedForTerrain: boolean;
@@ -438,7 +438,7 @@ export class SourceCache extends Evented {
      * are more likely to be found on devices with more memory and on pages where
      * the map is more important.
      */
-    updateCacheSize(transform: Transform) {
+    updateCacheSize(transform: IReadonlyTransform) {
         const widthInTiles = Math.ceil(transform.width / this._source.tileSize) + 1;
         const heightInTiles = Math.ceil(transform.height / this._source.tileSize) + 1;
         const approxTilesInView = widthInTiles * heightInTiles;
@@ -587,7 +587,7 @@ export class SourceCache extends Evented {
      * Removes tiles that are outside the viewport and adds new tiles that
      * are inside the viewport.
      */
-    update(transform: Transform, terrain?: Terrain) {
+    update(transform: ITransform, terrain?: Terrain) {
         if (!this._sourceLoaded || this._paused) {
             return;
         }
@@ -958,8 +958,8 @@ export class SourceCache extends Evented {
             transform.getCameraQueryGeometry(pointQueryGeometry) :
             pointQueryGeometry;
 
-        const queryGeometry = pointQueryGeometry.map((p: Point) => transform.pointCoordinate(p, this.terrain));
-        const cameraQueryGeometry = cameraPointQueryGeometry.map((p: Point) => transform.pointCoordinate(p, this.terrain));
+        const queryGeometry = pointQueryGeometry.map((p: Point) => transform.screenPointToMercatorCoordinate(p, this.terrain));
+        const cameraQueryGeometry = cameraPointQueryGeometry.map((p: Point) => transform.screenPointToMercatorCoordinate(p, this.terrain));
 
         const ids = this.getIds();
 
@@ -1011,8 +1011,8 @@ export class SourceCache extends Evented {
 
     getVisibleCoordinates(symbolLayer?: boolean): Array<OverscaledTileID> {
         const coords = this.getRenderableIds(symbolLayer).map((id) => this._tiles[id].tileID);
-        for (const coord of coords) {
-            coord.posMatrix = this.transform.calculatePosMatrix(coord.toUnwrapped());
+        if (this.transform) {
+            this.transform.precacheTiles(coords);
         }
         return coords;
     }
