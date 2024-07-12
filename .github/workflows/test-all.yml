@@ -33,6 +33,7 @@ jobs:
       - name: Build docs using docker and mkdocs-material
         run: |
           rm docs/README.md
+          rm -rf docs/API/_media
           docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build --strict
 
 
