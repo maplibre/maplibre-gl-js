@@ -3,6 +3,7 @@
 ### ✨ Features and improvements
 
 - Expose projection matrix parameters ([#3136](https://github.com/maplibre/maplibre-gl-js/pull/3136))
+- Support multiple layers in map.on and map.off methods ([#4279](https://github.com/maplibre/maplibre-gl-js/pull/4401))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
