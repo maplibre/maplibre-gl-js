@@ -1259,7 +1259,7 @@ export class Map extends Camera {
 
     /**
      * @event
-     * Adds a listener for events of a specified type, optionally limited to features in a specified style layer.
+     * Adds a listener for events of a specified type, optionally limited to features in a specified style layer(s).
      * See {@link MapEventType} and {@link MapLayerEventType} for a full list of events and their description.
      *
      * | Event                  | Compatible with `layerId` |
@@ -1393,19 +1393,19 @@ export class Map extends Camera {
      * @param listener - The listener callback.
      */
     on(type: keyof MapEventType | string, listener: Listener): this;
-    on(type: keyof MapEventType | string, layerIdOrListener: string | string[] | Listener, listener?: Listener): this {
+    on(type: keyof MapEventType | string, layerIdsOrListener: string | string[] | Listener, listener?: Listener): this {
         if (listener === undefined) {
-            return super.on(type, layerIdOrListener as Listener);
+            return super.on(type, layerIdsOrListener as Listener);
         }
 
-        if (Array.isArray(layerIdOrListener)) {
-            for (const layerId of layerIdOrListener) {
+        if (Array.isArray(layerIdsOrListener)) {
+            for (const layerId of layerIdsOrListener) {
                 this.on(type as keyof MapLayerEventType, layerId, listener);
             }
             return this;
         }
 
-        const delegatedListener = this._createDelegatedListener(type, layerIdOrListener as string, listener);
+        const delegatedListener = this._createDelegatedListener(type, layerIdsOrListener as string, listener);
 
         this._delegatedListeners = this._delegatedListeners || {};
         this._delegatedListeners[type] = this._delegatedListeners[type] || [];
@@ -1465,19 +1465,19 @@ export class Map extends Camera {
      * @param listener - The listener callback.
      */
     once(type: keyof MapEventType | string, listener?: Listener): this | Promise<any>;
-    once(type: keyof MapEventType | string, layerIdOrListener: string | string[] | Listener, listener?: Listener): this | Promise<any> {
+    once(type: keyof MapEventType | string, layerIdsOrListener: string | string[] | Listener, listener?: Listener): this | Promise<any> {
         if (listener === undefined) {
-            return super.once(type, layerIdOrListener as Listener);
+            return super.once(type, layerIdsOrListener as Listener);
         }
 
-        if (Array.isArray(layerIdOrListener)) {
-            for (const layerId of layerIdOrListener) {
+        if (Array.isArray(layerIdsOrListener)) {
+            for (const layerId of layerIdsOrListener) {
                 this.on(type as keyof MapLayerEventType, layerId, listener);
             }
             return this;
         }
 
-        const delegatedListener = this._createDelegatedListener(type, layerIdOrListener as string, listener);
+        const delegatedListener = this._createDelegatedListener(type, layerIdsOrListener as string, listener);
 
         for (const event in delegatedListener.delegates) {
             this.once(event, delegatedListener.delegates[event]);
@@ -1525,13 +1525,13 @@ export class Map extends Camera {
      * @param listener - The function previously installed as a listener.
      */
     off(type: keyof MapEventType | string, listener: Listener): this;
-    off(type: keyof MapEventType | string, layerIdOrListener: string | string[] | Listener, listener?: Listener): this {
+    off(type: keyof MapEventType | string, layerIdsOrListener: string | string[] | Listener, listener?: Listener): this {
         if (listener === undefined) {
-            return super.off(type, layerIdOrListener as Listener);
+            return super.off(type, layerIdsOrListener as Listener);
         }
 
-        if (Array.isArray(layerIdOrListener)) {
-            for (const layerId of layerIdOrListener) {
+        if (Array.isArray(layerIdsOrListener)) {
+            for (const layerId of layerIdsOrListener) {
                 this.off(type as keyof MapLayerEventType, layerId, listener);
             }
             return this;
@@ -1541,7 +1541,7 @@ export class Map extends Camera {
             const listeners = delegatedListeners[type];
             for (let i = 0; i < listeners.length; i++) {
                 const delegatedListener = listeners[i];
-                if (delegatedListener.layer === layerIdOrListener && delegatedListener.listener === listener) {
+                if (delegatedListener.layer === layerIdsOrListener && delegatedListener.listener === listener) {
                     for (const event in delegatedListener.delegates) {
                         this.off(((event as any)), delegatedListener.delegates[event]);
                     }
