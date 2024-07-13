@@ -255,7 +255,7 @@ How to add your changelog?
 
 ### Misc
 
-- [drawing antialiased lines](https://www.mapbox.com/blog/drawing-antialiased-lines/)
-- [drawing text with signed distance fields](https://www.mapbox.com/blog/text-signed-distance-fields/)
+- [drawing antialiased lines](https://blog.mapbox.com/drawing-antialiased-lines-with-opengl-8766f34192dc)
+- [drawing text with signed distance fields](https://blog.mapbox.com/drawing-text-with-signed-distance-fields-in-mapbox-gl-b0933af6f817)
 - [label placement](https://www.mapbox.com/blog/placing-labels/)
 - [distance fields](https://bytewrangler.blogspot.com/2011/10/signed-distance-fields.html)
