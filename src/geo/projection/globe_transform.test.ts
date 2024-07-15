@@ -58,7 +58,6 @@ describe('GlobeTransform', () => {
         const globeTransform = createGlobeTransform(globeProjectionMock);
 
         describe('general plane properties', () => {
-            //globeTransform.newFrameUpdate();
             const projectionData = globeTransform.getProjectionData(new OverscaledTileID(0, 0, 0, 0, 0));
 
             test('plane vector length', () => {
@@ -133,16 +132,13 @@ describe('GlobeTransform', () => {
             globeTransform.resize(512, 512);
             globeTransform.setZoom(-0.5);
             globeTransform.setCenter(new LngLat(0, 80));
-            //globeTransform.newFrameUpdate();
             expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [0, 2.2818294674820794, 0.40234810049271963], precisionDigits);
 
             globeTransform.setPitch(35);
             globeTransform.setBearing(70);
-            //globeTransform.newFrameUpdate();
             expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [-0.7098603286961542, 2.002400604307631, 0.6154310261827212], precisionDigits);
 
             globeTransform.setCenter(new LngLat(-10, 42));
-            //globeTransform.newFrameUpdate();
             expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [-3.8450970996236364, 2.9368285470351516, 4.311953269048194], precisionDigits);
         });
 
@@ -165,7 +161,6 @@ describe('GlobeTransform', () => {
         describe('project location to coordinates', () => {
             const precisionDigits = 10;
             const globeTransform = createGlobeTransform(globeProjectionMock);
-            //globeTransform.newFrameUpdate();
 
             test('basic test', () => {
                 globeTransform.setCenter(new LngLat(0, 0));
@@ -200,20 +195,16 @@ describe('GlobeTransform', () => {
             test('unproject screen center', () => {
                 const precisionDigits = 10;
                 const globeTransform = createGlobeTransform(globeProjectionMock);
-                //globeTransform.newFrameUpdate();
                 let unprojected = globeTransform.screenPointToLocation(screenCenter);
                 expect(unprojected.lng).toBeCloseTo(globeTransform.center.lng, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(globeTransform.center.lat, precisionDigits);
 
-                globeTransform.center.lng = 90.0;
-                //globeTransform.newFrameUpdate();
+                globeTransform.setCenter(new LngLat(90.0, 0.0));
                 unprojected = globeTransform.screenPointToLocation(screenCenter);
                 expect(unprojected.lng).toBeCloseTo(globeTransform.center.lng, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(globeTransform.center.lat, precisionDigits);
 
-                globeTransform.center.lng = 0.0;
-                globeTransform.center.lat = 60.0;
-                //globeTransform.newFrameUpdate();
+                globeTransform.setCenter(new LngLat(0.0, 60.0));
                 unprojected = globeTransform.screenPointToLocation(screenCenter);
                 expect(unprojected.lng).toBeCloseTo(globeTransform.center.lng, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(globeTransform.center.lat, precisionDigits);
@@ -222,7 +213,6 @@ describe('GlobeTransform', () => {
             test('unproject point to the side', () => {
                 const precisionDigits = 10;
                 const globeTransform = createGlobeTransform(globeProjectionMock);
-                //globeTransform.newFrameUpdate();
                 let coords: LngLat;
                 let projected: Point;
                 let unprojected: LngLat;
@@ -258,7 +248,6 @@ describe('GlobeTransform', () => {
                 globeTransform.resize(512, 512);
                 globeTransform.setZoom(-0.5);
                 globeTransform.setCenter(new LngLat(0, 80));
-                //globeTransform.newFrameUpdate();
 
                 let coords: LngLat;
                 let projected: Point;
@@ -288,7 +277,6 @@ describe('GlobeTransform', () => {
                 // Try unprojection a point somewhere above the western horizon
                 globeTransform.setPitch(60);
                 globeTransform.setBearing(-90);
-                //globeTransform.newFrameUpdate();
                 const unprojected = globeTransform.screenPointToLocation(screenTopEdgeCenter);
                 expect(unprojected.lng).toBeCloseTo(-34.699626794124015, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(0.0, precisionDigits);
@@ -299,7 +287,6 @@ describe('GlobeTransform', () => {
             const precisionDigits = 10;
             const globeTransform = createGlobeTransform(globeProjectionMock);
             globeTransform.setZoom(1);
-            //globeTransform.newFrameUpdate();
             let coords: LngLat;
             let point: Point;
             let projected: Point;
@@ -356,7 +343,6 @@ describe('GlobeTransform', () => {
 
             describe('rotated', () => {
                 globeTransform.setBearing(90);
-                //globeTransform.newFrameUpdate();
 
                 test('identity', () => {
                     // Should do nothing
@@ -439,7 +425,6 @@ describe('GlobeTransform', () => {
     test('pointCoordinate', () => {
         const precisionDigits = 10;
         const globeTransform = createGlobeTransform(globeProjectionMock);
-        //globeTransform.newFrameUpdate();
         let coords: LngLat;
         let coordsMercator: MercatorCoordinate;
         let projected: Point;
@@ -463,7 +448,6 @@ describe('GlobeTransform', () => {
     describe('globeViewAllowed', () => {
         test('starts enabled', async () => {
             const globeTransform = createGlobeTransform(globeProjectionMock);
-            //globeTransform.newFrameUpdate();
 
             expect(globeTransform.getGlobeViewAllowed()).toBe(true);
             expect(globeTransform.useGlobeControls).toBe(true);
@@ -471,27 +455,27 @@ describe('GlobeTransform', () => {
 
         test('animates to false', async () => {
             const globeTransform = createGlobeTransform(globeProjectionMock);
-            //globeTransform.newFrameUpdate();
+            globeTransform.newFrameUpdate();
             globeTransform.setGlobeViewAllowed(false);
 
             await sleep(20);
-            //globeTransform.newFrameUpdate();
+            globeTransform.newFrameUpdate();
             expect(globeTransform.getGlobeViewAllowed()).toBe(false);
             expect(globeTransform.useGlobeControls).toBe(true);
 
             await sleep(1000);
-            //globeTransform.newFrameUpdate();
+            globeTransform.newFrameUpdate();
             expect(globeTransform.getGlobeViewAllowed()).toBe(false);
             expect(globeTransform.useGlobeControls).toBe(false);
         });
 
         test('can skip animation if requested', async () => {
             const globeTransform = createGlobeTransform(globeProjectionMock);
-            //globeTransform.newFrameUpdate();
+            globeTransform.newFrameUpdate();
             globeTransform.setGlobeViewAllowed(false, false);
 
             await sleep(20);
-            //globeTransform.newFrameUpdate();
+            globeTransform.newFrameUpdate();
             expect(globeTransform.getGlobeViewAllowed()).toBe(false);
             expect(globeTransform.useGlobeControls).toBe(false);
         });
