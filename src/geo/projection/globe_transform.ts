@@ -12,27 +12,27 @@ import {ProjectionData} from '../../render/program/projection_program';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {PointProjection} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
-import {IReadonlyTransform, ITransform} from '../transform_interface';
+import {CoveringTilesOptions, CoveringZoomOptions, IReadonlyTransform, ITransform} from '../transform_interface';
 import {PaddingOptions} from '../edge_insets';
 import {tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 import {angularCoordinatesRadiansToVector, angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
 
 /**
  * Describes the intersection of ray and sphere.
- * When null, no intersection occured.
+ * When null, no intersection occurred.
  * When both "t" values are the same, the ray just touched the sphere's surface.
- * When both value are different, a full intersection occured.
+ * When both value are different, a full intersection occurred.
  */
 type RaySphereIntersection = {
     /**
      * The ray parameter for intersection that is "less" along the ray direction.
-     * Note that this value can be negative, meaning that this intersection occured before the ray's origin.
+     * Note that this value can be negative, meaning that this intersection occurred before the ray's origin.
      * The intersection point can be computed as `origin + direction * tMin`.
      */
     tMin: number;
     /**
      * The ray parameter for intersection that is "more" along the ray direction.
-     * Note that this value can be negative, meaning that this intersection occured before the ray's origin.
+     * Note that this value can be negative, meaning that this intersection occurred before the ray's origin.
      * The intersection point can be computed as `origin + direction * tMax`.
      */
     tMax: number;
@@ -124,7 +124,7 @@ export class GlobeTransform implements ITransform {
     isPaddingEqual(padding: PaddingOptions): boolean {
         return this._helper.isPaddingEqual(padding);
     }
-    coveringZoomLevel(options: { roundZoom?: boolean; tileSize: number }): number {
+    coveringZoomLevel(options: CoveringZoomOptions): number {
         return this._helper.coveringZoomLevel(options);
     }
     resize(width: number, height: number): void {
@@ -502,12 +502,16 @@ export class GlobeTransform implements ITransform {
         return sphere;
     }
 
-    public isOccluded(x: number, y: number, unwrappedTileID: UnwrappedTileID): boolean {
+    public isTilePositionOccluded(x: number, y: number, unwrappedTileID: UnwrappedTileID): boolean {
         if (!this._globeRendering) {
-            return this._mercatorTransform.isOccluded(x, y, unwrappedTileID);
+            return this._mercatorTransform.isTilePositionOccluded(x, y, unwrappedTileID);
         }
         const spherePos = this._projectTileCoordinatesToSphere(x, y, unwrappedTileID);
         return !this.isSurfacePointVisible(spherePos);
+    }
+
+    public isLocationOccluded(location: LngLat): boolean {
+        return !this.isSurfacePointVisible(angularCoordinatesToSurfaceVector(location));
     }
 
     public transformLightDirection(dir: vec3): vec3 {
@@ -654,14 +658,11 @@ export class GlobeTransform implements ITransform {
     }
 
     getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): UnwrappedTileID[] {
-        // Globe: TODO: implement for globe #3887
-        return this._mercatorTransform.getVisibleUnwrappedCoordinates(tileID);
+        // Globe has no wrap.
+        return [new UnwrappedTileID(0, tileID)];
     }
 
-    coveringTiles(options: {
-        tileSize: number; minzoom?: number;
-        maxzoom?: number; roundZoom?: boolean; reparseOverscaled?: boolean; renderWorldCopies?: boolean; terrain?: Terrain;
-    }): OverscaledTileID[] {
+    coveringTiles(options: CoveringTilesOptions): OverscaledTileID[] {
         // Globe: TODO: implement for globe #3887
         return this._mercatorTransform.coveringTiles(options);
     }

@@ -526,7 +526,9 @@ export class Marker extends Evented {
     _updateOpacity(force: boolean = false) {
         const terrain = this._map?.terrain;
         if (!terrain) {
-            if (this._element.style.opacity !== this._opacity) { this._element.style.opacity = this._opacity; }
+            const occluded = this._map.transform.isLocationOccluded(this._lngLat);
+            const targetOpacity = occluded ? this._opacityWhenCovered : this._opacity;
+            if (this._element.style.opacity !== targetOpacity) { this._element.style.opacity = targetOpacity; }
             return;
         }
         if (force) {

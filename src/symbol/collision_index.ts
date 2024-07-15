@@ -124,7 +124,7 @@ export class CollisionIndex {
 
         const [tlX, tlY, brX, brY] = projectedBox.box;
 
-        const projectionOccluded = (pitchWithMap ? projectedBox.allPointsOccluded : this.transform.isOccluded(x, y, unwrappedTileID));
+        const projectionOccluded = (pitchWithMap ? projectedBox.allPointsOccluded : this.transform.isTilePositionOccluded(x, y, unwrappedTileID));
 
         if (projectionOccluded || projectedPoint.perspectiveRatio < this.perspectiveRatioCutoff || !this.isInsideGrid(tlX, tlY, brX, brY) ||
             (overlapMode !== 'always' && this.grid.hitTest(tlX, tlY, brX, brY, overlapMode, collisionGroupPredicate))) {
