@@ -823,13 +823,13 @@ export abstract class Camera extends Evented {
 
             for (const vec of testVectors) {
                 if (xLeft < 0)
-                    smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vec, vecToCenter, matrix, 0, xLeft));
+                    smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vec, vecToCenter, matrix, 'x', xLeft));
                 if (xRight > 0)
-                    smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vec, vecToCenter, matrix, 0, xRight));
+                    smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vec, vecToCenter, matrix, 'x', xRight));
                 if (yTop > 0)
-                    smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vec, vecToCenter, matrix, 1, yTop));
+                    smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vec, vecToCenter, matrix, 'y', yTop));
                 if (yBottom < 0)
-                    smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vec, vecToCenter, matrix, 1, yBottom));
+                    smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vec, vecToCenter, matrix, 'y', yBottom));
             }
 
             if (!Number.isFinite(smallestNeededScale) || smallestNeededScale === 0) {
@@ -1834,61 +1834,52 @@ export abstract class Camera extends Evented {
     }
 }
 
-function solveVectorScale(vector: vec3, toCenter: vec3, projection: mat4, targetDimension: number, targetValue: number): number | null {
-    // We want to compute how much to scale the sphere in order for the input `vector` to project to `targetValue` in the given `targetDimension` (0=x, 1=y)
-    // Let vectors be column, let the first row of a matrix be at indices 0,4,8,12
-    // Let t := the scale we are looking for
-    // Let v := `vector`
-    // Let c := `toCenter` (map center vector)
-    // Let v_p := the vector that gets projected
-    // Let k := targetValue
-    // Let m := projection matrix
-    // Then:
-    // v_p = v*t + (1-t)*c
-    // Let . be a dot product
-    // Assume that targetDimension = 0 (X)
-    // For v_p to project to k, it must hold (from how matrix multiplication + projection division works):
-    // Let a_xyz := m[row 0][columns 0,1,2]
-    // Let a_w := m[row 0][column 3]
-    // Let b_xyz := m[row 3][columns 0,1,2]
-    // Let b_w := m[row 3][column 3]
-    // (v_p.m[row 0][columns 0,1,2] + m[row0][col3]) / (v_p.m[row 3][columns 0,1,2] + m[row3][col3]) = k
-    // We are doing dot products with v_p with some `d`, which we can write out as:
-    // (v*t + (1-t)*c).d
-    // v.d*t + (1-t)*c.d
-    // Thus we want to precompute:
-    // v_a := v.a_xyz
-    // c_a := c.a_xyz
-    // v_b := v.b_xyz
-    // c_b := c.b_xyz
-    // Then the matrix projection becomes:
-    // (v_a*t + (1-t)*c_a + a_w) / (v_b*t + (1-t)*c_b + b_w) = k
-    // Then we plug this to some equation solver and get:
-    // t = (c_a + a_w - k*c_b - k*b_w) / (c_a - v_a - k*c_b + k*v_b)
-    //     if:
-    //        c_a + k*v_b != v_a + k*c_b
-    //        b_w*(v_a-c_a) + a_w*(c_b-v_b) + v_a*c_b != c_a*v_b
+/**
+ * Computes how much to scale the globe in order for a given point on its surface (a location) to project to a given clip space coordinate in either the X or the Y axis.
+ * @param vector - Position of the queried location on the surface of the unit sphere globe.
+ * @param toCenter - Position of current transform center on the surface of the unit sphere globe.
+ * This is needed because zooming the globe not only changes its scale,
+ * but also moves the camera closer or further away along this vector (pitch is disregarded).
+ * @param projection - The globe projection matrix.
+ * @param targetDimension - The dimension in which the scaled vector must match the target value in clip space.
+ * @param targetValue - The target clip space value in the specified dimension to which the queried vector must project.
+ * @returns How much to scale the globe.
+ */
+function solveVectorScale(vector: vec3, toCenter: vec3, projection: mat4, targetDimension: 'x' | 'y', targetValue: number): number | null {
+    // We want to compute how much to scale the sphere in order for the input `vector` to project to `targetValue` in the given `targetDimension` (X or Y).
     const k = targetValue;
-    const a = targetDimension === 0 ?
-        [projection[0], projection[4], projection[8], projection[12]] :
-        [projection[1], projection[5], projection[9], projection[13]];
-    const b = [projection[3], projection[7], projection[11], projection[15]];
+    const columnXorY = targetDimension === 'x' ?
+        [projection[0], projection[4], projection[8], projection[12]] : // X
+        [projection[1], projection[5], projection[9], projection[13]];  // Y
+    const columnZ = [projection[3], projection[7], projection[11], projection[15]];
 
-    const aw = a[3];
-    const bw = b[3];
-    const va = vector[0] * a[0] + vector[1] * a[1] + vector[2] * a[2];
-    const vb = vector[0] * b[0] + vector[1] * b[1] + vector[2] * b[2];
-    const ca = toCenter[0] * a[0] + toCenter[1] * a[1] + toCenter[2] * a[2];
-    const cb = toCenter[0] * b[0] + toCenter[1] * b[1] + toCenter[2] * b[2];
+    const vecDotXY = vector[0] * columnXorY[0] + vector[1] * columnXorY[1] + vector[2] * columnXorY[2];
+    const vecDotZ = vector[0] * columnZ[0] + vector[1] * columnZ[1] + vector[2] * columnZ[2];
+    const toCenterDotXY = toCenter[0] * columnXorY[0] + toCenter[1] * columnXorY[1] + toCenter[2] * columnXorY[2];
+    const toCenterDotZ = toCenter[0] * columnZ[0] + toCenter[1] * columnZ[1] + toCenter[2] * columnZ[2];
 
-    const t = (ca + aw - k * cb - k * bw) / (ca - va - k * cb + k * vb);
+    // The following can be derived from writing down what happens to a vector scaled by a parameter ("V * t") when it is multiplied by a projection matrix, then solving for "t".
 
-    if (ca + k * vb === va + k * cb || bw * (va - ca) + aw * (cb - vb) + va * cb === ca * vb) {
+    const t = (toCenterDotXY + columnXorY[3] - k * toCenterDotZ - k * columnZ[3]) / (toCenterDotXY - vecDotXY - k * toCenterDotZ + k * vecDotZ);
+
+    if (
+        toCenterDotXY + k * vecDotZ === vecDotXY + k * toCenterDotZ ||
+        columnZ[3] * (vecDotXY - toCenterDotXY) + columnXorY[3] * (toCenterDotZ - vecDotZ) + vecDotXY * toCenterDotZ === toCenterDotXY * vecDotZ
+    ) {
         return null;
     }
     return t;
 }
 
+/**
+ * Returns `newValue` if it is:
+ *
+ * - not null AND
+ * - not negative AND
+ * - smaller than `newValue`,
+ *
+ * ...otherwise returns `oldValue`.
+ */
 function getLesserNonNegativeNonNull(oldValue: number, newValue: number): number {
     if (newValue !== null && newValue >= 0 && newValue < oldValue) {
         return newValue;
