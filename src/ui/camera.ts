@@ -14,10 +14,9 @@ import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
 import type {HandlerManager} from './handler_manager';
-import {angularCoordinatesToSurfaceVector, getZoomAdjustment, globeDistanceOfLocationsPixels} from '../geo/projection/globe_utils';
+import {angularCoordinatesToSurfaceVector, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from '../geo/projection/globe_utils';
 import {mat4, vec3} from 'gl-matrix';
 import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from '../geo/projection/mercator_utils';
-import {interpolateLngLatForGlobe} from './globe_control_utils';
 import {scaleZoom, zoomScale} from '../geo/transform_helper';
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.

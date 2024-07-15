@@ -21,10 +21,9 @@ import {clamp, differenceOfAnglesDegrees, extend, remapSaturate} from '../util/u
 import {browser} from '../util/browser';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../geo/lng_lat';
-import {getGlobeRadiusPixels, getZoomAdjustment} from '../geo/projection/globe_utils';
+import {computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment} from '../geo/projection/globe_utils';
 import {MAX_VALID_LATITUDE, zoomScale} from '../geo/transform_helper';
 import {vec3} from 'gl-matrix';
-import {computeGlobePanCenter} from './globe_control_utils';
 
 const isMoving = (p: EventsInProgress) => p.zoom || p.drag || p.pitch || p.rotate;
 
