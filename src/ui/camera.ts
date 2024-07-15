@@ -44,6 +44,7 @@ function solveVectorScale(vector: vec3, toCenter: vec3, projection: mat4, target
     const toCenterDotZ = toCenter[0] * columnZ[0] + toCenter[1] * columnZ[1] + toCenter[2] * columnZ[2];
 
     // The following can be derived from writing down what happens to a vector scaled by a parameter ("V * t") when it is multiplied by a projection matrix, then solving for "t".
+    // Or rather, we derive it for a vector "V * t + (1-t) * C". Where V is `vector` and C is `toCenter`. The extra addition is needed because zooming out also moves the camera along "C".
 
     const t = (toCenterDotXY + columnXorY[3] - k * toCenterDotZ - k * columnZ[3]) / (toCenterDotXY - vecDotXY - k * toCenterDotZ + k * vecDotZ);
 
@@ -51,6 +52,7 @@ function solveVectorScale(vector: vec3, toCenter: vec3, projection: mat4, target
         toCenterDotXY + k * vecDotZ === vecDotXY + k * toCenterDotZ ||
         columnZ[3] * (vecDotXY - toCenterDotXY) + columnXorY[3] * (toCenterDotZ - vecDotZ) + vecDotXY * toCenterDotZ === toCenterDotXY * vecDotZ
     ) {
+        // The computed result is invalid.
         return null;
     }
     return t;
@@ -730,7 +732,7 @@ export abstract class Camera extends Evented {
      * @internal
      * Calculate the center of these two points in the viewport and use
      * the highest zoom level up to and including `Map#getMaxZoom()` that fits
-     * the points in the viewport at the specified bearing.
+     * the AABB defined by these points in the viewport at the specified bearing.
      * @param p0 - First point
      * @param p1 - Second point
      * @param bearing - Desired map bearing at end of animation, in degrees
@@ -837,29 +839,33 @@ export abstract class Camera extends Evented {
 
         // If globe is enabled, we use the parameters computed for mercator, and just update the zoom to fit the bounds.
         if (this.transform.useGlobeControls) {
+            // Get clip space bounds including padding
             const xLeft = (options.padding.left) / tr.width * 2.0 - 1.0;
             const xRight = (tr.width - options.padding.right) / tr.width * 2.0 - 1.0;
             const yTop = (options.padding.top) / tr.height * -2.0 + 1.0;
             const yBottom = (tr.height - options.padding.bottom) / tr.height * -2.0 + 1.0;
 
+            // Get camera bounds
             const flipEastWest = differenceOfAnglesDegrees(bounds.getWest(), bounds.getEast()) < 0;
             const lngWest = flipEastWest ? bounds.getEast() : bounds.getWest();
             const lngEast = flipEastWest ? bounds.getWest() : bounds.getEast();
-            const lngDiffWestToEast = differenceOfAnglesDegrees(lngWest, lngEast);
+
             const latNorth = Math.max(bounds.getNorth(), bounds.getSouth()); // "getNorth" doesn't always return north...
             const latSouth = Math.min(bounds.getNorth(), bounds.getSouth());
-            const latDiffNorthToSouth = differenceOfAnglesDegrees(latNorth, latSouth);
 
             // Additional vectors will be tested for the rectangle midpoints
-            const lngMid = lngWest + lngDiffWestToEast * 0.5;
-            const latMid = latNorth + latDiffNorthToSouth * 0.5;
+            const lngMid = lngWest + differenceOfAnglesDegrees(lngWest, lngEast) * 0.5;
+            const latMid = latNorth + differenceOfAnglesDegrees(latNorth, latSouth) * 0.5;
 
+            // Obtain a globe projection matrix that does not include pitch (unsupported)
             const clonedTr = tr.clone();
             clonedTr.setCenter(result.center);
             clonedTr.setBearing(result.bearing);
             clonedTr.setPitch(0);
             clonedTr.setZoom(result.zoom);
+            const matrix = clonedTr.modelViewProjectionMatrix;
 
+            // Vectors to test - the bounds' corners and edge midpoints
             const testVectors = [
                 angularCoordinatesToSurfaceVector(bounds.getNorthWest()),
                 angularCoordinatesToSurfaceVector(bounds.getNorthEast()),
@@ -873,9 +879,8 @@ export abstract class Camera extends Evented {
             ];
             const vecToCenter = angularCoordinatesToSurfaceVector(result.center);
 
-            const matrix = clonedTr.modelViewProjectionMatrix;
+            // Test each vector, measure how much to scale down the globe to satisfy all tested points that they are inside clip space.
             let smallestNeededScale = Number.POSITIVE_INFINITY;
-
             for (const vec of testVectors) {
                 if (xLeft < 0)
                     smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vec, vecToCenter, matrix, 'x', xLeft));
@@ -892,6 +897,7 @@ export abstract class Camera extends Evented {
                 return undefined;
             }
 
+            // Compute target zoom from the obtained scale.
             result.zoom = clonedTr.zoom + scaleZoom(smallestNeededScale);
         }
 
@@ -1011,12 +1017,14 @@ export abstract class Camera extends Evented {
         const optionsZoom = typeof options.zoom === 'number';
         const optionsApparentZoom = typeof options.apparentZoom === 'number';
 
-        // Special zoom & center handling for globe
         if (this.transform.useGlobeControls) {
-            // Globe constrain's center isn't dependent on zoom level
+            // Special zoom & center handling for globe:
+            // Globe constrained center isn't dependent on zoom level
             const startingLat = tr.center.lat;
             const constrainedCenter = tr.getConstrained(options.center ? LngLat.convert(options.center) : tr.center, tr.zoom).center;
             tr.setCenter(constrainedCenter.wrap());
+
+            // Make sure to correctly apply apparentZoom
             let targetZoom;
             if (optionsApparentZoom) {
                 targetZoom = +options.apparentZoom + getZoomAdjustment(startingLat, constrainedCenter.lat);
@@ -1030,6 +1038,7 @@ export abstract class Camera extends Evented {
                 tr.setZoom(targetZoom);
             }
         } else {
+            // Mercator zoom & center handling.
             const zoom = optionsZoom ? +options.zoom : (optionsApparentZoom ? +options.apparentZoom : tr.zoom);
             if (tr.zoom !== zoom) {
                 zoomChanged = true;
@@ -1550,12 +1559,12 @@ export abstract class Camera extends Evented {
         let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
         const locationAtOffset = tr.screenPointToLocation(pointAtOffset);
 
+        const optionsZoom = typeof options.zoom === 'number';
+        const optionsApparentZoom = typeof options.apparentZoom === 'number';
+
+        // Obtain target center and zoom
         let targetCenter, targetZoom;
-
         if (this.transform.useGlobeControls) {
-            const optionsZoom = typeof options.zoom === 'number';
-            const optionsApparentZoom = typeof options.apparentZoom === 'number';
-
             const constrainedCenter = tr.getConstrained(
                 LngLat.convert(options.center || locationAtOffset),
                 startZoom
@@ -1568,6 +1577,7 @@ export abstract class Camera extends Evented {
                 targetZoom = tr.zoom + getZoomAdjustment(tr.center.lat, constrainedCenter.lat);
             }
 
+            // Compute target center that respects offset by creating a temporary transform and calling its `setLocationAtPoint`.
             const clonedTr = tr.clone();
             clonedTr.setCenter(constrainedCenter);
             if (this._padding) {
@@ -1584,7 +1594,7 @@ export abstract class Camera extends Evented {
         } else {
             const constrained = tr.getConstrained(
                 LngLat.convert(options.center || locationAtOffset),
-                options.zoom ?? startZoom
+                optionsZoom ? +options.zoom : (optionsApparentZoom ? +options.apparentZoom : startZoom)
             );
             targetCenter = constrained.center;
             targetZoom = constrained.zoom;
