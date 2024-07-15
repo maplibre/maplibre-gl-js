@@ -1,5 +1,5 @@
 import {mat2, mat4, vec3, vec4} from 'gl-matrix';
-import {MAX_VALID_LATITUDE, TransformHelper, TransformUpdateResult} from '../transform_helper';
+import {MAX_VALID_LATITUDE, TransformHelper} from '../transform_helper';
 import {MercatorTransform} from './mercator_transform';
 import {LngLat, earthRadius} from '../lng_lat';
 import {angleToRotateBetweenVectors2D, clamp, differenceOfAnglesDegrees, distanceOfAnglesRadians, easeCubicInOut, lerp, pointPlaneSignedDistance, warnOnce} from '../../util/util';
@@ -12,7 +12,7 @@ import {ProjectionData} from '../../render/program/projection_program';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {PointProjection} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
-import {CoveringTilesOptions, CoveringZoomOptions, IReadonlyTransform, ITransform} from '../transform_interface';
+import {CoveringTilesOptions, CoveringZoomOptions, IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
 import {PaddingOptions} from '../edge_insets';
 import {tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 import {angularCoordinatesRadiansToVector, angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
@@ -221,6 +221,7 @@ export class GlobeTransform implements ITransform {
 
     private _lastLargeZoomStateChange: number = -1000.0;
     private _lastLargeZoomState: boolean = false;
+    private _lastUpdateTime = -1e9;
 
     private _skipNextAnimation: boolean = true;
 
@@ -240,7 +241,6 @@ export class GlobeTransform implements ITransform {
      * to ensure the transform's state isn't unintentionally changed.
      */
     private _projectionInstance: GlobeProjection;
-    private _lastGlobeRenderingState: boolean = true;
     private _globeLatitudeErrorCorrectionRadians: number = 0;
 
     private get _globeRendering(): boolean {
@@ -270,14 +270,19 @@ export class GlobeTransform implements ITransform {
 
     clone(): ITransform {
         const clone = new GlobeTransform(null, this._globeProjectionEnabled);
+        clone._applyGlobeTransform(this);
         clone.apply(this);
-        this.newFrameUpdate();
+        clone._updateErrorCorrectionValue();
         return clone;
     }
 
     public apply(that: IReadonlyTransform): void {
         this._helper.apply(that);
         this._mercatorTransform.apply(this);
+    }
+
+    private _applyGlobeTransform(that: GlobeTransform): void {
+        this._globeness = that._globeness;
     }
 
     public get projectionMatrix(): mat4 { return this._globeRendering ? this._projectionMatrix : this._mercatorTransform.projectionMatrix; }
@@ -332,34 +337,42 @@ export class GlobeTransform implements ITransform {
             this._skipNextAnimation = true;
         }
         this._globeProjectionEnabled = allow;
-        this._lastGlobeChangeTime = browser.now();
+        this._lastGlobeChangeTime = this._lastUpdateTime;
     }
 
     /**
      * Should be called at the beginning of every frame to synchronize the transform with the underlying projection.
      */
     newFrameUpdate(): TransformUpdateResult {
-        if (this._projectionInstance) {
-            // Note: the _globeRendering field is only updated inside this function.
-            // This function should never be called on a cloned transform, thus ensuring that
-            // the state of a cloned transform is never changed after creation.
-            this._projectionInstance.useGlobeRendering = this._globeRendering;
-            this._projectionInstance.errorQueryLatitudeDegrees = this.center.lat;
-            this._globeLatitudeErrorCorrectionRadians = this._projectionInstance.latitudeErrorCorrectionRadians;
-        }
+        this._updateErrorCorrectionValue();
 
+        this._lastUpdateTime = browser.now();
+        const oldGlobeRendering = this._globeRendering;
         this._globeness = this._computeGlobenessAnimation();
 
         this._calcMatrices();
 
-        let forcePlacementUpdate = false;
-        if (this._lastGlobeRenderingState !== this._globeRendering) {
-            forcePlacementUpdate = true;
-        }
-        this._lastGlobeRenderingState = this._globeRendering;
-        return {
-            forcePlacementUpdate
+        const result: TransformUpdateResult = {
+            forcePlacementUpdate: false,
+            fireProjectionEvent: false,
         };
+        if (oldGlobeRendering !== this._globeRendering) {
+            result.forcePlacementUpdate = true;
+            result.fireProjectionEvent = true;
+        }
+        return result;
+    }
+
+    private _updateErrorCorrectionValue(): void {
+        if (!this._projectionInstance) {
+            return;
+        }
+        // Note: the _globeRendering field is only updated inside this function.
+        // This function should never be called on a cloned transform, thus ensuring that
+        // the state of a cloned transform is never changed after creation.
+        this._projectionInstance.useGlobeRendering = this._globeRendering;
+        this._projectionInstance.errorQueryLatitudeDegrees = this.center.lat;
+        this._globeLatitudeErrorCorrectionRadians = this._projectionInstance.latitudeErrorCorrectionRadians;
     }
 
     /**
@@ -368,7 +381,7 @@ export class GlobeTransform implements ITransform {
     private _computeGlobenessAnimation(): number {
         // Update globe transition animation
         const globeState = this._globeProjectionEnabled;
-        const currentTime = browser.now();
+        const currentTime = this._lastUpdateTime;
         if (globeState !== this._lastGlobeStateEnabled) {
             this._lastGlobeChangeTime = currentTime;
             this._lastGlobeStateEnabled = globeState;
@@ -409,9 +422,8 @@ export class GlobeTransform implements ITransform {
     }
 
     isRenderingDirty(): boolean {
-        const now = browser.now();
         // Globe transition
-        return (now - this._lastGlobeChangeTime) / 1000.0 < (Math.max(globeConstants.globeTransitionTimeSeconds, globeConstants.zoomTransitionTimeSeconds) + 0.2);
+        return (this._lastUpdateTime - this._lastGlobeChangeTime) / 1000.0 < (Math.max(globeConstants.globeTransitionTimeSeconds, globeConstants.zoomTransitionTimeSeconds));
     }
 
     getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData {

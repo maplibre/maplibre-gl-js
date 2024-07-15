@@ -411,6 +411,10 @@ export type MapEventType = {
      * Fired when terrain is changed
      */
     terrain: MapTerrainEvent;
+    /**
+     * Fired when map's projection is modified in other ways than by map being moved.
+     */
+    projectiontransition: MapProjectionEvent;
 };
 
 /**
@@ -727,6 +731,15 @@ export type MapDataEvent = {
 export type MapTerrainEvent = {
     type: 'terrain';
 };
+
+/**
+ * The map projection event
+ *
+ * @group Event Related
+ */
+export type MapProjectionEvent = {
+    type: 'projectiontransition';
+}
 
 /**
  * An event related to the web gl context

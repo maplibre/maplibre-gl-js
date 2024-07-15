@@ -8,11 +8,11 @@ import {Terrain} from '../../render/terrain';
 import {Aabb, Frustum} from '../../util/primitives';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {EXTENT} from '../../data/extent';
-import {scaleZoom, TransformHelper, TransformUpdateResult, zoomScale} from '../transform_helper';
+import {scaleZoom, TransformHelper, zoomScale} from '../transform_helper';
 import {ProjectionData} from '../../render/program/projection_program';
 import {PointProjection, xyTransformMat4} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
-import {CoveringTilesOptions, CoveringZoomOptions, IReadonlyTransform, ITransform} from '../transform_interface';
+import {CoveringTilesOptions, CoveringZoomOptions, IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
 import {PaddingOptions} from '../edge_insets';
 import {mercatorCoordinateToLocation, getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils';
 
@@ -831,9 +831,7 @@ export class MercatorTransform implements ITransform {
     }
 
     newFrameUpdate(): TransformUpdateResult {
-        return {
-            forcePlacementUpdate: false
-        };
+        return {};
     }
 
     transformLightDirection(dir: vec3): vec3 {

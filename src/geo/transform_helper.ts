@@ -19,8 +19,6 @@ export function zoomScale(zoom: number) { return Math.pow(2, zoom); }
  */
 export function scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
 
-export type TransformUpdateResult = {forcePlacementUpdate: boolean};
-
 export type TransformHelperCallbacks = {
     /**
      * Get center lngLat and zoom to ensure that

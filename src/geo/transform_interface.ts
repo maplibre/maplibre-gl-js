@@ -40,7 +40,10 @@ export type CoveringTilesOptions = CoveringZoomOptions & {
     terrain?: Terrain;
 };
 
-export type TransformUpdateResult = {forcePlacementUpdate: boolean};
+export type TransformUpdateResult = {
+    forcePlacementUpdate?: boolean;
+    fireProjectionEvent?: boolean;
+};
 
 export interface ITransformGetters {
     get tileSize(): number;

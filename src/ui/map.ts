@@ -3109,6 +3109,10 @@ export class Map extends Camera {
         const transformUpdateResult = this.transform.newFrameUpdate();
         this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, transformUpdateResult.forcePlacementUpdate);
 
+        if (transformUpdateResult.fireProjectionEvent) {
+            this.fire(new Event('projectiontransition'));
+        }
+
         // Actually draw
         this.painter.render(this.style, {
             showTileBoundaries: this.showTileBoundaries,
