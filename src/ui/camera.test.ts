@@ -2316,1073 +2316,1080 @@ describe('#transformCameraUpdate', () => {
 });
 
 describe('#jumpTo globe projection', () => {
-    // Test globe specific zoom behavior
-    test('changing center with no zoom specified should adjusts zoom', () => {
-        const camera = createCameraGlobe({zoom: 1});
-        camera.jumpTo({center: [0, 40]});
-        expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
-        expect(camera.getZoom()).toBe(0.6154999996223638);
+    let camera;
+
+    beforeEach(() => {
+        camera = createCameraGlobe({zoom: 1});
     });
 
-    test('changing center with zoom specified should not adjusts zoom', () => {
-        const camera = createCameraGlobe({zoom: 1});
-        camera.jumpTo({center: [0, 40], zoom: 3});
-        expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
-        expect(camera.getZoom()).toBe(3);
-    });
-
-    test('changing center with apparentZoom same as original zoom should adjusts zoom', () => {
-        const camera = createCameraGlobe({zoom: 1});
-        camera.jumpTo({center: [0, 40], apparentZoom: 1});
-        expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
-        expect(camera.getZoom()).toBe(0.6154999996223638);
-    });
-
-    test('changing center with apparentZoom larger should adjusts zoom and increase it', () => {
-        const camera = createCameraGlobe({zoom: 1});
-        camera.jumpTo({center: [0, 40], apparentZoom: 2});
-        expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
-        expect(camera.getZoom()).toBe(1.6154999996223638);
-    });
-
-    // jumpTo tests that mimic mercator tests
-
-    const camera = createCameraGlobe({zoom: 1});
-
-    test('sets center', () => {
-        camera.jumpTo({center: [1, 2]});
-        expect(camera.getCenter()).toEqual({lng: 1, lat: 2});
-    });
-
-    test('throws on invalid center argument', () => {
-        expect(() => {
-            camera.jumpTo({center: 1});
-        }).toThrow(Error);
-    });
-
-    test('keeps current center if not specified', () => {
-        camera.jumpTo({});
-        expect(camera.getCenter()).toEqual({lng: 1, lat: 2});
-    });
-
-    test('sets zoom', () => {
-        camera.jumpTo({zoom: 3});
-        expect(camera.getZoom()).toBe(3);
-    });
-
-    test('keeps current zoom if not specified', () => {
-        camera.jumpTo({});
-        expect(camera.getZoom()).toBe(3);
-    });
-
-    test('sets bearing', () => {
-        camera.jumpTo({bearing: 4});
-        expect(camera.getBearing()).toBe(4);
-    });
-
-    test('keeps current bearing if not specified', () => {
-        camera.jumpTo({});
-        expect(camera.getBearing()).toBe(4);
-    });
-
-    test('sets pitch', () => {
-        camera.jumpTo({pitch: 45});
-        expect(camera.getPitch()).toBe(45);
-    });
-
-    test('keeps current pitch if not specified', () => {
-        camera.jumpTo({});
-        expect(camera.getPitch()).toBe(45);
-    });
-
-    test('sets multiple properties', () => {
-        camera.jumpTo({
-            center: [10, 20],
-            zoom: 10,
-            bearing: 180,
-            pitch: 60
+    describe('globe specific behavior', () => {
+        test('changing center with no zoom specified should adjusts zoom', () => {
+            camera.jumpTo({center: [0, 40]});
+            expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
+            expect(camera.getZoom()).toBe(0.6154999996223638);
         });
-        expect(camera.getCenter()).toEqual({lng: 10, lat: 20});
-        expect(camera.getZoom()).toBe(10);
-        expect(camera.getBearing()).toBe(180);
-        expect(camera.getPitch()).toBe(60);
+
+        test('changing center with zoom specified should not adjusts zoom', () => {
+            camera.jumpTo({center: [0, 40], zoom: 3});
+            expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
+            expect(camera.getZoom()).toBe(3);
+        });
+
+        test('changing center with apparentZoom same as original zoom should adjusts zoom', () => {
+            camera.jumpTo({center: [0, 40], apparentZoom: 1});
+            expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
+            expect(camera.getZoom()).toBe(0.6154999996223638);
+        });
+
+        test('changing center with apparentZoom larger should adjusts zoom and increase it', () => {
+            camera.jumpTo({center: [0, 40], apparentZoom: 2});
+            expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
+            expect(camera.getZoom()).toBe(1.6154999996223638);
+        });
     });
 
-    test('emits move events, preserving eventData', done => {
-        let started, moved, ended;
-        const eventData = {data: 'ok'};
+    describe('mercator test equivalents', () => {
+        test('sets center', () => {
+            camera.jumpTo({center: [1, 2]});
+            expect(camera.getCenter()).toEqual({lng: 1, lat: 2});
+        });
 
-        camera
-            .on('movestart', (d) => { started = d.data; })
-            .on('move', (d) => { moved = d.data; })
-            .on('moveend', (d) => { ended = d.data; });
+        test('throws on invalid center argument', () => {
+            expect(() => {
+                camera.jumpTo({center: 1});
+            }).toThrow(Error);
+        });
 
-        camera.jumpTo({center: [1, 2]}, eventData);
-        expect(started).toBe('ok');
-        expect(moved).toBe('ok');
-        expect(ended).toBe('ok');
-        done();
-    });
+        test('keeps current center if not specified', () => {
+            camera.jumpTo({});
+            expect(camera.getCenter()).toEqual({lng: 1, lat: 2});
+        });
 
-    test('emits zoom events, preserving eventData', done => {
-        let started, zoomed, ended;
-        const eventData = {data: 'ok'};
+        test('sets zoom', () => {
+            camera.jumpTo({zoom: 3});
+            expect(camera.getZoom()).toBe(3);
+        });
 
-        camera
-            .on('zoomstart', (d) => { started = d.data; })
-            .on('zoom', (d) => { zoomed = d.data; })
-            .on('zoomend', (d) => { ended = d.data; });
+        test('keeps current zoom if not specified', () => {
+            camera.jumpTo({});
+            expect(camera.getZoom()).toBe(3);
+        });
 
-        camera.jumpTo({zoom: 3}, eventData);
-        expect(started).toBe('ok');
-        expect(zoomed).toBe('ok');
-        expect(ended).toBe('ok');
-        done();
-    });
+        test('sets bearing', () => {
+            camera.jumpTo({bearing: 4});
+            expect(camera.getBearing()).toBe(4);
+        });
 
-    test('emits rotate events, preserving eventData', done => {
-        let started, rotated, ended;
-        const eventData = {data: 'ok'};
+        test('keeps current bearing if not specified', () => {
+            camera.jumpTo({});
+            expect(camera.getBearing()).toBe(4);
+        });
 
-        camera
-            .on('rotatestart', (d) => { started = d.data; })
-            .on('rotate', (d) => { rotated = d.data; })
-            .on('rotateend', (d) => { ended = d.data; });
+        test('sets pitch', () => {
+            camera.jumpTo({pitch: 45});
+            expect(camera.getPitch()).toBe(45);
+        });
 
-        camera.jumpTo({bearing: 90}, eventData);
-        expect(started).toBe('ok');
-        expect(rotated).toBe('ok');
-        expect(ended).toBe('ok');
-        done();
-    });
+        test('keeps current pitch if not specified', () => {
+            camera.jumpTo({});
+            expect(camera.getPitch()).toBe(45);
+        });
 
-    test('emits pitch events, preserving eventData', done => {
-        let started, pitched, ended;
-        const eventData = {data: 'ok'};
+        test('sets multiple properties', () => {
+            camera.jumpTo({
+                center: [10, 20],
+                zoom: 10,
+                bearing: 180,
+                pitch: 60
+            });
+            expect(camera.getCenter()).toEqual({lng: 10, lat: 20});
+            expect(camera.getZoom()).toBe(10);
+            expect(camera.getBearing()).toBe(180);
+            expect(camera.getPitch()).toBe(60);
+        });
 
-        camera
-            .on('pitchstart', (d) => { started = d.data; })
-            .on('pitch', (d) => { pitched = d.data; })
-            .on('pitchend', (d) => { ended = d.data; });
+        test('emits move events, preserving eventData', done => {
+            let started, moved, ended;
+            const eventData = {data: 'ok'};
 
-        camera.jumpTo({pitch: 10}, eventData);
-        expect(started).toBe('ok');
-        expect(pitched).toBe('ok');
-        expect(ended).toBe('ok');
-        done();
-    });
+            camera
+                .on('movestart', (d) => { started = d.data; })
+                .on('move', (d) => { moved = d.data; })
+                .on('moveend', (d) => { ended = d.data; });
 
-    test('cancels in-progress easing', () => {
-        camera.panTo([3, 4]);
-        expect(camera.isEasing()).toBeTruthy();
-        camera.jumpTo({center: [1, 2]});
-        expect(!camera.isEasing()).toBeTruthy();
+            camera.jumpTo({center: [1, 2]}, eventData);
+            expect(started).toBe('ok');
+            expect(moved).toBe('ok');
+            expect(ended).toBe('ok');
+            done();
+        });
+
+        test('emits zoom events, preserving eventData', done => {
+            let started, zoomed, ended;
+            const eventData = {data: 'ok'};
+
+            camera
+                .on('zoomstart', (d) => { started = d.data; })
+                .on('zoom', (d) => { zoomed = d.data; })
+                .on('zoomend', (d) => { ended = d.data; });
+
+            camera.jumpTo({zoom: 3}, eventData);
+            expect(started).toBe('ok');
+            expect(zoomed).toBe('ok');
+            expect(ended).toBe('ok');
+            done();
+        });
+
+        test('emits rotate events, preserving eventData', done => {
+            let started, rotated, ended;
+            const eventData = {data: 'ok'};
+
+            camera
+                .on('rotatestart', (d) => { started = d.data; })
+                .on('rotate', (d) => { rotated = d.data; })
+                .on('rotateend', (d) => { ended = d.data; });
+
+            camera.jumpTo({bearing: 90}, eventData);
+            expect(started).toBe('ok');
+            expect(rotated).toBe('ok');
+            expect(ended).toBe('ok');
+            done();
+        });
+
+        test('emits pitch events, preserving eventData', done => {
+            let started, pitched, ended;
+            const eventData = {data: 'ok'};
+
+            camera
+                .on('pitchstart', (d) => { started = d.data; })
+                .on('pitch', (d) => { pitched = d.data; })
+                .on('pitchend', (d) => { ended = d.data; });
+
+            camera.jumpTo({pitch: 10}, eventData);
+            expect(started).toBe('ok');
+            expect(pitched).toBe('ok');
+            expect(ended).toBe('ok');
+            done();
+        });
+
+        test('cancels in-progress easing', () => {
+            camera.panTo([3, 4]);
+            expect(camera.isEasing()).toBeTruthy();
+            camera.jumpTo({center: [1, 2]});
+            expect(!camera.isEasing()).toBeTruthy();
+        });
     });
 });
 
 describe('#easeTo globe projection', () => {
-    // Test globe specific zoom behavior
-    test('changing center with no zoom specified should adjusts zoom', () => {
-        const camera = createCameraGlobe({zoom: 1});
-        camera.easeTo({center: [0, 40], duration: 0});
-        expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
-        expect(camera.getZoom()).toBe(0.6154999996223638);
+    describe('globe specific behavior', () => {
+        let camera;
+
+        beforeEach(() => {
+            camera = createCameraGlobe({zoom: 1});
+        });
+
+        test('changing center with no zoom specified should adjusts zoom', () => {
+            camera.easeTo({center: [0, 40], duration: 0});
+            expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
+            expect(camera.getZoom()).toBe(0.6154999996223638);
+        });
+
+        test('changing center with zoom specified should not adjusts zoom', () => {
+            camera.easeTo({center: [0, 40], zoom: 3, duration: 0});
+            expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
+            expect(camera.getZoom()).toBe(3);
+        });
+
+        test('changing center with apparentZoom same as original zoom should adjusts zoom', () => {
+            camera.easeTo({center: [0, 40], apparentZoom: 1, duration: 0});
+            expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
+            expect(camera.getZoom()).toBe(0.6154999996223638);
+        });
+
+        test('changing center with apparentZoom larger should adjusts zoom and increase it', () => {
+            camera.easeTo({center: [0, 40], apparentZoom: 2, duration: 0});
+            expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
+            expect(camera.getZoom()).toBe(1.6154999996223638);
+        });
     });
 
-    test('changing center with zoom specified should not adjusts zoom', () => {
-        const camera = createCameraGlobe({zoom: 1});
-        camera.easeTo({center: [0, 40], zoom: 3, duration: 0});
-        expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
-        expect(camera.getZoom()).toBe(3);
-    });
+    describe('mercator test equivalents', () => {
+        test('pans to specified location', () => {
+            const camera = createCameraGlobe();
+            camera.easeTo({center: [100, 0], duration: 0});
+            expect(camera.getCenter()).toEqual({lng: 100, lat: 0});
+        });
 
-    test('changing center with apparentZoom same as original zoom should adjusts zoom', () => {
-        const camera = createCameraGlobe({zoom: 1});
-        camera.easeTo({center: [0, 40], apparentZoom: 1, duration: 0});
-        expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
-        expect(camera.getZoom()).toBe(0.6154999996223638);
-    });
+        test('zooms to specified level', () => {
+            const camera = createCameraGlobe();
+            camera.easeTo({zoom: 3.2, duration: 0});
+            expect(camera.getZoom()).toBe(3.2);
+        });
 
-    test('changing center with apparentZoom larger should adjusts zoom and increase it', () => {
-        const camera = createCameraGlobe({zoom: 1});
-        camera.easeTo({center: [0, 40], apparentZoom: 2, duration: 0});
-        expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
-        expect(camera.getZoom()).toBe(1.6154999996223638);
-    });
+        test('rotates to specified bearing', () => {
+            const camera = createCameraGlobe();
+            camera.easeTo({bearing: 90, duration: 0});
+            expect(camera.getBearing()).toBe(90);
+        });
 
-    // easeTo tests that mimic mercator tests
+        test('pitches to specified pitch', () => {
+            const camera = createCameraGlobe();
+            camera.easeTo({pitch: 45, duration: 0});
+            expect(camera.getPitch()).toBe(45);
+        });
 
-    test('pans to specified location', () => {
-        const camera = createCameraGlobe();
-        camera.easeTo({center: [100, 0], duration: 0});
-        expect(camera.getCenter()).toEqual({lng: 100, lat: 0});
-    });
+        test('pans and zooms', () => {
+            const camera = createCameraGlobe();
+            camera.easeTo({center: [100, 0], zoom: 3.2, duration: 0});
+            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 100, lat: 0}));
+            expect(camera.getZoom()).toBe(3.2);
+        });
 
-    test('zooms to specified level', () => {
-        const camera = createCameraGlobe();
-        camera.easeTo({zoom: 3.2, duration: 0});
-        expect(camera.getZoom()).toBe(3.2);
-    });
+        test('pans and rotates', () => {
+            const camera = createCameraGlobe();
+            camera.easeTo({center: [100, 0], bearing: 90, duration: 0});
+            expect(camera.getCenter()).toEqual({lng: 100, lat: 0});
+            expect(camera.getBearing()).toBe(90);
+        });
 
-    test('rotates to specified bearing', () => {
-        const camera = createCameraGlobe();
-        camera.easeTo({bearing: 90, duration: 0});
-        expect(camera.getBearing()).toBe(90);
-    });
+        test('zooms and rotates', () => {
+            const camera = createCameraGlobe();
+            camera.easeTo({zoom: 3.2, bearing: 90, duration: 0});
+            expect(camera.getZoom()).toBe(3.2);
+            expect(camera.getBearing()).toBe(90);
+        });
 
-    test('pitches to specified pitch', () => {
-        const camera = createCameraGlobe();
-        camera.easeTo({pitch: 45, duration: 0});
-        expect(camera.getPitch()).toBe(45);
-    });
+        test('pans, zooms, and rotates', () => {
+            const camera = createCameraGlobe({bearing: -90});
+            camera.easeTo({center: [100, 0], zoom: 3.2, bearing: 90, duration: 0});
+            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 100, lat: 0}));
+            expect(camera.getZoom()).toBe(3.2);
+            expect(camera.getBearing()).toBe(90);
+        });
 
-    test('pans and zooms', () => {
-        const camera = createCameraGlobe();
-        camera.easeTo({center: [100, 0], zoom: 3.2, duration: 0});
-        expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 100, lat: 0}));
-        expect(camera.getZoom()).toBe(3.2);
-    });
+        test('noop', () => {
+            const camera = createCameraGlobe();
+            camera.easeTo({duration: 0});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 0, lat: 0});
+            expect(camera.getZoom()).toBe(0);
+            expect(camera.getBearing()).toBeCloseTo(0);
+        });
 
-    test('pans and rotates', () => {
-        const camera = createCameraGlobe();
-        camera.easeTo({center: [100, 0], bearing: 90, duration: 0});
-        expect(camera.getCenter()).toEqual({lng: 100, lat: 0});
-        expect(camera.getBearing()).toBe(90);
-    });
+        // The behavior of "offset" differs from mercator because mercator doesn't follow the docs
+        // that offset should be relative to the *target* map state, not *starting* map state.
+        // Globe does follow the docs for now.
 
-    test('zooms and rotates', () => {
-        const camera = createCameraGlobe();
-        camera.easeTo({zoom: 3.2, bearing: 90, duration: 0});
-        expect(camera.getZoom()).toBe(3.2);
-        expect(camera.getBearing()).toBe(90);
-    });
+        test('noop with offset', () => {
+            const camera = createCameraGlobe();
+            camera.easeTo({offset: [100, 0], duration: 0});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: -85.920282254, lat: 0});
+            expect(camera.getZoom()).toBe(0);
+            expect(camera.getBearing()).toBeCloseTo(0);
+        });
 
-    test('pans, zooms, and rotates', () => {
-        const camera = createCameraGlobe({bearing: -90});
-        camera.easeTo({center: [100, 0], zoom: 3.2, bearing: 90, duration: 0});
-        expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 100, lat: 0}));
-        expect(camera.getZoom()).toBe(3.2);
-        expect(camera.getBearing()).toBe(90);
-    });
+        test('pans with specified offset', () => {
+            const camera = createCameraGlobe();
+            camera.easeTo({center: [100, 0], offset: [100, 0], duration: 0});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 14.079717746, lat: 0});
+        });
 
-    test('noop', () => {
-        const camera = createCameraGlobe();
-        camera.easeTo({duration: 0});
-        expect(fixedLngLat(camera.getCenter())).toEqual({lng: 0, lat: 0});
-        expect(camera.getZoom()).toBe(0);
-        expect(camera.getBearing()).toBeCloseTo(0);
-    });
+        test('pans with specified offset relative to viewport on a rotated camera', () => {
+            const camera = createCameraGlobe({bearing: 180});
+            camera.easeTo({center: [100, 0], offset: [100, 0], duration: 0});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: -174.079717746, lat: 0});
+        });
 
-    // The behavior of "offset" differs from mercator because mercator doesn't follow the docs
-    // that offset should be relative to the *target* map state, not *starting* map state.
-    // Globe does follow the docs for now.
+        test('zooms with specified offset', () => {
+            const camera = createCameraGlobe();
+            camera.easeTo({zoom: 3.2, offset: [100, 0], duration: 0});
+            expect(camera.getZoom()).toBe(3.2);
+            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: -7.742888378, lat: 0}));
+        });
 
-    test('noop with offset', () => {
-        const camera = createCameraGlobe();
-        camera.easeTo({offset: [100, 0], duration: 0});
-        expect(fixedLngLat(camera.getCenter())).toEqual({lng: -85.920282254, lat: 0});
-        expect(camera.getZoom()).toBe(0);
-        expect(camera.getBearing()).toBeCloseTo(0);
-    });
+        test('zooms with specified offset relative to viewport on a rotated camera', () => {
+            const camera = createCameraGlobe({bearing: 180});
+            camera.easeTo({zoom: 3.2, offset: [100, 0], duration: 0});
+            expect(camera.getZoom()).toBe(3.2);
+            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 7.742888378, lat: 0}));
+        });
 
-    test('pans with specified offset', () => {
-        const camera = createCameraGlobe();
-        camera.easeTo({center: [100, 0], offset: [100, 0], duration: 0});
-        expect(fixedLngLat(camera.getCenter())).toEqual({lng: 14.079717746, lat: 0});
-    });
+        test('rotates with specified offset', () => {
+            const camera = createCameraGlobe();
+            camera.easeTo({bearing: 90, offset: [100, 0], duration: 0});
+            expect(camera.getBearing()).toBe(90);
+            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 0, lat: 85.051129}));
+        });
 
-    test('pans with specified offset relative to viewport on a rotated camera', () => {
-        const camera = createCameraGlobe({bearing: 180});
-        camera.easeTo({center: [100, 0], offset: [100, 0], duration: 0});
-        expect(fixedLngLat(camera.getCenter())).toEqual({lng: -174.079717746, lat: 0});
-    });
+        test('rotates with specified offset relative to viewport on a rotated camera', () => {
+            const camera = createCameraGlobe({bearing: 180});
+            camera.easeTo({bearing: 90, offset: [100, 0], duration: 0});
+            expect(camera.getBearing()).toBe(90);
+            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 0, lat: 85.051129}));
+        });
 
-    test('zooms with specified offset', () => {
-        const camera = createCameraGlobe();
-        camera.easeTo({zoom: 3.2, offset: [100, 0], duration: 0});
-        expect(camera.getZoom()).toBe(3.2);
-        expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: -7.742888378, lat: 0}));
-    });
+        test('emits zoom events if changing latitude but not zooming', () => {
+            const camera = createCameraGlobe();
 
-    test('zooms with specified offset relative to viewport on a rotated camera', () => {
-        const camera = createCameraGlobe({bearing: 180});
-        camera.easeTo({zoom: 3.2, offset: [100, 0], duration: 0});
-        expect(camera.getZoom()).toBe(3.2);
-        expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 7.742888378, lat: 0}));
-    });
+            let zoomstart, zoom, zoomend;
 
-    test('rotates with specified offset', () => {
-        const camera = createCameraGlobe();
-        camera.easeTo({bearing: 90, offset: [100, 0], duration: 0});
-        expect(camera.getBearing()).toBe(90);
-        expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 0, lat: 85.051129}));
-    });
+            expect.assertions(3);
 
-    test('rotates with specified offset relative to viewport on a rotated camera', () => {
-        const camera = createCameraGlobe({bearing: 180});
-        camera.easeTo({bearing: 90, offset: [100, 0], duration: 0});
-        expect(camera.getBearing()).toBe(90);
-        expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 0, lat: 85.051129}));
-    });
+            camera
+                .on('zoomstart', (d) => { zoomstart = d; })
+                .on('zoom', (d) => { zoom = d; })
+                .on('zoomend', (d) => { zoomend = d; })
+                .on('moveend', () => {
+                    expect(zoomstart).toBeDefined();
+                    expect(zoom).toBeDefined();
+                    expect(zoomend).toBeDefined();
+                });
 
-    test('emits zoom events if changing latitude but not zooming', () => {
-        const camera = createCameraGlobe();
+            camera.easeTo({center: [0, 20], duration: 0});
+        });
 
-        let zoomstart, zoom, zoomend;
+        test('does not emit zoom events if not changing latitude and not zooming', done => {
+            const camera = createCameraGlobe();
 
-        expect.assertions(3);
+            camera
+                .on('zoomstart', () => { done('zoomstart failed'); })
+                .on('zoom', () => { done('zoom failed'); })
+                .on('zoomend', () => { done('zoomend failed'); })
+                .on('moveend', () => { done(); });
 
-        camera
-            .on('zoomstart', (d) => { zoomstart = d; })
-            .on('zoom', (d) => { zoom = d; })
-            .on('zoomend', (d) => { zoomend = d; })
-            .on('moveend', () => {
-                expect(zoomstart).toBeDefined();
-                expect(zoom).toBeDefined();
-                expect(zoomend).toBeDefined();
+            camera.easeTo({center: [100, 0], duration: 0});
+        });
+
+        test('pans eastward across the antimeridian', done => {
+            const camera = createCameraGlobe();
+            const stub = jest.spyOn(browser, 'now');
+
+            camera.setCenter([170, 0]);
+            let crossedAntimeridian;
+
+            camera.on('move', () => {
+                if (camera.getCenter().lng > 170) {
+                    crossedAntimeridian = true;
+                }
             });
 
-        camera.easeTo({center: [0, 20], duration: 0});
-    });
+            camera.on('moveend', () => {
+                expect(crossedAntimeridian).toBeTruthy();
+                done();
+            });
 
-    test('does not emit zoom events if not changing latitude and not zooming', done => {
-        const camera = createCameraGlobe();
-
-        camera
-            .on('zoomstart', () => { done('zoomstart failed'); })
-            .on('zoom', () => { done('zoom failed'); })
-            .on('zoomend', () => { done('zoomend failed'); })
-            .on('moveend', () => { done(); });
-
-        camera.easeTo({center: [100, 0], duration: 0});
-    });
-
-    test('pans eastward across the antimeridian', done => {
-        const camera = createCameraGlobe();
-        const stub = jest.spyOn(browser, 'now');
-
-        camera.setCenter([170, 0]);
-        let crossedAntimeridian;
-
-        camera.on('move', () => {
-            if (camera.getCenter().lng > 170) {
-                crossedAntimeridian = true;
-            }
-        });
-
-        camera.on('moveend', () => {
-            expect(crossedAntimeridian).toBeTruthy();
-            done();
-        });
-
-        stub.mockImplementation(() => 0);
-        camera.easeTo({center: [-170, 0], duration: 10});
-
-        setTimeout(() => {
-            stub.mockImplementation(() => 1);
-            camera.simulateFrame();
+            stub.mockImplementation(() => 0);
+            camera.easeTo({center: [-170, 0], duration: 10});
 
             setTimeout(() => {
-                stub.mockImplementation(() => 10);
+                stub.mockImplementation(() => 1);
                 camera.simulateFrame();
+
+                setTimeout(() => {
+                    stub.mockImplementation(() => 10);
+                    camera.simulateFrame();
+                }, 0);
             }, 0);
-        }, 0);
-    });
-
-    test('does pan eastward across the antimeridian on a renderWorldCopies: false map if globe is enabled', done => {
-        const camera = createCameraGlobe({renderWorldCopies: false, zoom: 2});
-        camera.setCenter([170, 0]);
-        camera.on('moveend', () => {
-            expect(camera.getCenter().lng).toBeCloseTo(-150, 0);
-            done();
-        });
-        camera.easeTo({center: [210, 0], duration: 0});
-    });
-
-    test('pans westward across the antimeridian', done => {
-        const camera = createCameraGlobe();
-        const stub = jest.spyOn(browser, 'now');
-
-        camera.setCenter([-170, 0]);
-        let crossedAntimeridian;
-
-        camera.on('move', () => {
-            if (camera.getCenter().lng < -170) {
-                crossedAntimeridian = true;
-            }
         });
 
-        camera.on('moveend', () => {
-            expect(crossedAntimeridian).toBeTruthy();
-            done();
+        test('does pan eastward across the antimeridian on a renderWorldCopies: false map if globe is enabled', done => {
+            const camera = createCameraGlobe({renderWorldCopies: false, zoom: 2});
+            camera.setCenter([170, 0]);
+            camera.on('moveend', () => {
+                expect(camera.getCenter().lng).toBeCloseTo(-150, 0);
+                done();
+            });
+            camera.easeTo({center: [210, 0], duration: 0});
         });
 
-        stub.mockImplementation(() => 0);
-        camera.easeTo({center: [170, 0], duration: 10});
+        test('pans westward across the antimeridian', done => {
+            const camera = createCameraGlobe();
+            const stub = jest.spyOn(browser, 'now');
 
-        setTimeout(() => {
-            stub.mockImplementation(() => 1);
-            camera.simulateFrame();
+            camera.setCenter([-170, 0]);
+            let crossedAntimeridian;
+
+            camera.on('move', () => {
+                if (camera.getCenter().lng < -170) {
+                    crossedAntimeridian = true;
+                }
+            });
+
+            camera.on('moveend', () => {
+                expect(crossedAntimeridian).toBeTruthy();
+                done();
+            });
+
+            stub.mockImplementation(() => 0);
+            camera.easeTo({center: [170, 0], duration: 10});
 
             setTimeout(() => {
-                stub.mockImplementation(() => 10);
+                stub.mockImplementation(() => 1);
                 camera.simulateFrame();
-            }, 0);
-        }, 0);
-    });
 
-    test('does pan westward across the antimeridian on a renderWorldCopies: false map if globe is enabled', done => {
-        const camera = createCameraGlobe({renderWorldCopies: false, zoom: 2});
-        camera.setCenter([-170, 0]);
-        camera.on('moveend', () => {
-            expect(camera.getCenter().lng).toBeCloseTo(150, 0);
-            done();
+                setTimeout(() => {
+                    stub.mockImplementation(() => 10);
+                    camera.simulateFrame();
+                }, 0);
+            }, 0);
         });
-        camera.easeTo({center: [-210, 0], duration: 0});
+
+        test('does pan westward across the antimeridian on a renderWorldCopies: false map if globe is enabled', done => {
+            const camera = createCameraGlobe({renderWorldCopies: false, zoom: 2});
+            camera.setCenter([-170, 0]);
+            camera.on('moveend', () => {
+                expect(camera.getCenter().lng).toBeCloseTo(150, 0);
+                done();
+            });
+            camera.easeTo({center: [-210, 0], duration: 0});
+        });
     });
 });
 
 describe('#flyTo globe projection', () => {
-    // Test globe specific zoom behavior
-    test('changing center with no zoom specified should adjusts zoom', () => {
-        const camera = createCameraGlobe({zoom: 1});
-        camera.flyTo({center: [0, 40], animate: false});
-        expect(camera.getCenter().lng).toBeCloseTo(0, 9);
-        expect(camera.getCenter().lat).toBeCloseTo(40, 9);
-        expect(camera.getZoom()).toBe(0.6154999996223638);
-    });
+    describe('globe specific behavior', () => {
+        let camera;
 
-    test('changing center with zoom specified should not adjusts zoom', () => {
-        const camera = createCameraGlobe({zoom: 1});
-        camera.flyTo({center: [0, 40], zoom: 3, animate: false});
-        expect(camera.getCenter().lng).toBeCloseTo(0, 9);
-        expect(camera.getCenter().lat).toBeCloseTo(40, 9);
-        expect(camera.getZoom()).toBe(3);
-    });
-
-    test('changing center with apparentZoom same as original zoom should adjusts zoom', () => {
-        const camera = createCameraGlobe({zoom: 1});
-        camera.flyTo({center: [0, 40], apparentZoom: 1, animate: false});
-        expect(camera.getCenter().lng).toBeCloseTo(0, 9);
-        expect(camera.getCenter().lat).toBeCloseTo(40, 9);
-        expect(camera.getZoom()).toBe(0.6154999996223638);
-    });
-
-    test('changing center with apparentZoom larger should adjusts zoom and increase it', () => {
-        const camera = createCameraGlobe({zoom: 1});
-        camera.flyTo({center: [0, 40], apparentZoom: 2, animate: false});
-        expect(camera.getCenter().lng).toBeCloseTo(0, 9);
-        expect(camera.getCenter().lat).toBeCloseTo(40, 9);
-        expect(camera.getZoom()).toBe(1.6154999996223638);
-    });
-
-    // flyTo tests that mimic mercator tests
-
-    test('pans to specified location', () => {
-        const camera = createCameraGlobe();
-        camera.flyTo({center: [100, 0], animate: false});
-        expect(camera.getCenter().lng).toBeCloseTo(100, 9);
-        expect(camera.getCenter().lat).toBeCloseTo(0, 9);
-    });
-
-    test('throws on invalid center argument', () => {
-        const camera = createCameraGlobe();
-        expect(() => {
-            camera.flyTo({center: 1});
-        }).toThrow(Error);
-    });
-
-    test('does not throw when cameras current zoom is sufficiently greater than passed zoom option', () => {
-        const camera = createCameraGlobe({zoom: 22, center: [0, 0]});
-        expect(() => camera.flyTo({zoom: 10, center: [0, 0]})).not.toThrow();
-    });
-
-    test('zooms to specified level', () => {
-        const camera = createCameraGlobe();
-        camera.flyTo({zoom: 3.2, animate: false});
-        expect(fixedNum(camera.getZoom())).toBe(3.2);
-    });
-
-    test('zooms to integer level without floating point errors', () => {
-        const camera = createCameraGlobe({zoom: 0.6});
-        camera.flyTo({zoom: 2, animate: false});
-        expect(camera.getZoom()).toBe(2);
-    });
-
-    test('Zoom out from the same position to the same position with animation', done => {
-        const pos = {lng: 0, lat: 0};
-        const camera = createCameraGlobe({zoom: 20, center: pos});
-        const stub = jest.spyOn(browser, 'now');
-
-        camera.once('zoomend', () => {
-            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat(pos));
-            expect(camera.getZoom()).toBe(19);
-            done();
+        beforeEach(() => {
+            camera = createCameraGlobe({zoom: 1});
         });
 
-        stub.mockImplementation(() => 0);
-        camera.flyTo({zoom: 19, center: pos, duration: 2});
+        test('changing center with no zoom specified should adjusts zoom', () => {
+            camera.flyTo({center: [0, 40], animate: false});
+            expect(camera.getCenter().lng).toBeCloseTo(0, 9);
+            expect(camera.getCenter().lat).toBeCloseTo(40, 9);
+            expect(camera.getZoom()).toBe(0.6154999996223638);
+        });
 
-        stub.mockImplementation(() => 3);
-        camera.simulateFrame();
+        test('changing center with zoom specified should not adjusts zoom', () => {
+            camera.flyTo({center: [0, 40], zoom: 3, animate: false});
+            expect(camera.getCenter().lng).toBeCloseTo(0, 9);
+            expect(camera.getCenter().lat).toBeCloseTo(40, 9);
+            expect(camera.getZoom()).toBe(3);
+        });
+
+        test('changing center with apparentZoom same as original zoom should adjusts zoom', () => {
+            camera.flyTo({center: [0, 40], apparentZoom: 1, animate: false});
+            expect(camera.getCenter().lng).toBeCloseTo(0, 9);
+            expect(camera.getCenter().lat).toBeCloseTo(40, 9);
+            expect(camera.getZoom()).toBe(0.6154999996223638);
+        });
+
+        test('changing center with apparentZoom larger should adjusts zoom and increase it', () => {
+            camera.flyTo({center: [0, 40], apparentZoom: 2, animate: false});
+            expect(camera.getCenter().lng).toBeCloseTo(0, 9);
+            expect(camera.getCenter().lat).toBeCloseTo(40, 9);
+            expect(camera.getZoom()).toBe(1.6154999996223638);
+        });
     });
 
-    test('rotates to specified bearing', () => {
-        const camera = createCameraGlobe();
-        camera.flyTo({bearing: 90, animate: false});
-        expect(camera.getBearing()).toBe(90);
-    });
+    describe('mercator test equivalents', () => {
+        test('pans to specified location', () => {
+            const camera = createCameraGlobe();
+            camera.flyTo({center: [100, 0], animate: false});
+            expect(camera.getCenter().lng).toBeCloseTo(100, 9);
+            expect(camera.getCenter().lat).toBeCloseTo(0, 9);
+        });
 
-    test('tilts to specified pitch', () => {
-        const camera = createCameraGlobe();
-        camera.flyTo({pitch: 45, animate: false});
-        expect(camera.getPitch()).toBe(45);
-    });
+        test('throws on invalid center argument', () => {
+            const camera = createCameraGlobe();
+            expect(() => {
+                camera.flyTo({center: 1});
+            }).toThrow(Error);
+        });
 
-    test('pans and zooms', () => {
-        const camera = createCameraGlobe();
-        camera.flyTo({center: [100, 0], zoom: 3.2, animate: false});
-        expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
-        expect(fixedNum(camera.getZoom())).toBe(3.2);
-    });
+        test('does not throw when cameras current zoom is sufficiently greater than passed zoom option', () => {
+            const camera = createCameraGlobe({zoom: 22, center: [0, 0]});
+            expect(() => camera.flyTo({zoom: 10, center: [0, 0]})).not.toThrow();
+        });
 
-    test('pans and rotates', () => {
-        const camera = createCameraGlobe();
-        camera.flyTo({center: [100, 0], bearing: 90, animate: false});
-        expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
-        expect(camera.getBearing()).toBe(90);
-    });
+        test('zooms to specified level', () => {
+            const camera = createCameraGlobe();
+            camera.flyTo({zoom: 3.2, animate: false});
+            expect(fixedNum(camera.getZoom())).toBe(3.2);
+        });
 
-    test('zooms and rotates', () => {
-        const camera = createCameraGlobe();
-        camera.flyTo({zoom: 3.2, bearing: 90, animate: false});
-        expect(fixedNum(camera.getZoom())).toBe(3.2);
-        expect(camera.getBearing()).toBe(90);
-    });
+        test('zooms to integer level without floating point errors', () => {
+            const camera = createCameraGlobe({zoom: 0.6});
+            camera.flyTo({zoom: 2, animate: false});
+            expect(camera.getZoom()).toBe(2);
+        });
 
-    test('pans, zooms, and rotates', () => {
-        const camera = createCameraGlobe();
-        camera.flyTo({center: [100, 0], zoom: 3.2, bearing: 90, duration: 0, animate: false});
-        expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
-        expect(fixedNum(camera.getZoom())).toBe(3.2);
-        expect(camera.getBearing()).toBe(90);
-    });
+        test('Zoom out from the same position to the same position with animation', done => {
+            const pos = {lng: 0, lat: 0};
+            const camera = createCameraGlobe({zoom: 20, center: pos});
+            const stub = jest.spyOn(browser, 'now');
 
-    test('noop', () => {
-        const camera = createCameraGlobe();
-        camera.flyTo({animate: false});
-        expect(fixedLngLat(camera.getCenter())).toEqual({lng: 0, lat: 0});
-        expect(camera.getZoom()).toBe(0);
-        expect(camera.getBearing()).toBeCloseTo(0);
-    });
-
-    // Globe animations with offset are different from mercator because
-    // globe animations follow docs, see comment in easeTo globe tests.
-
-    test('noop with offset', () => {
-        const camera = createCameraGlobe();
-        camera.flyTo({offset: [100, 0], animate: false});
-        expect(fixedLngLat(camera.getCenter())).toEqual({lng: -85.920282254, lat: 0});
-        expect(camera.getZoom()).toBe(0);
-        expect(camera.getBearing()).toBeCloseTo(0);
-    });
-
-    test('pans with specified offset', () => {
-        const camera = createCameraGlobe();
-        camera.flyTo({center: [100, 0], offset: [100, 0], animate: false});
-        expect(fixedLngLat(camera.getCenter())).toEqual({lng: 14.079717746, lat: 0});
-    });
-
-    test('pans with specified offset relative to viewport on a rotated camera', () => {
-        const camera = createCameraGlobe({bearing: 180});
-        camera.easeTo({center: [100, 0], offset: [100, 0], animate: false});
-        expect(fixedLngLat(camera.getCenter())).toEqual({lng: -174.079717746, lat: 0});
-    });
-
-    test('emits move, zoom, rotate, and pitch events, preserving eventData', done => {
-        expect.assertions(18);
-
-        const camera = createCameraGlobe();
-        let movestarted, moved, zoomstarted, zoomed, rotatestarted, rotated, pitchstarted, pitched;
-        const eventData = {data: 'ok'};
-
-        camera
-            .on('movestart', (d) => { movestarted = d.data; })
-            .on('move', (d) => { moved = d.data; })
-            .on('rotate', (d) => { rotated = d.data; })
-            .on('pitch', (d) => { pitched = d.data; })
-            .on('moveend', (d) => {
-                expect(camera._zooming).toBeFalsy();
-                expect(camera._panning).toBeFalsy();
-                expect(camera._rotating).toBeFalsy();
-
-                expect(movestarted).toBe('ok');
-                expect(moved).toBe('ok');
-                expect(zoomed).toBe('ok');
-                expect(rotated).toBe('ok');
-                expect(pitched).toBe('ok');
-                expect(d.data).toBe('ok');
-            });
-
-        camera
-            .on('zoomstart', (d) => { zoomstarted = d.data; })
-            .on('zoom', (d) => { zoomed = d.data; })
-            .on('zoomend', (d) => {
-                expect(zoomstarted).toBe('ok');
-                expect(zoomed).toBe('ok');
-                expect(d.data).toBe('ok');
-            });
-
-        camera
-            .on('rotatestart', (d) => { rotatestarted = d.data; })
-            .on('rotate', (d) => { rotated = d.data; })
-            .on('rotateend', (d) => {
-                expect(rotatestarted).toBe('ok');
-                expect(rotated).toBe('ok');
-                expect(d.data).toBe('ok');
-            });
-
-        camera
-            .on('pitchstart', (d) => { pitchstarted = d.data; })
-            .on('pitch', (d) => { pitched = d.data; })
-            .on('pitchend', (d) => {
-                expect(pitchstarted).toBe('ok');
-                expect(pitched).toBe('ok');
-                expect(d.data).toBe('ok');
-            });
-
-        camera.flyTo(
-            {center: [100, 0], zoom: 3.2, bearing: 90, duration: 0, pitch: 45, animate: false},
-            eventData);
-        done();
-    });
-
-    test('for short flights, emits (solely) move events, preserving eventData', done => {
-        //As I type this, the code path for guiding super-short flights is (and will probably remain) different.
-        //As such; it deserves a separate test case. This test case flies the map from A to A.
-        const camera = createCameraGlobe({center: [100, 0]});
-        let movestarted, moved,
-            zoomstarted, zoomed, zoomended,
-            rotatestarted, rotated, rotateended,
-            pitchstarted, pitched, pitchended;
-        const eventData = {data: 'ok'};
-
-        camera
-            .on('movestart', (d) => { movestarted = d.data; })
-            .on('move', (d) => { moved = d.data; })
-            .on('zoomstart', (d) => { zoomstarted = d.data; })
-            .on('zoom', (d) => { zoomed = d.data; })
-            .on('zoomend', (d) => { zoomended = d.data; })
-            .on('rotatestart', (d) => { rotatestarted = d.data; })
-            .on('rotate', (d) => { rotated = d.data; })
-            .on('rotateend', (d) => { rotateended = d.data; })
-            .on('pitchstart', (d) => { pitchstarted = d.data; })
-            .on('pitch', (d) => { pitched = d.data; })
-            .on('pitchend', (d) => { pitchended = d.data; })
-            .on('moveend', (d) => {
-                expect(camera._zooming).toBeFalsy();
-                expect(camera._panning).toBeFalsy();
-                expect(camera._rotating).toBeFalsy();
-
-                expect(movestarted).toBe('ok');
-                expect(moved).toBe('ok');
-                expect(zoomstarted).toBeUndefined();
-                expect(zoomed).toBeUndefined();
-                expect(zoomended).toBeUndefined();
-                expect(rotatestarted).toBeUndefined();
-                expect(rotated).toBeUndefined();
-                expect(rotateended).toBeUndefined();
-                expect(pitched).toBeUndefined();
-                expect(pitchstarted).toBeUndefined();
-                expect(pitchended).toBeUndefined();
-                expect(d.data).toBe('ok');
+            camera.once('zoomend', () => {
+                expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat(pos));
+                expect(camera.getZoom()).toBe(19);
                 done();
             });
 
-        const stub = jest.spyOn(browser, 'now');
-        stub.mockImplementation(() => 0);
+            stub.mockImplementation(() => 0);
+            camera.flyTo({zoom: 19, center: pos, duration: 2});
 
-        camera.flyTo({center: [100, 0], duration: 10}, eventData);
-
-        setTimeout(() => {
-            stub.mockImplementation(() => 1);
-            camera.simulateFrame();
-
-            setTimeout(() => {
-                stub.mockImplementation(() => 10);
-                camera.simulateFrame();
-            }, 0);
-        }, 0);
-    });
-
-    test('ascends', done => {
-        const camera = createCameraGlobe();
-        camera.setZoom(18);
-        let ascended;
-        const normalizedStartZoom = camera.getZoom() + getZoomAdjustment(camera.getCenter().lat, 0);
-        camera.on('zoom', () => {
-            const normalizedZoom = camera.getZoom() + getZoomAdjustment(camera.getCenter().lat, 0);
-            if (normalizedZoom < normalizedStartZoom) {
-                ascended = true;
-            }
-        });
-
-        camera.on('moveend', () => {
-            expect(ascended).toBeTruthy();
-            done();
-        });
-
-        const stub = jest.spyOn(browser, 'now');
-        stub.mockImplementation(() => 0);
-
-        camera.flyTo({center: [100, 0], zoom: 18, duration: 10});
-
-        setTimeout(() => {
-            stub.mockImplementation(() => 1);
-            camera.simulateFrame();
-
-            setTimeout(() => {
-                stub.mockImplementation(() => 10);
-                camera.simulateFrame();
-            }, 0);
-        }, 0);
-    });
-
-    test('pans eastward across the prime meridian', done => {
-        const camera = createCameraGlobe();
-        const stub = jest.spyOn(browser, 'now');
-
-        camera.setCenter([-10, 0]);
-        let crossedPrimeMeridian;
-
-        camera.on('move', () => {
-            if (Math.abs(camera.getCenter().lng) < 10) {
-                crossedPrimeMeridian = true;
-            }
-        });
-
-        camera.on('moveend', () => {
-            expect(crossedPrimeMeridian).toBeTruthy();
-            done();
-        });
-
-        stub.mockImplementation(() => 0);
-        camera.flyTo({center: [10, 0], duration: 20});
-
-        setTimeout(() => {
-            stub.mockImplementation(() => 1);
-            camera.simulateFrame();
-
-            setTimeout(() => {
-                stub.mockImplementation(() => 20);
-                camera.simulateFrame();
-            }, 0);
-        }, 0);
-    });
-
-    test('pans westward across the prime meridian', done => {
-        const camera = createCameraGlobe();
-        const stub = jest.spyOn(browser, 'now');
-
-        camera.setCenter([10, 0]);
-        let crossedPrimeMeridian;
-
-        camera.on('move', () => {
-            if (Math.abs(camera.getCenter().lng) < 10) {
-                crossedPrimeMeridian = true;
-            }
-        });
-
-        camera.on('moveend', () => {
-            expect(crossedPrimeMeridian).toBeTruthy();
-            done();
-        });
-
-        stub.mockImplementation(() => 0);
-        camera.flyTo({center: [-10, 0], duration: 20});
-
-        setTimeout(() => {
-            stub.mockImplementation(() => 1);
-            camera.simulateFrame();
-
-            setTimeout(() => {
-                stub.mockImplementation(() => 20);
-                camera.simulateFrame();
-            }, 0);
-        }, 0);
-    });
-
-    test('pans eastward across the antimeridian', done => {
-        const camera = createCameraGlobe();
-        const stub = jest.spyOn(browser, 'now');
-
-        camera.setCenter([170, 0]);
-        let crossedAntimeridian;
-
-        camera.on('move', () => {
-            if (camera.getCenter().lng > 170) {
-                crossedAntimeridian = true;
-            }
-        });
-
-        camera.on('moveend', () => {
-            expect(crossedAntimeridian).toBeTruthy();
-            done();
-        });
-
-        stub.mockImplementation(() => 0);
-        camera.flyTo({center: [-170, 0], duration: 20});
-
-        setTimeout(() => {
-            stub.mockImplementation(() => 1);
-            camera.simulateFrame();
-
-            setTimeout(() => {
-                stub.mockImplementation(() => 20);
-                camera.simulateFrame();
-            }, 0);
-        }, 0);
-    });
-
-    test('pans westward across the antimeridian', done => {
-        const camera = createCameraGlobe();
-        const stub = jest.spyOn(browser, 'now');
-
-        camera.setCenter([-170, 0]);
-        let crossedAntimeridian;
-
-        camera.on('move', () => {
-            if (camera.getCenter().lng < -170) {
-                crossedAntimeridian = true;
-            }
-        });
-
-        camera.on('moveend', () => {
-            expect(crossedAntimeridian).toBeTruthy();
-            done();
-        });
-
-        stub.mockImplementation(() => 0);
-        camera.flyTo({center: [170, 0], duration: 10});
-
-        setTimeout(() => {
-            stub.mockImplementation(() => 1);
-            camera.simulateFrame();
-
-            setTimeout(() => {
-                stub.mockImplementation(() => 10);
-                camera.simulateFrame();
-            }, 0);
-        }, 0);
-    });
-
-    test('pans eastward across the antimeridian even if renderWorldCopies: false', done => {
-        const camera = createCameraGlobe({renderWorldCopies: false});
-        const stub = jest.spyOn(browser, 'now');
-
-        camera.setCenter([170, 0]);
-        let crossedAntimeridian;
-
-        camera.on('move', () => {
-            if (camera.getCenter().lng > 170) {
-                crossedAntimeridian = true;
-            }
-        });
-
-        camera.on('moveend', () => {
-            expect(crossedAntimeridian).toBeTruthy();
-            done();
-        });
-
-        stub.mockImplementation(() => 0);
-        camera.flyTo({center: [-170, 0], duration: 10});
-
-        setTimeout(() => {
-            stub.mockImplementation(() => 1);
-            camera.simulateFrame();
-
-            setTimeout(() => {
-                stub.mockImplementation(() => 10);
-                camera.simulateFrame();
-            }, 0);
-        }, 0);
-    });
-
-    test('pans westward across the antimeridian even if renderWorldCopies: false', done => {
-        const camera = createCameraGlobe({renderWorldCopies: false});
-        const stub = jest.spyOn(browser, 'now');
-
-        camera.setCenter([-170, 0]);
-        let crossedAntimeridian;
-
-        camera.on('move', () => {
-            if (fixedLngLat(camera.getCenter(), 10).lng < -170) {
-                crossedAntimeridian = true;
-            }
-        });
-
-        camera.on('moveend', () => {
-            expect(crossedAntimeridian).toBeTruthy();
-            done();
-        });
-
-        stub.mockImplementation(() => 0);
-        camera.flyTo({center: [170, 0], duration: 10});
-
-        setTimeout(() => {
-            stub.mockImplementation(() => 1);
-            camera.simulateFrame();
-
-            setTimeout(() => {
-                stub.mockImplementation(() => 10);
-                camera.simulateFrame();
-            }, 0);
-        }, 0);
-    });
-
-    test('jumps back to world 0 when crossing the antimeridian', done => {
-        const camera = createCameraGlobe();
-        const stub = jest.spyOn(browser, 'now');
-
-        camera.setCenter([-170, 0]);
-
-        let leftWorld0 = false;
-
-        camera.on('move', () => {
-            leftWorld0 = leftWorld0 || (camera.getCenter().lng < -180);
-        });
-
-        camera.on('moveend', () => {
-            expect(leftWorld0).toBeFalsy();
-            done();
-        });
-
-        stub.mockImplementation(() => 0);
-        camera.flyTo({center: [170, 0], duration: 10});
-
-        setTimeout(() => {
-            stub.mockImplementation(() => 1);
-            camera.simulateFrame();
-
-            setTimeout(() => {
-                stub.mockImplementation(() => 10);
-                camera.simulateFrame();
-            }, 0);
-        }, 0);
-    });
-
-    test('peaks at the specified zoom level', done => {
-        const camera = createCameraGlobe({zoom: 20});
-        const stub = jest.spyOn(browser, 'now');
-
-        const minZoom = 1;
-        let zoomed = false;
-
-        let leastZoom = 200;
-        camera.on('zoom', () => {
-            const zoom = camera.getZoom();
-            if (zoom < 1) {
-                fail(`${zoom} should be >= ${minZoom} during flyTo`);
-            }
-
-            leastZoom = Math.min(leastZoom, zoom);
-            if (zoom < (minZoom + 1)) {
-                zoomed = true;
-            }
-        });
-
-        camera.on('moveend', () => {
-            console.log(leastZoom);
-            expect(zoomed).toBeTruthy();
-            done();
-        });
-
-        stub.mockImplementation(() => 0);
-        camera.flyTo({center: [1, 0], zoom: 20, minZoom, duration: 10});
-
-        setTimeout(() => {
             stub.mockImplementation(() => 3);
             camera.simulateFrame();
+        });
+
+        test('rotates to specified bearing', () => {
+            const camera = createCameraGlobe();
+            camera.flyTo({bearing: 90, animate: false});
+            expect(camera.getBearing()).toBe(90);
+        });
+
+        test('tilts to specified pitch', () => {
+            const camera = createCameraGlobe();
+            camera.flyTo({pitch: 45, animate: false});
+            expect(camera.getPitch()).toBe(45);
+        });
+
+        test('pans and zooms', () => {
+            const camera = createCameraGlobe();
+            camera.flyTo({center: [100, 0], zoom: 3.2, animate: false});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
+            expect(fixedNum(camera.getZoom())).toBe(3.2);
+        });
+
+        test('pans and rotates', () => {
+            const camera = createCameraGlobe();
+            camera.flyTo({center: [100, 0], bearing: 90, animate: false});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
+            expect(camera.getBearing()).toBe(90);
+        });
+
+        test('zooms and rotates', () => {
+            const camera = createCameraGlobe();
+            camera.flyTo({zoom: 3.2, bearing: 90, animate: false});
+            expect(fixedNum(camera.getZoom())).toBe(3.2);
+            expect(camera.getBearing()).toBe(90);
+        });
+
+        test('pans, zooms, and rotates', () => {
+            const camera = createCameraGlobe();
+            camera.flyTo({center: [100, 0], zoom: 3.2, bearing: 90, duration: 0, animate: false});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
+            expect(fixedNum(camera.getZoom())).toBe(3.2);
+            expect(camera.getBearing()).toBe(90);
+        });
+
+        test('noop', () => {
+            const camera = createCameraGlobe();
+            camera.flyTo({animate: false});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 0, lat: 0});
+            expect(camera.getZoom()).toBe(0);
+            expect(camera.getBearing()).toBeCloseTo(0);
+        });
+
+        // Globe animations with offset are different from mercator because
+        // globe animations follow docs, see comment in easeTo globe tests.
+
+        test('noop with offset', () => {
+            const camera = createCameraGlobe();
+            camera.flyTo({offset: [100, 0], animate: false});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: -85.920282254, lat: 0});
+            expect(camera.getZoom()).toBe(0);
+            expect(camera.getBearing()).toBeCloseTo(0);
+        });
+
+        test('pans with specified offset', () => {
+            const camera = createCameraGlobe();
+            camera.flyTo({center: [100, 0], offset: [100, 0], animate: false});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 14.079717746, lat: 0});
+        });
+
+        test('pans with specified offset relative to viewport on a rotated camera', () => {
+            const camera = createCameraGlobe({bearing: 180});
+            camera.easeTo({center: [100, 0], offset: [100, 0], animate: false});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: -174.079717746, lat: 0});
+        });
+
+        test('emits move, zoom, rotate, and pitch events, preserving eventData', done => {
+            expect.assertions(18);
+
+            const camera = createCameraGlobe();
+            let movestarted, moved, zoomstarted, zoomed, rotatestarted, rotated, pitchstarted, pitched;
+            const eventData = {data: 'ok'};
+
+            camera
+                .on('movestart', (d) => { movestarted = d.data; })
+                .on('move', (d) => { moved = d.data; })
+                .on('rotate', (d) => { rotated = d.data; })
+                .on('pitch', (d) => { pitched = d.data; })
+                .on('moveend', (d) => {
+                    expect(camera._zooming).toBeFalsy();
+                    expect(camera._panning).toBeFalsy();
+                    expect(camera._rotating).toBeFalsy();
+
+                    expect(movestarted).toBe('ok');
+                    expect(moved).toBe('ok');
+                    expect(zoomed).toBe('ok');
+                    expect(rotated).toBe('ok');
+                    expect(pitched).toBe('ok');
+                    expect(d.data).toBe('ok');
+                });
+
+            camera
+                .on('zoomstart', (d) => { zoomstarted = d.data; })
+                .on('zoom', (d) => { zoomed = d.data; })
+                .on('zoomend', (d) => {
+                    expect(zoomstarted).toBe('ok');
+                    expect(zoomed).toBe('ok');
+                    expect(d.data).toBe('ok');
+                });
+
+            camera
+                .on('rotatestart', (d) => { rotatestarted = d.data; })
+                .on('rotate', (d) => { rotated = d.data; })
+                .on('rotateend', (d) => {
+                    expect(rotatestarted).toBe('ok');
+                    expect(rotated).toBe('ok');
+                    expect(d.data).toBe('ok');
+                });
+
+            camera
+                .on('pitchstart', (d) => { pitchstarted = d.data; })
+                .on('pitch', (d) => { pitched = d.data; })
+                .on('pitchend', (d) => {
+                    expect(pitchstarted).toBe('ok');
+                    expect(pitched).toBe('ok');
+                    expect(d.data).toBe('ok');
+                });
+
+            camera.flyTo(
+                {center: [100, 0], zoom: 3.2, bearing: 90, duration: 0, pitch: 45, animate: false},
+                eventData);
+            done();
+        });
+
+        test('for short flights, emits (solely) move events, preserving eventData', done => {
+            //As I type this, the code path for guiding super-short flights is (and will probably remain) different.
+            //As such; it deserves a separate test case. This test case flies the map from A to A.
+            const camera = createCameraGlobe({center: [100, 0]});
+            let movestarted, moved,
+                zoomstarted, zoomed, zoomended,
+                rotatestarted, rotated, rotateended,
+                pitchstarted, pitched, pitchended;
+            const eventData = {data: 'ok'};
+
+            camera
+                .on('movestart', (d) => { movestarted = d.data; })
+                .on('move', (d) => { moved = d.data; })
+                .on('zoomstart', (d) => { zoomstarted = d.data; })
+                .on('zoom', (d) => { zoomed = d.data; })
+                .on('zoomend', (d) => { zoomended = d.data; })
+                .on('rotatestart', (d) => { rotatestarted = d.data; })
+                .on('rotate', (d) => { rotated = d.data; })
+                .on('rotateend', (d) => { rotateended = d.data; })
+                .on('pitchstart', (d) => { pitchstarted = d.data; })
+                .on('pitch', (d) => { pitched = d.data; })
+                .on('pitchend', (d) => { pitchended = d.data; })
+                .on('moveend', (d) => {
+                    expect(camera._zooming).toBeFalsy();
+                    expect(camera._panning).toBeFalsy();
+                    expect(camera._rotating).toBeFalsy();
+
+                    expect(movestarted).toBe('ok');
+                    expect(moved).toBe('ok');
+                    expect(zoomstarted).toBeUndefined();
+                    expect(zoomed).toBeUndefined();
+                    expect(zoomended).toBeUndefined();
+                    expect(rotatestarted).toBeUndefined();
+                    expect(rotated).toBeUndefined();
+                    expect(rotateended).toBeUndefined();
+                    expect(pitched).toBeUndefined();
+                    expect(pitchstarted).toBeUndefined();
+                    expect(pitchended).toBeUndefined();
+                    expect(d.data).toBe('ok');
+                    done();
+                });
+
+            const stub = jest.spyOn(browser, 'now');
+            stub.mockImplementation(() => 0);
+
+            camera.flyTo({center: [100, 0], duration: 10}, eventData);
+
+            setTimeout(() => {
+                stub.mockImplementation(() => 1);
+                camera.simulateFrame();
+
+                setTimeout(() => {
+                    stub.mockImplementation(() => 10);
+                    camera.simulateFrame();
+                }, 0);
+            }, 0);
+        });
+
+        test('ascends', done => {
+            const camera = createCameraGlobe();
+            camera.setZoom(18);
+            let ascended;
+            const normalizedStartZoom = camera.getZoom() + getZoomAdjustment(camera.getCenter().lat, 0);
+            camera.on('zoom', () => {
+                const normalizedZoom = camera.getZoom() + getZoomAdjustment(camera.getCenter().lat, 0);
+                if (normalizedZoom < normalizedStartZoom) {
+                    ascended = true;
+                }
+            });
+
+            camera.on('moveend', () => {
+                expect(ascended).toBeTruthy();
+                done();
+            });
+
+            const stub = jest.spyOn(browser, 'now');
+            stub.mockImplementation(() => 0);
+
+            camera.flyTo({center: [100, 0], zoom: 18, duration: 10});
+
+            setTimeout(() => {
+                stub.mockImplementation(() => 1);
+                camera.simulateFrame();
+
+                setTimeout(() => {
+                    stub.mockImplementation(() => 10);
+                    camera.simulateFrame();
+                }, 0);
+            }, 0);
+        });
+
+        test('pans eastward across the prime meridian', done => {
+            const camera = createCameraGlobe();
+            const stub = jest.spyOn(browser, 'now');
+
+            camera.setCenter([-10, 0]);
+            let crossedPrimeMeridian;
+
+            camera.on('move', () => {
+                if (Math.abs(camera.getCenter().lng) < 10) {
+                    crossedPrimeMeridian = true;
+                }
+            });
+
+            camera.on('moveend', () => {
+                expect(crossedPrimeMeridian).toBeTruthy();
+                done();
+            });
+
+            stub.mockImplementation(() => 0);
+            camera.flyTo({center: [10, 0], duration: 20});
+
+            setTimeout(() => {
+                stub.mockImplementation(() => 1);
+                camera.simulateFrame();
+
+                setTimeout(() => {
+                    stub.mockImplementation(() => 20);
+                    camera.simulateFrame();
+                }, 0);
+            }, 0);
+        });
+
+        test('pans westward across the prime meridian', done => {
+            const camera = createCameraGlobe();
+            const stub = jest.spyOn(browser, 'now');
+
+            camera.setCenter([10, 0]);
+            let crossedPrimeMeridian;
+
+            camera.on('move', () => {
+                if (Math.abs(camera.getCenter().lng) < 10) {
+                    crossedPrimeMeridian = true;
+                }
+            });
+
+            camera.on('moveend', () => {
+                expect(crossedPrimeMeridian).toBeTruthy();
+                done();
+            });
+
+            stub.mockImplementation(() => 0);
+            camera.flyTo({center: [-10, 0], duration: 20});
+
+            setTimeout(() => {
+                stub.mockImplementation(() => 1);
+                camera.simulateFrame();
+
+                setTimeout(() => {
+                    stub.mockImplementation(() => 20);
+                    camera.simulateFrame();
+                }, 0);
+            }, 0);
+        });
+
+        test('pans eastward across the antimeridian', done => {
+            const camera = createCameraGlobe();
+            const stub = jest.spyOn(browser, 'now');
+
+            camera.setCenter([170, 0]);
+            let crossedAntimeridian;
+
+            camera.on('move', () => {
+                if (camera.getCenter().lng > 170) {
+                    crossedAntimeridian = true;
+                }
+            });
+
+            camera.on('moveend', () => {
+                expect(crossedAntimeridian).toBeTruthy();
+                done();
+            });
+
+            stub.mockImplementation(() => 0);
+            camera.flyTo({center: [-170, 0], duration: 20});
+
+            setTimeout(() => {
+                stub.mockImplementation(() => 1);
+                camera.simulateFrame();
+
+                setTimeout(() => {
+                    stub.mockImplementation(() => 20);
+                    camera.simulateFrame();
+                }, 0);
+            }, 0);
+        });
+
+        test('pans westward across the antimeridian', done => {
+            const camera = createCameraGlobe();
+            const stub = jest.spyOn(browser, 'now');
+
+            camera.setCenter([-170, 0]);
+            let crossedAntimeridian;
+
+            camera.on('move', () => {
+                if (camera.getCenter().lng < -170) {
+                    crossedAntimeridian = true;
+                }
+            });
+
+            camera.on('moveend', () => {
+                expect(crossedAntimeridian).toBeTruthy();
+                done();
+            });
+
+            stub.mockImplementation(() => 0);
+            camera.flyTo({center: [170, 0], duration: 10});
+
+            setTimeout(() => {
+                stub.mockImplementation(() => 1);
+                camera.simulateFrame();
+
+                setTimeout(() => {
+                    stub.mockImplementation(() => 10);
+                    camera.simulateFrame();
+                }, 0);
+            }, 0);
+        });
+
+        test('pans eastward across the antimeridian even if renderWorldCopies: false', done => {
+            const camera = createCameraGlobe({renderWorldCopies: false});
+            const stub = jest.spyOn(browser, 'now');
+
+            camera.setCenter([170, 0]);
+            let crossedAntimeridian;
+
+            camera.on('move', () => {
+                if (camera.getCenter().lng > 170) {
+                    crossedAntimeridian = true;
+                }
+            });
+
+            camera.on('moveend', () => {
+                expect(crossedAntimeridian).toBeTruthy();
+                done();
+            });
+
+            stub.mockImplementation(() => 0);
+            camera.flyTo({center: [-170, 0], duration: 10});
+
+            setTimeout(() => {
+                stub.mockImplementation(() => 1);
+                camera.simulateFrame();
+
+                setTimeout(() => {
+                    stub.mockImplementation(() => 10);
+                    camera.simulateFrame();
+                }, 0);
+            }, 0);
+        });
+
+        test('pans westward across the antimeridian even if renderWorldCopies: false', done => {
+            const camera = createCameraGlobe({renderWorldCopies: false});
+            const stub = jest.spyOn(browser, 'now');
+
+            camera.setCenter([-170, 0]);
+            let crossedAntimeridian;
+
+            camera.on('move', () => {
+                if (fixedLngLat(camera.getCenter(), 10).lng < -170) {
+                    crossedAntimeridian = true;
+                }
+            });
+
+            camera.on('moveend', () => {
+                expect(crossedAntimeridian).toBeTruthy();
+                done();
+            });
+
+            stub.mockImplementation(() => 0);
+            camera.flyTo({center: [170, 0], duration: 10});
+
+            setTimeout(() => {
+                stub.mockImplementation(() => 1);
+                camera.simulateFrame();
+
+                setTimeout(() => {
+                    stub.mockImplementation(() => 10);
+                    camera.simulateFrame();
+                }, 0);
+            }, 0);
+        });
+
+        test('jumps back to world 0 when crossing the antimeridian', done => {
+            const camera = createCameraGlobe();
+            const stub = jest.spyOn(browser, 'now');
+
+            camera.setCenter([-170, 0]);
+
+            let leftWorld0 = false;
+
+            camera.on('move', () => {
+                leftWorld0 = leftWorld0 || (camera.getCenter().lng < -180);
+            });
+
+            camera.on('moveend', () => {
+                expect(leftWorld0).toBeFalsy();
+                done();
+            });
+
+            stub.mockImplementation(() => 0);
+            camera.flyTo({center: [170, 0], duration: 10});
+
+            setTimeout(() => {
+                stub.mockImplementation(() => 1);
+                camera.simulateFrame();
+
+                setTimeout(() => {
+                    stub.mockImplementation(() => 10);
+                    camera.simulateFrame();
+                }, 0);
+            }, 0);
+        });
+
+        test('peaks at the specified zoom level', done => {
+            const camera = createCameraGlobe({zoom: 20});
+            const stub = jest.spyOn(browser, 'now');
+
+            const minZoom = 1;
+            let zoomed = false;
+
+            let leastZoom = 200;
+            camera.on('zoom', () => {
+                const zoom = camera.getZoom();
+                if (zoom < 1) {
+                    fail(`${zoom} should be >= ${minZoom} during flyTo`);
+                }
+
+                leastZoom = Math.min(leastZoom, zoom);
+                if (zoom < (minZoom + 1)) {
+                    zoomed = true;
+                }
+            });
+
+            camera.on('moveend', () => {
+                console.log(leastZoom);
+                expect(zoomed).toBeTruthy();
+                done();
+            });
+
+            stub.mockImplementation(() => 0);
+            camera.flyTo({center: [1, 0], zoom: 20, minZoom, duration: 10});
+
+            setTimeout(() => {
+                stub.mockImplementation(() => 3);
+                camera.simulateFrame();
+
+                setTimeout(() => {
+                    stub.mockImplementation(() => 10);
+                    camera.simulateFrame();
+                }, 0);
+            }, 0);
+        });
+
+        test('respects transform\'s maxZoom', done => {
+            const transform = createCameraGlobe().transform;
+            transform.setMinZoom(2);
+            transform.setMaxZoom(10);
+
+            const camera = attachSimulateFrame(new CameraMock(transform, {} as any));
+            camera._update = () => {};
+
+            camera.on('moveend', () => {
+                expect(camera.getZoom()).toBeCloseTo(10);
+                const {lng, lat} = camera.getCenter();
+                expect(lng).toBeCloseTo(12);
+                expect(lat).toBeCloseTo(34);
+                done();
+            });
+
+            const stub = jest.spyOn(browser, 'now');
+            stub.mockImplementation(() => 0);
+            camera.flyTo({center: [12, 34], zoom: 30, duration: 10});
 
             setTimeout(() => {
                 stub.mockImplementation(() => 10);
                 camera.simulateFrame();
             }, 0);
-        }, 0);
-    });
-
-    test('respects transform\'s maxZoom', done => {
-        const transform = createCameraGlobe().transform;
-        transform.setMinZoom(2);
-        transform.setMaxZoom(10);
-
-        const camera = attachSimulateFrame(new CameraMock(transform, {} as any));
-        camera._update = () => {};
-
-        camera.on('moveend', () => {
-            expect(camera.getZoom()).toBeCloseTo(10);
-            const {lng, lat} = camera.getCenter();
-            expect(lng).toBeCloseTo(12);
-            expect(lat).toBeCloseTo(34);
-            done();
         });
 
-        const stub = jest.spyOn(browser, 'now');
-        stub.mockImplementation(() => 0);
-        camera.flyTo({center: [12, 34], zoom: 30, duration: 10});
+        test('respects transform\'s minZoom', done => {
+            const transform = createCameraGlobe().transform;
+            transform.setMinZoom(2);
+            transform.setMaxZoom(10);
 
-        setTimeout(() => {
-            stub.mockImplementation(() => 10);
-            camera.simulateFrame();
-        }, 0);
-    });
+            const camera = attachSimulateFrame(new CameraMock(transform, {} as any));
+            camera._update = () => {};
 
-    test('respects transform\'s minZoom', done => {
-        const transform = createCameraGlobe().transform;
-        transform.setMinZoom(2);
-        transform.setMaxZoom(10);
+            const start = camera.getCenter();
+            const target = new LngLat(12, 34);
 
-        const camera = attachSimulateFrame(new CameraMock(transform, {} as any));
-        camera._update = () => {};
-
-        const start = camera.getCenter();
-        const target = new LngLat(12, 34);
-
-        camera.on('moveend', () => {
-            expect(camera.getZoom()).toBeCloseTo(2 + getZoomAdjustment(start.lat, target.lat));
-            const {lng, lat} = camera.getCenter();
-            expect(lng).toBeCloseTo(12);
-            expect(lat).toBeCloseTo(34);
-            done();
-        });
-
-        const stub = jest.spyOn(browser, 'now');
-        stub.mockImplementation(() => 0);
-        camera.flyTo({center: target, zoom: 1, duration: 10});
-
-        setTimeout(() => {
-            stub.mockImplementation(() => 10);
-            camera.simulateFrame();
-        }, 0);
-    });
-
-    test('resets duration to 0 if it exceeds maxDuration', done => {
-        let startTime, endTime, timeDiff;
-        const camera = createCameraGlobe({center: [37.63454, 55.75868], zoom: 18});
-
-        camera
-            .on('movestart', () => { startTime = new Date(); })
-            .on('moveend', () => {
-                endTime = new Date();
-                timeDiff = endTime - startTime;
-                expect(timeDiff).toBeLessThan(30);
+            camera.on('moveend', () => {
+                expect(camera.getZoom()).toBeCloseTo(2 + getZoomAdjustment(start.lat, target.lat));
+                const {lng, lat} = camera.getCenter();
+                expect(lng).toBeCloseTo(12);
+                expect(lat).toBeCloseTo(34);
                 done();
             });
 
-        camera.flyTo({center: [-122.3998631, 37.7884307], maxDuration: 100});
-    });
+            const stub = jest.spyOn(browser, 'now');
+            stub.mockImplementation(() => 0);
+            camera.flyTo({center: target, zoom: 1, duration: 10});
 
-    // No terrain/elevation tests for globe, as terrain isn't supported (yet?)
+            setTimeout(() => {
+                stub.mockImplementation(() => 10);
+                camera.simulateFrame();
+            }, 0);
+        });
+
+        test('resets duration to 0 if it exceeds maxDuration', done => {
+            let startTime, endTime, timeDiff;
+            const camera = createCameraGlobe({center: [37.63454, 55.75868], zoom: 18});
+
+            camera
+                .on('movestart', () => { startTime = new Date(); })
+                .on('moveend', () => {
+                    endTime = new Date();
+                    timeDiff = endTime - startTime;
+                    expect(timeDiff).toBeLessThan(30);
+                    done();
+                });
+
+            camera.flyTo({center: [-122.3998631, 37.7884307], maxDuration: 100});
+        });
+
+        // No terrain/elevation tests for globe, as terrain isn't supported (yet?)
+    });
 });
 
 describe('#fitBounds globe projection', () => {
