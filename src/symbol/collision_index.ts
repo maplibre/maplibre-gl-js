@@ -17,6 +17,7 @@ import type {OverlapMode} from '../style/style_layer/overlap_mode';
 import {UnwrappedTileID} from '../source/tile_id';
 import {type PointProjection, SymbolProjectionContext, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, projectPathSpecialProjection} from '../symbol/projection';
 import {clamp, getAABB} from '../util/util';
+import {tileCoordinatesToLocation} from '../geo/projection/mercator_utils';
 
 // When a symbol crosses the edge that causes it to be included in
 // collision detection, it will cause changes in the symbols around
@@ -124,7 +125,7 @@ export class CollisionIndex {
 
         const [tlX, tlY, brX, brY] = projectedBox.box;
 
-        const projectionOccluded = (pitchWithMap ? projectedBox.allPointsOccluded : this.transform.isTilePositionOccluded(x, y, unwrappedTileID));
+        const projectionOccluded = (pitchWithMap ? projectedBox.allPointsOccluded : this.transform.isLocationOccluded(tileCoordinatesToLocation(x, y, unwrappedTileID.canonical)));
 
         if (projectionOccluded || projectedPoint.perspectiveRatio < this.perspectiveRatioCutoff || !this.isInsideGrid(tlX, tlY, brX, brY) ||
             (overlapMode !== 'always' && this.grid.hitTest(tlX, tlY, brX, brY, overlapMode, collisionGroupPredicate))) {

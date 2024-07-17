@@ -810,10 +810,6 @@ export class MercatorTransform implements ITransform {
         return getBasicProjectionData(overscaledTileID, matrix, ignoreTerrainMatrix);
     }
 
-    isTilePositionOccluded(_: number, __: number, ___: UnwrappedTileID): boolean {
-        return false;
-    }
-
     isLocationOccluded(_: LngLat): boolean {
         return false;
     }

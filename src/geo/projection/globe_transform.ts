@@ -529,17 +529,9 @@ export class GlobeTransform implements ITransform {
 
     private _projectTileCoordinatesToSphere(inTileX: number, inTileY: number, tileID: UnwrappedTileID): vec3 {
         const mercator = tileCoordinatesToMercatorCoordinates(inTileX, inTileY, tileID.canonical);
-        const angular = mercatorCoordinatesToAngularCoordinatesRadians(mercator[0], mercator[1]);
+        const angular = mercatorCoordinatesToAngularCoordinatesRadians(mercator.x, mercator.y);
         const sphere = angularCoordinatesRadiansToVector(angular[0], angular[1]);
         return sphere;
-    }
-
-    public isTilePositionOccluded(x: number, y: number, unwrappedTileID: UnwrappedTileID): boolean {
-        if (!this._globeRendering) {
-            return this._mercatorTransform.isTilePositionOccluded(x, y, unwrappedTileID);
-        }
-        const spherePos = this._projectTileCoordinatesToSphere(x, y, unwrappedTileID);
-        return !this.isSurfacePointVisible(spherePos);
     }
 
     public isLocationOccluded(location: LngLat): boolean {

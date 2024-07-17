@@ -429,16 +429,6 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @internal
      * Returns whether the supplied location is occluded in this projection.
      * For example during globe rendering a location on the backfacing side of the globe is occluded.
-     * @param x - Tile space coordinate in range 0..EXTENT.
-     * @param y - Tile space coordinate in range 0..EXTENT.
-     * @param unwrappedTileID - TileID of the tile the supplied coordinates belong to.
-     */
-    isTilePositionOccluded(x: number, y: number, unwrappedTileID: UnwrappedTileID): boolean;
-
-    /**
-     * @internal
-     * Returns whether the supplied location is occluded in this projection.
-     * For example during globe rendering a location on the backfacing side of the globe is occluded.
      */
     isLocationOccluded(lngLat: LngLat): boolean;
 
