@@ -369,15 +369,17 @@ export class GlobeTransform implements ITransform {
 
         this._calcMatrices();
 
-        const result: TransformUpdateResult = {
-            forcePlacementUpdate: false,
-            fireProjectionEvent: false,
-        };
-        if (oldGlobeRendering !== this._globeRendering) {
-            result.forcePlacementUpdate = true;
-            result.fireProjectionEvent = true;
+        if (oldGlobeRendering === this._globeRendering) {
+            return {
+                forcePlacementUpdate: false,
+                fireProjectionEvent: false,
+            };
+        } else {
+            return {
+                forcePlacementUpdate: true,
+                fireProjectionEvent: true,
+            };
         }
-        return result;
     }
 
     /**
