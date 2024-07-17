@@ -272,7 +272,6 @@ export class GlobeTransform implements ITransform {
         const clone = new GlobeTransform(null, this._globeProjectionEnabled);
         clone._applyGlobeTransform(this);
         clone.apply(this);
-        clone._updateErrorCorrectionValue();
         return clone;
     }
 
@@ -283,6 +282,7 @@ export class GlobeTransform implements ITransform {
 
     private _applyGlobeTransform(that: GlobeTransform): void {
         this._globeness = that._globeness;
+        this._globeLatitudeErrorCorrectionRadians = that._globeLatitudeErrorCorrectionRadians;
     }
 
     public get projectionMatrix(): mat4 { return this._globeRendering ? this._projectionMatrix : this._mercatorTransform.projectionMatrix; }
@@ -363,13 +363,14 @@ export class GlobeTransform implements ITransform {
         return result;
     }
 
+    /**
+     * This function should never be called on a cloned transform, thus ensuring that
+     * the state of a cloned transform is never changed after creation.
+     */
     private _updateErrorCorrectionValue(): void {
         if (!this._projectionInstance) {
             return;
         }
-        // Note: the _globeRendering field is only updated inside this function.
-        // This function should never be called on a cloned transform, thus ensuring that
-        // the state of a cloned transform is never changed after creation.
         this._projectionInstance.useGlobeRendering = this._globeRendering;
         this._projectionInstance.errorQueryLatitudeDegrees = this.center.lat;
         this._globeLatitudeErrorCorrectionRadians = this._projectionInstance.latitudeErrorCorrectionRadians;
