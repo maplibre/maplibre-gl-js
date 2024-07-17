@@ -36,7 +36,13 @@ export type CoveringTilesOptions = CoveringZoomOptions & {
      * its zoom set to the overscaled greater zoom. When false, such tiles will have zoom set to `maxzoom`.
      */
     reparseOverscaled?: boolean;
+    /**
+     * Whether to render multiple copies of the world for non globe projection maps.
+     */
     renderWorldCopies?: boolean;
+    /**
+     * When terrain is present, tile visibility will be computed in regards to the min and max elevations for each tile.
+     */
     terrain?: Terrain;
 };
 
