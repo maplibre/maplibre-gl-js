@@ -221,7 +221,18 @@ export class GlobeTransform implements ITransform {
 
     private _lastLargeZoomStateChange: number = -1000.0;
     private _lastLargeZoomState: boolean = false;
-    private _lastUpdateTime = -1e9;
+
+    /**
+     * Stores when {@link newFrameUpdate} was last called.
+     * Serves as a unified clock for globe (instead of each function using a slightly different value from `browser.now()`).
+     */
+    private _lastUpdateTime = browser.now();
+    /**
+     * Stores when switch from globe to mercator or back last occurred, for animation purposes.
+     * This switch can be caused either by the map passing the threshold zoom level,
+     * or by {@link setGlobeViewAllowed} being called.
+     */
+    private _lastGlobeChangeTime: number = browser.now() - 10_000; // Ten seconds before transform creation
 
     private _skipNextAnimation: boolean = true;
 
@@ -233,8 +244,13 @@ export class GlobeTransform implements ITransform {
 
     private _cameraPosition: vec3 = createVec3();
 
-    private _lastGlobeChangeTime: number = -1000.0;
-    private _globeProjectionEnabled = true;
+    /**
+     * Whether globe projection is allowed to be used.
+     * Set with {@link setGlobeViewAllowed}.
+     * Can be used to dynamically disable globe projection without changing the map's projection,
+     * which would cause a map reload.
+     */
+    private _globeProjectionAllowed = true;
 
     /**
      * Note: projection instance should only be accessed in the {@link newFrameUpdate} function
@@ -262,14 +278,14 @@ export class GlobeTransform implements ITransform {
             calcMatrices: () => { this._calcMatrices(); },
             getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
         });
-        this._globeProjectionEnabled = globeProjectionEnabled;
+        this._globeProjectionAllowed = globeProjectionEnabled;
         this._globeness = globeProjectionEnabled ? 1 : 0; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.
         this._projectionInstance = globeProjection;
         this._mercatorTransform = new MercatorTransform();
     }
 
     clone(): ITransform {
-        const clone = new GlobeTransform(null, this._globeProjectionEnabled);
+        const clone = new GlobeTransform(null, this._globeProjectionAllowed);
         clone._applyGlobeTransform(this);
         clone.apply(this);
         return clone;
@@ -318,25 +334,26 @@ export class GlobeTransform implements ITransform {
      * Set with {@link setGlobeViewAllowed}.
      */
     public getGlobeViewAllowed(): boolean {
-        return this._globeProjectionEnabled;
+        return this._globeProjectionAllowed;
     }
 
     /**
      * Sets whether globe view is allowed. When allowed, globe fill function as normal, displaying a 3D planet,
      * but transitioning to mercator at high zoom levels.
      * Otherwise, mercator will be used at all zoom levels instead.
+     * When globe is caused to transition to mercator by this function, the transition will be animated.
      * @param allow - Sets whether glove view is allowed.
      * @param animateTransition - Controls whether the transition between globe view and mercator (if triggered by this call) should be animated. True by default.
      */
     public setGlobeViewAllowed(allow: boolean, animateTransition: boolean = true) {
-        if (allow === this._globeProjectionEnabled) {
+        if (allow === this._globeProjectionAllowed) {
             return;
         }
 
         if (!animateTransition) {
             this._skipNextAnimation = true;
         }
-        this._globeProjectionEnabled = allow;
+        this._globeProjectionAllowed = allow;
         this._lastGlobeChangeTime = this._lastUpdateTime;
     }
 
@@ -381,7 +398,7 @@ export class GlobeTransform implements ITransform {
      */
     private _computeGlobenessAnimation(): number {
         // Update globe transition animation
-        const globeState = this._globeProjectionEnabled;
+        const globeState = this._globeProjectionAllowed;
         const currentTime = this._lastUpdateTime;
         if (globeState !== this._lastGlobeStateEnabled) {
             this._lastGlobeChangeTime = currentTime;
