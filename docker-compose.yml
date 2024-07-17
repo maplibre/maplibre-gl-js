@@ -1,0 +1,15 @@
+services:
+  maplibre-gl-js:
+    privileged: true
+    platform: linux/amd64
+    image: localhost/maplibre-gl-js
+    build:
+      platforms:
+        - "linux/amd64"
+    working_dir: /maplibre-gl-js
+    volumes:
+      - ./maplibre-gl-js/src/:/maplibre-gl-js/src/
+      - ./maplibre-gl-js/dist/:/maplibre-gl-js/dist/
+    command:
+      - npm run watch-dev
+

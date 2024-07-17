@@ -3,6 +3,7 @@
 ### ✨ Features and improvements
 
 - Expose projection matrix parameters ([#3136](https://github.com/maplibre/maplibre-gl-js/pull/3136))
+- Add docker build abilities ([#57](https://github.com/maplibre/maplibre-gl-js/issues/57))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
