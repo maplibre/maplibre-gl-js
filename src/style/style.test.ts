@@ -184,6 +184,20 @@ describe('Style#loadURL', () => {
 
         expect(spy).toHaveBeenCalledTimes(0);
     });
+
+    test('fires an error if the request fails', done => {
+        const style = new Style(getStubMap());
+        const errorStatus = 400;
+
+        style.on('error', ({error}) => {
+            expect(error).toBeTruthy();
+            expect(error.status).toBe(errorStatus);
+            done();
+        });
+        style.loadURL('style.json');
+        server.respondWith(request => request.respond(errorStatus));
+        server.respond();
+    });
 });
 
 describe('Style#loadJSON', () => {
