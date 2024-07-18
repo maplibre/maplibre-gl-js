@@ -172,6 +172,18 @@ describe('Style#loadURL', () => {
         style._remove();
         expect((server.lastRequest as any).aborted).toBe(true);
     });
+
+    test('does not fire an error if removed', async () => {
+        const style = new Style(getStubMap());
+        const spy = jest.fn();
+
+        style.on('error', spy);
+        style.loadURL('style.json');
+        style._remove();
+        await sleep(0);
+
+        expect(spy).toHaveBeenCalledTimes(0);
+    });
 });
 
 describe('Style#loadJSON', () => {
