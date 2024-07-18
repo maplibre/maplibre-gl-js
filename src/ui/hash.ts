@@ -129,7 +129,26 @@ export class Hash {
     };
 
     _removeHash = () => {
-        const location = window.location.href.replace(/(#.+)?$/, '');
+        const currentHash = this._getCurrentHash();
+        if (currentHash.length === 0) {
+            return;
+        }
+        const baseHash = currentHash.join('/');
+        let targetHash = baseHash;
+        if (targetHash.split('&').length > 0) {
+            targetHash = targetHash.split('&')[0] // #3/1/2&foo=bar -> #3/1/2
+        }
+        if (this._hashName) {
+            targetHash = this._hashName + '=' + baseHash;
+        }
+        let replaceString = window.location.hash.replace(targetHash, '');
+        if (replaceString.startsWith('#&')) {
+            replaceString = replaceString.slice(0, 1) + replaceString.slice(2);
+        } else if (replaceString == '#') {
+            replaceString = '';
+        }
+        let location = window.location.href.replace(/(#.+)?$/, replaceString);
+        location = location.replace('&&', '&');
         try {
             window.history.replaceState(window.history.state, null, location);
         } catch (SecurityError) {
