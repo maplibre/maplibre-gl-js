@@ -8,6 +8,7 @@
 ### 🐞 Bug fixes
 
 - Fix lag on fast map zoom ([#4366](https://github.com/maplibre/maplibre-gl-js/pull/4366))
+- Fix flicker on map resize
 - _...Add new stuff here..._
 
 ## 4.5.0
