@@ -35,6 +35,7 @@ export class Hash {
         removeEventListener('hashchange', this._onHashChange, false);
         this._map.off('moveend', this._updateHash);
         clearTimeout(this._updateHash());
+        this._removeHash();
 
         delete this._map;
         return this;
@@ -124,6 +125,17 @@ export class Hash {
             // IE11 does not allow this if the page is within an iframe created
             // with iframe.contentWindow.document.write(...).
             // https://github.com/mapbox/mapbox-gl-js/issues/7410
+        }
+    };
+
+    _removeHash = () => {
+        const location = window.location.href.replace(/(#.+)?$/, '');
+        try {
+            window.history.replaceState(window.history.state, null, location);
+        } catch (SecurityError) {
+            // IE11 does not allow this if the page is within an iframe created
+            // with iframe.contentWindow.document.write(...).
+            //
         }
     };
 
