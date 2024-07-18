@@ -130,15 +130,15 @@ export class Hash {
         const baseHash = currentHash.join('/');
         let targetHash = baseHash;
         if (targetHash.split('&').length > 0) {
-            targetHash = targetHash.split('&')[0] // #3/1/2&foo=bar -> #3/1/2
+            targetHash = targetHash.split('&')[0]; // #3/1/2&foo=bar -> #3/1/2
         }
         if (this._hashName) {
-            targetHash = this._hashName + '=' + baseHash;
+            targetHash = `${this._hashName}=${baseHash}`;
         }
         let replaceString = window.location.hash.replace(targetHash, '');
         if (replaceString.startsWith('#&')) {
             replaceString = replaceString.slice(0, 1) + replaceString.slice(2);
-        } else if (replaceString == '#') {
+        } else if (replaceString === '#') {
             replaceString = '';
         }
         let location = window.location.href.replace(/(#.+)?$/, replaceString);
