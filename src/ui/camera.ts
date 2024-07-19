@@ -67,10 +67,6 @@ export type CameraOptions = CenterZoomBearing & {
      * Increasing the pitch value is often used to display 3D objects.
      */
     pitch?: number;
-    /**
-     * If `zoom` is specified, `around` determines the point around which the zoom is centered.
-     */
-    around?: LngLatLike;
 };
 
 /**
@@ -184,6 +180,10 @@ export type FlyToOptions = AnimationOptions & CameraOptions & {
 export type EaseToOptions = AnimationOptions & CameraOptions & {
     delayEndEvents?: number;
     padding?: number | RequireAtLeastOne<PaddingOptions>;
+    /**
+     * If `zoom` is specified, `around` determines the point around which the zoom is centered.
+     */
+    around?: LngLatLike;
 }
 
 /**
@@ -1461,13 +1461,9 @@ export abstract class Camera extends Evented {
      * @see [Fly to a location based on scroll position](https://maplibre.org/maplibre-gl-js/docs/examples/scroll-fly-to/)
      */
     flyTo(options: FlyToOptions, eventData?: any): this {
-        if (options.around) {
-            warnOnce('flyTo does not support the "around" option.');
-        }
-
         // Fall through to jumpTo if user has set prefers-reduced-motion
         if (!options.essential && browser.prefersReducedMotion) {
-            const coercedOptions = pick(options, ['center', 'zoom', 'bearing', 'pitch', 'around']) as CameraOptions;
+            const coercedOptions = pick(options, ['center', 'zoom', 'bearing', 'pitch']) as CameraOptions;
             return this.jumpTo(coercedOptions, eventData);
         }
 
