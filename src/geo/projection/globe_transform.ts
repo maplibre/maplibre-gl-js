@@ -583,7 +583,7 @@ export class GlobeTransform implements ITransform {
             return 1.0;
         }
         const mercator = tileCoordinatesToMercatorCoordinates(textAnchor.x, textAnchor.y, tileID.canonical);
-        const angular = mercatorCoordinatesToAngularCoordinatesRadians(mercator[0], mercator[1]);
+        const angular = mercatorCoordinatesToAngularCoordinatesRadians(mercator.x, mercator.y);
         return this.getCircleRadiusCorrection() / Math.cos(angular[1]);
     }
 
