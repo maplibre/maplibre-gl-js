@@ -2316,13 +2316,13 @@ describe('#transformCameraUpdate', () => {
 });
 
 describe('#jumpTo globe projection', () => {
-    let camera;
-
-    beforeEach(() => {
-        camera = createCameraGlobe({zoom: 1});
-    });
-
     describe('globe specific behavior', () => {
+        let camera;
+
+        beforeEach(() => {
+            camera = createCameraGlobe({zoom: 1});
+        });
+
         test('changing center with no zoom specified should adjusts zoom', () => {
             camera.jumpTo({center: [0, 40]});
             expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
@@ -2349,6 +2349,9 @@ describe('#jumpTo globe projection', () => {
     });
 
     describe('mercator test equivalents', () => {
+        // Modifications to this camera from one test should carry over to later tests
+        const camera = createCameraGlobe({zoom: 1});
+
         test('sets center', () => {
             camera.jumpTo({center: [1, 2]});
             expect(camera.getCenter()).toEqual({lng: 1, lat: 2});

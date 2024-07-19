@@ -560,7 +560,6 @@ describe('GlobeTransform', () => {
             transform.setPitch(60);
 
             const projection = transform.projectTileCoordinates(8192, 8192, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), (_x, _y) => 0);
-            console.log(projection);
             expect(projection.point.x).toBeCloseTo(0.22428309892086878, precisionDigits);
             expect(projection.point.y).toBeCloseTo(-0.4462620847133465, precisionDigits);
             expect(projection.signedDistanceFromCamera).toBeCloseTo(822.280942015371, precisionDigits);
