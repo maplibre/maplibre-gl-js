@@ -1,10 +1,10 @@
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
-import {getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates} from './mercator_utils';
+import {getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, tileCoordinatesToLocation, tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 import {MercatorTransform} from './mercator_transform';
 import {MAX_VALID_LATITUDE} from '../transform_helper';
 import {mat4} from 'gl-matrix';
-import {OverscaledTileID} from '../../source/tile_id';
+import {CanonicalTileID, OverscaledTileID} from '../../source/tile_id';
 import {ProjectionData} from '../../render/program/projection_program';
 import {EXTENT} from '../../data/extent';
 import {expectToBeCloseToArray} from '../../util/test/util';
@@ -55,6 +55,62 @@ describe('mercator utils', () => {
 
             projectionData = getBasicProjectionData(new OverscaledTileID(1, 0, 1, 1, 0));
             expectToBeCloseToArray(projectionData.u_projection_tile_mercator_coords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
+        });
+    });
+
+    describe('tileCoordinatesToMercatorCoordinates', () => {
+        const precisionDigits = 10;
+
+        test('Test 0,0', () => {
+            const result = tileCoordinatesToMercatorCoordinates(0, 0, new CanonicalTileID(0, 0, 0));
+            expect(result.x).toBe(0);
+            expect(result.y).toBe(0);
+        });
+
+        test('Test tile center', () => {
+            const result = tileCoordinatesToMercatorCoordinates(EXTENT / 2, EXTENT / 2, new CanonicalTileID(0, 0, 0));
+            expect(result.x).toBeCloseTo(0.5, precisionDigits);
+            expect(result.y).toBeCloseTo(0.5, precisionDigits);
+        });
+
+        test('Test higher zoom 0,0', () => {
+            const result = tileCoordinatesToMercatorCoordinates(0, 0, new CanonicalTileID(3, 0, 0));
+            expect(result.x).toBe(0);
+            expect(result.y).toBe(0);
+        });
+
+        test('Test higher zoom tile center', () => {
+            const result = tileCoordinatesToMercatorCoordinates(EXTENT / 2, EXTENT / 2, new CanonicalTileID(3, 0, 0));
+            expect(result.x).toBeCloseTo(1 / 16, precisionDigits);
+            expect(result.y).toBeCloseTo(1 / 16, precisionDigits);
+        });
+    });
+
+    describe('tileCoordinatesToLocation', () => {
+        const precisionDigits = 5;
+
+        test('Test 0,0', () => {
+            const result = tileCoordinatesToLocation(0, 0, new CanonicalTileID(0, 0, 0));
+            expect(result.lng).toBeCloseTo(-180, precisionDigits);
+            expect(result.lat).toBeCloseTo(MAX_VALID_LATITUDE, precisionDigits);
+        });
+
+        test('Test tile center', () => {
+            const result = tileCoordinatesToLocation(EXTENT / 2, EXTENT / 2, new CanonicalTileID(0, 0, 0));
+            expect(result.lng).toBeCloseTo(0, precisionDigits);
+            expect(result.lat).toBeCloseTo(0, precisionDigits);
+        });
+
+        test('Test higher zoom 0,0', () => {
+            const result = tileCoordinatesToLocation(0, 0, new CanonicalTileID(3, 0, 0));
+            expect(result.lng).toBeCloseTo(-180, precisionDigits);
+            expect(result.lat).toBeCloseTo(MAX_VALID_LATITUDE, precisionDigits);
+        });
+
+        test('Test higher zoom mercator center', () => {
+            const result = tileCoordinatesToLocation(EXTENT, EXTENT, new CanonicalTileID(3, 3, 3));
+            expect(result.lng).toBeCloseTo(0, precisionDigits);
+            expect(result.lat).toBeCloseTo(0, precisionDigits);
         });
     });
 });
