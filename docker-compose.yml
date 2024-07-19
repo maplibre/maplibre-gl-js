@@ -1,5 +1,5 @@
 services:
-  maplibre-gl-js:
+  dev:
     privileged: true
     platform: linux/amd64
     image: localhost/maplibre-gl-js
@@ -8,8 +8,20 @@ services:
         - "linux/amd64"
     working_dir: /maplibre-gl-js
     volumes:
-      - ./maplibre-gl-js/src/:/maplibre-gl-js/src/
-      - ./maplibre-gl-js/dist/:/maplibre-gl-js/dist/
+      - ./src/:/maplibre-gl-js/src/
+      - ./dist/:/maplibre-gl-js/dist/
+    ports:
+      - 9966:9966
+
+  test:
+    privileged: true
+    platform: linux/amd64
+    image: localhost/maplibre-gl-js
+    volumes:
+      - ./test/:/maplibre-gl-js/test/
     command:
-      - npm run watch-dev
+      - /bin/bash
+      - -c
+      - |
+        npm run test-unit
 

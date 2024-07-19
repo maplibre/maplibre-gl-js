@@ -156,6 +156,26 @@ Install headless-gl dependencies https://github.com/stackgl/headless-gl#windows
 copy node_modules/headless-gl/deps/windows/dll/x64/*.dll c:\windows\system32
 ```
 
+### Docker
+
+#### Build the basic docker image
+
+```shell
+docker compose build
+```
+
+#### Start development mode
+
+```shell
+docker compose up dev
+```
+
+#### Run tests
+
+```shell
+docker compose up test
+```
+
 ## Creating a Standalone Build
 
 A standalone build allows you to turn the contents of this repository into `maplibre-gl.js` and `maplibre-gl.css` files that can be included on an html page.
