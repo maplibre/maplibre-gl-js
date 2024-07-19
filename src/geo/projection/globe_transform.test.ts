@@ -7,6 +7,7 @@ import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../source/t
 import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
 import {expectToBeCloseToArray, sleep} from '../../util/test/util';
 import {MercatorCoordinate} from '../mercator_coordinate';
+import {tileCoordinatesToLocation} from './mercator_utils';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: Array<number>) {
     const lat = latDegrees / 180.0 * Math.PI;
@@ -564,6 +565,37 @@ describe('GlobeTransform', () => {
             expect(projection.point.y).toBeCloseTo(-0.4462620847133465, precisionDigits);
             expect(projection.signedDistanceFromCamera).toBeCloseTo(822.280942015371, precisionDigits);
             expect(projection.isOccluded).toBe(true);
+        });
+    });
+
+    describe('isLocationOccluded', () => {
+        const transform = new GlobeTransform(globeProjectionMock);
+        transform.resize(512, 512);
+        transform.setCenter(new LngLat(0.0, 0.0));
+        transform.setZoom(-1);
+
+        test('center', () => {
+            expect(transform.isLocationOccluded(new LngLat(0, 0))).toBe(false);
+        });
+
+        test('center from tile', () => {
+            expect(transform.isLocationOccluded(tileCoordinatesToLocation(0, 0, new CanonicalTileID(1, 1, 1)))).toBe(false);
+        });
+
+        test('backside', () => {
+            expect(transform.isLocationOccluded(new LngLat(179.9, 0))).toBe(true);
+        });
+
+        test('backside from tile', () => {
+            expect(transform.isLocationOccluded(tileCoordinatesToLocation(0, 0, new CanonicalTileID(1, 0, 1)))).toBe(true);
+        });
+
+        test('barely visible', () => {
+            expect(transform.isLocationOccluded(new LngLat(84.49, 0))).toBe(false);
+        });
+
+        test('barely hidden', () => {
+            expect(transform.isLocationOccluded(new LngLat(84.50, 0))).toBe(true);
         });
     });
 });
