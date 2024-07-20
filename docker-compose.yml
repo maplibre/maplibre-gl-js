@@ -1,20 +1,26 @@
 services:
   dev:
-    privileged: true
     platform: linux/amd64
     image: localhost/maplibre-gl-js
     build:
       platforms:
         - "linux/amd64"
+      context: .
+      dockerfile: ./.devcontainer/Dockerfile
     working_dir: /maplibre-gl-js
     volumes:
-      - ./src/:/maplibre-gl-js/src/
-      - ./dist/:/maplibre-gl-js/dist/
+      - ./:/maplibre-gl-js/
     ports:
       - 9966:9966
+    command:
+      - /bin/bash
+      - -c
+      - |
+        npm ci
+        npm run watch-css
+        npm run watch-dev
 
   test:
-    privileged: true
     platform: linux/amd64
     image: localhost/maplibre-gl-js
     volumes:
@@ -24,4 +30,3 @@ services:
       - -c
       - |
         npm run test-unit
-
