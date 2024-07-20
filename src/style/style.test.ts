@@ -182,21 +182,21 @@ describe('Style#loadURL', () => {
         style._remove();
         await sleep(0);
 
-        expect(spy).toHaveBeenCalledTimes(0);
+        expect(spy).not.toHaveBeenCalled();
     });
 
-    test('fires an error if the request fails', done => {
+    test('fires an error if the request fails', async () => {
         const style = new Style(getStubMap());
         const errorStatus = 400;
 
-        style.on('error', ({error}) => {
-            expect(error).toBeTruthy();
-            expect(error.status).toBe(errorStatus);
-            done();
-        });
+        const promise = style.once('error');
         style.loadURL('style.json');
         server.respondWith(request => request.respond(errorStatus));
         server.respond();
+        const {error} = await promise;
+
+        expect(error).toBeTruthy();
+        expect(error.status).toBe(errorStatus);
     });
 });
 
