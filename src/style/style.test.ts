@@ -179,8 +179,11 @@ describe('Style#loadURL', () => {
 
         style.on('error', spy);
         style.loadURL('style.json');
+        const promise = new Promise((_, reject) => {
+            (server.lastRequest as any).addEventListener('abort', reject);
+        });
         style._remove();
-        await sleep(0);
+        await promise.catch(() => {});
 
         expect(spy).not.toHaveBeenCalled();
     });
