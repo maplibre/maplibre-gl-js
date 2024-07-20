@@ -18,9 +18,3 @@ services:
     ports:
       - 9966:9966
     command: npm run start
-
-  test:
-    image: ghcr.io/maplibre/maplibre-gl-js:dev
-    volumes:
-      - ./test/:/maplibre-gl-js/test/
-    command: npm run test-unit
