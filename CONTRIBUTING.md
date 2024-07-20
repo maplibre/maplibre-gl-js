@@ -161,7 +161,7 @@ copy node_modules/headless-gl/deps/windows/dll/x64/*.dll c:\windows\system32
 #### Build the basic docker image
 
 ```shell
-docker compose build
+docker compose up --build build
 ```
 
 #### Start development mode

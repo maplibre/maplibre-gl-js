@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  push-store-image:
+  push-dev-image:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -24,8 +24,8 @@ jobs:
 
       - name: 'Build Inventory Image'
         run: |
-          docker build . --tag ghcr.io/maplibre/maplibre-gl-js-dev
-          docker push ghcr.io/maplibre/maplibre-gl-js-dev
+          docker build . --tag ghcr.io/maplibre/maplibre-gl-js:${{ steps.package-version.outputs.current-version }}
+          docker push ghcr.io/maplibre/maplibre-gl-js:${{ steps.package-version.outputs.current-version }}
   release-check:
     name: Check if version changed
     runs-on: ubuntu-latest
