@@ -1,12 +1,17 @@
 services:
-  dev:
+  build:
     platform: linux/amd64
-    image: localhost/maplibre-gl-js
     build:
       platforms:
         - "linux/amd64"
       context: .
       dockerfile: ./.devcontainer/Dockerfile
+    image: ghcr.io/maplibre/maplibre-gl-js-dev
+
+  dev:
+    # platform: linux/amd64
+    # image: localhost/maplibre-gl-js
+    image: ghcr.io/maplibre/maplibre-gl-js-dev
     working_dir: /maplibre-gl-js
     volumes:
       - ./:/maplibre-gl-js/
@@ -17,11 +22,13 @@ services:
       - -c
       - |
         npm ci
-        npm run watch-css
+        npm run build-css
+        npm run build-dev
+        npm run start-server &
         npm run watch-dev
 
   test:
-    platform: linux/amd64
+    # platform: linux/amd64
     image: localhost/maplibre-gl-js
     volumes:
       - ./test/:/maplibre-gl-js/test/

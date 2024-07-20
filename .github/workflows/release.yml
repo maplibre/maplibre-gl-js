@@ -6,6 +6,26 @@ on:
   workflow_dispatch:
 
 jobs:
+  push-store-image:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: './devcontainer'
+    steps:
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@main
+
+      - name: 'Login to GitHub Container Registry'
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+
+      - name: 'Build Inventory Image'
+        run: |
+          docker build . --tag ghcr.io/maplibre/maplibre-gl-js-dev
+          docker push ghcr.io/maplibre/maplibre-gl-js-dev
   release-check:
     name: Check if version changed
     runs-on: ubuntu-latest

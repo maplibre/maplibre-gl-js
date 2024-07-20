@@ -2,6 +2,7 @@
 ARG VARIANT=22-bookworm-slim
 
 FROM --platform=$BUILDPLATFORM node:${VARIANT}
+LABEL org.opencontainers.image.source="https://github.com/maplibre/maplibre-gl-js"
 
 ARG USERNAME=node
 ARG NPM_GLOBAL=/usr/local/share/npm-global
