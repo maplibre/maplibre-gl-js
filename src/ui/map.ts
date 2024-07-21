@@ -61,6 +61,7 @@ import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {ITransform} from '../geo/transform_interface';
+import {ICameraHelper} from '../geo/projection/camera_helper';
 
 const version = packageJSON.version;
 
@@ -2960,8 +2961,8 @@ export class Map extends Camera {
         webpSupported.testSupport(gl);
     }
 
-    override migrateProjection(newTransform: ITransform) {
-        super.migrateProjection(newTransform);
+    override migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper) {
+        super.migrateProjection(newTransform, newCameraHelper);
         this.painter.transform = newTransform;
     }
 

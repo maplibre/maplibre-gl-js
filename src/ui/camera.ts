@@ -18,6 +18,7 @@ import {angularCoordinatesToSurfaceVector, getZoomAdjustment, globeDistanceOfLoc
 import {mat4, vec3} from 'gl-matrix';
 import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from '../geo/projection/mercator_utils';
 import {scaleZoom, zoomScale} from '../geo/transform_helper';
+import {ICameraHelper} from '../geo/projection/camera_helper';
 
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
@@ -263,6 +264,7 @@ export type CameraUpdateTransformFunction =  (next: {
 
 export abstract class Camera extends Evented {
     transform: ITransform;
+    cameraHelper: ICameraHelper;
     terrain: Terrain;
     handlers: HandlerManager;
 
@@ -341,9 +343,10 @@ export abstract class Camera extends Evented {
      * to this new transform, carrying over all the properties of the old transform (center, pitch, etc.).
      * When the style's projection is changed (or first set), this function should be called.
      */
-    migrateProjection(newTransform: ITransform) {
+    migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper) {
         newTransform.apply(this.transform);
         this.transform = newTransform;
+        this.cameraHelper = newCameraHelper;
     }
 
     /**
