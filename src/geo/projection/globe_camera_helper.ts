@@ -1,13 +1,16 @@
 import Point from '@mapbox/point-geometry';
 import {IReadonlyTransform, ITransform} from '../transform_interface';
-import {ICameraHelper, MapControlsDeltas} from './camera_helper';
+import {cameraBoundsWarning, ICameraHelper, MapControlsDeltas} from './camera_helper';
 import {GlobeProjection} from './globe';
 import {LngLat} from '../lng_lat';
 import {MercatorCameraHelper} from './mercator_camera_helper';
-import {computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment} from './globe_utils';
+import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment} from './globe_utils';
 import {clamp, createVec3f64, differenceOfAnglesDegrees, remapSaturate} from '../../util/util';
-import {vec3} from 'gl-matrix';
-import {MAX_VALID_LATITUDE, zoomScale} from '../transform_helper';
+import {mat4, vec3} from 'gl-matrix';
+import {MAX_VALID_LATITUDE, scaleZoom, zoomScale} from '../transform_helper';
+import {CameraForBoundsOptions} from '../../ui/camera';
+import {LngLatBounds} from '../lng_lat_bounds';
+import {PaddingOptions} from '../edge_insets';
 
 /**
  * @internal
@@ -153,5 +156,132 @@ export class GlobeCameraHelper implements ICameraHelper {
         tr.setCenter(computeGlobePanCenter(deltas.panDelta, tr).wrap());
         // Setting the center might adjust zoom to keep globe size constant, we need to avoid adding this adjustment a second time
         tr.setZoom(oldZoom + getZoomAdjustment(oldLat, tr.center.lat));
+    }
+
+    cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform) {
+        const result = this._mercatorCameraHelper.cameraForBoxAndBearing(options, padding, bounds, bearing, tr);
+
+        if (!this.useGlobeControls) {
+            return result;
+        }
+
+        // If globe is enabled, we use the parameters computed for mercator, and just update the zoom to fit the bounds.
+
+        // Get clip space bounds including padding
+        const xLeft = (padding.left) / tr.width * 2.0 - 1.0;
+        const xRight = (tr.width - padding.right) / tr.width * 2.0 - 1.0;
+        const yTop = (padding.top) / tr.height * -2.0 + 1.0;
+        const yBottom = (tr.height - padding.bottom) / tr.height * -2.0 + 1.0;
+
+        // Get camera bounds
+        const flipEastWest = differenceOfAnglesDegrees(bounds.getWest(), bounds.getEast()) < 0;
+        const lngWest = flipEastWest ? bounds.getEast() : bounds.getWest();
+        const lngEast = flipEastWest ? bounds.getWest() : bounds.getEast();
+
+        const latNorth = Math.max(bounds.getNorth(), bounds.getSouth()); // "getNorth" doesn't always return north...
+        const latSouth = Math.min(bounds.getNorth(), bounds.getSouth());
+
+        // Additional vectors will be tested for the rectangle midpoints
+        const lngMid = lngWest + differenceOfAnglesDegrees(lngWest, lngEast) * 0.5;
+        const latMid = latNorth + differenceOfAnglesDegrees(latNorth, latSouth) * 0.5;
+
+        // Obtain a globe projection matrix that does not include pitch (unsupported)
+        const clonedTr = tr.clone();
+        clonedTr.setCenter(result.center);
+        clonedTr.setBearing(result.bearing);
+        clonedTr.setPitch(0);
+        clonedTr.setZoom(result.zoom);
+        const matrix = clonedTr.modelViewProjectionMatrix;
+
+        // Vectors to test - the bounds' corners and edge midpoints
+        const testVectors = [
+            angularCoordinatesToSurfaceVector(bounds.getNorthWest()),
+            angularCoordinatesToSurfaceVector(bounds.getNorthEast()),
+            angularCoordinatesToSurfaceVector(bounds.getSouthWest()),
+            angularCoordinatesToSurfaceVector(bounds.getSouthEast()),
+            // Also test edge midpoints
+            angularCoordinatesToSurfaceVector(new LngLat(lngEast, latMid)),
+            angularCoordinatesToSurfaceVector(new LngLat(lngWest, latMid)),
+            angularCoordinatesToSurfaceVector(new LngLat(lngMid, latNorth)),
+            angularCoordinatesToSurfaceVector(new LngLat(lngMid, latSouth))
+        ];
+        const vecToCenter = angularCoordinatesToSurfaceVector(result.center);
+
+        // Test each vector, measure how much to scale down the globe to satisfy all tested points that they are inside clip space.
+        let smallestNeededScale = Number.POSITIVE_INFINITY;
+        for (const vec of testVectors) {
+            if (xLeft < 0)
+                smallestNeededScale = GlobeCameraHelper.getLesserNonNegativeNonNull(smallestNeededScale, GlobeCameraHelper.solveVectorScale(vec, vecToCenter, matrix, 'x', xLeft));
+            if (xRight > 0)
+                smallestNeededScale = GlobeCameraHelper.getLesserNonNegativeNonNull(smallestNeededScale, GlobeCameraHelper.solveVectorScale(vec, vecToCenter, matrix, 'x', xRight));
+            if (yTop > 0)
+                smallestNeededScale = GlobeCameraHelper.getLesserNonNegativeNonNull(smallestNeededScale, GlobeCameraHelper.solveVectorScale(vec, vecToCenter, matrix, 'y', yTop));
+            if (yBottom < 0)
+                smallestNeededScale = GlobeCameraHelper.getLesserNonNegativeNonNull(smallestNeededScale, GlobeCameraHelper.solveVectorScale(vec, vecToCenter, matrix, 'y', yBottom));
+        }
+
+        if (!Number.isFinite(smallestNeededScale) || smallestNeededScale === 0) {
+            cameraBoundsWarning();
+            return undefined;
+        }
+
+        // Compute target zoom from the obtained scale.
+        result.zoom = clonedTr.zoom + scaleZoom(smallestNeededScale);
+    }
+
+    /**
+     * Computes how much to scale the globe in order for a given point on its surface (a location) to project to a given clip space coordinate in either the X or the Y axis.
+     * @param vector - Position of the queried location on the surface of the unit sphere globe.
+     * @param toCenter - Position of current transform center on the surface of the unit sphere globe.
+     * This is needed because zooming the globe not only changes its scale,
+     * but also moves the camera closer or further away along this vector (pitch is disregarded).
+     * @param projection - The globe projection matrix.
+     * @param targetDimension - The dimension in which the scaled vector must match the target value in clip space.
+     * @param targetValue - The target clip space value in the specified dimension to which the queried vector must project.
+     * @returns How much to scale the globe.
+     */
+    private static solveVectorScale(vector: vec3, toCenter: vec3, projection: mat4, targetDimension: 'x' | 'y', targetValue: number): number | null {
+        // We want to compute how much to scale the sphere in order for the input `vector` to project to `targetValue` in the given `targetDimension` (X or Y).
+        const k = targetValue;
+        const columnXorY = targetDimension === 'x' ?
+            [projection[0], projection[4], projection[8], projection[12]] : // X
+            [projection[1], projection[5], projection[9], projection[13]];  // Y
+        const columnZ = [projection[3], projection[7], projection[11], projection[15]];
+
+        const vecDotXY = vector[0] * columnXorY[0] + vector[1] * columnXorY[1] + vector[2] * columnXorY[2];
+        const vecDotZ = vector[0] * columnZ[0] + vector[1] * columnZ[1] + vector[2] * columnZ[2];
+        const toCenterDotXY = toCenter[0] * columnXorY[0] + toCenter[1] * columnXorY[1] + toCenter[2] * columnXorY[2];
+        const toCenterDotZ = toCenter[0] * columnZ[0] + toCenter[1] * columnZ[1] + toCenter[2] * columnZ[2];
+
+        // The following can be derived from writing down what happens to a vector scaled by a parameter ("V * t") when it is multiplied by a projection matrix, then solving for "t".
+        // Or rather, we derive it for a vector "V * t + (1-t) * C". Where V is `vector` and C is `toCenter`. The extra addition is needed because zooming out also moves the camera along "C".
+
+        const t = (toCenterDotXY + columnXorY[3] - k * toCenterDotZ - k * columnZ[3]) / (toCenterDotXY - vecDotXY - k * toCenterDotZ + k * vecDotZ);
+
+        if (
+            toCenterDotXY + k * vecDotZ === vecDotXY + k * toCenterDotZ ||
+            columnZ[3] * (vecDotXY - toCenterDotXY) + columnXorY[3] * (toCenterDotZ - vecDotZ) + vecDotXY * toCenterDotZ === toCenterDotXY * vecDotZ
+        ) {
+            // The computed result is invalid.
+            return null;
+        }
+        return t;
+    }
+
+    /**
+     * Returns `newValue` if it is:
+     *
+     * - not null AND
+     * - not negative AND
+     * - smaller than `newValue`,
+     *
+     * ...otherwise returns `oldValue`.
+     */
+    private static getLesserNonNegativeNonNull(oldValue: number, newValue: number): number {
+        if (newValue !== null && newValue >= 0 && newValue < oldValue) {
+            return newValue;
+        } else {
+            return oldValue;
+        }
     }
 }
