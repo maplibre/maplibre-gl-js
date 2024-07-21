@@ -2,7 +2,7 @@ import {mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {MAX_VALID_LATITUDE, TransformHelper} from '../transform_helper';
 import {MercatorTransform} from './mercator_transform';
 import {LngLat, earthRadius} from '../lng_lat';
-import {angleToRotateBetweenVectors2D, clamp, differenceOfAnglesDegrees, distanceOfAnglesRadians, easeCubicInOut, lerp, pointPlaneSignedDistance, warnOnce} from '../../util/util';
+import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, easeCubicInOut, lerp, pointPlaneSignedDistance, warnOnce} from '../../util/util';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {browser} from '../../util/browser';
@@ -37,16 +37,6 @@ type RaySphereIntersection = {
      */
     tMax: number;
 } | null;
-
-// These functions create **64** bit float vectors and matrices, unlike default gl-matrix functions.
-function createVec4(): vec4 { return new Float64Array(4) as any; }
-function createVec3(): vec3 { return new Float64Array(3) as any; }
-function createMat4(): mat4 { return new Float64Array(16) as any; }
-function createIdentityMat4(): mat4 {
-    const m = new Float64Array(16) as any;
-    mat4.identity(m);
-    return m;
-}
 
 export class GlobeTransform implements ITransform {
     private _helper: TransformHelper;
@@ -214,7 +204,7 @@ export class GlobeTransform implements ITransform {
     // Implementation of globe transform
     //
 
-    private _cachedClippingPlane: vec4 = createVec4();
+    private _cachedClippingPlane: vec4 = createVec4f64();
 
     // Transition handling
     private _lastGlobeStateEnabled: boolean = true;
@@ -236,13 +226,13 @@ export class GlobeTransform implements ITransform {
 
     private _skipNextAnimation: boolean = true;
 
-    private _projectionMatrix: mat4 = createIdentityMat4();
-    private _globeViewProjMatrix: mat4 = createIdentityMat4();
-    private _globeViewProjMatrixNoCorrection: mat4 = createIdentityMat4();
-    private _globeViewProjMatrixNoCorrectionInverted: mat4 = createIdentityMat4();
-    private _globeProjMatrixInverted: mat4 = createIdentityMat4();
+    private _projectionMatrix: mat4 = createIdentityMat4f64();
+    private _globeViewProjMatrix: mat4 = createIdentityMat4f64();
+    private _globeViewProjMatrixNoCorrection: mat4 = createIdentityMat4f64();
+    private _globeViewProjMatrixNoCorrectionInverted: mat4 = createIdentityMat4f64();
+    private _globeProjMatrixInverted: mat4 = createIdentityMat4f64();
 
-    private _cameraPosition: vec3 = createVec3();
+    private _cameraPosition: vec3 = createVec3f64();
 
     /**
      * Whether globe projection is allowed to be used.
@@ -311,7 +301,7 @@ export class GlobeTransform implements ITransform {
 
     public get cameraPosition(): vec3 {
         // Return a copy - don't let outside code mutate our precomputed camera position.
-        const copy = createVec3(); // Ensure the resulting vector is float64s
+        const copy = createVec3f64(); // Ensure the resulting vector is float64s
         copy[0] = this._cameraPosition[0];
         copy[1] = this._cameraPosition[1];
         copy[2] = this._cameraPosition[2];
@@ -623,8 +613,8 @@ export class GlobeTransform implements ITransform {
         const globeRadiusPixels = getGlobeRadiusPixels(this.worldSize, this.center.lat);
 
         // Construct a completely separate matrix for globe view
-        const globeMatrix = createMat4();
-        const globeMatrixUncorrected = createMat4();
+        const globeMatrix = createMat4f64();
+        const globeMatrixUncorrected = createMat4f64();
         this._nearZ = 0.5;
         this._farZ = this.cameraToCenterDistance + globeRadiusPixels * 2.0; // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
         mat4.perspective(globeMatrix, this.fov * Math.PI / 180, this.width / this.height, this._nearZ, this._farZ);
@@ -635,7 +625,7 @@ export class GlobeTransform implements ITransform {
         globeMatrix[9] = offset.y * 2 / this._helper._height;
         this._projectionMatrix = mat4.clone(globeMatrix);
 
-        this._globeProjMatrixInverted = createMat4();
+        this._globeProjMatrixInverted = createMat4f64();
         mat4.invert(this._globeProjMatrixInverted, globeMatrix);
         mat4.translate(globeMatrix, globeMatrix, [0, 0, -this.cameraToCenterDistance]);
         mat4.rotateX(globeMatrix, globeMatrix, -this.pitch * Math.PI / 180);
@@ -643,7 +633,7 @@ export class GlobeTransform implements ITransform {
         mat4.translate(globeMatrix, globeMatrix, [0.0, 0, -globeRadiusPixels]);
         // Rotate the sphere to center it on viewed coordinates
 
-        const scaleVec = createVec3();
+        const scaleVec = createVec3f64();
         scaleVec[0] = globeRadiusPixels;
         scaleVec[1] = globeRadiusPixels;
         scaleVec[2] = globeRadiusPixels;
@@ -659,11 +649,11 @@ export class GlobeTransform implements ITransform {
         mat4.scale(globeMatrix, globeMatrix, scaleVec); // Scale the unit sphere to a sphere with diameter of 1
         this._globeViewProjMatrix = globeMatrix;
 
-        this._globeViewProjMatrixNoCorrectionInverted = createMat4();
+        this._globeViewProjMatrixNoCorrectionInverted = createMat4f64();
         mat4.invert(this._globeViewProjMatrixNoCorrectionInverted, globeMatrixUncorrected);
 
-        const zero = createVec3();
-        this._cameraPosition = createVec3();
+        const zero = createVec3f64();
+        this._cameraPosition = createVec3f64();
         this._cameraPosition[2] = this.cameraToCenterDistance / globeRadiusPixels;
         vec3.rotateX(this._cameraPosition, this._cameraPosition, zero, this.pitch * Math.PI / 180);
         vec3.rotateZ(this._cameraPosition, this._cameraPosition, zero, this.angle);
@@ -676,7 +666,7 @@ export class GlobeTransform implements ITransform {
 
     calculateFogMatrix(_unwrappedTileID: UnwrappedTileID): mat4 {
         warnOnce('calculateFogMatrix is not supported on globe projection.');
-        const m = createMat4();
+        const m = createMat4f64();
         mat4.identity(m);
         return m;
     }
@@ -719,7 +709,7 @@ export class GlobeTransform implements ITransform {
         }
         const vec = angularCoordinatesToSurfaceVector(lngLat);
         vec3.scale(vec, vec, (1.0 + elevation / earthRadius));
-        const result = createVec4();
+        const result = createVec4f64();
         vec4.transformMat4(result, [vec[0], vec[1], vec[2], 1], this._globeViewProjMatrixNoCorrection);
         return result[2] / result[3];
     }
@@ -834,10 +824,10 @@ export class GlobeTransform implements ITransform {
         const vecToPixelCurrent = angularCoordinatesToSurfaceVector(pointLngLat);
         const vecToTarget = angularCoordinatesToSurfaceVector(lnglat);
 
-        const zero = createVec3();
+        const zero = createVec3f64();
         vec3.zero(zero);
 
-        const rotatedPixelVector = createVec3();
+        const rotatedPixelVector = createVec3f64();
         vec3.rotateY(rotatedPixelVector, vecToPixelCurrent, zero, -this.center.lng * Math.PI / 180.0);
         vec3.rotateX(rotatedPixelVector, rotatedPixelVector, zero, this.center.lat * Math.PI / 180.0);
 
@@ -875,10 +865,10 @@ export class GlobeTransform implements ITransform {
         const lngA = angleToRotateBetweenVectors2D(vecToTarget[0], vecToTarget[2], rotatedPixelVector[0], intersectionA);
         const lngB = angleToRotateBetweenVectors2D(vecToTarget[0], vecToTarget[2], rotatedPixelVector[0], intersectionB);
 
-        const vecToTargetLngA = createVec3();
+        const vecToTargetLngA = createVec3f64();
         vec3.rotateY(vecToTargetLngA, vecToTarget, zero, -lngA);
         const latA = angleToRotateBetweenVectors2D(vecToTargetLngA[1], vecToTargetLngA[2], rotatedPixelVector[1], rotatedPixelVector[2]);
-        const vecToTargetLngB = createVec3();
+        const vecToTargetLngB = createVec3f64();
         vec3.rotateY(vecToTargetLngB, vecToTarget, zero, -lngB);
         const latB = angleToRotateBetweenVectors2D(vecToTargetLngB[1], vecToTargetLngB[2], rotatedPixelVector[1], rotatedPixelVector[2]);
         // Is at least one of the needed latitudes valid?
@@ -944,7 +934,7 @@ export class GlobeTransform implements ITransform {
      * and returns its coordinates on screen in pixels.
      */
     private _projectSurfacePointToScreen(pos: vec3): Point {
-        const projected = createVec4();
+        const projected = createVec4f64();
         vec4.transformMat4(projected, [...pos, 1] as vec4, this._globeViewProjMatrixNoCorrection);
         projected[0] /= projected[3];
         projected[1] /= projected[3];
@@ -989,7 +979,7 @@ export class GlobeTransform implements ITransform {
      * Computes normalized direction of a ray from the camera to the given screen pixel.
      */
     getRayDirectionFromPixel(p: Point): vec3 {
-        const pos = createVec4();
+        const pos = createVec4f64();
         pos[0] = (p.x / this.width) * 2.0 - 1.0;
         pos[1] = ((p.y / this.height) * 2.0 - 1.0) * -1.0;
         pos[2] = 1;
@@ -998,11 +988,11 @@ export class GlobeTransform implements ITransform {
         pos[0] /= pos[3];
         pos[1] /= pos[3];
         pos[2] /= pos[3];
-        const ray = createVec3();
+        const ray = createVec3f64();
         ray[0] = pos[0] - this._cameraPosition[0];
         ray[1] = pos[1] - this._cameraPosition[1];
         ray[2] = pos[2] - this._cameraPosition[2];
-        const rayNormalized: vec3 = createVec3();
+        const rayNormalized: vec3 = createVec3f64();
         vec3.normalize(rayNormalized, ray);
         return rayNormalized;
     }
@@ -1030,7 +1020,7 @@ export class GlobeTransform implements ITransform {
             return false;
         }
 
-        const projected = createVec4();
+        const projected = createVec4f64();
         vec4.transformMat4(projected, [...vec, 1] as vec4, this._globeViewProjMatrixNoCorrection);
         projected[0] /= projected[3];
         projected[1] /= projected[3];
@@ -1057,8 +1047,8 @@ export class GlobeTransform implements ITransform {
         // However solving it in the traditional schoolbook way leads to floating point precision issues.
         // Here we instead use the approach suggested in the book Ray Tracing Gems, chapter 7.
         // https://www.realtimerendering.com/raytracinggems/rtg/index.html
-        const inner = createVec3();
-        const scaledDir = createVec3();
+        const inner = createVec3f64();
+        const scaledDir = createVec3f64();
         vec3.scale(scaledDir, direction, originDotDirection);
         vec3.sub(inner, origin, scaledDir);
         const discriminant = planetRadiusSquared - vec3.dot(inner, inner);
@@ -1099,13 +1089,13 @@ export class GlobeTransform implements ITransform {
         if (intersection) {
             // Ray intersects the sphere -> compute intersection LngLat.
             // Assume the ray origin is never inside the sphere - just use tMin
-            const intersectionPoint = createVec3();
+            const intersectionPoint = createVec3f64();
             vec3.add(intersectionPoint, rayOrigin, [
                 rayDirection[0] * intersection.tMin,
                 rayDirection[1] * intersection.tMin,
                 rayDirection[2] * intersection.tMin
             ]);
-            const sphereSurface = createVec3();
+            const sphereSurface = createVec3f64();
             vec3.normalize(sphereSurface, intersectionPoint);
             return sphereSurfacePointToCoordinates(sphereSurface);
         }
@@ -1117,7 +1107,7 @@ export class GlobeTransform implements ITransform {
         const distanceToIntersection = -originToPlaneDistance / directionDotPlaneXyz;
 
         const maxRayLength = 2.0; // One globe diameter
-        const planeIntersection = createVec3();
+        const planeIntersection = createVec3f64();
 
         if (distanceToIntersection > 0) {
             vec3.add(planeIntersection, rayOrigin, [
@@ -1128,7 +1118,7 @@ export class GlobeTransform implements ITransform {
         } else {
             // When the ray takes too long to hit the plane (>maxRayLength), or if the plane intersection is behind the camera, handle things differently.
             // Take a point along the ray at distance maxRayLength, project it to clipping plane, then continue as normal to find the horizon point.
-            const distantPoint = createVec3();
+            const distantPoint = createVec3f64();
             vec3.add(distantPoint, rayOrigin, [
                 rayDirection[0] * maxRayLength,
                 rayDirection[1] * maxRayLength,
@@ -1142,7 +1132,7 @@ export class GlobeTransform implements ITransform {
             ]);
         }
 
-        const closestOnHorizon = createVec3();
+        const closestOnHorizon = createVec3f64();
         vec3.normalize(closestOnHorizon, planeIntersection);
         return sphereSurfacePointToCoordinates(closestOnHorizon);
     }
