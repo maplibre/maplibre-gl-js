@@ -8,6 +8,7 @@
 ### 🐞 Bug fixes
 
 - Fix lag on fast map zoom ([#4366](https://github.com/maplibre/maplibre-gl-js/pull/4366))
+- Fix unguarded read access to possibly undefined object ([#4431](https://github.com/maplibre/maplibre-gl-js/pull/4431))
 - Fix remove hash string when map is removed ([#4427](https://github.com/maplibre/maplibre-gl-js/pull/4427))
 - _...Add new stuff here..._
 
