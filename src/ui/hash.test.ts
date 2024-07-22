@@ -281,6 +281,52 @@ describe('hash', () => {
         expect(window.location.hash).toBe('#baz&map=7/1/2/135/60&foo=bar');
     });
 
+    test('#_removeHash', () => {
+        const hash = createHash()
+            .addTo(map);
+
+        map.setZoom(3);
+        map.setCenter([2.0, 1.0]);
+
+        expect(window.location.hash).toBe('#3/1/2');
+
+        hash._removeHash();
+
+        expect(window.location.hash).toBe('');
+
+        window.location.hash = '#3/1/2&foo=bar';
+
+        hash._removeHash();
+
+        expect(window.location.hash).toBe('#foo=bar');
+    });
+
+    test('#_removeHash named', () => {
+        const hash = createHash('map')
+            .addTo(map);
+
+        map.setZoom(3);
+        map.setCenter([2.0, 1.0]);
+
+        expect(window.location.hash).toBe('#map=3/1/2');
+
+        hash._removeHash();
+
+        expect(window.location.hash).toBe('');
+
+        window.location.hash = '#map=3/1/2&foo=bar';
+
+        hash._removeHash();
+
+        expect(window.location.hash).toBe('#foo=bar');
+
+        window.location.hash = '#baz&map=7/2/1/135/60&foo=bar';
+
+        hash._removeHash();
+
+        expect(window.location.hash).toBe('#baz&foo=bar');
+    });
+
     test('map#remove', () => {
         const container = window.document.createElement('div');
         Object.defineProperty(container, 'clientWidth', {value: 512});
