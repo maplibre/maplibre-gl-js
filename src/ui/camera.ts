@@ -958,10 +958,10 @@ export abstract class Camera extends Evented {
         if (options.animate === false || (!options.essential && browser.prefersReducedMotion)) options.duration = 0;
 
         const tr = this._getTransformForUpdate(),
-            startZoom = this.getZoom(),
-            startBearing = this.getBearing(),
-            startPitch = this.getPitch(),
-            startPadding = this.getPadding(),
+            startZoom = tr.zoom,
+            startBearing = tr.bearing,
+            startPitch = tr.pitch,
+            startPadding = tr.padding,
 
             bearing = 'bearing' in options ? this._normalizeBearing(options.bearing, startBearing) : startBearing,
             pitch = 'pitch' in options ? +options.pitch : startPitch,
@@ -975,7 +975,7 @@ export abstract class Camera extends Evented {
             LngLat.convert(options.center || locationAtOffset),
             options.zoom ?? startZoom
         );
-        this._normalizeCenter(center);
+        this._normalizeCenter(center, tr);
 
         const from = tr.project(locationAtOffset);
         const delta = tr.project(center).sub(from);
@@ -1270,10 +1270,10 @@ export abstract class Camera extends Evented {
         }, options);
 
         const tr = this._getTransformForUpdate(),
-            startZoom = this.getZoom(),
-            startBearing = this.getBearing(),
-            startPitch = this.getPitch(),
-            startPadding = this.getPadding();
+            startZoom = tr.zoom,
+            startBearing = tr.bearing,
+            startPitch = tr.pitch,
+            startPadding = tr.padding;
 
         const bearing = 'bearing' in options ? this._normalizeBearing(options.bearing, startBearing) : startBearing;
         const pitch = 'pitch' in options ? +options.pitch : startPitch;
@@ -1287,7 +1287,7 @@ export abstract class Camera extends Evented {
             LngLat.convert(options.center || locationAtOffset),
             options.zoom ?? startZoom
         );
-        this._normalizeCenter(center);
+        this._normalizeCenter(center, tr);
         const scale = tr.zoomScale(zoom - startZoom);
 
         const from = tr.project(locationAtOffset);
@@ -1488,8 +1488,7 @@ export abstract class Camera extends Evented {
 
     // If a path crossing the antimeridian would be shorter, extend the final coordinate so that
     // interpolating between the two endpoints will cross it.
-    _normalizeCenter(center: LngLat) {
-        const tr = this.transform;
+    _normalizeCenter(center: LngLat, tr: Transform) {
         if (!tr.renderWorldCopies || tr.lngRange) return;
 
         const delta = center.lng - tr.center.lng;
