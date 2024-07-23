@@ -128,7 +128,7 @@
     "ts-node": "^10.9.2",
     "tslib": "^2.6.3",
     "typedoc": "^0.26.5",
-    "typedoc-plugin-markdown": "^4.2.1",
+    "typedoc-plugin-markdown": "^4.2.2",
     "typedoc-plugin-missing-exports": "^3.0.0",
     "typescript": "^5.5.4"
   },
