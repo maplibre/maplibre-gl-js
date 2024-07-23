@@ -1106,24 +1106,21 @@ export abstract class Camera extends Evented {
         return this._requestedCameraState;
     }
 
-
+    /**
+     * Moves the camera above the terrain surface for the given transform.
+     */
     _elevateCameraIfInsideTerrain(tr: Transform) {
-        try {
-            const buffer = Math.min(500, 20 * (25 - tr.zoom));
-            const camera = tr.getCameraPosition();
-            const minAllowedAltitude = this.terrain.getElevationForLngLatZoom(camera.lngLat, tr.zoom) + buffer;
-            if (camera.altitude < minAllowedAltitude) {
-                console.log('camera about to move into terrain');
-                const newCamera = this.calculateCameraOptionsFromTo(camera.lngLat, minAllowedAltitude, tr.center, tr.elevation);
-                console.log(`pitch: ${tr.pitch} vs ${newCamera.pitch} | zoom: ${tr.zoom} vs ${newCamera.zoom}`);
-                return {
-                    pitch: newCamera.pitch,
-                    zoom: newCamera.zoom,
-                };
-            }
-
-        } catch {
-            console.log('error thrown in transformCameraUpdate');
+        const camera = tr.getCameraPosition();
+        const surfacePadding = Math.min(500, 20 * (25 - tr.zoom));
+        const minAltitude = this.terrain.getElevationForLngLatZoom(
+            camera.lngLat, tr.zoom) + surfacePadding;
+        if (camera.altitude < minAltitude) {
+            const newCamera = this.calculateCameraOptionsFromTo(
+                camera.lngLat, minAltitude, tr.center, tr.elevation);
+            return {
+                pitch: newCamera.pitch,
+                zoom: newCamera.zoom,
+            };
         }
         return {};
     }
@@ -1141,8 +1138,6 @@ export abstract class Camera extends Evented {
             modifiers.push(this._elevateCameraIfInsideTerrain.bind(this));
         }
         if (this.transformCameraUpdate) {
-            console.log('noway');
-            return;
             modifiers.push(this.transformCameraUpdate.bind(this));
         }
         if (!modifiers.length) {
