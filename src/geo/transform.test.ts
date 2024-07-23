@@ -34,6 +34,10 @@ describe('transform', () => {
         expect(transform.scaleZoom(10)).toBe(3.3219280948873626);
         expect(transform.point).toEqual(new Point(262144, 262144));
         expect(transform.height).toBe(500);
+        expect(transform.nearZ).toBe(10);
+        expect(transform.farZ).toBe(804.8028169246645);
+        expect([...transform.projectionMatrix.values()]).toEqual([3, 0, 0, 0, 0, 3, 0, 0, -0, 0, -1.0251635313034058, -1, 0, 0, -20.25163459777832, 0]);
+        expect([...transform.modelViewProjectionMatrix.values()]).toEqual([3, 0, 0, 0, 0, -2.954423259036624, -0.1780177690666898, -0.17364817766693033, 0, 0.006822967915294533, -0.013222891287479163, -0.012898324631281611, -786432, 774484.3308168967, 47414.91102496082, 46270.827886319785]);
         expect(fixedLngLat(transform.pointLocation(new Point(250, 250)))).toEqual({lng: 0, lat: 0});
         expect(fixedCoord(transform.pointCoordinate(new Point(250, 250)))).toEqual({x: 0.5, y: 0.5, z: 0});
         expect(transform.locationPoint(new LngLat(0, 0))).toEqual({x: 250, y: 250});

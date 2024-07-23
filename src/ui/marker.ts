@@ -343,6 +343,7 @@ export class Marker extends Evented {
             this._map.off('click', this._onMapClick);
             this._map.off('move', this._update);
             this._map.off('moveend', this._update);
+            this._map.off('terrain', this._update);
             this._map.off('mousedown', this._addDragHandler);
             this._map.off('touchstart', this._addDragHandler);
             this._map.off('mouseup', this._onUp);

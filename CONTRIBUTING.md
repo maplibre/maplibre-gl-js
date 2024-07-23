@@ -54,7 +54,7 @@ Install the Xcode Command Line Tools Package
 xcode-select --install
 ```
 
-Install [node.js](https://nodejs.org/) version ^18
+Install [node.js](https://nodejs.org/) version in [.nvmrc](.nvmrc)
 ```bash
 brew install node
 ```
@@ -138,13 +138,12 @@ Before you can [run the docs](./docs/README.md), you need to ensure Docker is in
 
 Consider using WSL and follow the above Linux guide or follow the next steps
 
-Install [git](https://git-scm.com/), [node.js](https://nodejs.org/) (version ^18), [npm and node-gyp](https://github.com/Microsoft/nodejs-guidelines/blob/master/windows-environment.md#compiling-native-addon-modules).
+Install [git](https://git-scm.com/), [node.js](https://nodejs.org/) (version in [.nvmrc](.nvmrc)), [npm and node-gyp](https://github.com/Microsoft/nodejs-guidelines/blob/master/windows-environment.md#compiling-native-addon-modules).
 
 Clone the repository
 ```bash
 git clone git@github.com:maplibre/maplibre-gl-js.git
 ```
-
 
 Install node module dependencies
 ```bash
@@ -256,7 +255,7 @@ How to add your changelog?
 
 ### Misc
 
-- [drawing antialiased lines](https://www.mapbox.com/blog/drawing-antialiased-lines/)
-- [drawing text with signed distance fields](https://www.mapbox.com/blog/text-signed-distance-fields/)
+- [drawing antialiased lines](https://blog.mapbox.com/drawing-antialiased-lines-with-opengl-8766f34192dc)
+- [drawing text with signed distance fields](https://blog.mapbox.com/drawing-text-with-signed-distance-fields-in-mapbox-gl-b0933af6f817)
 - [label placement](https://www.mapbox.com/blog/placing-labels/)
 - [distance fields](https://bytewrangler.blogspot.com/2011/10/signed-distance-fields.html)

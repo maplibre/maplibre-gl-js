@@ -27,7 +27,6 @@ Adds support for drawing and editing features on maps.
 <br/><small>[View on GitHub](https://github.com/mapbox/mapbox-gl-draw)</small>
 
 #### terra-draw
-
 Provides a MapLibre GL JS adapter to allow creation, selection and editing of geometries.
 <br/><small>[View on GitHub](https://github.com/JamesLMilner/terra-draw)</small>
 
@@ -95,7 +94,7 @@ Draw routes and areas snapped to roads.
 A set of maplibre plugins to integrate with svelte/sveltekit. The repository consists of various useful plugins such as export plugin, legend plugin, measure plugin, attribute table plugin, tour plugin, etc.
 <br/><small>[View on GitHub](https://github.com/watergis/svelte-maplibre-components)</small>
 
-##  Map Rendering Plugins
+## Map Rendering Plugins
 
 #### mapbox-gl-language
 Automatically localizes the map into the user’s language.
@@ -148,6 +147,14 @@ A library for making it easier to use Esri services in MapLibre GL JS. Supports 
 #### pmtiles
 A library for retrieving tiles from single-file, cloud-storage-optimized PMTiles archives, which don't require running a server or API.
 <br/><small>[View on GitHub](https://github.com/protomaps/PMTiles)</small>
+
+#### maplibre-google-maps
+A library for integrating Google Maps as raster layers into MapLibre GL JS. It uses the new Google Map Tiles API.
+<br/><small>[View on GitHub](https://github.com/traccar/maplibre-google-maps)</small>
+
+#### allmaps-maplibre
+A package for displaying georeferenced [IIIF](https://iiif.io/) images by loading [Georeference Annotations](https://preview.iiif.io/api/georef/extension/georef/) and using WebGL to transform and overlay the images on their correct geographical position.
+<br/><small>[View on GitHub](https://github.com/allmaps/allmaps/tree/main/packages/maplibre)</small>
 
 ##  Framework Integrations
 

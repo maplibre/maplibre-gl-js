@@ -1,6 +1,6 @@
 # Introduction
 
-MapLibre GL JS is a TypeScript library that uses WebGL to render interactive maps from vector tiles in a browser. The customization of the map comply with the [MapLibre Style Spec](https://maplibre.org/maplibre-style-spec). It is part of the [MapLibre ecosystem](https://github.com/maplibre), with a pendant for Mobile, Desktop, Servers called [MapLibre Native](https://maplibre.org/projects/maplibre-native/).
+MapLibre GL JS is a TypeScript library that uses WebGL to render interactive maps from vector tiles in a browser. The customization of the map comply with the [MapLibre Style Spec](https://maplibre.org/maplibre-style-spec). It is part of the [MapLibre ecosystem](https://github.com/maplibre), with a counterpart for Android, iOS and other platforms called [MapLibre Native](https://github.com/maplibre/maplibre-native).
 
 ## Quickstart
 
@@ -35,6 +35,32 @@ This documentation is divided into several sections:
 Each section describes classes or objects as well as their **properties**, **parameters**, **instance members**, and associated **events**. Many sections also include inline code examples and related resources.
 
 In the examples, we use vector tiles from our [Demo tiles repository](https://github.com/maplibre/demotiles) and from [MapTiler](https://maptiler.com). Get your own API key if you want to use MapTiler data in your project.
+
+## NPM
+
+Install the MapLibre GL JS package via NPM.
+
+```bash
+npm install maplibre-gl
+```
+
+You can then import the MapLibre GL JS module in your project.
+
+```html
+<div id="map"></div>
+```
+
+```javascript
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+
+const map = new maplibregl.Map({
+    container: 'map', // container id
+    style: 'https://demotiles.maplibre.org/style.json', // style URL
+    center: [0, 0], // starting position [lng, lat]
+    zoom: 1 // starting zoom
+});
+```
 
 ## CSP Directives
 

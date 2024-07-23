@@ -47,6 +47,7 @@ markdown_extensions:
   - pymdownx.escapeall:
       hardbreak: True
       nbsp: True
+  - attr_list
 
 extra:
   social:
@@ -66,3 +67,8 @@ plugins:
   - social:
       cards_layout_options:
         background_color: '#295DAA'
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn

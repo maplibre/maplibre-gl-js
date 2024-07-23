@@ -53,7 +53,8 @@ import type {
     StyleSpecification,
     LightSpecification,
     SourceSpecification,
-    TerrainSpecification
+    TerrainSpecification,
+    SkySpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
@@ -2683,6 +2684,31 @@ export class Map extends Camera {
     }
 
     /**
+     * Loads sky and fog defined by {@link SkySpecification} onto the map.
+     * Note: The fog only shows when using the terrain 3D feature.
+     * @param sky - Sky properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sky).
+     * @returns `this`
+     * @example
+     * ```ts
+     * map.setSky({ 'sky-color': '#00f' });
+     * ```
+     */
+    setSky(sky: SkySpecification) {
+        this._lazyInitEmptyStyle();
+        this.style.setSky(sky);
+        return this._update(true);
+    }
+
+    /**
+     * Returns the value of the sky object.
+     *
+     * @returns sky Sky properties of the style.
+     */
+    getSky() {
+        return this.style.getSky();
+    }
+
+    /**
      * Sets the `state` of a feature.
      * A feature's `state` is a set of user-defined key-value pairs that are assigned to a feature at runtime.
      * When using this method, the `state` object is merged with any existing key-value pairs in the feature's state.
@@ -3175,7 +3201,7 @@ export class Map extends Camera {
 
         this._resizeObserver?.disconnect();
         const extension = this.painter.context.gl.getExtension('WEBGL_lose_context');
-        if (extension) extension.loseContext();
+        if (extension?.loseContext) extension.loseContext();
         this._canvas.removeEventListener('webglcontextrestored', this._contextRestored, false);
         this._canvas.removeEventListener('webglcontextlost', this._contextLost, false);
         DOM.remove(this._canvasContainer);

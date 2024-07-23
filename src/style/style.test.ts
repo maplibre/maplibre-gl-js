@@ -12,7 +12,7 @@ import {OverscaledTileID} from '../source/tile_id';
 import {fakeServer, type FakeServer} from 'nise';
 
 import {EvaluationParameters} from './evaluation_parameters';
-import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification, StyleSpecification, SymbolLayerSpecification, TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification, StyleSpecification, SymbolLayerSpecification, TerrainSpecification, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
 import {GeoJSONSource} from '../source/geojson_source';
 import {sleep} from '../util/test/util';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
@@ -695,6 +695,7 @@ describe('Style#setState', () => {
         spys.push(jest.spyOn(style, 'setGeoJSONSourceData').mockImplementation((() => {}) as any));
         spys.push(jest.spyOn(style, 'setGlyphs').mockImplementation((() => {}) as any));
         spys.push(jest.spyOn(style, 'setSprite').mockImplementation((() => {}) as any));
+        spys.push(jest.spyOn(style, 'setSky').mockImplementation((() => {}) as any));
         spys.push(jest.spyOn(style.map, 'setTerrain').mockImplementation((() => {}) as any));
 
         const newStyle = JSON.parse(JSON.stringify(styleJson)) as StyleSpecification;
@@ -723,6 +724,11 @@ describe('Style#setState', () => {
             exaggeration: 0.5
         };
         newStyle.zoom = 2;
+        newStyle.sky = {
+            'fog-color': '#000001',
+            'sky-color': '#000002',
+            'horizon-fog-blend': 0.5,
+        };
         const didChange = style.setState(newStyle);
         expect(didChange).toBeTruthy();
         for (const spy of spys) {
@@ -2529,5 +2535,76 @@ describe('Style#serialize', () => {
 
         await style.once('style.load');
         expect(style.serialize().terrain).toBeUndefined();
+    });
+
+    test('include sky property when map has sky', async () => {
+        const sky: SkySpecification = {
+            'horizon-fog-blend': 0.5,
+            'fog-color': '#fff'
+        };
+        const styleJson = createStyleJSON({sky});
+        const style = new Style(getStubMap());
+        style.loadJSON(styleJson);
+
+        await style.once('style.load');
+        expect(style.serialize().sky).toStrictEqual(sky);
+    });
+
+    test('do not include sky property when map does not have sky', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+
+        await style.once('style.load');
+        expect(style.serialize().sky).toBeUndefined();
+    });
+
+    test('sky should be undefined when map does not have sky', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+
+        await style.once('style.load');
+        expect(style.getSky()).toBeUndefined();
+    });
+
+    test('do not include sky property after removing sky from the map', async () => {
+        const sky: SkySpecification = {
+            'horizon-fog-blend': 0.5,
+            'fog-color': '#fff'
+        };
+        const styleJson = createStyleJSON({sky});
+        const style = new Style(getStubMap());
+        style.loadJSON(styleJson);
+
+        await style.once('style.load');
+        style.setSky(undefined);
+        expect(style.serialize().sky).toBeUndefined();
+    });
+
+    test('include sky property when setting it after map loads', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+
+        await style.once('style.load');
+        style.setSky({
+            'horizon-fog-blend': 0.5,
+            'fog-color': '#fff'
+        });
+        expect(style.serialize().sky).toBeDefined();
+    });
+
+    test('update sky properties after setting the sky on initial load', async () => {
+        const sky: SkySpecification = {
+            'fog-color': '#FF0000'
+        };
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({sky, transition: {duration: 0, delay: 0}}));
+
+        await style.once('style.load');
+        style.setSky({
+            'fog-color': '#00FF00'
+        });
+        style.update({transition: {duration: 0, delay: 0}} as EvaluationParameters);
+        expect(style.sky.properties.get('fog-color').g).toBe(1);
+        expect(style.sky.properties.get('fog-color').r).toBe(0);
     });
 });
