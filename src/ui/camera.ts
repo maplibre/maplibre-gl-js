@@ -1107,9 +1107,17 @@ export abstract class Camera extends Evented {
     }
 
     /**
-     * Moves the camera above the terrain surface for the given transform.
+     * @internal
+     * Checks the given transform for the camera being below terrain surface and
+     * returns new pitch and zoom to fix that.
+     *
+     * With the new pith and zoom, the camera will be at the same ground
+     * position but at higher altitude. It will still point to the same spot on
+     * the map.
+     *
+     * @param tr - The transform to check.
      */
-    _elevateCameraIfInsideTerrain(tr: Transform) {
+    _elevateCameraIfInsideTerrain(tr: Transform) : { pitch?: number; zoom?: number } {
         const camera = tr.getCameraPosition();
         const surfacePadding = Math.min(500, 20 * (25 - tr.zoom));
         const minAltitude = this.terrain.getElevationForLngLatZoom(

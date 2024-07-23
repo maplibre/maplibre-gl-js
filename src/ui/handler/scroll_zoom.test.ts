@@ -303,6 +303,7 @@ describe('ScrollZoomHandler', () => {
         browserNow.mockReturnValue(now);
 
         const map = createMap();
+        map._elevateCameraIfInsideTerrain = (_tr : any) => ({});
         map._renderTaskQueue.run();
         map.terrain = {
             pointCoordinate: () => null
@@ -329,6 +330,7 @@ describe('ScrollZoomHandler', () => {
         browserNow.mockReturnValue(now);
 
         let map = createMap();
+        map._elevateCameraIfInsideTerrain = (_tr : any) => ({});
         map._renderTaskQueue.run();
         map.terrain = {
             pointCoordinate: () => null
@@ -353,6 +355,7 @@ describe('ScrollZoomHandler', () => {
 
         // do the same test on the bottom
         map = createMap();
+        map._elevateCameraIfInsideTerrain = (_tr : any) => ({});
         map._renderTaskQueue.run();
         map.terrain = {
             pointCoordinate: () => null
