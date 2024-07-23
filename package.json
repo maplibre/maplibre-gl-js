@@ -137,7 +137,7 @@
     "typedoc": "^0.26.5",
     "typedoc-plugin-markdown": "^4.2.1",
     "typedoc-plugin-missing-exports": "^3.0.0",
-    "typescript": "^5.5.3"
+    "typescript": "^5.5.4"
   },
   "overrides": {
     "postcss-inline-svg": {
