@@ -590,27 +590,7 @@ export class Map extends Camera {
         this._clickTolerance = resolvedOptions.clickTolerance;
         this._overridePixelRatio = resolvedOptions.pixelRatio;
         this._maxCanvasSize = resolvedOptions.maxCanvasSize;
-        // this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
-        this.transformCameraUpdate = (tr: Transform) => {
-            try {
-                const buffer = Math.min(500, 20 * (25 - tr.zoom));
-                const camera = tr.getCameraPosition();
-                const minAllowedAltitude = this.terrain.getElevationForLngLatZoom(camera.lngLat, tr.zoom) + buffer;
-                if (camera.altitude < minAllowedAltitude) {
-                    console.log('camera about to move into terrain');
-                    const newCamera = this.calculateCameraOptionsFromTo(camera.lngLat, minAllowedAltitude, tr.center, tr.elevation);
-                    console.log(`pitch: ${tr.pitch} vs ${newCamera.pitch} | zoom: ${tr.zoom} vs ${newCamera.zoom}`);
-                    return {
-                        pitch: newCamera.pitch,
-                        zoom: newCamera.zoom,
-                    };
-                }
-
-            } catch {
-                console.log('error thrown in transformCameraUpdate');
-            }
-            return {};
-        };
+        this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
 
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
 

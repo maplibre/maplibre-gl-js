@@ -226,7 +226,13 @@ export type AnimationOptions = {
 /**
  * A callback hook that allows manipulating the camera and being notified about camera updates before they happen
  */
-export type CameraUpdateTransformFunction =  (next: Transform) => {
+export type CameraUpdateTransformFunction =  (next: {
+    center: LngLat;
+    zoom: number;
+    pitch: number;
+    bearing: number;
+    elevation: number;
+}) => {
     center?: LngLat;
     zoom?: number;
     pitch?: number;
@@ -1085,13 +1091,14 @@ export abstract class Camera extends Evented {
     /**
      * @internal
      * Called when the camera is about to be manipulated.
-     * If `transformCameraUpdate` is specified, a copy of the current transform is created to track the accumulated changes.
+     * If `transformCameraUpdate` is specified or terrain is enabled, a copy of
+     * the current transform is created to track the accumulated changes.
      * This underlying transform represents the "desired state" proposed by input handlers / animations / UI controls.
      * It may differ from the state used for rendering (`this.transform`).
      * @returns Transform to apply changes to
      */
     _getTransformForUpdate(): Transform {
-        if (!this.transformCameraUpdate) return this.transform;
+        if (!this.transformCameraUpdate && !this.terrain) return this.transform;
 
         if (!this._requestedCameraState) {
             this._requestedCameraState = this.transform.clone();
@@ -1099,29 +1106,66 @@ export abstract class Camera extends Evented {
         return this._requestedCameraState;
     }
 
+
+    _elevateCameraIfInsideTerrain(tr: Transform) {
+        try {
+            const buffer = Math.min(500, 20 * (25 - tr.zoom));
+            const camera = tr.getCameraPosition();
+            const minAllowedAltitude = this.terrain.getElevationForLngLatZoom(camera.lngLat, tr.zoom) + buffer;
+            if (camera.altitude < minAllowedAltitude) {
+                console.log('camera about to move into terrain');
+                const newCamera = this.calculateCameraOptionsFromTo(camera.lngLat, minAllowedAltitude, tr.center, tr.elevation);
+                console.log(`pitch: ${tr.pitch} vs ${newCamera.pitch} | zoom: ${tr.zoom} vs ${newCamera.zoom}`);
+                return {
+                    pitch: newCamera.pitch,
+                    zoom: newCamera.zoom,
+                };
+            }
+
+        } catch {
+            console.log('error thrown in transformCameraUpdate');
+        }
+        return {};
+    }
+
     /**
      * @internal
      * Called after the camera is done being manipulated.
      * @param tr - the requested camera end state
+     * If the camera is inside terrain, it gets elevated.
      * Call `transformCameraUpdate` if present, and then apply the "approved" changes.
      */
     _applyUpdatedTransform(tr: Transform) {
-        if (!this.transformCameraUpdate) return;
-
-        const nextTransform = tr.clone();
-        const {
-            center,
-            zoom,
-            pitch,
-            bearing,
-            elevation
-        } = this.transformCameraUpdate(nextTransform);
-        if (center) nextTransform.center = center;
-        if (zoom !== undefined) nextTransform.zoom = zoom;
-        if (pitch !== undefined) nextTransform.pitch = pitch;
-        if (bearing !== undefined) nextTransform.bearing = bearing;
-        if (elevation !== undefined) nextTransform.elevation = elevation;
-        this.transform.apply(nextTransform);
+        const modifiers = [];
+        if (this.terrain) {
+            modifiers.push(this._elevateCameraIfInsideTerrain.bind(this));
+        }
+        if (this.transformCameraUpdate) {
+            console.log('noway');
+            return;
+            modifiers.push(this.transformCameraUpdate.bind(this));
+        }
+        if (!modifiers.length) {
+            return;
+        }
+        const finalTransform = tr.clone();
+        modifiers.forEach((modifier) => {
+            const nextTransform = finalTransform.clone();
+            const {
+                center,
+                zoom,
+                pitch,
+                bearing,
+                elevation
+            } = modifier(nextTransform);
+            if (center) nextTransform.center = center;
+            if (zoom !== undefined) nextTransform.zoom = zoom;
+            if (pitch !== undefined) nextTransform.pitch = pitch;
+            if (bearing !== undefined) nextTransform.bearing = bearing;
+            if (elevation !== undefined) nextTransform.elevation = elevation;
+            finalTransform.apply(nextTransform);
+        });
+        this.transform.apply(finalTransform);
     }
 
     _fireMoveEvents(eventData?: any) {
