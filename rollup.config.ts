@@ -1,5 +1,6 @@
 import fs from 'fs';
 import sourcemaps from 'rollup-plugin-sourcemaps';
+import {codecovRollupPlugin} from '@codecov/rollup-plugin';
 import {plugins, watchStagingPlugin} from './build/rollup_plugins';
 import banner from './build/banner';
 import {RollupOptions} from 'rollup';
@@ -62,7 +63,12 @@ const config: RollupOptions[] = [{
         // When running in development watch mode, tell rollup explicitly to watch
         // for changes to the staging chunks built by the previous step. Otherwise
         // only they get built, but not the merged dev build js
-        ...production ? [] : [watchStagingPlugin]
+        ...production ? [] : [watchStagingPlugin],
+        codecovRollupPlugin({
+            enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,
+            bundleName: 'maplire-gl-js',
+            uploadToken: process.env.CODECOV_TOKEN,
+        }),
     ],
 }];
 
