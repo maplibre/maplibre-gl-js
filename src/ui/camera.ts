@@ -1111,7 +1111,7 @@ export abstract class Camera extends Evented {
      * Checks the given transform for the camera being below terrain surface and
      * returns new pitch and zoom to fix that.
      *
-     * With the new pith and zoom, the camera will be at the same ground
+     * With the new pitch and zoom, the camera will be at the same ground
      * position but at higher altitude. It will still point to the same spot on
      * the map.
      *
