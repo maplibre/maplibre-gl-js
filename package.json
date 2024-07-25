@@ -47,7 +47,7 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",
-    "@mapbox/mapbox-gl-rtl-text": "^0.2.3",
+    "@mapbox/mapbox-gl-rtl-text": "^0.3.0",
     "@mapbox/mvt-fixtures": "^3.10.0",
     "@rollup/plugin-commonjs": "^26.0.1",
     "@rollup/plugin-json": "^6.1.0",
