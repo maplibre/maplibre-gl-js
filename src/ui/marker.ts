@@ -470,7 +470,7 @@ export class Marker extends Evented {
     /**
       * Set the option to allow subpixel positioning of the marker by passing a boolean
       *
-      * @param value - When boolean is true, subpixel positioning is enabled for the popup.
+      * @param value - when set to `true`, subpixel positioning is enabled for the marker.
       *
       * @example
       * ```ts
