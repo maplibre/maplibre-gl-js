@@ -1134,7 +1134,7 @@ describe('marker', () => {
         const map = createMap();
         const marker = new Marker()
             .setLngLat([0, 0])
-            // .setSubpixelPositioning(true)
+            .setSubpixelPositioning(true)
             .addTo(map);
 
         const transform = marker.getElement().style.transform;

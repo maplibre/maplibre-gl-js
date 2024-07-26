@@ -84,6 +84,12 @@ type MarkerOptions = {
      * @defaultValue 0.2
      */
     opacityWhenCovered?: string;
+    /**
+      * If `true`, rounding is disabled for placement of the popup, allowing for
+      * subpixel positioning and smoother movement when the marker is translated.
+      * @defaultValue false
+      */
+    subpixelPositioning?: boolean;
 };
 
 /**
@@ -143,6 +149,7 @@ export class Marker extends Evented {
     _opacity: string;
     _opacityWhenCovered: string;
     _opacityTimeout: ReturnType<typeof setTimeout>;
+    _subpixelPositioning: boolean;
 
     /**
      * @param options - the options
@@ -155,6 +162,7 @@ export class Marker extends Evented {
         this._scale = options && options.scale || 1;
         this._draggable = options && options.draggable || false;
         this._clickTolerance = options && options.clickTolerance || 0;
+        this._subpixelPositioning = options && options.subpixelPositioning || false;
         this._isDragging = false;
         this._state = 'inactive';
         this._rotation = options && options.rotation || 0;
@@ -459,6 +467,22 @@ export class Marker extends Evented {
         return this;
     }
 
+    /**
+      * Set the option to allow subpixel positioning of the popup by passing a boolean
+      *
+      * @param value - When boolean is true, subpixel positioning is enabled for the popup.
+      *
+      * @example
+      * ```ts
+      * let marker = new Marker()
+      * marker.setSubpixelPositioning(true);
+      * ```
+      */
+    setSubpixelPositioning(value: boolean) {
+        this._subpixelPositioning = value;
+        return this;
+    }
+
     _onKeyPress = (e: KeyboardEvent) => {
         const code = e.code;
         const legacyCode = e.charCode || e.keyCode;
@@ -600,7 +624,7 @@ export class Marker extends Evented {
         // because rounding the coordinates at every `move` event causes stuttered zooming
         // we only round them when _update is called with `moveend` or when its called with
         // no arguments (when the Marker is initialized or Marker#setLngLat is invoked).
-        if (!e || e.type === 'moveend') {
+        if (!this._subpixelPositioning && (!e || e.type === 'moveend')) {
             this._pos = this._pos.round();
         }
 

@@ -3,6 +3,7 @@
 ### ✨ Features and improvements
 
 - Expose projection matrix parameters ([#3136](https://github.com/maplibre/maplibre-gl-js/pull/3136))
+- Add option to position markers at subpixel coordinates to prefer markers jumping on `moveend`.
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
