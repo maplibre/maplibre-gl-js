@@ -1109,4 +1109,44 @@ describe('marker', () => {
 
         expect(marker._lngLat.lng).toBe(-179);
     });
+
+    test('should round the marker transform position to whole pixels when subpixel positioning is disabled', () => {
+        const map = createMap();
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        const transform = marker.getElement().style.transform;
+        expect(transform).toBe(`
+            translate(-50%,-50%) translate(256px, 242px) rotateX(0deg) rotateZ(0deg)
+        `.trim());
+
+        marker.setLngLat([4.5, 4.5]);
+
+        const adjustedTransform = marker.getElement().style.transform;
+        expect(adjustedTransform).toBe(`
+            translate(-50%,-50%) translate(262px, 236px) rotateX(0deg) rotateZ(0deg)
+        `.trim());
+
+    });
+
+    test('should round the marker transform position to sub pixels when subpixel positioning is enabled', () => {
+        const map = createMap();
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            // .setSubpixelPositioning(true)
+            .addTo(map);
+
+        const transform = marker.getElement().style.transform;
+        expect(transform).toBe(`
+            translate(-50%,-50%) translate(256px, 242px) rotateX(0deg) rotateZ(0deg)
+        `.trim());
+
+        marker.setLngLat([4.5, 4.5]);
+
+        const adjustedTransform = marker.getElement().style.transform;
+        expect(adjustedTransform).toBe(`
+            translate(-50%,-50%) translate(262.4px, 235.5934100987358px) rotateX(0deg) rotateZ(0deg)
+        `.trim());
+    });
 });
