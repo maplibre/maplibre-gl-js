@@ -85,7 +85,7 @@ type MarkerOptions = {
      */
     opacityWhenCovered?: string;
     /**
-      * If `true`, rounding is disabled for placement of the popup, allowing for
+      * If `true`, rounding is disabled for placement of the marker, allowing for
       * subpixel positioning and smoother movement when the marker is translated.
       * @defaultValue false
       */
