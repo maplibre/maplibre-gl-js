@@ -11,7 +11,8 @@ import puppeteer, {Page, Browser} from 'puppeteer';
 import {CoverageReport} from 'monocart-coverage-reports';
 import {localizeURLs} from '../lib/localize-urls';
 import type {Map, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
-import jnuitReportBuilder from 'junit-report-builder';
+import {default as BuilderExport, type Builder} from 'junit-report-builder';
+const jnuitReportBuilder = (BuilderExport as any).default as Builder;
 import type {TestSuite} from 'junit-report-builder/lib/test_suite';
 import * as maplibreglModule from '../../../dist/maplibre-gl';
 
@@ -845,6 +846,8 @@ async function executeRenderTests() {
 
     const browser = await puppeteer.launch({headless: !options.openBrowser, args: ['--enable-webgl', '--no-sandbox',
         '--disable-web-security']});
+
+    console.log(jnuitReportBuilder);
 
     const server = http.createServer(
         st({
