@@ -11,7 +11,8 @@ import puppeteer, {Page, Browser} from 'puppeteer';
 import {CoverageReport} from 'monocart-coverage-reports';
 import {localizeURLs} from '../lib/localize-urls';
 import type {Map, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
-import jnuitReportBuilder, {type TestSuite} from 'junit-report-builder';
+import jnuitReportBuilder from 'junit-report-builder';
+import type {TestSuite} from 'junit-report-builder/lib/test_suite';
 import * as maplibreglModule from '../../../dist/maplibre-gl';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
