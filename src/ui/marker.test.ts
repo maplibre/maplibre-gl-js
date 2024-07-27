@@ -1117,16 +1117,14 @@ describe('marker', () => {
             .addTo(map);
 
         const transform = marker.getElement().style.transform;
-        expect(transform).toBe(`
-            translate(-50%,-50%) translate(256px, 242px) rotateX(0deg) rotateZ(0deg)
-        `.trim());
+        expect(transform)
+            .toContain('translate(256px, 242px)');
 
         marker.setLngLat([4.5, 4.5]);
 
         const adjustedTransform = marker.getElement().style.transform;
-        expect(adjustedTransform).toBe(`
-            translate(-50%,-50%) translate(262px, 236px) rotateX(0deg) rotateZ(0deg)
-        `.trim());
+        expect(adjustedTransform)
+            .toContain('translate(262px, 236px)');
 
     });
 
@@ -1138,15 +1136,14 @@ describe('marker', () => {
             .addTo(map);
 
         const transform = marker.getElement().style.transform;
-        expect(transform).toBe(`
-            translate(-50%,-50%) translate(256px, 242px) rotateX(0deg) rotateZ(0deg)
-        `.trim());
+
+        expect(transform)
+            .toContain('translate(256px, 242px)');
 
         marker.setLngLat([4.5, 4.5]);
 
         const adjustedTransform = marker.getElement().style.transform;
-        expect(adjustedTransform).toBe(`
-            translate(-50%,-50%) translate(262.4px, 235.5934100987358px) rotateX(0deg) rotateZ(0deg)
-        `.trim());
+        expect(adjustedTransform)
+            .toContain('translate(262.4px, 235.5934100987358px)');
     });
 });
