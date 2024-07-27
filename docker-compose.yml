@@ -1,0 +1,33 @@
+services:
+  build:
+    platform: linux/amd64
+    build:
+      platforms:
+        - "linux/amd64"
+      context: .
+      dockerfile: ./.devcontainer/Dockerfile
+    image: ghcr.io/maplibre/maplibre-gl-js:dev
+    volumes:
+      - ./:/maplibre-gl-js/
+
+  dev:
+    platform: linux/amd64
+    image: ghcr.io/maplibre/maplibre-gl-js:dev
+    working_dir: /maplibre-gl-js
+    volumes:
+      - ./:/maplibre-gl-js/
+    ports:
+      - 9966:9966
+    command: npm run start
+
+  test:
+    platform: linux/amd64
+    image: ghcr.io/maplibre/maplibre-gl-js:dev
+    volumes:
+      - ./:/maplibre-gl-js/
+    command:
+      - /bin/bash
+      - -c
+      - |
+        set -xe
+        npm run test
