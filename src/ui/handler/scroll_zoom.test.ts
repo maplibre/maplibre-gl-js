@@ -44,6 +44,32 @@ describe('ScrollZoomHandler', () => {
         map.remove();
     });
 
+    test('Zooms for multiple fast mouse wheel ticks', () => {
+        const browserNow = jest.spyOn(browser, 'now');
+        let now = 1555555555555;
+        browserNow.mockReturnValue(now);
+
+        const map = createMap();
+        map._renderTaskQueue.run();
+
+        // simulate a multiple fast 'wheel' event
+        const startZoom = map.getZoom();
+
+        const iterations = 10;
+
+        for (let i = 0; i < iterations; i++) {
+            simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+            map._renderTaskQueue.run();
+            now += 0;
+            browserNow.mockReturnValue(now);
+            map._renderTaskQueue.run();
+        }
+
+        expect(map.getZoom() - startZoom).toBeCloseTo(0.0285 * iterations, 2);
+
+        map.remove();
+    });
+
     test('Zooms for single mouse wheel tick with non-magical deltaY', done => {
         const browserNow = jest.spyOn(browser, 'now');
         const now = 1555555555555;

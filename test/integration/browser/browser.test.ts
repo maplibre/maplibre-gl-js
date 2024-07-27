@@ -26,7 +26,13 @@ describe('Browser tests', () => {
         );
         await new Promise<void>((resolve) => server.listen(resolve));
 
-        browser = await puppeteer.launch({headless: true});
+        browser = await puppeteer.launch({
+            headless: true,
+            args: [
+                '--use-gl=angle',
+                '--use-angle=gl'
+            ],
+        });
 
     }, 40000);
 
@@ -400,4 +406,45 @@ describe('Browser tests', () => {
         await expect(rtlPromise).rejects.toThrow(regex);
 
     }, 2000);
+
+    test('Movement with transformCameraUpdate and terrain', async () => {
+        await page.evaluate(async () => {
+            map.setPitch(52)
+                .setZoom(15)
+                .setCenter([11.40, 47.30])
+                .setStyle({
+                    version: 8,
+                    sources: {
+                        terrainSource: {
+                            type: 'raster-dem',
+                            url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                            tileSize: 256
+                        },
+                    },
+                    layers: [],
+                    terrain: {
+                        source: 'terrainSource',
+                        exaggeration: 1
+                    }
+                });
+            await map.once('idle');
+            map.transformCameraUpdate = () => ({});
+        });
+
+        const canvas = await page.$('.maplibregl-canvas');
+        const canvasBB = await canvas?.boundingBox();
+        await page.mouse.move(canvasBB!.x, canvasBB!.y);
+        await page.mouse.down();
+        await page.mouse.move(100, 0, {
+            steps: 10,
+        });
+        await page.mouse.up();
+        await sleep(200);
+
+        const center = await page.evaluate(() => {
+            return map.getCenter();
+        });
+        expect(center.lng).toBeCloseTo(11.39770);
+        expect(center.lat).toBeCloseTo(47.29960);
+    }, 20000);
 });
