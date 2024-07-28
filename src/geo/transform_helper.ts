@@ -5,9 +5,22 @@ import {wrap, clamp} from '../util/util';
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets';
 import type {PaddingOptions} from './edge_insets';
-import {CoveringZoomOptions, ITransformGetters} from './transform_interface';
+import {CoveringZoomOptions, IReadonlyTransform, ITransformGetters} from './transform_interface';
 
 export const MAX_VALID_LATITUDE = 85.051129;
+
+/**
+ * If a path crossing the antimeridian would be shorter, extend the final coordinate so that
+ * interpolating between the two endpoints will cross it.
+ * @param center - The LngLat object of the desired center. This object will be mutated.
+ */
+export function normalizeCenter(tr: IReadonlyTransform, center: LngLat): void {
+    if (!tr.renderWorldCopies || tr.lngRange) return;
+    const delta = center.lng - tr.center.lng;
+    center.lng +=
+        delta > 180 ? -360 :
+            delta < -180 ? 360 : 0;
+}
 
 /**
  * Computes scaling from zoom level.

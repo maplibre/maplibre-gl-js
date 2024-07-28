@@ -1,5 +1,5 @@
-import {extend, warnOnce, clamp, wrap, defaultEasing, pick, degreesToRadians, differenceOfAnglesDegrees} from '../util/util';
-import {interpolates, Padding} from '@maplibre/maplibre-gl-style-spec';
+import {extend, clamp, wrap, defaultEasing, pick, differenceOfAnglesDegrees} from '../util/util';
+import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {browser} from '../util/browser';
 import {LngLat} from '../geo/lng_lat';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
@@ -14,12 +14,11 @@ import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
 import type {HandlerManager} from './handler_manager';
-import {angularCoordinatesToSurfaceVector, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from '../geo/projection/globe_utils';
-import {mat4, vec3} from 'gl-matrix';
+import {getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from '../geo/projection/globe_utils';
 import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from '../geo/projection/mercator_utils';
-import {scaleZoom, zoomScale} from '../geo/transform_helper';
+import {normalizeCenter, scaleZoom, zoomScale} from '../geo/transform_helper';
 import {ICameraHelper} from '../geo/projection/camera_helper';
-import {handleJumpToCenterZoomMercator, MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
+import {handleJumpToCenterZoomMercator} from '../geo/projection/mercator_camera_helper';
 
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
@@ -943,22 +942,17 @@ export abstract class Camera extends Evented {
             easing: defaultEasing
         }, options);
 
-        if (options.animate === false || (!options.essential && browser.prefersReducedMotion)) options.duration = 0;
+        if (options.animate === false || (!options.essential && browser.prefersReducedMotion)) {
+            options.duration = 0;
+        }
 
-        const tr = this._getTransformForUpdate(),
-            startZoom = this.getZoom(),
-            startBearing = this.getBearing(),
+        const tr = this._getTransformForUpdate();
+        const startBearing = this.getBearing(),
             startPitch = this.getPitch(),
-            startPadding = this.getPadding(),
-
             bearing = 'bearing' in options ? this._normalizeBearing(options.bearing, startBearing) : startBearing,
             pitch = 'pitch' in options ? +options.pitch : startPitch,
-            padding = 'padding' in options ? options.padding : tr.padding;
-        const startCenter = tr.center;
+            padding = ('padding' in options ? options.padding : tr.padding) as PaddingOptions;
         const offsetAsPoint = Point.convert(options.offset);
-
-        const optionsZoom = typeof options.zoom === 'number';
-        const optionsApparentZoom = typeof options.apparentZoom === 'number';
 
         let around, aroundPoint;
 
@@ -977,166 +971,33 @@ export abstract class Camera extends Evented {
         this._pitching = this._pitching || (pitch !== startPitch);
         this._padding = !tr.isPaddingEqual(padding as PaddingOptions);
 
-        if (this.transform.useGlobeControls) {
-            // Globe needs special handling for how zoom should be animated.
-            // 1) if zoom is set, ease to the given mercator zoom
-            // 2) if apparentZoom is set, ease to the given apparent zoom
-            // 3) if neither is set, assume constant apparent zoom is to be kept and go to case 2
-            const preConstrainCenter = options.center ?
-                LngLat.convert(options.center) :
-                startCenter;
-            const constrainedCenter = tr.getConstrained(
-                preConstrainCenter,
-                startZoom // zoom can be whatever at this stage, it should not affect anything if globe is enabled
-            ).center;
-            this._normalizeCenter(constrainedCenter);
+        this._easeId = options.easeId;
+        this._prepareEase(eventData, options.noMoveStart, currently);
 
-            // Compute target mercator zoom which we will use to compute final animation targets
-            const desiredApparentZoom = optionsApparentZoom ?
-                +options.apparentZoom :
-                (optionsZoom ?
-                    undefined :
-                    tr.zoom);
-            const hasApparentZoom = typeof desiredApparentZoom === 'number';
-            const desiredMercatorZoom = hasApparentZoom ?
-                undefined :
-                +options.zoom;
-            const targetMercatorZoom = hasApparentZoom ?
-                desiredApparentZoom + getZoomAdjustment(startCenter.lat, preConstrainCenter.lat) :
-                desiredMercatorZoom;
+        const easeHandler = this.cameraHelper.handleEaseTo(tr, {
+            bearing,
+            pitch,
+            padding,
+            around,
+            aroundPoint,
+            offsetAsPoint,
+            zoom: options.zoom,
+            apparentZoom: options.apparentZoom,
+            center: options.center,
+        });
+        if (this.terrain) this._prepareElevation(easeHandler.elevationCenter);
 
-            const clonedTr = tr.clone();
-            clonedTr.setCenter(constrainedCenter);
-            if (this._padding) {
-                clonedTr.setPadding(padding as PaddingOptions);
-            }
-            clonedTr.setZoom(targetMercatorZoom);
-            clonedTr.setBearing(bearing);
-            const clampedPoint = new Point(
-                clamp(tr.centerPoint.x + offsetAsPoint.x, 0, tr.width),
-                clamp(tr.centerPoint.y + offsetAsPoint.y, 0, tr.height)
-            );
-            clonedTr.setLocationAtPoint(constrainedCenter, clampedPoint);
-            // Find final animation targets
-            const endCenterWithShift = (options.offset && offsetAsPoint.mag()) > 0 ? clonedTr.center : constrainedCenter;
-            const endZoomWithShift = hasApparentZoom ?
-                desiredApparentZoom + getZoomAdjustment(startCenter.lat, endCenterWithShift.lat) :
-                desiredMercatorZoom; // Not adjusting this zoom will reduce accuracy of the offset center
+        this._ease((k) => {
+            easeHandler.easeFunc(k);
 
-            // Planet radius for a given zoom level differs according to latitude
-            // Convert zooms to what they would be at equator for the given planet radius
-            const normalizedStartZoom = startZoom + getZoomAdjustment(startCenter.lat, 0);
-            const normalizedEndZoom = endZoomWithShift + getZoomAdjustment(endCenterWithShift.lat, 0);
-            const deltaLng = differenceOfAnglesDegrees(startCenter.lng, endCenterWithShift.lng);
-            const deltaLat = differenceOfAnglesDegrees(startCenter.lat, endCenterWithShift.lat);
+            if (this.terrain && !options.freezeElevation) this._updateElevation(k);
+            this._applyUpdatedTransform(tr);
+            this._fireMoveEvents(eventData);
 
-            const finalScale = zoomScale(normalizedEndZoom - normalizedStartZoom);
-            this._zooming = this._zooming || (endZoomWithShift !== startZoom);
-            this._easeId = options.easeId;
-            this._prepareEase(eventData, options.noMoveStart, currently);
-            if (this.terrain) this._prepareElevation(endCenterWithShift);
-
-            this._ease((k) => {
-                if (this._rotating) {
-                    tr.setBearing(interpolates.number(startBearing, bearing, k));
-                }
-                if (this._pitching) {
-                    tr.setPitch(interpolates.number(startPitch, pitch, k));
-                }
-
-                if (around) {
-                    warnOnce('Easing around a point is not supported under globe projection.');
-                    tr.setLocationAtPoint(around, aroundPoint);
-                } else {
-                    const base = normalizedEndZoom > normalizedStartZoom ?
-                        Math.min(2, finalScale) :
-                        Math.max(0.5, finalScale);
-                    const speedup = Math.pow(base, 1 - k);
-                    const factor = k * speedup;
-
-                    // Spherical lerp might be used here instead, but that was tested and it leads to very weird paths when the interpolated arc gets near the poles.
-                    // Instead we interpolate LngLat almost directly, but taking into account that
-                    // one degree of longitude gets progressively smaller relative to latitude towards the poles.
-                    const newCenter = interpolateLngLatForGlobe(startCenter, deltaLng, deltaLat, factor);
-                    tr.setCenter(newCenter.wrap());
-                }
-
-                if (this._zooming) {
-                    const normalizedInterpolatedZoom = interpolates.number(normalizedStartZoom, normalizedEndZoom, k);
-                    const interpolatedZoom = normalizedInterpolatedZoom + getZoomAdjustment(0, tr.center.lat);
-                    tr.setZoom(interpolatedZoom);
-                }
-
-                if (this.terrain && !options.freezeElevation) this._updateElevation(k);
-
-                this._applyUpdatedTransform(tr);
-
-                this._fireMoveEvents(eventData);
-
-            }, (interruptingEaseId?: string) => {
-                if (this.terrain && options.freezeElevation) this._finalizeElevation();
-                this._afterEase(eventData, interruptingEaseId);
-            }, options as any);
-        } else {
-            const zoom = optionsZoom ? +options.zoom : (optionsApparentZoom ? +options.apparentZoom : tr.zoom);
-
-            let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
-            const locationAtOffset = tr.screenPointToLocation(pointAtOffset);
-            const {center, zoom: endZoom} = tr.getConstrained(
-                LngLat.convert(options.center || locationAtOffset),
-                zoom ?? startZoom
-            );
-            this._normalizeCenter(center);
-
-            const from = projectToWorldCoordinates(tr.worldSize, locationAtOffset);
-            const delta = projectToWorldCoordinates(tr.worldSize, center).sub(from);
-
-            const finalScale = zoomScale(endZoom - startZoom);
-            this._zooming = this._zooming || (endZoom !== startZoom);
-            this._easeId = options.easeId;
-            this._prepareEase(eventData, options.noMoveStart, currently);
-            if (this.terrain) this._prepareElevation(center);
-
-            this._ease((k) => {
-                if (this._zooming) {
-                    tr.setZoom(interpolates.number(startZoom, endZoom, k));
-                }
-                if (this._rotating) {
-                    tr.setBearing(interpolates.number(startBearing, bearing, k));
-                }
-                if (this._pitching) {
-                    tr.setPitch(interpolates.number(startPitch, pitch, k));
-                }
-                if (this._padding) {
-                    tr.interpolatePadding(startPadding, padding as PaddingOptions, k);
-                    // When padding is being applied, Transform#centerPoint is changing continuously,
-                    // thus we need to recalculate offsetPoint every frame
-                    pointAtOffset = tr.centerPoint.add(offsetAsPoint);
-                }
-
-                if (this.terrain && !options.freezeElevation) this._updateElevation(k);
-
-                if (around) {
-                    tr.setLocationAtPoint(around, aroundPoint);
-                } else {
-                    const scale = zoomScale(tr.zoom - startZoom);
-                    const base = endZoom > startZoom ?
-                        Math.min(2, finalScale) :
-                        Math.max(0.5, finalScale);
-                    const speedup = Math.pow(base, 1 - k);
-                    const newCenter = unprojectFromWorldCoordinates(tr.worldSize, from.add(delta.mult(k * speedup)).mult(scale));
-                    tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
-                }
-
-                this._applyUpdatedTransform(tr);
-
-                this._fireMoveEvents(eventData);
-
-            }, (interruptingEaseId?: string) => {
-                if (this.terrain && options.freezeElevation) this._finalizeElevation();
-                this._afterEase(eventData, interruptingEaseId);
-            }, options as any);
-        }
+        }, (interruptingEaseId?: string) => {
+            if (this.terrain && options.freezeElevation) this._finalizeElevation();
+            this._afterEase(eventData, interruptingEaseId);
+        }, options as any);
 
         return this;
     }
@@ -1386,7 +1247,7 @@ export abstract class Camera extends Evented {
             targetZoom = constrained.zoom;
         }
 
-        this._normalizeCenter(targetCenter);
+        normalizeCenter(this.transform, targetCenter);
 
         const normalizedStartZoom = startZoom + getZoomAdjustment(startCenter.lat, 0);
         const normalizedTargetZoom = targetZoom + getZoomAdjustment(targetCenter.lat, 0);
@@ -1653,18 +1514,6 @@ export abstract class Camera extends Evented {
         if (Math.abs(bearing - 360 - currentBearing) < diff) bearing -= 360;
         if (Math.abs(bearing + 360 - currentBearing) < diff) bearing += 360;
         return bearing;
-    }
-
-    // If a path crossing the antimeridian would be shorter, extend the final coordinate so that
-    // interpolating between the two endpoints will cross it.
-    _normalizeCenter(center: LngLat) {
-        const tr = this.transform;
-        if (!tr.renderWorldCopies || tr.lngRange) return;
-
-        const delta = center.lng - tr.center.lng;
-        center.lng +=
-            delta > 180 ? -360 :
-                delta < -180 ? 360 : 0;
     }
 
     /**

@@ -1,16 +1,17 @@
 import Point from '@mapbox/point-geometry';
 import {IReadonlyTransform, ITransform} from '../transform_interface';
-import {cameraBoundsWarning, ICameraHelper, MapControlsDeltas} from './camera_helper';
+import {cameraBoundsWarning, EaseToHandler, EaseToHandlerOptions, ICameraHelper, MapControlsDeltas} from './camera_helper';
 import {GlobeProjection} from './globe';
 import {LngLat, LngLatLike} from '../lng_lat';
 import {MercatorCameraHelper} from './mercator_camera_helper';
-import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment} from './globe_utils';
-import {clamp, createVec3f64, differenceOfAnglesDegrees, remapSaturate} from '../../util/util';
+import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, interpolateLngLatForGlobe} from './globe_utils';
+import {clamp, createVec3f64, differenceOfAnglesDegrees, remapSaturate, warnOnce} from '../../util/util';
 import {mat4, vec3} from 'gl-matrix';
-import {MAX_VALID_LATITUDE, scaleZoom, zoomScale} from '../transform_helper';
+import {MAX_VALID_LATITUDE, normalizeCenter, scaleZoom, zoomScale} from '../transform_helper';
 import {CameraForBoundsOptions} from '../../ui/camera';
 import {LngLatBounds} from '../lng_lat_bounds';
 import {PaddingOptions} from '../edge_insets';
+import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
 /**
  * @internal
@@ -259,6 +260,117 @@ export class GlobeCameraHelper implements ICameraHelper {
         if (tr.zoom !== targetZoom) {
             tr.setZoom(targetZoom);
         }
+    }
+
+    handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandler {
+        if (!this.useGlobeControls) {
+            return this._mercatorCameraHelper.handleEaseTo(tr, options);
+        }
+
+        const startZoom = tr.zoom;
+        const startBearing = tr.bearing;
+        const startPitch = tr.pitch;
+        const startCenter = tr.center;
+
+        const optionsZoom = typeof options.zoom === 'number';
+        const optionsApparentZoom = typeof options.apparentZoom === 'number';
+
+        const doPadding = !tr.isPaddingEqual(options.padding);
+
+        let isZooming = false;
+
+        // Globe needs special handling for how zoom should be animated.
+        // 1) if zoom is set, ease to the given mercator zoom
+        // 2) if apparentZoom is set, ease to the given apparent zoom
+        // 3) if neither is set, assume constant apparent zoom is to be kept and go to case 2
+        const preConstrainCenter = options.center ?
+            LngLat.convert(options.center) :
+            startCenter;
+        const constrainedCenter = tr.getConstrained(
+            preConstrainCenter,
+            startZoom // zoom can be whatever at this stage, it should not affect anything if globe is enabled
+        ).center;
+        normalizeCenter(tr, constrainedCenter);
+
+        // Compute target mercator zoom which we will use to compute final animation targets
+        const desiredApparentZoom = optionsApparentZoom ?
+            +options.apparentZoom :
+            (optionsZoom ?
+                undefined :
+                tr.zoom);
+        const hasApparentZoom = typeof desiredApparentZoom === 'number';
+        const desiredMercatorZoom = hasApparentZoom ?
+            undefined :
+            +options.zoom;
+        const targetMercatorZoom = hasApparentZoom ?
+            desiredApparentZoom + getZoomAdjustment(startCenter.lat, preConstrainCenter.lat) :
+            desiredMercatorZoom;
+
+        const clonedTr = tr.clone();
+        clonedTr.setCenter(constrainedCenter);
+        if (doPadding) {
+            clonedTr.setPadding(options.padding);
+        }
+        clonedTr.setZoom(targetMercatorZoom);
+        clonedTr.setBearing(options.bearing);
+        const clampedPoint = new Point(
+            clamp(tr.centerPoint.x + options.offsetAsPoint.x, 0, tr.width),
+            clamp(tr.centerPoint.y + options.offsetAsPoint.y, 0, tr.height)
+        );
+        clonedTr.setLocationAtPoint(constrainedCenter, clampedPoint);
+        // Find final animation targets
+        const endCenterWithShift = (options.offset && options.offsetAsPoint.mag()) > 0 ? clonedTr.center : constrainedCenter;
+        const endZoomWithShift = hasApparentZoom ?
+            desiredApparentZoom + getZoomAdjustment(startCenter.lat, endCenterWithShift.lat) :
+            desiredMercatorZoom; // Not adjusting this zoom will reduce accuracy of the offset center
+
+        // Planet radius for a given zoom level differs according to latitude
+        // Convert zooms to what they would be at equator for the given planet radius
+        const normalizedStartZoom = startZoom + getZoomAdjustment(startCenter.lat, 0);
+        const normalizedEndZoom = endZoomWithShift + getZoomAdjustment(endCenterWithShift.lat, 0);
+        const deltaLng = differenceOfAnglesDegrees(startCenter.lng, endCenterWithShift.lng);
+        const deltaLat = differenceOfAnglesDegrees(startCenter.lat, endCenterWithShift.lat);
+
+        const finalScale = zoomScale(normalizedEndZoom - normalizedStartZoom);
+        isZooming = (endZoomWithShift !== startZoom);
+
+        const easeFunc = (k: number) => {
+            if (startBearing !== options.bearing) {
+                tr.setBearing(interpolates.number(startBearing, options.bearing, k));
+            }
+            if (startPitch !== options.pitch) {
+                tr.setPitch(interpolates.number(startPitch, options.pitch, k));
+            }
+
+            if (options.around) {
+                warnOnce('Easing around a point is not supported under globe projection.');
+                tr.setLocationAtPoint(options.around, options.aroundPoint);
+            } else {
+                const base = normalizedEndZoom > normalizedStartZoom ?
+                    Math.min(2, finalScale) :
+                    Math.max(0.5, finalScale);
+                const speedup = Math.pow(base, 1 - k);
+                const factor = k * speedup;
+
+                // Spherical lerp might be used here instead, but that was tested and it leads to very weird paths when the interpolated arc gets near the poles.
+                // Instead we interpolate LngLat almost directly, but taking into account that
+                // one degree of longitude gets progressively smaller relative to latitude towards the poles.
+                const newCenter = interpolateLngLatForGlobe(startCenter, deltaLng, deltaLat, factor);
+                tr.setCenter(newCenter.wrap());
+            }
+
+            if (isZooming) {
+                const normalizedInterpolatedZoom = interpolates.number(normalizedStartZoom, normalizedEndZoom, k);
+                const interpolatedZoom = normalizedInterpolatedZoom + getZoomAdjustment(0, tr.center.lat);
+                tr.setZoom(interpolatedZoom);
+            }
+        };
+
+        return {
+            easeFunc,
+            isZooming,
+            elevationCenter: endCenterWithShift,
+        };
     }
 
     /**

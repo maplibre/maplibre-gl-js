@@ -1,13 +1,14 @@
 import Point from '@mapbox/point-geometry';
 import {LngLat, LngLatLike} from '../lng_lat';
 import {IReadonlyTransform, ITransform} from '../transform_interface';
-import {cameraBoundsWarning, ICameraHelper, MapControlsDeltas} from './camera_helper';
+import {cameraBoundsWarning, EaseToHandler, EaseToHandlerOptions, ICameraHelper, MapControlsDeltas} from './camera_helper';
 import {CameraForBoundsOptions} from '../../ui/camera';
 import {PaddingOptions} from '../edge_insets';
 import {LngLatBounds} from '../lng_lat_bounds';
-import {scaleZoom, zoomScale} from '../transform_helper';
+import {normalizeCenter, scaleZoom, zoomScale} from '../transform_helper';
 import {degreesToRadians} from '../../util/util';
 import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils';
+import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
 // We need to be able to call this directly from camera.ts
 export function handleJumpToCenterZoomMercator(tr: ITransform, options: { zoom?: number; apparentZoom?: number; center?: LngLatLike }): void {
@@ -120,5 +121,71 @@ export class MercatorCameraHelper implements ICameraHelper {
 
     handleJumpToCenterZoom(tr: ITransform, options: { zoom?: number; apparentZoom?: number; center?: LngLatLike }): void {
         handleJumpToCenterZoomMercator(tr, options);
+    }
+
+    handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandler {
+        const startZoom = tr.zoom;
+        const startBearing = tr.bearing;
+        const startPitch = tr.pitch;
+        const startPadding = tr.padding;
+
+        const optionsZoom = typeof options.zoom === 'number';
+        const optionsApparentZoom = typeof options.apparentZoom === 'number';
+
+        const doPadding = !tr.isPaddingEqual(options.padding);
+
+        let isZooming = false;
+
+        const zoom = optionsZoom ? +options.zoom : (optionsApparentZoom ? +options.apparentZoom : tr.zoom);
+
+        let pointAtOffset = tr.centerPoint.add(options.offsetAsPoint);
+        const locationAtOffset = tr.screenPointToLocation(pointAtOffset);
+        const {center, zoom: endZoom} = tr.getConstrained(
+            LngLat.convert(options.center || locationAtOffset),
+            zoom ?? startZoom
+        );
+        normalizeCenter(tr, center);
+
+        const from = projectToWorldCoordinates(tr.worldSize, locationAtOffset);
+        const delta = projectToWorldCoordinates(tr.worldSize, center).sub(from);
+
+        const finalScale = zoomScale(endZoom - startZoom);
+        isZooming = (endZoom !== startZoom);
+
+        const easeFunc = (k: number) => {
+            if (isZooming) {
+                tr.setZoom(interpolates.number(startZoom, endZoom, k));
+            }
+            if (startBearing !== options.bearing) {
+                tr.setBearing(interpolates.number(startBearing, options.bearing, k));
+            }
+            if (startPitch !== options.pitch) {
+                tr.setPitch(interpolates.number(startPitch, options.pitch, k));
+            }
+            if (doPadding) {
+                tr.interpolatePadding(startPadding, options.padding, k);
+                // When padding is being applied, Transform#centerPoint is changing continuously,
+                // thus we need to recalculate offsetPoint every frame
+                pointAtOffset = tr.centerPoint.add(options.offsetAsPoint);
+            }
+
+            if (options.around) {
+                tr.setLocationAtPoint(options.around, options.aroundPoint);
+            } else {
+                const scale = zoomScale(tr.zoom - startZoom);
+                const base = endZoom > startZoom ?
+                    Math.min(2, finalScale) :
+                    Math.max(0.5, finalScale);
+                const speedup = Math.pow(base, 1 - k);
+                const newCenter = unprojectFromWorldCoordinates(tr.worldSize, from.add(delta.mult(k * speedup)).mult(scale));
+                tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
+            }
+        };
+
+        return {
+            easeFunc,
+            isZooming,
+            elevationCenter: center,
+        };
     }
 }

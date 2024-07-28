@@ -1,7 +1,7 @@
 import Point from '@mapbox/point-geometry';
 import {IReadonlyTransform, ITransform} from '../transform_interface';
 import {LngLat, LngLatLike} from '../lng_lat';
-import {CameraForBoundsOptions} from '../../ui/camera';
+import {CameraForBoundsOptions, PointLike} from '../../ui/camera';
 import {PaddingOptions} from '../edge_insets';
 import {LngLatBounds} from '../lng_lat_bounds';
 import {warnOnce} from '../../util/util';
@@ -12,6 +12,25 @@ export type MapControlsDeltas = {
     bearingDelta: number;
     pitchDelta: number;
     around: Point;
+}
+
+export type EaseToHandlerOptions = {
+    bearing: number;
+    pitch: number;
+    padding: PaddingOptions;
+    offsetAsPoint: Point;
+    around?: LngLat;
+    aroundPoint?: Point;
+    center?: LngLatLike;
+    zoom?: number;
+    apparentZoom?: number;
+    offset?: PointLike;
+}
+
+export type EaseToHandler = {
+    easeFunc: (k: number) => void;
+    elevationCenter: LngLat;
+    isZooming: boolean;
 }
 
 /**
@@ -46,4 +65,6 @@ export interface ICameraHelper {
     };
 
     handleJumpToCenterZoom(tr: ITransform, options: { zoom?: number; apparentZoom?: number; center?: LngLatLike }): void;
+
+    handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandler;
 }
