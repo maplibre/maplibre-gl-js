@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
 import {IReadonlyTransform, ITransform} from '../transform_interface';
-import {LngLat} from '../lng_lat';
+import {LngLat, LngLatLike} from '../lng_lat';
 import {CameraForBoundsOptions} from '../../ui/camera';
 import {PaddingOptions} from '../edge_insets';
 import {LngLatBounds} from '../lng_lat_bounds';
@@ -44,4 +44,6 @@ export interface ICameraHelper {
         zoom: number;
         bearing: number;
     };
+
+    handleJumpToCenterZoom(tr: ITransform, options: { zoom?: number; apparentZoom?: number; center?: LngLatLike }): void;
 }

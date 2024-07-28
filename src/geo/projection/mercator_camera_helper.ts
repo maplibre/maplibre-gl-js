@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import {LngLat} from '../lng_lat';
+import {LngLat, LngLatLike} from '../lng_lat';
 import {IReadonlyTransform, ITransform} from '../transform_interface';
 import {cameraBoundsWarning, ICameraHelper, MapControlsDeltas} from './camera_helper';
 import {CameraForBoundsOptions} from '../../ui/camera';
@@ -8,6 +8,22 @@ import {LngLatBounds} from '../lng_lat_bounds';
 import {scaleZoom, zoomScale} from '../transform_helper';
 import {degreesToRadians} from '../../util/util';
 import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils';
+
+// We need to be able to call this directly from camera.ts
+export function handleJumpToCenterZoomMercator(tr: ITransform, options: { zoom?: number; apparentZoom?: number; center?: LngLatLike }): void {
+    // Mercator zoom & center handling.
+    const optionsZoom = typeof options.zoom === 'number';
+    const optionsApparentZoom = typeof options.apparentZoom === 'number';
+
+    const zoom = optionsZoom ? +options.zoom : (optionsApparentZoom ? +options.apparentZoom : tr.zoom);
+    if (tr.zoom !== zoom) {
+        tr.setZoom(+options.zoom);
+    }
+
+    if (options.center !== undefined) {
+        tr.setCenter(LngLat.convert(options.center));
+    }
+}
 
 /**
  * @internal
@@ -100,5 +116,9 @@ export class MercatorCameraHelper implements ICameraHelper {
         };
 
         return result;
+    }
+
+    handleJumpToCenterZoom(tr: ITransform, options: { zoom?: number; apparentZoom?: number; center?: LngLatLike }): void {
+        handleJumpToCenterZoomMercator(tr, options);
     }
 }

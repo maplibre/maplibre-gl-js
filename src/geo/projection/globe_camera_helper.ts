@@ -2,7 +2,7 @@ import Point from '@mapbox/point-geometry';
 import {IReadonlyTransform, ITransform} from '../transform_interface';
 import {cameraBoundsWarning, ICameraHelper, MapControlsDeltas} from './camera_helper';
 import {GlobeProjection} from './globe';
-import {LngLat} from '../lng_lat';
+import {LngLat, LngLatLike} from '../lng_lat';
 import {MercatorCameraHelper} from './mercator_camera_helper';
 import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment} from './globe_utils';
 import {clamp, createVec3f64, differenceOfAnglesDegrees, remapSaturate} from '../../util/util';
@@ -227,6 +227,38 @@ export class GlobeCameraHelper implements ICameraHelper {
 
         // Compute target zoom from the obtained scale.
         result.zoom = clonedTr.zoom + scaleZoom(smallestNeededScale);
+    }
+
+    /**
+     * Handles the zoom and center change during camera jumpTo.
+     */
+    handleJumpToCenterZoom(tr: ITransform, options: { zoom?: number; apparentZoom?: number; center?: LngLatLike }): void {
+        if (!this.useGlobeControls) {
+            this._mercatorCameraHelper.handleJumpToCenterZoom(tr, options);
+            return;
+        }
+
+        const optionsZoom = typeof options.zoom === 'number';
+        const optionsApparentZoom = typeof options.apparentZoom === 'number';
+
+        // Special zoom & center handling for globe:
+        // Globe constrained center isn't dependent on zoom level
+        const startingLat = tr.center.lat;
+        const constrainedCenter = tr.getConstrained(options.center ? LngLat.convert(options.center) : tr.center, tr.zoom).center;
+        tr.setCenter(constrainedCenter.wrap());
+
+        // Make sure to correctly apply apparentZoom
+        let targetZoom;
+        if (optionsApparentZoom) {
+            targetZoom = +options.apparentZoom + getZoomAdjustment(startingLat, constrainedCenter.lat);
+        } else if (optionsZoom) {
+            targetZoom = +options.zoom;
+        } else {
+            targetZoom = tr.zoom + getZoomAdjustment(startingLat, constrainedCenter.lat);
+        }
+        if (tr.zoom !== targetZoom) {
+            tr.setZoom(targetZoom);
+        }
     }
 
     /**

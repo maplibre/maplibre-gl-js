@@ -19,6 +19,7 @@ import {mat4, vec3} from 'gl-matrix';
 import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from '../geo/projection/mercator_utils';
 import {scaleZoom, zoomScale} from '../geo/transform_helper';
 import {ICameraHelper} from '../geo/projection/camera_helper';
+import {handleJumpToCenterZoomMercator, MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
@@ -824,45 +825,20 @@ export abstract class Camera extends Evented {
         this.stop();
 
         const tr = this._getTransformForUpdate();
-        let zoomChanged = false,
-            bearingChanged = false,
+        let bearingChanged = false,
             pitchChanged = false;
 
-        const optionsZoom = typeof options.zoom === 'number';
-        const optionsApparentZoom = typeof options.apparentZoom === 'number';
+        const oldZoom = tr.zoom;
 
-        if (this.transform.useGlobeControls) {
-            // Special zoom & center handling for globe:
-            // Globe constrained center isn't dependent on zoom level
-            const startingLat = tr.center.lat;
-            const constrainedCenter = tr.getConstrained(options.center ? LngLat.convert(options.center) : tr.center, tr.zoom).center;
-            tr.setCenter(constrainedCenter.wrap());
-
-            // Make sure to correctly apply apparentZoom
-            let targetZoom;
-            if (optionsApparentZoom) {
-                targetZoom = +options.apparentZoom + getZoomAdjustment(startingLat, constrainedCenter.lat);
-            } else if (optionsZoom) {
-                targetZoom = +options.zoom;
-            } else {
-                targetZoom = tr.zoom + getZoomAdjustment(startingLat, constrainedCenter.lat);
-            }
-            if (tr.zoom !== targetZoom) {
-                zoomChanged = true;
-                tr.setZoom(targetZoom);
-            }
+        // The jumpTo function is sometimes called before the projection and cameraHelper is initialized.
+        // Fall back to mercator behavior for such calls.
+        if (this.cameraHelper) {
+            this.cameraHelper.handleJumpToCenterZoom(tr, options);
         } else {
-            // Mercator zoom & center handling.
-            const zoom = optionsZoom ? +options.zoom : (optionsApparentZoom ? +options.apparentZoom : tr.zoom);
-            if (tr.zoom !== zoom) {
-                zoomChanged = true;
-                tr.setZoom(+options.zoom);
-            }
-
-            if (options.center !== undefined) {
-                tr.setCenter(LngLat.convert(options.center));
-            }
+            handleJumpToCenterZoomMercator(tr, options);
         }
+
+        const zoomChanged = tr.zoom !== oldZoom;
 
         if ('bearing' in options && tr.bearing !== +options.bearing) {
             bearingChanged = true;
