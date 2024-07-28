@@ -2964,6 +2964,7 @@ export class Map extends Camera {
     override migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper) {
         super.migrateProjection(newTransform, newCameraHelper);
         this.painter.transform = newTransform;
+        this.fire(new Event('projectiontransition', this.style.projection.name));
     }
 
     _contextLost = (event: any) => {
@@ -3111,7 +3112,7 @@ export class Map extends Camera {
         this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, transformUpdateResult.forcePlacementUpdate);
 
         if (transformUpdateResult.fireProjectionEvent) {
-            this.fire(new Event('projectiontransition'));
+            this.fire(new Event('projectiontransition', transformUpdateResult.fireProjectionEvent));
         }
 
         // Actually draw

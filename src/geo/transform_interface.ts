@@ -8,6 +8,7 @@ import type {PaddingOptions} from './edge_insets';
 import {Terrain} from '../render/terrain';
 import {ProjectionData} from '../render/program/projection_program';
 import {PointProjection} from '../symbol/projection';
+import {MapProjectionEvent} from '../ui/events';
 
 export type CoveringZoomOptions = {
     /**
@@ -48,7 +49,7 @@ export type CoveringTilesOptions = CoveringZoomOptions & {
 
 export type TransformUpdateResult = {
     forcePlacementUpdate?: boolean;
-    fireProjectionEvent?: boolean;
+    fireProjectionEvent?: MapProjectionEvent;
 };
 
 export interface ITransformGetters {

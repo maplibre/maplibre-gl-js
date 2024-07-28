@@ -362,12 +362,14 @@ export class GlobeTransform implements ITransform {
         if (oldGlobeRendering === this._globeRendering) {
             return {
                 forcePlacementUpdate: false,
-                fireProjectionEvent: false,
             };
         } else {
             return {
                 forcePlacementUpdate: true,
-                fireProjectionEvent: true,
+                fireProjectionEvent: {
+                    type: 'projectiontransition',
+                    newProjection: this._globeRendering ? 'globe' : 'globe-mercator',
+                },
             };
         }
     }

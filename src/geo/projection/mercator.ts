@@ -15,7 +15,7 @@ export const MercatorShaderVariantKey = 'mercator';
 export class MercatorProjection implements Projection {
     private _cachedMesh: Mesh = null;
 
-    get name(): string {
+    get name(): 'mercator' {
         return 'mercator';
     }
 

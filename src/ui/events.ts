@@ -7,7 +7,7 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 
 import type {Map} from './map';
 import type {LngLat} from '../geo/lng_lat';
-import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {ProjectionSpecification, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 /**
  * An event from the mouse relevant to a specific layer.
@@ -739,6 +739,11 @@ export type MapTerrainEvent = {
  */
 export type MapProjectionEvent = {
     type: 'projectiontransition';
+    /**
+     * Specifies the name of the new projection.
+     * Additionally includes 'globe-mercator' to describe globe that has internally switched to mercator.
+     */
+    newProjection: ProjectionSpecification['type'] | 'globe-mercator';
 }
 
 /**
