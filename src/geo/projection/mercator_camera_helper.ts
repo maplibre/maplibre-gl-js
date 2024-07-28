@@ -1,7 +1,7 @@
 import Point from '@mapbox/point-geometry';
 import {LngLat, LngLatLike} from '../lng_lat';
 import {IReadonlyTransform, ITransform} from '../transform_interface';
-import {cameraBoundsWarning, EaseToHandler, EaseToHandlerOptions, ICameraHelper, MapControlsDeltas} from './camera_helper';
+import {cameraBoundsWarning, EaseToHandler, EaseToHandlerOptions, FlyToHandler, FlyToHandlerOptions, ICameraHelper, MapControlsDeltas} from './camera_helper';
 import {CameraForBoundsOptions} from '../../ui/camera';
 import {PaddingOptions} from '../edge_insets';
 import {LngLatBounds} from '../lng_lat_bounds';
@@ -186,6 +186,61 @@ export class MercatorCameraHelper implements ICameraHelper {
             easeFunc,
             isZooming,
             elevationCenter: center,
+        };
+    }
+
+    handleFlyTo(tr: ITransform, options: FlyToHandlerOptions): FlyToHandler {
+        const optionsZoom = typeof options.zoom === 'number';
+        const optionsApparentZoom = typeof options.apparentZoom === 'number';
+
+        const startZoom = tr.zoom;
+
+        // Obtain target center and zoom
+        const constrained = tr.getConstrained(
+            LngLat.convert(options.center || options.locationAtOffset),
+            optionsZoom ? +options.zoom : (optionsApparentZoom ? +options.apparentZoom : startZoom)
+        );
+        const targetCenter = constrained.center;
+        const targetZoom = constrained.zoom;
+
+        normalizeCenter(tr, targetCenter);
+
+        const from = projectToWorldCoordinates(tr.worldSize, options.locationAtOffset);
+        const delta = projectToWorldCoordinates(tr.worldSize, targetCenter).sub(from);
+
+        const pixelPathLength = delta.mag();
+
+        const scaleOfZoom = zoomScale(targetZoom - startZoom);
+
+        const optionsMinZoom = typeof options.minZoom === 'number';
+        const optionsApparentMinZoom = typeof options.apparentMinZoom === 'number';
+
+        let scaleOfMinZoom: number;
+
+        if (optionsMinZoom || optionsApparentMinZoom) {
+            let minZoomPreConstrain;
+            if (optionsMinZoom) {
+                minZoomPreConstrain = Math.min(+options.minZoom, startZoom, targetZoom);
+            } else {
+                // We *do* have apparentMinZoom, but not minZoom, and globe controls are not in effect
+                minZoomPreConstrain = Math.min(+options.apparentMinZoom + startZoom, startZoom, targetZoom);
+            }
+            const minZoom = tr.getConstrained(targetCenter, minZoomPreConstrain).zoom;
+            scaleOfMinZoom = zoomScale(minZoom - startZoom);
+        }
+
+        const easeFunc = (k: number, scale: number, centerFactor: number, pointAtOffset: Point) => {
+            tr.setZoom(k === 1 ? targetZoom : startZoom + scaleZoom(scale));
+            const newCenter = k === 1 ? targetCenter : unprojectFromWorldCoordinates(tr.worldSize, from.add(delta.mult(centerFactor)).mult(scale));
+            tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
+        };
+
+        return {
+            easeFunc,
+            scaleOfZoom,
+            targetCenter,
+            scaleOfMinZoom,
+            pixelPathLength,
         };
     }
 }

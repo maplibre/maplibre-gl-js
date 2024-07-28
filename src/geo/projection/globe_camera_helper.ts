@@ -1,10 +1,10 @@
 import Point from '@mapbox/point-geometry';
 import {IReadonlyTransform, ITransform} from '../transform_interface';
-import {cameraBoundsWarning, EaseToHandler, EaseToHandlerOptions, ICameraHelper, MapControlsDeltas} from './camera_helper';
+import {cameraBoundsWarning, EaseToHandler, EaseToHandlerOptions, FlyToHandler, FlyToHandlerOptions, ICameraHelper, MapControlsDeltas} from './camera_helper';
 import {GlobeProjection} from './globe';
 import {LngLat, LngLatLike} from '../lng_lat';
 import {MercatorCameraHelper} from './mercator_camera_helper';
-import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, interpolateLngLatForGlobe} from './globe_utils';
+import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from './globe_utils';
 import {clamp, createVec3f64, differenceOfAnglesDegrees, remapSaturate, warnOnce} from '../../util/util';
 import {mat4, vec3} from 'gl-matrix';
 import {MAX_VALID_LATITUDE, normalizeCenter, scaleZoom, zoomScale} from '../transform_helper';
@@ -370,6 +370,95 @@ export class GlobeCameraHelper implements ICameraHelper {
             easeFunc,
             isZooming,
             elevationCenter: endCenterWithShift,
+        };
+    }
+
+    handleFlyTo(tr: ITransform, options: FlyToHandlerOptions): FlyToHandler {
+        if (!this.useGlobeControls) {
+            return this._mercatorCameraHelper.handleFlyTo(tr, options);
+        }
+        const optionsZoom = typeof options.zoom === 'number';
+        const optionsApparentZoom = typeof options.apparentZoom === 'number';
+
+        const startCenter = tr.center;
+        const startZoom = tr.zoom;
+        const doPadding = !tr.isPaddingEqual(options.padding);
+
+        // Obtain target center and zoom
+        const constrainedCenter = tr.getConstrained(
+            LngLat.convert(options.center || options.locationAtOffset),
+            startZoom
+        ).center;
+        let targetZoom;
+        if (optionsApparentZoom) {
+            targetZoom = +options.apparentZoom + getZoomAdjustment(tr.center.lat, constrainedCenter.lat);
+        } else if (optionsZoom) {
+            targetZoom = +options.zoom;
+        } else {
+            targetZoom = tr.zoom + getZoomAdjustment(tr.center.lat, constrainedCenter.lat);
+        }
+
+        // Compute target center that respects offset by creating a temporary transform and calling its `setLocationAtPoint`.
+        const clonedTr = tr.clone();
+        clonedTr.setCenter(constrainedCenter);
+        if (doPadding) {
+            clonedTr.setPadding(options.padding as PaddingOptions);
+        }
+        clonedTr.setZoom(targetZoom);
+        clonedTr.setBearing(options.bearing);
+        const clampedPoint = new Point(
+            clamp(tr.centerPoint.x + options.offsetAsPoint.x, 0, tr.width),
+            clamp(tr.centerPoint.y + options.offsetAsPoint.y, 0, tr.height)
+        );
+        clonedTr.setLocationAtPoint(constrainedCenter, clampedPoint);
+        const targetCenter = clonedTr.center;
+
+        normalizeCenter(tr, targetCenter);
+
+        const pixelPathLength = globeDistanceOfLocationsPixels(tr, startCenter, targetCenter);
+
+        const normalizedStartZoom = startZoom + getZoomAdjustment(startCenter.lat, 0);
+        const normalizedTargetZoom = targetZoom + getZoomAdjustment(targetCenter.lat, 0);
+        const scaleOfZoom = zoomScale(normalizedTargetZoom - normalizedStartZoom);
+
+        const optionsMinZoom = typeof options.minZoom === 'number';
+        const optionsApparentMinZoom = typeof options.apparentMinZoom === 'number';
+
+        let scaleOfMinZoom: number;
+
+        if (optionsMinZoom || optionsApparentMinZoom) {
+            let normalizedOptionsMinZoom;
+            if (optionsApparentMinZoom) {
+                normalizedOptionsMinZoom = +options.apparentMinZoom + startZoom + getZoomAdjustment(startCenter.lat, 0);
+            } else {
+                normalizedOptionsMinZoom = +options.minZoom + getZoomAdjustment(targetCenter.lat, 0);
+            }
+            const normalizedMinZoomPreConstrain = Math.min(normalizedOptionsMinZoom, normalizedStartZoom, normalizedTargetZoom);
+            const minZoomPreConstrain = normalizedMinZoomPreConstrain + getZoomAdjustment(0, targetCenter.lat);
+            const minZoom = tr.getConstrained(targetCenter, minZoomPreConstrain).zoom;
+            const normalizedMinZoom = minZoom + getZoomAdjustment(targetCenter.lat, 0);
+            scaleOfMinZoom = zoomScale(normalizedMinZoom - normalizedStartZoom);
+        }
+
+        const deltaLng = differenceOfAnglesDegrees(startCenter.lng, targetCenter.lng);
+        const deltaLat = differenceOfAnglesDegrees(startCenter.lat, targetCenter.lat);
+
+        const easeFunc = (k: number, scale: number, centerFactor: number, _pointAtOffset: Point) => {
+            const interpolatedCenter = interpolateLngLatForGlobe(startCenter, deltaLng, deltaLat, centerFactor);
+
+            const newCenter = k === 1 ? targetCenter : interpolatedCenter;
+            tr.setCenter(newCenter.wrap());
+
+            const interpolatedZoom = normalizedStartZoom + scaleZoom(scale);
+            tr.setZoom(k === 1 ? targetZoom : (interpolatedZoom + getZoomAdjustment(0, newCenter.lat)));
+        };
+
+        return {
+            easeFunc,
+            scaleOfZoom,
+            targetCenter,
+            scaleOfMinZoom,
+            pixelPathLength,
         };
     }
 

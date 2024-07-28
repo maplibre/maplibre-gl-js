@@ -33,6 +33,27 @@ export type EaseToHandler = {
     isZooming: boolean;
 }
 
+export type FlyToHandlerOptions = {
+    bearing: number;
+    pitch: number;
+    padding: PaddingOptions;
+    offsetAsPoint: Point;
+    center?: LngLatLike;
+    locationAtOffset: LngLat;
+    zoom?: number;
+    apparentZoom?: number;
+    minZoom?: number;
+    apparentMinZoom?: number;
+}
+
+export type FlyToHandler = {
+    easeFunc: (k: number, scale: number, centerFactor: number, pointAtOffset: Point) => void;
+    scaleOfZoom: number;
+    scaleOfMinZoom?: number;
+    targetCenter: LngLat;
+    pixelPathLength: number;
+}
+
 /**
  * @internal
  */
@@ -67,4 +88,6 @@ export interface ICameraHelper {
     handleJumpToCenterZoom(tr: ITransform, options: { zoom?: number; apparentZoom?: number; center?: LngLatLike }): void;
 
     handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandler;
+
+    handleFlyTo(tr: ITransform, options: FlyToHandlerOptions): FlyToHandler;
 }
