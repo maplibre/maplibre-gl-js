@@ -1,4 +1,4 @@
-import {extend, clamp, wrap, defaultEasing, pick, differenceOfAnglesDegrees} from '../util/util';
+import {extend, wrap, defaultEasing, pick} from '../util/util';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {browser} from '../util/browser';
 import {LngLat} from '../geo/lng_lat';
@@ -14,9 +14,7 @@ import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
 import type {HandlerManager} from './handler_manager';
-import {getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from '../geo/projection/globe_utils';
-import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from '../geo/projection/mercator_utils';
-import {normalizeCenter, scaleZoom, zoomScale} from '../geo/transform_helper';
+import {scaleZoom} from '../geo/transform_helper';
 import {ICameraHelper} from '../geo/projection/camera_helper';
 import {handleJumpToCenterZoomMercator} from '../geo/projection/mercator_camera_helper';
 
@@ -1195,7 +1193,6 @@ export abstract class Camera extends Evented {
             startBearing = this.getBearing(),
             startPitch = this.getPitch(),
             startPadding = this.getPadding();
-        const startCenter = tr.center;
 
         const bearing = 'bearing' in options ? this._normalizeBearing(options.bearing, startBearing) : startBearing;
         const pitch = 'pitch' in options ? +options.pitch : startPitch;

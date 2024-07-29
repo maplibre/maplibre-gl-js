@@ -4,7 +4,6 @@ import {bezier, clamp, extend} from '../util/util';
 import Point from '@mapbox/point-geometry';
 import type {DragPanOptions} from './handler/shim/drag_pan';
 import {EaseToOptions} from './camera';
-import {computeGlobePanCenter} from '../geo/projection/globe_utils';
 
 const defaultInertiaOptions = {
     linearity: 0.3,

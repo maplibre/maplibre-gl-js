@@ -1,7 +1,7 @@
 import {Painter} from './painter';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {Style} from '../style/style';
-import { StubMap } from '../util/test/util';
+import {StubMap} from '../util/test/util';
 
 const getStubMap = () => new StubMap() as any;
 
