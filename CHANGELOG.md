@@ -3,6 +3,7 @@
 ### ✨ Features and improvements
 
 - Expose projection matrix parameters ([#3136](https://github.com/maplibre/maplibre-gl-js/pull/3136))
+- Add option to position markers at subpixel coordinates to prevent markers jumping on `moveend` ([#4458](https://github.com/maplibre/maplibre-gl-js/pull/4458))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
@@ -11,6 +12,7 @@
 - Fix unguarded read access to possibly undefined object ([#4431](https://github.com/maplibre/maplibre-gl-js/pull/4431))
 - Fix remove hash string when map is removed ([#4427](https://github.com/maplibre/maplibre-gl-js/pull/4427))
 - Fix GeolocateControl may be added twice when calling addControl/removeControl/addControl rapidly ([#4454](https://github.com/maplibre/maplibre-gl-js/pull/4454))
+- Fix `style.loadURL` abort error being logged when removing style ([#4425](https://github.com/maplibre/maplibre-gl-js/pull/4425))
 - _...Add new stuff here..._
 
 ## 4.5.0
