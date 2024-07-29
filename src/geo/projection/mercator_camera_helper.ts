@@ -1,7 +1,7 @@
 import Point from '@mapbox/point-geometry';
 import {LngLat, LngLatLike} from '../lng_lat';
 import {IReadonlyTransform, ITransform} from '../transform_interface';
-import {cameraBoundsWarning, EaseToHandler, EaseToHandlerOptions, FlyToHandler, FlyToHandlerOptions, ICameraHelper, MapControlsDeltas} from './camera_helper';
+import {cameraBoundsWarning, CameraForBoxAndBearingHandlerResult, EaseToHandlerResult, EaseToHandlerOptions, FlyToHandlerResult, FlyToHandlerOptions, ICameraHelper, MapControlsDeltas} from './camera_helper';
 import {CameraForBoundsOptions} from '../../ui/camera';
 import {PaddingOptions} from '../edge_insets';
 import {LngLatBounds} from '../lng_lat_bounds';
@@ -52,7 +52,7 @@ export class MercatorCameraHelper implements ICameraHelper {
         tr.setLocationAtPoint(preZoomAroundLoc, deltas.around);
     }
 
-    cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform) {
+    cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult {
         const edgePadding = tr.padding;
 
         // Consider all corners of the rotated bounding box derived from the given points
@@ -123,7 +123,7 @@ export class MercatorCameraHelper implements ICameraHelper {
         handleJumpToCenterZoomMercator(tr, options);
     }
 
-    handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandler {
+    handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandlerResult {
         const startZoom = tr.zoom;
         const startBearing = tr.bearing;
         const startPitch = tr.pitch;
@@ -189,7 +189,7 @@ export class MercatorCameraHelper implements ICameraHelper {
         };
     }
 
-    handleFlyTo(tr: ITransform, options: FlyToHandlerOptions): FlyToHandler {
+    handleFlyTo(tr: ITransform, options: FlyToHandlerOptions): FlyToHandlerResult {
         const optionsZoom = typeof options.zoom === 'number';
         const optionsApparentZoom = typeof options.apparentZoom === 'number';
 

@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
 import {IReadonlyTransform, ITransform} from '../transform_interface';
-import {cameraBoundsWarning, EaseToHandler, EaseToHandlerOptions, FlyToHandler, FlyToHandlerOptions, ICameraHelper, MapControlsDeltas} from './camera_helper';
+import {cameraBoundsWarning, CameraForBoxAndBearingHandlerResult, EaseToHandlerResult, EaseToHandlerOptions, FlyToHandlerResult, FlyToHandlerOptions, ICameraHelper, MapControlsDeltas} from './camera_helper';
 import {GlobeProjection} from './globe';
 import {LngLat, LngLatLike} from '../lng_lat';
 import {MercatorCameraHelper} from './mercator_camera_helper';
@@ -159,7 +159,7 @@ export class GlobeCameraHelper implements ICameraHelper {
         tr.setZoom(oldZoom + getZoomAdjustment(oldLat, tr.center.lat));
     }
 
-    cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform) {
+    cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
         const result = this._mercatorCameraHelper.cameraForBoxAndBearing(options, padding, bounds, bearing, tr);
 
         if (!this.useGlobeControls) {
@@ -228,6 +228,7 @@ export class GlobeCameraHelper implements ICameraHelper {
 
         // Compute target zoom from the obtained scale.
         result.zoom = clonedTr.zoom + scaleZoom(smallestNeededScale);
+        return result;
     }
 
     /**
@@ -262,7 +263,7 @@ export class GlobeCameraHelper implements ICameraHelper {
         }
     }
 
-    handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandler {
+    handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandlerResult {
         if (!this.useGlobeControls) {
             return this._mercatorCameraHelper.handleEaseTo(tr, options);
         }
@@ -373,7 +374,7 @@ export class GlobeCameraHelper implements ICameraHelper {
         };
     }
 
-    handleFlyTo(tr: ITransform, options: FlyToHandlerOptions): FlyToHandler {
+    handleFlyTo(tr: ITransform, options: FlyToHandlerOptions): FlyToHandlerResult {
         if (!this.useGlobeControls) {
             return this._mercatorCameraHelper.handleFlyTo(tr, options);
         }

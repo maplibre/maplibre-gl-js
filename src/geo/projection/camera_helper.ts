@@ -14,6 +14,12 @@ export type MapControlsDeltas = {
     around: Point;
 }
 
+export type CameraForBoxAndBearingHandlerResult = {
+    center: LngLat;
+    zoom: number;
+    bearing: number;
+};
+
 export type EaseToHandlerOptions = {
     bearing: number;
     pitch: number;
@@ -27,7 +33,7 @@ export type EaseToHandlerOptions = {
     offset?: PointLike;
 }
 
-export type EaseToHandler = {
+export type EaseToHandlerResult = {
     easeFunc: (k: number) => void;
     elevationCenter: LngLat;
     isZooming: boolean;
@@ -46,7 +52,7 @@ export type FlyToHandlerOptions = {
     apparentMinZoom?: number;
 }
 
-export type FlyToHandler = {
+export type FlyToHandlerResult = {
     easeFunc: (k: number, scale: number, centerFactor: number, pointAtOffset: Point) => void;
     scaleOfZoom: number;
     scaleOfMinZoom?: number;
@@ -79,15 +85,11 @@ export interface ICameraHelper {
 
     handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void;
 
-    cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): {
-        center: LngLat;
-        zoom: number;
-        bearing: number;
-    };
+    cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult;
 
     handleJumpToCenterZoom(tr: ITransform, options: { zoom?: number; apparentZoom?: number; center?: LngLatLike }): void;
 
-    handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandler;
+    handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandlerResult;
 
-    handleFlyTo(tr: ITransform, options: FlyToHandlerOptions): FlyToHandler;
+    handleFlyTo(tr: ITransform, options: FlyToHandlerOptions): FlyToHandlerResult;
 }
