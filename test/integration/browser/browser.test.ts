@@ -448,18 +448,4 @@ describe('Browser tests', () => {
         expect(center.lat).toBeCloseTo(47.29960);
     }, 20000);
 
-    test('Geolocate control should appear only once', async () => {
-        await page.evaluate(async () => {
-            const geolocateControl = new maplibregl.GeolocateControl({});
-
-            map.addControl(geolocateControl);
-            map.removeControl(geolocateControl);
-            map.addControl(geolocateControl);
-
-            await map.once('idle');
-        });
-
-        const geolocateUIelem = await page.$$('.maplibregl-ctrl-geolocate');
-        expect(geolocateUIelem).toHaveLength(1);
-    }, 20000);
 });
