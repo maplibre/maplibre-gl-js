@@ -11,6 +11,8 @@ import {LngLatBounds} from '../geo/lng_lat_bounds';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {GlobeTransform} from '../geo/projection/globe_transform';
 import {getZoomAdjustment} from '../geo/projection/globe_utils';
+import {GlobeCameraHelper} from '../geo/projection/globe_camera_helper';
+import {GlobeProjection} from '../geo/projection/globe';
 
 beforeEach(() => {
     setMatchMedia();
@@ -47,8 +49,11 @@ function createCamera(options?) {
     transform.setRenderWorldCopies(options.renderWorldCopies);
     transform.resize(512, 512);
 
-    const camera = attachSimulateFrame(new CameraMock(transform, {} as any))
-        .jumpTo(options);
+    const camera = attachSimulateFrame(new CameraMock(transform, {} as any));
+    if (options.globe) {
+        camera.cameraHelper = new GlobeCameraHelper({useGlobeRendering: true} as GlobeProjection);
+    }
+    camera.jumpTo(options);
 
     camera._update = () => {};
 
@@ -2313,6 +2318,11 @@ describe('#transformCameraUpdate', () => {
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 10});
         expect(fixedNum(camera.getZoom())).toBe(3);
     });
+});
+
+test('createCameraGlobe returns a globe camera', () => {
+    const camera = createCameraGlobe();
+    expect(typeof camera.cameraHelper._globe === 'undefined').toBeFalsy();
 });
 
 describe('#jumpTo globe projection', () => {

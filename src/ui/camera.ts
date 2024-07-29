@@ -16,7 +16,7 @@ import type {PaddingOptions} from '../geo/edge_insets';
 import type {HandlerManager} from './handler_manager';
 import {scaleZoom} from '../geo/transform_helper';
 import {ICameraHelper} from '../geo/projection/camera_helper';
-import {handleJumpToCenterZoomMercator} from '../geo/projection/mercator_camera_helper';
+import {handleJumpToCenterZoomMercator, MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
@@ -329,6 +329,7 @@ export abstract class Camera extends Evented {
         this._zooming = false;
         this.transform = transform;
         this._bearingSnap = options.bearingSnap;
+        this.cameraHelper = new MercatorCameraHelper();
 
         this.on('moveend', () => {
             delete this._requestedCameraState;
