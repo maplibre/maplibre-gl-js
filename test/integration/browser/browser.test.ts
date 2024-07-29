@@ -455,11 +455,11 @@ describe('Browser tests', () => {
             map.addControl(geolocateControl);
             map.removeControl(geolocateControl);
             map.addControl(geolocateControl);
-        
+
             await map.once('idle');
         });
 
         const geolocateUIelem = await page.$$('.maplibregl-ctrl-geolocate');
-        expect(geolocateUIelem.length).toBe(1);
+        expect(geolocateUIelem).toHaveLength(1);
     }, 20000);
 });
