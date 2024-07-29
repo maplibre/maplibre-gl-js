@@ -624,8 +624,7 @@ export class Marker extends Evented {
         // because rounding the coordinates at every `move` event causes stuttered zooming
         // we only round them when _update is called with `moveend` or when its called with
         // no arguments (when the Marker is initialized or Marker#setLngLat is invoked).
-        const shouldRoundPosition = !e || e.type === 'moveend';
-        if (!this._subpixelPositioning && shouldRoundPosition) {
+        if (!this._subpixelPositioning && (!e || e.type === 'moveend')) {
             this._pos = this._pos.round();
         }
 
