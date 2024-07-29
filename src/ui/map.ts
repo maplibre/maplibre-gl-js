@@ -2964,7 +2964,9 @@ export class Map extends Camera {
     override migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper) {
         super.migrateProjection(newTransform, newCameraHelper);
         this.painter.transform = newTransform;
-        this.fire(new Event('projectiontransition', this.style.projection.name));
+        this.fire(new Event('projectiontransition', {
+            newProjection: this.style.projection.name,
+        }));
     }
 
     _contextLost = (event: any) => {

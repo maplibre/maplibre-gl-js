@@ -1,10 +1,11 @@
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {StyleLayer} from '../../style/style_layer';
-import {createMap, beforeMapTest, createStyle} from '../../util/test/util';
+import {createMap, beforeMapTest, createStyle, sleep} from '../../util/test/util';
 import {MapGeoJSONFeature} from '../../util/vectortile_to_geojson';
 import {MapLayerEventType, MapLibreEvent} from '../events';
 import {Map, MapOptions} from '../map';
 import {Event as EventedEvent, ErrorEvent} from '../../util/evented';
+import {GlobeProjection} from '../../geo/projection/globe';
 
 type IsAny<T> = 0 extends T & 1 ? T : never;
 type NotAny<T> = T extends IsAny<T> ? never : T;
@@ -779,5 +780,65 @@ describe('map events', () => {
             map.fire(new ErrorEvent(error));
         });
 
+    });
+
+    describe('projectiontransition event', () => {
+        test('projectiontransition events is fired when setProjection is called', done => {
+            const map = createMap();
+            map.on('load', () => {
+                let stage = 0;
+                const expected = [
+                    'globe',
+                    'mercator',
+                ];
+                map.on('projectiontransition', event => {
+                    expect(event.newProjection).toBe(expected[stage]);
+                    stage++;
+                    if (stage === expected.length) {
+                        done();
+                    }
+                });
+                map.setProjection({
+                    type: 'globe',
+                });
+                map.setProjection({
+                    type: 'mercator',
+                });
+            });
+        });
+        test('projectiontransition is fired when globe transitions to mercator', done => {
+            const map = createMap();
+            jest.spyOn(GlobeProjection.prototype, 'updateGPUdependent').mockImplementation(() => {});
+            map.on('load', async () => {
+                let stage = 0;
+                const expected = [
+                    'globe',
+                    'globe-mercator',
+                    'globe',
+                    'mercator',
+                ];
+                map.on('projectiontransition', event => {
+                    expect(event.newProjection).toBe(expected[stage]);
+                    stage++;
+                    if (stage === expected.length) {
+                        done();
+                    }
+                });
+                map.setProjection({
+                    type: 'globe',
+                });
+                map.setZoom(18);
+                map.redraw();
+                await sleep(1500);
+                map.redraw();
+                map.setZoom(0);
+                map.redraw();
+                await sleep(1500);
+                map.redraw();
+                map.setProjection({
+                    type: 'mercator',
+                });
+            });
+        });
     });
 });
