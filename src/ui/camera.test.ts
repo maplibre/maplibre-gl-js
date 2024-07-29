@@ -3331,12 +3331,9 @@ describe('#flyTo globe projection', () => {
         });
 
         test('respects transform\'s maxZoom', done => {
-            const transform = createCameraGlobe().transform;
-            transform.setMinZoom(2);
-            transform.setMaxZoom(10);
-
-            const camera = attachSimulateFrame(new CameraMock(transform, {} as any));
-            camera._update = () => {};
+            const camera = createCameraGlobe();
+            camera.transform.setMinZoom(2);
+            camera.transform.setMaxZoom(10);
 
             camera.on('moveend', () => {
                 expect(camera.getZoom()).toBeCloseTo(10);
