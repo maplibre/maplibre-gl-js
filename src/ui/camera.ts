@@ -974,6 +974,7 @@ export abstract class Camera extends Evented {
             around,
             aroundPoint,
             offsetAsPoint,
+            offset: options.offset,
             zoom: options.zoom,
             apparentZoom: options.apparentZoom,
             center: options.center,
