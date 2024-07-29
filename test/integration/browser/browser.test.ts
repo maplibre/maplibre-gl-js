@@ -447,5 +447,4 @@ describe('Browser tests', () => {
         expect(center.lng).toBeCloseTo(11.39770);
         expect(center.lat).toBeCloseTo(47.29960);
     }, 20000);
-
 });
