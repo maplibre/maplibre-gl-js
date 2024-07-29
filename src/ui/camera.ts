@@ -966,12 +966,6 @@ export abstract class Camera extends Evented {
             rotating: this._rotating,
             pitching: this._pitching
         };
-        this._rotating = this._rotating || (startBearing !== bearing);
-        this._pitching = this._pitching || (pitch !== startPitch);
-        this._padding = !tr.isPaddingEqual(padding as PaddingOptions);
-
-        this._easeId = options.easeId;
-        this._prepareEase(eventData, options.noMoveStart, currently);
 
         const easeHandler = this.cameraHelper.handleEaseTo(tr, {
             bearing,
@@ -984,7 +978,17 @@ export abstract class Camera extends Evented {
             apparentZoom: options.apparentZoom,
             center: options.center,
         });
-        if (this.terrain) this._prepareElevation(easeHandler.elevationCenter);
+
+        this._rotating = this._rotating || (startBearing !== bearing);
+        this._pitching = this._pitching || (pitch !== startPitch);
+        this._padding = !tr.isPaddingEqual(padding as PaddingOptions);
+        this._zooming = this._zooming || easeHandler.isZooming;
+        this._easeId = options.easeId;
+        this._prepareEase(eventData, options.noMoveStart, currently);
+
+        if (this.terrain) {
+            this._prepareElevation(easeHandler.elevationCenter);
+        }
 
         this._ease((k) => {
             easeHandler.easeFunc(k);
