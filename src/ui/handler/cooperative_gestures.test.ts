@@ -49,6 +49,22 @@ describe('CoopGesturesHandler', () => {
         map.remove();
     });
 
+    test("Emits an event when a gesture is prevented", async () => {
+        const map = createMap(true);
+        map._renderTaskQueue.run();
+        
+        const eventHandler = jest.fn();
+        map.on('cooperativegestureprevented', eventHandler);
+        
+        // simulate a single 'wheel' event
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        map._renderTaskQueue.run();
+        
+        expect(eventHandler).toHaveBeenCalledTimes(1);
+        expect(eventHandler).toHaveBeenCalledWith(expect.objectContaining({gestureType: 'wheel_zoom'}));
+        map.remove();
+    })
+
     test('Zooms on wheel if no key is down after disabling cooperative gestures', () => {
         const browserNow = jest.spyOn(browser, 'now');
         let now = 1555555555555;

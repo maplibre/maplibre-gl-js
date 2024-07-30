@@ -1,4 +1,5 @@
 import {DOM} from '../../util/dom';
+import {Event} from '../../util/evented';
 import {Handler} from '../handler_manager';
 
 import type {Map} from '../map';
@@ -90,7 +91,7 @@ export class CooperativeGesturesHandler implements Handler {
     }
 
     touchmove(e: TouchEvent) {
-        this._onCooperativeGesture(e.touches.length === 1);
+        this._onCooperativeGesture(e.touches.length === 1, 'touch_drag');
     }
 
     wheel(e: WheelEvent) {
@@ -99,7 +100,7 @@ export class CooperativeGesturesHandler implements Handler {
         }
 
         const isPrevented = this.shouldPreventWheelEvent(e);
-        this._onCooperativeGesture(isPrevented);
+        this._onCooperativeGesture(isPrevented, 'wheel_zoom');
     }
 
     shouldPreventWheelEvent(e: WheelEvent) {
@@ -113,8 +114,12 @@ export class CooperativeGesturesHandler implements Handler {
         return !isBypassed;
     }
 
-    _onCooperativeGesture(showNotification: boolean) {
+    _onCooperativeGesture(showNotification: boolean, gestureType: 'touch_drag' | 'wheel_zoom') {
         if (!this._enabled || !showNotification) return;
+
+        // notify subscribers that a cooperative gesture was prevented
+        this._map.fire(new Event('cooperativegestureprevented', {gestureType}));
+
         // Alert user how to scroll/pan
         this._container.classList.add('maplibregl-show');
         setTimeout(() => {
