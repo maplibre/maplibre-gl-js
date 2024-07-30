@@ -281,7 +281,8 @@ export class GeolocateControl extends Evented implements IControl {
     onAdd(map: Map) {
         this._map = map;
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group');
-        checkGeolocationSupport().then((supported) => this._setupUI(supported));
+        this._setupUI();
+        checkGeolocationSupport().then((supported) => this._finishSetupUI(supported));
         return this._container;
     }
 
@@ -523,8 +524,7 @@ export class GeolocateControl extends Evented implements IControl {
         this._timeoutId = undefined;
     };
 
-    _setupUI = (supported: boolean) => {
-        // this method is called asynchronously during onAdd
+    _setupUI = () => {
         // the control could have been removed before reaching here
         if (!this._map) {
             return;
@@ -534,6 +534,15 @@ export class GeolocateControl extends Evented implements IControl {
         this._geolocateButton = DOM.create('button', 'maplibregl-ctrl-geolocate', this._container);
         DOM.create('span', 'maplibregl-ctrl-icon', this._geolocateButton).setAttribute('aria-hidden', 'true');
         this._geolocateButton.type = 'button';
+        this._geolocateButton.disabled = true;
+    };
+
+    _finishSetupUI = (supported: boolean) => {
+        // this method is called asynchronously during onAdd
+        if (!this._map) {
+            // control has since been removed
+            return;
+        }
 
         if (supported === false) {
             warnOnce('Geolocation support is not available so the GeolocateControl will be disabled.');
@@ -543,6 +552,7 @@ export class GeolocateControl extends Evented implements IControl {
             this._geolocateButton.setAttribute('aria-label', title);
         } else {
             const title = this._map._getUIString('GeolocateControl.FindMyLocation');
+            this._geolocateButton.disabled = false;
             this._geolocateButton.title = title;
             this._geolocateButton.setAttribute('aria-label', title);
         }
