@@ -1,15 +1,15 @@
-import {DOM} from '../../util/dom';
+import { DOM } from '../../util/dom';
 
 import {defaultEasing, bezier} from '../../util/util';
 import {browser} from '../../util/browser';
-import {interpolates} from '@maplibre/maplibre-gl-style-spec';
-import {LngLat} from '../../geo/lng_lat';
-import {TransformProvider} from './transform-provider';
+import { interpolates } from '@maplibre/maplibre-gl-style-spec';
+import { LngLat } from '../../geo/lng_lat';
+import { TransformProvider } from './transform-provider';
 
 import type {Map} from '../map';
 import type Point from '@mapbox/point-geometry';
 import type {AroundCenterOptions} from './two_fingers_touch';
-import {Handler} from '../handler_manager';
+import { Handler } from '../handler_manager';
 
 // deltaY value for mouse scroll wheel identification
 const wheelZoomDelta = 4.000244140625;
@@ -151,7 +151,7 @@ export class ScrollZoomHandler implements Handler {
 
     wheel(e: WheelEvent) {
         if (!this.isEnabled()) return;
-        if (this._map.cooperativeGestures.isEnabled() && !e[this._map.cooperativeGestures._bypassKey]) {
+        if (this._map.cooperativeGestures.shouldPreventWheelEvent(e)) {
             return;
         }
         let value = e.deltaMode === WheelEvent.DOM_DELTA_LINE ? e.deltaY * 40 : e.deltaY;

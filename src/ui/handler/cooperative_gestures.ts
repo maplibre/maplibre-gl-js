@@ -1,7 +1,7 @@
-import {DOM} from '../../util/dom';
-import {Handler} from '../handler_manager';
+import { DOM } from '../../util/dom';
+import { Handler } from '../handler_manager';
 
-import type {Map} from '../map';
+import type { Map } from '../map';
 
 /**
  * The {@link CooperativeGesturesHandler} options object for the gesture settings
@@ -97,7 +97,20 @@ export class CooperativeGesturesHandler implements Handler {
         if (!this._map.scrollZoom.isEnabled()) {
             return;
         }
-        this._onCooperativeGesture(!e[this._bypassKey]);
+        
+        const isPrevented = this.shouldPreventWheelEvent(e);
+        this._onCooperativeGesture(isPrevented);
+    }
+
+    shouldPreventWheelEvent(e: WheelEvent) {
+        if (!this.isEnabled()) {
+            return false;
+        }
+
+        const isTrackpadPinch = e.ctrlKey;
+        const isBypassed = e[this._bypassKey] || isTrackpadPinch;
+
+        return !isBypassed;
     }
 
     _onCooperativeGesture(showNotification: boolean) {
