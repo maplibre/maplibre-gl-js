@@ -591,7 +591,6 @@ export class Map extends Camera {
         this._overridePixelRatio = resolvedOptions.pixelRatio;
         this._maxCanvasSize = resolvedOptions.maxCanvasSize;
         this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
-
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
 
         this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
