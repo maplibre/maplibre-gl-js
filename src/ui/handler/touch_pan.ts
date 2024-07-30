@@ -38,7 +38,11 @@ export class TouchPanHandler implements Handler {
     }
 
     touchmove(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
-        if (!this._active || mapTouches.length < this.minTouchs()) return;
+        if (!this._active) return;
+        if (mapTouches.length < this.minTouchs()) {
+            this._map.cooperativeGestures.notifyGestureBlocked('touch_pan', e);
+            return;
+        }
         e.preventDefault();
         return this._calculateTransform(e, points, mapTouches);
     }
