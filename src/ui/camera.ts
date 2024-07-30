@@ -1141,12 +1141,12 @@ export abstract class Camera extends Evented {
      * Call `transformCameraUpdate` if present, and then apply the "approved" changes.
      */
     _applyUpdatedTransform(tr: Transform) {
-        const modifiers = [];
+        const modifiers : ((tr: Transform) => ReturnType<CameraUpdateTransformFunction>)[] = [];
         if (this.terrain) {
-            modifiers.push(this._elevateCameraIfInsideTerrain.bind(this));
+            modifiers.push(tr => this._elevateCameraIfInsideTerrain(tr));
         }
         if (this.transformCameraUpdate) {
-            modifiers.push(this.transformCameraUpdate.bind(this));
+            modifiers.push(tr => this.transformCameraUpdate(tr));
         }
         if (!modifiers.length) {
             return;
