@@ -12,6 +12,8 @@ export type GestureOptions = boolean;
 /**
  * A `CooperativeGestureHandler` is a control that adds cooperative gesture info when user tries to zoom in/out.
  *
+ * When the CooperativeGestureHandler blocks a gesture, it will emit a `cooperativegestureprevented` event.
+ *
  * @group Handlers
  *
  * @example
