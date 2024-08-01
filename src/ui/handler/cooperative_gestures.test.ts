@@ -97,6 +97,39 @@ describe('CoopGesturesHandler', () => {
         map.remove();
     });
 
+    test('Zooms on trackpad pinch when metaKey is the bypass key', () => {
+        // NOTE: This should pass regardless of whether cooperativeGestures is enabled or not
+        const browserNow = jest.spyOn(browser, 'now');
+        let now = 1555555555555;
+        browserNow.mockReturnValue(now);
+
+        const map = createMap(true);
+
+        // pretend we're on a Mac, where the ctrlKey isn't the bypassKey
+        map.cooperativeGestures._bypassKey = 'metaKey';
+        map._renderTaskQueue.run();
+
+        const startZoom = map.getZoom();
+        // simulate a single 'wheel' trackpad pinch event
+        simulate.wheel(map.getCanvas(), {
+            type: 'wheel',
+            deltaY: -simulate.magicWheelZoomDelta,
+
+            // this is how a browser identifies a trackpad pinch
+            ctrlKey: true
+        });
+        map._renderTaskQueue.run();
+
+        now += 400;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+
+        const endZoom = map.getZoom();
+        expect(endZoom - startZoom).toBeCloseTo(0.0285, 3);
+
+        map.remove();
+    });
+
     test('Does not show message if scrollZoom is disabled', () => {
         // NOTE: This should pass regardless of whether cooperativeGestures is enabled or not
         const browserNow = jest.spyOn(browser, 'now');
