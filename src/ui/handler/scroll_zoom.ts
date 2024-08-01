@@ -152,7 +152,7 @@ export class ScrollZoomHandler implements Handler {
     /**
      * Determines whether or not the gesture is blocked due to cooperativeGestures.
      */
-    _shouldBePrevent(e: WheelEvent) {
+    _shouldBePrevented(e: WheelEvent) {
         if (!this._map.cooperativeGestures.isEnabled()) {
             return false;
         }
@@ -165,7 +165,7 @@ export class ScrollZoomHandler implements Handler {
 
     wheel(e: WheelEvent) {
         if (!this.isEnabled()) return;
-        if (this._shouldBePrevent(e)) {
+        if (this._shouldBePrevented(e)) {
             this._map.cooperativeGestures.notifyGestureBlocked('wheel_zoom', e);
             return;
         }
