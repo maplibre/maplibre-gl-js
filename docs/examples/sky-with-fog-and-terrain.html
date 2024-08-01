@@ -5,12 +5,13 @@
     <meta property="og:description" content="Allows changing the sky, fog and horizon color and blends." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@4.5.1/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@4.5.1/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
         .listing-group {
+            font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;
             position: absolute;
             bottom: 10px;
             left: 10px;
@@ -24,13 +25,13 @@
 <body>
 <div id="map"></div>
 <table id="listing-group" class="listing-group">
-    <tr><td>sky-color</td><td><input type="color" id="sky-color-picker" value="#0000ff" style="width: 100%"/></td></tr>
-    <tr><td>horizon-color</td><td><input type="color" id="horizon-color-picker" value="#00ff00" style="width: 100%"/></td></tr>
-    <tr><td>fog-color</td><td><input type="color" id="fog-color-picker" value="#ff0000" style="width: 100%"/></td></tr>
-    <tr><td>sky-horizon-blend</td><td><input type="range" id="sky-horizon-blend-slider" min="0" max="1" step="0.01" value="0.5" /></td></tr>
-    <tr><td>horizon-fog-blend</td><td><input type="range" id="horizon-fog-blend-slider" min="0" max="1" step="0.01" value="0.5" /></td></tr>
-    <tr><td>fog-ground-blend</td><td><input type="range" id="fog-ground-blend-slider" min="0" max="1" step="0.01" value="0.1" /></td></tr>
-</nav>
+    <tr><td><label for="sky-color-picker">sky-color</label></td><td><input type="color" id="sky-color-picker" value="#0000ff" style="width: 100%"/></td></tr>
+    <tr><td><label for="horizon-color-picker">horizon-color</label></td><td><input type="color" id="horizon-color-picker" value="#00ff00" style="width: 100%"/></td></tr>
+    <tr><td><label for="fog-color-picker">fog-color</label></td><td><input type="color" id="fog-color-picker" value="#ff0000" style="width: 100%"/></td></tr>
+    <tr><td><label for="sky-horizon-blend-slider">sky-horizon-blend</label></td><td><input type="range" id="sky-horizon-blend-slider" min="0" max="1" step="0.01" value="0.5" /></td></tr>
+    <tr><td><label for="horizon-fog-blend-slider">horizon-fog-blend</label></td><td><input type="range" id="horizon-fog-blend-slider" min="0" max="1" step="0.01" value="0.5" /></td></tr>
+    <tr><td><label for="fog-ground-blend-slider">fog-ground-blend</label></td><td><input type="range" id="fog-ground-blend-slider" min="0" max="1" step="0.01" value="0.1" /></td></tr>
+</table>
 <script>
     function setSkyFromUi() {
         map.setSky({
