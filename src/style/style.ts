@@ -294,12 +294,13 @@ export class Style extends Evented {
 
         const request = this.map._requestManager.transformRequest(url, ResourceType.Style);
         this._loadStyleRequest = new AbortController();
+        const abortController = this._loadStyleRequest;
         getJSON<StyleSpecification>(request, this._loadStyleRequest).then((response) => {
             this._loadStyleRequest = null;
             this._load(response.data, options, previousStyle);
         }).catch((error) => {
             this._loadStyleRequest = null;
-            if (error) {
+            if (error && !abortController.signal.aborted) { // ignore abort
                 this.fire(new ErrorEvent(error));
             }
         });

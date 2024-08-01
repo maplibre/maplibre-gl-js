@@ -201,4 +201,18 @@ describe('Actor', () => {
 
         expect(spy).toHaveBeenCalled();
     });
+
+    test('should process a message when origin is "resource://android"', async () => {
+        const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
+        const actor = new Actor(worker, '1');
+
+        const spy = jest.fn().mockReturnValue(Promise.resolve({}));
+        worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, spy);
+
+        actor.target.postMessage({type: MessageType.getClusterExpansionZoom, data: {} as any, origin: 'resource://android'});
+
+        await sleep(0);
+
+        expect(spy).toHaveBeenCalled();
+    });
 });
