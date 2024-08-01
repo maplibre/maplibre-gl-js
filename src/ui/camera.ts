@@ -1152,7 +1152,7 @@ export abstract class Camera extends Evented {
             return;
         }
         const finalTransform = tr.clone();
-        modifiers.forEach((modifier) => {
+        for (const modifier of modifiers) {
             const nextTransform = finalTransform.clone();
             const {
                 center,
@@ -1167,7 +1167,7 @@ export abstract class Camera extends Evented {
             if (bearing !== undefined) nextTransform.bearing = bearing;
             if (elevation !== undefined) nextTransform.elevation = elevation;
             finalTransform.apply(nextTransform);
-        });
+        };
         this.transform.apply(finalTransform);
     }
 
