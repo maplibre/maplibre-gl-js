@@ -29,8 +29,9 @@ export class TouchPanHandler implements Handler {
         this._sum = new Point(0, 0);
     }
 
-    minTouchs() {
-        return this._map.cooperativeGestures.isEnabled() ? 2 : 1;
+    _shouldBePrevent(mapTouches: Array<Touch>) {
+        const minTouches = this._map.cooperativeGestures.isEnabled() ? 2 : 1;
+        return mapTouches.length < minTouches;
     }
 
     touchstart(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
@@ -39,7 +40,7 @@ export class TouchPanHandler implements Handler {
 
     touchmove(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
         if (!this._active) return;
-        if (mapTouches.length < this.minTouchs()) {
+        if (this._shouldBePrevent(mapTouches)) {
             this._map.cooperativeGestures.notifyGestureBlocked('touch_pan', e);
             return;
         }
