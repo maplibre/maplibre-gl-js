@@ -51,7 +51,7 @@ export class TouchPanHandler implements Handler {
     touchend(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
         this._calculateTransform(e, points, mapTouches);
 
-        if (this._active && mapTouches.length < this.minTouchs()) {
+        if (this._active && this._shouldBePrevent(mapTouches)) {
             this.reset();
         }
     }
