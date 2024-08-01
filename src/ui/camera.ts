@@ -1165,7 +1165,7 @@ export abstract class Camera extends Evented {
             if (bearing !== undefined) nextTransform.bearing = bearing;
             if (elevation !== undefined) nextTransform.elevation = elevation;
             finalTransform.apply(nextTransform);
-        };
+        }
         this.transform.apply(finalTransform);
     }
 
