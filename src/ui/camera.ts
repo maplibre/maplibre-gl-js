@@ -1119,9 +1119,7 @@ export abstract class Camera extends Evented {
      */
     _elevateCameraIfInsideTerrain(tr: Transform) : { pitch?: number; zoom?: number } {
         const camera = tr.getCameraPosition();
-        const surfacePadding = Math.min(500, 20 * (25 - tr.zoom));
-        const minAltitude = this.terrain.getElevationForLngLatZoom(
-            camera.lngLat, tr.zoom) + surfacePadding;
+        const minAltitude = this.terrain.getElevationForLngLatZoom(camera.lngLat, tr.zoom);
         if (camera.altitude < minAltitude) {
             const newCamera = this.calculateCameraOptionsFromTo(
                 camera.lngLat, minAltitude, tr.center, tr.elevation);
