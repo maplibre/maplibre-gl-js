@@ -45,9 +45,9 @@ export class ScrollZoomHandler implements Handler {
     _lastWheelEvent: any;
     _lastWheelEventTime: number;
 
-    _lastExpectedZoom: number = null;
+    _lastExpectedZoom: number;
     _startZoom: number;
-    _targetZoom: number | null = null;
+    _targetZoom: number;
     _delta: number;
     _easing: ((a: number) => number);
     _prevEase: {
@@ -255,12 +255,12 @@ export class ScrollZoomHandler implements Handler {
         const tr = this._tr.transform;
 
         // When globe is enabled zoom might be modified by the map center latitude being changes (either by panning or by zoom moving the map)
-        if (this._lastExpectedZoom !== null) {
+        if (typeof this._lastExpectedZoom === 'number') {
             const externalZoomChange = tr.zoom - this._lastExpectedZoom;
-            if (this._startZoom !== null) {
+            if (typeof this._startZoom === 'number') {
                 this._startZoom += externalZoomChange;
             }
-            if (this._targetZoom !== null) {
+            if (typeof this._targetZoom === 'number') {
                 this._targetZoom += externalZoomChange;
             }
         }
@@ -277,7 +277,7 @@ export class ScrollZoomHandler implements Handler {
                 scale = 1 / scale;
             }
 
-            const fromScale = this._targetZoom === null ? tr.scale : zoomScale(this._targetZoom);
+            const fromScale = typeof this._targetZoom !== 'number' ? tr.scale : zoomScale(this._targetZoom);
             this._targetZoom = Math.min(tr.maxZoom, Math.max(tr.minZoom, scaleZoom(fromScale * scale)));
 
             // if this is a mouse wheel, refresh the starting zoom and easing
@@ -291,7 +291,7 @@ export class ScrollZoomHandler implements Handler {
             this._delta = 0;
         }
 
-        const targetZoom = this._targetZoom === null ? tr.zoom : this._targetZoom;
+        const targetZoom = typeof this._targetZoom !== 'number' ? tr.zoom : this._targetZoom;
         const startZoom = this._startZoom;
         const easing = this._easing;
 
@@ -323,8 +323,8 @@ export class ScrollZoomHandler implements Handler {
             this._finishTimeout = setTimeout(() => {
                 this._zooming = false;
                 this._triggerRenderFrame();
-                this._targetZoom = null;
-                this._lastExpectedZoom = null;
+                delete this._targetZoom;
+                delete this._lastExpectedZoom;
                 delete this._finishTimeout;
             }, 200);
         }
@@ -367,8 +367,8 @@ export class ScrollZoomHandler implements Handler {
     reset() {
         this._active = false;
         this._zooming = false;
-        this._targetZoom = null;
-        this._lastExpectedZoom = null;
+        delete this._targetZoom;
+        delete this._lastExpectedZoom;
         if (this._finishTimeout) {
             clearTimeout(this._finishTimeout);
             delete this._finishTimeout;
