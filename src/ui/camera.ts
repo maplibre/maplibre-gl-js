@@ -16,7 +16,6 @@ import type {PaddingOptions} from '../geo/edge_insets';
 import type {HandlerManager} from './handler_manager';
 import {scaleZoom} from '../geo/transform_helper';
 import {ICameraHelper} from '../geo/projection/camera_helper';
-import {handleJumpToCenterZoomMercator, MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
@@ -305,7 +304,7 @@ export abstract class Camera extends Evented {
     abstract _requestRenderFrame(a: () => void): TaskID;
     abstract _cancelRenderFrame(_: TaskID): void;
 
-    constructor(transform: ITransform, options: {
+    constructor(transform: ITransform, cameraHelper: ICameraHelper, options: {
         bearingSnap: number;
     }) {
         super();
@@ -313,7 +312,7 @@ export abstract class Camera extends Evented {
         this._zooming = false;
         this.transform = transform;
         this._bearingSnap = options.bearingSnap;
-        this.cameraHelper = new MercatorCameraHelper();
+        this.cameraHelper = cameraHelper;
 
         this.on('moveend', () => {
             delete this._requestedCameraState;
@@ -807,13 +806,7 @@ export abstract class Camera extends Evented {
 
         const oldZoom = tr.zoom;
 
-        // The jumpTo function is sometimes called before the projection and cameraHelper is initialized.
-        // Fall back to mercator behavior for such calls.
-        if (this.cameraHelper) {
-            this.cameraHelper.handleJumpToCenterZoom(tr, options);
-        } else {
-            handleJumpToCenterZoomMercator(tr, options);
-        }
+        this.cameraHelper.handleJumpToCenterZoom(tr, options);
 
         const zoomChanged = tr.zoom !== oldZoom;
 

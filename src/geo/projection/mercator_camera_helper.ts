@@ -10,21 +10,6 @@ import {degreesToRadians} from '../../util/util';
 import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
-// We need to be able to call this directly from camera.ts
-export function handleJumpToCenterZoomMercator(tr: ITransform, options: { zoom?: number; center?: LngLatLike }): void {
-    // Mercator zoom & center handling.
-    const optionsZoom = typeof options.zoom !== 'undefined';
-
-    const zoom = optionsZoom ? +options.zoom : tr.zoom;
-    if (tr.zoom !== zoom) {
-        tr.setZoom(+options.zoom);
-    }
-
-    if (options.center !== undefined) {
-        tr.setCenter(LngLat.convert(options.center));
-    }
-}
-
 /**
  * @internal
  */
@@ -119,7 +104,17 @@ export class MercatorCameraHelper implements ICameraHelper {
     }
 
     handleJumpToCenterZoom(tr: ITransform, options: { zoom?: number; center?: LngLatLike }): void {
-        handleJumpToCenterZoomMercator(tr, options);
+        // Mercator zoom & center handling.
+        const optionsZoom = typeof options.zoom !== 'undefined';
+
+        const zoom = optionsZoom ? +options.zoom : tr.zoom;
+        if (tr.zoom !== zoom) {
+            tr.setZoom(+options.zoom);
+        }
+
+        if (options.center !== undefined) {
+            tr.setCenter(LngLat.convert(options.center));
+        }
     }
 
     handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandlerResult {

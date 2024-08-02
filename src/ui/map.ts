@@ -62,6 +62,7 @@ import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../s
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {ITransform} from '../geo/transform_interface';
 import {ICameraHelper} from '../geo/projection/camera_helper';
+import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 
 const version = packageJSON.version;
 
@@ -579,6 +580,7 @@ export class Map extends Camera {
         // Transform specialization will later be set by style when it creates its projection instance.
         // When this happens, the new transform will inherit all properties of this temporary transform.
         const transform = new MercatorTransform();
+        const cameraHelper = new MercatorCameraHelper();
         if (resolvedOptions.minZoom !== undefined) {
             transform.setMinZoom(resolvedOptions.minZoom);
         }
@@ -595,7 +597,7 @@ export class Map extends Camera {
             transform.setRenderWorldCopies(resolvedOptions.renderWorldCopies);
         }
 
-        super(transform, {bearingSnap: resolvedOptions.bearingSnap});
+        super(transform, cameraHelper, {bearingSnap: resolvedOptions.bearingSnap});
 
         this._interactive = resolvedOptions.interactive;
         this._maxTileCacheSize = resolvedOptions.maxTileCacheSize;

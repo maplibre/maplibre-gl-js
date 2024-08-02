@@ -13,6 +13,7 @@ import {GlobeTransform} from '../geo/projection/globe_transform';
 import {getZoomAdjustment} from '../geo/projection/globe_utils';
 import {GlobeCameraHelper} from '../geo/projection/globe_camera_helper';
 import {GlobeProjection} from '../geo/projection/globe';
+import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 
 beforeEach(() => {
     setMatchMedia();
@@ -49,7 +50,7 @@ function createCamera(options?) {
     transform.setRenderWorldCopies(options.renderWorldCopies);
     transform.resize(512, 512);
 
-    const camera = attachSimulateFrame(new CameraMock(transform, {} as any));
+    const camera = attachSimulateFrame(new CameraMock(transform, new MercatorCameraHelper(), {} as any));
     if (options.globe) {
         camera.cameraHelper = new GlobeCameraHelper({useGlobeRendering: true} as GlobeProjection);
     }
@@ -1126,7 +1127,7 @@ describe('#flyTo', () => {
     test('does not throw when cameras current zoom is above maxzoom and an offset creates infinite zoom out factor', () => {
         const transform = new MercatorTransform(0, 20.9999, 0, 60, true);
         transform.resize(512, 512);
-        const camera = attachSimulateFrame(new CameraMock(transform, {} as any))
+        const camera = attachSimulateFrame(new CameraMock(transform, new MercatorCameraHelper(), {} as any))
             .jumpTo({zoom: 21, center: [0, 0]});
         camera._update = () => {};
         expect(() => camera.flyTo({zoom: 7.5, center: [0, 0], offset: [0, 70]})).not.toThrow();
@@ -1683,7 +1684,7 @@ describe('#flyTo', () => {
         const transform = new MercatorTransform(2, 10, 0, 60, false);
         transform.resize(512, 512);
 
-        const camera = attachSimulateFrame(new CameraMock(transform, {} as any));
+        const camera = attachSimulateFrame(new CameraMock(transform, new MercatorCameraHelper(), {} as any));
         camera._update = () => {};
 
         camera.on('moveend', () => {
@@ -1708,7 +1709,7 @@ describe('#flyTo', () => {
         const transform = new MercatorTransform(2, 10, 0, 60, false);
         transform.resize(512, 512);
 
-        const camera = attachSimulateFrame(new CameraMock(transform, {} as any));
+        const camera = attachSimulateFrame(new CameraMock(transform, new MercatorCameraHelper(), {} as any));
         camera._update = () => {};
 
         camera.on('moveend', () => {
@@ -2068,7 +2069,7 @@ describe('#cameraForBounds', () => {
         const transform = new MercatorTransform(2, 10, 0, 60, false);
         transform.resize(2048, 512);
 
-        const camera = attachSimulateFrame(new CameraMock(transform, {} as any));
+        const camera = attachSimulateFrame(new CameraMock(transform, new MercatorCameraHelper(), {} as any));
         camera._update = () => {};
 
         const bb = new LngLatBounds();
@@ -3320,7 +3321,7 @@ describe('#flyTo globe projection', () => {
             transform.setMinZoom(2);
             transform.setMaxZoom(10);
 
-            const camera = attachSimulateFrame(new CameraMock(transform, {} as any));
+            const camera = attachSimulateFrame(new CameraMock(transform, new MercatorCameraHelper(), {} as any));
             camera._update = () => {};
 
             const start = camera.getCenter();
