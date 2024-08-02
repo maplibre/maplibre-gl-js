@@ -29,7 +29,6 @@ export type EaseToHandlerOptions = {
     aroundPoint?: Point;
     center?: LngLatLike;
     zoom?: number;
-    apparentZoom?: number;
     offset?: PointLike;
 }
 
@@ -47,9 +46,7 @@ export type FlyToHandlerOptions = {
     center?: LngLatLike;
     locationAtOffset: LngLat;
     zoom?: number;
-    apparentZoom?: number;
     minZoom?: number;
-    apparentMinZoom?: number;
 }
 
 export type FlyToHandlerResult = {
@@ -87,7 +84,7 @@ export interface ICameraHelper {
 
     cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult;
 
-    handleJumpToCenterZoom(tr: ITransform, options: { zoom?: number; apparentZoom?: number; center?: LngLatLike }): void;
+    handleJumpToCenterZoom(tr: ITransform, options: { zoom?: number; center?: LngLatLike }): void;
 
     handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandlerResult;
 

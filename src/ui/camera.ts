@@ -85,15 +85,6 @@ export type CenterZoomBearing = {
      * is "up". For example, `bearing: 90` orients the map so that east is up.
      */
     bearing?: number;
-    /**
-     * The desired apparent zoom level, relative to the animation's starting zoom level.
-     * This is only used when globe projection is enabled, where changing latitude shifts the actual zoom level to match mercator.
-     *
-     * For example, when easing from near the pole with starting zoom 4 and end zoom 5, the map will
-     * seem to zoom out, but will end up being at mercator zoom 5. When instead apparentZoom is set
-     * to 5, the map will appear to zoom in by one level, but its end mercator zoom will be larger than 5.
-     */
-    apparentZoom?: number;
 }
 
 /**
@@ -145,13 +136,6 @@ export type FlyToOptions = AnimationOptions & CameraOptions & {
      * `options.curve` is specified, this option is ignored.
      */
     minZoom?: number;
-    /**
-     * The desired apparent zoom level at the peak of the flight path, relative to the animation's starting zoom level.
-     * This is only used when globe projection is enabled, where changing latitude shifts the actual zoom level to match mercator.
-     *
-     * For example a value of -2 will allow the flightpath to zoom out enough to make the planet 4x smaller at most.
-     */
-    apparentMinZoom?: number;
     /**
      * The average speed of the animation defined in relation to
      * `options.curve`. A speed of 1.2 means that the map appears to move along the flight path
@@ -810,11 +794,6 @@ export abstract class Camera extends Evented {
      *   pitch: 45,
      *   bearing: 90
      * });
-     * // jump while preserving planet size under globe projection
-     * map.jumpTo({
-     *   center: [0, 0],
-     *   apparentZoom: map.getZoom(),
-     * });
      * ```
      * @see [Jump to a series of locations](https://maplibre.org/maplibre-gl-js/docs/examples/jump-to/)
      * @see [Update a feature in realtime](https://maplibre.org/maplibre-gl-js/docs/examples/live-update-feature/)
@@ -925,7 +904,6 @@ export abstract class Camera extends Evented {
      *
      * @param options - Options describing the destination and animation of the transition.
      * Accepts {@link CameraOptions} and {@link AnimationOptions}.
-     * Supports `apparentZoom` for consistent planet radius when animating with globe projection enabled.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
      * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
      */
@@ -976,7 +954,6 @@ export abstract class Camera extends Evented {
             offsetAsPoint,
             offset: options.offset,
             zoom: options.zoom,
-            apparentZoom: options.apparentZoom,
             center: options.center,
         });
 
@@ -1161,11 +1138,6 @@ export abstract class Camera extends Evented {
      *     return t;
      *   }
      * });
-     * // using apparentZoom to keep consistent planet radius when globe projection is enabled
-     * map.flyTo({
-     *   center: [0, 0],
-     *   apparentZoom: map.getZoom()
-     * });
      * ```
      * @see [Fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/flyto/)
      * @see [Slowly fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/flyto-options/)
@@ -1217,8 +1189,6 @@ export abstract class Camera extends Evented {
             center: options.center,
             minZoom: options.minZoom,
             zoom: options.zoom,
-            apparentMinZoom: options.apparentMinZoom,
-            apparentZoom: options.apparentZoom,
         });
 
         let rho = options.curve;

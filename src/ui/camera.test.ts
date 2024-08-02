@@ -2344,18 +2344,6 @@ describe('#jumpTo globe projection', () => {
             expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
             expect(camera.getZoom()).toBe(3);
         });
-
-        test('changing center with apparentZoom same as original zoom should adjusts zoom', () => {
-            camera.jumpTo({center: [0, 40], apparentZoom: 1});
-            expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
-            expect(camera.getZoom()).toBe(0.6154999996223638);
-        });
-
-        test('changing center with apparentZoom larger should adjusts zoom and increase it', () => {
-            camera.jumpTo({center: [0, 40], apparentZoom: 2});
-            expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
-            expect(camera.getZoom()).toBe(1.6154999996223638);
-        });
     });
 
     describe('mercator test equivalents', () => {
@@ -2512,18 +2500,6 @@ describe('#easeTo globe projection', () => {
             camera.easeTo({center: [0, 40], zoom: 3, duration: 0});
             expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
             expect(camera.getZoom()).toBe(3);
-        });
-
-        test('changing center with apparentZoom same as original zoom should adjusts zoom', () => {
-            camera.easeTo({center: [0, 40], apparentZoom: 1, duration: 0});
-            expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
-            expect(camera.getZoom()).toBe(0.6154999996223638);
-        });
-
-        test('changing center with apparentZoom larger should adjusts zoom and increase it', () => {
-            camera.easeTo({center: [0, 40], apparentZoom: 2, duration: 0});
-            expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
-            expect(camera.getZoom()).toBe(1.6154999996223638);
         });
     });
 
@@ -2779,20 +2755,6 @@ describe('#flyTo globe projection', () => {
             expect(camera.getCenter().lng).toBeCloseTo(0, 9);
             expect(camera.getCenter().lat).toBeCloseTo(40, 9);
             expect(camera.getZoom()).toBe(3);
-        });
-
-        test('changing center with apparentZoom same as original zoom should adjusts zoom', () => {
-            camera.flyTo({center: [0, 40], apparentZoom: 1, animate: false});
-            expect(camera.getCenter().lng).toBeCloseTo(0, 9);
-            expect(camera.getCenter().lat).toBeCloseTo(40, 9);
-            expect(camera.getZoom()).toBe(0.6154999996223638);
-        });
-
-        test('changing center with apparentZoom larger should adjusts zoom and increase it', () => {
-            camera.flyTo({center: [0, 40], apparentZoom: 2, animate: false});
-            expect(camera.getCenter().lng).toBeCloseTo(0, 9);
-            expect(camera.getCenter().lat).toBeCloseTo(40, 9);
-            expect(camera.getZoom()).toBe(1.6154999996223638);
         });
     });
 

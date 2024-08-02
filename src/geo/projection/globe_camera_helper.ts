@@ -234,14 +234,11 @@ export class GlobeCameraHelper implements ICameraHelper {
     /**
      * Handles the zoom and center change during camera jumpTo.
      */
-    handleJumpToCenterZoom(tr: ITransform, options: { zoom?: number; apparentZoom?: number; center?: LngLatLike }): void {
+    handleJumpToCenterZoom(tr: ITransform, options: { zoom?: number; center?: LngLatLike }): void {
         if (!this.useGlobeControls) {
             this._mercatorCameraHelper.handleJumpToCenterZoom(tr, options);
             return;
         }
-
-        const optionsZoom = typeof options.zoom === 'number';
-        const optionsApparentZoom = typeof options.apparentZoom === 'number';
 
         // Special zoom & center handling for globe:
         // Globe constrained center isn't dependent on zoom level
@@ -249,15 +246,8 @@ export class GlobeCameraHelper implements ICameraHelper {
         const constrainedCenter = tr.getConstrained(options.center ? LngLat.convert(options.center) : tr.center, tr.zoom).center;
         tr.setCenter(constrainedCenter.wrap());
 
-        // Make sure to correctly apply apparentZoom
-        let targetZoom;
-        if (optionsApparentZoom) {
-            targetZoom = +options.apparentZoom + getZoomAdjustment(startingLat, constrainedCenter.lat);
-        } else if (optionsZoom) {
-            targetZoom = +options.zoom;
-        } else {
-            targetZoom = tr.zoom + getZoomAdjustment(startingLat, constrainedCenter.lat);
-        }
+        // Make sure to compute correct target zoom level if no zoom is specified
+        const targetZoom = (typeof options.zoom !== 'undefined') ? +options.zoom : (tr.zoom + getZoomAdjustment(startingLat, constrainedCenter.lat));
         if (tr.zoom !== targetZoom) {
             tr.setZoom(targetZoom);
         }
@@ -273,8 +263,7 @@ export class GlobeCameraHelper implements ICameraHelper {
         const startPitch = tr.pitch;
         const startCenter = tr.center;
 
-        const optionsZoom = typeof options.zoom === 'number';
-        const optionsApparentZoom = typeof options.apparentZoom === 'number';
+        const optionsZoom = typeof options.zoom !== 'undefined';
 
         const doPadding = !tr.isPaddingEqual(options.padding);
 
@@ -282,8 +271,7 @@ export class GlobeCameraHelper implements ICameraHelper {
 
         // Globe needs special handling for how zoom should be animated.
         // 1) if zoom is set, ease to the given mercator zoom
-        // 2) if apparentZoom is set, ease to the given apparent zoom
-        // 3) if neither is set, assume constant apparent zoom is to be kept and go to case 2
+        // 2) if neither is set, assume constant apparent zoom (constant planet size) is to be kept
         const preConstrainCenter = options.center ?
             LngLat.convert(options.center) :
             startCenter;
@@ -293,26 +281,14 @@ export class GlobeCameraHelper implements ICameraHelper {
         ).center;
         normalizeCenter(tr, constrainedCenter);
 
-        // Compute target mercator zoom which we will use to compute final animation targets
-        const desiredApparentZoom = optionsApparentZoom ?
-            +options.apparentZoom :
-            (optionsZoom ?
-                undefined :
-                tr.zoom);
-        const hasApparentZoom = typeof desiredApparentZoom === 'number';
-        const desiredMercatorZoom = hasApparentZoom ?
-            undefined :
-            +options.zoom;
-        const targetMercatorZoom = hasApparentZoom ?
-            desiredApparentZoom + getZoomAdjustment(startCenter.lat, preConstrainCenter.lat) :
-            desiredMercatorZoom;
-
         const clonedTr = tr.clone();
         clonedTr.setCenter(constrainedCenter);
         if (doPadding) {
             clonedTr.setPadding(options.padding);
         }
-        clonedTr.setZoom(targetMercatorZoom);
+        clonedTr.setZoom(optionsZoom ?
+            +options.zoom :
+            startZoom + getZoomAdjustment(startCenter.lat, preConstrainCenter.lat));
         clonedTr.setBearing(options.bearing);
         const clampedPoint = new Point(
             clamp(tr.centerPoint.x + options.offsetAsPoint.x, 0, tr.width),
@@ -321,9 +297,9 @@ export class GlobeCameraHelper implements ICameraHelper {
         clonedTr.setLocationAtPoint(constrainedCenter, clampedPoint);
         // Find final animation targets
         const endCenterWithShift = (options.offset && options.offsetAsPoint.mag()) > 0 ? clonedTr.center : constrainedCenter;
-        const endZoomWithShift = hasApparentZoom ?
-            desiredApparentZoom + getZoomAdjustment(startCenter.lat, endCenterWithShift.lat) :
-            desiredMercatorZoom; // Not adjusting this zoom will reduce accuracy of the offset center
+        const endZoomWithShift = optionsZoom ?
+            +options.zoom :
+            startZoom + getZoomAdjustment(startCenter.lat, endCenterWithShift.lat);
 
         // Planet radius for a given zoom level differs according to latitude
         // Convert zooms to what they would be at equator for the given planet radius
@@ -378,8 +354,7 @@ export class GlobeCameraHelper implements ICameraHelper {
         if (!this.useGlobeControls) {
             return this._mercatorCameraHelper.handleFlyTo(tr, options);
         }
-        const optionsZoom = typeof options.zoom === 'number';
-        const optionsApparentZoom = typeof options.apparentZoom === 'number';
+        const optionsZoom = typeof options.zoom !== 'undefined';
 
         const startCenter = tr.center;
         const startZoom = tr.zoom;
@@ -390,14 +365,7 @@ export class GlobeCameraHelper implements ICameraHelper {
             LngLat.convert(options.center || options.locationAtOffset),
             startZoom
         ).center;
-        let targetZoom;
-        if (optionsApparentZoom) {
-            targetZoom = +options.apparentZoom + getZoomAdjustment(tr.center.lat, constrainedCenter.lat);
-        } else if (optionsZoom) {
-            targetZoom = +options.zoom;
-        } else {
-            targetZoom = tr.zoom + getZoomAdjustment(tr.center.lat, constrainedCenter.lat);
-        }
+        const targetZoom = optionsZoom ? +options.zoom : tr.zoom + getZoomAdjustment(tr.center.lat, constrainedCenter.lat);
 
         // Compute target center that respects offset by creating a temporary transform and calling its `setLocationAtPoint`.
         const clonedTr = tr.clone();
@@ -423,17 +391,11 @@ export class GlobeCameraHelper implements ICameraHelper {
         const scaleOfZoom = zoomScale(normalizedTargetZoom - normalizedStartZoom);
 
         const optionsMinZoom = typeof options.minZoom === 'number';
-        const optionsApparentMinZoom = typeof options.apparentMinZoom === 'number';
 
         let scaleOfMinZoom: number;
 
-        if (optionsMinZoom || optionsApparentMinZoom) {
-            let normalizedOptionsMinZoom;
-            if (optionsApparentMinZoom) {
-                normalizedOptionsMinZoom = +options.apparentMinZoom + startZoom + getZoomAdjustment(startCenter.lat, 0);
-            } else {
-                normalizedOptionsMinZoom = +options.minZoom + getZoomAdjustment(targetCenter.lat, 0);
-            }
+        if (optionsMinZoom) {
+            const normalizedOptionsMinZoom = +options.minZoom + getZoomAdjustment(targetCenter.lat, 0);
             const normalizedMinZoomPreConstrain = Math.min(normalizedOptionsMinZoom, normalizedStartZoom, normalizedTargetZoom);
             const minZoomPreConstrain = normalizedMinZoomPreConstrain + getZoomAdjustment(0, targetCenter.lat);
             const minZoom = tr.getConstrained(targetCenter, minZoomPreConstrain).zoom;
