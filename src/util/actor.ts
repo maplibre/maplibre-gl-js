@@ -132,7 +132,7 @@ export class Actor implements IActor {
     receive(message: {data: MessageData}) {
         const data = message.data;
         const id = data.id;
-        if (data.origin !== 'file://' && location.origin !== 'file://' && data.origin !== location.origin) {
+        if (data.origin !== 'file://' && location.origin !== 'file://' && data.origin !== 'resource://android' && location.origin !== 'resource://android' && data.origin !== location.origin) {
             return;
         }
         if (data.targetMapId && this.mapId !== data.targetMapId) {
