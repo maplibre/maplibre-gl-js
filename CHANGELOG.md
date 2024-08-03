@@ -1,6 +1,8 @@
 ## main
 
 ### ✨ Features and improvements
+
+- Emit events when the cooperative gestures option has prevented a gesture. ([#4470](https://github.com/maplibre/maplibre-gl-js/pull/4470))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
