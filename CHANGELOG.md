@@ -2,7 +2,6 @@
 
 ### ✨ Features and improvements
 
-- Allow trackpad pinch gestures to break through the `cooperativeGestures` setting, bringing it in line with other embedded map behaviours, such as Google Maps and Mapbox. ([#4465](https://github.com/maplibre/maplibre-gl-js/pull/4465))
 - Emit events when the cooperative gestures option has prevented a gesture. ([#4470](https://github.com/maplibre/maplibre-gl-js/pull/4470))
 - _...Add new stuff here..._
 
@@ -14,6 +13,7 @@
 
 ### ✨ Features and improvements
 
+- Allow trackpad pinch gestures to break through the `cooperativeGestures` setting, bringing it in line with other embedded map behaviours, such as Google Maps and Mapbox. ([#4465](https://github.com/maplibre/maplibre-gl-js/pull/4465))
 - Expose projection matrix parameters ([#3136](https://github.com/maplibre/maplibre-gl-js/pull/3136))
 - Add option to position markers at subpixel coordinates to prevent markers jumping on `moveend` ([#4458](https://github.com/maplibre/maplibre-gl-js/pull/4458))
 
