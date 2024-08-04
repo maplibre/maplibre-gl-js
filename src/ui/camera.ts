@@ -971,10 +971,10 @@ export abstract class Camera extends Evented {
         if (options.animate === false || (!options.essential && browser.prefersReducedMotion)) options.duration = 0;
 
         const tr = this._getTransformForUpdate(),
-            startZoom = this.getZoom(),
-            startBearing = this.getBearing(),
-            startPitch = this.getPitch(),
-            startPadding = this.getPadding(),
+            startZoom = tr.zoom,
+            startBearing = tr.bearing,
+            startPitch = tr.pitch,
+            startPadding = tr.padding,
 
             bearing = 'bearing' in options ? this._normalizeBearing(options.bearing, startBearing) : startBearing,
             pitch = 'pitch' in options ? +options.pitch : startPitch,
@@ -988,7 +988,7 @@ export abstract class Camera extends Evented {
             LngLat.convert(options.center || locationAtOffset),
             options.zoom ?? startZoom
         );
-        this._normalizeCenter(center);
+        this._normalizeCenter(center, tr);
 
         const from = projectToWorldCoordinates(tr.worldSize, locationAtOffset);
         const delta = projectToWorldCoordinates(tr.worldSize, center).sub(from);
@@ -1104,13 +1104,14 @@ export abstract class Camera extends Evented {
     /**
      * @internal
      * Called when the camera is about to be manipulated.
-     * If `transformCameraUpdate` is specified, a copy of the current transform is created to track the accumulated changes.
+     * If `transformCameraUpdate` is specified or terrain is enabled, a copy of
+     * the current transform is created to track the accumulated changes.
      * This underlying transform represents the "desired state" proposed by input handlers / animations / UI controls.
      * It may differ from the state used for rendering (`this.transform`).
      * @returns Transform to apply changes to
      */
     _getTransformForUpdate(): ITransform {
-        if (!this.transformCameraUpdate) return this.transform;
+        if (!this.transformCameraUpdate && !this.terrain) return this.transform;
 
         if (!this._requestedCameraState) {
             this._requestedCameraState = this.transform.clone();
@@ -1120,27 +1121,66 @@ export abstract class Camera extends Evented {
 
     /**
      * @internal
+     * Checks the given transform for the camera being below terrain surface and
+     * returns new pitch and zoom to fix that.
+     *
+     * With the new pitch and zoom, the camera will be at the same ground
+     * position but at higher altitude. It will still point to the same spot on
+     * the map.
+     *
+     * @param tr - The transform to check.
+     */
+    _elevateCameraIfInsideTerrain(tr: ITransform) : { pitch?: number; zoom?: number } {
+        const cameraLngLat = tr.screenPointToLocation(tr.getCameraPoint());
+        const cameraAltitude = tr.getCameraAltitude();
+        const minAltitude = this.terrain.getElevationForLngLatZoom(cameraLngLat, tr.zoom);
+        if (cameraAltitude < minAltitude) {
+            const newCamera = this.calculateCameraOptionsFromTo(
+                cameraLngLat, minAltitude, tr.center, tr.elevation);
+            return {
+                pitch: newCamera.pitch,
+                zoom: newCamera.zoom,
+            };
+        }
+        return {};
+    }
+
+    /**
+     * @internal
      * Called after the camera is done being manipulated.
      * @param tr - the requested camera end state
+     * If the camera is inside terrain, it gets elevated.
      * Call `transformCameraUpdate` if present, and then apply the "approved" changes.
      */
     _applyUpdatedTransform(tr: ITransform) {
-        if (!this.transformCameraUpdate) return;
-
-        const nextTransform = tr.clone();
-        const {
-            center,
-            zoom,
-            pitch,
-            bearing,
-            elevation
-        } = this.transformCameraUpdate(nextTransform);
-        if (center) nextTransform.setCenter(center);
-        if (zoom !== undefined) nextTransform.setZoom(zoom);
-        if (pitch !== undefined) nextTransform.setPitch(pitch);
-        if (bearing !== undefined) nextTransform.setBearing(bearing);
-        if (elevation !== undefined) nextTransform.setElevation(elevation);
-        this.transform.apply(nextTransform);
+        const modifiers : ((tr: ITransform) => ReturnType<CameraUpdateTransformFunction>)[] = [];
+        if (this.terrain) {
+            modifiers.push(tr => this._elevateCameraIfInsideTerrain(tr));
+        }
+        if (this.transformCameraUpdate) {
+            modifiers.push(tr => this.transformCameraUpdate(tr));
+        }
+        if (!modifiers.length) {
+            return;
+        }
+        const finalTransform = tr.clone();
+        for (const modifier of modifiers) {
+            const nextTransform = finalTransform.clone();
+            const {
+                center,
+                zoom,
+                pitch,
+                bearing,
+                elevation
+            } = modifier(nextTransform);
+            if (center) nextTransform.setCenter(center);
+            if (zoom !== undefined) nextTransform.setZoom(zoom);
+            if (pitch !== undefined) nextTransform.setPitch(pitch);
+            if (bearing !== undefined) nextTransform.setBearing(bearing);
+            if (elevation !== undefined) nextTransform.setElevation(elevation);
+            finalTransform.apply(nextTransform);
+        }
+        this.transform.apply(finalTransform);
     }
 
     _fireMoveEvents(eventData?: any) {
@@ -1245,10 +1285,10 @@ export abstract class Camera extends Evented {
         }, options);
 
         const tr = this._getTransformForUpdate(),
-            startZoom = this.getZoom(),
-            startBearing = this.getBearing(),
-            startPitch = this.getPitch(),
-            startPadding = this.getPadding();
+            startZoom = tr.zoom,
+            startBearing = tr.bearing,
+            startPitch = tr.pitch,
+            startPadding = tr.padding;
 
         const bearing = 'bearing' in options ? this._normalizeBearing(options.bearing, startBearing) : startBearing;
         const pitch = 'pitch' in options ? +options.pitch : startPitch;
@@ -1262,7 +1302,7 @@ export abstract class Camera extends Evented {
             LngLat.convert(options.center || locationAtOffset),
             options.zoom ?? startZoom
         );
-        this._normalizeCenter(center);
+        this._normalizeCenter(center, tr);
         const scale = zoomScale(zoom - startZoom);
 
         const from = projectToWorldCoordinates(tr.worldSize, locationAtOffset);
@@ -1463,8 +1503,7 @@ export abstract class Camera extends Evented {
 
     // If a path crossing the antimeridian would be shorter, extend the final coordinate so that
     // interpolating between the two endpoints will cross it.
-    _normalizeCenter(center: LngLat) {
-        const tr = this.transform;
+    _normalizeCenter(center: LngLat, tr: ITransform) {
         if (!tr.renderWorldCopies || tr.lngRange) return;
 
         const delta = center.lng - tr.center.lng;

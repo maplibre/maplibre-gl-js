@@ -416,7 +416,7 @@ describe('transform', () => {
         // closer to the terrain (and therefore also when the terrain is closer to the camera),
         // but that shouldn't change the camera's position in world space if that wasn't requested.
         const expectedAltitude = 1865.7579397718;
-        expect(transform.getCameraPosition().altitude).toBeCloseTo(expectedAltitude, 10);
+        expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 10);
 
         // expect same values because of no elevation change
         const terrain = {
@@ -424,7 +424,7 @@ describe('transform', () => {
             pointCoordinate: () => null
         };
         transform.recalculateZoom(terrain as any);
-        expect(transform.getCameraPosition().altitude).toBeCloseTo(expectedAltitude, 10);
+        expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 10);
         expect(transform.zoom).toBe(14);
 
         // expect new zoom because of elevation change
@@ -433,14 +433,14 @@ describe('transform', () => {
         expect(transform.elevation).toBe(400);
         expect(transform.center.lng).toBeCloseTo(10, 10);
         expect(transform.center.lat).toBeCloseTo(50, 10);
-        expect(transform.getCameraPosition().altitude).toBeCloseTo(expectedAltitude, 10);
+        expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 10);
         expect(transform.zoom).toBeCloseTo(14.1845318986, 10);
 
         // expect new zoom because of elevation change to point below sea level
         terrain.getElevationForLngLatZoom = () => -200;
         transform.recalculateZoom(terrain as any);
         expect(transform.elevation).toBe(-200);
-        expect(transform.getCameraPosition().altitude).toBeCloseTo(expectedAltitude, 10);
+        expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 10);
         expect(transform.zoom).toBeCloseTo(13.6895075574, 10);
     });
 

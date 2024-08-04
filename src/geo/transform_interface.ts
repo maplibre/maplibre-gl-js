@@ -357,6 +357,11 @@ export interface IReadonlyTransform extends ITransformGetters {
      */
     getCameraPoint(): Point;
 
+    /**
+     * The altitude of the camera above the center of the map in meters.
+     */
+    getCameraAltitude(): number;
+
     getRayDirectionFromPixel(p: Point): vec3;
 
     /**

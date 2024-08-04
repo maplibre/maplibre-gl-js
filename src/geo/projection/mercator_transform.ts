@@ -378,19 +378,6 @@ export class MercatorTransform implements ITransform {
         return result.sort((a, b) => a.distanceSq - b.distanceSq).map(a => a.tileID);
     }
 
-    /**
-     * Get the camera position in LngLat and altitudes in meters.
-     * @returns An object with lngLat & altitude.
-     */
-    getCameraPosition(): {
-        lngLat: LngLat;
-        altitude: number;
-    } {
-        const lngLat = this.screenPointToLocation(this.getCameraPoint());
-        const altitude = Math.cos(this._helper._pitch) * this._cameraToCenterDistance / this._helper._pixelPerMeter;
-        return {lngLat, altitude: altitude + this.elevation};
-    }
-
     recalculateZoom(terrain: Terrain): void {
         const origElevation = this.elevation;
         const origAltitude = Math.cos(this._helper._pitch) * this._cameraToCenterDistance / this._helper._pixelPerMeter;
@@ -802,6 +789,11 @@ export class MercatorTransform implements ITransform {
         const pitch = this._helper._pitch;
         const yOffset = Math.tan(pitch) * (this._cameraToCenterDistance || 1);
         return this.centerPoint.add(new Point(0, yOffset));
+    }
+
+    getCameraAltitude(): number {
+        const altitude = Math.cos(this._helper._pitch) * this._cameraToCenterDistance / this._helper._pixelPerMeter;
+        return altitude + this.elevation;
     }
 
     lngLatToCameraDepth(lngLat: LngLat, elevation: number) {

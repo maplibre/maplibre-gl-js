@@ -69,3 +69,38 @@ describe('getCameraTargetElevation', () => {
         expect(map.getCameraTargetElevation()).toBe(2000);
     });
 });
+
+describe('Keep camera outside terrain', () => {
+    test('Try to move camera into terrain', () => {
+        const map = createMap();
+
+        let terrainElevation = 10;
+        const terrainStub = {} as Terrain;
+        terrainStub.getElevationForLngLatZoom = jest.fn(
+            (_lngLat: LngLat, _zoom: number) => terrainElevation
+        );
+        map.terrain = terrainStub;
+
+        // Terrain elevation is 10 everywhere, we are above it at zoom level 15
+        // with pitch 45 deg.
+        map.jumpTo({center: [0.0, 0.0], bearing: 0, pitch: 45, zoom: 15});
+        const initialLngLat = map.transform.screenPointToLocation(map.transform.getCameraPoint());
+        const initialAltitude = map.transform.getCameraAltitude();
+        expect(initialAltitude).toBeCloseTo(506, 0);
+
+        // Now we set the elevation to 5000 everywhere and try to jump to the
+        // same position. This would lead to a jump into the terrain, which
+        // must not be possible.
+        // Camera should be above the terrain, but at the same location as
+        // before and with decreased pitch.
+        terrainElevation = 5000;
+        map.jumpTo({center: [0.0, 0.0], pitch: 45, zoom: 15});
+
+        const lngLat = map.transform.screenPointToLocation(map.transform.getCameraPoint());
+        expect(lngLat.lng).toBeCloseTo(initialLngLat.lng);
+        expect(lngLat.lat).toBeCloseTo(initialLngLat.lat);
+        expect(map.transform.pitch).toBeLessThan(45);
+        expect(map.transform.getCameraAltitude()).toBeGreaterThan(initialAltitude);
+        expect(map.transform.getCameraAltitude()).toBeGreaterThan(terrainElevation);
+    });
+});
