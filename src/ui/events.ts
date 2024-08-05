@@ -412,6 +412,13 @@ export type MapEventType = {
      */
     terrain: MapTerrainEvent;
     /**
+     * Fired whenever the cooperativeGestures option prevents a gesture from being handled by the map.
+     * This is useful for showing your own UI when this happens.
+     */
+    cooperativegestureprevented: MapLibreEvent<WheelEvent | TouchEvent> & {
+        gestureType: 'wheel_zoom' | 'touch_pan';
+    };
+    /**
      * Fired when map's projection is modified in other ways than by map being moved.
      */
     projectiontransition: MapProjectionEvent;

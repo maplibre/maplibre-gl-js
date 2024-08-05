@@ -57,6 +57,7 @@ function createCamera(options?) {
     camera.jumpTo(options);
 
     camera._update = () => {};
+    camera._elevateCameraIfInsideTerrain = (_tr : any) => ({});
 
     return camera;
 }
