@@ -8,6 +8,7 @@
 ### 🐞 Bug fixes
 - Fix camera being able to move into 3D terrain ([#1542](https://github.com/maplibre/maplibre-gl-js/issues/1542))
 - _...Add new stuff here..._
+- Fix cacheControl for Tile to not ignore values of 0
 
 ## 4.5.1
 
