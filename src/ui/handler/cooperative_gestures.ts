@@ -1,4 +1,5 @@
 import {DOM} from '../../util/dom';
+import {Event} from '../../util/evented';
 import {Handler} from '../handler_manager';
 
 import type {Map} from '../map';
@@ -10,6 +11,8 @@ export type GestureOptions = boolean;
 
 /**
  * A `CooperativeGestureHandler` is a control that adds cooperative gesture info when user tries to zoom in/out.
+ *
+ * When the CooperativeGestureHandler blocks a gesture, it will emit a `cooperativegestureprevented` event.
  *
  * @group Handlers
  *
@@ -66,7 +69,7 @@ export class CooperativeGesturesHandler implements Handler {
         this._container.setAttribute('aria-hidden', 'true');
     }
 
-    _destoryUI() {
+    _destroyUI() {
         if (this._container) {
             DOM.remove(this._container);
             const mapCanvasContainer = this._map.getCanvasContainer();
@@ -82,39 +85,23 @@ export class CooperativeGesturesHandler implements Handler {
 
     disable() {
         this._enabled = false;
-        this._destoryUI();
+        this._destroyUI();
     }
 
     isEnabled() {
         return this._enabled;
     }
 
-    touchmove(e: TouchEvent) {
-        this._onCooperativeGesture(e.touches.length === 1);
+    isBypassed(event: MouseEvent | WheelEvent | PointerEvent) {
+        return event[this._bypassKey];
     }
 
-    wheel(e: WheelEvent) {
-        if (!this._map.scrollZoom.isEnabled()) {
-            return;
-        }
+    notifyGestureBlocked(gestureType: 'wheel_zoom' | 'touch_pan', originalEvent: Event) {
+        if (!this._enabled) return;
 
-        const isPrevented = this.shouldPreventWheelEvent(e);
-        this._onCooperativeGesture(isPrevented);
-    }
+        // notify subscribers that a cooperative gesture was prevented
+        this._map.fire(new Event('cooperativegestureprevented', {gestureType, originalEvent}));
 
-    shouldPreventWheelEvent(e: WheelEvent) {
-        if (!this.isEnabled()) {
-            return false;
-        }
-
-        const isTrackpadPinch = e.ctrlKey;
-        const isBypassed = e[this._bypassKey] || isTrackpadPinch;
-
-        return !isBypassed;
-    }
-
-    _onCooperativeGesture(showNotification: boolean) {
-        if (!this._enabled || !showNotification) return;
         // Alert user how to scroll/pan
         this._container.classList.add('maplibregl-show');
         setTimeout(() => {
