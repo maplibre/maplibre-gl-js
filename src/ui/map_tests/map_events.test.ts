@@ -783,47 +783,29 @@ describe('map events', () => {
     });
 
     describe('projectiontransition event', () => {
-        test('projectiontransition events is fired when setProjection is called', done => {
+        test('projectiontransition events is fired when setProjection is called', async () => {
             const map = createMap();
-            map.on('load', () => {
-                let stage = 0;
-                const expected = [
-                    'globe',
-                    'mercator',
-                ];
-                map.on('projectiontransition', event => {
-                    expect(event.newProjection).toBe(expected[stage]);
-                    stage++;
-                    if (stage === expected.length) {
-                        done();
-                    }
-                });
+            await map.once('load', () => {
+                const spy = jest.fn();
+                map.on('projectiontransition', spy);
                 map.setProjection({
                     type: 'globe',
                 });
                 map.setProjection({
                     type: 'mercator',
                 });
+                expect(spy).toHaveBeenCalledTimes(2);
+                expect(spy).toHaveBeenNthCalledWith(1, {newProjection: 'globe'});
+                expect(spy).toHaveBeenNthCalledWith(2, {newProjection: 'mercator'});
             });
         });
-        test('projectiontransition is fired when globe transitions to mercator', done => {
+        test('projectiontransition is fired when globe transitions to mercator', async () => {
             const map = createMap();
             jest.spyOn(GlobeProjection.prototype, 'updateGPUdependent').mockImplementation(() => {});
-            map.on('load', async () => {
-                let stage = 0;
-                const expected = [
-                    'globe',
-                    'globe-mercator',
-                    'globe',
-                    'mercator',
-                ];
-                map.on('projectiontransition', event => {
-                    expect(event.newProjection).toBe(expected[stage]);
-                    stage++;
-                    if (stage === expected.length) {
-                        done();
-                    }
-                });
+            await map.once('load', async () => {
+                const spy = jest.fn();
+                map.on('projectiontransition', spy);
+
                 map.setProjection({
                     type: 'globe',
                 });
@@ -838,6 +820,12 @@ describe('map events', () => {
                 map.setProjection({
                     type: 'mercator',
                 });
+
+                expect(spy).toHaveBeenCalledTimes(4);
+                expect(spy).toHaveBeenNthCalledWith(1, {newProjection: 'globe'});
+                expect(spy).toHaveBeenNthCalledWith(2, {newProjection: 'globe-mercator'});
+                expect(spy).toHaveBeenNthCalledWith(3, {newProjection: 'globe'});
+                expect(spy).toHaveBeenNthCalledWith(4, {newProjection: 'mercator'});
             });
         });
     });
