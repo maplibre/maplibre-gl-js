@@ -211,7 +211,7 @@ describe('#jumpTo', () => {
         expect(camera.getPitch()).toBe(60);
     });
 
-    test('emits move events, preserving eventData', done => {
+    test('emits move events, preserving eventData', () => {
         let started, moved, ended;
         const eventData = {data: 'ok'};
 
@@ -224,10 +224,9 @@ describe('#jumpTo', () => {
         expect(started).toBe('ok');
         expect(moved).toBe('ok');
         expect(ended).toBe('ok');
-        done();
     });
 
-    test('emits zoom events, preserving eventData', done => {
+    test('emits zoom events, preserving eventData', () => {
         let started, zoomed, ended;
         const eventData = {data: 'ok'};
 
@@ -240,10 +239,9 @@ describe('#jumpTo', () => {
         expect(started).toBe('ok');
         expect(zoomed).toBe('ok');
         expect(ended).toBe('ok');
-        done();
     });
 
-    test('emits rotate events, preserving eventData', done => {
+    test('emits rotate events, preserving eventData', () => {
         let started, rotated, ended;
         const eventData = {data: 'ok'};
 
@@ -256,10 +254,9 @@ describe('#jumpTo', () => {
         expect(started).toBe('ok');
         expect(rotated).toBe('ok');
         expect(ended).toBe('ok');
-        done();
     });
 
-    test('emits pitch events, preserving eventData', done => {
+    test('emits pitch events, preserving eventData', () => {
         let started, pitched, ended;
         const eventData = {data: 'ok'};
 
@@ -272,7 +269,6 @@ describe('#jumpTo', () => {
         expect(started).toBe('ok');
         expect(pitched).toBe('ok');
         expect(ended).toBe('ok');
-        done();
     });
 
     test('cancels in-progress easing', () => {
@@ -298,7 +294,7 @@ describe('#setCenter', () => {
         }).toThrow(Error);
     });
 
-    test('emits move events, preserving eventData', done => {
+    test('emits move events, preserving eventData', () => {
         let started, moved, ended;
         const eventData = {data: 'ok'};
 
@@ -310,7 +306,6 @@ describe('#setCenter', () => {
         expect(started).toBe('ok');
         expect(moved).toBe('ok');
         expect(ended).toBe('ok');
-        done();
     });
 
     test('cancels in-progress easing', () => {
@@ -329,7 +324,7 @@ describe('#setZoom', () => {
         expect(camera.getZoom()).toBe(3);
     });
 
-    test('emits move and zoom events, preserving eventData', done => {
+    test('emits move and zoom events, preserving eventData', () => {
         let movestarted, moved, moveended, zoomstarted, zoomed, zoomended;
         const eventData = {data: 'ok'};
 
@@ -348,7 +343,6 @@ describe('#setZoom', () => {
         expect(zoomstarted).toBe('ok');
         expect(zoomed).toBe('ok');
         expect(zoomended).toBe('ok');
-        done();
     });
 
     test('cancels in-progress easing', () => {
@@ -367,7 +361,7 @@ describe('#setBearing', () => {
         expect(camera.getBearing()).toBe(4);
     });
 
-    test('emits move and rotate events, preserving eventData', done => {
+    test('emits move and rotate events, preserving eventData', () => {
         let movestarted, moved, moveended, rotatestarted, rotated, rotateended;
         const eventData = {data: 'ok'};
 
@@ -386,7 +380,6 @@ describe('#setBearing', () => {
         expect(rotatestarted).toBe('ok');
         expect(rotated).toBe('ok');
         expect(rotateended).toBe('ok');
-        done();
     });
 
     test('cancels in-progress easing', () => {
@@ -570,7 +563,7 @@ describe('#zoomTo', () => {
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: -62.66117668978012, lat: 0}));
     });
 
-    test('emits move and zoom events, preserving eventData', done => {
+    test('emits move and zoom events, preserving eventData', () => {
         const camera = createCamera();
         let movestarted, moved, zoomstarted, zoomed;
         const eventData = {data: 'ok'};
@@ -596,7 +589,6 @@ describe('#zoomTo', () => {
             });
 
         camera.zoomTo(5, {duration: 0}, eventData);
-        done();
     });
 });
 
@@ -642,7 +634,7 @@ describe('#rotateTo', () => {
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: -70.3125, lat: 57.3265212252}));
     });
 
-    test('emits move and rotate events, preserving eventData', done => {
+    test('emits move and rotate events, preserving eventData', () => {
         const camera = createCamera();
         let movestarted, moved, rotatestarted, rotated;
         const eventData = {data: 'ok'};
@@ -668,7 +660,6 @@ describe('#rotateTo', () => {
             });
 
         camera.rotateTo(90, {duration: 0}, eventData);
-        done();
     });
 });
 
@@ -789,7 +780,7 @@ describe('#easeTo', () => {
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: -70.3125, lat: 0.000002552471840999715}));
     });
 
-    test('emits move, zoom, rotate, and pitch events, preserving eventData', done => {
+    test('emits move, zoom, rotate, and pitch events, preserving eventData', () => {
         const camera = createCamera();
         let movestarted, moved, zoomstarted, zoomed, rotatestarted, rotated, pitchstarted, pitched;
         const eventData = {data: 'ok'};
@@ -842,7 +833,6 @@ describe('#easeTo', () => {
         camera.easeTo(
             {center: [100, 0], zoom: 3.2, bearing: 90, duration: 0, pitch: 45},
             eventData);
-        done();
     });
 
     test('does not emit zoom events if not zooming', done => {
@@ -2411,7 +2401,7 @@ describe('#jumpTo globe projection', () => {
             expect(camera.getPitch()).toBe(60);
         });
 
-        test('emits move events, preserving eventData', done => {
+        test('emits move events, preserving eventData', () => {
             let started, moved, ended;
             const eventData = {data: 'ok'};
 
@@ -2424,10 +2414,9 @@ describe('#jumpTo globe projection', () => {
             expect(started).toBe('ok');
             expect(moved).toBe('ok');
             expect(ended).toBe('ok');
-            done();
         });
 
-        test('emits zoom events, preserving eventData', done => {
+        test('emits zoom events, preserving eventData', () => {
             let started, zoomed, ended;
             const eventData = {data: 'ok'};
 
@@ -2440,10 +2429,9 @@ describe('#jumpTo globe projection', () => {
             expect(started).toBe('ok');
             expect(zoomed).toBe('ok');
             expect(ended).toBe('ok');
-            done();
         });
 
-        test('emits rotate events, preserving eventData', done => {
+        test('emits rotate events, preserving eventData', () => {
             let started, rotated, ended;
             const eventData = {data: 'ok'};
 
@@ -2456,10 +2444,9 @@ describe('#jumpTo globe projection', () => {
             expect(started).toBe('ok');
             expect(rotated).toBe('ok');
             expect(ended).toBe('ok');
-            done();
         });
 
-        test('emits pitch events, preserving eventData', done => {
+        test('emits pitch events, preserving eventData', () => {
             let started, pitched, ended;
             const eventData = {data: 'ok'};
 
@@ -2472,7 +2459,6 @@ describe('#jumpTo globe projection', () => {
             expect(started).toBe('ok');
             expect(pitched).toBe('ok');
             expect(ended).toBe('ok');
-            done();
         });
 
         test('cancels in-progress easing', () => {
@@ -2619,34 +2605,41 @@ describe('#easeTo globe projection', () => {
             expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 0, lat: 85.051129}));
         });
 
-        test('emits zoom events if changing latitude but not zooming', () => {
+        test('emits zoom events if changing latitude but not zooming', async () => {
             const camera = createCameraGlobe();
 
-            let zoomstart, zoom, zoomend;
+            const zoomstart = jest.fn();
+            const zoom = jest.fn();
+            const zoomend = jest.fn();
 
             expect.assertions(3);
 
             camera
-                .on('zoomstart', (d) => { zoomstart = d; })
-                .on('zoom', (d) => { zoom = d; })
-                .on('zoomend', (d) => { zoomend = d; })
+                .on('zoomstart', zoomstart)
+                .on('zoom', zoom)
+                .on('zoomend', zoomend)
                 .on('moveend', () => {
-                    expect(zoomstart).toBeDefined();
-                    expect(zoom).toBeDefined();
-                    expect(zoomend).toBeDefined();
+                    expect(zoomstart).toHaveBeenCalled();
+                    expect(zoom).toHaveBeenCalled();
+                    expect(zoomend).toHaveBeenCalled();
                 });
 
             camera.easeTo({center: [0, 20], duration: 0});
         });
 
-        test('does not emit zoom events if not changing latitude and not zooming', done => {
+        test('does not emit zoom events if not changing latitude and not zooming', async () => {
             const camera = createCameraGlobe();
 
+            expect.assertions(1);
+
+            const spy = jest.fn();
             camera
-                .on('zoomstart', () => { done('zoomstart failed'); })
-                .on('zoom', () => { done('zoom failed'); })
-                .on('zoomend', () => { done('zoomend failed'); })
-                .on('moveend', () => { done(); });
+                .on('zoomstart', spy)
+                .on('zoom', spy)
+                .on('zoomend', spy)
+                .on('moveend', () => {
+                    expect(spy).not.toHaveBeenCalled();
+                });
 
             camera.easeTo({center: [100, 0], duration: 0});
         });
