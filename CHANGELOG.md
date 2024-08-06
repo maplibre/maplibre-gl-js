@@ -7,6 +7,7 @@
 
 ### 🐞 Bug fixes
 - Fix camera being able to move into 3D terrain ([#1542](https://github.com/maplibre/maplibre-gl-js/issues/1542))
+- Fix flicker on map resize ([#4429](https://github.com/maplibre/maplibre-gl-js/pull/4429))
 - _...Add new stuff here..._
 
 ## 4.5.1
@@ -20,7 +21,6 @@
 ### 🐞 Bug fixes
 
 - Fix lag on fast map zoom ([#4366](https://github.com/maplibre/maplibre-gl-js/pull/4366))
-- Fix flicker on map resize ([#4429](https://github.com/maplibre/maplibre-gl-js/pull/4429))
 - Fix unguarded read access to possibly undefined object ([#4431](https://github.com/maplibre/maplibre-gl-js/pull/4431))
 - Fix remove hash string when map is removed ([#4427](https://github.com/maplibre/maplibre-gl-js/pull/4427))
 - Fix GeolocateControl may be added twice when calling addControl/removeControl/addControl rapidly ([#4454](https://github.com/maplibre/maplibre-gl-js/pull/4454))
