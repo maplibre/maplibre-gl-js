@@ -1223,7 +1223,7 @@ describe('#flyTo', () => {
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 170.3125, lat: 0});
     });
 
-    test('emits move, zoom, rotate, and pitch events, preserving eventData', done => {
+    test('emits move, zoom, rotate, and pitch events, preserving eventData', () => {
         expect.assertions(18);
 
         const camera = createCamera();
@@ -1278,7 +1278,6 @@ describe('#flyTo', () => {
         camera.flyTo(
             {center: [100, 0], zoom: 3.2, bearing: 90, duration: 0, pitch: 45, animate: false},
             eventData);
-        done();
     });
 
     test('for short flights, emits (solely) move events, preserving eventData', done => {
@@ -1339,12 +1338,11 @@ describe('#flyTo', () => {
         }, 0);
     });
 
-    test('stops existing ease', done => {
+    test('stops existing ease', () => {
         const camera = createCamera();
         camera.flyTo({center: [200, 0], duration: 100});
         camera.flyTo({center: [100, 0], duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
-        done();
     });
 
     test('can be called from within a moveend event handler', done => {
@@ -1792,7 +1790,7 @@ describe('#flyTo', () => {
         expect(terrainCallbacks.finalize).toBe(1);
     });
 
-    test('check elevation callbacks', done => {
+    test('check elevation callbacks', () => {
         const camera = createCamera();
         camera.terrain = {
             getElevationForLngLatZoom: () => 100,
@@ -1818,8 +1816,6 @@ describe('#flyTo', () => {
 
         camera._finalizeElevation();
         expect(camera._elevationFreeze).toBeFalsy();
-
-        done();
     });
 });
 
@@ -2875,7 +2871,7 @@ describe('#flyTo globe projection', () => {
             expect(fixedLngLat(camera.getCenter())).toEqual({lng: -174.079717746, lat: 0});
         });
 
-        test('emits move, zoom, rotate, and pitch events, preserving eventData', done => {
+        test('emits move, zoom, rotate, and pitch events, preserving eventData', () => {
             expect.assertions(18);
 
             const camera = createCameraGlobe();
@@ -2930,7 +2926,6 @@ describe('#flyTo globe projection', () => {
             camera.flyTo(
                 {center: [100, 0], zoom: 3.2, bearing: 90, duration: 0, pitch: 45, animate: false},
                 eventData);
-            done();
         });
 
         test('for short flights, emits (solely) move events, preserving eventData', done => {
