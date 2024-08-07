@@ -483,7 +483,7 @@ export class Style extends Evented {
      */
     private _serializeByIds(ids?: Array<string>): Array<LayerSpecification> {
 
-        const serializedLayersDictionary = this._serializedAllLayers();
+        const serializedLayersDictionary = clone(this._serializedAllLayers());
         if (!ids || ids.length === 0) {
             return Object.values(serializedLayersDictionary);
         }
