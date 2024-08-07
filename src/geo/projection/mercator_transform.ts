@@ -8,11 +8,11 @@ import {Terrain} from '../../render/terrain';
 import {Aabb, Frustum} from '../../util/primitives';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {EXTENT} from '../../data/extent';
-import {scaleZoom, TransformHelper, TransformUpdateResult, zoomScale} from '../transform_helper';
+import {scaleZoom, TransformHelper, zoomScale} from '../transform_helper';
 import {ProjectionData} from '../../render/program/projection_program';
 import {PointProjection, xyTransformMat4} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
-import {IReadonlyTransform, ITransform} from '../transform_interface';
+import {CoveringTilesOptions, CoveringZoomOptions, IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
 import {PaddingOptions} from '../edge_insets';
 import {mercatorCoordinateToLocation, getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils';
 
@@ -92,7 +92,7 @@ export class MercatorTransform implements ITransform {
     isPaddingEqual(padding: PaddingOptions): boolean {
         return this._helper.isPaddingEqual(padding);
     }
-    coveringZoomLevel(options: { roundZoom?: boolean; tileSize: number }): number {
+    coveringZoomLevel(options: CoveringZoomOptions): number {
         return this._helper.coveringZoomLevel(options);
     }
     resize(width: number, height: number): void {
@@ -256,17 +256,7 @@ export class MercatorTransform implements ITransform {
         return result;
     }
 
-    coveringTiles(
-        options: {
-            tileSize: number;
-            minzoom?: number;
-            maxzoom?: number;
-            roundZoom?: boolean;
-            reparseOverscaled?: boolean;
-            renderWorldCopies?: boolean;
-            terrain?: Terrain;
-        }
-    ): Array<OverscaledTileID> {
+    coveringTiles(options: CoveringTilesOptions): Array<OverscaledTileID> {
         let z = this.coveringZoomLevel(options);
         const actualZ = z;
 
@@ -812,7 +802,7 @@ export class MercatorTransform implements ITransform {
         return getBasicProjectionData(overscaledTileID, matrix, ignoreTerrainMatrix);
     }
 
-    isOccluded(_: number, __: number, ___: UnwrappedTileID): boolean {
+    isLocationOccluded(_: LngLat): boolean {
         return false;
     }
 
@@ -829,9 +819,7 @@ export class MercatorTransform implements ITransform {
     }
 
     newFrameUpdate(): TransformUpdateResult {
-        return {
-            forcePlacementUpdate: false
-        };
+        return {};
     }
 
     transformLightDirection(dir: vec3): vec3 {

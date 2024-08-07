@@ -36,7 +36,6 @@ export class ScrollZoomHandler implements Handler {
     _active: boolean;
     _zooming: boolean;
     _aroundCenter: boolean;
-    _around: LngLat;
     _aroundPoint: Point;
     _type: 'wheel' | 'trackpad' | null;
     _lastValue: number;
@@ -46,6 +45,7 @@ export class ScrollZoomHandler implements Handler {
     _lastWheelEvent: any;
     _lastWheelEventTime: number;
 
+    _lastExpectedZoom: number;
     _startZoom: number;
     _targetZoom: number;
     _delta: number;
@@ -249,15 +249,13 @@ export class ScrollZoomHandler implements Handler {
         const pos = DOM.mousePos(this._map.getCanvas(), e);
         const tr = this._tr;
 
-        if (tr.transform.isPointOnMapSurface(pos)) {
-            this._around = LngLat.convert(this._aroundCenter ? tr.center : tr.unproject(pos));
+        // Whether aroundPoint is actually unprojectable is not a problem to be solved here, but in handler_manager.ts instead.
+        if (this._aroundCenter) {
+            this._aroundPoint = tr.transform.locationToScreenPoint(LngLat.convert(tr.center));
         } else {
-            // Do not use current cursor position if above the horizon to avoid 'unproject' this point
-            // as it is not mapped into 'coords' framebuffer or inversible with 'pixelMatrixInverse'.
-            this._around = LngLat.convert(tr.center);
+            this._aroundPoint = pos;
         }
 
-        this._aroundPoint = tr.transform.locationToScreenPoint(this._around);
         if (!this._frameId) {
             this._frameId = true;
             this._triggerRenderFrame();
@@ -271,6 +269,17 @@ export class ScrollZoomHandler implements Handler {
         if (!this.isActive()) return;
         const tr = this._tr.transform;
 
+        // When globe is enabled zoom might be modified by the map center latitude being changes (either by panning or by zoom moving the map)
+        if (typeof this._lastExpectedZoom === 'number') {
+            const externalZoomChange = tr.zoom - this._lastExpectedZoom;
+            if (typeof this._startZoom === 'number') {
+                this._startZoom += externalZoomChange;
+            }
+            if (typeof this._targetZoom === 'number') {
+                this._targetZoom += externalZoomChange;
+            }
+        }
+
         // if we've had scroll events since the last render frame, consume the
         // accumulated delta, and update the target zoom level accordingly
         if (this._delta !== 0) {
@@ -283,7 +292,7 @@ export class ScrollZoomHandler implements Handler {
                 scale = 1 / scale;
             }
 
-            const fromScale = typeof this._targetZoom === 'number' ? zoomScale(this._targetZoom) : tr.scale;
+            const fromScale = typeof this._targetZoom !== 'number' ? tr.scale : zoomScale(this._targetZoom);
             this._targetZoom = Math.min(tr.maxZoom, Math.max(tr.minZoom, scaleZoom(fromScale * scale)));
 
             // if this is a mouse wheel, refresh the starting zoom and easing
@@ -297,8 +306,7 @@ export class ScrollZoomHandler implements Handler {
             this._delta = 0;
         }
 
-        const targetZoom = typeof this._targetZoom === 'number' ?
-            this._targetZoom : tr.zoom;
+        const targetZoom = typeof this._targetZoom !== 'number' ? tr.zoom : this._targetZoom;
         const startZoom = this._startZoom;
         const easing = this._easing;
 
@@ -331,9 +339,12 @@ export class ScrollZoomHandler implements Handler {
                 this._zooming = false;
                 this._triggerRenderFrame();
                 delete this._targetZoom;
+                delete this._lastExpectedZoom;
                 delete this._finishTimeout;
             }, 200);
         }
+
+        this._lastExpectedZoom = zoom;
 
         return {
             noInertia: true,
@@ -372,6 +383,7 @@ export class ScrollZoomHandler implements Handler {
         this._active = false;
         this._zooming = false;
         delete this._targetZoom;
+        delete this._lastExpectedZoom;
         if (this._finishTimeout) {
             clearTimeout(this._finishTimeout);
             delete this._finishTimeout;

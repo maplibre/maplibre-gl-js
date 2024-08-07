@@ -322,6 +322,7 @@ export class Marker extends Evented {
         map.on('move', this._update);
         map.on('moveend', this._update);
         map.on('terrain', this._update);
+        map.on('projectiontransition', this._update);
 
         this.setDraggable(this._draggable);
         this._update();
@@ -352,6 +353,7 @@ export class Marker extends Evented {
             this._map.off('move', this._update);
             this._map.off('moveend', this._update);
             this._map.off('terrain', this._update);
+            this._map.off('projectiontransition', this._update);
             this._map.off('mousedown', this._addDragHandler);
             this._map.off('touchstart', this._addDragHandler);
             this._map.off('mouseup', this._onUp);
@@ -550,7 +552,9 @@ export class Marker extends Evented {
     _updateOpacity(force: boolean = false) {
         const terrain = this._map?.terrain;
         if (!terrain) {
-            if (this._element.style.opacity !== this._opacity) { this._element.style.opacity = this._opacity; }
+            const occluded = this._map.transform.isLocationOccluded(this._lngLat);
+            const targetOpacity = occluded ? this._opacityWhenCovered : this._opacity;
+            if (this._element.style.opacity !== targetOpacity) { this._element.style.opacity = targetOpacity; }
             return;
         }
         if (force) {

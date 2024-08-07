@@ -1550,9 +1550,9 @@ export class Style extends Evented {
     }
 
     _setProjectionInternal(name: ProjectionSpecification['type']) {
-        const projTransform = createProjectionFromName(name);
-        this.projection = projTransform.projection;
-        this.map.migrateProjection(projTransform.transform);
+        const projectionObjects = createProjectionFromName(name);
+        this.projection = projectionObjects.projection;
+        this.map.migrateProjection(projectionObjects.transform, projectionObjects.cameraHelper);
         for (const key in this.sourceCaches) {
             this.sourceCaches[key].reload();
         }

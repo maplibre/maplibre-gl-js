@@ -1,8 +1,8 @@
 import {mat2, mat4, vec3, vec4} from 'gl-matrix';
-import {MAX_VALID_LATITUDE, TransformHelper, TransformUpdateResult} from '../transform_helper';
+import {MAX_VALID_LATITUDE, TransformHelper} from '../transform_helper';
 import {MercatorTransform} from './mercator_transform';
 import {LngLat, earthRadius} from '../lng_lat';
-import {angleToRotateBetweenVectors2D, clamp, differenceOfAnglesDegrees, distanceOfAnglesRadians, easeCubicInOut, lerp, pointPlaneSignedDistance, warnOnce} from '../../util/util';
+import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, easeCubicInOut, lerp, pointPlaneSignedDistance, warnOnce} from '../../util/util';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {browser} from '../../util/browser';
@@ -12,41 +12,31 @@ import {ProjectionData} from '../../render/program/projection_program';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {PointProjection} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
-import {IReadonlyTransform, ITransform} from '../transform_interface';
+import {CoveringTilesOptions, CoveringZoomOptions, IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
 import {PaddingOptions} from '../edge_insets';
 import {tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 import {angularCoordinatesRadiansToVector, angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
 
 /**
  * Describes the intersection of ray and sphere.
- * When null, no intersection occured.
+ * When null, no intersection occurred.
  * When both "t" values are the same, the ray just touched the sphere's surface.
- * When both value are different, a full intersection occured.
+ * When both value are different, a full intersection occurred.
  */
 type RaySphereIntersection = {
     /**
      * The ray parameter for intersection that is "less" along the ray direction.
-     * Note that this value can be negative, meaning that this intersection occured before the ray's origin.
+     * Note that this value can be negative, meaning that this intersection occurred before the ray's origin.
      * The intersection point can be computed as `origin + direction * tMin`.
      */
     tMin: number;
     /**
      * The ray parameter for intersection that is "more" along the ray direction.
-     * Note that this value can be negative, meaning that this intersection occured before the ray's origin.
+     * Note that this value can be negative, meaning that this intersection occurred before the ray's origin.
      * The intersection point can be computed as `origin + direction * tMax`.
      */
     tMax: number;
 } | null;
-
-// These functions create **64** bit float vectors and matrices, unlike default gl-matrix functions.
-function createVec4(): vec4 { return new Float64Array(4) as any; }
-function createVec3(): vec3 { return new Float64Array(3) as any; }
-function createMat4(): mat4 { return new Float64Array(16) as any; }
-function createIdentityMat4(): mat4 {
-    const m = new Float64Array(16) as any;
-    mat4.identity(m);
-    return m;
-}
 
 export class GlobeTransform implements ITransform {
     private _helper: TransformHelper;
@@ -124,7 +114,7 @@ export class GlobeTransform implements ITransform {
     isPaddingEqual(padding: PaddingOptions): boolean {
         return this._helper.isPaddingEqual(padding);
     }
-    coveringZoomLevel(options: { roundZoom?: boolean; tileSize: number }): number {
+    coveringZoomLevel(options: CoveringZoomOptions): number {
         return this._helper.coveringZoomLevel(options);
     }
     resize(width: number, height: number): void {
@@ -214,7 +204,7 @@ export class GlobeTransform implements ITransform {
     // Implementation of globe transform
     //
 
-    private _cachedClippingPlane: vec4 = createVec4();
+    private _cachedClippingPlane: vec4 = createVec4f64();
 
     // Transition handling
     private _lastGlobeStateEnabled: boolean = true;
@@ -222,25 +212,41 @@ export class GlobeTransform implements ITransform {
     private _lastLargeZoomStateChange: number = -1000.0;
     private _lastLargeZoomState: boolean = false;
 
+    /**
+     * Stores when {@link newFrameUpdate} was last called.
+     * Serves as a unified clock for globe (instead of each function using a slightly different value from `browser.now()`).
+     */
+    private _lastUpdateTime = browser.now();
+    /**
+     * Stores when switch from globe to mercator or back last occurred, for animation purposes.
+     * This switch can be caused either by the map passing the threshold zoom level,
+     * or by {@link setGlobeViewAllowed} being called.
+     */
+    private _lastGlobeChangeTime: number = browser.now() - 10_000; // Ten seconds before transform creation
+
     private _skipNextAnimation: boolean = true;
 
-    private _projectionMatrix: mat4 = createIdentityMat4();
-    private _globeViewProjMatrix: mat4 = createIdentityMat4();
-    private _globeViewProjMatrixNoCorrection: mat4 = createIdentityMat4();
-    private _globeViewProjMatrixNoCorrectionInverted: mat4 = createIdentityMat4();
-    private _globeProjMatrixInverted: mat4 = createIdentityMat4();
+    private _projectionMatrix: mat4 = createIdentityMat4f64();
+    private _globeViewProjMatrix: mat4 = createIdentityMat4f64();
+    private _globeViewProjMatrixNoCorrection: mat4 = createIdentityMat4f64();
+    private _globeViewProjMatrixNoCorrectionInverted: mat4 = createIdentityMat4f64();
+    private _globeProjMatrixInverted: mat4 = createIdentityMat4f64();
 
-    private _cameraPosition: vec3 = createVec3();
+    private _cameraPosition: vec3 = createVec3f64();
 
-    private _lastGlobeChangeTime: number = -1000.0;
-    private _globeProjectionEnabled = true;
+    /**
+     * Whether globe projection is allowed to be used.
+     * Set with {@link setGlobeViewAllowed}.
+     * Can be used to dynamically disable globe projection without changing the map's projection,
+     * which would cause a map reload.
+     */
+    private _globeProjectionAllowed = true;
 
     /**
      * Note: projection instance should only be accessed in the {@link newFrameUpdate} function
      * to ensure the transform's state isn't unintentionally changed.
      */
     private _projectionInstance: GlobeProjection;
-    private _lastGlobeRenderingState: boolean = true;
     private _globeLatitudeErrorCorrectionRadians: number = 0;
 
     private get _globeRendering(): boolean {
@@ -262,22 +268,27 @@ export class GlobeTransform implements ITransform {
             calcMatrices: () => { this._calcMatrices(); },
             getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
         });
-        this._globeProjectionEnabled = globeProjectionEnabled;
+        this._globeProjectionAllowed = globeProjectionEnabled;
         this._globeness = globeProjectionEnabled ? 1 : 0; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.
         this._projectionInstance = globeProjection;
         this._mercatorTransform = new MercatorTransform();
     }
 
     clone(): ITransform {
-        const clone = new GlobeTransform(null, this._globeProjectionEnabled);
+        const clone = new GlobeTransform(null, this._globeProjectionAllowed);
+        clone._applyGlobeTransform(this);
         clone.apply(this);
-        this.newFrameUpdate();
         return clone;
     }
 
     public apply(that: IReadonlyTransform): void {
         this._helper.apply(that);
         this._mercatorTransform.apply(this);
+    }
+
+    private _applyGlobeTransform(that: GlobeTransform): void {
+        this._globeness = that._globeness;
+        this._globeLatitudeErrorCorrectionRadians = that._globeLatitudeErrorCorrectionRadians;
     }
 
     public get projectionMatrix(): mat4 { return this._globeRendering ? this._projectionMatrix : this._mercatorTransform.projectionMatrix; }
@@ -290,7 +301,7 @@ export class GlobeTransform implements ITransform {
 
     public get cameraPosition(): vec3 {
         // Return a copy - don't let outside code mutate our precomputed camera position.
-        const copy = createVec3(); // Ensure the resulting vector is float64s
+        const copy = createVec3f64(); // Ensure the resulting vector is float64s
         copy[0] = this._cameraPosition[0];
         copy[1] = this._cameraPosition[1];
         copy[2] = this._cameraPosition[2];
@@ -313,53 +324,67 @@ export class GlobeTransform implements ITransform {
      * Set with {@link setGlobeViewAllowed}.
      */
     public getGlobeViewAllowed(): boolean {
-        return this._globeProjectionEnabled;
+        return this._globeProjectionAllowed;
     }
 
     /**
      * Sets whether globe view is allowed. When allowed, globe fill function as normal, displaying a 3D planet,
      * but transitioning to mercator at high zoom levels.
      * Otherwise, mercator will be used at all zoom levels instead.
+     * When globe is caused to transition to mercator by this function, the transition will be animated.
      * @param allow - Sets whether glove view is allowed.
      * @param animateTransition - Controls whether the transition between globe view and mercator (if triggered by this call) should be animated. True by default.
      */
     public setGlobeViewAllowed(allow: boolean, animateTransition: boolean = true) {
-        if (allow === this._globeProjectionEnabled) {
+        if (allow === this._globeProjectionAllowed) {
             return;
         }
 
         if (!animateTransition) {
             this._skipNextAnimation = true;
         }
-        this._globeProjectionEnabled = allow;
-        this._lastGlobeChangeTime = browser.now();
+        this._globeProjectionAllowed = allow;
+        this._lastGlobeChangeTime = this._lastUpdateTime;
     }
 
     /**
      * Should be called at the beginning of every frame to synchronize the transform with the underlying projection.
      */
     newFrameUpdate(): TransformUpdateResult {
-        if (this._projectionInstance) {
-            // Note: the _globeRendering field is only updated inside this function.
-            // This function should never be called on a cloned transform, thus ensuring that
-            // the state of a cloned transform is never changed after creation.
-            this._projectionInstance.useGlobeRendering = this._globeRendering;
-            this._projectionInstance.errorQueryLatitudeDegrees = this.center.lat;
-            this._globeLatitudeErrorCorrectionRadians = this._projectionInstance.latitudeErrorCorrectionRadians;
-        }
+        this._updateErrorCorrectionValue();
 
+        this._lastUpdateTime = browser.now();
+        const oldGlobeRendering = this._globeRendering;
         this._globeness = this._computeGlobenessAnimation();
 
         this._calcMatrices();
 
-        let forcePlacementUpdate = false;
-        if (this._lastGlobeRenderingState !== this._globeRendering) {
-            forcePlacementUpdate = true;
+        if (oldGlobeRendering === this._globeRendering) {
+            return {
+                forcePlacementUpdate: false,
+            };
+        } else {
+            return {
+                forcePlacementUpdate: true,
+                fireProjectionEvent: {
+                    type: 'projectiontransition',
+                    newProjection: this._globeRendering ? 'globe' : 'globe-mercator',
+                },
+            };
         }
-        this._lastGlobeRenderingState = this._globeRendering;
-        return {
-            forcePlacementUpdate
-        };
+    }
+
+    /**
+     * This function should never be called on a cloned transform, thus ensuring that
+     * the state of a cloned transform is never changed after creation.
+     */
+    private _updateErrorCorrectionValue(): void {
+        if (!this._projectionInstance) {
+            return;
+        }
+        this._projectionInstance.useGlobeRendering = this._globeRendering;
+        this._projectionInstance.errorQueryLatitudeDegrees = this.center.lat;
+        this._globeLatitudeErrorCorrectionRadians = this._projectionInstance.latitudeErrorCorrectionRadians;
     }
 
     /**
@@ -367,8 +392,8 @@ export class GlobeTransform implements ITransform {
      */
     private _computeGlobenessAnimation(): number {
         // Update globe transition animation
-        const globeState = this._globeProjectionEnabled;
-        const currentTime = browser.now();
+        const globeState = this._globeProjectionAllowed;
+        const currentTime = this._lastUpdateTime;
         if (globeState !== this._lastGlobeStateEnabled) {
             this._lastGlobeChangeTime = currentTime;
             this._lastGlobeStateEnabled = globeState;
@@ -409,9 +434,8 @@ export class GlobeTransform implements ITransform {
     }
 
     isRenderingDirty(): boolean {
-        const now = browser.now();
         // Globe transition
-        return (now - this._lastGlobeChangeTime) / 1000.0 < (Math.max(globeConstants.globeTransitionTimeSeconds, globeConstants.zoomTransitionTimeSeconds) + 0.2);
+        return (this._lastUpdateTime - this._lastGlobeChangeTime) / 1000.0 < (Math.max(globeConstants.globeTransitionTimeSeconds, globeConstants.zoomTransitionTimeSeconds));
     }
 
     getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData {
@@ -497,17 +521,13 @@ export class GlobeTransform implements ITransform {
 
     private _projectTileCoordinatesToSphere(inTileX: number, inTileY: number, tileID: UnwrappedTileID): vec3 {
         const mercator = tileCoordinatesToMercatorCoordinates(inTileX, inTileY, tileID.canonical);
-        const angular = mercatorCoordinatesToAngularCoordinatesRadians(mercator[0], mercator[1]);
+        const angular = mercatorCoordinatesToAngularCoordinatesRadians(mercator.x, mercator.y);
         const sphere = angularCoordinatesRadiansToVector(angular[0], angular[1]);
         return sphere;
     }
 
-    public isOccluded(x: number, y: number, unwrappedTileID: UnwrappedTileID): boolean {
-        if (!this._globeRendering) {
-            return this._mercatorTransform.isOccluded(x, y, unwrappedTileID);
-        }
-        const spherePos = this._projectTileCoordinatesToSphere(x, y, unwrappedTileID);
-        return !this.isSurfacePointVisible(spherePos);
+    public isLocationOccluded(location: LngLat): boolean {
+        return !this.isSurfacePointVisible(angularCoordinatesToSurfaceVector(location));
     }
 
     public transformLightDirection(dir: vec3): vec3 {
@@ -555,7 +575,7 @@ export class GlobeTransform implements ITransform {
             return 1.0;
         }
         const mercator = tileCoordinatesToMercatorCoordinates(textAnchor.x, textAnchor.y, tileID.canonical);
-        const angular = mercatorCoordinatesToAngularCoordinatesRadians(mercator[0], mercator[1]);
+        const angular = mercatorCoordinatesToAngularCoordinatesRadians(mercator.x, mercator.y);
         return this.getCircleRadiusCorrection() / Math.cos(angular[1]);
     }
 
@@ -595,8 +615,8 @@ export class GlobeTransform implements ITransform {
         const globeRadiusPixels = getGlobeRadiusPixels(this.worldSize, this.center.lat);
 
         // Construct a completely separate matrix for globe view
-        const globeMatrix = createMat4();
-        const globeMatrixUncorrected = createMat4();
+        const globeMatrix = createMat4f64();
+        const globeMatrixUncorrected = createMat4f64();
         this._nearZ = 0.5;
         this._farZ = this.cameraToCenterDistance + globeRadiusPixels * 2.0; // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
         mat4.perspective(globeMatrix, this.fov * Math.PI / 180, this.width / this.height, this._nearZ, this._farZ);
@@ -607,7 +627,7 @@ export class GlobeTransform implements ITransform {
         globeMatrix[9] = offset.y * 2 / this._helper._height;
         this._projectionMatrix = mat4.clone(globeMatrix);
 
-        this._globeProjMatrixInverted = createMat4();
+        this._globeProjMatrixInverted = createMat4f64();
         mat4.invert(this._globeProjMatrixInverted, globeMatrix);
         mat4.translate(globeMatrix, globeMatrix, [0, 0, -this.cameraToCenterDistance]);
         mat4.rotateX(globeMatrix, globeMatrix, -this.pitch * Math.PI / 180);
@@ -615,7 +635,7 @@ export class GlobeTransform implements ITransform {
         mat4.translate(globeMatrix, globeMatrix, [0.0, 0, -globeRadiusPixels]);
         // Rotate the sphere to center it on viewed coordinates
 
-        const scaleVec = createVec3();
+        const scaleVec = createVec3f64();
         scaleVec[0] = globeRadiusPixels;
         scaleVec[1] = globeRadiusPixels;
         scaleVec[2] = globeRadiusPixels;
@@ -631,11 +651,11 @@ export class GlobeTransform implements ITransform {
         mat4.scale(globeMatrix, globeMatrix, scaleVec); // Scale the unit sphere to a sphere with diameter of 1
         this._globeViewProjMatrix = globeMatrix;
 
-        this._globeViewProjMatrixNoCorrectionInverted = createMat4();
+        this._globeViewProjMatrixNoCorrectionInverted = createMat4f64();
         mat4.invert(this._globeViewProjMatrixNoCorrectionInverted, globeMatrixUncorrected);
 
-        const zero = createVec3();
-        this._cameraPosition = createVec3();
+        const zero = createVec3f64();
+        this._cameraPosition = createVec3f64();
         this._cameraPosition[2] = this.cameraToCenterDistance / globeRadiusPixels;
         vec3.rotateX(this._cameraPosition, this._cameraPosition, zero, this.pitch * Math.PI / 180);
         vec3.rotateZ(this._cameraPosition, this._cameraPosition, zero, this.angle);
@@ -648,20 +668,17 @@ export class GlobeTransform implements ITransform {
 
     calculateFogMatrix(_unwrappedTileID: UnwrappedTileID): mat4 {
         warnOnce('calculateFogMatrix is not supported on globe projection.');
-        const m = createMat4();
+        const m = createMat4f64();
         mat4.identity(m);
         return m;
     }
 
     getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): UnwrappedTileID[] {
-        // Globe: TODO: implement for globe #3887
-        return this._mercatorTransform.getVisibleUnwrappedCoordinates(tileID);
+        // Globe has no wrap.
+        return [new UnwrappedTileID(0, tileID)];
     }
 
-    coveringTiles(options: {
-        tileSize: number; minzoom?: number;
-        maxzoom?: number; roundZoom?: boolean; reparseOverscaled?: boolean; renderWorldCopies?: boolean; terrain?: Terrain;
-    }): OverscaledTileID[] {
+    coveringTiles(options: CoveringTilesOptions): OverscaledTileID[] {
         // Globe: TODO: implement for globe #3887
         return this._mercatorTransform.coveringTiles(options);
     }
@@ -698,7 +715,7 @@ export class GlobeTransform implements ITransform {
         }
         const vec = angularCoordinatesToSurfaceVector(lngLat);
         vec3.scale(vec, vec, (1.0 + elevation / earthRadius));
-        const result = createVec4();
+        const result = createVec4f64();
         vec4.transformMat4(result, [vec[0], vec[1], vec[2], 1], this._globeViewProjMatrixNoCorrection);
         return result[2] / result[3];
     }
@@ -813,10 +830,10 @@ export class GlobeTransform implements ITransform {
         const vecToPixelCurrent = angularCoordinatesToSurfaceVector(pointLngLat);
         const vecToTarget = angularCoordinatesToSurfaceVector(lnglat);
 
-        const zero = createVec3();
+        const zero = createVec3f64();
         vec3.zero(zero);
 
-        const rotatedPixelVector = createVec3();
+        const rotatedPixelVector = createVec3f64();
         vec3.rotateY(rotatedPixelVector, vecToPixelCurrent, zero, -this.center.lng * Math.PI / 180.0);
         vec3.rotateX(rotatedPixelVector, rotatedPixelVector, zero, this.center.lat * Math.PI / 180.0);
 
@@ -854,10 +871,10 @@ export class GlobeTransform implements ITransform {
         const lngA = angleToRotateBetweenVectors2D(vecToTarget[0], vecToTarget[2], rotatedPixelVector[0], intersectionA);
         const lngB = angleToRotateBetweenVectors2D(vecToTarget[0], vecToTarget[2], rotatedPixelVector[0], intersectionB);
 
-        const vecToTargetLngA = createVec3();
+        const vecToTargetLngA = createVec3f64();
         vec3.rotateY(vecToTargetLngA, vecToTarget, zero, -lngA);
         const latA = angleToRotateBetweenVectors2D(vecToTargetLngA[1], vecToTargetLngA[2], rotatedPixelVector[1], rotatedPixelVector[2]);
-        const vecToTargetLngB = createVec3();
+        const vecToTargetLngB = createVec3f64();
         vec3.rotateY(vecToTargetLngB, vecToTarget, zero, -lngB);
         const latB = angleToRotateBetweenVectors2D(vecToTargetLngB[1], vecToTargetLngB[2], rotatedPixelVector[1], rotatedPixelVector[2]);
         // Is at least one of the needed latitudes valid?
@@ -923,7 +940,7 @@ export class GlobeTransform implements ITransform {
      * and returns its coordinates on screen in pixels.
      */
     private _projectSurfacePointToScreen(pos: vec3): Point {
-        const projected = createVec4();
+        const projected = createVec4f64();
         vec4.transformMat4(projected, [...pos, 1] as vec4, this._globeViewProjMatrixNoCorrection);
         projected[0] /= projected[3];
         projected[1] /= projected[3];
@@ -968,7 +985,7 @@ export class GlobeTransform implements ITransform {
      * Computes normalized direction of a ray from the camera to the given screen pixel.
      */
     getRayDirectionFromPixel(p: Point): vec3 {
-        const pos = createVec4();
+        const pos = createVec4f64();
         pos[0] = (p.x / this.width) * 2.0 - 1.0;
         pos[1] = ((p.y / this.height) * 2.0 - 1.0) * -1.0;
         pos[2] = 1;
@@ -977,11 +994,11 @@ export class GlobeTransform implements ITransform {
         pos[0] /= pos[3];
         pos[1] /= pos[3];
         pos[2] /= pos[3];
-        const ray = createVec3();
+        const ray = createVec3f64();
         ray[0] = pos[0] - this._cameraPosition[0];
         ray[1] = pos[1] - this._cameraPosition[1];
         ray[2] = pos[2] - this._cameraPosition[2];
-        const rayNormalized: vec3 = createVec3();
+        const rayNormalized: vec3 = createVec3f64();
         vec3.normalize(rayNormalized, ray);
         return rayNormalized;
     }
@@ -1009,7 +1026,7 @@ export class GlobeTransform implements ITransform {
             return false;
         }
 
-        const projected = createVec4();
+        const projected = createVec4f64();
         vec4.transformMat4(projected, [...vec, 1] as vec4, this._globeViewProjMatrixNoCorrection);
         projected[0] /= projected[3];
         projected[1] /= projected[3];
@@ -1036,8 +1053,8 @@ export class GlobeTransform implements ITransform {
         // However solving it in the traditional schoolbook way leads to floating point precision issues.
         // Here we instead use the approach suggested in the book Ray Tracing Gems, chapter 7.
         // https://www.realtimerendering.com/raytracinggems/rtg/index.html
-        const inner = createVec3();
-        const scaledDir = createVec3();
+        const inner = createVec3f64();
+        const scaledDir = createVec3f64();
         vec3.scale(scaledDir, direction, originDotDirection);
         vec3.sub(inner, origin, scaledDir);
         const discriminant = planetRadiusSquared - vec3.dot(inner, inner);
@@ -1078,13 +1095,13 @@ export class GlobeTransform implements ITransform {
         if (intersection) {
             // Ray intersects the sphere -> compute intersection LngLat.
             // Assume the ray origin is never inside the sphere - just use tMin
-            const intersectionPoint = createVec3();
+            const intersectionPoint = createVec3f64();
             vec3.add(intersectionPoint, rayOrigin, [
                 rayDirection[0] * intersection.tMin,
                 rayDirection[1] * intersection.tMin,
                 rayDirection[2] * intersection.tMin
             ]);
-            const sphereSurface = createVec3();
+            const sphereSurface = createVec3f64();
             vec3.normalize(sphereSurface, intersectionPoint);
             return sphereSurfacePointToCoordinates(sphereSurface);
         }
@@ -1096,7 +1113,7 @@ export class GlobeTransform implements ITransform {
         const distanceToIntersection = -originToPlaneDistance / directionDotPlaneXyz;
 
         const maxRayLength = 2.0; // One globe diameter
-        const planeIntersection = createVec3();
+        const planeIntersection = createVec3f64();
 
         if (distanceToIntersection > 0) {
             vec3.add(planeIntersection, rayOrigin, [
@@ -1107,7 +1124,7 @@ export class GlobeTransform implements ITransform {
         } else {
             // When the ray takes too long to hit the plane (>maxRayLength), or if the plane intersection is behind the camera, handle things differently.
             // Take a point along the ray at distance maxRayLength, project it to clipping plane, then continue as normal to find the horizon point.
-            const distantPoint = createVec3();
+            const distantPoint = createVec3f64();
             vec3.add(distantPoint, rayOrigin, [
                 rayDirection[0] * maxRayLength,
                 rayDirection[1] * maxRayLength,
@@ -1121,7 +1138,7 @@ export class GlobeTransform implements ITransform {
             ]);
         }
 
-        const closestOnHorizon = createVec3();
+        const closestOnHorizon = createVec3f64();
         vec3.normalize(closestOnHorizon, planeIntersection);
         return sphereSurfacePointToCoordinates(closestOnHorizon);
     }

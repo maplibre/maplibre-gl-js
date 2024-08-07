@@ -5,9 +5,22 @@ import {wrap, clamp} from '../util/util';
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets';
 import type {PaddingOptions} from './edge_insets';
-import {ITransformGetters} from './transform_interface';
+import {CoveringZoomOptions, IReadonlyTransform, ITransformGetters} from './transform_interface';
 
 export const MAX_VALID_LATITUDE = 85.051129;
+
+/**
+ * If a path crossing the antimeridian would be shorter, extend the final coordinate so that
+ * interpolating between the two endpoints will cross it.
+ * @param center - The LngLat object of the desired center. This object will be mutated.
+ */
+export function normalizeCenter(tr: IReadonlyTransform, center: LngLat): void {
+    if (!tr.renderWorldCopies || tr.lngRange) return;
+    const delta = center.lng - tr.center.lng;
+    center.lng +=
+        delta > 180 ? -360 :
+            delta < -180 ? 360 : 0;
+}
 
 /**
  * Computes scaling from zoom level.
@@ -18,8 +31,6 @@ export function zoomScale(zoom: number) { return Math.pow(2, zoom); }
  * Computes zoom level from scaling.
  */
 export function scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
-
-export type TransformUpdateResult = {forcePlacementUpdate: boolean};
 
 export type TransformHelperCallbacks = {
     /**
@@ -349,20 +360,11 @@ export class TransformHelper implements ITransformGetters {
     }
 
     /**
-     * Return a zoom level that will cover all tiles the transform
-     * @param options - the options
-     * @returns zoom level An integer zoom level at which all tiles will be visible.
+     * Return what zoom level of a tile source would most closely cover the tiles displayed by this transform.
+     * @param options - The options, most importantly the source's tile size.
+     * @returns An integer zoom level at which all tiles will be visible.
      */
-    coveringZoomLevel(options: {
-        /**
-         * Target zoom level. If true, the value will be rounded to the closest integer. Otherwise the value will be floored.
-         */
-        roundZoom?: boolean;
-        /**
-         * Tile size, expressed in screen pixels.
-         */
-        tileSize: number;
-    }): number {
+    coveringZoomLevel(options: CoveringZoomOptions): number {
         const z = (options.roundZoom ? Math.round : Math.floor)(
             this.zoom + scaleZoom(this._tileSize / options.tileSize)
         );

@@ -61,6 +61,8 @@ import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {ITransform} from '../geo/transform_interface';
+import {ICameraHelper} from '../geo/projection/camera_helper';
+import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 
 const version = packageJSON.version;
 
@@ -578,6 +580,7 @@ export class Map extends Camera {
         // Transform specialization will later be set by style when it creates its projection instance.
         // When this happens, the new transform will inherit all properties of this temporary transform.
         const transform = new MercatorTransform();
+        const cameraHelper = new MercatorCameraHelper();
         if (resolvedOptions.minZoom !== undefined) {
             transform.setMinZoom(resolvedOptions.minZoom);
         }
@@ -594,7 +597,7 @@ export class Map extends Camera {
             transform.setRenderWorldCopies(resolvedOptions.renderWorldCopies);
         }
 
-        super(transform, {bearingSnap: resolvedOptions.bearingSnap});
+        super(transform, cameraHelper, {bearingSnap: resolvedOptions.bearingSnap});
 
         this._interactive = resolvedOptions.interactive;
         this._maxTileCacheSize = resolvedOptions.maxTileCacheSize;
@@ -2960,9 +2963,12 @@ export class Map extends Camera {
         webpSupported.testSupport(gl);
     }
 
-    override migrateProjection(newTransform: ITransform) {
-        super.migrateProjection(newTransform);
+    override migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper) {
+        super.migrateProjection(newTransform, newCameraHelper);
         this.painter.transform = newTransform;
+        this.fire(new Event('projectiontransition', {
+            newProjection: this.style.projection.name,
+        }));
     }
 
     _contextLost = (event: any) => {
@@ -3108,6 +3114,10 @@ export class Map extends Camera {
 
         const transformUpdateResult = this.transform.newFrameUpdate();
         this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, transformUpdateResult.forcePlacementUpdate);
+
+        if (transformUpdateResult.fireProjectionEvent) {
+            this.fire(new Event('projectiontransition', transformUpdateResult.fireProjectionEvent));
+        }
 
         // Actually draw
         this.painter.render(this.style, {

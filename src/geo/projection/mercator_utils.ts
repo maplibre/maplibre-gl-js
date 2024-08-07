@@ -15,12 +15,22 @@ import Point from '@mapbox/point-geometry';
  * @param canonicalTileID - Tile canonical ID - mercator X, Y and zoom.
  * @returns Mercator coordinates of the specified point in range [0..1].
  */
-export function tileCoordinatesToMercatorCoordinates(inTileX: number, inTileY: number, canonicalTileID: CanonicalTileID): [number, number] {
+export function tileCoordinatesToMercatorCoordinates(inTileX: number, inTileY: number, canonicalTileID: CanonicalTileID): MercatorCoordinate {
     const scale = 1.0 / (1 << canonicalTileID.z);
-    return [
+    return new MercatorCoordinate(
         inTileX / EXTENT * scale + canonicalTileID.x * scale,
         inTileY / EXTENT * scale + canonicalTileID.y * scale
-    ];
+    );
+}
+
+/**
+ * Returns LngLat for given in-tile coordinates and tile ID.
+ * @param inTileX - X coordinate in tile units - range [0..EXTENT].
+ * @param inTileY - Y coordinate in tile units - range [0..EXTENT].
+ * @param canonicalTileID - Tile canonical ID - mercator X, Y and zoom.
+ */
+export function tileCoordinatesToLocation(inTileX: number, inTileY: number, canonicalTileID: CanonicalTileID) {
+    return tileCoordinatesToMercatorCoordinates(inTileX, inTileY, canonicalTileID).toLngLat();
 }
 
 /**

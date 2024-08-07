@@ -7,6 +7,7 @@ import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../source/t
 import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
 import {expectToBeCloseToArray, sleep} from '../../util/test/util';
 import {MercatorCoordinate} from '../mercator_coordinate';
+import {tileCoordinatesToLocation} from './mercator_utils';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: Array<number>) {
     const lat = latDegrees / 180.0 * Math.PI;
@@ -58,7 +59,6 @@ describe('GlobeTransform', () => {
         const globeTransform = createGlobeTransform(globeProjectionMock);
 
         describe('general plane properties', () => {
-            globeTransform.newFrameUpdate();
             const projectionData = globeTransform.getProjectionData(new OverscaledTileID(0, 0, 0, 0, 0));
 
             test('plane vector length', () => {
@@ -133,16 +133,13 @@ describe('GlobeTransform', () => {
             globeTransform.resize(512, 512);
             globeTransform.setZoom(-0.5);
             globeTransform.setCenter(new LngLat(0, 80));
-            globeTransform.newFrameUpdate();
             expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [0, 2.2818294674820794, 0.40234810049271963], precisionDigits);
 
             globeTransform.setPitch(35);
             globeTransform.setBearing(70);
-            globeTransform.newFrameUpdate();
             expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [-0.7098603286961542, 2.002400604307631, 0.6154310261827212], precisionDigits);
 
             globeTransform.setCenter(new LngLat(-10, 42));
-            globeTransform.newFrameUpdate();
             expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [-3.8450970996236364, 2.9368285470351516, 4.311953269048194], precisionDigits);
         });
 
@@ -165,7 +162,6 @@ describe('GlobeTransform', () => {
         describe('project location to coordinates', () => {
             const precisionDigits = 10;
             const globeTransform = createGlobeTransform(globeProjectionMock);
-            globeTransform.newFrameUpdate();
 
             test('basic test', () => {
                 globeTransform.setCenter(new LngLat(0, 0));
@@ -200,20 +196,16 @@ describe('GlobeTransform', () => {
             test('unproject screen center', () => {
                 const precisionDigits = 10;
                 const globeTransform = createGlobeTransform(globeProjectionMock);
-                globeTransform.newFrameUpdate();
                 let unprojected = globeTransform.screenPointToLocation(screenCenter);
                 expect(unprojected.lng).toBeCloseTo(globeTransform.center.lng, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(globeTransform.center.lat, precisionDigits);
 
-                globeTransform.center.lng = 90.0;
-                globeTransform.newFrameUpdate();
+                globeTransform.setCenter(new LngLat(90.0, 0.0));
                 unprojected = globeTransform.screenPointToLocation(screenCenter);
                 expect(unprojected.lng).toBeCloseTo(globeTransform.center.lng, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(globeTransform.center.lat, precisionDigits);
 
-                globeTransform.center.lng = 0.0;
-                globeTransform.center.lat = 60.0;
-                globeTransform.newFrameUpdate();
+                globeTransform.setCenter(new LngLat(0.0, 60.0));
                 unprojected = globeTransform.screenPointToLocation(screenCenter);
                 expect(unprojected.lng).toBeCloseTo(globeTransform.center.lng, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(globeTransform.center.lat, precisionDigits);
@@ -222,7 +214,6 @@ describe('GlobeTransform', () => {
             test('unproject point to the side', () => {
                 const precisionDigits = 10;
                 const globeTransform = createGlobeTransform(globeProjectionMock);
-                globeTransform.newFrameUpdate();
                 let coords: LngLat;
                 let projected: Point;
                 let unprojected: LngLat;
@@ -258,7 +249,6 @@ describe('GlobeTransform', () => {
                 globeTransform.resize(512, 512);
                 globeTransform.setZoom(-0.5);
                 globeTransform.setCenter(new LngLat(0, 80));
-                globeTransform.newFrameUpdate();
 
                 let coords: LngLat;
                 let projected: Point;
@@ -288,7 +278,6 @@ describe('GlobeTransform', () => {
                 // Try unprojection a point somewhere above the western horizon
                 globeTransform.setPitch(60);
                 globeTransform.setBearing(-90);
-                globeTransform.newFrameUpdate();
                 const unprojected = globeTransform.screenPointToLocation(screenTopEdgeCenter);
                 expect(unprojected.lng).toBeCloseTo(-34.699626794124015, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(0.0, precisionDigits);
@@ -299,7 +288,6 @@ describe('GlobeTransform', () => {
             const precisionDigits = 10;
             const globeTransform = createGlobeTransform(globeProjectionMock);
             globeTransform.setZoom(1);
-            globeTransform.newFrameUpdate();
             let coords: LngLat;
             let point: Point;
             let projected: Point;
@@ -356,7 +344,6 @@ describe('GlobeTransform', () => {
 
             describe('rotated', () => {
                 globeTransform.setBearing(90);
-                globeTransform.newFrameUpdate();
 
                 test('identity', () => {
                     // Should do nothing
@@ -439,7 +426,6 @@ describe('GlobeTransform', () => {
     test('pointCoordinate', () => {
         const precisionDigits = 10;
         const globeTransform = createGlobeTransform(globeProjectionMock);
-        globeTransform.newFrameUpdate();
         let coords: LngLat;
         let coordsMercator: MercatorCoordinate;
         let projected: Point;
@@ -463,7 +449,6 @@ describe('GlobeTransform', () => {
     describe('globeViewAllowed', () => {
         test('starts enabled', async () => {
             const globeTransform = createGlobeTransform(globeProjectionMock);
-            globeTransform.newFrameUpdate();
 
             expect(globeTransform.getGlobeViewAllowed()).toBe(true);
             expect(globeTransform.useGlobeControls).toBe(true);
@@ -576,11 +561,41 @@ describe('GlobeTransform', () => {
             transform.setPitch(60);
 
             const projection = transform.projectTileCoordinates(8192, 8192, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), (_x, _y) => 0);
-            console.log(projection);
             expect(projection.point.x).toBeCloseTo(0.22428309892086878, precisionDigits);
             expect(projection.point.y).toBeCloseTo(-0.4462620847133465, precisionDigits);
             expect(projection.signedDistanceFromCamera).toBeCloseTo(822.280942015371, precisionDigits);
             expect(projection.isOccluded).toBe(true);
+        });
+    });
+
+    describe('isLocationOccluded', () => {
+        const transform = new GlobeTransform(globeProjectionMock);
+        transform.resize(512, 512);
+        transform.setCenter(new LngLat(0.0, 0.0));
+        transform.setZoom(-1);
+
+        test('center', () => {
+            expect(transform.isLocationOccluded(new LngLat(0, 0))).toBe(false);
+        });
+
+        test('center from tile', () => {
+            expect(transform.isLocationOccluded(tileCoordinatesToLocation(0, 0, new CanonicalTileID(1, 1, 1)))).toBe(false);
+        });
+
+        test('backside', () => {
+            expect(transform.isLocationOccluded(new LngLat(179.9, 0))).toBe(true);
+        });
+
+        test('backside from tile', () => {
+            expect(transform.isLocationOccluded(tileCoordinatesToLocation(0, 0, new CanonicalTileID(1, 0, 1)))).toBe(true);
+        });
+
+        test('barely visible', () => {
+            expect(transform.isLocationOccluded(new LngLat(84.49, 0))).toBe(false);
+        });
+
+        test('barely hidden', () => {
+            expect(transform.isLocationOccluded(new LngLat(84.50, 0))).toBe(true);
         });
     });
 });

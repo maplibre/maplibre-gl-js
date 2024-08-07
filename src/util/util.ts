@@ -3,9 +3,30 @@ import UnitBezier from '@mapbox/unitbezier';
 import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';
 import type {Size} from './image';
 import type {WorkerGlobalScopeInterface} from './web_worker';
-import {vec3, vec4} from 'gl-matrix';
+import {mat4, vec3, vec4} from 'gl-matrix';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
 import {OverscaledTileID} from '../source/tile_id';
+
+/**
+ * Returns a new 64 bit float vec4 of zeroes.
+ */
+export function createVec4f64(): vec4 { return new Float64Array(4) as any; }
+/**
+ * Returns a new 64 bit float vec3 of zeroes.
+ */
+export function createVec3f64(): vec3 { return new Float64Array(3) as any; }
+/**
+ * Returns a new 64 bit float mat4 of zeroes.
+ */
+export function createMat4f64(): mat4 { return new Float64Array(16) as any; }
+/**
+ * Returns a new 64 bit float mat4 set to identity.
+ */
+export function createIdentityMat4f64(): mat4 {
+    const m = new Float64Array(16) as any;
+    mat4.identity(m);
+    return m;
+}
 
 /**
  * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.

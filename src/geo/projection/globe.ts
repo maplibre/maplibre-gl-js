@@ -58,7 +58,7 @@ export class GlobeProjection implements Projection {
     private _errorCorrectionPreviousValue: number = 0.0;
     private _errorMeasurementLastChangeTime: number = -1000.0;
 
-    get name(): string {
+    get name(): 'globe' {
         return 'globe';
     }
 

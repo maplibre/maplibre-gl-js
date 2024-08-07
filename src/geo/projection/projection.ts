@@ -4,6 +4,7 @@ import type {Context} from '../../gl/context';
 import type {Mesh} from '../../render/mesh';
 import type {Program} from '../../render/program';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
+import {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 /**
  * Custom projections are handled both by a class which implements this `Projection` interface,
@@ -37,7 +38,7 @@ export interface Projection {
      * @internal
      * A short, descriptive name of this projection, such as 'mercator' or 'globe'.
      */
-    get name(): string;
+    get name(): ProjectionSpecification['type'];
 
     /**
      * @internal

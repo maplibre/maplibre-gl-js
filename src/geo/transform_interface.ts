@@ -8,8 +8,49 @@ import type {PaddingOptions} from './edge_insets';
 import {Terrain} from '../render/terrain';
 import {ProjectionData} from '../render/program/projection_program';
 import {PointProjection} from '../symbol/projection';
+import {MapProjectionEvent} from '../ui/events';
 
-export type TransformUpdateResult = {forcePlacementUpdate: boolean};
+export type CoveringZoomOptions = {
+    /**
+     * Whether to round or floor the target zoom level. If true, the value will be rounded to the closest integer. Otherwise the value will be floored.
+     */
+    roundZoom?: boolean;
+    /**
+     * Tile size, expressed in screen pixels.
+     */
+    tileSize: number;
+};
+
+export type CoveringTilesOptions = CoveringZoomOptions & {
+    /**
+     * Smallest allowed tile zoom.
+     */
+    minzoom?: number;
+    /**
+     * Largest allowed tile zoom.
+     */
+    maxzoom?: number;
+    /**
+     * `true` if tiles should be sent back to the worker for each overzoomed zoom level, `false` if not.
+     * Fill this option when computing covering tiles for a source.
+     * When true, any tile at `maxzoom` level that should be overscaled to a greater zoom will have
+     * its zoom set to the overscaled greater zoom. When false, such tiles will have zoom set to `maxzoom`.
+     */
+    reparseOverscaled?: boolean;
+    /**
+     * Whether to render multiple copies of the world for non globe projection maps.
+     */
+    renderWorldCopies?: boolean;
+    /**
+     * When terrain is present, tile visibility will be computed in regards to the min and max elevations for each tile.
+     */
+    terrain?: Terrain;
+};
+
+export type TransformUpdateResult = {
+    forcePlacementUpdate?: boolean;
+    fireProjectionEvent?: MapProjectionEvent;
+};
 
 export interface ITransformGetters {
     get tileSize(): number;
@@ -245,20 +286,11 @@ export interface IReadonlyTransform extends ITransformGetters {
     isPaddingEqual(padding: PaddingOptions): boolean;
 
     /**
-     * Return a zoom level that will cover all tiles the transform
-     * @param options - the options
-     * @returns zoom level An integer zoom level at which all tiles will be visible.
+     * Return what zoom level of a tile source would most closely cover the tiles displayed by this transform.
+     * @param options - The options, most importantly the source's tile size.
+     * @returns An integer zoom level at which all tiles will be visible.
      */
-    coveringZoomLevel(options: {
-        /**
-         * Target zoom level. If true, the value will be rounded to the closest integer. Otherwise the value will be floored.
-         */
-        roundZoom?: boolean;
-        /**
-         * Tile size, expressed in screen pixels.
-         */
-        tileSize: number;
-    }): number;
+    coveringZoomLevel(options: CoveringZoomOptions): number;
 
     /**
      * @internal
@@ -268,22 +300,12 @@ export interface IReadonlyTransform extends ITransformGetters {
     getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): Array<UnwrappedTileID>;
 
     /**
-     * Return all coordinates that could cover this transform for a covering
-     * zoom level.
+     * Return all tile coordinates that could cover this transform for a covering
+     * zoom level, ordered by ascending distance from camera.
      * @param options - the options
      * @returns Array of OverscaledTileID. All OverscaledTileID instances are newly created.
      */
-    coveringTiles(
-        options: {
-            tileSize: number;
-            minzoom?: number;
-            maxzoom?: number;
-            roundZoom?: boolean;
-            reparseOverscaled?: boolean;
-            renderWorldCopies?: boolean;
-            terrain?: Terrain;
-        }
-    ): Array<OverscaledTileID>;
+    coveringTiles(options: CoveringTilesOptions): Array<OverscaledTileID>;
 
     /**
      * @internal
@@ -413,11 +435,8 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @internal
      * Returns whether the supplied location is occluded in this projection.
      * For example during globe rendering a location on the backfacing side of the globe is occluded.
-     * @param x - Tile space coordinate in range 0..EXTENT.
-     * @param y - Tile space coordinate in range 0..EXTENT.
-     * @param unwrappedTileID - TileID of the tile the supplied coordinates belong to.
      */
-    isOccluded(x: number, y: number, unwrappedTileID: UnwrappedTileID): boolean;
+    isLocationOccluded(lngLat: LngLat): boolean;
 
     /**
      * @internal

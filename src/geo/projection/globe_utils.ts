@@ -1,7 +1,8 @@
 import {vec3} from 'gl-matrix';
-import {mod, wrap} from '../../util/util';
+import {clamp, lerp, mod, remapSaturate, wrap} from '../../util/util';
 import {LngLat} from '../lng_lat';
-import {scaleZoom} from '../transform_helper';
+import {MAX_VALID_LATITUDE, scaleZoom} from '../transform_helper';
+import Point from '@mapbox/point-geometry';
 
 export function getGlobeCircumferencePixels(transform: {worldSize: number; center: {lat: number}}): number {
     const radius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);
@@ -76,15 +77,106 @@ export function sphereSurfacePointToCoordinates(surface: vec3): LngLat {
     }
 }
 
+function planetScaleAtLatitude(latitudeDegrees: number): number {
+    return Math.cos(latitudeDegrees * Math.PI / 180);
+}
+
 /**
  * Computes how much to modify zoom to keep the globe size constant when changing latitude.
  * @param transform - An instance of any transform. Does not have any relation on the computed values.
- * @param oldLat - Latitude before change.
- * @param newLat - Latitude after change.
+ * @param oldLat - Latitude before change, in degrees.
+ * @param newLat - Latitude after change, in degrees.
  * @returns A value to add to zoom level used for old latitude to keep same planet radius at new latitude.
  */
 export function getZoomAdjustment(oldLat: number, newLat: number): number {
-    const oldCircumference = Math.cos(oldLat * Math.PI / 180.0);
-    const newCircumference = Math.cos(newLat * Math.PI / 180.0);
+    const oldCircumference = planetScaleAtLatitude(oldLat);
+    const newCircumference = planetScaleAtLatitude(newLat);
     return scaleZoom(newCircumference / oldCircumference);
+}
+
+export function getDegreesPerPixel(worldSize: number, lat: number): number {
+    return 360.0 / getGlobeCircumferencePixels({worldSize, center: {lat}});
+}
+
+/**
+ * Returns transform's new center rotation after applying panning.
+ * @param panDelta - Panning delta, in same units as what is supplied to {@link HandlerManager}.
+ * @param tr - Current transform. This object is not modified by the function.
+ * @returns New center location to set to the map's transform to apply the specified panning.
+ */
+export function computeGlobePanCenter(panDelta: Point, tr: {
+    readonly angle: number;
+    readonly worldSize: number;
+    readonly center: LngLat;
+    readonly zoom: number;
+}): LngLat {
+    // Apply map bearing to the panning vector
+    const rotatedPanDelta = panDelta.rotate(-tr.angle);
+    // Compute what the current zoom would be if the transform center would be moved to latitude 0.
+    const normalizedGlobeZoom = tr.zoom + getZoomAdjustment(tr.center.lat, 0);
+    // Note: we divide longitude speed by planet width at the given latitude. But we diminish this effect when the globe is zoomed out a lot.
+    const lngSpeed = lerp(
+        1.0 / planetScaleAtLatitude(tr.center.lat), // speed adjusted by latitude
+        1.0 / planetScaleAtLatitude(Math.min(Math.abs(tr.center.lat), 60)), // also adjusted, but latitude is clamped to 60° to avoid too large speeds near poles
+        remapSaturate(normalizedGlobeZoom, 7, 3, 0, 1.0) // Values chosen so that globe interactions feel good. Not scientific by any means.
+    );
+    const panningDegreesPerPixel = getDegreesPerPixel(tr.worldSize, tr.center.lat);
+    return new LngLat(
+        tr.center.lng - rotatedPanDelta.x * panningDegreesPerPixel * lngSpeed,
+        clamp(tr.center.lat + rotatedPanDelta.y * panningDegreesPerPixel, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE)
+    );
+}
+
+/**
+ * Integration of `1 / cos(x)`.
+ */
+function integrateSecX(x: number): number {
+    const xHalf = 0.5 * x;
+    const sin = Math.sin(xHalf);
+    const cos = Math.cos(xHalf);
+    return Math.log(sin + cos) - Math.log(cos - sin);
+}
+
+/**
+ * Interpolates globe center between two locations while preserving apparent rotation speed during interpolation.
+ * @param start - The starting location of the interpolation.
+ * @param deltaLng - Longitude delta to the end of the interpolation.
+ * @param deltaLat - Latitude delta to the end of the interpolation.
+ * @param t - The interpolation point in [0..1], where 0 is starting location, 1 is end location and other values are in between.
+ * @returns The interpolated location.
+ */
+export function interpolateLngLatForGlobe(start: LngLat, deltaLng: number, deltaLat: number, t: number): LngLat {
+    // Rate of change of longitude when moving the globe should be roughly 1/cos(latitude)
+    // We want to use this rate of change, even for interpolation during easing.
+    // Thus we know the derivative of our interpolation function: 1/cos(x)
+    // To get our interpolation function, we need to integrate that.
+
+    const interpolatedLat = start.lat + deltaLat * t;
+
+    if (Math.abs(deltaLat) > 1) {
+        const endLat = start.lat + deltaLat;
+        const onDifferentHemispheres = Math.sign(endLat) !== Math.sign(start.lat);
+        // Where do we sample the integrated speed curve?
+        const samplePointStart = (onDifferentHemispheres ? -Math.abs(start.lat) : Math.abs(start.lat)) * Math.PI / 180;
+        const samplePointEnd = Math.abs(start.lat + deltaLat) * Math.PI / 180;
+        // Read the integrated speed curve at those points, and at the interpolation value "t".
+        const valueT = integrateSecX(samplePointStart + t * (samplePointEnd - samplePointStart));
+        const valueStart = integrateSecX(samplePointStart);
+        const valueEnd = integrateSecX(samplePointEnd);
+        // Compute new interpolation factor based on the speed curve
+        const newT = (valueT - valueStart) / (valueEnd - valueStart);
+        // Interpolate using that factor
+        const interpolatedLng = start.lng + deltaLng * newT;
+        return new LngLat(
+            interpolatedLng,
+            interpolatedLat
+        );
+    } else {
+        // Fall back to simple interpolation when latitude doesn't change much.
+        const interpolatedLng = start.lng + deltaLng * t;
+        return new LngLat(
+            interpolatedLng,
+            interpolatedLat
+        );
+    }
 }
