@@ -21,6 +21,11 @@ export const MAX_VALID_LATITUDE = 85.051129;
  * scaled, rotated, and zoomed.
  */
 export class Transform {
+    /**
+     * Size of map tiles in pixel.
+     *
+     * @defaultValue 512
+     */
     tileSize: number;
     tileZoom: number;
     lngRange: [number, number];
@@ -44,6 +49,9 @@ export class Transform {
     glCoordMatrix: mat4;
     labelPlaneMatrix: mat4;
     minElevationForCurrentTile: number;
+    /**
+     * Field of view in radians.
+     */
     _fov: number;
     _pitch: number;
     _zoom: number;
@@ -53,6 +61,9 @@ export class Transform {
     _maxZoom: number;
     _minPitch: number;
     _maxPitch: number;
+    /**
+     * Coordinates of the center point.
+     */
     _center: LngLat;
     _elevation: number;
     _pixelPerMeter: number;
@@ -191,6 +202,9 @@ export class Transform {
         mat2.rotate(this.rotationMatrix, this.rotationMatrix, this.angle);
     }
 
+    /**
+     * Pitch in degrees. Constrained to minPitch and maxPitch.
+     */
     get pitch(): number {
         return this._pitch / Math.PI * 180;
     }
@@ -213,6 +227,9 @@ export class Transform {
         this._calcMatrices();
     }
 
+    /**
+     * Zoom level. Constrained to minZoom and maxZoom.
+     */
     get zoom(): number { return this._zoom; }
     set zoom(zoom: number) {
         const constrainedZoom = Math.min(Math.max(zoom, this.minZoom), this.maxZoom);
@@ -225,6 +242,9 @@ export class Transform {
         this._calcMatrices();
     }
 
+    /**
+     * Coordinates of the center point.
+     */
     get center(): LngLat { return this._center; }
     set center(center: LngLat) {
         if (center.lat === this._center.lat && center.lng === this._center.lng) return;
@@ -546,6 +566,12 @@ export class Transform {
         this.zoom = zoom;
     }
 
+    /**
+     * Adjust the center point so that the given location corresponds to the
+     * given screen point.
+     * @param lnglat - location
+     * @param point - screen point
+     */
     setLocationAtPoint(lnglat: LngLat, point: Point) {
         const a = this.pointCoordinate(point);
         const b = this.pointCoordinate(this.centerPoint);
