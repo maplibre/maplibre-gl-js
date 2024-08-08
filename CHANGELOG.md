@@ -7,6 +7,7 @@
 
 ### 🐞 Bug fixes
 - Fix camera being able to move into 3D terrain ([#1542](https://github.com/maplibre/maplibre-gl-js/issues/1542))
+- Fix flicker on map resize ([#4429](https://github.com/maplibre/maplibre-gl-js/pull/4429))
 - _...Add new stuff here..._
 
 ## 4.5.1
