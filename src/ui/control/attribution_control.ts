@@ -16,7 +16,7 @@ export type AttributionControlOptions = {
     compact?: boolean;
 
     /**
-     * Collapse attributions on small sceens or in compact mode by default. Default: false
+     * Collapse attributions on small screens or in compact mode by default. Default: false
      */
     collapsedByDefault?: boolean;
 

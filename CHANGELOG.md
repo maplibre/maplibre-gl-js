@@ -3,7 +3,7 @@
 ### ✨ Features and improvements
 
 - Emit events when the cooperative gestures option has prevented a gesture. ([#4470](https://github.com/maplibre/maplibre-gl-js/pull/4470))
-- Add option to initially hide attributions in small figures ([#4526](https://github.com/maplibre/maplibre-gl-js/pull/4526))
+- Add option to initially hide attributions by default in small figures ([#4526](https://github.com/maplibre/maplibre-gl-js/pull/4526))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
