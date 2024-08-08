@@ -1,13 +1,12 @@
 import {CanvasSource} from '../source/canvas_source';
-import {Transform} from '../geo/transform';
+import {IReadonlyTransform} from '../geo/transform_interface';
 import {Event, Evented} from '../util/evented';
 import {extend} from '../util/util';
 
 import type {Dispatcher} from '../util/dispatcher';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
-import {VertexBuffer} from '../gl/vertex_buffer';
-import {SegmentVector} from '../data/segment';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 function createSource(options?) {
     const c = options && options.canvas || window.document.createElement('canvas');
@@ -27,13 +26,13 @@ function createSource(options?) {
 }
 
 class StubMap extends Evented {
-    transform: Transform;
+    transform: IReadonlyTransform;
     style: any;
     painter: any;
 
     constructor() {
         super();
-        this.transform = new Transform();
+        this.transform = new MercatorTransform();
         this.style = {};
         this.painter = {
             context: {
@@ -190,8 +189,6 @@ describe('CanvasSource', () => {
 
         source.tiles[String(tile.tileID.wrap)] = tile;
         // assign dummies directly so we don't need to stub the gl things
-        source.boundsBuffer = {} as VertexBuffer;
-        source.boundsSegments = {} as SegmentVector;
         source.texture = {
             update: () => {}
         } as any;

@@ -87,7 +87,12 @@ export class OverscaledTileID {
     wrap: number;
     canonical: CanonicalTileID;
     key: string;
-    posMatrix: mat4;
+    /**
+     * This matrix is used during terrain's render-to-texture stage only.
+     * If the render-to-texture stage is active, this matrix will be present
+     * and should be used, otherwise this matrix will be null.
+     */
+    terrainRttPosMatrix: mat4 | null = null;
 
     constructor(overscaledZ: number, wrap: number, z: number, x: number, y: number) {
         if (overscaledZ < z) throw new Error(`overscaledZ should be >= z; overscaledZ = ${overscaledZ}; z = ${z}`);
@@ -216,4 +221,4 @@ function getQuadkey(z, x, y) {
 }
 
 register('CanonicalTileID', CanonicalTileID);
-register('OverscaledTileID', OverscaledTileID, {omit: ['posMatrix']});
+register('OverscaledTileID', OverscaledTileID, {omit: ['terrainRttPosMatrix']});

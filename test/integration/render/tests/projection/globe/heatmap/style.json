@@ -1,0 +1,97 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 256,
+      "height": 256
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [
+    0,
+    0
+  ],
+  "zoom": 1,
+  "projection": { "type": "globe" },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -90,
+            0
+          ],
+          [
+            -60,
+            0
+          ],
+          [
+            -30,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            30,
+            0
+          ],
+          [
+            60,
+            0
+          ],
+          [
+            90,
+            0
+          ],
+          [
+            0,
+            -90
+          ],
+          [
+            0,
+            -60
+          ],
+          [
+            0,
+            -30
+          ],
+          [
+            0,
+            30
+          ],
+          [
+            0,
+            60
+          ],
+          [
+            0,
+            90
+          ]
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "grey"
+      }
+    },
+    {
+      "id": "heatmap",
+      "type": "heatmap",
+      "source": "geojson",
+      "paint": {
+        "heatmap-radius": 60
+      }
+    }
+  ]
+}

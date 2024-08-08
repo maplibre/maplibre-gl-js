@@ -37,7 +37,6 @@ import {register} from '../../util/web_worker_transfer';
 import {EvaluationParameters} from '../../style/evaluation_parameters';
 import {Formatted, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import {rtlWorkerPlugin} from '../../source/rtl_text_plugin_worker';
-import {mat4} from 'gl-matrix';
 import {getOverlapMode} from '../../style/style_layer/overlap_mode';
 import type {CanonicalTileID} from '../../source/tile_id';
 import type {
@@ -348,8 +347,6 @@ export class SymbolBucket implements Bucket {
     featureSortOrder: Array<number>;
 
     collisionCircleArray: Array<number>;
-    placementInvProjMatrix: mat4;
-    placementViewportMatrix: mat4;
 
     text: SymbolBuffers;
     icon: SymbolBuffers;
@@ -377,8 +374,6 @@ export class SymbolBucket implements Bucket {
         this.sortKeyRanges = [];
 
         this.collisionCircleArray = [];
-        this.placementInvProjMatrix = mat4.identity([] as any);
-        this.placementViewportMatrix = mat4.identity([] as any);
 
         const layer = this.layers[0];
         const unevaluatedLayoutValues = layer._unevaluatedLayout._values;
@@ -603,7 +598,7 @@ export class SymbolBucket implements Bucket {
         }
     }
 
-    addToLineVertexArray(anchor: Anchor, line: any) {
+    addToLineVertexArray(anchor: Anchor, line: Array<Point>) {
         const lineStartIndex = this.lineVertexArray.length;
         if (anchor.segment !== undefined) {
             let sumForwardLength = anchor.dist(line[anchor.segment + 1]);
@@ -667,7 +662,7 @@ export class SymbolBucket implements Bucket {
 
             addDynamicAttributes(arrays.dynamicLayoutVertexArray, labelAnchor, angle);
 
-            indexArray.emplaceBack(index, index + 1, index + 2);
+            indexArray.emplaceBack(index, index + 2, index + 1);
             indexArray.emplaceBack(index + 1, index + 2, index + 3);
 
             segment.vertexLength += 4;
@@ -859,7 +854,7 @@ export class SymbolBucket implements Bucket {
 
         const endIndex = placedSymbol.vertexStartIndex + placedSymbol.numGlyphs * 4;
         for (let vertexIndex = placedSymbol.vertexStartIndex; vertexIndex < endIndex; vertexIndex += 4) {
-            iconOrText.indexArray.emplaceBack(vertexIndex, vertexIndex + 1, vertexIndex + 2);
+            iconOrText.indexArray.emplaceBack(vertexIndex, vertexIndex + 2, vertexIndex + 1);
             iconOrText.indexArray.emplaceBack(vertexIndex + 1, vertexIndex + 2, vertexIndex + 3);
         }
     }

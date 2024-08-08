@@ -3,8 +3,7 @@ import {
     Uniform1i,
     Uniform1f,
     Uniform2f,
-    UniformColor,
-    UniformMatrix4f
+    UniformColor
 } from '../uniform_binding';
 import {extend} from '../../util/util';
 
@@ -15,16 +14,13 @@ import type {Color, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {CrossFaded} from '../../style/properties';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters';
 import type {OverscaledTileID} from '../../source/tile_id';
-import {mat4} from 'gl-matrix';
 
 export type BackgroundUniformsType = {
-    'u_matrix': UniformMatrix4f;
     'u_opacity': Uniform1f;
     'u_color': UniformColor;
 };
 
 export type BackgroundPatternUniformsType = {
-    'u_matrix': UniformMatrix4f;
     'u_opacity': Uniform1f;
     // pattern uniforms:
     'u_image': Uniform1i;
@@ -44,13 +40,11 @@ export type BackgroundPatternUniformsType = {
 };
 
 const backgroundUniforms = (context: Context, locations: UniformLocations): BackgroundUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
     'u_opacity': new Uniform1f(context, locations.u_opacity),
     'u_color': new UniformColor(context, locations.u_color)
 });
 
 const backgroundPatternUniforms = (context: Context, locations: UniformLocations): BackgroundPatternUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
     'u_opacity': new Uniform1f(context, locations.u_opacity),
     'u_image': new Uniform1i(context, locations.u_image),
     'u_pattern_tl_a': new Uniform2f(context, locations.u_pattern_tl_a),
@@ -68,14 +62,12 @@ const backgroundPatternUniforms = (context: Context, locations: UniformLocations
     'u_tile_units_to_pixels': new Uniform1f(context, locations.u_tile_units_to_pixels)
 });
 
-const backgroundUniformValues = (matrix: mat4, opacity: number, color: Color): UniformValues<BackgroundUniformsType> => ({
-    'u_matrix': matrix,
+const backgroundUniformValues = (opacity: number, color: Color): UniformValues<BackgroundUniformsType> => ({
     'u_opacity': opacity,
     'u_color': color
 });
 
 const backgroundPatternUniformValues = (
-    matrix: mat4,
     opacity: number,
     painter: Painter,
     image: CrossFaded<ResolvedImage>,
@@ -87,7 +79,6 @@ const backgroundPatternUniformValues = (
 ): UniformValues<BackgroundPatternUniformsType> => extend(
     bgPatternUniformValues(image, crossfade, painter, tile),
     {
-        'u_matrix': matrix,
         'u_opacity': opacity
     }
 );

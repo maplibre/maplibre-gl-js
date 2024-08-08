@@ -13,6 +13,7 @@ import type {Actor} from '../util/actor';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {GeoJSONSourceDiff} from './geojson_source_diff';
 import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
+import {WorkerTileParameters} from './worker_source';
 import {MessageType} from '../util/actor_messages';
 
 /**
@@ -373,7 +374,7 @@ export class GeoJSONSource extends Evented implements Source {
     async loadTile(tile: Tile): Promise<void> {
         const message = !tile.actor ?  MessageType.loadTile :  MessageType.reloadTile;
         tile.actor = this.actor;
-        const params = {
+        const params: WorkerTileParameters = {
             type: this.type,
             uid: tile.uid,
             tileID: tile.tileID,
@@ -383,7 +384,8 @@ export class GeoJSONSource extends Evented implements Source {
             source: this.id,
             pixelRatio: this.map.getPixelRatio(),
             showCollisionBoxes: this.map.showCollisionBoxes,
-            promoteId: this.promoteId
+            promoteId: this.promoteId,
+            subdivisionGranularity: this.map.style.projection.subdivisionGranularity
         };
 
         tile.abortController = new AbortController();

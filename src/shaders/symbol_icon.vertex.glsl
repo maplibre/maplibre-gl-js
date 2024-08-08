@@ -13,7 +13,6 @@ uniform highp float u_pitch;
 uniform bool u_rotate_symbol;
 uniform highp float u_aspect_ratio;
 uniform float u_fade_change;
-uniform mat4 u_matrix;
 uniform mat4 u_label_plane_matrix;
 uniform mat4 u_coord_matrix;
 uniform bool u_is_text;
@@ -26,10 +25,6 @@ uniform float u_pitched_scale;
 
 out vec2 v_tex;
 out float v_fade_opacity;
-
-vec4 projectTileWithElevation(vec2 posInTile, float elevation) {
-    return u_matrix * vec4(posInTile, elevation, 1.0);
-}
 
 #pragma mapbox: define lowp float opacity
 
@@ -102,6 +97,12 @@ void main() {
     float z = float(u_pitch_with_map) * projected_pos.z / projected_pos.w;
 
     float projectionScaling = 1.0;
+#ifdef GLOBE
+    if(u_pitch_with_map && !u_is_along_line) {
+        float anchor_pos_tile_y = (u_coord_matrix * vec4(projected_pos.xy / projected_pos.w, z, 1.0)).y;
+        projectionScaling = mix(projectionScaling, 1.0 / circumferenceRatioAtTileY(anchor_pos_tile_y) * u_pitched_scale, u_projection_transition);
+    }
+#endif
 
     vec4 finalPos = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (a_offset / 32.0 * max(a_minFontScale, fontScale) + a_pxoffset / 16.0) * projectionScaling, z, 1.0);
     if(u_pitch_with_map) {

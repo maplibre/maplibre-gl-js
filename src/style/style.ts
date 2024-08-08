@@ -38,7 +38,7 @@ const emitValidationErrors = (evented: Evented, errors?: ReadonlyArray<{
     _emitValidationErrors(evented, errors && errors.filter(error => error.identifier !== 'source.canvas'));
 
 import type {Map} from '../ui/map';
-import type {Transform} from '../geo/transform';
+import type {IReadonlyTransform, ITransform} from '../geo/transform_interface';
 import type {StyleImage} from './style_image';
 import type {EvaluationParameters} from './evaluation_parameters';
 import type {Placement} from '../symbol/placement';
@@ -50,6 +50,7 @@ import type {
     SourceSpecification,
     SpriteSpecification,
     DiffOperations,
+    ProjectionSpecification,
     SkySpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
@@ -61,6 +62,8 @@ import {
     type GetImagesParamerters,
     type GetImagesResponse
 } from '../util/actor_messages';
+import {Projection} from '../geo/projection/projection';
+import {createProjectionFromName} from '../geo/projection/projection_factory';
 
 const empty = emptyStyle() as StyleSpecification;
 /**
@@ -186,6 +189,7 @@ export class Style extends Evented {
     glyphManager: GlyphManager;
     lineAtlas: LineAtlas;
     light: Light;
+    projection: Projection;
     sky: Sky;
 
     _frameRequest: AbortController;
@@ -341,6 +345,8 @@ export class Style extends Evented {
         this._createLayers();
 
         this.light = new Light(this.stylesheet.light);
+        this._setProjectionInternal(this.stylesheet.projection?.type || 'mercator');
+
         this.sky = new Sky(this.stylesheet.sky);
 
         this.map.setTerrain(this.stylesheet.terrain ?? null);
@@ -773,11 +779,14 @@ export class Style extends Evented {
                 case 'setSprite':
                     operations.push(() => this.setSprite.apply(this, op.args));
                     break;
+                case 'setTerrain':
+                    operations.push(() => this.map.setTerrain.apply(this, op.args));
+                    break;
                 case 'setSky':
                     operations.push(() => this.setSky.apply(this, op.args));
                     break;
-                case 'setTerrain':
-                    operations.push(() => this.map.setTerrain.apply(this, op.args));
+                case 'setProjection':
+                    this.setProjection.apply(this, op.args);
                     break;
                 case 'setTransition':
                     operations.push(() => {});
@@ -1299,6 +1308,7 @@ export class Style extends Evented {
             sprite: myStyleSheet.sprite,
             glyphs: myStyleSheet.glyphs,
             transition: myStyleSheet.transition,
+            projection: myStyleSheet.projection,
             sources,
             layers,
             terrain
@@ -1389,7 +1399,7 @@ export class Style extends Evented {
         return features;
     }
 
-    queryRenderedFeatures(queryGeometry: any, params: QueryRenderedFeaturesOptions, transform: Transform) {
+    queryRenderedFeatures(queryGeometry: any, params: QueryRenderedFeaturesOptions, transform: IReadonlyTransform) {
         if (params && params.filter) {
             this._validate(validateStyle.filter, 'queryRenderedFeatures.filter', params.filter, null, params);
         }
@@ -1489,11 +1499,28 @@ export class Style extends Evented {
         this.light.updateTransitions(parameters);
     }
 
+    getProjection(): ProjectionSpecification {
+        return this.stylesheet.projection;
+    }
+
+    setProjection(projection: ProjectionSpecification) {
+        this._checkLoaded();
+        if (this.projection) {
+            if (this.projection.name === projection.type) return;
+            this.projection.destroy();
+            delete this.projection;
+        }
+        this.stylesheet.projection = projection;
+        this._setProjectionInternal(projection.type);
+    }
+
     getSky(): SkySpecification {
         return this.stylesheet?.sky;
     }
 
     setSky(skyOptions?: SkySpecification, options: StyleSetterOptions = {}) {
+        this._checkLoaded();
+
         const sky = this.sky.getSky();
         let update = false;
         if (!skyOptions) {
@@ -1520,6 +1547,15 @@ export class Style extends Evented {
         this.stylesheet.sky = skyOptions;
         this.sky.setSky(skyOptions, options);
         this.sky.updateTransitions(parameters);
+    }
+
+    _setProjectionInternal(name: ProjectionSpecification['type']) {
+        const projectionObjects = createProjectionFromName(name);
+        this.projection = projectionObjects.projection;
+        this.map.migrateProjection(projectionObjects.transform, projectionObjects.cameraHelper);
+        for (const key in this.sourceCaches) {
+            this.sourceCaches[key].reload();
+        }
     }
 
     _validate(validate: Validator, key: string, value: any, props: any, options: {
@@ -1576,7 +1612,7 @@ export class Style extends Evented {
         this.sourceCaches[id].reload();
     }
 
-    _updateSources(transform: Transform) {
+    _updateSources(transform: ITransform) {
         for (const id in this.sourceCaches) {
             this.sourceCaches[id].update(transform, this.map.terrain);
         }
@@ -1588,7 +1624,7 @@ export class Style extends Evented {
         }
     }
 
-    _updatePlacement(transform: Transform, showCollisionBoxes: boolean, fadeDuration: number, crossSourceCollisions: boolean, forceFullPlacement: boolean = false) {
+    _updatePlacement(transform: ITransform, showCollisionBoxes: boolean, fadeDuration: number, crossSourceCollisions: boolean, forceFullPlacement: boolean = false) {
         let symbolBucketsChanged = false;
         let placementCommitted = false;
 
@@ -1687,14 +1723,14 @@ export class Style extends Evented {
     }
 
     async getGlyphs(mapId: string | number, params: GetGlyphsParamerters): Promise<GetGlyphsResponse> {
-        const glypgs = await this.glyphManager.getGlyphs(params.stacks);
+        const glyphs = await this.glyphManager.getGlyphs(params.stacks);
         const sourceCache = this.sourceCaches[params.source];
         if (sourceCache) {
             // we are not setting stacks as dependencies since for now
             // we just need to know which tiles have glyph dependencies
             sourceCache.setDependencies(params.tileID.key, params.type, ['']);
         }
-        return glypgs;
+        return glyphs;
     }
 
     getGlyphsUrl() {

@@ -8,7 +8,7 @@ import {getAnchorAlignment, WritingMode} from './shaping';
 import {mat4} from 'gl-matrix';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
 import Point from '@mapbox/point-geometry';
-import type {Transform} from '../geo/transform';
+import type {IReadonlyTransform, ITransform} from '../geo/transform_interface';
 import type {StyleLayer} from '../style/style_layer';
 import {PossiblyEvaluated} from '../style/properties';
 import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
@@ -21,9 +21,8 @@ import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance, TextAnchor
 import type {FeatureIndex} from '../data/feature_index';
 import type {OverscaledTileID, UnwrappedTileID} from '../source/tile_id';
 import {Terrain} from '../render/terrain';
-import {warnOnce} from '../util/util';
+import {translatePosition, warnOnce} from '../util/util';
 import {TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor';
-import {Projection} from '../geo/projection/projection';
 
 class OpacityState {
     opacity: number;
@@ -65,19 +64,6 @@ class JointPlacement {
         this.text = text;
         this.icon = icon;
         this.skipFade = skipFade;
-    }
-}
-
-class CollisionCircleArray {
-    // Stores collision circles and placement matrices of a bucket for debug rendering.
-    invProjMatrix: mat4;
-    viewportMatrix: mat4;
-    circles: Array<number>;
-
-    constructor() {
-        this.invProjMatrix = mat4.create();
-        this.viewportMatrix = mat4.create();
-        this.circles = [];
     }
 }
 
@@ -169,9 +155,7 @@ type TileLayerParameters = {
     translationText: [number, number];
     translationIcon: [number, number];
     unwrappedTileID: UnwrappedTileID;
-    posMatrix: mat4;
-    textLabelPlaneMatrix: mat4;
-    labelToScreenMatrix: mat4;
+    pitchedLabelPlaneMatrix: mat4;
     scale: number;
     textPixelRatio: number;
     holdingForFade: boolean;
@@ -193,7 +177,7 @@ export type BucketPart = {
 export type CrossTileID = string | number;
 
 export class Placement {
-    transform: Transform;
+    transform: IReadonlyTransform;
     terrain: Terrain;
     collisionIndex: CollisionIndex;
     placements: {
@@ -220,17 +204,17 @@ export class Placement {
     prevPlacement: Placement;
     zoomAtLastRecencyCheck: number;
     collisionCircleArrays: {
-        [k in any]: CollisionCircleArray;
+        [k in any]: Array<number>;
     };
     collisionBoxArrays: Map<number, Map<number, {
         text: number[];
         icon: number[];
     }>>;
 
-    constructor(transform: Transform, projection: Projection, terrain: Terrain, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement) {
+    constructor(transform: ITransform, terrain: Terrain, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement) {
         this.transform = transform.clone();
         this.terrain = terrain;
-        this.collisionIndex = new CollisionIndex(this.transform, projection);
+        this.collisionIndex = new CollisionIndex(this.transform);
         this.placements = {};
         this.opacities = {};
         this.variableOffsets = {};
@@ -274,42 +258,22 @@ export class Placement {
 
         const unwrappedTileID = tile.tileID.toUnwrapped();
 
-        const posMatrix = this.transform.calculatePosMatrix(unwrappedTileID);
-
-        const pitchWithMap = layout.get('text-pitch-alignment') === 'map';
         const rotateWithMap = layout.get('text-rotation-alignment') === 'map';
         const pixelsToTiles = pixelsToTileUnits(tile, 1, this.transform.zoom);
 
-        const translationText = this.collisionIndex.mapProjection.translatePosition(
-            this.transform,
+        const translationText = translatePosition(
+            this.collisionIndex.transform,
             tile,
             paint.get('text-translate'),
             paint.get('text-translate-anchor'),);
 
-        const translationIcon = this.collisionIndex.mapProjection.translatePosition(
-            this.transform,
+        const translationIcon = translatePosition(
+            this.collisionIndex.transform,
             tile,
             paint.get('icon-translate'),
             paint.get('icon-translate-anchor'),);
 
-        const textLabelPlaneMatrix = projection.getLabelPlaneMatrix(posMatrix,
-            pitchWithMap,
-            rotateWithMap,
-            this.transform,
-            pixelsToTiles);
-
-        let labelToScreenMatrix = null;
-
-        if (pitchWithMap) {
-            const glMatrix = projection.getGlCoordMatrix(
-                posMatrix,
-                pitchWithMap,
-                rotateWithMap,
-                this.transform,
-                pixelsToTiles);
-
-            labelToScreenMatrix = mat4.multiply([] as any, this.transform.labelPlaneMatrix, glMatrix);
-        }
+        const pitchedLabelPlaneMatrix = projection.getPitchedLabelPlaneMatrix(rotateWithMap, this.transform, pixelsToTiles);
 
         // As long as this placement lives, we have to hold onto this bucket's
         // matching FeatureIndex/data for querying purposes
@@ -326,10 +290,8 @@ export class Placement {
             layout,
             translationText,
             translationIcon,
-            posMatrix,
             unwrappedTileID,
-            textLabelPlaneMatrix,
-            labelToScreenMatrix,
+            pitchedLabelPlaneMatrix,
             scale,
             textPixelRatio,
             holdingForFade: tile.holdingForFade(),
@@ -361,7 +323,6 @@ export class Placement {
         rotateWithMap: boolean,
         pitchWithMap: boolean,
         textPixelRatio: number,
-        posMatrix: mat4,
         unwrappedTileID,
         collisionGroup: CollisionGroup,
         textOverlapMode: OverlapMode,
@@ -385,7 +346,6 @@ export class Placement {
             textBox,
             textOverlapMode,
             textPixelRatio,
-            posMatrix,
             unwrappedTileID,
             pitchWithMap,
             rotateWithMap,
@@ -400,7 +360,6 @@ export class Placement {
                 iconBox,
                 textOverlapMode,
                 textPixelRatio,
-                posMatrix,
                 unwrappedTileID,
                 pitchWithMap,
                 rotateWithMap,
@@ -451,10 +410,8 @@ export class Placement {
             layout,
             translationText,
             translationIcon,
-            posMatrix,
             unwrappedTileID,
-            textLabelPlaneMatrix,
-            labelToScreenMatrix,
+            pitchedLabelPlaneMatrix,
             textPixelRatio,
             holdingForFade,
             collisionBoxArray,
@@ -572,7 +529,6 @@ export class Placement {
                             collisionTextBox,
                             textOverlapMode,
                             textPixelRatio,
-                            posMatrix,
                             unwrappedTileID,
                             pitchWithMap,
                             rotateWithMap,
@@ -630,7 +586,7 @@ export class Placement {
 
                                 const result = this.attemptAnchorPlacement(
                                     textAnchorOffset, collisionTextBox, width, height,
-                                    textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, posMatrix, unwrappedTileID,
+                                    textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, unwrappedTileID,
                                     collisionGroup, overlapMode, symbolInstance, bucket, orientation, translationText, translationIcon, variableIconBox, getElevation);
 
                                 if (result) {
@@ -657,7 +613,6 @@ export class Placement {
                                 textBox,
                                 'always', // Skips expensive collision check with already placed boxes
                                 textPixelRatio,
-                                posMatrix,
                                 unwrappedTileID,
                                 pitchWithMap,
                                 rotateWithMap,
@@ -729,10 +684,8 @@ export class Placement {
                     bucket.lineVertexArray,
                     bucket.glyphOffsetArray,
                     fontSize,
-                    posMatrix,
                     unwrappedTileID,
-                    textLabelPlaneMatrix,
-                    labelToScreenMatrix,
+                    pitchedLabelPlaneMatrix,
                     showCollisionBoxes,
                     pitchWithMap,
                     collisionGroup.predicate,
@@ -764,7 +717,6 @@ export class Placement {
                         iconBox,
                         iconOverlapMode,
                         textPixelRatio,
-                        posMatrix,
                         unwrappedTileID,
                         pitchWithMap,
                         rotateWithMap,
@@ -866,14 +818,6 @@ export class Placement {
             }
         }
 
-        if (showCollisionBoxes && bucket.bucketInstanceId in this.collisionCircleArrays) {
-            const circleArray = this.collisionCircleArrays[bucket.bucketInstanceId];
-
-            // Store viewport and inverse projection matrices per bucket
-            mat4.invert(circleArray.invProjMatrix, posMatrix);
-            circleArray.viewportMatrix = this.collisionIndex.getViewportMatrix();
-        }
-
         bucket.justReloaded = false;
     }
 
@@ -923,13 +867,13 @@ export class Placement {
             // Group collision circles together by bucket. Circles can't be pushed forward for rendering yet as the symbol placement
             // for a bucket is not guaranteed to be complete before the commit-function has been called
             if (circleArray === undefined)
-                circleArray = this.collisionCircleArrays[bucketInstanceId] = new CollisionCircleArray();
+                circleArray = this.collisionCircleArrays[bucketInstanceId] = [];
 
             for (let i = 0; i < placedGlyphCircles.circles.length; i += 4) {
-                circleArray.circles.push(placedGlyphCircles.circles[i + 0]);              // x
-                circleArray.circles.push(placedGlyphCircles.circles[i + 1]);              // y
-                circleArray.circles.push(placedGlyphCircles.circles[i + 2]);              // radius
-                circleArray.circles.push(placedGlyphCircles.collisionDetected ? 1 : 0);   // collisionDetected-flag
+                circleArray.push(placedGlyphCircles.circles[i + 0] - viewportPadding); // x
+                circleArray.push(placedGlyphCircles.circles[i + 1] - viewportPadding); // y
+                circleArray.push(placedGlyphCircles.circles[i + 2]);                   // radius
+                circleArray.push(placedGlyphCircles.collisionDetected ? 1 : 0);        // collisionDetected-flag
             }
         }
     }
@@ -1281,12 +1225,7 @@ export class Placement {
 
         // Push generated collision circles to the bucket for debug rendering
         if (bucket.bucketInstanceId in this.collisionCircleArrays) {
-            const instance = this.collisionCircleArrays[bucket.bucketInstanceId];
-
-            bucket.placementInvProjMatrix = instance.invProjMatrix;
-            bucket.placementViewportMatrix = instance.viewportMatrix;
-            bucket.collisionCircleArray = instance.circles;
-
+            bucket.collisionCircleArray = this.collisionCircleArrays[bucket.bucketInstanceId];
             delete this.collisionCircleArrays[bucket.bucketInstanceId];
         }
     }

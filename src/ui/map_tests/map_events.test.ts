@@ -1,10 +1,11 @@
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {StyleLayer} from '../../style/style_layer';
-import {createMap, beforeMapTest, createStyle} from '../../util/test/util';
+import {createMap, beforeMapTest, createStyle, sleep} from '../../util/test/util';
 import {MapGeoJSONFeature} from '../../util/vectortile_to_geojson';
 import {MapLayerEventType, MapLibreEvent} from '../events';
 import {Map, MapOptions} from '../map';
 import {Event as EventedEvent, ErrorEvent} from '../../util/evented';
+import {GlobeProjection} from '../../geo/projection/globe';
 
 type IsAny<T> = 0 extends T & 1 ? T : never;
 type NotAny<T> = T extends IsAny<T> ? never : T;
@@ -779,5 +780,54 @@ describe('map events', () => {
             map.fire(new ErrorEvent(error));
         });
 
+    });
+
+    describe('projectiontransition event', () => {
+        test('projectiontransition events is fired when setProjection is called', async () => {
+            const map = createMap();
+
+            await map.once('load');
+
+            const spy = jest.fn();
+            map.on('projectiontransition', (e) => spy(e.newProjection));
+            map.setProjection({
+                type: 'globe',
+            });
+            map.setProjection({
+                type: 'mercator',
+            });
+            expect(spy).toHaveBeenCalledTimes(2);
+            expect(spy).toHaveBeenNthCalledWith(1, 'globe');
+            expect(spy).toHaveBeenNthCalledWith(2, 'mercator');
+        });
+        test('projectiontransition is fired when globe transitions to mercator', async () => {
+            const map = createMap();
+            jest.spyOn(GlobeProjection.prototype, 'updateGPUdependent').mockImplementation(() => {});
+            await map.once('load');
+
+            const spy = jest.fn();
+            map.on('projectiontransition', (e) => spy(e.newProjection));
+
+            map.setProjection({
+                type: 'globe',
+            });
+            map.setZoom(18);
+            map.redraw();
+            await sleep(550);
+            map.redraw();
+            map.setZoom(0);
+            map.redraw();
+            await sleep(550);
+            map.redraw();
+            map.setProjection({
+                type: 'mercator',
+            });
+
+            expect(spy).toHaveBeenCalledTimes(4);
+            expect(spy).toHaveBeenNthCalledWith(1, 'globe');
+            expect(spy).toHaveBeenNthCalledWith(2, 'globe-mercator');
+            expect(spy).toHaveBeenNthCalledWith(3, 'globe');
+            expect(spy).toHaveBeenNthCalledWith(4, 'mercator');
+        });
     });
 });

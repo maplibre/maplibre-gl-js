@@ -6,6 +6,9 @@ uniform float u_fade;
 in vec2 v_pos_a;
 in vec2 v_pos_b;
 in vec2 v_pos;
+#ifdef GLOBE
+in float v_depth;
+#endif
 
 #pragma mapbox: define lowp float opacity
 #pragma mapbox: define lowp vec4 pattern_from
@@ -34,8 +37,14 @@ void main() {
     float dist = length(v_pos - gl_FragCoord.xy);
     float alpha = 1.0 - smoothstep(0.0, 1.0, dist);
 
-
     fragColor = mix(color1, color2, u_fade) * alpha * opacity;
+
+    #ifdef GLOBE
+    if (v_depth > 1.0) {
+        // See comment in fill_outline.fragment.glsl
+        discard;
+    }
+    #endif
 
 #ifdef OVERDRAW_INSPECTOR
     fragColor = vec4(1.0);

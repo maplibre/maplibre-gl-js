@@ -2,8 +2,41 @@ import {Map} from '../../ui/map';
 import {extend} from '../../util/util';
 import {Dispatcher} from '../../util/dispatcher';
 import {IActor} from '../actor';
-import type {Evented} from '../evented';
-import {SourceSpecification, StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {Evented} from '../evented';
+import {SourceSpecification, StyleSpecification, TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {MercatorTransform} from '../../geo/projection/mercator_transform';
+import {RequestManager} from '../request_manager';
+import {IReadonlyTransform, ITransform} from '../../geo/transform_interface';
+import {Style} from '../../style/style';
+
+export class StubMap extends Evented {
+    style: Style;
+    transform: IReadonlyTransform;
+    private _requestManager: RequestManager;
+    _terrain: TerrainSpecification;
+
+    constructor() {
+        super();
+        this.transform = new MercatorTransform();
+        this._requestManager = new RequestManager();
+    }
+
+    _getMapId() {
+        return 1;
+    }
+
+    getPixelRatio() {
+        return 1;
+    }
+
+    setTerrain(terrain) { this._terrain = terrain; }
+    getTerrain() { return this._terrain; }
+
+    migrateProjection(newTransform: ITransform) {
+        newTransform.apply(this.transform);
+        this.transform = newTransform;
+    }
+}
 
 export function createMap(options?, callback?) {
     const container = window.document.createElement('div');
@@ -182,4 +215,11 @@ export function createStyle() {
         sources: {},
         layers: []
     } as StyleSpecification;
+}
+
+export function expectToBeCloseToArray(actual: Array<number>, expected: Array<number>, precision?: number) {
+    expect(actual).toHaveLength(expected.length);
+    for (let i = 0; i < expected.length; i++) {
+        expect(actual[i]).toBeCloseTo(expected[i], precision);
+    }
 }

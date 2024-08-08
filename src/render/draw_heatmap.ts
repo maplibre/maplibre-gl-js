@@ -25,6 +25,7 @@ export function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: H
     if (painter.renderPass === 'offscreen') {
         const context = painter.context;
         const gl = context.gl;
+        const transform = painter.transform;
 
         // Allow kernels to be drawn across boundaries, so that
         // large kernels are not clipped to tiles
@@ -50,12 +51,16 @@ export function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: H
 
             const programConfiguration = bucket.programConfigurations.get(layer.id);
             const program = painter.useProgram('heatmap', programConfiguration);
-            const {zoom} = painter.transform;
 
-            program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.disabled,
-                heatmapUniformValues(coord.posMatrix, tile, zoom, layer.paint.get('heatmap-intensity')), null,
+            const projectionData = transform.getProjectionData(coord);
+
+            const radiusCorrectionFactor = transform.getCircleRadiusCorrection();
+
+            program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.backCCW,
+                heatmapUniformValues(tile, transform.zoom, layer.paint.get('heatmap-intensity'), radiusCorrectionFactor),
+                null, projectionData,
                 layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
-                bucket.segments, layer.paint, painter.transform.zoom,
+                bucket.segments, layer.paint, transform.zoom,
                 programConfiguration);
         }
 
@@ -127,7 +132,7 @@ function renderTextureToMap(painter: Painter, layer: HeatmapStyleLayer) {
 
     painter.useProgram('heatmapTexture').draw(context, gl.TRIANGLES,
         DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled,
-        heatmapTextureUniformValues(painter, layer, 0, 1), null,
+        heatmapTextureUniformValues(painter, layer, 0, 1), null, null,
         layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
         painter.viewportSegments, layer.paint, painter.transform.zoom);
 }
