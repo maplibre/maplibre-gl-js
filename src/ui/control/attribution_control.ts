@@ -14,6 +14,12 @@ export type AttributionControlOptions = {
      * **Attribution should not be collapsed if it can comfortably fit on the map. `compact` should only be used to modify default attribution when map size makes it impossible to fit default attribution and when the automatic compact resizing for default settings are not sufficient.**
      */
     compact?: boolean;
+
+    /**
+     * Collapse attributions on small sceens or in compact mode by default. Default: false
+     */
+    collapsedByDefault?: boolean;
+
     /**
      * Attributions to show in addition to any other attributions.
      */
@@ -40,6 +46,7 @@ export class AttributionControl implements IControl {
     options: AttributionControlOptions;
     _map: Map;
     _compact: boolean | undefined;
+    _collapsedByDefault: boolean | undefined;
     _container: HTMLElement;
     _innerContainer: HTMLElement;
     _compactButton: HTMLElement;
@@ -63,6 +70,7 @@ export class AttributionControl implements IControl {
     onAdd(map: Map) {
         this._map = map;
         this._compact = this.options.compact;
+        this._collapsedByDefault = this.options.collapsedByDefault;
         this._container = DOM.create('details', 'maplibregl-ctrl maplibregl-ctrl-attrib');
         this._compactButton = DOM.create('summary', 'maplibregl-ctrl-attrib-button', this._container);
         this._compactButton.addEventListener('click', this._toggleAttribution);
@@ -186,10 +194,21 @@ export class AttributionControl implements IControl {
     _updateCompact = () => {
         if (this._map.getCanvasContainer().offsetWidth <= 640 || this._compact) {
             if (this._compact === false) {
-                this._container.setAttribute('open', '');
+
+                if (this._collapsedByDefault) {
+                    this._collapsedByDefault = false;
+                } else {
+                    this._container.setAttribute('open', '');
+                }
             } else if (!this._container.classList.contains('maplibregl-compact') && !this._container.classList.contains('maplibregl-attrib-empty')) {
-                this._container.setAttribute('open', '');
-                this._container.classList.add('maplibregl-compact', 'maplibregl-compact-show');
+
+                if (this._collapsedByDefault) {
+                    this._collapsedByDefault = false;
+                    this._container.classList.add('maplibregl-compact');
+                } else {
+                    this._container.setAttribute('open', '');
+                    this._container.classList.add('maplibregl-compact', 'maplibregl-compact-show');
+                }
             }
         } else {
             this._container.setAttribute('open', '');
