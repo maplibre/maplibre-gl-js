@@ -3,8 +3,8 @@
 ### ✨ Features and improvements
 
 - Emit events when the cooperative gestures option has prevented a gesture. ([#4470](https://github.com/maplibre/maplibre-gl-js/pull/4470))
+- Enable anisotropic filtering only when the pitch is greater than 20 degrees to preserve image sharpness on flat or slightly tilted maps.
 - _...Add new stuff here..._
-
 ### 🐞 Bug fixes
 - Fix camera being able to move into 3D terrain ([#1542](https://github.com/maplibre/maplibre-gl-js/issues/1542))
 - _...Add new stuff here..._
