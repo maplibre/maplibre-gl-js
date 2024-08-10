@@ -27,6 +27,7 @@ export function charAllowsLetterSpacing(char: number) {
     if (isChar['Arabic'](char)) return false;
     if (isChar['Arabic Supplement'](char)) return false;
     if (isChar['Arabic Extended-A'](char)) return false;
+    if (isChar['Arabic Extended-B'](char)) return false;
     if (isChar['Arabic Presentation Forms-A'](char)) return false;
     if (isChar['Arabic Presentation Forms-B'](char)) return false;
 
@@ -62,7 +63,7 @@ export function charAllowsIdeographicBreaking(char: number) {
 }
 
 // The following logic comes from
-// <https://www.unicode.org/Public/12.0.0/ucd/VerticalOrientation.txt>.
+// <https://www.unicode.org/Public/15.1.0/ucd/VerticalOrientation.txt>.
 // Keep it synchronized with
 // <https://www.unicode.org/Public/UCD/latest/ucd/VerticalOrientation.txt>.
 // The data file denotes with “U” or “Tu” any codepoint that may be drawn
@@ -268,6 +269,7 @@ export function charInComplexShapingScript(char: number) {
     return isChar['Arabic'](char) ||
            isChar['Arabic Supplement'](char) ||
            isChar['Arabic Extended-A'](char) ||
+           isChar['Arabic Extended-B'](char) ||
            isChar['Arabic Presentation Forms-A'](char) ||
            isChar['Arabic Presentation Forms-B'](char);
 }
