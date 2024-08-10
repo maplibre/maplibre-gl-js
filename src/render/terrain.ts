@@ -184,6 +184,8 @@ export class Terrain {
      * @returns the elevation
      */
     getElevationForLngLatZoom(lnglat: LngLat, zoom: number) {
+        const {x, y} = MercatorCoordinate.fromLngLat(lnglat.wrap());
+        if (y < 0 || y >= 1 || zoom < 0 || zoom > 25 || x < 0 || x >= 1) return 0;
         const {tileID, mercatorX, mercatorY} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
         return this.getElevation(tileID, mercatorX % EXTENT, mercatorY % EXTENT, EXTENT);
     }
