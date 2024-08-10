@@ -29,6 +29,7 @@
   "ts-node": {
     "experimentalSpecifierResolution": "node",
     "esm": true,
+    "moduleResolution": "Bundler",
     "compilerOptions": {
       "target": "es2019",
       "types": [
