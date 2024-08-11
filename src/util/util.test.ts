@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap} from './util';
+import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, MAX_TILE_ZOOM, MIN_TILE_ZOOM} from './util';
 import {Canvas} from 'canvas';
 
 describe('util', () => {
@@ -431,5 +431,17 @@ describe('util readImageDataUsingOffscreenCanvas', () => {
             10, 0, 0, 255, 0, 20, 0, 255,
             0, 0, 30, 255, 40, 40, 40, 255,
         ]);
+    });
+});
+
+describe('util MAX_TILE_ZOOM', () => {
+    test('is correct value', () => {
+        expect(MAX_TILE_ZOOM).toBe(25);
+    });
+});
+
+describe('util MIN_TILE_ZOOM', () => {
+    test('is correct value', () => {
+        expect(MIN_TILE_ZOOM).toBe(0);
     });
 });
