@@ -5,6 +5,7 @@ import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {register} from '../util/web_worker_transfer';
 import {mat4} from 'gl-matrix';
 import {ICanonicalTileID, IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
+import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util';
 
 /**
  * A canonical way to define a tile ID
@@ -17,8 +18,8 @@ export class CanonicalTileID implements ICanonicalTileID {
 
     constructor(z: number, x: number, y: number) {
 
-        if (z < 0 || z > 25 || y < 0 || y >= Math.pow(2, z) || x < 0 || x >= Math.pow(2, z)) {
-            throw new Error(`x=${x}, y=${y}, z=${z} outside of bounds. 0<=x<${Math.pow(2, z)}, 0<=y<${Math.pow(2, z)} 0<=z<=25 `);
+        if (!isInBoundsForTileZoomXY(z, x, y)) {
+            throw new Error(`x=${x}, y=${y}, z=${z} outside of bounds. 0<=x<${Math.pow(2, z)}, 0<=y<${Math.pow(2, z)} ${MIN_TILE_ZOOM}<=z<=${MAX_TILE_ZOOM} `);
         }
 
         this.z = z;
@@ -198,6 +199,27 @@ export class OverscaledTileID {
         return this.canonical.getTilePoint(new MercatorCoordinate(coord.x - this.wrap, coord.y));
     }
 }
+
+/**
+ * Returns true if a given tile zoom (Z), X, and Y are in the bounds of the world.
+ * Zoom bounds are the minimum zoom (inclusive) through the maximum zoom (inclusive).
+ * X and Y bounds are 0 (inclusive) to their respective zoom-dependent maxima (exclusive).
+ * 
+ * @param zoom - the tile zoom (Z)
+ * @param x - the tile X
+ * @param y - the tile Y
+ * @returns `true` if a given tile zoom, X, and Y are in the bounds of the world.
+ */
+export function isInBoundsForTileZoomXY(zoom: number, x: number, y: number): boolean {
+    return !(
+           zoom < MIN_TILE_ZOOM
+        || zoom > MAX_TILE_ZOOM
+        || y < 0
+        || y >= Math.pow(2, zoom)
+        || x < 0
+        || x >= Math.pow(2, zoom)
+    );
+};
 
 function calculateKey(wrap: number, overscaledZ: number, z: number, x: number, y: number): string {
     wrap *= 2;
