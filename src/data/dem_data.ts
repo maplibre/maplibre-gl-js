@@ -10,7 +10,7 @@ export type DEMEncoding = 'mapbox' | 'terrarium' | 'custom'
 
 /**
  * DEMData is a data structure for decoding, backfilling, and storing elevation data for processing in the hillshade shaders
- * data can be populated either from a pngraw image tile or from serliazed data sent back from a worker. When data is initially
+ * data can be populated either from a pngraw image tile or from serialized data sent back from a worker. When data is initially
  * loaded from a image tile, we decode the pixel values using the appropriate decoding formula, but we store the
  * elevation data as an Int32 value. we add 65536 (2^16) to eliminate negative values and enable the use of
  * integer overflow when creating the texture used in the hillshadePrepare step.

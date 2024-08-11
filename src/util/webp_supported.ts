@@ -10,12 +10,12 @@ let webpImgTestOnloadComplete = false;
 
 if (typeof document !== 'undefined') {
     webpImgTest = document.createElement('img');
-    webpImgTest.onload = function() {
+    webpImgTest.onload = () => {
         if (glForTesting) testWebpTextureUpload(glForTesting);
         glForTesting = null;
         webpImgTestOnloadComplete = true;
     };
-    webpImgTest.onerror = function() {
+    webpImgTest.onerror = () => {
         webpCheckComplete = true;
         glForTesting = null;
     };

@@ -149,9 +149,24 @@ export class ScrollZoomHandler implements Handler {
         this._enabled = false;
     }
 
+    /**
+     * Determines whether or not the gesture is blocked due to cooperativeGestures.
+     */
+    _shouldBePrevented(e: WheelEvent) {
+        if (!this._map.cooperativeGestures.isEnabled()) {
+            return false;
+        }
+
+        const isTrackpadPinch = e.ctrlKey;
+        const isBypassed = isTrackpadPinch || this._map.cooperativeGestures.isBypassed(e);
+
+        return !isBypassed;
+    }
+
     wheel(e: WheelEvent) {
         if (!this.isEnabled()) return;
-        if (this._map.cooperativeGestures.isEnabled() && !e[this._map.cooperativeGestures._bypassKey]) {
+        if (this._shouldBePrevented(e)) {
+            this._map.cooperativeGestures.notifyGestureBlocked('wheel_zoom', e);
             return;
         }
         let value = e.deltaMode === WheelEvent.DOM_DELTA_LINE ? e.deltaY * 40 : e.deltaY;
@@ -173,7 +188,7 @@ export class ScrollZoomHandler implements Handler {
             this._type = null;
             this._lastValue = value;
 
-            // Start a timeout in case this was a singular event, and dely it by up to 40ms.
+            // Start a timeout in case this was a singular event, and delay it by up to 40ms.
             this._timeout = setTimeout(this._onTimeout, 40, e);
 
         } else if (!this._type) {
@@ -288,9 +303,11 @@ export class ScrollZoomHandler implements Handler {
 
         let finished = false;
         let zoom;
-        if (this._type === 'wheel' && startZoom && easing) {
 
-            const t = Math.min((browser.now() - this._lastWheelEventTime) / 200, 1);
+        const lastWheelEventTimeDiff = browser.now() - this._lastWheelEventTime;
+        if (this._type === 'wheel' && startZoom && easing && lastWheelEventTimeDiff) {
+            const t = Math.min(lastWheelEventTimeDiff / 200, 1);
+
             const k = easing(t);
             zoom = interpolates.number(startZoom, targetZoom, k);
             if (t < 1) {

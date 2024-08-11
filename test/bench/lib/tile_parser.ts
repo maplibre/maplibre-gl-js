@@ -12,9 +12,10 @@ import {StyleLayerIndex} from '../../../src/style/style_layer_index';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {WorkerTileResult} from '../../../src/source/worker_source';
 import type {OverscaledTileID} from '../../../src/source/tile_id';
-import type {TileJSON} from '../../../src/types/tilejson';
+import type {TileJSON} from '../../../src/util/util';
 import type {Map} from '../../../src/ui/map';
 import type {IActor} from '../../../src/util/actor';
+import {MessageType} from '../../../src/util/actor_messages';
 
 class StubMap extends Evented {
     style: Style;
@@ -88,10 +89,10 @@ export default class TileParser {
         const parser = this;
         this.actor = {
             sendAsync(message) {
-                if (message.type === 'getImages') {
+                if (message.type === MessageType.getImages) {
                     return parser.loadImages(message.data);
                 }
-                if (message.type === 'getGlyphs') {
+                if (message.type === MessageType.getGlyphs) {
                     return parser.loadGlyphs(message.data);
                 }
                 throw new Error(`Invalid action ${message.type}`);

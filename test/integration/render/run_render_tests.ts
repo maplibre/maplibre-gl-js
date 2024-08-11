@@ -11,6 +11,7 @@ import puppeteer, {Page, Browser} from 'puppeteer';
 import {CoverageReport} from 'monocart-coverage-reports';
 import {localizeURLs} from '../lib/localize-urls';
 import type {Map, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
+import junitReportBuilder, {type TestSuite} from 'junit-report-builder';
 import * as maplibreglModule from '../../../dist/maplibre-gl';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -662,7 +663,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
  */
 function printProgress(test: TestData, total: number, index: number) {
     if (test.error) {
-        console.log('\x1b[31m', `${index}/${total}: errored ${test.id} ${test.error.message}`, '\x1b[0m');
+        console.log('\x1b[91m', `${index}/${total}: errored ${test.id} ${test.error.message}`, '\x1b[0m');
     } else if (!test.ok) {
         console.log('\x1b[31m', `${index}/${total}: failed ${test.id} ${test.difference}`, '\x1b[0m');
     } else {
@@ -670,30 +671,41 @@ function printProgress(test: TestData, total: number, index: number) {
     }
 }
 
+function printSpecificStatistics(status: 'passed' | 'failed' | 'errored', subsetStats: TestData[], total: number, suite: TestSuite) {
+    const statusCount = subsetStats.length;
+    if (statusCount === 0) {
+        return;
+    }
+    console.log(`${statusCount} ${status} (${(100 * statusCount / total).toFixed(1)}%)`);
+    for (const testData of subsetStats) {
+        const testCase = suite.testCase().className(testData.id).name(testData.id);
+        if (status === 'failed') {
+            testCase.failure();
+        } else if (status === 'errored') {
+            testCase.error();
+        }
+    }
+    if (status === 'passed') {
+        return;
+    }
+    for (let i = 0; i < subsetStats.length; i++) {
+        printProgress(subsetStats[i], statusCount, i + 1);
+    }
+}
+
 /**
  * Prints the summary at the end of the run
  *
- * @param tests - all the tests with their resutls
+ * @param tests - all the tests with their results
  * @returns `true` if all the tests passed
  */
 function printStatistics(stats: TestStats): boolean {
+    const suite = junitReportBuilder.testSuite().name('render-tests');
+    printSpecificStatistics('passed', stats.passed, stats.total, suite);
+    printSpecificStatistics('failed', stats.failed, stats.total, suite);
+    printSpecificStatistics('errored', stats.errored, stats.total, suite);
 
-    function printStat(status: string, subsetStats: TestData[]) {
-        const statusCount = subsetStats.length;
-        if (statusCount > 0) {
-            console.log(`${statusCount} ${status} (${(100 * statusCount / stats.total).toFixed(1)}%)`);
-            if (status !== 'passed') {
-                for (let i = 0; i < subsetStats.length; i++) {
-                    printProgress(subsetStats[i], statusCount, i + 1);
-                }
-            }
-        }
-    }
-
-    printStat('passed', stats.passed);
-    printStat('failed', stats.failed);
-    printStat('errored', stats.errored);
-
+    junitReportBuilder.writeTo('junit.xml');
     return (stats.failed.length + stats.errored.length) === 0;
 }
 
@@ -877,7 +889,11 @@ async function executeRenderTests() {
     };
 
     if (process.env.UPDATE) {
-        console.log(`Updated ${testStyles.length} tests.`);
+        if (testStats.errored.length > 0) {
+            console.log(`Updated ${testStats.failed.length}/${testStats.total} tests, ${testStats.errored.length} errored.`);
+        } else {
+            console.log(`Updated ${testStats.total} tests.`);
+        }
         process.exit(0);
     }
 

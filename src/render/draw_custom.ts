@@ -36,7 +36,7 @@ export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: Cu
 
         context.setDepthMode(depthMode);
 
-        implementation.render(context.gl, painter.transform.customLayerMatrix());
+        implementation.render(context.gl, painter.transform.customLayerMatrix(), {farZ: painter.transform.farZ, nearZ: painter.transform.nearZ, fov: painter.transform._fov, modelViewProjectionMatrix: painter.transform.modelViewProjectionMatrix, projectionMatrix: painter.transform.projectionMatrix});
 
         context.setDirty();
         painter.setBaseState();

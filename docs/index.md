@@ -1,7 +1,6 @@
 # Introduction
 
-MapLibre GL JS is a TypeScript library that uses WebGL to render interactive maps from vector tiles in a browser. The customization of the map comply with the [MapLibre Style Spec](https://maplibre.org/maplibre-style-spec). It is part of the [MapLibre ecosystem](https://github.com/maplibre), with a pendant for Mobile, Desktop, Servers called [MapLibre Native](https://maplibre.org/projects/maplibre-native/).
-
+MapLibre GL JS is a TypeScript library that uses WebGL to render interactive maps from vector tiles in a browser. The customization of the map comply with the [MapLibre Style Spec](https://maplibre.org/maplibre-style-spec). It is part of the [MapLibre ecosystem](https://github.com/maplibre), with a counterpart for Android, iOS and other platforms called [MapLibre Native](https://github.com/maplibre/maplibre-native).
 
 ## Quickstart
 
@@ -25,8 +24,8 @@ MapLibre GL JS is a TypeScript library that uses WebGL to render interactive map
 This documentation is divided into several sections:
 
 * [**Main**](./API/README.md) - The Main section holds the following classes
-    * [`Map`](./API/classes/Map/) object is the map on your page. It lets you access methods and properties for interacting with the map's style and layers, respond to events, and manipulate the user's perspective with the camera.
-    * [`Global Functions`](./API/functions/addProtocol/) let you set global properties and options that you might want to access while initializing your map or accessing information about its status.
+    * [`Map`](./API/classes/Map.md) object is the map on your page. It lets you access methods and properties for interacting with the map's style and layers, respond to events, and manipulate the user's perspective with the camera.
+    * [`Global Functions`](./API/functions/addProtocol.md) let you set global properties and options that you might want to access while initializing your map or accessing information about its status.
 * [**Markers and Controls**](./API/README.md#markers-and-controls) - This section describes the user interface elements that you can add to your map. The items in this section exist outside of the map's `canvas` element. This consists of `Marker`, `Popup` and all the controls.
 * [**Geography and geometry**](./API/README.md#geography-and-geometry) - This section includes general utilities and types that relate to working with and manipulating geographic information or geometries.
 * [**User interaction handlers**](./API/README.md#handlers) - The items in this section relate to the ways in which the map responds to user input.
@@ -36,6 +35,32 @@ This documentation is divided into several sections:
 Each section describes classes or objects as well as their **properties**, **parameters**, **instance members**, and associated **events**. Many sections also include inline code examples and related resources.
 
 In the examples, we use vector tiles from our [Demo tiles repository](https://github.com/maplibre/demotiles) and from [MapTiler](https://maptiler.com). Get your own API key if you want to use MapTiler data in your project.
+
+## NPM
+
+Install the MapLibre GL JS package via NPM.
+
+```bash
+npm install maplibre-gl
+```
+
+You can then import the MapLibre GL JS module in your project.
+
+```html
+<div id="map"></div>
+```
+
+```javascript
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+
+const map = new maplibregl.Map({
+    container: 'map', // container id
+    style: 'https://demotiles.maplibre.org/style.json', // style URL
+    center: [0, 0], // starting position [lng, lat]
+    zoom: 1 // starting zoom
+});
+```
 
 ## CSP Directives
 
@@ -48,7 +73,6 @@ img-src data: blob: ;
 ```
 
 For strict CSP environments without `worker-src blob: ; child-src blob:` enabled, there's a separate MapLibre GL JS bundle (`maplibre-gl-csp.js` and `maplibre-gl-csp-worker.js`) which requires setting the path to the worker manually:
-
 
 ```html
 <script>
@@ -70,7 +94,7 @@ Note too that if the CSS isn't available by the first render, as soon as the CSS
 The MapLibre GL JS (`.js` & `.css`) are distributed via [UNPKG.com](https://unpkg.com).
 You can view a listing of all the files in the MapLibre GL JS package by appending a `/` at the end of the MapLibre slug. This is useful to review other revisions or to review the files at UNPKG or the LICENSE. See examples in the following table:
 
-*Examples*
+### Examples
 
 | Use Case  | `.js` | `.css` |
 | :------- | :---: | :----: |

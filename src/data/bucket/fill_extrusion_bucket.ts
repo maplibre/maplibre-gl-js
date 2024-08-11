@@ -8,7 +8,7 @@ import {EXTENT} from '../extent';
 import earcut from 'earcut';
 import mvt from '@mapbox/vector-tile';
 const vectorTileFeatureTypes = mvt.VectorTileFeature.types;
-import {classifyRings} from '../../util/classify_rings';
+import {classifyRings} from '@maplibre/maplibre-gl-style-spec';
 const EARCUT_MAX_RINGS = 500;
 import {register} from '../../util/web_worker_transfer';
 import {hasPattern, addPatternDependencies} from './pattern_bucket_features';
@@ -160,8 +160,10 @@ export class FillExtrusionBucket implements Bucket {
     }
 
     addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}) {
-        const centroid = {x: 0, y: 0, vertexCount: 0};
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
+
+            const centroid = {x: 0, y: 0, vertexCount: 0};
+
             let numVertices = 0;
             for (const ring of polygon) {
                 numVertices += ring.length;
@@ -274,15 +276,16 @@ export class FillExtrusionBucket implements Bucket {
 
             segment.primitiveLength += indices.length / 3;
             segment.vertexLength += numVertices;
+
+            // remember polygon centroid to calculate elevation in GPU
+            for (let i = 0; i < centroid.vertexCount; i++) {
+                const averageX =  Math.floor(centroid.x / centroid.vertexCount);
+                const averageY = Math.floor(centroid.y / centroid.vertexCount);
+                this.centroidVertexArray.emplaceBack(averageX, averageY);
+            }
+
         }
 
-        // remember polygon centroid to calculate elevation in GPU
-        for (let i = 0; i < centroid.vertexCount; i++) {
-            this.centroidVertexArray.emplaceBack(
-                Math.floor(centroid.x / centroid.vertexCount),
-                Math.floor(centroid.y / centroid.vertexCount)
-            );
-        }
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, imagePositions, canonical);
     }
 }

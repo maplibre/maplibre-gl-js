@@ -20,7 +20,6 @@ export class Hash {
      * Map element to listen for coordinate changes
      *
      * @param map - The map object
-     * @returns `this`
      */
     addTo(map: Map) {
         this._map = map;
@@ -31,13 +30,12 @@ export class Hash {
 
     /**
      * Removes hash
-     *
-     * @returns `this`
      */
     remove() {
         removeEventListener('hashchange', this._onHashChange, false);
         this._map.off('moveend', this._updateHash);
         clearTimeout(this._updateHash());
+        this._removeHash();
 
         delete this._map;
         return this;
@@ -121,13 +119,31 @@ export class Hash {
     _updateHashUnthrottled = () => {
         // Replace if already present, else append the updated hash string
         const location = window.location.href.replace(/(#.+)?$/, this.getHashString());
-        try {
-            window.history.replaceState(window.history.state, null, location);
-        } catch (SecurityError) {
-            // IE11 does not allow this if the page is within an iframe created
-            // with iframe.contentWindow.document.write(...).
-            // https://github.com/mapbox/mapbox-gl-js/issues/7410
+        window.history.replaceState(window.history.state, null, location);
+    };
+
+    _removeHash = () => {
+        const currentHash = this._getCurrentHash();
+        if (currentHash.length === 0) {
+            return;
         }
+        const baseHash = currentHash.join('/');
+        let targetHash = baseHash;
+        if (targetHash.split('&').length > 0) {
+            targetHash = targetHash.split('&')[0]; // #3/1/2&foo=bar -> #3/1/2
+        }
+        if (this._hashName) {
+            targetHash = `${this._hashName}=${baseHash}`;
+        }
+        let replaceString = window.location.hash.replace(targetHash, '');
+        if (replaceString.startsWith('#&')) {
+            replaceString = replaceString.slice(0, 1) + replaceString.slice(2);
+        } else if (replaceString === '#') {
+            replaceString = '';
+        }
+        let location = window.location.href.replace(/(#.+)?$/, replaceString);
+        location = location.replace('&&', '&');
+        window.history.replaceState(window.history.state, null, location);
     };
 
     /**

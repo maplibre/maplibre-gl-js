@@ -24,7 +24,7 @@
     });
 
     map.on('load', () => {
-        // data from opendata.cityofboise.org/
+        // data from https://opendata.cityofboise.org/
         map.addSource('off-leash-areas', {
             'type': 'geojson',
             'data':
@@ -35,7 +35,7 @@
             'type': 'symbol',
             'source': 'off-leash-areas',
             'layout': {
-                'icon-image': 'dog-park-11',
+                'icon-image': 'dog_park',
                 'text-field': [
                     'format',
                     ['upcase', ['get', 'FacilityName']],

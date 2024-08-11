@@ -7,8 +7,6 @@ import {warnOnce} from '../util/util';
 import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g';
 import pos3dAttributes from '../data/pos3d_attributes';
 import {SegmentVector} from '../data/segment';
-import {VertexBuffer} from '../gl/vertex_buffer';
-import {IndexBuffer} from '../gl/index_buffer';
 import {Painter} from './painter';
 import {Texture} from '../render/texture';
 import type {Framebuffer} from '../gl/framebuffer';
@@ -19,6 +17,7 @@ import {SourceCache} from '../source/source_cache';
 import {EXTENT} from '../data/extent';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {LngLat, earthRadius} from '../geo/lng_lat';
+import {Mesh} from './mesh';
 
 /**
  * @internal
@@ -38,40 +37,36 @@ export type TerrainData = {
 
 /**
  * @internal
- * A terrain mesh object
- */
-export type TerrainMesh = {
-    indexBuffer: IndexBuffer;
-    vertexBuffer: VertexBuffer;
-    segments: SegmentVector;
-}
-
-/**
- * @internal
  * This is the main class which handles most of the 3D Terrain logic. It has the following topics:
- *    1) loads raster-dem tiles via the internal sourceCache this.sourceCache
- *    2) creates a depth-framebuffer, which is used to calculate the visibility of coordinates
- *    3) creates a coords-framebuffer, which is used the get to tile-coordinate for a screen-pixel
- *    4) stores all render-to-texture tiles in the this.sourceCache._tiles
- *    5) calculates the elevation for a specific tile-coordinate
- *    6) creates a terrain-mesh
  *
- *    A note about the GPU resource-usage:
- *    Framebuffers:
- *       - one for the depth & coords framebuffer with the size of the map-div.
- *       - one for rendering a tile to texture with the size of tileSize (= 512x512).
- *    Textures:
- *       - one texture for an empty raster-dem tile with size 1x1
- *       - one texture for an empty depth-buffer, when terrain is disabled with size 1x1
- *       - one texture for an each loaded raster-dem with size of the source.tileSize
- *       - one texture for the coords-framebuffer with the size of the map-div.
- *       - one texture for the depth-framebuffer with the size of the map-div.
- *       - one texture for the encoded tile-coords with the size 2*tileSize (=1024x1024)
- *       - finally for each render-to-texture tile (= this._tiles) a set of textures
- *         for each render stack (The stack-concept is documented in painter.ts).
- *         Normally there exists 1-3 Textures per tile, depending on the stylesheet.
- *         Each Textures has the size 2*tileSize (= 1024x1024). Also there exists a
- *         cache of the last 150 newest rendered tiles.
+ * 1. loads raster-dem tiles via the internal sourceCache this.sourceCache
+ * 2. creates a depth-framebuffer, which is used to calculate the visibility of coordinates
+ * 3. creates a coords-framebuffer, which is used the get to tile-coordinate for a screen-pixel
+ * 4. stores all render-to-texture tiles in the this.sourceCache._tiles
+ * 5. calculates the elevation for a specific tile-coordinate
+ * 6. creates a terrain-mesh
+ *
+ * A note about the GPU resource-usage:
+ *
+ * Framebuffers:
+ *
+ * - one for the depth & coords framebuffer with the size of the map-div.
+ * - one for rendering a tile to texture with the size of tileSize (= 512x512).
+ *
+ * Textures:
+ *
+ * - one texture for an empty raster-dem tile with size 1x1
+ * - one texture for an empty depth-buffer, when terrain is disabled with size 1x1
+ * - one texture for an each loaded raster-dem with size of the source.tileSize
+ * - one texture for the coords-framebuffer with the size of the map-div.
+ * - one texture for the depth-framebuffer with the size of the map-div.
+ * - one texture for the encoded tile-coords with the size 2*tileSize (=1024x1024)
+ * - finally for each render-to-texture tile (= this._tiles) a set of textures
+ * for each render stack (The stack-concept is documented in painter.ts).
+ *
+ * Normally there exists 1-3 Textures per tile, depending on the stylesheet.
+ * Each Textures has the size 2*tileSize (= 1024x1024). Also there exists a
+ * cache of the last 150 newest rendered tiles.
  *
  */
 export class Terrain {
@@ -112,7 +107,7 @@ export class Terrain {
      * GL Objects for the terrain-mesh
      * The mesh is a regular mesh, which has the advantage that it can be reused for all tiles.
      */
-    _mesh: TerrainMesh;
+    _mesh: Mesh;
     /**
      * coords index contains a list of tileID.keys. This index is used to identify
      * the tile via the alpha-cannel in the coords-texture.
@@ -327,11 +322,17 @@ export class Terrain {
      * @returns mercator coordinate for a screen pixel
      */
     pointCoordinate(p: Point): MercatorCoordinate {
+        // First, ensure the coords framebuffer is up to date.
+        this.painter.maybeDrawDepthAndCoords(true);
+
         const rgba = new Uint8Array(4);
         const context = this.painter.context, gl = context.gl;
+        const px = Math.round(p.x * this.painter.pixelRatio / devicePixelRatio);
+        const py = Math.round(p.y * this.painter.pixelRatio / devicePixelRatio);
+        const fbHeight = Math.round(this.painter.height / devicePixelRatio);
         // grab coordinate pixel from coordinates framebuffer
         context.bindFramebuffer.set(this.getFramebuffer('coords').framebuffer);
-        gl.readPixels(p.x, this.painter.height / devicePixelRatio - p.y - 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
+        gl.readPixels(px, fbHeight - py - 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
         context.bindFramebuffer.set(null);
         // decode coordinates (encoding see getCoordsTexture)
         const x = rgba[0] + ((rgba[2] >> 4) << 8);
@@ -369,7 +370,7 @@ export class Terrain {
      * create a regular mesh which will be used by all terrain-tiles
      * @returns the created regular mesh
      */
-    getTerrainMesh(): TerrainMesh {
+    getTerrainMesh(): Mesh {
         if (this._mesh) return this._mesh;
         const context = this.painter.context;
         const vertexArray = new Pos3dArray();
@@ -403,11 +404,11 @@ export class Terrain {
             indexArray.emplaceBack(offsetRight + y, offsetRight + y + 3, offsetRight + y + 1);
             indexArray.emplaceBack(offsetRight + y, offsetRight + y + 2, offsetRight + y + 3);
         }
-        this._mesh = {
-            indexBuffer: context.createIndexBuffer(indexArray),
-            vertexBuffer: context.createVertexBuffer(vertexArray, pos3dAttributes.members),
-            segments: SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
-        };
+        this._mesh = new Mesh(
+            context.createVertexBuffer(vertexArray, pos3dAttributes.members),
+            context.createIndexBuffer(indexArray),
+            SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
+        );
         return this._mesh;
     }
 

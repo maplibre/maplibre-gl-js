@@ -5,8 +5,10 @@ import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
 import simulate from '../../test/unit/lib/simulate_interaction';
 import type {Terrain} from '../render/terrain';
+import type {defaultLocale} from './default_locale';
 
 type MapOptions = {
+    locale?: Partial<typeof defaultLocale>;
     width?: number;
     renderWorldCopies?: boolean;
 }
@@ -157,13 +159,15 @@ describe('marker', () => {
         expect(!marker.getPopup()).toBeTruthy();
     });
 
-    test('Marker#togglePopup opens a popup that was closed', () => {
+    test('Marker#togglePopup opens a popup that was closed', async () => {
         const map = createMap();
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map)
-            .setPopup(new Popup())
-            .togglePopup();
+            .setPopup(new Popup());
+
+        await sleep(100);
+        marker.togglePopup();
 
         expect(marker.getPopup().isOpen()).toBeTruthy();
 
@@ -184,12 +188,14 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Enter key on Marker opens a popup that was closed', () => {
+    test('Enter key on Marker opens a popup that was closed', async () => {
         const map = createMap();
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map)
             .setPopup(new Popup());
+
+        await sleep(100);
 
         // popup not initially open
         expect(marker.getPopup().isOpen()).toBeFalsy();
@@ -202,12 +208,14 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Space key on Marker opens a popup that was closed', () => {
+    test('Space key on Marker opens a popup that was closed', async () => {
         const map = createMap();
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map)
             .setPopup(new Popup());
+
+        await sleep(100);
 
         // popup not initially open
         expect(marker.getPopup().isOpen()).toBeFalsy();
@@ -242,6 +250,13 @@ describe('marker', () => {
         const marker = new Marker({element})
             .setPopup(popup);
         expect(marker.getElement().getAttribute('tabindex')).toBe('5');
+    });
+
+    test('Marker aria-label is set accordingly to its label value', () => {
+        const map = createMap({locale: {'Marker.Title': 'alt title'}});
+        const marker = new Marker().setLngLat([0, 0]).addTo(map);
+
+        expect(marker.getElement().getAttribute('aria-label')).toBe('alt title');
     });
 
     test('Marker anchor defaults to center', () => {
@@ -292,13 +307,15 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Popup anchors around default Marker', () => {
+    test('Popup anchors around default Marker', async () => {
         const map = createMap();
 
         const marker = new Marker()
             .setLngLat([0, 0])
             .setPopup(new Popup().setText('Test'))
             .addTo(map);
+
+        await sleep(100);
 
         // open the popup
         marker.togglePopup();
@@ -361,13 +378,15 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Popup is opened at its marker position after marker is moved to another globe', () => {
+    test('Popup is opened at its marker position after marker is moved to another globe', async () => {
         const map = createMap({width: 3000});
 
         const marker = new Marker()
             .setLngLat([0, 0])
             .setPopup(new Popup().setText('Test'))
             .addTo(map);
+
+        await sleep(100);
 
         marker._pos = new Point(2999, 242);
         marker._lngLat = map.unproject(marker._pos);
@@ -377,7 +396,7 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Popup is re-opened at its marker position after marker is moved to another globe', () => {
+    test('Popup is re-opened at its marker position after marker is moved to another globe', async () => {
         const map = createMap({width: 3000});
 
         const marker = new Marker()
@@ -387,6 +406,7 @@ describe('marker', () => {
             .togglePopup()
             .togglePopup();
 
+        await sleep(100);
         marker._pos = new Point(2999, 242);
         marker._lngLat = map.unproject(marker._pos);
         marker.togglePopup();
@@ -886,7 +906,7 @@ describe('marker', () => {
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map);
-        await sleep(500);
+        await sleep(100);
         expect(marker.getElement().style.opacity).toMatch('1');
         map.remove();
     });
@@ -896,7 +916,7 @@ describe('marker', () => {
         const marker = new Marker({opacity: '0.7'})
             .setLngLat([0, 0])
             .addTo(map);
-        await sleep(500);
+        await sleep(100);
         expect(marker.getElement().style.opacity).toMatch('.7');
         map.remove();
     });
@@ -935,22 +955,22 @@ describe('marker', () => {
             getElevationForLngLatZoom: () => 0,
             depthAtPoint: () => .95 // Mocking distance to terrain
         } as any as Terrain;
-        await sleep(500);
         map.fire('terrain');
+        await sleep(100);
 
         expect(marker.getElement().style.opacity).toMatch('1');
 
         // Terrain blocks marker
         map.terrain.depthAtPoint = () => .92; // Mocking terrain blocking marker
-        await sleep(500);
         map.fire('moveend');
+        await sleep(100);
 
         expect(marker.getElement().style.opacity).toMatch('.2');
 
         // Remove terrain
         map.terrain = null;
-        await sleep(500);
         map.fire('terrain');
+        await sleep(100);
         expect(marker.getElement().style.opacity).toMatch('1');
 
         map.remove();
@@ -967,7 +987,7 @@ describe('marker', () => {
             getElevationForLngLatZoom: () => 0,
             depthAtPoint: () => .95
         } as any as Terrain;
-        await sleep(500);
+        await sleep(100);
         map.fire('terrain');
 
         expect(marker.getElement().style.opacity).toMatch('.7');
@@ -985,7 +1005,7 @@ describe('marker', () => {
             getElevationForLngLatZoom: () => 0,
             depthAtPoint: (p) => p.y === 256 ? .95 : .92 // return "far" given the marker's center coord; return "near" otherwise
         } as any as Terrain;
-        await sleep(500);
+        await sleep(100);
         map.fire('terrain');
 
         expect(marker.getElement().style.opacity).toMatch('.7');
@@ -1003,7 +1023,7 @@ describe('marker', () => {
             getElevationForLngLatZoom: () => 0,
             depthAtPoint: () => .92
         } as any as Terrain;
-        await sleep(500);
+        await sleep(100);
         map.fire('terrain');
 
         expect(marker.getElement().style.opacity).toMatch('0.3');
@@ -1029,6 +1049,56 @@ describe('marker', () => {
         map.remove();
     });
 
+    test('Removes an open popup when going behind 3d terrain', async () => {
+        const map = createMap();
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .addTo(map)
+            .setPopup(new Popup());
+
+        await sleep(100);
+        marker.togglePopup();
+
+        expect(marker._popup.isOpen()).toBeTruthy();
+
+        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+
+        map.terrain = {
+            getElevationForLngLatZoom: () => 0,
+            depthAtPoint: () => .92
+        } as any as Terrain;
+        map.fire('terrain');
+
+        await sleep(100);
+
+        expect(marker._popup?.isOpen()).toBeFalsy();
+        map.remove();
+    });
+
+    test('Does not open a popup when behind 3d terrain', async () => {
+        const map = createMap();
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .addTo(map)
+            .setPopup(new Popup());
+
+        map.transform.lngLatToCameraDepth = () => .95;
+
+        map.terrain = {
+            getElevationForLngLatZoom: () => 0,
+            depthAtPoint: () => .92
+        } as any as Terrain;
+        map.fire('terrain');
+
+        await sleep(100);
+
+        marker.togglePopup();
+
+        expect(marker._popup.isOpen()).toBeFalsy();
+
+        map.remove();
+    });
+
     test('Marker\'s lng is wrapped when slightly crossing 180 with {renderWorldCopies: false}', () => {
         const map = createMap({width: 1024, renderWorldCopies: false});
         const marker = new Marker()
@@ -1038,5 +1108,42 @@ describe('marker', () => {
         marker.setLngLat([181, 0]);
 
         expect(marker._lngLat.lng).toBe(-179);
+    });
+
+    test('should round the marker transform position to whole pixels when subpixel positioning is disabled', () => {
+        const map = createMap();
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        const transform = marker.getElement().style.transform;
+        expect(transform)
+            .toContain('translate(256px, 242px)');
+
+        marker.setLngLat([4.5, 4.5]);
+
+        const adjustedTransform = marker.getElement().style.transform;
+        expect(adjustedTransform)
+            .toContain('translate(262px, 236px)');
+
+    });
+
+    test('should round the marker transform position to sub pixels when subpixel positioning is enabled', () => {
+        const map = createMap();
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .setSubpixelPositioning(true)
+            .addTo(map);
+
+        const transform = marker.getElement().style.transform;
+
+        expect(transform)
+            .toContain('translate(256px, 242px)');
+
+        marker.setLngLat([4.5, 4.5]);
+
+        const adjustedTransform = marker.getElement().style.transform;
+        expect(adjustedTransform)
+            .toContain('translate(262.4px, 235.5934100987358px)');
     });
 });
