@@ -710,3 +710,11 @@ export type TileJSON = {
     center?: [number, number, number];
     vector_layers: [{id: string}]; // this is partial but enough for what we need
 };
+
+/**
+ * The maximum and minimum world tile zoom (Z).
+ * In other words, the upper and lower bounds supported for tile zoom.
+ */
+export const
+    MAX_TILE_ZOOM = 25,
+    MIN_TILE_ZOOM = 0;
