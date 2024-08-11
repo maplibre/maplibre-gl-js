@@ -13,6 +13,7 @@
 - Emit events when the cooperative gestures option has prevented a gesture. ([#4470](https://github.com/maplibre/maplibre-gl-js/pull/4470))
 
 ### 🐞 Bug fixes
+
 - Fix camera being able to move into 3D terrain ([#1542](https://github.com/maplibre/maplibre-gl-js/issues/1542))
 
 ## 4.5.1
