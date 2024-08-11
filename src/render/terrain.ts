@@ -1,7 +1,7 @@
 
 import {Tile} from '../source/tile';
 import {mat4, vec2} from 'gl-matrix';
-import {OverscaledTileID} from '../source/tile_id';
+import {OverscaledTileID, isInBoundsForZoomLngLat} from '../source/tile_id';
 import {RGBAImage} from '../util/image';
 import {warnOnce} from '../util/util';
 import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g';
@@ -184,8 +184,7 @@ export class Terrain {
      * @returns the elevation
      */
     getElevationForLngLatZoom(lnglat: LngLat, zoom: number) {
-        const {x, y} = MercatorCoordinate.fromLngLat(lnglat.wrap());
-        if (y < 0 || y >= 1 || zoom < 0 || zoom > 25 || x < 0 || x >= 1) return 0;
+        if (!isInBoundsForZoomLngLat(zoom, lnglat.wrap())) return 0;
         const {tileID, mercatorX, mercatorY} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
         return this.getElevation(tileID, mercatorX % EXTENT, mercatorY % EXTENT, EXTENT);
     }

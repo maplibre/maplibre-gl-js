@@ -2,6 +2,7 @@ import {getTileBBox} from '@mapbox/whoots-js';
 import {EXTENT} from '../data/extent';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
+import {LngLat} from '../geo/lng_lat';
 import {register} from '../util/web_worker_transfer';
 import {mat4} from 'gl-matrix';
 import {ICanonicalTileID, IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
@@ -218,6 +219,28 @@ export function isInBoundsForTileZoomXY(zoom: number, x: number, y: number): boo
         || y >= Math.pow(2, zoom)
         || x < 0
         || x >= Math.pow(2, zoom)
+    );
+};
+
+/**
+ * Returns true if a given zoom and `LngLat` are in the bounds of the world.
+ * Does not wrap `LngLat` when checking if in bounds.
+ * Zoom bounds are the minimum zoom (inclusive) through the maximum zoom (inclusive).
+ * `LngLat` bounds are the mercator world's north-west corner (inclusive) to its south-east corner (exclusive).
+ * 
+ * @param zoom - the tile zoom (Z)
+ * @param `LngLat` - the `LngLat` object containing the longitude and latitude
+ * @returns `true` if a given zoom and `LngLat` are in the bounds of the world.
+ */
+export function isInBoundsForZoomLngLat(zoom: number, lnglat: LngLat): boolean {
+    const {x, y} = MercatorCoordinate.fromLngLat(lnglat);
+    return !(
+           zoom < MIN_TILE_ZOOM
+        || zoom > MAX_TILE_ZOOM
+        || y < 0
+        || y >= 1
+        || x < 0
+        || x >= 1
     );
 };
 
