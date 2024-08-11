@@ -126,7 +126,7 @@ describe('isInBoundsForTileZoomXY', () => {
         const z = 2, y = 0;
         expect(isInBoundsForTileZoomXY(z, 0, y)).toBeTruthy();
         expect(isInBoundsForTileZoomXY(z, -1, y)).toBeFalsy();
-        expect(isInBoundsForTileZoomXY(z, 3, y )).toBeTruthy();
+        expect(isInBoundsForTileZoomXY(z, 3, y)).toBeTruthy();
         expect(isInBoundsForTileZoomXY(z, 4, y)).toBeFalsy();
     });
 
@@ -150,9 +150,8 @@ describe('isInBoundsForZoomLngLat', () => {
         expect(isInBoundsForZoomLngLat(MAX_TILE_ZOOM + 1, lnglat)).toBeFalsy();
     });
 
-
     test('at longitude bounds', () => {
-        const z = 0, lat = 0, maxLng = 180;
+        const z = 0, lat = 0;
         expect(isInBoundsForZoomLngLat(z, new LngLat(-180, lat))).toBeTruthy();
         expect(isInBoundsForZoomLngLat(z, new LngLat(-181, lat))).toBeFalsy();
         expect(isInBoundsForZoomLngLat(z, new LngLat(179, lat))).toBeTruthy();
