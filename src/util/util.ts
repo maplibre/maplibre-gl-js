@@ -712,9 +712,13 @@ export type TileJSON = {
 };
 
 /**
- * The maximum and minimum world tile zoom (Z).
- * In other words, the upper and lower bounds supported for tile zoom.
+ * The maximum world tile zoom (Z).
+ * In other words, the upper bound supported for tile zoom.
  */
-export const
-    MAX_TILE_ZOOM = 25,
-    MIN_TILE_ZOOM = 0;
+export const MAX_TILE_ZOOM = 25;
+
+/**
+ * The minimum world tile zoom (Z).
+ * In other words, the lower bound supported for tile zoom.
+ */
+export const MIN_TILE_ZOOM = 0;
