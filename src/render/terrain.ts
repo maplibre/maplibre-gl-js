@@ -1,7 +1,7 @@
 
 import {Tile} from '../source/tile';
 import {mat4, vec2} from 'gl-matrix';
-import {OverscaledTileID, isInBoundsForZoomLngLat} from '../source/tile_id';
+import {OverscaledTileID} from '../source/tile_id';
 import {RGBAImage} from '../util/image';
 import {warnOnce} from '../util/util';
 import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g';
@@ -18,6 +18,7 @@ import {EXTENT} from '../data/extent';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {LngLat, earthRadius} from '../geo/lng_lat';
 import {Mesh} from './mesh';
+import {isInBoundsForZoomLngLat} from '../util/world_bounds';
 
 /**
  * @internal
