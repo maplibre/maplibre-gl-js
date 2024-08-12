@@ -20,7 +20,7 @@
     "source": {
       "type": "raster",
       "tiles": [
-        "local://tiles/checkerboard-raster/{z}-{x}-{y}.png"
+        "local://tiles/checkerboard.png"
       ],
       "minzoom": 8,
       "maxzoom": 8,
