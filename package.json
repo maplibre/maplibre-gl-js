@@ -138,14 +138,6 @@
     "typedoc-plugin-missing-exports": "^3.0.0",
     "typescript": "^5.5.4"
   },
-  "overrides": {
-    "postcss-inline-svg": {
-      "css-select": "^5.1.0",
-      "dom-serializer": "^2.0.0",
-      "htmlparser2": "^8.0.1",
-      "postcss-value-parser": "^4.2.0"
-    }
-  },
   "scripts": {
     "generate-dist-package": "node --no-warnings --loader ts-node/esm build/generate-dist-package.js",
     "generate-shaders": "node --no-warnings --loader ts-node/esm build/generate-shaders.ts",
