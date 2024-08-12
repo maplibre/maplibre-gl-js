@@ -10,7 +10,7 @@ import {easeCubicInOut, lerp} from '../../util/util';
 import {mercatorYfromLat} from '../mercator_coordinate';
 import {NORTH_POLE_Y, SOUTH_POLE_Y} from '../../render/subdivision';
 import {SubdivisionGranularityExpression, SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import type {Projection, ProjectionGPUContext} from './projection';
+import type {Projection, ProjectionGPUContext, TileMeshUsage} from './projection';
 import {PreparedShader, shaders} from '../../shaders/shaders';
 import {MercatorProjection} from './mercator';
 import {ProjectionErrorMeasurement} from './globe_projection_error_measurement';
@@ -35,7 +35,9 @@ const granularitySettingsGlobe: SubdivisionGranularitySetting = new SubdivisionG
     // otherwise they will be visibly warped at high zooms (before mercator transition).
     // This si not needed on fill, because fill geometry tends to already be
     // highly tessellated and granular at high zooms.
-    tile: new SubdivisionGranularityExpression(128, 16),
+    // Minimal granularity of 8 seems to be enough to avoid warped raster tiles, while also minimizing triangle count.
+    tile: new SubdivisionGranularityExpression(128, 8),
+    stencil: new SubdivisionGranularityExpression(128, 4),
     circle: 3
 });
 
@@ -172,9 +174,10 @@ export class GlobeProjection implements Projection {
         return `${granularity.toString(36)}_${border ? 'b' : ''}${north ? 'n' : ''}${south ? 's' : ''}`;
     }
 
-    public getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean, allowPoles: boolean): Mesh {
+    public getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean, allowPoles: boolean, usage: TileMeshUsage): Mesh {
         // Stencil granularity must match fill granularity
-        const granularity = granularitySettingsGlobe.fill.getGranularityForZoomLevel(canonical.z);
+        const granularityConfig = usage === 'stencil' ? granularitySettingsGlobe.stencil : granularitySettingsGlobe.tile;
+        const granularity = granularityConfig.getGranularityForZoomLevel(canonical.z);
         const north = (canonical.y === 0) && allowPoles;
         const south = (canonical.y === (1 << canonical.z) - 1) && allowPoles;
         return this._getMesh(context, granularity, hasBorder, north, south);
@@ -208,11 +211,15 @@ export class GlobeProjection implements Projection {
         const quadsPerAxisX = granularity + (border ? 2 : 0); // two extra quads for border
         const quadsPerAxisY = granularity + ((north || border) ? 1 : 0) + (south || border ? 1 : 0);
         const verticesPerAxisX = quadsPerAxisX + 1; // one more vertex than quads
-        //const verticesPerAxisY = quadsPerAxisY + 1; // one more vertex than quads
+        const verticesPerAxisY = quadsPerAxisY + 1; // one more vertex than quads
         const offsetX = border ? -1 : 0;
         const offsetY = (border || north) ? -1 : 0;
         const endX = granularity + (border ? 1 : 0);
         const endY = granularity + ((border || south) ? 1 : 0);
+
+        if (verticesPerAxisX * verticesPerAxisY > (1 << 16)) {
+            throw new Error('Granularity is too large and meshes would not fit inside 16 bit vertex indices.');
+        }
 
         const northY = NORTH_POLE_Y;
         const southY = SOUTH_POLE_Y;

@@ -58,7 +58,7 @@ export function drawBackground(painter: Painter, sourceCache: SourceCache, layer
         // and also enable stencil clipping. Make sure to render a proper tile clipping mask into stencil
         // first though, as that doesn't seem to happen for background layers as of writing this.
 
-        const mesh = projection.getMeshFromTileID(context, tileID.canonical, false, true);
+        const mesh = projection.getMeshFromTileID(context, tileID.canonical, false, true, 'raster');
         program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
             uniformValues, terrainData, projectionData, layer.id,
             mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);

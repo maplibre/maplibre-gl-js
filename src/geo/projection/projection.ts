@@ -31,6 +31,14 @@ export type ProjectionGPUContext = {
 };
 
 /**
+ * @internal
+ * Specifies the usage for a square tile mesh:
+ * - 'stencil' for drawing stencil masks
+ * - 'raster' for drawing raster tiles, hillshade, etc.
+ */
+export type TileMeshUsage = 'stencil' | 'raster';
+
+/**
  * An interface the implementations of which are used internally by MapLibre to handle different projections.
  */
 export interface Projection {
@@ -108,5 +116,5 @@ export interface Projection {
      * @param hasBorder - When true, the mesh will also include a small border beyond the 0..EXTENT range.
      * @param allowPoles - When true, the mesh will also include geometry to cover the north (south) pole, if the given tileID borders the mercator range's top (bottom) edge.
      */
-    getMeshFromTileID(context: Context, tileID: CanonicalTileID, hasBorder: boolean, allowPoles: boolean): Mesh;
+    getMeshFromTileID(context: Context, tileID: CanonicalTileID, hasBorder: boolean, allowPoles: boolean, usage: TileMeshUsage): Mesh;
 }
