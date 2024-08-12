@@ -1,6 +1,6 @@
-import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from "./util";
-import {LngLat} from "../geo/lng_lat";
-import {MercatorCoordinate} from "../geo/mercator_coordinate";
+import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from './util';
+import {LngLat} from '../geo/lng_lat';
+import {MercatorCoordinate} from '../geo/mercator_coordinate';
 
 /**
  * Returns true if a given tile zoom (Z), X, and Y are in the bounds of the world.
