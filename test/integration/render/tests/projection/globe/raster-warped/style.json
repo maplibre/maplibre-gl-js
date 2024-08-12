@@ -23,7 +23,7 @@
         "local://tiles/checkerboard-raster/{z}-{x}-{y}.png"
       ],
       "minzoom": 8,
-      "maxzoom": 9,
+      "maxzoom": 8,
       "tileSize": 256
     }
   },
