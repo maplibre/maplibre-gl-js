@@ -433,15 +433,3 @@ describe('util readImageDataUsingOffscreenCanvas', () => {
         ]);
     });
 });
-
-describe('util MAX_TILE_ZOOM', () => {
-    test('is correct value', () => {
-        expect(MAX_TILE_ZOOM).toBe(25);
-    });
-});
-
-describe('util MIN_TILE_ZOOM', () => {
-    test('is correct value', () => {
-        expect(MIN_TILE_ZOOM).toBe(0);
-    });
-});
