@@ -1,7 +1,7 @@
 {
   "name": "maplibre-gl",
   "description": "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library",
-  "version": "4.5.1",
+  "version": "4.5.2",
   "main": "dist/maplibre-gl.js",
   "style": "dist/maplibre-gl.css",
   "license": "BSD-3-Clause",
@@ -85,14 +85,14 @@
     "cssnano": "^7.0.4",
     "d3": "^7.9.0",
     "d3-queue": "^3.0.7",
-    "devtools-protocol": "^0.0.1337664",
+    "devtools-protocol": "^0.0.1339468",
     "diff": "^5.2.0",
     "dts-bundle-generator": "^9.5.1",
     "eslint": "^8.57.0",
     "eslint-config-mourner": "^3.0.0",
     "eslint-plugin-html": "^8.1.1",
     "eslint-plugin-import": "^2.29.1",
-    "eslint-plugin-jest": "^28.7.0",
+    "eslint-plugin-jest": "^28.8.0",
     "eslint-plugin-react": "^7.35.0",
     "eslint-plugin-tsdoc": "0.3.0",
     "expect": "^29.7.0",
@@ -107,7 +107,7 @@
     "junit-report-builder": "^5.0.0",
     "minimist": "^1.2.8",
     "mock-geolocation": "^1.0.11",
-    "monocart-coverage-reports": "^2.10.1",
+    "monocart-coverage-reports": "^2.10.2",
     "nise": "^6.0.0",
     "npm-font-open-sans": "^1.1.0",
     "npm-run-all": "^4.1.5",
@@ -118,7 +118,7 @@
     "postcss-cli": "^11.0.0",
     "postcss-inline-svg": "^6.0.0",
     "pretty-bytes": "^6.1.1",
-    "puppeteer": "^22.15.0",
+    "puppeteer": "^23.0.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "rollup": "^4.20.0",
@@ -137,14 +137,6 @@
     "typedoc-plugin-markdown": "^4.2.3",
     "typedoc-plugin-missing-exports": "^3.0.0",
     "typescript": "^5.5.4"
-  },
-  "overrides": {
-    "postcss-inline-svg": {
-      "css-select": "^5.1.0",
-      "dom-serializer": "^2.0.0",
-      "htmlparser2": "^8.0.1",
-      "postcss-value-parser": "^4.2.0"
-    }
   },
   "scripts": {
     "generate-dist-package": "node --no-warnings --loader ts-node/esm build/generate-dist-package.js",

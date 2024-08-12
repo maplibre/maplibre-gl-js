@@ -10,6 +10,7 @@ import {Tile} from '../source/tile';
 import {Painter} from './painter';
 import {mat4} from 'gl-matrix';
 import {LngLat} from '../geo/lng_lat';
+import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util';
 
 describe('Terrain', () => {
     let gl: WebGLRenderingContext;
@@ -296,6 +297,26 @@ describe('Terrain', () => {
         const OVERSCALETILEID_DOES_NOT_THROW = 4;
         terrain.getMinMaxElevation = () => ({minElevation: OVERSCALETILEID_DOES_NOT_THROW, maxElevation: 42});
         expect(terrain.getMinTileElevationForLngLatZoom(new LngLat(-183, 40), 0)).toBe(OVERSCALETILEID_DOES_NOT_THROW);
+    });
+
+    describe('getElevationForLngLatZoom returns 0 for out of bounds', () => {
+        const terrain = new Terrain(null, {} as any, {} as any);
+
+        test('lng', () => {
+            expect(terrain.getElevationForLngLatZoom(new LngLat(180, 0), 0)).toBe(0);
+        });
+
+        test('lat', () => {
+            expect(terrain.getElevationForLngLatZoom(new LngLat(0, 88), 0)).toBe(0);
+        });
+
+        test('zoom', () => {
+            expect(terrain.getElevationForLngLatZoom(new LngLat(0, 0), MIN_TILE_ZOOM - 1)).toBe(0);
+        });
+
+        test('zoom', () => {
+            expect(terrain.getElevationForLngLatZoom(new LngLat(0, 0), MAX_TILE_ZOOM + 1)).toBe(0);
+        });
     });
 
 });

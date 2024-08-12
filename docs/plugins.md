@@ -125,6 +125,9 @@ Render a geographic flow map visualization from a spreadsheet published on Googl
 Adds elevation contour lines to a map from raster-dem tiles.
 <br/><small>[View on GitHub](https://github.com/onthegomap/maplibre-contour)</small>
 
+#### maplibre-gl-dates
+Filters a time-enabled map by date. Optimized for OpenHistoricalMap vector tiles.
+<br/><small>[View on GitHub](https://github.com/OpenHistoricalMap/maplibre-gl-dates/)</small>
 
 ## Layer Types
 
