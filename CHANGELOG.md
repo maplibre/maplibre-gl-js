@@ -3,9 +3,12 @@
 ### ✨ Features and improvements
 - Add constants `MAX_TILE_ZOOM = 25` and `MIN_TILE_ZOOM = 0` as maximum and minimum world tile zoom (Z) values; replace hardcoded instances with those constants.
 - Add functions `isInBoundsForTileZoomXY` and `isInBoundsForZoomLngLat` to check whether a tile ZXY or a zoom+LngLat is in the world bounds; use `MAX_TILE_ZOOM` and `MIN_TILE_ZOOM` in those checks; replace existing hardcoded checks with those functions.
+- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix right-to-left layout of labels that contain characters in the Arabic Extended-B code block. ([#4536](https://github.com/maplibre/maplibre-gl-js/pull/4536))
 - Fix 3D map freezing when camera is adjusted against map bounds. ([#4537](https://github.com/maplibre/maplibre-gl-js/issues/4537))
+- - _...Add new stuff here..._
 
 ## 4.5.2
 
