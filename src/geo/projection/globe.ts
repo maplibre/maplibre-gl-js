@@ -36,7 +36,7 @@ const granularitySettingsGlobe: SubdivisionGranularitySetting = new SubdivisionG
     // This si not needed on fill, because fill geometry tends to already be
     // highly tessellated and granular at high zooms.
     // Minimal granularity of 8 seems to be enough to avoid warped raster tiles, while also minimizing triangle count.
-    tile: new SubdivisionGranularityExpression(128, 8),
+    tile: new SubdivisionGranularityExpression(128, 32),
     stencil: new SubdivisionGranularityExpression(128, 4),
     circle: 3
 });
