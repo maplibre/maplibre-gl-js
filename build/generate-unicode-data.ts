@@ -15,12 +15,12 @@ async function createSet(blocks: Array<string>, scripts: Array<string>): Promise
     const set = regenerate.default();
 
     for (const block of blocks) {
-        const slug = block.replaceAll(' ', '_');
+        const slug = block.replace(/[- ]/g, '_');
         set.add((await import(`@unicode/unicode-${unicodeVersion}/Block/${slug}/code-points.js`)).default);
     }
 
     for (const script of scripts) {
-        const slug = script.replaceAll(' ', '_');
+        const slug = script.replace(/[- ]/g, '_');
         set.add((await import(`@unicode/unicode-${unicodeVersion}/Script/${slug}/code-points.js`)).default);
     }
 
@@ -48,10 +48,17 @@ async function usesLocalIdeographFontFamily(): Promise<string> {
         'Halfwidth And Fullwidth Forms',
         'Hangul Syllables',
         'Hiragana',
+        'Ideographic Symbols And Punctuation',
+        'Kana Extended-A',
+        'Kana Extended-B',
+        'Kana Supplement',
+        'Kangxi Radicals',
         'Katakana', // includes "ー"
+        'Katakana Phonetic Extensions',
         // memo: these symbols are not all. others could be added if needed.
         'CJK Symbols And Punctuation', // 、。〃〄々〆〇〈〉《》「...
         'Halfwidth And Fullwidth Forms',
+        'Small Kana Extension',
         'Vertical Forms',
     ], [
         'Bopomofo',
@@ -83,6 +90,13 @@ async function allowsIdeographicBreaking(): Promise<string> {
         'Enclosed Ideographic Supplement',
         'Halfwidth And Fullwidth Forms',
         'Ideographic Description Characters',
+        'Ideographic Symbols And Punctuation',
+        'Kana Extended-A',
+        'Kana Extended-B',
+        'Kana Supplement',
+        'Kangxi Radicals',
+        'Katakana Phonetic Extensions',
+        'Small Kana Extension',
         'Vertical Forms',
     ], [
         'Bopomofo',
@@ -106,23 +120,47 @@ async function allowsIdeographicBreaking(): Promise<string> {
 // upright in vertical text but does not distinguish between upright and
 // “neutral” characters.
 
-// Blocks in the Unicode supplementary planes are excluded from this module due
-// to <https://github.com/mapbox/mapbox-gl/issues/29>.
-
 async function hasUprightVerticalOrientation(): Promise<string> {
     const set = await createSet([
+        'Alchemical Symbols',
+        'Anatolian Hieroglyphs',
+        'Byzantine Musical Symbols',
+        'Chess Symbols',
         'CJK Compatibility Forms',
         'CJK Compatibility',
         'CJK Strokes',
         'CJK Symbols And Punctuation',
+        'Counting Rod Numerals',
+        'Domino Tiles',
+        'Emoticons',
+        'Enclosed Alphanumeric Supplement',
         'Enclosed CJK Letters And Months',
+        'Geometric Shapes Extended',
+        'Halfwidth And Fullwidth Forms',
         'Ideographic Description Characters',
         'Kanbun',
         'Katakana',
-        'Halfwidth And Fullwidth Forms',
+        'Mahjong Tiles',
+        'Mayan Numerals',
+        'Meroitic Hieroglyphs',
+        'Miscellaneous Symbols And Pictographs',
+        'Miscellaneous Symbols Supplement',
+        'Musical Symbols',
+        'Ornamental Dingbats',
+        'Playing Cards',
+        'Siddham',
         'Small Form Variants',
+        'Small Kana Extension',
+        'Soyombo',
+        'Supplemental Symbols And Pictographs',
+        'Sutton SignWriting',
+        'Symbols And Pictographs Extended-A',
+        'Tai Xuan Jing Symbols',
+        'Transport And Map Symbols',
         'Vertical Forms',
         'Yijing Hexagram Symbols',
+        'Zanabazar Square',
+        'Znamenny Musical Notation',
     ], [
         'Bopomofo',
         'Canadian Aboriginal',
@@ -184,6 +222,8 @@ async function hasNeutralVerticalOrientation(): Promise<string> {
         'Optical Character Recognition',
         'Private Use Area',
         'Small Form Variants',
+        'Supplementary Private Use Area-A',
+        'Supplementary Private Use Area-B',
     ], []);
 
     // Latin-1 Supplement

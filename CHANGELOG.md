@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Render uncommon Chinese, Japanese, Korean, and Vietnamese characters. ([#6640](https://github.com/maplibre/maplibre-gl-js/pull/6640)) (by [@1ec5](https://github.com/1ec5))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
