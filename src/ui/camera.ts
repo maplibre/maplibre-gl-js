@@ -1085,7 +1085,9 @@ export abstract class Camera extends Evented {
 
     _finalizeElevation() {
         this._elevationFreeze = false;
-        this.transform.recalculateZoom(this.terrain);
+        const tr = this._getTransformForUpdate();
+        tr.recalculateZoom(this.terrain);
+        this._applyUpdatedTransform(tr);
     }
 
     /**
