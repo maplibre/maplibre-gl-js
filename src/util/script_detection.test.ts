@@ -5,6 +5,10 @@ describe('charAllowsIdeographicBreaking', () => {
         expect(charAllowsIdeographicBreaking('A'.codePointAt(0))).toBe(false);
     });
 
+    test('allows ideographic breaking of ideographic punctuation', () => {
+        expect(charAllowsIdeographicBreaking('〈'.codePointAt(0))).toBe(true);
+    });
+
     test('allows ideographic breaking of Bopomofo text', () => {
         expect(charAllowsIdeographicBreaking('ㄎ'.codePointAt(0))).toBe(true);
     });
