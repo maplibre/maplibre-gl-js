@@ -62,7 +62,7 @@ export function translatePosition(
 /**
  * Returns the signed distance between a point and a plane.
  * @param plane - The plane equation, in the form where the first three components are the normal and the fourth component is the plane's distance from origin along normal.
- * @param point - The point whose distance from plane is retunred.
+ * @param point - The point whose distance from plane is returned.
  * @returns Signed distance of the point from the plane. Positive distances are in the half space where the plane normal points to, negative otherwise.
  */
 export function pointPlaneSignedDistance(

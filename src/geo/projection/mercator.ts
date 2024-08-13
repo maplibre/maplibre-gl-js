@@ -1,4 +1,4 @@
-import type {Projection, ProjectionGPUContext} from './projection';
+import type {Projection, ProjectionGPUContext, TileMeshUsage} from './projection';
 import type {CanonicalTileID} from '../../source/tile_id';
 import {EXTENT} from '../../data/extent';
 import {PreparedShader, shaders} from '../../shaders/shaders';
@@ -61,7 +61,7 @@ export class MercatorProjection implements Projection {
         // Do nothing.
     }
 
-    public getMeshFromTileID(context: Context, _tileID: CanonicalTileID, _hasBorder: boolean, _allowPoles: boolean): Mesh {
+    public getMeshFromTileID(context: Context, _tileID: CanonicalTileID, _hasBorder: boolean, _allowPoles: boolean, _usage: TileMeshUsage): Mesh {
         if (this._cachedMesh) {
             return this._cachedMesh;
         }

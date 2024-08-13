@@ -25,6 +25,10 @@ export class SubdivisionGranularityExpression {
     private readonly _minGranularity: number;
 
     constructor(baseZoomGranularity: number, minGranularity: number) {
+        if (minGranularity > baseZoomGranularity) {
+            throw new Error('Min granularity must not be greater than base granularity.');
+        }
+
         this._baseZoomGranularity = baseZoomGranularity;
         this._minGranularity = minGranularity;
     }
@@ -50,9 +54,14 @@ export class SubdivisionGranularitySetting {
     public readonly line: SubdivisionGranularityExpression;
 
     /**
-     * Granularity used for geometry covering the entire tile: stencil masks, raster tiles, etc.
+     * Granularity used for geometry covering the entire tile: raster tiles, etc.
      */
     public readonly tile: SubdivisionGranularityExpression;
+
+    /**
+     * Granularity used for stencil masks for tiles.
+     */
+    public readonly stencil: SubdivisionGranularityExpression;
 
     /**
      * Controls the granularity of `pitch-alignment: map` circles and heatmap kernels.
@@ -74,6 +83,10 @@ export class SubdivisionGranularitySetting {
          */
         tile: SubdivisionGranularityExpression;
         /**
+         * Granularity used for stencil masks for tiles.
+         */
+        stencil: SubdivisionGranularityExpression;
+        /**
          * Controls the granularity of `pitch-alignment: map` circles and heatmap kernels.
          * More granular circles will more closely follow the map's surface.
          */
@@ -82,6 +95,7 @@ export class SubdivisionGranularitySetting {
         this.fill = options.fill;
         this.line = options.line;
         this.tile = options.tile;
+        this.stencil = options.stencil;
         this.circle = options.circle;
     }
 
@@ -92,6 +106,7 @@ export class SubdivisionGranularitySetting {
         fill: new SubdivisionGranularityExpression(0, 0),
         line: new SubdivisionGranularityExpression(0, 0),
         tile: new SubdivisionGranularityExpression(0, 0),
+        stencil: new SubdivisionGranularityExpression(0, 0),
         circle: 1
     });
 }

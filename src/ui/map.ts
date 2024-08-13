@@ -3092,10 +3092,12 @@ export class Map extends Camera {
             this.style.update(parameters);
         }
 
+        const transformUpdateResult = this.transform.newFrameUpdate();
+
         // If we are in _render for any reason other than an in-progress paint
         // transition, update source caches to check for and load any tiles we
         // need for the current transform
-        if (this.style && this._sourcesDirty) {
+        if (this.style && (this._sourcesDirty || transformUpdateResult.forceSourceUpdate)) {
             this._sourcesDirty = false;
             this.style._updateSources(this.transform);
         }
@@ -3112,7 +3114,6 @@ export class Map extends Camera {
             this.transform.setElevation(0);
         }
 
-        const transformUpdateResult = this.transform.newFrameUpdate();
         this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, transformUpdateResult.forcePlacementUpdate);
 
         if (transformUpdateResult.fireProjectionEvent) {

@@ -50,6 +50,7 @@ export type CoveringTilesOptions = CoveringZoomOptions & {
 export type TransformUpdateResult = {
     forcePlacementUpdate?: boolean;
     fireProjectionEvent?: MapProjectionEvent;
+    forceSourceUpdate?: boolean;
 };
 
 export interface ITransformGetters {

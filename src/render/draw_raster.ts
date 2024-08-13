@@ -123,7 +123,7 @@ function drawTiles(
         const projectionData = transform.getProjectionData(coord, align);
         const uniformValues = rasterUniformValues(parentTL || [0, 0], parentScaleBy || 1, fade, layer, corners);
 
-        const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, allowPoles);
+        const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, allowPoles, 'raster');
 
         const stencilMode = stencilModes ? stencilModes[coord.overscaledZ] : StencilMode.disabled;
 

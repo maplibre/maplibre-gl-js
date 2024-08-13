@@ -17,11 +17,18 @@
 <script>
     const map = new maplibregl.Map({
         container: 'map',
-        projection: 'globe',
+        style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
         zoom: 0,
         center: [137.9150899566626, 36.25956997955441],
-        style:
-            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+    });
+
+    map.on('style.load', () => {
+        map.setProjection({
+            type: 'globe', // Set projection to globe
+        });
+        map.setSky({
+            'atmosphere-blend': 0.0, // Disable sky
+        });
     });
 </script>
 </body>
