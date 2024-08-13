@@ -120,9 +120,7 @@ void main() {
 
     float z = float(u_pitch_with_map) * projected_pos.z / projected_pos.w;
 
-    float projectionScaling = 1.0;
-
-    vec4 finalPos = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (a_offset / 32.0 * fontScale) * projectionScaling, z, 1.0);
+    vec4 finalPos = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (a_offset / 32.0 * fontScale), z, 1.0);
     if(u_pitch_with_map) {
         finalPos = projectTileWithElevation(finalPos.xy, finalPos.z);
     }
