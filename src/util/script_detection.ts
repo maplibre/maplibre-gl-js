@@ -4,21 +4,21 @@ import {unicodeBlockLookup as isChar} from './is_char_in_unicode_block';
 
 export function allowsIdeographicBreaking(chars: string) {
     for (const char of chars) {
-        if (!charAllowsIdeographicBreaking(char.charCodeAt(0))) return false;
+        if (!charAllowsIdeographicBreaking(char.codePointAt(0))) return false;
     }
     return true;
 }
 
 export function allowsVerticalWritingMode(chars: string) {
     for (const char of chars) {
-        if (charHasUprightVerticalOrientation(char.charCodeAt(0))) return true;
+        if (charHasUprightVerticalOrientation(char.codePointAt(0))) return true;
     }
     return false;
 }
 
 export function allowsLetterSpacing(chars: string) {
     for (const char of chars) {
-        if (!charAllowsLetterSpacing(char.charCodeAt(0))) return false;
+        if (!charAllowsLetterSpacing(char.codePointAt(0))) return false;
     }
     return true;
 }
@@ -79,11 +79,13 @@ export function charAllowsIdeographicBreaking(char: number) {
     // Return early for characters outside all ideographic ranges.
     if (char < 0x2E80) return false;
 
-    if (isChar['CJK Compatibility Forms'](char)) return true;
     if (isChar['CJK Compatibility'](char)) return true;
+    if (isChar['CJK Compatibility Forms'](char)) return true;
+    if (isChar['CJK Radicals Supplement'](char)) return true;
     if (isChar['CJK Strokes'](char)) return true;
     if (isChar['CJK Symbols and Punctuation'](char)) return true;
     if (isChar['Enclosed CJK Letters and Months'](char)) return true;
+    if (isChar['Enclosed Ideographic Supplement'](char)) return true;
     if (isChar['Halfwidth and Fullwidth Forms'](char)) return true;
     if (isChar['Ideographic Description Characters'](char)) return true;
     if (isChar['Vertical Forms'](char)) return true;
@@ -359,7 +361,7 @@ export function charInSupportedScript(char: number, canRenderRTL: boolean) {
 
 export function stringContainsRTLText(chars: string): boolean {
     for (const char of chars) {
-        if (charInRTLScript(char.charCodeAt(0))) {
+        if (charInRTLScript(char.codePointAt(0))) {
             return true;
         }
     }
@@ -368,7 +370,7 @@ export function stringContainsRTLText(chars: string): boolean {
 
 export function isStringInSupportedScript(chars: string, canRenderRTL: boolean) {
     for (const char of chars) {
-        if (!charInSupportedScript(char.charCodeAt(0), canRenderRTL)) {
+        if (!charInSupportedScript(char.codePointAt(0), canRenderRTL)) {
             return false;
         }
     }

@@ -98,6 +98,14 @@ describe('GlyphManager', () => {
         expect(returnedGlyphs['Arial Unicode MS'][0x5e73].metrics.advance).toBe(0.5);
     });
 
+    test('GlyphManager generates non-BMP CJK PBF locally', async () => {
+        const manager = createGlyphManager('sans-serif');
+
+        // Chinese character biáng 𰻞
+        const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [0x30EDE]});
+        expect(returnedGlyphs['Arial Unicode MS'][0x30EDE].metrics.advance).toBe(1);
+    });
+
     test('GlyphManager generates Katakana PBF locally', async () => {
         const manager = createGlyphManager('sans-serif');
 
