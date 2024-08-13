@@ -1,12 +1,12 @@
 import {loadGlyphRange} from '../style/load_glyph_range';
 
 import TinySDF from '@mapbox/tiny-sdf';
+import {charAllowsIdeographicBreaking} from '../util/script_detection';
 import {AlphaImage} from '../util/image';
 
 import type {StyleGlyph} from '../style/style_glyph';
 import type {RequestManager} from '../util/request_manager';
 import type {GetGlyphsResponse} from '../util/actor_messages';
-import {charAllowsIdeographicBreaking} from '../util/script_detection';
 
 type Entry = {
     // null means we've requested the range, but the glyph wasn't included in the result.
@@ -137,11 +137,9 @@ export class GlyphManager {
      * other siniform code blocks prefer local rendering.
      */
     _doesCharSupportLocalGlyph(id: number): boolean {
-        /* eslint-disable new-cap */
         return !!this.localIdeographFontFamily &&
             (/\p{Ideo}|\p{sc=Hang}|\p{sc=Hira}|\p{sc=Kana}/u.test(String.fromCodePoint(id)) ||
              charAllowsIdeographicBreaking(id));
-        /* eslint-enable new-cap */
     }
 
     _tinySDF(entry: Entry, stack: string, id: number): StyleGlyph {

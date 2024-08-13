@@ -88,6 +88,13 @@ export function charAllowsIdeographicBreaking(char: number) {
     if (isChar['Enclosed Ideographic Supplement'](char)) return true;
     if (isChar['Halfwidth and Fullwidth Forms'](char)) return true;
     if (isChar['Ideographic Description Characters'](char)) return true;
+    if (isChar['Ideographic Symbols and Punctuation'](char)) return true;
+    if (isChar['Kana Extended-A'](char)) return true;
+    if (isChar['Kana Extended-B'](char)) return true;
+    if (isChar['Kana Supplement'](char)) return true;
+    if (isChar['Kangxi Radicals'](char)) return true;
+    if (isChar['Katakana Phonetic Extensions'](char)) return true;
+    if (isChar['Small Kana Extension'](char)) return true;
     if (isChar['Vertical Forms'](char)) return true;
     return ideographicBreakingRegExp.test(String.fromCodePoint(char));
 }
@@ -123,12 +130,15 @@ export function charHasUprightVerticalOrientation(char: number) {
     // upright in vertical writing mode.
     if (char < 0x1100) return false;
 
+    if (isChar['Alchemical Symbols'](char)) return true;
+    if (isChar['Anatolian Hieroglyphs'](char)) return true;
+    if (isChar['Byzantine Musical Symbols'](char)) return true;
+    if (isChar['Chess Symbols'](char)) return true;
     if (isChar['CJK Compatibility Forms'](char)) {
         if (!((char >= 0xFE49 /* dashed overline */ && char <= 0xFE4F) /* wavy low line */)) {
             return true;
         }
     }
-    if (isChar['CJK Compatibility'](char)) return true;
     if (isChar['CJK Strokes'](char)) return true;
     if (isChar['CJK Symbols and Punctuation'](char)) {
         if (!((char >= 0x3008 /* left angle bracket */ && char <= 0x3011) /* right black lenticular bracket */) &&
@@ -137,8 +147,11 @@ export function charHasUprightVerticalOrientation(char: number) {
             return true;
         }
     }
-    if (isChar['Enclosed CJK Letters and Months'](char)) return true;
-    if (isChar['Ideographic Description Characters'](char)) return true;
+    if (isChar['Counting Rod Numerals'](char)) return true;
+    if (isChar['Domino Tiles'](char)) return true;
+    if (isChar['Emoticons'](char)) return true;
+    if (isChar['Enclosed Alphanumeric Supplement'](char)) return true;
+    if (isChar['Geometric Shapes Extended'](char)) return true;
     if (isChar['Kanbun'](char)) return true;
     if (isChar['Katakana'](char)) {
         if (char !== 0x30FC /* katakana-hiragana prolonged sound mark */) {
@@ -159,18 +172,36 @@ export function charHasUprightVerticalOrientation(char: number) {
             return true;
         }
     }
+    if (isChar['Mahjong Tiles'](char)) return true;
+    if (isChar['Mayan Numerals'](char)) return true;
+    if (isChar['Meroitic Hieroglyphs'](char)) return true;
+    if (isChar['Miscellaneous Symbols and Pictographs'](char)) return true;
+    if (isChar['Musical Symbols'](char)) return true;
+    if (isChar['Ornamental Dingbats'](char)) return true;
+    if (isChar['Playing Cards'](char)) return true;
+    if (isChar['Siddham'](char)) return true;
     if (isChar['Small Form Variants'](char)) {
         if (!((char >= 0xFE58 /* small em dash */ && char <= 0xFE5E) /* small right tortoise shell bracket */) &&
             !((char >= 0xFE63 /* small hyphen-minus */ && char <= 0xFE66) /* small equals sign */)) {
             return true;
         }
     }
+    if (isChar['Small Kana Extension'](char)) return true;
+    if (isChar['Soyombo'](char)) return true;
+    if (isChar['Supplemental Symbols and Pictographs'](char)) return true;
+    if (isChar['Sutton SignWriting'](char)) return true;
+    if (isChar['Symbols and Pictographs Extended-A'](char)) return true;
+    if (isChar['Tai Xuan Jing Symbols'](char)) return true;
+    if (isChar['Transport and Map Symbols'](char)) return true;
     if (isChar['Vertical Forms'](char)) return true;
     if (isChar['Yijing Hexagram Symbols'](char)) return true;
+    if (isChar['Zanabazar Square'](char)) return true;
+    if (isChar['Znamenny Musical Notation'](char)) return true;
 
     if (/* Canadian Aboriginal */ /\p{sc=Cans}/u.test(String.fromCodePoint(char))) return true;
+    if (/* Egyptian Hieroglyphs */ /\p{sc=Egyp}/u.test(String.fromCodePoint(char))) return true;
     if (/* Hangul */ /\p{sc=Hang}/u.test(String.fromCodePoint(char))) return true;
-    if (ideographicBreakingRegExp.test(String.fromCodePoint(char))) return true;
+    if (charAllowsIdeographicBreaking(char)) return true;
 
     return false;
 }
@@ -250,6 +281,8 @@ export function charHasNeutralVerticalOrientation(char: number) {
     if (isChar['CJK Symbols and Punctuation'](char)) return true;
     if (isChar['Katakana'](char)) return true;
     if (isChar['Private Use Area'](char)) return true;
+    if (isChar['Supplementary Private Use Area-A'](char)) return true;
+    if (isChar['Supplementary Private Use Area-B'](char)) return true;
     if (isChar['CJK Compatibility Forms'](char)) return true;
     if (isChar['Small Form Variants'](char)) return true;
     if (isChar['Halfwidth and Fullwidth Forms'](char)) return true;
