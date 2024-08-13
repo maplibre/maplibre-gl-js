@@ -2,13 +2,13 @@ import {loadGlyphRange} from '../style/load_glyph_range';
 
 import TinySDF from '@mapbox/tiny-sdf';
 import {unicodeBlockLookup} from '../util/is_char_in_unicode_block';
+import {charAllowsIdeographicBreaking} from '../util/script_detection';
 import {AlphaImage} from '../util/image';
 import {warnOnce} from '../util/util';
 
 import type {StyleGlyph} from '../style/style_glyph';
 import type {RequestManager} from '../util/request_manager';
 import type {GetGlyphsResponse} from '../util/actor_messages';
-import {charAllowsIdeographicBreaking} from '../util/script_detection';
 
 import {v8} from '@maplibre/maplibre-gl-style-spec';
 
