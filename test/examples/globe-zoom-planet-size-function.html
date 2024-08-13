@@ -42,7 +42,7 @@
         zoom: 2,
     });
 
-    map.style.on('style.load', () => {
+    map.on('style.load', () => {
         map.setProjection({
             type: 'globe', // Set projection to globe
         });
