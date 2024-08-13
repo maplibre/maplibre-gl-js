@@ -1,14 +1,15 @@
 import {CanonicalTileID, OverscaledTileID} from '../source/tile_id';
+import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util';
 
 describe('CanonicalTileID', () => {
     test('#constructor', () => {
         expect(() => {
             /*eslint no-new: 0*/
-            new CanonicalTileID(-1, 0, 0);
+            new CanonicalTileID(MIN_TILE_ZOOM - 1, 0, 0);
         }).toThrow();
         expect(() => {
             /*eslint no-new: 0*/
-            new CanonicalTileID(26, 0, 0);
+            new CanonicalTileID(MAX_TILE_ZOOM + 1, 0, 0);
         }).toThrow();
         expect(() => {
             /*eslint no-new: 0*/

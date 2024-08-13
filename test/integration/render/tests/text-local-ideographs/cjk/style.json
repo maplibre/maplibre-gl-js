@@ -21,8 +21,8 @@
                 "properties": {
                     "name_en": "abcde",
                     "name_ja": "あいうえお",
-                    "name_ch": "阿衣乌唉哦",
-                    "name_kr": "아이우"
+                    "name_zh": "阿衣乌唉哦",
+                    "name_ko": "아이우"
                 }
             }
         }
@@ -47,7 +47,7 @@
             "source": "sample",
             "layout": {
                 "text-anchor": "top",
-                "text-field": "{name_ch}{name_kr}",
+                "text-field": "{name_zh}{name_ko}",
                 "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
                 "text-size": 30,
                 "text-offset": [0, 0]
