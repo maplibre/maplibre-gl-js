@@ -538,12 +538,15 @@ export class Transform {
         const requiredWorldSize = requiredPixelPerMeter / mercatorZfromAltitude(1, center.lat);
         // Since worldSize = this.tileSize * scale:
         const requiredScale = requiredWorldSize / this.tileSize;
-        const zoom = this.scaleZoom(requiredScale);
-
-        // update matrices
-        this._elevation = elevation;
-        this._center = center;
-        this.zoom = zoom;
+        try {
+            const zoom = this.scaleZoom(requiredScale);
+            // update matrices
+            this._elevation = elevation;
+            this._center = center;
+            this.zoom = zoom;
+        } catch (_e) {
+            console.error(`Could not recalculate zoom. requiredScale: ${requiredScale}`);
+        }
     }
 
     setLocationAtPoint(lnglat: LngLat, point: Point) {
