@@ -119,17 +119,23 @@ export class GlyphManager {
     }
 
     async _downloadAndCacheRangePromise(stack: string, id: number): Promise<{stack: string; id: number; glyph: StyleGlyph}> {
-        // Avoid requesting astral codepoints from the server because we can’t handle them anyways.
-        // https://github.com/maplibre/maplibre-gl-js/issues/2307
-        const range = Math.floor(id / 256);
-        if (range * 256 > 65535) {
-            throw new Error('glyphs > 65535 not supported');
-        }
-
         // Try to get the glyph from the cache of server-side glyphs by PBF range.
         const entry = this.entries[stack];
+        const range = Math.floor(id / 256);
         if (entry.ranges[range]) {
             return {stack, id, glyph: null};
+        }
+
+        // Avoid requesting astral codepoints from the server because we can’t handle them anyways.
+        // https://github.com/maplibre/maplibre-gl-js/issues/2307
+        const isInBMP = range * 256 <= 0xFFFF;
+        if (!isInBMP) {
+            if (this._charUsesLocalIdeographFontFamily(+id)) {
+                entry.ranges[range] = true;
+                return {stack, id, glyph: null};
+            } else {
+                throw new Error('glyphs > 65535 not supported');
+            }
         }
 
         // Start downloading this range unless we’re currently downloading it.
@@ -161,6 +167,9 @@ export class GlyphManager {
         warnOnce(`Unable to load glyph range ${range}, ${begin}-${end}. Rendering codepoint U+${codePoint} locally instead. ${err}`);
     }
 
+    /**
+     * Returns whether the given codepoint should be rendered locally.
+     */
     _charUsesLocalIdeographFontFamily(id: number): boolean {
         return !!this.localIdeographFontFamily && codePointUsesLocalIdeographFontFamily(id);
     }
@@ -175,7 +184,7 @@ export class GlyphManager {
         // Keep a separate TinySDF instance for when we need to apply the localIdeographFontFamily fallback to keep the font selection from bleeding into non-CJK text.
         const tinySDFKey = usesLocalIdeographFontFamily ? 'ideographTinySDF' : 'tinySDF';
         entry[tinySDFKey] ||= this._createTinySDF(usesLocalIdeographFontFamily ? this.localIdeographFontFamily : stack);
-        const char = entry[tinySDFKey].draw(String.fromCharCode(id));
+        const char = entry[tinySDFKey].draw(String.fromCodePoint(id));
 
         /**
          * TinySDF's "top" is the distance from the alphabetic baseline to the top of the glyph.

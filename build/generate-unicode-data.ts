@@ -28,24 +28,41 @@ async function createSet(blocks: Array<string>, scripts: Array<string>): Promise
 }
 
 async function usesLocalIdeographFontFamily(): Promise<string> {
-    // The CJK Unified Ideographs blocks and Hangul Syllables blocks are spread
-    // across many glyph PBFs and are typically accessed very randomly.
-    // Preferring local rendering for these blocks reduces wasteful bandwidth
-    // consumption. For visual consistency within CJKV text, also include any
-    // other CJKV or siniform ideograph or hangul, hiragana, or katakana
-    // character.
+    // Local rendering is preferred for Unicode code blocks that represent
+    // writing systems for which TinySDF produces optimal results and greatly
+    // reduces bandwidth consumption. In general, TinySDF is best for any
+    // writing system typically set in a monospaced font. With more than 99,000
+    // codepoints accessed essentially at random, Hanzi/Kanji/Hanja (from the
+    // CJK Unified Ideographs blocks) is the canonical example of wasteful
+    // bandwidth consumption when rendered remotely. For visual consistency
+    // within CJKV text, even relatively small CJKV and other siniform code
+    // blocks prefer local rendering.
     const set = await createSet([
+        'CJK Compatibility Forms',
+        'CJK Compatibility',
+        'CJK Radicals Supplement',
+        'CJK Strokes',
         'CJK Unified Ideographs',
+        'Enclosed CJK Letters And Months',
+        'Enclosed Ideographic Supplement',
+        'Halfwidth And Fullwidth Forms',
         'Hangul Syllables',
         'Hiragana',
         'Katakana', // includes "ー"
         // memo: these symbols are not all. others could be added if needed.
         'CJK Symbols And Punctuation', // 、。〃〄々〆〇〈〉《》「...
         'Halfwidth And Fullwidth Forms',
+        'Vertical Forms',
     ], [
+        'Bopomofo',
+        'Han',
         'Hangul',
         'Hiragana',
         'Katakana',
+        'Khitan Small Script',
+        'Nushu',
+        'Tangut',
+        'Yi',
     ]);
 
     set.add((await import(`@unicode/unicode-${unicodeVersion}/Binary_Property/Ideographic/code-points.js`)).default);
@@ -54,13 +71,16 @@ async function usesLocalIdeographFontFamily(): Promise<string> {
 }
 
 async function allowsIdeographicBreaking(): Promise<string> {
-    // Unicode only considers CJKV to be ideographic, but some other scripts mix with CJKV so can also have ideographic line breaking.
+    // Unicode only considers CJKV to be ideographic, but some other scripts mix
+    // with CJKV so can also have ideographic line breaking.
     const set = await createSet([
         'CJK Compatibility Forms',
         'CJK Compatibility',
+        'CJK Radicals Supplement',
         'CJK Strokes',
         'CJK Symbols And Punctuation',
         'Enclosed CJK Letters And Months',
+        'Enclosed Ideographic Supplement',
         'Halfwidth And Fullwidth Forms',
         'Ideographic Description Characters',
         'Vertical Forms',
