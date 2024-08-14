@@ -11,9 +11,7 @@ import puppeteer, {Page, Browser} from 'puppeteer';
 import {CoverageReport} from 'monocart-coverage-reports';
 import {localizeURLs} from '../lib/localize-urls';
 import type {Map, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
-import {default as BuilderExport, type Builder} from 'junit-report-builder';
-const jnuitReportBuilder = (BuilderExport as any).default as Builder;
-import type {TestSuite} from 'junit-report-builder/lib/test_suite';
+import junitReportBuilder, {type TestSuite} from 'junit-report-builder';
 import * as maplibreglModule from '../../../dist/maplibre-gl';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -702,12 +700,12 @@ function printSpecificStatistics(status: 'passed' | 'failed' | 'errored', subset
  * @returns `true` if all the tests passed
  */
 function printStatistics(stats: TestStats): boolean {
-    const suite = jnuitReportBuilder.testSuite().name('render-tests');
+    const suite = junitReportBuilder.testSuite().name('render-tests');
     printSpecificStatistics('passed', stats.passed, stats.total, suite);
     printSpecificStatistics('failed', stats.failed, stats.total, suite);
     printSpecificStatistics('errored', stats.errored, stats.total, suite);
 
-    jnuitReportBuilder.writeTo('junit.xml');
+    junitReportBuilder.writeTo('junit.xml');
     return (stats.failed.length + stats.errored.length) === 0;
 }
 
@@ -846,8 +844,6 @@ async function executeRenderTests() {
 
     const browser = await puppeteer.launch({headless: !options.openBrowser, args: ['--enable-webgl', '--no-sandbox',
         '--disable-web-security']});
-
-    console.log(jnuitReportBuilder);
 
     const server = http.createServer(
         st({

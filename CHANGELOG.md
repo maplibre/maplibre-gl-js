@@ -1,12 +1,35 @@
 ## main
 
-- Allow trackpad pinch gestures to break through the `cooperativeGestures` setting, bringing it in line with other embedded map behaviours, such as Google Maps and Mapbox. ([#4465](https://github.com/maplibre/maplibre-gl-js/pull/4465))
+### ✨ Features and improvements
+
+- Add constants `MAX_TILE_ZOOM = 25` and `MIN_TILE_ZOOM = 0` as maximum and minimum world tile zoom (Z) values; replace hardcoded instances with those constants.
+- Add functions `isInBoundsForTileZoomXY` and `isInBoundsForZoomLngLat` to check whether a tile ZXY or a zoom+LngLat is in the world bounds; use `MAX_TILE_ZOOM` and `MIN_TILE_ZOOM` in those checks; replace existing hardcoded checks with those functions.
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+
+- Fix right-to-left layout of labels that contain characters in the Arabic Extended-B code block. ([#4536](https://github.com/maplibre/maplibre-gl-js/pull/4536))
+- Fix 3D map freezing when camera is adjusted against map bounds. ([#4537](https://github.com/maplibre/maplibre-gl-js/issues/4537))
+- - _...Add new stuff here..._
+
+## 4.5.2
 
 ### ✨ Features and improvements
 
+- Emit events when the cooperative gestures option has prevented a gesture. ([#4470](https://github.com/maplibre/maplibre-gl-js/pull/4470))
+- Enable anisotropic filtering only when the pitch is greater than 20 degrees to preserve image sharpness on flat or slightly tilted maps.
+
+### 🐞 Bug fixes
+
+- Fix camera being able to move into 3D terrain ([#1542](https://github.com/maplibre/maplibre-gl-js/issues/1542))
+
+## 4.5.1
+
+### ✨ Features and improvements
+
+- Allow trackpad pinch gestures to break through the `cooperativeGestures` setting, bringing it in line with other embedded map behaviours, such as Google Maps and Mapbox. ([#4465](https://github.com/maplibre/maplibre-gl-js/pull/4465))
 - Expose projection matrix parameters ([#3136](https://github.com/maplibre/maplibre-gl-js/pull/3136))
 - Add option to position markers at subpixel coordinates to prevent markers jumping on `moveend` ([#4458](https://github.com/maplibre/maplibre-gl-js/pull/4458))
-- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 
@@ -17,7 +40,6 @@
 - Fix `style.loadURL` abort error being logged when removing style ([#4425](https://github.com/maplibre/maplibre-gl-js/pull/4425))
 - Fix `getStyle()` to return a clone so the object cannot be internally changed.
 - Fix vector tiles not loading when html is opened via "resource://android" (i.e., the assets folder) in GeckoView on Android ([#4451](https://github.com/maplibre/maplibre-gl-js/pull/4451))
-- _...Add new stuff here..._
 
 ## 4.5.0
 
