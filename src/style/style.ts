@@ -479,20 +479,22 @@ export class Style extends Evented {
      * @hidden
      * take an array of string IDs, and based on this._layers, generate an array of LayerSpecification
      * @param ids - an array of string IDs, for which serialized layers will be generated. If omitted, all serialized layers will be returned
+     * @param returnClose - if true, return a clone of the layer object
      * @returns generated result
      */
-    private _serializeByIds(ids?: Array<string>): Array<LayerSpecification> {
+    private _serializeByIds(ids: Array<string>, returnClone: boolean = false): Array<LayerSpecification> {
 
         const serializedLayersDictionary = this._serializedAllLayers();
         if (!ids || ids.length === 0) {
-            return Object.values(serializedLayersDictionary);
+            return returnClone ? Object.values(clone(serializedLayersDictionary)) : Object.values(serializedLayersDictionary);
         }
 
         const serializedLayers = [];
         for (const id of ids) {
             // this check will skip all custom layers
             if (serializedLayersDictionary[id]) {
-                serializedLayers.push(serializedLayersDictionary[id]);
+                const toPush = returnClone ? clone(serializedLayersDictionary[id]) : serializedLayersDictionary[id];
+                serializedLayers.push(toPush);
             }
         }
 
@@ -666,7 +668,7 @@ export class Style extends Evented {
 
     _updateWorkerLayers(updatedIds: Array<string>, removedIds: Array<string>) {
         this.dispatcher.broadcast(MessageType.updateLayers, {
-            layers: this._serializeByIds(updatedIds),
+            layers: this._serializeByIds(updatedIds, false),
             removedIds
         });
     }
@@ -1282,7 +1284,7 @@ export class Style extends Evented {
         if (!this._loaded) return;
 
         const sources = mapObject(this.sourceCaches, (source) => source.serialize());
-        const layers = this._serializeByIds(this._order);
+        const layers = this._serializeByIds(this._order, true);
         const terrain = this.map.getTerrain() || undefined;
         const myStyleSheet = this.stylesheet;
 

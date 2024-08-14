@@ -359,6 +359,30 @@ describe('#getStyle', () => {
         });
     });
 
+    test('returns the previous style even if modified', async () => {
+        const style = {
+            version: 8 as const,
+            sources: {},
+            layers: [
+                {
+                    id: 'background',
+                    type: 'background' as const,
+                    paint: {'background-color': 'blue'}
+                },
+            ]
+        };
+
+        const map = createMap({style});
+
+        await map.once('load');
+        const newStyle = map.getStyle();
+        newStyle.layers[0].paint = {'background-color': 'red'};
+
+        // map.getStyle() should still equal the original style since
+        // we have not yet called map.setStyle(...).
+        expect(map.getStyle()).toEqual(style);
+    });
+
     test('returns the style with added sources', done => {
         const style = createStyle();
         const map = createMap({style});
