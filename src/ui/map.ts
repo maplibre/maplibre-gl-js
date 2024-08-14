@@ -1205,15 +1205,16 @@ export class Map extends Camera {
         return this._rotating || this.handlers?.isRotating();
     }
 
-    _createDelegatedListener(type: keyof MapEventType | string, layerId: string, listener: Listener): {
-        layer: string;
+    _createDelegatedListener(type: keyof MapEventType | string, layerIds: string[], listener: Listener): {
+        layers: string[];
         listener: Listener;
         delegates: {[type in keyof MapEventType]?: (e: any) => void};
     } {
         if (type === 'mouseenter' || type === 'mouseover') {
             let mousein = false;
             const mousemove = (e) => {
-                const features = this.getLayer(layerId) ? this.queryRenderedFeatures(e.point, {layers: [layerId]}) : [];
+                const existingLayers = layerIds.filter((layerId) => this.getLayer(layerId));
+                const features = existingLayers.length !== 0 ? this.queryRenderedFeatures(e.point, {layers: layerIds}) : [];
                 if (!features.length) {
                     mousein = false;
                 } else if (!mousein) {
@@ -1224,11 +1225,12 @@ export class Map extends Camera {
             const mouseout = () => {
                 mousein = false;
             };
-            return {layer: layerId, listener, delegates: {mousemove, mouseout}};
+            return {layers: layerIds, listener, delegates: {mousemove, mouseout}};
         } else if (type === 'mouseleave' || type === 'mouseout') {
             let mousein = false;
             const mousemove = (e) => {
-                const features = this.getLayer(layerId) ? this.queryRenderedFeatures(e.point, {layers: [layerId]}) : [];
+                const existingLayers = layerIds.filter((layerId) => this.getLayer(layerId));
+                const features = existingLayers.length !== 0 ? this.queryRenderedFeatures(e.point, {layers: layerIds}) : [];
                 if (features.length) {
                     mousein = true;
                 } else if (mousein) {
@@ -1242,10 +1244,11 @@ export class Map extends Camera {
                     listener.call(this, new MapMouseEvent(type, this, e.originalEvent));
                 }
             };
-            return {layer: layerId, listener, delegates: {mousemove, mouseout}};
+            return {layers: layerIds, listener, delegates: {mousemove, mouseout}};
         } else {
             const delegate = (e) => {
-                const features = this.getLayer(layerId) ? this.queryRenderedFeatures(e.point, {layers: [layerId]}) : [];
+                const existingLayers = layerIds.filter((layerId) => this.getLayer(layerId));
+                const features = existingLayers.length !== 0 ? this.queryRenderedFeatures(e.point, {layers: layerIds}) : [];
                 if (features.length) {
                     // Here we need to mutate the original event, so that preventDefault works as expected.
                     e.features = features;
@@ -1253,7 +1256,7 @@ export class Map extends Camera {
                     delete e.features;
                 }
             };
-            return {layer: layerId, listener, delegates: {[type]: delegate}};
+            return {layers: layerIds, listener, delegates: {[type]: delegate}};
         }
     }
 
@@ -1398,14 +1401,9 @@ export class Map extends Camera {
             return super.on(type, layerIdsOrListener as Listener);
         }
 
-        if (Array.isArray(layerIdsOrListener)) {
-            for (const layerId of layerIdsOrListener) {
-                this.on(type as keyof MapLayerEventType, layerId, listener);
-            }
-            return this;
-        }
+        const layerIds = typeof layerIdsOrListener === 'string' ? [layerIdsOrListener] : layerIdsOrListener as string[];
 
-        const delegatedListener = this._createDelegatedListener(type, layerIdsOrListener as string, listener);
+        const delegatedListener = this._createDelegatedListener(type, layerIds, listener);
 
         this._delegatedListeners = this._delegatedListeners || {};
         this._delegatedListeners[type] = this._delegatedListeners[type] || [];
@@ -1470,14 +1468,9 @@ export class Map extends Camera {
             return super.once(type, layerIdsOrListener as Listener);
         }
 
-        if (Array.isArray(layerIdsOrListener)) {
-            for (const layerId of layerIdsOrListener) {
-                this.on(type as keyof MapLayerEventType, layerId, listener);
-            }
-            return this;
-        }
+        const layerIds = typeof layerIdsOrListener === 'string' ? [layerIdsOrListener] : layerIdsOrListener as string[];
 
-        const delegatedListener = this._createDelegatedListener(type, layerIdsOrListener as string, listener);
+        const delegatedListener = this._createDelegatedListener(type, layerIds, listener);
 
         for (const event in delegatedListener.delegates) {
             this.once(event, delegatedListener.delegates[event]);
@@ -1530,18 +1523,17 @@ export class Map extends Camera {
             return super.off(type, layerIdsOrListener as Listener);
         }
 
-        if (Array.isArray(layerIdsOrListener)) {
-            for (const layerId of layerIdsOrListener) {
-                this.off(type as keyof MapLayerEventType, layerId, listener);
-            }
-            return this;
-        }
+        const layerIds = typeof layerIdsOrListener === 'string' ? [layerIdsOrListener] : layerIdsOrListener as string[];
 
         const removeDelegatedListener = (delegatedListeners) => {
             const listeners = delegatedListeners[type];
             for (let i = 0; i < listeners.length; i++) {
                 const delegatedListener = listeners[i];
-                if (delegatedListener.layer === layerIdsOrListener && delegatedListener.listener === listener) {
+                if (
+                    delegatedListener.listener === listener &&
+                    delegatedListener.layers.length === layerIds.length &&
+                    delegatedListener.layers.every((layerId, index) => layerId === layerIds[index])
+                ) {
                     for (const event in delegatedListener.delegates) {
                         this.off(((event as any)), delegatedListener.delegates[event]);
                     }

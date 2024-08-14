@@ -70,11 +70,7 @@ describe('map events', () => {
         jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
         jest.spyOn(map, 'queryRenderedFeatures')
             .mockImplementationOnce((_point, options) => {
-                expect(options).toEqual({layers: ['layer1']});
-                return features;
-            })
-            .mockImplementationOnce((_point, options) => {
-                expect(options).toEqual({layers: ['layer2']});
+                expect(options).toEqual({layers: ['layer1', 'layer2']});
                 return features;
             });
 
@@ -87,7 +83,7 @@ describe('map events', () => {
         map.on('click', ['layer1', 'layer2'], spy);
         simulate.click(map.getCanvas());
 
-        expect(spy).toHaveBeenCalledTimes(2);
+        expect(spy).toHaveBeenCalledTimes(1);
     });
 
     test('Map#on adds a listener not triggered for events not matching any features', () => {
@@ -287,21 +283,22 @@ describe('map events', () => {
         expect(spy).toHaveBeenCalledTimes(1);
     });
 
-    test('Map#off distinguishes distinct layers, when multiple layers provided', () => {
+    test('Map#off distinguishes distinct layer arrays', () => {
         const map = createMap();
-        const featuresB = [{} as MapGeoJSONFeature];
+        const featuresAB = [{} as MapGeoJSONFeature];
 
         jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
         jest.spyOn(map, 'queryRenderedFeatures').mockImplementation((point, options) => {
-            expect(options).toEqual({layers: ['B']});
-            return featuresB;
+            expect(options).toEqual({layers: ['A', 'B']});
+            return featuresAB;
         });
 
         const spy = jest.fn((e) => {
-            expect(e.features).toBe(featuresB);
+            expect(e.features).toBe(featuresAB);
         });
 
-        map.on('click', ['A', 'B', 'C'], spy);
+        map.on('click', ['A', 'B'], spy);
+        map.on('click', ['A', 'C'], spy);
         map.off('click', ['A', 'C'], spy);
         simulate.click(map.getCanvas());
 
