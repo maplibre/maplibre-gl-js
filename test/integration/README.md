@@ -17,10 +17,11 @@ harness sets up the environment such that requests for these resources are direc
 The contents of vector tile fixtures can be read using the [`vt2geojson`](https://github.com/mapbox/vt2geojson) tool (see below).
 
 ## Running tests in GitHub
+
 All tests are run for every PR. If you're not sure yet if the tests are good, you may use a Draft PR to indicate that the work is still in progress.
 Each jos, or a group of tests, will create an artifact of any of its tests fail. The artifacts are found at the bottom of the jobs summary
 
-<image width="80%" src="https://github.com/maplibre/maplibre-gl-js/assets/1304610/bc313a30-cdec-4de5-b6c9-90637ffbf79a"/>
+<image width="80%" src="https://github.com/maplibre/maplibre-gl-js/assets/1304610/bc313a30-cdec-4de5-b6c9-90637ffbf79a" alt="" />
 
 Download the appropriate artifact as a zip file, open it and view the `results.html` file it contains.
 The "Actual" image of a failed test can be saved and used as the new "Expected" image.
@@ -29,13 +30,13 @@ The "Actual" image of a failed test can be saved and used as the new "Expected" 
 
 To run the render tests:
 
-```
+```sh
 npm run test-render
 ```
 
 To run the integration tests (except the render tests):
 
-```
+```sh
 npm run test-integration
 ```
 
@@ -45,7 +46,7 @@ To run the build tests
 
 ```
 npm run test-build
-````
+```
 
 For running a subset of tests, you may use jest filters e.g.
 
@@ -58,8 +59,9 @@ Additionally, it may be helpful to use a visual jest frontend (e.g. `npx majesti
 ### Running specific tests
 
 To run a subset of tests or an individual test, you can pass a specific subdirectory to the `test-render` script. For example, to run all the tests for a given property, e.g. `circle-radius`:
+
 ```
-$ npm run test-render -- circle-radius
+npm run test-render -- circle-radius
 ...
 * passed circle-radius/antimeridian
 * passed circle-radius/default
@@ -73,17 +75,19 @@ Done in 2.71s.
 ```
 Or to run a single test:
 ```
-$ npm run test-render -- circle-radius/literal
+npm run test-render -- circle-radius/literal
 ...
 * passed circle-radius/literal
 1 passed (100.0%)
 Results at: ./test/integration/render-tests/index.html
 Done in 2.32s.
 ```
+
 ### Detailed debug messages for render tests
+
 Render tests are executed in browser, and by default console messages are hidden. If need to see them, please pass <code>--debug</code> parameter:
 ```
-$ npm run test-render -- raster-masking/overlapping-zoom --debug
+npm run test-render -- raster-masking/overlapping-zoom --debug
 ```
 
 ### Viewing render test results
@@ -92,7 +96,7 @@ During a render test run, the test harness will use puppeteer to drive real brow
 
 By default render tests generate reports in <code>./test/integration/render/</code> directory:
 ```
-$ npm run test-render
+npm run test-render
 ...
 1211 passed (99.8%)
 2 failed (0.2%)
@@ -106,7 +110,7 @@ open ./test/integration/render/results.html
 
 If want to skip the report, please pass <code>--skip-report</code> parameter
 ```
-$ npm run test-render -- circle-radius/literal --skip-report
+npm run test-render -- circle-radius/literal --skip-report
 ```
 
 ### Updating results of render test results
@@ -126,8 +130,6 @@ Or on Windows with PowerShell:
 ```
 $env:UPDATE=$true; npm run test-render
 ```
-
-
 
 #### Notes on the query integration tests
 
@@ -184,7 +186,7 @@ To add a new render test:
 
 3. Generate an `expected.png` image from the given style by running the new test with the `UPDATE` flag enabled:
    ```
-   $ UPDATE=1 npm run test-render <property-name>/<new-test-name>
+   UPDATE=1 npm run test-render <property-name>/<new-test-name>
    ```
    The test will appear to fail, but you'll now see a new `expected.png` in the test directory.
 
@@ -193,6 +195,7 @@ To add a new render test:
 5. Commit the new `style.json` and `expected.png` :rocket:
 
 ## Updating results of query-tests
+
 You can update the expected results of query-tests by running them with with the `UPDATE` flag enabled, for example on Linux:
 ```
 UPDATE=true npm run test-query
@@ -201,25 +204,14 @@ Check carefully if all changes are intended.
 
 ## Reading Vector Tile Fixtures
 
-Install `vt2geojson`, a command line utility which turns vector tiles into geojson, and `harp`, a simple file server.
-
-```
-npm install -g vt2geojson harp
-```
-
-Start a static file server
-```
-harp server .
-```
-
 Read the contents of an entire vector tile
 
 ```
-vt2geojson -z 14 -y 8803 -x 5374 http://localhost:9000/tiles/14-8803-5374.mvt
+npx vt2geojson -z 14 -y 8803 -x 5374 test/integration/assets/tiles/14-8803-5374.mvt
 ```
 
 Read the contents of a particular layer in a vector tile
 
 ```
-vt2geojson --layer poi_label -z 14 -y 8803 -x 5374 http://localhost:9000/tiles/14-8803-5374.mvt
+npx vt2geojson --layer poi_label -z 14 -y 8803 -x 5374 test/integration/assets/tiles/14-8803-5374.mvt
 ```

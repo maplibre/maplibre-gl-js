@@ -149,9 +149,24 @@ export class ScrollZoomHandler implements Handler {
         this._enabled = false;
     }
 
+    /**
+     * Determines whether or not the gesture is blocked due to cooperativeGestures.
+     */
+    _shouldBePrevented(e: WheelEvent) {
+        if (!this._map.cooperativeGestures.isEnabled()) {
+            return false;
+        }
+
+        const isTrackpadPinch = e.ctrlKey;
+        const isBypassed = isTrackpadPinch || this._map.cooperativeGestures.isBypassed(e);
+
+        return !isBypassed;
+    }
+
     wheel(e: WheelEvent) {
         if (!this.isEnabled()) return;
-        if (this._map.cooperativeGestures.isEnabled() && !e[this._map.cooperativeGestures._bypassKey]) {
+        if (this._shouldBePrevented(e)) {
+            this._map.cooperativeGestures.notifyGestureBlocked('wheel_zoom', e);
             return;
         }
         let value = e.deltaMode === WheelEvent.DOM_DELTA_LINE ? e.deltaY * 40 : e.deltaY;

@@ -7,8 +7,9 @@ import {LngLat} from '../../geo/lng_lat';
 /**
  * @internal
  * Shared utilities for the Handler classes to access the correct camera state.
- * If Camera.transformCameraUpdate is specified, the "desired state" of camera may differ from the state used for rendering.
- * The handlers need the "desired state" to track accumulated changes.
+ * If Camera.transformCameraUpdate is specified or terrain is enabled, the
+ * "desired state" of camera may differ from the state used for rendering. The
+ * handlers need the "desired state" to track accumulated changes.
  */
 export class TransformProvider {
     _map: Map;
