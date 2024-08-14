@@ -119,16 +119,12 @@ export function charHasUprightVerticalOrientation(char: number) {
     // upright in vertical writing mode.
     if (char < 0x1100) return false;
 
-    if (isChar['Bopomofo Extended'](char)) return true;
-    if (isChar['Bopomofo'](char)) return true;
     if (isChar['CJK Compatibility Forms'](char)) {
         if (!((char >= 0xFE49 /* dashed overline */ && char <= 0xFE4F) /* wavy low line */)) {
             return true;
         }
     }
-    if (isChar['CJK Compatibility Ideographs'](char)) return true;
     if (isChar['CJK Compatibility'](char)) return true;
-    if (isChar['CJK Radicals Supplement'](char)) return true;
     if (isChar['CJK Strokes'](char)) return true;
     if (isChar['CJK Symbols and Punctuation'](char)) {
         if (!((char >= 0x3008 /* left angle bracket */ && char <= 0x3011) /* right black lenticular bracket */) &&
@@ -137,19 +133,9 @@ export function charHasUprightVerticalOrientation(char: number) {
             return true;
         }
     }
-    if (isChar['CJK Unified Ideographs Extension A'](char)) return true;
-    if (isChar['CJK Unified Ideographs'](char)) return true;
     if (isChar['Enclosed CJK Letters and Months'](char)) return true;
-    if (isChar['Hangul Compatibility Jamo'](char)) return true;
-    if (isChar['Hangul Jamo Extended-A'](char)) return true;
-    if (isChar['Hangul Jamo Extended-B'](char)) return true;
-    if (isChar['Hangul Jamo'](char)) return true;
-    if (isChar['Hangul Syllables'](char)) return true;
-    if (isChar['Hiragana'](char)) return true;
     if (isChar['Ideographic Description Characters'](char)) return true;
     if (isChar['Kanbun'](char)) return true;
-    if (isChar['Kangxi Radicals'](char)) return true;
-    if (isChar['Katakana Phonetic Extensions'](char)) return true;
     if (isChar['Katakana'](char)) {
         if (char !== 0x30FC /* katakana-hiragana prolonged sound mark */) {
             return true;
@@ -175,12 +161,12 @@ export function charHasUprightVerticalOrientation(char: number) {
             return true;
         }
     }
-    if (isChar['Unified Canadian Aboriginal Syllabics'](char)) return true;
-    if (isChar['Unified Canadian Aboriginal Syllabics Extended'](char)) return true;
     if (isChar['Vertical Forms'](char)) return true;
     if (isChar['Yijing Hexagram Symbols'](char)) return true;
-    if (isChar['Yi Syllables'](char)) return true;
-    if (isChar['Yi Radicals'](char)) return true;
+
+    if (/* Canadian Aboriginal */ /\p{sc=Cans}/u.test(String.fromCodePoint(char))) return true;
+    if (/* Hangul */ /\p{sc=Hang}/u.test(String.fromCodePoint(char))) return true;
+    if (ideographicBreakingRegExp.test(String.fromCodePoint(char))) return true;
 
     return false;
 }
