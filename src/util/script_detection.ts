@@ -24,43 +24,54 @@ export function allowsLetterSpacing(chars: string) {
 }
 
 /**
- * ISO 15924 script codes of scripts that disallow letter spacing as of Unicode 16.0.0.
+ * Returns a regular expression matching the given script codes, excluding any
+ * code that the execution environment lacks support for in regular expressions.
+ */
+function sanitizedRegExpFromScriptCodes(scriptCodes: Array<string>): RegExp {
+    let supportedPropertyEscapes = scriptCodes.map(code => {
+        try {
+            return new RegExp(`\\p{sc=${code}}`, 'u').source;
+        } catch (e) {}
+    }).filter(pe => pe);
+    return new RegExp(supportedPropertyEscapes.join('|'), 'u');
+}
+
+/**
+ * ISO 15924 script codes of scripts that disallow letter spacing as of Unicode
+ * 16.0.0.
  *
  * In general, cursive scripts are incompatible with letter spacing.
- *
- * Scripts encoded in Unicode 13.0 and later are commented out for increased browser compatibility.
  */
 const cursiveScriptCodes = [
     'Arab', // Arabic
     'Dupl', // Duployan
     'Mong', // Mongolian
-    // 'Ougr', // Old Uyghur
+    'Ougr', // Old Uyghur
     'Syrc', // Syriac
 ];
 
-const cursiveScriptRegExp = new RegExp(cursiveScriptCodes.map(sc => `\\p{sc=${sc}}`).join('|'), 'u');
+const cursiveScriptRegExp = sanitizedRegExpFromScriptCodes(cursiveScriptCodes);
 
 export function charAllowsLetterSpacing(char: number) {
     return !cursiveScriptRegExp.test(String.fromCodePoint(char));
 }
 
 /**
- * ISO 15924 script codes of scripts that allow ideographic line breaking beyond the CJKV scripts that are considered ideographic in Unicode 16.0.0. 
- *
- * Scripts encoded in Unicode 13.0 and later are commented out for increased browser compatibility.
+ * ISO 15924 script codes of scripts that allow ideographic line breaking beyond
+ * the CJKV scripts that are considered ideographic in Unicode 16.0.0. 
  */
 const ideographicBreakingScriptCodes = [
     'Bopo', // Bopomofo
     'Hani', // Han
     'Hira', // Hiragana
     'Kana', // Katakana
-    // 'Kits', // Khitan Small Script
+    'Kits', // Khitan Small Script
     'Nshu', // Nushu
     'Tang', // Tangut
     'Yiii', // Yi
 ];
 
-const ideographicBreakingRegExp = new RegExp(ideographicBreakingScriptCodes.map(sc => `\\p{sc=${sc}}`).join('|'), 'u');
+const ideographicBreakingRegExp = sanitizedRegExpFromScriptCodes(ideographicBreakingScriptCodes);
 
 export function charAllowsIdeographicBreaking(char: number) {
     // Return early for characters outside all ideographic ranges.
@@ -285,20 +296,19 @@ export function charInComplexShapingScript(char: number) {
 }
 
 /**
- * ISO 15924 script codes of scripts that are primarily written horizontally right-to-left according to Unicode 16.0.0. 
- *
- * Scripts encoded in Unicode 13.0 and later are commented out for increased browser compatibility.
+ * ISO 15924 script codes of scripts that are primarily written horizontally
+ * right-to-left according to Unicode 16.0.0. 
  */
 const rtlScriptCodes = [
     'Adlm', // Adlam
     'Arab', // Arabic
     'Armi', // Imperial Aramaic
     'Avst', // Avestan
-    // 'Chrs', // Chorasmian
+    'Chrs', // Chorasmian
     'Cprt', // Cypriot
     'Egyp', // Egyptian Hieroglyphs
     'Elym', // Elymaic
-    // 'Gara', // Garay
+    'Gara', // Garay
     'Hatr', // Hatran
     'Hebr', // Hebrew
     'Hung', // Old Hungarian
@@ -324,11 +334,11 @@ const rtlScriptCodes = [
     'Sogo', // Old Sogdian
     'Syrc', // Syriac
     'Thaa', // Thaana
-    // 'Todr', // Todhri
-    // 'Yezi', // Yezidi
+    'Todr', // Todhri
+    'Yezi', // Yezidi
 ];
 
-const rtlScriptRegExp = new RegExp(rtlScriptCodes.map(sc => `\\p{sc=${sc}}`).join('|'), 'u');
+const rtlScriptRegExp = sanitizedRegExpFromScriptCodes(rtlScriptCodes);
 
 export function charInRTLScript(char: number) {
     return rtlScriptRegExp.test(String.fromCodePoint(char));
