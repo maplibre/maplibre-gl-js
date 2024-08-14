@@ -61,7 +61,7 @@ describe('charHasUprightVerticalOrientation', () => {
     test('keeps Bopomofo text upright', () => {
         expect(charHasUprightVerticalOrientation('ㄎ'.codePointAt(0))).toBe(true);
     });
-    
+
     test('keeps Canadian Aboriginal text upright', () => {
         expect(charHasUprightVerticalOrientation('ᐃ'.codePointAt(0))).toBe(true);
     });
@@ -79,7 +79,7 @@ describe('charHasUprightVerticalOrientation', () => {
         expect(charHasUprightVerticalOrientation('あ'.codePointAt(0))).toBe(true);
         expect(charHasUprightVerticalOrientation('カ'.codePointAt(0))).toBe(true);
     });
-    
+
     test('keeps Yi text upright', () => {
         expect(charHasUprightVerticalOrientation('ꉆ'.codePointAt(0))).toBe(true);
     });

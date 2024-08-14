@@ -28,10 +28,12 @@ export function allowsLetterSpacing(chars: string) {
  * code that the execution environment lacks support for in regular expressions.
  */
 function sanitizedRegExpFromScriptCodes(scriptCodes: Array<string>): RegExp {
-    let supportedPropertyEscapes = scriptCodes.map(code => {
+    const supportedPropertyEscapes = scriptCodes.map(code => {
         try {
             return new RegExp(`\\p{sc=${code}}`, 'u').source;
-        } catch (e) {}
+        } catch (e) {
+            return null;
+        }
     }).filter(pe => pe);
     return new RegExp(supportedPropertyEscapes.join('|'), 'u');
 }
@@ -58,7 +60,7 @@ export function charAllowsLetterSpacing(char: number) {
 
 /**
  * ISO 15924 script codes of scripts that allow ideographic line breaking beyond
- * the CJKV scripts that are considered ideographic in Unicode 16.0.0. 
+ * the CJKV scripts that are considered ideographic in Unicode 16.0.0.
  */
 const ideographicBreakingScriptCodes = [
     'Bopo', // Bopomofo
@@ -283,7 +285,7 @@ export function charInComplexShapingScript(char: number) {
 
 /**
  * ISO 15924 script codes of scripts that are primarily written horizontally
- * right-to-left according to Unicode 16.0.0. 
+ * right-to-left according to Unicode 16.0.0.
  */
 const rtlScriptCodes = [
     'Adlm', // Adlam
