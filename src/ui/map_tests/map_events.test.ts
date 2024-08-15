@@ -86,6 +86,34 @@ describe('map events', () => {
         expect(spy).toHaveBeenCalledTimes(1);
     });
 
+    test('Map#on adds listener which calls queryRenderedFeatures only for existing layers', () => {
+        const map = createMap();
+        const features = [{} as MapGeoJSONFeature];
+
+        jest.spyOn(map, 'getLayer').mockImplementation((id: string) => {
+            if (id === 'nonExistingLayer') {
+                return undefined;
+            }
+            return {} as StyleLayer;
+        });
+        jest.spyOn(map, 'queryRenderedFeatures')
+            .mockImplementationOnce((_point, options) => {
+                expect(options).toEqual({layers: ['layer1', 'layer2']});
+                return features;
+            });
+
+        const spy = jest.fn(function (e) {
+            expect(this).toBe(map);
+            expect(e.type).toBe('click');
+            expect(e.features).toBe(features);
+        });
+
+        map.on('click', ['layer1', 'layer2', 'nonExistingLayer'], spy);
+        simulate.click(map.getCanvas());
+
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
+
     test('Map#on adds a listener not triggered for events not matching any features', () => {
         const map = createMap();
         const features = [];
@@ -304,6 +332,31 @@ describe('map events', () => {
 
         expect(spy).toHaveBeenCalledTimes(1);
     });
+
+    test('Map#off compares full layer array list, including layers missing in style', () => {
+        const map = createMap();
+
+        jest.spyOn(map, 'getLayer').mockImplementation((id: string) => {
+            if (id === 'nonExistingLayer') {
+                return undefined;
+            }
+            return {} as StyleLayer;
+        });
+        jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
+
+        const spy = jest.fn();
+
+        map.on('click', ['A', 'C', 'nonExistingLayer'], spy);
+        map.off('click', ['A', 'C'], spy);
+
+        simulate.click(map.getCanvas());
+
+        map.off('click', ['A', 'C', 'nonExistingLayer'], spy);
+
+        simulate.click(map.getCanvas());
+
+        expect(spy).toHaveBeenCalledTimes(1);
+    })
 
     test('Map#off distinguishes distinct listeners', () => {
         const map = createMap();
