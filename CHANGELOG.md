@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-- Render uncommon Chinese, Japanese, Korean, and Vietnamese characters. ([#6640](https://github.com/maplibre/maplibre-gl-js/pull/6640)) (by [@1ec5](https://github.com/1ec5))
+- Text labels can now include relatively uncommon Chinese, Japanese, Korean, and Vietnamese characters, as well as characters from historical writing systems. When using server-side fonts, the map may request glyph PBFs beyond U+FFFF from the server instead of throwing an error as before. ([#6640](https://github.com/maplibre/maplibre-gl-js/pull/6640)) (by [@1ec5](https://github.com/1ec5))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

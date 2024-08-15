@@ -126,18 +126,6 @@ export class GlyphManager {
             return {stack, id, glyph: null};
         }
 
-        // Avoid requesting astral codepoints from the server because we can’t handle them anyways.
-        // https://github.com/maplibre/maplibre-gl-js/issues/2307
-        const isInBMP = range * 256 <= 0xFFFF;
-        if (!isInBMP) {
-            if (this._charUsesLocalIdeographFontFamily(+id)) {
-                entry.ranges[range] = true;
-                return {stack, id, glyph: null};
-            } else {
-                throw new Error('glyphs > 65535 not supported');
-            }
-        }
-
         // Start downloading this range unless we’re currently downloading it.
         if (!entry.requests[range]) {
             const promise = GlyphManager.loadGlyphRange(stack, range, this.url, this.requestManager);
