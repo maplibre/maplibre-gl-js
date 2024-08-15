@@ -5,6 +5,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix crash on missing glyph PBF. ([#4564](https://github.com/maplibre/maplibre-gl-js/pull/4564))
 - _...Add new stuff here..._
 
 ## 5.10.0
