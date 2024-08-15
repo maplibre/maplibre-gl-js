@@ -1,13 +1,13 @@
 ## main
 
 ### ✨ Features and improvements
+- If a glyph PBF is unavailable or lacks a glyph for a character in a `text-field`, try to render it locally instead of crashing. ([#4564](https://github.com/maplibre/maplibre-gl-js/pull/4564))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Fix white artifacts when using non-zero elevation ([#6032](https://github.com/maplibre/maplibre-gl-js/pull/6032))
 - Fix geolocate control lock loss on window resize ([#3504](https://github.com/maplibre/maplibre-gl-js/issues/3504))
 - Fix a memory leak in `GeoJSONSource` when rapidly updating data ([#6163](https://github.com/maplibre/maplibre-gl-js/pull/6163))
-- Fix crash on missing glyph PBF. ([#4564](https://github.com/maplibre/maplibre-gl-js/pull/4564))
 
 - _...Add new stuff here..._
 
