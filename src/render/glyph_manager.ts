@@ -92,16 +92,6 @@ export class GlyphManager {
         }
 
         const range = Math.floor(id / 256);
-        const isInBMP = range * 256 <= 0xFFFF;
-        if (!isInBMP) {
-            if (this._doesCharSupportLocalGlyph(+id)) {
-                entry.ranges[range] = true;
-                return {stack, id, glyph: null};
-            } else {
-                throw new Error('glyphs > 65535 not supported');
-            }
-        }
-
         if (entry.ranges[range]) {
             return {stack, id, glyph};
         }
