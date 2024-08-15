@@ -1214,7 +1214,7 @@ export class Map extends Camera {
             let mousein = false;
             const mousemove = (e) => {
                 const existingLayers = layerIds.filter((layerId) => this.getLayer(layerId));
-                const features = existingLayers.length !== 0 ? this.queryRenderedFeatures(e.point, {layers: layerIds}) : [];
+                const features = existingLayers.length !== 0 ? this.queryRenderedFeatures(e.point, {layers: existingLayers}) : [];
                 if (!features.length) {
                     mousein = false;
                 } else if (!mousein) {
@@ -1230,7 +1230,7 @@ export class Map extends Camera {
             let mousein = false;
             const mousemove = (e) => {
                 const existingLayers = layerIds.filter((layerId) => this.getLayer(layerId));
-                const features = existingLayers.length !== 0 ? this.queryRenderedFeatures(e.point, {layers: layerIds}) : [];
+                const features = existingLayers.length !== 0 ? this.queryRenderedFeatures(e.point, {layers: existingLayers}) : [];
                 if (features.length) {
                     mousein = true;
                 } else if (mousein) {
@@ -1248,7 +1248,7 @@ export class Map extends Camera {
         } else {
             const delegate = (e) => {
                 const existingLayers = layerIds.filter((layerId) => this.getLayer(layerId));
-                const features = existingLayers.length !== 0 ? this.queryRenderedFeatures(e.point, {layers: layerIds}) : [];
+                const features = existingLayers.length !== 0 ? this.queryRenderedFeatures(e.point, {layers: existingLayers}) : [];
                 if (features.length) {
                     // Here we need to mutate the original event, so that preventDefault works as expected.
                     e.features = features;
