@@ -93,7 +93,7 @@ describe('GlyphManager', () => {
     test('GlyphManager generates CJK PBF locally', async () => {
         const manager = createGlyphManager('sans-serif');
 
-        // character 平
+        // Chinese character píng 平
         const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [0x5e73]});
         expect(returnedGlyphs['Arial Unicode MS'][0x5e73].metrics.advance).toBe(0.5);
     });
@@ -112,6 +112,23 @@ describe('GlyphManager', () => {
         //Hiragana letter te て
         const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [0x3066]});
         expect(returnedGlyphs['Arial Unicode MS'][0x3066].metrics.advance).toBe(0.5);
+    });
+
+    test('GlyphManager consistently generates CJKV text locally', async () => {
+        const manager = createGlyphManager('sans-serif');
+
+        // Space
+        expect(manager._doesCharSupportLocalGlyph(0x0020)).toBe(false);
+        // Chinese character píng 平
+        expect(manager._doesCharSupportLocalGlyph(0x5e73)).toBe(true);
+        // Chinese character biáng 𰻞
+        expect(manager._doesCharSupportLocalGlyph(0x30EDE)).toBe(true);
+        // Katakana letter te テ
+        expect(manager._doesCharSupportLocalGlyph(0x30c6)).toBe(true);
+        // Hiragana letter te て
+        expect(manager._doesCharSupportLocalGlyph(0x3066)).toBe(true);
+        // Hangul letter a 아
+        expect(manager._doesCharSupportLocalGlyph(0xC544)).toBe(true);
     });
 
     test('GlyphManager caches locally generated glyphs', async () => {
