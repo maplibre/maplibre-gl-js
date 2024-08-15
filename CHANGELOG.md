@@ -2,10 +2,10 @@
 
 ### ✨ Features and improvements
 - Improve performance of `GeoJSONSource#updateData` when called on small diffs ([#6562](https://github.com/maplibre/maplibre-gl-js/pull/6562))
+- If a glyph PBF is unavailable or lacks a glyph for a character in a `text-field`, try to render it locally instead of crashing. ([#4564](https://github.com/maplibre/maplibre-gl-js/pull/4564))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix crash on missing glyph PBF. ([#4564](https://github.com/maplibre/maplibre-gl-js/pull/4564))
 - _...Add new stuff here..._
 
 ## 5.10.0
