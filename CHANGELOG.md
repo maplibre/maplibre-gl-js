@@ -4,7 +4,7 @@
 - Improve performance of `GeoJSONSource#updateData` when called on small diffs ([#6562](https://github.com/maplibre/maplibre-gl-js/pull/6562))
 - If the stylesheet lacks a `glyphs` property at the root level, interpret the `text-font` property as a cascading fallback list of font names and render all text using local or system fonts. ([#4564](https://github.com/maplibre/maplibre-gl-js/pull/4564))
 - ⚠️ Refactor SourceCache to TileManager ([#6635](https://github.com/maplibre/maplibre-gl-js/pull/6635)) - this is not a breaking change since SourceCache is not part of the public API, but if you have a plugin that uses internal stuff, it might break...
-- Render uncommon Chinese, Japanese, Korean, and Vietnamese characters. ([#6640](https://github.com/maplibre/maplibre-gl-js/pull/6640))
+- Text labels can now include relatively uncommon Chinese, Japanese, Korean, and Vietnamese characters, as well as characters from historical writing systems. When using server-side fonts, the map may request glyph PBFs beyond U+FFFF from the server instead of throwing an error as before. ([#6640](https://github.com/maplibre/maplibre-gl-js/pull/6640))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
