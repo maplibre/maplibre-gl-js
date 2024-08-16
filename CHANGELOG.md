@@ -4,7 +4,7 @@
 
 - Add constants `MAX_TILE_ZOOM = 25` and `MIN_TILE_ZOOM = 0` as maximum and minimum world tile zoom (Z) values; replace hardcoded instances with those constants.
 - Add functions `isInBoundsForTileZoomXY` and `isInBoundsForZoomLngLat` to check whether a tile ZXY or a zoom+LngLat is in the world bounds; use `MAX_TILE_ZOOM` and `MIN_TILE_ZOOM` in those checks; replace existing hardcoded checks with those functions.
-- Support multiple layers in map.on and map.off methods ([#4279](https://github.com/maplibre/maplibre-gl-js/pull/4401))
+- Support multiple layers in `map.on`, `map.once` and `map.off` methods ([#4279](https://github.com/maplibre/maplibre-gl-js/pull/4401))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

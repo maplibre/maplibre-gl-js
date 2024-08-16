@@ -1533,7 +1533,7 @@ export class Map extends Camera {
                 if (
                     delegatedListener.listener === listener &&
                     delegatedListener.layers.length === layerIds.length &&
-                    delegatedListener.layers.every((layerId, index) => layerId === layerIds[index])
+                    delegatedListener.layers.every((layerId: string) => layerIds.includes(layerId))
                 ) {
                     for (const event in delegatedListener.delegates) {
                         this.off(((event as any)), delegatedListener.delegates[event]);
