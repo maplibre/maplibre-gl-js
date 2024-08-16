@@ -13,6 +13,7 @@ import type {Tile} from '../../source/tile';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {Painter} from '../painter';
 import type {HeatmapStyleLayer} from '../../style/style_layer/heatmap_style_layer';
+import { OverscaledTileID } from '../../source/tile_id';
 
 export type HeatmapUniformsType = {
     'u_extrude_scale': Uniform1f;
@@ -42,8 +43,8 @@ const heatmapTextureUniforms = (context: Context, locations: UniformLocations): 
     'u_opacity': new Uniform1f(context, locations.u_opacity)
 });
 
-const heatmapUniformValues = (matrix: mat4, tile: Tile, zoom: number, intensity: number): UniformValues<HeatmapUniformsType> => ({
-    'u_matrix': matrix,
+const heatmapUniformValues = (matrix: mat4, tile: Tile, zoom: number, intensity: number, coord: OverscaledTileID): UniformValues<HeatmapUniformsType> => ({
+    'u_matrix': coord ? coord.posMatrix : matrix,
     'u_extrude_scale': pixelsToTileUnits(tile, 1, zoom),
     'u_intensity': intensity
 });

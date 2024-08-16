@@ -64,8 +64,10 @@ function prepareHeatmap(painter: Painter, tile: Tile, layer: HeatmapStyleLayer, 
     const program = painter.useProgram('heatmap', programConfiguration);
     const {zoom} = painter.transform;
 
+    const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
+    const terrainCoord = terrainData ? coord : null;
     program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.disabled,
-        heatmapUniformValues(coord.posMatrix, tile, zoom, layer.paint.get('heatmap-intensity')), null,
+        heatmapUniformValues(coord.posMatrix, tile, zoom, layer.paint.get('heatmap-intensity'), terrainCoord), terrainData,
         layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
         bucket.segments, layer.paint, painter.transform.zoom,
         programConfiguration);
@@ -81,8 +83,6 @@ function createHeatmapFbo(context: Context, tileSize: number): Framebuffer {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
-    // Use the higher precision half-float texture where available (producing much smoother looking heatmaps);
-    // Otherwise, fall back to a low precision texture
     const numType = context.HALF_FLOAT;
     const internalFormat = context.RGBA16F ?? gl.RGBA;
 
