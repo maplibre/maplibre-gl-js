@@ -356,7 +356,7 @@ describe('map events', () => {
         simulate.click(map.getCanvas());
 
         expect(spy).toHaveBeenCalledTimes(1);
-    })
+    });
 
     test('Map#off distinguishes distinct listeners', () => {
         const map = createMap();
