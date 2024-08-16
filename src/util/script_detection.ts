@@ -23,43 +23,71 @@ export function allowsLetterSpacing(chars: string) {
     return true;
 }
 
-export function charAllowsLetterSpacing(char: number) {
-    if (isChar['Arabic'](char)) return false;
-    if (isChar['Arabic Supplement'](char)) return false;
-    if (isChar['Arabic Extended-A'](char)) return false;
-    if (isChar['Arabic Extended-B'](char)) return false;
-    if (isChar['Arabic Presentation Forms-A'](char)) return false;
-    if (isChar['Arabic Presentation Forms-B'](char)) return false;
-
-    return true;
+/**
+ * Returns a regular expression matching the given script codes, excluding any
+ * code that the execution environment lacks support for in regular expressions.
+ */
+function sanitizedRegExpFromScriptCodes(scriptCodes: Array<string>): RegExp {
+    const supportedPropertyEscapes = scriptCodes.map(code => {
+        try {
+            return new RegExp(`\\p{sc=${code}}`, 'u').source;
+        } catch (e) {
+            return null;
+        }
+    }).filter(pe => pe);
+    return new RegExp(supportedPropertyEscapes.join('|'), 'u');
 }
+
+/**
+ * ISO 15924 script codes of scripts that disallow letter spacing as of Unicode
+ * 16.0.0.
+ *
+ * In general, cursive scripts are incompatible with letter spacing.
+ */
+const cursiveScriptCodes = [
+    'Arab', // Arabic
+    'Dupl', // Duployan
+    'Mong', // Mongolian
+    'Ougr', // Old Uyghur
+    'Syrc', // Syriac
+];
+
+const cursiveScriptRegExp = sanitizedRegExpFromScriptCodes(cursiveScriptCodes);
+
+export function charAllowsLetterSpacing(char: number) {
+    return !cursiveScriptRegExp.test(String.fromCodePoint(char));
+}
+
+/**
+ * ISO 15924 script codes of scripts that allow ideographic line breaking beyond
+ * the CJKV scripts that are considered ideographic in Unicode 16.0.0.
+ */
+const ideographicBreakingScriptCodes = [
+    'Bopo', // Bopomofo
+    'Hani', // Han
+    'Hira', // Hiragana
+    'Kana', // Katakana
+    'Kits', // Khitan Small Script
+    'Nshu', // Nushu
+    'Tang', // Tangut
+    'Yiii', // Yi
+];
+
+const ideographicBreakingRegExp = sanitizedRegExpFromScriptCodes(ideographicBreakingScriptCodes);
 
 export function charAllowsIdeographicBreaking(char: number) {
     // Return early for characters outside all ideographic ranges.
     if (char < 0x2E80) return false;
 
-    if (isChar['Bopomofo Extended'](char)) return true;
-    if (isChar['Bopomofo'](char)) return true;
     if (isChar['CJK Compatibility Forms'](char)) return true;
-    if (isChar['CJK Compatibility Ideographs'](char)) return true;
     if (isChar['CJK Compatibility'](char)) return true;
-    if (isChar['CJK Radicals Supplement'](char)) return true;
     if (isChar['CJK Strokes'](char)) return true;
     if (isChar['CJK Symbols and Punctuation'](char)) return true;
-    if (isChar['CJK Unified Ideographs Extension A'](char)) return true;
-    if (isChar['CJK Unified Ideographs'](char)) return true;
     if (isChar['Enclosed CJK Letters and Months'](char)) return true;
     if (isChar['Halfwidth and Fullwidth Forms'](char)) return true;
-    if (isChar['Hiragana'](char)) return true;
     if (isChar['Ideographic Description Characters'](char)) return true;
-    if (isChar['Kangxi Radicals'](char)) return true;
-    if (isChar['Katakana Phonetic Extensions'](char)) return true;
-    if (isChar['Katakana'](char)) return true;
     if (isChar['Vertical Forms'](char)) return true;
-    if (isChar['Yi Radicals'](char)) return true;
-    if (isChar['Yi Syllables'](char)) return true;
-
-    return false;
+    return ideographicBreakingRegExp.test(String.fromCodePoint(char));
 }
 
 // The following logic comes from
@@ -93,16 +121,12 @@ export function charHasUprightVerticalOrientation(char: number) {
     // upright in vertical writing mode.
     if (char < 0x1100) return false;
 
-    if (isChar['Bopomofo Extended'](char)) return true;
-    if (isChar['Bopomofo'](char)) return true;
     if (isChar['CJK Compatibility Forms'](char)) {
         if (!((char >= 0xFE49 /* dashed overline */ && char <= 0xFE4F) /* wavy low line */)) {
             return true;
         }
     }
-    if (isChar['CJK Compatibility Ideographs'](char)) return true;
     if (isChar['CJK Compatibility'](char)) return true;
-    if (isChar['CJK Radicals Supplement'](char)) return true;
     if (isChar['CJK Strokes'](char)) return true;
     if (isChar['CJK Symbols and Punctuation'](char)) {
         if (!((char >= 0x3008 /* left angle bracket */ && char <= 0x3011) /* right black lenticular bracket */) &&
@@ -111,19 +135,9 @@ export function charHasUprightVerticalOrientation(char: number) {
             return true;
         }
     }
-    if (isChar['CJK Unified Ideographs Extension A'](char)) return true;
-    if (isChar['CJK Unified Ideographs'](char)) return true;
     if (isChar['Enclosed CJK Letters and Months'](char)) return true;
-    if (isChar['Hangul Compatibility Jamo'](char)) return true;
-    if (isChar['Hangul Jamo Extended-A'](char)) return true;
-    if (isChar['Hangul Jamo Extended-B'](char)) return true;
-    if (isChar['Hangul Jamo'](char)) return true;
-    if (isChar['Hangul Syllables'](char)) return true;
-    if (isChar['Hiragana'](char)) return true;
     if (isChar['Ideographic Description Characters'](char)) return true;
     if (isChar['Kanbun'](char)) return true;
-    if (isChar['Kangxi Radicals'](char)) return true;
-    if (isChar['Katakana Phonetic Extensions'](char)) return true;
     if (isChar['Katakana'](char)) {
         if (char !== 0x30FC /* katakana-hiragana prolonged sound mark */) {
             return true;
@@ -149,12 +163,12 @@ export function charHasUprightVerticalOrientation(char: number) {
             return true;
         }
     }
-    if (isChar['Unified Canadian Aboriginal Syllabics'](char)) return true;
-    if (isChar['Unified Canadian Aboriginal Syllabics Extended'](char)) return true;
     if (isChar['Vertical Forms'](char)) return true;
     if (isChar['Yijing Hexagram Symbols'](char)) return true;
-    if (isChar['Yi Syllables'](char)) return true;
-    if (isChar['Yi Radicals'](char)) return true;
+
+    if (/* Canadian Aboriginal */ /\p{sc=Cans}/u.test(String.fromCodePoint(char))) return true;
+    if (/* Hangul */ /\p{sc=Hang}/u.test(String.fromCodePoint(char))) return true;
+    if (ideographicBreakingRegExp.test(String.fromCodePoint(char))) return true;
 
     return false;
 }
@@ -266,19 +280,56 @@ export function charHasRotatedVerticalOrientation(char: number) {
 }
 
 export function charInComplexShapingScript(char: number) {
-    return isChar['Arabic'](char) ||
-           isChar['Arabic Supplement'](char) ||
-           isChar['Arabic Extended-A'](char) ||
-           isChar['Arabic Extended-B'](char) ||
-           isChar['Arabic Presentation Forms-A'](char) ||
-           isChar['Arabic Presentation Forms-B'](char);
+    return /\p{sc=Arab}/u.test(String.fromCodePoint(char));
 }
 
+/**
+ * ISO 15924 script codes of scripts that are primarily written horizontally
+ * right-to-left according to Unicode 16.0.0.
+ */
+const rtlScriptCodes = [
+    'Adlm', // Adlam
+    'Arab', // Arabic
+    'Armi', // Imperial Aramaic
+    'Avst', // Avestan
+    'Chrs', // Chorasmian
+    'Cprt', // Cypriot
+    'Egyp', // Egyptian Hieroglyphs
+    'Elym', // Elymaic
+    'Gara', // Garay
+    'Hatr', // Hatran
+    'Hebr', // Hebrew
+    'Hung', // Old Hungarian
+    'Khar', // Kharoshthi
+    'Lydi', // Lydian
+    'Mand', // Mandaic
+    'Mani', // Manichaean
+    'Mend', // Mende Kikakui
+    'Merc', // Meroitic Cursive
+    'Mero', // Meroitic Hieroglyphs
+    'Narb', // Old North Arabian
+    'Nbat', // Nabataean
+    'Nkoo', // NKo
+    'Orkh', // Old Turkic
+    'Palm', // Palmyrene
+    'Phli', // Inscriptional Pahlavi
+    'Phlp', // Psalter Pahlavi
+    'Phnx', // Phoenician
+    'Prti', // Inscriptional Parthian
+    'Rohg', // Hanifi Rohingya
+    'Samr', // Samaritan
+    'Sarb', // Old South Arabian
+    'Sogo', // Old Sogdian
+    'Syrc', // Syriac
+    'Thaa', // Thaana
+    'Todr', // Todhri
+    'Yezi', // Yezidi
+];
+
+const rtlScriptRegExp = sanitizedRegExpFromScriptCodes(rtlScriptCodes);
+
 export function charInRTLScript(char: number) {
-    // Main blocks for Hebrew, Arabic, Thaana and other RTL scripts
-    return (char >= 0x0590 && char <= 0x08FF) ||
-        isChar['Arabic Presentation Forms-A'](char) ||
-        isChar['Arabic Presentation Forms-B'](char);
+    return rtlScriptRegExp.test(String.fromCodePoint(char));
 }
 
 export function charInSupportedScript(char: number, canRenderRTL: boolean) {
