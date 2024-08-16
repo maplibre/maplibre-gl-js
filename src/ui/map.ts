@@ -1493,7 +1493,8 @@ export class Map extends Camera {
         listener: (ev: MapLayerEventType[T] & Object) => void,
     ): this;
     /**
-     * Overload of the `off` method that allows to listen to events specifying multiple layers.
+     * Overload of the `off` method that allows to remove an event created with multiple layers.
+     * Provide the same layer ids as to `on` method to match the listener.
      * @event
      * @param type - The type of the event.
      * @param layers - The layer IDs preciously used to install the listener.
@@ -1505,14 +1506,14 @@ export class Map extends Camera {
         listener: (ev: MapLayerEventType[T] & Object) => void,
     ): this;
     /**
-     * Overload of the `off` method that allows to listen to events without specifying a layer.
+     * Overload of the `off` method that allows to remove an event created without specifying a layer.
      * @event
      * @param type - The type of the event.
      * @param listener - The function previously installed as a listener.
      */
     off<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
     /**
-     * Overload of the `off` method that allows to listen to events without specifying a layer.
+     * Overload of the `off` method that allows to remove an event created without specifying a layer.
      * @event
      * @param type - The type of the event.
      * @param listener - The function previously installed as a listener.
