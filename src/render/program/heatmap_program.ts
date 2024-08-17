@@ -13,7 +13,7 @@ import type {Tile} from '../../source/tile';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {Painter} from '../painter';
 import type {HeatmapStyleLayer} from '../../style/style_layer/heatmap_style_layer';
-import { OverscaledTileID } from '../../source/tile_id';
+import {OverscaledTileID} from '../../source/tile_id';
 
 export type HeatmapUniformsType = {
     'u_extrude_scale': Uniform1f;
