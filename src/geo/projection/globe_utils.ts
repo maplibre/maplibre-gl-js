@@ -1,5 +1,5 @@
 import {vec3} from 'gl-matrix';
-import {clamp, differenceOfAnglesDegrees, lerp, mod, remapSaturate, wrap} from '../../util/util';
+import {clamp, lerp, mod, remapSaturate, wrap} from '../../util/util';
 import {LngLat} from '../lng_lat';
 import {MAX_VALID_LATITUDE, scaleZoom} from '../transform_helper';
 import Point from '@mapbox/point-geometry';
@@ -178,17 +178,5 @@ export function interpolateLngLatForGlobe(start: LngLat, deltaLng: number, delta
             interpolatedLng,
             interpolatedLat
         );
-    }
-}
-
-export function clampLngLat(val: LngLat, min: LngLat, max: LngLat): LngLat {
-    const lat = clamp(val.lat, min.lat, max.lat);
-    if (val.lng >= min.lng && val.lng <= max.lng) {
-        return new LngLat(val.lng, lat);
-    }
-    if (Math.abs(differenceOfAnglesDegrees(min.lng, val.lng)) < Math.abs(differenceOfAnglesDegrees(max.lng, val.lng))) {
-        return new LngLat(min.lng, lat);
-    } else {
-        return new LngLat(max.lng, lat);
     }
 }
