@@ -1,7 +1,7 @@
 import {mat2, mat4, vec3, vec4} from 'gl-matrix';
-import {MAX_VALID_LATITUDE, TransformHelper} from '../transform_helper';
+import {CustomLayerArgsTransformSpecific, MAX_VALID_LATITUDE, TransformHelper} from '../transform_helper';
 import {MercatorTransform} from './mercator_transform';
-import {LngLat, earthRadius} from '../lng_lat';
+import {LngLat, LngLatLike, earthRadius} from '../lng_lat';
 import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, easeCubicInOut, lerp, pointPlaneSignedDistance, warnOnce} from '../../util/util';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
@@ -243,7 +243,7 @@ export class GlobeTransform implements ITransform {
     private _globeProjectionAllowed = true;
 
     /**
-     * Note: projection instance should only be accessed in the {@link newFrameUpdate} function
+     * Note: projection instance should only be accessed in the {@link newFrameUpdate} function.
      * to ensure the transform's state isn't unintentionally changed.
      */
     private _projectionInstance: GlobeProjection;
@@ -520,8 +520,8 @@ export class GlobeTransform implements ITransform {
         return [...planeVector, -tangentPlaneDistanceToC * scale];
     }
 
-    private _projectTileCoordinatesToSphere(inTileX: number, inTileY: number, tileID: UnwrappedTileID): vec3 {
-        const mercator = tileCoordinatesToMercatorCoordinates(inTileX, inTileY, tileID.canonical);
+    private _projectTileCoordinatesToSphere(inTileX: number, inTileY: number, tileID: {x: number; y: number; z: number}): vec3 {
+        const mercator = tileCoordinatesToMercatorCoordinates(inTileX, inTileY, tileID);
         const angular = mercatorCoordinatesToAngularCoordinatesRadians(mercator.x, mercator.y);
         const sphere = angularCoordinatesRadiansToVector(angular[0], angular[1]);
         return sphere;
@@ -585,7 +585,7 @@ export class GlobeTransform implements ITransform {
             return this._mercatorTransform.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
         }
 
-        const spherePos = this._projectTileCoordinatesToSphere(x, y, unwrappedTileID);
+        const spherePos = this._projectTileCoordinatesToSphere(x, y, unwrappedTileID.canonical);
         const elevation = getElevation ? getElevation(x, y) : 0.0;
         const vectorMultiplier = 1.0 + elevation / earthRadius;
         const pos: vec4 = [spherePos[0] * vectorMultiplier, spherePos[1] * vectorMultiplier, spherePos[2] * vectorMultiplier, 1];
@@ -687,11 +687,6 @@ export class GlobeTransform implements ITransform {
     recalculateZoom(terrain: Terrain): void {
         this._mercatorTransform.recalculateZoom(terrain);
         this.apply(this._mercatorTransform);
-    }
-
-    customLayerMatrix(): mat4 {
-        // Globe: TODO
-        return this._mercatorTransform.customLayerMatrix();
     }
 
     maxPitchScaleFactor(): number {
@@ -1142,5 +1137,31 @@ export class GlobeTransform implements ITransform {
         const closestOnHorizon = createVec3f64();
         vec3.normalize(closestOnHorizon, planeIntersection);
         return sphereSurfacePointToCoordinates(closestOnHorizon);
+    }
+
+    customLayerMatrix(): mat4 {
+        return this._globeRendering ? this.modelViewProjectionMatrix : this._mercatorTransform.customLayerMatrix();
+    }
+
+    getCustomLayerArgs(): CustomLayerArgsTransformSpecific {
+        const mercatorArgs = this._mercatorTransform.getCustomLayerArgs();
+        return {
+            getMatrixForModel: (location: LngLatLike, altitude?: number) => {
+                if (!this._globeRendering) {
+                    return mercatorArgs.getMatrixForModel(location, altitude);
+                }
+                const lnglat = LngLat.convert(location);
+                const scale = 1.0 / earthRadius;
+
+                const m = createIdentityMat4f64();
+                mat4.rotateY(m, m, lnglat.lng / 180.0 * Math.PI);
+                mat4.rotateX(m, m, -lnglat.lat / 180.0 * Math.PI);
+                mat4.translate(m, m, [0, 0, 1 + altitude / earthRadius]);
+                mat4.rotateX(m, m, Math.PI * 0.5);
+                mat4.scale(m, m, [scale, scale, scale]);
+                return m;
+            },
+            getMercatorTileProjectionMatrix: mercatorArgs.getMercatorTileProjectionMatrix,
+        };
     }
 }
