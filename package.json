@@ -30,7 +30,7 @@
     "earcut": "^3.0.0",
     "geojson-vt": "^4.0.2",
     "gl-matrix": "^3.4.3",
-    "global-prefix": "^3.0.0",
+    "global-prefix": "^4.0.0",
     "kdbush": "^4.0.2",
     "murmurhash-js": "^1.0.0",
     "pbf": "^4.0.1",
