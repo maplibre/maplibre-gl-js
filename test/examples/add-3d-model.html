@@ -90,7 +90,7 @@
 
             this.renderer.autoClear = false;
         },
-        render (gl, matrix) {
+        render (gl, matrix, args) {
             const rotationX = new THREE.Matrix4().makeRotationAxis(
                 new THREE.Vector3(1, 0, 0),
                 modelTransform.rotateX
@@ -121,6 +121,15 @@
                 .multiply(rotationX)
                 .multiply(rotationY)
                 .multiply(rotationZ);
+
+            // Alternatively, you can use this API to get the correct model matrix.
+            // It will work regardless of current projection.
+            // See MapLibre source code, files mercator_transform.ts or globe_transform.ts, function "getCustomLayerArgs".
+            // Also see the example "globe-3d-model.html".
+            //
+            // const modelMatrix = args.getMatrixForModel(modelOrigin, modelAltitude);
+            // const m = new THREE.Matrix4().fromArray(matrix);
+            // const l = new THREE.Matrix4().fromArray(modelMatrix);
 
             this.camera.projectionMatrix = m.multiply(l);
             this.renderer.resetState();

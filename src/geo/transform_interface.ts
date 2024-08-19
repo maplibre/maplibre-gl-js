@@ -9,6 +9,7 @@ import {Terrain} from '../render/terrain';
 import {ProjectionData} from '../render/program/projection_program';
 import {PointProjection} from '../symbol/projection';
 import {MapProjectionEvent} from '../ui/events';
+import {CustomLayerArgsTransformSpecific} from './transform_helper';
 
 export type CoveringZoomOptions = {
     /**
@@ -475,6 +476,12 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Projects a point in tile coordinates to clip space. Used in symbol rendering.
      */
     projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection;
+
+    /**
+     * @internal
+     * Returns transform/projection-specific arguments for custom layers.
+     */
+    getCustomLayerArgs(): CustomLayerArgsTransformSpecific;
 }
 
 /**

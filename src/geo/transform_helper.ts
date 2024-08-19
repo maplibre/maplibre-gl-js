@@ -1,4 +1,4 @@
-import {LngLat} from './lng_lat';
+import {LngLat, LngLatLike} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {wrap, clamp} from '../util/util';
@@ -31,6 +31,95 @@ export function zoomScale(zoom: number) { return Math.pow(2, zoom); }
  * Computes zoom level from scaling.
  */
 export function scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
+
+export type UnwrappedTileIDType = {
+    /**
+     * Tile wrap: 0 for the "main" world,
+     * negative values for worlds left of the main,
+     * positive values for worlds right of the main.
+     */
+    wrap?: number;
+    canonical: {
+        /**
+         * Tile X coordinate, in range 0..(z^2)-1
+         */
+        x: number;
+        /**
+         * Tile Y coordinate, in range 0..(z^2)-1
+         */
+        y: number;
+        /**
+         * Tile zoom level.
+         */
+        z: number;
+    };
+};
+
+export type CustomLayerArgsTransformSpecific = {
+    /**
+     * Returns a matrix that will place, rotate and scale a model to display at the given location and altitude
+     * while also being projected by the custom layer matrix.
+     * @param location - Location of the model.
+     * @param altitude - Altitude of the model. May be undefined.
+     */
+    getMatrixForModel(location: LngLatLike, altitude?: number): mat4;
+    /**
+     * Get the projection matrix to project a tile to the screen under mercator projection.
+     * This is useful for drawing tiles under mercator projection, and for drawing
+     * tiles under globe projection while supporting mercator fallback.
+     * @param unwrappedTile - The tile ID for which to generate the matrix.
+     */
+    getMercatorTileProjectionMatrix(unwrappedTile: UnwrappedTileIDType): mat4;
+};
+
+export type CustomLayerArgs = CustomLayerArgsTransformSpecific & {
+    farZ: number;
+    nearZ: number;
+    /**
+     * Vertical field of view in radians.
+     */
+    fov: number;
+    /**
+     * The model-view-projection matrix.
+     */
+    modelViewProjectionMatrix: mat4;
+    /**
+     * The projection matrix, without the camera matrix.
+     */
+    projectionMatrix: mat4;
+    /**
+     * Data required for picking and compiling a custom shader for the current projection.
+     */
+    shader: {
+        /**
+         * Name of the shader variant that should be used.
+         * Depends on current projection.
+         * Whenever the other shader properties change, this string changes as well,
+         * and can be used as a key with which to cache compiled shaders.
+         */
+        variantName: string;
+        /**
+         * The prelude code to add to the vertex shader to access MapLibre's projection function.
+         * Depends on current projection.
+         */
+        vertexShaderPrelude: string;
+        /**
+         * Defines to add to the shader code.
+         * Depends on current projection.
+         */
+        define: string;
+    };
+    /**
+     * Uniforms that should be passed to the vertex shader,
+     * if MapLibre's projection code is used.
+     */
+    uniforms: {[key: string]: number | Array<number>};
+    /**
+     * Returns the  subdivision granularity for a given zoom level.
+     * @param z - The zoom level.
+     */
+    getSubdivisionForZoomLevel(z: number): number;
+};
 
 export type TransformHelperCallbacks = {
     /**
