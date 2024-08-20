@@ -90,7 +90,7 @@
 
             this.renderer.autoClear = false;
         },
-        render (gl, matrix, args) {
+        render (gl, args) {
             const rotationX = new THREE.Matrix4().makeRotationAxis(
                 new THREE.Vector3(1, 0, 0),
                 modelTransform.rotateX
@@ -104,7 +104,7 @@
                 modelTransform.rotateZ
             );
 
-            const m = new THREE.Matrix4().fromArray(matrix);
+            const m = new THREE.Matrix4().fromArray(args.projectionDataForMercatorCoords.u_projection_matrix);
             const l = new THREE.Matrix4()
                 .makeTranslation(
                     modelTransform.translateX,

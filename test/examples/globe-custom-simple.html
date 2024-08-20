@@ -194,12 +194,12 @@
             gl.uniformMatrix4fv(
                 gl.getUniformLocation(program, 'u_projection_fallback_matrix'),
                 false,
-                args.projectionDataForMercatorCoords.u_projection_fallback_matrix.slice() // convert mat4 from gl-matrix to a plain array
+                args.projectionDataForMercatorCoords.u_projection_fallback_matrix // convert mat4 from gl-matrix to a plain array
             );
             gl.uniformMatrix4fv(
                 gl.getUniformLocation(program, 'u_projection_matrix'),
                 false,
-                args.projectionDataForMercatorCoords.u_projection_matrix.slice() // convert mat4 from gl-matrix to a plain array
+                args.projectionDataForMercatorCoords.u_projection_matrix // convert mat4 from gl-matrix to a plain array
             );
             gl.uniform4f(
                 gl.getUniformLocation(program, 'u_projection_tile_mercator_coords'),
