@@ -103,7 +103,7 @@
             gl.uniformMatrix4fv(
                 gl.getUniformLocation(this.program, 'u_matrix'),
                 false,
-                args.projectionDataForMercatorCoords.u_projection_matrix
+                args.defaultProjectionData.u_projection_matrix
             );
             gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
             gl.enableVertexAttribArray(this.aPos);

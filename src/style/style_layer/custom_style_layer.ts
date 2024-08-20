@@ -63,6 +63,9 @@ export type CustomRenderMethodInput = {
      * They are set so that `projectTile` in shader accepts a vec2 in range 0..1 in web mercator coordinates.
      * Use `map.transform.getProjectionData(tileID)` to get uniforms for a given tile and pass vec2 in tile-local range 0..EXTENT instead.
      *
+     * If you just need a projection matrix, use `defaultProjectionData.u_projection_matrix`.
+     * A projection matrix is sufficient for simple custom layers that also only support mercator projection.
+     *
      * When these uniforms are used, the shader's `projectTile` function projects spherical mercator
      * coordinates to gl clip space coordinates. The spherical mercator coordinate `[0, 0]` represents the
      * top left corner of the mercator world and `[1, 1]` represents the bottom right corner. When
@@ -70,7 +73,7 @@ export type CustomRenderMethodInput = {
      * lengths in mercator units would be rendered as a cube. {@link MercatorCoordinate.fromLngLat}
      * can be used to project a `LngLat` to a mercator coordinate.
      */
-    projectionDataForMercatorCoords: ProjectionData;
+    defaultProjectionData: ProjectionData;
 }
 
 /**

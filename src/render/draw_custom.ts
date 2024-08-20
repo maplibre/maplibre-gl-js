@@ -25,7 +25,7 @@ export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: Cu
             vertexShaderPrelude: `const float PI = 3.141592653589793;\nuniform mat4 u_projection_matrix;\n${projection.shaderPreludeCode.vertexSource}`,
             define: projection.shaderDefine,
         },
-        projectionDataForMercatorCoords: projectionData,
+        defaultProjectionData: projectionData,
     };
 
     if (painter.renderPass === 'offscreen') {

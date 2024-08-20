@@ -125,7 +125,7 @@
                 // It will work regardless of current projection.
                 // See MapLibre source code, files mercator_transform.ts or globe_transform.ts, function "getCustomLayerArgs".
                 const modelMatrix = map.transform.getMatrixForModel(modelOrigin, modelAltitude);
-                const m = new THREE.Matrix4().fromArray(args.projectionDataForMercatorCoords.u_projection_matrix);
+                const m = new THREE.Matrix4().fromArray(args.defaultProjectionData.u_projection_matrix);
                 const l = new THREE.Matrix4().fromArray(modelMatrix).scale(
                     new THREE.Vector3(
                         scaling,
