@@ -399,7 +399,7 @@ describe('transform', () => {
         transform.setPitch(67.25);
         transform.setCenter(new LngLat(0.0, 0.0));
 
-        expect(transform.customLayerMatrix()[0].toString().length).toBeGreaterThan(10);
+        expect(transform.modelViewProjectionMatrix[0].toString().length).toBeGreaterThan(10);
         expect(transform.pixelsToClipSpaceMatrix[0].toString().length).toBeGreaterThan(10);
         expect(transform.maxPitchScaleFactor()).toBeCloseTo(2.366025418080343, 5);
     });

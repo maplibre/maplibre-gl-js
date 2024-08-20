@@ -55,50 +55,6 @@ export type UnwrappedTileIDType = {
     };
 };
 
-export type CustomLayerArgs = {
-    farZ: number;
-    nearZ: number;
-    /**
-     * Vertical field of view in radians.
-     */
-    fov: number;
-    /**
-     * The model-view-projection matrix.
-     */
-    modelViewProjectionMatrix: mat4;
-    /**
-     * The projection matrix, without the camera matrix.
-     */
-    projectionMatrix: mat4;
-    /**
-     * Data required for picking and compiling a custom shader for the current projection.
-     */
-    shader: {
-        /**
-         * Name of the shader variant that should be used.
-         * Depends on current projection.
-         * Whenever the other shader properties change, this string changes as well,
-         * and can be used as a key with which to cache compiled shaders.
-         */
-        variantName: string;
-        /**
-         * The prelude code to add to the vertex shader to access MapLibre's projection function.
-         * Depends on current projection.
-         */
-        vertexShaderPrelude: string;
-        /**
-         * Defines to add to the shader code.
-         * Depends on current projection.
-         */
-        define: string;
-    };
-    /**
-     * Uniforms that should be passed to the vertex shader,
-     * if MapLibre's projection code is used.
-     */
-    uniforms: {[key: string]: number | Array<number>};
-};
-
 export type TransformHelperCallbacks = {
     /**
      * Get center lngLat and zoom to ensure that

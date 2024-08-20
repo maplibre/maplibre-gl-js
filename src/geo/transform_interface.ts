@@ -358,8 +358,6 @@ export interface IReadonlyTransform extends ITransformGetters {
      */
     isPointOnMapSurface(p: Point, terrain?: Terrain): boolean;
 
-    customLayerMatrix(): mat4;
-
     /**
      * Get center lngLat and zoom to ensure that longitude and latitude bounds are respected and regions beyond the map bounds are not displayed.
      */
@@ -484,6 +482,11 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @param altitude - Altitude of the model. May be undefined.
      */
     getMatrixForModel(location: LngLatLike, altitude?: number): mat4;
+
+    /**
+     * Return projection data such that coordinates in mercator projection in range 0..1 will get projected to the map correctly.
+     */
+    getProjectionDataForCustomLayer(): ProjectionData;
 }
 
 /**

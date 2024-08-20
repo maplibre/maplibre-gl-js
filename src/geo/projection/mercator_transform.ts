@@ -1,7 +1,7 @@
 import {LngLat, LngLatLike} from '../lng_lat';
 import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp, createIdentityMat4f64} from '../../util/util';
+import {wrap, clamp, createIdentityMat4f64, createMat4f64} from '../../util/util';
 import {mat2, mat4, vec2, vec3, vec4} from 'gl-matrix';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID, calculateTileKey} from '../../source/tile_id';
 import {Terrain} from '../../render/terrain';
@@ -14,6 +14,7 @@ import {LngLatBounds} from '../lng_lat_bounds';
 import {CoveringTilesOptions, CoveringZoomOptions, IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
 import {PaddingOptions} from '../edge_insets';
 import {mercatorCoordinateToLocation, getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix} from './mercator_utils';
+import {EXTENT} from '../../data/extent';
 
 export class MercatorTransform implements ITransform {
     private _helper: TransformHelper;
@@ -834,10 +835,6 @@ export class MercatorTransform implements ITransform {
         }
     }
 
-    customLayerMatrix(): mat4 {
-        return this._mercatorMatrix.slice() as any;
-    }
-
     getMatrixForModel(location: LngLatLike, altitude?: number): mat4 {
         const modelAsMercatorCoordinate = MercatorCoordinate.fromLngLat(
             location,
@@ -851,5 +848,23 @@ export class MercatorTransform implements ITransform {
         mat4.rotateX(m, m, Math.PI / 2);
         mat4.scale(m, m, [-scale, scale, scale]);
         return m;
+    }
+
+    getProjectionDataForCustomLayer(): ProjectionData {
+        const projectionData = this.getProjectionData(new OverscaledTileID(0, 0, 0, 0, 0));
+        projectionData['u_projection_tile_mercator_coords'] = [0, 0, 1, 1];
+
+        // Even though we requested projection data for the mercator base tile which covers the entire mercator range,
+        // the shader projection machinery still expects inputs to be in tile units range [0..EXTENT].
+        // Since custom layers are expected to supply mercator coordinates [0..1], we need to rescale
+        // both matrices by EXTENT. We also need to rescale Z.
+        const fallbackMatrixScaled = createMat4f64();
+        mat4.scale(fallbackMatrixScaled, projectionData.u_projection_fallback_matrix, [EXTENT, EXTENT, this.worldSize / this._helper.pixelsPerMeter]);
+        const projectionMatrixScaled = createMat4f64();
+        mat4.scale(projectionMatrixScaled, projectionData.u_projection_matrix, [EXTENT, EXTENT, this.worldSize / this._helper.pixelsPerMeter]);
+
+        projectionData['u_projection_fallback_matrix'] = fallbackMatrixScaled;
+        projectionData['u_projection_matrix'] = projectionMatrixScaled;
+        return projectionData;
     }
 }

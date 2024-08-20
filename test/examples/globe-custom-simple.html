@@ -10,10 +10,28 @@
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
+        #project {
+            display: block;
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translate(-50%);
+            width: 50%;
+            height: 40px;
+            padding: 10px;
+            border: none;
+            border-radius: 3px;
+            font-size: 12px;
+            text-align: center;
+            color: #fff;
+            background: #ee8a65;
+        }
     </style>
 </head>
 <body>
 <div id="map"></div>
+<br />
+<button id="project">Toggle projection</button>
 <script>
     const map = new maplibregl.Map({
         container: 'map',
@@ -29,6 +47,14 @@
         });
         map.setSky({
             'atmosphere-blend': 0.0, // Disable sky
+        });
+    });
+
+    document.getElementById('project').addEventListener('click', () => {
+        // Toggle projection
+        const currentProjection = map.getProjection();
+        map.setProjection({
+            type: currentProjection.type === 'globe' ? 'mercator' : 'globe',
         });
     });
 
@@ -162,36 +188,30 @@
         },
 
         // method fired on each animation frame
-        render (gl, matrix, args) {
+        render (gl, args) {
             const program = this.getShader(gl, args.shader);
             gl.useProgram(program);
             gl.uniformMatrix4fv(
-                gl.getUniformLocation(program, 'u_matrix'),
-                false,
-                matrix
-            );
-
-            gl.uniformMatrix4fv(
                 gl.getUniformLocation(program, 'u_projection_fallback_matrix'),
                 false,
-                args.uniforms.u_projection_fallback_matrix
+                args.projectionDataForMercatorCoords.u_projection_fallback_matrix.slice() // convert mat4 from gl-matrix to a plain array
             );
             gl.uniformMatrix4fv(
                 gl.getUniformLocation(program, 'u_projection_matrix'),
                 false,
-                args.uniforms.u_projection_matrix
+                args.projectionDataForMercatorCoords.u_projection_matrix.slice() // convert mat4 from gl-matrix to a plain array
             );
             gl.uniform4f(
                 gl.getUniformLocation(program, 'u_projection_tile_mercator_coords'),
-                ...args.uniforms.u_projection_tile_mercator_coords
+                ...args.projectionDataForMercatorCoords.u_projection_tile_mercator_coords
             );
             gl.uniform4f(
                 gl.getUniformLocation(program, 'u_projection_clipping_plane'),
-                ...args.uniforms.u_projection_clipping_plane
+                ...args.projectionDataForMercatorCoords.u_projection_clipping_plane
             );
             gl.uniform1f(
                 gl.getUniformLocation(program, 'u_projection_transition'),
-                args.uniforms.u_projection_transition
+                args.projectionDataForMercatorCoords.u_projection_transition
             );
 
             gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);

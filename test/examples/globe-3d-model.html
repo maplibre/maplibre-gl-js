@@ -113,7 +113,7 @@
 
                 this.renderer.autoClear = false;
             },
-            render(gl, matrix, args) {
+            render(gl, args) {
                 // parameters to ensure the model is georeferenced correctly on the map
                 const modelOrigin = [148.9819, -35.39847];
                 const modelAltitude = 0;
@@ -125,7 +125,7 @@
                 // It will work regardless of current projection.
                 // See MapLibre source code, files mercator_transform.ts or globe_transform.ts, function "getCustomLayerArgs".
                 const modelMatrix = map.transform.getMatrixForModel(modelOrigin, modelAltitude);
-                const m = new THREE.Matrix4().fromArray(matrix);
+                const m = new THREE.Matrix4().fromArray(args.projectionDataForMercatorCoords['u_projection_matrix'].slice());
                 const l = new THREE.Matrix4().fromArray(modelMatrix).scale(
                     new THREE.Vector3(
                         scaling,

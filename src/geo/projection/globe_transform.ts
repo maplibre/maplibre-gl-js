@@ -16,6 +16,7 @@ import {CoveringTilesOptions, CoveringZoomOptions, IReadonlyTransform, ITransfor
 import {PaddingOptions} from '../edge_insets';
 import {tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 import {angularCoordinatesRadiansToVector, angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
+import {EXTENT} from '../../data/extent';
 
 /**
  * Describes the intersection of ray and sphere.
@@ -1139,10 +1140,6 @@ export class GlobeTransform implements ITransform {
         return sphereSurfacePointToCoordinates(closestOnHorizon);
     }
 
-    customLayerMatrix(): mat4 {
-        return this._globeRendering ? this.modelViewProjectionMatrix : this._mercatorTransform.customLayerMatrix();
-    }
-
     getMatrixForModel(location: LngLatLike, altitude?: number): mat4 {
         if (!this._globeRendering) {
             return this._mercatorTransform.getMatrixForModel(location, altitude);
@@ -1157,5 +1154,22 @@ export class GlobeTransform implements ITransform {
         mat4.rotateX(m, m, Math.PI * 0.5);
         mat4.scale(m, m, [scale, scale, scale]);
         return m;
+    }
+
+    getProjectionDataForCustomLayer(): ProjectionData {
+        const projectionData = this.getProjectionData(new OverscaledTileID(0, 0, 0, 0, 0));
+        projectionData['u_projection_tile_mercator_coords'] = [0, 0, 1, 1];
+
+        // Even though we requested projection data for the mercator base tile which covers the entire mercator range,
+        // the shader projection machinery still expects inputs to be in tile units range [0..EXTENT].
+        // Since custom layers are expected to supply mercator coordinates [0..1], we need to rescale
+        // the fallback projection matrix by EXTENT.
+        // Note that the regular projection matrices do not need to be modified, since the rescaling happens by setting
+        // the `u_projection_tile_mercator_coords` uniform correctly.
+        const fallbackMatrixScaled = createMat4f64();
+        mat4.scale(fallbackMatrixScaled, projectionData.u_projection_fallback_matrix, [EXTENT, EXTENT, 1]);
+
+        projectionData['u_projection_fallback_matrix'] = fallbackMatrixScaled;
+        return projectionData;
     }
 }

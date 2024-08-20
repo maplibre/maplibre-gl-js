@@ -186,7 +186,7 @@
             return result;
         },
 
-        getTileMesh(gl, args, x, y, z, border) {
+        getTileMesh(gl, x, y, z, border) {
             // What granularity should we use? Query MapLibre's projection object's granularity settings.
             const granularity = map.style.projection.subdivisionGranularity.tile.getGranularityForZoomLevel(z);
             // Do we want north pole geometry?
@@ -236,7 +236,7 @@
         },
 
         // method fired on each animation frame
-        render (gl, _matrix, args) {
+        render (gl, args) {
             const {program, locations} = this.getShader(gl, args.shader);
 
             const isBorderDemo = true;
@@ -287,14 +287,14 @@
                 gl.uniformMatrix4fv(
                     locations['u_projection_matrix'],
                     false,
-                    [...projectionData['u_projection_matrix'].values()] // matrix
+                    projectionData['u_projection_matrix']
                 );
                 gl.uniformMatrix4fv(
                     locations['u_projection_fallback_matrix'],
                     false,
-                    [...projectionData['u_projection_fallback_matrix'].values()] // matrix
+                    projectionData['u_projection_fallback_matrix']
                 );
-                const mesh = this.getTileMesh(gl, args, tile.x, tile.y, tile.z, false);
+                const mesh = this.getTileMesh(gl, tile.x, tile.y, tile.z, false);
                 gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vbo);
                 gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.ibo);
                 gl.enableVertexAttribArray(this.aPos);
