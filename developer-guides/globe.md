@@ -11,7 +11,7 @@ The actual projection is done in three steps:
 - project the 3D vector using a common perspective projection matrix
 
 So the globe is a unit sphere from the point of view of projection.
-This also simplifies a lot of math, and is used extensively in `globe_transform.ts`.
+This also simplifies a lot of math, and is used extensively in the globe transform class.
 
 Geometry is projected to the sphere in the vertex shader.
 
@@ -29,7 +29,7 @@ The only case when the user needs to be aware of this is when
 programmatically triggering animations such as `flyTo` and `easeTo`
 and using them to both change the map center's latitude and *at the same time*
 changing the map's zoom to an amount based on the map's starting zoom.
-The example `globe-zoom-planet-size-function.html` demonstrates how to
+The example [globe-zoom-planet-size-function](https://maplibre.org/maplibre-gl-js/docs/examples/globe-zoom-planet-size-function/) demonstrates how to
 compensate for planet size changes in this case.
 All other camera animations (that either specify target zoom
 that is not based on current zoom or do not specify zoom at all) will work as expected.
@@ -50,17 +50,17 @@ although there are shaders that use `#ifdef GLOBE` for globe-specific code.
 
 ## Subdivision
 
-If were were to draw mercator tiles with globe shaders directly, we would end up with a deformed sphere.
+If we were to draw mercator tiles with globe shaders directly, we would end up with a deformed sphere.
 This is due to how polygons and lines are triangulated in MapLibre - the earcut algorithm
 creates as few triangles as possible, which can sometimes result in huge triangles, for example in the oceans.
 This behavior is desirable in mercator maps, but if we were to project the vertices of such large triangles to globe directly,
-we would not get curved horizons, lines, etc. The figure below demonstrates how globe would look without subdivision.
+we would not get curved horizons, lines, etc.
+For this reason, before a tile is finished loading, its geometry (both polygons and lines) is further subdivided.
+
+The figure below demonstrates how globe would look without subdivision.
 Note the deformed oceans, and the USA-Canada border that is not properly curved.
 
 ![](assets/no_subdivision.png)
-
-For this reason, before a tile is finished loading, its geometry (both polygons and lines) is further subdivided.
-This subdivision is handled in `subdividePolygon` and `subdivideVertexLine` functions in `src/render/subdivision.ts`
 
 It is critical that subdivision is as fast as possible, otherwise it would significantly slow down tile loading.
 Currently the fastest approach seems to be taking the output geometry from `earcut` and subdividing that further.
@@ -73,9 +73,7 @@ We use subdivision that results in a square grid, visible in the figure below.
 
 ![](assets/wireframe.png)
 
-Subdivision is configured in the Projection object (inheriting from `src/geo/projection/projection.ts`).
-See `src/geo/projection/globe.ts` for an example.
-
+Subdivision is configured in the Projection object.
 Subdivision granularity is defined by the base tile granularity and minimal allowed granularity.
 The tile for zoom level 0 will have base granularity, tile for zoom 1 will have half that, etc.,
 but never less than minimal granularity.
@@ -101,8 +99,8 @@ This transition is smooth, animated and can only be noticed if you look very clo
 because globe and mercator projections converge at high zoom levels, and around level 12
 they are already very close.
 
-The transition animation is implemented in the shader, in `interpolateProjection` function in `src/shaders/_projection_globe.vertex.glsl`.
-It is controlled by a "globeness" parameter, also stored in `globe_transform.ts`.
+The transition animation is implemented in the shader's projection function,
+and is controlled by a "globeness" parameter passed from the transform.
 
 ## GPU atan() error correction
 
@@ -169,7 +167,7 @@ This is an approximation, but works well in practice.
 
 ## Transformations and unprojection
 
-Most projection and unprojection functions from `ITransform` are adapted for globe,
+Most projection and unprojection functions from the transform interface are adapted for globe,
 with some caveats.
 The `setLocationAtPoint`function may sometimes not find a valid solution
 for the given parameters.
