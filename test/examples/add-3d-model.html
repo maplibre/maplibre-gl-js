@@ -124,10 +124,9 @@
 
             // Alternatively, you can use this API to get the correct model matrix.
             // It will work regardless of current projection.
-            // See MapLibre source code, files mercator_transform.ts or globe_transform.ts, function "getCustomLayerArgs".
             // Also see the example "globe-3d-model.html".
             //
-            // const modelMatrix = args.getMatrixForModel(modelOrigin, modelAltitude);
+            // const modelMatrix = map.transform.getMatrixForModel(modelOrigin, modelAltitude);
             // const m = new THREE.Matrix4().fromArray(matrix);
             // const l = new THREE.Matrix4().fromArray(modelMatrix);
 

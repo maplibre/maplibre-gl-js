@@ -1,4 +1,4 @@
-import {LngLat, LngLatLike} from './lng_lat';
+import {LngLat} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {wrap, clamp} from '../util/util';
@@ -55,24 +55,7 @@ export type UnwrappedTileIDType = {
     };
 };
 
-export type CustomLayerArgsTransformSpecific = {
-    /**
-     * Returns a matrix that will place, rotate and scale a model to display at the given location and altitude
-     * while also being projected by the custom layer matrix.
-     * @param location - Location of the model.
-     * @param altitude - Altitude of the model. May be undefined.
-     */
-    getMatrixForModel(location: LngLatLike, altitude?: number): mat4;
-    /**
-     * Get the projection matrix to project a tile to the screen under mercator projection.
-     * This is useful for drawing tiles under mercator projection, and for drawing
-     * tiles under globe projection while supporting mercator fallback.
-     * @param unwrappedTile - The tile ID for which to generate the matrix.
-     */
-    getMercatorTileProjectionMatrix(unwrappedTile: UnwrappedTileIDType): mat4;
-};
-
-export type CustomLayerArgs = CustomLayerArgsTransformSpecific & {
+export type CustomLayerArgs = {
     farZ: number;
     nearZ: number;
     /**
@@ -114,11 +97,6 @@ export type CustomLayerArgs = CustomLayerArgsTransformSpecific & {
      * if MapLibre's projection code is used.
      */
     uniforms: {[key: string]: number | Array<number>};
-    /**
-     * Returns the  subdivision granularity for a given zoom level.
-     * @param z - The zoom level.
-     */
-    getSubdivisionForZoomLevel(z: number): number;
 };
 
 export type TransformHelperCallbacks = {

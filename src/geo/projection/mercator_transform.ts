@@ -3,11 +3,11 @@ import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAlt
 import Point from '@mapbox/point-geometry';
 import {wrap, clamp, createIdentityMat4f64} from '../../util/util';
 import {mat2, mat4, vec2, vec3, vec4} from 'gl-matrix';
-import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../../source/tile_id';
+import {UnwrappedTileID, OverscaledTileID, CanonicalTileID, calculateTileKey} from '../../source/tile_id';
 import {Terrain} from '../../render/terrain';
 import {Aabb, Frustum} from '../../util/primitives';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
-import {CustomLayerArgsTransformSpecific, scaleZoom, TransformHelper, zoomScale} from '../transform_helper';
+import {scaleZoom, TransformHelper, zoomScale} from '../transform_helper';
 import {ProjectionData} from '../../render/program/projection_program';
 import {PointProjection, xyTransformMat4} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
@@ -487,16 +487,16 @@ export class MercatorTransform implements ITransform {
     /**
      * Calculate the posMatrix that, given a tile coordinate, would be used to display the tile on a map.
      * This function is specific to the mercator projection.
-     * @param unwrappedTileID - the tile ID
+     * @param tileID - the tile ID
      */
-    calculatePosMatrix(unwrappedTileID: UnwrappedTileID, aligned: boolean = false): mat4 {
-        const posMatrixKey = unwrappedTileID.key;
+    calculatePosMatrix(tileID: UnwrappedTileID | OverscaledTileID, aligned: boolean = false): mat4 {
+        const posMatrixKey = calculateTileKey(tileID.wrap, tileID.canonical.z, tileID.canonical.z, tileID.canonical.x, tileID.canonical.y);
         const cache = aligned ? this._alignedPosMatrixCache : this._posMatrixCache;
         if (cache[posMatrixKey]) {
             return cache[posMatrixKey];
         }
 
-        const tileMatrix = calculateTileMatrix(unwrappedTileID, this.worldSize);
+        const tileMatrix = calculateTileMatrix(tileID, this.worldSize);
         mat4.multiply(tileMatrix, aligned ? this._alignedProjMatrix : this._viewProjMatrix, tileMatrix);
 
         cache[posMatrixKey] = new Float32Array(tileMatrix);
@@ -776,7 +776,7 @@ export class MercatorTransform implements ITransform {
     }
 
     getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData {
-        const matrix = overscaledTileID ? this.calculatePosMatrix(overscaledTileID.toUnwrapped(), aligned) : null;
+        const matrix = overscaledTileID ? this.calculatePosMatrix(overscaledTileID, aligned) : null;
         return getBasicProjectionData(overscaledTileID, matrix, ignoreTerrainMatrix);
     }
 
@@ -830,7 +830,7 @@ export class MercatorTransform implements ITransform {
         for (const coord of coords) {
             // Return value is thrown away, but this function will still
             // place the pos matrix into the transform's internal cache.
-            this.calculatePosMatrix(coord.toUnwrapped());
+            this.calculatePosMatrix(coord);
         }
     }
 
@@ -838,35 +838,18 @@ export class MercatorTransform implements ITransform {
         return this._mercatorMatrix.slice() as any;
     }
 
-    getCustomLayerArgs(): CustomLayerArgsTransformSpecific {
-        const current = this;
-        return {
-            getMatrixForModel: (location: LngLatLike, altitude?: number) => {
-                const modelAsMercatorCoordinate = MercatorCoordinate.fromLngLat(
-                    location,
-                    altitude
-                );
-                const scale = modelAsMercatorCoordinate.meterInMercatorCoordinateUnits();
+    getMatrixForModel(location: LngLatLike, altitude?: number): mat4 {
+        const modelAsMercatorCoordinate = MercatorCoordinate.fromLngLat(
+            location,
+            altitude
+        );
+        const scale = modelAsMercatorCoordinate.meterInMercatorCoordinateUnits();
 
-                const m = createIdentityMat4f64();
-                mat4.translate(m, m, [modelAsMercatorCoordinate.x, modelAsMercatorCoordinate.y, modelAsMercatorCoordinate.z]);
-                mat4.rotateZ(m, m, Math.PI);
-                mat4.rotateX(m, m, Math.PI / 2);
-                mat4.scale(m, m, [-scale, scale, scale]);
-                return m;
-            },
-            getMercatorTileProjectionMatrix: (unwrappedTile: {
-                wrap: number;
-                canonical: {
-                    x: number;
-                    y: number;
-                    z: number;
-                };
-            }) => {
-                const m = calculateTileMatrix(unwrappedTile, current.worldSize);
-                mat4.multiply(m, current._viewProjMatrix, m);
-                return m;
-            },
-        };
+        const m = createIdentityMat4f64();
+        mat4.translate(m, m, [modelAsMercatorCoordinate.x, modelAsMercatorCoordinate.y, modelAsMercatorCoordinate.z]);
+        mat4.rotateZ(m, m, Math.PI);
+        mat4.rotateX(m, m, Math.PI / 2);
+        mat4.scale(m, m, [-scale, scale, scale]);
+        return m;
     }
 }

@@ -1,4 +1,4 @@
-import {LngLat} from './lng_lat';
+import {LngLat, LngLatLike} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
 import {MercatorCoordinate} from './mercator_coordinate';
 import Point from '@mapbox/point-geometry';
@@ -9,7 +9,6 @@ import {Terrain} from '../render/terrain';
 import {ProjectionData} from '../render/program/projection_program';
 import {PointProjection} from '../symbol/projection';
 import {MapProjectionEvent} from '../ui/events';
-import {CustomLayerArgsTransformSpecific} from './transform_helper';
 
 export type CoveringZoomOptions = {
     /**
@@ -478,10 +477,13 @@ export interface IReadonlyTransform extends ITransformGetters {
     projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection;
 
     /**
-     * @internal
-     * Returns transform/projection-specific arguments for custom layers.
+     * Returns a matrix that will place, rotate and scale a model to display at the given location and altitude
+     * while also being projected by the custom layer matrix.
+     * This function is intended to be called from custom layers.
+     * @param location - Location of the model.
+     * @param altitude - Altitude of the model. May be undefined.
      */
-    getCustomLayerArgs(): CustomLayerArgsTransformSpecific;
+    getMatrixForModel(location: LngLatLike, altitude?: number): mat4;
 }
 
 /**

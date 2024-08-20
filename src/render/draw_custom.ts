@@ -28,8 +28,6 @@ export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: Cu
     const fallbackMatrixScaled = createMat4f64();
     mat4.scale(fallbackMatrixScaled, projectionData.u_projection_fallback_matrix, [EXTENT, EXTENT, 1]);
 
-    const transformArgs = transform.getCustomLayerArgs();
-
     const customLayerArgs: CustomLayerArgs = {
         farZ: transform.farZ,
         nearZ: transform.nearZ,
@@ -51,12 +49,6 @@ export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: Cu
             'u_projection_transition': projectionData.u_projection_transition,
             'u_projection_fallback_matrix': [...fallbackMatrixScaled.values()],
         },
-        // The following should be filled in by the transform.
-        getSubdivisionForZoomLevel: (zoomLevel): number => {
-            return projection.subdivisionGranularity.tile.getGranularityForZoomLevel(zoomLevel);
-        },
-        getMatrixForModel: transformArgs.getMatrixForModel,
-        getMercatorTileProjectionMatrix: transformArgs.getMercatorTileProjectionMatrix,
     };
 
     const customLayerMatrix = transform.customLayerMatrix();

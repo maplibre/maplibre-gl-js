@@ -187,8 +187,8 @@
         },
 
         getTileMesh(gl, args, x, y, z, border) {
-            // What granularity should we use?
-            const granularity = args.getSubdivisionForZoomLevel(z);
+            // What granularity should we use? Query MapLibre's projection object's granularity settings.
+            const granularity = map.style.projection.subdivisionGranularity.tile.getGranularityForZoomLevel(z);
             // Do we want north pole geometry?
             const north = y === 0;
             // Do we want south pole geometry?
@@ -249,15 +249,6 @@
 
             gl.useProgram(program);
 
-            gl.uniform4f(
-                locations['u_projection_clipping_plane'],
-                ...args.uniforms.u_projection_clipping_plane
-            );
-            gl.uniform1f(
-                locations['u_projection_transition'],
-                args.uniforms.u_projection_transition
-            );
-
             const isGlobeProjection = args.shader.variantName === 'globe';
 
             for (const tile of tilesToRender) {
@@ -265,47 +256,43 @@
                     continue; // No need to draw wrapped tiles on a globe.
                 }
 
+                const tileID = {
+                    wrap: tile.wrap,
+                    canonical: {
+                        x: tile.x,
+                        y: tile.y,
+                        z: tile.z,
+                    }
+                };
+
+                const projectionData = map.transform.getProjectionData(tileID);
+
+                gl.uniform4f(
+                    locations['u_projection_clipping_plane'],
+                    ...projectionData['u_projection_clipping_plane'] // vec4
+                );
+                gl.uniform1f(
+                    locations['u_projection_transition'],
+                    projectionData['u_projection_transition'] // float
+                );
+
                 // Set tile mercator extents accordingly
                 const tileSize = 1.0 / (1 << tile.z);
                 gl.uniform4f(
                     locations['u_projection_tile_mercator_coords'],
-                    tile.x * tileSize, // mercator offset X
-                    tile.y * tileSize, // mercator offset Y
-                    tileSize / EXTENT, // mercator size (also divide by tile extent)
-                    tileSize / EXTENT  // mercator size
+                    ...projectionData['u_projection_tile_mercator_coords'] // vec4
                 );
 
-                const mercatorTileProjectionMatrixArray = [
-                    ...args.getMercatorTileProjectionMatrix({
-                        wrap: tile.wrap,
-                        canonical: {
-                            x: tile.x,
-                            y: tile.y,
-                            z: tile.z,
-                        }
-                    }).values()
-                ];
-
                 // Shader variant name effectively tells us what projection code path should be used.
-                if (isGlobeProjection) {
-                    // Pass regular globe projection matrix for globe (same for every tile)...
-                    gl.uniformMatrix4fv(
-                        locations['u_projection_matrix'],
-                        false,
-                        args.uniforms.u_projection_matrix
-                    );
-                } else {
-                    // ...or pass tile-specific projection matrix for mercator.
-                    gl.uniformMatrix4fv(
-                        locations['u_projection_matrix'],
-                        false,
-                        mercatorTileProjectionMatrixArray
-                    );
-                }
+                gl.uniformMatrix4fv(
+                    locations['u_projection_matrix'],
+                    false,
+                    [...projectionData['u_projection_matrix'].values()] // matrix
+                );
                 gl.uniformMatrix4fv(
                     locations['u_projection_fallback_matrix'],
                     false,
-                    mercatorTileProjectionMatrixArray
+                    [...projectionData['u_projection_fallback_matrix'].values()] // matrix
                 );
                 const mesh = this.getTileMesh(gl, args, tile.x, tile.y, tile.z, false);
                 gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vbo);
