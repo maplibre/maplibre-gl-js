@@ -51,104 +51,6 @@
     // filled with a valid neighboring tile.
 
     const EXTENT = 8192;
-    const BORDER = EXTENT / 128;
-
-    /**
-     * Returns a "mesh" of a tessellated quad that covers an entire tile.
-     * - gl - the WebGL context
-     * - granularity - the granularity of the mesh subdivision (number of quads per axis)
-     * - border - when true, a small border will be generated for the tile
-     * - north - if true, the tile is assumed to border the north pole
-     * - south - if true, the tile is assumed to border the south pole
-     */
-    function createTileMesh(gl, granularity, border, north, south) {
-        // We only want to generate the north/south border if the tile
-        // does NOT border the north/south edge of the mercator range.
-
-        const quadsPerAxisX = granularity + (border ? 2 : 0); // two extra quads for border
-        const quadsPerAxisY = granularity + ((north || border) ? 1 : 0) + (south || border ? 1 : 0);
-        // one more vertex than quads
-        const verticesPerAxisX = quadsPerAxisX + 1;
-        const verticesPerAxisY = quadsPerAxisY + 1;
-        const offsetX = border ? -1 : 0;
-        const offsetY = (border || north) ? -1 : 0;
-        const endX = granularity + (border ? 1 : 0);
-        const endY = granularity + ((border || south) ? 1 : 0);
-
-        // The shader's projection function will recognize these values
-        // as the north/south pole and place the vertex accordingly.
-        const NORTH_POLE_Y = -32768;
-        const SOUTH_POLE_Y = 32767;
-
-        const vertexBuffer = new Int16Array(verticesPerAxisX * verticesPerAxisY * 2); // 2 values per vertex
-        const indexBuffer = new Int16Array(quadsPerAxisX * quadsPerAxisY * 6); // 6 values per quad (two triangles)
-        let vertexCount = 0;
-        let indexCount = 0;
-
-        for (let y = offsetY; y <= endY; y++) {
-            for (let x = offsetX; x <= endX; x++) {
-                let vx = x / granularity * EXTENT;
-                if (x === -1) {
-                    vx = -BORDER;
-                }
-                if (x === granularity + 1) {
-                    vx = EXTENT + BORDER;
-                }
-                let vy = y / granularity * EXTENT;
-                if (y === -1) {
-                    vy = north ? NORTH_POLE_Y : (-BORDER);
-                }
-                if (y === granularity + 1) {
-                    vy = south ? SOUTH_POLE_Y : EXTENT + BORDER;
-                }
-                vertexBuffer[vertexCount++] = vx;
-                vertexBuffer[vertexCount++] = vy;
-            }
-        }
-
-        for (let y = 0; y < quadsPerAxisY; y++) {
-            for (let x = 0; x < quadsPerAxisX; x++) {
-                const v0 = x + y * verticesPerAxisX;
-                const v1 = (x + 1) + y * verticesPerAxisX;
-                const v2 = x + (y + 1) * verticesPerAxisX;
-                const v3 = (x + 1) + (y + 1) * verticesPerAxisX;
-                // v0----v1
-                //  |  / |
-                //  | /  |
-                // v2----v3
-                indexBuffer[indexCount++] = v0;
-                indexBuffer[indexCount++] = v2;
-                indexBuffer[indexCount++] = v1;
-
-                indexBuffer[indexCount++] = v1;
-                indexBuffer[indexCount++] = v2;
-                indexBuffer[indexCount++] = v3;
-            }
-        }
-
-        const vbo = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-        gl.bufferData(
-            gl.ARRAY_BUFFER,
-            vertexBuffer,
-            gl.STATIC_DRAW
-        );
-        gl.bindBuffer(gl.ARRAY_BUFFER, null);
-        const ibo = gl.createBuffer();
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
-        gl.bufferData(
-            gl.ELEMENT_ARRAY_BUFFER,
-            indexBuffer,
-            gl.STATIC_DRAW
-        );
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-
-        return {
-            vbo,
-            ibo,
-            indexCount,
-        };
-    }
 
     // Generate an arbitrary list of tiles to render
     function generateTileList(list, current) {
@@ -274,23 +176,57 @@
                 locations[uniform] = gl.getUniformLocation(program, uniform);
             }
 
-            this.shaderMap.set(shaderDescription.variantName, {
+            const result = {
                 program,
                 locations
-            });
+            };
 
-            return program;
+            this.shaderMap.set(shaderDescription.variantName, result);
+
+            return result;
         },
 
         getTileMesh(gl, args, x, y, z, border) {
+            // What granularity should we use?
             const granularity = args.getSubdivisionForZoomLevel(z);
+            // Do we want north pole geometry?
             const north = y === 0;
+            // Do we want south pole geometry?
             const south = y === (1 << z) - 1;
             const key = `${granularity}_${north}_${south}_${border}`;
             if (this.meshMap.has(key)) {
                 return this.meshMap.get(key);
             }
-            const mesh = createTileMesh(gl, granularity, border, north, south);
+
+            const meshBuffers = maplibregl.createTileMesh({
+                granularity,
+                generateBorders: border,
+                extendToNorthPole: north,
+                extendToSouthPole: south,
+            }, '16bit');
+
+            const vbo = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                meshBuffers.vertices,
+                gl.STATIC_DRAW
+            );
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+            const ibo = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+            gl.bufferData(
+                gl.ELEMENT_ARRAY_BUFFER,
+                meshBuffers.indices,
+                gl.STATIC_DRAW
+            );
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+
+            const mesh = {
+                vbo,
+                ibo,
+                indexCount: meshBuffers.indices.length,
+            };
             this.meshMap.set(key, mesh);
             return mesh;
         },

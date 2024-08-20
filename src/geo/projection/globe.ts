@@ -1,21 +1,15 @@
 import type {Context} from '../../gl/context';
 import type {CanonicalTileID} from '../../source/tile_id';
-import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
 import {Mesh} from '../../render/mesh';
-import {EXTENT} from '../../data/extent';
-import {SegmentVector} from '../../data/segment';
-import posAttributes from '../../data/pos_attributes';
 import {browser} from '../../util/browser';
 import {easeCubicInOut, lerp} from '../../util/util';
 import {mercatorYfromLat} from '../mercator_coordinate';
-import {NORTH_POLE_Y, SOUTH_POLE_Y} from '../../render/subdivision';
 import {SubdivisionGranularityExpression, SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import type {Projection, ProjectionGPUContext, TileMeshUsage} from './projection';
 import {PreparedShader, shaders} from '../../shaders/shaders';
 import {MercatorProjection} from './mercator';
 import {ProjectionErrorMeasurement} from './globe_projection_error_measurement';
-
-const EXTENT_STENCIL_BORDER = EXTENT / 128;
+import {createTileMeshInternal, CreateTileMeshOptions} from '../../util/create_tile_mesh';
 
 export const globeConstants = {
     /**
@@ -170,8 +164,8 @@ export class GlobeProjection implements Projection {
         this._errorCorrectionUsable = lerp(this._errorCorrectionPreviousValue, newCorrection, easeCubicInOut(mix));
     }
 
-    private _getMeshKey(granularity: number, border: boolean, north: boolean, south: boolean): string {
-        return `${granularity.toString(36)}_${border ? 'b' : ''}${north ? 'n' : ''}${south ? 's' : ''}`;
+    private _getMeshKey(options: CreateTileMeshOptions): string {
+        return `${options.granularity.toString(36)}_${options.generateBorders ? 'b' : ''}${options.extendToNorthPole ? 'n' : ''}${options.extendToSouthPole ? 's' : ''}`;
     }
 
     public getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean, allowPoles: boolean, usage: TileMeshUsage): Mesh {
@@ -180,91 +174,23 @@ export class GlobeProjection implements Projection {
         const granularity = granularityConfig.getGranularityForZoomLevel(canonical.z);
         const north = (canonical.y === 0) && allowPoles;
         const south = (canonical.y === (1 << canonical.z) - 1) && allowPoles;
-        return this._getMesh(context, granularity, hasBorder, north, south);
+        return this._getMesh(context, {
+            granularity,
+            generateBorders: hasBorder,
+            extendToNorthPole: north,
+            extendToSouthPole: south,
+        });
     }
 
-    private _getMesh(context: Context, granularity: number, hasBorder: boolean, hasNorthEdge: boolean, hasSouthEdge: boolean): Mesh {
-        const key = this._getMeshKey(granularity, hasBorder, hasNorthEdge, hasSouthEdge);
+    private _getMesh(context: Context, options: CreateTileMeshOptions): Mesh {
+        const key = this._getMeshKey(options);
 
         if (key in this._tileMeshCache) {
             return this._tileMeshCache[key];
         }
 
-        const mesh = this._createQuadMesh(context, granularity, hasBorder, hasNorthEdge, hasSouthEdge);
+        const mesh = createTileMeshInternal(context, options);
         this._tileMeshCache[key] = mesh;
-        return mesh;
-    }
-
-    /**
-     * Creates a quad mesh covering positions in range 0..EXTENT, for tile clipping.
-     * @param context - MapLibre's rendering context object.
-     * @param granularity - Mesh triangulation granularity: 1 for just a single quad, 3 for 3x3 quads.
-     * @returns
-     */
-    private _createQuadMesh(context: Context, granularity: number, border: boolean, north: boolean, south: boolean): Mesh {
-        const vertexArray = new PosArray();
-        const indexArray = new TriangleIndexArray();
-
-        // We only want to generate the north/south border if the tile
-        // does NOT border the north/south edge of the mercator range.
-
-        const quadsPerAxisX = granularity + (border ? 2 : 0); // two extra quads for border
-        const quadsPerAxisY = granularity + ((north || border) ? 1 : 0) + (south || border ? 1 : 0);
-        const verticesPerAxisX = quadsPerAxisX + 1; // one more vertex than quads
-        const verticesPerAxisY = quadsPerAxisY + 1; // one more vertex than quads
-        const offsetX = border ? -1 : 0;
-        const offsetY = (border || north) ? -1 : 0;
-        const endX = granularity + (border ? 1 : 0);
-        const endY = granularity + ((border || south) ? 1 : 0);
-
-        if (verticesPerAxisX * verticesPerAxisY > (1 << 16)) {
-            throw new Error('Granularity is too large and meshes would not fit inside 16 bit vertex indices.');
-        }
-
-        const northY = NORTH_POLE_Y;
-        const southY = SOUTH_POLE_Y;
-
-        for (let y = offsetY; y <= endY; y++) {
-            for (let x = offsetX; x <= endX; x++) {
-                let vx = x / granularity * EXTENT;
-                if (x === -1) {
-                    vx = -EXTENT_STENCIL_BORDER;
-                }
-                if (x === granularity + 1) {
-                    vx = EXTENT + EXTENT_STENCIL_BORDER;
-                }
-                let vy = y / granularity * EXTENT;
-                if (y === -1) {
-                    vy = north ? northY : (-EXTENT_STENCIL_BORDER);
-                }
-                if (y === granularity + 1) {
-                    vy = south ? southY : EXTENT + EXTENT_STENCIL_BORDER;
-                }
-                vertexArray.emplaceBack(vx, vy);
-            }
-        }
-
-        for (let y = 0; y < quadsPerAxisY; y++) {
-            for (let x = 0; x < quadsPerAxisX; x++) {
-                const v0 = x + y * verticesPerAxisX;
-                const v1 = (x + 1) + y * verticesPerAxisX;
-                const v2 = x + (y + 1) * verticesPerAxisX;
-                const v3 = (x + 1) + (y + 1) * verticesPerAxisX;
-                // v0----v1
-                //  |  / |
-                //  | /  |
-                // v2----v3
-                indexArray.emplaceBack(v0, v2, v1);
-                indexArray.emplaceBack(v1, v2, v3);
-            }
-        }
-
-        const mesh = new Mesh(
-            context.createVertexBuffer(vertexArray, posAttributes.members),
-            context.createIndexBuffer(indexArray),
-            SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
-        );
-
         return mesh;
     }
 }
