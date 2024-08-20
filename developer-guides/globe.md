@@ -102,7 +102,7 @@ they are already very close.
 The transition animation is implemented in the shader's projection function,
 and is controlled by a "globeness" parameter passed from the transform.
 
-## GPU atan() error correction
+## GPU "atan" error correction
 
 When implementing globe, we noticed that globe projection did not match mercator projection
 after the automatic transition described in previous section.
