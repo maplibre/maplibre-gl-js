@@ -656,6 +656,29 @@ describe('map events', () => {
             expect(spy).toHaveBeenCalledTimes(1);
         });
 
+        test(`Map#off ${event} distinguishes distinct layers when multiple layers provided`, () => {
+            const map = createMap();
+            const featuresAB = [{} as MapGeoJSONFeature];
+
+            jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+            jest.spyOn(map, 'queryRenderedFeatures').mockImplementation((_point, options) => {
+                expect(options).toEqual({layers: ['A', 'B']});
+                return featuresAB;
+            });
+
+            const spy = jest.fn((e) => {
+                expect(e.features).toBe(featuresAB);
+            });
+
+            map.on(event, ['A', 'B'], spy);
+            map.on(event, ['B', 'C'], spy);
+            map.off(event, ['B', 'C'], spy);
+            simulate.mousemove(map.getCanvas());
+
+            expect(spy).toHaveBeenCalledTimes(1);
+            expect(map.queryRenderedFeatures).toHaveBeenCalledTimes(1);
+        });
+
         test(`Map#off ${event} distinguishes distinct listeners`, () => {
             const map = createMap();
 
