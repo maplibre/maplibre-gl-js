@@ -16,7 +16,7 @@ import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
  */
 export class HeatmapStyleLayer extends StyleLayer {
 
-    heatmapFbo: Framebuffer;
+    heatmapFbos: Map<string, Framebuffer>;
     colorRamp: RGBAImage;
     colorRampTexture: Texture;
 
@@ -31,6 +31,7 @@ export class HeatmapStyleLayer extends StyleLayer {
     constructor(layer: LayerSpecification) {
         super(layer, properties);
 
+        this.heatmapFbos = new Map();
         // make sure color ramp texture is generated for default heatmap color too
         this._updateColorRamp();
     }
@@ -52,9 +53,8 @@ export class HeatmapStyleLayer extends StyleLayer {
     }
 
     resize() {
-        if (this.heatmapFbo) {
-            this.heatmapFbo.destroy();
-            this.heatmapFbo = null;
+        if (this.heatmapFbos.has('big-fb')) {
+            this.heatmapFbos.delete('big-fb');
         }
     }
 
