@@ -858,10 +858,17 @@ export class MercatorTransform implements ITransform {
         // the shader projection machinery still expects inputs to be in tile units range [0..EXTENT].
         // Since custom layers are expected to supply mercator coordinates [0..1], we need to rescale
         // both matrices by EXTENT. We also need to rescale Z.
+
+        const scale: vec3 = [EXTENT, EXTENT, this.worldSize / this._helper.pixelsPerMeter];
+        const translate: vec3 = [0, 0, this.elevation];
+
         const fallbackMatrixScaled = createMat4f64();
-        mat4.scale(fallbackMatrixScaled, projectionData.u_projection_fallback_matrix, [EXTENT, EXTENT, this.worldSize / this._helper.pixelsPerMeter]);
+        mat4.translate(fallbackMatrixScaled, projectionData.u_projection_fallback_matrix, translate);
+        mat4.scale(fallbackMatrixScaled, fallbackMatrixScaled, scale);
+
         const projectionMatrixScaled = createMat4f64();
-        mat4.scale(projectionMatrixScaled, projectionData.u_projection_matrix, [EXTENT, EXTENT, this.worldSize / this._helper.pixelsPerMeter]);
+        mat4.translate(projectionMatrixScaled, projectionData.u_projection_matrix, translate);
+        mat4.scale(projectionMatrixScaled, projectionMatrixScaled, scale);
 
         projectionData['u_projection_fallback_matrix'] = fallbackMatrixScaled;
         projectionData['u_projection_matrix'] = projectionMatrixScaled;
