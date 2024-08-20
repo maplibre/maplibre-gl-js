@@ -702,7 +702,8 @@ describe('map events', () => {
         test(`Map#on ${event} does not fire if the specified layer does not exist`, () => {
             const map = createMap();
 
-            jest.spyOn(map, 'getLayer').mockReturnValue(null as unknown as StyleLayer);
+            jest.spyOn(map, 'getLayer').mockReturnValue(undefined);
+            jest.spyOn(map, 'queryRenderedFeatures');
 
             const spy = jest.fn();
 
@@ -711,7 +712,24 @@ describe('map events', () => {
             simulate.mousemove(map.getCanvas());
 
             expect(spy).not.toHaveBeenCalled();
+            expect(map.queryRenderedFeatures).not.toHaveBeenCalled();
+        });
 
+        test(`Map#on ${event} fires if one of specified layers exists`, () => {
+            const map = createMap();
+
+            jest.spyOn(map, 'getLayer').mockImplementation((id: string) => id === 'A' ? {} as StyleLayer : undefined);
+            jest.spyOn(map, 'queryRenderedFeatures')
+                .mockReturnValueOnce([{} as MapGeoJSONFeature])
+                .mockReturnValueOnce([]);
+
+            const spy = jest.fn();
+
+            map.on(event, ['A', 'B'], spy);
+            simulate.mousemove(map.getCanvas());
+            simulate.mousemove(map.getCanvas());
+
+            expect(spy).toHaveBeenCalledTimes(1);
         });
 
         test(`Map#on ${event} does not fire on mousemove when entering or within the specified layer`, () => {
