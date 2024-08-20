@@ -551,6 +551,56 @@ describe('map events', () => {
             expect(spyB).toHaveBeenCalledTimes(1);
         });
 
+        test(`Map#on ${event} distinguishes distinct layers when multiple layers provided`, () => {
+            const map = createMap();
+
+            const nonEmptyFeatures = [{} as MapGeoJSONFeature];
+            const emptyFeatures = [];
+
+            jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+            jest.spyOn(map, 'queryRenderedFeatures').mockImplementation((_point, options) => {
+                const layers = (options as any).layers as string[];
+                if (layers.includes('A')) {
+                    return nonEmptyFeatures;
+                }
+                return emptyFeatures;
+            });
+
+            const spyA = jest.fn();
+            const spyAB = jest.fn();
+            const spyC = jest.fn();
+
+            map.on(event, 'A', spyA);
+            map.on(event, ['A', 'B'], spyAB);
+            map.on(event, 'C', spyC);
+
+            simulate.mousemove(map.getCanvas());
+            simulate.mousemove(map.getCanvas());
+
+            expect(spyA).toHaveBeenCalledTimes(1);
+            expect(spyAB).toHaveBeenCalledTimes(1);
+            expect(spyC).not.toHaveBeenCalled();
+        });
+
+        test(`Map#on ${event} filters non-existing layers`, () => {
+            const map = createMap();
+
+            jest.spyOn(map, 'getLayer').mockImplementation((id: string) => id === 'B' ? undefined : {} as StyleLayer);
+            jest.spyOn(map, 'queryRenderedFeatures').mockImplementation((_point, options) => {
+                expect((options as any).layers).toStrictEqual(['A', 'C']);
+                return [{} as MapGeoJSONFeature];
+            });
+
+            const spyAC = jest.fn();
+
+            map.on(event, ['A', 'B', 'C'], spyAC);
+
+            simulate.mousemove(map.getCanvas());
+
+            expect(map.queryRenderedFeatures).toHaveBeenCalled();
+            expect(spyAC).toHaveBeenCalledTimes(1);
+        });
+
         test(`Map#on ${event} distinguishes distinct listeners`, () => {
             const map = createMap();
 
