@@ -340,6 +340,12 @@ export type AddImageOptions = {
 // This type is used inside map since all properties are assigned a default value.
 export type CompleteMapOptions = Complete<MapOptions>;
 
+type DelegatedListener = {
+    layers: string[];
+    listener: Listener;
+    delegates: {[type in keyof MapEventType]?: (e: any) => void};
+}
+
 const defaultMinZoom = -2;
 const defaultMaxZoom = 22;
 
@@ -463,7 +469,7 @@ export class Map extends Camera {
     _antialias: boolean;
     _refreshExpiredTiles: boolean;
     _hash: Hash;
-    _delegatedListeners: any;
+    _delegatedListeners: Record<string, DelegatedListener[]>;
     _fadeDuration: number;
     _crossSourceCollisions: boolean;
     _crossFadingFactor = 1;
@@ -1205,11 +1211,7 @@ export class Map extends Camera {
         return this._rotating || this.handlers?.isRotating();
     }
 
-    _createDelegatedListener(type: keyof MapEventType | string, layerIds: string[], listener: Listener): {
-        layers: string[];
-        listener: Listener;
-        delegates: {[type in keyof MapEventType]?: (e: any) => void};
-    } {
+    _createDelegatedListener(type: keyof MapEventType | string, layerIds: string[], listener: Listener): DelegatedListener {
         if (type === 'mouseenter' || type === 'mouseover') {
             let mousein = false;
             const mousemove = (e) => {
@@ -1526,7 +1528,7 @@ export class Map extends Camera {
 
         const layerIds = typeof layerIdsOrListener === 'string' ? [layerIdsOrListener] : layerIdsOrListener as string[];
 
-        const removeDelegatedListener = (delegatedListeners) => {
+        const removeDelegatedListener = (delegatedListeners: Record<string, DelegatedListener[]>) => {
             const listeners = delegatedListeners[type];
             for (let i = 0; i < listeners.length; i++) {
                 const delegatedListener = listeners[i];
