@@ -1262,6 +1262,28 @@ export class Map extends Camera {
         }
     }
 
+    _removeDelegatedListener(type: string, layerIds: string[], listener: Listener) {
+        if (!this._delegatedListeners || !this._delegatedListeners[type]) {
+            return this;
+        }
+
+        const listeners = this._delegatedListeners[type];
+        for (let i = 0; i < listeners.length; i++) {
+            const delegatedListener = listeners[i];
+            if (
+                delegatedListener.listener === listener &&
+                delegatedListener.layers.length === layerIds.length &&
+                delegatedListener.layers.every((layerId: string) => layerIds.includes(layerId))
+            ) {
+                for (const event in delegatedListener.delegates) {
+                    this.off(((event as any)), delegatedListener.delegates[event]);
+                }
+                listeners.splice(i, 1);
+                return this;
+            }
+        }
+    }
+
     /**
      * @event
      * Adds a listener for events of a specified type, optionally limited to features in a specified style layer(s).
@@ -1527,28 +1549,7 @@ export class Map extends Camera {
         }
 
         const layerIds = typeof layerIdsOrListener === 'string' ? [layerIdsOrListener] : layerIdsOrListener as string[];
-
-        const removeDelegatedListener = (delegatedListeners: Record<string, DelegatedListener[]>) => {
-            const listeners = delegatedListeners[type];
-            for (let i = 0; i < listeners.length; i++) {
-                const delegatedListener = listeners[i];
-                if (
-                    delegatedListener.listener === listener &&
-                    delegatedListener.layers.length === layerIds.length &&
-                    delegatedListener.layers.every((layerId: string) => layerIds.includes(layerId))
-                ) {
-                    for (const event in delegatedListener.delegates) {
-                        this.off(((event as any)), delegatedListener.delegates[event]);
-                    }
-                    listeners.splice(i, 1);
-                    return this;
-                }
-            }
-        };
-
-        if (this._delegatedListeners && this._delegatedListeners[type]) {
-            removeDelegatedListener(this._delegatedListeners);
-        }
+        this._removeDelegatedListener(type, layerIds, listener);
 
         return this;
     }
