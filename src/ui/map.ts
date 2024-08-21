@@ -1276,7 +1276,7 @@ export class Map extends Camera {
                 delegatedListener.layers.every((layerId: string) => layerIds.includes(layerId))
             ) {
                 for (const event in delegatedListener.delegates) {
-                    this.off(((event as any)), delegatedListener.delegates[event]);
+                    this.off(event, delegatedListener.delegates[event]);
                 }
                 listeners.splice(i, 1);
                 return this;
