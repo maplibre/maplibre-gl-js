@@ -2592,7 +2592,7 @@ describe('Style#serialize', () => {
         expect(style.getSky()).toBeUndefined();
     });
 
-    test('sky sure be defined even after setting it to undefined', async () => {
+    test('sky should be defined even after setting it to undefined and back', async () => {
         const sky: SkySpecification = {
             'horizon-fog-blend': 0.5,
             'fog-color': '#fff'
