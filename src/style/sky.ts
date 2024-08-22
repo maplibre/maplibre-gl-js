@@ -60,6 +60,14 @@ export class Sky extends Evented {
     setSky(sky?: SkySpecification, options: StyleSetterOptions = {}) {
         if (this._validate(validateSky, sky, options)) return;
 
+        if (!sky) {
+            sky = {
+                'sky-color': 'transparent',
+                'horizon-color': 'transparent',
+                'fog-color': 'transparent',
+            };
+        }
+
         for (const name in sky) {
             const value = sky[name];
             if (name.endsWith(TRANSITION_SUFFIX)) {
