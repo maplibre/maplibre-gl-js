@@ -1,7 +1,7 @@
 import {loadGlyphRange} from '../style/load_glyph_range';
 
 import TinySDF from '@mapbox/tiny-sdf';
-import {AlphaImage} from '../util/image';
+import {RGBAImage} from '../util/image';
 
 import type {StyleGlyph} from '../style/style_glyph';
 import type {RequestManager} from '../util/request_manager';
@@ -184,7 +184,7 @@ export class GlyphManager {
 
         return {
             id,
-            bitmap: new AlphaImage({width: char.width || 30 * textureScale, height: char.height || 30 * textureScale}, char.data),
+            bitmap: new RGBAImage({width: char.width || 30 * textureScale, height: char.height || 30 * textureScale}, char.data),
             metrics: {
                 width: char.glyphWidth / textureScale || 24,
                 height: char.glyphHeight / textureScale || 24,
