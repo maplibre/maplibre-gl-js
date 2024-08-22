@@ -1518,10 +1518,10 @@ export class Map extends Camera {
     ): this;
     /**
      * Overload of the `off` method that allows to remove an event created with multiple layers.
-     * Provide the same layer ids as to `on` method to match the listener.
+     * Provide the same layer IDs as to `on` or `once`, when the listener was registered.
      * @event
      * @param type - The type of the event.
-     * @param layers - The layer IDs preciously used to install the listener.
+     * @param layers - The layer IDs previously used to install the listener.
      * @param listener - The function previously installed as a listener.
      */
     off<T extends keyof MapLayerEventType>(
