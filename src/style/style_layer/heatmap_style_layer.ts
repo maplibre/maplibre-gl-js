@@ -11,6 +11,8 @@ import type {Framebuffer} from '../../gl/framebuffer';
 import type {HeatmapPaintProps} from './heatmap_style_layer_properties.g';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
+export const HEATMAP_FULL_RENDER_FBO_KEY = 'big-fb';
+
 /**
  * A style layer that defines a heatmap
  */
@@ -53,8 +55,8 @@ export class HeatmapStyleLayer extends StyleLayer {
     }
 
     resize() {
-        if (this.heatmapFbos.has('big-fb')) {
-            this.heatmapFbos.delete('big-fb');
+        if (this.heatmapFbos.has(HEATMAP_FULL_RENDER_FBO_KEY)) {
+            this.heatmapFbos.delete(HEATMAP_FULL_RENDER_FBO_KEY);
         }
     }
 
