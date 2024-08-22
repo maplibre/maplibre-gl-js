@@ -55,6 +55,7 @@ export class Sky extends Evented {
         this._transitionable = new Transitionable(properties);
         this.setSky(sky);
         this._transitioning = this._transitionable.untransitioned();
+        this.recalculate(new EvaluationParameters(0));
     }
 
     setSky(sky?: SkySpecification, options: StyleSetterOptions = {}) {

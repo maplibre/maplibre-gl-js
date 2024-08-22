@@ -1496,7 +1496,7 @@ export class Style extends Evented {
     }
 
     setSky(skyOptions?: SkySpecification, options: StyleSetterOptions = {}) {
-        const sky = this.stylesheet.sky;
+        const sky = this.getSky();
         let update = false;
         if (!skyOptions && !sky) return;
 
