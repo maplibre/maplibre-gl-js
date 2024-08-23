@@ -289,8 +289,8 @@ export type MapOptions = {
     fitBoundsOptions?: FitBoundsOptions;
     /**
      * Defines a CSS
-     * font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
-     * In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
+     * font-family for locally overriding generation of Chinese, Japanese, and Korean characters.
+     * For these characters, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
      * Set to `false`, to enable font settings from the map's style for these glyph ranges.
      * The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js/docs/examples/local-ideographs).)
      * @defaultValue 'sans-serif'
@@ -2665,7 +2665,7 @@ export class Map extends Camera {
     /**
      * Loads sky and fog defined by {@link SkySpecification} onto the map.
      * Note: The fog only shows when using the terrain 3D feature.
-     * @param sky - Sky properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sky).
+     * @param sky - Sky properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/sky/).
      * @returns `this`
      * @example
      * ```ts
@@ -2681,7 +2681,11 @@ export class Map extends Camera {
     /**
      * Returns the value of the sky object.
      *
-     * @returns sky Sky properties of the style.
+     * @returns the sky properties of the style.
+     * @example
+     * ```ts
+     * map.getSky();
+     * ```
      */
     getSky() {
         return this.style.getSky();

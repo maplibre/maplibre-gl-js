@@ -18,6 +18,7 @@ import {EXTENT} from '../data/extent';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {LngLat, earthRadius} from '../geo/lng_lat';
 import {Mesh} from './mesh';
+import {isInBoundsForZoomLngLat} from '../util/world_bounds';
 
 /**
  * @internal
@@ -184,6 +185,7 @@ export class Terrain {
      * @returns the elevation
      */
     getElevationForLngLatZoom(lnglat: LngLat, zoom: number) {
+        if (!isInBoundsForZoomLngLat(zoom, lnglat.wrap())) return 0;
         const {tileID, mercatorX, mercatorY} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
         return this.getElevation(tileID, mercatorX % EXTENT, mercatorY % EXTENT, EXTENT);
     }

@@ -172,7 +172,7 @@ export function createStyleSource() {
     } as SourceSpecification;
 }
 
-export function createStyle() {
+export function createStyle(): StyleSpecification {
     return {
         version: 8,
         center: [-73.9749, 40.7736],
@@ -181,5 +181,5 @@ export function createStyle() {
         pitch: 50,
         sources: {},
         layers: []
-    } as StyleSpecification;
+    };
 }
