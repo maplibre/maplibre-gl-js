@@ -31038,9 +31038,9 @@ function doOnceCompleted(jsonsMap, imagesMap) {
             const context = browser.getImageCanvasContext((yield imagesMap[spriteName]).data);
             const json = (yield jsonsMap[spriteName]).data;
             for (const id in json) {
-                const { width, height, x, y, sdf, pixelRatio, stretchX, stretchY, content, textFitWidth, textFitHeight } = json[id];
+                const { width, height, x, y, pixelRatio, stretchX, stretchY, content, textFitWidth, textFitHeight } = json[id];
                 const spriteData = { width, height, x, y, context };
-                result[spriteName][id] = { data: null, pixelRatio, sdf, stretchX, stretchY, content, textFitWidth, textFitHeight, spriteData };
+                result[spriteName][id] = { data: null, pixelRatio, sdf: true, stretchX, stretchY, content, textFitWidth, textFitHeight, spriteData };
             }
         }
         return result;
