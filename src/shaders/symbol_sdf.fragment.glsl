@@ -28,8 +28,8 @@ float screenPxRange() {
     // TODO: This should be a uniform that contains the value of
     // fontSize / sdfSize * sdfPixelRange
     
-    float fontSize = u_size;
-    float sdfSize = 36.0;
+    float fontSize = u_size * 32.0;
+    float sdfSize = 32.0;
     float sdfPixelRange = 8.0;
     return fontSize / sdfSize * sdfPixelRange;
     /*
