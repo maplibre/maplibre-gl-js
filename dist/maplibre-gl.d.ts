@@ -2658,7 +2658,7 @@ export type GlyphMetrics = {
  */
 export type StyleGlyph = {
 	id: number;
-	bitmap: RGBAImage;
+	bitmap: AlphaImage;
 	metrics: GlyphMetrics;
 };
 /**

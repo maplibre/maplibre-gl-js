@@ -28643,7 +28643,7 @@ function readFontstack(tag, glyphs, pbf) {
         const { id, bitmap, width, height, left, top, advance } = pbf.readMessage(readGlyph, {});
         glyphs.push({
             id,
-            bitmap: new RGBAImage({
+            bitmap: new AlphaImage({
                 width: width + 2 * border$1,
                 height: height + 2 * border$1
             }, bitmap),
@@ -32173,7 +32173,7 @@ class GlyphAtlas {
             }
         }
         const { w, h } = potpack(bins);
-        const image = new RGBAImage({ width: w || 1, height: h || 1 });
+        const image = new AlphaImage({ width: w || 1, height: h || 1 });
         for (const stack in stacks) {
             const glyphs = stacks[stack];
             for (const id in glyphs) {
@@ -32181,7 +32181,7 @@ class GlyphAtlas {
                 if (!src || src.bitmap.width === 0 || src.bitmap.height === 0)
                     continue;
                 const bin = positions[stack][id].rect;
-                RGBAImage.copy(src.bitmap, image, { x: 0, y: 0 }, { x: bin.x + padding, y: bin.y + padding }, src.bitmap);
+                AlphaImage.copy(src.bitmap, image, { x: 0, y: 0 }, { x: bin.x + padding, y: bin.y + padding }, src.bitmap);
             }
         }
         this.image = image;

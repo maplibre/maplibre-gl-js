@@ -28469,7 +28469,7 @@ function readFontstack(tag, glyphs, pbf) {
         const { id, bitmap, width, height, left, top, advance } = pbf.readMessage(readGlyph, {});
         glyphs.push({
             id,
-            bitmap: new RGBAImage({
+            bitmap: new AlphaImage({
                 width: width + 2 * border$1,
                 height: height + 2 * border$1
             }, bitmap),
@@ -33251,6 +33251,7 @@ var performance$1 = performance;
 
 exports.AJAXError = AJAXError;
 exports.Actor = Actor;
+exports.AlphaImage = AlphaImage;
 exports.CanonicalTileID = CanonicalTileID;
 exports.CollisionBoxArray = CollisionBoxArray;
 exports.CollisionCircleLayoutArray = CollisionCircleLayoutArray;
@@ -33491,7 +33492,7 @@ class GlyphAtlas {
             }
         }
         const { w, h } = performance.potpack(bins);
-        const image = new performance.RGBAImage({ width: w || 1, height: h || 1 });
+        const image = new performance.AlphaImage({ width: w || 1, height: h || 1 });
         for (const stack in stacks) {
             const glyphs = stacks[stack];
             for (const id in glyphs) {
@@ -33499,7 +33500,7 @@ class GlyphAtlas {
                 if (!src || src.bitmap.width === 0 || src.bitmap.height === 0)
                     continue;
                 const bin = positions[stack][id].rect;
-                performance.RGBAImage.copy(src.bitmap, image, { x: 0, y: 0 }, { x: bin.x + padding, y: bin.y + padding }, src.bitmap);
+                performance.AlphaImage.copy(src.bitmap, image, { x: 0, y: 0 }, { x: bin.x + padding, y: bin.y + padding }, src.bitmap);
             }
         }
         this.image = image;
@@ -37405,7 +37406,7 @@ class GlyphManager {
         const leftAdjustment = 0.5;
         return {
             id,
-            bitmap: new performance$1.RGBAImage({ width: char.width || 30 * textureScale, height: char.height || 30 * textureScale }, char.data),
+            bitmap: new performance$1.AlphaImage({ width: char.width || 30 * textureScale, height: char.height || 30 * textureScale }, char.data),
             metrics: {
                 width: char.glyphWidth / textureScale || 24,
                 height: char.glyphHeight / textureScale || 24,
@@ -40174,7 +40175,7 @@ class Tile {
             this.imageAtlas.uploaded = true;
         }
         if (this.glyphAtlasImage) {
-            this.glyphAtlasTexture = new Texture(context, this.glyphAtlasImage, gl.RGBA);
+            this.glyphAtlasTexture = new Texture(context, this.glyphAtlasImage, gl.ALPHA);
             this.glyphAtlasImage = null;
         }
     }

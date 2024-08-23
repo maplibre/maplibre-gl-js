@@ -1,4 +1,4 @@
-import {RGBAImage} from '../util/image';
+import {AlphaImage} from '../util/image';
 
 import Protobuf from 'pbf';
 const border = 3;
@@ -16,7 +16,7 @@ function readFontstack(tag: number, glyphs: Array<StyleGlyph>, pbf: Protobuf) {
         const {id, bitmap, width, height, left, top, advance} = pbf.readMessage(readGlyph, {});
         glyphs.push({
             id,
-            bitmap: new RGBAImage({
+            bitmap: new AlphaImage({
                 width: width + 2 * border,
                 height: height + 2 * border
             }, bitmap),

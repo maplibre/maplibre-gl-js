@@ -29079,7 +29079,7 @@ function readFontstack(tag, glyphs, pbf) {
         const { id, bitmap, width, height, left, top, advance } = pbf.readMessage(readGlyph, {});
         glyphs.push({
             id,
-            bitmap: new RGBAImage({
+            bitmap: new AlphaImage({
                 width: width + 2 * border$1,
                 height: height + 2 * border$1
             }, bitmap),
@@ -31696,7 +31696,7 @@ class GlyphManager {
         const leftAdjustment = 0.5;
         return {
             id,
-            bitmap: new RGBAImage({ width: char.width || 30 * textureScale, height: char.height || 30 * textureScale }, char.data),
+            bitmap: new AlphaImage({ width: char.width || 30 * textureScale, height: char.height || 30 * textureScale }, char.data),
             metrics: {
                 width: char.glyphWidth / textureScale || 24,
                 height: char.glyphHeight / textureScale || 24,
@@ -35607,7 +35607,7 @@ class Tile {
             this.imageAtlas.uploaded = true;
         }
         if (this.glyphAtlasImage) {
-            this.glyphAtlasTexture = new Texture(context, this.glyphAtlasImage, gl.RGBA);
+            this.glyphAtlasTexture = new Texture(context, this.glyphAtlasImage, gl.ALPHA);
             this.glyphAtlasImage = null;
         }
     }

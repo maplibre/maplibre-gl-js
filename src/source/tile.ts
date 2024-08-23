@@ -265,7 +265,7 @@ export class Tile {
         }
 
         if (this.glyphAtlasImage) {
-            this.glyphAtlasTexture = new Texture(context, this.glyphAtlasImage, gl.RGBA);
+            this.glyphAtlasTexture = new Texture(context, this.glyphAtlasImage, gl.ALPHA);
             this.glyphAtlasImage = null;
         }
     }

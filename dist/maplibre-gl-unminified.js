@@ -20128,7 +20128,7 @@ function readFontstack(tag, glyphs, pbf) {
         const { id, bitmap, width, height, left, top, advance } = pbf.readMessage(readGlyph, {});
         glyphs.push({
             id,
-            bitmap: new RGBAImage({
+            bitmap: new AlphaImage({
                 width: width + 2 * border$1,
                 height: height + 2 * border$1
             }, bitmap),
@@ -20354,13 +20354,13 @@ class ImageAtlas {
 register('ImagePosition', ImagePosition);
 register('ImageAtlas', ImageAtlas);
 
-exports.ag = void 0;
+exports.ah = void 0;
 (function (WritingMode) {
     WritingMode[WritingMode["none"] = 0] = "none";
     WritingMode[WritingMode["horizontal"] = 1] = "horizontal";
     WritingMode[WritingMode["vertical"] = 2] = "vertical";
     WritingMode[WritingMode["horizontalOnly"] = 3] = "horizontalOnly";
-})(exports.ag || (exports.ag = {}));
+})(exports.ah || (exports.ah = {}));
 const SHAPING_DEFAULT_OFFSET = -17;
 function isEmpty(positionedLines) {
     for (const line of positionedLines) {
@@ -20500,7 +20500,7 @@ function breakLines(input, lineBreakPoints) {
 }
 function shapeText(text, glyphMap, glyphPositions, imagePositions, defaultFontStack, maxWidth, lineHeight, textAnchor, textJustify, spacing, translate, writingMode, allowVerticalPlacement, layoutTextSize, layoutTextSizeThisZoom) {
     const logicalInput = TaggedString.fromFeature(text, defaultFontStack);
-    if (writingMode === exports.ag.vertical) {
+    if (writingMode === exports.ah.vertical) {
         logicalInput.verticalizePunctuation();
     }
     let lines;
@@ -20751,7 +20751,7 @@ function shapeLines(shaping, glyphMap, glyphPositions, imagePositions, lines, li
             let rect = null;
             let imageName = null;
             let verticalAdvance = ONE_EM;
-            const vertical = !(writingMode === exports.ag.horizontal ||
+            const vertical = !(writingMode === exports.ah.horizontal ||
                 // Don't verticalize glyphs that have no upright orientation if vertical placement is disabled.
                 (!allowVerticalPlacement && !charHasUprightVerticalOrientation(codePoint)) ||
                 // If vertical placement is enabled, don't verticalize glyphs that
@@ -21216,7 +21216,7 @@ class SymbolBucket {
         const zOrderByViewportY = zOrder === 'viewport-y' || (zOrder === 'auto' && !this.sortFeaturesByKey);
         this.sortFeaturesByY = zOrderByViewportY && this.canOverlap;
         if (layout.get('symbol-placement') === 'point') {
-            this.writingModes = layout.get('text-writing-mode').map(wm => exports.ag[wm]);
+            this.writingModes = layout.get('text-writing-mode').map(wm => exports.ah[wm]);
         }
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
         this.sourceID = options.sourceID;
@@ -21325,7 +21325,7 @@ class SymbolBucket {
             if (text) {
                 const fontStack = textFont.evaluate(evaluationFeature, {}, canonical).join(',');
                 const textAlongLine = layout.get('text-rotation-alignment') !== 'viewport' && layout.get('symbol-placement') !== 'point';
-                this.allowVerticalPlacement = this.writingModes && this.writingModes.indexOf(exports.ag.vertical) >= 0;
+                this.allowVerticalPlacement = this.writingModes && this.writingModes.indexOf(exports.ah.vertical) >= 0;
                 for (const section of text.sections) {
                     if (!section.image) {
                         const doesAllowVerticalWritingMode = allowsVerticalWritingMode(text.toString());
@@ -21420,7 +21420,7 @@ class SymbolBucket {
         const segment = arrays.segments.prepareSegment(4 * quads.length, layoutVertexArray, indexArray, this.canOverlap ? feature.sortKey : undefined);
         const glyphOffsetArrayStart = this.glyphOffsetArray.length;
         const vertexStartIndex = segment.vertexLength;
-        const angle = (this.allowVerticalPlacement && writingMode === exports.ag.vertical) ? Math.PI / 2 : 0;
+        const angle = (this.allowVerticalPlacement && writingMode === exports.ah.vertical) ? Math.PI / 2 : 0;
         const sections = feature.text && feature.text.sections;
         for (let i = 0; i < quads.length; i++) {
             const { tl, tr, bl, br, tex, pixelOffsetTL, pixelOffsetBR, minFontScaleX, minFontScaleY, glyphOffset, isSDF, sectionIndex } = quads[i];
@@ -23868,7 +23868,7 @@ function getCentroidCell(polygon) {
     return new Cell(x / area, y / area, 0, polygon);
 }
 
-exports.ap = void 0;
+exports.aq = void 0;
 (function (TextAnchorEnum) {
     TextAnchorEnum[TextAnchorEnum["center"] = 1] = "center";
     TextAnchorEnum[TextAnchorEnum["left"] = 2] = "left";
@@ -23879,7 +23879,7 @@ exports.ap = void 0;
     TextAnchorEnum[TextAnchorEnum["top-right"] = 7] = "top-right";
     TextAnchorEnum[TextAnchorEnum["bottom-left"] = 8] = "bottom-left";
     TextAnchorEnum[TextAnchorEnum["bottom-right"] = 9] = "bottom-right";
-})(exports.ap || (exports.ap = {}));
+})(exports.aq || (exports.aq = {}));
 // The radial offset is to the edge of the text box
 // In the horizontal direction, the edge of the text box is where glyphs start
 // But in the vertical direction, the glyphs appear to "start" at the baseline
@@ -24083,7 +24083,7 @@ function performSymbolLayout(args) {
                     // Vertical POI label placement is meant to be used for scripts that support vertical
                     // writing mode, thus, default left justification is used. If Latin
                     // scripts would need to be supported, this should take into account other justifications.
-                    shapedTextOrientations.vertical = shapeText(text, args.glyphMap, args.glyphPositions, args.imagePositions, fontstack, maxWidth, lineHeight, textAnchor, 'left', spacingIfAllowed, textOffset, exports.ag.vertical, true, layoutTextSize, layoutTextSizeThisZoom);
+                    shapedTextOrientations.vertical = shapeText(text, args.glyphMap, args.glyphPositions, args.imagePositions, fontstack, maxWidth, lineHeight, textAnchor, 'left', spacingIfAllowed, textOffset, exports.ah.vertical, true, layoutTextSize, layoutTextSizeThisZoom);
                 }
             };
             // If this layer uses text-variable-anchor, generate shapings for all justification possibilities.
@@ -24109,7 +24109,7 @@ function performSymbolLayout(args) {
                     else {
                         // If using text-variable-anchor for the layer, we use a center anchor for all shapings and apply
                         // the offsets for the anchor in the placement step.
-                        const shaping = shapeText(text, args.glyphMap, args.glyphPositions, args.imagePositions, fontstack, maxWidth, lineHeight, 'center', justification, spacingIfAllowed, textOffset, exports.ag.horizontal, false, layoutTextSize, layoutTextSizeThisZoom);
+                        const shaping = shapeText(text, args.glyphMap, args.glyphPositions, args.imagePositions, fontstack, maxWidth, lineHeight, 'center', justification, spacingIfAllowed, textOffset, exports.ah.horizontal, false, layoutTextSize, layoutTextSizeThisZoom);
                         if (shaping) {
                             shapedTextOrientations.horizontal[justification] = shaping;
                             singleLine = shaping.positionedLines.length === 1;
@@ -24123,14 +24123,14 @@ function performSymbolLayout(args) {
                     textJustify = getAnchorJustification(textAnchor);
                 }
                 // Horizontal point or line label.
-                const shaping = shapeText(text, args.glyphMap, args.glyphPositions, args.imagePositions, fontstack, maxWidth, lineHeight, textAnchor, textJustify, spacingIfAllowed, textOffset, exports.ag.horizontal, false, layoutTextSize, layoutTextSizeThisZoom);
+                const shaping = shapeText(text, args.glyphMap, args.glyphPositions, args.imagePositions, fontstack, maxWidth, lineHeight, textAnchor, textJustify, spacingIfAllowed, textOffset, exports.ah.horizontal, false, layoutTextSize, layoutTextSizeThisZoom);
                 if (shaping)
                     shapedTextOrientations.horizontal[textJustify] = shaping;
                 // Vertical point label (if allowVerticalPlacement is enabled).
                 addVerticalShapingForPointLabelIfNeeded();
                 // Verticalized line label.
                 if (allowsVerticalWritingMode(unformattedText) && textAlongLine && keepUpright) {
-                    shapedTextOrientations.vertical = shapeText(text, args.glyphMap, args.glyphPositions, args.imagePositions, fontstack, maxWidth, lineHeight, textAnchor, textJustify, spacingIfAllowed, textOffset, exports.ag.vertical, false, layoutTextSize, layoutTextSizeThisZoom);
+                    shapedTextOrientations.vertical = shapeText(text, args.glyphMap, args.glyphPositions, args.imagePositions, fontstack, maxWidth, lineHeight, textAnchor, textJustify, spacingIfAllowed, textOffset, exports.ah.vertical, false, layoutTextSize, layoutTextSizeThisZoom);
                 }
             }
         }
@@ -24268,7 +24268,7 @@ function addTextVariableAnchorOffsets(textAnchorOffsets, variableAnchorOffset) {
     const values = variableAnchorOffset === null || variableAnchorOffset === void 0 ? void 0 : variableAnchorOffset.values;
     if ((values === null || values === void 0 ? void 0 : values.length) > 0) {
         for (let i = 0; i < values.length; i += 2) {
-            const anchor = exports.ap[values[i]];
+            const anchor = exports.aq[values[i]];
             const offset = values[i + 1];
             textAnchorOffsets.emplaceBack(anchor, offset[0], offset[1]);
         }
@@ -24365,13 +24365,13 @@ function addSymbol(bucket, anchor, line, shapedTextOrientations, shapedIcon, ima
                 warnOnce(`${bucket.layerIds[0]}: Value for "icon-size" is >= ${MAX_GLYPH_ICON_SIZE}. Reduce your "icon-size".`);
             }
         }
-        bucket.addSymbols(bucket.icon, iconQuads, iconSizeData, iconOffset, iconAlongLine, feature, exports.ag.none, anchor, lineArray.lineStartIndex, lineArray.lineLength, 
+        bucket.addSymbols(bucket.icon, iconQuads, iconSizeData, iconOffset, iconAlongLine, feature, exports.ah.none, anchor, lineArray.lineStartIndex, lineArray.lineLength, 
         // The icon itself does not have an associated symbol since the text isn't placed yet
         -1, canonical);
         placedIconSymbolIndex = bucket.icon.placedSymbolArray.length - 1;
         if (verticalIconQuads) {
             numVerticalIconVertices = verticalIconQuads.length * 4;
-            bucket.addSymbols(bucket.icon, verticalIconQuads, iconSizeData, iconOffset, iconAlongLine, feature, exports.ag.vertical, anchor, lineArray.lineStartIndex, lineArray.lineLength, 
+            bucket.addSymbols(bucket.icon, verticalIconQuads, iconSizeData, iconOffset, iconAlongLine, feature, exports.ah.vertical, anchor, lineArray.lineStartIndex, lineArray.lineLength, 
             // The icon itself does not have an associated symbol since the text isn't placed yet
             -1, canonical);
             verticalPlacedIconSymbolIndex = bucket.icon.placedSymbolArray.length - 1;
@@ -24388,13 +24388,13 @@ function addSymbol(bucket, anchor, line, shapedTextOrientations, shapedIcon, ima
             textCollisionFeature = new CollisionFeature(collisionBoxArray, anchor, featureIndex, sourceLayerIndex, bucketIndex, shaping, textBoxScale, textPadding, textAlongLine, textRotate);
         }
         const singleLine = shaping.positionedLines.length === 1;
-        numHorizontalGlyphVertices += addTextVertices(bucket, anchor, shaping, imageMap, layer, textAlongLine, feature, textOffset, lineArray, shapedTextOrientations.vertical ? exports.ag.horizontal : exports.ag.horizontalOnly, singleLine ? justifications : [justification], placedTextSymbolIndices, placedIconSymbolIndex, sizes, canonical);
+        numHorizontalGlyphVertices += addTextVertices(bucket, anchor, shaping, imageMap, layer, textAlongLine, feature, textOffset, lineArray, shapedTextOrientations.vertical ? exports.ah.horizontal : exports.ah.horizontalOnly, singleLine ? justifications : [justification], placedTextSymbolIndices, placedIconSymbolIndex, sizes, canonical);
         if (singleLine) {
             break;
         }
     }
     if (shapedTextOrientations.vertical) {
-        numVerticalGlyphVertices += addTextVertices(bucket, anchor, shapedTextOrientations.vertical, imageMap, layer, textAlongLine, feature, textOffset, lineArray, exports.ag.vertical, ['vertical'], placedTextSymbolIndices, verticalPlacedIconSymbolIndex, sizes, canonical);
+        numVerticalGlyphVertices += addTextVertices(bucket, anchor, shapedTextOrientations.vertical, imageMap, layer, textAlongLine, feature, textOffset, lineArray, exports.ah.vertical, ['vertical'], placedTextSymbolIndices, verticalPlacedIconSymbolIndex, sizes, canonical);
     }
     const textBoxStartIndex = textCollisionFeature ? textCollisionFeature.boxStartIndex : bucket.collisionBoxArray.length;
     const textBoxEndIndex = textCollisionFeature ? textCollisionFeature.boxEndIndex : bucket.collisionBoxArray.length;
@@ -24776,12 +24776,12 @@ function sqDist(ax, ay, bx, by) {
     return dx * dx + dy * dy;
 }
 
-exports.be = void 0;
+exports.bf = void 0;
 (function (PerformanceMarkers) {
     PerformanceMarkers["create"] = "create";
     PerformanceMarkers["load"] = "load";
     PerformanceMarkers["fullLoad"] = "fullLoad";
-})(exports.be || (exports.be = {}));
+})(exports.bf || (exports.bf = {}));
 let lastFrameTime = null;
 let frameTimes = [];
 const minFramerateTarget = 60;
@@ -24805,13 +24805,13 @@ const PerformanceUtils = {
         frameTimes = [];
         performance.clearMeasures(loadTimeKey);
         performance.clearMeasures(fullLoadTimeKey);
-        for (const marker in exports.be) {
-            performance.clearMarks(exports.be[marker]);
+        for (const marker in exports.bf) {
+            performance.clearMarks(exports.bf[marker]);
         }
     },
     getPerformanceMetrics() {
-        performance.measure(loadTimeKey, exports.be.create, exports.be.load);
-        performance.measure(fullLoadTimeKey, exports.be.create, exports.be.fullLoad);
+        performance.measure(loadTimeKey, exports.bf.create, exports.bf.load);
+        performance.measure(fullLoadTimeKey, exports.bf.create, exports.bf.fullLoad);
         const loadTime = performance.getEntriesByName(loadTimeKey)[0].duration;
         const fullLoadTime = performance.getEntriesByName(fullLoadTimeKey)[0].duration;
         const totalFrames = frameTimes.length;
@@ -24862,135 +24862,136 @@ class RequestPerformance {
     }
 }
 
-exports.$ = CanonicalTileID;
+exports.$ = SegmentVector;
 exports.A = ARRAY_TYPE;
-exports.B = Actor;
-exports.C = create$1;
+exports.B = isSafari;
+exports.C = Actor;
 exports.D = DataConstantProperty;
 exports.E = Evented;
-exports.F = translate;
+exports.F = create$1;
 exports.G = GLOBAL_DISPATCHER_ID;
-exports.H = scale;
+exports.H = translate;
 exports.I = ImagePosition;
-exports.J = multiply$1;
-exports.K = pick;
-exports.L = LngLat;
-exports.M = mercatorXfromLng;
-exports.N = mercatorYfromLat;
-exports.O = OverscaledTileID;
+exports.J = scale;
+exports.K = multiply$1;
+exports.L = pick;
+exports.M = LngLat;
+exports.N = mercatorXfromLng;
+exports.O = mercatorYfromLat;
 exports.P = Point$2;
-exports.Q = offscreenCanvasSupported;
+exports.Q = OverscaledTileID;
 exports.R = RGBAImage;
-exports.S = isOffscreenCanvasDistorted;
+exports.S = offscreenCanvasSupported;
 exports.T = Transitionable;
-exports.U = readImageUsingVideoFrame;
-exports.V = EXTENT;
-exports.W = createLayout;
-exports.X = MercatorCoordinate;
-exports.Y = RasterBoundsArray;
-exports.Z = SegmentVector;
+exports.U = isOffscreenCanvasDistorted;
+exports.V = readImageUsingVideoFrame;
+exports.W = EXTENT;
+exports.X = createLayout;
+exports.Y = MercatorCoordinate;
+exports.Z = RasterBoundsArray;
 exports._ = __awaiter;
 exports.a = config;
-exports.a$ = mul;
-exports.a0 = ValidationError;
-exports.a1 = getVideo;
-exports.a2 = uniqueId;
-exports.a3 = CollisionBoxArray;
-exports.a4 = SymbolBucket;
-exports.a5 = createFilter;
-exports.a6 = toEvaluationFeature;
-exports.a7 = EvaluationParameters;
-exports.a8 = GeoJSONFeature;
-exports.a9 = parseCacheControl;
-exports.aA = clone$1;
-exports.aB = diffStyles;
-exports.aC = validateCustomStyleLayer;
-exports.aD = deepEqual$1;
-exports.aE = mapObject;
-exports.aF = filterObject;
-exports.aG = Uniform1i;
-exports.aH = Uniform1f;
-exports.aI = UniformMatrix4f;
-exports.aJ = Uniform4f;
-exports.aK = UniformColor;
-exports.aL = Color;
-exports.aM = Uniform3f;
-exports.aN = Uniform2f;
-exports.aO = ortho;
-exports.aP = mul$1;
-exports.aQ = CollisionCircleLayoutArray;
-exports.aR = collisionCircleLayout;
-exports.aS = QuadTriangleArray;
-exports.aT = nextPowerOfTwo;
-exports.aU = renderColorRamp;
-exports.aV = PosArray;
-exports.aW = TriangleIndexArray;
-exports.aX = LineStripIndexArray;
-exports.aY = exactEquals;
-exports.aZ = equals$1;
-exports.a_ = copy;
-exports.aa = keysDifference;
-exports.ab = clamp$1;
-exports.ac = rotateZ;
-exports.ad = clone;
-exports.ae = transformMat4;
-exports.af = evaluateSizeForZoom;
-exports.ah = evaluateSizeForFeature;
-exports.ai = addDynamicAttributes;
-exports.aj = findLineIntersection;
-exports.ak = clipLine;
-exports.al = polygonIntersectsPolygon;
-exports.am = identity;
-exports.an = getAABB;
-exports.ao = ONE_EM;
-exports.aq = getOverlapMode;
-exports.ar = invert;
-exports.as = getAnchorJustification;
-exports.at = getAnchorAlignment;
-exports.au = KDBush;
-exports.av = emptyStyle;
-exports.aw = ZoomHistory;
-exports.ax = getReferrer;
-exports.ay = derefLayers;
-exports.az = createStyleLayer;
+exports.a$ = copy;
+exports.a0 = CanonicalTileID;
+exports.a1 = ValidationError;
+exports.a2 = getVideo;
+exports.a3 = uniqueId;
+exports.a4 = CollisionBoxArray;
+exports.a5 = SymbolBucket;
+exports.a6 = createFilter;
+exports.a7 = toEvaluationFeature;
+exports.a8 = EvaluationParameters;
+exports.a9 = GeoJSONFeature;
+exports.aA = createStyleLayer;
+exports.aB = clone$1;
+exports.aC = diffStyles;
+exports.aD = validateCustomStyleLayer;
+exports.aE = deepEqual$1;
+exports.aF = mapObject;
+exports.aG = filterObject;
+exports.aH = Uniform1i;
+exports.aI = Uniform1f;
+exports.aJ = UniformMatrix4f;
+exports.aK = Uniform4f;
+exports.aL = UniformColor;
+exports.aM = Color;
+exports.aN = Uniform3f;
+exports.aO = Uniform2f;
+exports.aP = ortho;
+exports.aQ = mul$1;
+exports.aR = CollisionCircleLayoutArray;
+exports.aS = collisionCircleLayout;
+exports.aT = QuadTriangleArray;
+exports.aU = nextPowerOfTwo;
+exports.aV = renderColorRamp;
+exports.aW = PosArray;
+exports.aX = TriangleIndexArray;
+exports.aY = LineStripIndexArray;
+exports.aZ = exactEquals;
+exports.a_ = equals$1;
+exports.aa = parseCacheControl;
+exports.ab = keysDifference;
+exports.ac = clamp$1;
+exports.ad = rotateZ;
+exports.ae = clone;
+exports.af = transformMat4;
+exports.ag = evaluateSizeForZoom;
+exports.ai = evaluateSizeForFeature;
+exports.aj = addDynamicAttributes;
+exports.ak = findLineIntersection;
+exports.al = clipLine;
+exports.am = polygonIntersectsPolygon;
+exports.an = identity;
+exports.ao = getAABB;
+exports.ap = ONE_EM;
+exports.ar = getOverlapMode;
+exports.as = invert;
+exports.at = getAnchorJustification;
+exports.au = getAnchorAlignment;
+exports.av = KDBush;
+exports.aw = emptyStyle;
+exports.ax = ZoomHistory;
+exports.ay = getReferrer;
+exports.az = derefLayers;
 exports.b = isImageBitmap;
-exports.b0 = dot$1;
-exports.b1 = wrap;
-exports.b2 = UnwrappedTileID;
-exports.b3 = mercatorZfromAltitude;
-exports.b4 = perspective;
-exports.b5 = rotateX;
-exports.b6 = bezier;
-exports.b7 = defaultEasing;
-exports.b8 = degreesToRadians;
-exports.b9 = isInBoundsForZoomLngLat;
-exports.bA = createExpression;
-exports.bB = rtlWorkerPlugin;
-exports.ba = fromScaling;
-exports.bb = Pos3dArray;
-exports.bc = earthRadius;
-exports.bd = PerformanceUtils;
-exports.bf = AJAXError;
-exports.bg = addProtocol;
-exports.bh = removeProtocol;
-exports.bi = groupByLayout;
-exports.bj = register;
-exports.bk = DictionaryCoder;
-exports.bl = FeatureIndex;
-exports.bm = ImageAtlas;
-exports.bn = performSymbolLayout;
-exports.bo = LineBucket;
-exports.bp = FillBucket;
-exports.bq = FillExtrusionBucket;
-exports.br = vectorTile;
-exports.bs = Protobuf;
-exports.bt = RequestPerformance;
-exports.bu = getImageData;
-exports.bv = DEMData;
-exports.bw = getDefaultExportFromCjs$1;
-exports.bx = pointGeometry;
-exports.by = pbf;
-exports.bz = isAbortError;
+exports.b0 = mul;
+exports.b1 = dot$1;
+exports.b2 = wrap;
+exports.b3 = UnwrappedTileID;
+exports.b4 = mercatorZfromAltitude;
+exports.b5 = perspective;
+exports.b6 = rotateX;
+exports.b7 = bezier;
+exports.b8 = defaultEasing;
+exports.b9 = degreesToRadians;
+exports.bA = isAbortError;
+exports.bB = createExpression;
+exports.bC = rtlWorkerPlugin;
+exports.ba = isInBoundsForZoomLngLat;
+exports.bb = fromScaling;
+exports.bc = Pos3dArray;
+exports.bd = earthRadius;
+exports.be = PerformanceUtils;
+exports.bg = AJAXError;
+exports.bh = addProtocol;
+exports.bi = removeProtocol;
+exports.bj = groupByLayout;
+exports.bk = register;
+exports.bl = DictionaryCoder;
+exports.bm = FeatureIndex;
+exports.bn = ImageAtlas;
+exports.bo = performSymbolLayout;
+exports.bp = LineBucket;
+exports.bq = FillBucket;
+exports.br = FillExtrusionBucket;
+exports.bs = vectorTile;
+exports.bt = Protobuf;
+exports.bu = RequestPerformance;
+exports.bv = getImageData;
+exports.bw = DEMData;
+exports.bx = getDefaultExportFromCjs$1;
+exports.by = pointGeometry;
+exports.bz = pbf;
 exports.c = createAbortError;
 exports.d = arrayBufferToImageBitmap;
 exports.e = extend;
@@ -25003,18 +25004,18 @@ exports.k = Event;
 exports.l = getArrayBuffer;
 exports.m = makeRequest;
 exports.n = parseGlyphPbf;
-exports.o = Properties;
+exports.o = AlphaImage;
 exports.p = potpack;
-exports.q = validateLight;
-exports.r = emitValidationErrors;
+exports.q = Properties;
+exports.r = validateLight;
 exports.s = sameOrigin;
-exports.t = validateStyle;
-exports.u = sphericalToCartesian;
+exports.t = emitValidationErrors;
+exports.u = validateStyle;
 exports.v = v8Spec;
 exports.w = warnOnce;
-exports.x = interpolate;
-exports.y = validateSky;
-exports.z = isSafari;
+exports.x = sphericalToCartesian;
+exports.y = interpolate;
+exports.z = validateSky;
 
 }));
 
@@ -25035,8 +25036,8 @@ class StyleLayerIndex {
     update(layerConfigs, removedIds) {
         for (const layerConfig of layerConfigs) {
             this._layerConfigs[layerConfig.id] = layerConfig;
-            const layer = this._layers[layerConfig.id] = performance.az(layerConfig);
-            layer._featureFilter = performance.a5(layer.filter);
+            const layer = this._layers[layerConfig.id] = performance.aA(layerConfig);
+            layer._featureFilter = performance.a6(layer.filter);
             if (this.keyCache[layerConfig.id])
                 delete this.keyCache[layerConfig.id];
         }
@@ -25046,7 +25047,7 @@ class StyleLayerIndex {
             delete this._layers[id];
         }
         this.familiesBySource = {};
-        const groups = performance.bi(Object.values(this._layerConfigs), this.keyCache);
+        const groups = performance.bj(Object.values(this._layerConfigs), this.keyCache);
         for (const layerConfigs of groups) {
             const layers = layerConfigs.map((layerConfig) => this._layers[layerConfig.id]);
             const layer = layers[0];
@@ -25091,7 +25092,7 @@ class GlyphAtlas {
             }
         }
         const { w, h } = performance.p(bins);
-        const image = new performance.R({ width: w || 1, height: h || 1 });
+        const image = new performance.o({ width: w || 1, height: h || 1 });
         for (const stack in stacks) {
             const glyphs = stacks[stack];
             for (const id in glyphs) {
@@ -25099,18 +25100,18 @@ class GlyphAtlas {
                 if (!src || src.bitmap.width === 0 || src.bitmap.height === 0)
                     continue;
                 const bin = positions[stack][id].rect;
-                performance.R.copy(src.bitmap, image, { x: 0, y: 0 }, { x: bin.x + padding, y: bin.y + padding }, src.bitmap);
+                performance.o.copy(src.bitmap, image, { x: 0, y: 0 }, { x: bin.x + padding, y: bin.y + padding }, src.bitmap);
             }
         }
         this.image = image;
         this.positions = positions;
     }
 }
-performance.bj('GlyphAtlas', GlyphAtlas);
+performance.bk('GlyphAtlas', GlyphAtlas);
 
 class WorkerTile {
     constructor(params) {
-        this.tileID = new performance.O(params.tileID.overscaledZ, params.tileID.wrap, params.tileID.canonical.z, params.tileID.canonical.x, params.tileID.canonical.y);
+        this.tileID = new performance.Q(params.tileID.overscaledZ, params.tileID.wrap, params.tileID.canonical.z, params.tileID.canonical.x, params.tileID.canonical.y);
         this.uid = params.uid;
         this.zoom = params.zoom;
         this.pixelRatio = params.pixelRatio;
@@ -25127,9 +25128,9 @@ class WorkerTile {
         return performance._(this, void 0, void 0, function* () {
             this.status = 'parsing';
             this.data = data;
-            this.collisionBoxArray = new performance.a3();
-            const sourceLayerCoder = new performance.bk(Object.keys(data.layers).sort());
-            const featureIndex = new performance.bl(this.tileID, this.promoteId);
+            this.collisionBoxArray = new performance.a4();
+            const sourceLayerCoder = new performance.bl(Object.keys(data.layers).sort());
+            const featureIndex = new performance.bm(this.tileID, this.promoteId);
             featureIndex.bucketLayerIDs = [];
             const buckets = {};
             const options = {
@@ -25184,7 +25185,7 @@ class WorkerTile {
             }
             // options.glyphDependencies looks like: {"SomeFontName":{"10":true,"32":true}}
             // this line makes an object like: {"SomeFontName":[10,32]}
-            const stacks = performance.aE(options.glyphDependencies, (glyphs) => Object.keys(glyphs).map(Number));
+            const stacks = performance.aF(options.glyphDependencies, (glyphs) => Object.keys(glyphs).map(Number));
             this.inFlightDependencies.forEach((request) => request === null || request === void 0 ? void 0 : request.abort());
             this.inFlightDependencies = [];
             let getGlyphsPromise = Promise.resolve({});
@@ -25209,12 +25210,12 @@ class WorkerTile {
             }
             const [glyphMap, iconMap, patternMap] = yield Promise.all([getGlyphsPromise, getIconsPromise, getPatternsPromise]);
             const glyphAtlas = new GlyphAtlas(glyphMap);
-            const imageAtlas = new performance.bm(iconMap, patternMap);
+            const imageAtlas = new performance.bn(iconMap, patternMap);
             for (const key in buckets) {
                 const bucket = buckets[key];
-                if (bucket instanceof performance.a4) {
+                if (bucket instanceof performance.a5) {
                     recalculateLayers(bucket.layers, this.zoom, availableImages);
-                    performance.bn({
+                    performance.bo({
                         bucket,
                         glyphMap,
                         glyphPositions: glyphAtlas.positions,
@@ -25225,9 +25226,9 @@ class WorkerTile {
                     });
                 }
                 else if (bucket.hasPattern &&
-                    (bucket instanceof performance.bo ||
-                        bucket instanceof performance.bp ||
-                        bucket instanceof performance.bq)) {
+                    (bucket instanceof performance.bp ||
+                        bucket instanceof performance.bq ||
+                        bucket instanceof performance.br)) {
                     recalculateLayers(bucket.layers, this.zoom, availableImages);
                     bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions);
                 }
@@ -25249,7 +25250,7 @@ class WorkerTile {
 }
 function recalculateLayers(layers, zoom, availableImages) {
     // Layers are shared and may have been used by a WorkerTile with a different zoom.
-    const parameters = new performance.a7(zoom);
+    const parameters = new performance.a8(zoom);
     for (const layer of layers) {
         layer.recalculate(parameters, availableImages);
     }
@@ -25283,7 +25284,7 @@ class VectorTileWorkerSource {
         return performance._(this, void 0, void 0, function* () {
             const response = yield performance.l(params.request, abortController);
             try {
-                const vectorTile = new performance.br.VectorTile(new performance.bs(response.data));
+                const vectorTile = new performance.bs.VectorTile(new performance.bt(response.data));
                 return {
                     vectorTile,
                     rawData: response.data,
@@ -25314,7 +25315,7 @@ class VectorTileWorkerSource {
         return performance._(this, void 0, void 0, function* () {
             const tileUid = params.uid;
             const perf = (params && params.request && params.request.collectResourceTiming) ?
-                new performance.bt(params.request) : false;
+                new performance.bu(params.request) : false;
             const workerTile = new WorkerTile(params);
             this.loading[tileUid] = workerTile;
             const abortController = new AbortController();
@@ -25428,9 +25429,9 @@ class RasterDEMTileWorkerSource {
             const width = rawImageData.width + 2;
             const height = rawImageData.height + 2;
             const imagePixels = performance.b(rawImageData) ?
-                new performance.R({ width, height }, yield performance.bu(rawImageData, -1, -1, width, height)) :
+                new performance.R({ width, height }, yield performance.bv(rawImageData, -1, -1, width, height)) :
                 rawImageData;
-            const dem = new performance.bv(uid, imagePixels, encoding, redFactor, greenFactor, blueFactor, baseShift);
+            const dem = new performance.bw(uid, imagePixels, encoding, redFactor, greenFactor, blueFactor, baseShift);
             this.loaded = this.loaded || {};
             this.loaded[uid] = dem;
             return dem;
@@ -25488,13 +25489,13 @@ function rewindRing(ring, dir) {
     if (area + err >= 0 !== !!dir) ring.reverse();
 }
 
-var rewind$2 = /*@__PURE__*/performance.bw(geojsonRewind);
+var rewind$2 = /*@__PURE__*/performance.bx(geojsonRewind);
 
-const toGeoJSON = performance.br.VectorTileFeature.prototype.toGeoJSON;
+const toGeoJSON = performance.bs.VectorTileFeature.prototype.toGeoJSON;
 let FeatureWrapper$1 = class FeatureWrapper {
     constructor(feature) {
         this._feature = feature;
-        this.extent = performance.V;
+        this.extent = performance.W;
         this.type = feature.type;
         this.properties = feature.tags;
         // If the feature has a top-level `id` property, copy it over, but only
@@ -25535,7 +25536,7 @@ let GeoJSONWrapper$2 = class GeoJSONWrapper {
     constructor(features) {
         this.layers = { '_geojsonTileLayer': this };
         this.name = '_geojsonTileLayer';
-        this.extent = performance.V;
+        this.extent = performance.W;
         this.length = features.length;
         this._features = features;
     }
@@ -25546,8 +25547,8 @@ let GeoJSONWrapper$2 = class GeoJSONWrapper {
 
 var vtPbf = {exports: {}};
 
-var Point = performance.bx;
-var VectorTileFeature = performance.br.VectorTileFeature;
+var Point = performance.by;
+var VectorTileFeature = performance.bs.VectorTileFeature;
 
 var geojson_wrapper = GeoJSONWrapper$1;
 
@@ -25612,7 +25613,7 @@ FeatureWrapper.prototype.bbox = function () {
 
 FeatureWrapper.prototype.toGeoJSON = VectorTileFeature.prototype.toGeoJSON;
 
-var Pbf = performance.by;
+var Pbf = performance.bz;
 var GeoJSONWrapper = geojson_wrapper;
 
 vtPbf.exports = fromVectorTileJs;
@@ -25793,7 +25794,7 @@ function writeValue (value, pbf) {
 }
 
 var vtPbfExports = vtPbf.exports;
-var vtpbf = /*@__PURE__*/performance.bw(vtPbfExports);
+var vtpbf = /*@__PURE__*/performance.bx(vtPbfExports);
 
 const defaultOptions$1 = {
     minZoom: 0,   // min zoom to generate clusters on
@@ -26014,7 +26015,7 @@ class Supercluster {
     }
 
     _createTree(data) {
-        const tree = new performance.au(data.length / this.stride | 0, this.options.nodeSize, Float32Array);
+        const tree = new performance.av(data.length / this.stride | 0, this.options.nodeSize, Float32Array);
         for (let i = 0; i < data.length; i += this.stride) tree.add(data[i], data[i + 1]);
         tree.finish();
         tree.data = data;
@@ -27254,7 +27255,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
             var _a;
             (_a = this._pendingRequest) === null || _a === void 0 ? void 0 : _a.abort();
             const perf = (params && params.request && params.request.collectResourceTiming) ?
-                new performance.bt(params.request) : false;
+                new performance.bu(params.request) : false;
             this._pendingRequest = new AbortController();
             try {
                 this._pendingData = this.loadAndProcessGeoJSON(params, this._pendingRequest);
@@ -27276,7 +27277,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
             }
             catch (err) {
                 delete this._pendingRequest;
-                if (performance.bz(err)) {
+                if (performance.bA(err)) {
                     return { abandoned: true };
                 }
                 throw err;
@@ -27329,7 +27330,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
             }
             rewind$2(data, true);
             if (params.filter) {
-                const compiled = performance.bA(params.filter, { type: 'boolean', 'property-type': 'data-driven', overridable: false, transition: false });
+                const compiled = performance.bB(params.filter, { type: 'boolean', 'property-type': 'data-driven', overridable: false, transition: false });
                 if (compiled.result === 'error')
                     throw new Error(compiled.value.map(err => `${err.key}: ${err.message}`).join(', '));
                 const features = data.features.filter(feature => compiled.value.evaluate({ zoom: 0 }, feature));
@@ -27403,8 +27404,8 @@ function getSuperclusterOptions({ superclusterOptions, clusterProperties }) {
     const propertyNames = Object.keys(clusterProperties);
     for (const key of propertyNames) {
         const [operator, mapExpression] = clusterProperties[key];
-        const mapExpressionParsed = performance.bA(mapExpression);
-        const reduceExpressionParsed = performance.bA(typeof operator === 'string' ? [operator, ['accumulated'], ['get', key]] : operator);
+        const mapExpressionParsed = performance.bB(mapExpression);
+        const reduceExpressionParsed = performance.bB(typeof operator === 'string' ? [operator, ['accumulated'], ['get', key]] : operator);
         mapExpressions[key] = mapExpressionParsed.value;
         reduceExpressions[key] = reduceExpressionParsed.value;
     }
@@ -27432,7 +27433,7 @@ function getSuperclusterOptions({ superclusterOptions, clusterProperties }) {
 class Worker {
     constructor(self) {
         this.self = self;
-        this.actor = new performance.B(self);
+        this.actor = new performance.C(self);
         this.layerIndexes = {};
         this.availableImages = {};
         this.workerSources = {};
@@ -27444,14 +27445,14 @@ class Worker {
             }
             this.externalWorkerSourceTypes[name] = WorkerSource;
         };
-        this.self.addProtocol = performance.bg;
-        this.self.removeProtocol = performance.bh;
+        this.self.addProtocol = performance.bh;
+        this.self.removeProtocol = performance.bi;
         // This is invoked by the RTL text plugin when the download via the `importScripts` call has finished, and the code has been parsed.
         this.self.registerRTLTextPlugin = (rtlTextPlugin) => {
-            if (performance.bB.isParsed()) {
+            if (performance.bC.isParsed()) {
                 throw new Error('RTL text plugin already registered.');
             }
-            performance.bB.setMethods(rtlTextPlugin);
+            performance.bC.setMethods(rtlTextPlugin);
         };
         this.actor.registerMessageHandler("LDT" /* MessageType.loadDEMTile */, (mapId, params) => {
             return this._getDEMWorkerSource(mapId, params.source).loadTile(params);
@@ -27537,27 +27538,27 @@ class Worker {
     _syncRTLPluginState(mapId, incomingState) {
         return performance._(this, void 0, void 0, function* () {
             // Parsed plugin cannot be changed, so just return its current state.
-            if (performance.bB.isParsed()) {
-                return performance.bB.getState();
+            if (performance.bC.isParsed()) {
+                return performance.bC.getState();
             }
             if (incomingState.pluginStatus !== 'loading') {
                 // simply sync and done
-                performance.bB.setState(incomingState);
+                performance.bC.setState(incomingState);
                 return incomingState;
             }
             const urlToLoad = incomingState.pluginURL;
             this.self.importScripts(urlToLoad);
-            const complete = performance.bB.isParsed();
+            const complete = performance.bC.isParsed();
             if (complete) {
                 const loadedState = {
                     pluginStatus: 'loaded',
                     pluginURL: urlToLoad
                 };
-                performance.bB.setState(loadedState);
+                performance.bC.setState(loadedState);
                 return loadedState;
             }
             // error case
-            performance.bB.setState({
+            performance.bC.setState({
                 pluginStatus: 'error',
                 pluginURL: ''
             });
@@ -29406,7 +29407,7 @@ class GlyphManager {
         const leftAdjustment = 0.5;
         return {
             id,
-            bitmap: new performance$1.R({ width: char.width || 30 * textureScale, height: char.height || 30 * textureScale }, char.data),
+            bitmap: new performance$1.o({ width: char.width || 30 * textureScale, height: char.height || 30 * textureScale }, char.data),
             metrics: {
                 width: char.glyphWidth / textureScale || 24,
                 height: char.glyphHeight / textureScale || 24,
@@ -29427,13 +29428,13 @@ class LightPositionProperty {
         this.specification = performance$1.v.light.position;
     }
     possiblyEvaluate(value, parameters) {
-        return performance$1.u(value.expression.evaluate(parameters));
+        return performance$1.x(value.expression.evaluate(parameters));
     }
     interpolate(a, b, t) {
         return {
-            x: performance$1.x.number(a.x, b.x, t),
-            y: performance$1.x.number(a.y, b.y, t),
-            z: performance$1.x.number(a.z, b.z, t),
+            x: performance$1.y.number(a.x, b.x, t),
+            y: performance$1.y.number(a.y, b.y, t),
+            z: performance$1.y.number(a.z, b.z, t),
         };
     }
 }
@@ -29445,7 +29446,7 @@ let lightProperties;
 class Light extends performance$1.E {
     constructor(lightOptions) {
         super();
-        lightProperties = lightProperties || new performance$1.o({
+        lightProperties = lightProperties || new performance$1.q({
             'anchor': new performance$1.D(performance$1.v.light.anchor),
             'position': new LightPositionProperty(),
             'color': new performance$1.D(performance$1.v.light.color),
@@ -29459,7 +29460,7 @@ class Light extends performance$1.E {
         return this._transitionable.serialize();
     }
     setLight(light, options = {}) {
-        if (this._validate(performance$1.q, light, options)) {
+        if (this._validate(performance$1.r, light, options)) {
             return;
         }
         for (const name in light) {
@@ -29485,7 +29486,7 @@ class Light extends performance$1.E {
         if (options && options.validate === false) {
             return false;
         }
-        return performance$1.r(this, validate.call(performance$1.t, {
+        return performance$1.t(this, validate.call(performance$1.u, {
             value,
             // Workaround for https://github.com/mapbox/mapbox-gl-js/issues/2407
             style: { glyphs: true, sprite: true },
@@ -29494,7 +29495,7 @@ class Light extends performance$1.E {
     }
 }
 
-const properties = new performance$1.o({
+const properties = new performance$1.q({
     'sky-color': new performance$1.D(performance$1.v.sky['sky-color']),
     'horizon-color': new performance$1.D(performance$1.v.sky['horizon-color']),
     'fog-color': new performance$1.D(performance$1.v.sky['fog-color']),
@@ -29512,7 +29513,7 @@ class Sky extends performance$1.E {
         this._transitioning = this._transitionable.untransitioned();
     }
     setSky(sky, options = {}) {
-        if (this._validate(performance$1.y, sky, options))
+        if (this._validate(performance$1.z, sky, options))
             return;
         for (const name in sky) {
             const value = sky[name];
@@ -29540,7 +29541,7 @@ class Sky extends performance$1.E {
         if ((options === null || options === void 0 ? void 0 : options.validate) === false) {
             return false;
         }
-        return performance$1.r(this, validate.call(performance$1.t, performance$1.e({
+        return performance$1.t(this, validate.call(performance$1.u, performance$1.e({
             value,
             // Workaround for https://github.com/mapbox/mapbox-gl-js/issues/2407
             style: { glyphs: true, sprite: true },
@@ -29772,7 +29773,7 @@ class WorkerPool {
 }
 // Based on results from A/B testing: https://github.com/maplibre/maplibre-gl-js/pull/2354
 const availableLogicalProcessors = Math.floor(browser.hardwareConcurrency / 2);
-WorkerPool.workerCount = performance$1.z(globalThis) ? Math.max(Math.min(availableLogicalProcessors, 3), 1) : 1;
+WorkerPool.workerCount = performance$1.B(globalThis) ? Math.max(Math.min(availableLogicalProcessors, 3), 1) : 1;
 
 let globalWorkerPool;
 /**
@@ -29849,7 +29850,7 @@ class Dispatcher {
         const workers = this.workerPool.acquire(mapId);
         for (let i = 0; i < workers.length; i++) {
             const worker = workers[i];
-            const actor = new performance$1.B(worker, mapId);
+            const actor = new performance$1.C(worker, mapId);
             actor.name = `Worker ${i}`;
             this.actors.push(actor);
         }
@@ -29901,10 +29902,10 @@ function getGlobalDispatcher() {
  * Returns a matrix that can be used to convert from tile coordinates to viewport pixel coordinates.
  */
 function getPixelPosMatrix(transform, tileID) {
-    const t = performance$1.C();
-    performance$1.F(t, t, [1, 1, 0]);
-    performance$1.H(t, t, [transform.width * 0.5, transform.height * 0.5, 1]);
-    return performance$1.J(t, t, transform.calculatePosMatrix(tileID.toUnwrapped()));
+    const t = performance$1.F();
+    performance$1.H(t, t, [1, 1, 0]);
+    performance$1.J(t, t, [transform.width * 0.5, transform.height * 0.5, 1]);
+    return performance$1.K(t, t, transform.calculatePosMatrix(tileID.toUnwrapped()));
 }
 function queryIncludes3DLayer(layers, styleLayers, sourceID) {
     if (layers) {
@@ -30063,7 +30064,7 @@ function loadTileJson(options, requestManager, abortController) {
         if (!tileJSON) {
             return null;
         }
-        const result = performance$1.K(
+        const result = performance$1.L(
         // explicit source options take precedence over TileJSON
         performance$1.e(tileJSON, options), ['tiles', 'minzoom', 'maxzoom', 'attribution', 'bounds', 'scheme', 'tileSize', 'encoding']);
         if ('vector_layers' in tileJSON && tileJSON.vector_layers) {
@@ -30134,7 +30135,7 @@ class LngLatBounds {
      * @param ne - a {@link LngLatLike} object describing the northeast corner of the bounding box.
      */
     setNorthEast(ne) {
-        this._ne = ne instanceof performance$1.L ? new performance$1.L(ne.lng, ne.lat) : performance$1.L.convert(ne);
+        this._ne = ne instanceof performance$1.M ? new performance$1.M(ne.lng, ne.lat) : performance$1.M.convert(ne);
         return this;
     }
     /**
@@ -30143,7 +30144,7 @@ class LngLatBounds {
      * @param sw - a {@link LngLatLike} object describing the southwest corner of the bounding box.
      */
     setSouthWest(sw) {
-        this._sw = sw instanceof performance$1.L ? new performance$1.L(sw.lng, sw.lat) : performance$1.L.convert(sw);
+        this._sw = sw instanceof performance$1.M ? new performance$1.M(sw.lng, sw.lat) : performance$1.M.convert(sw);
         return this;
     }
     /**
@@ -30154,7 +30155,7 @@ class LngLatBounds {
     extend(obj) {
         const sw = this._sw, ne = this._ne;
         let sw2, ne2;
-        if (obj instanceof performance$1.L) {
+        if (obj instanceof performance$1.M) {
             sw2 = obj;
             ne2 = obj;
         }
@@ -30172,17 +30173,17 @@ class LngLatBounds {
                 }
                 else {
                     const lngLatObj = obj;
-                    return this.extend(performance$1.L.convert(lngLatObj));
+                    return this.extend(performance$1.M.convert(lngLatObj));
                 }
             }
             else if (obj && ('lng' in obj || 'lon' in obj) && 'lat' in obj) {
-                return this.extend(performance$1.L.convert(obj));
+                return this.extend(performance$1.M.convert(obj));
             }
             return this;
         }
         if (!sw && !ne) {
-            this._sw = new performance$1.L(sw2.lng, sw2.lat);
-            this._ne = new performance$1.L(ne2.lng, ne2.lat);
+            this._sw = new performance$1.M(sw2.lng, sw2.lat);
+            this._ne = new performance$1.M(ne2.lng, ne2.lat);
         }
         else {
             sw.lng = Math.min(sw2.lng, sw.lng);
@@ -30203,7 +30204,7 @@ class LngLatBounds {
      * ```
      */
     getCenter() {
-        return new performance$1.L((this._sw.lng + this._ne.lng) / 2, (this._sw.lat + this._ne.lat) / 2);
+        return new performance$1.M((this._sw.lng + this._ne.lng) / 2, (this._sw.lat + this._ne.lat) / 2);
     }
     /**
      * Returns the southwest corner of the bounding box.
@@ -30222,13 +30223,13 @@ class LngLatBounds {
      *
      * @returns The northwest corner of the bounding box.
      */
-    getNorthWest() { return new performance$1.L(this.getWest(), this.getNorth()); }
+    getNorthWest() { return new performance$1.M(this.getWest(), this.getNorth()); }
     /**
      * Returns the southeast corner of the bounding box.
      *
      * @returns The southeast corner of the bounding box.
      */
-    getSouthEast() { return new performance$1.L(this.getEast(), this.getSouth()); }
+    getSouthEast() { return new performance$1.M(this.getEast(), this.getSouth()); }
     /**
      * Returns the west edge of the bounding box.
      *
@@ -30307,7 +30308,7 @@ class LngLatBounds {
      * ```
      */
     contains(lnglat) {
-        const { lng, lat } = performance$1.L.convert(lnglat);
+        const { lng, lat } = performance$1.M.convert(lnglat);
         const containsLatitude = this._sw.lat <= lat && lat <= this._ne.lat;
         let containsLongitude = this._sw.lng <= lng && lng <= this._ne.lng;
         if (this._sw.lng > this._ne.lng) { // wrapped coordinates
@@ -30352,7 +30353,7 @@ class LngLatBounds {
     static fromLngLat(center, radius = 0) {
         const earthCircumferenceInMetersAtEquator = 40075017;
         const latAccuracy = 360 * radius / earthCircumferenceInMetersAtEquator, lngAccuracy = latAccuracy / Math.cos((Math.PI / 180) * center.lat);
-        return new LngLatBounds(new performance$1.L(center.lng - lngAccuracy, center.lat - latAccuracy), new performance$1.L(center.lng + lngAccuracy, center.lat + latAccuracy));
+        return new LngLatBounds(new performance$1.M(center.lng - lngAccuracy, center.lat - latAccuracy), new performance$1.M(center.lng + lngAccuracy, center.lat + latAccuracy));
     }
 }
 
@@ -30371,10 +30372,10 @@ class TileBounds {
     contains(tileID) {
         const worldSize = Math.pow(2, tileID.z);
         const level = {
-            minX: Math.floor(performance$1.M(this.bounds.getWest()) * worldSize),
-            minY: Math.floor(performance$1.N(this.bounds.getNorth()) * worldSize),
-            maxX: Math.ceil(performance$1.M(this.bounds.getEast()) * worldSize),
-            maxY: Math.ceil(performance$1.N(this.bounds.getSouth()) * worldSize)
+            minX: Math.floor(performance$1.N(this.bounds.getWest()) * worldSize),
+            minY: Math.floor(performance$1.O(this.bounds.getNorth()) * worldSize),
+            maxX: Math.ceil(performance$1.N(this.bounds.getEast()) * worldSize),
+            maxY: Math.ceil(performance$1.O(this.bounds.getSouth()) * worldSize)
         };
         const hit = tileID.x >= level.minX && tileID.x < level.maxX && tileID.y >= level.minY && tileID.y < level.maxY;
         return hit;
@@ -30429,7 +30430,7 @@ class VectorTileSource extends performance$1.E {
         this.reparseOverscaled = true;
         this.isTileClipped = true;
         this._loaded = false;
-        performance$1.e(this, performance$1.K(options, ['url', 'scheme', 'tileSize', 'promoteId']));
+        performance$1.e(this, performance$1.L(options, ['url', 'scheme', 'tileSize', 'promoteId']));
         this._options = performance$1.e({ type: 'vector' }, options);
         this._collectResourceTiming = options.collectResourceTiming;
         if (this.tileSize !== 512) {
@@ -30651,7 +30652,7 @@ class RasterTileSource extends performance$1.E {
         this.tileSize = 512;
         this._loaded = false;
         this._options = performance$1.e({ type: 'raster' }, options);
-        performance$1.e(this, performance$1.K(options, ['url', 'scheme', 'tileSize']));
+        performance$1.e(this, performance$1.L(options, ['url', 'scheme', 'tileSize']));
     }
     load() {
         return performance$1._(this, void 0, void 0, function* () {
@@ -30836,7 +30837,7 @@ class RasterDEMTileSource extends RasterTileSource {
                     if (this.map._refreshExpiredTiles && response.cacheControl && response.expires) {
                         tile.setExpiryData({ cacheControl: response.cacheControl, expires: response.expires });
                     }
-                    const transfer = performance$1.b(img) && performance$1.Q();
+                    const transfer = performance$1.b(img) && performance$1.S();
                     const rawImageData = transfer ? img : yield this.readImageNow(img);
                     const params = {
                         type: this.type,
@@ -30875,11 +30876,11 @@ class RasterDEMTileSource extends RasterTileSource {
     }
     readImageNow(img) {
         return performance$1._(this, void 0, void 0, function* () {
-            if (typeof VideoFrame !== 'undefined' && performance$1.S()) {
+            if (typeof VideoFrame !== 'undefined' && performance$1.U()) {
                 const width = img.width + 2;
                 const height = img.height + 2;
                 try {
-                    return new performance$1.R({ width, height }, yield performance$1.U(img, -1, -1, width, height));
+                    return new performance$1.R({ width, height }, yield performance$1.V(img, -1, -1, width, height));
                 }
                 catch (e) {
                     // fall-back to browser canvas decoding
@@ -30897,19 +30898,19 @@ class RasterDEMTileSource extends RasterTileSource {
         const nxw = canonical.x + 1 === dim ? tileID.wrap + 1 : tileID.wrap;
         const neighboringTiles = {};
         // add adjacent tiles
-        neighboringTiles[new performance$1.O(tileID.overscaledZ, pxw, canonical.z, px, canonical.y).key] = { backfilled: false };
-        neighboringTiles[new performance$1.O(tileID.overscaledZ, nxw, canonical.z, nx, canonical.y).key] = { backfilled: false };
+        neighboringTiles[new performance$1.Q(tileID.overscaledZ, pxw, canonical.z, px, canonical.y).key] = { backfilled: false };
+        neighboringTiles[new performance$1.Q(tileID.overscaledZ, nxw, canonical.z, nx, canonical.y).key] = { backfilled: false };
         // Add upper neighboringTiles
         if (canonical.y > 0) {
-            neighboringTiles[new performance$1.O(tileID.overscaledZ, pxw, canonical.z, px, canonical.y - 1).key] = { backfilled: false };
-            neighboringTiles[new performance$1.O(tileID.overscaledZ, tileID.wrap, canonical.z, canonical.x, canonical.y - 1).key] = { backfilled: false };
-            neighboringTiles[new performance$1.O(tileID.overscaledZ, nxw, canonical.z, nx, canonical.y - 1).key] = { backfilled: false };
+            neighboringTiles[new performance$1.Q(tileID.overscaledZ, pxw, canonical.z, px, canonical.y - 1).key] = { backfilled: false };
+            neighboringTiles[new performance$1.Q(tileID.overscaledZ, tileID.wrap, canonical.z, canonical.x, canonical.y - 1).key] = { backfilled: false };
+            neighboringTiles[new performance$1.Q(tileID.overscaledZ, nxw, canonical.z, nx, canonical.y - 1).key] = { backfilled: false };
         }
         // Add lower neighboringTiles
         if (canonical.y + 1 < dim) {
-            neighboringTiles[new performance$1.O(tileID.overscaledZ, pxw, canonical.z, px, canonical.y + 1).key] = { backfilled: false };
-            neighboringTiles[new performance$1.O(tileID.overscaledZ, tileID.wrap, canonical.z, canonical.x, canonical.y + 1).key] = { backfilled: false };
-            neighboringTiles[new performance$1.O(tileID.overscaledZ, nxw, canonical.z, nx, canonical.y + 1).key] = { backfilled: false };
+            neighboringTiles[new performance$1.Q(tileID.overscaledZ, pxw, canonical.z, px, canonical.y + 1).key] = { backfilled: false };
+            neighboringTiles[new performance$1.Q(tileID.overscaledZ, tileID.wrap, canonical.z, canonical.x, canonical.y + 1).key] = { backfilled: false };
+            neighboringTiles[new performance$1.Q(tileID.overscaledZ, nxw, canonical.z, nx, canonical.y + 1).key] = { backfilled: false };
         }
         return neighboringTiles;
     }
@@ -31013,7 +31014,7 @@ class GeoJSONSource extends performance$1.E {
         if (options.attribution)
             this.attribution = options.attribution;
         this.promoteId = options.promoteId;
-        const scale = performance$1.V / this.tileSize;
+        const scale = performance$1.W / this.tileSize;
         // sent to the worker, along with `url: ...` or `data: literal geojson`,
         // so that it can load/parse/index the geojson data
         // extending with `options.workerOptions` helps to make it easy for
@@ -31024,7 +31025,7 @@ class GeoJSONSource extends performance$1.E {
             geojsonVtOptions: {
                 buffer: (options.buffer !== undefined ? options.buffer : 128) * scale,
                 tolerance: (options.tolerance !== undefined ? options.tolerance : 0.375) * scale,
-                extent: performance$1.V,
+                extent: performance$1.W,
                 maxZoom: this.maxzoom,
                 lineMetrics: options.lineMetrics || false,
                 generateId: options.generateId || false
@@ -31032,7 +31033,7 @@ class GeoJSONSource extends performance$1.E {
             superclusterOptions: {
                 maxZoom: options.clusterMaxZoom !== undefined ? options.clusterMaxZoom : this.maxzoom - 1,
                 minPoints: Math.max(2, options.clusterMinPoints || 2),
-                extent: performance$1.V,
+                extent: performance$1.W,
                 radius: (options.clusterRadius || 50) * scale,
                 log: false,
                 generateId: options.generateId || false
@@ -31274,7 +31275,7 @@ class GeoJSONSource extends performance$1.E {
     }
 }
 
-var rasterBoundsAttributes = performance$1.W([
+var rasterBoundsAttributes = performance$1.X([
     { name: 'a_pos', type: 'Int16', components: 2 },
     { name: 'a_texture_pos', type: 'Int16', components: 2 }
 ]);
@@ -31414,7 +31415,7 @@ class ImageSource extends performance$1.E {
         // and create a buffer with the corner coordinates. These coordinates
         // may be outside the tile, because raster tiles aren't clipped when rendering.
         // transform the geo coordinates into (zoom 0) tile space coordinates
-        const cornerCoords = coordinates.map(performance$1.X.fromLngLat);
+        const cornerCoords = coordinates.map(performance$1.Y.fromLngLat);
         // Compute the coordinates of the tile we'll use to hold this image's
         // render data
         this.tileID = getCoordinatesCenterTileID(cornerCoords);
@@ -31425,11 +31426,11 @@ class ImageSource extends performance$1.E {
         // Transform the corner coordinates into the coordinate space of our
         // tile.
         const tileCoords = cornerCoords.map((coord) => this.tileID.getTilePoint(coord)._round());
-        this._boundsArray = new performance$1.Y();
+        this._boundsArray = new performance$1.Z();
         this._boundsArray.emplaceBack(tileCoords[0].x, tileCoords[0].y, 0, 0);
-        this._boundsArray.emplaceBack(tileCoords[1].x, tileCoords[1].y, performance$1.V, 0);
-        this._boundsArray.emplaceBack(tileCoords[3].x, tileCoords[3].y, 0, performance$1.V);
-        this._boundsArray.emplaceBack(tileCoords[2].x, tileCoords[2].y, performance$1.V, performance$1.V);
+        this._boundsArray.emplaceBack(tileCoords[1].x, tileCoords[1].y, performance$1.W, 0);
+        this._boundsArray.emplaceBack(tileCoords[3].x, tileCoords[3].y, 0, performance$1.W);
+        this._boundsArray.emplaceBack(tileCoords[2].x, tileCoords[2].y, performance$1.W, performance$1.W);
         if (this.boundsBuffer) {
             this.boundsBuffer.destroy();
             delete this.boundsBuffer;
@@ -31447,7 +31448,7 @@ class ImageSource extends performance$1.E {
             this.boundsBuffer = context.createVertexBuffer(this._boundsArray, rasterBoundsAttributes.members);
         }
         if (!this.boundsSegments) {
-            this.boundsSegments = performance$1.Z.simpleSegment(0, 0, 4, 2);
+            this.boundsSegments = performance$1.$.simpleSegment(0, 0, 4, 2);
         }
         if (!this.texture) {
             this.texture = new Texture(context, this.image, gl.RGBA);
@@ -31516,7 +31517,7 @@ function getCoordinatesCenterTileID(coords) {
     const dMax = Math.max(dx, dy);
     const zoom = Math.max(0, Math.floor(-Math.log(dMax) / Math.LN2));
     const tilesAtZoom = Math.pow(2, zoom);
-    return new performance$1.$(zoom, Math.floor((minX + maxX) / 2 * tilesAtZoom), Math.floor((minY + maxY) / 2 * tilesAtZoom));
+    return new performance$1.a0(zoom, Math.floor((minX + maxX) / 2 * tilesAtZoom), Math.floor((minY + maxY) / 2 * tilesAtZoom));
 }
 
 /**
@@ -31575,7 +31576,7 @@ class VideoSource extends ImageSource {
                 this.urls.push(this.map._requestManager.transformRequest(url, "Source" /* ResourceType.Source */).url);
             }
             try {
-                const video = yield performance$1.a1(this.urls);
+                const video = yield performance$1.a2(this.urls);
                 this._loaded = true;
                 if (!video) {
                     return;
@@ -31620,7 +31621,7 @@ class VideoSource extends ImageSource {
         if (this.video) {
             const seekableRange = this.video.seekable;
             if (seconds < seekableRange.start(0) || seconds > seekableRange.end(0)) {
-                this.fire(new performance$1.j(new performance$1.a0(`sources.${this.id}`, null, `Playback for this video can be set only between the ${seekableRange.start(0)} and ${seekableRange.end(0)}-second mark.`)));
+                this.fire(new performance$1.j(new performance$1.a1(`sources.${this.id}`, null, `Playback for this video can be set only between the ${seekableRange.start(0)} and ${seekableRange.end(0)}-second mark.`)));
             }
             else
                 this.video.currentTime = seconds;
@@ -31657,7 +31658,7 @@ class VideoSource extends ImageSource {
             this.boundsBuffer = context.createVertexBuffer(this._boundsArray, rasterBoundsAttributes.members);
         }
         if (!this.boundsSegments) {
-            this.boundsSegments = performance$1.Z.simpleSegment(0, 0, 4, 2);
+            this.boundsSegments = performance$1.$.simpleSegment(0, 0, 4, 2);
         }
         if (!this.texture) {
             this.texture = new Texture(context, this.video, gl.RGBA);
@@ -31730,20 +31731,20 @@ class CanvasSource extends ImageSource {
         super(id, options, dispatcher, eventedParent);
         // We build in some validation here, since canvas sources aren't included in the style spec:
         if (!options.coordinates) {
-            this.fire(new performance$1.j(new performance$1.a0(`sources.${id}`, null, 'missing required property "coordinates"')));
+            this.fire(new performance$1.j(new performance$1.a1(`sources.${id}`, null, 'missing required property "coordinates"')));
         }
         else if (!Array.isArray(options.coordinates) || options.coordinates.length !== 4 ||
             options.coordinates.some(c => !Array.isArray(c) || c.length !== 2 || c.some(l => typeof l !== 'number'))) {
-            this.fire(new performance$1.j(new performance$1.a0(`sources.${id}`, null, '"coordinates" property must be an array of 4 longitude/latitude array pairs')));
+            this.fire(new performance$1.j(new performance$1.a1(`sources.${id}`, null, '"coordinates" property must be an array of 4 longitude/latitude array pairs')));
         }
         if (options.animate && typeof options.animate !== 'boolean') {
-            this.fire(new performance$1.j(new performance$1.a0(`sources.${id}`, null, 'optional "animate" property must be a boolean value')));
+            this.fire(new performance$1.j(new performance$1.a1(`sources.${id}`, null, 'optional "animate" property must be a boolean value')));
         }
         if (!options.canvas) {
-            this.fire(new performance$1.j(new performance$1.a0(`sources.${id}`, null, 'missing required property "canvas"')));
+            this.fire(new performance$1.j(new performance$1.a1(`sources.${id}`, null, 'missing required property "canvas"')));
         }
         else if (typeof options.canvas !== 'string' && !(options.canvas instanceof HTMLCanvasElement)) {
-            this.fire(new performance$1.j(new performance$1.a0(`sources.${id}`, null, '"canvas" must be either a string representing the ID of the canvas element from which to read, or an HTMLCanvasElement instance')));
+            this.fire(new performance$1.j(new performance$1.a1(`sources.${id}`, null, '"canvas" must be either a string representing the ID of the canvas element from which to read, or an HTMLCanvasElement instance')));
         }
         this.options = options;
         this.animate = options.animate !== undefined ? options.animate : true;
@@ -31816,7 +31817,7 @@ class CanvasSource extends ImageSource {
             this.boundsBuffer = context.createVertexBuffer(this._boundsArray, rasterBoundsAttributes.members);
         }
         if (!this.boundsSegments) {
-            this.boundsSegments = performance$1.Z.simpleSegment(0, 0, 4, 2);
+            this.boundsSegments = performance$1.$.simpleSegment(0, 0, 4, 2);
         }
         if (!this.texture) {
             this.texture = new Texture(context, this.canvas, gl.RGBA, { premultiply: true });
@@ -32031,7 +32032,7 @@ class Tile {
         this.timeAdded = 0;
         this.fadeEndTime = 0;
         this.tileID = tileID;
-        this.uid = performance$1.a2();
+        this.uid = performance$1.a3();
         this.uses = 0;
         this.tileSize = size;
         this.buckets = {};
@@ -32080,7 +32081,7 @@ class Tile {
         this.state = 'loaded';
         // empty GeoJSON tile
         if (!data) {
-            this.collisionBoxArray = new performance$1.a3();
+            this.collisionBoxArray = new performance$1.a4();
             return;
         }
         if (data.featureIndex) {
@@ -32102,7 +32103,7 @@ class Tile {
         this.hasSymbolBuckets = false;
         for (const id in this.buckets) {
             const bucket = this.buckets[id];
-            if (bucket instanceof performance$1.a4) {
+            if (bucket instanceof performance$1.a5) {
                 this.hasSymbolBuckets = true;
                 if (justReloaded) {
                     bucket.justReloaded = true;
@@ -32116,7 +32117,7 @@ class Tile {
         if (this.hasSymbolBuckets) {
             for (const id in this.buckets) {
                 const bucket = this.buckets[id];
-                if (bucket instanceof performance$1.a4) {
+                if (bucket instanceof performance$1.a5) {
                     if (bucket.hasRTLText) {
                         this.hasRTLText = true;
                         rtlMainThreadPluginFactory().lazyLoad();
@@ -32173,7 +32174,7 @@ class Tile {
             this.imageAtlas.uploaded = true;
         }
         if (this.glyphAtlasImage) {
-            this.glyphAtlasTexture = new Texture(context, this.glyphAtlasImage, gl.RGBA);
+            this.glyphAtlasTexture = new Texture(context, this.glyphAtlasImage, gl.ALPHA);
             this.glyphAtlasImage = null;
         }
     }
@@ -32207,21 +32208,21 @@ class Tile {
         const layer = vtLayers._geojsonTileLayer || vtLayers[sourceLayer];
         if (!layer)
             return;
-        const filter = performance$1.a5(params && params.filter);
+        const filter = performance$1.a6(params && params.filter);
         const { z, x, y } = this.tileID.canonical;
         const coord = { z, x, y };
         for (let i = 0; i < layer.length; i++) {
             const feature = layer.feature(i);
             if (filter.needGeometry) {
-                const evaluationFeature = performance$1.a6(feature, true);
-                if (!filter.filter(new performance$1.a7(this.tileID.overscaledZ), evaluationFeature, this.tileID.canonical))
+                const evaluationFeature = performance$1.a7(feature, true);
+                if (!filter.filter(new performance$1.a8(this.tileID.overscaledZ), evaluationFeature, this.tileID.canonical))
                     continue;
             }
-            else if (!filter.filter(new performance$1.a7(this.tileID.overscaledZ), feature)) {
+            else if (!filter.filter(new performance$1.a8(this.tileID.overscaledZ), feature)) {
                 continue;
             }
             const id = featureIndex.getId(feature, sourceLayer);
-            const geojsonFeature = new performance$1.a8(feature, z, x, y, id);
+            const geojsonFeature = new performance$1.a9(feature, z, x, y, id);
             geojsonFeature.tile = coord;
             result.push(geojsonFeature);
         }
@@ -32235,7 +32236,7 @@ class Tile {
     setExpiryData(data) {
         const prior = this.expirationTime;
         if (data.cacheControl) {
-            const parsedCC = performance$1.a9(data.cacheControl);
+            const parsedCC = performance$1.aa(data.cacheControl);
             if (parsedCC['max-age'])
                 this.expirationTime = Date.now() + parsedCC['max-age'] * 1000;
         }
@@ -33162,7 +33163,7 @@ class SourceCache extends performance$1.E {
         }
         else if (this._source.tileID) {
             idealTileIDs = transform.getVisibleUnwrappedCoordinates(this._source.tileID)
-                .map((unwrapped) => new performance$1.O(unwrapped.canonical.z, unwrapped.wrap, unwrapped.canonical.z, unwrapped.canonical.x, unwrapped.canonical.y));
+                .map((unwrapped) => new performance$1.Q(unwrapped.canonical.z, unwrapped.wrap, unwrapped.canonical.z, unwrapped.canonical.x, unwrapped.canonical.y));
         }
         else {
             idealTileIDs = transform.coveringTiles({
@@ -33215,7 +33216,7 @@ class SourceCache extends performance$1.E {
             this._tiles[retainedId].clearFadeHold();
         }
         // Remove the tiles we don't need anymore.
-        const remove = performance$1.aa(this._tiles, retain);
+        const remove = performance$1.ab(this._tiles, retain);
         for (const tileID of remove) {
             const tile = this._tiles[tileID];
             if (tile.hasSymbolBuckets && !tile.holdingForFade()) {
@@ -33484,12 +33485,12 @@ class SourceCache extends performance$1.E {
             }
             const tileID = tile.tileID;
             const scale = Math.pow(2, transform.zoom - tile.tileID.overscaledZ);
-            const queryPadding = maxPitchScaleFactor * tile.queryPadding * performance$1.V / tile.tileSize / scale;
+            const queryPadding = maxPitchScaleFactor * tile.queryPadding * performance$1.W / tile.tileSize / scale;
             const tileSpaceBounds = [
-                tileID.getTilePoint(new performance$1.X(minX, minY)),
-                tileID.getTilePoint(new performance$1.X(maxX, maxY))
+                tileID.getTilePoint(new performance$1.Y(minX, minY)),
+                tileID.getTilePoint(new performance$1.Y(maxX, maxY))
             ];
-            if (tileSpaceBounds[0].x - queryPadding < performance$1.V && tileSpaceBounds[0].y - queryPadding < performance$1.V &&
+            if (tileSpaceBounds[0].x - queryPadding < performance$1.W && tileSpaceBounds[0].y - queryPadding < performance$1.W &&
                 tileSpaceBounds[1].x + queryPadding >= 0 && tileSpaceBounds[1].y + queryPadding >= 0) {
                 const tileSpaceQueryGeometry = queryGeometry.map((c) => tileID.getTilePoint(c));
                 const tileSpaceCameraQueryGeometry = cameraQueryGeometry.map((c) => tileID.getTilePoint(c));
@@ -33604,7 +33605,7 @@ class PathInterpolator {
         if (this.points.length === 1) {
             return this.points[0];
         }
-        t = performance$1.ab(t, 0, 1);
+        t = performance$1.ac(t, 0, 1);
         // Find the correct segment [p0, p1] where p0 <= x < p1
         let currentIndex = 1;
         let distOfCurrentIdx = this._distances[currentIndex];
@@ -33966,15 +33967,15 @@ class GridIndex {
  * Returns a matrix for converting from tile units to the correct label coordinate space.
  */
 function getLabelPlaneMatrix(posMatrix, pitchWithMap, rotateWithMap, transform, pixelsToTileUnits) {
-    const m = performance$1.C();
+    const m = performance$1.F();
     if (pitchWithMap) {
-        performance$1.H(m, m, [1 / pixelsToTileUnits, 1 / pixelsToTileUnits, 1]);
+        performance$1.J(m, m, [1 / pixelsToTileUnits, 1 / pixelsToTileUnits, 1]);
         if (!rotateWithMap) {
-            performance$1.ac(m, m, transform.angle);
+            performance$1.ad(m, m, transform.angle);
         }
     }
     else {
-        performance$1.J(m, transform.labelPlaneMatrix, posMatrix);
+        performance$1.K(m, transform.labelPlaneMatrix, posMatrix);
     }
     return m;
 }
@@ -33983,10 +33984,10 @@ function getLabelPlaneMatrix(posMatrix, pitchWithMap, rotateWithMap, transform, 
  */
 function getGlCoordMatrix(posMatrix, pitchWithMap, rotateWithMap, transform, pixelsToTileUnits) {
     if (pitchWithMap) {
-        const m = performance$1.ad(posMatrix);
-        performance$1.H(m, m, [pixelsToTileUnits, pixelsToTileUnits, 1]);
+        const m = performance$1.ae(posMatrix);
+        performance$1.J(m, m, [pixelsToTileUnits, pixelsToTileUnits, 1]);
         if (!rotateWithMap) {
-            performance$1.ac(m, m, -transform.angle);
+            performance$1.ad(m, m, -transform.angle);
         }
         return m;
     }
@@ -33998,7 +33999,7 @@ function project(point, matrix, getElevation) {
     let pos;
     if (getElevation) { // slow because of handle z-index
         pos = [point.x, point.y, getElevation(point.x, point.y), 1];
-        performance$1.ae(pos, pos, matrix);
+        performance$1.af(pos, pos, matrix);
     }
     else { // fast because of ignore z-index
         pos = [point.x, point.y, 0, 1];
@@ -34027,7 +34028,7 @@ function isVisible(p, clippingBuffer) {
  */
 function updateLineLabels(bucket, posMatrix, painter, isText, labelPlaneMatrix, glCoordMatrix, pitchWithMap, keepUpright, rotateToLine, projection, unwrappedTileID, viewportWidth, viewportHeight, translation, getElevation) {
     const sizeData = isText ? bucket.textSizeData : bucket.iconSizeData;
-    const partiallyEvaluatedSize = performance$1.af(sizeData, painter.transform.zoom);
+    const partiallyEvaluatedSize = performance$1.ag(sizeData, painter.transform.zoom);
     const clippingBuffer = [256 / painter.width * 2 + 1, 256 / painter.height * 2 + 1];
     const dynamicLayoutVertexArray = isText ?
         bucket.text.dynamicLayoutVertexArray :
@@ -34042,7 +34043,7 @@ function updateLineLabels(bucket, posMatrix, painter, isText, labelPlaneMatrix, 
         // Don't do calculations for vertical glyphs unless the previous symbol was horizontal
         // and we determined that vertical glyphs were necessary.
         // Also don't do calculations for symbols that are collided and fully faded out
-        if (symbol.hidden || symbol.writingMode === performance$1.ag.vertical && !useVertical) {
+        if (symbol.hidden || symbol.writingMode === performance$1.ah.vertical && !useVertical) {
             hideGlyphs(symbol.numGlyphs, dynamicLayoutVertexArray);
             continue;
         }
@@ -34056,7 +34057,7 @@ function updateLineLabels(bucket, posMatrix, painter, isText, labelPlaneMatrix, 
         }
         const cameraToAnchorDistance = anchorPos.signedDistanceFromCamera;
         const perspectiveRatio = getPerspectiveRatio(painter.transform.cameraToCenterDistance, cameraToAnchorDistance);
-        const fontSize = performance$1.ah(sizeData, partiallyEvaluatedSize, symbol);
+        const fontSize = performance$1.ai(sizeData, partiallyEvaluatedSize, symbol);
         const pitchScaledFontSize = pitchWithMap ? fontSize / perspectiveRatio : fontSize * perspectiveRatio;
         const tileAnchorPoint = new performance$1.P(symbol.anchorX, symbol.anchorY);
         const projectionCache = { projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false };
@@ -34118,7 +34119,7 @@ function placeFirstAndLastGlyph(fontScale, glyphOffsetArray, lineOffsetX, lineOf
     return { first: firstPlacedGlyph, last: lastPlacedGlyph };
 }
 function requiresOrientationChange(writingMode, firstPoint, lastPoint, aspectRatio) {
-    if (writingMode === performance$1.ag.horizontal) {
+    if (writingMode === performance$1.ah.horizontal) {
         // On top of choosing whether to flip, choose whether to render this version of the glyphs or the alternate
         // vertical glyphs. We can't just filter out vertical glyphs in the horizontal range because the horizontal
         // and vertical versions can have slightly different projections which could lead to angles where both or
@@ -34129,7 +34130,7 @@ function requiresOrientationChange(writingMode, firstPoint, lastPoint, aspectRat
             return { useVertical: true };
         }
     }
-    if (writingMode === performance$1.ag.vertical ? firstPoint.y < lastPoint.y : firstPoint.x > lastPoint.x) {
+    if (writingMode === performance$1.ah.vertical ? firstPoint.y < lastPoint.y : firstPoint.x > lastPoint.x) {
         // Includes "horizontalOnly" case for labels without vertical glyphs
         return { needsFlipping: true };
     }
@@ -34198,7 +34199,7 @@ function placeGlyphsAlongLine(projectionContext, symbol, fontSize, flip, keepUpr
         placedGlyphs = [singleGlyph];
     }
     for (const glyph of placedGlyphs) {
-        performance$1.ai(dynamicLayoutVertexArray, glyph.point, glyph.angle);
+        performance$1.aj(dynamicLayoutVertexArray, glyph.point, glyph.angle);
     }
     return {};
 }
@@ -34334,7 +34335,7 @@ function findOffsetIntersectionPoint(index, prevToCurrentOffsetNormal, currentVe
     const offsetNextSegmentEnd = nextVertex.add(currentToNextOffsetNormal);
     // find the intersection of these two lines
     // if the lines are parallel, offsetCurrent/offsetNextBegin will touch
-    projectionContext.projectionCache.offsets[index] = performance$1.aj(offsetPreviousVertex, offsetCurrentVertex, offsetNextSegmentBegin, offsetNextSegmentEnd) || offsetCurrentVertex;
+    projectionContext.projectionCache.offsets[index] = performance$1.ak(offsetPreviousVertex, offsetCurrentVertex, offsetNextSegmentBegin, offsetNextSegmentEnd) || offsetCurrentVertex;
     return projectionContext.projectionCache.offsets[index];
 }
 /*
@@ -34513,7 +34514,7 @@ class CollisionIndex {
         const tileUnitAnchorPoint = new performance$1.P(symbol.anchorX, symbol.anchorY);
         const perspectiveRatio = this.getPerspectiveRatio(posMatrix, tileUnitAnchorPoint.x, tileUnitAnchorPoint.y, unwrappedTileID, getElevation);
         const labelPlaneFontSize = pitchWithMap ? fontSize / perspectiveRatio : fontSize * perspectiveRatio;
-        const labelPlaneFontScale = labelPlaneFontSize / performance$1.ao;
+        const labelPlaneFontScale = labelPlaneFontSize / performance$1.ap;
         const projectionCache = { projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false };
         const lineOffsetX = symbol.lineOffsetX * labelPlaneFontScale;
         const lineOffsetY = symbol.lineOffsetY * labelPlaneFontScale;
@@ -34587,7 +34588,7 @@ class CollisionIndex {
                     segments = [];
                 }
                 else {
-                    segments = performance$1.ak([projectedPath], screenPlaneMin.x, screenPlaneMin.y, screenPlaneMax.x, screenPlaneMax.y);
+                    segments = performance$1.al([projectedPath], screenPlaneMin.x, screenPlaneMin.y, screenPlaneMax.x, screenPlaneMax.y);
                 }
             }
             for (const seg of segments) {
@@ -34683,7 +34684,7 @@ class CollisionIndex {
                 new performance$1.P(feature.x2, feature.y2),
                 new performance$1.P(feature.x1, feature.y2)
             ];
-            if (!performance$1.al(query, bbox)) {
+            if (!performance$1.am(query, bbox)) {
                 continue;
             }
             seenFeatures[featureKey.bucketInstanceId][featureKey.featureIndex] = true;
@@ -34739,8 +34740,8 @@ class CollisionIndex {
     *   example transformation: clipPos = glCoordMatrix * viewportMatrix * circle_pos
     */
     getViewportMatrix() {
-        const m = performance$1.am([]);
-        performance$1.F(m, m, [-viewportPadding, -viewportPadding, 0.0]);
+        const m = performance$1.an([]);
+        performance$1.H(m, m, [-viewportPadding, -viewportPadding, 0.0]);
         return m;
     }
     /**
@@ -34787,7 +34788,7 @@ class CollisionIndex {
                 // Here, we compute and apply the pitchWithMap branch.
                 // See the computation of `perspective_ratio` in the symbol vertex shaders for the GLSL code.
                 const distanceRatio = projectedPoint.signedDistanceFromCamera / this.transform.cameraToCenterDistance;
-                const perspectiveRatio = performance$1.ab(0.5 + 0.5 * distanceRatio, 0.0, 4.0); // Same clamp as what is used in the shader.
+                const perspectiveRatio = performance$1.ac(0.5 + 0.5 * distanceRatio, 0.0, 4.0); // Same clamp as what is used in the shader.
                 distanceMultiplier *= perspectiveRatio;
             }
         }
@@ -34833,7 +34834,7 @@ class CollisionIndex {
             anyPointVisible = true;
         }
         return {
-            box: performance$1.an(points),
+            box: performance$1.ao(points),
             allPointsOccluded: !anyPointVisible
         };
     }
@@ -34851,7 +34852,7 @@ class CollisionIndex {
  * @returns value in tile units
  */
 function pixelsToTileUnits(tile, pixelValue, z) {
-    return pixelValue * (performance$1.V / (tile.tileSize * Math.pow(2, z - tile.tileID.overscaledZ)));
+    return pixelValue * (performance$1.W / (tile.tileSize * Math.pow(2, z - tile.tileID.overscaledZ)));
 }
 
 class OpacityState {
@@ -34886,8 +34887,8 @@ class JointPlacement {
 }
 class CollisionCircleArray {
     constructor() {
-        this.invProjMatrix = performance$1.C();
-        this.viewportMatrix = performance$1.C();
+        this.invProjMatrix = performance$1.F();
+        this.viewportMatrix = performance$1.F();
         this.circles = [];
     }
 }
@@ -34928,7 +34929,7 @@ class CollisionGroups {
     }
 }
 function calculateVariableLayoutShift(anchor, width, height, textOffset, textBoxScale) {
-    const { horizontalAlign, verticalAlign } = performance$1.at(anchor);
+    const { horizontalAlign, verticalAlign } = performance$1.au(anchor);
     const shiftX = -(horizontalAlign - 0.5) * width;
     const shiftY = -(verticalAlign - 0.5) * height;
     return new performance$1.P(shiftX + textOffset[0] * textBoxScale, shiftY + textOffset[1] * textBoxScale);
@@ -34967,7 +34968,7 @@ class Placement {
         const layout = symbolBucket.layers[0].layout;
         const paint = symbolBucket.layers[0].paint;
         const scale = Math.pow(2, this.transform.zoom - tile.tileID.overscaledZ);
-        const textPixelRatio = tile.tileSize / performance$1.V;
+        const textPixelRatio = tile.tileSize / performance$1.W;
         const unwrappedTileID = tile.tileID.toUnwrapped();
         const posMatrix = this.transform.calculatePosMatrix(unwrappedTileID);
         const pitchWithMap = layout.get('text-pitch-alignment') === 'map';
@@ -34979,7 +34980,7 @@ class Placement {
         let labelToScreenMatrix = null;
         if (pitchWithMap) {
             const glMatrix = getGlCoordMatrix(posMatrix, pitchWithMap, rotateWithMap, this.transform, pixelsToTiles);
-            labelToScreenMatrix = performance$1.J([], this.transform.labelPlaneMatrix, glMatrix);
+            labelToScreenMatrix = performance$1.K([], this.transform.labelPlaneMatrix, glMatrix);
         }
         // As long as this placement lives, we have to hold onto this bucket's
         // matching FeatureIndex/data for querying purposes
@@ -34997,7 +34998,7 @@ class Placement {
             textPixelRatio,
             holdingForFade: tile.holdingForFade(),
             collisionBoxArray,
-            partiallyEvaluatedTextSize: performance$1.af(symbolBucket.textSizeData, this.transform.zoom),
+            partiallyEvaluatedTextSize: performance$1.ag(symbolBucket.textSizeData, this.transform.zoom),
             collisionGroup: this.collisionGroups.get(symbolBucket.sourceID)
         };
         if (sortAcrossTiles) {
@@ -35015,7 +35016,7 @@ class Placement {
         }
     }
     attemptAnchorPlacement(textAnchorOffset, textBox, width, height, textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, posMatrix, unwrappedTileID, collisionGroup, textOverlapMode, symbolInstance, bucket, orientation, translationText, translationIcon, iconBox, getElevation) {
-        const anchor = performance$1.ap[textAnchorOffset.textAnchor];
+        const anchor = performance$1.aq[textAnchorOffset.textAnchor];
         const textOffset = [textAnchorOffset.textOffset0, textAnchorOffset.textOffset1];
         const shift = calculateVariableLayoutShift(anchor, width, height, textOffset, textBoxScale);
         const placedGlyphBoxes = this.collisionIndex.placeCollisionBox(textBox, textOverlapMode, textPixelRatio, posMatrix, unwrappedTileID, pitchWithMap, rotateWithMap, translationText, collisionGroup.predicate, getElevation, shift);
@@ -35056,9 +35057,9 @@ class Placement {
         const { bucket, layout, translationText, translationIcon, posMatrix, unwrappedTileID, textLabelPlaneMatrix, labelToScreenMatrix, textPixelRatio, holdingForFade, collisionBoxArray, partiallyEvaluatedTextSize, collisionGroup } = bucketPart.parameters;
         const textOptional = layout.get('text-optional');
         const iconOptional = layout.get('icon-optional');
-        const textOverlapMode = performance$1.aq(layout, 'text-overlap', 'text-allow-overlap');
+        const textOverlapMode = performance$1.ar(layout, 'text-overlap', 'text-allow-overlap');
         const textAlwaysOverlap = textOverlapMode === 'always';
-        const iconOverlapMode = performance$1.aq(layout, 'icon-overlap', 'icon-allow-overlap');
+        const iconOverlapMode = performance$1.ar(layout, 'icon-overlap', 'icon-allow-overlap');
         const iconAlwaysOverlap = iconOverlapMode === 'always';
         const rotateWithMap = layout.get('text-rotation-alignment') === 'map';
         const pitchWithMap = layout.get('text-pitch-alignment') === 'map';
@@ -35119,7 +35120,7 @@ class Placement {
             const textBox = collisionArrays.textBox;
             if (textBox) {
                 const updatePreviousOrientationIfNotPlaced = (isPlaced) => {
-                    let previousOrientation = performance$1.ag.horizontal;
+                    let previousOrientation = performance$1.ah.horizontal;
                     if (bucket.allowVerticalPlacement && !isPlaced && this.prevPlacement) {
                         const prevPlacedOrientation = this.prevPlacement.placedOrientations[symbolInstance.crossTileID];
                         if (prevPlacedOrientation) {
@@ -35133,7 +35134,7 @@ class Placement {
                 const placeTextForPlacementModes = (placeHorizontalFn, placeVerticalFn) => {
                     if (bucket.allowVerticalPlacement && symbolInstance.numVerticalGlyphVertices > 0 && collisionArrays.verticalTextBox) {
                         for (const placementMode of bucket.writingModes) {
-                            if (placementMode === performance$1.ag.vertical) {
+                            if (placementMode === performance$1.ah.vertical) {
                                 placed = placeVerticalFn();
                                 placedVerticalText = placed;
                             }
@@ -35161,12 +35162,12 @@ class Placement {
                         return placedFeature;
                     };
                     const placeHorizontal = () => {
-                        return placeBox(textBox, performance$1.ag.horizontal);
+                        return placeBox(textBox, performance$1.ah.horizontal);
                     };
                     const placeVertical = () => {
                         const verticalTextBox = collisionArrays.verticalTextBox;
                         if (bucket.allowVerticalPlacement && symbolInstance.numVerticalGlyphVertices > 0 && verticalTextBox) {
-                            return placeBox(verticalTextBox, performance$1.ag.vertical);
+                            return placeBox(verticalTextBox, performance$1.ah.vertical);
                         }
                         return { box: null, offscreen: null };
                     };
@@ -35175,7 +35176,7 @@ class Placement {
                 }
                 else {
                     // If this symbol was in the last placement, prefer placement using same anchor, if it's still available
-                    let prevAnchor = performance$1.ap[(_b = (_a = this.prevPlacement) === null || _a === void 0 ? void 0 : _a.variableOffsets[symbolInstance.crossTileID]) === null || _b === void 0 ? void 0 : _b.anchor];
+                    let prevAnchor = performance$1.aq[(_b = (_a = this.prevPlacement) === null || _a === void 0 ? void 0 : _a.variableOffsets[symbolInstance.crossTileID]) === null || _b === void 0 ? void 0 : _b.anchor];
                     const placeBoxForVariableAnchors = (collisionTextBox, collisionIconBox, orientation) => {
                         const width = collisionTextBox.x2 - collisionTextBox.x1;
                         const height = collisionTextBox.y2 - collisionTextBox.y1;
@@ -35224,13 +35225,13 @@ class Placement {
                         return placedBox;
                     };
                     const placeHorizontal = () => {
-                        return placeBoxForVariableAnchors(textBox, collisionArrays.iconBox, performance$1.ag.horizontal);
+                        return placeBoxForVariableAnchors(textBox, collisionArrays.iconBox, performance$1.ah.horizontal);
                     };
                     const placeVertical = () => {
                         const verticalTextBox = collisionArrays.verticalTextBox;
                         const wasPlaced = placed && placed.placeable;
                         if (bucket.allowVerticalPlacement && !wasPlaced && symbolInstance.numVerticalGlyphVertices > 0 && verticalTextBox) {
-                            return placeBoxForVariableAnchors(verticalTextBox, collisionArrays.verticalIconBox, performance$1.ag.vertical);
+                            return placeBoxForVariableAnchors(verticalTextBox, collisionArrays.verticalIconBox, performance$1.ah.vertical);
                         }
                         return { box: null, occluded: true, offscreen: null };
                     };
@@ -35256,7 +35257,7 @@ class Placement {
             offscreen = placedGlyphBoxes && placedGlyphBoxes.offscreen;
             if (symbolInstance.useRuntimeCollisionCircles) {
                 const placedSymbol = bucket.text.placedSymbolArray.get(symbolInstance.centerJustifiedTextSymbolIndex);
-                const fontSize = performance$1.ah(bucket.textSizeData, partiallyEvaluatedTextSize, placedSymbol);
+                const fontSize = performance$1.ai(bucket.textSizeData, partiallyEvaluatedTextSize, placedSymbol);
                 const textPixelPadding = layout.get('text-padding');
                 const circlePixelDiameter = symbolInstance.collisionCircleDiameter;
                 placedGlyphCircles = this.collisionIndex.placeCollisionCircles(textOverlapMode, placedSymbol, bucket.lineVertexArray, bucket.glyphOffsetArray, fontSize, posMatrix, unwrappedTileID, textLabelPlaneMatrix, labelToScreenMatrix, showCollisionBoxes, pitchWithMap, collisionGroup.predicate, circlePixelDiameter, textPixelPadding, translationText, getElevation);
@@ -35345,7 +35346,7 @@ class Placement {
         if (showCollisionBoxes && bucket.bucketInstanceId in this.collisionCircleArrays) {
             const circleArray = this.collisionCircleArrays[bucket.bucketInstanceId];
             // Store viewport and inverse projection matrices per bucket
-            performance$1.ar(circleArray.invProjMatrix, posMatrix);
+            performance$1.as(circleArray.invProjMatrix, posMatrix);
             circleArray.viewportMatrix = this.collisionIndex.getViewportMatrix();
         }
         bucket.justReloaded = false;
@@ -35400,11 +35401,11 @@ class Placement {
             'right': symbolInstance.rightJustifiedTextSymbolIndex
         };
         let autoIndex;
-        if (orientation === performance$1.ag.vertical) {
+        if (orientation === performance$1.ah.vertical) {
             autoIndex = symbolInstance.verticalPlacedTextSymbolIndex;
         }
         else {
-            autoIndex = justifications[performance$1.as(placedAnchor)];
+            autoIndex = justifications[performance$1.at(placedAnchor)];
         }
         const indexes = [
             symbolInstance.leftJustifiedTextSymbolIndex,
@@ -35426,8 +35427,8 @@ class Placement {
         }
     }
     markUsedOrientation(bucket, orientation, symbolInstance) {
-        const horizontal = (orientation === performance$1.ag.horizontal || orientation === performance$1.ag.horizontalOnly) ? orientation : 0;
-        const vertical = orientation === performance$1.ag.vertical ? orientation : 0;
+        const horizontal = (orientation === performance$1.ah.horizontal || orientation === performance$1.ah.horizontalOnly) ? orientation : 0;
+        const vertical = orientation === performance$1.ah.vertical ? orientation : 0;
         const horizontalIndexes = [
             symbolInstance.leftJustifiedTextSymbolIndex,
             symbolInstance.centerJustifiedTextSymbolIndex,
@@ -35562,8 +35563,8 @@ class Placement {
             const hasText = numHorizontalGlyphVertices > 0 || numVerticalGlyphVertices > 0;
             const hasIcon = symbolInstance.numIconVertices > 0;
             const placedOrientation = this.placedOrientations[symbolInstance.crossTileID];
-            const horizontalHidden = placedOrientation === performance$1.ag.vertical;
-            const verticalHidden = placedOrientation === performance$1.ag.horizontal || placedOrientation === performance$1.ag.horizontalOnly;
+            const horizontalHidden = placedOrientation === performance$1.ah.vertical;
+            const verticalHidden = placedOrientation === performance$1.ah.horizontal || placedOrientation === performance$1.ah.horizontalOnly;
             if (hasText) {
                 const packedOpacity = packOpacity(opacityState.text);
                 // Vertical text fades in/out on collision the same way as corresponding
@@ -35908,7 +35909,7 @@ class PauseablePlacement {
     matching it with an existing id or assigning a new one.
 */
 // Round anchor positions to roughly 4 pixel grid
-const roundingFactor = 512 / performance$1.V / 2;
+const roundingFactor = 512 / performance$1.W / 2;
 const KDBUSH_THRESHHOLD = 128;
 class TileLayerIndex {
     constructor(tileID, symbolInstances, bucketInstanceId) {
@@ -35937,7 +35938,7 @@ class TileLayerIndex {
             const entry = { positions, crossTileIDs };
             // once we get too many symbols for a given key, it becomes much faster to index it before queries
             if (entry.positions.length > KDBUSH_THRESHHOLD) {
-                const index = new performance$1.au(entry.positions.length, 16, Uint16Array);
+                const index = new performance$1.av(entry.positions.length, 16, Uint16Array);
                 for (const { x, y } of entry.positions)
                     index.add(x, y);
                 index.finish();
@@ -35959,10 +35960,10 @@ class TileLayerIndex {
         const { x, y, z } = childTileID.canonical;
         const zDifference = z - localZ;
         const scale = roundingFactor / Math.pow(2, zDifference);
-        const xWorld = (x * performance$1.V + symbolInstance.anchorX) * scale;
-        const yWorld = (y * performance$1.V + symbolInstance.anchorY) * scale;
-        const xOffset = localX * performance$1.V * roundingFactor;
-        const yOffset = localY * performance$1.V * roundingFactor;
+        const xWorld = (x * performance$1.W + symbolInstance.anchorX) * scale;
+        const yWorld = (y * performance$1.W + symbolInstance.anchorY) * scale;
+        const xOffset = localX * performance$1.W * roundingFactor;
+        const yOffset = localY * performance$1.W * roundingFactor;
         const result = {
             x: Math.floor(xWorld - xOffset),
             y: Math.floor(yWorld - yOffset)
@@ -36185,8 +36186,8 @@ class CrossTileSymbolIndex {
 // We're skipping validation errors with the `source.canvas` identifier in order
 // to continue to allow canvas sources to be added at runtime/updated in
 // smart setStyle (see https://github.com/mapbox/mapbox-gl-js/pull/6424):
-const emitValidationErrors = (evented, errors) => performance$1.r(evented, errors && errors.filter(error => error.identifier !== 'source.canvas'));
-const empty = performance$1.av();
+const emitValidationErrors = (evented, errors) => performance$1.t(evented, errors && errors.filter(error => error.identifier !== 'source.canvas'));
+const empty = performance$1.aw();
 /**
  * The Style base class
  */
@@ -36221,11 +36222,11 @@ class Style extends performance$1.E {
         this._layers = {};
         this._order = [];
         this.sourceCaches = {};
-        this.zoomHistory = new performance$1.aw();
+        this.zoomHistory = new performance$1.ax();
         this._loaded = false;
         this._availableImages = [];
         this._resetUpdates();
-        this.dispatcher.broadcast("SR" /* MessageType.setReferrer */, performance$1.ax());
+        this.dispatcher.broadcast("SR" /* MessageType.setReferrer */, performance$1.ay());
         rtlMainThreadPluginFactory().on(RTLPluginLoadedEventName, this._rtlPluginLoaded);
         this.on('data', (event) => {
             if (event.dataType !== 'source' || event.sourceDataType !== 'metadata') {
@@ -36280,7 +36281,7 @@ class Style extends performance$1.E {
     _load(json, options, previousStyle) {
         var _a;
         const nextState = options.transformStyle ? options.transformStyle(previousStyle, json) : json;
-        if (options.validate && emitValidationErrors(this, performance$1.t(nextState))) {
+        if (options.validate && emitValidationErrors(this, performance$1.u(nextState))) {
             return;
         }
         this._loaded = true;
@@ -36303,7 +36304,7 @@ class Style extends performance$1.E {
         this.fire(new performance$1.k('style.load'));
     }
     _createLayers() {
-        const dereferencedLayers = performance$1.ay(this.stylesheet.layers);
+        const dereferencedLayers = performance$1.az(this.stylesheet.layers);
         // Broadcast layers to workers first, so that expensive style processing (createStyleLayer)
         // can happen in parallel on both main and worker threads.
         this.dispatcher.broadcast("SL" /* MessageType.setLayers */, dereferencedLayers);
@@ -36312,7 +36313,7 @@ class Style extends performance$1.E {
         // reset serialization field, to be populated only when needed
         this._serializedLayers = null;
         for (const layer of dereferencedLayers) {
-            const styledLayer = performance$1.az(layer);
+            const styledLayer = performance$1.aA(layer);
             styledLayer.setEventedParent(this, { layer: { id: layer.id } });
             this._layers[layer.id] = styledLayer;
         }
@@ -36415,13 +36416,13 @@ class Style extends performance$1.E {
     _serializeByIds(ids, returnClone = false) {
         const serializedLayersDictionary = this._serializedAllLayers();
         if (!ids || ids.length === 0) {
-            return returnClone ? Object.values(performance$1.aA(serializedLayersDictionary)) : Object.values(serializedLayersDictionary);
+            return returnClone ? Object.values(performance$1.aB(serializedLayersDictionary)) : Object.values(serializedLayersDictionary);
         }
         const serializedLayers = [];
         for (const id of ids) {
             // this check will skip all custom layers
             if (serializedLayersDictionary[id]) {
-                const toPush = returnClone ? performance$1.aA(serializedLayersDictionary[id]) : serializedLayersDictionary[id];
+                const toPush = returnClone ? performance$1.aB(serializedLayersDictionary[id]) : serializedLayersDictionary[id];
                 serializedLayers.push(toPush);
             }
         }
@@ -36595,11 +36596,11 @@ class Style extends performance$1.E {
         const serializedStyle = this.serialize();
         nextState = options.transformStyle ? options.transformStyle(serializedStyle, nextState) : nextState;
         const validate = (_a = options.validate) !== null && _a !== void 0 ? _a : true;
-        if (validate && emitValidationErrors(this, performance$1.t(nextState)))
+        if (validate && emitValidationErrors(this, performance$1.u(nextState)))
             return false;
-        nextState = performance$1.aA(nextState);
-        nextState.layers = performance$1.ay(nextState.layers);
-        const changes = performance$1.aB(serializedStyle, nextState);
+        nextState = performance$1.aB(nextState);
+        nextState.layers = performance$1.az(nextState.layers);
+        const changes = performance$1.aC(serializedStyle, nextState);
         const operations = this._getOperationsToPerform(changes);
         if (operations.unimplemented.length > 0) {
             throw new Error(`Unimplemented: ${operations.unimplemented.join(', ')}.`);
@@ -36721,7 +36722,7 @@ class Style extends performance$1.E {
         }
         const builtIns = ['vector', 'raster', 'geojson', 'video', 'image'];
         const shouldValidate = builtIns.indexOf(source.type) >= 0;
-        if (shouldValidate && this._validate(performance$1.t.source, `sources.${id}`, source, null, options))
+        if (shouldValidate && this._validate(performance$1.u.source, `sources.${id}`, source, null, options))
             return;
         if (this.map && this.map._collectResourceTiming)
             source.collectResourceTiming = true;
@@ -36797,20 +36798,20 @@ class Style extends performance$1.E {
         }
         let layer;
         if (layerObject.type === 'custom') {
-            if (emitValidationErrors(this, performance$1.aC(layerObject)))
+            if (emitValidationErrors(this, performance$1.aD(layerObject)))
                 return;
-            layer = performance$1.az(layerObject);
+            layer = performance$1.aA(layerObject);
         }
         else {
             if ('source' in layerObject && typeof layerObject.source === 'object') {
                 this.addSource(id, layerObject.source);
-                layerObject = performance$1.aA(layerObject);
+                layerObject = performance$1.aB(layerObject);
                 layerObject = performance$1.e(layerObject, { source: id });
             }
             // this layer is not in the style.layers array, so we pass an impossible array index
-            if (this._validate(performance$1.t.layer, `layers.${id}`, layerObject, { arrayIndex: -1 }, options))
+            if (this._validate(performance$1.u.layer, `layers.${id}`, layerObject, { arrayIndex: -1 }, options))
                 return;
-            layer = performance$1.az(layerObject);
+            layer = performance$1.aA(layerObject);
             this._validateLayer(layer);
             layer.setEventedParent(this, { layer: { id } });
         }
@@ -36951,7 +36952,7 @@ class Style extends performance$1.E {
             this.fire(new performance$1.j(new Error(`Cannot filter non-existing layer "${layerId}".`)));
             return;
         }
-        if (performance$1.aD(layer.filter, filter)) {
+        if (performance$1.aE(layer.filter, filter)) {
             return;
         }
         if (filter === null || filter === undefined) {
@@ -36959,10 +36960,10 @@ class Style extends performance$1.E {
             this._updateLayer(layer);
             return;
         }
-        if (this._validate(performance$1.t.filter, `layers.${layer.id}.filter`, filter, null, options)) {
+        if (this._validate(performance$1.u.filter, `layers.${layer.id}.filter`, filter, null, options)) {
             return;
         }
-        layer.filter = performance$1.aA(filter);
+        layer.filter = performance$1.aB(filter);
         this._updateLayer(layer);
     }
     /**
@@ -36971,7 +36972,7 @@ class Style extends performance$1.E {
      * @returns the layer's filter, if any
      */
     getFilter(layer) {
-        return performance$1.aA(this.getLayer(layer).filter);
+        return performance$1.aB(this.getLayer(layer).filter);
     }
     setLayoutProperty(layerId, name, value, options = {}) {
         this._checkLoaded();
@@ -36980,7 +36981,7 @@ class Style extends performance$1.E {
             this.fire(new performance$1.j(new Error(`Cannot style non-existing layer "${layerId}".`)));
             return;
         }
-        if (performance$1.aD(layer.getLayoutProperty(name), value))
+        if (performance$1.aE(layer.getLayoutProperty(name), value))
             return;
         layer.setLayoutProperty(name, value, options);
         this._updateLayer(layer);
@@ -37006,7 +37007,7 @@ class Style extends performance$1.E {
             this.fire(new performance$1.j(new Error(`Cannot style non-existing layer "${layerId}".`)));
             return;
         }
-        if (performance$1.aD(layer.getPaintProperty(name), value))
+        if (performance$1.aE(layer.getPaintProperty(name), value))
             return;
         const requiresRelayout = layer.setPaintProperty(name, value, options);
         if (requiresRelayout) {
@@ -37092,11 +37093,11 @@ class Style extends performance$1.E {
         // calling Style._checkLoaded() first if their validation requires the style to be loaded.
         if (!this._loaded)
             return;
-        const sources = performance$1.aE(this.sourceCaches, (source) => source.serialize());
+        const sources = performance$1.aF(this.sourceCaches, (source) => source.serialize());
         const layers = this._serializeByIds(this._order, true);
         const terrain = this.map.getTerrain() || undefined;
         const myStyleSheet = this.stylesheet;
-        return performance$1.aF({
+        return performance$1.aG({
             version: myStyleSheet.version,
             name: myStyleSheet.name,
             metadata: myStyleSheet.metadata,
@@ -37192,7 +37193,7 @@ class Style extends performance$1.E {
     }
     queryRenderedFeatures(queryGeometry, params, transform) {
         if (params && params.filter) {
-            this._validate(performance$1.t.filter, 'queryRenderedFeatures.filter', params.filter, null, params);
+            this._validate(performance$1.u.filter, 'queryRenderedFeatures.filter', params.filter, null, params);
         }
         const includedSources = {};
         if (params && params.layers) {
@@ -37228,7 +37229,7 @@ class Style extends performance$1.E {
     }
     querySourceFeatures(sourceID, params) {
         if (params && params.filter) {
-            this._validate(performance$1.t.filter, 'querySourceFeatures.filter', params.filter, null, params);
+            this._validate(performance$1.u.filter, 'querySourceFeatures.filter', params.filter, null, params);
         }
         const sourceCache = this.sourceCaches[sourceID];
         return sourceCache ? querySourceFeatures(sourceCache, params) : [];
@@ -37241,7 +37242,7 @@ class Style extends performance$1.E {
         const light = this.light.getLight();
         let _update = false;
         for (const key in lightOptions) {
-            if (!performance$1.aD(lightOptions[key], light[key])) {
+            if (!performance$1.aE(lightOptions[key], light[key])) {
                 _update = true;
                 break;
             }
@@ -37271,7 +37272,7 @@ class Style extends performance$1.E {
             }
         }
         for (const key in skyOptions) {
-            if (!performance$1.aD(skyOptions[key], sky[key])) {
+            if (!performance$1.aE(skyOptions[key], sky[key])) {
                 update = true;
                 break;
             }
@@ -37293,7 +37294,7 @@ class Style extends performance$1.E {
         if (options && options.validate === false) {
             return false;
         }
-        return emitValidationErrors(this, validate.call(performance$1.t, performance$1.e({
+        return emitValidationErrors(this, validate.call(performance$1.u, performance$1.e({
             key,
             style: this.serialize(),
             value,
@@ -37450,7 +37451,7 @@ class Style extends performance$1.E {
     }
     setGlyphs(glyphsUrl, options = {}) {
         this._checkLoaded();
-        if (glyphsUrl && this._validate(performance$1.t.glyphs, 'glyphs', glyphsUrl, null, options)) {
+        if (glyphsUrl && this._validate(performance$1.u.glyphs, 'glyphs', glyphsUrl, null, options)) {
             return;
         }
         this._glyphsDidChange = true;
@@ -37473,7 +37474,7 @@ class Style extends performance$1.E {
             ...coerceSpriteToArray(this.stylesheet.sprite),
             ...spriteToAdd
         ];
-        if (this._validate(performance$1.t.sprite, 'sprite', updatedSprite, null, options))
+        if (this._validate(performance$1.u.sprite, 'sprite', updatedSprite, null, options))
             return;
         this.stylesheet.sprite = updatedSprite;
         this._loadSprite(spriteToAdd, true, completion);
@@ -37522,7 +37523,7 @@ class Style extends performance$1.E {
      */
     setSprite(sprite, options = {}, completion) {
         this._checkLoaded();
-        if (sprite && this._validate(performance$1.t.sprite, 'sprite', sprite, null, options)) {
+        if (sprite && this._validate(performance$1.u.sprite, 'sprite', sprite, null, options)) {
             return;
         }
         this.stylesheet.sprite = sprite;
@@ -37538,7 +37539,7 @@ class Style extends performance$1.E {
     }
 }
 
-var posAttributes = performance$1.W([
+var posAttributes = performance$1.X([
     { name: 'a_pos', type: 'Int16', components: 2 }
 ]);
 
@@ -37969,43 +37970,43 @@ class VertexArrayObject {
 }
 
 const terrainPreludeUniforms = (context, locations) => ({
-    'u_depth': new performance$1.aG(context, locations.u_depth),
-    'u_terrain': new performance$1.aG(context, locations.u_terrain),
-    'u_terrain_dim': new performance$1.aH(context, locations.u_terrain_dim),
-    'u_terrain_matrix': new performance$1.aI(context, locations.u_terrain_matrix),
-    'u_terrain_unpack': new performance$1.aJ(context, locations.u_terrain_unpack),
-    'u_terrain_exaggeration': new performance$1.aH(context, locations.u_terrain_exaggeration)
+    'u_depth': new performance$1.aH(context, locations.u_depth),
+    'u_terrain': new performance$1.aH(context, locations.u_terrain),
+    'u_terrain_dim': new performance$1.aI(context, locations.u_terrain_dim),
+    'u_terrain_matrix': new performance$1.aJ(context, locations.u_terrain_matrix),
+    'u_terrain_unpack': new performance$1.aK(context, locations.u_terrain_unpack),
+    'u_terrain_exaggeration': new performance$1.aI(context, locations.u_terrain_exaggeration)
 });
 const terrainUniforms = (context, locations) => ({
-    'u_matrix': new performance$1.aI(context, locations.u_matrix),
-    'u_texture': new performance$1.aG(context, locations.u_texture),
-    'u_ele_delta': new performance$1.aH(context, locations.u_ele_delta),
-    'u_fog_matrix': new performance$1.aI(context, locations.u_fog_matrix),
-    'u_fog_color': new performance$1.aK(context, locations.u_fog_color),
-    'u_fog_ground_blend': new performance$1.aH(context, locations.u_fog_ground_blend),
-    'u_fog_ground_blend_opacity': new performance$1.aH(context, locations.u_fog_ground_blend_opacity),
-    'u_horizon_color': new performance$1.aK(context, locations.u_horizon_color),
-    'u_horizon_fog_blend': new performance$1.aH(context, locations.u_horizon_fog_blend)
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix),
+    'u_texture': new performance$1.aH(context, locations.u_texture),
+    'u_ele_delta': new performance$1.aI(context, locations.u_ele_delta),
+    'u_fog_matrix': new performance$1.aJ(context, locations.u_fog_matrix),
+    'u_fog_color': new performance$1.aL(context, locations.u_fog_color),
+    'u_fog_ground_blend': new performance$1.aI(context, locations.u_fog_ground_blend),
+    'u_fog_ground_blend_opacity': new performance$1.aI(context, locations.u_fog_ground_blend_opacity),
+    'u_horizon_color': new performance$1.aL(context, locations.u_horizon_color),
+    'u_horizon_fog_blend': new performance$1.aI(context, locations.u_horizon_fog_blend)
 });
 const terrainDepthUniforms = (context, locations) => ({
-    'u_matrix': new performance$1.aI(context, locations.u_matrix),
-    'u_ele_delta': new performance$1.aH(context, locations.u_ele_delta)
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix),
+    'u_ele_delta': new performance$1.aI(context, locations.u_ele_delta)
 });
 const terrainCoordsUniforms = (context, locations) => ({
-    'u_matrix': new performance$1.aI(context, locations.u_matrix),
-    'u_texture': new performance$1.aG(context, locations.u_texture),
-    'u_terrain_coords_id': new performance$1.aH(context, locations.u_terrain_coords_id),
-    'u_ele_delta': new performance$1.aH(context, locations.u_ele_delta)
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix),
+    'u_texture': new performance$1.aH(context, locations.u_texture),
+    'u_terrain_coords_id': new performance$1.aI(context, locations.u_terrain_coords_id),
+    'u_ele_delta': new performance$1.aI(context, locations.u_ele_delta)
 });
 const terrainUniformValues = (matrix, eleDelta, fogMatrix, sky, pitch) => ({
     'u_matrix': matrix,
     'u_texture': 0,
     'u_ele_delta': eleDelta,
     'u_fog_matrix': fogMatrix,
-    'u_fog_color': sky ? sky.properties.get('fog-color') : performance$1.aL.white,
+    'u_fog_color': sky ? sky.properties.get('fog-color') : performance$1.aM.white,
     'u_fog_ground_blend': sky ? sky.properties.get('fog-ground-blend') : 1,
     'u_fog_ground_blend_opacity': sky ? sky.calculateFogBlendOpacity(pitch) : 0,
-    'u_horizon_color': sky ? sky.properties.get('horizon-color') : performance$1.aL.white,
+    'u_horizon_color': sky ? sky.properties.get('horizon-color') : performance$1.aM.white,
     'u_horizon_fog_blend': sky ? sky.properties.get('horizon-fog-blend') : 1
 });
 const terrainDepthUniformValues = (matrix, eleDelta) => ({
@@ -38199,28 +38200,28 @@ function bgPatternUniformValues(image, crossfade, painter, tile) {
 }
 
 const fillExtrusionUniforms = (context, locations) => ({
-    'u_matrix': new performance$1.aI(context, locations.u_matrix),
-    'u_lightpos': new performance$1.aM(context, locations.u_lightpos),
-    'u_lightintensity': new performance$1.aH(context, locations.u_lightintensity),
-    'u_lightcolor': new performance$1.aM(context, locations.u_lightcolor),
-    'u_vertical_gradient': new performance$1.aH(context, locations.u_vertical_gradient),
-    'u_opacity': new performance$1.aH(context, locations.u_opacity)
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix),
+    'u_lightpos': new performance$1.aN(context, locations.u_lightpos),
+    'u_lightintensity': new performance$1.aI(context, locations.u_lightintensity),
+    'u_lightcolor': new performance$1.aN(context, locations.u_lightcolor),
+    'u_vertical_gradient': new performance$1.aI(context, locations.u_vertical_gradient),
+    'u_opacity': new performance$1.aI(context, locations.u_opacity)
 });
 const fillExtrusionPatternUniforms = (context, locations) => ({
-    'u_matrix': new performance$1.aI(context, locations.u_matrix),
-    'u_lightpos': new performance$1.aM(context, locations.u_lightpos),
-    'u_lightintensity': new performance$1.aH(context, locations.u_lightintensity),
-    'u_lightcolor': new performance$1.aM(context, locations.u_lightcolor),
-    'u_vertical_gradient': new performance$1.aH(context, locations.u_vertical_gradient),
-    'u_height_factor': new performance$1.aH(context, locations.u_height_factor),
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix),
+    'u_lightpos': new performance$1.aN(context, locations.u_lightpos),
+    'u_lightintensity': new performance$1.aI(context, locations.u_lightintensity),
+    'u_lightcolor': new performance$1.aN(context, locations.u_lightcolor),
+    'u_vertical_gradient': new performance$1.aI(context, locations.u_vertical_gradient),
+    'u_height_factor': new performance$1.aI(context, locations.u_height_factor),
     // pattern uniforms
-    'u_image': new performance$1.aG(context, locations.u_image),
-    'u_texsize': new performance$1.aN(context, locations.u_texsize),
-    'u_pixel_coord_upper': new performance$1.aN(context, locations.u_pixel_coord_upper),
-    'u_pixel_coord_lower': new performance$1.aN(context, locations.u_pixel_coord_lower),
-    'u_scale': new performance$1.aM(context, locations.u_scale),
-    'u_fade': new performance$1.aH(context, locations.u_fade),
-    'u_opacity': new performance$1.aH(context, locations.u_opacity)
+    'u_image': new performance$1.aH(context, locations.u_image),
+    'u_texsize': new performance$1.aO(context, locations.u_texsize),
+    'u_pixel_coord_upper': new performance$1.aO(context, locations.u_pixel_coord_upper),
+    'u_pixel_coord_lower': new performance$1.aO(context, locations.u_pixel_coord_lower),
+    'u_scale': new performance$1.aN(context, locations.u_scale),
+    'u_fade': new performance$1.aI(context, locations.u_fade),
+    'u_opacity': new performance$1.aI(context, locations.u_opacity)
 });
 const fillExtrusionUniformValues = (matrix, painter, shouldUseVerticalGradient, opacity) => {
     const light = painter.style.light;
@@ -38248,30 +38249,30 @@ const fillExtrusionPatternUniformValues = (matrix, painter, shouldUseVerticalGra
 };
 
 const fillUniforms = (context, locations) => ({
-    'u_matrix': new performance$1.aI(context, locations.u_matrix)
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix)
 });
 const fillPatternUniforms = (context, locations) => ({
-    'u_matrix': new performance$1.aI(context, locations.u_matrix),
-    'u_image': new performance$1.aG(context, locations.u_image),
-    'u_texsize': new performance$1.aN(context, locations.u_texsize),
-    'u_pixel_coord_upper': new performance$1.aN(context, locations.u_pixel_coord_upper),
-    'u_pixel_coord_lower': new performance$1.aN(context, locations.u_pixel_coord_lower),
-    'u_scale': new performance$1.aM(context, locations.u_scale),
-    'u_fade': new performance$1.aH(context, locations.u_fade)
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix),
+    'u_image': new performance$1.aH(context, locations.u_image),
+    'u_texsize': new performance$1.aO(context, locations.u_texsize),
+    'u_pixel_coord_upper': new performance$1.aO(context, locations.u_pixel_coord_upper),
+    'u_pixel_coord_lower': new performance$1.aO(context, locations.u_pixel_coord_lower),
+    'u_scale': new performance$1.aN(context, locations.u_scale),
+    'u_fade': new performance$1.aI(context, locations.u_fade)
 });
 const fillOutlineUniforms = (context, locations) => ({
-    'u_matrix': new performance$1.aI(context, locations.u_matrix),
-    'u_world': new performance$1.aN(context, locations.u_world)
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix),
+    'u_world': new performance$1.aO(context, locations.u_world)
 });
 const fillOutlinePatternUniforms = (context, locations) => ({
-    'u_matrix': new performance$1.aI(context, locations.u_matrix),
-    'u_world': new performance$1.aN(context, locations.u_world),
-    'u_image': new performance$1.aG(context, locations.u_image),
-    'u_texsize': new performance$1.aN(context, locations.u_texsize),
-    'u_pixel_coord_upper': new performance$1.aN(context, locations.u_pixel_coord_upper),
-    'u_pixel_coord_lower': new performance$1.aN(context, locations.u_pixel_coord_lower),
-    'u_scale': new performance$1.aM(context, locations.u_scale),
-    'u_fade': new performance$1.aH(context, locations.u_fade)
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix),
+    'u_world': new performance$1.aO(context, locations.u_world),
+    'u_image': new performance$1.aH(context, locations.u_image),
+    'u_texsize': new performance$1.aO(context, locations.u_texsize),
+    'u_pixel_coord_upper': new performance$1.aO(context, locations.u_pixel_coord_upper),
+    'u_pixel_coord_lower': new performance$1.aO(context, locations.u_pixel_coord_lower),
+    'u_scale': new performance$1.aN(context, locations.u_scale),
+    'u_fade': new performance$1.aI(context, locations.u_fade)
 });
 const fillUniformValues = (matrix) => ({
     'u_matrix': matrix
@@ -38286,12 +38287,12 @@ const fillOutlinePatternUniformValues = (matrix, painter, crossfade, tile, drawi
 });
 
 const circleUniforms = (context, locations) => ({
-    'u_camera_to_center_distance': new performance$1.aH(context, locations.u_camera_to_center_distance),
-    'u_scale_with_map': new performance$1.aG(context, locations.u_scale_with_map),
-    'u_pitch_with_map': new performance$1.aG(context, locations.u_pitch_with_map),
-    'u_extrude_scale': new performance$1.aN(context, locations.u_extrude_scale),
-    'u_device_pixel_ratio': new performance$1.aH(context, locations.u_device_pixel_ratio),
-    'u_matrix': new performance$1.aI(context, locations.u_matrix)
+    'u_camera_to_center_distance': new performance$1.aI(context, locations.u_camera_to_center_distance),
+    'u_scale_with_map': new performance$1.aH(context, locations.u_scale_with_map),
+    'u_pitch_with_map': new performance$1.aH(context, locations.u_pitch_with_map),
+    'u_extrude_scale': new performance$1.aO(context, locations.u_extrude_scale),
+    'u_device_pixel_ratio': new performance$1.aI(context, locations.u_device_pixel_ratio),
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix)
 });
 const circleUniformValues = (painter, coord, tile, layer) => {
     const transform = painter.transform;
@@ -38316,14 +38317,14 @@ const circleUniformValues = (painter, coord, tile, layer) => {
 };
 
 const collisionUniforms = (context, locations) => ({
-    'u_matrix': new performance$1.aI(context, locations.u_matrix),
-    'u_pixel_extrude_scale': new performance$1.aN(context, locations.u_pixel_extrude_scale)
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix),
+    'u_pixel_extrude_scale': new performance$1.aO(context, locations.u_pixel_extrude_scale)
 });
 const collisionCircleUniforms = (context, locations) => ({
-    'u_matrix': new performance$1.aI(context, locations.u_matrix),
-    'u_inv_matrix': new performance$1.aI(context, locations.u_inv_matrix),
-    'u_camera_to_center_distance': new performance$1.aH(context, locations.u_camera_to_center_distance),
-    'u_viewport_size': new performance$1.aN(context, locations.u_viewport_size)
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix),
+    'u_inv_matrix': new performance$1.aJ(context, locations.u_inv_matrix),
+    'u_camera_to_center_distance': new performance$1.aI(context, locations.u_camera_to_center_distance),
+    'u_viewport_size': new performance$1.aO(context, locations.u_viewport_size)
 });
 const collisionUniformValues = (transform, matrix) => {
     return {
@@ -38341,10 +38342,10 @@ const collisionCircleUniformValues = (matrix, invMatrix, transform) => {
 };
 
 const debugUniforms = (context, locations) => ({
-    'u_color': new performance$1.aK(context, locations.u_color),
-    'u_matrix': new performance$1.aI(context, locations.u_matrix),
-    'u_overlay': new performance$1.aG(context, locations.u_overlay),
-    'u_overlay_scale': new performance$1.aH(context, locations.u_overlay_scale)
+    'u_color': new performance$1.aL(context, locations.u_color),
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix),
+    'u_overlay': new performance$1.aH(context, locations.u_overlay),
+    'u_overlay_scale': new performance$1.aI(context, locations.u_overlay_scale)
 });
 const debugUniformValues = (matrix, color, scaleRatio = 1) => ({
     'u_matrix': matrix,
@@ -38354,23 +38355,23 @@ const debugUniformValues = (matrix, color, scaleRatio = 1) => ({
 });
 
 const clippingMaskUniforms = (context, locations) => ({
-    'u_matrix': new performance$1.aI(context, locations.u_matrix)
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix)
 });
 const clippingMaskUniformValues = (matrix) => ({
     'u_matrix': matrix
 });
 
 const heatmapUniforms = (context, locations) => ({
-    'u_extrude_scale': new performance$1.aH(context, locations.u_extrude_scale),
-    'u_intensity': new performance$1.aH(context, locations.u_intensity),
-    'u_matrix': new performance$1.aI(context, locations.u_matrix)
+    'u_extrude_scale': new performance$1.aI(context, locations.u_extrude_scale),
+    'u_intensity': new performance$1.aI(context, locations.u_intensity),
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix)
 });
 const heatmapTextureUniforms = (context, locations) => ({
-    'u_matrix': new performance$1.aI(context, locations.u_matrix),
-    'u_world': new performance$1.aN(context, locations.u_world),
-    'u_image': new performance$1.aG(context, locations.u_image),
-    'u_color_ramp': new performance$1.aG(context, locations.u_color_ramp),
-    'u_opacity': new performance$1.aH(context, locations.u_opacity)
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix),
+    'u_world': new performance$1.aO(context, locations.u_world),
+    'u_image': new performance$1.aH(context, locations.u_image),
+    'u_color_ramp': new performance$1.aH(context, locations.u_color_ramp),
+    'u_opacity': new performance$1.aI(context, locations.u_opacity)
 });
 const heatmapUniformValues = (matrix, tile, zoom, intensity) => ({
     'u_matrix': matrix,
@@ -38378,8 +38379,8 @@ const heatmapUniformValues = (matrix, tile, zoom, intensity) => ({
     'u_intensity': intensity
 });
 const heatmapTextureUniformValues = (painter, layer, textureUnit, colorRampUnit) => {
-    const matrix = performance$1.C();
-    performance$1.aO(matrix, 0, painter.width, painter.height, 0, 0, 1);
+    const matrix = performance$1.F();
+    performance$1.aP(matrix, 0, painter.width, painter.height, 0, 0, 1);
     const gl = painter.context.gl;
     return {
         'u_matrix': matrix,
@@ -38391,20 +38392,20 @@ const heatmapTextureUniformValues = (painter, layer, textureUnit, colorRampUnit)
 };
 
 const hillshadeUniforms = (context, locations) => ({
-    'u_matrix': new performance$1.aI(context, locations.u_matrix),
-    'u_image': new performance$1.aG(context, locations.u_image),
-    'u_latrange': new performance$1.aN(context, locations.u_latrange),
-    'u_light': new performance$1.aN(context, locations.u_light),
-    'u_shadow': new performance$1.aK(context, locations.u_shadow),
-    'u_highlight': new performance$1.aK(context, locations.u_highlight),
-    'u_accent': new performance$1.aK(context, locations.u_accent)
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix),
+    'u_image': new performance$1.aH(context, locations.u_image),
+    'u_latrange': new performance$1.aO(context, locations.u_latrange),
+    'u_light': new performance$1.aO(context, locations.u_light),
+    'u_shadow': new performance$1.aL(context, locations.u_shadow),
+    'u_highlight': new performance$1.aL(context, locations.u_highlight),
+    'u_accent': new performance$1.aL(context, locations.u_accent)
 });
 const hillshadePrepareUniforms = (context, locations) => ({
-    'u_matrix': new performance$1.aI(context, locations.u_matrix),
-    'u_image': new performance$1.aG(context, locations.u_image),
-    'u_dimension': new performance$1.aN(context, locations.u_dimension),
-    'u_zoom': new performance$1.aH(context, locations.u_zoom),
-    'u_unpack': new performance$1.aJ(context, locations.u_unpack)
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix),
+    'u_image': new performance$1.aH(context, locations.u_image),
+    'u_dimension': new performance$1.aO(context, locations.u_dimension),
+    'u_zoom': new performance$1.aI(context, locations.u_zoom),
+    'u_unpack': new performance$1.aK(context, locations.u_unpack)
 });
 const hillshadeUniformValues = (painter, tile, layer, coord) => {
     const shadow = layer.paint.get('hillshade-shadow-color');
@@ -38428,10 +38429,10 @@ const hillshadeUniformValues = (painter, tile, layer, coord) => {
 };
 const hillshadeUniformPrepareValues = (tileID, dem) => {
     const stride = dem.stride;
-    const matrix = performance$1.C();
+    const matrix = performance$1.F();
     // Flip rendering at y axis.
-    performance$1.aO(matrix, 0, performance$1.V, -performance$1.V, 0, 0, 1);
-    performance$1.F(matrix, matrix, [0, -performance$1.V, 0]);
+    performance$1.aP(matrix, 0, performance$1.W, -performance$1.W, 0, 0, 1);
+    performance$1.H(matrix, matrix, [0, -performance$1.W, 0]);
     return {
         'u_matrix': matrix,
         'u_image': 1,
@@ -38445,47 +38446,47 @@ function getTileLatRange(painter, tileID) {
     const tilesAtZoom = Math.pow(2, tileID.canonical.z);
     const y = tileID.canonical.y;
     return [
-        new performance$1.X(0, y / tilesAtZoom).toLngLat().lat,
-        new performance$1.X(0, (y + 1) / tilesAtZoom).toLngLat().lat
+        new performance$1.Y(0, y / tilesAtZoom).toLngLat().lat,
+        new performance$1.Y(0, (y + 1) / tilesAtZoom).toLngLat().lat
     ];
 }
 
 const lineUniforms = (context, locations) => ({
-    'u_matrix': new performance$1.aI(context, locations.u_matrix),
-    'u_ratio': new performance$1.aH(context, locations.u_ratio),
-    'u_device_pixel_ratio': new performance$1.aH(context, locations.u_device_pixel_ratio),
-    'u_units_to_pixels': new performance$1.aN(context, locations.u_units_to_pixels)
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix),
+    'u_ratio': new performance$1.aI(context, locations.u_ratio),
+    'u_device_pixel_ratio': new performance$1.aI(context, locations.u_device_pixel_ratio),
+    'u_units_to_pixels': new performance$1.aO(context, locations.u_units_to_pixels)
 });
 const lineGradientUniforms = (context, locations) => ({
-    'u_matrix': new performance$1.aI(context, locations.u_matrix),
-    'u_ratio': new performance$1.aH(context, locations.u_ratio),
-    'u_device_pixel_ratio': new performance$1.aH(context, locations.u_device_pixel_ratio),
-    'u_units_to_pixels': new performance$1.aN(context, locations.u_units_to_pixels),
-    'u_image': new performance$1.aG(context, locations.u_image),
-    'u_image_height': new performance$1.aH(context, locations.u_image_height)
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix),
+    'u_ratio': new performance$1.aI(context, locations.u_ratio),
+    'u_device_pixel_ratio': new performance$1.aI(context, locations.u_device_pixel_ratio),
+    'u_units_to_pixels': new performance$1.aO(context, locations.u_units_to_pixels),
+    'u_image': new performance$1.aH(context, locations.u_image),
+    'u_image_height': new performance$1.aI(context, locations.u_image_height)
 });
 const linePatternUniforms = (context, locations) => ({
-    'u_matrix': new performance$1.aI(context, locations.u_matrix),
-    'u_texsize': new performance$1.aN(context, locations.u_texsize),
-    'u_ratio': new performance$1.aH(context, locations.u_ratio),
-    'u_device_pixel_ratio': new performance$1.aH(context, locations.u_device_pixel_ratio),
-    'u_image': new performance$1.aG(context, locations.u_image),
-    'u_units_to_pixels': new performance$1.aN(context, locations.u_units_to_pixels),
-    'u_scale': new performance$1.aM(context, locations.u_scale),
-    'u_fade': new performance$1.aH(context, locations.u_fade)
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix),
+    'u_texsize': new performance$1.aO(context, locations.u_texsize),
+    'u_ratio': new performance$1.aI(context, locations.u_ratio),
+    'u_device_pixel_ratio': new performance$1.aI(context, locations.u_device_pixel_ratio),
+    'u_image': new performance$1.aH(context, locations.u_image),
+    'u_units_to_pixels': new performance$1.aO(context, locations.u_units_to_pixels),
+    'u_scale': new performance$1.aN(context, locations.u_scale),
+    'u_fade': new performance$1.aI(context, locations.u_fade)
 });
 const lineSDFUniforms = (context, locations) => ({
-    'u_matrix': new performance$1.aI(context, locations.u_matrix),
-    'u_ratio': new performance$1.aH(context, locations.u_ratio),
-    'u_device_pixel_ratio': new performance$1.aH(context, locations.u_device_pixel_ratio),
-    'u_units_to_pixels': new performance$1.aN(context, locations.u_units_to_pixels),
-    'u_patternscale_a': new performance$1.aN(context, locations.u_patternscale_a),
-    'u_patternscale_b': new performance$1.aN(context, locations.u_patternscale_b),
-    'u_sdfgamma': new performance$1.aH(context, locations.u_sdfgamma),
-    'u_image': new performance$1.aG(context, locations.u_image),
-    'u_tex_y_a': new performance$1.aH(context, locations.u_tex_y_a),
-    'u_tex_y_b': new performance$1.aH(context, locations.u_tex_y_b),
-    'u_mix': new performance$1.aH(context, locations.u_mix)
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix),
+    'u_ratio': new performance$1.aI(context, locations.u_ratio),
+    'u_device_pixel_ratio': new performance$1.aI(context, locations.u_device_pixel_ratio),
+    'u_units_to_pixels': new performance$1.aO(context, locations.u_units_to_pixels),
+    'u_patternscale_a': new performance$1.aO(context, locations.u_patternscale_a),
+    'u_patternscale_b': new performance$1.aO(context, locations.u_patternscale_b),
+    'u_sdfgamma': new performance$1.aI(context, locations.u_sdfgamma),
+    'u_image': new performance$1.aH(context, locations.u_image),
+    'u_tex_y_a': new performance$1.aI(context, locations.u_tex_y_a),
+    'u_tex_y_b': new performance$1.aI(context, locations.u_tex_y_b),
+    'u_mix': new performance$1.aI(context, locations.u_mix)
 });
 const lineUniformValues = (painter, tile, layer, coord) => {
     const transform = painter.transform;
@@ -38550,19 +38551,19 @@ function calculateMatrix(painter, tile, layer, coord) {
 }
 
 const rasterUniforms = (context, locations) => ({
-    'u_matrix': new performance$1.aI(context, locations.u_matrix),
-    'u_tl_parent': new performance$1.aN(context, locations.u_tl_parent),
-    'u_scale_parent': new performance$1.aH(context, locations.u_scale_parent),
-    'u_buffer_scale': new performance$1.aH(context, locations.u_buffer_scale),
-    'u_fade_t': new performance$1.aH(context, locations.u_fade_t),
-    'u_opacity': new performance$1.aH(context, locations.u_opacity),
-    'u_image0': new performance$1.aG(context, locations.u_image0),
-    'u_image1': new performance$1.aG(context, locations.u_image1),
-    'u_brightness_low': new performance$1.aH(context, locations.u_brightness_low),
-    'u_brightness_high': new performance$1.aH(context, locations.u_brightness_high),
-    'u_saturation_factor': new performance$1.aH(context, locations.u_saturation_factor),
-    'u_contrast_factor': new performance$1.aH(context, locations.u_contrast_factor),
-    'u_spin_weights': new performance$1.aM(context, locations.u_spin_weights)
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix),
+    'u_tl_parent': new performance$1.aO(context, locations.u_tl_parent),
+    'u_scale_parent': new performance$1.aI(context, locations.u_scale_parent),
+    'u_buffer_scale': new performance$1.aI(context, locations.u_buffer_scale),
+    'u_fade_t': new performance$1.aI(context, locations.u_fade_t),
+    'u_opacity': new performance$1.aI(context, locations.u_opacity),
+    'u_image0': new performance$1.aH(context, locations.u_image0),
+    'u_image1': new performance$1.aH(context, locations.u_image1),
+    'u_brightness_low': new performance$1.aI(context, locations.u_brightness_low),
+    'u_brightness_high': new performance$1.aI(context, locations.u_brightness_high),
+    'u_saturation_factor': new performance$1.aI(context, locations.u_saturation_factor),
+    'u_contrast_factor': new performance$1.aI(context, locations.u_contrast_factor),
+    'u_spin_weights': new performance$1.aN(context, locations.u_spin_weights)
 });
 const rasterUniformValues = (matrix, parentTL, parentScaleBy, fade, layer) => ({
     'u_matrix': matrix,
@@ -38601,78 +38602,78 @@ function saturationFactor(saturation) {
 }
 
 const symbolIconUniforms = (context, locations) => ({
-    'u_is_size_zoom_constant': new performance$1.aG(context, locations.u_is_size_zoom_constant),
-    'u_is_size_feature_constant': new performance$1.aG(context, locations.u_is_size_feature_constant),
-    'u_size_t': new performance$1.aH(context, locations.u_size_t),
-    'u_size': new performance$1.aH(context, locations.u_size),
-    'u_camera_to_center_distance': new performance$1.aH(context, locations.u_camera_to_center_distance),
-    'u_pitch': new performance$1.aH(context, locations.u_pitch),
-    'u_rotate_symbol': new performance$1.aG(context, locations.u_rotate_symbol),
-    'u_aspect_ratio': new performance$1.aH(context, locations.u_aspect_ratio),
-    'u_fade_change': new performance$1.aH(context, locations.u_fade_change),
-    'u_matrix': new performance$1.aI(context, locations.u_matrix),
-    'u_label_plane_matrix': new performance$1.aI(context, locations.u_label_plane_matrix),
-    'u_coord_matrix': new performance$1.aI(context, locations.u_coord_matrix),
-    'u_is_text': new performance$1.aG(context, locations.u_is_text),
-    'u_pitch_with_map': new performance$1.aG(context, locations.u_pitch_with_map),
-    'u_is_along_line': new performance$1.aG(context, locations.u_is_along_line),
-    'u_is_variable_anchor': new performance$1.aG(context, locations.u_is_variable_anchor),
-    'u_texsize': new performance$1.aN(context, locations.u_texsize),
-    'u_texture': new performance$1.aG(context, locations.u_texture),
-    'u_translation': new performance$1.aN(context, locations.u_translation),
-    'u_pitched_scale': new performance$1.aH(context, locations.u_pitched_scale),
+    'u_is_size_zoom_constant': new performance$1.aH(context, locations.u_is_size_zoom_constant),
+    'u_is_size_feature_constant': new performance$1.aH(context, locations.u_is_size_feature_constant),
+    'u_size_t': new performance$1.aI(context, locations.u_size_t),
+    'u_size': new performance$1.aI(context, locations.u_size),
+    'u_camera_to_center_distance': new performance$1.aI(context, locations.u_camera_to_center_distance),
+    'u_pitch': new performance$1.aI(context, locations.u_pitch),
+    'u_rotate_symbol': new performance$1.aH(context, locations.u_rotate_symbol),
+    'u_aspect_ratio': new performance$1.aI(context, locations.u_aspect_ratio),
+    'u_fade_change': new performance$1.aI(context, locations.u_fade_change),
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix),
+    'u_label_plane_matrix': new performance$1.aJ(context, locations.u_label_plane_matrix),
+    'u_coord_matrix': new performance$1.aJ(context, locations.u_coord_matrix),
+    'u_is_text': new performance$1.aH(context, locations.u_is_text),
+    'u_pitch_with_map': new performance$1.aH(context, locations.u_pitch_with_map),
+    'u_is_along_line': new performance$1.aH(context, locations.u_is_along_line),
+    'u_is_variable_anchor': new performance$1.aH(context, locations.u_is_variable_anchor),
+    'u_texsize': new performance$1.aO(context, locations.u_texsize),
+    'u_texture': new performance$1.aH(context, locations.u_texture),
+    'u_translation': new performance$1.aO(context, locations.u_translation),
+    'u_pitched_scale': new performance$1.aI(context, locations.u_pitched_scale),
 });
 const symbolSDFUniforms = (context, locations) => ({
-    'u_is_size_zoom_constant': new performance$1.aG(context, locations.u_is_size_zoom_constant),
-    'u_is_size_feature_constant': new performance$1.aG(context, locations.u_is_size_feature_constant),
-    'u_size_t': new performance$1.aH(context, locations.u_size_t),
-    'u_size': new performance$1.aH(context, locations.u_size),
-    'u_camera_to_center_distance': new performance$1.aH(context, locations.u_camera_to_center_distance),
-    'u_pitch': new performance$1.aH(context, locations.u_pitch),
-    'u_rotate_symbol': new performance$1.aG(context, locations.u_rotate_symbol),
-    'u_aspect_ratio': new performance$1.aH(context, locations.u_aspect_ratio),
-    'u_fade_change': new performance$1.aH(context, locations.u_fade_change),
-    'u_matrix': new performance$1.aI(context, locations.u_matrix),
-    'u_label_plane_matrix': new performance$1.aI(context, locations.u_label_plane_matrix),
-    'u_coord_matrix': new performance$1.aI(context, locations.u_coord_matrix),
-    'u_is_text': new performance$1.aG(context, locations.u_is_text),
-    'u_pitch_with_map': new performance$1.aG(context, locations.u_pitch_with_map),
-    'u_is_along_line': new performance$1.aG(context, locations.u_is_along_line),
-    'u_is_variable_anchor': new performance$1.aG(context, locations.u_is_variable_anchor),
-    'u_texsize': new performance$1.aN(context, locations.u_texsize),
-    'u_texture': new performance$1.aG(context, locations.u_texture),
-    'u_gamma_scale': new performance$1.aH(context, locations.u_gamma_scale),
-    'u_device_pixel_ratio': new performance$1.aH(context, locations.u_device_pixel_ratio),
-    'u_is_halo': new performance$1.aG(context, locations.u_is_halo),
-    'u_translation': new performance$1.aN(context, locations.u_translation),
-    'u_pitched_scale': new performance$1.aH(context, locations.u_pitched_scale),
+    'u_is_size_zoom_constant': new performance$1.aH(context, locations.u_is_size_zoom_constant),
+    'u_is_size_feature_constant': new performance$1.aH(context, locations.u_is_size_feature_constant),
+    'u_size_t': new performance$1.aI(context, locations.u_size_t),
+    'u_size': new performance$1.aI(context, locations.u_size),
+    'u_camera_to_center_distance': new performance$1.aI(context, locations.u_camera_to_center_distance),
+    'u_pitch': new performance$1.aI(context, locations.u_pitch),
+    'u_rotate_symbol': new performance$1.aH(context, locations.u_rotate_symbol),
+    'u_aspect_ratio': new performance$1.aI(context, locations.u_aspect_ratio),
+    'u_fade_change': new performance$1.aI(context, locations.u_fade_change),
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix),
+    'u_label_plane_matrix': new performance$1.aJ(context, locations.u_label_plane_matrix),
+    'u_coord_matrix': new performance$1.aJ(context, locations.u_coord_matrix),
+    'u_is_text': new performance$1.aH(context, locations.u_is_text),
+    'u_pitch_with_map': new performance$1.aH(context, locations.u_pitch_with_map),
+    'u_is_along_line': new performance$1.aH(context, locations.u_is_along_line),
+    'u_is_variable_anchor': new performance$1.aH(context, locations.u_is_variable_anchor),
+    'u_texsize': new performance$1.aO(context, locations.u_texsize),
+    'u_texture': new performance$1.aH(context, locations.u_texture),
+    'u_gamma_scale': new performance$1.aI(context, locations.u_gamma_scale),
+    'u_device_pixel_ratio': new performance$1.aI(context, locations.u_device_pixel_ratio),
+    'u_is_halo': new performance$1.aH(context, locations.u_is_halo),
+    'u_translation': new performance$1.aO(context, locations.u_translation),
+    'u_pitched_scale': new performance$1.aI(context, locations.u_pitched_scale),
 });
 const symbolTextAndIconUniforms = (context, locations) => ({
-    'u_is_size_zoom_constant': new performance$1.aG(context, locations.u_is_size_zoom_constant),
-    'u_is_size_feature_constant': new performance$1.aG(context, locations.u_is_size_feature_constant),
-    'u_size_t': new performance$1.aH(context, locations.u_size_t),
-    'u_size': new performance$1.aH(context, locations.u_size),
-    'u_camera_to_center_distance': new performance$1.aH(context, locations.u_camera_to_center_distance),
-    'u_pitch': new performance$1.aH(context, locations.u_pitch),
-    'u_rotate_symbol': new performance$1.aG(context, locations.u_rotate_symbol),
-    'u_aspect_ratio': new performance$1.aH(context, locations.u_aspect_ratio),
-    'u_fade_change': new performance$1.aH(context, locations.u_fade_change),
-    'u_matrix': new performance$1.aI(context, locations.u_matrix),
-    'u_label_plane_matrix': new performance$1.aI(context, locations.u_label_plane_matrix),
-    'u_coord_matrix': new performance$1.aI(context, locations.u_coord_matrix),
-    'u_is_text': new performance$1.aG(context, locations.u_is_text),
-    'u_pitch_with_map': new performance$1.aG(context, locations.u_pitch_with_map),
-    'u_is_along_line': new performance$1.aG(context, locations.u_is_along_line),
-    'u_is_variable_anchor': new performance$1.aG(context, locations.u_is_variable_anchor),
-    'u_texsize': new performance$1.aN(context, locations.u_texsize),
-    'u_texsize_icon': new performance$1.aN(context, locations.u_texsize_icon),
-    'u_texture': new performance$1.aG(context, locations.u_texture),
-    'u_texture_icon': new performance$1.aG(context, locations.u_texture_icon),
-    'u_gamma_scale': new performance$1.aH(context, locations.u_gamma_scale),
-    'u_device_pixel_ratio': new performance$1.aH(context, locations.u_device_pixel_ratio),
-    'u_is_halo': new performance$1.aG(context, locations.u_is_halo),
-    'u_translation': new performance$1.aN(context, locations.u_translation),
-    'u_pitched_scale': new performance$1.aH(context, locations.u_pitched_scale),
+    'u_is_size_zoom_constant': new performance$1.aH(context, locations.u_is_size_zoom_constant),
+    'u_is_size_feature_constant': new performance$1.aH(context, locations.u_is_size_feature_constant),
+    'u_size_t': new performance$1.aI(context, locations.u_size_t),
+    'u_size': new performance$1.aI(context, locations.u_size),
+    'u_camera_to_center_distance': new performance$1.aI(context, locations.u_camera_to_center_distance),
+    'u_pitch': new performance$1.aI(context, locations.u_pitch),
+    'u_rotate_symbol': new performance$1.aH(context, locations.u_rotate_symbol),
+    'u_aspect_ratio': new performance$1.aI(context, locations.u_aspect_ratio),
+    'u_fade_change': new performance$1.aI(context, locations.u_fade_change),
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix),
+    'u_label_plane_matrix': new performance$1.aJ(context, locations.u_label_plane_matrix),
+    'u_coord_matrix': new performance$1.aJ(context, locations.u_coord_matrix),
+    'u_is_text': new performance$1.aH(context, locations.u_is_text),
+    'u_pitch_with_map': new performance$1.aH(context, locations.u_pitch_with_map),
+    'u_is_along_line': new performance$1.aH(context, locations.u_is_along_line),
+    'u_is_variable_anchor': new performance$1.aH(context, locations.u_is_variable_anchor),
+    'u_texsize': new performance$1.aO(context, locations.u_texsize),
+    'u_texsize_icon': new performance$1.aO(context, locations.u_texsize_icon),
+    'u_texture': new performance$1.aH(context, locations.u_texture),
+    'u_texture_icon': new performance$1.aH(context, locations.u_texture_icon),
+    'u_gamma_scale': new performance$1.aI(context, locations.u_gamma_scale),
+    'u_device_pixel_ratio': new performance$1.aI(context, locations.u_device_pixel_ratio),
+    'u_is_halo': new performance$1.aH(context, locations.u_is_halo),
+    'u_translation': new performance$1.aO(context, locations.u_translation),
+    'u_pitched_scale': new performance$1.aI(context, locations.u_pitched_scale),
 });
 const symbolIconUniformValues = (functionType, size, rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, painter, matrix, labelPlaneMatrix, glCoordMatrix, translation, isText, texSize, pitchedScale) => {
     const transform = painter.transform;
@@ -38715,27 +38716,27 @@ const symbolTextAndIconUniformValues = (functionType, size, rotateInShader, pitc
 };
 
 const backgroundUniforms = (context, locations) => ({
-    'u_matrix': new performance$1.aI(context, locations.u_matrix),
-    'u_opacity': new performance$1.aH(context, locations.u_opacity),
-    'u_color': new performance$1.aK(context, locations.u_color)
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix),
+    'u_opacity': new performance$1.aI(context, locations.u_opacity),
+    'u_color': new performance$1.aL(context, locations.u_color)
 });
 const backgroundPatternUniforms = (context, locations) => ({
-    'u_matrix': new performance$1.aI(context, locations.u_matrix),
-    'u_opacity': new performance$1.aH(context, locations.u_opacity),
-    'u_image': new performance$1.aG(context, locations.u_image),
-    'u_pattern_tl_a': new performance$1.aN(context, locations.u_pattern_tl_a),
-    'u_pattern_br_a': new performance$1.aN(context, locations.u_pattern_br_a),
-    'u_pattern_tl_b': new performance$1.aN(context, locations.u_pattern_tl_b),
-    'u_pattern_br_b': new performance$1.aN(context, locations.u_pattern_br_b),
-    'u_texsize': new performance$1.aN(context, locations.u_texsize),
-    'u_mix': new performance$1.aH(context, locations.u_mix),
-    'u_pattern_size_a': new performance$1.aN(context, locations.u_pattern_size_a),
-    'u_pattern_size_b': new performance$1.aN(context, locations.u_pattern_size_b),
-    'u_scale_a': new performance$1.aH(context, locations.u_scale_a),
-    'u_scale_b': new performance$1.aH(context, locations.u_scale_b),
-    'u_pixel_coord_upper': new performance$1.aN(context, locations.u_pixel_coord_upper),
-    'u_pixel_coord_lower': new performance$1.aN(context, locations.u_pixel_coord_lower),
-    'u_tile_units_to_pixels': new performance$1.aH(context, locations.u_tile_units_to_pixels)
+    'u_matrix': new performance$1.aJ(context, locations.u_matrix),
+    'u_opacity': new performance$1.aI(context, locations.u_opacity),
+    'u_image': new performance$1.aH(context, locations.u_image),
+    'u_pattern_tl_a': new performance$1.aO(context, locations.u_pattern_tl_a),
+    'u_pattern_br_a': new performance$1.aO(context, locations.u_pattern_br_a),
+    'u_pattern_tl_b': new performance$1.aO(context, locations.u_pattern_tl_b),
+    'u_pattern_br_b': new performance$1.aO(context, locations.u_pattern_br_b),
+    'u_texsize': new performance$1.aO(context, locations.u_texsize),
+    'u_mix': new performance$1.aI(context, locations.u_mix),
+    'u_pattern_size_a': new performance$1.aO(context, locations.u_pattern_size_a),
+    'u_pattern_size_b': new performance$1.aO(context, locations.u_pattern_size_b),
+    'u_scale_a': new performance$1.aI(context, locations.u_scale_a),
+    'u_scale_b': new performance$1.aI(context, locations.u_scale_b),
+    'u_pixel_coord_upper': new performance$1.aO(context, locations.u_pixel_coord_upper),
+    'u_pixel_coord_lower': new performance$1.aO(context, locations.u_pixel_coord_lower),
+    'u_tile_units_to_pixels': new performance$1.aI(context, locations.u_tile_units_to_pixels)
 });
 const backgroundUniformValues = (matrix, opacity, color) => ({
     'u_matrix': matrix,
@@ -38748,10 +38749,10 @@ const backgroundPatternUniformValues = (matrix, opacity, painter, image, tile, c
 });
 
 const skyUniforms = (context, locations) => ({
-    'u_sky_color': new performance$1.aK(context, locations.u_sky_color),
-    'u_horizon_color': new performance$1.aK(context, locations.u_horizon_color),
-    'u_horizon': new performance$1.aH(context, locations.u_horizon),
-    'u_sky_horizon_blend': new performance$1.aH(context, locations.u_sky_horizon_blend),
+    'u_sky_color': new performance$1.aL(context, locations.u_sky_color),
+    'u_horizon_color': new performance$1.aL(context, locations.u_horizon_color),
+    'u_horizon': new performance$1.aI(context, locations.u_horizon),
+    'u_sky_horizon_blend': new performance$1.aI(context, locations.u_sky_horizon_blend),
 });
 const skyUniformValues = (sky, transform, pixelRatio) => ({
     'u_sky_color': sky.properties.get('sky-color'),
@@ -38950,7 +38951,7 @@ class BaseValue {
 }
 class ClearColor extends BaseValue {
     getDefault() {
-        return performance$1.aL.transparent;
+        return performance$1.aM.transparent;
     }
     set(v) {
         const c = this.current;
@@ -39148,7 +39149,7 @@ class BlendFunc extends BaseValue {
 }
 class BlendColor extends BaseValue {
     getDefault() {
-        return performance$1.aL.transparent;
+        return performance$1.aM.transparent;
     }
     set(v) {
         const c = this.current;
@@ -39473,9 +39474,9 @@ class ColorMode {
     }
 }
 ColorMode.Replace = [ONE, ZERO];
-ColorMode.disabled = new ColorMode(ColorMode.Replace, performance$1.aL.transparent, [false, false, false, false]);
-ColorMode.unblended = new ColorMode(ColorMode.Replace, performance$1.aL.transparent, [true, true, true, true]);
-ColorMode.alphaBlended = new ColorMode([ONE, ONE_MINUS_SRC_ALPHA], performance$1.aL.transparent, [true, true, true, true]);
+ColorMode.disabled = new ColorMode(ColorMode.Replace, performance$1.aM.transparent, [false, false, false, false]);
+ColorMode.unblended = new ColorMode(ColorMode.Replace, performance$1.aM.transparent, [true, true, true, true]);
+ColorMode.alphaBlended = new ColorMode([ONE, ONE_MINUS_SRC_ALPHA], performance$1.aM.transparent, [true, true, true, true]);
 
 /**
  * @internal
@@ -39675,7 +39676,7 @@ class Context {
         }
     }
     setColorMode(colorMode) {
-        if (performance$1.aD(colorMode.blendFunction, ColorMode.Replace)) {
+        if (performance$1.aE(colorMode.blendFunction, ColorMode.Replace)) {
             this.blend.set(false);
         }
         else {
@@ -39763,9 +39764,9 @@ function drawCollisionDebug(painter, sourceCache, layer, coords, isText) {
             // We need to know the projection matrix that was used for projecting collision circles to the screen.
             // This might vary between buckets as the symbol placement is a continuous process. This matrix is
             // required for transforming points from previous screen space to the current one
-            const invTransform = performance$1.C();
-            performance$1.aP(invTransform, bucket.placementInvProjMatrix, painter.transform.glCoordMatrix);
-            performance$1.aP(invTransform, invTransform, bucket.placementViewportMatrix);
+            const invTransform = performance$1.F();
+            performance$1.aQ(invTransform, bucket.placementInvProjMatrix, painter.transform.glCoordMatrix);
+            performance$1.aQ(invTransform, invTransform, bucket.placementViewportMatrix);
             tileBatches.push({
                 circleArray,
                 circleOffset,
@@ -39788,7 +39789,7 @@ function drawCollisionDebug(painter, sourceCache, layer, coords, isText) {
     // Render collision circles
     const circleProgram = painter.useProgram('collisionCircle');
     // Construct vertex data
-    const vertexData = new performance$1.aQ();
+    const vertexData = new performance$1.aR();
     vertexData.resize(circleCount * 4);
     vertexData._trim();
     let vertexOffset = 0;
@@ -39810,18 +39811,18 @@ function drawCollisionDebug(painter, sourceCache, layer, coords, isText) {
         quadTriangles = createQuadTriangles(circleCount);
     }
     const indexBuffer = context.createIndexBuffer(quadTriangles, true);
-    const vertexBuffer = context.createVertexBuffer(vertexData, performance$1.aR.members, true);
+    const vertexBuffer = context.createVertexBuffer(vertexData, performance$1.aS.members, true);
     // Render batches
     for (const batch of tileBatches) {
         const uniforms = collisionCircleUniformValues(batch.transform, batch.invTransform, painter.transform);
-        circleProgram.draw(context, gl.TRIANGLES, DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled, uniforms, painter.style.map.terrain && painter.style.map.terrain.getTerrainData(batch.coord), layer.id, vertexBuffer, indexBuffer, performance$1.Z.simpleSegment(0, batch.circleOffset * 2, batch.circleArray.length, batch.circleArray.length / 2), null, painter.transform.zoom, null, null, null);
+        circleProgram.draw(context, gl.TRIANGLES, DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled, uniforms, painter.style.map.terrain && painter.style.map.terrain.getTerrainData(batch.coord), layer.id, vertexBuffer, indexBuffer, performance$1.$.simpleSegment(0, batch.circleOffset * 2, batch.circleArray.length, batch.circleArray.length / 2), null, painter.transform.zoom, null, null, null);
     }
     vertexBuffer.destroy();
     indexBuffer.destroy();
 }
 function createQuadTriangles(quadCount) {
     const triCount = quadCount * 2;
-    const array = new performance$1.aS();
+    const array = new performance$1.aT();
     array.resize(triCount);
     array._trim();
     // Two triangles and 4 vertices per quad.
@@ -39837,7 +39838,7 @@ function createQuadTriangles(quadCount) {
     return array;
 }
 
-const identityMat4 = performance$1.am(new Float32Array(16));
+const identityMat4 = performance$1.an(new Float32Array(16));
 function drawSymbols(painter, sourceCache, layer, coords, variableOffsets) {
     if (painter.renderPass !== 'translucent')
         return;
@@ -39862,7 +39863,7 @@ function drawSymbols(painter, sourceCache, layer, coords, variableOffsets) {
     }
 }
 function calculateVariableRenderShift(anchor, width, height, textOffset, textBoxScale, renderTextSize) {
-    const { horizontalAlign, verticalAlign } = performance$1.at(anchor);
+    const { horizontalAlign, verticalAlign } = performance$1.au(anchor);
     const shiftX = -(horizontalAlign - 0.5) * width;
     const shiftY = -(verticalAlign - 0.5) * height;
     return new performance$1.P((shiftX / textBoxScale + textOffset[0]) * renderTextSize, (shiftY / textBoxScale + textOffset[1]) * renderTextSize);
@@ -39878,7 +39879,7 @@ function updateVariableAnchors(coords, painter, layer, sourceCache, rotationAlig
         if (!bucket || !bucket.text || !bucket.text.segments.get().length)
             continue;
         const sizeData = bucket.textSizeData;
-        const size = performance$1.af(sizeData, transform.zoom);
+        const size = performance$1.ag(sizeData, transform.zoom);
         const pixelToTileScale = pixelsToTileUnits(tile, 1, painter.transform.zoom);
         const labelPlaneMatrix = getLabelPlaneMatrix(coord.posMatrix, pitchWithMap, rotateWithMap, painter.transform, pixelToTileScale);
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' && bucket.hasIconData();
@@ -39951,7 +39952,7 @@ function updateVariableAnchorsForBucket(bucket, rotateWithMap, pitchWithMap, var
                 project(tileAnchor, posMatrix, getElevation) :
                 projectTileCoordinatesToViewport(tileAnchor.x, tileAnchor.y, projectionContext);
             const perspectiveRatio = getPerspectiveRatio(transform.cameraToCenterDistance, projectedAnchor.signedDistanceFromCamera);
-            let renderTextSize = performance$1.ah(bucket.textSizeData, size, symbol) * perspectiveRatio / performance$1.ao;
+            let renderTextSize = performance$1.ai(bucket.textSizeData, size, symbol) * perspectiveRatio / performance$1.ap;
             if (pitchWithMap) {
                 // Go from size in pixels to equivalent size in tile units
                 renderTextSize *= bucket.tilePixelRatio / tileScale;
@@ -39960,9 +39961,9 @@ function updateVariableAnchorsForBucket(bucket, rotateWithMap, pitchWithMap, var
             const shift = calculateVariableRenderShift(anchor, width, height, textOffset, textBoxScale, renderTextSize);
             const pitchedTextCorrection = projection.getPitchedTextCorrection(transform, tileAnchor.add(new performance$1.P(translation[0], translation[1])), unwrappedTileID);
             const shiftedAnchor = getShiftedAnchor(projectedAnchor.point, projectionContext, rotateWithMap, shift, transform.angle, pitchedTextCorrection);
-            const angle = (bucket.allowVerticalPlacement && symbol.placedOrientation === performance$1.ag.vertical) ? Math.PI / 2 : 0;
+            const angle = (bucket.allowVerticalPlacement && symbol.placedOrientation === performance$1.ah.vertical) ? Math.PI / 2 : 0;
             for (let g = 0; g < symbol.numGlyphs; g++) {
-                performance$1.ai(dynamicTextLayoutVertexArray, shiftedAnchor, angle);
+                performance$1.aj(dynamicTextLayoutVertexArray, shiftedAnchor, angle);
             }
             //Only offset horizontal text icons
             if (updateTextFitIcon && symbol.associatedIconIndex >= 0) {
@@ -39985,7 +39986,7 @@ function updateVariableAnchorsForBucket(bucket, rotateWithMap, pitchWithMap, var
                 }
                 else {
                     for (let g = 0; g < placedIcon.numGlyphs; g++) {
-                        performance$1.ai(dynamicIconLayoutVertexArray, shift.shiftedAnchor, shift.angle);
+                        performance$1.aj(dynamicIconLayoutVertexArray, shift.shiftedAnchor, shift.angle);
                     }
                 }
             }
@@ -40037,7 +40038,7 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate
         const sizeData = isText ? bucket.textSizeData : bucket.iconSizeData;
         const transformed = pitchWithMap || tr.pitch !== 0;
         const program = painter.useProgram(getSymbolProgramName(isSDF, isText, bucket), programConfiguration);
-        const size = performance$1.af(sizeData, tr.zoom);
+        const size = performance$1.ag(sizeData, tr.zoom);
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
         let texSize;
         let texSizeIcon = [0, 0];
@@ -40113,7 +40114,7 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate
             const oldSegments = buffers.segments.get();
             for (const segment of oldSegments) {
                 tileRenderState.push({
-                    segments: new performance$1.Z([segment]),
+                    segments: new performance$1.$([segment]),
                     sortKey: segment.sortKey,
                     state,
                     terrainData
@@ -40201,7 +40202,7 @@ function drawCircles(painter, sourceCache, layer, coords) {
             const oldSegments = bucket.segments.get();
             for (const segment of oldSegments) {
                 segmentsRenderStates.push({
-                    segments: new performance$1.Z([segment]),
+                    segments: new performance$1.$([segment]),
                     sortKey: segment.sortKey,
                     state
                 });
@@ -40236,9 +40237,9 @@ function drawHeatmap(painter, sourceCache, layer, coords) {
         // large kernels are not clipped to tiles
         const stencilMode = StencilMode.disabled;
         // Turn on additive blending for kernels, which is a key aspect of kernel density estimation formula
-        const colorMode = new ColorMode([gl.ONE, gl.ONE], performance$1.aL.transparent, [true, true, true, true]);
+        const colorMode = new ColorMode([gl.ONE, gl.ONE], performance$1.aM.transparent, [true, true, true, true]);
         bindFramebuffer(context, painter, layer);
-        context.clear({ color: performance$1.aL.transparent });
+        context.clear({ color: performance$1.aM.transparent });
         for (let i = 0; i < coords.length; i++) {
             const coord = coords[i];
             // Skip tiles that have uncovered parents to avoid flickering; we don't need
@@ -40376,14 +40377,14 @@ function drawLine(painter, sourceCache, layer, coords) {
                     const sourceMaxZoom = sourceCache.getSource().maxzoom;
                     const potentialOverzoom = coord.canonical.z === sourceMaxZoom ?
                         Math.ceil(1 << (painter.transform.maxZoom - coord.canonical.z)) : 1;
-                    const lineLength = bucket.maxLineLength / performance$1.V;
+                    const lineLength = bucket.maxLineLength / performance$1.W;
                     // Logical pixel tile size is 512px, and 1024px right before current zoom + 1
                     const maxTilePixelSize = 1024;
                     // Maximum possible texture coverage heuristic, bound by hardware max texture size
                     const maxTextureCoverage = lineLength * maxTilePixelSize * potentialOverzoom;
-                    textureResolution = performance$1.ab(performance$1.aT(maxTextureCoverage), 256, context.maxTextureSize);
+                    textureResolution = performance$1.ac(performance$1.aU(maxTextureCoverage), 256, context.maxTextureSize);
                 }
-                layerGradient.gradient = performance$1.aU({
+                layerGradient.gradient = performance$1.aV({
                     expression: layer.gradientExpression(),
                     evaluationKey: 'lineProgress',
                     resolution: textureResolution,
@@ -40454,7 +40455,7 @@ function drawFill(painter, sourceCache, layer, coords) {
     const pattern = layer.paint.get('fill-pattern');
     const pass = painter.opaquePassEnabledForLayer() &&
         (!pattern.constantOr(1) &&
-            color.constantOr(performance$1.aL.transparent).a === 1 &&
+            color.constantOr(performance$1.aM.transparent).a === 1 &&
             opacity.constantOr(0) === 1) ? 'opaque' : 'translucent';
     // Draw fill
     if (painter.renderPass === pass) {
@@ -40722,7 +40723,7 @@ function getFadeValues(tile, parentTile, sourceCache, layer, transform, terrain)
         });
         // if no parent or parent is older, fade in; if parent is younger, fade out
         const fadeIn = !parentTile || Math.abs(parentTile.tileID.overscaledZ - idealZ) > Math.abs(tile.tileID.overscaledZ - idealZ);
-        const childOpacity = (fadeIn && tile.refreshedUponExpiration) ? 1 : performance$1.ab(fadeIn ? sinceTile : 1 - sinceParent, 0, 1);
+        const childOpacity = (fadeIn && tile.refreshedUponExpiration) ? 1 : performance$1.ac(fadeIn ? sinceTile : 1 - sinceParent, 0, 1);
         // we don't crossfade tiles that were just refreshed upon expiring:
         // once they're old enough to pass the crossfading threshold
         // (fadeDuration), unset the `refreshedUponExpiration` flag so we don't
@@ -40785,11 +40786,11 @@ function drawBackground(painter, sourceCache, layer, coords) {
     }
 }
 
-const topColor = new performance$1.aL(1, 0, 0, 1);
-const btmColor = new performance$1.aL(0, 1, 0, 1);
-const leftColor = new performance$1.aL(0, 0, 1, 1);
-const rightColor = new performance$1.aL(1, 0, 1, 1);
-const centerColor = new performance$1.aL(0, 1, 1, 1);
+const topColor = new performance$1.aM(1, 0, 0, 1);
+const btmColor = new performance$1.aM(0, 1, 0, 1);
+const leftColor = new performance$1.aM(0, 0, 1, 1);
+const rightColor = new performance$1.aM(1, 0, 1, 1);
+const centerColor = new performance$1.aM(0, 1, 1, 1);
 function drawDebugPadding(painter) {
     const padding = painter.transform.padding;
     const lineWidth = 3;
@@ -40854,8 +40855,8 @@ function drawDebugTile(painter, sourceCache, coord) {
     }
     const tileLabel = `${tileIdText} ${tileSizeKb}kB`;
     drawTextToOverlay(painter, tileLabel);
-    program.draw(context, gl.TRIANGLES, depthMode, stencilMode, ColorMode.alphaBlended, CullFaceMode.disabled, debugUniformValues(posMatrix, performance$1.aL.transparent, scaleRatio), null, id, painter.debugBuffer, painter.quadTriangleIndexBuffer, painter.debugSegments);
-    program.draw(context, gl.LINE_STRIP, depthMode, stencilMode, colorMode, CullFaceMode.disabled, debugUniformValues(posMatrix, performance$1.aL.red), terrainData, id, painter.debugBuffer, painter.tileBorderIndexBuffer, painter.debugSegments);
+    program.draw(context, gl.TRIANGLES, depthMode, stencilMode, ColorMode.alphaBlended, CullFaceMode.disabled, debugUniformValues(posMatrix, performance$1.aM.transparent, scaleRatio), null, id, painter.debugBuffer, painter.quadTriangleIndexBuffer, painter.debugSegments);
+    program.draw(context, gl.LINE_STRIP, depthMode, stencilMode, colorMode, CullFaceMode.disabled, debugUniformValues(posMatrix, performance$1.aM.red), terrainData, id, painter.debugBuffer, painter.tileBorderIndexBuffer, painter.debugSegments);
 }
 function drawTextToOverlay(painter, text) {
     painter.initDebugOverlayCanvas();
@@ -40945,7 +40946,7 @@ function drawDepth(painter, terrain) {
     const program = painter.useProgram('terrainDepth');
     context.bindFramebuffer.set(terrain.getFramebuffer('depth').framebuffer);
     context.viewport.set([0, 0, painter.width / devicePixelRatio, painter.height / devicePixelRatio]);
-    context.clear({ color: performance$1.aL.transparent, depth: 1 });
+    context.clear({ color: performance$1.aM.transparent, depth: 1 });
     for (const tile of tiles) {
         const terrainData = terrain.getTerrainData(tile.tileID);
         const posMatrix = painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped());
@@ -40972,7 +40973,7 @@ function drawCoords(painter, terrain) {
     const program = painter.useProgram('terrainCoords');
     context.bindFramebuffer.set(terrain.getFramebuffer('coords').framebuffer);
     context.viewport.set([0, 0, painter.width / devicePixelRatio, painter.height / devicePixelRatio]);
-    context.clear({ color: performance$1.aL.transparent, depth: 1 });
+    context.clear({ color: performance$1.aM.transparent, depth: 1 });
     terrain.coordsIndex = [];
     for (const tile of tiles) {
         const terrainData = terrain.getTerrainData(tile.tileID);
@@ -41033,15 +41034,15 @@ function drawSky(painter, sky) {
     const colorMode = painter.colorModeForRenderPass();
     const program = painter.useProgram('sky');
     if (!sky.mesh) {
-        const vertexArray = new performance$1.aV();
+        const vertexArray = new performance$1.aW();
         vertexArray.emplaceBack(-1, -1);
         vertexArray.emplaceBack(1, -1);
         vertexArray.emplaceBack(1, 1);
         vertexArray.emplaceBack(-1, 1);
-        const indexArray = new performance$1.aW();
+        const indexArray = new performance$1.aX();
         indexArray.emplaceBack(0, 1, 2);
         indexArray.emplaceBack(0, 2, 3);
-        sky.mesh = new Mesh(context.createVertexBuffer(vertexArray, posAttributes.members), context.createIndexBuffer(indexArray), performance$1.Z.simpleSegment(0, 0, vertexArray.length, indexArray.length));
+        sky.mesh = new Mesh(context.createVertexBuffer(vertexArray, posAttributes.members), context.createIndexBuffer(indexArray), performance$1.$.simpleSegment(0, 0, vertexArray.length, indexArray.length));
     }
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled, skyUniforms, undefined, 'sky', sky.mesh.vertexBuffer, sky.mesh.indexBuffer, sky.mesh.segments);
 }
@@ -41055,7 +41056,7 @@ class Painter {
         this.context = new Context(gl);
         this.transform = transform;
         this._tileTextures = {};
-        this.terrainFacilitator = { dirty: true, matrix: performance$1.am(new Float64Array(16)), renderTime: 0 };
+        this.terrainFacilitator = { dirty: true, matrix: performance$1.an(new Float64Array(16)), renderTime: 0 };
         this.setup();
         // Within each layer there are multiple distinct z-planes that can be drawn to.
         // This is implemented using the WebGL depth buffer.
@@ -41080,42 +41081,42 @@ class Painter {
     }
     setup() {
         const context = this.context;
-        const tileExtentArray = new performance$1.aV();
+        const tileExtentArray = new performance$1.aW();
         tileExtentArray.emplaceBack(0, 0);
-        tileExtentArray.emplaceBack(performance$1.V, 0);
-        tileExtentArray.emplaceBack(0, performance$1.V);
-        tileExtentArray.emplaceBack(performance$1.V, performance$1.V);
+        tileExtentArray.emplaceBack(performance$1.W, 0);
+        tileExtentArray.emplaceBack(0, performance$1.W);
+        tileExtentArray.emplaceBack(performance$1.W, performance$1.W);
         this.tileExtentBuffer = context.createVertexBuffer(tileExtentArray, posAttributes.members);
-        this.tileExtentSegments = performance$1.Z.simpleSegment(0, 0, 4, 2);
-        const debugArray = new performance$1.aV();
+        this.tileExtentSegments = performance$1.$.simpleSegment(0, 0, 4, 2);
+        const debugArray = new performance$1.aW();
         debugArray.emplaceBack(0, 0);
-        debugArray.emplaceBack(performance$1.V, 0);
-        debugArray.emplaceBack(0, performance$1.V);
-        debugArray.emplaceBack(performance$1.V, performance$1.V);
+        debugArray.emplaceBack(performance$1.W, 0);
+        debugArray.emplaceBack(0, performance$1.W);
+        debugArray.emplaceBack(performance$1.W, performance$1.W);
         this.debugBuffer = context.createVertexBuffer(debugArray, posAttributes.members);
-        this.debugSegments = performance$1.Z.simpleSegment(0, 0, 4, 5);
-        const rasterBoundsArray = new performance$1.Y();
+        this.debugSegments = performance$1.$.simpleSegment(0, 0, 4, 5);
+        const rasterBoundsArray = new performance$1.Z();
         rasterBoundsArray.emplaceBack(0, 0, 0, 0);
-        rasterBoundsArray.emplaceBack(performance$1.V, 0, performance$1.V, 0);
-        rasterBoundsArray.emplaceBack(0, performance$1.V, 0, performance$1.V);
-        rasterBoundsArray.emplaceBack(performance$1.V, performance$1.V, performance$1.V, performance$1.V);
+        rasterBoundsArray.emplaceBack(performance$1.W, 0, performance$1.W, 0);
+        rasterBoundsArray.emplaceBack(0, performance$1.W, 0, performance$1.W);
+        rasterBoundsArray.emplaceBack(performance$1.W, performance$1.W, performance$1.W, performance$1.W);
         this.rasterBoundsBuffer = context.createVertexBuffer(rasterBoundsArray, rasterBoundsAttributes.members);
-        this.rasterBoundsSegments = performance$1.Z.simpleSegment(0, 0, 4, 2);
-        const viewportArray = new performance$1.aV();
+        this.rasterBoundsSegments = performance$1.$.simpleSegment(0, 0, 4, 2);
+        const viewportArray = new performance$1.aW();
         viewportArray.emplaceBack(0, 0);
         viewportArray.emplaceBack(1, 0);
         viewportArray.emplaceBack(0, 1);
         viewportArray.emplaceBack(1, 1);
         this.viewportBuffer = context.createVertexBuffer(viewportArray, posAttributes.members);
-        this.viewportSegments = performance$1.Z.simpleSegment(0, 0, 4, 2);
-        const tileLineStripIndices = new performance$1.aX();
+        this.viewportSegments = performance$1.$.simpleSegment(0, 0, 4, 2);
+        const tileLineStripIndices = new performance$1.aY();
         tileLineStripIndices.emplaceBack(0);
         tileLineStripIndices.emplaceBack(1);
         tileLineStripIndices.emplaceBack(3);
         tileLineStripIndices.emplaceBack(2);
         tileLineStripIndices.emplaceBack(0);
         this.tileBorderIndexBuffer = context.createIndexBuffer(tileLineStripIndices);
-        const quadTriangleIndices = new performance$1.aW();
+        const quadTriangleIndices = new performance$1.aX();
         quadTriangleIndices.emplaceBack(0, 1, 2);
         quadTriangleIndices.emplaceBack(2, 1, 3);
         this.quadTriangleIndexBuffer = context.createIndexBuffer(quadTriangleIndices);
@@ -41135,9 +41136,9 @@ class Painter {
         // pending an upstream fix, we draw a fullscreen stencil=0 clipping mask here,
         // effectively clearing the stencil buffer: once an upstream patch lands, remove
         // this function in favor of context.clear({ stencil: 0x0 })
-        const matrix = performance$1.C();
-        performance$1.aO(matrix, 0, this.width, this.height, 0, 0, 1);
-        performance$1.H(matrix, matrix, [gl.drawingBufferWidth, gl.drawingBufferHeight, 0]);
+        const matrix = performance$1.F();
+        performance$1.aP(matrix, 0, this.width, this.height, 0, 0, 1);
+        performance$1.J(matrix, matrix, [gl.drawingBufferWidth, gl.drawingBufferHeight, 0]);
         this.useProgram('clippingMask').draw(context, gl.TRIANGLES, DepthMode.disabled, this.stencilClearMode, ColorMode.disabled, CullFaceMode.disabled, clippingMaskUniformValues(matrix), null, '$clipping', this.viewportBuffer, this.quadTriangleIndexBuffer, this.viewportSegments);
     }
     _renderTileClippingMasks(layer, tileIDs) {
@@ -41209,7 +41210,7 @@ class Painter {
         if (this._showOverdrawInspector) {
             const numOverdrawSteps = 8;
             const a = 1 / numOverdrawSteps;
-            return new ColorMode([gl.CONSTANT_COLOR, gl.ONE], new performance$1.aL(a, a, a, 0), [true, true, true, true]);
+            return new ColorMode([gl.CONSTANT_COLOR, gl.ONE], new performance$1.aM(a, a, a, 0), [true, true, true, true]);
         }
         else if (this.renderPass === 'opaque') {
             return ColorMode.unblended;
@@ -41288,7 +41289,7 @@ class Painter {
         // Rebind the main framebuffer now that all offscreen layers have been rendered:
         this.context.bindFramebuffer.set(null);
         // Clear buffers in preparation for drawing to the main framebuffer
-        this.context.clear({ color: options.showOverdrawInspector ? performance$1.aL.black : performance$1.aL.transparent, depth: 1 });
+        this.context.clear({ color: options.showOverdrawInspector ? performance$1.aM.black : performance$1.aM.transparent, depth: 1 });
         this.clearStencil();
         // draw sky first to not overwrite symbols
         if ((_a = this.style.stylesheet) === null || _a === void 0 ? void 0 : _a.sky)
@@ -41348,12 +41349,12 @@ class Painter {
         const currMatrix = this.transform.modelViewProjectionMatrix;
         // Update coords/depth-framebuffer on camera movement, or tile reloading
         let doUpdate = this.terrainFacilitator.dirty;
-        doUpdate || (doUpdate = requireExact ? !performance$1.aY(prevMatrix, currMatrix) : !performance$1.aZ(prevMatrix, currMatrix));
+        doUpdate || (doUpdate = requireExact ? !performance$1.aZ(prevMatrix, currMatrix) : !performance$1.a_(prevMatrix, currMatrix));
         doUpdate || (doUpdate = this.style.map.terrain.sourceCache.tilesAfterTime(this.terrainFacilitator.renderTime).length > 0);
         if (!doUpdate) {
             return;
         }
-        performance$1.a_(prevMatrix, currMatrix);
+        performance$1.a$(prevMatrix, currMatrix);
         this.terrainFacilitator.renderTime = Date.now();
         this.terrainFacilitator.dirty = false;
         drawDepth(this, this.style.map.terrain);
@@ -41423,7 +41424,7 @@ class Painter {
             0
         ];
         const translatedMatrix = new Float32Array(16);
-        performance$1.F(translatedMatrix, matrix, translation);
+        performance$1.H(translatedMatrix, matrix, translation);
         return translatedMatrix;
     }
     saveTileTexture(texture) {
@@ -41534,9 +41535,9 @@ class Frustum {
         const scale = Math.pow(2, zoom);
         // Transform frustum corner points from clip space to tile space, Z to meters
         const frustumCoords = clipSpaceCorners.map(v => {
-            v = performance$1.ae([], v, invProj);
+            v = performance$1.af([], v, invProj);
             const s = 1.0 / v[3] / worldSize * scale;
-            return performance$1.a$(v, v, [s, s, 1.0 / v[3], s]);
+            return performance$1.b0(v, v, [s, s, 1.0 / v[3], s]);
         });
         const frustumPlanePointIndices = [
             [0, 1, 2], // near
@@ -41602,7 +41603,7 @@ class Aabb {
             const plane = frustum.planes[p];
             let pointsInside = 0;
             for (let i = 0; i < aabbPoints.length; i++) {
-                if (performance$1.b0(plane, aabbPoints[i]) >= 0) {
+                if (performance$1.b1(plane, aabbPoints[i]) >= 0) {
                     pointsInside++;
                 }
             }
@@ -41658,13 +41659,13 @@ class EdgeInsets {
      */
     interpolate(start, target, t) {
         if (target.top != null && start.top != null)
-            this.top = performance$1.x.number(start.top, target.top, t);
+            this.top = performance$1.y.number(start.top, target.top, t);
         if (target.bottom != null && start.bottom != null)
-            this.bottom = performance$1.x.number(start.bottom, target.bottom, t);
+            this.bottom = performance$1.y.number(start.bottom, target.bottom, t);
         if (target.left != null && start.left != null)
-            this.left = performance$1.x.number(start.left, target.left, t);
+            this.left = performance$1.y.number(start.left, target.left, t);
         if (target.right != null && start.right != null)
-            this.right = performance$1.x.number(start.right, target.right, t);
+            this.right = performance$1.y.number(start.right, target.right, t);
         return this;
     }
     /**
@@ -41677,8 +41678,8 @@ class EdgeInsets {
      */
     getCenter(width, height) {
         // Clamp insets so they never overflow width/height and always calculate a valid center
-        const x = performance$1.ab((this.left + width - this.right) / 2, 0, width);
-        const y = performance$1.ab((this.top + height - this.bottom) / 2, 0, height);
+        const x = performance$1.ac((this.left + width - this.right) / 2, 0, width);
+        const y = performance$1.ac((this.top + height - this.bottom) / 2, 0, height);
         return new performance$1.P(x, y);
     }
     equals(other) {
@@ -41723,7 +41724,7 @@ class Transform {
         this.setMaxBounds();
         this.width = 0;
         this.height = 0;
-        this._center = new performance$1.L(0, 0);
+        this._center = new performance$1.M(0, 0);
         this._elevation = 0;
         this.zoom = 0;
         this.angle = 0;
@@ -41808,7 +41809,7 @@ class Transform {
         return -this.angle / Math.PI * 180;
     }
     set bearing(bearing) {
-        const b = -performance$1.b1(bearing, -180, 180) * Math.PI / 180;
+        const b = -performance$1.b2(bearing, -180, 180) * Math.PI / 180;
         if (this.angle === b)
             return;
         this._unmodified = false;
@@ -41822,7 +41823,7 @@ class Transform {
         return this._pitch / Math.PI * 180;
     }
     set pitch(pitch) {
-        const p = performance$1.ab(pitch, this.minPitch, this.maxPitch) / 180 * Math.PI;
+        const p = performance$1.ac(pitch, this.minPitch, this.maxPitch) / 180 * Math.PI;
         if (this._pitch === p)
             return;
         this._unmodified = false;
@@ -41925,7 +41926,7 @@ class Transform {
      * in the current view.
      */
     getVisibleUnwrappedCoordinates(tileID) {
-        const result = [new performance$1.b2(0, tileID)];
+        const result = [new performance$1.b3(0, tileID)];
         if (this._renderWorldCopies) {
             const utl = this.pointCoordinate(new performance$1.P(0, 0));
             const utr = this.pointCoordinate(new performance$1.P(this.width, 0));
@@ -41940,7 +41941,7 @@ class Transform {
             for (let w = w0 - extraWorldCopy; w <= w1 + extraWorldCopy; w++) {
                 if (w === 0)
                     continue;
-                result.push(new performance$1.b2(w, tileID));
+                result.push(new performance$1.b3(w, tileID));
             }
         }
         return result;
@@ -41960,7 +41961,7 @@ class Transform {
         if (options.maxzoom !== undefined && z > options.maxzoom)
             z = options.maxzoom;
         const cameraCoord = this.pointCoordinate(this.getCameraPoint());
-        const centerCoord = performance$1.X.fromLngLat(this.center);
+        const centerCoord = performance$1.Y.fromLngLat(this.center);
         const numTiles = Math.pow(2, z);
         const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
         const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
@@ -42021,7 +42022,7 @@ class Transform {
             if (it.zoom === maxZoom || (longestDim > distToSplit && it.zoom >= minZoom)) {
                 const dz = maxZoom - it.zoom, dx = cameraPoint[0] - 0.5 - (x << dz), dy = cameraPoint[1] - 0.5 - (y << dz);
                 result.push({
-                    tileID: new performance$1.O(it.zoom === maxZoom ? overscaledZ : it.zoom, it.wrap, it.zoom, x, y),
+                    tileID: new performance$1.Q(it.zoom === maxZoom ? overscaledZ : it.zoom, it.wrap, it.zoom, x, y),
                     distanceSq: sqrLen([centerPoint[0] - 0.5 - x, centerPoint[1] - 0.5 - y]),
                     // this variable is currently not used, but may be important to reduce the amount of loaded tiles
                     tileDistanceToCamera: Math.sqrt(dx * dx + dy * dy)
@@ -42034,7 +42035,7 @@ class Transform {
                 const childZ = it.zoom + 1;
                 let quadrant = it.aabb.quadrant(i);
                 if (options.terrain) {
-                    const tileID = new performance$1.O(childZ, it.wrap, childZ, childX, childY);
+                    const tileID = new performance$1.Q(childZ, it.wrap, childZ, childX, childY);
                     const minMax = options.terrain.getMinMaxElevation(tileID);
                     const minElevation = (_a = minMax.minElevation) !== null && _a !== void 0 ? _a : this.elevation;
                     const maxElevation = (_b = minMax.maxElevation) !== null && _b !== void 0 ? _b : this.elevation;
@@ -42061,8 +42062,8 @@ class Transform {
      * @returns Point
      */
     project(lnglat) {
-        const lat = performance$1.ab(lnglat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
-        return new performance$1.P(performance$1.M(lnglat.lng) * this.worldSize, performance$1.N(lat) * this.worldSize);
+        const lat = performance$1.ac(lnglat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
+        return new performance$1.P(performance$1.N(lnglat.lng) * this.worldSize, performance$1.O(lat) * this.worldSize);
     }
     /**
      * Convert from world coordinates ([0, 512],[0, 512]) to LngLat ([-180, 180], [-90, 90])
@@ -42070,7 +42071,7 @@ class Transform {
      * @returns LngLat
      */
     unproject(point) {
-        return new performance$1.X(point.x / this.worldSize, point.y / this.worldSize).toLngLat();
+        return new performance$1.Y(point.x / this.worldSize, point.y / this.worldSize).toLngLat();
     }
     get point() { return this.project(this.center); }
     /**
@@ -42103,7 +42104,7 @@ class Transform {
         // Since altitude = Math.cos(this._pitch) * this.cameraToCenterDistance / pixelPerMeter:
         const requiredPixelPerMeter = Math.cos(this._pitch) * this.cameraToCenterDistance / requiredAltitude;
         // Since pixelPerMeter = mercatorZfromAltitude(1, center.lat) * worldSize:
-        const requiredWorldSize = requiredPixelPerMeter / performance$1.b3(1, center.lat);
+        const requiredWorldSize = requiredPixelPerMeter / performance$1.b4(1, center.lat);
         // Since worldSize = this.tileSize * scale:
         const requiredScale = requiredWorldSize / this.tileSize;
         const zoom = this.scaleZoom(requiredScale);
@@ -42116,7 +42117,7 @@ class Transform {
         const a = this.pointCoordinate(point);
         const b = this.pointCoordinate(this.centerPoint);
         const loc = this.locationCoordinate(lnglat);
-        const newCenter = new performance$1.X(loc.x - (a.x - b.x), loc.y - (a.y - b.y));
+        const newCenter = new performance$1.Y(loc.x - (a.x - b.x), loc.y - (a.y - b.y));
         this.center = this.coordinateLocation(newCenter);
         if (this._renderWorldCopies) {
             this.center = this.center.wrap();
@@ -42149,7 +42150,7 @@ class Transform {
      * @returns The mercator coordinate
      */
     locationCoordinate(lnglat) {
-        return performance$1.X.fromLngLat(lnglat);
+        return performance$1.Y.fromLngLat(lnglat);
     }
     /**
      * Given a Coordinate, return its geographical position.
@@ -42180,8 +42181,8 @@ class Transform {
         // line with z=0
         const coord0 = [p.x, p.y, 0, 1];
         const coord1 = [p.x, p.y, 1, 1];
-        performance$1.ae(coord0, coord0, this.pixelMatrixInverse);
-        performance$1.ae(coord1, coord1, this.pixelMatrixInverse);
+        performance$1.af(coord0, coord0, this.pixelMatrixInverse);
+        performance$1.af(coord1, coord1, this.pixelMatrixInverse);
         const w0 = coord0[3];
         const w1 = coord1[3];
         const x0 = coord0[0] / w0;
@@ -42191,7 +42192,7 @@ class Transform {
         const z0 = coord0[2] / w0;
         const z1 = coord1[2] / w1;
         const t = z0 === z1 ? 0 : (targetZ - z0) / (z1 - z0);
-        return new performance$1.X(performance$1.x.number(x0, x1, t) / this.worldSize, performance$1.x.number(y0, y1, t) / this.worldSize);
+        return new performance$1.Y(performance$1.y.number(x0, x1, t) / this.worldSize, performance$1.y.number(y0, y1, t) / this.worldSize);
     }
     /**
      * Given a coordinate, return the screen point that corresponds to it
@@ -42202,7 +42203,7 @@ class Transform {
      */
     coordinatePoint(coord, elevation = 0, pixelMatrix = this.pixelMatrix) {
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1];
-        performance$1.ae(p, p, pixelMatrix);
+        performance$1.af(p, p, pixelMatrix);
         return new performance$1.P(p[0] / p[3], p[1] / p[3]);
     }
     /**
@@ -42256,9 +42257,9 @@ class Transform {
         const canonical = unwrappedTileID.canonical;
         const scale = this.worldSize / this.zoomScale(canonical.z);
         const unwrappedX = canonical.x + Math.pow(2, canonical.z) * unwrappedTileID.wrap;
-        const worldMatrix = performance$1.am(new Float64Array(16));
-        performance$1.F(worldMatrix, worldMatrix, [unwrappedX * scale, canonical.y * scale, 0]);
-        performance$1.H(worldMatrix, worldMatrix, [scale / performance$1.V, scale / performance$1.V, 1]);
+        const worldMatrix = performance$1.an(new Float64Array(16));
+        performance$1.H(worldMatrix, worldMatrix, [unwrappedX * scale, canonical.y * scale, 0]);
+        performance$1.J(worldMatrix, worldMatrix, [scale / performance$1.W, scale / performance$1.W, 1]);
         return worldMatrix;
     }
     /**
@@ -42272,7 +42273,7 @@ class Transform {
             return cache[posMatrixKey];
         }
         const posMatrix = this.calculateTileMatrix(unwrappedTileID);
-        performance$1.J(posMatrix, aligned ? this.alignedModelViewProjectionMatrix : this.modelViewProjectionMatrix, posMatrix);
+        performance$1.K(posMatrix, aligned ? this.alignedModelViewProjectionMatrix : this.modelViewProjectionMatrix, posMatrix);
         cache[posMatrixKey] = new Float32Array(posMatrix);
         return cache[posMatrixKey];
     }
@@ -42288,7 +42289,7 @@ class Transform {
             return cache[posMatrixKey];
         }
         const fogMatrix = this.calculateTileMatrix(unwrappedTileID);
-        performance$1.J(fogMatrix, this.fogMatrix, fogMatrix);
+        performance$1.K(fogMatrix, this.fogMatrix, fogMatrix);
         cache[posMatrixKey] = new Float32Array(fogMatrix);
         return cache[posMatrixKey];
     }
@@ -42302,9 +42303,9 @@ class Transform {
      * Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
      */
     getConstrained(lngLat, zoom) {
-        zoom = performance$1.ab(+zoom, this.minZoom, this.maxZoom);
+        zoom = performance$1.ac(+zoom, this.minZoom, this.maxZoom);
         const result = {
-            center: new performance$1.L(lngLat.lng, lngLat.lat),
+            center: new performance$1.M(lngLat.lng, lngLat.lat),
             zoom
         };
         let lngRange = this.lngRange;
@@ -42322,15 +42323,15 @@ class Transform {
         const { x: screenWidth, y: screenHeight } = this.size;
         if (this.latRange) {
             const latRange = this.latRange;
-            minY = performance$1.N(latRange[1]) * worldSize;
-            maxY = performance$1.N(latRange[0]) * worldSize;
+            minY = performance$1.O(latRange[1]) * worldSize;
+            maxY = performance$1.O(latRange[0]) * worldSize;
             const shouldZoomIn = maxY - minY < screenHeight;
             if (shouldZoomIn)
                 scaleY = screenHeight / (maxY - minY);
         }
         if (lngRange) {
-            minX = performance$1.b1(performance$1.M(lngRange[0]) * worldSize, 0, worldSize);
-            maxX = performance$1.b1(performance$1.M(lngRange[1]) * worldSize, 0, worldSize);
+            minX = performance$1.b2(performance$1.N(lngRange[0]) * worldSize, 0, worldSize);
+            maxX = performance$1.b2(performance$1.N(lngRange[1]) * worldSize, 0, worldSize);
             if (maxX < minX)
                 maxX += worldSize;
             const shouldZoomIn = maxX - minX < screenWidth;
@@ -42358,7 +42359,7 @@ class Transform {
             const centerX = (minX + maxX) / 2;
             let wrappedX = originalX;
             if (this._renderWorldCopies) {
-                wrappedX = performance$1.b1(originalX, centerX - worldSize / 2, centerX + worldSize / 2);
+                wrappedX = performance$1.b2(originalX, centerX - worldSize / 2, centerX + worldSize / 2);
             }
             const w2 = screenWidth / 2;
             if (wrappedX - w2 < minX)
@@ -42391,15 +42392,15 @@ class Transform {
         const offset = this.centerOffset;
         const x = this.point.x, y = this.point.y;
         this.cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this.height;
-        this._pixelPerMeter = performance$1.b3(1, this.center.lat) * this.worldSize;
-        let m = performance$1.am(new Float64Array(16));
-        performance$1.H(m, m, [this.width / 2, -this.height / 2, 1]);
-        performance$1.F(m, m, [1, -1, 0]);
+        this._pixelPerMeter = performance$1.b4(1, this.center.lat) * this.worldSize;
+        let m = performance$1.an(new Float64Array(16));
+        performance$1.J(m, m, [this.width / 2, -this.height / 2, 1]);
+        performance$1.H(m, m, [1, -1, 0]);
         this.labelPlaneMatrix = m;
-        m = performance$1.am(new Float64Array(16));
-        performance$1.H(m, m, [1, -1, 1]);
-        performance$1.F(m, m, [-1, -1, 0]);
-        performance$1.H(m, m, [2 / this.width, 2 / this.height, 1]);
+        m = performance$1.an(new Float64Array(16));
+        performance$1.J(m, m, [1, -1, 1]);
+        performance$1.H(m, m, [-1, -1, 0]);
+        performance$1.J(m, m, [2 / this.width, 2 / this.height, 1]);
         this.glCoordMatrix = m;
         // Calculate the camera to sea-level distance in pixel in respect of terrain
         const cameraToSeaLevelDistance = this.cameraToCenterDistance + this._elevation * this._pixelPerMeter / Math.cos(this._pitch);
@@ -42413,12 +42414,12 @@ class Transform {
         // (the distance between[width/2, height/2] and [width/2 + 1, height/2])
         const groundAngle = Math.PI / 2 + this._pitch;
         const fovAboveCenter = this._fov * (0.5 + offset.y / this.height);
-        const topHalfSurfaceDistance = Math.sin(fovAboveCenter) * lowestPlane / Math.sin(performance$1.ab(Math.PI - groundAngle - fovAboveCenter, 0.01, Math.PI - 0.01));
+        const topHalfSurfaceDistance = Math.sin(fovAboveCenter) * lowestPlane / Math.sin(performance$1.ac(Math.PI - groundAngle - fovAboveCenter, 0.01, Math.PI - 0.01));
         // Find the distance from the center point to the horizon
         const horizon = this.getHorizon();
         const horizonAngle = Math.atan(horizon / this.cameraToCenterDistance);
         const fovCenterToHorizon = 2 * horizonAngle * (0.5 + offset.y / (horizon * 2));
-        const topHalfSurfaceDistanceHorizon = Math.sin(fovCenterToHorizon) * lowestPlane / Math.sin(performance$1.ab(Math.PI - groundAngle - fovCenterToHorizon, 0.01, Math.PI - 0.01));
+        const topHalfSurfaceDistanceHorizon = Math.sin(fovCenterToHorizon) * lowestPlane / Math.sin(performance$1.ac(Math.PI - groundAngle - fovCenterToHorizon, 0.01, Math.PI - 0.01));
         // Calculate z distance of the farthest fragment that should be rendered.
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
         const topHalfMinDistance = Math.min(topHalfSurfaceDistance, topHalfSurfaceDistanceHorizon);
@@ -42433,42 +42434,42 @@ class Transform {
         this.nearZ = this.height / 50;
         // matrix for conversion from location to clip space(-1 .. 1)
         m = new Float64Array(16);
-        performance$1.b4(m, this._fov, this.width / this.height, this.nearZ, this.farZ);
+        performance$1.b5(m, this._fov, this.width / this.height, this.nearZ, this.farZ);
         // Apply center of perspective offset
         m[8] = -offset.x * 2 / this.width;
         m[9] = offset.y * 2 / this.height;
-        this.projectionMatrix = performance$1.ad(m);
-        performance$1.H(m, m, [1, -1, 1]);
-        performance$1.F(m, m, [0, 0, -this.cameraToCenterDistance]);
-        performance$1.b5(m, m, this._pitch);
-        performance$1.ac(m, m, this.angle);
-        performance$1.F(m, m, [-x, -y, 0]);
+        this.projectionMatrix = performance$1.ae(m);
+        performance$1.J(m, m, [1, -1, 1]);
+        performance$1.H(m, m, [0, 0, -this.cameraToCenterDistance]);
+        performance$1.b6(m, m, this._pitch);
+        performance$1.ad(m, m, this.angle);
+        performance$1.H(m, m, [-x, -y, 0]);
         // The mercatorMatrix can be used to transform points from mercator coordinates
         // ([0, 0] nw, [1, 1] se) to clip space.
-        this.mercatorMatrix = performance$1.H([], m, [this.worldSize, this.worldSize, this.worldSize]);
+        this.mercatorMatrix = performance$1.J([], m, [this.worldSize, this.worldSize, this.worldSize]);
         // scale vertically to meters per pixel (inverse of ground resolution):
-        performance$1.H(m, m, [1, 1, this._pixelPerMeter]);
+        performance$1.J(m, m, [1, 1, this._pixelPerMeter]);
         // matrix for conversion from world space to screen coordinates in 2D
-        this.pixelMatrix = performance$1.J(new Float64Array(16), this.labelPlaneMatrix, m);
+        this.pixelMatrix = performance$1.K(new Float64Array(16), this.labelPlaneMatrix, m);
         // matrix for conversion from world space to clip space (-1 .. 1)
-        performance$1.F(m, m, [0, 0, -this.elevation]); // elevate camera over terrain
+        performance$1.H(m, m, [0, 0, -this.elevation]); // elevate camera over terrain
         this.modelViewProjectionMatrix = m;
-        this.invModelViewProjectionMatrix = performance$1.ar([], m);
+        this.invModelViewProjectionMatrix = performance$1.as([], m);
         // create a fog matrix, same es proj-matrix but with near clipping-plane in mapcenter
         // needed to calculate a correct z-value for fog calculation, because projMatrix z value is not
         this.fogMatrix = new Float64Array(16);
-        performance$1.b4(this.fogMatrix, this._fov, this.width / this.height, cameraToSeaLevelDistance, this.farZ);
+        performance$1.b5(this.fogMatrix, this._fov, this.width / this.height, cameraToSeaLevelDistance, this.farZ);
         this.fogMatrix[8] = -offset.x * 2 / this.width;
         this.fogMatrix[9] = offset.y * 2 / this.height;
-        performance$1.H(this.fogMatrix, this.fogMatrix, [1, -1, 1]);
-        performance$1.F(this.fogMatrix, this.fogMatrix, [0, 0, -this.cameraToCenterDistance]);
-        performance$1.b5(this.fogMatrix, this.fogMatrix, this._pitch);
-        performance$1.ac(this.fogMatrix, this.fogMatrix, this.angle);
-        performance$1.F(this.fogMatrix, this.fogMatrix, [-x, -y, 0]);
-        performance$1.H(this.fogMatrix, this.fogMatrix, [1, 1, this._pixelPerMeter]);
-        performance$1.F(this.fogMatrix, this.fogMatrix, [0, 0, -this.elevation]); // elevate camera over terrain
+        performance$1.J(this.fogMatrix, this.fogMatrix, [1, -1, 1]);
+        performance$1.H(this.fogMatrix, this.fogMatrix, [0, 0, -this.cameraToCenterDistance]);
+        performance$1.b6(this.fogMatrix, this.fogMatrix, this._pitch);
+        performance$1.ad(this.fogMatrix, this.fogMatrix, this.angle);
+        performance$1.H(this.fogMatrix, this.fogMatrix, [-x, -y, 0]);
+        performance$1.J(this.fogMatrix, this.fogMatrix, [1, 1, this._pixelPerMeter]);
+        performance$1.H(this.fogMatrix, this.fogMatrix, [0, 0, -this.elevation]); // elevate camera over terrain
         // matrix for conversion from world space to screen coordinates in 3D
-        this.pixelMatrix3D = performance$1.J(new Float64Array(16), this.labelPlaneMatrix, m);
+        this.pixelMatrix3D = performance$1.K(new Float64Array(16), this.labelPlaneMatrix, m);
         // Make a second projection matrix that is aligned to a pixel grid for rendering raster tiles.
         // We're rounding the (floating point) x/y values to achieve to avoid rendering raster images to fractional
         // coordinates. Additionally, we adjust by half a pixel in either direction in case that viewport dimension
@@ -42477,10 +42478,10 @@ class Transform {
         // it is always <= 0.5 pixels.
         const xShift = (this.width % 2) / 2, yShift = (this.height % 2) / 2, angleCos = Math.cos(this.angle), angleSin = Math.sin(this.angle), dx = x - Math.round(x) + angleCos * xShift + angleSin * yShift, dy = y - Math.round(y) + angleCos * yShift + angleSin * xShift;
         const alignedM = new Float64Array(m);
-        performance$1.F(alignedM, alignedM, [dx > 0.5 ? dx - 1 : dx, dy > 0.5 ? dy - 1 : dy, 0]);
+        performance$1.H(alignedM, alignedM, [dx > 0.5 ? dx - 1 : dx, dy > 0.5 ? dy - 1 : dy, 0]);
         this.alignedModelViewProjectionMatrix = alignedM;
         // inverse matrix for conversion from screen coordinates to location
-        m = performance$1.ar(new Float64Array(16), this.pixelMatrix);
+        m = performance$1.as(new Float64Array(16), this.pixelMatrix);
         if (!m)
             throw new Error('failed to invert matrix');
         this.pixelMatrixInverse = m;
@@ -42494,7 +42495,7 @@ class Transform {
             return 1;
         const coord = this.pointCoordinate(new performance$1.P(0, 0));
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, 0, 1];
-        const topPoint = performance$1.ae(p, p, this.pixelMatrix);
+        const topPoint = performance$1.af(p, p, this.pixelMatrix);
         return topPoint[3] / this.cameraToCenterDistance;
     }
     /**
@@ -42559,7 +42560,7 @@ class Transform {
     lngLatToCameraDepth(lngLat, elevation) {
         const coord = this.locationCoordinate(lngLat);
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1];
-        performance$1.ae(p, p, this.modelViewProjectionMatrix);
+        performance$1.af(p, p, this.modelViewProjectionMatrix);
         return (p[2] / p[3]);
     }
 }
@@ -42724,7 +42725,7 @@ class Hash {
 
 const defaultInertiaOptions = {
     linearity: 0.3,
-    easing: performance$1.b6(0, 0, 0.3, 1),
+    easing: performance$1.b7(0, 0, 0.3, 1),
 };
 const defaultPanInertiaOptions = performance$1.e({
     deceleration: 2500,
@@ -42799,7 +42800,7 @@ class HandlerInertia {
         }
         if (deltas.bearing) {
             const result = calculateEasing(deltas.bearing, duration, defaultBearingInertiaOptions);
-            easeOptions.bearing = this._map.transform.bearing + performance$1.ab(result.amount, -179, 179);
+            easeOptions.bearing = this._map.transform.bearing + performance$1.ac(result.amount, -179, 179);
             extendDuration(easeOptions, result);
         }
         if (deltas.pitch) {
@@ -42827,7 +42828,7 @@ function extendDuration(easeOptions, result) {
 }
 function calculateEasing(amount, inertiaDuration, inertiaOptions) {
     const { maxSpeed, linearity, deceleration } = inertiaOptions;
-    const speed = performance$1.ab(amount * linearity / (inertiaDuration / 1000), -maxSpeed, maxSpeed);
+    const speed = performance$1.ac(amount * linearity / (inertiaDuration / 1000), -maxSpeed, maxSpeed);
     const duration = Math.abs(speed) / (deceleration * linearity);
     return {
         easing: inertiaOptions.easing,
@@ -44320,12 +44321,12 @@ class ScrollZoomHandler {
         const pos = DOM.mousePos(this._map.getCanvas(), e);
         const tr = this._tr;
         if (pos.y > tr.transform.height / 2 - tr.transform.getHorizon()) {
-            this._around = performance$1.L.convert(this._aroundCenter ? tr.center : tr.unproject(pos));
+            this._around = performance$1.M.convert(this._aroundCenter ? tr.center : tr.unproject(pos));
         }
         else {
             // Do not use current cursor position if above the horizon to avoid 'unproject' this point
             // as it is not mapped into 'coords' framebuffer or inversible with 'pixelMatrixInverse'.
-            this._around = performance$1.L.convert(tr.center);
+            this._around = performance$1.M.convert(tr.center);
         }
         this._aroundPoint = tr.transform.locationPoint(this._around);
         if (!this._frameId) {
@@ -44371,7 +44372,7 @@ class ScrollZoomHandler {
         if (this._type === 'wheel' && startZoom && easing && lastWheelEventTimeDiff) {
             const t = Math.min(lastWheelEventTimeDiff / 200, 1);
             const k = easing(t);
-            zoom = performance$1.x.number(startZoom, targetZoom, k);
+            zoom = performance$1.y.number(startZoom, targetZoom, k);
             if (t < 1) {
                 if (!this._frameId) {
                     this._frameId = true;
@@ -44404,7 +44405,7 @@ class ScrollZoomHandler {
         };
     }
     _smoothOutEasing(duration) {
-        let easing = performance$1.b7;
+        let easing = performance$1.b8;
         if (this._prevEase) {
             const currentEase = this._prevEase;
             const t = (browser.now() - currentEase.start) / currentEase.duration;
@@ -44412,7 +44413,7 @@ class ScrollZoomHandler {
             // Quick hack to make new bezier that is continuous with last
             const x = 0.27 / Math.sqrt(speed * speed + 0.0001) * 0.01;
             const y = Math.sqrt(0.27 * 0.27 - x * x);
-            easing = performance$1.b6(x, y, 0.25, 1);
+            easing = performance$1.b7(x, y, 0.25, 1);
         }
         this._prevEase = {
             start: browser.now(),
@@ -45379,7 +45380,7 @@ class Camera extends performance$1.E {
      * let {lng, lat} = map.getCenter();
      * ```
      */
-    getCenter() { return new performance$1.L(this.transform.center.lng, this.transform.center.lat); }
+    getCenter() { return new performance$1.M(this.transform.center.lng, this.transform.center.lat); }
     /**
      * Sets the map's geographical centerpoint. Equivalent to `jumpTo({center: center})`.
      *
@@ -45716,7 +45717,7 @@ class Camera extends performance$1.E {
         const neWorld = tr.project(bounds.getNorthEast());
         const seWorld = tr.project(bounds.getSouthEast());
         const swWorld = tr.project(bounds.getSouthWest());
-        const bearingRadians = performance$1.b8(-bearing);
+        const bearingRadians = performance$1.b9(-bearing);
         const nwRotatedWorld = nwWorld.rotate(bearingRadians);
         const neRotatedWorld = neWorld.rotate(bearingRadians);
         const seRotatedWorld = seWorld.rotate(bearingRadians);
@@ -45737,7 +45738,7 @@ class Camera extends performance$1.E {
         const paddingOffsetX = (options.padding.left - options.padding.right) / 2;
         const paddingOffsetY = (options.padding.top - options.padding.bottom) / 2;
         const paddingOffset = new performance$1.P(paddingOffsetX, paddingOffsetY);
-        const rotatedPaddingOffset = paddingOffset.rotate(performance$1.b8(bearing));
+        const rotatedPaddingOffset = paddingOffset.rotate(performance$1.b9(bearing));
         const offsetAtInitialZoom = offset.add(rotatedPaddingOffset);
         const offsetAtFinalZoom = offsetAtInitialZoom.mult(tr.scale / tr.zoomScale(zoom));
         const center = tr.unproject(
@@ -45841,7 +45842,7 @@ class Camera extends performance$1.E {
             tr.zoom = +options.zoom;
         }
         if (options.center !== undefined) {
-            tr.center = performance$1.L.convert(options.center);
+            tr.center = performance$1.M.convert(options.center);
         }
         if ('bearing' in options && tr.bearing !== +options.bearing) {
             bearingChanged = true;
@@ -45884,8 +45885,8 @@ class Camera extends performance$1.E {
      * @returns the calculated camera options
      */
     calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo = 0) {
-        const fromMerc = performance$1.X.fromLngLat(from, altitudeFrom);
-        const toMerc = performance$1.X.fromLngLat(to, altitudeTo);
+        const fromMerc = performance$1.Y.fromLngLat(from, altitudeFrom);
+        const toMerc = performance$1.Y.fromLngLat(to, altitudeTo);
         const dx = toMerc.x - fromMerc.x;
         const dy = toMerc.y - fromMerc.y;
         const dz = toMerc.z - fromMerc.z;
@@ -45927,7 +45928,7 @@ class Camera extends performance$1.E {
         options = performance$1.e({
             offset: [0, 0],
             duration: 500,
-            easing: performance$1.b7
+            easing: performance$1.b8
         }, options);
         if (options.animate === false || (!options.essential && browser.prefersReducedMotion))
             options.duration = 0;
@@ -45935,14 +45936,14 @@ class Camera extends performance$1.E {
         const offsetAsPoint = performance$1.P.convert(options.offset);
         let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
         const locationAtOffset = tr.pointLocation(pointAtOffset);
-        const { center, zoom } = tr.getConstrained(performance$1.L.convert(options.center || locationAtOffset), (_a = options.zoom) !== null && _a !== void 0 ? _a : startZoom);
+        const { center, zoom } = tr.getConstrained(performance$1.M.convert(options.center || locationAtOffset), (_a = options.zoom) !== null && _a !== void 0 ? _a : startZoom);
         this._normalizeCenter(center, tr);
         const from = tr.project(locationAtOffset);
         const delta = tr.project(center).sub(from);
         const finalScale = tr.zoomScale(zoom - startZoom);
         let around, aroundPoint;
         if (options.around) {
-            around = performance$1.L.convert(options.around);
+            around = performance$1.M.convert(options.around);
             aroundPoint = tr.locationPoint(around);
         }
         const currently = {
@@ -45961,13 +45962,13 @@ class Camera extends performance$1.E {
             this._prepareElevation(center);
         this._ease((k) => {
             if (this._zooming) {
-                tr.zoom = performance$1.x.number(startZoom, zoom, k);
+                tr.zoom = performance$1.y.number(startZoom, zoom, k);
             }
             if (this._rotating) {
-                tr.bearing = performance$1.x.number(startBearing, bearing, k);
+                tr.bearing = performance$1.y.number(startBearing, bearing, k);
             }
             if (this._pitching) {
-                tr.pitch = performance$1.x.number(startPitch, pitch, k);
+                tr.pitch = performance$1.y.number(startPitch, pitch, k);
             }
             if (this._padding) {
                 tr.interpolatePadding(startPadding, padding, k);
@@ -46029,7 +46030,7 @@ class Camera extends performance$1.E {
             this._elevationStart += k * (pitch1 - pitch2);
             this._elevationTarget = elevation;
         }
-        this.transform.elevation = performance$1.x.number(this._elevationStart, this._elevationTarget, k);
+        this.transform.elevation = performance$1.y.number(this._elevationStart, this._elevationTarget, k);
     }
     _finalizeElevation() {
         this._elevationFreeze = false;
@@ -46188,7 +46189,7 @@ class Camera extends performance$1.E {
         var _a;
         // Fall through to jumpTo if user has set prefers-reduced-motion
         if (!options.essential && browser.prefersReducedMotion) {
-            const coercedOptions = performance$1.K(options, ['center', 'zoom', 'bearing', 'pitch', 'around']);
+            const coercedOptions = performance$1.L(options, ['center', 'zoom', 'bearing', 'pitch', 'around']);
             return this.jumpTo(coercedOptions, eventData);
         }
         // This method implements an “optimal path” animation, as detailed in:
@@ -46203,7 +46204,7 @@ class Camera extends performance$1.E {
             offset: [0, 0],
             speed: 1.2,
             curve: 1.42,
-            easing: performance$1.b7
+            easing: performance$1.b8
         }, options);
         const tr = this._getTransformForUpdate(), startZoom = tr.zoom, startBearing = tr.bearing, startPitch = tr.pitch, startPadding = tr.padding;
         const bearing = 'bearing' in options ? this._normalizeBearing(options.bearing, startBearing) : startBearing;
@@ -46212,7 +46213,7 @@ class Camera extends performance$1.E {
         const offsetAsPoint = performance$1.P.convert(options.offset);
         let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
         const locationAtOffset = tr.pointLocation(pointAtOffset);
-        const { center, zoom } = tr.getConstrained(performance$1.L.convert(options.center || locationAtOffset), (_a = options.zoom) !== null && _a !== void 0 ? _a : startZoom);
+        const { center, zoom } = tr.getConstrained(performance$1.M.convert(options.center || locationAtOffset), (_a = options.zoom) !== null && _a !== void 0 ? _a : startZoom);
         this._normalizeCenter(center, tr);
         const scale = tr.zoomScale(zoom - startZoom);
         const from = tr.project(locationAtOffset);
@@ -46226,7 +46227,7 @@ class Camera extends performance$1.E {
         // the world image origin at the initial scale.
         u1 = delta.mag();
         if ('minZoom' in options) {
-            const minZoom = performance$1.ab(Math.min(options.minZoom, startZoom, zoom), tr.minZoom, tr.maxZoom);
+            const minZoom = performance$1.ac(Math.min(options.minZoom, startZoom, zoom), tr.minZoom, tr.maxZoom);
             // w<sub>m</sub>: Maximum visible span, measured in pixels with respect to the initial
             // scale.
             const wMax = w0 / tr.zoomScale(minZoom - startZoom);
@@ -46293,10 +46294,10 @@ class Camera extends performance$1.E {
             const scale = 1 / w(s);
             tr.zoom = k === 1 ? zoom : startZoom + tr.scaleZoom(scale);
             if (this._rotating) {
-                tr.bearing = performance$1.x.number(startBearing, bearing, k);
+                tr.bearing = performance$1.y.number(startBearing, bearing, k);
             }
             if (this._pitching) {
-                tr.pitch = performance$1.x.number(startPitch, pitch, k);
+                tr.pitch = performance$1.y.number(startPitch, pitch, k);
             }
             if (this._padding) {
                 tr.interpolatePadding(startPadding, padding, k);
@@ -46361,7 +46362,7 @@ class Camera extends performance$1.E {
     }
     // convert bearing so that it's numerically close to the current one so that it interpolates properly
     _normalizeBearing(bearing, currentBearing) {
-        bearing = performance$1.b1(bearing, -180, 180);
+        bearing = performance$1.b2(bearing, -180, 180);
         const diff = Math.abs(bearing - currentBearing);
         if (Math.abs(bearing - 360 - currentBearing) < diff)
             bearing -= 360;
@@ -46392,7 +46393,7 @@ class Camera extends performance$1.E {
         if (!this.terrain) {
             return null;
         }
-        const elevation = this.terrain.getElevationForLngLatZoom(performance$1.L.convert(lngLatLike), this.transform.tileZoom);
+        const elevation = this.terrain.getElevationForLngLatZoom(performance$1.M.convert(lngLatLike), this.transform.tileZoom);
         return elevation - this.transform.elevation;
     }
 }
@@ -46668,7 +46669,7 @@ class TaskQueue {
     }
 }
 
-var pos3dAttributes = performance$1.W([
+var pos3dAttributes = performance$1.X([
     { name: 'a_pos3d', type: 'Int16', components: 3 }
 ]);
 
@@ -46722,7 +46723,7 @@ class TerrainSourceCache extends performance$1.E {
             this._renderableTilesKeys.push(tileID.key);
             if (!this._tiles[tileID.key]) {
                 tileID.posMatrix = new Float64Array(16);
-                performance$1.aO(tileID.posMatrix, 0, performance$1.V, 0, performance$1.V, 0, 1);
+                performance$1.aP(tileID.posMatrix, 0, performance$1.W, 0, performance$1.W, 0, 1);
                 this._tiles[tileID.key] = new Tile(tileID, this.tileSize);
             }
         }
@@ -46770,7 +46771,7 @@ class TerrainSourceCache extends performance$1.E {
             if (_tileID.canonical.equals(tileID.canonical)) {
                 const coord = tileID.clone();
                 coord.posMatrix = new Float64Array(16);
-                performance$1.aO(coord.posMatrix, 0, performance$1.V, 0, performance$1.V, 0, 1);
+                performance$1.aP(coord.posMatrix, 0, performance$1.W, 0, performance$1.W, 0, 1);
                 coords[key] = coord;
             }
             else if (_tileID.canonical.isChildOf(tileID.canonical)) {
@@ -46779,9 +46780,9 @@ class TerrainSourceCache extends performance$1.E {
                 const dz = _tileID.canonical.z - tileID.canonical.z;
                 const dx = _tileID.canonical.x - (_tileID.canonical.x >> dz << dz);
                 const dy = _tileID.canonical.y - (_tileID.canonical.y >> dz << dz);
-                const size = performance$1.V >> dz;
-                performance$1.aO(coord.posMatrix, 0, size, 0, size, 0, 1);
-                performance$1.F(coord.posMatrix, coord.posMatrix, [-dx * size, -dy * size, 0]);
+                const size = performance$1.W >> dz;
+                performance$1.aP(coord.posMatrix, 0, size, 0, size, 0, 1);
+                performance$1.H(coord.posMatrix, coord.posMatrix, [-dx * size, -dy * size, 0]);
                 coords[key] = coord;
             }
             else if (tileID.canonical.isChildOf(_tileID.canonical)) {
@@ -46790,10 +46791,10 @@ class TerrainSourceCache extends performance$1.E {
                 const dz = tileID.canonical.z - _tileID.canonical.z;
                 const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
                 const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
-                const size = performance$1.V >> dz;
-                performance$1.aO(coord.posMatrix, 0, performance$1.V, 0, performance$1.V, 0, 1);
-                performance$1.F(coord.posMatrix, coord.posMatrix, [dx * size, dy * size, 0]);
-                performance$1.H(coord.posMatrix, coord.posMatrix, [1 / (2 ** dz), 1 / (2 ** dz), 0]);
+                const size = performance$1.W >> dz;
+                performance$1.aP(coord.posMatrix, 0, performance$1.W, 0, performance$1.W, 0, 1);
+                performance$1.H(coord.posMatrix, coord.posMatrix, [dx * size, dy * size, 0]);
+                performance$1.J(coord.posMatrix, coord.posMatrix, [1 / (2 ** dz), 1 / (2 ** dz), 0]);
                 coords[key] = coord;
             }
         }
@@ -46886,7 +46887,7 @@ class Terrain {
      * @param extent - optional, default 8192
      * @returns the elevation
      */
-    getDEMElevation(tileID, x, y, extent = performance$1.V) {
+    getDEMElevation(tileID, x, y, extent = performance$1.W) {
         var _a;
         if (!(x >= 0 && x < extent && y >= 0 && y < extent))
             return 0;
@@ -46894,7 +46895,7 @@ class Terrain {
         const dem = (_a = terrain.tile) === null || _a === void 0 ? void 0 : _a.dem;
         if (!dem)
             return 0;
-        const pos = transformMat4([], [x / extent * performance$1.V, y / extent * performance$1.V], terrain.u_terrain_matrix);
+        const pos = transformMat4([], [x / extent * performance$1.W, y / extent * performance$1.W], terrain.u_terrain_matrix);
         const coord = [pos[0] * dem.dim, pos[1] * dem.dim];
         // bilinear interpolation
         const cx = Math.floor(coord[0]), cy = Math.floor(coord[1]), tx = coord[0] - cx, ty = coord[1] - cy;
@@ -46910,10 +46911,10 @@ class Terrain {
      * @returns the elevation
      */
     getElevationForLngLatZoom(lnglat, zoom) {
-        if (!performance$1.b9(zoom, lnglat.wrap()))
+        if (!performance$1.ba(zoom, lnglat.wrap()))
             return 0;
         const { tileID, mercatorX, mercatorY } = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
-        return this.getElevation(tileID, mercatorX % performance$1.V, mercatorY % performance$1.V, performance$1.V);
+        return this.getElevation(tileID, mercatorX % performance$1.W, mercatorY % performance$1.W, performance$1.W);
     }
     /**
      * Get the elevation for given coordinate in respect of exaggeration.
@@ -46923,7 +46924,7 @@ class Terrain {
      * @param extent - optional, default 8192
      * @returns the elevation
      */
-    getElevation(tileID, x, y, extent = performance$1.V) {
+    getElevation(tileID, x, y, extent = performance$1.W) {
         return this.getDEMElevation(tileID, x, y, extent) * this.exaggeration;
     }
     /**
@@ -46941,7 +46942,7 @@ class Terrain {
             this._emptyDemUnpack = [0, 0, 0, 0];
             this._emptyDemTexture = new Texture(context, new performance$1.R({ width: 1, height: 1 }), context.gl.RGBA, { premultiply: false });
             this._emptyDemTexture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
-            this._emptyDemMatrix = performance$1.am([]);
+            this._emptyDemMatrix = performance$1.an([]);
         }
         // find covering dem tile and prepare demTexture
         const sourceTile = this.sourceCache.getSourceTile(tileID, true);
@@ -46968,8 +46969,8 @@ class Terrain {
             }
             const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
             const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
-            const demMatrix = performance$1.ba(new Float64Array(16), [1 / (performance$1.V << dz), 1 / (performance$1.V << dz), 0]);
-            performance$1.F(demMatrix, demMatrix, [dx * performance$1.V, dy * performance$1.V, 0]);
+            const demMatrix = performance$1.bb(new Float64Array(16), [1 / (performance$1.W << dz), 1 / (performance$1.W << dz), 0]);
+            performance$1.H(demMatrix, demMatrix, [dx * performance$1.W, dy * performance$1.W, 0]);
             this._demMatrixCache[tileID.key] = { matrix: demMatrix, coord: tileID };
         }
         // return uniform values & textures
@@ -47071,7 +47072,7 @@ class Terrain {
             return null;
         const coordsSize = this._coordsTextureSize;
         const worldSize = (1 << tile.tileID.canonical.z) * coordsSize;
-        return new performance$1.X((tile.tileID.canonical.x * coordsSize + x) / worldSize + tile.tileID.wrap, (tile.tileID.canonical.y * coordsSize + y) / worldSize, this.getElevation(tile.tileID, x, y, coordsSize));
+        return new performance$1.Y((tile.tileID.canonical.x * coordsSize + x) / worldSize + tile.tileID.wrap, (tile.tileID.canonical.y * coordsSize + y) / worldSize, this.getElevation(tile.tileID, x, y, coordsSize));
     }
     /**
      * Reads the depth value from the depth-framebuffer at a given screen pixel
@@ -47096,10 +47097,10 @@ class Terrain {
         if (this._mesh)
             return this._mesh;
         const context = this.painter.context;
-        const vertexArray = new performance$1.bb();
-        const indexArray = new performance$1.aW();
+        const vertexArray = new performance$1.bc();
+        const indexArray = new performance$1.aX();
         const meshSize = this.meshSize;
-        const delta = performance$1.V / meshSize;
+        const delta = performance$1.W / meshSize;
         const meshSize2 = meshSize * meshSize;
         for (let y = 0; y <= meshSize; y++)
             for (let x = 0; x <= meshSize; x++)
@@ -47115,7 +47116,7 @@ class Terrain {
         for (const y of [0, 1])
             for (let x = 0; x <= meshSize; x++)
                 for (const z of [0, 1])
-                    vertexArray.emplaceBack(x * delta, y * performance$1.V, z);
+                    vertexArray.emplaceBack(x * delta, y * performance$1.W, z);
         for (let x = 0; x < meshSize * 2; x += 2) {
             indexArray.emplaceBack(offsetBottom + x, offsetBottom + x + 1, offsetBottom + x + 3);
             indexArray.emplaceBack(offsetBottom + x, offsetBottom + x + 3, offsetBottom + x + 2);
@@ -47126,14 +47127,14 @@ class Terrain {
         for (const x of [0, 1])
             for (let y = 0; y <= meshSize; y++)
                 for (const z of [0, 1])
-                    vertexArray.emplaceBack(x * performance$1.V, y * delta, z);
+                    vertexArray.emplaceBack(x * performance$1.W, y * delta, z);
         for (let y = 0; y < meshSize * 2; y += 2) {
             indexArray.emplaceBack(offsetLeft + y, offsetLeft + y + 1, offsetLeft + y + 3);
             indexArray.emplaceBack(offsetLeft + y, offsetLeft + y + 3, offsetLeft + y + 2);
             indexArray.emplaceBack(offsetRight + y, offsetRight + y + 3, offsetRight + y + 1);
             indexArray.emplaceBack(offsetRight + y, offsetRight + y + 2, offsetRight + y + 3);
         }
-        this._mesh = new Mesh(context.createVertexBuffer(vertexArray, pos3dAttributes.members), context.createIndexBuffer(indexArray), performance$1.Z.simpleSegment(0, 0, vertexArray.length, indexArray.length));
+        this._mesh = new Mesh(context.createVertexBuffer(vertexArray, pos3dAttributes.members), context.createIndexBuffer(indexArray), performance$1.$.simpleSegment(0, 0, vertexArray.length, indexArray.length));
         return this._mesh;
     }
     /**
@@ -47144,7 +47145,7 @@ class Terrain {
      */
     getMeshFrameDelta(zoom) {
         // divide by 5 is evaluated by trial & error to get a frame in the right height
-        return 2 * Math.PI * performance$1.bc / Math.pow(2, zoom) / 5;
+        return 2 * Math.PI * performance$1.bd / Math.pow(2, zoom) / 5;
     }
     getMinTileElevationForLngLatZoom(lnglat, zoom) {
         var _a;
@@ -47169,12 +47170,12 @@ class Terrain {
         return minMax;
     }
     _getOverscaledTileIDFromLngLatZoom(lnglat, zoom) {
-        const mercatorCoordinate = performance$1.X.fromLngLat(lnglat.wrap());
-        const worldSize = (1 << zoom) * performance$1.V;
+        const mercatorCoordinate = performance$1.Y.fromLngLat(lnglat.wrap());
+        const worldSize = (1 << zoom) * performance$1.W;
         const mercatorX = mercatorCoordinate.x * worldSize;
         const mercatorY = mercatorCoordinate.y * worldSize;
-        const tileX = Math.floor(mercatorX / performance$1.V), tileY = Math.floor(mercatorY / performance$1.V);
-        const tileID = new performance$1.O(zoom, 0, zoom, tileX, tileY);
+        const tileX = Math.floor(mercatorX / performance$1.W), tileY = Math.floor(mercatorY / performance$1.W);
+        const tileID = new performance$1.Q(zoom, 0, zoom, tileX, tileY);
         return {
             tileID,
             mercatorX,
@@ -47370,7 +47371,7 @@ class RenderToTexture {
                 tile.rtt[stack] = { id: obj.id, stamp: obj.stamp };
                 // prepare PoolObject for rendering
                 painter.context.bindFramebuffer.set(obj.fbo.framebuffer);
-                painter.context.clear({ color: performance$1.aL.transparent, stencil: 0 });
+                painter.context.clear({ color: performance$1.aM.transparent, stencil: 0 });
                 painter.currentStencilSource = undefined;
                 for (let l = 0; l < layers.length; l++) {
                     const layer = painter.style._layers[layers[l]];
@@ -47500,7 +47501,7 @@ const defaultOptions$4 = {
  */
 let Map$1 = class Map extends Camera {
     constructor(options) {
-        performance$1.bd.mark(performance$1.be.create);
+        performance$1.be.mark(performance$1.bf.create);
         const resolvedOptions = Object.assign(Object.assign({}, defaultOptions$4), options);
         if (resolvedOptions.minZoom != null && resolvedOptions.maxZoom != null && resolvedOptions.minZoom > resolvedOptions.maxZoom) {
             throw new Error('maxZoom must be greater than or equal to minZoom');
@@ -47520,7 +47521,7 @@ let Map$1 = class Map extends Camera {
         this._crossFadingFactor = 1;
         this._renderTaskQueue = new TaskQueue();
         this._controls = [];
-        this._mapId = performance$1.a2();
+        this._mapId = performance$1.a3();
         this._contextLost = (event) => {
             event.preventDefault();
             if (this._frameRequest) {
@@ -48067,7 +48068,7 @@ let Map$1 = class Map extends Camera {
      * ```
      */
     project(lnglat) {
-        return this.transform.locationPoint(performance$1.L.convert(lnglat), this.style && this.terrain);
+        return this.transform.locationPoint(performance$1.M.convert(lnglat), this.style && this.terrain);
     }
     /**
      * Returns a {@link LngLat} representing geographical coordinates that correspond
@@ -49621,7 +49622,7 @@ let Map$1 = class Map extends Camera {
             const zoom = this.transform.zoom;
             const now = browser.now();
             this.style.zoomHistory.update(zoom, now);
-            const parameters = new performance$1.a7(zoom, {
+            const parameters = new performance$1.a8(zoom, {
                 now,
                 fadeDuration,
                 zoomHistory: this.style.zoomHistory,
@@ -49667,7 +49668,7 @@ let Map$1 = class Map extends Camera {
         this.fire(new performance$1.k('render'));
         if (this.loaded() && !this._loaded) {
             this._loaded = true;
-            performance$1.bd.mark(performance$1.be.load);
+            performance$1.be.mark(performance$1.bf.load);
             this.fire(new performance$1.k('load'));
         }
         if (this.style && (this.style.hasTransitions() || crossFading)) {
@@ -49693,7 +49694,7 @@ let Map$1 = class Map extends Camera {
         }
         if (this._loaded && !this._fullyLoaded && !somethingDirty) {
             this._fullyLoaded = true;
-            performance$1.bd.mark(performance$1.be.fullLoad);
+            performance$1.be.mark(performance$1.bf.fullLoad);
         }
         return this;
     }
@@ -49753,7 +49754,7 @@ let Map$1 = class Map extends Camera {
         DOM.remove(this._canvasContainer);
         DOM.remove(this._controlContainer);
         this._container.classList.remove('maplibregl-map');
-        performance$1.bd.clearMetrics();
+        performance$1.be.clearMetrics();
         this._removed = true;
         this.fire(new performance$1.k('remove'));
     }
@@ -49772,7 +49773,7 @@ let Map$1 = class Map extends Camera {
         if (this.style && !this._frameRequest) {
             this._frameRequest = new AbortController();
             browser.frameAsync(this._frameRequest).then((paintStartTimeStamp) => {
-                performance$1.bd.frame(paintStartTimeStamp);
+                performance$1.be.frame(paintStartTimeStamp);
                 this._frameRequest = null;
                 this._render(paintStartTimeStamp);
             }).catch(() => { }); // ignore abort error
@@ -50174,14 +50175,14 @@ function checkGeolocationSupport() {
  * should wrap just enough to avoid doing so.
  */
 function smartWrap(lngLat, priorPos, transform) {
-    const originalLngLat = new performance$1.L(lngLat.lng, lngLat.lat);
-    lngLat = new performance$1.L(lngLat.lng, lngLat.lat);
+    const originalLngLat = new performance$1.M(lngLat.lng, lngLat.lat);
+    lngLat = new performance$1.M(lngLat.lng, lngLat.lat);
     // First, try shifting one world in either direction, and see if either is closer to the
     // prior position. This preserves object constancy when the map center is auto-wrapped
     // during animations.
     if (priorPos) {
-        const left = new performance$1.L(lngLat.lng - 360, lngLat.lat);
-        const right = new performance$1.L(lngLat.lng + 360, lngLat.lat);
+        const left = new performance$1.M(lngLat.lng - 360, lngLat.lat);
+        const right = new performance$1.M(lngLat.lng + 360, lngLat.lat);
         const delta = transform.locationPoint(lngLat).distSqr(priorPos);
         if (transform.locationPoint(left).distSqr(priorPos) < delta) {
             lngLat = left;
@@ -50593,7 +50594,7 @@ class Marker extends performance$1.E {
      * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-marker/)
      */
     setLngLat(lnglat) {
-        this._lngLat = performance$1.L.convert(lnglat);
+        this._lngLat = performance$1.M.convert(lnglat);
         this._pos = null;
         if (this._popup)
             this._popup.setLngLat(this._lngLat);
@@ -51176,7 +51177,7 @@ class GeolocateControl extends performance$1.E {
          * @param position - the Geolocation API Position
          */
         this._updateCamera = (position) => {
-            const center = new performance$1.L(position.coords.longitude, position.coords.latitude);
+            const center = new performance$1.M(position.coords.longitude, position.coords.latitude);
             const radius = position.coords.accuracy;
             const bearing = this._map.getBearing();
             const options = performance$1.e({ bearing }, this.options.fitBoundsOptions);
@@ -51192,7 +51193,7 @@ class GeolocateControl extends performance$1.E {
          */
         this._updateMarker = (position) => {
             if (position) {
-                const center = new performance$1.L(position.coords.longitude, position.coords.latitude);
+                const center = new performance$1.M(position.coords.longitude, position.coords.latitude);
                 this._accuracyCircleMarker.setLngLat(center).addTo(this._map);
                 this._userLocationDotMarker.setLngLat(center).addTo(this._map);
                 this._accuracy = position.coords.accuracy;
@@ -52113,7 +52114,7 @@ class Popup extends performance$1.E {
      * @param lnglat - The geographical location to set as the popup's anchor.
      */
     setLngLat(lnglat) {
-        this._lngLat = performance$1.L.convert(lnglat);
+        this._lngLat = performance$1.M.convert(lnglat);
         this._pos = null;
         this._flatPos = null;
         this._trackPointer = false;
@@ -52541,14 +52542,14 @@ function setWorkerUrl(value) { performance$1.a.WORKER_URL = value; }
  */
 function importScriptInWorkers(workerUrl) { return getGlobalDispatcher().broadcast("IS" /* MessageType.importScript */, workerUrl); }
 
-exports.AJAXError = performance$1.bf;
+exports.AJAXError = performance$1.bg;
 exports.Evented = performance$1.E;
-exports.LngLat = performance$1.L;
-exports.MercatorCoordinate = performance$1.X;
+exports.LngLat = performance$1.M;
+exports.MercatorCoordinate = performance$1.Y;
 exports.Point = performance$1.P;
-exports.addProtocol = performance$1.bg;
+exports.addProtocol = performance$1.bh;
 exports.config = performance$1.a;
-exports.removeProtocol = performance$1.bh;
+exports.removeProtocol = performance$1.bi;
 exports.AttributionControl = AttributionControl;
 exports.BoxZoomHandler = BoxZoomHandler;
 exports.CanvasSource = CanvasSource;
