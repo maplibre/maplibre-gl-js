@@ -434,6 +434,21 @@ describe('map events', () => {
         expect(spy).toHaveBeenCalledTimes(1);
     });
 
+    test('Map#off removes listener registered with Map#once', () => {
+        const map = createMap();
+
+        jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
+
+        const spy = jest.fn();
+
+        map.once('click', 'layer', spy);
+        map.off('click', 'layer', spy);
+        simulate.click(map.getCanvas());
+
+        expect(spy).not.toHaveBeenCalled();
+    });
+
     (['mouseenter', 'mouseover'] as (keyof MapLayerEventType)[]).forEach((event) => {
         test(`Map#on ${event} does not fire if the specified layer does not exist`, () => {
             const map = createMap();
