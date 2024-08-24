@@ -1264,7 +1264,7 @@ export class Map extends Camera {
 
     _removeDelegatedListener(type: string, layerIds: string[], listener: Listener) {
         if (!this._delegatedListeners || !this._delegatedListeners[type]) {
-            return this;
+            return;
         }
 
         const listeners = this._delegatedListeners[type];
@@ -1279,7 +1279,7 @@ export class Map extends Camera {
                     this.off(event, delegatedListener.delegates[event]);
                 }
                 listeners.splice(i, 1);
-                return this;
+                return;
             }
         }
     }
