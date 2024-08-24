@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Support multiple layers in `map.on`, `map.once` and `map.off` methods ([#4279](https://github.com/maplibre/maplibre-gl-js/pull/4401))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
