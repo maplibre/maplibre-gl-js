@@ -55,10 +55,19 @@ export class Sky extends Evented {
         this._transitionable = new Transitionable(properties);
         this.setSky(sky);
         this._transitioning = this._transitionable.untransitioned();
+        this.recalculate(new EvaluationParameters(0));
     }
 
     setSky(sky?: SkySpecification, options: StyleSetterOptions = {}) {
         if (this._validate(validateSky, sky, options)) return;
+
+        if (!sky) {
+            sky = {
+                'sky-color': 'transparent',
+                'horizon-color': 'transparent',
+                'fog-color': 'transparent',
+            };
+        }
 
         for (const name in sky) {
             const value = sky[name];

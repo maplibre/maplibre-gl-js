@@ -25,6 +25,7 @@
 <body>
 <div id="map"></div>
 <table id="listing-group" class="listing-group">
+    <tr><td><label for="sky-enabled">enabled</label></td><td><input type="checkbox" id="sky-enabled" checked/></td></tr>
     <tr><td><label for="sky-color-picker">sky-color</label></td><td><input type="color" id="sky-color-picker" value="#0000ff" style="width: 100%"/></td></tr>
     <tr><td><label for="horizon-color-picker">horizon-color</label></td><td><input type="color" id="horizon-color-picker" value="#00ff00" style="width: 100%"/></td></tr>
     <tr><td><label for="fog-color-picker">fog-color</label></td><td><input type="color" id="fog-color-picker" value="#ff0000" style="width: 100%"/></td></tr>
@@ -34,6 +35,10 @@
 </table>
 <script>
     function setSkyFromUi() {
+        if (!document.getElementById('sky-enabled').checked) {
+            map.setSky(undefined);
+            return;
+        }
         map.setSky({
             'sky-color': document.getElementById('sky-color-picker').value,
             'sky-horizon-blend': +document.getElementById('sky-horizon-blend-slider').value,
@@ -116,6 +121,7 @@
         document.getElementById('sky-horizon-blend-slider').addEventListener('change', setSkyFromUi);
         document.getElementById('horizon-fog-blend-slider').addEventListener('change', setSkyFromUi);
         document.getElementById('fog-ground-blend-slider').addEventListener('change', setSkyFromUi);
+        document.getElementById('sky-enabled').addEventListener('change', setSkyFromUi);
         setSkyFromUi();
     });
 </script>
