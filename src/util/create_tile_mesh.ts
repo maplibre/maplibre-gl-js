@@ -8,6 +8,13 @@ import posAttributes from '../data/pos_attributes';
 
 const EXTENT_STENCIL_BORDER = EXTENT / 128;
 
+/**
+ * Options for generating a tile mesh.
+ * Can optionally configure any of the following:
+ * - mesh subdivision granularity
+ * - border presence
+ * - special geometry for the north and/or south pole
+ */
 export type CreateTileMeshOptions = {
     /**
      * Specifies how much should the tile mesh be subdivided.
@@ -30,9 +37,22 @@ export type CreateTileMeshOptions = {
     extendToSouthPole?: boolean;
 };
 
+/**
+ * Stores the prepared vertex and index buffer bytes for a mesh.
+ */
 export type TileMesh<T extends Uint16Array | Uint32Array> = {
+    /**
+     * The vertex data. Each vertex is two 16 bit signed integers, one for X, one for Y.
+     */
     vertices: Int16Array;
+    /**
+     * The index data. Each triangle is defined by three indices. The indices may either be 16 bit or 32 bit unsigned integers,
+     * depending on the mesh creation arguments and on whether the mesh can fit into 16 bit indices.
+     */
     indices: T;
+    /**
+     * A helper boolean indicating whether the indices are 32 bit.
+     */
     uses32bitIndices: T extends Uint32Array ? true : false;
 };
 
