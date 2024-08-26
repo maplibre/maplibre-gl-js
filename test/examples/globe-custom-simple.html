@@ -189,7 +189,7 @@
 
         // method fired on each animation frame
         render (gl, args) {
-            const program = this.getShader(gl, args.shader);
+            const program = this.getShader(gl, args.shaderData);
             gl.useProgram(program);
             gl.uniformMatrix4fv(
                 gl.getUniformLocation(program, 'u_projection_fallback_matrix'),

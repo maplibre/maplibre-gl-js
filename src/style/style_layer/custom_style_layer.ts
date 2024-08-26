@@ -39,7 +39,7 @@ export type CustomRenderMethodInput = {
     /**
      * Data required for picking and compiling a custom shader for the current projection.
      */
-    shader: {
+    shaderData: {
         /**
          * Name of the shader variant that should be used.
          * Depends on current projection.

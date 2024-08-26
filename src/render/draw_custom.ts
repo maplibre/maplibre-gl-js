@@ -20,7 +20,7 @@ export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: Cu
         fov: transform.fov * Math.PI / 180, // fov converted to radians
         modelViewProjectionMatrix: transform.modelViewProjectionMatrix,
         projectionMatrix: transform.projectionMatrix,
-        shader: {
+        shaderData: {
             variantName: projection.shaderVariantName,
             vertexShaderPrelude: `const float PI = 3.141592653589793;\nuniform mat4 u_projection_matrix;\n${projection.shaderPreludeCode.vertexSource}`,
             define: projection.shaderDefine,
