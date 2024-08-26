@@ -66,11 +66,13 @@ export type IndicesType = '32bit' | '16bit' | undefined;
  * Creates a mesh of a quad that covers the entire tile (covering positions in range 0..EXTENT),
  * is optionally subdivided into finer quads, optionally includes a border
  * and optionally extends to the north and/or special pole vertices.
+ * Also allocates and populates WebGL buffers for the mesh.
+ * Forces 16 bit indices that are used throughout MapLibre.
  * @param context - The WebGL context wrapper.
  * @param options - Specify options for tile mesh creation such as granularity or border.
  * @returns The mesh vertices and indices, already allocated and uploaded into WebGL buffers.
  */
-export function createTileMeshInternal(context: Context, options: CreateTileMeshOptions): Mesh {
+export function createTileMeshWithBuffers(context: Context, options: CreateTileMeshOptions): Mesh {
     const tileMesh = createTileMesh(options, '16bit');
     const vertices = PosArray.deserialize({
         arrayBuffer: tileMesh.vertices,

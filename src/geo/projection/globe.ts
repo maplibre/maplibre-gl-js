@@ -9,7 +9,7 @@ import type {Projection, ProjectionGPUContext, TileMeshUsage} from './projection
 import {PreparedShader, shaders} from '../../shaders/shaders';
 import {MercatorProjection} from './mercator';
 import {ProjectionErrorMeasurement} from './globe_projection_error_measurement';
-import {createTileMeshInternal, CreateTileMeshOptions} from '../../util/create_tile_mesh';
+import {createTileMeshWithBuffers, CreateTileMeshOptions} from '../../util/create_tile_mesh';
 
 export const globeConstants = {
     /**
@@ -189,7 +189,7 @@ export class GlobeProjection implements Projection {
             return this._tileMeshCache[key];
         }
 
-        const mesh = createTileMeshInternal(context, options);
+        const mesh = createTileMeshWithBuffers(context, options);
         this._tileMeshCache[key] = mesh;
         return mesh;
     }
