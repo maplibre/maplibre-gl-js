@@ -2629,6 +2629,24 @@ describe('Style#serialize', () => {
         expect(style.getSky()).toBeUndefined();
     });
 
+    test('sky should be defined even after setting it to undefined and back', async () => {
+        const sky: SkySpecification = {
+            'horizon-fog-blend': 0.5,
+            'fog-color': '#fff'
+        };
+        const styleJson = createStyleJSON({sky});
+        const style = new Style(getStubMap());
+        style.loadJSON(styleJson);
+
+        await style.once('style.load');
+        style.setSky(undefined);
+        expect(style.serialize().sky).toBeUndefined();
+        style.setSky(sky);
+        expect(style.serialize().sky).toBeDefined();
+        style.setSky(undefined);
+        expect(style.serialize().sky).toBeUndefined();
+    });
+
     test('do not include sky property after removing sky from the map', async () => {
         const sky: SkySpecification = {
             'horizon-fog-blend': 0.5,

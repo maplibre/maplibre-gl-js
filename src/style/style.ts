@@ -1522,18 +1522,21 @@ export class Style extends Evented {
 
     setSky(skyOptions?: SkySpecification, options: StyleSetterOptions = {}) {
         this._checkLoaded();
+        const sky = this.getSky();
 
-        const sky = this.sky.getSky();
         let update = false;
-        if (!skyOptions) {
-            if (sky) {
-                update = true;
-            }
-        }
-        for (const key in skyOptions) {
-            if (!deepEqual(skyOptions[key], sky[key])) {
-                update = true;
-                break;
+        if (!skyOptions && !sky) return;
+
+        if (skyOptions && !sky) {
+            update = true;
+        } else if (!skyOptions && sky) {
+            update = true;
+        } else {
+            for (const key in skyOptions) {
+                if (!deepEqual(skyOptions[key], sky[key])) {
+                    update = true;
+                    break;
+                }
             }
         }
         if (!update) return;
