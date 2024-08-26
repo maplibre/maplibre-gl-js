@@ -48,6 +48,14 @@ export type FeatureKey = {
     overlapMode: OverlapMode;
 };
 
+type ProjectedBox = {
+    /**
+     * The AABB in the format [minX, minY, maxX, maxY].
+     */
+    box: [number, number, number, number];
+    allPointsOccluded: boolean;
+};
+
 /**
  * @internal
  * A collision index used to prevent symbols from overlapping. It keep tracks of
@@ -118,18 +126,37 @@ export class CollisionIndex {
             getElevation
         );
 
-        const projectedBox = this._projectCollisionBox(
-            collisionBox,
-            textPixelRatio,
-            posMatrix,
-            unwrappedTileID,
-            pitchWithMap,
-            rotateWithMap,
-            translation,
-            projectedPoint,
-            getElevation,
-            shift
-        );
+        const tileToViewport = textPixelRatio * projectedPoint.perspectiveRatio;
+
+        let projectedBox: ProjectedBox;
+
+        if (!pitchWithMap && !rotateWithMap) {
+            // Fast path for common symbols
+            const shiftX = shift ? shift.x * tileToViewport : 0;
+            const shiftY = shift ? shift.y * tileToViewport : 0;
+            projectedBox = {
+                allPointsOccluded: false,
+                box: [
+                    projectedPoint.point.x + collisionBox.x1 * tileToViewport + shiftX,
+                    projectedPoint.point.y + collisionBox.y1 * tileToViewport + shiftY,
+                    projectedPoint.point.x + collisionBox.x2 * tileToViewport + shiftX,
+                    projectedPoint.point.y + collisionBox.y2 * tileToViewport + shiftY,
+                ]
+            };
+        } else {
+            projectedBox = this._projectCollisionBox(
+                collisionBox,
+                tileToViewport,
+                posMatrix,
+                unwrappedTileID,
+                pitchWithMap,
+                rotateWithMap,
+                translation,
+                projectedPoint,
+                getElevation,
+                shift
+            );
+        }
 
         const [tlX, tlY, brX, brY] = projectedBox.box;
 
@@ -457,7 +484,7 @@ export class CollisionIndex {
      */
     private _projectCollisionBox(
         collisionBox: SingleCollisionBox,
-        textPixelRatio: number,
+        tileToViewport: number,
         posMatrix: mat4,
         unwrappedTileID: UnwrappedTileID,
         pitchWithMap: boolean,
@@ -466,12 +493,7 @@ export class CollisionIndex {
         projectedPoint: {point: Point; perspectiveRatio: number; signedDistanceFromCamera: number},
         getElevation?: (x: number, y: number) => number,
         shift?: Point
-    ): {
-            box: [number, number, number, number];
-            allPointsOccluded: boolean;
-        } {
-
-        const tileToViewport = textPixelRatio * projectedPoint.perspectiveRatio;
+    ): ProjectedBox {
 
         // These vectors are valid both for screen space viewport-rotation-aligned texts and for pitch-align: map texts that are map-rotation-aligned.
         let vecEast = new Point(1, 0);
