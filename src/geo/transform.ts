@@ -787,7 +787,7 @@ export class Transform {
         let scaleX = 0;
         const {x: screenWidth, y: screenHeight} = this.size;
 
-        if (this.latRange) {
+        if (this.latRange && this._renderWorldCopies) {
             const latRange = this.latRange;
             minY = mercatorYfromLat(latRange[1]) * worldSize;
             maxY = mercatorYfromLat(latRange[0]) * worldSize;
@@ -795,7 +795,7 @@ export class Transform {
             if (shouldZoomIn) scaleY = screenHeight / (maxY - minY);
         }
 
-        if (lngRange) {
+        if (lngRange && this._renderWorldCopies) {
             minX = wrap(
                 mercatorXfromLng(lngRange[0]) * worldSize,
                 0,
@@ -820,16 +820,20 @@ export class Transform {
 
         if (scale) {
             // zoom in to exclude all beyond the given lng/lat ranges
-            const newPoint = new Point(
-                scaleX ? (maxX + minX) / 2 : originalX,
-                scaleY ? (maxY + minY) / 2 : originalY);
+            const pointX = !this._renderWorldCopies
+                ? originalX
+                : scaleX ? (maxX + minX) / 2 : originalX;
+            const pointY = !this._renderWorldCopies
+                ? originalY
+                : scaleY ? (maxY + minY) / 2 : originalY;
+            const newPoint = new Point(pointX, pointY);
             result.center = this.unproject.call({worldSize}, newPoint).wrap();
             result.zoom += this.scaleZoom(scale);
             return result;
         }
 
         if (this.latRange) {
-            const h2 = screenHeight / 2;
+            const h2 = !this._renderWorldCopies ? 1e-10 : screenHeight / 2;
             if (originalY - h2 < minY) modifiedY = minY + h2;
             if (originalY + h2 > maxY) modifiedY = maxY - h2;
         }
@@ -840,7 +844,7 @@ export class Transform {
             if (this._renderWorldCopies) {
                 wrappedX = wrap(originalX, centerX - worldSize / 2, centerX + worldSize / 2);
             }
-            const w2 = screenWidth / 2;
+            const w2 = !this._renderWorldCopies ? 1e-10 : screenWidth / 2;
 
             if (wrappedX - w2 < minX) modifiedX = minX + w2;
             if (wrappedX + w2 > maxX) modifiedX = maxX - w2;
