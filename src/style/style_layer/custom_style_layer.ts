@@ -48,13 +48,36 @@ export type CustomRenderMethodInput = {
          */
         variantName: string;
         /**
-         * The prelude code to add to the vertex shader to access MapLibre's projection function.
+         * The prelude code to add to the vertex shader to access MapLibre's `projectTile` projection function.
          * Depends on current projection.
+         * @example
+         * ```
+         * const vertexSource = `#version 300 es
+         * ${shaderDescription.vertexShaderPrelude}
+         * ${shaderDescription.define}
+         * in vec2 a_pos;
+         * void main() {
+         *     gl_Position = projectTile(a_pos);
+         * }`;
+         * ```
          */
         vertexShaderPrelude: string;
         /**
          * Defines to add to the shader code.
          * Depends on current projection.
+         * @example
+         * ```
+         * const vertexSource = `#version 300 es
+         * ${shaderDescription.vertexShaderPrelude}
+         * ${shaderDescription.define}
+         * in vec2 a_pos;
+         * void main() {
+         *     gl_Position = projectTile(a_pos);
+         *     #ifdef GLOBE
+         *     // Do globe-specific things
+         *     #endif
+         * }`;
+         * ```
          */
         define: string;
     };
