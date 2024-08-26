@@ -501,7 +501,7 @@ export class Painter {
         this.clearStencil();
 
         // draw sky first to not overwrite symbols
-        if (this.style.stylesheet?.sky) drawSky(this, this.style.sky);
+        if (this.style.sky) drawSky(this, this.style.sky);
 
         this._showOverdrawInspector = options.showOverdrawInspector;
         this.depthRangeFor3D = [0, 1 - ((style._order.length + 2) * this.numSublayers * this.depthEpsilon)];

@@ -1,14 +1,26 @@
 ## main
 
 ### ✨ Features and improvements
-- Add constants `MAX_TILE_ZOOM = 25` and `MIN_TILE_ZOOM = 0` as maximum and minimum world tile zoom (Z) values; replace hardcoded instances with those constants.
-- Add functions `isInBoundsForTileZoomXY` and `isInBoundsForZoomLngLat` to check whether a tile ZXY or a zoom+LngLat is in the world bounds; use `MAX_TILE_ZOOM` and `MIN_TILE_ZOOM` in those checks; replace existing hardcoded checks with those functions.
+- Support multiple layers in `map.on`, `map.once` and `map.off` methods ([#4279](https://github.com/maplibre/maplibre-gl-js/pull/4401))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+
+- Heatmap Fix for 3D terrain ([#4571](https://github.com/maplibre/maplibre-gl-js/pull/4571))
+- _...Add new stuff here..._
+
+## 4.6.0
+
+### ✨ Features and improvements
+
+- Prefer local glyph rendering for all CJKV characters, not just those in the CJK Unified Ideographs, Hiragana, Katakana, and Hangul Syllables blocks. ([#4560](https://github.com/maplibre/maplibre-gl-js/pull/4560)))
+
+### 🐞 Bug fixes
+
 - Fix right-to-left layout of labels that contain characters in the Arabic Extended-B code block. ([#4536](https://github.com/maplibre/maplibre-gl-js/pull/4536))
 - Fix 3D map freezing when camera is adjusted against map bounds. ([#4537](https://github.com/maplibre/maplibre-gl-js/issues/4537))
-- - _...Add new stuff here..._
+- Fix `getStyle()` to return a clone so the object cannot be internally changed ([#4488](https://github.com/maplibre/maplibre-gl-js/issues/4488))
+- Fix issues with setting sky to `undefined` ([#4587](https://github.com/maplibre/maplibre-gl-js/pull/4587)))
 
 ## 4.5.2
 
