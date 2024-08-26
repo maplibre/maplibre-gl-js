@@ -187,7 +187,7 @@
                         scale: sceneOriginMercator.meterInMercatorCoordinateUnits()
                     };
 
-                    const m = new THREE.Matrix4().fromArray(args.defaultProjectionData.projectionMatrix);
+                    const m = new THREE.Matrix4().fromArray(args.defaultProjectionData.mainMatrix);
                     const l = new THREE.Matrix4()
                         .makeTranslation(sceneTransform.translateX, sceneTransform.translateY, sceneTransform.translateZ)
                         .scale(new THREE.Vector3(sceneTransform.scale, -sceneTransform.scale, sceneTransform.scale));

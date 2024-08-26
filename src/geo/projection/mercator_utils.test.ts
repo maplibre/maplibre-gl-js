@@ -41,20 +41,20 @@ describe('mercator utils', () => {
             const mat = mat4.create();
             mat[0] = 1234;
             const projectionData = getBasicProjectionData(new OverscaledTileID(0, 0, 0, 0, 0), mat);
-            expect(projectionData.projectionFallbackMatrix).toEqual(mat);
+            expect(projectionData.fallbackMatrix).toEqual(mat);
         });
 
         test('mercator tile extents are set', () => {
             let projectionData: ProjectionData;
 
             projectionData = getBasicProjectionData(new OverscaledTileID(0, 0, 0, 0, 0));
-            expectToBeCloseToArray(projectionData.projectionTileMercatorCoords, [0, 0, 1 / EXTENT, 1 / EXTENT]);
+            expectToBeCloseToArray(projectionData.tileMercatorCoords, [0, 0, 1 / EXTENT, 1 / EXTENT]);
 
             projectionData = getBasicProjectionData(new OverscaledTileID(1, 0, 1, 0, 0));
-            expectToBeCloseToArray(projectionData.projectionTileMercatorCoords, [0, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
+            expectToBeCloseToArray(projectionData.tileMercatorCoords, [0, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
 
             projectionData = getBasicProjectionData(new OverscaledTileID(1, 0, 1, 1, 0));
-            expectToBeCloseToArray(projectionData.projectionTileMercatorCoords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
+            expectToBeCloseToArray(projectionData.tileMercatorCoords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
         });
     });
 

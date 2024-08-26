@@ -233,11 +233,11 @@ export class Painter {
         mat4.scale(matrix, matrix, [gl.drawingBufferWidth, gl.drawingBufferHeight, 0]);
 
         const projectionData: ProjectionData = {
-            projectionMatrix: matrix,
-            projectionTileMercatorCoords: [0, 0, 1, 1],
-            projectionClippingPlane: [0, 0, 0, 0],
+            mainMatrix: matrix,
+            tileMercatorCoords: [0, 0, 1, 1],
+            clippingPlane: [0, 0, 0, 0],
             projectionTransition: 0.0,
-            projectionFallbackMatrix: matrix,
+            fallbackMatrix: matrix,
         };
 
         // Note: we force a simple mercator projection for the shader, since we want to draw a fullscreen quad.

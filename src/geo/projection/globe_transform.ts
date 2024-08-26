@@ -445,10 +445,10 @@ export class GlobeTransform implements ITransform {
 
         // Set 'projectionMatrix' to actual globe transform
         if (this._globeRendering) {
-            data.projectionMatrix = this._globeViewProjMatrix;
+            data.mainMatrix = this._globeViewProjMatrix;
         }
 
-        data.projectionClippingPlane = this._cachedClippingPlane as [number, number, number, number];
+        data.clippingPlane = this._cachedClippingPlane as [number, number, number, number];
         data.projectionTransition = this._globeness;
 
         return data;
@@ -1158,7 +1158,7 @@ export class GlobeTransform implements ITransform {
 
     getProjectionDataForCustomLayer(): ProjectionData {
         const projectionData = this.getProjectionData(new OverscaledTileID(0, 0, 0, 0, 0));
-        projectionData.projectionTileMercatorCoords = [0, 0, 1, 1];
+        projectionData.tileMercatorCoords = [0, 0, 1, 1];
 
         // Even though we requested projection data for the mercator base tile which covers the entire mercator range,
         // the shader projection machinery still expects inputs to be in tile units range [0..EXTENT].
@@ -1167,9 +1167,9 @@ export class GlobeTransform implements ITransform {
         // Note that the regular projection matrices do not need to be modified, since the rescaling happens by setting
         // the `u_projection_tile_mercator_coords` uniform correctly.
         const fallbackMatrixScaled = createMat4f64();
-        mat4.scale(fallbackMatrixScaled, projectionData.projectionFallbackMatrix, [EXTENT, EXTENT, 1]);
+        mat4.scale(fallbackMatrixScaled, projectionData.fallbackMatrix, [EXTENT, EXTENT, 1]);
 
-        projectionData.projectionFallbackMatrix = fallbackMatrixScaled;
+        projectionData.fallbackMatrix = fallbackMatrixScaled;
         return projectionData;
     }
 }

@@ -24,9 +24,9 @@ export const projectionUniforms = (context: Context, locations: UniformLocations
  * Maps a field name in {@link ProjectionData} to its corresponding uniform name in {@link ProjectionPreludeUniformsType}.
  */
 export const projectionObjectToUniformMap: {[field in keyof ProjectionData]: keyof ProjectionPreludeUniformsType} = {
-    projectionMatrix: 'u_projection_matrix',
-    projectionTileMercatorCoords: 'u_projection_tile_mercator_coords',
-    projectionClippingPlane: 'u_projection_clipping_plane',
+    mainMatrix: 'u_projection_matrix',
+    tileMercatorCoords: 'u_projection_tile_mercator_coords',
+    clippingPlane: 'u_projection_clipping_plane',
     projectionTransition: 'u_projection_transition',
-    projectionFallbackMatrix: 'u_projection_fallback_matrix',
+    fallbackMatrix: 'u_projection_fallback_matrix',
 };

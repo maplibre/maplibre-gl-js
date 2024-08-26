@@ -141,7 +141,7 @@
             this.map = map;
         },
         render (gl, args) {
-            const cameraMatrix = BABYLON.Matrix.FromArray(args.defaultProjectionData.projectionMatrix);
+            const cameraMatrix = BABYLON.Matrix.FromArray(args.defaultProjectionData.mainMatrix);
 
             // world-view-projection matrix
             const wvpMatrix = worldMatrix.multiply(cameraMatrix);

@@ -110,11 +110,11 @@ export function getBasicProjectionData(overscaledTileID: OverscaledTileID, tileP
     }
 
     const data: ProjectionData = {
-        projectionMatrix: mainMatrix, // Might be set to a custom matrix by different projections.
-        projectionTileMercatorCoords: tileOffsetSize,
-        projectionClippingPlane: [0, 0, 0, 0],
+        mainMatrix, // Might be set to a custom matrix by different projections.
+        tileMercatorCoords: tileOffsetSize,
+        clippingPlane: [0, 0, 0, 0],
         projectionTransition: 0.0, // Range 0..1, where 0 is mercator, 1 is another projection, mostly globe.
-        projectionFallbackMatrix: mainMatrix,
+        fallbackMatrix: mainMatrix,
     };
 
     return data;

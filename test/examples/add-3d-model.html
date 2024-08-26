@@ -104,7 +104,7 @@
                 modelTransform.rotateZ
             );
 
-            const m = new THREE.Matrix4().fromArray(args.defaultProjectionData.projectionMatrix);
+            const m = new THREE.Matrix4().fromArray(args.defaultProjectionData.mainMatrix);
             const l = new THREE.Matrix4()
                 .makeTranslation(
                     modelTransform.translateX,

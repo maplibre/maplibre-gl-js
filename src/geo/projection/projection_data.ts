@@ -10,7 +10,7 @@ export type ProjectionData = {
      * for globe projection, it projects a unit sphere planet to screen.
      * Uniform name: `u_projection_matrix`.
      */
-    projectionMatrix: mat4;
+    mainMatrix: mat4;
     /**
      * The extent of current tile in the mercator square.
      * Used by globe projection.
@@ -23,14 +23,14 @@ export type ProjectionData = {
      * vec2 mercator_coords = u_projection_tile_mercator_coords.xy + in_tile.xy * u_projection_tile_mercator_coords.zw;
      * ```
      */
-    projectionTileMercatorCoords: [number, number, number, number];
+    tileMercatorCoords: [number, number, number, number];
     /**
      * The plane equation for a plane that intersects the planet's horizon.
      * Assumes the planet to be a unit sphere.
      * Used by globe projection for clipping.
      * Uniform name: `u_projection_clipping_plane`.
      */
-    projectionClippingPlane: [number, number, number, number];
+    clippingPlane: [number, number, number, number];
     /**
      * A value in range 0..1 indicating interpolation between mercator (0) and globe (1) projections.
      * Used by globe projection to hide projection transition at high zooms.
@@ -42,5 +42,5 @@ export type ProjectionData = {
      * Used by globe projection to fall back to mercator projection in an animated way.
      * Uniform name: `u_projection_fallback_matrix`.
      */
-    projectionFallbackMatrix: mat4;
+    fallbackMatrix: mat4;
 }

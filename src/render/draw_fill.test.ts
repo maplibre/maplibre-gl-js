@@ -90,11 +90,11 @@ describe('drawFill', () => {
             angle: 0,
             getProjectionData(_canonical, fallback): ProjectionData {
                 return {
-                    projectionMatrix: fallback,
-                    projectionTileMercatorCoords: [0, 0, 1, 1],
-                    projectionClippingPlane: [0, 0, 0, 0],
+                    mainMatrix: fallback,
+                    tileMercatorCoords: [0, 0, 1, 1],
+                    clippingPlane: [0, 0, 0, 0],
                     projectionTransition: 0.0,
-                    projectionFallbackMatrix: fallback,
+                    fallbackMatrix: fallback,
                 };
             },
         } as any as IReadonlyTransform;

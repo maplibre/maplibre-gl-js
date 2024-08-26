@@ -51,7 +51,7 @@ describe('GlobeTransform', () => {
         const globeTransform = createGlobeTransform(globeProjectionMock);
         test('mercator tile extents are set', () => {
             const projectionData = globeTransform.getProjectionData(new OverscaledTileID(1, 0, 1, 1, 0));
-            expectToBeCloseToArray(projectionData.projectionTileMercatorCoords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
+            expectToBeCloseToArray(projectionData.tileMercatorCoords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
         });
     });
 
@@ -63,35 +63,35 @@ describe('GlobeTransform', () => {
 
             test('plane vector length', () => {
                 const len = Math.sqrt(
-                    projectionData.projectionClippingPlane[0] * projectionData.projectionClippingPlane[0] +
-                    projectionData.projectionClippingPlane[1] * projectionData.projectionClippingPlane[1] +
-                    projectionData.projectionClippingPlane[2] * projectionData.projectionClippingPlane[2]
+                    projectionData.clippingPlane[0] * projectionData.clippingPlane[0] +
+                    projectionData.clippingPlane[1] * projectionData.clippingPlane[1] +
+                    projectionData.clippingPlane[2] * projectionData.clippingPlane[2]
                 );
                 expect(len).toBeCloseTo(0.25);
             });
 
             test('camera is in positive halfspace', () => {
-                expect(planeDistance(globeTransform.cameraPosition as [number, number, number], projectionData.projectionClippingPlane)).toBeGreaterThan(0);
+                expect(planeDistance(globeTransform.cameraPosition as [number, number, number], projectionData.clippingPlane)).toBeGreaterThan(0);
             });
 
             test('coordinates 0E,0N are in positive halfspace', () => {
-                expect(testPlaneAgainstLngLat(0, 0, projectionData.projectionClippingPlane)).toBeGreaterThan(0);
+                expect(testPlaneAgainstLngLat(0, 0, projectionData.clippingPlane)).toBeGreaterThan(0);
             });
 
             test('coordinates 40E,0N are in positive halfspace', () => {
-                expect(testPlaneAgainstLngLat(40, 0, projectionData.projectionClippingPlane)).toBeGreaterThan(0);
+                expect(testPlaneAgainstLngLat(40, 0, projectionData.clippingPlane)).toBeGreaterThan(0);
             });
 
             test('coordinates 0E,90N are in negative halfspace', () => {
-                expect(testPlaneAgainstLngLat(0, 90, projectionData.projectionClippingPlane)).toBeLessThan(0);
+                expect(testPlaneAgainstLngLat(0, 90, projectionData.clippingPlane)).toBeLessThan(0);
             });
 
             test('coordinates 90E,0N are in negative halfspace', () => {
-                expect(testPlaneAgainstLngLat(90, 0, projectionData.projectionClippingPlane)).toBeLessThan(0);
+                expect(testPlaneAgainstLngLat(90, 0, projectionData.clippingPlane)).toBeLessThan(0);
             });
 
             test('coordinates 180E,0N are in negative halfspace', () => {
-                expect(testPlaneAgainstLngLat(180, 0, projectionData.projectionClippingPlane)).toBeLessThan(0);
+                expect(testPlaneAgainstLngLat(180, 0, projectionData.clippingPlane)).toBeLessThan(0);
             });
         });
     });
