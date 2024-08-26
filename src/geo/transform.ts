@@ -785,9 +785,38 @@ export class Transform {
         let maxX = worldSize;
         let scaleY = 0;
         let scaleX = 0;
-        const {x: screenWidth, y: screenHeight} = this.size;
+        let {x: screenWidth, y: screenHeight} = this.size;
 
-        if (this.latRange && this._renderWorldCopies) {
+        // With single-copy world, users can "underzoom" the world to see it entirely.
+        if (!this._renderWorldCopies) {
+            // `boundsRatio` is the percentage of the bounds one can exceed when
+            // panning and/or zooming, where a bound is measured from viewport
+            // edge to viewport center.
+            // The default is boundsRatio=0.5, which means on a wide viewport
+            // one can pan and zoom out until the world's top and bottom edges
+            // reach halfway (50%) between the viewport center and its top and
+            // bottom edges.
+            //
+            // viewport
+            // _______________________________
+            // |viewport      : } boundsRatio|
+            // |        -———————————-        |
+            // |        |world:     |        |
+            // |        |     :     |        |
+            // |        |     *     |        |
+            // |        |           |        |
+            // |        -———————————-        |
+            // |_____________________________|
+            //
+            // If boundsRatio=0.0, one can pan and zoom out just until the world
+            // edges touch the edge of the viewport. 
+            // If boundsRatio=1.0, one can pan and zoom out until the world
+            // edges touch the center of the viewport.
+            const boundsRatio = 0.5;
+            screenWidth = screenHeight = (1.0 - boundsRatio) * Math.min(screenWidth, screenHeight)
+        }
+
+        if (this.latRange) {
             const latRange = this.latRange;
             minY = mercatorYfromLat(latRange[1]) * worldSize;
             maxY = mercatorYfromLat(latRange[0]) * worldSize;
@@ -795,7 +824,7 @@ export class Transform {
             if (shouldZoomIn) scaleY = screenHeight / (maxY - minY);
         }
 
-        if (lngRange && this._renderWorldCopies) {
+        if (lngRange) {
             minX = wrap(
                 mercatorXfromLng(lngRange[0]) * worldSize,
                 0,
@@ -820,20 +849,16 @@ export class Transform {
 
         if (scale) {
             // zoom in to exclude all beyond the given lng/lat ranges
-            const pointX = !this._renderWorldCopies
-                ? originalX
-                : scaleX ? (maxX + minX) / 2 : originalX;
-            const pointY = !this._renderWorldCopies
-                ? originalY
-                : scaleY ? (maxY + minY) / 2 : originalY;
-            const newPoint = new Point(pointX, pointY);
+            const newPoint = new Point(
+                scaleX ? (maxX + minX) / 2 : originalX,
+                scaleY ? (maxY + minY) / 2 : originalY);
             result.center = this.unproject.call({worldSize}, newPoint).wrap();
             result.zoom += this.scaleZoom(scale);
             return result;
         }
 
         if (this.latRange) {
-            const h2 = !this._renderWorldCopies ? 1e-10 : screenHeight / 2;
+            const h2 = screenHeight / 2;
             if (originalY - h2 < minY) modifiedY = minY + h2;
             if (originalY + h2 > maxY) modifiedY = maxY - h2;
         }
@@ -844,7 +869,7 @@ export class Transform {
             if (this._renderWorldCopies) {
                 wrappedX = wrap(originalX, centerX - worldSize / 2, centerX + worldSize / 2);
             }
-            const w2 = !this._renderWorldCopies ? 1e-10 : screenWidth / 2;
+            const w2 = screenWidth / 2;
 
             if (wrappedX - w2 < minX) modifiedX = minX + w2;
             if (wrappedX + w2 > maxX) modifiedX = maxX - w2;
