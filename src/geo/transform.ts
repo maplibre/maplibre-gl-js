@@ -787,17 +787,12 @@ export class Transform {
         let scaleX = 0;
         let {x: screenWidth, y: screenHeight} = this.size;
 
-        // With single-copy world, users can "underzoom" the world to see it entirely.
+        // For a single-world map, a user can "underzoom" the world to see it entirely in the viewport.
+        // This works by reducing the viewport's appararent size to a square with a side length equal to the smallest viewport dimension, then reduced by a factor `boundsRatio`.
+        // `minZoom` is obeyed in all cases.
         if (!this._renderWorldCopies) {
-            // `boundsRatio` is the percentage of the bounds one can exceed when
-            // panning and/or zooming, where a bound is measured from viewport
-            // edge to viewport center.
-            // The default is boundsRatio=0.5, which means on a wide viewport
-            // one can pan and zoom out until the world's top and bottom edges
-            // reach halfway (50%) between the viewport center and its top and
-            // bottom edges.
-            //
-            // viewport
+            // `boundsRatio` is the percentage of the bounds a user can exceed when panning and/or zooming, where a bound is measured from viewport edge to viewport center.
+            // The default is boundsRatio=0.5, which on a wide viewport means a user can pan and zoom out until the world's top and bottom edges are halfway between the viewport center and its top and bottom edges.
             // _______________________________
             // |viewport      : } boundsRatio|
             // |        -———————————-        |
@@ -807,13 +802,8 @@ export class Transform {
             // |        |           |        |
             // |        -———————————-        |
             // |_____________________________|
-            //
-            // If boundsRatio=0.0, one can pan and zoom out just until the world
-            // edges touch the edge of the viewport. 
-            // If boundsRatio=1.0, one can pan and zoom out until the world
-            // edges touch the center of the viewport.
             const boundsRatio = 0.5;
-            screenWidth = screenHeight = (1.0 - boundsRatio) * Math.min(screenWidth, screenHeight)
+            screenWidth = screenHeight = (1.0 - boundsRatio) * Math.min(screenWidth, screenHeight);
         }
 
         if (this.latRange) {
