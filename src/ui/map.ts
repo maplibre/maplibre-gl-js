@@ -343,8 +343,10 @@ export type CompleteMapOptions = Complete<MapOptions>;
 type DelegatedListener = {
     layers: string[];
     listener: Listener;
-    delegates: {[type in keyof MapEventType]?: (e: any) => void};
+    delegates: {[E in keyof MapEventType]?: Delegate<MapEventType[E]>};
 }
+
+type Delegate<E extends Event = Event> = (e: E) => void;
 
 const defaultMinZoom = -2;
 const defaultMaxZoom = 22;
@@ -1262,6 +1264,12 @@ export class Map extends Camera {
         }
     }
 
+    _saveDelegatedListener(type: keyof MapEventType | string, delegatedListener: DelegatedListener): void {
+        this._delegatedListeners = this._delegatedListeners || {};
+        this._delegatedListeners[type] = this._delegatedListeners[type] || [];
+        this._delegatedListeners[type].push(delegatedListener);
+    }
+
     _removeDelegatedListener(type: string, layerIds: string[], listener: Listener) {
         if (!this._delegatedListeners || !this._delegatedListeners[type]) {
             return;
@@ -1429,9 +1437,7 @@ export class Map extends Camera {
 
         const delegatedListener = this._createDelegatedListener(type, layerIds, listener);
 
-        this._delegatedListeners = this._delegatedListeners || {};
-        this._delegatedListeners[type] = this._delegatedListeners[type] || [];
-        this._delegatedListeners[type].push(delegatedListener);
+        this._saveDelegatedListener(type, delegatedListener);
 
         for (const event in delegatedListener.delegates) {
             this.on(event, delegatedListener.delegates[event]);
@@ -1495,6 +1501,16 @@ export class Map extends Camera {
         const layerIds = typeof layerIdsOrListener === 'string' ? [layerIdsOrListener] : layerIdsOrListener as string[];
 
         const delegatedListener = this._createDelegatedListener(type, layerIds, listener);
+
+        for (const key in delegatedListener.delegates) {
+            const delegate: Delegate = delegatedListener.delegates[key];
+            delegatedListener.delegates[key] = (...args: Parameters<Delegate>) => {
+                this._removeDelegatedListener(type, layerIds, listener);
+                delegate(...args);
+            };
+        }
+
+        this._saveDelegatedListener(type, delegatedListener);
 
         for (const event in delegatedListener.delegates) {
             this.once(event, delegatedListener.delegates[event]);
