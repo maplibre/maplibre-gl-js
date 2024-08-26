@@ -126,7 +126,7 @@
     "stylelint-config-standard": "^36.0.1",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
-    "tslib": "^2.6.3",
+    "tslib": "^2.7.0",
     "typedoc": "^0.26.6",
     "typedoc-plugin-markdown": "^4.2.6",
     "typedoc-plugin-missing-exports": "^3.0.0",
