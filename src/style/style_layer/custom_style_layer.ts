@@ -2,7 +2,7 @@ import {StyleLayer} from '../style_layer';
 import type {Map} from '../../ui/map';
 import {mat4} from 'gl-matrix';
 import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {ProjectionData} from '../../render/program/projection_program';
+import type {ProjectionData} from '../../geo/projection/projection_data';
 
 /**
 * Input arguments exposed by custom render function.
@@ -63,7 +63,7 @@ export type CustomRenderMethodInput = {
      * They are set so that `projectTile` in shader accepts a vec2 in range 0..1 in web mercator coordinates.
      * Use `map.transform.getProjectionData(tileID)` to get uniforms for a given tile and pass vec2 in tile-local range 0..EXTENT instead.
      *
-     * If you just need a projection matrix, use `defaultProjectionData.u_projection_matrix`.
+     * If you just need a projection matrix, use `defaultProjectionData.projectionMatrix`.
      * A projection matrix is sufficient for simple custom layers that also only support mercator projection.
      *
      * When these uniforms are used, the shader's `projectTile` function projects spherical mercator

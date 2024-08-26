@@ -46,8 +46,8 @@ import type {VertexBuffer} from '../gl/vertex_buffer';
 import type {IndexBuffer} from '../gl/index_buffer';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
-import type {ProjectionData} from './program/projection_program';
 import type {RenderToTexture} from './render_to_texture';
+import type {ProjectionData} from '../geo/projection/projection_data';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -233,11 +233,11 @@ export class Painter {
         mat4.scale(matrix, matrix, [gl.drawingBufferWidth, gl.drawingBufferHeight, 0]);
 
         const projectionData: ProjectionData = {
-            'u_projection_matrix': matrix,
-            'u_projection_tile_mercator_coords': [0, 0, 1, 1],
-            'u_projection_clipping_plane': [0, 0, 0, 0],
-            'u_projection_transition': 0.0,
-            'u_projection_fallback_matrix': matrix,
+            projectionMatrix: matrix,
+            projectionTileMercatorCoords: [0, 0, 1, 1],
+            projectionClippingPlane: [0, 0, 0, 0],
+            projectionTransition: 0.0,
+            projectionFallbackMatrix: matrix,
         };
 
         // Note: we force a simple mercator projection for the shader, since we want to draw a fullscreen quad.

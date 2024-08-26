@@ -8,13 +8,13 @@ import {Terrain} from '../../render/terrain';
 import {Aabb, Frustum} from '../../util/primitives';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {scaleZoom, TransformHelper, zoomScale} from '../transform_helper';
-import {ProjectionData} from '../../render/program/projection_program';
 import {PointProjection, xyTransformMat4} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
 import {CoveringTilesOptions, CoveringZoomOptions, IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
 import {PaddingOptions} from '../edge_insets';
 import {mercatorCoordinateToLocation, getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix} from './mercator_utils';
 import {EXTENT} from '../../data/extent';
+import type {ProjectionData} from './projection_data';
 
 export class MercatorTransform implements ITransform {
     private _helper: TransformHelper;
@@ -852,7 +852,7 @@ export class MercatorTransform implements ITransform {
 
     getProjectionDataForCustomLayer(): ProjectionData {
         const projectionData = this.getProjectionData(new OverscaledTileID(0, 0, 0, 0, 0));
-        projectionData['u_projection_tile_mercator_coords'] = [0, 0, 1, 1];
+        projectionData.projectionTileMercatorCoords = [0, 0, 1, 1];
 
         // Even though we requested projection data for the mercator base tile which covers the entire mercator range,
         // the shader projection machinery still expects inputs to be in tile units range [0..EXTENT].
@@ -863,15 +863,15 @@ export class MercatorTransform implements ITransform {
         const translate: vec3 = [0, 0, this.elevation];
 
         const fallbackMatrixScaled = createMat4f64();
-        mat4.translate(fallbackMatrixScaled, projectionData.u_projection_fallback_matrix, translate);
+        mat4.translate(fallbackMatrixScaled, projectionData.projectionFallbackMatrix, translate);
         mat4.scale(fallbackMatrixScaled, fallbackMatrixScaled, scale);
 
         const projectionMatrixScaled = createMat4f64();
-        mat4.translate(projectionMatrixScaled, projectionData.u_projection_matrix, translate);
+        mat4.translate(projectionMatrixScaled, projectionData.projectionMatrix, translate);
         mat4.scale(projectionMatrixScaled, projectionMatrixScaled, scale);
 
-        projectionData['u_projection_fallback_matrix'] = fallbackMatrixScaled;
-        projectionData['u_projection_matrix'] = projectionMatrixScaled;
+        projectionData.projectionFallbackMatrix = fallbackMatrixScaled;
+        projectionData.projectionMatrix = projectionMatrixScaled;
         return projectionData;
     }
 }

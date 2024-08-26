@@ -269,30 +269,30 @@
 
                 gl.uniform4f(
                     locations['u_projection_clipping_plane'],
-                    ...projectionData.u_projection_clipping_plane // vec4
+                    ...projectionData.projectionClippingPlane // vec4
                 );
                 gl.uniform1f(
                     locations['u_projection_transition'],
-                    projectionData.u_projection_transition // float
+                    projectionData.projectionTransition // float
                 );
 
                 // Set tile mercator extents accordingly
                 const tileSize = 1.0 / (1 << tile.z);
                 gl.uniform4f(
                     locations['u_projection_tile_mercator_coords'],
-                    ...projectionData.u_projection_tile_mercator_coords // vec4
+                    ...projectionData.projectionTileMercatorCoords // vec4
                 );
 
                 // Shader variant name effectively tells us what projection code path should be used.
                 gl.uniformMatrix4fv(
                     locations['u_projection_matrix'],
                     false,
-                    projectionData.u_projection_matrix
+                    projectionData.projectionMatrix
                 );
                 gl.uniformMatrix4fv(
                     locations['u_projection_fallback_matrix'],
                     false,
-                    projectionData.u_projection_fallback_matrix
+                    projectionData.projectionFallbackMatrix
                 );
                 const mesh = this.getTileMesh(gl, tile.x, tile.y, tile.z, false);
                 gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vbo);

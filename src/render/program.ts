@@ -14,7 +14,8 @@ import type {UniformBindings, UniformValues, UniformLocations} from './uniform_b
 import type {BinderUniform} from '../data/program_configuration';
 import {terrainPreludeUniforms, TerrainPreludeUniformsType} from './program/terrain_program';
 import type {TerrainData} from '../render/terrain';
-import {ProjectionData, ProjectionPreludeUniformsType, projectionUniforms} from './program/projection_program';
+import {projectionObjectToUniformMap, ProjectionPreludeUniformsType, projectionUniforms} from './program/projection_program';
+import type {ProjectionData} from '../geo/projection/projection_data';
 
 export type DrawMode = WebGLRenderingContextBase['LINES'] | WebGLRenderingContextBase['TRIANGLES'] | WebGL2RenderingContext['LINE_STRIP'];
 
@@ -191,8 +192,9 @@ export class Program<Us extends UniformBindings> {
         }
 
         if (projectionData) {
-            for (const name in this.projectionUniforms) {
-                this.projectionUniforms[name].set(projectionData[name]);
+            for (const fieldName in projectionData) {
+                const uniformName = projectionObjectToUniformMap[fieldName];
+                this.projectionUniforms[uniformName].set(projectionData[fieldName]);
             }
         }
 

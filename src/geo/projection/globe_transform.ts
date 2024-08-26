@@ -8,7 +8,6 @@ import Point from '@mapbox/point-geometry';
 import {browser} from '../../util/browser';
 import {Terrain} from '../../render/terrain';
 import {GlobeProjection, globeConstants} from './globe';
-import {ProjectionData} from '../../render/program/projection_program';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {PointProjection} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
@@ -17,6 +16,7 @@ import {PaddingOptions} from '../edge_insets';
 import {tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 import {angularCoordinatesRadiansToVector, angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
 import {EXTENT} from '../../data/extent';
+import type {ProjectionData} from './projection_data';
 
 /**
  * Describes the intersection of ray and sphere.
@@ -443,13 +443,13 @@ export class GlobeTransform implements ITransform {
     getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData {
         const data = this._mercatorTransform.getProjectionData(overscaledTileID, aligned, ignoreTerrainMatrix);
 
-        // Set 'u_projection_matrix' to actual globe transform
+        // Set 'projectionMatrix' to actual globe transform
         if (this._globeRendering) {
-            data['u_projection_matrix'] = this._globeViewProjMatrix;
+            data.projectionMatrix = this._globeViewProjMatrix;
         }
 
-        data['u_projection_clipping_plane'] = this._cachedClippingPlane as [number, number, number, number];
-        data['u_projection_transition'] = this._globeness;
+        data.projectionClippingPlane = this._cachedClippingPlane as [number, number, number, number];
+        data.projectionTransition = this._globeness;
 
         return data;
     }
@@ -1158,7 +1158,7 @@ export class GlobeTransform implements ITransform {
 
     getProjectionDataForCustomLayer(): ProjectionData {
         const projectionData = this.getProjectionData(new OverscaledTileID(0, 0, 0, 0, 0));
-        projectionData['u_projection_tile_mercator_coords'] = [0, 0, 1, 1];
+        projectionData.projectionTileMercatorCoords = [0, 0, 1, 1];
 
         // Even though we requested projection data for the mercator base tile which covers the entire mercator range,
         // the shader projection machinery still expects inputs to be in tile units range [0..EXTENT].
@@ -1167,9 +1167,9 @@ export class GlobeTransform implements ITransform {
         // Note that the regular projection matrices do not need to be modified, since the rescaling happens by setting
         // the `u_projection_tile_mercator_coords` uniform correctly.
         const fallbackMatrixScaled = createMat4f64();
-        mat4.scale(fallbackMatrixScaled, projectionData.u_projection_fallback_matrix, [EXTENT, EXTENT, 1]);
+        mat4.scale(fallbackMatrixScaled, projectionData.projectionFallbackMatrix, [EXTENT, EXTENT, 1]);
 
-        projectionData['u_projection_fallback_matrix'] = fallbackMatrixScaled;
+        projectionData.projectionFallbackMatrix = fallbackMatrixScaled;
         return projectionData;
     }
 }

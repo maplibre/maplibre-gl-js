@@ -15,6 +15,7 @@ import type {EvaluationParameters} from '../style/evaluation_parameters';
 import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {Style} from '../style/style';
 import {MercatorProjection} from '../geo/projection/mercator';
+import type {ProjectionData} from '../geo/projection/projection_data';
 
 jest.mock('./painter');
 jest.mock('./program');
@@ -31,13 +32,13 @@ function createMockTransform() {
         getCircleRadiusCorrection: () => 1,
         angle: 0,
         zoom: 0,
-        getProjectionData(_canonical, fallback) {
+        getProjectionData(_canonical, fallback): ProjectionData {
             return {
-                'u_projection_matrix': fallback,
-                'u_projection_tile_mercator_coords': [0, 0, 1, 1],
-                'u_projection_clipping_plane': [0, 0, 0, 0],
-                'u_projection_transition': 0.0,
-                'u_projection_fallback_matrix': fallback,
+                projectionMatrix: fallback,
+                projectionTileMercatorCoords: [0, 0, 1, 1],
+                projectionClippingPlane: [0, 0, 0, 0],
+                projectionTransition: 0.0,
+                projectionFallbackMatrix: fallback,
             };
         },
     } as any as IReadonlyTransform;

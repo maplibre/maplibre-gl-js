@@ -6,9 +6,9 @@ import {mat4, mat2, vec3} from 'gl-matrix';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import type {PaddingOptions} from './edge_insets';
 import {Terrain} from '../render/terrain';
-import {ProjectionData} from '../render/program/projection_program';
 import {PointProjection} from '../symbol/projection';
 import {MapProjectionEvent} from '../ui/events';
+import type {ProjectionData} from './projection/projection_data';
 
 export type CoveringZoomOptions = {
     /**

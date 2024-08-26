@@ -1,5 +1,4 @@
 import {mat4} from 'gl-matrix';
-import {ProjectionData} from '../../render/program/projection_program';
 import {EXTENT} from '../../data/extent';
 import {OverscaledTileID} from '../../source/tile_id';
 import {clamp} from '../../util/util';
@@ -7,6 +6,7 @@ import {MAX_VALID_LATITUDE, UnwrappedTileIDType, zoomScale} from '../transform_h
 import {LngLat} from '../lng_lat';
 import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat} from '../mercator_coordinate';
 import Point from '@mapbox/point-geometry';
+import type {ProjectionData} from './projection_data';
 
 /**
  * Returns mercator coordinates in range 0..1 for given coordinates inside a specified tile.
@@ -110,11 +110,11 @@ export function getBasicProjectionData(overscaledTileID: OverscaledTileID, tileP
     }
 
     const data: ProjectionData = {
-        'u_projection_matrix': mainMatrix, // Might be set to a custom matrix by different projections.
-        'u_projection_tile_mercator_coords': tileOffsetSize,
-        'u_projection_clipping_plane': [0, 0, 0, 0],
-        'u_projection_transition': 0.0, // Range 0..1, where 0 is mercator, 1 is another projection, mostly globe.
-        'u_projection_fallback_matrix': mainMatrix,
+        projectionMatrix: mainMatrix, // Might be set to a custom matrix by different projections.
+        projectionTileMercatorCoords: tileOffsetSize,
+        projectionClippingPlane: [0, 0, 0, 0],
+        projectionTransition: 0.0, // Range 0..1, where 0 is mercator, 1 is another projection, mostly globe.
+        projectionFallbackMatrix: mainMatrix,
     };
 
     return data;
