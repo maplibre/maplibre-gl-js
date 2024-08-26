@@ -74,6 +74,16 @@ export function createTileMeshInternal(context: Context, options: CreateTileMesh
  * is optionally subdivided into finer quads, optionally includes a border
  * and optionally extends to the north and/or special pole vertices.
  * Additionally the resulting mesh indices type can be specified using `forceIndicesSize`.
+ * @example
+ * ```
+ * // Creating a mesh for a tile that can be used for raster layers, hillshade, etc.
+ * const meshBuffers = createTileMesh({
+ *     granularity: map.style.projection.subdivisionGranularity.tile.getGranularityForZoomLevel(tileID.z),
+ *     generateBorders: true,
+ *     extendToNorthPole: tileID.y === 0,
+ *     extendToSouthPole: tileID.y === (1 << tileID.z) - 1,
+ * }, '16bit');
+ * ```
  * @param options - Specify options for tile mesh creation such as granularity or border.
  * @param forceIndicesSize - Specifies what indices type to use. The values '32bit' and '16bit' force their respective indices size. If undefined, the mesh may use either size, and will pick 16 bit indices if possible. If '16bit' is specified and the mesh exceeds 65536 vertices, an exception is thrown.
  * @returns Typed arrays of the mesh vertices and indices.
