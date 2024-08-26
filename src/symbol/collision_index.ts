@@ -350,7 +350,7 @@ export class CollisionIndex {
     }
 
     projectPathToScreenSpace(projectedPath: Array<Point>, projectionContext: SymbolProjectionContext, labelToScreenMatrix: mat4) {
-        return projectedPath.map(p => projection.project(p, labelToScreenMatrix, projectionContext.getElevation));
+        return projectedPath.map(p => projection.project(p.x, p.y, labelToScreenMatrix, projectionContext.getElevation));
     }
 
     /**
@@ -437,7 +437,7 @@ export class CollisionIndex {
     projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number) {
         const projected = this.mapProjection.useSpecialProjectionForSymbols ?
             this.mapProjection.projectTileCoordinates(x, y, unwrappedTileID, getElevation) :
-            projection.project(new Point(x, y), posMatrix, getElevation);
+            projection.project(x, y, posMatrix, getElevation);
         return {
             point: new Point(
                 (((projected.point.x + 1) / 2) * this.transform.width) + viewportPadding,
@@ -456,7 +456,7 @@ export class CollisionIndex {
         // We don't care about the actual projected point, just its W component.
         const projected = this.mapProjection.useSpecialProjectionForSymbols ?
             this.mapProjection.projectTileCoordinates(x, y, unwrappedTileID, getElevation) :
-            projection.project(new Point(x, y), posMatrix, getElevation);
+            projection.project(x, y, posMatrix, getElevation);
         return 0.5 + 0.5 * (this.transform.cameraToCenterDistance / projected.signedDistanceFromCamera);
     }
 
