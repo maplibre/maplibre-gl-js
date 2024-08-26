@@ -52,6 +52,7 @@ export function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: H
 function prepareHeatmapFlat(painter: Painter, sourceCache: SourceCache, layer: HeatmapStyleLayer, coords: Array<OverscaledTileID>) {
     const context = painter.context;
     const gl = context.gl;
+    const transform = painter.transform;
 
     // Allow kernels to be drawn across boundaries, so that
     // large kernels are not clipped to tiles
@@ -77,12 +78,16 @@ function prepareHeatmapFlat(painter: Painter, sourceCache: SourceCache, layer: H
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram('heatmap', programConfiguration);
-        const {zoom} = painter.transform;
 
-        program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.disabled,
-            heatmapUniformValues(coord.posMatrix, tile, zoom, layer.paint.get('heatmap-intensity')), null,
+        const projectionData = transform.getProjectionData(coord);
+
+        const radiusCorrectionFactor = transform.getCircleRadiusCorrection();
+
+        program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.backCCW,
+            heatmapUniformValues(tile, transform.zoom, layer.paint.get('heatmap-intensity'), radiusCorrectionFactor),
+            null, projectionData,
             layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
-            bucket.segments, layer.paint, painter.transform.zoom,
+            bucket.segments, layer.paint, transform.zoom,
             programConfiguration);
     }
 
@@ -109,7 +114,7 @@ function renderHeatmapFlat(painter: Painter, layer: HeatmapStyleLayer) {
 
     painter.useProgram('heatmapTexture').draw(context, gl.TRIANGLES,
         DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled,
-        heatmapTextureUniformValues(painter, layer, 0, 1), null,
+        heatmapTextureUniformValues(painter, layer, 0, 1), null, null,
         layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
         painter.viewportSegments, layer.paint, painter.transform.zoom);
 }
@@ -138,11 +143,13 @@ function prepareHeatmapTerrain(painter: Painter, tile: Tile, layer: HeatmapStyle
     context.clear({color: Color.transparent});
 
     const programConfiguration = bucket.programConfigurations.get(layer.id);
-    const program = painter.useProgram('heatmap', programConfiguration);
+    const program = painter.useProgram('heatmap', programConfiguration, true);
+
+    const projectionData = painter.transform.getProjectionData(tile.tileID);
 
     const terrainData = painter.style.map.terrain.getTerrainData(coord);
     program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.disabled,
-        heatmapUniformValues(coord.posMatrix, tile, painter.transform.zoom, layer.paint.get('heatmap-intensity')), terrainData,
+        heatmapUniformValues(tile, painter.transform.zoom, layer.paint.get('heatmap-intensity'), 1.0), terrainData, projectionData,
         layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
         bucket.segments, layer.paint, painter.transform.zoom,
         programConfiguration);
@@ -151,6 +158,7 @@ function prepareHeatmapTerrain(painter: Painter, tile: Tile, layer: HeatmapStyle
 function renderHeatmapTerrain(painter: Painter, layer: HeatmapStyleLayer, coord: OverscaledTileID) {
     const context = painter.context;
     const gl = context.gl;
+    const transform = painter.transform;
 
     context.setColorMode(painter.colorModeForRenderPass());
 
@@ -169,11 +177,13 @@ function renderHeatmapTerrain(painter: Painter, layer: HeatmapStyleLayer, coord:
     context.activeTexture.set(gl.TEXTURE1);
     colorRampTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
 
+    const projectionData = transform.getProjectionData(coord, false, true);
+
     painter.useProgram('heatmapTexture').draw(context, gl.TRIANGLES,
         DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled,
-        heatmapTextureUniformValues(painter, layer, 0, 1), null,
+        heatmapTextureUniformValues(painter, layer, 0, 1), null, projectionData,
         layer.id, painter.rasterBoundsBuffer, painter.quadTriangleIndexBuffer,
-        painter.rasterBoundsSegments, layer.paint, painter.transform.zoom);
+        painter.rasterBoundsSegments, layer.paint, transform.zoom);
 
     // destroy the FBO after rendering
     fbo.destroy();
