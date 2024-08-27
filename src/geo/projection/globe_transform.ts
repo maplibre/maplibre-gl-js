@@ -301,13 +301,6 @@ export class GlobeTransform implements ITransform {
 
     public get useGlobeControls(): boolean { return this._globeRendering; }
 
-    public get allowWrapJumps(): boolean {
-        if (this._globeRendering) {
-            return false;
-        }
-        return this._mercatorTransform.allowWrapJumps;
-    }
-
     public get cameraPosition(): vec3 {
         // Return a copy - don't let outside code mutate our precomputed camera position.
         const copy = createVec3f64(); // Ensure the resulting vector is float64s
@@ -907,8 +900,21 @@ export class GlobeTransform implements ITransform {
                 const dz = maxZoom - it.zoom;
                 const dx = cameraPoint[0] - 0.5 - (x << dz);
                 const dy = cameraPoint[1] - 0.5 - (y << dz);
+                // We need to compute a valid wrap value for the tile to keep compatibility with mercator
+
+                const distanceCurrent = this.distanceToTileSimple(scaledCenter[0], x);
+                const distanceLeft = this.distanceToTileSimple(scaledCenter[0], x - scale);
+                const distanceRight = this.distanceToTileSimple(scaledCenter[0], x + scale);
+                const distanceSmallest = Math.min(distanceCurrent, distanceLeft, distanceRight);
+                let wrap = 0;
+                if (distanceSmallest === distanceLeft) {
+                    wrap = -1;
+                }
+                if (distanceSmallest === distanceRight) {
+                    wrap = 1;
+                }
                 result.push({
-                    tileID: new OverscaledTileID(it.zoom === maxZoom ? overscaledZ : it.zoom, 0, it.zoom, x, y),
+                    tileID: new OverscaledTileID(it.zoom === maxZoom ? overscaledZ : it.zoom, wrap, it.zoom, x, y),
                     distanceSq: vec2.sqrLen([centerPoint[0] - 0.5 - dx, centerPoint[1] - 0.5 - dy]),
                     // this variable is currently not used, but may be important to reduce the amount of loaded tiles
                     tileDistanceToCamera: Math.sqrt(dx * dx + dy * dy)

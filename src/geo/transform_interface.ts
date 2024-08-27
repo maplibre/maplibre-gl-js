@@ -240,15 +240,6 @@ export interface IReadonlyTransform extends ITransformGetters {
      */
     get useGlobeControls(): boolean;
     /**
-     * When true, source caches are allowed to track when map center crosses the antimeridian
-     * and shift all cached tiles by one world when that happens.
-     * Mercator maps should have this enabled, but globe is in a special situation,
-     * where it both allows the map to cross the antimeridian, but also only draws wrap 0,
-     * so a wrap jump would cause all tiles to be discarded by assigning them to wrap 1.
-     * Thus globe should have wrap jumps disabled, unless in mercator mode at high zoom.
-     */
-    get allowWrapJumps(): boolean;
-    /**
      * Distance from camera origin to view plane, in pixels.
      * Calculated using vertical fov and viewport height.
      * Center is considered to be in the middle of the viewport.

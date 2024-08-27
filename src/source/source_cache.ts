@@ -451,7 +451,7 @@ export class SourceCache extends Evented {
         this._cache.setMaxSize(maxSize);
     }
 
-    handleWrapJump(lng: number, allowWrapJump: boolean) {
+    handleWrapJump(lng: number) {
         // On top of the regular z/x/y values, TileIDs have a `wrap` value that specify
         // which copy of the world the tile belongs to. For example, at `lng: 10` you
         // might render z/x/y/0 while at `lng: 370` you would render z/x/y/1.
@@ -467,11 +467,6 @@ export class SourceCache extends Evented {
         // in a different position.
         //
         // This enables us to reuse the tiles at more ideal locations and prevent flickering.
-        if (!allowWrapJump) {
-            this._prevLng = lng;
-            return;
-        }
-
         const prevLng = this._prevLng === undefined ? lng : this._prevLng;
         const lngDifference = lng - prevLng;
         const worldDifference = lngDifference / 360;
@@ -600,7 +595,7 @@ export class SourceCache extends Evented {
         this.terrain = terrain;
 
         this.updateCacheSize(transform);
-        this.handleWrapJump(this.transform.center.lng, transform.allowWrapJumps);
+        this.handleWrapJump(this.transform.center.lng);
 
         // Covered is a list of retained tiles who's areas are fully covered by other,
         // better, retained tiles. They are not drawn separately.

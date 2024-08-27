@@ -228,7 +228,6 @@ export class MercatorTransform implements ITransform {
     public get modelViewProjectionMatrix(): mat4 { return this._viewProjMatrix; }
     public get inverseProjectionMatrix(): mat4 { return this._invProjMatrix; }
     public get useGlobeControls(): boolean { return false; }
-    public get allowWrapJumps(): boolean { return true; }
     public get nearZ(): number { return this._nearZ; }
     public get farZ(): number { return this._farZ; }
 

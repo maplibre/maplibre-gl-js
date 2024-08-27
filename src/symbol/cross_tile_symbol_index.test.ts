@@ -41,7 +41,7 @@ describe('CrossTileSymbolIndex.addLayer', () => {
         ];
         const mainTile = makeTile(mainID, mainInstances);
 
-        index.addLayer(styleLayer, [mainTile], 0, true);
+        index.addLayer(styleLayer, [mainTile], 0);
         // Assigned new IDs
         expect(mainInstances[0].crossTileID).toBe(1);
         expect(mainInstances[1].crossTileID).toBe(2);
@@ -55,7 +55,7 @@ describe('CrossTileSymbolIndex.addLayer', () => {
         ];
         const childTile = makeTile(childID, childInstances);
 
-        index.addLayer(styleLayer, [mainTile, childTile], 0, true);
+        index.addLayer(styleLayer, [mainTile, childTile], 0);
         // matched parent tile
         expect(childInstances[0].crossTileID).toBe(1);
         // does not match because of different key
@@ -71,7 +71,7 @@ describe('CrossTileSymbolIndex.addLayer', () => {
         ];
         const parentTile = makeTile(parentID, parentInstances);
 
-        index.addLayer(styleLayer, [mainTile, childTile, parentTile], 0, true);
+        index.addLayer(styleLayer, [mainTile, childTile, parentTile], 0);
         // matched child tile
         expect(parentInstances[0].crossTileID).toBe(1);
 
@@ -82,8 +82,8 @@ describe('CrossTileSymbolIndex.addLayer', () => {
         ];
         const grandchildTile = makeTile(grandchildID, grandchildInstances);
 
-        index.addLayer(styleLayer, [mainTile], 0, true);
-        index.addLayer(styleLayer, [mainTile, grandchildTile], 0, true);
+        index.addLayer(styleLayer, [mainTile], 0);
+        index.addLayer(styleLayer, [mainTile, grandchildTile], 0);
         // Matches the symbol in `mainBucket`
         expect(grandchildInstances[0].crossTileID).toBe(1);
         // Does not match the previous value for Windsor because that tile was removed
@@ -103,18 +103,18 @@ describe('CrossTileSymbolIndex.addLayer', () => {
         const childTile = makeTile(childID, childInstances);
 
         // assigns a new id
-        index.addLayer(styleLayer, [mainTile], 0, true);
+        index.addLayer(styleLayer, [mainTile], 0);
         expect(mainInstances[0].crossTileID).toBe(1);
 
         // removes the tile
-        index.addLayer(styleLayer, [], 0, true);
+        index.addLayer(styleLayer, [], 0);
 
         // assigns a new id
-        index.addLayer(styleLayer, [childTile], 0, true);
+        index.addLayer(styleLayer, [childTile], 0);
         expect(childInstances[0].crossTileID).toBe(2);
 
         // overwrites the old id to match the already-added tile
-        index.addLayer(styleLayer, [mainTile, childTile], 0, true);
+        index.addLayer(styleLayer, [mainTile, childTile], 0);
         expect(mainInstances[0].crossTileID).toBe(2);
         expect(childInstances[0].crossTileID).toBe(2);
 
@@ -139,7 +139,7 @@ describe('CrossTileSymbolIndex.addLayer', () => {
         const childTile = makeTile(childID, childInstances);
 
         // assigns new ids
-        index.addLayer(styleLayer, [mainTile], 0, true);
+        index.addLayer(styleLayer, [mainTile], 0);
         expect(mainInstances[0].crossTileID).toBe(1);
         expect(mainInstances[1].crossTileID).toBe(2);
 
@@ -147,7 +147,7 @@ describe('CrossTileSymbolIndex.addLayer', () => {
         expect(Object.keys(layerIndex.usedCrossTileIDs[6])).toEqual(['1', '2']);
 
         // copies parent ids without duplicate ids in this tile
-        index.addLayer(styleLayer, [childTile], 0, true);
+        index.addLayer(styleLayer, [childTile], 0);
         expect(childInstances[0].crossTileID).toBe(1); // A' copies from A
         expect(childInstances[1].crossTileID).toBe(2); // B' copies from B
         expect(childInstances[2].crossTileID).toBe(3); // C' gets new ID
@@ -176,7 +176,7 @@ describe('CrossTileSymbolIndex.addLayer', () => {
         const secondTile = makeTile(tileID, secondInstances);
 
         // assigns new ids
-        index.addLayer(styleLayer, [firstTile], 0, true);
+        index.addLayer(styleLayer, [firstTile], 0);
         expect(firstInstances[0].crossTileID).toBe(1);
         expect(firstInstances[1].crossTileID).toBe(2);
 
@@ -184,7 +184,7 @@ describe('CrossTileSymbolIndex.addLayer', () => {
         expect(Object.keys(layerIndex.usedCrossTileIDs[6])).toEqual(['1', '2']);
 
         // uses same ids when tile gets updated
-        index.addLayer(styleLayer, [secondTile], 0, true);
+        index.addLayer(styleLayer, [secondTile], 0);
         expect(secondInstances[0].crossTileID).toBe(1); // A' copies from A
         expect(secondInstances[1].crossTileID).toBe(2); // B' copies from B
         expect(secondInstances[2].crossTileID).toBe(3); // C' gets new ID
@@ -203,12 +203,12 @@ describe('CrossTileSymbolIndex.addLayer', () => {
         ];
         const tile = makeTile(tileID, firstInstances);
 
-        index.addLayer(styleLayer, [tile], longitude, true);
+        index.addLayer(styleLayer, [tile], longitude);
         expect(firstInstances[0].crossTileID).toBe(1); // A
 
         tile.tileID = tileID.wrapped();
 
-        index.addLayer(styleLayer, [tile], longitude % 360, true);
+        index.addLayer(styleLayer, [tile], longitude % 360);
         expect(firstInstances[0].crossTileID).toBe(1);
 
     });
@@ -228,8 +228,8 @@ describe('CrossTileSymbolIndex.addLayer', () => {
         }
         const mainTile = makeTile(mainID, mainInstances);
         const childTile = makeTile(childID, childInstances);
-        index.addLayer(styleLayer, [mainTile], 0, true);
-        index.addLayer(styleLayer, [childTile], 0, true);
+        index.addLayer(styleLayer, [mainTile], 0);
+        index.addLayer(styleLayer, [childTile], 0);
 
         // check that we matched the parent tile
         expect(childInstances[0].crossTileID).toBe(1);
@@ -248,7 +248,7 @@ describe('CrossTileSymbolIndex.pruneUnusedLayers', () => {
     const tile = makeTile(tileID, instances);
 
     // assigns new ids
-    index.addLayer(styleLayer, [tile], 0, true);
+    index.addLayer(styleLayer, [tile], 0);
     expect(instances[0].crossTileID).toBe(1);
     expect(instances[1].crossTileID).toBe(2);
     expect(index.layerIndexes[styleLayer.id]).toBeTruthy();

@@ -201,11 +201,7 @@ class CrossTileSymbolLayerIndex {
      * To prevent labels from flashing out and in we adjust the tileID values in the indexes
      * so that they match the new wrapped version of the map.
      */
-    handleWrapJump(lng: number, allowWrapJump: boolean) {
-        if (!allowWrapJump) {
-            this.lng = lng;
-            return;
-        }
+    handleWrapJump(lng: number) {
         const wrapDelta = Math.round((lng - this.lng) / 360);
         if (wrapDelta !== 0) {
             for (const zoom in this.indexes) {
@@ -220,6 +216,7 @@ class CrossTileSymbolLayerIndex {
                 this.indexes[zoom] = newZoomIndex;
             }
         }
+        this.lng = lng;
     }
 
     addBucket(tileID: OverscaledTileID, bucket: SymbolBucket, crossTileIDs: CrossTileIDs) {
@@ -323,7 +320,7 @@ export class CrossTileSymbolIndex {
         this.bucketsInCurrentPlacement = {};
     }
 
-    addLayer(styleLayer: StyleLayer, tiles: Array<Tile>, lng: number, allowWrapJump: boolean) {
+    addLayer(styleLayer: StyleLayer, tiles: Array<Tile>, lng: number) {
         let layerIndex = this.layerIndexes[styleLayer.id];
         if (layerIndex === undefined) {
             layerIndex = this.layerIndexes[styleLayer.id] = new CrossTileSymbolLayerIndex();
@@ -332,7 +329,7 @@ export class CrossTileSymbolIndex {
         let symbolBucketsChanged = false;
         const currentBucketIDs = {};
 
-        layerIndex.handleWrapJump(lng, allowWrapJump);
+        layerIndex.handleWrapJump(lng);
 
         for (const tile of tiles) {
             const symbolBucket = (tile.getBucket(styleLayer) as any as SymbolBucket);
