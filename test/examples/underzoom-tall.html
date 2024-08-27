@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Tall-bounded render world copies</title>
+    <meta property="og:description" content="On a tall-bounded map, toggle between rendering a single world and multiple copies of the world using setRenderWorldCopies." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<style>
+    #menu {
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: #fff;
+        padding: 10px;
+        font-family: 'Open Sans', sans-serif;
+    }
+</style>
+<div id="map"></div>
+<div id="menu">
+    <div>Set <code>renderWorldCopies</code> to:</div>
+    <div>
+        <input type="radio" id="true" name="rtoggle" value="true" />
+        <label for="true">true</label>
+    </div>
+    <div>
+        <input type="radio" id="false" name="rtoggle" value="false" checked />
+        <label for="false">false (allows underzoom)</label>
+    </div>
+</div>
+<script>
+    
+    // Set bounds to New York, New York
+    const north = 40.87764500765852;
+    const east = -73.91058699000139;
+    const south = 40.68392799015035;
+    const west = -74.04728500751165;
+    
+    const bounds = [
+        [west, south], // Southwest coordinates
+        [east, north] // Northeast coordinates
+    ];
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        center: [(west+east)/2, (north+south)/2],
+        zoom: 10,
+        maxBounds: bounds, // Sets bounds as max
+        renderWorldCopies: false,
+        style: {
+            version: 8,
+            sources: {
+                rgb: {
+                    type: 'raster',
+                    tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                    tileSize: 256,
+                    maxzoom: 19
+                },
+            },
+            layers: [
+                {
+                    id: 'rgb',
+                    type: 'raster',
+                    source: 'rgb'
+                },
+            ],
+        },
+    });
+
+    map.on('load', () => {
+        map.addSource('bounds', {
+            'type': 'geojson',
+            'data': {
+                'type': 'Feature',
+                'properties': {},
+                'geometry': {
+                    'type': 'LineString',
+                    'coordinates': [
+                        [west, south],
+                        [west, north],
+                        [east, north],
+                        [east, south],
+                        [west, south],
+                    ]
+                }
+            }
+        });
+        map.addLayer({
+            'id': 'bounds',
+            'type': 'line',
+            'source': 'bounds',
+            'layout': {
+                'line-join': 'round',
+                'line-cap': 'round'
+            },
+            'paint': {
+                'line-color': '#ff0000',
+                'line-width': 8
+            }
+        });
+    });
+
+    const renderOptions = document.getElementById('menu');
+    const inputs = renderOptions.getElementsByTagName('input');
+
+    function switchRenderOption(option) {
+        const status = option.target.id;
+        map.setRenderWorldCopies(status === 'true');
+        map.panTo(map.getCenter());
+    }
+
+    for (let i = 0; i < inputs.length; i++) {
+        inputs[i].onclick = switchRenderOption;
+    }
+</script>
+</body>
+</html>
