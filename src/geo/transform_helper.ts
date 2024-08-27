@@ -32,6 +32,29 @@ export function zoomScale(zoom: number) { return Math.pow(2, zoom); }
  */
 export function scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
 
+export type UnwrappedTileIDType = {
+    /**
+     * Tile wrap: 0 for the "main" world,
+     * negative values for worlds left of the main,
+     * positive values for worlds right of the main.
+     */
+    wrap?: number;
+    canonical: {
+        /**
+         * Tile X coordinate, in range 0..(z^2)-1
+         */
+        x: number;
+        /**
+         * Tile Y coordinate, in range 0..(z^2)-1
+         */
+        y: number;
+        /**
+         * Tile zoom level.
+         */
+        z: number;
+    };
+};
+
 export type TransformHelperCallbacks = {
     /**
      * Get center lngLat and zoom to ensure that

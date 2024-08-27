@@ -1,4 +1,4 @@
-import {LngLat} from './lng_lat';
+import {LngLat, LngLatLike} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
 import {MercatorCoordinate} from './mercator_coordinate';
 import Point from '@mapbox/point-geometry';
@@ -6,9 +6,9 @@ import {mat4, mat2, vec3} from 'gl-matrix';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import type {PaddingOptions} from './edge_insets';
 import {Terrain} from '../render/terrain';
-import {ProjectionData} from '../render/program/projection_program';
 import {PointProjection} from '../symbol/projection';
 import {MapProjectionEvent} from '../ui/events';
+import type {ProjectionData} from './projection/projection_data';
 
 export type CoveringZoomOptions = {
     /**
@@ -358,8 +358,6 @@ export interface IReadonlyTransform extends ITransformGetters {
      */
     isPointOnMapSurface(p: Point, terrain?: Terrain): boolean;
 
-    customLayerMatrix(): mat4;
-
     /**
      * Get center lngLat and zoom to ensure that longitude and latitude bounds are respected and regions beyond the map bounds are not displayed.
      */
@@ -475,6 +473,20 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Projects a point in tile coordinates to clip space. Used in symbol rendering.
      */
     projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection;
+
+    /**
+     * Returns a matrix that will place, rotate and scale a model to display at the given location and altitude
+     * while also being projected by the custom layer matrix.
+     * This function is intended to be called from custom layers.
+     * @param location - Location of the model.
+     * @param altitude - Altitude of the model. May be undefined.
+     */
+    getMatrixForModel(location: LngLatLike, altitude?: number): mat4;
+
+    /**
+     * Return projection data such that coordinates in mercator projection in range 0..1 will get projected to the map correctly.
+     */
+    getProjectionDataForCustomLayer(): ProjectionData;
 }
 
 /**

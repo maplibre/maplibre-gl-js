@@ -1,12 +1,12 @@
 import {mat4} from 'gl-matrix';
-import {ProjectionData} from '../../render/program/projection_program';
 import {EXTENT} from '../../data/extent';
-import {CanonicalTileID, OverscaledTileID} from '../../source/tile_id';
+import {OverscaledTileID} from '../../source/tile_id';
 import {clamp} from '../../util/util';
-import {MAX_VALID_LATITUDE} from '../transform_helper';
+import {MAX_VALID_LATITUDE, UnwrappedTileIDType, zoomScale} from '../transform_helper';
 import {LngLat} from '../lng_lat';
 import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat} from '../mercator_coordinate';
 import Point from '@mapbox/point-geometry';
+import type {ProjectionData} from './projection_data';
 
 /**
  * Returns mercator coordinates in range 0..1 for given coordinates inside a specified tile.
@@ -15,7 +15,7 @@ import Point from '@mapbox/point-geometry';
  * @param canonicalTileID - Tile canonical ID - mercator X, Y and zoom.
  * @returns Mercator coordinates of the specified point in range [0..1].
  */
-export function tileCoordinatesToMercatorCoordinates(inTileX: number, inTileY: number, canonicalTileID: CanonicalTileID): MercatorCoordinate {
+export function tileCoordinatesToMercatorCoordinates(inTileX: number, inTileY: number, canonicalTileID: {x: number; y: number; z: number}): MercatorCoordinate {
     const scale = 1.0 / (1 << canonicalTileID.z);
     return new MercatorCoordinate(
         inTileX / EXTENT * scale + canonicalTileID.x * scale,
@@ -29,7 +29,7 @@ export function tileCoordinatesToMercatorCoordinates(inTileX: number, inTileY: n
  * @param inTileY - Y coordinate in tile units - range [0..EXTENT].
  * @param canonicalTileID - Tile canonical ID - mercator X, Y and zoom.
  */
-export function tileCoordinatesToLocation(inTileX: number, inTileY: number, canonicalTileID: CanonicalTileID) {
+export function tileCoordinatesToLocation(inTileX: number, inTileY: number, canonicalTileID: {x: number; y: number; z: number}): LngLat {
     return tileCoordinatesToMercatorCoordinates(inTileX, inTileY, canonicalTileID).toLngLat();
 }
 
@@ -110,12 +110,23 @@ export function getBasicProjectionData(overscaledTileID: OverscaledTileID, tileP
     }
 
     const data: ProjectionData = {
-        'u_projection_matrix': mainMatrix, // Might be set to a custom matrix by different projections.
-        'u_projection_tile_mercator_coords': tileOffsetSize,
-        'u_projection_clipping_plane': [0, 0, 0, 0],
-        'u_projection_transition': 0.0, // Range 0..1, where 0 is mercator, 1 is another projection, mostly globe.
-        'u_projection_fallback_matrix': mainMatrix,
+        mainMatrix, // Might be set to a custom matrix by different projections.
+        tileMercatorCoords: tileOffsetSize,
+        clippingPlane: [0, 0, 0, 0],
+        projectionTransition: 0.0, // Range 0..1, where 0 is mercator, 1 is another projection, mostly globe.
+        fallbackMatrix: mainMatrix,
     };
 
     return data;
+}
+
+export function calculateTileMatrix(unwrappedTileID: UnwrappedTileIDType, worldSize: number): mat4 {
+    const canonical = unwrappedTileID.canonical;
+    const scale = worldSize / zoomScale(canonical.z);
+    const unwrappedX = canonical.x + Math.pow(2, canonical.z) * unwrappedTileID.wrap;
+
+    const worldMatrix = mat4.identity(new Float64Array(16) as any);
+    mat4.translate(worldMatrix, worldMatrix, [unwrappedX * scale, canonical.y * scale, 0]);
+    mat4.scale(worldMatrix, worldMatrix, [scale / EXTENT, scale / EXTENT, 1]);
+    return worldMatrix;
 }

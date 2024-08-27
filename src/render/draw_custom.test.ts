@@ -6,6 +6,7 @@ import type {Map} from '../ui/map';
 import {drawCustom} from './draw_custom';
 import {CustomStyleLayer} from '../style/style_layer/custom_style_layer';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {MercatorProjection} from '../geo/projection/mercator';
 
 jest.mock('./painter');
 jest.mock('./program');
@@ -22,6 +23,9 @@ describe('drawCustom', () => {
         transform.setMinPitch(10);
         transform.setMaxPitch(10);
         const mockPainter = new Painter(null, null);
+        mockPainter.style = {
+            projection: new MercatorProjection(),
+        } as any;
         mockPainter.renderPass = 'translucent';
         mockPainter.transform = transform;
         mockPainter.context = {
@@ -49,22 +53,21 @@ describe('drawCustom', () => {
         const mockLayer = new CustomStyleLayer({
             id: 'custom-layer',
             type: 'custom',
-            render(gl, matrix, args) {
+            render(gl, args) {
                 result = {
                     gl,
-                    matrix,
                     args
                 };
             },
         });
         drawCustom(mockPainter, sourceCacheMock, mockLayer);
         expect(result.gl).toBeDefined();
-        expect(result.matrix).toEqual([...transform.mercatorMatrix.values()]);
         expect(result.args.farZ).toBe(804.8028169246645);
         expect(result.args.farZ).toBe(mockPainter.transform.farZ);
         expect(result.args.nearZ).toBe(mockPainter.transform.nearZ);
         expect(result.args.fov).toBe(mockPainter.transform.fov * Math.PI / 180);
         expect(result.args.modelViewProjectionMatrix).toEqual(mockPainter.transform.modelViewProjectionMatrix);
         expect(result.args.projectionMatrix).toEqual(mockPainter.transform.projectionMatrix);
+        // JP: TODO: test projection args
     });
 });

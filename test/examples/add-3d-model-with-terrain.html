@@ -170,7 +170,7 @@
                     this.renderer.autoClear = false;
                 },
 
-                render(gl, mercatorMatrix) {
+                render(gl, args) {
 
                     // `queryTerrainElevation` gives us the elevation of a point on the terrain
                     // **relative to the elevation of `center`**,
@@ -187,7 +187,7 @@
                         scale: sceneOriginMercator.meterInMercatorCoordinateUnits()
                     };
 
-                    const m = new THREE.Matrix4().fromArray(mercatorMatrix);
+                    const m = new THREE.Matrix4().fromArray(args.defaultProjectionData.mainMatrix);
                     const l = new THREE.Matrix4()
                         .makeTranslation(sceneTransform.translateX, sceneTransform.translateY, sceneTransform.translateZ)
                         .scale(new THREE.Vector3(sceneTransform.scale, -sceneTransform.scale, sceneTransform.scale));

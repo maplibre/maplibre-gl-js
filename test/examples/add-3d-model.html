@@ -90,7 +90,7 @@
 
             this.renderer.autoClear = false;
         },
-        render (gl, matrix) {
+        render (gl, args) {
             const rotationX = new THREE.Matrix4().makeRotationAxis(
                 new THREE.Vector3(1, 0, 0),
                 modelTransform.rotateX
@@ -104,7 +104,7 @@
                 modelTransform.rotateZ
             );
 
-            const m = new THREE.Matrix4().fromArray(matrix);
+            const m = new THREE.Matrix4().fromArray(args.defaultProjectionData.mainMatrix);
             const l = new THREE.Matrix4()
                 .makeTranslation(
                     modelTransform.translateX,
@@ -121,6 +121,14 @@
                 .multiply(rotationX)
                 .multiply(rotationY)
                 .multiply(rotationZ);
+
+            // Alternatively, you can use this API to get the correct model matrix.
+            // It will work regardless of current projection.
+            // Also see the example "globe-3d-model.html".
+            //
+            // const modelMatrix = map.transform.getMatrixForModel(modelOrigin, modelAltitude);
+            // const m = new THREE.Matrix4().fromArray(matrix);
+            // const l = new THREE.Matrix4().fromArray(modelMatrix);
 
             this.camera.projectionMatrix = m.multiply(l);
             this.renderer.resetState();

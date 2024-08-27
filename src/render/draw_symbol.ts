@@ -36,9 +36,9 @@ import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {ColorMode} from '../gl/color_mode';
 import type {Program} from './program';
 import type {TextAnchor} from '../style/style_layer/variable_text_anchor';
-import {ProjectionData} from './program/projection_program';
 import {getGlCoordMatrix, getPerspectiveRatio, getPitchedLabelPlaneMatrix, hideGlyphs, projectWithMatrix, projectTileCoordinatesToClipSpace, projectTileCoordinatesToLabelPlane, SymbolProjectionContext, updateLineLabels} from '../symbol/projection';
 import {translatePosition} from '../util/util';
+import type {ProjectionData} from '../geo/projection/projection_data';
 
 type SymbolTileRenderState = {
     segments: SegmentVector;

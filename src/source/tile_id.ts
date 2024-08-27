@@ -26,7 +26,7 @@ export class CanonicalTileID implements ICanonicalTileID {
         this.z = z;
         this.x = x;
         this.y = y;
-        this.key = calculateKey(0, z, z, x, y);
+        this.key = calculateTileKey(0, z, z, x, y);
     }
 
     equals(id: ICanonicalTileID) {
@@ -77,7 +77,7 @@ export class UnwrappedTileID {
     constructor(wrap: number, canonical: CanonicalTileID) {
         this.wrap = wrap;
         this.canonical = canonical;
-        this.key = calculateKey(wrap, canonical.z, canonical.z, canonical.x, canonical.y);
+        this.key = calculateTileKey(wrap, canonical.z, canonical.z, canonical.x, canonical.y);
     }
 }
 
@@ -101,7 +101,7 @@ export class OverscaledTileID {
         this.overscaledZ = overscaledZ;
         this.wrap = wrap;
         this.canonical = new CanonicalTileID(z, +x, +y);
-        this.key = calculateKey(wrap, overscaledZ, z, x, y);
+        this.key = calculateTileKey(wrap, overscaledZ, z, x, y);
     }
 
     clone() {
@@ -131,9 +131,9 @@ export class OverscaledTileID {
         if (targetZ > this.overscaledZ) throw new Error(`targetZ > this.overscaledZ; targetZ = ${targetZ}; overscaledZ = ${this.overscaledZ}`);
         const zDifference = this.canonical.z - targetZ;
         if (targetZ > this.canonical.z) {
-            return calculateKey(this.wrap * +withWrap, targetZ, this.canonical.z, this.canonical.x, this.canonical.y);
+            return calculateTileKey(this.wrap * +withWrap, targetZ, this.canonical.z, this.canonical.x, this.canonical.y);
         } else {
-            return calculateKey(this.wrap * +withWrap, targetZ, targetZ, this.canonical.x >> zDifference, this.canonical.y >> zDifference);
+            return calculateTileKey(this.wrap * +withWrap, targetZ, targetZ, this.canonical.x >> zDifference, this.canonical.y >> zDifference);
         }
     }
 
@@ -206,7 +206,7 @@ export class OverscaledTileID {
     }
 }
 
-function calculateKey(wrap: number, overscaledZ: number, z: number, x: number, y: number): string {
+export function calculateTileKey(wrap: number, overscaledZ: number, z: number, x: number, y: number): string {
     wrap *= 2;
     if (wrap < 0) wrap = wrap * -1 - 1;
     const dim = 1 << z;

@@ -98,12 +98,12 @@
         },
 
         // method fired on each animation frame
-        render (gl, matrix) {
+        render (gl, args) {
             gl.useProgram(this.program);
             gl.uniformMatrix4fv(
                 gl.getUniformLocation(this.program, 'u_matrix'),
                 false,
-                matrix
+                args.defaultProjectionData.mainMatrix
             );
             gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
             gl.enableVertexAttribArray(this.aPos);

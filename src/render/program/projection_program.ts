@@ -1,6 +1,8 @@
 import {Uniform1f, Uniform4f, UniformLocations, UniformMatrix4f} from '../uniform_binding';
 import {Context} from '../../gl/context';
-import {mat4} from 'gl-matrix';
+// This next import is needed for the "@link" in the documentation to work properly.
+
+import type {ProjectionData} from '../../geo/projection/projection_data';
 
 export type ProjectionPreludeUniformsType = {
     'u_projection_matrix': UniformMatrix4f;
@@ -18,10 +20,13 @@ export const projectionUniforms = (context: Context, locations: UniformLocations
     'u_projection_fallback_matrix': new UniformMatrix4f(context, locations.u_projection_fallback_matrix),
 });
 
-export type ProjectionData = {
-    'u_projection_matrix': mat4;
-    'u_projection_tile_mercator_coords': [number, number, number, number];
-    'u_projection_clipping_plane': [number, number, number, number];
-    'u_projection_transition': number;
-    'u_projection_fallback_matrix': mat4;
-}
+/**
+ * Maps a field name in {@link ProjectionData} to its corresponding uniform name in {@link ProjectionPreludeUniformsType}.
+ */
+export const projectionObjectToUniformMap: {[field in keyof ProjectionData]: keyof ProjectionPreludeUniformsType} = {
+    mainMatrix: 'u_projection_matrix',
+    tileMercatorCoords: 'u_projection_tile_mercator_coords',
+    clippingPlane: 'u_projection_clipping_plane',
+    projectionTransition: 'u_projection_transition',
+    fallbackMatrix: 'u_projection_fallback_matrix',
+};

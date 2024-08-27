@@ -399,7 +399,8 @@ describe('transform', () => {
         transform.setPitch(67.25);
         transform.setCenter(new LngLat(0.0, 0.0));
 
-        expect(transform.customLayerMatrix()[0].toString().length).toBeGreaterThan(10);
+        const customLayerMatrix = transform.getProjectionDataForCustomLayer().mainMatrix;
+        expect(customLayerMatrix[0].toString().length).toBeGreaterThan(10);
         expect(transform.pixelsToClipSpaceMatrix[0].toString().length).toBeGreaterThan(10);
         expect(transform.maxPitchScaleFactor()).toBeCloseTo(2.366025418080343, 5);
     });
@@ -484,16 +485,16 @@ describe('transform', () => {
         transform.resize(500, 500);
         transform.setCenter(new LngLat(10.0, 50.0));
         let projection = transform.projectTileCoordinates(1024, 1024, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), (_x, _y) => 0);
-        expect(projection.point.x).toBeCloseTo(0.0711111094156901, precisionDigits);
-        expect(projection.point.y).toBeCloseTo(0.872, precisionDigits);
+        expect(projection.point.x).toBeCloseTo(0.07111111111111101, precisionDigits);
+        expect(projection.point.y).toBeCloseTo(0.8719999854792714, precisionDigits);
         expect(projection.signedDistanceFromCamera).toBeCloseTo(750, precisionDigits);
         expect(projection.isOccluded).toBe(false);
         transform.setBearing(12);
         transform.setPitch(10);
         projection = transform.projectTileCoordinates(1024, 1024, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), (_x, _y) => 0);
-        expect(projection.point.x).toBeCloseTo(-0.10639783373236278, precisionDigits);
-        expect(projection.point.y).toBeCloseTo(0.8136785294062687, precisionDigits);
-        expect(projection.signedDistanceFromCamera).toBeCloseTo(787.6698880195618, precisionDigits);
+        expect(projection.point.x).toBeCloseTo(-0.10639783257205901, precisionDigits);
+        expect(projection.point.y).toBeCloseTo(0.8136784996777623, precisionDigits);
+        expect(projection.signedDistanceFromCamera).toBeCloseTo(787.6699126802941, precisionDigits);
         expect(projection.isOccluded).toBe(false);
     });
 });

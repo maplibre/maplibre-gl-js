@@ -35,7 +35,7 @@ export class SubdivisionGranularityExpression {
 
     public getGranularityForZoomLevel(zoomLevel: number): number {
         const divisor = 1 << zoomLevel;
-        return Math.max(Math.floor(this._baseZoomGranularity / divisor), this._minGranularity, 0);
+        return Math.max(Math.floor(this._baseZoomGranularity / divisor), this._minGranularity, 1);
     }
 }
 
