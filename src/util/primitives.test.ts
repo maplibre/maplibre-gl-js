@@ -68,7 +68,7 @@ describe('primitives', () => {
         ];
 
         for (const aabb of aabbList)
-            expect(aabb.intersects(frustum)).toBe(2);
+            expect(aabb.intersectsFrustum(frustum)).toBe(2);
 
     });
 
@@ -81,7 +81,7 @@ describe('primitives', () => {
         ];
 
         for (const aabb of aabbList)
-            expect(aabb.intersects(frustum)).toBe(1);
+            expect(aabb.intersectsFrustum(frustum)).toBe(1);
 
     });
 
@@ -95,7 +95,7 @@ describe('primitives', () => {
         ];
 
         for (const aabb of aabbList)
-            expect(aabb.intersects(frustum)).toBe(0);
+            expect(aabb.intersectsFrustum(frustum)).toBe(0);
 
     });
 

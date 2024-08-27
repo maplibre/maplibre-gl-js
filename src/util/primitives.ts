@@ -4,7 +4,7 @@ class Frustum {
 
     constructor(public points: vec4[], public planes: vec4[]) { }
 
-    public static fromInvProjectionMatrix(invProj: mat4, worldSize: number, zoom: number): Frustum {
+    public static fromInvProjectionMatrix(invProj: mat4, worldSize: number = 1, zoom: number = 0): Frustum {
         const clipSpaceCorners = [
             [-1, 1, -1, 1],
             [1, 1, -1, 1],
@@ -80,13 +80,15 @@ class Aabb {
         return pointOnAabb - point[1];
     }
 
-    // Performs a frustum-aabb intersection test. Returns 0 if there's no intersection,
-    // 1 if shapes are intersecting and 2 if the aabb if fully inside the frustum.
-    intersects(frustum: Frustum): number {
+    /**
+     * Performs a frustum-aabb intersection test. Returns 0 if there's no intersection,
+     * 1 if shapes are intersecting and 2 if the aabb if fully inside the frustum.
+     */
+    intersectsFrustum(frustum: Frustum): number {
         // Execute separating axis test between two convex objects to find intersections
         // Each frustum plane together with 3 major axes define the separating axes
 
-        const aabbPoints = [
+        const aabbPoints: Array<vec4> = [
             [this.min[0], this.min[1], this.min[2], 1],
             [this.max[0], this.min[1], this.min[2], 1],
             [this.max[0], this.max[1], this.min[2], 1],
@@ -104,7 +106,7 @@ class Aabb {
             let pointsInside = 0;
 
             for (let i = 0; i < aabbPoints.length; i++) {
-                if (vec4.dot(plane, aabbPoints[i] as any) >= 0) {
+                if (vec4.dot(plane, aabbPoints[i]) >= 0) {
                     pointsInside++;
                 }
             }
@@ -136,7 +138,40 @@ class Aabb {
 
         return 1;
     }
+
+    /**
+     * Performs a halfspace-aabb intersection test. Returns 0 if there's no intersection,
+     * 1 if shapes are intersecting and 2 if the aabb if fully inside the plane's positive halfspace.
+     */
+    intersectsPlane(plane: vec4): number {
+        const aabbPoints: Array<vec4> = [
+            [this.min[0], this.min[1], this.min[2], 1],
+            [this.max[0], this.min[1], this.min[2], 1],
+            [this.max[0], this.max[1], this.min[2], 1],
+            [this.min[0], this.max[1], this.min[2], 1],
+            [this.min[0], this.min[1], this.max[2], 1],
+            [this.max[0], this.min[1], this.max[2], 1],
+            [this.max[0], this.max[1], this.max[2], 1],
+            [this.min[0], this.max[1], this.max[2], 1]
+        ];
+
+        let pointsInside = 0;
+        for (let i = 0; i < aabbPoints.length; i++) {
+            if (vec4.dot(plane, aabbPoints[i]) >= 0) {
+                pointsInside++;
+            }
+        }
+
+        if (pointsInside === 0) {
+            return 0;
+        } else if (pointsInside < aabbPoints.length) {
+            return 1;
+        } else {
+            return 2;
+        }
+    }
 }
+
 export {
     Aabb,
     Frustum

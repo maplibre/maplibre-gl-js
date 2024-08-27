@@ -1,4 +1,4 @@
-import {mat2, mat4, vec3, vec4} from 'gl-matrix';
+import {mat2, mat4, vec2, vec3, vec4} from 'gl-matrix';
 import {MAX_VALID_LATITUDE, TransformHelper} from '../transform_helper';
 import {MercatorTransform} from './mercator_transform';
 import {LngLat, LngLatLike, earthRadius} from '../lng_lat';
@@ -17,6 +17,7 @@ import {tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 import {angularCoordinatesRadiansToVector, angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
 import {EXTENT} from '../../data/extent';
 import type {ProjectionData} from './projection_data';
+import {Aabb, Frustum} from '../../util/primitives';
 
 /**
  * Describes the intersection of ray and sphere.
@@ -680,9 +681,207 @@ export class GlobeTransform implements ITransform {
         return [new UnwrappedTileID(0, tileID)];
     }
 
+    /**
+     * Returns the AABB of the specified tile. The AABB is in the coordinate space where the globe is a unit sphere.
+     * @param tileID - Tile x, y and z for zoom.
+     */
+    private getTileAABB(tileID: {x: number; y: number; z: number}): Aabb {
+        if (tileID.z <= 0) {
+            return new Aabb(
+                [-1, -1, -1],
+                [1, 1, 1]
+            );
+        } else if (tileID.z === 1) {
+            // X is 1 at lng=E90°
+            // Y is 1 at **north** pole
+            // Z is 1 at null island
+            return new Aabb(
+                [tileID.x === 0 ? -1 : 0, tileID.y === 0 ? 0 : -1, -1],
+                [tileID.x === 0 ? 0 : 1, tileID.y === 0 ? 1 : 0, 1]
+            );
+        } else {
+            // We can get away with this simple AABB construction, because the extremes
+            // of each X,Y or Z axis will always lie on a tile edge.
+            // This only fails for tiles with zoom level <2, hence the special handling above.
+
+            const corners = [
+                this._projectTileCoordinatesToSphere(0, 0, tileID),
+                this._projectTileCoordinatesToSphere(EXTENT, 0, tileID),
+                this._projectTileCoordinatesToSphere(EXTENT, EXTENT, tileID),
+                this._projectTileCoordinatesToSphere(0, EXTENT, tileID),
+            ];
+
+            const min: vec3 = [1, 1, 1];
+            const max: vec3 = [-1, -1, -1];
+
+            for (const c of corners) {
+                for (let i = 0; i < 3; i++) {
+                    min[i] = Math.min(min[i], c[i]);
+                    max[i] = Math.max(max[i], c[i]);
+                }
+            }
+
+            // Special handling of poles - we need to extend the tile AABB
+            // to include the pole for tiles that border mercator north/south edge.
+            if (tileID.y === 0 || (tileID.y === (1 << tileID.z) - 1)) {
+                const pole = [0, tileID.y === 0 ? 1 : -1, 0];
+                for (let i = 0; i < 3; i++) {
+                    min[i] = Math.min(min[i], pole[i]);
+                    max[i] = Math.max(max[i], pole[i]);
+                }
+            }
+
+            return new Aabb(
+                min,
+                max
+            );
+        }
+    }
+
+    /**
+     * Returns the Manhattan distance of a point to a square tile of size 1. If the point is inside the tile, returns 0.
+     */
+    private distanceToTile(pointX: number, pointY: number, tileCornerX: number, tileCornerY: number): number {
+        const tileCornerToCenterX = pointX - tileCornerX;
+        const tileCornerToCenterY = pointY - tileCornerY;
+        const distanceX = (tileCornerToCenterX < 0) ? -tileCornerToCenterX : Math.max(0, tileCornerToCenterX - 1);
+        const distanceY = (tileCornerToCenterY < 0) ? -tileCornerToCenterY : Math.max(0, tileCornerToCenterY - 1);
+        return Math.max(distanceX, distanceY);
+    }
+
+    /**
+     * A simple/heuristic function that returns whether the tile is visible under the current transform.
+     * @param x - Tile X.
+     * @param y - tile Y.
+     * @param z - Tile zoom.
+     * @returns 0 is not visible, 1 if partially visible, 2 if fully visible.
+     */
+    private isTileVisible(x: number, y: number, z: number, frustum: Frustum): number {
+        // Named constants for better readability
+        const notVisible = 0;
+        const partiallyVisible = 1;
+        const fullyVisible = 2;
+
+        const tileID = {x, y, z};
+        const aabb = this.getTileAABB(tileID);
+
+        const frustumTest = aabb.intersectsFrustum(frustum);
+        const planeTest = aabb.intersectsPlane(this._cachedClippingPlane);
+
+        if (frustumTest === notVisible || planeTest === notVisible) {
+            return notVisible;
+        }
+
+        if (frustumTest === fullyVisible && planeTest === fullyVisible) {
+            return fullyVisible;
+        }
+
+        return partiallyVisible;
+    }
+
     coveringTiles(options: CoveringTilesOptions): OverscaledTileID[] {
-        // Globe: TODO: implement for globe #3887
-        return this._mercatorTransform.coveringTiles(options);
+        if (!this._globeRendering) {
+            return this._mercatorTransform.coveringTiles(options);
+        }
+
+        let z = this.coveringZoomLevel(options);
+        const actualZ = z;
+
+        if (options.minzoom !== undefined && z < options.minzoom) {
+            return [];
+        }
+        if (options.maxzoom !== undefined && z > options.maxzoom) {
+            z = options.maxzoom;
+        }
+
+        const matrix = mat4.clone(this._globeViewProjMatrixNoCorrectionInverted);
+        mat4.scale(matrix, matrix, [1, 1, -1]);
+        const cameraFrustum = Frustum.fromInvProjectionMatrix(matrix);
+
+        const cameraCoord = this.screenPointToMercatorCoordinate(this.getCameraPoint());
+        const centerCoord = MercatorCoordinate.fromLngLat(this.center);
+        const numTiles = Math.pow(2, z);
+        const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
+        const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
+
+        const radiusOfMaxLvlLodInTiles = 3;
+
+        // Do a depth-first traversal to find visible tiles and proper levels of detail
+        const stack: Array<{
+            x: number;
+            y: number;
+            zoom: number;
+            fullyVisible: boolean;
+        }> = [];
+        const result: Array<{
+            tileID: OverscaledTileID;
+            distanceSq: number;
+            tileDistanceToCamera: number;
+        }> = [];
+        const maxZoom = z;
+        const overscaledZ = options.reparseOverscaled ? actualZ : z;
+        stack.push({
+            zoom: 0,
+            x: 0,
+            y: 0,
+            fullyVisible: false
+        });
+
+        while (stack.length > 0) {
+            const it = stack.pop();
+            const x = it.x;
+            const y = it.y;
+            let fullyVisible = it.fullyVisible;
+
+            // Visibility of a tile is not required if any of its ancestor if fully visible
+            if (!fullyVisible) {
+                const intersectResult = this.isTileVisible(it.x, it.y, it.zoom, cameraFrustum);
+
+                if (intersectResult === 0)
+                    continue;
+
+                fullyVisible = intersectResult === 2;
+            }
+
+            // Determine whether the tile needs any further splitting.
+            // At each level, we want at least `radiusOfMaxLvlLodInTiles` tiles loaded in each axis from the map center point.
+            // For radiusOfMaxLvlLodInTiles=1, this would result in something like this:
+            // z=4 |--------------||--------------||--------------|
+            // z=5         |------||------||------|
+            // z=6             |--||--||--|
+            //                       ^map center
+            // ...where "|--|" symbolizes a tile viewed sideways.
+            // This logic might be slightly different from what mercator_transform.ts does, but should result in very similar (if not the same) set of tiles being loaded.
+            const scale = 1 << (Math.max(it.zoom, 0));
+            const scaledCenter = [centerCoord.x * scale, centerCoord.y * scale];
+            const scaledCamera = [cameraCoord.x * scale, cameraCoord.y * scale];
+            const centerDist = this.distanceToTile(scaledCenter[0], scaledCenter[1], x, y);
+            const cameraDist = this.distanceToTile(scaledCamera[0], scaledCamera[1], x, y);
+            const split = Math.min(centerDist, cameraDist) * 2 <= radiusOfMaxLvlLodInTiles; // Multiply distance by 2, because the subdivided tiles would be half the size
+
+            // Have we reached the target depth or is the tile too far away to be any split further?
+            if (it.zoom === maxZoom || !split) {
+                const dz = maxZoom - it.zoom;
+                const dx = cameraPoint[0] - 0.5 - (x << dz);
+                const dy = cameraPoint[1] - 0.5 - (y << dz);
+                result.push({
+                    tileID: new OverscaledTileID(it.zoom === maxZoom ? overscaledZ : it.zoom, 0, it.zoom, x, y),
+                    distanceSq: vec2.sqrLen([centerPoint[0] - 0.5 - dx, centerPoint[1] - 0.5 - dy]),
+                    // this variable is currently not used, but may be important to reduce the amount of loaded tiles
+                    tileDistanceToCamera: Math.sqrt(dx * dx + dy * dy)
+                });
+                continue;
+            }
+
+            for (let i = 0; i < 4; i++) {
+                const childX = (x << 1) + (i % 2);
+                const childY = (y << 1) + (i >> 1);
+                const childZ = it.zoom + 1;
+                stack.push({zoom: childZ, x: childX, y: childY, fullyVisible});
+            }
+        }
+
+        return result.sort((a, b) => a.distanceSq - b.distanceSq).map(a => a.tileID);
     }
 
     recalculateZoom(terrain: Terrain): void {
