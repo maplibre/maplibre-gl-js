@@ -90,7 +90,7 @@ describe('SymbolBucket', () => {
         tileB.buckets = {test: bucketB};
         tileB.collisionBoxArray = collisionBoxArray;
 
-        crossTileSymbolIndex.addLayer(bucketA.layers[0], [tileA, tileB], undefined as any);
+        crossTileSymbolIndex.addLayer(bucketA.layers[0], [tileA, tileB], undefined as any, true);
 
         const place = (layer, tile) => {
             const parts = [];

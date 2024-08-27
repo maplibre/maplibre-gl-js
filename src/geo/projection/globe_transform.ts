@@ -301,6 +301,13 @@ export class GlobeTransform implements ITransform {
 
     public get useGlobeControls(): boolean { return this._globeRendering; }
 
+    public get allowWrapJumps(): boolean {
+        if (this._globeRendering) {
+            return false;
+        }
+        return this._mercatorTransform.allowWrapJumps;
+    }
+
     public get cameraPosition(): vec3 {
         // Return a copy - don't let outside code mutate our precomputed camera position.
         const copy = createVec3f64(); // Ensure the resulting vector is float64s
@@ -739,14 +746,50 @@ export class GlobeTransform implements ITransform {
     }
 
     /**
-     * Returns the Manhattan distance of a point to a square tile of size 1. If the point is inside the tile, returns 0.
+     * Computes distance of a point to a tile in an arbitrary axis.
+     * Tile is assumed to have size 1, distance returned is to the nearer tile edge.
+     * @param point - Point position.
+     * @param tile - Tile position.
      */
-    private distanceToTile(pointX: number, pointY: number, tileCornerX: number, tileCornerY: number): number {
+    private distanceToTileSimple(point: number, tile: number): number {
+        const delta = point - tile;
+        return (delta < 0) ? -delta : Math.max(0, delta - 1);
+    }
+
+    private distanceToTileWrapX(pointX: number, pointY: number, tileCornerX: number, tileCornerY: number, worldSize: number): number {
         const tileCornerToCenterX = pointX - tileCornerX;
-        const tileCornerToCenterY = pointY - tileCornerY;
-        const distanceX = (tileCornerToCenterX < 0) ? -tileCornerToCenterX : Math.max(0, tileCornerToCenterX - 1);
-        const distanceY = (tileCornerToCenterY < 0) ? -tileCornerToCenterY : Math.max(0, tileCornerToCenterY - 1);
-        return Math.max(distanceX, distanceY);
+
+        let distanceX: number;
+        if (tileCornerToCenterX < 0) {
+            // Point is left of tile
+            distanceX = Math.min(-tileCornerToCenterX, worldSize + tileCornerToCenterX - 1);
+        } else if (tileCornerToCenterX > 1) {
+            // Point is right of tile
+            distanceX = Math.min(tileCornerToCenterX - 1, worldSize - tileCornerToCenterX);
+        } else {
+            // Point is inside tile in the X axis.
+            distanceX = 0;
+        }
+
+        return Math.max(distanceX, this.distanceToTileSimple(pointY, tileCornerY));
+    }
+
+    /**
+     * Returns the distance of a point to a square tile of size 1. If the point is inside the tile, returns 0.
+     * Handles distances on a sphere correctly: X is wrapped when crossing the antimeridian,
+     * when crossing the poles Y is mirrored and X is shifted by half world size.
+     */
+    private distanceToTile(pointX: number, pointY: number, tileCornerX: number, tileCornerY: number, worldSize: number): number {
+        const halfWorld = worldSize * 0.5;
+        let smallestDistance = worldSize * 2;
+        // Original tile
+        smallestDistance = Math.min(smallestDistance, this.distanceToTileWrapX(pointX, pointY, tileCornerX, tileCornerY, worldSize));
+        // Up
+        smallestDistance = Math.min(smallestDistance, this.distanceToTileWrapX(pointX, pointY, tileCornerX + halfWorld, -tileCornerY - 1, worldSize));
+        // Down
+        smallestDistance = Math.min(smallestDistance, this.distanceToTileWrapX(pointX, pointY, tileCornerX + halfWorld, worldSize + worldSize - tileCornerY - 1, worldSize));
+
+        return smallestDistance;
     }
 
     /**
@@ -855,8 +898,8 @@ export class GlobeTransform implements ITransform {
             const scale = 1 << (Math.max(it.zoom, 0));
             const scaledCenter = [centerCoord.x * scale, centerCoord.y * scale];
             const scaledCamera = [cameraCoord.x * scale, cameraCoord.y * scale];
-            const centerDist = this.distanceToTile(scaledCenter[0], scaledCenter[1], x, y);
-            const cameraDist = this.distanceToTile(scaledCamera[0], scaledCamera[1], x, y);
+            const centerDist = this.distanceToTile(scaledCenter[0], scaledCenter[1], x, y, scale);
+            const cameraDist = this.distanceToTile(scaledCamera[0], scaledCamera[1], x, y, scale);
             const split = Math.min(centerDist, cameraDist) * 2 <= radiusOfMaxLvlLodInTiles; // Multiply distance by 2, because the subdivided tiles would be half the size
 
             // Have we reached the target depth or is the tile too far away to be any split further?
