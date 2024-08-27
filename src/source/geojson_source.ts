@@ -1,10 +1,9 @@
 import {Event, ErrorEvent, Evented} from '../util/evented';
 
-import {extend} from '../util/util';
+import {extend, warnOnce} from '../util/util';
 import {EXTENT} from '../data/extent';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
-import {warnOnce} from '../util/util';
 
 import type {Source} from './source';
 import type {Map} from '../ui/map';

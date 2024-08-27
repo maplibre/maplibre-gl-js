@@ -68,11 +68,11 @@ describe('GeoJSONSource#constructor', () => {
         source.map = mapStub;
         source.load();
 
-        expect(warn).toHaveBeenCalledWith('The maxzoom value "4" is expected to be greater than the clusterMaxZoom value "4".')
+        expect(warn).toHaveBeenCalledWith('The maxzoom value "4" is expected to be greater than the clusterMaxZoom value "4".');
 
         warn.mockRestore();
     });
-})
+});
 
 describe('GeoJSONSource#setData', () => {
     function createSource(opts?) {
