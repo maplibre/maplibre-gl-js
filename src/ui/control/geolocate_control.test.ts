@@ -47,7 +47,7 @@ describe('GeolocateControl with no options', () => {
         spy.mockRestore();
     });
 
-    test('is enabled when there no support', async () => {
+    test('is enabled when there is support', async () => {
         const geolocate = new GeolocateControl(undefined);
         map.addControl(geolocate);
         await sleep(0);
