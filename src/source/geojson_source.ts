@@ -30,6 +30,7 @@ export type GeoJSONSourceInternalOptions = {
     clusterMaxZoom?: number;
     clusterRadius?: number;
     clusterMinPoints?: number;
+    clusterArrayType?: "Float32Array" | "Float64Array";
     generateId?: boolean;
 }
 
@@ -179,7 +180,8 @@ export class GeoJSONSource extends Evented implements Source {
                 extent: EXTENT,
                 radius: (options.clusterRadius || 50) * scale,
                 log: false,
-                generateId: options.generateId || false
+                generateId: options.generateId || false,
+                arrayType: options.clusterArrayType || 'Float32Array'
             },
             clusterProperties: options.clusterProperties,
             filter: options.filter
