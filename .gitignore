@@ -39,5 +39,3 @@ npm-debug.log
 /.vs/
 .*.swp
 junit.xml
-
-/test/data
