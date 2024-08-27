@@ -7,6 +7,7 @@
 ### 🐞 Bug fixes
 
 - Heatmap Fix for 3D terrain ([#4571](https://github.com/maplibre/maplibre-gl-js/pull/4571))
+- Fix Map#off to not remove listener with layer(s) registered with Map#once ([#4592](https://github.com/maplibre/maplibre-gl-js/pull/4592))
 - _...Add new stuff here..._
 
 ## 4.6.0
