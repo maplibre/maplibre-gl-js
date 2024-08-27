@@ -102,20 +102,7 @@ vec4 interpolateProjection(vec2 posInTile, vec3 spherePos, float elevation) {
     return globePosition;
 }
 
-// Computes screenspace projection
-// and replaces Z with a custom value that clips geometry
-// on the backfacing side of the planet.
-vec4 projectTile(vec2 posInTile) {
-    return interpolateProjection(posInTile, projectToSphere(posInTile), 0.0);
-}
-
-// Uses elevation to compute final screenspace projection
-// and replaces Z with a custom value that clips geometry
-// on the backfacing side of the planet.
-vec4 projectTileWithElevation(vec2 posInTile, float elevation) {
-    return interpolateProjection(posInTile, projectToSphere(posInTile), elevation);
-}
-
+// Unlike interpolateProjection, this variant of the function preserves the Z value of the final vector.
 vec4 interpolateProjectionFor3D(vec2 posInTile, vec3 spherePos, float elevation) {
     vec3 elevatedPos = spherePos * (1.0 + elevation / GLOBE_RADIUS);
     vec4 globePosition = u_projection_matrix * vec4(elevatedPos, 1.0);
@@ -123,7 +110,21 @@ vec4 interpolateProjectionFor3D(vec2 posInTile, vec3 spherePos, float elevation)
     return mix(fallbackPosition, globePosition, u_projection_transition);
 }
 
-// Projects the tile coordinates+elevation while preserving the Z value from the projection matrix.
+// Computes screenspace projection
+// and **replaces Z** with a custom value that clips geometry
+// on the backfacing side of the planet.
+vec4 projectTile(vec2 posInTile) {
+    return interpolateProjection(posInTile, projectToSphere(posInTile), 0.0);
+}
+
+// Uses elevation to compute final screenspace projection
+// and **replaces Z** with a custom value that clips geometry
+// on the backfacing side of the planet.
+vec4 projectTileWithElevation(vec2 posInTile, float elevation) {
+    return interpolateProjection(posInTile, projectToSphere(posInTile), elevation);
+}
+
+// Projects the tile coordinates+elevation while **preserving Z** value from multiplication with the projection matrix.
 vec4 projectTileFor3D(vec2 posInTile, float elevation) {
     vec3 spherePos = projectToSphere(posInTile);
     return interpolateProjectionFor3D(posInTile, spherePos, elevation);

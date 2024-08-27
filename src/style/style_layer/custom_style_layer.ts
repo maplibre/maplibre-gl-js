@@ -53,8 +53,8 @@ export type CustomRenderMethodInput = {
          * @example
          * ```
          * const vertexSource = `#version 300 es
-         * ${shaderDescription.vertexShaderPrelude}
-         * ${shaderDescription.define}
+         * ${shaderData.vertexShaderPrelude}
+         * ${shaderData.define}
          * in vec2 a_pos;
          * void main() {
          *     gl_Position = projectTile(a_pos);
@@ -68,8 +68,8 @@ export type CustomRenderMethodInput = {
          * @example
          * ```
          * const vertexSource = `#version 300 es
-         * ${shaderDescription.vertexShaderPrelude}
-         * ${shaderDescription.define}
+         * ${shaderData.vertexShaderPrelude}
+         * ${shaderData.define}
          * in vec2 a_pos;
          * void main() {
          *     gl_Position = projectTile(a_pos);
@@ -83,18 +83,26 @@ export type CustomRenderMethodInput = {
     };
     /**
      * Uniforms that should be passed to the vertex shader, if MapLibre's projection code is used.
-     * They are set so that `projectTile` in shader accepts a vec2 in range 0..1 in web mercator coordinates.
+     * For more details of this object's internals, see its doc comments in `src/geo/projection/projection_data.ts`.
+     *
+     * These uniforms are set so that `projectTile` in shader accepts a vec2 in range 0..1 in web mercator coordinates.
      * Use `map.transform.getProjectionData(tileID)` to get uniforms for a given tile and pass vec2 in tile-local range 0..EXTENT instead.
+     *
+     * For projection 3D features, use `projectTileFor3D` in the shader.
      *
      * If you just need a projection matrix, use `defaultProjectionData.projectionMatrix`.
      * A projection matrix is sufficient for simple custom layers that also only support mercator projection.
      *
-     * When these uniforms are used, the shader's `projectTile` function projects spherical mercator
+     * Under mercator projection, when these uniforms are used, the shader's `projectTile` function projects spherical mercator
      * coordinates to gl clip space coordinates. The spherical mercator coordinate `[0, 0]` represents the
      * top left corner of the mercator world and `[1, 1]` represents the bottom right corner. When
      * the `renderingMode` is `"3d"`, the z coordinate is conformal. A box with identical x, y, and z
      * lengths in mercator units would be rendered as a cube. {@link MercatorCoordinate.fromLngLat}
      * can be used to project a `LngLat` to a mercator coordinate.
+     *
+     * Under globe projection, when these uniforms are used, the `elevation` parameter
+     * passed to `projectTileFor3D` in the shader is elevation in meters above "sea level",
+     * or more accurately for globe, elevation above the surface of the perfect sphere used to render the planet.
      */
     defaultProjectionData: ProjectionData;
 }
