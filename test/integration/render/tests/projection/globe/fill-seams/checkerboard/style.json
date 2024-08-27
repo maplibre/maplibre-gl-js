@@ -15,12 +15,14 @@
     61.590
   ],
   "zoom": 7.95,
-  "projection": { "type": "globe" },
+  "projection": {
+    "type": "globe"
+  },
   "sources": {
     "vector_tiles": {
       "type": "vector",
       "tiles": [
-        "local://tiles/checkerboard/{z}-{x}-{y}.mvt"
+        "local://tiles/checkerboard.mvt"
       ]
     }
   },
