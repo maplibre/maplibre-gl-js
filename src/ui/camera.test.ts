@@ -2099,6 +2099,16 @@ describe('#fitBounds', () => {
             bottom: 0
         });
     });
+
+    test('bounds crossing antimeridian', () => {
+        const camera = createCamera();
+        const bb = [[175.813127, -20.157768], [-178.340903, -15.449124]]; // bounds for fiji (crossing antimeridian)
+        camera.fitBounds(bb, {duration: 0});
+
+        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: 178.7361, lat: -17.8190});
+        expect(fixedNum(camera.getZoom(), 3)).toBe(5.944);
+    });
+
 });
 
 describe('#fitScreenCoordinates', () => {
