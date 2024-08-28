@@ -56,8 +56,8 @@ void main() {
     float fontScale = u_is_text ? size / 24.0 : size;
 
     lowp vec4 color = fill_color;
-    // highp float gamma = EDGE_GAMMA / (fontScale * u_gamma_scale);
-    // lowp float inner_edge = (256.0 - 64.0) / 256.0;
+    highp float gamma = EDGE_GAMMA / (fontScale * u_gamma_scale);
+    lowp float inner_edge = (256.0 - 64.0) / 256.0;
 
     vec3 s = texture(u_texture, tex).rgb;
     float sd = median(s);
@@ -65,15 +65,14 @@ void main() {
 
     if (u_is_halo) {
         color = halo_color;
-        // gamma = (halo_blur * 1.19 / SDF_PX + EDGE_GAMMA) / (fontScale * u_gamma_scale);
-        // inner_edge = inner_edge + gamma * gamma_scale;
+        gamma = (halo_blur * 1.19 / SDF_PX + EDGE_GAMMA) / (fontScale * u_gamma_scale);
+        inner_edge = inner_edge + gamma * gamma_scale;
         dist = (sd - 0.5 + halo_blur + halo_width);
     } else {
         dist = (sd - 0.5 + halo_blur);
     }
+    dist = dist * screenPxRange() + 0.5;
 
-    /*
-    lowp float dist = texture(u_texture, tex).a;
     highp float gamma_scaled = gamma * gamma_scale;
     highp float alpha = smoothstep(inner_edge - gamma_scaled, inner_edge + gamma_scaled, dist);
     if (u_is_halo) {
@@ -82,9 +81,8 @@ void main() {
         lowp float halo_edge = (6.0 - halo_width / fontScale) / SDF_PX;
         alpha = min(smoothstep(halo_edge - gamma_scaled, halo_edge + gamma_scaled, dist), 1.0 - alpha);
     }
-    */
 
-    float alpha = clamp(dist * screenPxRange()  + 0.5, 0.0, 1.0);
+    // float alpha = clamp(dist, 0.0, 1.0);
     fragColor = color * (alpha * opacity * fade_opacity);
 
 #ifdef OVERDRAW_INSPECTOR
