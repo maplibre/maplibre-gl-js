@@ -626,9 +626,36 @@ export abstract class Camera extends Evented {
      * ```
      */
     cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): CenterZoomBearing | undefined {
-        bounds = LngLatBounds.convert(bounds);
+        bounds = this._adjustAntiMeridian(LngLatBounds.convert(bounds));
         const bearing = options && options.bearing || 0;
+
         return this._cameraForBoxAndBearing(bounds.getNorthWest(), bounds.getSouthEast(), bearing, options);
+    }
+
+    /**
+     * @internal
+     * Adjusts the given bounds to handle the case where the bounds cross the 180th meridian (antimeridian).
+     * @param bounds - The LngLatBounds to adjust
+     * @returns The adjusted LngLatBounds
+     * @example
+     * ```ts
+     * let bounds = new LngLatBounds([175.813127, -20.157768], [-178. 340903, -15.449124]);
+     * let adjustedBounds = this._adjustAntiMeridian(bounds);
+     * // adjustedBounds will be: [[175.813127, -20.157768], [181.659097, -15.449124]]
+     * ```
+     */
+    _adjustAntiMeridian(bounds: LngLatBounds): LngLatBounds {
+        const sw = bounds.getSouthWest();
+        const ne = bounds.getNorthEast();
+
+        if (sw.lng > ne.lng) {
+            return new LngLatBounds(
+                sw,
+                new LngLat(ne.lng + 360, ne.lat)
+            );
+        }
+
+        return bounds;
     }
 
     /**
