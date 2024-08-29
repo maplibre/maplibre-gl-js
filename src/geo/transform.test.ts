@@ -118,6 +118,28 @@ describe('transform', () => {
         expect(transform.center).toEqual(new LngLat(-4.828338623046875, -4.828969771321582));
     });
 
+    test('lngRange & latRange constrain zoom and center after cloning', () => {
+        const old = new Transform(0, 22, 0, 60, true);
+        old.center = new LngLat(0, 0);
+        old.zoom = 10;
+        old.resize(500, 500);
+
+        old.lngRange = [-5, 5];
+        old.latRange = [-5, 5];
+
+        const transform = old.clone();
+
+        transform.zoom = 0;
+        expect(transform.zoom).toBe(5.1357092861044045);
+
+        transform.center = new LngLat(-50, -30);
+        expect(transform.center).toEqual(new LngLat(0, -0.0063583052861417855));
+
+        transform.zoom = 10;
+        transform.center = new LngLat(-50, -30);
+        expect(transform.center).toEqual(new LngLat(-4.828338623046875, -4.828969771321582));
+    });
+
     test('lngRange can constrain zoom and center across meridian', () => {
         const transform = new Transform(0, 22, 0, 60, true);
         transform.center = new LngLat(180, 0);
