@@ -67,6 +67,8 @@ export class Sky extends Evented {
                 'sky-color': 'transparent',
                 'horizon-color': 'transparent',
                 'fog-color': 'transparent',
+                'fog-ground-blend': 1,
+                'atmosphere-blend': 0,
             };
         }
 

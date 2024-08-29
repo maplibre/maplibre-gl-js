@@ -2,12 +2,15 @@
 
 ### ✨ Features and improvements
 - Support multiple layers in `map.on`, `map.once` and `map.off` methods ([#4279](https://github.com/maplibre/maplibre-gl-js/pull/4401))
+- Ensure GeoJSON cluster sources emit a console warning if `maxzoom` is less than or equal to `clusterMaxZoom` since in this case you may see unexpected results. ([#4604](https://github.com/maplibre/maplibre-gl-js/pull/4604))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 
 - Heatmap Fix for 3D terrain ([#4571](https://github.com/maplibre/maplibre-gl-js/pull/4571))
 - Fix Map#off to not remove listener with layer(s) registered with Map#once ([#4592](https://github.com/maplibre/maplibre-gl-js/pull/4592))
+- Improve types a bit for `addSource` and `getSource` ([#4616](https://github.com/maplibre/maplibre-gl-js/pull/4616))
+- Fix the color near the horizon when terrain is enabled without any sky ([#4607](https://github.com/maplibre/maplibre-gl-js/pull/4607))
 - _...Add new stuff here..._
 
 ## 4.6.0

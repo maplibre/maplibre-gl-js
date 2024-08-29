@@ -519,7 +519,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                         map._render();
                         break;
                     case 'updateFakeCanvas': {
-                        const canvasSource = map.getSource(operation[1]) as CanvasSource;
+                        const canvasSource = map.getSource<CanvasSource>(operation[1]);
                         canvasSource.play();
                         // update before pause should be rendered
                         await updateFakeCanvas(window.document, testData.addFakeCanvas.id, operation[2]);
