@@ -205,6 +205,16 @@ describe('LngLatBounds', () => {
         expect(center1Radius0.toArray()).toEqual([[-73.9749, 40.7736], [-73.9749, 40.7736]]);
     });
 
+    test('#adjustAntiMeridian across dateline', () => {
+        const sw = new LngLat(170, 0);
+        const ne = new LngLat(-170, 10);
+        const bounds = new LngLatBounds(sw, ne).adjustAntiMeridian();
+        expect(bounds.getSouth()).toBe(0);
+        expect(bounds.getWest()).toBe(170);
+        expect(bounds.getNorth()).toBe(10);
+        expect(bounds.getEast()).toBe(190);
+    });
+
     describe('contains', () => {
         describe('point', () => {
             test('point is in bounds', () => {
