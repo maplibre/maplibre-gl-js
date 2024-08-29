@@ -115,9 +115,9 @@ export type StyleSetterOptions = {
  *
  * This function exposes previous and next styles, it can be commonly used to support a range of functionalities like:
  *
- * * when previous style carries certain 'state' that needs to be carried over to a new style gracefully;
- * * when a desired style is a certain combination of previous and incoming style;
- * * when an incoming style requires modification based on external state.
+ * - when previous style carries certain 'state' that needs to be carried over to a new style gracefully;
+ * - when a desired style is a certain combination of previous and incoming style;
+ * - when an incoming style requires modification based on external state.
  *
  * @param previous - The current style.
  * @param next - The next style.
