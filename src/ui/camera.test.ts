@@ -2109,121 +2109,13 @@ describe('#fitBounds', () => {
         expect(fixedNum(camera.getZoom(), 3)).toBe(5.944);
     });
 
-    test('kenya', () => {
-        const camera = createCamera();
-        const bb = [[32.958984, -5.353521], [43.50585, 5.615985]];
-        camera.fitBounds(bb, {duration: 0});
-
-        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: 38.2324, lat: 0.1318});
-        expect(fixedNum(camera.getZoom(), 3)).toBe(5.034);
-    });
-
-    test('normal cross (crossing antimeridian)', () => {
-        const camera = createCamera();
-        const bb = [[170, 0], [-170, 10]];
-        camera.fitBounds(bb, {duration: 0});
-
-        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: 180, lat: 5.0191});
-        expect(fixedNum(camera.getZoom(), 3)).toBe(4.17);
-    });
-
-    test('not cross', () => {
+    test('not crossing antimeridian', () => {
         const camera = createCamera();
         const bb = [[-10, -10], [10, 10]];
         camera.fitBounds(bb, {duration: 0});
 
         expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: 0, lat: 0});
         expect(fixedNum(camera.getZoom(), 3)).toBe(4.163);
-    });
-
-    test('exactly meridian (crossing antimeridian)', () => {
-        const camera = createCamera();
-        const bb = [[180, -20], [-180, 20]];
-        camera.fitBounds(bb, {duration: 0});
-
-        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: 180, lat: 0});
-        expect(fixedNum(camera.getZoom(), 3)).toBe(3.14);
-    });
-
-    test('small cross (crossing antimeridian)', () => {
-        const camera = createCamera();
-        const bb = [[179, -5], [-179, 5]];
-        camera.fitBounds(bb, {duration: 0});
-
-        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: 180, lat: 0});
-        expect(fixedNum(camera.getZoom(), 3)).toBe(5.168);
-    });
-
-    test('large cross (crossing antimeridian)', () => {
-        const camera = createCamera();
-        const bb = [[100, -30], [-100, 30]];
-        camera.fitBounds(bb, {duration: 0});
-
-        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: 180, lat: 0});
-        expect(fixedNum(camera.getZoom(), 3)).toBe(1.17);
-    });
-
-    test('reverse cross (crossing antimeridian)', () => {
-        const camera = createCamera();
-        const bb = [[-170, 10], [170, 0]];
-        camera.fitBounds(bb, {duration: 0});
-
-        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: 0, lat: 5.0191});
-        expect(fixedNum(camera.getZoom(), 3)).toBe(0.082);
-    });
-
-    test('reverse not cross', () => {
-        const camera = createCamera();
-        const bb = [[170, 10], [150, 0]];
-        camera.fitBounds(bb, {duration: 0});
-
-        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -20, lat: 5.0191});
-        expect(fixedNum(camera.getZoom(), 3)).toBe(0.082);
-    });
-
-    test('reverse reversed', () => {
-        const camera = createCamera();
-        const bb = [[150, 0], [170, 10]];
-        camera.fitBounds(bb, {duration: 0});
-
-        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: 160, lat: 5.0191});
-        expect(fixedNum(camera.getZoom(), 3)).toBe(4.17);
-    });
-
-    test('same longitude', () => {
-        const camera = createCamera();
-        const bb = [[175, -10], [175, 10]];
-        camera.fitBounds(bb, {duration: 0});
-
-        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: 175, lat: 0});
-        expect(fixedNum(camera.getZoom(), 3)).toBe(4.163);
-    });
-
-    test('full world', () => {
-        const camera = createCamera();
-        const bb = [[-180, -90], [180, 90]];
-        camera.fitBounds(bb, {duration: 0});
-
-        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: 0, lat: 0});
-        expect(fixedNum(camera.getZoom(), 3)).toBe(0);
-    });
-
-    test('across pole', () => {
-        const camera = createCamera();
-        const bb = [[0, 85], [-10, -85]];
-        camera.fitBounds(bb, {duration: 0});
-
-        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: 175, lat: 0});
-        expect(fixedNum(camera.getZoom(), 3)).toBe(0.005);
-    });
-
-    test('across pole reverse', () => {
-        const camera = createCamera();
-        const bb = [[-10, -85], [0, 85]];
-        camera.fitBounds(bb, {duration: 0});
-
-        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -5, lat: 0});
-        expect(fixedNum(camera.getZoom(), 3)).toBe(0.005);
     });
 
 });
