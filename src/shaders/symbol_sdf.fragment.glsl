@@ -21,17 +21,15 @@ float median(vec3 values) {
     return max(min(values.r, values.g), min(max(values.r, values.g), values.b));
 }
 
-float screenPxRange() {
+float screenPxRange(float fontScale) {
     // WebGL1 doesn't support derivatives and we can't use version 300
     // due to https://github.com/maplibre/maplibre-gl-js/pull/2656
     // Instead of doing the actual computation, we just return a single value
     // TODO: This should be a uniform that contains the value of
-    // fontSize / sdfSize * sdfPixelRange
+    // fontScale * sdfPixelRange
+    // See https://github.com/Chlumsky/msdfgen?tab=readme-ov-file
     
-    float fontSize = u_size * 32.0;
-    float sdfSize = 32.0;
-    float sdfPixelRange = 8.0;
-    return fontSize / sdfSize * sdfPixelRange;
+    return fontScale * SDF_PX;
     /*
     vec2 unitRange = vec2(8.0) / u_texsize;
     vec2 screenTexSize = vec2(1.0) / fwidth(v_data0.xy);
@@ -61,28 +59,25 @@ void main() {
 
     vec3 s = texture(u_texture, tex).rgb;
     float sd = median(s);
-    float dist = 0.0;
+    float dist = sd - 0.5;
 
     if (u_is_halo) {
         color = halo_color;
         gamma = (halo_blur * 1.19 / SDF_PX + EDGE_GAMMA) / (fontScale * u_gamma_scale);
         inner_edge = inner_edge + gamma * gamma_scale;
-        dist = (sd - 0.5 + halo_blur + halo_width);
-    } else {
-        dist = (sd - 0.5 + halo_blur);
     }
-    dist = dist * screenPxRange() + 0.5;
 
+    float clampedDistance = clamp(dist * screenPxRange(fontScale) + 0.5, 0.0, 1.0);
+    
     highp float gamma_scaled = gamma * gamma_scale;
-    highp float alpha = smoothstep(inner_edge - gamma_scaled, inner_edge + gamma_scaled, dist);
+    highp float alpha = smoothstep(inner_edge - gamma_scaled, inner_edge + gamma_scaled, clampedDistance);
     if (u_is_halo) {
         // When drawing halos, we want the inside of the halo to be transparent as well
         // in case the text fill is transparent.
         lowp float halo_edge = (6.0 - halo_width / fontScale) / SDF_PX;
-        alpha = min(smoothstep(halo_edge - gamma_scaled, halo_edge + gamma_scaled, dist), 1.0 - alpha);
+        alpha = min(smoothstep(halo_edge - gamma_scaled, halo_edge + gamma_scaled, clampedDistance), 1.0 - alpha);
     }
 
-    // float alpha = clamp(dist, 0.0, 1.0);
     fragColor = color * (alpha * opacity * fade_opacity);
 
 #ifdef OVERDRAW_INSPECTOR
