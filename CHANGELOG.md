@@ -6,6 +6,7 @@ using `transformCameraUpdate` caused the `maxBounds` to stop working just for ea
 ### ✨ Features and improvements
 - Support multiple layers in `map.on`, `map.once` and `map.off` methods ([#4279](https://github.com/maplibre/maplibre-gl-js/pull/4401))
 - Ensure GeoJSON cluster sources emit a console warning if `maxzoom` is less than or equal to `clusterMaxZoom` since in this case you may see unexpected results. ([#4604](https://github.com/maplibre/maplibre-gl-js/pull/4604))
+- Fix bug where `fitBounds` and `cameraForBounds` would not display accross the 180th meridian (antimeridian)
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
