@@ -6,47 +6,50 @@ import {MercatorCoordinate} from '../mercator_coordinate';
 
 /**
  * Computes distance of a point to a tile in an arbitrary axis.
- * Tile is assumed to have size 1, distance returned is to the nearer tile edge.
+ * World is assumed to have size 1, distance returned is to the nearer tile edge.
  * @param point - Point position.
  * @param tile - Tile position.
+ * @param tileSize - Tile size.
  */
-function distanceToTileSimple(point: number, tile: number): number {
+function distanceToTileSimple(point: number, tile: number, tileSize: number): number {
     const delta = point - tile;
-    return (delta < 0) ? -delta : Math.max(0, delta - 1);
+    return (delta < 0) ? -delta : Math.max(0, delta - tileSize);
 }
 
-function distanceToTileWrapX(pointX: number, pointY: number, tileCornerX: number, tileCornerY: number, worldSize: number): number {
-    const tileCornerToCenterX = pointX - tileCornerX;
+function distanceToTileWrapX(pointX: number, pointY: number, tileCornerX: number, tileCornerY: number, tileSize: number): number {
+    const tileCornerToPointX = pointX - tileCornerX;
 
     let distanceX: number;
-    if (tileCornerToCenterX < 0) {
+    if (tileCornerToPointX < 0) {
         // Point is left of tile
-        distanceX = Math.min(-tileCornerToCenterX, worldSize + tileCornerToCenterX - 1);
-    } else if (tileCornerToCenterX > 1) {
+        distanceX = Math.min(-tileCornerToPointX, 1.0 + tileCornerToPointX - tileSize);
+    } else if (tileCornerToPointX > 1) {
         // Point is right of tile
-        distanceX = Math.min(tileCornerToCenterX - 1, worldSize - tileCornerToCenterX);
+        distanceX = Math.min(Math.max(tileCornerToPointX - tileSize, 0), 1.0 - tileCornerToPointX);
     } else {
         // Point is inside tile in the X axis.
         distanceX = 0;
     }
 
-    return Math.max(distanceX, distanceToTileSimple(pointY, tileCornerY));
+    return Math.max(distanceX, distanceToTileSimple(pointY, tileCornerY, tileSize));
 }
 
 /**
- * Returns the distance of a point to a square tile of size 1. If the point is inside the tile, returns 0.
+ * Returns the distance of a point to a square tile. If the point is inside the tile, returns 0.
+ * Assumes the world to be of size 1.
  * Handles distances on a sphere correctly: X is wrapped when crossing the antimeridian,
  * when crossing the poles Y is mirrored and X is shifted by half world size.
  */
-function distanceToTile(pointX: number, pointY: number, tileCornerX: number, tileCornerY: number, worldSize: number): number {
-    const halfWorld = worldSize * 0.5;
-    let smallestDistance = worldSize * 2;
+function distanceToTile(pointX: number, pointY: number, tileCornerX: number, tileCornerY: number, tileSize: number): number {
+    const worldSize = 1.0;
+    const halfWorld = 0.5 * worldSize;
+    let smallestDistance = 2.0 * worldSize;
     // Original tile
-    smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX, tileCornerY, worldSize));
+    smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX, tileCornerY, tileSize));
     // Up
-    smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX + halfWorld, -tileCornerY - 1, worldSize));
+    smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX + halfWorld, -tileCornerY - tileSize, tileSize));
     // Down
-    smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX + halfWorld, worldSize + worldSize - tileCornerY - 1, worldSize));
+    smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX + halfWorld, worldSize + worldSize - tileCornerY - tileSize, tileSize));
 
     return smallestDistance;
 }
@@ -124,10 +127,11 @@ export function globeCoveringTiles(transform: IReadonlyTransform & ITileVisibili
         // ...where "|--|" symbolizes a tile viewed sideways.
         // This logic might be slightly different from what mercator_transform.ts does, but should result in very similar (if not the same) set of tiles being loaded.
         const scale = 1 << (Math.max(it.zoom, 0));
-        const scaledCenter = [centerCoord.x * scale, centerCoord.y * scale];
-        const scaledCamera = [cameraCoord.x * scale, cameraCoord.y * scale];
-        const centerDist = distanceToTile(scaledCenter[0], scaledCenter[1], x, y, scale);
-        const cameraDist = distanceToTile(scaledCamera[0], scaledCamera[1], x, y, scale);
+        const tileSize = 1.0 / scale;
+        const tileX = x / scale; // In range 0..1
+        const tileY = y / scale; // In range 0..1
+        const centerDist = distanceToTile(centerCoord.x, centerCoord.y, tileX, tileY, tileSize);
+        const cameraDist = distanceToTile(cameraCoord.x, cameraCoord.y, tileX, tileY, tileSize);
         const split = Math.min(centerDist, cameraDist) * 2 <= radiusOfMaxLvlLodInTiles; // Multiply distance by 2, because the subdivided tiles would be half the size
 
         // Have we reached the target depth or is the tile too far away to be any split further?
@@ -137,9 +141,9 @@ export function globeCoveringTiles(transform: IReadonlyTransform & ITileVisibili
             const dy = cameraPoint[1] - 0.5 - (y << dz);
             // We need to compute a valid wrap value for the tile to keep compatibility with mercator
 
-            const distanceCurrent = distanceToTileSimple(scaledCenter[0], x);
-            const distanceLeft = distanceToTileSimple(scaledCenter[0], x - scale);
-            const distanceRight = distanceToTileSimple(scaledCenter[0], x + scale);
+            const distanceCurrent = distanceToTileSimple(centerCoord.x, tileX, tileSize);
+            const distanceLeft = distanceToTileSimple(centerCoord.x, tileX - 1.0, tileSize);
+            const distanceRight = distanceToTileSimple(centerCoord.x, tileX + 1.0, tileSize);
             const distanceSmallest = Math.min(distanceCurrent, distanceLeft, distanceRight);
             let wrap = 0;
             if (distanceSmallest === distanceLeft) {
