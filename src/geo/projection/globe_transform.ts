@@ -1,4 +1,4 @@
-import {mat2, mat4, vec2, vec3, vec4} from 'gl-matrix';
+import {mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {MAX_VALID_LATITUDE, TransformHelper} from '../transform_helper';
 import {MercatorTransform} from './mercator_transform';
 import {LngLat, LngLatLike, earthRadius} from '../lng_lat';
@@ -17,6 +17,7 @@ import {tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 import {angularCoordinatesRadiansToVector, angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
 import {EXTENT} from '../../data/extent';
 import type {ProjectionData} from './projection_data';
+import {globeCoveringTiles} from './globe_covering_tiles';
 import {Aabb, Frustum, IntersectionResult} from '../../util/primitives';
 
 /**
@@ -207,6 +208,7 @@ export class GlobeTransform implements ITransform {
     //
 
     private _cachedClippingPlane: vec4 = createVec4f64();
+    private _cachedFrustum: Frustum;
 
     // Transition handling
     private _lastGlobeStateEnabled: boolean = true;
@@ -667,6 +669,10 @@ export class GlobeTransform implements ITransform {
         vec3.rotateY(this._cameraPosition, this._cameraPosition, zero, this.center.lng * Math.PI / 180.0);
 
         this._cachedClippingPlane = this._computeClippingPlane(globeRadiusPixels);
+
+        const matrix = mat4.clone(this._globeViewProjMatrixNoCorrectionInverted);
+        mat4.scale(matrix, matrix, [1, 1, -1]);
+        this._cachedFrustum = Frustum.fromInvProjectionMatrix(matrix);
     }
 
     calculateFogMatrix(_unwrappedTileID: UnwrappedTileID): mat4 {
@@ -685,7 +691,7 @@ export class GlobeTransform implements ITransform {
      * Returns the AABB of the specified tile. The AABB is in the coordinate space where the globe is a unit sphere.
      * @param tileID - Tile x, y and z for zoom.
      */
-    private getTileAABB(tileID: {x: number; y: number; z: number}): Aabb {
+    getTileAABB(tileID: {x: number; y: number; z: number}): Aabb {
         if (tileID.z <= 0) {
             return new Aabb(
                 [-1, -1, -1],
@@ -739,64 +745,17 @@ export class GlobeTransform implements ITransform {
     }
 
     /**
-     * Computes distance of a point to a tile in an arbitrary axis.
-     * Tile is assumed to have size 1, distance returned is to the nearer tile edge.
-     * @param point - Point position.
-     * @param tile - Tile position.
-     */
-    private distanceToTileSimple(point: number, tile: number): number {
-        const delta = point - tile;
-        return (delta < 0) ? -delta : Math.max(0, delta - 1);
-    }
-
-    private distanceToTileWrapX(pointX: number, pointY: number, tileCornerX: number, tileCornerY: number, worldSize: number): number {
-        const tileCornerToCenterX = pointX - tileCornerX;
-
-        let distanceX: number;
-        if (tileCornerToCenterX < 0) {
-            // Point is left of tile
-            distanceX = Math.min(-tileCornerToCenterX, worldSize + tileCornerToCenterX - 1);
-        } else if (tileCornerToCenterX > 1) {
-            // Point is right of tile
-            distanceX = Math.min(tileCornerToCenterX - 1, worldSize - tileCornerToCenterX);
-        } else {
-            // Point is inside tile in the X axis.
-            distanceX = 0;
-        }
-
-        return Math.max(distanceX, this.distanceToTileSimple(pointY, tileCornerY));
-    }
-
-    /**
-     * Returns the distance of a point to a square tile of size 1. If the point is inside the tile, returns 0.
-     * Handles distances on a sphere correctly: X is wrapped when crossing the antimeridian,
-     * when crossing the poles Y is mirrored and X is shifted by half world size.
-     */
-    private distanceToTile(pointX: number, pointY: number, tileCornerX: number, tileCornerY: number, worldSize: number): number {
-        const halfWorld = worldSize * 0.5;
-        let smallestDistance = worldSize * 2;
-        // Original tile
-        smallestDistance = Math.min(smallestDistance, this.distanceToTileWrapX(pointX, pointY, tileCornerX, tileCornerY, worldSize));
-        // Up
-        smallestDistance = Math.min(smallestDistance, this.distanceToTileWrapX(pointX, pointY, tileCornerX + halfWorld, -tileCornerY - 1, worldSize));
-        // Down
-        smallestDistance = Math.min(smallestDistance, this.distanceToTileWrapX(pointX, pointY, tileCornerX + halfWorld, worldSize + worldSize - tileCornerY - 1, worldSize));
-
-        return smallestDistance;
-    }
-
-    /**
      * A simple/heuristic function that returns whether the tile is visible under the current transform.
      * @param x - Tile X.
      * @param y - tile Y.
      * @param z - Tile zoom.
      * @returns 0 is not visible, 1 if partially visible, 2 if fully visible.
      */
-    private isTileVisible(x: number, y: number, z: number, frustum: Frustum): IntersectionResult {
+    isTileVisible(x: number, y: number, z: number): IntersectionResult {
         const tileID = {x, y, z};
         const aabb = this.getTileAABB(tileID);
 
-        const frustumTest = aabb.intersectsFrustum(frustum);
+        const frustumTest = aabb.intersectsFrustum(this._cachedFrustum);
         const planeTest = aabb.intersectsPlane(this._cachedClippingPlane);
 
         if (frustumTest === IntersectionResult.None || planeTest === IntersectionResult.None) {
@@ -815,117 +774,7 @@ export class GlobeTransform implements ITransform {
             return this._mercatorTransform.coveringTiles(options);
         }
 
-        let z = this.coveringZoomLevel(options);
-        const actualZ = z;
-
-        if (options.minzoom !== undefined && z < options.minzoom) {
-            return [];
-        }
-        if (options.maxzoom !== undefined && z > options.maxzoom) {
-            z = options.maxzoom;
-        }
-
-        const matrix = mat4.clone(this._globeViewProjMatrixNoCorrectionInverted);
-        mat4.scale(matrix, matrix, [1, 1, -1]);
-        const cameraFrustum = Frustum.fromInvProjectionMatrix(matrix);
-
-        const cameraCoord = this.screenPointToMercatorCoordinate(this.getCameraPoint());
-        const centerCoord = MercatorCoordinate.fromLngLat(this.center);
-        const numTiles = Math.pow(2, z);
-        const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
-        const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
-
-        const radiusOfMaxLvlLodInTiles = 3;
-
-        // Do a depth-first traversal to find visible tiles and proper levels of detail
-        const stack: Array<{
-            x: number;
-            y: number;
-            zoom: number;
-            fullyVisible: boolean;
-        }> = [];
-        const result: Array<{
-            tileID: OverscaledTileID;
-            distanceSq: number;
-            tileDistanceToCamera: number;
-        }> = [];
-        const maxZoom = z;
-        const overscaledZ = options.reparseOverscaled ? actualZ : z;
-        stack.push({
-            zoom: 0,
-            x: 0,
-            y: 0,
-            fullyVisible: false
-        });
-
-        while (stack.length > 0) {
-            const it = stack.pop();
-            const x = it.x;
-            const y = it.y;
-            let fullyVisible = it.fullyVisible;
-
-            // Visibility of a tile is not required if any of its ancestor if fully visible
-            if (!fullyVisible) {
-                const intersectResult = this.isTileVisible(it.x, it.y, it.zoom, cameraFrustum);
-
-                if (intersectResult === IntersectionResult.None)
-                    continue;
-
-                fullyVisible = intersectResult === IntersectionResult.Full;
-            }
-
-            // Determine whether the tile needs any further splitting.
-            // At each level, we want at least `radiusOfMaxLvlLodInTiles` tiles loaded in each axis from the map center point.
-            // For radiusOfMaxLvlLodInTiles=1, this would result in something like this:
-            // z=4 |--------------||--------------||--------------|
-            // z=5         |------||------||------|
-            // z=6             |--||--||--|
-            //                       ^map center
-            // ...where "|--|" symbolizes a tile viewed sideways.
-            // This logic might be slightly different from what mercator_transform.ts does, but should result in very similar (if not the same) set of tiles being loaded.
-            const scale = 1 << (Math.max(it.zoom, 0));
-            const scaledCenter = [centerCoord.x * scale, centerCoord.y * scale];
-            const scaledCamera = [cameraCoord.x * scale, cameraCoord.y * scale];
-            const centerDist = this.distanceToTile(scaledCenter[0], scaledCenter[1], x, y, scale);
-            const cameraDist = this.distanceToTile(scaledCamera[0], scaledCamera[1], x, y, scale);
-            const split = Math.min(centerDist, cameraDist) * 2 <= radiusOfMaxLvlLodInTiles; // Multiply distance by 2, because the subdivided tiles would be half the size
-
-            // Have we reached the target depth or is the tile too far away to be any split further?
-            if (it.zoom === maxZoom || !split) {
-                const dz = maxZoom - it.zoom;
-                const dx = cameraPoint[0] - 0.5 - (x << dz);
-                const dy = cameraPoint[1] - 0.5 - (y << dz);
-                // We need to compute a valid wrap value for the tile to keep compatibility with mercator
-
-                const distanceCurrent = this.distanceToTileSimple(scaledCenter[0], x);
-                const distanceLeft = this.distanceToTileSimple(scaledCenter[0], x - scale);
-                const distanceRight = this.distanceToTileSimple(scaledCenter[0], x + scale);
-                const distanceSmallest = Math.min(distanceCurrent, distanceLeft, distanceRight);
-                let wrap = 0;
-                if (distanceSmallest === distanceLeft) {
-                    wrap = -1;
-                }
-                if (distanceSmallest === distanceRight) {
-                    wrap = 1;
-                }
-                result.push({
-                    tileID: new OverscaledTileID(it.zoom === maxZoom ? overscaledZ : it.zoom, wrap, it.zoom, x, y),
-                    distanceSq: vec2.sqrLen([centerPoint[0] - 0.5 - dx, centerPoint[1] - 0.5 - dy]),
-                    // this variable is currently not used, but may be important to reduce the amount of loaded tiles
-                    tileDistanceToCamera: Math.sqrt(dx * dx + dy * dy)
-                });
-                continue;
-            }
-
-            for (let i = 0; i < 4; i++) {
-                const childX = (x << 1) + (i % 2);
-                const childY = (y << 1) + (i >> 1);
-                const childZ = it.zoom + 1;
-                stack.push({zoom: childZ, x: childX, y: childY, fullyVisible});
-            }
-        }
-
-        return result.sort((a, b) => a.distanceSq - b.distanceSq).map(a => a.tileID);
+        return globeCoveringTiles(this, options);
     }
 
     recalculateZoom(terrain: Terrain): void {
