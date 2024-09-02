@@ -692,12 +692,44 @@ export class GlobeTransform implements ITransform {
      * @param tileID - Tile x, y and z for zoom.
      */
     getTileAABB(tileID: {x: number; y: number; z: number}): Aabb {
+        // We can get away with only checking the 4 tile corners for AABB construction, because for any tile of zoom level 2 or higher
+        // it holds that the extremes (minimal or maximal value) of X, Y or Z coordinates must lie in one of the tile corners.
+        //
+        // To see why this holds, consider the formula for computing X,Y and Z from angular coordinates.
+        // It goes something like this:
+        //
+        // X = sin(lng) * cos(lat)
+        // Y = sin(lat)
+        // Z = cos(lng) * cos(lat)
+        //
+        // Note that a tile always covers a continuous range of lng and lat values,
+        // and that tiles that border the mercator north/south edge are assumed to extend all the way to the poles.
+        //
+        // We will consider each coordinate separately and show that an extreme must always lie in a tile corner for every axis, and must not lie inside the tile.
+        //
+        // For Y, it is clear that the only way for an extreme to not lie on an edge of the lat range is for the range to contain lat=90° or lat=-90° without either being the tile edge.
+        // This cannot happen for any tile, these latitudes will always:
+        // - either lie outside the tile entirely, thus Y will be monotonically increasing or decreasing across the entire tile, thus the extreme must lie at a corner/edge
+        // - or be the tile edge itself, thus the extreme will lie at the tile edge
+        //
+        // For X, considering only longitude, the tile would also have to contain lng=90° or lng=-90° (with neither being the tile edge) for the extreme to not lie on a tile edge.
+        // This can only happen at zoom levels 0 and 1, which are handled separately.
+        // But X is also scaled by cos(lat)! However, this can only cause an extreme to lie inside the tile if the tile crosses lat=0°, which cannot happen for zoom levels other than 0.
+        //
+        // For Z, similarly to X, the extremes must lie at lng=0° or lng=180°, but for zoom levels other than 0 these cannot lie inside the tile. Scaling by cos(lat) has the same effect as with the X axis.
+        //
+        // So checking the 4 tile corners only fails for tiles with zoom level <2, and these are handled separately with hardcoded AABBs:
+        // - zoom level 0 tile is the entire sphere
+        // - zoom level 1 tiles are "quarters of a sphere"
+
         if (tileID.z <= 0) {
+            // Tile covers the entire sphere.
             return new Aabb(
                 [-1, -1, -1],
                 [1, 1, 1]
             );
         } else if (tileID.z === 1) {
+            // Tile covers a quarter of the sphere.
             // X is 1 at lng=E90°
             // Y is 1 at **north** pole
             // Z is 1 at null island
@@ -706,9 +738,7 @@ export class GlobeTransform implements ITransform {
                 [tileID.x === 0 ? 0 : 1, tileID.y === 0 ? 1 : 0, 1]
             );
         } else {
-            // We can get away with this simple AABB construction, because the extremes
-            // of each X,Y or Z axis will always lie on a tile edge.
-            // This only fails for tiles with zoom level <2, hence the special handling above.
+            // Compute AABB using the 4 corners.
 
             const corners = [
                 this._projectTileCoordinatesToSphere(0, 0, tileID),
