@@ -107,9 +107,7 @@ export function globeCoveringTiles(transform: IReadonlyTransform & ITileVisibili
     const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
     const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
 
-    // This number was determined through trial and error so that globe behaves as closely to mercator as possible
-    // in regards to what tiles are rendered at what LOD.
-    const radiusOfMaxLvlLodInTiles = 3;
+    const radiusOfMaxLvlLodInTiles = 3; // Matches the value in the mercator variant of coveringTiles
 
     // Do a depth-first traversal to find visible tiles and proper levels of detail
     const stack: Array<{

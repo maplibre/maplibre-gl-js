@@ -39,10 +39,6 @@ export type CoveringTilesOptions = CoveringZoomOptions & {
      */
     reparseOverscaled?: boolean;
     /**
-     * Whether to render multiple copies of the world for non globe projection maps.
-     */
-    renderWorldCopies?: boolean;
-    /**
      * When terrain is present, tile visibility will be computed in regards to the min and max elevations for each tile.
      */
     terrain?: Terrain;
