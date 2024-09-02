@@ -14,11 +14,11 @@ import {LngLatBounds} from '../lng_lat_bounds';
 import {CoveringTilesOptions, CoveringZoomOptions, IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
 import {PaddingOptions} from '../edge_insets';
 import {tileCoordinatesToMercatorCoordinates} from './mercator_utils';
-import {angularCoordinatesRadiansToVector, angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
+import {angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, sphereSurfacePointToCoordinates} from './globe_utils';
 import {EXTENT} from '../../data/extent';
 import type {ProjectionData} from './projection_data';
 import {globeCoveringTiles} from './globe_covering_tiles';
-import {Aabb, Frustum, IntersectionResult} from '../../util/primitives';
+import {Frustum} from '../../util/primitives';
 
 /**
  * Describes the intersection of ray and sphere.
@@ -524,13 +524,6 @@ export class GlobeTransform implements ITransform {
         return [...planeVector, -tangentPlaneDistanceToC * scale];
     }
 
-    private _projectTileCoordinatesToSphere(inTileX: number, inTileY: number, tileID: {x: number; y: number; z: number}): vec3 {
-        const mercator = tileCoordinatesToMercatorCoordinates(inTileX, inTileY, tileID);
-        const angular = mercatorCoordinatesToAngularCoordinatesRadians(mercator.x, mercator.y);
-        const sphere = angularCoordinatesRadiansToVector(angular[0], angular[1]);
-        return sphere;
-    }
-
     public isLocationOccluded(location: LngLat): boolean {
         return !this.isSurfacePointVisible(angularCoordinatesToSurfaceVector(location));
     }
@@ -589,7 +582,7 @@ export class GlobeTransform implements ITransform {
             return this._mercatorTransform.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
         }
 
-        const spherePos = this._projectTileCoordinatesToSphere(x, y, unwrappedTileID.canonical);
+        const spherePos = projectTileCoordinatesToSphere(x, y, unwrappedTileID.canonical);
         const elevation = getElevation ? getElevation(x, y) : 0.0;
         const vectorMultiplier = 1.0 + elevation / earthRadius;
         const pos: vec4 = [spherePos[0] * vectorMultiplier, spherePos[1] * vectorMultiplier, spherePos[2] * vectorMultiplier, 1];
@@ -687,124 +680,16 @@ export class GlobeTransform implements ITransform {
         return [new UnwrappedTileID(0, tileID)];
     }
 
-    /**
-     * Returns the AABB of the specified tile. The AABB is in the coordinate space where the globe is a unit sphere.
-     * @param tileID - Tile x, y and z for zoom.
-     */
-    getTileAABB(tileID: {x: number; y: number; z: number}): Aabb {
-        // We can get away with only checking the 4 tile corners for AABB construction, because for any tile of zoom level 2 or higher
-        // it holds that the extremes (minimal or maximal value) of X, Y or Z coordinates must lie in one of the tile corners.
-        //
-        // To see why this holds, consider the formula for computing X,Y and Z from angular coordinates.
-        // It goes something like this:
-        //
-        // X = sin(lng) * cos(lat)
-        // Y = sin(lat)
-        // Z = cos(lng) * cos(lat)
-        //
-        // Note that a tile always covers a continuous range of lng and lat values,
-        // and that tiles that border the mercator north/south edge are assumed to extend all the way to the poles.
-        //
-        // We will consider each coordinate separately and show that an extreme must always lie in a tile corner for every axis, and must not lie inside the tile.
-        //
-        // For Y, it is clear that the only way for an extreme to not lie on an edge of the lat range is for the range to contain lat=90° or lat=-90° without either being the tile edge.
-        // This cannot happen for any tile, these latitudes will always:
-        // - either lie outside the tile entirely, thus Y will be monotonically increasing or decreasing across the entire tile, thus the extreme must lie at a corner/edge
-        // - or be the tile edge itself, thus the extreme will lie at the tile edge
-        //
-        // For X, considering only longitude, the tile would also have to contain lng=90° or lng=-90° (with neither being the tile edge) for the extreme to not lie on a tile edge.
-        // This can only happen at zoom levels 0 and 1, which are handled separately.
-        // But X is also scaled by cos(lat)! However, this can only cause an extreme to lie inside the tile if the tile crosses lat=0°, which cannot happen for zoom levels other than 0.
-        //
-        // For Z, similarly to X, the extremes must lie at lng=0° or lng=180°, but for zoom levels other than 0 these cannot lie inside the tile. Scaling by cos(lat) has the same effect as with the X axis.
-        //
-        // So checking the 4 tile corners only fails for tiles with zoom level <2, and these are handled separately with hardcoded AABBs:
-        // - zoom level 0 tile is the entire sphere
-        // - zoom level 1 tiles are "quarters of a sphere"
-
-        if (tileID.z <= 0) {
-            // Tile covers the entire sphere.
-            return new Aabb(
-                [-1, -1, -1],
-                [1, 1, 1]
-            );
-        } else if (tileID.z === 1) {
-            // Tile covers a quarter of the sphere.
-            // X is 1 at lng=E90°
-            // Y is 1 at **north** pole
-            // Z is 1 at null island
-            return new Aabb(
-                [tileID.x === 0 ? -1 : 0, tileID.y === 0 ? 0 : -1, -1],
-                [tileID.x === 0 ? 0 : 1, tileID.y === 0 ? 1 : 0, 1]
-            );
-        } else {
-            // Compute AABB using the 4 corners.
-
-            const corners = [
-                this._projectTileCoordinatesToSphere(0, 0, tileID),
-                this._projectTileCoordinatesToSphere(EXTENT, 0, tileID),
-                this._projectTileCoordinatesToSphere(EXTENT, EXTENT, tileID),
-                this._projectTileCoordinatesToSphere(0, EXTENT, tileID),
-            ];
-
-            const min: vec3 = [1, 1, 1];
-            const max: vec3 = [-1, -1, -1];
-
-            for (const c of corners) {
-                for (let i = 0; i < 3; i++) {
-                    min[i] = Math.min(min[i], c[i]);
-                    max[i] = Math.max(max[i], c[i]);
-                }
-            }
-
-            // Special handling of poles - we need to extend the tile AABB
-            // to include the pole for tiles that border mercator north/south edge.
-            if (tileID.y === 0 || (tileID.y === (1 << tileID.z) - 1)) {
-                const pole = [0, tileID.y === 0 ? 1 : -1, 0];
-                for (let i = 0; i < 3; i++) {
-                    min[i] = Math.min(min[i], pole[i]);
-                    max[i] = Math.max(max[i], pole[i]);
-                }
-            }
-
-            return new Aabb(
-                min,
-                max
-            );
-        }
-    }
-
-    /**
-     * A simple/heuristic function that returns whether the tile is visible under the current transform.
-     * @param x - Tile X.
-     * @param y - tile Y.
-     * @param z - Tile zoom.
-     * @returns 0 is not visible, 1 if partially visible, 2 if fully visible.
-     */
-    isTileVisible(x: number, y: number, z: number): IntersectionResult {
-        const tileID = {x, y, z};
-        const aabb = this.getTileAABB(tileID);
-
-        const frustumTest = aabb.intersectsFrustum(this._cachedFrustum);
-        const planeTest = aabb.intersectsPlane(this._cachedClippingPlane);
-
-        if (frustumTest === IntersectionResult.None || planeTest === IntersectionResult.None) {
-            return IntersectionResult.None;
-        }
-
-        if (frustumTest === IntersectionResult.Full && planeTest === IntersectionResult.Full) {
-            return IntersectionResult.Full;
-        }
-
-        return IntersectionResult.Partial;
-    }
-
     coveringTiles(options: CoveringTilesOptions): OverscaledTileID[] {
         if (!this._globeRendering) {
             return this._mercatorTransform.coveringTiles(options);
         }
 
-        return globeCoveringTiles(this, options);
+        const coveringZ = this.coveringZoomLevel(options);
+        const cameraCoord = this.screenPointToMercatorCoordinate(this.getCameraPoint());
+        const centerCoord = MercatorCoordinate.fromLngLat(this.center);
+
+        return globeCoveringTiles(this._cachedFrustum, this._cachedClippingPlane, cameraCoord, centerCoord, coveringZ, options);
     }
 
     recalculateZoom(terrain: Terrain): void {

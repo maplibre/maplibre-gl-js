@@ -3,6 +3,7 @@ import {clamp, lerp, mod, remapSaturate, wrap} from '../../util/util';
 import {LngLat} from '../lng_lat';
 import {MAX_VALID_LATITUDE, scaleZoom} from '../transform_helper';
 import Point from '@mapbox/point-geometry';
+import {tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 
 export function getGlobeCircumferencePixels(transform: {worldSize: number; center: {lat: number}}): number {
     const radius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);
@@ -40,6 +41,13 @@ export function angularCoordinatesRadiansToVector(lngRadians: number, latRadians
     vec[1] = Math.sin(latRadians);
     vec[2] = Math.cos(lngRadians) * len;
     return vec;
+}
+
+export function projectTileCoordinatesToSphere(inTileX: number, inTileY: number, tileID: {x: number; y: number; z: number}): vec3 {
+    const mercator = tileCoordinatesToMercatorCoordinates(inTileX, inTileY, tileID);
+    const angular = mercatorCoordinatesToAngularCoordinatesRadians(mercator.x, mercator.y);
+    const sphere = angularCoordinatesRadiansToVector(angular[0], angular[1]);
+    return sphere;
 }
 
 /**

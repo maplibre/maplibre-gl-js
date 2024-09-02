@@ -5,10 +5,9 @@ import {LngLat} from '../lng_lat';
 import {GlobeTransform} from './globe_transform';
 import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../source/tile_id';
 import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
-import {expectToBeCloseToArray, sleep} from '../../util/test/util';
+import {expectToBeCloseToArray, getGlobeProjectionMock, sleep} from '../../util/test/util';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {tileCoordinatesToLocation} from './mercator_utils';
-import {Aabb} from '../../util/primitives';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: Array<number>) {
     const lat = latDegrees / 180.0 * Math.PI;
@@ -34,19 +33,7 @@ function createGlobeTransform(globeProjection: GlobeProjection) {
 }
 
 describe('GlobeTransform', () => {
-    const globeProjectionMock = {
-        get useGlobeControls(): boolean {
-            return true;
-        },
-        get useGlobeRendering(): boolean {
-            return true;
-        },
-        set useGlobeRendering(_value: boolean) {
-            // do not set
-        },
-        latitudeErrorCorrectionRadians: 0,
-        errorQueryLatitudeDegrees: 0,
-    } as GlobeProjection;
+    const globeProjectionMock = getGlobeProjectionMock();
 
     describe('getProjectionData', () => {
         const globeTransform = createGlobeTransform(globeProjectionMock);
@@ -597,58 +584,6 @@ describe('GlobeTransform', () => {
 
         test('barely hidden', () => {
             expect(transform.isLocationOccluded(new LngLat(84.50, 0))).toBe(true);
-        });
-    });
-
-    describe('aabb', () => {
-        test('z=0', () => {
-            const transform = new GlobeTransform(globeProjectionMock);
-            const aabb = transform.getTileAABB({
-                x: 0,
-                y: 0,
-                z: 0,
-            });
-            expect(aabb).toEqual(new Aabb(
-                [-1, -1, -1],
-                [1, 1, 1],
-            ));
-        });
-
-        test('z=1,x=0', () => {
-            const transform = new GlobeTransform(globeProjectionMock);
-            const aabb = transform.getTileAABB({
-                x: 0,
-                y: 0,
-                z: 1,
-            });
-            expect(aabb).toEqual(new Aabb(
-                [-1, 0, -1],
-                [0, 1, 1],
-            ));
-        });
-
-        test('z=1,x=1', () => {
-            const transform = new GlobeTransform(globeProjectionMock);
-            const aabb = transform.getTileAABB({
-                x: 1,
-                y: 0,
-                z: 1,
-            });
-            expect(aabb).toEqual(new Aabb(
-                [0, 0, -1],
-                [1, 1, 1],
-            ));
-        });
-
-        test('z=2,x=1', () => {
-            const transform = new GlobeTransform(globeProjectionMock);
-            const aabb = transform.getTileAABB({
-                x: 1,
-                y: 0,
-                z: 2,
-            });
-            expectToBeCloseToArray([...aabb.min], [-0.3985368153383868, 0.9171523356672743, -7.321002528698027e-17,]);
-            expectToBeCloseToArray([...aabb.max], [0, 1, 0.3985368153383868]);
         });
     });
 
