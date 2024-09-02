@@ -4,6 +4,21 @@ import {Aabb, Frustum, IntersectionResult} from '../../util/primitives';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {CoveringTilesOptions, IReadonlyTransform} from '../transform_interface';
 
+type CoveringTilesResult = {
+    tileID: OverscaledTileID;
+    distanceSq: number;
+    tileDistanceToCamera: number;
+};
+
+type CoveringTilesStack = {
+    aabb: Aabb;
+    zoom: number;
+    x: number;
+    y: number;
+    wrap: number;
+    fullyVisible: boolean;
+};
+
 /**
  * Returns a list of tiles that optimally covers the screen.
  * Correctly handles LOD when moving over the antimeridian.
@@ -47,19 +62,8 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, options: Co
     };
 
     // Do a depth-first traversal to find visible tiles and proper levels of detail
-    const stack: Array<{
-        aabb: Aabb;
-        zoom: number;
-        x: number;
-        y: number;
-        wrap: number;
-        fullyVisible: boolean;
-    }> = [];
-    const result: Array<{
-        tileID: OverscaledTileID;
-        distanceSq: number;
-        tileDistanceToCamera: number;
-    }> = [];
+    const stack: Array<CoveringTilesStack> = [];
+    const result: Array<CoveringTilesResult> = [];
     const maxZoom = z;
     const overscaledZ = options.reparseOverscaled ? actualZ : z;
 

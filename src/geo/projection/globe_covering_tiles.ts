@@ -5,6 +5,19 @@ import {OverscaledTileID} from '../../source/tile_id';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import type {GlobeTransform} from './globe_transform';
 
+type CoveringTilesResult = {
+    tileID: OverscaledTileID;
+    distanceSq: number;
+    tileDistanceToCamera: number;
+};
+
+type CoveringTilesStack = {
+    x: number;
+    y: number;
+    zoom: number;
+    fullyVisible: boolean;
+};
+
 /**
  * Computes distance of a point to a tile in an arbitrary axis.
  * World is assumed to have size 1, distance returned is to the nearer tile edge.
@@ -111,17 +124,8 @@ export function globeCoveringTiles(transform: GlobeTransform, options: CoveringT
     const radiusOfMaxLvlLodInTiles = 3; // Matches the value in the mercator variant of coveringTiles
 
     // Do a depth-first traversal to find visible tiles and proper levels of detail
-    const stack: Array<{
-        x: number;
-        y: number;
-        zoom: number;
-        fullyVisible: boolean;
-    }> = [];
-    const result: Array<{
-        tileID: OverscaledTileID;
-        distanceSq: number;
-        tileDistanceToCamera: number;
-    }> = [];
+    const stack: Array<CoveringTilesStack> = [];
+    const result: Array<CoveringTilesResult> = [];
     const maxZoom = z;
     const overscaledZ = options.reparseOverscaled ? actualZ : z;
     stack.push({
