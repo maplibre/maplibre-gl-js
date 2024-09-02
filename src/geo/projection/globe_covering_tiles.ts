@@ -54,6 +54,35 @@ function distanceToTile(pointX: number, pointY: number, tileCornerX: number, til
     return smallestDistance;
 }
 
+function shouldSplitTile(centerCoord: MercatorCoordinate, cameraCoord: MercatorCoordinate, tileX: number, tileY: number, tileSize: number, radiusOfMaxLvlLodInTiles: number): boolean {
+    // Determine whether the tile needs any further splitting.
+    // At each level, we want at least `radiusOfMaxLvlLodInTiles` tiles loaded in each axis from the map center point.
+    // For radiusOfMaxLvlLodInTiles=1, this would result in something like this:
+    // z=4 |--------------||--------------||--------------|
+    // z=5         |------||------||------|
+    // z=6             |--||--||--|
+    //                       ^map center
+    // ...where "|--|" symbolizes a tile viewed sideways.
+    // This logic might be slightly different from what mercator_transform.ts does, but should result in very similar (if not the same) set of tiles being loaded.
+    const centerDist = distanceToTile(centerCoord.x, centerCoord.y, tileX, tileY, tileSize);
+    const cameraDist = distanceToTile(cameraCoord.x, cameraCoord.y, tileX, tileY, tileSize);
+    return Math.min(centerDist, cameraDist) * 2 <= radiusOfMaxLvlLodInTiles; // Multiply distance by 2, because the subdivided tiles would be half the size
+}
+
+function getWrap(centerCoord: MercatorCoordinate, tileX: number, tileSize: number): number {
+    const distanceCurrent = distanceToTileSimple(centerCoord.x, tileX, tileSize);
+    const distanceLeft = distanceToTileSimple(centerCoord.x, tileX - 1.0, tileSize);
+    const distanceRight = distanceToTileSimple(centerCoord.x, tileX + 1.0, tileSize);
+    const distanceSmallest = Math.min(distanceCurrent, distanceLeft, distanceRight);
+    if (distanceSmallest === distanceRight) {
+        return 1;
+    }
+    if (distanceSmallest === distanceLeft) {
+        return -1;
+    }
+    return 0;
+}
+
 /**
  * Returns a list of tiles that optimally covers the screen. Adapted for globe projection.
  * Correctly handles LOD when moving over the antimeridian.
@@ -117,22 +146,12 @@ export function globeCoveringTiles(transform: IReadonlyTransform & ITileVisibili
             fullyVisible = intersectResult === IntersectionResult.Full;
         }
 
-        // Determine whether the tile needs any further splitting.
-        // At each level, we want at least `radiusOfMaxLvlLodInTiles` tiles loaded in each axis from the map center point.
-        // For radiusOfMaxLvlLodInTiles=1, this would result in something like this:
-        // z=4 |--------------||--------------||--------------|
-        // z=5         |------||------||------|
-        // z=6             |--||--||--|
-        //                       ^map center
-        // ...where "|--|" symbolizes a tile viewed sideways.
-        // This logic might be slightly different from what mercator_transform.ts does, but should result in very similar (if not the same) set of tiles being loaded.
         const scale = 1 << (Math.max(it.zoom, 0));
         const tileSize = 1.0 / scale;
         const tileX = x / scale; // In range 0..1
         const tileY = y / scale; // In range 0..1
-        const centerDist = distanceToTile(centerCoord.x, centerCoord.y, tileX, tileY, tileSize);
-        const cameraDist = distanceToTile(cameraCoord.x, cameraCoord.y, tileX, tileY, tileSize);
-        const split = Math.min(centerDist, cameraDist) * 2 <= radiusOfMaxLvlLodInTiles; // Multiply distance by 2, because the subdivided tiles would be half the size
+
+        const split = shouldSplitTile(centerCoord, cameraCoord, tileX, tileY, tileSize, radiusOfMaxLvlLodInTiles);
 
         // Have we reached the target depth or is the tile too far away to be any split further?
         if (it.zoom === maxZoom || !split) {
@@ -140,18 +159,7 @@ export function globeCoveringTiles(transform: IReadonlyTransform & ITileVisibili
             const dx = cameraPoint[0] - 0.5 - (x << dz);
             const dy = cameraPoint[1] - 0.5 - (y << dz);
             // We need to compute a valid wrap value for the tile to keep compatibility with mercator
-
-            const distanceCurrent = distanceToTileSimple(centerCoord.x, tileX, tileSize);
-            const distanceLeft = distanceToTileSimple(centerCoord.x, tileX - 1.0, tileSize);
-            const distanceRight = distanceToTileSimple(centerCoord.x, tileX + 1.0, tileSize);
-            const distanceSmallest = Math.min(distanceCurrent, distanceLeft, distanceRight);
-            let wrap = 0;
-            if (distanceSmallest === distanceLeft) {
-                wrap = -1;
-            }
-            if (distanceSmallest === distanceRight) {
-                wrap = 1;
-            }
+            const wrap = getWrap(centerCoord, tileX, tileSize);
             result.push({
                 tileID: new OverscaledTileID(it.zoom === maxZoom ? overscaledZ : it.zoom, wrap, it.zoom, x, y),
                 distanceSq: vec2.sqrLen([centerPoint[0] - 0.5 - dx, centerPoint[1] - 0.5 - dy]),
