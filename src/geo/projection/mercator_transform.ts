@@ -5,7 +5,7 @@ import {wrap, clamp, createIdentityMat4f64, createMat4f64} from '../../util/util
 import {mat2, mat4, vec2, vec3, vec4} from 'gl-matrix';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID, calculateTileKey} from '../../source/tile_id';
 import {Terrain} from '../../render/terrain';
-import {Aabb, Frustum} from '../../util/primitives';
+import {Aabb, Frustum, IntersectionResult} from '../../util/primitives';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {PointProjection, xyTransformMat4} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
@@ -327,10 +327,10 @@ export class MercatorTransform implements ITransform {
             if (!fullyVisible) {
                 const intersectResult = it.aabb.intersectsFrustum(cameraFrustum);
 
-                if (intersectResult === 0)
+                if (intersectResult === IntersectionResult.None)
                     continue;
 
-                fullyVisible = intersectResult === 2;
+                fullyVisible = intersectResult === IntersectionResult.Full;
             }
 
             const refPoint = options.terrain ? cameraPoint : centerPoint;

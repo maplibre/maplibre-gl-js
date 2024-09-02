@@ -17,7 +17,7 @@ import {tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 import {angularCoordinatesRadiansToVector, angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
 import {EXTENT} from '../../data/extent';
 import type {ProjectionData} from './projection_data';
-import {Aabb, Frustum} from '../../util/primitives';
+import {Aabb, Frustum, IntersectionResult} from '../../util/primitives';
 
 /**
  * Describes the intersection of ray and sphere.
@@ -792,27 +792,22 @@ export class GlobeTransform implements ITransform {
      * @param z - Tile zoom.
      * @returns 0 is not visible, 1 if partially visible, 2 if fully visible.
      */
-    private isTileVisible(x: number, y: number, z: number, frustum: Frustum): number {
-        // Named constants for better readability
-        const notVisible = 0;
-        const partiallyVisible = 1;
-        const fullyVisible = 2;
-
+    private isTileVisible(x: number, y: number, z: number, frustum: Frustum): IntersectionResult {
         const tileID = {x, y, z};
         const aabb = this.getTileAABB(tileID);
 
         const frustumTest = aabb.intersectsFrustum(frustum);
         const planeTest = aabb.intersectsPlane(this._cachedClippingPlane);
 
-        if (frustumTest === notVisible || planeTest === notVisible) {
-            return notVisible;
+        if (frustumTest === IntersectionResult.None || planeTest === IntersectionResult.None) {
+            return IntersectionResult.None;
         }
 
-        if (frustumTest === fullyVisible && planeTest === fullyVisible) {
-            return fullyVisible;
+        if (frustumTest === IntersectionResult.Full && planeTest === IntersectionResult.Full) {
+            return IntersectionResult.Full;
         }
 
-        return partiallyVisible;
+        return IntersectionResult.Partial;
     }
 
     coveringTiles(options: CoveringTilesOptions): OverscaledTileID[] {
@@ -873,10 +868,10 @@ export class GlobeTransform implements ITransform {
             if (!fullyVisible) {
                 const intersectResult = this.isTileVisible(it.x, it.y, it.zoom, cameraFrustum);
 
-                if (intersectResult === 0)
+                if (intersectResult === IntersectionResult.None)
                     continue;
 
-                fullyVisible = intersectResult === 2;
+                fullyVisible = intersectResult === IntersectionResult.Full;
             }
 
             // Determine whether the tile needs any further splitting.
