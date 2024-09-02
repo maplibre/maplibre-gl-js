@@ -1,8 +1,9 @@
 import {vec2} from 'gl-matrix';
 import {IntersectionResult} from '../../util/primitives';
-import {CoveringTilesOptions, IReadonlyTransform, ITileVisibilityProvider} from '../transform_interface';
+import {CoveringTilesOptions} from '../transform_interface';
 import {OverscaledTileID} from '../../source/tile_id';
 import {MercatorCoordinate} from '../mercator_coordinate';
+import type {GlobeTransform} from './globe_transform';
 
 /**
  * Computes distance of a point to a tile in an arbitrary axis.
@@ -90,7 +91,7 @@ function getWrap(centerCoord: MercatorCoordinate, tileX: number, tileSize: numbe
  * @param options - Additional coveringTiles options.
  * @returns A list of tile coordinates, ordered by ascending distance from camera.
  */
-export function globeCoveringTiles(transform: IReadonlyTransform & ITileVisibilityProvider, options: CoveringTilesOptions): OverscaledTileID[] {
+export function globeCoveringTiles(transform: GlobeTransform, options: CoveringTilesOptions): OverscaledTileID[] {
     let z = transform.coveringZoomLevel(options);
     const actualZ = z;
 

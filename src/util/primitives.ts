@@ -1,6 +1,6 @@
 import {mat4, vec3, vec4} from 'gl-matrix';
 
-export enum IntersectionResult {
+export const enum IntersectionResult {
     None = 0,
     Partial = 1,
     Full = 2,

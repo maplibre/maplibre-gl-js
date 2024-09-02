@@ -9,7 +9,6 @@ import {Terrain} from '../render/terrain';
 import {PointProjection} from '../symbol/projection';
 import {MapProjectionEvent} from '../ui/events';
 import type {ProjectionData} from './projection/projection_data';
-import {IntersectionResult} from '../util/primitives';
 
 export type CoveringZoomOptions = {
     /**
@@ -494,14 +493,3 @@ export interface IReadonlyTransform extends ITransformGetters {
  */
 export interface ITransform extends IReadonlyTransform, ITransformMutators {}
 
-export interface ITileVisibilityProvider {
-    /**
-     * A function that returns whether the tile is visible under the current transform.
-     * The computation needs not be completely accurate, but no tile that is even partially visible can be returned as not visible.
-     * @param x - Tile X.
-     * @param y - tile Y.
-     * @param z - Tile zoom.
-     * @returns 0 is not visible, 1 if partially visible, 2 if fully visible.
-     */
-    isTileVisible(x: number, y: number, z: number): IntersectionResult;
-}
