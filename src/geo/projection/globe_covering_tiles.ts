@@ -12,7 +12,7 @@ type CoveringTilesResult = {
     tileDistanceToCamera: number;
 };
 
-type CoveringTilesStack = {
+type CoveringTilesStackEntry = {
     x: number;
     y: number;
     zoom: number;
@@ -233,7 +233,7 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
     const radiusOfMaxLvlLodInTiles = 3; // Matches the value in the mercator variant of coveringTiles
 
     // Do a depth-first traversal to find visible tiles and proper levels of detail
-    const stack: Array<CoveringTilesStack> = [];
+    const stack: Array<CoveringTilesStackEntry> = [];
     const result: Array<CoveringTilesResult> = [];
     const maxZoom = z;
     const overscaledZ = options.reparseOverscaled ? actualZ : z;

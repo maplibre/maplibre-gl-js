@@ -10,7 +10,7 @@ type CoveringTilesResult = {
     tileDistanceToCamera: number;
 };
 
-type CoveringTilesStack = {
+type CoveringTilesStackEntry = {
     aabb: Aabb;
     zoom: number;
     x: number;
@@ -62,7 +62,7 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, options: Co
     };
 
     // Do a depth-first traversal to find visible tiles and proper levels of detail
-    const stack: Array<CoveringTilesStack> = [];
+    const stack: Array<CoveringTilesStackEntry> = [];
     const result: Array<CoveringTilesResult> = [];
     const maxZoom = z;
     const overscaledZ = options.reparseOverscaled ? actualZ : z;
