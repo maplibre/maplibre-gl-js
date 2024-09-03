@@ -1,0 +1,49 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Tests that tile LOD is the same on both sides of the antimeridian.",
+      "width": 64,
+      "height": 64
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [
+    179.99,
+    0.0
+  ],
+  "zoom": 6,
+  "projection": {
+    "type": "globe"
+  },
+  "sources": {
+    "raster": {
+      "type": "raster",
+      "tiles": [
+        "local://tiles/raster-zoom/{z}.png"
+      ],
+      "minzoom": 0,
+      "maxzoom": 7,
+      "tileSize": 512
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "grey"
+      }
+    },
+    {
+      "id": "raster",
+      "type": "raster",
+      "source": "raster",
+      "paint": {
+        "raster-fade-duration": 0
+      }
+    }
+  ]
+}

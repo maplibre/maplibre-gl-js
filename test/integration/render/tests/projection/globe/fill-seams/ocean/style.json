@@ -17,12 +17,14 @@
   "pitch": 60.0,
   "bearing": 180.0,
   "zoom": 7,
-  "projection": { "type": "globe" },
+  "projection": {
+    "type": "globe"
+  },
   "sources": {
     "vector_tiles": {
       "type": "vector",
       "tiles": [
-        "local://tiles/ocean-only/{z}-{x}-{y}.mvt"
+        "local://tiles/ocean.mvt"
       ]
     }
   },

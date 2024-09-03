@@ -5,7 +5,7 @@ import {LngLat} from '../lng_lat';
 import {GlobeTransform} from './globe_transform';
 import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../source/tile_id';
 import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
-import {expectToBeCloseToArray, sleep} from '../../util/test/util';
+import {expectToBeCloseToArray, getGlobeProjectionMock, sleep} from '../../util/test/util';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {tileCoordinatesToLocation} from './mercator_utils';
 
@@ -33,19 +33,7 @@ function createGlobeTransform(globeProjection: GlobeProjection) {
 }
 
 describe('GlobeTransform', () => {
-    const globeProjectionMock = {
-        get useGlobeControls(): boolean {
-            return true;
-        },
-        get useGlobeRendering(): boolean {
-            return true;
-        },
-        set useGlobeRendering(_value: boolean) {
-            // do not set
-        },
-        latitudeErrorCorrectionRadians: 0,
-        errorQueryLatitudeDegrees: 0,
-    } as GlobeProjection;
+    const globeProjectionMock = getGlobeProjectionMock();
 
     describe('getProjectionData', () => {
         const globeTransform = createGlobeTransform(globeProjectionMock);
@@ -596,6 +584,151 @@ describe('GlobeTransform', () => {
 
         test('barely hidden', () => {
             expect(transform.isLocationOccluded(new LngLat(84.50, 0))).toBe(true);
+        });
+    });
+
+    describe('coveringTiles', () => {
+        test('zoomed out', () => {
+            const transform = new GlobeTransform(globeProjectionMock);
+            transform.resize(128, 128);
+            transform.setCenter(new LngLat(0.0, 0.0));
+            transform.setZoom(-1);
+
+            const tiles = transform.coveringTiles({
+                tileSize: 512,
+            });
+
+            expect(tiles).toEqual([
+                new OverscaledTileID(0, 0, 0, 0, 0)
+            ]);
+        });
+
+        test('zoomed in', () => {
+            const transform = new GlobeTransform(globeProjectionMock);
+            transform.resize(128, 128);
+            transform.setCenter(new LngLat(0.0, 0.0));
+            transform.setZoom(3);
+
+            const tiles = transform.coveringTiles({
+                tileSize: 512,
+            });
+
+            expect(tiles).toEqual([
+                new OverscaledTileID(3, 0, 3, 3, 3),
+                new OverscaledTileID(3, 0, 3, 3, 4),
+                new OverscaledTileID(3, 0, 3, 4, 3),
+                new OverscaledTileID(3, 0, 3, 4, 4),
+            ]);
+        });
+
+        test('zoomed in 512x512', () => {
+            const transform = new GlobeTransform(globeProjectionMock);
+            transform.resize(512, 512);
+            transform.setCenter(new LngLat(0.0, 0.0));
+            transform.setZoom(3);
+
+            const tiles = transform.coveringTiles({
+                tileSize: 512,
+            });
+
+            expect(tiles).toEqual([
+                new OverscaledTileID(3, 0, 3, 2, 2),
+                new OverscaledTileID(3, 0, 3, 2, 3),
+                new OverscaledTileID(3, 0, 3, 3, 3),
+                new OverscaledTileID(3, 0, 3, 2, 4),
+                new OverscaledTileID(3, 0, 3, 3, 4),
+                new OverscaledTileID(3, 0, 3, 4, 3),
+                new OverscaledTileID(3, 0, 3, 2, 5),
+                new OverscaledTileID(3, 0, 3, 5, 2),
+                new OverscaledTileID(3, 0, 3, 4, 4),
+                new OverscaledTileID(3, 0, 3, 5, 3),
+                new OverscaledTileID(3, 0, 3, 5, 4),
+                new OverscaledTileID(3, 0, 3, 5, 5),
+            ]);
+        });
+
+        test('pitched', () => {
+            const transform = new GlobeTransform(globeProjectionMock);
+            transform.resize(128, 128);
+            transform.setCenter(new LngLat(0.0, 0.0));
+            transform.setZoom(8);
+            transform.setMaxPitch(80);
+            transform.setPitch(80);
+
+            const tiles = transform.coveringTiles({
+                tileSize: 512,
+            });
+
+            expect(tiles).toEqual([
+                new OverscaledTileID(8, 0, 8, 127, 126),
+                new OverscaledTileID(8, 0, 8, 127, 127),
+                new OverscaledTileID(8, 0, 8, 128, 126),
+                new OverscaledTileID(8, 0, 8, 127, 128),
+                new OverscaledTileID(8, 0, 8, 128, 127),
+                new OverscaledTileID(8, 0, 8, 128, 128),
+            ]);
+        });
+
+        test('pitched+rotated', () => {
+            const transform = new GlobeTransform(globeProjectionMock);
+            transform.resize(128, 128);
+            transform.setCenter(new LngLat(0.0, 0.0));
+            transform.setZoom(8);
+            transform.setMaxPitch(80);
+            transform.setPitch(80);
+            transform.setBearing(45);
+
+            const tiles = transform.coveringTiles({
+                tileSize: 512,
+            });
+
+            expect(tiles).toEqual([
+                new OverscaledTileID(8, 0, 8, 128, 125),
+                new OverscaledTileID(8, 0, 8, 127, 127),
+                new OverscaledTileID(8, 0, 8, 128, 126),
+                new OverscaledTileID(8, 0, 8, 127, 128),
+                new OverscaledTileID(8, 0, 8, 128, 127),
+                new OverscaledTileID(8, 0, 8, 129, 126),
+                new OverscaledTileID(8, 0, 8, 128, 128),
+                new OverscaledTileID(8, 0, 8, 129, 127),
+                new OverscaledTileID(8, 0, 8, 130, 127),
+            ]);
+        });
+
+        test('antimeridian1', () => {
+            const transform = new GlobeTransform(globeProjectionMock);
+            transform.resize(128, 128);
+            transform.setCenter(new LngLat(179.99, 0.0));
+            transform.setZoom(5);
+
+            const tiles = transform.coveringTiles({
+                tileSize: 512,
+            });
+
+            expect(tiles).toEqual([
+                new OverscaledTileID(5, 1, 5, 0, 15),
+                new OverscaledTileID(5, 1, 5, 0, 16),
+                new OverscaledTileID(5, 0, 5, 31, 15),
+                new OverscaledTileID(5, 0, 5, 31, 16),
+            ]);
+        });
+
+        test('antimeridian2', () => {
+            const transform = new GlobeTransform(globeProjectionMock);
+            transform.resize(128, 128);
+            transform.setCenter(new LngLat(-179.99, 0.0));
+            transform.setZoom(5);
+
+            const tiles = transform.coveringTiles({
+                tileSize: 512,
+            });
+
+            expect(tiles).toEqual([
+                new OverscaledTileID(5, 0, 5, 0, 15),
+                new OverscaledTileID(5, 0, 5, 0, 16),
+                new OverscaledTileID(5, -1, 5, 31, 15),
+                new OverscaledTileID(5, -1, 5, 31, 16),
+            ]);
         });
     });
 });

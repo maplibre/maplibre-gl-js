@@ -38,10 +38,6 @@ export type CoveringTilesOptions = CoveringZoomOptions & {
      */
     reparseOverscaled?: boolean;
     /**
-     * Whether to render multiple copies of the world for non globe projection maps.
-     */
-    renderWorldCopies?: boolean;
-    /**
      * When terrain is present, tile visibility will be computed in regards to the min and max elevations for each tile.
      */
     terrain?: Terrain;
@@ -301,9 +297,9 @@ export interface IReadonlyTransform extends ITransformGetters {
     getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): Array<UnwrappedTileID>;
 
     /**
-     * Return all tile coordinates that could cover this transform for a covering
-     * zoom level, ordered by ascending distance from camera.
-     * @param options - the options
+     * Returns a list of tile coordinates that when rendered cover the entire screen at an optimal detail level.
+     * Tiles are ordered by ascending distance from camera.
+     * @param options - Additional options - min & max zoom, terrain presence, etc.
      * @returns Array of OverscaledTileID. All OverscaledTileID instances are newly created.
      */
     coveringTiles(options: CoveringTilesOptions): Array<OverscaledTileID>;
@@ -496,3 +492,4 @@ export interface IReadonlyTransform extends ITransformGetters {
  * A transform is cloneable, which is used when a given map state must be retained for multiple frames, mostly during symbol placement.
  */
 export interface ITransform extends IReadonlyTransform, ITransformMutators {}
+

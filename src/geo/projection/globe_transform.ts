@@ -14,9 +14,11 @@ import {LngLatBounds} from '../lng_lat_bounds';
 import {CoveringTilesOptions, CoveringZoomOptions, IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
 import {PaddingOptions} from '../edge_insets';
 import {tileCoordinatesToMercatorCoordinates} from './mercator_utils';
-import {angularCoordinatesRadiansToVector, angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
+import {angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, sphereSurfacePointToCoordinates} from './globe_utils';
 import {EXTENT} from '../../data/extent';
 import type {ProjectionData} from './projection_data';
+import {globeCoveringTiles} from './globe_covering_tiles';
+import {Frustum} from '../../util/primitives';
 
 /**
  * Describes the intersection of ray and sphere.
@@ -206,6 +208,7 @@ export class GlobeTransform implements ITransform {
     //
 
     private _cachedClippingPlane: vec4 = createVec4f64();
+    private _cachedFrustum: Frustum;
 
     // Transition handling
     private _lastGlobeStateEnabled: boolean = true;
@@ -521,13 +524,6 @@ export class GlobeTransform implements ITransform {
         return [...planeVector, -tangentPlaneDistanceToC * scale];
     }
 
-    private _projectTileCoordinatesToSphere(inTileX: number, inTileY: number, tileID: {x: number; y: number; z: number}): vec3 {
-        const mercator = tileCoordinatesToMercatorCoordinates(inTileX, inTileY, tileID);
-        const angular = mercatorCoordinatesToAngularCoordinatesRadians(mercator.x, mercator.y);
-        const sphere = angularCoordinatesRadiansToVector(angular[0], angular[1]);
-        return sphere;
-    }
-
     public isLocationOccluded(location: LngLat): boolean {
         return !this.isSurfacePointVisible(angularCoordinatesToSurfaceVector(location));
     }
@@ -586,7 +582,7 @@ export class GlobeTransform implements ITransform {
             return this._mercatorTransform.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
         }
 
-        const spherePos = this._projectTileCoordinatesToSphere(x, y, unwrappedTileID.canonical);
+        const spherePos = projectTileCoordinatesToSphere(x, y, unwrappedTileID.canonical);
         const elevation = getElevation ? getElevation(x, y) : 0.0;
         const vectorMultiplier = 1.0 + elevation / earthRadius;
         const pos: vec4 = [spherePos[0] * vectorMultiplier, spherePos[1] * vectorMultiplier, spherePos[2] * vectorMultiplier, 1];
@@ -666,6 +662,10 @@ export class GlobeTransform implements ITransform {
         vec3.rotateY(this._cameraPosition, this._cameraPosition, zero, this.center.lng * Math.PI / 180.0);
 
         this._cachedClippingPlane = this._computeClippingPlane(globeRadiusPixels);
+
+        const matrix = mat4.clone(this._globeViewProjMatrixNoCorrectionInverted);
+        mat4.scale(matrix, matrix, [1, 1, -1]);
+        this._cachedFrustum = Frustum.fromInvProjectionMatrix(matrix);
     }
 
     calculateFogMatrix(_unwrappedTileID: UnwrappedTileID): mat4 {
@@ -681,8 +681,15 @@ export class GlobeTransform implements ITransform {
     }
 
     coveringTiles(options: CoveringTilesOptions): OverscaledTileID[] {
-        // Globe: TODO: implement for globe #3887
-        return this._mercatorTransform.coveringTiles(options);
+        if (!this._globeRendering) {
+            return this._mercatorTransform.coveringTiles(options);
+        }
+
+        const coveringZ = this.coveringZoomLevel(options);
+        const cameraCoord = this.screenPointToMercatorCoordinate(this.getCameraPoint());
+        const centerCoord = MercatorCoordinate.fromLngLat(this.center);
+
+        return globeCoveringTiles(this._cachedFrustum, this._cachedClippingPlane, cameraCoord, centerCoord, coveringZ, options);
     }
 
     recalculateZoom(terrain: Terrain): void {
