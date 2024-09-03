@@ -52,6 +52,7 @@ import type {
     DiffOperations,
     SkySpecification
 } from '@maplibre/maplibre-gl-style-spec';
+import type {CanvasSourceSpecification} from '../source/canvas_source';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
 import {
@@ -110,11 +111,13 @@ export type StyleSetterOptions = {
 };
 
 /**
- * Part of {@link Map#setStyle} options, transformStyle is a convenience function that allows to modify a style after it is fetched but before it is committed to the map state
- * this function exposes previous and next styles, it can be commonly used to support a range of functionalities like:
- *      when previous style carries certain 'state' that needs to be carried over to a new style gracefully
- *      when a desired style is a certain combination of previous and incoming style
- *      when an incoming style requires modification based on external state
+ * Part of {@link Map#setStyle} options, transformStyle is a convenience function that allows to modify a style after it is fetched but before it is committed to the map state.
+ *
+ * This function exposes previous and next styles, it can be commonly used to support a range of functionalities like:
+ *
+ * - when previous style carries certain 'state' that needs to be carried over to a new style gracefully;
+ * - when a desired style is a certain combination of previous and incoming style;
+ * - when an incoming style requires modification based on external state.
  *
  * @param previous - The current style.
  * @param next - The next style.
@@ -833,7 +836,7 @@ export class Style extends Evented {
         return this.imageManager.listImages();
     }
 
-    addSource(id: string, source: SourceSpecification, options: StyleSetterOptions = {}) {
+    addSource(id: string, source: SourceSpecification | CanvasSourceSpecification, options: StyleSetterOptions = {}) {
         this._checkLoaded();
 
         if (this.sourceCaches[id] !== undefined) {

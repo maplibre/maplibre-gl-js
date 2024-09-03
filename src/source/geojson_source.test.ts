@@ -55,6 +55,25 @@ const hawkHill = {
     }]
 } as GeoJSON.GeoJSON;
 
+describe('GeoJSONSource#constructor', () => {
+    const mapStub = {
+        _requestManager: {
+            transformRequest: (url) => { return {url}; }
+        }
+    } as any;
+    test('warn if maxzoom <= clusterMaxZoom', () => {
+        const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+        const source = new GeoJSONSource('id', {data: hawkHill, maxzoom: 4, clusterMaxZoom: 4} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.map = mapStub;
+        source.load();
+
+        expect(warn).toHaveBeenCalledWith('The maxzoom value "4" is expected to be greater than the clusterMaxZoom value "4".');
+
+        warn.mockRestore();
+    });
+});
+
 describe('GeoJSONSource#setData', () => {
     function createSource(opts?) {
         opts = opts || {};
