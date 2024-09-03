@@ -34,6 +34,8 @@
         zoom: 12 // starting zoom
     });
 
+    // as default, all terra-draw drawing modes are enabled.
+    // you can disable some of modes in the constructor options if you want.
     const draw = new MaplibreTerradrawControl({
         point: true,
         line: true,
@@ -45,6 +47,16 @@
         select: true
     });
     map.addControl(draw, 'top-right');
+
+    // you can access to terra-draw api gey using `getTerraDrawInstance` function
+    // you can find detailed terra-draw api from https://terradraw.io/
+    // the below example is to subscribe select method to get a feature which you selected.
+    const drawInstance = draw.getTerraDrawInstance();
+    drawInstance?.on('select', (id) => {
+        const snapshot = drawInstance.getSnapshot();
+        const polygon = snapshot?.find((feature) => feature.id === id);
+        console.log(polygon);
+    });
 </script>
 </body>
 </html>
