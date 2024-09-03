@@ -14,8 +14,9 @@ using `transformCameraUpdate` caused the `maxBounds` to stop working just for ea
 - Fix Map#off to not remove listener with layer(s) registered with Map#once ([#4592](https://github.com/maplibre/maplibre-gl-js/pull/4592))
 - Improve types a bit for `addSource` and `getSource` ([#4616](https://github.com/maplibre/maplibre-gl-js/pull/4616))
 - Fix the color near the horizon when terrain is enabled without any sky ([#4607](https://github.com/maplibre/maplibre-gl-js/pull/4607))
-- Fix bug where `fitBounds` and `cameraForBounds` would not display accross the 180th meridian (antimeridian)
+- Fix bug where `fitBounds` and `cameraForBounds` would not display across the 180th meridian (antimeridian)
 - Fix white flickering on map resize ([#4158](https://github.com/maplibre/maplibre-gl-js/pull/4158))
+- Fixed a performance regression related to symbol placement ([#4599](https://github.com/maplibre/maplibre-gl-js/pull/4599))
 - _...Add new stuff here..._
 
 ## 4.6.0
