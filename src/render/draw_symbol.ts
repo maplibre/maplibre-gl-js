@@ -170,7 +170,7 @@ function getShiftedAnchor(projectedAnchorPoint: Point, projectionContext: symbol
             adjustedShift = adjustedShift.rotate(-transformAngle);
         }
         const tileAnchorShifted = translatedAnchor.add(adjustedShift);
-        return symbolProjection.project(tileAnchorShifted, projectionContext.labelPlaneMatrix, projectionContext.getElevation).point;
+        return symbolProjection.project(tileAnchorShifted.x, tileAnchorShifted.y, projectionContext.labelPlaneMatrix, projectionContext.getElevation).point;
     } else {
         if (rotateWithMap) {
             // Compute the angle with which to rotate the anchor, so that it is aligned with
@@ -231,7 +231,7 @@ function updateVariableAnchorsForBucket(
                 unwrappedTileID
             };
             const projectedAnchor = pitchWithMap ?
-                symbolProjection.project(tileAnchor, posMatrix, getElevation) :
+                symbolProjection.project(tileAnchor.x, tileAnchor.y, posMatrix, getElevation) :
                 symbolProjection.projectTileCoordinatesToViewport(tileAnchor.x, tileAnchor.y, projectionContext);
             const perspectiveRatio = symbolProjection.getPerspectiveRatio(transform.cameraToCenterDistance, projectedAnchor.signedDistanceFromCamera);
             let renderTextSize = evaluateSizeForFeature(bucket.textSizeData, size, symbol) * perspectiveRatio / ONE_EM;
