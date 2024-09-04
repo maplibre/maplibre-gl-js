@@ -214,6 +214,11 @@ Provides a [Webtoolkit](https://www.webtoolkit.eu/wt) integration.
 Provides a [React](https://facebook.github.io/react/) integration.
 <br/><small>[View on GitHub](https://github.com/alex3165/react-mapbox-gl)</small>
 
+#### maplibre-react-components
+
+Lightweight MapLibre only binding for React.
+<br/><small>[Documentation](https://maplibre-react-components.pentatrion.com/) - [View on GitHub](https://github.com/lhapaipai/maplibre-react-components)</small>
+
 #### angular-mapboxgl-directive
 
 Provides an [AngularJS](https://angularjs.org/) directive.
@@ -299,6 +304,11 @@ Manage layers, sources, and properties with syntactic sugar and convenience func
 
 This library provides a request transforming function enabling the consumption of MapboxGL Styles in MapLibreGL.
 <br/><small>[View on GitHub](https://github.com/rowanwins/maplibregl-mapbox-request-transformer)</small>
+
+#### maplibregl-theme
+
+Custom themes for your MapLibre GL Web app.
+<br/><small>[Theme customizer](https://maplibre-theme.pentatrion.com/) - [View on GitHub](https://github.com/lhapaipai/maplibre-theme)</small>
 
 ## Development Tools
 
