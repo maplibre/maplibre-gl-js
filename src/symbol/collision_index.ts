@@ -4,7 +4,7 @@ import {PathInterpolator} from './path_interpolator';
 
 import * as intersectionTests from '../util/intersection_tests';
 import {GridIndex} from './grid_index';
-import {mat4} from 'gl-matrix';
+import {mat4, vec4} from 'gl-matrix';
 import ONE_EM from '../symbol/one_em';
 
 import * as projection from '../symbol/projection';
@@ -46,6 +46,14 @@ export type FeatureKey = {
     featureIndex: number;
     collisionGroupID: number;
     overlapMode: OverlapMode;
+};
+
+type ProjectedBox = {
+    /**
+     * The AABB in the format [minX, minY, maxX, maxY].
+     */
+    box: [number, number, number, number];
+    allPointsOccluded: boolean;
 };
 
 /**
@@ -118,18 +126,37 @@ export class CollisionIndex {
             getElevation
         );
 
-        const projectedBox = this._projectCollisionBox(
-            collisionBox,
-            textPixelRatio,
-            posMatrix,
-            unwrappedTileID,
-            pitchWithMap,
-            rotateWithMap,
-            translation,
-            projectedPoint,
-            getElevation,
-            shift
-        );
+        const tileToViewport = textPixelRatio * projectedPoint.perspectiveRatio;
+
+        let projectedBox: ProjectedBox;
+
+        if (!pitchWithMap && !rotateWithMap) {
+            // Fast path for common symbols
+            const pointX = projectedPoint.point.x + (shift ? shift.x * tileToViewport : 0);
+            const pointY = projectedPoint.point.y + (shift ? shift.y * tileToViewport : 0);
+            projectedBox = {
+                allPointsOccluded: false,
+                box: [
+                    pointX + collisionBox.x1 * tileToViewport,
+                    pointY + collisionBox.y1 * tileToViewport,
+                    pointX + collisionBox.x2 * tileToViewport,
+                    pointY + collisionBox.y2 * tileToViewport,
+                ]
+            };
+        } else {
+            projectedBox = this._projectCollisionBox(
+                collisionBox,
+                tileToViewport,
+                posMatrix,
+                unwrappedTileID,
+                pitchWithMap,
+                rotateWithMap,
+                translation,
+                projectedPoint,
+                getElevation,
+                shift
+            );
+        }
 
         const [tlX, tlY, brX, brY] = projectedBox.box;
 
@@ -323,7 +350,7 @@ export class CollisionIndex {
     }
 
     projectPathToScreenSpace(projectedPath: Array<Point>, projectionContext: SymbolProjectionContext, labelToScreenMatrix: mat4) {
-        return projectedPath.map(p => projection.project(p, labelToScreenMatrix, projectionContext.getElevation));
+        return projectedPath.map(p => projection.project(p.x, p.y, labelToScreenMatrix, projectionContext.getElevation));
     }
 
     /**
@@ -407,21 +434,29 @@ export class CollisionIndex {
         }
     }
 
-    projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number) {
-        const projected = this.mapProjection.useSpecialProjectionForSymbols ?
-            this.mapProjection.projectTileCoordinates(x, y, unwrappedTileID, getElevation) :
-            projection.project(new Point(x, y), posMatrix, getElevation);
+    projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number, _unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number) {
+        // The code here is duplicated from "projection.ts" for performance.
+        // Code here is subject to change once globe is merged.
+        let pos;
+        if (getElevation) { // slow because of handle z-index
+            pos = [x, y, getElevation(x, y), 1] as vec4;
+            vec4.transformMat4(pos, pos, posMatrix);
+        } else { // fast because of ignore z-index
+            pos = [x, y, 0, 1] as vec4;
+            projection.xyTransformMat4(pos, pos, posMatrix);
+        }
+        const w = pos[3];
         return {
             point: new Point(
-                (((projected.point.x + 1) / 2) * this.transform.width) + viewportPadding,
-                (((-projected.point.y + 1) / 2) * this.transform.height) + viewportPadding
+                (((pos[0] / w + 1) / 2) * this.transform.width) + viewportPadding,
+                (((-pos[1] / w + 1) / 2) * this.transform.height) + viewportPadding
             ),
             // See perspective ratio comment in symbol_sdf.vertex
             // We're doing collision detection in viewport space so we need
             // to scale down boxes in the distance
-            perspectiveRatio: 0.5 + 0.5 * (this.transform.cameraToCenterDistance / projected.signedDistanceFromCamera),
-            isOccluded: projected.isOccluded,
-            signedDistanceFromCamera: projected.signedDistanceFromCamera
+            perspectiveRatio: 0.5 + 0.5 * (this.transform.cameraToCenterDistance / w),
+            isOccluded: false,
+            signedDistanceFromCamera: w
         };
     }
 
@@ -429,7 +464,7 @@ export class CollisionIndex {
         // We don't care about the actual projected point, just its W component.
         const projected = this.mapProjection.useSpecialProjectionForSymbols ?
             this.mapProjection.projectTileCoordinates(x, y, unwrappedTileID, getElevation) :
-            projection.project(new Point(x, y), posMatrix, getElevation);
+            projection.project(x, y, posMatrix, getElevation);
         return 0.5 + 0.5 * (this.transform.cameraToCenterDistance / projected.signedDistanceFromCamera);
     }
 
@@ -457,7 +492,7 @@ export class CollisionIndex {
      */
     private _projectCollisionBox(
         collisionBox: SingleCollisionBox,
-        textPixelRatio: number,
+        tileToViewport: number,
         posMatrix: mat4,
         unwrappedTileID: UnwrappedTileID,
         pitchWithMap: boolean,
@@ -466,12 +501,7 @@ export class CollisionIndex {
         projectedPoint: {point: Point; perspectiveRatio: number; signedDistanceFromCamera: number},
         getElevation?: (x: number, y: number) => number,
         shift?: Point
-    ): {
-            box: [number, number, number, number];
-            allPointsOccluded: boolean;
-        } {
-
-        const tileToViewport = textPixelRatio * projectedPoint.perspectiveRatio;
+    ): ProjectedBox {
 
         // These vectors are valid both for screen space viewport-rotation-aligned texts and for pitch-align: map texts that are map-rotation-aligned.
         let vecEast = new Point(1, 0);

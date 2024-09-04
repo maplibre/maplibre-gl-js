@@ -111,6 +111,7 @@ export class Transform {
     apply(that: Transform) {
         this.tileSize = that.tileSize;
         this.latRange = that.latRange;
+        this.lngRange = that.lngRange;
         this.width = that.width;
         this.height = that.height;
         this._center = that._center;
