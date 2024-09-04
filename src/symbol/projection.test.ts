@@ -9,7 +9,7 @@ describe('Projection', () => {
     test('matrix float precision', () => {
         const point = new Point(10.000000005, 0);
         const matrix = mat4.create();
-        expect(projectWithMatrix(point, matrix).point.x).toBeCloseTo(point.x, 10);
+        expect(projectWithMatrix(point.x, point.y, matrix).point.x).toBeCloseTo(point.x, 10);
     });
 });
 

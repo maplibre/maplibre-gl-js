@@ -129,13 +129,13 @@ export function getGlCoordMatrix(
  * Projects a point using a specified matrix, including the perspective divide.
  * Uses a fast path if `getElevation` is undefined.
  */
-export function projectWithMatrix(point: Point, matrix: mat4, getElevation?: (x: number, y: number) => number): PointProjection {
+export function projectWithMatrix(x: number, y: number, matrix: mat4, getElevation?: (x: number, y: number) => number): PointProjection {
     let pos;
     if (getElevation) { // slow because of handle z-index
-        pos = [point.x, point.y, getElevation(point.x, point.y), 1] as vec4;
+        pos = [x, y, getElevation(x, y), 1] as vec4;
         vec4.transformMat4(pos, pos, matrix);
     } else { // fast because of ignore z-index
-        pos = [point.x, point.y, 0, 1] as vec4;
+        pos = [x, y, 0, 1] as vec4;
         xyTransformMat4(pos, pos, matrix);
     }
     const w = pos[3];
@@ -621,7 +621,7 @@ export function projectTileCoordinatesToLabelPlane(x: number, y: number, project
     const translatedY = y + projectionContext.translation[1];
     let projection;
     if (projectionContext.pitchWithMap) {
-        projection = projectWithMatrix(new Point(translatedX, translatedY), projectionContext.pitchedLabelPlaneMatrix, projectionContext.getElevation);
+        projection = projectWithMatrix(translatedX, translatedY, projectionContext.pitchedLabelPlaneMatrix, projectionContext.getElevation);
         projection.isOccluded = false;
     } else {
         projection = projectionContext.transform.projectTileCoordinates(translatedX, translatedY, projectionContext.unwrappedTileID, projectionContext.getElevation);
@@ -887,7 +887,7 @@ export function projectPathSpecialProjection(projectedPath: Array<Point>, projec
     const inverseLabelPlaneMatrix = mat4.create();
     mat4.invert(inverseLabelPlaneMatrix, projectionContext.pitchedLabelPlaneMatrix);
     return projectedPath.map(p => {
-        const backProjected = projectWithMatrix(p, inverseLabelPlaneMatrix, projectionContext.getElevation);
+        const backProjected = projectWithMatrix(p.x, p.y, inverseLabelPlaneMatrix, projectionContext.getElevation);
         const projected = projectionContext.transform.projectTileCoordinates(
             backProjected.point.x,
             backProjected.point.y,

@@ -172,7 +172,7 @@ function getShiftedAnchor(projectedAnchorPoint: Point, projectionContext: Symbol
             adjustedShift = adjustedShift.rotate(-transformAngle);
         }
         const tileAnchorShifted = translatedAnchor.add(adjustedShift);
-        return projectWithMatrix(tileAnchorShifted, projectionContext.pitchedLabelPlaneMatrix, projectionContext.getElevation).point;
+        return projectWithMatrix(tileAnchorShifted.x, tileAnchorShifted.y, projectionContext.pitchedLabelPlaneMatrix, projectionContext.getElevation).point;
     } else {
         if (rotateWithMap) {
             // Compute the angle with which to rotate the anchor, so that it is aligned with

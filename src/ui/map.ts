@@ -663,7 +663,8 @@ export class Map extends Camera {
             let initialResizeEventCaptured = false;
             const throttledResizeCallback = throttle((entries: ResizeObserverEntry[]) => {
                 if (this._trackResize && !this._removed) {
-                    this.resize(entries)._update();
+                    this.resize(entries);
+                    this.redraw();
                 }
             }, 50);
             this._resizeObserver = new ResizeObserver((entries) => {

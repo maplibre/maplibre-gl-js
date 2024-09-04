@@ -130,6 +130,27 @@ describe('transform', () => {
         expect(transform.center).toEqual(new LngLat(-4.828338623046875, -4.828969771321582));
     });
 
+    test('lngRange & latRange constrain zoom and center after cloning', () => {
+        const old = new MercatorTransform(0, 22, 0, 60, true);
+        old.setCenter(new LngLat(0, 0));
+        old.setZoom(10);
+        old.resize(500, 500);
+
+        old.setMaxBounds(new LngLatBounds([-5, -5, 5, 5]));
+
+        const transform = old.clone();
+
+        transform.setZoom(0);
+        expect(transform.zoom).toBe(5.1357092861044045);
+
+        transform.setCenter(new LngLat(-50, -30));
+        expect(transform.center).toEqual(new LngLat(0, -0.0063583052861417855));
+
+        transform.setZoom(10);
+        transform.setCenter(new LngLat(-50, -30));
+        expect(transform.center).toEqual(new LngLat(-4.828338623046875, -4.828969771321582));
+    });
+
     test('lngRange can constrain zoom and center across meridian', () => {
         const transform = new MercatorTransform(0, 22, 0, 60, true);
         transform.setCenter(new LngLat(180, 0));
