@@ -65,7 +65,7 @@ export type StructArrayLayout = {
 };
 
 /**
- * An array that can be desialized
+ * An array that can be deserialized
  */
 export type SerializedStructArray = {
     length: number;
