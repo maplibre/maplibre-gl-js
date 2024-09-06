@@ -32834,10 +32834,17 @@ class WorkerTile {
             }
             const icons = Object.keys(options.iconDependencies);
             let getIconsPromise = Promise.resolve({});
+            let getIconBackgroundsPromise = Promise.resolve({});
             if (icons.length) {
                 const abortController = new AbortController();
                 this.inFlightDependencies.push(abortController);
                 getIconsPromise = actor.sendAsync({ type: "GI" /* MessageType.getImages */, data: { icons, source: this.source, tileID: this.tileID, type: 'icons' } }, abortController);
+                // If there are MSDF icons we also need to add the background
+                const msdfIcons = icons.filter(i => i.includes('msdf'));
+                const backgroundIcons = msdfIcons.map(i => i.replace('msdf', 'msdf-backgrounds'));
+                if (backgroundIcons.length) {
+                    getIconBackgroundsPromise = actor.sendAsync({ type: "GI" /* MessageType.getImages */, data: { icons: backgroundIcons, source: this.source, tileID: this.tileID, type: 'icons' } }, abortController);
+                }
             }
             const patterns = Object.keys(options.patternDependencies);
             let getPatternsPromise = Promise.resolve({});
@@ -32846,9 +32853,10 @@ class WorkerTile {
                 this.inFlightDependencies.push(abortController);
                 getPatternsPromise = actor.sendAsync({ type: "GI" /* MessageType.getImages */, data: { icons: patterns, source: this.source, tileID: this.tileID, type: 'patterns' } }, abortController);
             }
-            const [glyphMap, iconMap, patternMap] = yield Promise.all([getGlyphsPromise, getIconsPromise, getPatternsPromise]);
+            const [glyphMap, iconMap, iconBackgroundsMap, patternMap] = yield Promise.all([getGlyphsPromise, getIconsPromise, getIconBackgroundsPromise, getPatternsPromise]);
             const glyphAtlas = new GlyphAtlas(glyphMap);
             const imageAtlas = new ImageAtlas(iconMap, patternMap);
+            const imageBackgroundsAtlas = new ImageAtlas(iconBackgroundsMap, {});
             for (const key in buckets) {
                 const bucket = buckets[key];
                 if (bucket instanceof SymbolBucket) {
@@ -32878,6 +32886,7 @@ class WorkerTile {
                 collisionBoxArray: this.collisionBoxArray,
                 glyphAtlasImage: glyphAtlas.image,
                 imageAtlas,
+                imageBackgroundsAtlas,
                 // Only used for benchmarking:
                 glyphMap: this.returnDependencies ? glyphMap : null,
                 iconMap: this.returnDependencies ? iconMap : null,

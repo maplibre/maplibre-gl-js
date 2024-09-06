@@ -33596,10 +33596,17 @@ class WorkerTile {
             }
             const icons = Object.keys(options.iconDependencies);
             let getIconsPromise = Promise.resolve({});
+            let getIconBackgroundsPromise = Promise.resolve({});
             if (icons.length) {
                 const abortController = new AbortController();
                 this.inFlightDependencies.push(abortController);
                 getIconsPromise = actor.sendAsync({ type: "GI" /* MessageType.getImages */, data: { icons, source: this.source, tileID: this.tileID, type: 'icons' } }, abortController);
+                // If there are MSDF icons we also need to add the background
+                const msdfIcons = icons.filter(i => i.includes('msdf'));
+                const backgroundIcons = msdfIcons.map(i => i.replace('msdf', 'msdf-backgrounds'));
+                if (backgroundIcons.length) {
+                    getIconBackgroundsPromise = actor.sendAsync({ type: "GI" /* MessageType.getImages */, data: { icons: backgroundIcons, source: this.source, tileID: this.tileID, type: 'icons' } }, abortController);
+                }
             }
             const patterns = Object.keys(options.patternDependencies);
             let getPatternsPromise = Promise.resolve({});
@@ -33608,9 +33615,10 @@ class WorkerTile {
                 this.inFlightDependencies.push(abortController);
                 getPatternsPromise = actor.sendAsync({ type: "GI" /* MessageType.getImages */, data: { icons: patterns, source: this.source, tileID: this.tileID, type: 'patterns' } }, abortController);
             }
-            const [glyphMap, iconMap, patternMap] = yield Promise.all([getGlyphsPromise, getIconsPromise, getPatternsPromise]);
+            const [glyphMap, iconMap, iconBackgroundsMap, patternMap] = yield Promise.all([getGlyphsPromise, getIconsPromise, getIconBackgroundsPromise, getPatternsPromise]);
             const glyphAtlas = new GlyphAtlas(glyphMap);
             const imageAtlas = new performance.ImageAtlas(iconMap, patternMap);
+            const imageBackgroundsAtlas = new performance.ImageAtlas(iconBackgroundsMap, {});
             for (const key in buckets) {
                 const bucket = buckets[key];
                 if (bucket instanceof performance.SymbolBucket) {
@@ -33640,6 +33648,7 @@ class WorkerTile {
                 collisionBoxArray: this.collisionBoxArray,
                 glyphAtlasImage: glyphAtlas.image,
                 imageAtlas,
+                imageBackgroundsAtlas,
                 // Only used for benchmarking:
                 glyphMap: this.returnDependencies ? glyphMap : null,
                 iconMap: this.returnDependencies ? iconMap : null,
@@ -40135,6 +40144,9 @@ class Tile {
         if (data.imageAtlas) {
             this.imageAtlas = data.imageAtlas;
         }
+        if (data.imageBackgroundsAtlas) {
+            this.imageBackgroundsAtlas = data.imageBackgroundsAtlas;
+        }
         if (data.glyphAtlasImage) {
             this.glyphAtlasImage = data.glyphAtlasImage;
         }
@@ -40150,8 +40162,14 @@ class Tile {
         if (this.imageAtlasTexture) {
             this.imageAtlasTexture.destroy();
         }
+        if (this.imageBackgroundsAtlasTexture) {
+            this.imageBackgroundsAtlasTexture.destroy();
+        }
         if (this.imageAtlas) {
             this.imageAtlas = null;
+        }
+        if (this.imageBackgroundsAtlas) {
+            this.imageBackgroundsAtlas = null;
         }
         if (this.glyphAtlasTexture) {
             this.glyphAtlasTexture.destroy();
@@ -40174,6 +40192,10 @@ class Tile {
             this.imageAtlasTexture = new Texture(context, this.imageAtlas.image, gl.RGBA);
             this.imageAtlas.uploaded = true;
         }
+        if (this.imageBackgroundsAtlas && !this.imageBackgroundsAtlas.uploaded) {
+            this.imageBackgroundsAtlasTexture = new Texture(context, this.imageBackgroundsAtlas.image, gl.RGBA);
+            this.imageBackgroundsAtlas.uploaded = true;
+        }
         if (this.glyphAtlasImage) {
             this.glyphAtlasTexture = new Texture(context, this.glyphAtlasImage, gl.ALPHA);
             this.glyphAtlasImage = null;
@@ -40182,6 +40204,9 @@ class Tile {
     prepare(imageManager) {
         if (this.imageAtlas) {
             this.imageAtlas.patchUpdatedImages(imageManager, this.imageAtlasTexture);
+        }
+        if (this.imageBackgroundsAtlas) {
+            this.imageBackgroundsAtlas.patchUpdatedImages(imageManager, this.imageBackgroundsAtlasTexture);
         }
     }
     // Queries non-symbol features rendered for this tile.
@@ -45691,7 +45716,7 @@ var symbolIconFrag = 'uniform sampler2D u_texture;varying vec2 v_tex;varying flo
 var symbolIconVert = 'attribute vec4 a_pos_offset;attribute vec4 a_data;attribute vec4 a_pixeloffset;attribute vec3 a_projected_pos;attribute float a_fade_opacity;uniform bool u_is_size_zoom_constant;uniform bool u_is_size_feature_constant;uniform highp float u_size_t;uniform highp float u_size;uniform highp float u_camera_to_center_distance;uniform highp float u_pitch;uniform bool u_rotate_symbol;uniform highp float u_aspect_ratio;uniform float u_fade_change;uniform mat4 u_matrix;uniform mat4 u_label_plane_matrix;uniform mat4 u_coord_matrix;uniform bool u_is_text;uniform bool u_pitch_with_map;uniform vec2 u_texsize;uniform bool u_is_along_line;uniform bool u_is_variable_anchor;uniform vec2 u_translation;uniform float u_pitched_scale;varying vec2 v_tex;varying float v_fade_opacity;vec4 projectTileWithElevation(vec2 posInTile,float elevation) {return u_matrix*vec4(posInTile,elevation,1.0);}\n#pragma mapbox: define lowp float opacity\nvoid main() {\n#pragma mapbox: initialize lowp float opacity\nvec2 a_pos=a_pos_offset.xy;vec2 a_offset=a_pos_offset.zw;vec2 a_tex=a_data.xy;vec2 a_size=a_data.zw;float a_size_min=floor(a_size[0]*0.5);vec2 a_pxoffset=a_pixeloffset.xy;vec2 a_minFontScale=a_pixeloffset.zw/256.0;float ele=get_elevation(a_pos);highp float segment_angle=-a_projected_pos[2];float size;if (!u_is_size_zoom_constant && !u_is_size_feature_constant) {size=mix(a_size_min,a_size[1],u_size_t)/128.0;} else if (u_is_size_zoom_constant && !u_is_size_feature_constant) {size=a_size_min/128.0;} else {size=u_size;}vec2 translated_a_pos=a_pos+u_translation;vec4 projectedPoint=projectTileWithElevation(translated_a_pos,ele);highp float camera_to_anchor_distance=projectedPoint.w;highp float distance_ratio=u_pitch_with_map ?\ncamera_to_anchor_distance/u_camera_to_center_distance :\nu_camera_to_center_distance/camera_to_anchor_distance;highp float perspective_ratio=clamp(0.5+0.5*distance_ratio,0.0,4.0);size*=perspective_ratio;float fontScale=u_is_text ? size/24.0 : size;highp float symbol_rotation=0.0;if (u_rotate_symbol) {vec4 offsetProjectedPoint=projectTileWithElevation(translated_a_pos+vec2(1,0),ele);vec2 a=projectedPoint.xy/projectedPoint.w;vec2 b=offsetProjectedPoint.xy/offsetProjectedPoint.w;symbol_rotation=atan((b.y-a.y)/u_aspect_ratio,b.x-a.x);}highp float angle_sin=sin(segment_angle+symbol_rotation);highp float angle_cos=cos(segment_angle+symbol_rotation);mat2 rotation_matrix=mat2(angle_cos,-1.0*angle_sin,angle_sin,angle_cos);vec4 projected_pos;if (u_is_along_line || u_is_variable_anchor) {projected_pos=vec4(a_projected_pos.xy,ele,1.0);} else if (u_pitch_with_map) {projected_pos=u_label_plane_matrix*vec4(a_projected_pos.xy+u_translation,ele,1.0);} else {projected_pos=u_label_plane_matrix*projectTileWithElevation(a_projected_pos.xy+u_translation,ele);}float z=float(u_pitch_with_map)*projected_pos.z/projected_pos.w;float projectionScaling=1.0;vec4 finalPos=u_coord_matrix*vec4(projected_pos.xy/projected_pos.w+rotation_matrix*(a_offset/32.0*max(a_minFontScale,fontScale)+a_pxoffset/16.0)*projectionScaling,z,1.0);if(u_pitch_with_map) {finalPos=projectTileWithElevation(finalPos.xy,finalPos.z);}gl_Position=finalPos;v_tex=a_tex/u_texsize;vec2 fade_opacity=unpack_opacity(a_fade_opacity);float fade_change=fade_opacity[1] > 0.5 ? u_fade_change :-u_fade_change;float visibility=calculate_visibility(projectedPoint);v_fade_opacity=max(0.0,min(visibility,fade_opacity[0]+fade_change));}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
-var symbolSDFFrag = '#define SDF_PX 8.0\nuniform bool u_is_halo;uniform sampler2D u_texture;uniform highp float u_gamma_scale;uniform lowp float u_device_pixel_ratio;uniform bool u_is_text;uniform highp vec2 u_texsize;uniform highp float u_size;varying vec2 v_data0;varying vec3 v_data1;\n#pragma mapbox: define highp vec4 fill_color\n#pragma mapbox: define highp vec4 halo_color\n#pragma mapbox: define lowp float opacity\n#pragma mapbox: define lowp float halo_width\n#pragma mapbox: define lowp float halo_blur\nfloat median(vec3 values) {return max(min(values.r,values.g),min(max(values.r,values.g),values.b));}float screenPxRange(float fontScale) {return fontScale*SDF_PX;/*vec2 unitRange=vec2(8.0)/u_texsize;vec2 screenTexSize=vec2(1.0)/fwidth(v_data0.xy);return max(0.5*dot(unitRange,screenTexSize),1.0);*/}void main() {\n#pragma mapbox: initialize highp vec4 fill_color\n#pragma mapbox: initialize highp vec4 halo_color\n#pragma mapbox: initialize lowp float opacity\n#pragma mapbox: initialize lowp float halo_width\n#pragma mapbox: initialize lowp float halo_blur\nfloat EDGE_GAMMA=0.105/u_device_pixel_ratio;vec2 tex=v_data0.xy;float gamma_scale=v_data1.x;float size=v_data1.y;float fade_opacity=v_data1[2];float fontScale=u_is_text ? size/24.0 : size;lowp vec4 color=fill_color;highp float gamma=EDGE_GAMMA/(fontScale*u_gamma_scale);lowp float inner_edge=(256.0-64.0)/256.0;vec3 s=texture2D(u_texture,tex).rgb;float sd=median(s);float dist=sd-0.5;if (u_is_halo) {color=halo_color;gamma=(halo_blur*1.19/SDF_PX+EDGE_GAMMA)/(fontScale*u_gamma_scale);inner_edge=inner_edge+gamma*gamma_scale;}float clampedDistance=clamp(dist*screenPxRange(fontScale)+0.5,0.0,1.0);highp float gamma_scaled=gamma*gamma_scale;highp float alpha=smoothstep(inner_edge-gamma_scaled,inner_edge+gamma_scaled,clampedDistance);if (u_is_halo) {lowp float halo_edge=(6.0-halo_width/fontScale)/SDF_PX;alpha=min(smoothstep(halo_edge-gamma_scaled,halo_edge+gamma_scaled,clampedDistance),1.0-alpha);}gl_FragColor=color*(alpha*opacity*fade_opacity);\n#ifdef OVERDRAW_INSPECTOR\ngl_FragColor=vec4(1.0);\n#endif\n}';
+var symbolSDFFrag = '#define SDF_PX 8.0\nuniform bool u_is_halo;uniform sampler2D u_texture;uniform sampler2D u_texture_2;uniform highp float u_gamma_scale;uniform lowp float u_device_pixel_ratio;uniform bool u_is_text;uniform highp vec2 u_texsize;uniform highp float u_size;varying vec2 v_data0;varying vec3 v_data1;\n#pragma mapbox: define highp vec4 fill_color\n#pragma mapbox: define highp vec4 halo_color\n#pragma mapbox: define lowp float opacity\n#pragma mapbox: define lowp float halo_width\n#pragma mapbox: define lowp float halo_blur\nfloat median(vec3 values) {return max(min(values.r,values.g),min(max(values.r,values.g),values.b));}float screenPxRange(float fontScale) {return fontScale*SDF_PX;/*vec2 unitRange=vec2(8.0)/u_texsize;vec2 screenTexSize=vec2(1.0)/fwidth(v_data0.xy);return max(0.5*dot(unitRange,screenTexSize),1.0);*/}void main() {\n#pragma mapbox: initialize highp vec4 fill_color\n#pragma mapbox: initialize highp vec4 halo_color\n#pragma mapbox: initialize lowp float opacity\n#pragma mapbox: initialize lowp float halo_width\n#pragma mapbox: initialize lowp float halo_blur\nfloat EDGE_GAMMA=0.105/u_device_pixel_ratio;vec2 tex=v_data0.xy;float gamma_scale=v_data1.x;float size=v_data1.y;float fade_opacity=v_data1[2];float fontScale=u_is_text ? size/24.0 : size;lowp vec4 color=fill_color;highp float gamma=EDGE_GAMMA/(fontScale*u_gamma_scale);lowp float inner_edge=(256.0-64.0)/256.0;vec3 s=texture2D(u_texture,tex).rgb;float sd=median(s);float dist=sd-0.5;if (u_is_halo) {color=vec4(1.0);s=texture2D(u_texture_2,tex).rgb;sd=median(s);dist=sd-0.5;}float clampedDistance=clamp(dist*screenPxRange(fontScale)+0.5,0.0,1.0);highp float gamma_scaled=gamma*gamma_scale;highp float alpha=smoothstep(inner_edge-gamma_scaled,inner_edge+gamma_scaled,clampedDistance);/*if (u_is_halo) {lowp float halo_edge=(6.0-halo_width/fontScale)/SDF_PX;alpha=min(smoothstep(halo_edge-gamma_scaled,halo_edge+gamma_scaled,clampedDistance),1.0-alpha);}*/gl_FragColor=color*(alpha*opacity*fade_opacity);\n#ifdef OVERDRAW_INSPECTOR\ngl_FragColor=vec4(1.0);\n#endif\n}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
 var symbolSDFVert = 'attribute vec4 a_pos_offset;attribute vec4 a_data;attribute vec4 a_pixeloffset;attribute vec3 a_projected_pos;attribute float a_fade_opacity;uniform bool u_is_size_zoom_constant;uniform bool u_is_size_feature_constant;uniform highp float u_size_t;uniform highp float u_size;uniform mat4 u_matrix;uniform mat4 u_label_plane_matrix;uniform mat4 u_coord_matrix;uniform bool u_is_text;uniform bool u_pitch_with_map;uniform bool u_is_along_line;uniform bool u_is_variable_anchor;uniform highp float u_pitch;uniform bool u_rotate_symbol;uniform highp float u_aspect_ratio;uniform highp float u_camera_to_center_distance;uniform float u_fade_change;uniform vec2 u_texsize;uniform vec2 u_translation;uniform float u_pitched_scale;varying vec2 v_data0;varying vec3 v_data1;vec4 projectTileWithElevation(vec2 posInTile,float elevation) {return u_matrix*vec4(posInTile,elevation,1.0);}\n#pragma mapbox: define highp vec4 fill_color\n#pragma mapbox: define highp vec4 halo_color\n#pragma mapbox: define lowp float opacity\n#pragma mapbox: define lowp float halo_width\n#pragma mapbox: define lowp float halo_blur\nvoid main() {\n#pragma mapbox: initialize highp vec4 fill_color\n#pragma mapbox: initialize highp vec4 halo_color\n#pragma mapbox: initialize lowp float opacity\n#pragma mapbox: initialize lowp float halo_width\n#pragma mapbox: initialize lowp float halo_blur\nvec2 a_pos=a_pos_offset.xy;vec2 a_offset=a_pos_offset.zw;vec2 a_tex=a_data.xy;vec2 a_size=a_data.zw;float a_size_min=floor(a_size[0]*0.5);vec2 a_pxoffset=a_pixeloffset.xy;float ele=get_elevation(a_pos);highp float segment_angle=-a_projected_pos[2];float size;if (!u_is_size_zoom_constant && !u_is_size_feature_constant) {size=mix(a_size_min,a_size[1],u_size_t)/128.0;} else if (u_is_size_zoom_constant && !u_is_size_feature_constant) {size=a_size_min/128.0;} else {size=u_size;}vec2 translated_a_pos=a_pos+u_translation;vec4 projectedPoint=projectTileWithElevation(translated_a_pos,ele);highp float camera_to_anchor_distance=projectedPoint.w;highp float distance_ratio=u_pitch_with_map ?\ncamera_to_anchor_distance/u_camera_to_center_distance :\nu_camera_to_center_distance/camera_to_anchor_distance;highp float perspective_ratio=clamp(0.5+0.5*distance_ratio,0.0,4.0);size*=perspective_ratio;float fontScale=u_is_text ? size/24.0 : size;highp float symbol_rotation=0.0;if (u_rotate_symbol) {vec4 offsetProjectedPoint=projectTileWithElevation(translated_a_pos+vec2(1,0),ele);vec2 a=projectedPoint.xy/projectedPoint.w;vec2 b=offsetProjectedPoint.xy/offsetProjectedPoint.w;symbol_rotation=atan((b.y-a.y)/u_aspect_ratio,b.x-a.x);}highp float angle_sin=sin(segment_angle+symbol_rotation);highp float angle_cos=cos(segment_angle+symbol_rotation);mat2 rotation_matrix=mat2(angle_cos,-1.0*angle_sin,angle_sin,angle_cos);vec4 projected_pos;if (u_is_along_line || u_is_variable_anchor) {projected_pos=vec4(a_projected_pos.xy,ele,1.0);} else if (u_pitch_with_map) {projected_pos=u_label_plane_matrix*vec4(a_projected_pos.xy+u_translation,ele,1.0);} else {projected_pos=u_label_plane_matrix*projectTileWithElevation(a_projected_pos.xy+u_translation,ele);}float z=float(u_pitch_with_map)*projected_pos.z/projected_pos.w;float projectionScaling=1.0;vec4 finalPos=u_coord_matrix*vec4(projected_pos.xy/projected_pos.w+rotation_matrix*(a_offset/32.0*fontScale+a_pxoffset)*projectionScaling,z,1.0);if(u_pitch_with_map) {finalPos=projectTileWithElevation(finalPos.xy,finalPos.z);}float gamma_scale=finalPos.w;gl_Position=finalPos;vec2 fade_opacity=unpack_opacity(a_fade_opacity);float visibility=calculate_visibility(projectedPoint);float fade_change=fade_opacity[1] > 0.5 ? u_fade_change :-u_fade_change;float interpolated_fade_opacity=max(0.0,min(visibility,fade_opacity[0]+fade_change));v_data0=a_tex/u_texsize;v_data1=vec3(gamma_scale,size,interpolated_fade_opacity);}';
@@ -46647,6 +46672,7 @@ const symbolSDFUniforms = (context, locations) => ({
     'u_is_variable_anchor': new performance$1.Uniform1i(context, locations.u_is_variable_anchor),
     'u_texsize': new performance$1.Uniform2f(context, locations.u_texsize),
     'u_texture': new performance$1.Uniform1i(context, locations.u_texture),
+    'u_texture_2': new performance$1.Uniform1i(context, locations.u_texture_2),
     'u_gamma_scale': new performance$1.Uniform1f(context, locations.u_gamma_scale),
     'u_device_pixel_ratio': new performance$1.Uniform1f(context, locations.u_device_pixel_ratio),
     'u_is_halo': new performance$1.Uniform1i(context, locations.u_is_halo),
@@ -46710,7 +46736,8 @@ const symbolSDFUniformValues = (functionType, size, rotateInShader, pitchWithMap
     return performance$1.extend(symbolIconUniformValues(functionType, size, rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, painter, matrix, labelPlaneMatrix, glCoordMatrix, translation, isText, texSize, pitchedScale), {
         'u_gamma_scale': (pitchWithMap ? Math.cos(transform._pitch) * transform.cameraToCenterDistance : 1),
         'u_device_pixel_ratio': painter.pixelRatio,
-        'u_is_halo': +isHalo
+        'u_is_halo': +isHalo,
+        'u_texture_2': 1
     });
 };
 const symbolTextAndIconUniformValues = (functionType, size, rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, painter, matrix, labelPlaneMatrix, glCoordMatrix, translation, texSizeSDF, texSizeIcon, pitchedScale) => {
@@ -48051,6 +48078,7 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate
         let atlasInterpolation;
         let atlasTextureIcon = null;
         let atlasInterpolationIcon;
+        let atlasBackgroundTexture;
         if (isText) {
             atlasTexture = tile.glyphAtlasTexture;
             atlasInterpolation = gl.LINEAR;
@@ -48065,6 +48093,7 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate
         else {
             const iconScaled = layer.layout.get('icon-size').constantOr(0) !== 1 || bucket.iconsNeedLinear;
             atlasTexture = tile.imageAtlasTexture;
+            atlasBackgroundTexture = tile.imageBackgroundsAtlasTexture;
             atlasInterpolation = isSDF || painter.options.rotating || painter.options.zooming || iconScaled || transformed ?
                 gl.LINEAR :
                 gl.NEAREST;
@@ -48108,6 +48137,7 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate
             buffers,
             uniformValues,
             atlasTexture,
+            atlasBackgroundTexture,
             atlasTextureIcon,
             atlasInterpolation,
             atlasInterpolationIcon,
@@ -48142,15 +48172,18 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate
         const state = segmentState.state;
         context.activeTexture.set(gl.TEXTURE0);
         state.atlasTexture.bind(state.atlasInterpolation, gl.CLAMP_TO_EDGE);
-        if (state.atlasTextureIcon) {
+        if (state.atlasTextureIcon || state.atlasBackgroundTexture) {
             context.activeTexture.set(gl.TEXTURE1);
             if (state.atlasTextureIcon) {
                 state.atlasTextureIcon.bind(state.atlasInterpolationIcon, gl.CLAMP_TO_EDGE);
             }
+            if (state.atlasBackgroundTexture) {
+                state.atlasBackgroundTexture.bind(state.atlasInterpolation, gl.CLAMP_TO_EDGE);
+            }
         }
         if (state.isSDF) {
             const uniformValues = state.uniformValues;
-            if (state.hasHalo) {
+            if (true) {
                 uniformValues['u_is_halo'] = 1;
                 drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, uniformValues, segmentState.terrainData);
             }
