@@ -59,7 +59,9 @@ export class Tile {
     latestFeatureIndex: FeatureIndex;
     latestRawTileData: ArrayBuffer;
     imageAtlas: ImageAtlas;
+    imageBackgroundsAtlas: ImageAtlas;
     imageAtlasTexture: Texture;
+    imageBackgroundsAtlasTexture: Texture;
     glyphAtlasImage: AlphaImage;
     glyphAtlasTexture: Texture;
     expirationTime: any;
@@ -216,6 +218,9 @@ export class Tile {
         if (data.imageAtlas) {
             this.imageAtlas = data.imageAtlas;
         }
+        if (data.imageBackgroundsAtlas) {
+            this.imageBackgroundsAtlas = data.imageBackgroundsAtlas;
+        }
         if (data.glyphAtlasImage) {
             this.glyphAtlasImage = data.glyphAtlasImage;
         }
@@ -234,8 +239,16 @@ export class Tile {
             this.imageAtlasTexture.destroy();
         }
 
+        if (this.imageBackgroundsAtlasTexture) {
+            this.imageBackgroundsAtlasTexture.destroy();
+        }
+
         if (this.imageAtlas) {
             this.imageAtlas = null;
+        }
+
+        if (this.imageBackgroundsAtlas) {
+            this.imageBackgroundsAtlas = null;
         }
 
         if (this.glyphAtlasTexture) {
@@ -264,6 +277,12 @@ export class Tile {
             this.imageAtlas.uploaded = true;
         }
 
+        if (this.imageBackgroundsAtlas && !this.imageBackgroundsAtlas.uploaded) {
+            this.imageBackgroundsAtlasTexture = new Texture(context, this.imageBackgroundsAtlas.image, gl.RGBA);
+            this.imageBackgroundsAtlas.uploaded = true;
+        }
+
+
         if (this.glyphAtlasImage) {
             this.glyphAtlasTexture = new Texture(context, this.glyphAtlasImage, gl.ALPHA);
             this.glyphAtlasImage = null;
@@ -273,6 +292,10 @@ export class Tile {
     prepare(imageManager: ImageManager) {
         if (this.imageAtlas) {
             this.imageAtlas.patchUpdatedImages(imageManager, this.imageAtlasTexture);
+        }
+
+        if (this.imageBackgroundsAtlas) {
+            this.imageBackgroundsAtlas.patchUpdatedImages(imageManager, this.imageBackgroundsAtlasTexture);
         }
     }
 

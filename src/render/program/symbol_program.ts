@@ -48,6 +48,7 @@ export type SymbolSDFUniformsType = {
     'u_is_variable_anchor': Uniform1i;
     'u_texsize': Uniform2f;
     'u_texture': Uniform1i;
+    'u_texture_2': Uniform1i;
     'u_gamma_scale': Uniform1f;
     'u_device_pixel_ratio': Uniform1f;
     'u_is_halo': Uniform1i;
@@ -125,6 +126,7 @@ const symbolSDFUniforms = (context: Context, locations: UniformLocations): Symbo
     'u_is_variable_anchor': new Uniform1i(context, locations.u_is_variable_anchor),
     'u_texsize': new Uniform2f(context, locations.u_texsize),
     'u_texture': new Uniform1i(context, locations.u_texture),
+    'u_texture_2': new Uniform1i(context, locations.u_texture_2),
     'u_gamma_scale': new Uniform1f(context, locations.u_gamma_scale),
     'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
     'u_is_halo': new Uniform1i(context, locations.u_is_halo),
@@ -232,7 +234,8 @@ const symbolSDFUniformValues = (
         glCoordMatrix, translation, isText, texSize, pitchedScale), {
         'u_gamma_scale': (pitchWithMap ? Math.cos(transform._pitch) * transform.cameraToCenterDistance : 1),
         'u_device_pixel_ratio': painter.pixelRatio,
-        'u_is_halo': +isHalo
+        'u_is_halo': +isHalo,
+        'u_texture_2': 1
     });
 };
 

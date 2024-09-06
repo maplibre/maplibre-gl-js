@@ -2,6 +2,7 @@
 
 uniform bool u_is_halo;
 uniform sampler2D u_texture;
+uniform sampler2D u_texture_2;
 uniform highp float u_gamma_scale;
 uniform lowp float u_device_pixel_ratio;
 uniform bool u_is_text;
@@ -62,21 +63,22 @@ void main() {
     float dist = sd - 0.5;
 
     if (u_is_halo) {
-        color = halo_color;
-        gamma = (halo_blur * 1.19 / SDF_PX + EDGE_GAMMA) / (fontScale * u_gamma_scale);
-        inner_edge = inner_edge + gamma * gamma_scale;
+        color = vec4(1.0);
+        s = texture(u_texture_2, tex).rgb;
+        sd = median(s);
+        dist = sd - 0.5;
     }
 
     float clampedDistance = clamp(dist * screenPxRange(fontScale) + 0.5, 0.0, 1.0);
     
     highp float gamma_scaled = gamma * gamma_scale;
     highp float alpha = smoothstep(inner_edge - gamma_scaled, inner_edge + gamma_scaled, clampedDistance);
-    if (u_is_halo) {
+    /*if (u_is_halo) {
         // When drawing halos, we want the inside of the halo to be transparent as well
         // in case the text fill is transparent.
         lowp float halo_edge = (6.0 - halo_width / fontScale) / SDF_PX;
         alpha = min(smoothstep(halo_edge - gamma_scaled, halo_edge + gamma_scaled, clampedDistance), 1.0 - alpha);
-    }
+    }*/
 
     fragColor = color * (alpha * opacity * fade_opacity);
 

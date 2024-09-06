@@ -48,6 +48,7 @@ type SymbolTileRenderState = {
         buffers: SymbolBuffers;
         uniformValues: UniformValues<SymbolSDFUniformsType | SymbolIconUniformsType>;
         atlasTexture: Texture;
+        atlasBackgroundTexture: Texture | null;
         atlasTextureIcon: Texture | null;
         atlasInterpolation: TextureFilter;
         atlasInterpolationIcon: TextureFilter;
@@ -354,6 +355,7 @@ function drawLayerSymbols(
         let atlasInterpolation: TextureFilter;
         let atlasTextureIcon = null;
         let atlasInterpolationIcon: TextureFilter;
+        let atlasBackgroundTexture: Texture;
         if (isText) {
             atlasTexture = tile.glyphAtlasTexture;
             atlasInterpolation = gl.LINEAR;
@@ -367,6 +369,7 @@ function drawLayerSymbols(
         } else {
             const iconScaled = layer.layout.get('icon-size').constantOr(0) !== 1 || bucket.iconsNeedLinear;
             atlasTexture = tile.imageAtlasTexture;
+            atlasBackgroundTexture = tile.imageBackgroundsAtlasTexture;
             atlasInterpolation = isSDF || painter.options.rotating || painter.options.zooming || iconScaled || transformed ?
                 gl.LINEAR :
                 gl.NEAREST;
@@ -422,6 +425,7 @@ function drawLayerSymbols(
             buffers,
             uniformValues,
             atlasTexture,
+            atlasBackgroundTexture,
             atlasTextureIcon,
             atlasInterpolation,
             atlasInterpolationIcon,
@@ -459,16 +463,19 @@ function drawLayerSymbols(
 
         context.activeTexture.set(gl.TEXTURE0);
         state.atlasTexture.bind(state.atlasInterpolation, gl.CLAMP_TO_EDGE);
-        if (state.atlasTextureIcon) {
+        if (state.atlasTextureIcon || state.atlasBackgroundTexture) {
             context.activeTexture.set(gl.TEXTURE1);
             if (state.atlasTextureIcon) {
                 state.atlasTextureIcon.bind(state.atlasInterpolationIcon, gl.CLAMP_TO_EDGE);
+            }
+            if (state.atlasBackgroundTexture) {
+                state.atlasBackgroundTexture.bind(state.atlasInterpolation, gl.CLAMP_TO_EDGE);
             }
         }
 
         if (state.isSDF) {
             const uniformValues = state.uniformValues;
-            if (state.hasHalo) {
+            if (true) {
                 uniformValues['u_is_halo'] = 1;
                 drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, uniformValues, segmentState.terrainData);
             }

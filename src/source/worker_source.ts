@@ -57,6 +57,7 @@ export type WorkerDEMTileParameters = TileParameters & {
 export type WorkerTileResult = ExpiryData & {
     buckets: Array<Bucket>;
     imageAtlas: ImageAtlas;
+    imageBackgroundsAtlas?: ImageAtlas;
     glyphAtlasImage: AlphaImage;
     featureIndex: FeatureIndex;
     collisionBoxArray: CollisionBoxArray;
