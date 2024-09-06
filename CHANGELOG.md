@@ -18,6 +18,7 @@ using `transformCameraUpdate` caused the `maxBounds` to stop working just for ea
 - Fix white flickering on map resize ([#4158](https://github.com/maplibre/maplibre-gl-js/pull/4158))
 - Fixed a performance regression related to symbol placement ([#4599](https://github.com/maplibre/maplibre-gl-js/pull/4599))
 - _...Add new stuff here..._
+- Fix cacheControl for Tile to not ignore values of 0
 
 ## 4.6.0
 
