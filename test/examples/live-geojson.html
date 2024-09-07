@@ -18,9 +18,24 @@
 <script>
     const map = new maplibregl.Map({
         container: 'map',
-        style:
-            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
         zoom: 0
+    });
+
+    let requestedIcons = {};
+
+    map.on('styleimagemissing', (e) => {
+        let id = e.id;
+        if (!requestedIcons[id] && (id.includes('-15') || id.includes('_15'))) {
+
+            requestedIcons[id] = true;
+            const img = new Image(15, 15);
+            img.onload = function() {
+                map.addImage(id, img);
+            };
+            img.crossOrigin = 'Anonymous';
+            img.src = `https://unpkg.com/maki@2.1.0/icons/${id}.svg`;
+        }
     });
 
     map.on('load', () => {
@@ -49,6 +64,7 @@
                 });
         }, 2000);
 
+
         // Set initial location at (0,0).
         map.addSource('drone', {type: 'geojson', data: {
             type: 'Feature',
@@ -62,7 +78,8 @@
             'type': 'symbol',
             'source': 'drone',
             'layout': {
-                'icon-image': 'rocket_15'
+                'icon-image': 'rocket-15',
+                'icon-size': 2
             }
         });
     });

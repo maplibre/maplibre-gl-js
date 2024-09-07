@@ -18,13 +18,43 @@
 <script>
     const map = new maplibregl.Map({
         container: 'map',
-        style:
-            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
         center: [-87.6298, 41.8781],
         zoom: 17,
         bearing: -12,
         pitch: 60,
         interactive: false
+    });
+
+    map.on('load', () => {
+        map.addLayer({
+            'id': 'building-top-extrusion',
+            'type': 'fill-extrusion',
+            'source': 'carto',
+            'source-layer': 'building',
+            'paint': {
+                'fill-extrusion-color': '#add8e6',
+                'fill-extrusion-height': [
+                    'interpolate',
+                    ['linear'],
+                    ['zoom'],
+                    15,
+                    0,
+                    15.05,
+                    10
+                ],
+                'fill-extrusion-base': [
+                    'interpolate',
+                    ['linear'],
+                    ['zoom'],
+                    15,
+                    0,
+                    15.05,
+                    -10
+                ],
+                'fill-extrusion-opacity': 1
+            }
+        });
     });
 
     // pixels the map pans when the up or down arrow is clicked
@@ -64,6 +94,18 @@
                     // right
                     map.easeTo({
                         bearing: map.getBearing() + deltaDegrees,
+                        easing
+                    });
+                }
+
+                if (e.which === 187) {
+                    // + (zoom in)
+                    map.zoomIn({
+                        easing
+                    });
+                } else if (e.which === 189) {
+                    // - (zoom out)
+                    map.zoomOut({
                         easing
                     });
                 }

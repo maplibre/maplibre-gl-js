@@ -27,12 +27,9 @@
   <body>
     <div id="map"></div>
     <script>
-      const url = 'https://maps.clockworkmicro.com/streets/v1/style?x-api-key=';
-      const apiKey = 'Dr4eW3s233rRkk8I_public';
-
       const map = new maplibregl.Map({
           container: 'map',
-          style: url + apiKey,
+          style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
           center: [2.343957, 48.862011],
           zoom: 10.5,
       });

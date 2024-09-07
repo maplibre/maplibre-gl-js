@@ -18,7 +18,8 @@
 <script>
     const map = new maplibregl.Map({
         container: 'map',
-        style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
+
         center: [-103.59179687498357, 40.66995747013945],
         zoom: 3
     });
@@ -76,8 +77,7 @@
             filter: ['has', 'point_count'],
             layout: {
                 'text-field': '{point_count_abbreviated}',
-                'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-                'text-size': 12
+                'text-size': 14
             }
         });
 

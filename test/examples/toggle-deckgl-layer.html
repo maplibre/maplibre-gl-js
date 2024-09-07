@@ -45,14 +45,11 @@
     <div id="map"></div>
     <button id="toggle-button">Hide</button>
     <script>
-      const url = 'https://maps.clockworkmicro.com/streets/v1/style?x-api-key=';
-      const apiKey = 'Dr4eW3s233rRkk8I_public';
-
       let overlay;
 
       const map = new maplibregl.Map({
           container: 'map',
-          style: url + apiKey,
+          style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
           center: [2.345885, 48.860412],
           zoom: 12,
       });

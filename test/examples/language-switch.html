@@ -46,8 +46,7 @@
 <script>
     const map = new maplibregl.Map({
         container: 'map',
-        style:
-            'https://api.maptiler.com/maps/basic/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
         center: [16.05, 48],
         zoom: 2.9
     });
@@ -59,7 +58,11 @@
             // Use setLayoutProperty to set the value of a layout property in a style layer.
             // The three arguments are the id of the layer, the name of the layout property,
             // and the new property value.
-            map.setLayoutProperty('label_country', 'text-field', [
+            map.setLayoutProperty('place_country_1', 'text-field', [
+                'get',
+                `name:${language}`
+            ]);
+            map.setLayoutProperty('place_country_2', 'text-field', [
                 'get',
                 `name:${language}`
             ]);

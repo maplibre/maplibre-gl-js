@@ -125,10 +125,25 @@
     const filterInput = document.getElementById('filter-input');
     const map = new maplibregl.Map({
         container: 'map',
-        style:
-            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
         center: [-77.04, 38.907],
         zoom: 11.15
+    });
+
+    let requestedIcons = {};
+
+    map.on('styleimagemissing', (e) => {
+        let id = e.id;
+        if (!requestedIcons[id] && (id.includes('-15') || id.includes('_15'))) {
+
+            requestedIcons[id] = true;
+            const img = new Image(15, 15);
+            img.onload = function() {
+                map.addImage(id, img);
+            };
+            img.crossOrigin = 'Anonymous';
+            img.src = `https://unpkg.com/maki@2.1.0/icons/${id}.svg`;
+        }
     });
 
     map.on('load', () => {
@@ -149,7 +164,7 @@
                     'type': 'symbol',
                     'source': 'places',
                     'layout': {
-                        'icon-image': `${symbol}_15`,
+                        'icon-image': `${symbol}-15`,
                         'icon-overlap': 'always',
                         'text-field': symbol,
                         'text-font': [

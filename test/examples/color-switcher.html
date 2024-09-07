@@ -74,8 +74,8 @@
         <fieldset>
             <label for="layer">Select layer</label>
             <select id="layer" name="layer">
-                <option value="water">Water</option>
-                <option value="building-3d">Buildings</option>
+                <option value="water_shadow">Water</option>
+                <option value="building-top">Buildings</option>
             </select>
         </fieldset>
         <fieldset>
@@ -88,7 +88,7 @@
 <script>
     const map = new maplibregl.Map({
         container: 'map',
-        style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
         center: [12.338, 45.4385],
         zoom: 17.4
     });
@@ -114,7 +114,7 @@
         swatch.addEventListener('click', () => {
             map.setPaintProperty(
                 layer.value,
-                layer.value === 'water' ? 'fill-color' : 'fill-extrusion-color',
+                'fill-color',
                 color
             );
         });

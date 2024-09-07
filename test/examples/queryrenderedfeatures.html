@@ -32,10 +32,10 @@
 <script>
     const map = new maplibregl.Map({
         container: 'map',
-        style:
-            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
-        center: [-96, 37.8],
-        zoom: 3
+        style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
+        center: [-83.01987, 42.32438],
+        hash: true,
+        zoom: 12.93
     });
 
     map.on('mousemove', (e) => {

@@ -36,14 +36,13 @@
 <script>
     const map = new maplibregl.Map({
         container: 'map',
-        style:
-            'https://api.maptiler.com/maps/basic/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
         center: [-90.73414, 14.55524],
         zoom: 13
     });
 
     map.on('load', () => {
-        map.setPaintProperty('building', 'fill-color', [
+        map.setPaintProperty('building-top', 'fill-color', [
             'interpolate',
             ['exponential', 0.5],
             ['zoom'],
@@ -53,7 +52,7 @@
             '#eee695'
         ]);
 
-        map.setPaintProperty('building', 'fill-opacity', [
+        map.setPaintProperty('building-top', 'fill-opacity', [
             'interpolate',
             ['exponential', 0.5],
             ['zoom'],

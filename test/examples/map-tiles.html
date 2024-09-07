@@ -18,27 +18,21 @@
     const map = new maplibregl.Map({
         container: 'map', // container id
         style: {
-            'version': 8,
-            'sources': {
-                'raster-tiles': {
-                    'type': 'raster',
-                    'tiles': [
-                        // NOTE: Layers from Stadia Maps do not require an API key for localhost development or most production
-                        // web deployments. See https://docs.stadiamaps.com/authentication/ for details.
-                        'https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg'
-                    ],
-                    'tileSize': 256,
-                    'attribution':
-                        'Map tiles by <a target="_blank" href="https://stamen.com">Stamen Design</a>; Hosting by <a href="https://stadiamaps.com/" target="_blank">Stadia Maps</a>. Data &copy; <a href="https://www.openstreetmap.org/about" target="_blank">OpenStreetMap</a> contributors'
+            version: 8,
+            sources: {
+                osm: {
+                    type: 'raster',
+                    tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                    tileSize: 256,
+                    attribution: '&copy; OpenStreetMap Contributors',
+                    maxzoom: 19
                 }
             },
-            'layers': [
+            layers: [
                 {
-                    'id': 'simple-tiles',
-                    'type': 'raster',
-                    'source': 'raster-tiles',
-                    'minzoom': 0,
-                    'maxzoom': 22
+                    id: 'osm',
+                    type: 'raster',
+                    source: 'osm'
                 }
             ]
         },
