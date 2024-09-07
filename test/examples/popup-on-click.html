@@ -178,12 +178,6 @@
             }
         });
 
-        // Create a popup, but don't add it to the map yet.
-        const popup = new maplibregl.Popup({
-            closeButton: false,
-            closeOnClick: false
-        });
-
         // When a click event occurs on a feature in the places layer, open a popup at the
         // location of the feature, with description HTML from its properties.
         map.on('click', 'places', (e) => {
