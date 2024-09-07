@@ -157,7 +157,7 @@
     "watch-css": "postcss --watch -o dist/maplibre-gl.css src/css/maplibre-gl.css",
     "build-benchmarks": "npm run build-dev && rollup --configPlugin @rollup/plugin-typescript -c test/bench/rollup_config_benchmarks.ts",
     "watch-benchmarks": "rollup --configPlugin @rollup/plugin-typescript -c test/bench/rollup_config_benchmarks.ts --watch",
-    "start-server": "st --no-cache -H 0.0.0.0 --port 9966 .",
+    "start-server": "st --no-cache -H localhost --port 9966 .",
     "start-docs": "docker run --rm -it -p 8000:8000 -v ${PWD}:/docs squidfunk/mkdocs-material",
     "start": "run-p watch-css watch-dev start-server",
     "start-bench": "run-p watch-css watch-benchmarks start-server",
