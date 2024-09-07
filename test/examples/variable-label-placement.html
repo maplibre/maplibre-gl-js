@@ -106,10 +106,10 @@
         zoom: 11.15
     });
 
-    let requestedIcons = {};
+    const requestedIcons = {};
 
     map.on('styleimagemissing', (e) => {
-        let id = e.id;
+        const id = e.id;
         if (!requestedIcons[id] && (id.includes('-15') || id.includes('_15'))) {
 
             requestedIcons[id] = true;
