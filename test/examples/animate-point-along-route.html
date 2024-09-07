@@ -54,6 +54,21 @@
         zoom: 3
     });
 
+    const requestedIcons = {};
+    map.on('styleimagemissing', (e) => {
+        const id = e.id;
+        if (!requestedIcons[id] && id.includes('-15')) {
+
+            requestedIcons[id] = true;
+            const img = new Image(15, 15);
+            img.onload = function() {
+                map.addImage(id, img);
+            };
+            img.crossOrigin = 'Anonymous';
+            img.src = `https://unpkg.com/maki@2.1.0/icons/${id}.svg`;
+        }
+    });
+
     // San Francisco
     const origin = [-122.414, 37.776];
 
@@ -139,7 +154,7 @@
             'source': 'point',
             'type': 'symbol',
             'layout': {
-                'icon-image': 'airport_15',
+                'icon-image': 'airport-15',
                 'icon-rotate': ['get', 'bearing'],
                 'icon-rotation-alignment': 'map',
                 'icon-overlap': 'always',

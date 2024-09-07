@@ -209,6 +209,21 @@
         zoom: 3
     });
 
+    const requestedIcons = {};
+    map.on('styleimagemissing', (e) => {
+        const id = e.id;
+        if (!requestedIcons[id] && id.includes('-15')) {
+
+            requestedIcons[id] = true;
+            const img = new Image(15, 15);
+            img.onload = function() {
+                map.addImage(id, img);
+            };
+            img.crossOrigin = 'Anonymous';
+            img.src = `https://unpkg.com/maki@2.1.0/icons/${id}.svg`;
+        }
+    });
+
     map.on('load', () => {
         // add a layer to display the map's center point
         map.addSource('center', {
@@ -223,7 +238,7 @@
             'type': 'symbol',
             'source': 'center',
             'layout': {
-                'icon-image': 'marker_15',
+                'icon-image': 'marker-15',
                 'text-field': 'Center: [-94, 40]',
                 'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
                 'text-offset': [0, 0.6],

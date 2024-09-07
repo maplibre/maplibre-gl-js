@@ -21,6 +21,7 @@
         center: [-77, 38.75],
         zoom: 5
     });
+
     map.on('load', () => {
         map.addSource('points', {
             'type': 'geojson',
@@ -72,8 +73,8 @@
             'layout': {
                 'icon-image': [
                     'coalesce',
-                    ['image', ['concat', ['get', 'icon'], '_15']],
-                    ['image', 'marker_15']
+                    ['image', ['concat', ['get', 'icon'], '-15']],
+                    ['image', 'marker-15']
                 ],
                 'text-field': ['get', 'title'],
                 'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],

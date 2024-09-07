@@ -26,7 +26,7 @@
 
     map.on('styleimagemissing', (e) => {
         const id = e.id;
-        if (!requestedIcons[id] && (id.includes('-15') || id.includes('_15'))) {
+        if (!requestedIcons[id] && id.includes('-15')) {
 
             requestedIcons[id] = true;
             const img = new Image(15, 15);
