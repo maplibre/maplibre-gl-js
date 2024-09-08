@@ -14,10 +14,10 @@
 </head>
 <body>
 
-<script src="https://cdn.jsdelivr.net/npm/@watergis/maplibre-gl-terradraw@0.0.3/dist/maplibre-gl-terradraw.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@watergis/maplibre-gl-terradraw@0.1.1/dist/maplibre-gl-terradraw.umd.js"></script>
 <link
     rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/@watergis/maplibre-gl-terradraw@0.0.3/dist/maplibre-gl-terradraw.css"
+    href="https://cdn.jsdelivr.net/npm/@watergis/maplibre-gl-terradraw@0.1.1/dist/maplibre-gl-terradraw.css"
 />
 <div id="map"></div>
 
@@ -33,14 +33,17 @@
     // By default, all terra-draw drawing modes are enabled.
     // you can disable some of modes in the constructor options if you want.
     const draw = new MaplibreTerradrawControl({
-        point: true,
-        line: true,
-        polygon: true,
-        rectangle: true,
-        circle: true,
-        freehand: true,
-        angledRectangle: true,
-        select: true
+        modes: [
+            'point',
+            'linestring',
+            'polygon',
+            'rectangle',
+            'angled-rectangle',
+            'circle',
+            'freehand',
+            'select'
+        ],
+        open: true,
     });
     map.addControl(draw, 'top-right');
 </script>
