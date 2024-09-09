@@ -111,7 +111,7 @@ describe('#setStyle', () => {
         spy.mockRestore();
     });
 
-    test('style transform overrides unmodified map transform', () => new Promise(done => {
+    test('style transform overrides unmodified map transform', () => new Promise<void>(done => {
         const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
         map.transform.lngRange = [-120, 140];
         map.transform.latRange = [-60, 80];
@@ -128,7 +128,7 @@ describe('#setStyle', () => {
         });
     }));
 
-    test('style transform does not override map transform modified via options', () => new Promise(done => {
+    test('style transform does not override map transform modified via options', () => new Promise<void>(done => {
         const map = new Map({container: window.document.createElement('div'), zoom: 10, center: [-77.0186, 38.8888]} as any as MapOptions);
         expect(map.transform.unmodified).toBeFalsy();
         map.setStyle(createStyle());
@@ -141,7 +141,7 @@ describe('#setStyle', () => {
         });
     }));
 
-    test('style transform does not override map transform modified via setters', () => new Promise(done => {
+    test('style transform does not override map transform modified via setters', () => new Promise<void>(done => {
         const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
         expect(map.transform.unmodified).toBeTruthy();
         map.setZoom(10);
@@ -185,7 +185,7 @@ describe('#setStyle', () => {
         spyWorkerPoolRelease.mockClear();
     });
 
-    test('transformStyle should copy the source and the layer into next style', () => new Promise(done => {
+    test('transformStyle should copy the source and the layer into next style', () => new Promise<void>(done => {
         const style = extend(createStyle(), {
             sources: {
                 maplibre: {
@@ -233,7 +233,7 @@ describe('#setStyle', () => {
         });
     }));
 
-    test('delayed setStyle with transformStyle should copy the source and the layer into next style with diffing', () => new Promise(done => {
+    test('delayed setStyle with transformStyle should copy the source and the layer into next style with diffing', () => new Promise<void>(done => {
         const style = extend(createStyle(), {
             sources: {
                 maplibre: {
@@ -281,7 +281,7 @@ describe('#setStyle', () => {
         }, 100);
     }));
 
-    test('transformStyle should get called when passed to setStyle after the map is initialised without a style', () => new Promise(done => {
+    test('transformStyle should get called when passed to setStyle after the map is initialised without a style', () => new Promise<void>(done => {
         const map = createMap({deleteStyle: true});
         map.setStyle(createStyle(), {
             diff: true,
@@ -316,7 +316,7 @@ describe('#setStyle', () => {
         });
     }));
 
-    test('map load should be fired when transformStyle is used on setStyle after the map is initialised without a style', () => new Promise(done => {
+    test('map load should be fired when transformStyle is used on setStyle after the map is initialised without a style', () => new Promise<void>(done => {
         const map = createMap({deleteStyle: true});
         map.setStyle({version: 8, sources: {}, layers: []}, {
             diff: true,
@@ -342,14 +342,14 @@ describe('#setStyle', () => {
 });
 
 describe('#getStyle', () => {
-    test('returns undefined if the style has not loaded yet', () => new Promise(done => {
+    test('returns undefined if the style has not loaded yet', () => new Promise<void>(done => {
         const style = createStyle();
         const map = createMap({style});
         expect(map.getStyle()).toBeUndefined();
         done();
     }));
 
-    test('returns the style', () => new Promise(done => {
+    test('returns the style', () => new Promise<void>(done => {
         const style = createStyle();
         const map = createMap({style});
 
@@ -383,7 +383,7 @@ describe('#getStyle', () => {
         expect(map.getStyle()).toEqual(style);
     });
 
-    test('returns the style with added sources', () => new Promise(done => {
+    test('returns the style with added sources', () => new Promise<void>(done => {
         const style = createStyle();
         const map = createMap({style});
 
@@ -396,7 +396,7 @@ describe('#getStyle', () => {
         });
     }));
 
-    test('fires an error on checking if non-existant source is loaded', () => new Promise(done => {
+    test('fires an error on checking if non-existant source is loaded', () => new Promise<void>(done => {
         const style = createStyle();
         const map = createMap({style});
 
@@ -409,7 +409,7 @@ describe('#getStyle', () => {
         });
     }));
 
-    test('returns the style with added layers', () => new Promise(done => {
+    test('returns the style with added layers', () => new Promise<void>(done => {
         const style = createStyle();
         const map = createMap({style});
         const layer = {
@@ -454,7 +454,7 @@ describe('#getStyle', () => {
         });
     });
 
-    test('returns the style with added source and layer', () => new Promise(done => {
+    test('returns the style with added source and layer', () => new Promise<void>(done => {
         const style = createStyle();
         const map = createMap({style});
         const source = createStyleSource();

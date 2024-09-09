@@ -110,7 +110,7 @@ describe('Map', () => {
             await promise;
         });
 
-        test('Map#isStyleLoaded', () => new Promise(done => {
+        test('Map#isStyleLoaded', () => new Promise<void>(done => {
             const style = createStyle();
             const map = createMap({style});
 
@@ -121,7 +121,7 @@ describe('Map', () => {
             });
         }));
 
-        test('Map#areTilesLoaded', () => new Promise(done => {
+        test('Map#areTilesLoaded', () => new Promise<void>(done => {
             const style = createStyle();
             const map = createMap({style});
             expect(map.areTilesLoaded()).toBe(true);
@@ -162,7 +162,7 @@ describe('Map', () => {
         expect(control.onRemove).toHaveBeenCalledTimes(1);
     });
 
-    test('#remove calls onRemove on added controls before style is destroyed', () => new Promise(done => {
+    test('#remove calls onRemove on added controls before style is destroyed', () => new Promise<void>(done => {
         const map = createMap();
         let onRemoveCalled = 0;
         let style;

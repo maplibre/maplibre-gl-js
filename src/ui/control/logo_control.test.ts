@@ -28,7 +28,7 @@ describe('LogoControl', () => {
         )).toHaveLength(0);
     });
 
-    test('is not displayed when the maplibreLogo property is false', () => new Promise(done => {
+    test('is not displayed when the maplibreLogo property is false', () => new Promise<void>(done => {
         const map = createMap(undefined, false);
         map.on('load', () => {
             expect(map.getContainer().querySelectorAll(
@@ -38,7 +38,7 @@ describe('LogoControl', () => {
         });
     }));
 
-    test('appears in bottom-left when maplibreLogo is true and logoPosition is undefined', () => new Promise(done => {
+    test('appears in bottom-left when maplibreLogo is true and logoPosition is undefined', () => new Promise<void>(done => {
         const map = createMap(undefined, true);
         map.on('load', () => {
             expect(map.getContainer().querySelectorAll(
@@ -48,7 +48,7 @@ describe('LogoControl', () => {
         });
     }));
 
-    test('appears in the position specified by the position option', () => new Promise(done => {
+    test('appears in the position specified by the position option', () => new Promise<void>(done => {
         const map = createMap('top-left', true);
         map.on('load', () => {
             expect(map.getContainer().querySelectorAll(
@@ -75,7 +75,7 @@ describe('LogoControl', () => {
         ).toHaveLength(1);
     });
 
-    test('has `rel` noopener and nofollow', () => new Promise(done => {
+    test('has `rel` noopener and nofollow', () => new Promise<void>(done => {
         const map = createMap(undefined, true);
 
         map.on('load', () => {

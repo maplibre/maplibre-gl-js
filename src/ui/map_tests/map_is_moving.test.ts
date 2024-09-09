@@ -27,7 +27,7 @@ describe('Map#isMoving', () => {
         expect(map.isMoving()).toBe(false);
     });
 
-    test('returns true during a camera zoom animation', () => new Promise(done => {
+    test('returns true during a camera zoom animation', () => new Promise<void>(done => {
         map.on('zoomstart', () => {
             expect(map.isMoving()).toBe(true);
         });
@@ -40,7 +40,7 @@ describe('Map#isMoving', () => {
         map.zoomTo(5, {duration: 0});
     }));
 
-    test('returns true when drag panning', () => new Promise(done => {
+    test('returns true when drag panning', () => new Promise<void>(done => {
         map.on('movestart', () => {
             expect(map.isMoving()).toBe(true);
         });
@@ -66,7 +66,7 @@ describe('Map#isMoving', () => {
         map._renderTaskQueue.run();
     }));
 
-    test('returns true when drag rotating', () => new Promise(done => {
+    test('returns true when drag rotating', () => new Promise<void>(done => {
         // Prevent inertial rotation.
         jest.spyOn(browser, 'now').mockImplementation(() => { return 0; });
 
@@ -97,7 +97,7 @@ describe('Map#isMoving', () => {
         map._renderTaskQueue.run();
     }));
 
-    test('returns true when scroll zooming', () => new Promise(done => {
+    test('returns true when scroll zooming', () => new Promise<void>(done => {
         map.on('zoomstart', () => {
             expect(map.isMoving()).toBe(true);
         });
@@ -119,7 +119,7 @@ describe('Map#isMoving', () => {
         }, 400);
     }));
 
-    test('returns true when drag panning and scroll zooming interleave', () => new Promise(done => {
+    test('returns true when drag panning and scroll zooming interleave', () => new Promise<void>(done => {
         map.on('dragstart', () => {
             expect(map.isMoving()).toBe(true);
         });

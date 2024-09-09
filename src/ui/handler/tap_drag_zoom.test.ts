@@ -62,7 +62,7 @@ describe('tap_drag_zoom', () => {
 
     });
 
-    test('TapDragZoomHandler does not fire zoom on tap and drag if touchstart events are > 500ms apart', () => new Promise(done => {
+    test('TapDragZoomHandler does not fire zoom on tap and drag if touchstart events are > 500ms apart', () => new Promise<void>(done => {
         const map = createMap();
         const target = map.getCanvas();
 

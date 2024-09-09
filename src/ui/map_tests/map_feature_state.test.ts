@@ -6,7 +6,7 @@ beforeEach(() => {
 });
 
 describe('#setFeatureState', () => {
-    test('sets state', () => new Promise(done => {
+    test('sets state', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -23,7 +23,7 @@ describe('#setFeatureState', () => {
             done();
         });
     }));
-    test('works with string ids', () => new Promise(done => {
+    test('works with string ids', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -40,7 +40,7 @@ describe('#setFeatureState', () => {
             done();
         });
     }));
-    test('parses feature id as an int', () => new Promise(done => {
+    test('parses feature id as an int', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -57,7 +57,7 @@ describe('#setFeatureState', () => {
             done();
         });
     }));
-    test('throw before loaded', () => new Promise(done => {
+    test('throw before loaded', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -73,7 +73,7 @@ describe('#setFeatureState', () => {
 
         done();
     }));
-    test('fires an error if source not found', () => new Promise(done => {
+    test('fires an error if source not found', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -91,7 +91,7 @@ describe('#setFeatureState', () => {
             map.setFeatureState({source: 'vector', id: 12345}, {'hover': true});
         });
     }));
-    test('fires an error if sourceLayer not provided for a vector source', () => new Promise(done => {
+    test('fires an error if sourceLayer not provided for a vector source', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -112,7 +112,7 @@ describe('#setFeatureState', () => {
             (map as any).setFeatureState({source: 'vector', sourceLayer: 0, id: 12345}, {'hover': true});
         });
     }));
-    test('fires an error if id not provided', () => new Promise(done => {
+    test('fires an error if id not provided', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -137,7 +137,7 @@ describe('#setFeatureState', () => {
 
 describe('#removeFeatureState', () => {
 
-    test('accepts "0" id', () => new Promise(done => {
+    test('accepts "0" id', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -156,7 +156,7 @@ describe('#removeFeatureState', () => {
             done();
         });
     }));
-    test('accepts string id', () => new Promise(done => {
+    test('accepts string id', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -175,7 +175,7 @@ describe('#removeFeatureState', () => {
             done();
         });
     }));
-    test('remove specific state property', () => new Promise(done => {
+    test('remove specific state property', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -193,7 +193,7 @@ describe('#removeFeatureState', () => {
             done();
         });
     }));
-    test('remove all state properties of one feature', () => new Promise(done => {
+    test('remove all state properties of one feature', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -214,7 +214,7 @@ describe('#removeFeatureState', () => {
             done();
         });
     }));
-    test('remove properties for zero-based feature IDs.', () => new Promise(done => {
+    test('remove properties for zero-based feature IDs.', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -235,7 +235,7 @@ describe('#removeFeatureState', () => {
             done();
         });
     }));
-    test('other properties persist when removing specific property', () => new Promise(done => {
+    test('other properties persist when removing specific property', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -255,7 +255,7 @@ describe('#removeFeatureState', () => {
             done();
         });
     }));
-    test('remove all state properties of all features in source', () => new Promise(done => {
+    test('remove all state properties of all features in source', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -282,7 +282,7 @@ describe('#removeFeatureState', () => {
             done();
         });
     }));
-    test('specific state deletion should not interfere with broader state deletion', () => new Promise(done => {
+    test('specific state deletion should not interfere with broader state deletion', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -319,7 +319,7 @@ describe('#removeFeatureState', () => {
             done();
         });
     }));
-    test('add/remove and remove/add state', () => new Promise(done => {
+    test('add/remove and remove/add state', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -346,7 +346,7 @@ describe('#removeFeatureState', () => {
             done();
         });
     }));
-    test('throw before loaded', () => new Promise(done => {
+    test('throw before loaded', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -362,7 +362,7 @@ describe('#removeFeatureState', () => {
 
         done();
     }));
-    test('fires an error if source not found', () => new Promise(done => {
+    test('fires an error if source not found', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -380,7 +380,7 @@ describe('#removeFeatureState', () => {
             (map as any).removeFeatureState({source: 'vector', id: 12345}, {'hover': true});
         });
     }));
-    test('fires an error if sourceLayer not provided for a vector source', () => new Promise(done => {
+    test('fires an error if sourceLayer not provided for a vector source', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -401,7 +401,7 @@ describe('#removeFeatureState', () => {
             (map as any).removeFeatureState({source: 'vector', sourceLayer: 0, id: 12345}, {'hover': true});
         });
     }));
-    test('fires an error if state property is provided without a feature id', () => new Promise(done => {
+    test('fires an error if state property is provided without a feature id', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,

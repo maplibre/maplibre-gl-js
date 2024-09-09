@@ -53,7 +53,7 @@ describe('CanvasSource', () => {
         map = new StubMap();
     });
 
-    test('constructor', () => new Promise(done => {
+    test('constructor', () => new Promise<void>(done => {
         const source = createSource();
 
         expect(source.minzoom).toBe(0);
@@ -95,7 +95,7 @@ describe('CanvasSource', () => {
 
     });
 
-    test('can be initialized with HTML element', () => new Promise(done => {
+    test('can be initialized with HTML element', () => new Promise<void>(done => {
         const el = window.document.createElement('canvas');
         const source = createSource({
             canvas: el
@@ -111,7 +111,7 @@ describe('CanvasSource', () => {
         source.onAdd(map);
     }));
 
-    test('rerenders if animated', () => new Promise(done => {
+    test('rerenders if animated', () => new Promise<void>(done => {
         const source = createSource();
 
         map.on('rerender', () => {
@@ -122,7 +122,7 @@ describe('CanvasSource', () => {
         source.onAdd(map);
     }));
 
-    test('can be static', () => new Promise(done => {
+    test('can be static', () => new Promise<void>(done => {
         const source = createSource({
             animate: false
         });
@@ -177,7 +177,7 @@ describe('CanvasSource', () => {
 
     });
 
-    test('fires idle event on prepare call when there is at least one not loaded tile', () => new Promise(done => {
+    test('fires idle event on prepare call when there is at least one not loaded tile', () => new Promise<void>(done => {
         const source = createSource();
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
         source.on('data', (e) => {

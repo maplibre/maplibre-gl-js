@@ -241,7 +241,7 @@ describe('vector tile worker source', () => {
         expect(await promise).toBeNull();
     });
 
-    test('VectorTileWorkerSource#returns a good error message when failing to parse a tile', () => new Promise(done => {
+    test('VectorTileWorkerSource#returns a good error message when failing to parse a tile', () => new Promise<void>(done => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
         const parse = jest.fn();
 
@@ -264,7 +264,7 @@ describe('vector tile worker source', () => {
         expect(parse).not.toHaveBeenCalled();
     }));
 
-    test('VectorTileWorkerSource#returns a good error message when failing to parse a gzipped tile', () => new Promise(done => {
+    test('VectorTileWorkerSource#returns a good error message when failing to parse a gzipped tile', () => new Promise<void>(done => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
         const parse = jest.fn();
 

@@ -87,7 +87,7 @@ describe('VideoSource', () => {
         expect(source.getVideo()).toBe(el);
     });
 
-    test('fires idle event on prepare call when there is at least one not loaded tile', () => new Promise(done => {
+    test('fires idle event on prepare call when there is at least one not loaded tile', () => new Promise<void>(done => {
         const source = createSource({
             type: 'video',
             urls: [],

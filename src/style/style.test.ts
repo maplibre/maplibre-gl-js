@@ -152,7 +152,7 @@ describe('Style#loadURL', () => {
         expect(spy.mock.calls[0][1]).toBe('Style');
     });
 
-    test('validates the style', () => new Promise(done => {
+    test('validates the style', () => new Promise<void>(done => {
         const style = new Style(getStubMap());
 
         style.on('error', ({error}) => {
@@ -371,7 +371,7 @@ describe('Style#loadJSON', () => {
         expect(transformSpy.mock.calls[1][1]).toBe('SpriteImage');
     });
 
-    test('emits an error on non-existant vector source layer', () => new Promise(done => {
+    test('emits an error on non-existant vector source layer', () => new Promise<void>(done => {
         const style = createStyle();
         style.loadJSON(createStyleJSON({
             sources: {
@@ -406,7 +406,7 @@ describe('Style#loadJSON', () => {
         });
     }));
 
-    test('sets up layer event forwarding', () => new Promise(done => {
+    test('sets up layer event forwarding', () => new Promise<void>(done => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON({
             layers: [{
@@ -618,7 +618,7 @@ describe('Style#_remove', () => {
 });
 
 describe('Style#update', () => {
-    test('on error', () => new Promise(done => {
+    test('on error', () => new Promise<void>(done => {
         const style = createStyle();
         style.loadJSON({
             'version': 8,
@@ -1167,7 +1167,7 @@ describe('Style#removeSprite', () => {
         expect(() => style.removeSprite('test')).toThrow(/load/i);
     });
 
-    test('fires an error when trying to delete an non-existing sprite (sprite: undefined)', () => new Promise(done => {
+    test('fires an error when trying to delete an non-existing sprite (sprite: undefined)', () => new Promise<void>(done => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
         style.on('style.load', () => {
@@ -1180,7 +1180,7 @@ describe('Style#removeSprite', () => {
         });
     }));
 
-    test('fires an error when trying to delete an non-existing sprite (sprite: single url)', () => new Promise(done => {
+    test('fires an error when trying to delete an non-existing sprite (sprite: single url)', () => new Promise<void>(done => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON({sprite: 'https://example.com/sprite'}));
         style.on('style.load', () => {
@@ -1193,7 +1193,7 @@ describe('Style#removeSprite', () => {
         });
     }));
 
-    test('fires an error when trying to delete an non-existing sprite (sprite: array)', () => new Promise(done => {
+    test('fires an error when trying to delete an non-existing sprite (sprite: array)', () => new Promise<void>(done => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON({sprite: [{id: 'default', url: 'https://example.com/sprite'}]}));
         style.on('style.load', () => {
@@ -1245,7 +1245,7 @@ describe('Style#addLayer', () => {
         expect(() => style.addLayer({id: 'background', type: 'background'})).toThrow(/load/i);
     });
 
-    test('sets up layer event forwarding', () => new Promise(done => {
+    test('sets up layer event forwarding', () => new Promise<void>(done => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
 
@@ -1264,7 +1264,7 @@ describe('Style#addLayer', () => {
         });
     }));
 
-    test('throws on non-existant vector source layer', () => new Promise(done => {
+    test('throws on non-existant vector source layer', () => new Promise<void>(done => {
         const style = createStyle();
         style.loadJSON(createStyleJSON({
             sources: {
@@ -1297,7 +1297,7 @@ describe('Style#addLayer', () => {
         });
     }));
 
-    test('emits error on invalid layer', () => new Promise(done => {
+    test('emits error on invalid layer', () => new Promise<void>(done => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
         style.on('style.load', () => {
@@ -1331,7 +1331,7 @@ describe('Style#addLayer', () => {
         expect((layer as any).source).toEqual(source);
     });
 
-    test('reloads source', () => new Promise(done => {
+    test('reloads source', () => new Promise<void>(done => {
         const style = createStyle();
         style.loadJSON(extend(createStyleJSON(), {
             'sources': {
@@ -1358,7 +1358,7 @@ describe('Style#addLayer', () => {
         });
     }));
 
-    test('#3895 reloads source (instead of clearing) if adding this layer with the same type, immediately after removing it', () => new Promise(done => {
+    test('#3895 reloads source (instead of clearing) if adding this layer with the same type, immediately after removing it', () => new Promise<void>((done, fail) => {
         const style = createStyle();
         style.loadJSON(extend(createStyleJSON(), {
             'sources': {
@@ -1386,7 +1386,7 @@ describe('Style#addLayer', () => {
         style.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'content') {
                 style.sourceCaches['mapLibre'].reload = () => { done(); };
-                style.sourceCaches['mapLibre'].clearTiles =  () => { done('test failed'); };
+                style.sourceCaches['mapLibre'].clearTiles =  () => { fail(new Error('test failed')); };
                 style.removeLayer('my-layer');
                 style.addLayer(layer);
                 style.update({} as EvaluationParameters);
@@ -1395,7 +1395,7 @@ describe('Style#addLayer', () => {
 
     }));
 
-    test('clears source (instead of reloading) if adding this layer with a different type, immediately after removing it', () => new Promise(done => {
+    test('clears source (instead of reloading) if adding this layer with a different type, immediately after removing it', () => new Promise<void>((done, fail) => {
         const style = createStyle();
         style.loadJSON(extend(createStyleJSON(), {
             'sources': {
@@ -1421,7 +1421,7 @@ describe('Style#addLayer', () => {
         }as LayerSpecification;
         style.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'content') {
-                style.sourceCaches['mapLibre'].reload =  () => { done('test failed'); };
+                style.sourceCaches['mapLibre'].reload =  () => { fail(new Error('test failed')); };
                 style.sourceCaches['mapLibre'].clearTiles = () => { done(); };
                 style.removeLayer('my-layer');
                 style.addLayer(layer);
@@ -1445,7 +1445,7 @@ describe('Style#addLayer', () => {
         await dataPromise;
     });
 
-    test('emits error on duplicates', () => new Promise(done => {
+    test('emits error on duplicates', () => new Promise<void>(done => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
         const layer = {id: 'background', type: 'background'} as LayerSpecification;
@@ -1497,7 +1497,7 @@ describe('Style#addLayer', () => {
         expect(style._order).toEqual(['c', 'a', 'b']);
     });
 
-    test('fire error if before layer does not exist', () => new Promise(done => {
+    test('fire error if before layer does not exist', () => new Promise<void>(done => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON({
             layers: [{
@@ -1519,7 +1519,7 @@ describe('Style#addLayer', () => {
         });
     }));
 
-    test('fires an error on non-existant source layer', () => new Promise(done => {
+    test('fires an error on non-existant source layer', () => new Promise<void>(done => {
         const style = new Style(getStubMap());
         style.loadJSON(extend(createStyleJSON(), {
             sources: {
@@ -1570,7 +1570,7 @@ describe('Style#removeLayer', () => {
         await dataPromise;
     });
 
-    test('tears down layer event forwarding', () => new Promise(done => {
+    test('tears down layer event forwarding', () => new Promise<void>((done, fail) => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON({
             layers: [{
@@ -1580,7 +1580,7 @@ describe('Style#removeLayer', () => {
         }));
 
         style.on('error', () => {
-            done('test failed');
+            fail(new Error('test failed'));
         });
 
         style.on('style.load', () => {
@@ -1705,7 +1705,7 @@ describe('Style#moveLayer', () => {
 });
 
 describe('Style#setPaintProperty', () => {
-    test('#4738 postpones source reload until layers have been broadcast to workers', () => new Promise(done => {
+    test('#4738 postpones source reload until layers have been broadcast to workers', () => new Promise<void>(done => {
         const style = new Style(getStubMap());
         style.loadJSON(extend(createStyleJSON(), {
             'sources': {
@@ -1973,7 +1973,7 @@ describe('Style#setFilter', () => {
         return style;
     }
 
-    test('sets filter', () => new Promise(done => {
+    test('sets filter', () => new Promise<void>(done => {
         const style = createStyle();
 
         style.on('style.load', () => {
@@ -2005,7 +2005,7 @@ describe('Style#setFilter', () => {
         expect(filter2).not.toBe(filter3);
     });
 
-    test('sets again mutated filter', () => new Promise(done => {
+    test('sets again mutated filter', () => new Promise<void>(done => {
         const style = createStyle();
 
         style.on('style.load', () => {
@@ -2061,7 +2061,7 @@ describe('Style#setFilter', () => {
         style.update({} as EvaluationParameters); // trigger dispatcher broadcast
     });
 
-    test('respects validate option', () => new Promise(done => {
+    test('respects validate option', () => new Promise<void>(done => {
         const style = createStyle();
 
         style.on('style.load', () => {
@@ -2102,7 +2102,7 @@ describe('Style#setLayerZoomRange', () => {
         return style;
     }
 
-    test('sets zoom range', () => new Promise(done => {
+    test('sets zoom range', () => new Promise<void>(done => {
         const style = createStyle();
 
         style.on('style.load', () => {

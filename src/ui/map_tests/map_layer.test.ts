@@ -75,7 +75,7 @@ test('#getLayer', async () => {
     expect(mapLayer.source).toBe(layer.source);
 });
 
-test('#removeLayer restores Map#loaded() to true', () => new Promise(done => {
+test('#removeLayer restores Map#loaded() to true', () => new Promise<void>(done => {
     const map = createMap({
         style: extend(createStyle(), {
             sources: {
@@ -107,7 +107,7 @@ test('#removeLayer restores Map#loaded() to true', () => new Promise(done => {
 }));
 
 describe('#getLayersOrder', () => {
-    test('returns ids of layers in the correct order', () => new Promise(done => {
+    test('returns ids of layers in the correct order', () => new Promise<void>(done => {
         const map = createMap({
             style: extend(createStyle(), {
                 'sources': {
@@ -137,7 +137,7 @@ describe('#getLayersOrder', () => {
 });
 
 describe('#setLayoutProperty', () => {
-    test('sets property', () => new Promise(done => {
+    test('sets property', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -190,7 +190,7 @@ describe('#setLayoutProperty', () => {
 
     });
 
-    test('fires an error if layer not found', () => new Promise(done => {
+    test('fires an error if layer not found', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 version: 8,
@@ -231,7 +231,7 @@ describe('#setLayoutProperty', () => {
         expect(e.dataType).toBe('style');
     });
 
-    test('sets visibility on background layer', () => new Promise(done => {
+    test('sets visibility on background layer', () => new Promise<void>(done => {
         // background layers do not have a source
         const map = createMap({
             style: {
@@ -254,7 +254,7 @@ describe('#setLayoutProperty', () => {
         });
     }));
 
-    test('sets visibility on raster layer', () => new Promise(done => {
+    test('sets visibility on raster layer', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -285,7 +285,7 @@ describe('#setLayoutProperty', () => {
         });
     }));
 
-    test('sets visibility on video layer', () => new Promise(done => {
+    test('sets visibility on video layer', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -319,7 +319,7 @@ describe('#setLayoutProperty', () => {
         });
     }));
 
-    test('sets visibility on image layer', () => new Promise(done => {
+    test('sets visibility on image layer', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -356,7 +356,7 @@ describe('#setLayoutProperty', () => {
 });
 
 describe('#getLayoutProperty', () => {
-    test('fires an error if layer not found', () => new Promise(done => {
+    test('fires an error if layer not found', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 version: 8,
@@ -377,7 +377,7 @@ describe('#getLayoutProperty', () => {
 });
 
 describe('#setPaintProperty', () => {
-    test('sets property', () => new Promise(done => {
+    test('sets property', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -436,7 +436,7 @@ describe('#setPaintProperty', () => {
 
     });
 
-    test('fires an error if layer not found', () => new Promise(done => {
+    test('fires an error if layer not found', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 version: 8,

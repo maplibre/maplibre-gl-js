@@ -924,10 +924,10 @@ describe('map events', () => {
         map.remove();
     });
 
-    test('emits load event after a style is set', () => new Promise(done => {
+    test('emits load event after a style is set', () => new Promise<void>((done, failTest) => {
         const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
 
-        const fail = () => done('test failed');
+        const fail = () => failTest(new Error('test failed'));
         const pass = () => done();
 
         map.on('load', fail);
@@ -987,7 +987,7 @@ describe('map events', () => {
             expect(stub.mock.calls[0][0]).toBe(error);
         });
 
-        test('calls listeners', () => new Promise(done => {
+        test('calls listeners', () => new Promise<void>(done => {
             const map = createMap();
             const error = new Error('test');
             map.on('error', (event) => {

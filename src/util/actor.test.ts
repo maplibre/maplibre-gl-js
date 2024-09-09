@@ -116,7 +116,7 @@ describe('Actor', () => {
         expect(spy).not.toHaveBeenCalled();
     });
 
-    test('#remove unbinds event listener', () => new Promise(done => {
+    test('#remove unbinds event listener', () => new Promise<void>(done => {
         const actor = new Actor({
             addEventListener(type, callback, useCapture) {
                 this._addEventListenerArgs = [type, callback, useCapture];

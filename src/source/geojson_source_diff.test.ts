@@ -6,7 +6,7 @@ beforeEach(() => {
 });
 
 describe('isUpdateableGeoJSON', () => {
-    test('feature without id is not updateable', () => new Promise(done => {
+    test('feature without id is not updateable', () => new Promise<void>(done => {
         // no feature id -> false
         expect(isUpdateableGeoJSON({
             type: 'Feature',
@@ -19,7 +19,7 @@ describe('isUpdateableGeoJSON', () => {
         done();
     }));
 
-    test('feature with id is updateable', () => new Promise(done => {
+    test('feature with id is updateable', () => new Promise<void>(done => {
         // has a feature id -> true
         expect(isUpdateableGeoJSON({
             type: 'Feature',
@@ -33,7 +33,7 @@ describe('isUpdateableGeoJSON', () => {
         done();
     }));
 
-    test('promoteId missing is not updateable', () => new Promise(done => {
+    test('promoteId missing is not updateable', () => new Promise<void>(done => {
         expect(isUpdateableGeoJSON({
             type: 'Feature',
             id: 'feature_id',
@@ -46,7 +46,7 @@ describe('isUpdateableGeoJSON', () => {
         done();
     }));
 
-    test('promoteId present is updateable', () => new Promise(done => {
+    test('promoteId present is updateable', () => new Promise<void>(done => {
         expect(isUpdateableGeoJSON({
             type: 'Feature',
             geometry: {
@@ -60,7 +60,7 @@ describe('isUpdateableGeoJSON', () => {
         done();
     }));
 
-    test('feature collection with unique ids is updateable', () => new Promise(done => {
+    test('feature collection with unique ids is updateable', () => new Promise<void>(done => {
         expect(isUpdateableGeoJSON({
             type: 'FeatureCollection',
             features: [{
@@ -84,7 +84,7 @@ describe('isUpdateableGeoJSON', () => {
         done();
     }));
 
-    test('feature collection with unique promoteIds is updateable', () => new Promise(done => {
+    test('feature collection with unique promoteIds is updateable', () => new Promise<void>(done => {
         expect(isUpdateableGeoJSON({
             type: 'FeatureCollection',
             features: [{
@@ -110,7 +110,7 @@ describe('isUpdateableGeoJSON', () => {
         done();
     }));
 
-    test('feature collection without unique ids is not updateable', () => new Promise(done => {
+    test('feature collection without unique ids is not updateable', () => new Promise<void>(done => {
         expect(isUpdateableGeoJSON({
             type: 'FeatureCollection',
             features: [{
@@ -125,7 +125,7 @@ describe('isUpdateableGeoJSON', () => {
         done();
     }));
 
-    test('feature collection with duplicate feature ids is not updateable', () => new Promise(done => {
+    test('feature collection with duplicate feature ids is not updateable', () => new Promise<void>(done => {
         expect(isUpdateableGeoJSON({
             type: 'FeatureCollection',
             features: [{
@@ -149,14 +149,14 @@ describe('isUpdateableGeoJSON', () => {
         done();
     }));
 
-    test('geometries are not updateable', () => new Promise(done => {
+    test('geometries are not updateable', () => new Promise<void>(done => {
         expect(isUpdateableGeoJSON({type: 'Point', coordinates: [0, 0]})).toBe(false);
         done();
     }));
 });
 
 describe('toUpdateable', () => {
-    test('works with a single feature - feature id', () => new Promise(done => {
+    test('works with a single feature - feature id', () => new Promise<void>(done => {
         const updateable = toUpdateable({
             type: 'Feature',
             id: 'point',
@@ -169,7 +169,7 @@ describe('toUpdateable', () => {
         done();
     }));
 
-    test('works with a single feature - promoteId', () => new Promise(done => {
+    test('works with a single feature - promoteId', () => new Promise<void>(done => {
         const updateable2 = toUpdateable({
             type: 'Feature',
             geometry: {
@@ -183,7 +183,7 @@ describe('toUpdateable', () => {
         done();
     }));
 
-    test('works with a FeatureCollection - feature id', () => new Promise(done => {
+    test('works with a FeatureCollection - feature id', () => new Promise<void>(done => {
         const updateable = toUpdateable({
             type: 'FeatureCollection',
             features: [
@@ -209,7 +209,7 @@ describe('toUpdateable', () => {
         done();
     }));
 
-    test('works with a FeatureCollection - promoteId', () => new Promise(done => {
+    test('works with a FeatureCollection - promoteId', () => new Promise<void>(done => {
         const updateable2 = toUpdateable({
             type: 'FeatureCollection',
             features: [
@@ -270,7 +270,7 @@ describe('applySourceDiff', () => {
     Object.freeze((point2.geometry as GeoJSON.Point).coordinates);
     Object.freeze(point2.properties);
 
-    test('adds a feature using the feature id', () => new Promise(done => {
+    test('adds a feature using the feature id', () => new Promise<void>(done => {
         const updateable = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
 
         applySourceDiff(updateable, {
@@ -281,7 +281,7 @@ describe('applySourceDiff', () => {
         done();
     }));
 
-    test('adds a feature using the promoteId', () => new Promise(done => {
+    test('adds a feature using the promoteId', () => new Promise<void>(done => {
         const updateable = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
         applySourceDiff(updateable, {
             add: [point2]
@@ -291,7 +291,7 @@ describe('applySourceDiff', () => {
         done();
     }));
 
-    test('removes a feature by its id', () => new Promise(done => {
+    test('removes a feature by its id', () => new Promise<void>(done => {
         const updateable = new Map([['point', point], ['point2', point2]]);
         applySourceDiff(updateable, {
             remove: ['point2'],
@@ -301,7 +301,7 @@ describe('applySourceDiff', () => {
         done();
     }));
 
-    test('updates a feature geometry', () => new Promise(done => {
+    test('updates a feature geometry', () => new Promise<void>(done => {
         const updateable = new Map([['point', point]]);
         // update -> new geometry
         applySourceDiff(updateable, {
@@ -318,7 +318,7 @@ describe('applySourceDiff', () => {
         done();
     }));
 
-    test('adds properties', () => new Promise(done => {
+    test('adds properties', () => new Promise<void>(done => {
         const updateable = new Map([['point', point]]);
         applySourceDiff(updateable, {
             update: [{
@@ -337,7 +337,7 @@ describe('applySourceDiff', () => {
         done();
     }));
 
-    test('updates properties', () => new Promise(done => {
+    test('updates properties', () => new Promise<void>(done => {
         const updateable = new Map([['point', {...point, properties: {prop: 'value', prop2: 'value2'}}]]);
         applySourceDiff(updateable, {
             update: [{
@@ -355,7 +355,7 @@ describe('applySourceDiff', () => {
         done();
     }));
 
-    test('removes properties', () => new Promise(done => {
+    test('removes properties', () => new Promise<void>(done => {
         const updateable = new Map([['point', {...point, properties: {prop: 'value', prop2: 'value2'}}]]);
         applySourceDiff(updateable, {
             update: [{
@@ -370,7 +370,7 @@ describe('applySourceDiff', () => {
         done();
     }));
 
-    test('removes all properties', () => new Promise(done => {
+    test('removes all properties', () => new Promise<void>(done => {
         const updateable = new Map([['point', {...point, properties: {prop: 'value', prop2: 'value2'}}]]);
         applySourceDiff(updateable, {
             update: [{

@@ -78,7 +78,7 @@ describe('VectorTileSource', () => {
         expect(transformSpy).toHaveBeenCalledWith('/source.json', 'Source');
     });
 
-    test('fires event with metadata property', () => new Promise(done => {
+    test('fires event with metadata property', () => new Promise<void>(done => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
         const source = createSource({url: '/source.json'});
         source.on('data', (e) => {

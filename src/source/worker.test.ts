@@ -154,7 +154,7 @@ describe('Worker generic testing', () => {
         global.fetch = null;
     });
 
-    test('should validate handlers execution in worker for load tile', () => new Promise(done => {
+    test('should validate handlers execution in worker for load tile', () => new Promise<void>(done => {
         const server = fakeServer.create();
         worker.actor.messageHandlers[MessageType.loadTile]('0', {
             type: 'vector',
@@ -183,7 +183,7 @@ describe('Worker generic testing', () => {
         expect(worker.layerIndexes[0]).not.toBe(worker.layerIndexes[1]);
     });
 
-    test('worker source messages dispatched to the correct map instance', () => new Promise(done => {
+    test('worker source messages dispatched to the correct map instance', () => new Promise<void>(done => {
         const externalSourceName = 'test';
 
         worker.actor.sendAsync = (message, abortController) => {
@@ -208,7 +208,7 @@ describe('Worker generic testing', () => {
         expect(worker.referrer).toBe('myMap');
     });
 
-    test('calls callback on error', () => new Promise(done => {
+    test('calls callback on error', () => new Promise<void>(done => {
         const server = fakeServer.create();
         worker.actor.messageHandlers[MessageType.importScript]('0', '/error').catch((err) => {
             expect(err).toBeTruthy();

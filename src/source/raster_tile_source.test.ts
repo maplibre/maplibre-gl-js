@@ -50,7 +50,7 @@ describe('RasterTileSource', () => {
         expect(transformSpy.mock.calls[0][1]).toBe('Source');
     });
 
-    test('respects TileJSON.bounds', () => new Promise(done => {
+    test('respects TileJSON.bounds', () => new Promise<void>(done => {
         const source = createSource({
             minzoom: 0,
             maxzoom: 22,
@@ -67,7 +67,7 @@ describe('RasterTileSource', () => {
         });
     }));
 
-    test('does not error on invalid bounds', () => new Promise(done => {
+    test('does not error on invalid bounds', () => new Promise<void>(done => {
         const source = createSource({
             minzoom: 0,
             maxzoom: 22,
@@ -84,7 +84,7 @@ describe('RasterTileSource', () => {
         });
     }));
 
-    test('respects TileJSON.bounds when loaded from TileJSON', () => new Promise(done => {
+    test('respects TileJSON.bounds when loaded from TileJSON', () => new Promise<void>(done => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
@@ -104,7 +104,7 @@ describe('RasterTileSource', () => {
         server.respond();
     }));
 
-    test('transforms tile urls before requesting', () => new Promise(done => {
+    test('transforms tile urls before requesting', () => new Promise<void>(done => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
@@ -132,7 +132,7 @@ describe('RasterTileSource', () => {
         server.respond();
     }));
 
-    test('HttpImageElement used to get image when refreshExpiredTiles is false', () => new Promise(done => {
+    test('HttpImageElement used to get image when refreshExpiredTiles is false', () => new Promise<void>(done => {
         stubAjaxGetImage(undefined);
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,

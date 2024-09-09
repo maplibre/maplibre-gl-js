@@ -14,7 +14,7 @@ describe('util', () => {
     expect(pick({a: 1, b: 2, c: 3}, ['a', 'c', 'd'] as any)).toEqual({a: 1, c: 3});
     expect(typeof uniqueId() === 'number').toBeTruthy();
 
-    test('isPowerOfTwo', () => new Promise(done => {
+    test('isPowerOfTwo', () => new Promise<void>(done => {
         expect(isPowerOfTwo(1)).toBe(true);
         expect(isPowerOfTwo(2)).toBe(true);
         expect(isPowerOfTwo(256)).toBe(true);
@@ -25,7 +25,7 @@ describe('util', () => {
         done();
     }));
 
-    test('nextPowerOfTwo', () => new Promise(done => {
+    test('nextPowerOfTwo', () => new Promise<void>(done => {
         expect(nextPowerOfTwo(1)).toBe(1);
         expect(nextPowerOfTwo(2)).toBe(2);
         expect(nextPowerOfTwo(256)).toBe(256);
@@ -36,7 +36,7 @@ describe('util', () => {
         done();
     }));
 
-    test('nextPowerOfTwo', () => new Promise(done => {
+    test('nextPowerOfTwo', () => new Promise<void>(done => {
         expect(isPowerOfTwo(nextPowerOfTwo(1))).toBe(true);
         expect(isPowerOfTwo(nextPowerOfTwo(2))).toBe(true);
         expect(isPowerOfTwo(nextPowerOfTwo(256))).toBe(true);
@@ -47,7 +47,7 @@ describe('util', () => {
         done();
     }));
 
-    test('clamp', () => new Promise(done => {
+    test('clamp', () => new Promise<void>(done => {
         expect(clamp(0, 0, 1)).toBe(0);
         expect(clamp(1, 0, 1)).toBe(1);
         expect(clamp(200, 0, 180)).toBe(180);
@@ -55,7 +55,7 @@ describe('util', () => {
         done();
     }));
 
-    test('wrap', () => new Promise(done => {
+    test('wrap', () => new Promise<void>(done => {
         expect(wrap(0, 0, 1)).toBe(1);
         expect(wrap(1, 0, 1)).toBe(1);
         expect(wrap(200, 0, 180)).toBe(20);
@@ -63,7 +63,7 @@ describe('util', () => {
         done();
     }));
 
-    test('bezier', () => new Promise(done => {
+    test('bezier', () => new Promise<void>(done => {
         const curve = bezier(0, 0, 0.25, 1);
         expect(curve instanceof Function).toBeTruthy();
         expect(curve(0)).toBe(0);
@@ -84,7 +84,7 @@ describe('util', () => {
         }, that)).toEqual({map: 'BOX'});
     });
 
-    test('filterObject', () => new Promise(done => {
+    test('filterObject', () => new Promise<void>(done => {
         expect.assertions(6);
         expect(filterObject({}, () => { expect(false).toBeTruthy(); })).toEqual({});
         const that = {};
@@ -101,7 +101,7 @@ describe('util', () => {
         done();
     }));
 
-    test('deepEqual', () => new Promise(done => {
+    test('deepEqual', () => new Promise<void>(done => {
         const a = {
             foo: 'bar',
             bar: {
@@ -124,7 +124,7 @@ describe('util', () => {
 });
 
 describe('util clone', () => {
-    test('array', () => new Promise(done => {
+    test('array', () => new Promise<void>(done => {
         const input = [false, 1, 'two'];
         const output = clone(input);
         expect(input).not.toBe(output);
@@ -132,7 +132,7 @@ describe('util clone', () => {
         done();
     }));
 
-    test('object', () => new Promise(done => {
+    test('object', () => new Promise<void>(done => {
         const input = {a: false, b: 1, c: 'two'};
         const output = clone(input);
         expect(input).not.toBe(output);
@@ -140,7 +140,7 @@ describe('util clone', () => {
         done();
     }));
 
-    test('deep object', () => new Promise(done => {
+    test('deep object', () => new Promise<void>(done => {
         const input = {object: {a: false, b: 1, c: 'two'}};
         const output = clone(input);
         expect(input.object).not.toBe(output.object);
@@ -148,7 +148,7 @@ describe('util clone', () => {
         done();
     }));
 
-    test('deep array', () => new Promise(done => {
+    test('deep array', () => new Promise<void>(done => {
         const input = {array: [false, 1, 'two']};
         const output = clone(input);
         expect(input.array).not.toBe(output.array);
@@ -158,7 +158,7 @@ describe('util clone', () => {
 });
 
 describe('util arraysIntersect', () => {
-    test('intersection', () => new Promise(done => {
+    test('intersection', () => new Promise<void>(done => {
         const a = ['1', '2', '3'];
         const b = ['5', '4', '3'];
 
@@ -166,7 +166,7 @@ describe('util arraysIntersect', () => {
         done();
     }));
 
-    test('no intersection', () => new Promise(done => {
+    test('no intersection', () => new Promise<void>(done => {
         const a = ['1', '2', '3'];
         const b = ['4', '5', '6'];
 
@@ -177,7 +177,7 @@ describe('util arraysIntersect', () => {
 });
 
 describe('util isCounterClockwise', () => {
-    test('counter clockwise', () => new Promise(done => {
+    test('counter clockwise', () => new Promise<void>(done => {
         const a = new Point(0, 0);
         const b = new Point(1, 0);
         const c = new Point(1, 1);
@@ -186,7 +186,7 @@ describe('util isCounterClockwise', () => {
         done();
     }));
 
-    test('clockwise', () => new Promise(done => {
+    test('clockwise', () => new Promise<void>(done => {
         const a = new Point(0, 0);
         const b = new Point(1, 0);
         const c = new Point(1, 1);
@@ -197,7 +197,7 @@ describe('util isCounterClockwise', () => {
 });
 
 describe('util parseCacheControl', () => {
-    test('max-age', () => new Promise(done => {
+    test('max-age', () => new Promise<void>(done => {
         expect(parseCacheControl('max-age=123456789')).toEqual({
             'max-age': 123456789
         });

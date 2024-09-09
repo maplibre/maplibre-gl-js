@@ -105,10 +105,10 @@ describe('Evented', () => {
 
     });
 
-    test('does not immediately call listeners added within another listener', () => new Promise(done => {
+    test('does not immediately call listeners added within another listener', () => new Promise<void>((done, fail) => {
         const evented = new Evented();
         evented.on('a', () => {
-            evented.on('a', () => done('fail'));
+            evented.on('a', () => fail(new Error('fail')));
         });
         evented.fire(new Event('a'));
         done();

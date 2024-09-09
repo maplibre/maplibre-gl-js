@@ -92,7 +92,7 @@ describe('StyleLayer#setPaintProperty', () => {
         expect(layer.getPaintProperty('background-color-transition')).toEqual({duration: 400});
     });
 
-    test('emits on an invalid property value', () => new Promise(done => {
+    test('emits on an invalid property value', () => new Promise<void>(done => {
         const layer = createStyleLayer({
             'id': 'background',
             'type': 'background'
@@ -106,7 +106,7 @@ describe('StyleLayer#setPaintProperty', () => {
         layer.setPaintProperty('background-opacity', 5);
     }));
 
-    test('emits on an invalid transition property value', () => new Promise(done => {
+    test('emits on an invalid transition property value', () => new Promise<void>(done => {
         const layer = createStyleLayer({
             'id': 'background',
             'type': 'background'
@@ -198,7 +198,7 @@ describe('StyleLayer#setLayoutProperty', () => {
         expect(layer.getLayoutProperty('text-transform')).toBe('lowercase');
     });
 
-    test('emits on an invalid property value', () => new Promise(done => {
+    test('emits on an invalid property value', () => new Promise<void>(done => {
         const layer = createStyleLayer({
             'id': 'symbol',
             'type': 'symbol'

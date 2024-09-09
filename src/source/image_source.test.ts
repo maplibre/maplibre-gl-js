@@ -128,7 +128,7 @@ describe('ImageSource', () => {
         expect(afterSerialized.coordinates).toEqual([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
     });
 
-    test('fires data event when content is loaded', () => new Promise(done => {
+    test('fires data event when content is loaded', () => new Promise<void>(done => {
         const source = createSource({url: '/image.png'});
         source.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'content') {
@@ -140,7 +140,7 @@ describe('ImageSource', () => {
         server.respond();
     }));
 
-    test('fires data event when metadata is loaded', () => new Promise(done => {
+    test('fires data event when metadata is loaded', () => new Promise<void>(done => {
         const source = createSource({url: '/image.png'});
         source.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
@@ -151,7 +151,7 @@ describe('ImageSource', () => {
         server.respond();
     }));
 
-    test('fires idle event on prepare call when there is at least one not loaded tile', () => new Promise(done => {
+    test('fires idle event on prepare call when there is at least one not loaded tile', () => new Promise<void>(done => {
         const source = createSource({url: '/image.png'});
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
         source.on('data', (e) => {

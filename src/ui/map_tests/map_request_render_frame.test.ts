@@ -6,7 +6,7 @@ beforeEach(() => {
 
 describe('requestRenderFrame', () => {
 
-    test('Map#_requestRenderFrame schedules a new render frame if necessary', () => new Promise(done => {
+    test('Map#_requestRenderFrame schedules a new render frame if necessary', () => new Promise<void>(done => {
         const map = createMap();
         const spy = jest.spyOn(map, 'triggerRepaint');
         map._requestRenderFrame(() => {});

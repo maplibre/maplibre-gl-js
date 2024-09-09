@@ -70,7 +70,7 @@ describe('ScrollZoomHandler', () => {
         map.remove();
     });
 
-    test('Zooms for single mouse wheel tick with non-magical deltaY', () => new Promise(done => {
+    test('Zooms for single mouse wheel tick with non-magical deltaY', () => new Promise<void>(done => {
         const browserNow = jest.spyOn(browser, 'now');
         const now = 1555555555555;
         browserNow.mockReturnValue(now);

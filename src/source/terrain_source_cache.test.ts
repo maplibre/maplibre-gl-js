@@ -55,7 +55,7 @@ describe('TerrainSourceCache', () => {
     let style: Style;
     let tsc: TerrainSourceCache;
 
-    beforeAll(() => new Promise(done => {
+    beforeAll(() => new Promise<void>(done => {
         global.fetch = null;
         server = fakeServer.create();
         server.respondWith('/source.json', JSON.stringify({

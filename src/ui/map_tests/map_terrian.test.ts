@@ -17,7 +17,7 @@ afterEach(() => {
 });
 
 describe('#setTerrain', () => {
-    test('warn when terrain and hillshade source identical', () => new Promise(done => {
+    test('warn when terrain and hillshade source identical', () => new Promise<void>(done => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 5,
             maxzoom: 12,
