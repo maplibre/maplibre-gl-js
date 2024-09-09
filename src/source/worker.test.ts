@@ -154,7 +154,7 @@ describe('Worker generic testing', () => {
         global.fetch = null;
     });
 
-    test('should validate handlers execution in worker for load tile', done => {
+    test('should validate handlers execution in worker for load tile', () => new Promise(done => {
         const server = fakeServer.create();
         worker.actor.messageHandlers[MessageType.loadTile]('0', {
             type: 'vector',
@@ -168,7 +168,7 @@ describe('Worker generic testing', () => {
             done();
         });
         server.respond();
-    });
+    }));
 
     test('isolates different instances\' data', () => {
         worker.actor.messageHandlers[MessageType.setLayers]('0', [
@@ -183,7 +183,7 @@ describe('Worker generic testing', () => {
         expect(worker.layerIndexes[0]).not.toBe(worker.layerIndexes[1]);
     });
 
-    test('worker source messages dispatched to the correct map instance', done => {
+    test('worker source messages dispatched to the correct map instance', () => new Promise(done => {
         const externalSourceName = 'test';
 
         worker.actor.sendAsync = (message, abortController) => {
@@ -201,14 +201,14 @@ describe('Worker generic testing', () => {
         }).toThrow(`Worker source with name "${externalSourceName}" already registered.`);
 
         worker.actor.messageHandlers[MessageType.loadTile]('999', {type: externalSourceName} as WorkerTileParameters);
-    });
+    }));
 
     test('Referrer is set', () => {
         worker.actor.messageHandlers[MessageType.setReferrer]('fakeId', 'myMap');
         expect(worker.referrer).toBe('myMap');
     });
 
-    test('calls callback on error', done => {
+    test('calls callback on error', () => new Promise(done => {
         const server = fakeServer.create();
         worker.actor.messageHandlers[MessageType.importScript]('0', '/error').catch((err) => {
             expect(err).toBeTruthy();
@@ -216,7 +216,7 @@ describe('Worker generic testing', () => {
             done();
         });
         server.respond();
-    });
+    }));
 
     test('set images', () => {
         expect(worker.availableImages['0']).toBeUndefined();

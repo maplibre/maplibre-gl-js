@@ -924,7 +924,7 @@ describe('map events', () => {
         map.remove();
     });
 
-    test('emits load event after a style is set', done => {
+    test('emits load event after a style is set', () => new Promise(done => {
         const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
 
         const fail = () => done('test failed');
@@ -937,7 +937,7 @@ describe('map events', () => {
             map.on('load', pass);
             map.setStyle(createStyle());
         }, 1);
-    });
+    }));
 
     test('no idle event during move', async () => {
         const style = createStyle();
@@ -987,7 +987,7 @@ describe('map events', () => {
             expect(stub.mock.calls[0][0]).toBe(error);
         });
 
-        test('calls listeners', done => {
+        test('calls listeners', () => new Promise(done => {
             const map = createMap();
             const error = new Error('test');
             map.on('error', (event) => {
@@ -995,7 +995,7 @@ describe('map events', () => {
                 done();
             });
             map.fire(new ErrorEvent(error));
-        });
+        }));
 
     });
 });

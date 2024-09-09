@@ -116,7 +116,7 @@ describe('Actor', () => {
         expect(spy).not.toHaveBeenCalled();
     });
 
-    test('#remove unbinds event listener', done => {
+    test('#remove unbinds event listener', () => new Promise(done => {
         const actor = new Actor({
             addEventListener(type, callback, useCapture) {
                 this._addEventListenerArgs = [type, callback, useCapture];
@@ -127,7 +127,7 @@ describe('Actor', () => {
             }
         } as ActorTarget, null);
         actor.remove();
-    });
+    }));
 
     test('send a message that is rejected', async () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;

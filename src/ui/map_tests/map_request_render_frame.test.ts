@@ -6,7 +6,7 @@ beforeEach(() => {
 
 describe('requestRenderFrame', () => {
 
-    test('Map#_requestRenderFrame schedules a new render frame if necessary', (done) => {
+    test('Map#_requestRenderFrame schedules a new render frame if necessary', () => new Promise(done => {
         const map = createMap();
         const spy = jest.spyOn(map, 'triggerRepaint');
         map._requestRenderFrame(() => {});
@@ -20,7 +20,7 @@ describe('requestRenderFrame', () => {
             map.remove();
             done();
         });
-    });
+    }));
 
     test('Map#_requestRenderFrame should not schedule a render frame before style load', () => {
         const map = createMap();

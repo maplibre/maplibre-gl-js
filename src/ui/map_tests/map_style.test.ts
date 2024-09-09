@@ -111,7 +111,7 @@ describe('#setStyle', () => {
         spy.mockRestore();
     });
 
-    test('style transform overrides unmodified map transform', done => {
+    test('style transform overrides unmodified map transform', () => new Promise(done => {
         const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
         map.transform.lngRange = [-120, 140];
         map.transform.latRange = [-60, 80];
@@ -126,9 +126,9 @@ describe('#setStyle', () => {
             expect(fixedNum(map.transform.pitch)).toBe(50);
             done();
         });
-    });
+    }));
 
-    test('style transform does not override map transform modified via options', done => {
+    test('style transform does not override map transform modified via options', () => new Promise(done => {
         const map = new Map({container: window.document.createElement('div'), zoom: 10, center: [-77.0186, 38.8888]} as any as MapOptions);
         expect(map.transform.unmodified).toBeFalsy();
         map.setStyle(createStyle());
@@ -139,9 +139,9 @@ describe('#setStyle', () => {
             expect(fixedNum(map.transform.pitch)).toBe(0);
             done();
         });
-    });
+    }));
 
-    test('style transform does not override map transform modified via setters', done => {
+    test('style transform does not override map transform modified via setters', () => new Promise(done => {
         const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
         expect(map.transform.unmodified).toBeTruthy();
         map.setZoom(10);
@@ -155,7 +155,7 @@ describe('#setStyle', () => {
             expect(fixedNum(map.transform.pitch)).toBe(0);
             done();
         });
-    });
+    }));
 
     test('passing null removes style', () => {
         const map = createMap();
@@ -185,7 +185,7 @@ describe('#setStyle', () => {
         spyWorkerPoolRelease.mockClear();
     });
 
-    test('transformStyle should copy the source and the layer into next style', done => {
+    test('transformStyle should copy the source and the layer into next style', () => new Promise(done => {
         const style = extend(createStyle(), {
             sources: {
                 maplibre: {
@@ -231,9 +231,9 @@ describe('#setStyle', () => {
             expect(loadedStyle.layers).toHaveLength(1);
             done();
         });
-    });
+    }));
 
-    test('delayed setStyle with transformStyle should copy the source and the layer into next style with diffing', done => {
+    test('delayed setStyle with transformStyle should copy the source and the layer into next style with diffing', () => new Promise(done => {
         const style = extend(createStyle(), {
             sources: {
                 maplibre: {
@@ -279,9 +279,9 @@ describe('#setStyle', () => {
             expect(loadedStyle.layers).toHaveLength(1);
             done();
         }, 100);
-    });
+    }));
 
-    test('transformStyle should get called when passed to setStyle after the map is initialised without a style', done => {
+    test('transformStyle should get called when passed to setStyle after the map is initialised without a style', () => new Promise(done => {
         const map = createMap({deleteStyle: true});
         map.setStyle(createStyle(), {
             diff: true,
@@ -314,9 +314,9 @@ describe('#setStyle', () => {
             expect(loadedStyle.layers[0].id).toBe('layerId0');
             done();
         });
-    });
+    }));
 
-    test('map load should be fired when transformStyle is used on setStyle after the map is initialised without a style', done => {
+    test('map load should be fired when transformStyle is used on setStyle after the map is initialised without a style', () => new Promise(done => {
         const map = createMap({deleteStyle: true});
         map.setStyle({version: 8, sources: {}, layers: []}, {
             diff: true,
@@ -327,7 +327,7 @@ describe('#setStyle', () => {
             }
         });
         map.on('load', () => done());
-    });
+    }));
 
     test('Override default style validation', () => {
         let validationOption = true;
@@ -342,14 +342,14 @@ describe('#setStyle', () => {
 });
 
 describe('#getStyle', () => {
-    test('returns undefined if the style has not loaded yet', done => {
+    test('returns undefined if the style has not loaded yet', () => new Promise(done => {
         const style = createStyle();
         const map = createMap({style});
         expect(map.getStyle()).toBeUndefined();
         done();
-    });
+    }));
 
-    test('returns the style', done => {
+    test('returns the style', () => new Promise(done => {
         const style = createStyle();
         const map = createMap({style});
 
@@ -357,7 +357,7 @@ describe('#getStyle', () => {
             expect(map.getStyle()).toEqual(style);
             done();
         });
-    });
+    }));
 
     test('returns the previous style even if modified', async () => {
         const style = {
@@ -383,7 +383,7 @@ describe('#getStyle', () => {
         expect(map.getStyle()).toEqual(style);
     });
 
-    test('returns the style with added sources', done => {
+    test('returns the style with added sources', () => new Promise(done => {
         const style = createStyle();
         const map = createMap({style});
 
@@ -394,9 +394,9 @@ describe('#getStyle', () => {
             }));
             done();
         });
-    });
+    }));
 
-    test('fires an error on checking if non-existant source is loaded', done => {
+    test('fires an error on checking if non-existant source is loaded', () => new Promise(done => {
         const style = createStyle();
         const map = createMap({style});
 
@@ -407,9 +407,9 @@ describe('#getStyle', () => {
             });
             map.isSourceLoaded('geojson');
         });
-    });
+    }));
 
-    test('returns the style with added layers', done => {
+    test('returns the style with added layers', () => new Promise(done => {
         const style = createStyle();
         const map = createMap({style});
         const layer = {
@@ -424,7 +424,7 @@ describe('#getStyle', () => {
             }));
             done();
         });
-    });
+    }));
 
     test('a layer can be added even if a map is created without a style', () => {
         const map = createMap({deleteStyle: true});
@@ -454,7 +454,7 @@ describe('#getStyle', () => {
         });
     });
 
-    test('returns the style with added source and layer', done => {
+    test('returns the style with added source and layer', () => new Promise(done => {
         const style = createStyle();
         const map = createMap({style});
         const source = createStyleSource();
@@ -473,7 +473,7 @@ describe('#getStyle', () => {
             }));
             done();
         });
-    });
+    }));
 
     test('creates a new Style if diff fails', () => {
         const style = createStyle();

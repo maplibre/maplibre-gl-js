@@ -5,7 +5,7 @@ beforeEach(() => {
     global.fetch = null;
 });
 
-test('does not fire "webglcontextlost" after #remove has been called', done => {
+test('does not fire "webglcontextlost" after #remove has been called', () => new Promise(done => {
     const map = createMap();
     const canvas = map.getCanvas();
     map.once('webglcontextlost', () => done('"webglcontextlost" fired after #remove has been called'));
@@ -14,9 +14,9 @@ test('does not fire "webglcontextlost" after #remove has been called', done => {
     // the WEBGL_lose_context extension.
     canvas.dispatchEvent(new window.Event('webglcontextlost'));
     done();
-});
+}));
 
-test('does not fire "webglcontextrestored" after #remove has been called', done => {
+test('does not fire "webglcontextrestored" after #remove has been called', () => new Promise(done => {
     const map = createMap();
     const canvas = map.getCanvas();
 
@@ -30,7 +30,7 @@ test('does not fire "webglcontextrestored" after #remove has been called', done 
     // Dispatch the event manually because at the time of this writing, gl does not support
     // the WEBGL_lose_context extension.
     canvas.dispatchEvent(new window.Event('webglcontextlost'));
-});
+}));
 
 test('WebGL error while creating map', () => {
     const original = HTMLCanvasElement.prototype.getContext;

@@ -8,7 +8,7 @@ beforeEach(() => {
 
 describe('#queryRenderedFeatures', () => {
 
-    test('if no arguments provided', done => {
+    test('if no arguments provided', () => new Promise(done => {
         createMap({}, (err, map) => {
             expect(err).toBeFalsy();
             const spy = jest.spyOn(map.style, 'queryRenderedFeatures');
@@ -22,9 +22,9 @@ describe('#queryRenderedFeatures', () => {
 
             done();
         });
-    });
+    }));
 
-    test('if only "geometry" provided', done => {
+    test('if only "geometry" provided', () => new Promise(done => {
         createMap({}, (err, map) => {
             expect(err).toBeFalsy();
             const spy = jest.spyOn(map.style, 'queryRenderedFeatures');
@@ -39,9 +39,9 @@ describe('#queryRenderedFeatures', () => {
 
             done();
         });
-    });
+    }));
 
-    test('if only "params" provided', done => {
+    test('if only "params" provided', () => new Promise(done => {
         createMap({}, (err, map) => {
             expect(err).toBeFalsy();
             const spy = jest.spyOn(map.style, 'queryRenderedFeatures');
@@ -55,9 +55,9 @@ describe('#queryRenderedFeatures', () => {
 
             done();
         });
-    });
+    }));
 
-    test('if both "geometry" and "params" provided', done => {
+    test('if both "geometry" and "params" provided', () => new Promise(done => {
         createMap({}, (err, map) => {
             expect(err).toBeFalsy();
             const spy = jest.spyOn(map.style, 'queryRenderedFeatures');
@@ -71,9 +71,9 @@ describe('#queryRenderedFeatures', () => {
 
             done();
         });
-    });
+    }));
 
-    test('if "geometry" with unwrapped coords provided', done => {
+    test('if "geometry" with unwrapped coords provided', () => new Promise(done => {
         createMap({}, (err, map) => {
             expect(err).toBeFalsy();
             const spy = jest.spyOn(map.style, 'queryRenderedFeatures');
@@ -83,7 +83,7 @@ describe('#queryRenderedFeatures', () => {
             expect(spy.mock.calls[0][0]).toEqual([{x: 612, y: 100}]);
             done();
         });
-    });
+    }));
 
     test('returns an empty array when no style is loaded', () => {
         const map = createMap({style: undefined});

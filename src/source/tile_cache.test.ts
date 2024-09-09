@@ -30,7 +30,7 @@ describe('TileCache', () => {
         keysExpected(cache, []);
     });
 
-    test('get without removing', done => {
+    test('get without removing', () => new Promise(done => {
         const cache = new TileCache(10, () => {
             done('test "get without removing" failed');
         });
@@ -39,9 +39,9 @@ describe('TileCache', () => {
         keysExpected(cache, [idA]);
         expect(cache.get(idA)).toBe(tileA);
         done();
-    });
+    }));
 
-    test('duplicate add', done => {
+    test('duplicate add', () => new Promise(done => {
         const cache = new TileCache(10, () => {
             done('test "duplicate add" failed');
         });
@@ -55,7 +55,7 @@ describe('TileCache', () => {
         expect(cache.has(idA)).toBeTruthy();
         expect(cache.getAndRemove(idA)).toBe(tileA2);
         done();
-    });
+    }));
 
     test('expiry', () => {
         const cache = new TileCache(10, (removed) => {

@@ -17,7 +17,7 @@ afterEach(() => {
 });
 
 describe('#setTerrain', () => {
-    test('warn when terrain and hillshade source identical', done => {
+    test('warn when terrain and hillshade source identical', () => new Promise(done => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 5,
             maxzoom: 12,
@@ -40,7 +40,7 @@ describe('#setTerrain', () => {
             expect(console.warn).toHaveBeenCalledTimes(1);
             done();
         });
-    });
+    }));
 });
 
 describe('#getTerrain', () => {

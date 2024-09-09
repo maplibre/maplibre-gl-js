@@ -27,7 +27,7 @@ describe('Map#isMoving', () => {
         expect(map.isMoving()).toBe(false);
     });
 
-    test('returns true during a camera zoom animation', done => {
+    test('returns true during a camera zoom animation', () => new Promise(done => {
         map.on('zoomstart', () => {
             expect(map.isMoving()).toBe(true);
         });
@@ -38,9 +38,9 @@ describe('Map#isMoving', () => {
         });
 
         map.zoomTo(5, {duration: 0});
-    });
+    }));
 
-    test('returns true when drag panning', done => {
+    test('returns true when drag panning', () => new Promise(done => {
         map.on('movestart', () => {
             expect(map.isMoving()).toBe(true);
         });
@@ -64,9 +64,9 @@ describe('Map#isMoving', () => {
 
         simulate.mouseup(map.getCanvas());
         map._renderTaskQueue.run();
-    });
+    }));
 
-    test('returns true when drag rotating', done => {
+    test('returns true when drag rotating', () => new Promise(done => {
         // Prevent inertial rotation.
         jest.spyOn(browser, 'now').mockImplementation(() => { return 0; });
 
@@ -95,9 +95,9 @@ describe('Map#isMoving', () => {
 
         simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2});
         map._renderTaskQueue.run();
-    });
+    }));
 
-    test('returns true when scroll zooming', done => {
+    test('returns true when scroll zooming', () => new Promise(done => {
         map.on('zoomstart', () => {
             expect(map.isMoving()).toBe(true);
         });
@@ -117,9 +117,9 @@ describe('Map#isMoving', () => {
         setTimeout(() => {
             map._renderTaskQueue.run();
         }, 400);
-    });
+    }));
 
-    test('returns true when drag panning and scroll zooming interleave', done => {
+    test('returns true when drag panning and scroll zooming interleave', () => new Promise(done => {
         map.on('dragstart', () => {
             expect(map.isMoving()).toBe(true);
         });
@@ -160,5 +160,5 @@ describe('Map#isMoving', () => {
         setTimeout(() => {
             map._renderTaskQueue.run();
         }, 400);
-    });
+    }));
 });

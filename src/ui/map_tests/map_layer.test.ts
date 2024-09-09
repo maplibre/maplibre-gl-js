@@ -75,7 +75,7 @@ test('#getLayer', async () => {
     expect(mapLayer.source).toBe(layer.source);
 });
 
-test('#removeLayer restores Map#loaded() to true', done => {
+test('#removeLayer restores Map#loaded() to true', () => new Promise(done => {
     const map = createMap({
         style: extend(createStyle(), {
             sources: {
@@ -104,10 +104,10 @@ test('#removeLayer restores Map#loaded() to true', done => {
             }
         });
     });
-});
+}));
 
 describe('#getLayersOrder', () => {
-    test('returns ids of layers in the correct order', done => {
+    test('returns ids of layers in the correct order', () => new Promise(done => {
         const map = createMap({
             style: extend(createStyle(), {
                 'sources': {
@@ -133,11 +133,11 @@ describe('#getLayersOrder', () => {
             expect(map.getLayersOrder()).toEqual(['custom', 'raster']);
             done();
         });
-    });
+    }));
 });
 
 describe('#setLayoutProperty', () => {
-    test('sets property', done => {
+    test('sets property', () => new Promise(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -173,7 +173,7 @@ describe('#setLayoutProperty', () => {
             expect(map.getLayoutProperty('symbol', 'text-transform')).toBe('lowercase');
             done();
         });
-    });
+    }));
 
     test('throw before loaded', () => {
         const map = createMap({
@@ -190,7 +190,7 @@ describe('#setLayoutProperty', () => {
 
     });
 
-    test('fires an error if layer not found', done => {
+    test('fires an error if layer not found', () => new Promise(done => {
         const map = createMap({
             style: {
                 version: 8,
@@ -206,7 +206,7 @@ describe('#setLayoutProperty', () => {
             });
             map.setLayoutProperty('non-existant', 'text-transform', 'lowercase');
         });
-    });
+    }));
 
     test('fires a data event', async () => {
         // background layers do not have a source
@@ -231,7 +231,7 @@ describe('#setLayoutProperty', () => {
         expect(e.dataType).toBe('style');
     });
 
-    test('sets visibility on background layer', done => {
+    test('sets visibility on background layer', () => new Promise(done => {
         // background layers do not have a source
         const map = createMap({
             style: {
@@ -252,9 +252,9 @@ describe('#setLayoutProperty', () => {
             expect(map.getLayoutProperty('background', 'visibility')).toBe('visible');
             done();
         });
-    });
+    }));
 
-    test('sets visibility on raster layer', done => {
+    test('sets visibility on raster layer', () => new Promise(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -283,9 +283,9 @@ describe('#setLayoutProperty', () => {
             expect(map.getLayoutProperty('satellite', 'visibility')).toBe('visible');
             done();
         });
-    });
+    }));
 
-    test('sets visibility on video layer', done => {
+    test('sets visibility on video layer', () => new Promise(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -317,9 +317,9 @@ describe('#setLayoutProperty', () => {
             expect(map.getLayoutProperty('shore', 'visibility')).toBe('visible');
             done();
         });
-    });
+    }));
 
-    test('sets visibility on image layer', done => {
+    test('sets visibility on image layer', () => new Promise(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -351,12 +351,12 @@ describe('#setLayoutProperty', () => {
             expect(map.getLayoutProperty('image', 'visibility')).toBe('visible');
             done();
         });
-    });
+    }));
 
 });
 
 describe('#getLayoutProperty', () => {
-    test('fires an error if layer not found', done => {
+    test('fires an error if layer not found', () => new Promise(done => {
         const map = createMap({
             style: {
                 version: 8,
@@ -372,12 +372,12 @@ describe('#getLayoutProperty', () => {
             });
             (map as any).getLayoutProperty('non-existant', 'text-transform', 'lowercase');
         });
-    });
+    }));
 
 });
 
 describe('#setPaintProperty', () => {
-    test('sets property', done => {
+    test('sets property', () => new Promise(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -394,7 +394,7 @@ describe('#setPaintProperty', () => {
             expect(map.getPaintProperty('background', 'background-color')).toBe('red');
             done();
         });
-    });
+    }));
 
     test('#3373 paint property should be synchronized with an update', async () => {
         const colors = ['red', 'blue'];
@@ -436,7 +436,7 @@ describe('#setPaintProperty', () => {
 
     });
 
-    test('fires an error if layer not found', done => {
+    test('fires an error if layer not found', () => new Promise(done => {
         const map = createMap({
             style: {
                 version: 8,
@@ -452,6 +452,6 @@ describe('#setPaintProperty', () => {
             });
             map.setPaintProperty('non-existant', 'background-color', 'red');
         });
-    });
+    }));
 
 });

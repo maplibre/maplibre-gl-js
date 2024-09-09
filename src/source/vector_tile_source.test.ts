@@ -78,14 +78,14 @@ describe('VectorTileSource', () => {
         expect(transformSpy).toHaveBeenCalledWith('/source.json', 'Source');
     });
 
-    test('fires event with metadata property', done => {
+    test('fires event with metadata property', () => new Promise(done => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
         const source = createSource({url: '/source.json'});
         source.on('data', (e) => {
             if (e.sourceDataType === 'content') done();
         });
         server.respond();
-    });
+    }));
 
     test('fires "dataloading" event', async () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));

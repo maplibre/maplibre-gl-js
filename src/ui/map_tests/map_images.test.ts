@@ -6,7 +6,7 @@ beforeEach(() => {
     global.fetch = null;
 });
 
-test('#listImages', done => {
+test('#listImages', () => new Promise(done => {
     const map = createMap();
 
     map.on('load', () => {
@@ -19,7 +19,7 @@ test('#listImages', done => {
         expect(images[0]).toBe('img');
         done();
     });
-});
+}));
 
 test('#listImages throws an error if called before "load"', () => {
     const map = createMap();
@@ -147,7 +147,7 @@ test('map getImage matches addImage, StyleImageInterface SDF', () => {
     expect(gotImage.sdf).toBe(true);
 });
 
-test('map does not fire `styleimagemissing` for empty icon values', done => {
+test('map does not fire `styleimagemissing` for empty icon values', () => new Promise(done => {
     const map = createMap();
 
     map.on('load', () => {
@@ -172,4 +172,4 @@ test('map does not fire `styleimagemissing` for empty icon values', done => {
             done(`styleimagemissing fired for value ${id}`);
         });
     });
-});
+}));

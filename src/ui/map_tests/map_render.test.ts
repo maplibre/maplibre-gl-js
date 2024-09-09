@@ -13,7 +13,7 @@ afterEach(() => {
     server.restore();
 });
 
-test('render stabilizes', done => {
+test('render stabilizes', () => new Promise(done => {
     const style = createStyle();
     style.sources.mapbox = {
         type: 'vector',
@@ -41,9 +41,9 @@ test('render stabilizes', done => {
             done();
         }, 100);
     });
-});
+}));
 
-test('no render after idle event', done => {
+test('no render after idle event', () => new Promise(done => {
     const style = createStyle();
     const map = createMap({style});
     map.on('idle', () => {
@@ -54,9 +54,9 @@ test('no render after idle event', done => {
             done();
         }, 100);
     });
-});
+}));
 
-test('no render before style loaded', done => {
+test('no render before style loaded', () => new Promise(done => {
     server.respondWith('/styleUrl', JSON.stringify(createStyle()));
     const map = createMap({style: '/styleUrl'});
 
@@ -77,7 +77,7 @@ test('no render before style loaded', done => {
     // Once style is loaded, it will trigger the update.
     map._update();
     server.respond();
-});
+}));
 
 test('#redraw', async () => {
     const map = createMap();
