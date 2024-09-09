@@ -1,3 +1,4 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {fakeServer} from 'nise';
 import Worker from './worker';
 import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -42,7 +43,7 @@ describe('Worker RTLTextPlugin', () => {
             processBidirectionalText: null,
             processStyledBidirectionalText: null
         });
-        jest.spyOn(rtlWorkerPlugin, 'isParsed').mockImplementation(() => {
+        vi.spyOn(rtlWorkerPlugin, 'isParsed').mockImplementation(() => {
             return false;
         });
     });
@@ -61,14 +62,14 @@ describe('Worker RTLTextPlugin', () => {
     });
 
     test('should throw if already parsed', () => {
-        jest.spyOn(rtlWorkerPlugin, 'isParsed').mockImplementation(() => {
+        vi.spyOn(rtlWorkerPlugin, 'isParsed').mockImplementation(() => {
             return true;
         });
 
         const rtlTextPlugin = {
-            applyArabicShaping: jest.fn(),
-            processBidirectionalText: jest.fn(),
-            processStyledBidirectionalText: jest.fn(),
+            applyArabicShaping: vi.fn(),
+            processBidirectionalText: vi.fn(),
+            processStyledBidirectionalText: vi.fn(),
         };
 
         expect(() => {
@@ -103,9 +104,9 @@ describe('Worker RTLTextPlugin', () => {
             pluginStatus: 'loading'
         };
 
-        const importSpy = jest.spyOn(worker.self, 'importScripts').mockImplementation(() => {
+        const importSpy = vi.spyOn(worker.self, 'importScripts').mockImplementation(() => {
             // after importing isParse() to return true
-            jest.spyOn(rtlWorkerPlugin, 'isParsed').mockImplementation(() => {
+            vi.spyOn(rtlWorkerPlugin, 'isParsed').mockImplementation(() => {
                 return true;
             });
         });
@@ -125,7 +126,7 @@ describe('Worker RTLTextPlugin', () => {
             pluginStatus: 'loaded'
         });
 
-        jest.spyOn(rtlWorkerPlugin, 'isParsed').mockImplementation(() => {
+        vi.spyOn(rtlWorkerPlugin, 'isParsed').mockImplementation(() => {
             return true;
         });
         const mockMessage: PluginState = {

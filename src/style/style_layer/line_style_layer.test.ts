@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {createStyleLayer} from '../create_style_layer';
 import {extend} from '../../util/util';
 import {LineStyleLayer} from './line_style_layer';

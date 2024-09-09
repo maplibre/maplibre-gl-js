@@ -1,3 +1,4 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {Map} from '../map';
 import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
@@ -15,8 +16,8 @@ describe('BoxZoomHandler', () => {
     test('fires boxzoomstart and boxzoomend events at appropriate times', () => {
         const map = createMap(undefined);
 
-        const boxzoomstart = jest.fn();
-        const boxzoomend   = jest.fn();
+        const boxzoomstart = vi.fn();
+        const boxzoomend   = vi.fn();
 
         map.on('boxzoomstart', boxzoomstart);
         map.on('boxzoomend',   boxzoomend);
@@ -45,15 +46,15 @@ describe('BoxZoomHandler', () => {
         map.boxZoom.disable();
         map.boxZoom.enable();
 
-        const boxzoomstart = jest.fn();
-        const boxzoomend   = jest.fn();
+        const boxzoomstart = vi.fn();
+        const boxzoomend   = vi.fn();
 
         map.on('boxzoomstart', boxzoomstart);
         map.on('boxzoomend',   boxzoomend);
 
-        const dragstart = jest.fn();
-        const drag      = jest.fn();
-        const dragend   = jest.fn();
+        const dragstart = vi.fn();
+        const drag      = vi.fn();
+        const dragend   = vi.fn();
 
         map.on('dragstart', dragstart);
         map.on('drag',      drag);
@@ -86,8 +87,8 @@ describe('BoxZoomHandler', () => {
 
         map.on('mousedown', e => e.preventDefault());
 
-        const boxzoomstart = jest.fn();
-        const boxzoomend   = jest.fn();
+        const boxzoomstart = vi.fn();
+        const boxzoomend   = vi.fn();
 
         map.on('boxzoomstart', boxzoomstart);
         map.on('boxzoomend',   boxzoomend);
@@ -110,8 +111,8 @@ describe('BoxZoomHandler', () => {
     test('does not begin a box zoom on spurious mousemove events', () => {
         const map = createMap(undefined);
 
-        const boxzoomstart = jest.fn();
-        const boxzoomend   = jest.fn();
+        const boxzoomstart = vi.fn();
+        const boxzoomend   = vi.fn();
 
         map.on('boxzoomstart', boxzoomstart);
         map.on('boxzoomend',   boxzoomend);
@@ -137,8 +138,8 @@ describe('BoxZoomHandler', () => {
     test('does not begin a box zoom until mouse move is larger than click tolerance', () => {
         const map = createMap(4);
 
-        const boxzoomstart = jest.fn();
-        const boxzoomend   = jest.fn();
+        const boxzoomstart = vi.fn();
+        const boxzoomend   = vi.fn();
 
         map.on('boxzoomstart', boxzoomstart);
         map.on('boxzoomend',   boxzoomend);

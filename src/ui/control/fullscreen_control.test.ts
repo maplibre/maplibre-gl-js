@@ -1,3 +1,4 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
 import {FullscreenControl} from './fullscreen_control';
 
@@ -57,8 +58,8 @@ describe('FullscreenControl', () => {
         const map = createMap(undefined, undefined);
         const fullscreen = new FullscreenControl({});
 
-        const fullscreenstart = jest.fn();
-        const fullscreenend   = jest.fn();
+        const fullscreenstart = vi.fn();
+        const fullscreenend   = vi.fn();
 
         fullscreen.on('fullscreenstart', fullscreenstart);
         fullscreen.on('fullscreenend', fullscreenend);

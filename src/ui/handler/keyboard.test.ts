@@ -1,3 +1,4 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {Map} from '../../ui/map';
 import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
@@ -18,7 +19,7 @@ describe('keyboard', () => {
     test('KeyboardHandler responds to keydown events', () => {
         const map = createMap();
         const h = map.keyboard;
-        const spy = jest.spyOn(h, 'keydown');
+        const spy = vi.spyOn(h, 'keydown');
 
         simulate.keydown(map.getCanvas(), {keyCode: 32, key: ' '});
         expect(h.keydown).toHaveBeenCalled();
@@ -27,7 +28,7 @@ describe('keyboard', () => {
 
     test('KeyboardHandler pans map in response to arrow keys', () => {
         const map = createMap({zoom: 10, center: [0, 0]});
-        const spy = jest.spyOn(map, 'easeTo');
+        const spy = vi.spyOn(map, 'easeTo');
 
         simulate.keydown(map.getCanvas(), {keyCode: 32, key: ' '});
         expect(map.easeTo).not.toHaveBeenCalled();
@@ -60,7 +61,7 @@ describe('keyboard', () => {
 
     test('KeyboardHandler pans map in response to arrow keys when disableRotation has been called', () => {
         const map = createMap({zoom: 10, center: [0, 0]});
-        const spy = jest.spyOn(map, 'easeTo');
+        const spy = vi.spyOn(map, 'easeTo');
         map.keyboard.disableRotation();
 
         simulate.keydown(map.getCanvas(), {keyCode: 32, key: ' '});
@@ -94,7 +95,7 @@ describe('keyboard', () => {
 
     test('KeyboardHandler rotates map in response to Shift+left/right arrow keys', async () => {
         const map = createMap({zoom: 10, center: [0, 0], bearing: 0});
-        const spy = jest.spyOn(map, 'easeTo');
+        const spy = vi.spyOn(map, 'easeTo');
 
         simulate.keydown(map.getCanvas(), {keyCode: 32, key: ' '});
         expect(map.easeTo).not.toHaveBeenCalled();
@@ -116,7 +117,7 @@ describe('keyboard', () => {
 
     test('KeyboardHandler does not rotate map in response to Shift+left/right arrow keys when disableRotation has been called', async () => {
         const map = createMap({zoom: 10, center: [0, 0], bearing: 0});
-        const spy = jest.spyOn(map, 'easeTo');
+        const spy = vi.spyOn(map, 'easeTo');
         map.keyboard.disableRotation();
 
         simulate.keydown(map.getCanvas(), {keyCode: 32, key: ' '});
@@ -139,7 +140,7 @@ describe('keyboard', () => {
 
     test('KeyboardHandler pitches map in response to Shift+up/down arrow keys', async () => {
         const map = createMap({zoom: 10, center: [0, 0], pitch: 30});
-        const spy = jest.spyOn(map, 'easeTo');
+        const spy = vi.spyOn(map, 'easeTo');
 
         simulate.keydown(map.getCanvas(), {keyCode: 32, key: ' '});
         expect(map.easeTo).not.toHaveBeenCalled();
@@ -161,7 +162,7 @@ describe('keyboard', () => {
 
     test('KeyboardHandler does not pitch map in response to Shift+up/down arrow keys when disableRotation has been called', async () => {
         const map = createMap({zoom: 10, center: [0, 0], pitch: 30});
-        const spy = jest.spyOn(map, 'easeTo');
+        const spy = vi.spyOn(map, 'easeTo');
         map.keyboard.disableRotation();
 
         simulate.keydown(map.getCanvas(), {keyCode: 32, key: ' '});
@@ -184,7 +185,7 @@ describe('keyboard', () => {
 
     test('KeyboardHandler zooms map in response to -/+ keys', () => {
         const map = createMap({zoom: 10, center: [0, 0]});
-        const spy = jest.spyOn(map, 'easeTo');
+        const spy = vi.spyOn(map, 'easeTo');
 
         simulate.keydown(map.getCanvas(), {keyCode: 187, key: 'Equal'});
         expect(spy).toHaveBeenCalledTimes(1);
@@ -209,7 +210,7 @@ describe('keyboard', () => {
 
     test('KeyboardHandler zooms map in response to -/+ keys when disableRotation has been called', () => {
         const map = createMap({zoom: 10, center: [0, 0]});
-        const spy = jest.spyOn(map, 'easeTo');
+        const spy = vi.spyOn(map, 'easeTo');
         map.keyboard.disableRotation();
 
         simulate.keydown(map.getCanvas(), {keyCode: 187, key: 'Equal'});

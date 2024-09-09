@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {CanonicalTileID, OverscaledTileID} from '../source/tile_id';
 import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util';
 

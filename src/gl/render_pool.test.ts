@@ -1,3 +1,4 @@
+import {describe, test, expect, vi} from 'vitest';
 import {Context} from './context';
 import {RenderPool} from './render_pool';
 
@@ -6,7 +7,7 @@ describe('render pool', () => {
 
     function createAndFillPool(): RenderPool {
         const gl = document.createElement('canvas').getContext('webgl');
-        jest.spyOn(gl, 'checkFramebufferStatus').mockReturnValue(gl.FRAMEBUFFER_COMPLETE);
+        vi.spyOn(gl, 'checkFramebufferStatus').mockReturnValue(gl.FRAMEBUFFER_COMPLETE);
         const pool = new RenderPool(new Context(gl), POOL_SIZE, 512);
         for (let i = 0; i < POOL_SIZE; i++) {
             pool.useObject(pool.getOrCreateFreeObject());

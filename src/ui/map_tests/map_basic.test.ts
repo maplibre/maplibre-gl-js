@@ -1,3 +1,4 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {Map, MapOptions} from '../map';
 import {createMap, beforeMapTest, createStyle, createStyleSource} from '../../util/test/util';
 import {Tile} from '../../source/tile';
@@ -139,7 +140,7 @@ describe('Map', () => {
 
     test('#remove', () => {
         const map = createMap();
-        const spyWorkerPoolRelease = jest.spyOn(map.style.dispatcher.workerPool, 'release');
+        const spyWorkerPoolRelease = vi.spyOn(map.style.dispatcher.workerPool, 'release');
         expect(map.getContainer().childNodes).toHaveLength(2);
         map.remove();
         expect(spyWorkerPoolRelease).toHaveBeenCalledTimes(1);
@@ -152,7 +153,7 @@ describe('Map', () => {
     test('#remove calls onRemove on added controls', () => {
         const map = createMap();
         const control = {
-            onRemove: jest.fn(),
+            onRemove: vi.fn(),
             onAdd(_) {
                 return window.document.createElement('div');
             }
@@ -188,7 +189,7 @@ describe('Map', () => {
 
     test('#remove broadcasts removeMap to worker', () => {
         const map = createMap();
-        const _broadcastSpyOn = jest.spyOn(map.style.dispatcher, 'broadcast');
+        const _broadcastSpyOn = vi.spyOn(map.style.dispatcher, 'broadcast');
         map.remove();
         expect(_broadcastSpyOn).toHaveBeenCalledWith(MessageType.removeMap, undefined);
     });

@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {CollisionFeature} from './collision_feature';
 import {Anchor} from './anchor';
 import Point from '@mapbox/point-geometry';

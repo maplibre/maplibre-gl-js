@@ -1,3 +1,4 @@
+import {describe, test, expect, vi} from 'vitest';
 import {DEMData} from './dem_data';
 import {RGBAImage} from '../util/image';
 import {serialize, deserialize} from '../util/web_worker_transfer';
@@ -41,7 +42,7 @@ describe('DEMData', () => {
         });
 
         test('otherEncoding', () => {
-            const spyOnWarnConsole = jest.spyOn(console, 'warn').mockImplementation();
+            const spyOnWarnConsole = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
             const imageData0 = createMockImage(4, 4);
             new DEMData('0', imageData0, 'otherEncoding' as any);

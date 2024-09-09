@@ -1,3 +1,4 @@
+import {test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {findPoleOfInaccessibility} from './find_pole_of_inaccessibility';
 

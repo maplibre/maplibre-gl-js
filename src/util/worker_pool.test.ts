@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {WorkerPool} from './worker_pool';
 
 describe('WorkerPool', () => {

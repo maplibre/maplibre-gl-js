@@ -1,3 +1,4 @@
+import {beforeEach, test, expect} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 

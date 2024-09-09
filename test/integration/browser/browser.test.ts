@@ -1,3 +1,4 @@
+import {describe, beforeEach, beforeAll, afterEach, afterAll, test, expect} from 'vitest';
 import puppeteer, {Page, Browser} from 'puppeteer';
 import st from 'st';
 import http, {type Server} from 'http';
@@ -14,8 +15,6 @@ let browser: Browser;
 let page: Page;
 let map: Map;
 let maplibregl: typeof MapLibreGL;
-
-jest.retryTimes(3);
 
 describe('Browser tests', () => {
 
@@ -81,7 +80,7 @@ describe('Browser tests', () => {
             });
         });
         expect(firstFiredEvent).toBe('load');
-    }, 20000);
+    }, {retry: 3, timeout: 20000});
 
     test('Should continue zooming from last mouse position after scroll and flyto, see #2709', async () => {
         const finalZoom = await page.evaluate(() => {
@@ -101,7 +100,7 @@ describe('Browser tests', () => {
             });
         });
         expect(finalZoom).toBeGreaterThan(2);
-    }, 20000);
+    }, {retry: 3, timeout: 20000});
 
     test('Drag to the left', async () => {
         const canvas = await page.$('.maplibregl-canvas');
@@ -134,7 +133,7 @@ describe('Browser tests', () => {
         const centerWithInertia = await dragToLeft();
         expect(centerWithInertia.lng).toBeLessThan(-60);
         expect(centerWithInertia.lat).toBeCloseTo(0, 7);
-    }, 20000);
+    }, {retry: 3, timeout: 20000});
 
     test('Resize viewport (page)', async () => {
 
@@ -146,7 +145,7 @@ describe('Browser tests', () => {
         const canvasBB = await canvas?.boundingBox();
         expect(canvasBB?.width).toBeCloseTo(400);
         expect(canvasBB?.height).toBeCloseTo(400);
-    }, 20000);
+    }, {retry: 3, timeout: 20000});
 
     test('Resize div', async () => {
 
@@ -160,7 +159,7 @@ describe('Browser tests', () => {
         const canvasBB = await canvas?.boundingBox();
         expect(canvasBB!.width).toBeCloseTo(200);
         expect(canvasBB!.height).toBeCloseTo(200);
-    }, 20000);
+    }, {retry: 3, timeout: 20000});
 
     test('Zoom: Double click at the center', async () => {
 
@@ -176,7 +175,7 @@ describe('Browser tests', () => {
         });
 
         expect(zoom).toBe(2);
-    }, 20000);
+    }, {retry: 3, timeout: 20000});
 
     test('Marker scaled: correct drag', async () => {
         await page.evaluate(() => {
@@ -206,7 +205,7 @@ describe('Browser tests', () => {
         const newPosition = await dragToLeft();
         expect(newPosition.x).toBeCloseTo(0);
         expect(newPosition.y).toBeCloseTo(0);
-    });
+    }, {retry: 3});
 
     test('Marker: correct position', async () => {
         const markerScreenPosition = await page.evaluate(() => {
@@ -282,7 +281,7 @@ describe('Browser tests', () => {
 
         expect(markerScreenPosition.x).toBeCloseTo(386.5);
         expect(markerScreenPosition.y).toBeCloseTo(378.1);
-    }, 20000);
+    }, {retry: 3, timeout: 20000});
 
     test('Fullscreen control should work in shadowdom as well', async () => {
         const fullscreenButtonTitle = await page.evaluate(async () => {
@@ -341,7 +340,7 @@ describe('Browser tests', () => {
         });
 
         expect(fullscreenButtonTitle).toBe('Exit fullscreen');
-    }, 20000);
+    }, {retry: 3, timeout: 20000});
 
     test('Marker: correct opacity after resize with 3d terrain', async () => {
         const markerOpacity = await page.evaluate(() => {
@@ -390,7 +389,7 @@ describe('Browser tests', () => {
         });
 
         expect(markerOpacity).toBe('1');
-    }, 20000);
+    }, {retry: 3, timeout: 20000});
 
     test('Load map with RTL plugin should throw exception for invalid URL', async () => {
 
@@ -446,5 +445,5 @@ describe('Browser tests', () => {
         });
         expect(center.lng).toBeCloseTo(11.39770);
         expect(center.lat).toBeCloseTo(47.29960);
-    }, 20000);
+    }, {retry: 3, timeout: 20000});
 });

@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {CollisionIndex} from './collision_index';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {CanonicalTileID, UnwrappedTileID} from '../source/tile_id';

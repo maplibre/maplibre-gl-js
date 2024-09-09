@@ -1,3 +1,4 @@
+import {describe, test, expect, vi} from 'vitest';
 import {SourceCache} from '../source/source_cache';
 import {RasterSourceSpecification, SourceSpecification, VectorSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {Style} from '../style/style';
@@ -5,7 +6,7 @@ import {FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
 import {selectDebugSource} from './draw_debug';
 
-jest.mock('../style/style');
+vi.mock('../style/style');
 
 const zoom = 14;
 

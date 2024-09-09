@@ -14,7 +14,7 @@
     "@typescript-eslint",
     "import",
     "eslint-plugin-tsdoc",
-    "jest"
+    "vitest"
   ],
   "rules": {
     "no-dupe-class-members": "off",
@@ -81,19 +81,7 @@
         "max": 1
     }],
     "import/no-relative-packages": ["error"],
-    "tsdoc/syntax": "warn",
-    // Jest https://www.npmjs.com/package/eslint-plugin-jest
-    "jest/no-commented-out-tests": "error",
-    "jest/no-disabled-tests": "warn",
-    "jest/no-focused-tests": "error",
-    "jest/prefer-to-contain": "warn",
-    "jest/prefer-to-have-length": "warn",
-    "jest/valid-expect": "error",
-    "jest/prefer-to-be": "warn",
-    "jest/no-alias-methods": "warn",
-    "jest/no-interpolation-in-snapshots": "warn",
-    "jest/no-large-snapshots": ["warn", { "maxSize": 50, "inlineMaxSize": 20 }],
-    "jest/no-deprecated-functions": "warn"
+    "tsdoc/syntax": "warn"
   },
   "reportUnusedDisableDirectives": true,
   "ignorePatterns": ["build/*.js", "*.json"],

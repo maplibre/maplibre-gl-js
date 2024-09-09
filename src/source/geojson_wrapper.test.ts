@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {GeoJSONWrapper} from './geojson_wrapper';
 
 describe('geojsonwrapper', () => {

@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {Tile} from './tile';
 import {TileCache} from './tile_cache';
 import {OverscaledTileID} from './tile_id';

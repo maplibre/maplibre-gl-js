@@ -1,3 +1,4 @@
+import {describe, test, expect, vi} from 'vitest';
 import {createSymbolBucket} from '../../test/unit/lib/create_symbol_layer';
 import {Tile} from '../source/tile';
 import {GeoJSONWrapper, Feature} from '../source/geojson_wrapper';
@@ -101,7 +102,7 @@ describe('querySourceFeatures', () => {
     test('loadVectorData unloads existing data before overwriting it', () => {
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
         tile.state = 'loaded';
-        const spy = jest.spyOn(tile, 'unloadVectorData');
+        const spy = vi.spyOn(tile, 'unloadVectorData');
         const painter = {};
 
         tile.loadVectorData(null, painter);

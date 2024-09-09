@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {mapObject} from '../util/util';
 import {StyleLayerIndex} from './style_layer_index';
 

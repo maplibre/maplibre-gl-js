@@ -1,3 +1,4 @@
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
 import {LngLat} from '../../geo/lng_lat';
 import {fakeServer, FakeServer} from 'nise';
@@ -32,7 +33,7 @@ describe('#setTerrain', () => {
             map.addSource('terrainrgb', {type: 'raster-dem', url: '/source.json'});
             server.respond();
             map.addLayer({id: 'hillshade', type: 'hillshade', source: 'terrainrgb'});
-            const stub = jest.spyOn(console, 'warn').mockImplementation(() => { });
+            const stub = vi.spyOn(console, 'warn').mockImplementation(() => { });
             stub.mockReset();
             map.setTerrain({
                 source: 'terrainrgb'
@@ -76,7 +77,7 @@ describe('Keep camera outside terrain', () => {
 
         let terrainElevation = 10;
         const terrainStub = {} as Terrain;
-        terrainStub.getElevationForLngLatZoom = jest.fn(
+        terrainStub.getElevationForLngLatZoom = vi.fn(
             (_lngLat: LngLat, _zoom: number) => terrainElevation
         );
         map.terrain = terrainStub;

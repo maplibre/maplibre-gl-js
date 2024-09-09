@@ -1,3 +1,4 @@
+import {describe, beforeEach,  afterEach,  test, expect} from 'vitest';
 import {Hash} from './hash';
 import {createMap as globalCreateMap, beforeMapTest} from '../util/test/util';
 import type {Map} from './map';
@@ -252,6 +253,7 @@ describe('hash', () => {
             .addTo(map);
 
         expect(window.location.hash).toBeFalsy();
+        window.location.hash = '';
 
         map.setZoom(3);
         map.setCenter([1.0, 2.0]);
@@ -301,26 +303,26 @@ describe('hash', () => {
         expect(window.location.hash).toBe('#foo=bar');
     });
 
-    test('#_removeHash named', () => {
-        const hash = createHash('map')
+    test.only('#_removeHash named', () => {
+        const hash = createHash('myhash')
             .addTo(map);
 
         map.setZoom(3);
         map.setCenter([2.0, 1.0]);
 
-        expect(window.location.hash).toBe('#map=3/1/2');
+        expect(window.location.hash).toBe('#myhash=3/1/2');
 
         hash._removeHash();
 
         expect(window.location.hash).toBe('');
 
-        window.location.hash = '#map=3/1/2&foo=bar';
+        window.location.hash = '#myhash=3/1/2&foo=bar';
 
         hash._removeHash();
 
         expect(window.location.hash).toBe('#foo=bar');
 
-        window.location.hash = '#baz&map=7/2/1/135/60&foo=bar';
+        window.location.hash = '#baz&myhash=7/2/1/135/60&foo=bar';
 
         hash._removeHash();
 

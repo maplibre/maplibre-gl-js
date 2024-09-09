@@ -1,3 +1,4 @@
+import {describe, beforeAll, afterAll, test, expect} from 'vitest';
 import {TerrainSourceCache} from './terrain_source_cache';
 import {Style} from '../style/style';
 import {RequestManager} from '../util/request_manager';

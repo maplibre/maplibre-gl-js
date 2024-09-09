@@ -1,3 +1,4 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
 import {LngLat} from '../../geo/lng_lat';
 
@@ -11,7 +12,7 @@ describe('#queryRenderedFeatures', () => {
     test('if no arguments provided', () => new Promise<void>(done => {
         createMap({}, (err, map) => {
             expect(err).toBeFalsy();
-            const spy = jest.spyOn(map.style, 'queryRenderedFeatures');
+            const spy = vi.spyOn(map.style, 'queryRenderedFeatures');
 
             const output = map.queryRenderedFeatures();
 
@@ -27,7 +28,7 @@ describe('#queryRenderedFeatures', () => {
     test('if only "geometry" provided', () => new Promise<void>(done => {
         createMap({}, (err, map) => {
             expect(err).toBeFalsy();
-            const spy = jest.spyOn(map.style, 'queryRenderedFeatures');
+            const spy = vi.spyOn(map.style, 'queryRenderedFeatures');
 
             const output = map.queryRenderedFeatures(map.project(new LngLat(0, 0)));
 
@@ -44,7 +45,7 @@ describe('#queryRenderedFeatures', () => {
     test('if only "params" provided', () => new Promise<void>(done => {
         createMap({}, (err, map) => {
             expect(err).toBeFalsy();
-            const spy = jest.spyOn(map.style, 'queryRenderedFeatures');
+            const spy = vi.spyOn(map.style, 'queryRenderedFeatures');
 
             const output = map.queryRenderedFeatures({filter: ['all']});
 
@@ -60,7 +61,7 @@ describe('#queryRenderedFeatures', () => {
     test('if both "geometry" and "params" provided', () => new Promise<void>(done => {
         createMap({}, (err, map) => {
             expect(err).toBeFalsy();
-            const spy = jest.spyOn(map.style, 'queryRenderedFeatures');
+            const spy = vi.spyOn(map.style, 'queryRenderedFeatures');
 
             const output = map.queryRenderedFeatures({filter: ['all']});
 
@@ -76,7 +77,7 @@ describe('#queryRenderedFeatures', () => {
     test('if "geometry" with unwrapped coords provided', () => new Promise<void>(done => {
         createMap({}, (err, map) => {
             expect(err).toBeFalsy();
-            const spy = jest.spyOn(map.style, 'queryRenderedFeatures');
+            const spy = vi.spyOn(map.style, 'queryRenderedFeatures');
 
             map.queryRenderedFeatures(map.project(new LngLat(360, 0)));
 

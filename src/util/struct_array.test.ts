@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {StructArrayLayout3i6, FeatureIndexArray} from '../data/array_types.g';
 
 describe('StructArray', () => {

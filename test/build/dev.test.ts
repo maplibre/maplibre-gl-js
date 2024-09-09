@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import fs from 'fs';
 
 describe('dev build', () => {

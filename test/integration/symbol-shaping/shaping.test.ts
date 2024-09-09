@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import {WritingMode, shapeText, Shaping} from '../../../src/symbol/shaping';
