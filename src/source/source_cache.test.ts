@@ -1709,7 +1709,7 @@ describe('source cache get ids', () => {
             new OverscaledTileID(3, 0, 3, 0, 0).key
         ]);
         done();
-    });
+    }));
 });
 
 describe('SourceCache#findLoadedParent', () => {
