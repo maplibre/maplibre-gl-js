@@ -31,11 +31,59 @@ float screenPxRange(float fontScale) {
     // See https://github.com/Chlumsky/msdfgen?tab=readme-ov-file
     
     return fontScale * SDF_PX;
-    /*
-    vec2 unitRange = vec2(8.0) / u_texsize;
-    vec2 screenTexSize = vec2(1.0) / fwidth(v_data0.xy);
-    return max(0.5 * dot(unitRange, screenTexSize), 1.0);
-    */
+}
+
+vec4 renderText(vec4 fill_color, vec4 halo_color, float opacity, float halo_width, float halo_blur, float EDGE_GAMMA, vec2 tex, float gamma_scale, float size, float fade_opacity) {
+
+    float fontScale = size / 24.0;
+
+    lowp vec4 color = fill_color;
+    highp float gamma = EDGE_GAMMA / (fontScale * u_gamma_scale);
+    lowp float inner_edge = (256.0 - 64.0) / 256.0;
+    if (u_is_halo) {
+        color = halo_color;
+        gamma = (halo_blur * 1.19 / SDF_PX + EDGE_GAMMA) / (fontScale * u_gamma_scale);
+        inner_edge = inner_edge + gamma * gamma_scale;
+    }
+
+    lowp float dist = texture(u_texture, tex).a;
+    highp float gamma_scaled = gamma * gamma_scale;
+    highp float alpha = smoothstep(inner_edge - gamma_scaled, inner_edge + gamma_scaled, dist);
+    if (u_is_halo) {
+        // When drawing halos, we want the inside of the halo to be transparent as well
+        // in case the text fill is transparent.
+        lowp float halo_edge = (6.0 - halo_width / fontScale) / SDF_PX;
+        alpha = min(smoothstep(halo_edge - gamma_scaled, halo_edge + gamma_scaled, dist), 1.0 - alpha);
+    }
+
+    return color * (alpha * opacity * fade_opacity);
+}
+
+vec4 renderMSDFIcon(vec4 fill_color, vec4 halo_color, float opacity, float EDGE_GAMMA, vec2 tex, float gamma_scale, float size, float fade_opacity) {
+
+    float fontScale = size;
+
+    lowp vec4 color = fill_color;
+    highp float gamma = EDGE_GAMMA / (fontScale * u_gamma_scale);
+    lowp float inner_edge = (256.0 - 64.0) / 256.0;
+
+    vec3 s = texture(u_texture, tex).rgb;
+    float sd = median(s);
+    float dist = sd - 0.5;
+
+    if (u_is_halo) {
+        color = halo_color;
+        s = texture(u_texture_2, tex).rgb;
+        sd = median(s);
+        dist = sd - 0.5;
+    }
+
+    float clampedDistance = clamp(dist * screenPxRange(fontScale) + 0.5, 0.0, 1.0);
+    
+    highp float gamma_scaled = gamma * gamma_scale;
+    highp float alpha = smoothstep(inner_edge - gamma_scaled, inner_edge + gamma_scaled, clampedDistance);
+
+    return color * (alpha * opacity * fade_opacity);
 }
 
 void main() {
@@ -52,35 +100,7 @@ void main() {
     float size = v_data1.y;
     float fade_opacity = v_data1[2];
 
-    float fontScale = u_is_text ? size / 24.0 : size;
-
-    lowp vec4 color = fill_color;
-    highp float gamma = EDGE_GAMMA / (fontScale * u_gamma_scale);
-    lowp float inner_edge = (256.0 - 64.0) / 256.0;
-
-    vec3 s = texture(u_texture, tex).rgb;
-    float sd = median(s);
-    float dist = sd - 0.5;
-
-    if (u_is_halo) {
-        color = vec4(1.0);
-        s = texture(u_texture_2, tex).rgb;
-        sd = median(s);
-        dist = sd - 0.5;
-    }
-
-    float clampedDistance = clamp(dist * screenPxRange(fontScale) + 0.5, 0.0, 1.0);
-    
-    highp float gamma_scaled = gamma * gamma_scale;
-    highp float alpha = smoothstep(inner_edge - gamma_scaled, inner_edge + gamma_scaled, clampedDistance);
-    /*if (u_is_halo) {
-        // When drawing halos, we want the inside of the halo to be transparent as well
-        // in case the text fill is transparent.
-        lowp float halo_edge = (6.0 - halo_width / fontScale) / SDF_PX;
-        alpha = min(smoothstep(halo_edge - gamma_scaled, halo_edge + gamma_scaled, clampedDistance), 1.0 - alpha);
-    }*/
-
-    fragColor = color * (alpha * opacity * fade_opacity);
+    fragColor = u_is_text ? renderText(fill_color, halo_color, opacity, halo_width, halo_blur, EDGE_GAMMA, tex, gamma_scale, size, fade_opacity) : renderMSDFIcon(fill_color, halo_color, opacity, EDGE_GAMMA, tex, gamma_scale, size, fade_opacity);
 
 #ifdef OVERDRAW_INSPECTOR
     fragColor = vec4(1.0);
