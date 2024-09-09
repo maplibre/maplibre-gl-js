@@ -810,13 +810,13 @@ describe('#easeTo', () => {
             eventData);
     });
 
-    test('does not emit zoom events if not zooming', () => new Promise<void>((done, fail) => {
+    test('does not emit zoom events if not zooming', () => new Promise<void>((done) => {
         const camera = createCamera();
 
         camera
-            .on('zoomstart', () => { fail(new Error('zoomstart failed')); })
-            .on('zoom', () => { fail(new Error('zoom failed')); })
-            .on('zoomend', () => { fail(new Error('zoomend failed')); })
+            .on('zoomstart', () => { throw new Error('zoomstart failed'); })
+            .on('zoom', () => { throw new Error('zoom failed'); })
+            .on('zoomend', () => { throw new Error('zoomend failed'); })
             .on('moveend', () => { done(); });
 
         camera.easeTo({center: [100, 0], duration: 0});
@@ -1617,7 +1617,7 @@ describe('#flyTo', () => {
         camera.on('zoom', () => {
             const zoom = camera.getZoom();
             if (zoom < 1) {
-                fail(`${zoom} should be >= ${minZoom} during flyTo`);
+                throw new Error(`${zoom} should be >= ${minZoom} during flyTo`);
             }
 
             if (camera.getZoom() < (minZoom + 1)) {

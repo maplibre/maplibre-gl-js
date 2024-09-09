@@ -924,10 +924,10 @@ describe('map events', () => {
         map.remove();
     });
 
-    test('emits load event after a style is set', () => new Promise<void>((done, failTest) => {
+    test('emits load event after a style is set', () => new Promise<void>((done) => {
         const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
 
-        const fail = () => failTest(new Error('test failed'));
+        const fail = () => { throw new Error('test failed'); };
         const pass = () => done();
 
         map.on('load', fail);

@@ -13,7 +13,7 @@ afterEach(() => {
     server.restore();
 });
 
-test('render stabilizes', () => new Promise<void>((done, fail) => {
+test('render stabilizes', () => new Promise<void>((done) => {
     const style = createStyle();
     style.sources.mapbox = {
         type: 'vector',
@@ -35,7 +35,7 @@ test('render stabilizes', () => new Promise<void>((done, fail) => {
         timer = setTimeout(() => {
             map.off('render', undefined);
             map.on('render', () => {
-                fail(new Error('test failed'));
+                throw new Error('test failed');
             });
             expect((map as any)._frameId).toBeFalsy();
             done();
@@ -43,12 +43,12 @@ test('render stabilizes', () => new Promise<void>((done, fail) => {
     });
 }));
 
-test('no render after idle event', () => new Promise<void>((done, fail) => {
+test('no render after idle event', () => new Promise<void>((done) => {
     const style = createStyle();
     const map = createMap({style});
     map.on('idle', () => {
         map.on('render', () => {
-            fail(new Error('test failed'));
+            throw new Error('test failed');
         });
         setTimeout(() => {
             done();
@@ -56,20 +56,20 @@ test('no render after idle event', () => new Promise<void>((done, fail) => {
     });
 }));
 
-test('no render before style loaded', () => new Promise<void>((done, fail) => {
+test('no render before style loaded', () => new Promise<void>((done) => {
     server.respondWith('/styleUrl', JSON.stringify(createStyle()));
     const map = createMap({style: '/styleUrl'});
 
     jest.spyOn(map, 'triggerRepaint').mockImplementationOnce(() => {
         if (!map.style._loaded) {
-            fail(new Error('test failed'));
+            throw new Error('test failed');
         }
     });
     map.on('render', () => {
         if (map.style._loaded) {
             done();
         } else {
-            fail(new Error('test failed'));
+            throw new Error('test failed');
         }
     });
 

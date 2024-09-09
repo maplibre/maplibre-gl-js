@@ -1358,7 +1358,7 @@ describe('Style#addLayer', () => {
         });
     }));
 
-    test('#3895 reloads source (instead of clearing) if adding this layer with the same type, immediately after removing it', () => new Promise<void>((done, fail) => {
+    test('#3895 reloads source (instead of clearing) if adding this layer with the same type, immediately after removing it', () => new Promise<void>((done) => {
         const style = createStyle();
         style.loadJSON(extend(createStyleJSON(), {
             'sources': {
@@ -1386,7 +1386,7 @@ describe('Style#addLayer', () => {
         style.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'content') {
                 style.sourceCaches['mapLibre'].reload = () => { done(); };
-                style.sourceCaches['mapLibre'].clearTiles =  () => { fail(new Error('test failed')); };
+                style.sourceCaches['mapLibre'].clearTiles =  () => { throw new Error('test failed'); };
                 style.removeLayer('my-layer');
                 style.addLayer(layer);
                 style.update({} as EvaluationParameters);
@@ -1395,7 +1395,7 @@ describe('Style#addLayer', () => {
 
     }));
 
-    test('clears source (instead of reloading) if adding this layer with a different type, immediately after removing it', () => new Promise<void>((done, fail) => {
+    test('clears source (instead of reloading) if adding this layer with a different type, immediately after removing it', () => new Promise<void>((done) => {
         const style = createStyle();
         style.loadJSON(extend(createStyleJSON(), {
             'sources': {
@@ -1421,7 +1421,7 @@ describe('Style#addLayer', () => {
         }as LayerSpecification;
         style.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'content') {
-                style.sourceCaches['mapLibre'].reload =  () => { fail(new Error('test failed')); };
+                style.sourceCaches['mapLibre'].reload =  () => { throw new Error('test failed'); };
                 style.sourceCaches['mapLibre'].clearTiles = () => { done(); };
                 style.removeLayer('my-layer');
                 style.addLayer(layer);
@@ -1570,7 +1570,7 @@ describe('Style#removeLayer', () => {
         await dataPromise;
     });
 
-    test('tears down layer event forwarding', () => new Promise<void>((done, fail) => {
+    test('tears down layer event forwarding', () => new Promise<void>((done) => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON({
             layers: [{
@@ -1580,7 +1580,7 @@ describe('Style#removeLayer', () => {
         }));
 
         style.on('error', () => {
-            fail(new Error('test failed'));
+            throw new Error('test failed');
         });
 
         style.on('style.load', () => {

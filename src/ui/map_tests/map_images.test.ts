@@ -147,7 +147,7 @@ test('map getImage matches addImage, StyleImageInterface SDF', () => {
     expect(gotImage.sdf).toBe(true);
 });
 
-test('map does not fire `styleimagemissing` for empty icon values', () => new Promise<void>((done, fail) => {
+test('map does not fire `styleimagemissing` for empty icon values', () => new Promise<void>((done) => {
     const map = createMap();
 
     map.on('load', () => {
@@ -169,7 +169,7 @@ test('map does not fire `styleimagemissing` for empty icon values', () => new Pr
         });
 
         map.on('styleimagemissing', ({id}) => {
-            fail(new Error(`styleimagemissing fired for value ${id}`));
+            throw new Error(`styleimagemissing fired for value ${id}`);
         });
     });
 }));

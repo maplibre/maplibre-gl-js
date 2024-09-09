@@ -390,9 +390,9 @@ describe('SourceCache#removeTile', () => {
 });
 
 describe('SourceCache / Source lifecycle', () => {
-    test('does not fire load or change before source load event', () => new Promise<void>((done, fail) => {
+    test('does not fire load or change before source load event', () => new Promise<void>((done) => {
         const sourceCache = createSourceCache({noLoad: true})
-            .on('data', () => fail(new Error('test failed: data event fired')));
+            .on('data', () => { throw new Error('test failed: data event fired'); });
         sourceCache.onAdd(undefined);
         setTimeout(() => done(), 1);
     }));
@@ -422,7 +422,7 @@ describe('SourceCache / Source lifecycle', () => {
 
     test('suppress 404 errors', () => {
         const sourceCache = createSourceCache({status: 404, message: 'Not found'})
-            .on('error', () => fail(new Error('test failed: error event fired')));
+            .on('error', () => { throw new Error('test failed: error event fired'); });
         sourceCache.onAdd(undefined);
     });
 
