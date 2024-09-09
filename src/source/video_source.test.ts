@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {VideoSource} from './video_source';
 import {extend} from '../util/util';
 import {getMockDispatcher} from '../util/test/util';

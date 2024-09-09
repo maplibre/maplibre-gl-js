@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {LineAtlas} from './line_atlas';
 
 describe('LineAtlas', () => {

@@ -8,6 +8,7 @@ import {CanonicalTileID, OverscaledTileID} from '../../source/tile_id';
 import {EXTENT} from '../../data/extent';
 import {expectToBeCloseToArray} from '../../util/test/util';
 import type {ProjectionData} from './projection_data';
+import {describe, expect, test} from 'vitest';
 
 describe('mercator utils', () => {
     test('projectToWorldCoordinates basic', () => {

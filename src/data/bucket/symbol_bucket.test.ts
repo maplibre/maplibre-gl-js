@@ -1,3 +1,4 @@
+import {describe, test, expect, vi} from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import Protobuf from 'pbf';
@@ -111,7 +112,7 @@ describe('SymbolBucket', () => {
     });
 
     test('SymbolBucket integer overflow', () => {
-        const spy = jest.spyOn(console, 'warn').mockImplementation(() => { });
+        const spy = vi.spyOn(console, 'warn').mockImplementation(() => { });
         SymbolBucket.MAX_GLYPHS = 5;
 
         const bucket = bucketSetup() as any as SymbolBucket;
@@ -131,7 +132,7 @@ describe('SymbolBucket', () => {
     });
 
     test('SymbolBucket image undefined sdf', () => {
-        const spy = jest.spyOn(console, 'warn').mockImplementation(() => { });
+        const spy = vi.spyOn(console, 'warn').mockImplementation(() => { });
         spy.mockReset();
 
         const imageMap = {
@@ -173,7 +174,7 @@ describe('SymbolBucket', () => {
     });
 
     test('SymbolBucket image mismatched sdf', () => {
-        const spy = jest.spyOn(console, 'warn').mockImplementation(() => { });
+        const spy = vi.spyOn(console, 'warn').mockImplementation(() => { });
         spy.mockReset();
 
         const imageMap = {

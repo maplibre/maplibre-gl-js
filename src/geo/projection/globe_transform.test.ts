@@ -9,6 +9,7 @@ import {expectToBeCloseToArray, getGlobeProjectionMock, sleep} from '../../util/
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {tileCoordinatesToLocation} from './mercator_utils';
 import {coveringTiles} from './covering_tiles';
+import {describe, expect, test} from 'vitest';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: Array<number>) {
     const lat = latDegrees / 180.0 * Math.PI;

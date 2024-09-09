@@ -1,3 +1,4 @@
+import {describe, test, expect, vi} from 'vitest';
 import {RenderToTexture} from './render_to_texture';
 import type {Painter} from './painter';
 import type {LineStyleLayer} from '../style/style_layer/line_style_layer';
@@ -19,7 +20,7 @@ import {DepthMode} from '../gl/depth_mode';
 
 describe('render to texture', () => {
     const gl = document.createElement('canvas').getContext('webgl');
-    jest.spyOn(gl, 'checkFramebufferStatus').mockReturnValue(gl.FRAMEBUFFER_COMPLETE);
+    vi.spyOn(gl, 'checkFramebufferStatus').mockReturnValue(gl.FRAMEBUFFER_COMPLETE);
     const backgroundLayer = {
         id: 'maine-background',
         type: 'background',

@@ -1,3 +1,4 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate, radiansToDegrees, degreesToRadians, rollPitchBearingToQuat, getRollPitchBearing, getAngleDelta} from './util';
 import {Canvas} from 'canvas';
@@ -311,13 +312,13 @@ describe('util readImageUsingVideoFrame', () => {
         get format() {
             return format;
         },
-        copyTo: jest.fn(buf => {
+        copyTo: vi.fn(buf => {
             buf.set(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]).subarray(0, buf.length));
             return Promise.resolve();
         }),
-        close: jest.fn(),
+        close: vi.fn(),
     };
-    (window as any).VideoFrame = jest.fn(() => frame);
+    (window as any).VideoFrame = vi.fn(() => frame);
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = 2;
 
@@ -360,7 +361,7 @@ describe('util readImageUsingVideoFrame', () => {
 
     describe('layout/rect', () => {
         beforeEach(() => {
-            (window as any).VideoFrame = jest.fn(() => frame);
+            (window as any).VideoFrame = vi.fn(() => frame);
             canvas.width = canvas.height = 3;
         });
 

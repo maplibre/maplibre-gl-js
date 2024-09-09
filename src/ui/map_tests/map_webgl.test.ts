@@ -1,3 +1,4 @@
+import {beforeEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
 
 beforeEach(() => {
@@ -62,8 +63,8 @@ test('Hit WebGL max drawing buffer limit', () => {
     Object.defineProperty(container, 'clientWidth', {value: 8000});
     Object.defineProperty(container, 'clientHeight', {value: 4500});
     const map = createMap({container, maxCanvasSize: [16834, 16834], pixelRatio: 1});
-    jest.spyOn(map.painter.context.gl, 'drawingBufferWidth', 'get').mockReturnValue(7536);
-    jest.spyOn(map.painter.context.gl, 'drawingBufferHeight', 'get').mockReturnValue(4239);
+    vi.spyOn(map.painter.context.gl, 'drawingBufferWidth', 'get').mockReturnValue(7536);
+    vi.spyOn(map.painter.context.gl, 'drawingBufferHeight', 'get').mockReturnValue(4239);
     map.resize();
     expect(map.getCanvas().width).toBe(7536);
     expect(map.getCanvas().height).toBe(4239);
