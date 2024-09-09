@@ -102,6 +102,11 @@ A plugin for taking measures on the map.
 A modular plugin for calculating routes.
 <br/><small>[View on GitHub](https://github.com/marucjmar/any-routing)</small>
 
+#### maptiler-geocoding-control
+
+Adds a control for searching using MapTiler Geocoding API
+<br/><small>[View on GitHub](https://github.com/maptiler/maptiler-geocoding-control) | [Docs](https://docs.maptiler.com/sdk-js/modules/geocoding/)</small>
+
 #### maplibre-search-box
 
 Adds a control for searching for places using Stadia Maps.
