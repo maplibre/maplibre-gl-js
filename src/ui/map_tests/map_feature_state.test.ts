@@ -57,7 +57,7 @@ describe('#setFeatureState', () => {
             done();
         });
     }));
-    test('throw before loaded', () => new Promise<void>(done => {
+    test('throw before loaded', () => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -70,9 +70,7 @@ describe('#setFeatureState', () => {
         expect(() => {
             map.setFeatureState({source: 'geojson', id: 12345}, {'hover': true});
         }).toThrow(Error);
-
-        done();
-    }));
+    });
     test('fires an error if source not found', () => new Promise<void>(done => {
         const map = createMap({
             style: {
@@ -346,7 +344,7 @@ describe('#removeFeatureState', () => {
             done();
         });
     }));
-    test('throw before loaded', () => new Promise<void>(done => {
+    test('throw before loaded', () => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -359,9 +357,7 @@ describe('#removeFeatureState', () => {
         expect(() => {
             (map as any).removeFeatureState({source: 'geojson', id: 12345}, {'hover': true});
         }).toThrow(Error);
-
-        done();
-    }));
+    });
     test('fires an error if source not found', () => new Promise<void>(done => {
         const map = createMap({
             style: {

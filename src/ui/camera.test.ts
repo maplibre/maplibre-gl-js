@@ -186,7 +186,7 @@ describe('#jumpTo', () => {
         expect(camera.getPitch()).toBe(60);
     });
 
-    test('emits move events, preserving eventData', () => new Promise<void>(done => {
+    test('emits move events, preserving eventData', () => {
         let started, moved, ended;
         const eventData = {data: 'ok'};
 
@@ -199,10 +199,9 @@ describe('#jumpTo', () => {
         expect(started).toBe('ok');
         expect(moved).toBe('ok');
         expect(ended).toBe('ok');
-        done();
-    }));
+    });
 
-    test('emits zoom events, preserving eventData', () => new Promise<void>(done => {
+    test('emits zoom events, preserving eventData', () => {
         let started, zoomed, ended;
         const eventData = {data: 'ok'};
 
@@ -215,10 +214,9 @@ describe('#jumpTo', () => {
         expect(started).toBe('ok');
         expect(zoomed).toBe('ok');
         expect(ended).toBe('ok');
-        done();
-    }));
+    });
 
-    test('emits rotate events, preserving eventData', () => new Promise<void>(done => {
+    test('emits rotate events, preserving eventData', () => {
         let started, rotated, ended;
         const eventData = {data: 'ok'};
 
@@ -231,10 +229,9 @@ describe('#jumpTo', () => {
         expect(started).toBe('ok');
         expect(rotated).toBe('ok');
         expect(ended).toBe('ok');
-        done();
-    }));
+    });
 
-    test('emits pitch events, preserving eventData', () => new Promise<void>(done => {
+    test('emits pitch events, preserving eventData', () => {
         let started, pitched, ended;
         const eventData = {data: 'ok'};
 
@@ -247,8 +244,7 @@ describe('#jumpTo', () => {
         expect(started).toBe('ok');
         expect(pitched).toBe('ok');
         expect(ended).toBe('ok');
-        done();
-    }));
+    });
 
     test('cancels in-progress easing', () => {
         camera.panTo([3, 4]);
@@ -273,7 +269,7 @@ describe('#setCenter', () => {
         }).toThrow(Error);
     });
 
-    test('emits move events, preserving eventData', () => new Promise<void>(done => {
+    test('emits move events, preserving eventData', () => {
         let started, moved, ended;
         const eventData = {data: 'ok'};
 
@@ -285,8 +281,7 @@ describe('#setCenter', () => {
         expect(started).toBe('ok');
         expect(moved).toBe('ok');
         expect(ended).toBe('ok');
-        done();
-    }));
+    });
 
     test('cancels in-progress easing', () => {
         camera.panTo([3, 4]);
@@ -304,7 +299,7 @@ describe('#setZoom', () => {
         expect(camera.getZoom()).toBe(3);
     });
 
-    test('emits move and zoom events, preserving eventData', () => new Promise<void>(done => {
+    test('emits move and zoom events, preserving eventData', () => {
         let movestarted, moved, moveended, zoomstarted, zoomed, zoomended;
         const eventData = {data: 'ok'};
 
@@ -323,8 +318,7 @@ describe('#setZoom', () => {
         expect(zoomstarted).toBe('ok');
         expect(zoomed).toBe('ok');
         expect(zoomended).toBe('ok');
-        done();
-    }));
+    });
 
     test('cancels in-progress easing', () => {
         camera.panTo([3, 4]);
@@ -342,7 +336,7 @@ describe('#setBearing', () => {
         expect(camera.getBearing()).toBe(4);
     });
 
-    test('emits move and rotate events, preserving eventData', () => new Promise<void>(done => {
+    test('emits move and rotate events, preserving eventData', () => {
         let movestarted, moved, moveended, rotatestarted, rotated, rotateended;
         const eventData = {data: 'ok'};
 
@@ -361,8 +355,7 @@ describe('#setBearing', () => {
         expect(rotatestarted).toBe('ok');
         expect(rotated).toBe('ok');
         expect(rotateended).toBe('ok');
-        done();
-    }));
+    });
 
     test('cancels in-progress easing', () => {
         camera.panTo([3, 4]);
@@ -545,7 +538,7 @@ describe('#zoomTo', () => {
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: -62.66117668978012, lat: 0}));
     });
 
-    test('emits move and zoom events, preserving eventData', () => new Promise<void>(done => {
+    test('emits move and zoom events, preserving eventData', () => {
         const camera = createCamera();
         let movestarted, moved, zoomstarted, zoomed;
         const eventData = {data: 'ok'};
@@ -571,8 +564,7 @@ describe('#zoomTo', () => {
             });
 
         camera.zoomTo(5, {duration: 0}, eventData);
-        done();
-    }));
+    });
 });
 
 describe('#rotateTo', () => {
@@ -617,7 +609,7 @@ describe('#rotateTo', () => {
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: -70.3125, lat: 57.3265212252}));
     });
 
-    test('emits move and rotate events, preserving eventData', () => new Promise<void>(done => {
+    test('emits move and rotate events, preserving eventData', () => {
         const camera = createCamera();
         let movestarted, moved, rotatestarted, rotated;
         const eventData = {data: 'ok'};
@@ -643,8 +635,7 @@ describe('#rotateTo', () => {
             });
 
         camera.rotateTo(90, {duration: 0}, eventData);
-        done();
-    }));
+    });
 });
 
 describe('#easeTo', () => {
@@ -764,7 +755,7 @@ describe('#easeTo', () => {
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: -70.3125, lat: 0.000002552471840999715}));
     });
 
-    test('emits move, zoom, rotate, and pitch events, preserving eventData', () => new Promise<void>(done => {
+    test('emits move, zoom, rotate, and pitch events, preserving eventData', () => {
         const camera = createCamera();
         let movestarted, moved, zoomstarted, zoomed, rotatestarted, rotated, pitchstarted, pitched;
         const eventData = {data: 'ok'};
@@ -817,8 +808,7 @@ describe('#easeTo', () => {
         camera.easeTo(
             {center: [100, 0], zoom: 3.2, bearing: 90, duration: 0, pitch: 45},
             eventData);
-        done();
-    }));
+    });
 
     test('does not emit zoom events if not zooming', () => new Promise<void>((done, fail) => {
         const camera = createCamera();
@@ -1208,7 +1198,7 @@ describe('#flyTo', () => {
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 170.3125, lat: 0});
     });
 
-    test('emits move, zoom, rotate, and pitch events, preserving eventData', () => new Promise<void>(done => {
+    test('emits move, zoom, rotate, and pitch events, preserving eventData', () => {
         expect.assertions(18);
 
         const camera = createCamera();
@@ -1263,8 +1253,7 @@ describe('#flyTo', () => {
         camera.flyTo(
             {center: [100, 0], zoom: 3.2, bearing: 90, duration: 0, pitch: 45, animate: false},
             eventData);
-        done();
-    }));
+    });
 
     test('for short flights, emits (solely) move events, preserving eventData', () => new Promise<void>(done => {
         //As I type this, the code path for guiding super-short flights is (and will probably remain) different.
@@ -1324,13 +1313,12 @@ describe('#flyTo', () => {
         }, 0);
     }));
 
-    test('stops existing ease', () => new Promise<void>(done => {
+    test('stops existing ease', () => {
         const camera = createCamera();
         camera.flyTo({center: [200, 0], duration: 100});
         camera.flyTo({center: [100, 0], duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
-        done();
-    }));
+    });
 
     test('can be called from within a moveend event handler', () => new Promise<void>(done => {
         const camera = createCamera();
@@ -1777,7 +1765,7 @@ describe('#flyTo', () => {
         expect(terrainCallbacks.finalize).toBe(1);
     });
 
-    test('check elevation callbacks', () => new Promise<void>(done => {
+    test('check elevation callbacks', () => {
         const camera = createCamera();
         camera.terrain = {
             getElevationForLngLatZoom: () => 100,
@@ -1801,10 +1789,7 @@ describe('#flyTo', () => {
 
         camera._finalizeElevation();
         expect(camera._elevationFreeze).toBeFalsy();
-
-        done();
-    }));
-
+    });
 });
 
 describe('#isEasing', () => {

@@ -14,7 +14,7 @@ describe('util', () => {
     expect(pick({a: 1, b: 2, c: 3}, ['a', 'c', 'd'] as any)).toEqual({a: 1, c: 3});
     expect(typeof uniqueId() === 'number').toBeTruthy();
 
-    test('isPowerOfTwo', () => new Promise<void>(done => {
+    test('isPowerOfTwo', () => {
         expect(isPowerOfTwo(1)).toBe(true);
         expect(isPowerOfTwo(2)).toBe(true);
         expect(isPowerOfTwo(256)).toBe(true);
@@ -22,10 +22,9 @@ describe('util', () => {
         expect(isPowerOfTwo(0)).toBe(false);
         expect(isPowerOfTwo(-42)).toBe(false);
         expect(isPowerOfTwo(42)).toBe(false);
-        done();
-    }));
+    });
 
-    test('nextPowerOfTwo', () => new Promise<void>(done => {
+    test('nextPowerOfTwo', () => {
         expect(nextPowerOfTwo(1)).toBe(1);
         expect(nextPowerOfTwo(2)).toBe(2);
         expect(nextPowerOfTwo(256)).toBe(256);
@@ -33,10 +32,9 @@ describe('util', () => {
         expect(nextPowerOfTwo(0)).toBe(1);
         expect(nextPowerOfTwo(-42)).toBe(1);
         expect(nextPowerOfTwo(42)).toBe(64);
-        done();
-    }));
+    });
 
-    test('nextPowerOfTwo', () => new Promise<void>(done => {
+    test('nextPowerOfTwo', () => {
         expect(isPowerOfTwo(nextPowerOfTwo(1))).toBe(true);
         expect(isPowerOfTwo(nextPowerOfTwo(2))).toBe(true);
         expect(isPowerOfTwo(nextPowerOfTwo(256))).toBe(true);
@@ -44,33 +42,29 @@ describe('util', () => {
         expect(isPowerOfTwo(nextPowerOfTwo(0))).toBe(true);
         expect(isPowerOfTwo(nextPowerOfTwo(-42))).toBe(true);
         expect(isPowerOfTwo(nextPowerOfTwo(42))).toBe(true);
-        done();
-    }));
+    });
 
-    test('clamp', () => new Promise<void>(done => {
+    test('clamp', () => {
         expect(clamp(0, 0, 1)).toBe(0);
         expect(clamp(1, 0, 1)).toBe(1);
         expect(clamp(200, 0, 180)).toBe(180);
         expect(clamp(-200, 0, 180)).toBe(0);
-        done();
-    }));
+    });
 
-    test('wrap', () => new Promise<void>(done => {
+    test('wrap', () => {
         expect(wrap(0, 0, 1)).toBe(1);
         expect(wrap(1, 0, 1)).toBe(1);
         expect(wrap(200, 0, 180)).toBe(20);
         expect(wrap(-200, 0, 180)).toBe(160);
-        done();
-    }));
+    });
 
-    test('bezier', () => new Promise<void>(done => {
+    test('bezier', () => {
         const curve = bezier(0, 0, 0.25, 1);
         expect(curve instanceof Function).toBeTruthy();
         expect(curve(0)).toBe(0);
         expect(curve(1)).toBe(1);
         expect(curve(0.5)).toBe(0.8230854638965502);
-        done();
-    }));
+    });
 
     test('mapObject', () => {
         expect.assertions(5);
@@ -84,7 +78,7 @@ describe('util', () => {
         }, that)).toEqual({map: 'BOX'});
     });
 
-    test('filterObject', () => new Promise<void>(done => {
+    test('filterObject', () => {
         expect.assertions(6);
         expect(filterObject({}, () => { expect(false).toBeTruthy(); })).toEqual({});
         const that = {};
@@ -98,10 +92,9 @@ describe('util', () => {
         expect(filterObject({map: 'box', box: 'map'}, (value) => {
             return value === 'box';
         })).toEqual({map: 'box'});
-        done();
-    }));
+    });
 
-    test('deepEqual', () => new Promise<void>(done => {
+    test('deepEqual', () => {
         const a = {
             foo: 'bar',
             bar: {
@@ -118,86 +111,75 @@ describe('util', () => {
         expect(deepEqual(a, null)).toBeFalsy();
         expect(deepEqual(null, c)).toBeFalsy();
         expect(deepEqual(null, null)).toBeTruthy();
-
-        done();
-    }));
+    });
 });
 
 describe('util clone', () => {
-    test('array', () => new Promise<void>(done => {
+    test('array', () => {
         const input = [false, 1, 'two'];
         const output = clone(input);
         expect(input).not.toBe(output);
         expect(input).toEqual(output);
-        done();
-    }));
+    });
 
-    test('object', () => new Promise<void>(done => {
+    test('object', () => {
         const input = {a: false, b: 1, c: 'two'};
         const output = clone(input);
         expect(input).not.toBe(output);
         expect(input).toEqual(output);
-        done();
-    }));
+    });
 
-    test('deep object', () => new Promise<void>(done => {
+    test('deep object', () => {
         const input = {object: {a: false, b: 1, c: 'two'}};
         const output = clone(input);
         expect(input.object).not.toBe(output.object);
         expect(input.object).toEqual(output.object);
-        done();
-    }));
+    });
 
-    test('deep array', () => new Promise<void>(done => {
+    test('deep array', () => {
         const input = {array: [false, 1, 'two']};
         const output = clone(input);
         expect(input.array).not.toBe(output.array);
         expect(input.array).toEqual(output.array);
-        done();
-    }));
+    });
 });
 
 describe('util arraysIntersect', () => {
-    test('intersection', () => new Promise<void>(done => {
+    test('intersection', () => {
         const a = ['1', '2', '3'];
         const b = ['5', '4', '3'];
 
         expect(arraysIntersect(a, b)).toBe(true);
-        done();
-    }));
+    });
 
-    test('no intersection', () => new Promise<void>(done => {
+    test('no intersection', () => {
         const a = ['1', '2', '3'];
         const b = ['4', '5', '6'];
 
         expect(arraysIntersect(a, b)).toBe(false);
-        done();
-    }));
-
+    });
 });
 
 describe('util isCounterClockwise', () => {
-    test('counter clockwise', () => new Promise<void>(done => {
+    test('counter clockwise', () => {
         const a = new Point(0, 0);
         const b = new Point(1, 0);
         const c = new Point(1, 1);
 
         expect(isCounterClockwise(a, b, c)).toBe(true);
-        done();
-    }));
+    });
 
-    test('clockwise', () => new Promise<void>(done => {
+    test('clockwise', () => {
         const a = new Point(0, 0);
         const b = new Point(1, 0);
         const c = new Point(1, 1);
 
         expect(isCounterClockwise(c, b, a)).toBe(false);
-        done();
-    }));
+    });
 });
 
 describe('util parseCacheControl', () => {
-    test('max-age', () => new Promise<void>(done => {
+    test('max-age', () => {
         expect(parseCacheControl('max-age=123456789')).toEqual({
             'max-age': 123456789
         });
@@ -207,10 +189,7 @@ describe('util parseCacheControl', () => {
         });
 
         expect(parseCacheControl('max-age=null')).toEqual({});
-
-        done();
-    }));
-
+    });
 });
 
 describe('util findLineIntersection', () => {

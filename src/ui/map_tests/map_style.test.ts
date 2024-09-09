@@ -342,12 +342,11 @@ describe('#setStyle', () => {
 });
 
 describe('#getStyle', () => {
-    test('returns undefined if the style has not loaded yet', () => new Promise<void>(done => {
+    test('returns undefined if the style has not loaded yet', () => {
         const style = createStyle();
         const map = createMap({style});
         expect(map.getStyle()).toBeUndefined();
-        done();
-    }));
+    });
 
     test('returns the style', () => new Promise<void>(done => {
         const style = createStyle();

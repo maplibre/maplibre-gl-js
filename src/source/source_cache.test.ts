@@ -420,12 +420,11 @@ describe('SourceCache / Source lifecycle', () => {
         sourceCache.onAdd(undefined);
     }));
 
-    test('suppress 404 errors', () => new Promise<void>((done, fail) => {
+    test('suppress 404 errors', () => {
         const sourceCache = createSourceCache({status: 404, message: 'Not found'})
             .on('error', () => fail(new Error('test failed: error event fired')));
         sourceCache.onAdd(undefined);
-        done();
-    }));
+    });
 
     test('loaded() true after source error', () => new Promise<void>(done => {
         const sourceCache = createSourceCache({error: 'Error loading source'}).on('error', () => {
@@ -1689,7 +1688,7 @@ describe('source cache loaded', () => {
 });
 
 describe('source cache get ids', () => {
-    test('SourceCache#getIds (ascending order by zoom level)', () => new Promise<void>(done => {
+    test('SourceCache#getIds (ascending order by zoom level)', () => {
         const ids = [
             new OverscaledTileID(0, 0, 0, 0, 0),
             new OverscaledTileID(3, 0, 3, 0, 0),
@@ -1708,8 +1707,7 @@ describe('source cache get ids', () => {
             new OverscaledTileID(2, 0, 2, 0, 0).key,
             new OverscaledTileID(3, 0, 3, 0, 0).key
         ]);
-        done();
-    }));
+    });
 });
 
 describe('SourceCache#findLoadedParent', () => {

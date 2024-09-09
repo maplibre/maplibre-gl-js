@@ -14,12 +14,11 @@ beforeEach(() => {
 
 describe('Map#isZooming', () => {
 
-    test('returns false by default', () => new Promise<void>(done => {
+    test('returns false by default', () => {
         const map = createMap();
         expect(map.isZooming()).toBe(false);
         map.remove();
-        done();
-    }));
+    });
 
     test('returns true during a camera zoom animation', () => new Promise<void>(done => {
         const map = createMap();
