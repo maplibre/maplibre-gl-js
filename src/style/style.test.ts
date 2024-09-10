@@ -2187,7 +2187,7 @@ describe('Style#queryRenderedFeatures', () => {
     let style;
     let transform;
 
-    beforeEach(() => new Promise(callback => {
+    beforeEach(() => new Promise<void>(callback => {
         style = new Style(getStubMap());
         transform = new Transform();
         transform.resize(512, 512);
@@ -2421,7 +2421,7 @@ describe('Style#query*Features', () => {
     let onError;
     let transform;
 
-    beforeEach(() => new Promise(callback => {
+    beforeEach(() => new Promise<void>(callback => {
         transform = new Transform();
         transform.resize(100, 100);
         style = new Style(getStubMap());
