@@ -2187,7 +2187,7 @@ describe('Style#queryRenderedFeatures', () => {
     let style;
     let transform;
 
-    beforeEach((callback) => {
+    beforeEach(() => new Promise(callback => {
         style = new Style(getStubMap());
         transform = new Transform();
         transform.resize(512, 512);
@@ -2301,7 +2301,7 @@ describe('Style#queryRenderedFeatures', () => {
             style._updateSources(transform);
             callback();
         });
-    });
+    }));
 
     afterEach(() => {
         style = undefined;
@@ -2421,7 +2421,7 @@ describe('Style#query*Features', () => {
     let onError;
     let transform;
 
-    beforeEach((callback) => {
+    beforeEach(() => new Promise(callback => {
         transform = new Transform();
         transform.resize(100, 100);
         style = new Style(getStubMap());
@@ -2443,7 +2443,7 @@ describe('Style#query*Features', () => {
             .on('style.load', () => {
                 callback();
             });
-    });
+    }));
 
     test('querySourceFeatures emits an error on incorrect filter', () => {
         expect(style.querySourceFeatures([10, 100], {filter: 7}, transform)).toEqual([]);
