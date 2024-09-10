@@ -62,7 +62,7 @@ describe('tap_drag_zoom', () => {
 
     });
 
-    test('TapDragZoomHandler does not fire zoom on tap and drag if touchstart events are > 500ms apart', () => new Promise<void>(done => {
+    test('TapDragZoomHandler does not fire zoom on tap and drag if touchstart events are > 500ms apart', async () => {
         const map = createMap();
         const target = map.getCanvas();
 
@@ -74,19 +74,19 @@ describe('tap_drag_zoom', () => {
 
         simulate.touchstart(target, pointTouchOptions);
         simulate.touchend(target);
-        setTimeout(() => {
-            simulate.touchstart(target, pointTouchOptions);
-            simulate.touchmove(target, {
-                touches: [{target, clientX: 100, clientY: 110}]
-            });
-            map._renderTaskQueue.run();
 
-            expect(zoomstart).not.toHaveBeenCalled();
-            expect(zoom).not.toHaveBeenCalled();
-            expect(zoomend).not.toHaveBeenCalled();
-            done();
-        }, 510);
-    }));
+        await new Promise(resolve => setTimeout(resolve, 510));
+
+        simulate.touchstart(target, pointTouchOptions);
+        simulate.touchmove(target, {
+            touches: [{target, clientX: 100, clientY: 110}]
+        });
+        map._renderTaskQueue.run();
+
+        expect(zoomstart).not.toHaveBeenCalled();
+        expect(zoom).not.toHaveBeenCalled();
+        expect(zoomend).not.toHaveBeenCalled();
+    });
 
     test('TapDragZoomHandler does not zoom on double-tap and drag if touchstart events are in different locations (>30px apart)', () => {
         const map = createMap();

@@ -8,19 +8,17 @@ describe('throttle', () => {
         expect(executionCount).toBe(0);
     });
 
-    test('executes unthrottled function once per tick when period is 0', () => new Promise<void>(done => {
+    test('executes unthrottled function once per tick when period is 0', async () => {
         let executionCount = 0;
         const throttledFunction = throttle(() => { executionCount++; }, 0);
         throttledFunction();
         throttledFunction();
         expect(executionCount).toBe(1);
-        setTimeout(() => {
-            throttledFunction();
-            throttledFunction();
-            expect(executionCount).toBe(2);
-            done();
-        }, 0);
-    }));
+        await new Promise(resolve => setTimeout(resolve, 0));
+        throttledFunction();
+        throttledFunction();
+        expect(executionCount).toBe(2);
+    });
 
     test('executes unthrottled function immediately once when period is > 0', () => {
         let executionCount = 0;
@@ -31,15 +29,13 @@ describe('throttle', () => {
         expect(executionCount).toBe(1);
     });
 
-    test('queues exactly one execution of unthrottled function when period is > 0', () => new Promise<void>(done => {
+    test('queues exactly one execution of unthrottled function when period is > 0', async () => {
         let executionCount = 0;
         const throttledFunction = throttle(() => { executionCount++; }, 5);
         throttledFunction();
         throttledFunction();
         throttledFunction();
-        setTimeout(() => {
-            expect(executionCount).toBe(2);
-            done();
-        }, 10);
-    }));
+        await new Promise(resolve => setTimeout(resolve, 10));
+        expect(executionCount).toBe(2);
+    });
 });
