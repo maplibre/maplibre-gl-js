@@ -16,6 +16,7 @@ using `transformCameraUpdate` caused the `maxBounds` to stop working just for ea
 - Fix the color near the horizon when terrain is enabled without any sky ([#4607](https://github.com/maplibre/maplibre-gl-js/pull/4607))
 - Fix bug where `fitBounds` and `cameraForBounds` would not display accross the 180th meridian (antimeridian)
 - Fix white flickering on map resize ([#4158](https://github.com/maplibre/maplibre-gl-js/pull/4158))
+- Fix circle won't render on mesa 24.1 with AMD GPU ([#4062](https://github.com/maplibre/maplibre-gl-js/issues/4062))
 - _...Add new stuff here..._
 
 ## 4.6.0
