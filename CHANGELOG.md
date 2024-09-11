@@ -1,12 +1,17 @@
 ## main
 
-- Fix a bug where cloning a Transform instance didn't include the `lngRange`. This caused a bug where
-using `transformCameraUpdate` caused the `maxBounds` to stop working just for east/west bounds.
+### ✨ Features and improvements
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 4.7.0
 
 ### ✨ Features and improvements
-- Support multiple layers in `map.on`, `map.once` and `map.off` methods ([#4279](https://github.com/maplibre/maplibre-gl-js/pull/4401))
+
+- Support multiple layers in `map.on`, `map.once` and `map.off` methods ([#4570](https://github.com/maplibre/maplibre-gl-js/pull/4570))
 - Ensure GeoJSON cluster sources emit a console warning if `maxzoom` is less than or equal to `clusterMaxZoom` since in this case you may see unexpected results. ([#4604](https://github.com/maplibre/maplibre-gl-js/pull/4604))
-- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 
@@ -17,7 +22,8 @@ using `transformCameraUpdate` caused the `maxBounds` to stop working just for ea
 - Fix bug where `fitBounds` and `cameraForBounds` would not display across the 180th meridian (antimeridian)
 - Fix white flickering on map resize ([#4158](https://github.com/maplibre/maplibre-gl-js/pull/4158))
 - Fixed a performance regression related to symbol placement ([#4599](https://github.com/maplibre/maplibre-gl-js/pull/4599))
-- _...Add new stuff here..._
+- Fix a bug where cloning a Transform instance didn't include the `lngRange`. This caused a bug where
+using `transformCameraUpdate` caused the `maxBounds` to stop working just for east/west bounds. ([#4625](https://github.com/maplibre/maplibre-gl-js/pull/4625))
 
 ## 4.6.0
 
