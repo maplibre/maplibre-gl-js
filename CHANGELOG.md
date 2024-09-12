@@ -4,6 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix circle won't render on mesa 24.1 with AMD GPU ([#4062](https://github.com/maplibre/maplibre-gl-js/issues/4062))
 - _...Add new stuff here..._
 
 ## 4.7.0

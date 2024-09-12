@@ -20,9 +20,7 @@ void main() {
 
     vec2 extrude = v_data.xy;
     float extrude_length = length(extrude);
-
-    lowp float antialiasblur = v_data.z;
-    float antialiased_blur = -max(blur, antialiasblur);
+    float antialiased_blur = v_data.z;
 
     float opacity_t = smoothstep(0.0, antialiased_blur, extrude_length - 1.0);
 
