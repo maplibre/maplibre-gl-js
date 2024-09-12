@@ -518,6 +518,10 @@ export class Transform {
      * This method works in combination with freezeElevation activated.
      * freezeElevation is enabled during map-panning because during this the camera should sit in constant height.
      * After panning finished, call this method to recalculate the zoomlevel for the current camera-height in current terrain.
+     *
+     * If any of the values would lead to an invalid zoom, the recalculation is
+     * skipped and an error logged to the console.
+     *
      * @param terrain - the terrain
      */
     recalculateZoom(terrain: Terrain) {
@@ -539,15 +543,20 @@ export class Transform {
         const requiredWorldSize = requiredPixelPerMeter / mercatorZfromAltitude(1, center.lat);
         // Since worldSize = this.tileSize * scale:
         const requiredScale = requiredWorldSize / this.tileSize;
+        const zoom = this.scaleZoom(requiredScale);
+
+        // First try the recalculation on a clone. If setting the zoom throws,
+        // don't recalculate the zoom.
+        const clonedTransform = this.clone();
+        clonedTransform._elevation = elevation;
+        clonedTransform._center = center;
         try {
-            const zoom = this.scaleZoom(requiredScale);
-            // update matrices
-            this._elevation = elevation;
-            this._center = center;
-            this.zoom = zoom;
+            clonedTransform.zoom = zoom;
         } catch (_e) {
             console.error(`Could not recalculate zoom. requiredScale: ${requiredScale}`);
+            return;
         }
+        this.apply(clonedTransform);
     }
 
     setLocationAtPoint(lnglat: LngLat, point: Point) {
