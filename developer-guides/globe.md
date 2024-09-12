@@ -165,9 +165,9 @@ MapLibre computed well-fitting bounding boxes even for curved symbols under glob
 by computing the AABB from a projection of the symbol's box' corners and box edge midpoints.
 This is an approximation, but works well in practice. 
 
-## Transformations and unprojection
+## Transformations and unproject
 
-Most projection and unprojection functions from the transform interface are adapted for globe,
+Most projection and unproject functions from the transform interface are adapted for globe,
 with some caveats.
 The `setLocationAtPoint`function may sometimes not find a valid solution
 for the given parameters.
