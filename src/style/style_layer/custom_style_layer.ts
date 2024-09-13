@@ -10,7 +10,7 @@ type CustomRenderMethodInput = {
     /**
      * This value represents the distance from the camera to the far clipping plane.
      * It is used in the calculation of the projection matrix to determine which objects are visible.
-     * farz should be larger than nearZ.
+     * farZ should be larger than nearZ.
      */
     farZ: number;
     /**

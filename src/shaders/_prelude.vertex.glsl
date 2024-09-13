@@ -109,7 +109,7 @@ highp float depthOpacity(vec3 frag) {
 float calculate_visibility(vec4 pos) {
     #ifdef TERRAIN3D
         vec3 frag = pos.xyz / pos.w;
-        // check if coordingate is fully visible
+        // check if coordinate is fully visible
         highp float d = depthOpacity(frag);
         if (d > 0.95) return 1.0;
         // if not, go some pixel above and check it this point is visible
