@@ -91,12 +91,9 @@ Note too that if the CSS isn't available by the first render, as soon as the CSS
 
 ## CDN
 
-The MapLibre GL JS (`.js` & `.css`) are distributed via [UNPKG.com](https://unpkg.com).
-You can view a listing of all the files in the MapLibre GL JS package by appending a `/` at the end of the MapLibre slug. This is useful to review other revisions or to review the files at UNPKG or the LICENSE. See examples in the following table:
+MapLibre GL JS is also distributed via UNPKG. Our latest version can installed by adding below tags this in the html `<head>`. Further instructions on how to select specific versions and semver ranges can be found on at [unpkg.com](https://unpkg.com):
 
-### Examples
-
-| Use Case  | `.js` | `.css` |
-| :------- | :---: | :----: |
-| `latest` | <https://unpkg.com/maplibre-gl/dist/maplibre-gl.js> | <https://unpkg.com/maplibre-gl/dist/maplibre-gl.css> |
-| Use at least `2.4.x` | <https://unpkg.com/maplibre-gl@^2.4/dist/maplibre-gl.js> | <https://unpkg.com/maplibre-gl@^2.4/dist/maplibre-gl.css> |
+```html
+<script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
+<link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet" />
+```
