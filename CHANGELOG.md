@@ -1,9 +1,11 @@
 ## main
 
 ### ✨ Features and improvements
-- _...Add new stuff here..._
+
+- Doc plugins page generated from Awesome MapLibre ([#4707](https://github.com/maplibre/maplibre-gl-js/pull/4707))
 
 ### 🐞 Bug fixes
+
 - Fix circle won't render on mesa 24.1 with AMD GPU ([#4062](https://github.com/maplibre/maplibre-gl-js/issues/4062))
 - _...Add new stuff here..._
 
