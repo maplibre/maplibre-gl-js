@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import typedocConfig from '../typedoc.json' with {type: 'json'};
 import packageJson from '../package.json' with {type: 'json'};
+import fetch from 'node-fetch';
 
 type HtmlDoc = {
     title: string;
@@ -110,6 +111,76 @@ function generateExamplesFolder() {
     fs.writeFileSync(path.join(examplesDocsFolder, 'index.md'), indexMarkdown);
 }
 
+/**
+ * It extract some content from a reference file (README.md) and replace extracts into
+ * a template file.
+ *
+ * you need to define some boundaries in your reference file with
+ *
+ * ```
+ *    header
+ *    <!-- [SOME-ID]:BEGIN -->
+ *    CONTENT-TO-EXTRACT
+ *    <!-- [SOME-ID]:END -->
+ *    footer
+ * ```
+ *
+ * and some placeholders in your template file with
+ *
+ * ```
+ *    Template header
+ *    <!-- [SOME-ID] -->
+ * ```
+ *
+ * the extracted content would be replaced in the placeholders of the template file.
+ * and produce the following output.
+ *
+ * ```
+ *    Template header
+ *    CONTENT-TO-EXTRACT
+ * ```
+
+ */
+function extractContent(reference: string, template: string) {
+    const contentGroupsRE =
+  /<!--\s*\[([-a-zA-Z]+)\]:BEGIN\s*-->([\s\S]*?)<!--\s*\[\1\]:END\s*-->/g;
+
+    const matches = reference.matchAll(contentGroupsRE);
+    const groups = Object.fromEntries(
+        Array.from(matches).map(([, key, content]) => [key, content])
+    );
+
+    const contentPlaceholdersRE = /<!--\s*\[([-a-zA-Z]+)\]\s*-->/g;
+    const placeholderMatches = template.matchAll(contentPlaceholdersRE);
+
+    for (const [placeholder, identifier] of placeholderMatches) {
+        if (!groups[identifier]) {
+            throw new Error(
+                `Referenced identifier ${identifier} is not present in reference file.`
+            );
+        }
+        template = template.replace(placeholder, groups[identifier]);
+    }
+
+    return template;
+}
+
+async function generatePluginsPage() {
+    const awesomeReadmeUrl = 'https://raw.githubusercontent.com/maplibre/awesome-maplibre/main/README.md';
+    const awesomeReadme = await fetch(awesomeReadmeUrl).then(res => res.text());
+
+    const pluginsTemplate = `# Plugins
+
+<!-- [JAVASCRIPT-PLUGINS] -->
+
+## Framework Integrations
+
+<!-- [JAVASCRIPT-BINDINGS] -->
+`;
+    const content = extractContent(awesomeReadme, pluginsTemplate);
+    fs.writeFileSync('docs/plugins.md', content, {encoding: 'utf-8'});
+}
+
 // !!Main flow start here!!
 if (!fs.existsSync(typedocConfig.out)) {
     throw new Error('Please run typedoc generation first!');
@@ -117,4 +188,5 @@ if (!fs.existsSync(typedocConfig.out)) {
 fs.rmSync(path.join(typedocConfig.out, 'README.md'));
 generateReadme();
 generateExamplesFolder();
+await generatePluginsPage();
 console.log('Docs generation completed, to see it in action run\n npm run start-docs');
