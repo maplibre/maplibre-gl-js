@@ -91,7 +91,7 @@ Note too that if the CSS isn't available by the first render, as soon as the CSS
 
 ## CDN
 
-MapLibre GL JS is also distributed via UNPKG. Our latest version can installed by adding below tags this in the html `<head>`. Further instructions on how to select specific versions and semver ranges can be found on at [unpkg.com](https://unpkg.com):
+MapLibre GL JS is also distributed via UNPKG. Our latest version can installed by adding below tags this in the html `<head>`. Further instructions on how to select specific versions and semver ranges can be found on at [unpkg.com](https://unpkg.com).
 
 ```html
 <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
