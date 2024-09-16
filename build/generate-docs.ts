@@ -131,64 +131,39 @@ async function fetchUrlContent(url: string) {
     });
 }
 
-/**
- * It extract some sections from a reference content and reinsert them into a template content.
- *
- * you need to define some boundaries in your reference content with
- *
- * ```
- *    header
- *    <!-- [SOME-ID]:BEGIN -->
- *    CONTENT-TO-EXTRACT
- *    <!-- [SOME-ID]:END -->
- *    footer
- * ```
- *
- * and some placeholders in your template content with
- *
- * ```
- *    Template header
- *    <!-- [SOME-ID] -->
- * ```
- *
- * the extracted content would be replaced in the placeholders of the template content.
- * and produce the following output.
- *
- * ```
- *    Template header
- *    CONTENT-TO-EXTRACT
- * ```
-
- */
-function extractContent(reference: string, template: string) {
-    const contentGroupsRE =
-  /<!--\s*\[([-a-zA-Z]+)\]:BEGIN\s*-->([\s\S]*?)<!--\s*\[\1\]:END\s*-->/g;
-
-    const matches = reference.matchAll(contentGroupsRE);
-    const groups = Object.fromEntries(
-        Array.from(matches).map(([, key, content]) => [key, content])
-    );
-
-    const contentPlaceholdersRE = /<!--\s*\[([-a-zA-Z]+)\]\s*-->/g;
-    const placeholderMatches = template.matchAll(contentPlaceholdersRE);
-
-    for (const [placeholder, identifier] of placeholderMatches) {
-        if (!groups[identifier]) {
-            throw new Error(
-                `Referenced identifier ${identifier} is not present in reference file.`
-            );
-        }
-        template = template.replace(placeholder, groups[identifier]);
-    }
-
-    return template;
-}
-
 async function generatePluginsPage() {
+    /**
+     * It extract some sections from Awesome MapLibre README.md and reinsert them into a template content.
+     * you need to define some boundaries in your README.md content with
+     *
+     * ```
+     *    header
+     *    <!-- [SOME-ID]:BEGIN -->
+     *    CONTENT-TO-EXTRACT
+     *    <!-- [SOME-ID]:END -->
+     *    footer
+     * ```
+     *
+     * and some placeholders in your template content with
+     *
+     * ```
+     *    Template header
+     *    <!-- [SOME-ID] -->
+     * ```
+     *
+     * the extracted content would be replaced in the placeholders of the template content.
+     * and produce the following output.
+     *
+     * ```
+     *    Template header
+     *    CONTENT-TO-EXTRACT
+     * ```
+
+    */
     const awesomeReadmeUrl = 'https://raw.githubusercontent.com/maplibre/awesome-maplibre/main/README.md';
     const awesomeReadme = await fetchUrlContent(awesomeReadmeUrl);
 
-    const pluginsTemplate = `# Plugins
+    let pluginsTemplate = `# Plugins
 
 <!-- [JAVASCRIPT-PLUGINS] -->
 
@@ -196,8 +171,27 @@ async function generatePluginsPage() {
 
 <!-- [JAVASCRIPT-BINDINGS] -->
 `;
-    const content = extractContent(awesomeReadme, pluginsTemplate);
-    fs.writeFileSync('docs/plugins.md', content, {encoding: 'utf-8'});
+
+    const contentGroupsRE = /<!--\s*\[([-a-zA-Z]+)\]:BEGIN\s*-->([\s\S]*?)<!--\s*\[\1\]:END\s*-->/g;
+
+    const matches = awesomeReadme.matchAll(contentGroupsRE);
+    const groups = Object.fromEntries(
+        Array.from(matches).map(([, key, content]) => [key, content])
+    );
+
+    const contentPlaceholdersRE = /<!--\s*\[([-a-zA-Z]+)\]\s*-->/g;
+    const placeholderMatches = pluginsTemplate.matchAll(contentPlaceholdersRE);
+
+    for (const [placeholder, identifier] of placeholderMatches) {
+        if (!groups[identifier]) {
+            throw new Error(
+                `Referenced identifier ${identifier} is not present in awesomeReadme file.`
+            );
+        }
+        pluginsTemplate = pluginsTemplate.replace(placeholder, groups[identifier]);
+    }
+
+    fs.writeFileSync('docs/plugins.md', pluginsTemplate, {encoding: 'utf-8'});
 }
 
 // !!Main flow start here!!
