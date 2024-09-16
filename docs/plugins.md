@@ -282,7 +282,7 @@ Converts GeoJSON styles with [simplestyle-spec](https://github.com/mapbox/simple
 
 #### mapbox-gl-sync-move
 
-Syncs movement between two maps.
+Syncs movement between multiple maps.
 <br/><small>[View on GitHub](https://github.com/mapbox/mapbox-gl-sync-move)</small>
 
 #### mapbox-choropleth
