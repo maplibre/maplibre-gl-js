@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import typedocConfig from '../typedoc.json' with {type: 'json'};
 import packageJson from '../package.json' with {type: 'json'};
-import fetch from 'node-fetch';
+import {get} from 'https';
 
 type HtmlDoc = {
     title: string;
@@ -111,11 +111,30 @@ function generateExamplesFolder() {
     fs.writeFileSync(path.join(examplesDocsFolder, 'index.md'), indexMarkdown);
 }
 
+async function fetchUrlContent(url: string) {
+    return new Promise<string>((resolve, reject) => {
+        get(url, (res) => {
+            let data = '';
+            if (res.statusCode && (res.statusCode < 200 || res.statusCode >= 300)) {
+                reject(new Error(res.statusMessage));
+                return;
+            }
+
+            res.on('data', (chunk) => {
+                data += chunk;
+            });
+
+            res.on('end', () => {
+                resolve(data);
+            });
+        }).on('error', reject);
+    });
+}
+
 /**
- * It extract some content from a reference file (README.md) and replace extracts into
- * a template file.
+ * It extract some sections from a reference content and reinsert them into a template content.
  *
- * you need to define some boundaries in your reference file with
+ * you need to define some boundaries in your reference content with
  *
  * ```
  *    header
@@ -125,14 +144,14 @@ function generateExamplesFolder() {
  *    footer
  * ```
  *
- * and some placeholders in your template file with
+ * and some placeholders in your template content with
  *
  * ```
  *    Template header
  *    <!-- [SOME-ID] -->
  * ```
  *
- * the extracted content would be replaced in the placeholders of the template file.
+ * the extracted content would be replaced in the placeholders of the template content.
  * and produce the following output.
  *
  * ```
@@ -167,7 +186,7 @@ function extractContent(reference: string, template: string) {
 
 async function generatePluginsPage() {
     const awesomeReadmeUrl = 'https://raw.githubusercontent.com/maplibre/awesome-maplibre/main/README.md';
-    const awesomeReadme = await fetch(awesomeReadmeUrl).then(res => res.text());
+    const awesomeReadme = await fetchUrlContent(awesomeReadmeUrl);
 
     const pluginsTemplate = `# Plugins
 
