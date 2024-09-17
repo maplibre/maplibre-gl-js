@@ -133,8 +133,7 @@ async function fetchUrlContent(url: string) {
 
 async function generatePluginsPage() {
     /**
-     * It extract some sections from Awesome MapLibre README.md and reinsert them into a template content.
-     * you need to define some boundaries in your README.md content with
+     * It extract some sections from Awesome MapLibre README.md so we can integrate it into our plugins page
      *
      * ```
      *    header
@@ -143,34 +142,9 @@ async function generatePluginsPage() {
      *    <!-- [SOME-ID]:END -->
      *    footer
      * ```
-     *
-     * and some placeholders in your template content with
-     *
-     * ```
-     *    Template header
-     *    <!-- [SOME-ID] -->
-     * ```
-     *
-     * the extracted content would be replaced in the placeholders of the template content.
-     * and produce the following output.
-     *
-     * ```
-     *    Template header
-     *    CONTENT-TO-EXTRACT
-     * ```
-
-    */
+     */
     const awesomeReadmeUrl = 'https://raw.githubusercontent.com/maplibre/awesome-maplibre/main/README.md';
     const awesomeReadme = await fetchUrlContent(awesomeReadmeUrl);
-
-    let pluginsTemplate = `# Plugins
-
-<!-- [JAVASCRIPT-PLUGINS] -->
-
-## Framework Integrations
-
-<!-- [JAVASCRIPT-BINDINGS] -->
-`;
 
     const contentGroupsRE = /<!--\s*\[([-a-zA-Z]+)\]:BEGIN\s*-->([\s\S]*?)<!--\s*\[\1\]:END\s*-->/g;
 
@@ -179,19 +153,16 @@ async function generatePluginsPage() {
         Array.from(matches).map(([, key, content]) => [key, content])
     );
 
-    const contentPlaceholdersRE = /<!--\s*\[([-a-zA-Z]+)\]\s*-->/g;
-    const placeholderMatches = pluginsTemplate.matchAll(contentPlaceholdersRE);
+    const pluginsContent = `# Plugins
 
-    for (const [placeholder, identifier] of placeholderMatches) {
-        if (!groups[identifier]) {
-            throw new Error(
-                `Referenced identifier ${identifier} is not present in awesomeReadme file.`
-            );
-        }
-        pluginsTemplate = pluginsTemplate.replace(placeholder, groups[identifier]);
-    }
+${groups['JAVASCRIPT-PLUGINS']}
 
-    fs.writeFileSync('docs/plugins.md', pluginsTemplate, {encoding: 'utf-8'});
+## Framework Integrations
+
+${groups['JAVASCRIPT-BINDINGS']}
+`;
+
+    fs.writeFileSync('docs/plugins.md', pluginsContent, {encoding: 'utf-8'});
 }
 
 // !!Main flow start here!!
