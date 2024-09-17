@@ -72,7 +72,7 @@
     "@types/offscreencanvas": "^2019.7.3",
     "@types/pixelmatch": "^5.2.6",
     "@types/pngjs": "^6.0.5",
-    "@types/react": "^18.3.5",
+    "@types/react": "^18.3.6",
     "@types/react-dom": "^18.3.0",
     "@types/request": "^2.48.12",
     "@types/shuffle-seed": "^1.1.3",
