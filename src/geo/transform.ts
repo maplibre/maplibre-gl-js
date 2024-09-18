@@ -800,8 +800,10 @@ export class Transform {
         // |        -———————————-        |
         // |_____________________________|
 
+        // this._allowUnderzoom
         const allowUnderzoom = true;
 
+        // this._underzoomScale
         const userUnderzoomScale = 0.2; // Range 1.0 to 0.5
         const underzoomScale =
             this._renderWorldCopies ?
@@ -857,12 +859,11 @@ export class Transform {
         // and likewise no farther upwards than the center of the viewport.
         // Due to the complexity and consequence of altering project() or MAX_VALID_LATITUDE, we'll simply limit
         // the overpanRatio to 1.0 to match that external limit.
+        // this._overpanScale
         const userOverpanRatio = 0.0; // If 0.0, you may not overpan the bounds; if 1.0, you may overpan the bounds to 100% to the center
-        let lngOverpanRatio, latOverpanRatio;
-        if (this._renderWorldCopies && !allowUnderzoom) {
-            lngOverpanRatio = 0.0;
-            latOverpanRatio = 0.0;
-        } else {
+        let lngOverpanRatio = 0.0;
+        let latOverpanRatio = 0.0;
+        if (!this._renderWorldCopies && allowUnderzoom) {
             const overpanRatio = clamp(userOverpanRatio, 0.0, 1.0);
             const latUnderzoomMinimumPanRatio = 1 - ((maxY - minY) / screenHeight);
             const lngUnderzoomMinimumPanRatio = 1 - ((maxX - minX) / screenWidth);
