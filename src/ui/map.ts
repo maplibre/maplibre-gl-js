@@ -56,6 +56,7 @@ import type {
     TerrainSpecification,
     SkySpecification
 } from '@maplibre/maplibre-gl-style-spec';
+import type {CanvasSourceSpecification} from '../source/canvas_source';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
@@ -637,7 +638,8 @@ export class Map extends Camera {
             let initialResizeEventCaptured = false;
             const throttledResizeCallback = throttle((entries: ResizeObserverEntry[]) => {
                 if (this._trackResize && !this._removed) {
-                    this.resize(entries)._update();
+                    this.resize(entries);
+                    this.redraw();
                 }
             }, 50);
             this._resizeObserver = new ResizeObserver((entries) => {
@@ -1930,7 +1932,7 @@ export class Map extends Camera {
      * ```
      * @see GeoJSON source: [Add live realtime data](https://maplibre.org/maplibre-gl-js/docs/examples/live-geojson/)
      */
-    addSource(id: string, source: SourceSpecification): this {
+    addSource(id: string, source: SourceSpecification | CanvasSourceSpecification): this {
         this._lazyInitEmptyStyle();
         this.style.addSource(id, source);
         return this._update(true);
@@ -2089,8 +2091,8 @@ export class Map extends Camera {
      * @see [Animate a point](https://maplibre.org/maplibre-gl-js/docs/examples/animate-point-along-line/)
      * @see [Add live realtime data](https://maplibre.org/maplibre-gl-js/docs/examples/live-geojson/)
      */
-    getSource(id: string): Source | undefined {
-        return this.style.getSource(id);
+    getSource<TSource extends Source>(id: string): TSource | undefined {
+        return this.style.getSource(id) as TSource;
     }
 
     /**

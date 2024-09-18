@@ -23,7 +23,7 @@ void main(void) {
     #pragma mapbox: initialize highp float weight
     #pragma mapbox: initialize mediump float radius
 
-    // unencode the extrusion vector that we snuck into the a_pos vector
+    // decode the extrusion vector that we snuck into the a_pos vector
     vec2 unscaled_extrude = vec2(mod(a_pos, 2.0) * 2.0 - 1.0);
 
     // This 'extrude' comes in ranging from [-1, -1], to [1, 1].  We'll use

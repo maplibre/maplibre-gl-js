@@ -64,7 +64,7 @@ export class Transform {
     /**
      * This value represents the distance from the camera to the far clipping plane.
      * It is used in the calculation of the projection matrix to determine which objects are visible.
-     * farz should be larger than nearZ.
+     * farZ should be larger than nearZ.
      */
     farZ: number;
     /**
@@ -111,6 +111,7 @@ export class Transform {
     apply(that: Transform) {
         this.tileSize = that.tileSize;
         this.latRange = that.latRange;
+        this.lngRange = that.lngRange;
         this.width = that.width;
         this.height = that.height;
         this._center = that._center;

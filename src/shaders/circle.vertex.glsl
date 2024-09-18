@@ -27,7 +27,7 @@ void main(void) {
     #pragma mapbox: initialize mediump float stroke_width
     #pragma mapbox: initialize lowp float stroke_opacity
 
-    // unencode the extrusion vector that we snuck into the a_pos vector
+    // decode the extrusion vector that we snuck into the a_pos vector
     vec2 extrude = vec2(mod(a_pos, 2.0) * 2.0 - 1.0);
 
     // multiply a_pos by 0.5, since we had it * 2 in order to sneak
@@ -62,7 +62,7 @@ void main(void) {
     // This is a minimum blur distance that serves as a faux-antialiasing for
     // the circle. since blur is a ratio of the circle's size and the intent is
     // to keep the blur at roughly 1px, the two are inversely related.
-    lowp float antialiasblur = 1.0 / u_device_pixel_ratio / (radius + stroke_width);
+    float antialiasblur = -max(1.0 / u_device_pixel_ratio / (radius + stroke_width), blur);
 
     v_data = vec3(extrude.x, extrude.y, antialiasblur);
 }

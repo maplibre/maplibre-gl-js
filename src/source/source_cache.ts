@@ -11,6 +11,7 @@ import Point from '@mapbox/point-geometry';
 import {browser} from '../util/browser';
 import {OverscaledTileID} from './tile_id';
 import {SourceFeatureState} from './source_state';
+import {config} from '../util/config';
 
 import type {Source} from './source';
 import type {Map} from '../ui/map';
@@ -20,8 +21,8 @@ import type {Transform} from '../geo/transform';
 import type {TileState} from './tile';
 import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapSourceDataEvent} from '../ui/events';
-import {Terrain} from '../render/terrain';
-import {config} from '../util/config';
+import type {Terrain} from '../render/terrain';
+import type {CanvasSourceSpecification} from './canvas_source';
 
 /**
  * @internal
@@ -78,7 +79,7 @@ export class SourceCache extends Evented {
     static maxUnderzooming: number;
     static maxOverzooming: number;
 
-    constructor(id: string, options: SourceSpecification, dispatcher: Dispatcher) {
+    constructor(id: string, options: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher) {
         super();
         this.id = id;
         this.dispatcher = dispatcher;
@@ -453,7 +454,7 @@ export class SourceCache extends Evented {
 
     handleWrapJump(lng: number) {
         // On top of the regular z/x/y values, TileIDs have a `wrap` value that specify
-        // which cppy of the world the tile belongs to. For example, at `lng: 10` you
+        // which copy of the world the tile belongs to. For example, at `lng: 10` you
         // might render z/x/y/0 while at `lng: 370` you would render z/x/y/1.
         //
         // When lng values get wrapped (going from `lng: 370` to `long: 10`) you expect

@@ -2099,6 +2099,25 @@ describe('#fitBounds', () => {
             bottom: 0
         });
     });
+
+    test('fiji (crossing antimeridian)', () => {
+        const camera = createCamera();
+        const bb = [[175.813127, -20.157768], [-178.340903, -15.449124]];
+        camera.fitBounds(bb, {duration: 0});
+
+        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: 178.7361, lat: -17.819});
+        expect(fixedNum(camera.getZoom(), 3)).toBe(5.944);
+    });
+
+    test('not crossing antimeridian', () => {
+        const camera = createCamera();
+        const bb = [[-10, -10], [10, 10]];
+        camera.fitBounds(bb, {duration: 0});
+
+        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: 0, lat: 0});
+        expect(fixedNum(camera.getZoom(), 3)).toBe(4.163);
+    });
+
 });
 
 describe('#fitScreenCoordinates', () => {

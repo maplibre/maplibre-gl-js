@@ -21,14 +21,14 @@ describe('style utils', () => {
 
         test('duplicated entries should be removed', () => {
             const spriteWithDuplicatedEntries = [
-                {id: 'sprite1', url: 'http://www.dummy.com'},
-                {id: 'sprite1', url: 'http://www.dummy.com'}];
+                {id: 'sprite1', url: 'https://example.com'},
+                {id: 'sprite1', url: 'https://example.com'}];
 
             const result = coerceSpriteToArray(spriteWithDuplicatedEntries);
 
             expect(result).toHaveLength(1);
             expect(result[0].id).toBe('sprite1');
-            expect(result[0].url).toBe('http://www.dummy.com');
+            expect(result[0].url).toBe('https://example.com');
         });
     });
 });
