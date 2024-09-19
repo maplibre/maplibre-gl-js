@@ -1785,7 +1785,9 @@ describe('#flyTo', () => {
         };
         camera.transform = {
             elevation: 0,
-            recalculateZoom: () => true
+            recalculateZoom: () => true,
+            clone: () => camera.transform,
+            apply: () => {},
         };
 
         camera._prepareElevation([10, 0]);
