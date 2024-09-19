@@ -1,4 +1,4 @@
-import { sleep } from './test/util';
+import {sleep} from './test/util';
 import {throttle} from './throttle';
 
 describe('throttle', () => {
