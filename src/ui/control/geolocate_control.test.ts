@@ -85,11 +85,7 @@ describe('GeolocateControl with no options', () => {
     test('does not throw if removed quickly', () => {
         (checkGeolocationSupport as any as jest.SpyInstance).mockReset()
             .mockImplementationOnce(() => {
-                return new Promise(resolve => {
-                    setTimeout(() => {
-                        resolve(true);
-                    }, 10);
-                });
+                return sleep(10);
             });
 
         const geolocate = new GeolocateControl(undefined);
