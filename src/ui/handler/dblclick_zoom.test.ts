@@ -1,5 +1,5 @@
 import simulate from '../../../test/unit/lib/simulate_interaction';
-import {beforeMapTest} from '../../util/test/util';
+import {beforeMapTest, sleep} from '../../util/test/util';
 import {Map, MapOptions} from '../map';
 
 function createMap() {
@@ -12,7 +12,7 @@ async function simulateDoubleTap(map, delay = 100) {
     simulate.touchstart(canvas, {touches: [{target: canvas, clientX: 0, clientY: 0}]});
     simulate.touchend(canvas);
 
-    await new Promise(resolve => setTimeout(resolve, delay));
+    await sleep(delay);
 
     simulate.touchstart(canvas, {touches: [{target: canvas, clientX: 0, clientY: 0}]});
     simulate.touchend(canvas);
@@ -88,7 +88,7 @@ describe('dbclick_zoom', () => {
 
         simulate.touchstart(canvas, {touches: [{clientX: 0, clientY: 0}]});
         simulate.touchend(canvas);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await sleep(100);
         simulate.touchstart(canvas, {touches: [{clientX: 30.5, clientY: 30.5}]});
         simulate.touchend(canvas);
         map._renderTaskQueue.run();
@@ -143,7 +143,7 @@ describe('dbclick_zoom', () => {
         simulate.touchstart(canvas);
         simulate.touchend(canvas);
         simulate.touchstart(canvas);
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await sleep(300);
         simulate.touchend(canvas);
         map._renderTaskQueue.run();
         expect(zoom).not.toHaveBeenCalled();

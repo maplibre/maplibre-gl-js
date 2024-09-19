@@ -1,4 +1,4 @@
-import {beforeMapTest} from '../../util/test/util';
+import {beforeMapTest, sleep} from '../../util/test/util';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {Map, MapOptions} from '../map';
 
@@ -75,7 +75,7 @@ describe('tap_drag_zoom', () => {
         simulate.touchstart(target, pointTouchOptions);
         simulate.touchend(target);
 
-        await new Promise(resolve => setTimeout(resolve, 510));
+        await sleep(510);
 
         simulate.touchstart(target, pointTouchOptions);
         simulate.touchmove(target, {

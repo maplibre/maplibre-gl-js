@@ -1,3 +1,4 @@
+import { sleep } from './test/util';
 import {throttle} from './throttle';
 
 describe('throttle', () => {
@@ -14,7 +15,7 @@ describe('throttle', () => {
         throttledFunction();
         throttledFunction();
         expect(executionCount).toBe(1);
-        await new Promise(resolve => setTimeout(resolve, 0));
+        await sleep(0);
         throttledFunction();
         throttledFunction();
         expect(executionCount).toBe(2);
@@ -35,7 +36,7 @@ describe('throttle', () => {
         throttledFunction();
         throttledFunction();
         throttledFunction();
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await sleep(10);
         expect(executionCount).toBe(2);
     });
 });

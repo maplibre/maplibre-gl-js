@@ -41,7 +41,7 @@ class SourceMock extends Evented implements Source {
                 expires: this.sourceOptions.expires
             });
         }
-        return new Promise(resolve => setTimeout(resolve, 0));
+        return sleep(0);
     }
     loaded() {
         return true;
