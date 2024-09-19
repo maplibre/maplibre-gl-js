@@ -168,7 +168,7 @@ ${groups['JAVASCRIPT-BINDINGS']}
 function updateMapLibreVersionForUNPKG() {
 
     // Read index.md
-    const indexPath = path.join(process.cwd(), 'docs/index.md');
+    const indexPath = 'docs/index.md';
     let indexContent = fs.readFileSync(indexPath, 'utf-8');
 
     // Replace the version number
