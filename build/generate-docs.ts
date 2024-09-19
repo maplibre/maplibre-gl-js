@@ -166,22 +166,16 @@ ${groups['JAVASCRIPT-BINDINGS']}
 }
 
 function updateMapLibreVersionForUNPKG() {
-    // Read the version from package.json
-    const packageJsonPath = path.join(process.cwd(), 'package.json');
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
-    const maplibreVersion = packageJson.version;
 
-    // Read the index.md file
+    // Read index.md
     const indexPath = path.join(process.cwd(), 'docs/index.md');
     let indexContent = fs.readFileSync(indexPath, 'utf-8');
 
-    // Replace the version number in the unpkg.com URL with the actual version
-    indexContent = indexContent.replace(/unpkg\.com\/maplibre-gl@\^(\d+\.\d+\.\d+)/g, `unpkg.com/maplibre-gl@^${maplibreVersion}`);
+    // Replace the version number
+    indexContent = indexContent.replace(/unpkg\.com\/maplibre-gl@\^(\d+\.\d+\.\d+)/g, `unpkg.com/maplibre-gl@^${packageJson.version}`);
 
-    // Write the updated content back to the index.md file
+    // Save index.md
     fs.writeFileSync(indexPath, indexContent);
-
-    console.log(`Updated MapLibre version to ${maplibreVersion} in docs/index.md`);
 }
 
 // !!Main flow start here!!
