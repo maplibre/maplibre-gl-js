@@ -104,7 +104,7 @@
     "jest-monocart-coverage": "^1.1.1",
     "jest-webgl-canvas-mock": "^2.5.3",
     "jsdom": "^25.0.0",
-    "junit-report-builder": "^5.0.0",
+    "junit-report-builder": "^5.1.1",
     "minimist": "^1.2.8",
     "mock-geolocation": "^1.0.11",
     "monocart-coverage-reports": "^2.10.9",
