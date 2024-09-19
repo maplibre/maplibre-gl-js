@@ -287,7 +287,7 @@ describe('Browser tests', () => {
     test('Fullscreen control should work in shadowdom as well', async () => {
         const fullscreenButtonTitle = await page.evaluate(async () => {
             function sleepInBrowser(milliseconds: number) {
-                return sleep(milliseconds);
+                return new Promise(resolve => setTimeout(resolve, milliseconds));
             }
 
             let map: Map;
