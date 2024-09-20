@@ -45,34 +45,31 @@
 <div id="map"></div>
 
 <table id="listing-group-bottom-left" class="listing-group">
-    <tr><td><label for="render-world-copies">render world copies</label></td><td><input type="checkbox" id="render-world-copies" unchecked/></td></tr>
     <tr><td><label for="allow-underzoom">allow underzoom</label></td><td><input type="checkbox" id="allow-underzoom" checked/></td></tr>
-    <tr><td><label for="underzoom-scale-slider">underzoom scale</label></td><td><input type="range" id="underzoom-scale-slider" min="0" max="1" step="0.1" value="0.8" /></td></tr>
-    <tr><td><label for="overpan-ratio-slider">overpan ratio</label></td><td><input type="range" id="overpan-ratio-slider" min="0" max="1" step="0.1" value="0.0" /></td></tr>
+    <tr><td><label for="underzoom-scale-slider" id="underzoom">underzoom scale</label></td><td><input type="range" id="underzoom-scale-slider" min="0" max="1" step="0.1" value="0.8" /></td></tr>
+    <tr><td><label for="overpan-ratio-slider" id="overpan">overpan ratio</label></td><td><input type="range" id="overpan-ratio-slider" min="0" max="1" step="0.1" value="1.0" /></td></tr>
 </table>
 
 <table id="listing-group-top-left" class="listing-group">
     <tr><td><label for="zoom-out">zoom out upon change</label></td><td><input type="checkbox" id="zoom-out" checked/></td></tr>
 </table>
+    
 <script>
     function setUnderzoomFromUi() {
-        map.setRenderWorldCopies(
-            document.getElementById('render-world-copies').checked
-        )
         map.setAllowUnderzoom(
             document.getElementById('allow-underzoom').checked
         )
-        map.setUnderzoomScale(
-            document.getElementById('underzoom-scale-slider').value
-        )
+        const underzoom = parseFloat(document.getElementById('underzoom-scale-slider').value);
+        map.setUnderzoomScale(underzoom)
+        document.getElementById("underzoom").textContent=`underzoom scale (${underzoom.toFixed(1)})`;
         if (document.getElementById('zoom-out').checked) {
             map.setZoom(-Infinity);
         }
     }
     function setOverpanFromUi() {
-        map.setOverpanRatio(
-            document.getElementById('overpan-ratio-slider').value
-        )
+        const overpan = parseFloat(document.getElementById('overpan-ratio-slider').value);
+        map.setOverpanRatio(overpan)
+        document.getElementById("overpan").textContent=`overpan ratio (${overpan.toFixed(1)}:1.0)`;
     }
     
     // Set bounds to Amsterdam, Netherlands
@@ -151,10 +148,9 @@
                 'line-offset': -2,
             }
         });
-        document.getElementById('render-world-copies').addEventListener('change', setUnderzoomFromUi);
         document.getElementById('allow-underzoom').addEventListener('change', setUnderzoomFromUi);
-        document.getElementById('underzoom-scale-slider').addEventListener('change', setUnderzoomFromUi);
-        document.getElementById('overpan-ratio-slider').addEventListener('change', setOverpanFromUi);
+        document.getElementById('underzoom-scale-slider').addEventListener('input', setUnderzoomFromUi);
+        document.getElementById('overpan-ratio-slider').addEventListener('input', setOverpanFromUi);
         setUnderzoomFromUi();
         setOverpanFromUi();
     });

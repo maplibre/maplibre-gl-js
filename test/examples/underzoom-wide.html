@@ -8,34 +8,69 @@
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
     <script src='../../dist/maplibre-gl-dev.js'></script>
     <style>
-        body { margin: 0; padding: 0; }
+        :root {
+            --checker-dark: #3e3e3e;
+            --checker-light: #4d4d4d;
+            --checker-size: 40px;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--checker-light);
+            background-image: linear-gradient(45deg, var(--checker-dark) 25%, transparent 25%), linear-gradient(-45deg, var(--checker-dark) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, var(--checker-dark) 75%), linear-gradient(-45deg, transparent 75%, var(--checker-dark) 75%);
+            background-size: var(--checker-size) var(--checker-size);
+            background-position: 0 0, 0 20px, 20px -20px, -20px 0px;
+        }
         html, body, #map { height: 100%; }
+        .listing-group {
+            font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;
+            position: absolute;
+            color: #fff;
+            background-color: rgb(157, 156, 156);
+            padding: 10px;
+            border-radius: 4px;
+        }
+        #listing-group-top-left {
+            top: 10px;
+            left: 10px;
+        }
+        #listing-group-bottom-left {
+            bottom: 10px;
+            left: 10px;
+        }
     </style>
 </head>
 <body>
-<style>
-    #menu {
-        position: absolute;
-        top: 0;
-        left: 0;
-        background: #fff;
-        padding: 10px;
-        font-family: 'Open Sans', sans-serif;
-    }
-</style>
+
 <div id="map"></div>
-<div id="menu">
-    <div>Set <code>renderWorldCopies</code> to:</div>
-    <div>
-        <input type="radio" id="true" name="rtoggle" value="true" />
-        <label for="true">true</label>
-    </div>
-    <div>
-        <input type="radio" id="false" name="rtoggle" value="false" checked />
-        <label for="false">false (allows underzoom)</label>
-    </div>
-</div>
+
+<table id="listing-group-bottom-left" class="listing-group">
+    <tr><td><label for="allow-underzoom">allow underzoom</label></td><td><input type="checkbox" id="allow-underzoom" checked/></td></tr>
+    <tr><td><label for="underzoom-scale-slider" id="underzoom">underzoom scale</label></td><td><input type="range" id="underzoom-scale-slider" min="0" max="1" step="0.1" value="0.8" /></td></tr>
+    <tr><td><label for="overpan-ratio-slider" id="overpan">overpan ratio</label></td><td><input type="range" id="overpan-ratio-slider" min="0" max="1" step="0.1" value="1.0" /></td></tr>
+</table>
+
+<table id="listing-group-top-left" class="listing-group">
+    <tr><td><label for="zoom-out">zoom out upon change</label></td><td><input type="checkbox" id="zoom-out" checked/></td></tr>
+</table>
+
 <script>
+    function setUnderzoomFromUi() {
+        map.setAllowUnderzoom(
+            document.getElementById('allow-underzoom').checked
+        )
+        const underzoom = parseFloat(document.getElementById('underzoom-scale-slider').value);
+        map.setUnderzoomScale(underzoom)
+        document.getElementById("underzoom").textContent=`underzoom scale (${underzoom.toFixed(1)})`;
+        if (document.getElementById('zoom-out').checked) {
+            map.setZoom(-Infinity);
+        }
+    }
+    function setOverpanFromUi() {
+        const overpan = parseFloat(document.getElementById('overpan-ratio-slider').value);
+        map.setOverpanRatio(overpan)
+        document.getElementById("overpan").textContent=`overpan ratio (${overpan.toFixed(1)}:1.0)`;
+    }
     
     // Set bounds to New York, New York
     const north = 40.78;
@@ -82,7 +117,7 @@
             showZoom: true,
             showCompass: true
         }),
-        "bottom-left"
+        "top-right"
     );
 
     map.on('load', () => {
@@ -113,20 +148,12 @@
                 'line-offset': -2,
             }
         });
+        document.getElementById('allow-underzoom').addEventListener('change', setUnderzoomFromUi);
+        document.getElementById('underzoom-scale-slider').addEventListener('input', setUnderzoomFromUi);
+        document.getElementById('overpan-ratio-slider').addEventListener('input', setOverpanFromUi);
+        setUnderzoomFromUi();
+        setOverpanFromUi();
     });
-
-    const renderOptions = document.getElementById('menu');
-    const inputs = renderOptions.getElementsByTagName('input');
-
-    function switchRenderOption(option) {
-        const status = option.target.id;
-        map.setRenderWorldCopies(status === 'true');
-        map.panTo(map.getCenter());
-    }
-
-    for (let i = 0; i < inputs.length; i++) {
-        inputs[i].onclick = switchRenderOption;
-    }
 </script>
 </body>
 </html>
