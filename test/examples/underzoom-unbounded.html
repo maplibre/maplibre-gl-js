@@ -8,7 +8,19 @@
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
     <script src='../../dist/maplibre-gl-dev.js'></script>
     <style>
-        body { margin: 0; padding: 0; }
+        :root {
+            --checker-dark: #3e3e3e;
+            --checker-light: #4d4d4d;
+            --checker-size: 40px;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--checker-light);
+            background-image: linear-gradient(45deg, var(--checker-dark) 25%, transparent 25%), linear-gradient(-45deg, var(--checker-dark) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, var(--checker-dark) 75%), linear-gradient(-45deg, transparent 75%, var(--checker-dark) 75%);
+            background-size: var(--checker-size) var(--checker-size);
+            background-position: 0 0, 0 20px, 20px -20px, -20px 0px;
+        }
         html, body, #map { height: 100%; }
     </style>
 </head>
@@ -39,13 +51,45 @@
 
 <script>
     const map = new maplibregl.Map({
-        container: 'map', // container id
-        style:
-            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL', // stylesheet location
+        container: 'map',
         center: [0, 0], // starting position [lng, lat]
-        zoom: 0.01, // starting zoom
+        zoom: -2, // starting zoom
         renderWorldCopies: false,
+        style: {
+            version: 8,
+            sources: {
+                rgb: {
+                    type: 'raster',
+                    tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                    tileSize: 256,
+                    attribution: '&copy; OpenStreetMap Contributors',
+                    maxzoom: 19
+                },
+            },
+            layers: [
+                {
+                    id: 'rgb',
+                    type: 'raster',
+                    source: 'rgb'
+                },
+            ]
+        },
     });
+
+    map.addControl(
+        new maplibregl.NavigationControl({
+            visualizePitch: true,
+            showZoom: true,
+            showCompass: true
+        }),
+        "bottom-left"
+    );
+
+    // World bounds
+    const north = 85.0511287798066;
+    const east = 180;
+    const south = -85.05112877980659;
+    const west = -180;
 
     const renderOptions = document.getElementById('menu');
     const inputs = renderOptions.getElementsByTagName('input');

@@ -38,9 +38,9 @@
 <script>
     
     // Set bounds to New York, New York
-    const north = 40.81;
+    const north = 40.78;
     const east = -73.81;
-    const south = 40.75;
+    const south = 40.68;
     const west = -74.15;
     
     const bounds = [
@@ -51,7 +51,6 @@
     const map = new maplibregl.Map({
         container: 'map',
         center: [(west+east)/2, (north+south)/2],
-        zoom: 10,
         maxBounds: bounds, // Sets bounds as max
         renderWorldCopies: false,
         style: {
@@ -61,6 +60,7 @@
                     type: 'raster',
                     tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
                     tileSize: 256,
+                    attribution: '&copy; OpenStreetMap Contributors',
                     maxzoom: 19
                 },
             },
@@ -70,9 +70,18 @@
                     type: 'raster',
                     source: 'rgb'
                 },
-            ],
+            ]
         },
     });
+
+    map.addControl(
+        new maplibregl.NavigationControl({
+            visualizePitch: true,
+            showZoom: true,
+            showCompass: true
+        }),
+        "bottom-left"
+    );
 
     map.on('load', () => {
         map.addSource('bounds', {
@@ -96,13 +105,10 @@
             'id': 'bounds',
             'type': 'line',
             'source': 'bounds',
-            'layout': {
-                'line-join': 'round',
-                'line-cap': 'round'
-            },
             'paint': {
                 'line-color': '#ff0000',
-                'line-width': 8
+                'line-width': 4,
+                'line-offset': -2,
             }
         });
     });
