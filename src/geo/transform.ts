@@ -49,6 +49,9 @@ export class Transform {
     _zoom: number;
     _unmodified: boolean;
     _renderWorldCopies: boolean;
+    _allowUnderzoom: boolean;
+    _underzoomScale: number;
+    _overpanRatio: number;
     _minZoom: number;
     _maxZoom: number;
     _minPitch: number;
@@ -74,12 +77,15 @@ export class Transform {
      */
     nearZ: number;
 
-    constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
+    constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean, allowUnderzoom?: boolean, underzoomScale?: number, overpanRatio?: number) {
         this.tileSize = 512; // constant
 
         this._renderWorldCopies = renderWorldCopies === undefined ? true : !!renderWorldCopies;
         this._minZoom = minZoom || 0;
         this._maxZoom = maxZoom || 22;
+        this._allowUnderzoom = allowUnderzoom === undefined ? false : !!allowUnderzoom;
+        this._underzoomScale = underzoomScale || 1.0;
+        this._overpanRatio = overpanRatio || 0.0;
 
         this._minPitch = (minPitch === undefined || minPitch === null) ? 0 : minPitch;
         this._maxPitch = (maxPitch === undefined || maxPitch === null) ? 60 : maxPitch;
@@ -103,7 +109,7 @@ export class Transform {
     }
 
     clone(): Transform {
-        const clone = new Transform(this._minZoom, this._maxZoom, this._minPitch, this.maxPitch, this._renderWorldCopies);
+        const clone = new Transform(this._minZoom, this._maxZoom, this._minPitch, this.maxPitch, this._renderWorldCopies, this._allowUnderzoom, this._underzoomScale, this._overpanRatio);
         clone.apply(this);
         return clone;
     }
@@ -163,6 +169,41 @@ export class Transform {
         }
 
         this._renderWorldCopies = renderWorldCopies;
+        
+        this._constrain();
+        this._calcMatrices();
+    }
+
+    get allowUnderzoom(): boolean { return this._allowUnderzoom; }
+    set allowUnderzoom(allowUnderzoom: boolean) {
+        if (allowUnderzoom === undefined) {
+            allowUnderzoom = false;
+        } else if (allowUnderzoom === null) {
+            allowUnderzoom = false;
+        }
+
+        this._allowUnderzoom = allowUnderzoom;
+        
+        this._constrain();
+        this._calcMatrices();
+    }
+
+    get underzoomScale(): number { return this._underzoomScale; }
+    set underzoomScale(scale: number) {
+        if (this._underzoomScale === scale) return;
+        this._underzoomScale = scale;
+        
+        this._constrain();
+        this._calcMatrices();
+    }
+
+    get overpanRatio(): number { return this._overpanRatio; }
+    set overpanRatio(ratio: number) {
+        if (this._overpanRatio === ratio) return;
+        this._overpanRatio = ratio;
+        
+        this._constrain();
+        this._calcMatrices();
     }
 
     get worldSize(): number {
@@ -800,13 +841,14 @@ export class Transform {
         // |        -———————————-        |
         // |_____________________________|
 
-        // this._allowUnderzoom
-        const allowUnderzoom = true;
+        // const userAllowUnderzoom = true;
+        const userAllowUnderzoom = this._allowUnderzoom;
+        const allowUnderzoom = userAllowUnderzoom;
 
-        // this._underzoomScale
-        const userUnderzoomScale = 0.2; // Range 1.0 to 0.5
+        // const userUnderzoomScale = 0.8;
+        const userUnderzoomScale = this._underzoomScale;
         const underzoomScale =
-            this._renderWorldCopies ?
+            (this._renderWorldCopies || !allowUnderzoom) ?
             1.0 :
             userUnderzoomScale;
 
@@ -859,8 +901,8 @@ export class Transform {
         // and likewise no farther upwards than the center of the viewport.
         // Due to the complexity and consequence of altering project() or MAX_VALID_LATITUDE, we'll simply limit
         // the overpanRatio to 1.0 to match that external limit.
-        // this._overpanScale
-        const userOverpanRatio = 0.0; // If 0.0, you may not overpan the bounds; if 1.0, you may overpan the bounds to 100% to the center
+        // const userOverpanRatio = 0.0; // If 0.0, you may not overpan the bounds; if 1.0, you may overpan the bounds to 100% to the center
+        const userOverpanRatio = this._overpanRatio;
         let lngOverpanRatio = 0.0;
         let latOverpanRatio = 0.0;
         if (!this._renderWorldCopies && allowUnderzoom) {

@@ -233,6 +233,9 @@ export type MapOptions = {
      * @defaultValue true
      */
     renderWorldCopies?: boolean;
+    allowUnderzoom?: boolean;
+    underzoomScale?: number;
+    overpanRatio?: number;
     /**
      * The maximum number of tiles stored in the tile cache for a given source. If omitted, the cache will be dynamically sized based on the current viewport which can be set using `maxTileCacheZoomLevels` constructor options.
      * @defaultValue null
@@ -392,6 +395,9 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     pitch: 0,
 
     renderWorldCopies: true,
+    allowUnderzoom: false,
+    underzoomScale: 1,
+    overpanRatio: 0,
     maxTileCacheSize: null,
     maxTileCacheZoomLevels: config.MAX_TILE_CACHE_ZOOM_LEVELS,
     transformRequest: null,
@@ -580,7 +586,7 @@ export class Map extends Camera {
             throw new Error(`maxPitch must be less than or equal to ${maxPitchThreshold}`);
         }
 
-        const transform = new Transform(resolvedOptions.minZoom, resolvedOptions.maxZoom, resolvedOptions.minPitch, resolvedOptions.maxPitch, resolvedOptions.renderWorldCopies);
+        const transform = new Transform(resolvedOptions.minZoom, resolvedOptions.maxZoom, resolvedOptions.minPitch, resolvedOptions.maxPitch, resolvedOptions.renderWorldCopies, resolvedOptions.allowUnderzoom, resolvedOptions.underzoomScale, resolvedOptions.overpanRatio);
         super(transform, {bearingSnap: resolvedOptions.bearingSnap});
 
         this._interactive = resolvedOptions.interactive;
@@ -1142,6 +1148,53 @@ export class Map extends Camera {
      */
     setRenderWorldCopies(renderWorldCopies?: boolean | null): Map {
         this.transform.renderWorldCopies = renderWorldCopies;
+        return this._update();
+    }
+    
+    /**
+     * TODO: Write docs
+     */
+    getAllowUnderzoom(): boolean { return this.transform.allowUnderzoom; }
+    setAllowUnderzoom(allowUnderzoom?: boolean | null): Map {
+        this.transform.allowUnderzoom = allowUnderzoom;
+        return this._update();
+    }
+
+    /**
+     * TODO: Write docs
+     * TODO: Create and use defaults, thresholds, as is done with setMaxPitch
+     */
+    getUnderzoomScale(): number { return this.transform.underzoomScale; }
+    setUnderzoomScale(underzoomScale?: number | null): Map {
+
+        underzoomScale = underzoomScale === null || underzoomScale === undefined ? 1.0 : underzoomScale;
+
+        if (underzoomScale > 1.0) {
+            throw new Error(`underzoomScale must be less than or equal to ${1.0}`);
+        } else if (underzoomScale < 0.0) {
+            throw new Error(`underzoomScale must be greater than or equal to ${0.0}`);
+        }
+
+        this.transform.underzoomScale = underzoomScale;
+        return this._update();
+    }
+
+    /**
+     * TODO: Write docs
+     * TODO: Create and use defaults, thresholds, as is done with setMaxPitch
+     */
+    getOverpanRatio(): number { return this.transform.overpanRatio; }
+    setOverpanRatio(overpanRatio?: number | null): Map {
+
+        overpanRatio = overpanRatio === null || overpanRatio === undefined ? 0.0 : overpanRatio;
+
+        if (overpanRatio > 1.0) {
+            throw new Error(`overpanRatio must be less than or equal to ${1.0}`);
+        } else if (overpanRatio < 0.0) {
+            throw new Error(`overpanRatio must be greater than or equal to ${0.0}`);
+        }
+
+        this.transform.overpanRatio = overpanRatio;
         return this._update();
     }
 
