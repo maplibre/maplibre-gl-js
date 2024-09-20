@@ -65,7 +65,7 @@ describe('Browser tests', () => {
         }
     }, 40000);
 
-    test('Load should fire before resize and moveend', async () => {
+    test('Load should fire before resize and moveend', {retry: 3, timeout: 20000}, async () => {
         const firstFiredEvent = await page.evaluate(() => {
             const map2 = new maplibregl.Map({
                 container: 'map',
@@ -80,9 +80,9 @@ describe('Browser tests', () => {
             });
         });
         expect(firstFiredEvent).toBe('load');
-    }, {retry: 3, timeout: 20000});
+    });
 
-    test('Should continue zooming from last mouse position after scroll and flyto, see #2709', async () => {
+    test('Should continue zooming from last mouse position after scroll and flyto, see #2709', {retry: 3, timeout: 20000}, async () => {
         const finalZoom = await page.evaluate(() => {
             return new Promise<number>((resolve, _reject) => {
                 map.once('zoom', () => {
@@ -100,9 +100,9 @@ describe('Browser tests', () => {
             });
         });
         expect(finalZoom).toBeGreaterThan(2);
-    }, {retry: 3, timeout: 20000});
+    });
 
-    test('Drag to the left', async () => {
+    test('Drag to the left', {retry: 3, timeout: 20000}, async () => {
         const canvas = await page.$('.maplibregl-canvas');
         const canvasBB = await canvas?.boundingBox();
 
@@ -133,9 +133,9 @@ describe('Browser tests', () => {
         const centerWithInertia = await dragToLeft();
         expect(centerWithInertia.lng).toBeLessThan(-60);
         expect(centerWithInertia.lat).toBeCloseTo(0, 7);
-    }, {retry: 3, timeout: 20000});
+    });
 
-    test('Resize viewport (page)', async () => {
+    test('Resize viewport (page)', {retry: 3, timeout: 20000}, async () => {
 
         await page.setViewport({width: 400, height: 400, deviceScaleFactor: 2});
 
@@ -145,9 +145,9 @@ describe('Browser tests', () => {
         const canvasBB = await canvas?.boundingBox();
         expect(canvasBB?.width).toBeCloseTo(400);
         expect(canvasBB?.height).toBeCloseTo(400);
-    }, {retry: 3, timeout: 20000});
+    });
 
-    test('Resize div', async () => {
+    test('Resize div', {retry: 3, timeout: 20000}, async () => {
 
         await page.evaluate(() => {
             document.getElementById('map')!.style.width = '200px';
@@ -159,9 +159,9 @@ describe('Browser tests', () => {
         const canvasBB = await canvas?.boundingBox();
         expect(canvasBB!.width).toBeCloseTo(200);
         expect(canvasBB!.height).toBeCloseTo(200);
-    }, {retry: 3, timeout: 20000});
+    });
 
-    test('Zoom: Double click at the center', async () => {
+    test('Zoom: Double click at the center', {retry: 3, timeout: 20000}, async () => {
 
         const canvas = await page.$('.maplibregl-canvas');
         const canvasBB = await canvas?.boundingBox()!;
@@ -175,9 +175,9 @@ describe('Browser tests', () => {
         });
 
         expect(zoom).toBe(2);
-    }, {retry: 3, timeout: 20000});
+    });
 
-    test('Marker scaled: correct drag', async () => {
+    test('Marker scaled: correct drag', {retry: 3}, async () => {
         await page.evaluate(() => {
             document.getElementById('map')!.style.transform = 'scale(0.5)';
             const markerMapPosition = map.getCenter();
@@ -205,9 +205,9 @@ describe('Browser tests', () => {
         const newPosition = await dragToLeft();
         expect(newPosition.x).toBeCloseTo(0);
         expect(newPosition.y).toBeCloseTo(0);
-    }, {retry: 3});
+    });
 
-    test('Marker: correct position', async () => {
+    test('Marker: correct position', {retry: 3, timeout: 20000}, async () => {
         const markerScreenPosition = await page.evaluate(() => {
             const markerMapPosition = [11.40, 47.30] as [number, number];
             const marker = new maplibregl.Marker()
@@ -281,9 +281,9 @@ describe('Browser tests', () => {
 
         expect(markerScreenPosition.x).toBeCloseTo(386.5);
         expect(markerScreenPosition.y).toBeCloseTo(378.1);
-    }, {retry: 3, timeout: 20000});
+    });
 
-    test('Fullscreen control should work in shadowdom as well', async () => {
+    test('Fullscreen control should work in shadowdom as well', {retry: 3, timeout: 20000}, async () => {
         const fullscreenButtonTitle = await page.evaluate(async () => {
             function sleepInBrowser(milliseconds: number) {
                 return new Promise(resolve => setTimeout(resolve, milliseconds));
@@ -340,9 +340,9 @@ describe('Browser tests', () => {
         });
 
         expect(fullscreenButtonTitle).toBe('Exit fullscreen');
-    }, {retry: 3, timeout: 20000});
+    });
 
-    test('Marker: correct opacity after resize with 3d terrain', async () => {
+    test('Marker: correct opacity after resize with 3d terrain', {retry: 3, timeout: 20000}, async () => {
         const markerOpacity = await page.evaluate(() => {
             const marker = new maplibregl.Marker()
                 .setLngLat(map.getCenter())
@@ -389,7 +389,7 @@ describe('Browser tests', () => {
         });
 
         expect(markerOpacity).toBe('1');
-    }, {retry: 3, timeout: 20000});
+    });
 
     test('Load map with RTL plugin should throw exception for invalid URL', async () => {
 
@@ -406,7 +406,7 @@ describe('Browser tests', () => {
 
     }, 2000);
 
-    test('Movement with transformCameraUpdate and terrain', async () => {
+    test('Movement with transformCameraUpdate and terrain', {retry: 3, timeout: 20000}, async () => {
         await page.evaluate(async () => {
             map.setPitch(52)
                 .setZoom(15)
@@ -445,5 +445,5 @@ describe('Browser tests', () => {
         });
         expect(center.lng).toBeCloseTo(11.39770);
         expect(center.lat).toBeCloseTo(47.29960);
-    }, {retry: 3, timeout: 20000});
+    });
 });
