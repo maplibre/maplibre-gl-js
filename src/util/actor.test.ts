@@ -95,7 +95,7 @@ describe('Actor', () => {
         expect(gotAbortSignal).toBeTruthy();
     });
 
-    test('cancel a request that must be queued will not call the method at all', async () => {
+    test('cancel a request that must be queued will not call the method at all', {retry: 3}, async () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
@@ -115,7 +115,7 @@ describe('Actor', () => {
         await Promise.any([p1, p2]);
         expect(received).toBeFalsy();
         expect(spy).not.toHaveBeenCalled();
-    }, {retry: 3});
+    });
 
     test('#remove unbinds event listener', () => new Promise<void>(done => {
         const actor = new Actor({
