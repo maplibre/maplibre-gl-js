@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang='en'>
 <head>
     <title>Tall-bounded underzoom</title>
-    <meta property="og:description" content="Adjust underzoom parameters on a tall-bounded world." />
+    <meta property='og:description' content='Adjust underzoom parameters on a tall-bounded world.' />
     <meta charset='utf-8'>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
     <script src='../../dist/maplibre-gl-dev.js'></script>
     <style>
@@ -42,34 +42,35 @@
 </head>
 <body>
 
-<div id="map"></div>
+<div id='map'></div>
 
-<table id="listing-group-bottom-left" class="listing-group">
-    <tr><td><label for="allow-underzoom">allow underzoom</label></td><td><input type="checkbox" id="allow-underzoom" checked/></td></tr>
-    <tr><td><label for="underzoom-scale-slider" id="underzoom">underzoom scale</label></td><td><input type="range" id="underzoom-scale-slider" min="0" max="1" step="0.1" value="0.8" /></td></tr>
-    <tr><td><label for="overpan-ratio-slider" id="overpan">overpan ratio</label></td><td><input type="range" id="overpan-ratio-slider" min="0" max="1" step="0.1" value="1.0" /></td></tr>
+<table id='listing-group-bottom-left' class='listing-group'>
+    <tr><td><label for='allow-underzoom'>allow underzoom</label></td><td><input type='checkbox' id='allow-underzoom' checked/></td></tr>
+    <tr><td><label for='underzoom-slider' id='underzoom-label'>underzoom</label></td><td><input type='range' id='underzoom-slider' min='0' max='100' step='10' value='80' /></td></tr>
+    <tr><td><label for='overpan-slider' id='overpan-label'>overpan ratio</label></td><td><input type='range' id='overpan-slider' min='0' max='50' step='10' value='50' /></td></tr>
 </table>
 
-<table id="listing-group-top-left" class="listing-group">
-    <tr><td><label for="zoom-out">zoom out upon change</label></td><td><input type="checkbox" id="zoom-out" checked/></td></tr>
+<table id='listing-group-top-left' class='listing-group'>
+    <tr><td><label for='zoom-out'>zoom out upon change</label></td><td><input type='checkbox' id='zoom-out' checked/></td></tr>
 </table>
     
 <script>
+    const zeroPad = (num, places) => String(num).padStart(places, '0');
     function setUnderzoomFromUi() {
         map.setAllowUnderzoom(
             document.getElementById('allow-underzoom').checked
-        )
-        const underzoom = parseFloat(document.getElementById('underzoom-scale-slider').value);
-        map.setUnderzoomScale(underzoom)
-        document.getElementById("underzoom").textContent=`underzoom scale (${underzoom.toFixed(1)})`;
+        );
+        const underzoom = parseFloat(document.getElementById('underzoom-slider').value);
+        map.setUnderzoom(underzoom);
+        document.getElementById('underzoom-label').textContent = `underzoom (${zeroPad(underzoom, 3)}%)`;
         if (document.getElementById('zoom-out').checked) {
             map.setZoom(-Infinity);
         }
     }
     function setOverpanFromUi() {
-        const overpan = parseFloat(document.getElementById('overpan-ratio-slider').value);
-        map.setOverpanRatio(overpan)
-        document.getElementById("overpan").textContent=`overpan ratio (${overpan.toFixed(1)}:1.0)`;
+        const overpan = parseFloat(document.getElementById('overpan-slider').value);
+        map.setOverpan(overpan);
+        document.getElementById('overpan-label').textContent = `overpan (${zeroPad(overpan, 2)}%)`;
     }
     
     // Set bounds to Amsterdam, Netherlands
@@ -85,11 +86,11 @@
 
     const map = new maplibregl.Map({
         container: 'map',
-        center: [(west+east)/2, (north+south)/2],
+        center: [(west + east) / 2, (north + south) / 2],
         maxBounds: bounds, // Sets bounds as max
         renderWorldCopies: false,
         allowUnderzoom: true,
-        underzoomScale: 0.8,
+        underzoomPercent: 80,
         style: {
             version: 8,
             sources: {
@@ -117,7 +118,7 @@
             showZoom: true,
             showCompass: true
         }),
-        "top-right"
+        'top-right'
     );
 
     map.on('load', () => {
@@ -149,8 +150,8 @@
             }
         });
         document.getElementById('allow-underzoom').addEventListener('change', setUnderzoomFromUi);
-        document.getElementById('underzoom-scale-slider').addEventListener('input', setUnderzoomFromUi);
-        document.getElementById('overpan-ratio-slider').addEventListener('input', setOverpanFromUi);
+        document.getElementById('underzoom-slider').addEventListener('input', setUnderzoomFromUi);
+        document.getElementById('overpan-slider').addEventListener('input', setOverpanFromUi);
         setUnderzoomFromUi();
         setOverpanFromUi();
     });

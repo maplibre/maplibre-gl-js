@@ -233,9 +233,21 @@ export type MapOptions = {
      * @defaultValue true
      */
     renderWorldCopies?: boolean;
+    /**
+     * If `true`, a user may zoom out a single-copy world beyond its bounds until the bounded area is a percent of the viewport size as defined by `underzoom` unless `minZoom` is reached. If  `false`, a user may not zoom out beyond the map bounds.
+     * @defaultValue false
+     */
     allowUnderzoom?: boolean;
-    underzoomScale?: number;
-    overpanRatio?: number;
+    /**
+     * The allowable underzoom of the map, measured as a percentage of the size of the map's bounds relative to the viewport size (0-100). If `underzoom` is not specified in the constructor options, MapLibre GL JS will default to `100`. `allowUnderzoom` must be set `true` for underzooming to occur.
+     * @defaultValue 100
+     */
+    underzoom?: number;
+    /**
+     * The allowable overpan of the map, measured as a percentage of how far the map's latitude-longitude bounds may be exceed relative to the viewport's height and width (0-100). If `overpan` is not specified in the constructor options, MapLibre GL JS will default to `0`. `allowUnderzoom` must be set `true` for overpanning to occur. `overpan` is exceeded when necessary for underzooming.
+     * @defaultValue 0
+     */
+    overpan?: number;
     /**
      * The maximum number of tiles stored in the tile cache for a given source. If omitted, the cache will be dynamically sized based on the current viewport which can be set using `maxTileCacheZoomLevels` constructor options.
      * @defaultValue null
@@ -362,6 +374,14 @@ const defaultMaxPitch = 60;
 // use this variable to check maxPitch for validity
 const maxPitchThreshold = 85;
 
+const defaultUnderzoom = 80;
+const minUnderzoom = 0;
+const maxUnderzoom = 100;
+
+const defaultOverpan = 0;
+const minOverpan = 0;
+const maxOverpan = 50;
+
 const defaultOptions: Readonly<Partial<MapOptions>> = {
     hash: false,
     interactive: true,
@@ -396,8 +416,8 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
 
     renderWorldCopies: true,
     allowUnderzoom: false,
-    underzoomScale: 1,
-    overpanRatio: 0,
+    underzoom: defaultUnderzoom,
+    overpan: defaultOverpan,
     maxTileCacheSize: null,
     maxTileCacheZoomLevels: config.MAX_TILE_CACHE_ZOOM_LEVELS,
     transformRequest: null,
@@ -586,7 +606,7 @@ export class Map extends Camera {
             throw new Error(`maxPitch must be less than or equal to ${maxPitchThreshold}`);
         }
 
-        const transform = new Transform(resolvedOptions.minZoom, resolvedOptions.maxZoom, resolvedOptions.minPitch, resolvedOptions.maxPitch, resolvedOptions.renderWorldCopies, resolvedOptions.allowUnderzoom, resolvedOptions.underzoomScale, resolvedOptions.overpanRatio);
+        const transform = new Transform(resolvedOptions.minZoom, resolvedOptions.maxZoom, resolvedOptions.minPitch, resolvedOptions.maxPitch, resolvedOptions.renderWorldCopies, resolvedOptions.allowUnderzoom, resolvedOptions.underzoom, resolvedOptions.overpan);
         super(transform, {bearingSnap: resolvedOptions.bearingSnap});
 
         this._interactive = resolvedOptions.interactive;
@@ -1150,51 +1170,128 @@ export class Map extends Camera {
         this.transform.renderWorldCopies = renderWorldCopies;
         return this._update();
     }
-    
+
     /**
-     * TODO: Write docs
+     * Returns the state of `allowUnderzoom`.
+     * If `true`, a user may zoom out a single-copy world beyond its bounds
+     * until the bounded area is a percent of the viewport size as defined by
+     * `underzoom` unless `minZoom` is reached.
+     * If `false`, a user may not zoom out beyond the map bounds.
+     *
+     * @returns The allowUnderzoom
+     * @example
+     * ```ts
+     * let worldUnderzoomAllowed = map.getAllowUnderzoom();
+     * ```
      */
     getAllowUnderzoom(): boolean { return this.transform.allowUnderzoom; }
+
+    /**
+     * Sets the state of `allowUnderzoom`.
+     *
+     * @param allowUnderzoom - If `true`, a user may zoom out a single-copy
+     * world beyond its bounds until the bounded area is a percent of the
+     * viewport size as defined by `underzoom` unless `minZoom` is reached.
+     * If `false`, a user may not zoom out beyond the map bounds.
+     *
+     * `undefined` is treated as `true`, `null` is treated as `false`.
+     * @example
+     * ```ts
+     * map.setAllowUnderzoom(true);
+     * ```
+     */
     setAllowUnderzoom(allowUnderzoom?: boolean | null): Map {
         this.transform.allowUnderzoom = allowUnderzoom;
         return this._update();
     }
 
     /**
-     * TODO: Write docs
-     * TODO: Create and use defaults, thresholds, as is done with setMaxPitch
+     * Returns the map's allowable underzoom percentage.
+     *
+     * @returns underzoom
+     * @example
+     * ```ts
+     * let underzoom = map.getUnderzoom();
+     * ```
      */
-    getUnderzoomScale(): number { return this.transform.underzoomScale; }
-    setUnderzoomScale(underzoomScale?: number | null): Map {
+    getUnderzoom(): number { return this.transform.underzoom; }
 
-        underzoomScale = underzoomScale === null || underzoomScale === undefined ? 1.0 : underzoomScale;
+    /**
+     * Sets or clears the map's allowable underzoom percentage.
+     *
+     * `allowUnderzoom` must be `true` for underzooming to occur.
+     *
+     * If the map is currently zoomed out to a size lower than the new
+     * underzoom, the map will zoom in to respect the new underzoom.
+     *
+     * `minZoom` is always respected, meaning if the map is already at
+     * `minZoom = 0` but the map is larger than the allowable underzoom size,
+     * it is not possible to zoom out any further.
+     *
+     * A {@link ErrorEvent} event will be fired if underzoom is out of bounds.
+     *
+     * @param underzoom - The allowable underzoom percentage to set (0 - 100).
+     * If `null` or `undefined` is provided, the function removes the current
+     * underzoom and sets it to the default (80).
+     * @example
+     * ```ts
+     * map.setUnderzoom(25);
+     * ```
+     */
+    setUnderzoom(underzoom?: number | null): Map {
 
-        if (underzoomScale > 1.0) {
-            throw new Error(`underzoomScale must be less than or equal to ${1.0}`);
-        } else if (underzoomScale < 0.0) {
-            throw new Error(`underzoomScale must be greater than or equal to ${0.0}`);
+        underzoom = underzoom === null || underzoom === undefined ? defaultUnderzoom : underzoom;
+
+        if (underzoom > maxUnderzoom) {
+            throw new Error(`underzoom must be less than or equal to ${maxUnderzoom}`);
+        } else if (underzoom < minUnderzoom) {
+            throw new Error(`underzoom must be greater than or equal to ${minUnderzoom}`);
         }
 
-        this.transform.underzoomScale = underzoomScale;
+        this.transform.underzoom = underzoom;
         return this._update();
     }
 
     /**
-     * TODO: Write docs
-     * TODO: Create and use defaults, thresholds, as is done with setMaxPitch
+     * Returns the map's allowable overpan percentage.
+     *
+     * @returns overpan
+     * @example
+     * ```ts
+     * let overpan = map.getOverpan();
+     * ```
      */
-    getOverpanRatio(): number { return this.transform.overpanRatio; }
-    setOverpanRatio(overpanRatio?: number | null): Map {
+    getOverpan(): number { return this.transform.overpan; }
 
-        overpanRatio = overpanRatio === null || overpanRatio === undefined ? 0.0 : overpanRatio;
+    /**
+     * Sets or clears the map's allowable overpan percentage.
+     *
+     * `allowUnderzoom` must be `true` for overpanning to occur.
+     *
+     * If the map is underzoomed such that the bounds must exceed `overpan`, the
+     * map will allow that.
+     *
+     * A {@link ErrorEvent} event will be fired if overpan is out of bounds.
+     *
+     * @param overpan - The allowable overpan percentage to set (0 - 50).
+     * If `null` or `undefined` is provided, the function removes the current
+     * overpan and sets it to the default (0).
+     * @example
+     * ```ts
+     * map.setOverpan(25);
+     * ```
+     */
+    setOverpan(overpan?: number | null): Map {
 
-        if (overpanRatio > 1.0) {
-            throw new Error(`overpanRatio must be less than or equal to ${1.0}`);
-        } else if (overpanRatio < 0.0) {
-            throw new Error(`overpanRatio must be greater than or equal to ${0.0}`);
+        overpan = overpan === null || overpan === undefined ? defaultOverpan : overpan;
+
+        if (overpan > maxOverpan) {
+            throw new Error(`overpan must be less than or equal to ${maxOverpan}`);
+        } else if (overpan < minOverpan) {
+            throw new Error(`overpan must be greater than or equal to ${minOverpan}`);
         }
 
-        this.transform.overpanRatio = overpanRatio;
+        this.transform.overpan = overpan;
         return this._update();
     }
 
