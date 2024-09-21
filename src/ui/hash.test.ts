@@ -327,11 +327,69 @@ describe('hash', () => {
         expect(window.location.hash).toBe('#baz&foo=bar');
     });
 
-    test('url ending with hash', () => {
+    test('initialize http://localhost/#', () => {
         window.location.href = 'http://localhost/#';
         createHash().addTo(map);
         map.setZoom(3);
         expect(window.location.hash).toBe('#3/0/0');
+        expect(window.location.href).toBe('http://localhost/#3/0/0');
+        map.setCenter([2.0, 1.0]);
+        expect(window.location.hash).toBe('#3/1/2');
+        expect(window.location.href).toBe('http://localhost/#3/1/2');
+    });
+
+    test('initialize http://localhost/##', () => {
+        window.location.href = 'http://localhost/##';
+        createHash().addTo(map);
+        map.setZoom(3);
+        expect(window.location.hash).toBe('#3/0/0');
+        expect(window.location.href).toBe('http://localhost/#3/0/0');
+        map.setCenter([2.0, 1.0]);
+        expect(window.location.hash).toBe('#3/1/2');
+        expect(window.location.href).toBe('http://localhost/#3/1/2');
+    });
+
+    test('initialize http://localhost#', () => {
+        window.location.href = 'http://localhost#';
+        createHash().addTo(map);
+        map.setZoom(4);
+        expect(window.location.hash).toBe('#4/0/0');
+        expect(window.location.href).toBe('http://localhost/#4/0/0');
+        map.setCenter([2.0, 1.0]);
+        expect(window.location.hash).toBe('#4/1/2');
+        expect(window.location.href).toBe('http://localhost/#4/1/2');
+    });
+
+    test('initialize http://localhost/', () => {
+        window.location.href = 'http://localhost/';
+        createHash().addTo(map);
+        map.setZoom(5);
+        expect(window.location.hash).toBe('#5/0/0');
+        expect(window.location.href).toBe('http://localhost/#5/0/0');
+        map.setCenter([2.0, 1.0]);
+        expect(window.location.hash).toBe('#5/1/2');
+        expect(window.location.href).toBe('http://localhost/#5/1/2');
+    });
+
+    test('initialize default value for window.location.href', () => {
+        createHash().addTo(map);
+        map.setZoom(5);
+        expect(window.location.hash).toBe('#5/0/0');
+        expect(window.location.href).toBe('http://localhost/#5/0/0');
+        map.setCenter([2.0, 1.0]);
+        expect(window.location.hash).toBe('#5/1/2');
+        expect(window.location.href).toBe('http://localhost/#5/1/2');
+    });
+
+    test('initialize http://localhost', () => {
+        window.location.href = 'http://localhost';
+        createHash().addTo(map);
+        map.setZoom(4);
+        expect(window.location.hash).toBe('#4/0/0');
+        expect(window.location.href).toBe('http://localhost/#4/0/0');
+        map.setCenter([2.0, 1.0]);
+        expect(window.location.hash).toBe('#4/1/2');
+        expect(window.location.href).toBe('http://localhost/#4/1/2');
     });
 
     test('map#remove', () => {
