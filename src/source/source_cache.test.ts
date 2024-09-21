@@ -41,7 +41,7 @@ class SourceMock extends Evented implements Source {
                 expires: this.sourceOptions.expires
             });
         }
-        return new Promise(resolve => setTimeout(resolve, 0));
+        return sleep(0);
     }
     loaded() {
         return true;
@@ -103,7 +103,7 @@ afterEach(() => {
 });
 
 describe('SourceCache#addTile', () => {
-    test('loads tile when uncached', done => {
+    test('loads tile when uncached', () => new Promise<void>(done => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
@@ -113,9 +113,9 @@ describe('SourceCache#addTile', () => {
         };
         sourceCache.onAdd(undefined);
         sourceCache._addTile(tileID);
-    });
+    }));
 
-    test('adds tile when uncached', done => {
+    test('adds tile when uncached', () => new Promise<void>(done => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const sourceCache = createSourceCache({}).on('dataloading', (data) => {
             expect(data.tile.tileID).toEqual(tileID);
@@ -124,9 +124,9 @@ describe('SourceCache#addTile', () => {
         });
         sourceCache.onAdd(undefined);
         sourceCache._addTile(tileID);
-    });
+    }));
 
-    test('updates feature state on added uncached tile', done => {
+    test('updates feature state on added uncached tile', () => new Promise<void>(done => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         let updateFeaturesSpy;
         const sourceCache = createSourceCache({});
@@ -140,7 +140,7 @@ describe('SourceCache#addTile', () => {
         };
         sourceCache.onAdd(undefined);
         sourceCache._addTile(tileID);
-    });
+    }));
 
     test('uses cached tile', () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
@@ -278,7 +278,7 @@ describe('SourceCache#addTile', () => {
 });
 
 describe('SourceCache#removeTile', () => {
-    test('removes tile', done => {
+    test('removes tile', () => new Promise<void>(done => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const sourceCache = createSourceCache({});
         sourceCache._addTile(tileID);
@@ -287,7 +287,7 @@ describe('SourceCache#removeTile', () => {
             expect(sourceCache._tiles[tileID.key]).toBeFalsy();
             done();
         });
-    });
+    }));
 
     test('caches (does not unload) loaded tile', () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
@@ -390,52 +390,51 @@ describe('SourceCache#removeTile', () => {
 });
 
 describe('SourceCache / Source lifecycle', () => {
-    test('does not fire load or change before source load event', done => {
+    test('does not fire load or change before source load event', () => new Promise<void>((done) => {
         const sourceCache = createSourceCache({noLoad: true})
-            .on('data', () => done('test failed: data event fired'));
+            .on('data', () => { throw new Error('test failed: data event fired'); });
         sourceCache.onAdd(undefined);
         setTimeout(() => done(), 1);
-    });
+    }));
 
-    test('forward load event', done => {
+    test('forward load event', () => new Promise<void>(done => {
         const sourceCache = createSourceCache({}).on('data', (e) => {
             if (e.sourceDataType === 'metadata') done();
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('forward change event', done => {
+    test('forward change event', () => new Promise<void>(done => {
         const sourceCache = createSourceCache().on('data', (e) => {
             if (e.sourceDataType === 'metadata') done();
         });
         sourceCache.onAdd(undefined);
         sourceCache.getSource().fire(new Event('data'));
-    });
+    }));
 
-    test('forward error event', done => {
+    test('forward error event', () => new Promise<void>(done => {
         const sourceCache = createSourceCache({error: 'Error loading source'}).on('error', (err) => {
             expect(err.error).toBe('Error loading source');
             done();
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('suppress 404 errors', done => {
+    test('suppress 404 errors', () => {
         const sourceCache = createSourceCache({status: 404, message: 'Not found'})
-            .on('error', () => done('test failed: error event fired'));
+            .on('error', () => { throw new Error('test failed: error event fired'); });
         sourceCache.onAdd(undefined);
-        done();
     });
 
-    test('loaded() true after source error', done => {
+    test('loaded() true after source error', () => new Promise<void>(done => {
         const sourceCache = createSourceCache({error: 'Error loading source'}).on('error', () => {
             expect(sourceCache.loaded()).toBeTruthy();
             done();
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('loaded() true after tile error', done => {
+    test('loaded() true after tile error', () => new Promise<void>(done => {
         const transform = new Transform();
         transform.resize(511, 511);
         transform.zoom = 0;
@@ -453,9 +452,9 @@ describe('SourceCache / Source lifecycle', () => {
         });
 
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('loaded() false after source begins loading following error', done => {
+    test('loaded() false after source begins loading following error', () => new Promise<void>(done => {
         const sourceCache = createSourceCache({error: 'Error loading source'}).on('error', () => {
             sourceCache.on('dataloading', () => {
                 expect(sourceCache.loaded()).toBeFalsy();
@@ -465,9 +464,9 @@ describe('SourceCache / Source lifecycle', () => {
         });
 
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('loaded() false when error occurs while source is not loaded', done => {
+    test('loaded() false when error occurs while source is not loaded', () => new Promise<void>(done => {
         const sourceCache = createSourceCache({
             error: 'Error loading source',
 
@@ -480,7 +479,7 @@ describe('SourceCache / Source lifecycle', () => {
         });
 
         sourceCache.onAdd(undefined);
-    });
+    }));
 
     test('reloads tiles after a data event where source is updated', () => {
         const transform = new Transform();
@@ -535,7 +534,7 @@ describe('SourceCache / Source lifecycle', () => {
 });
 
 describe('SourceCache#update', () => {
-    test('loads no tiles if used is false', done => {
+    test('loads no tiles if used is false', () => new Promise<void>(done => {
         const transform = new Transform();
         transform.resize(512, 512);
         transform.zoom = 0;
@@ -549,9 +548,9 @@ describe('SourceCache#update', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('loads covering tiles', done => {
+    test('loads covering tiles', () => new Promise<void>(done => {
         const transform = new Transform();
         transform.resize(511, 511);
         transform.zoom = 0;
@@ -565,9 +564,9 @@ describe('SourceCache#update', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('respects Source#hasTile method if it is present', done => {
+    test('respects Source#hasTile method if it is present', () => new Promise<void>(done => {
         const transform = new Transform();
         transform.resize(511, 511);
         transform.zoom = 1;
@@ -586,9 +585,9 @@ describe('SourceCache#update', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('removes unused tiles', done => {
+    test('removes unused tiles', () => new Promise<void>(done => {
         const transform = new Transform();
         transform.resize(511, 511);
         transform.zoom = 0;
@@ -617,9 +616,9 @@ describe('SourceCache#update', () => {
         });
 
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('retains parent tiles for pending children', done => {
+    test('retains parent tiles for pending children', () => new Promise<void>(done => {
         const transform = new Transform();
         (transform as any)._test = 'retains';
         transform.resize(511, 511);
@@ -649,9 +648,9 @@ describe('SourceCache#update', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('retains parent tiles for pending children (wrapped)', done => {
+    test('retains parent tiles for pending children (wrapped)', () => new Promise<void>(done => {
         const transform = new Transform();
         transform.resize(511, 511);
         transform.zoom = 0;
@@ -681,9 +680,9 @@ describe('SourceCache#update', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('retains covered child tiles while parent tile is fading in', done => {
+    test('retains covered child tiles while parent tile is fading in', () => new Promise<void>(done => {
         const transform = new Transform();
         transform.resize(511, 511);
         transform.zoom = 2;
@@ -715,9 +714,9 @@ describe('SourceCache#update', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('retains a parent tile for fading even if a tile is partially covered by children', done => {
+    test('retains a parent tile for fading even if a tile is partially covered by children', () => new Promise<void>(done => {
         const transform = new Transform();
         transform.resize(511, 511);
         transform.zoom = 0;
@@ -746,9 +745,9 @@ describe('SourceCache#update', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('retain children for fading fadeEndTime is 0 (added but registerFadeDuration() is not called yet)', done => {
+    test('retain children for fading fadeEndTime is 0 (added but registerFadeDuration() is not called yet)', () => new Promise<void>(done => {
         const transform = new Transform();
         transform.resize(511, 511);
         transform.zoom = 1;
@@ -774,9 +773,9 @@ describe('SourceCache#update', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('retains children when tile.fadeEndTime is in the future', done => {
+    test('retains children when tile.fadeEndTime is in the future', () => new Promise<void>(done => {
         const transform = new Transform();
         transform.resize(511, 511);
         transform.zoom = 1;
@@ -818,9 +817,9 @@ describe('SourceCache#update', () => {
         });
 
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('retains overscaled loaded children', done => {
+    test('retains overscaled loaded children', () => new Promise<void>(done => {
         const transform = new Transform();
         transform.resize(511, 511);
         transform.zoom = 16;
@@ -856,9 +855,9 @@ describe('SourceCache#update', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('reassigns tiles for large jumps in longitude', done => {
+    test('reassigns tiles for large jumps in longitude', () => new Promise<void>(done => {
 
         const transform = new Transform();
         transform.resize(511, 511);
@@ -882,7 +881,7 @@ describe('SourceCache#update', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
 });
 
@@ -1392,7 +1391,7 @@ describe('SourceCache#tilesIn', () => {
         });
     }
 
-    test('regular tiles', done => {
+    test('regular tiles', () => new Promise<void>(done => {
         const transform = new Transform();
         transform.resize(512, 512);
         transform.zoom = 1;
@@ -1437,7 +1436,7 @@ describe('SourceCache#tilesIn', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
     test('reparsed overscaled tiles', () => {
         const sourceCache = createSourceCache({
@@ -1488,7 +1487,7 @@ describe('SourceCache#tilesIn', () => {
         sourceCache.onAdd(undefined);
     });
 
-    test('overscaled tiles', done => {
+    test('overscaled tiles', () => new Promise<void>(done => {
         const sourceCache = createSourceCache({
             reparseOverscaled: false,
             minzoom: 1,
@@ -1510,11 +1509,11 @@ describe('SourceCache#tilesIn', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 });
 
 describe('source cache loaded', () => {
-    test('SourceCache#loaded (no errors)', done => {
+    test('SourceCache#loaded (no errors)', () => new Promise<void>(done => {
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'loaded';
@@ -1534,9 +1533,9 @@ describe('source cache loaded', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('SourceCache#loaded (with errors)', done => {
+    test('SourceCache#loaded (with errors)', () => new Promise<void>(done => {
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'errored';
@@ -1557,9 +1556,9 @@ describe('source cache loaded', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('SourceCache#loaded (unused)', done => {
+    test('SourceCache#loaded (unused)', () => new Promise<void>(done => {
         const sourceCache = createSourceCache(undefined, false);
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'errored';
@@ -1573,9 +1572,9 @@ describe('source cache loaded', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('SourceCache#loaded (unusedForTerrain)', done => {
+    test('SourceCache#loaded (unusedForTerrain)', () => new Promise<void>(done => {
         const sourceCache = createSourceCache(undefined, false);
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'errored';
@@ -1590,9 +1589,9 @@ describe('source cache loaded', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('SourceCache#loaded (not loaded when no update)', done => {
+    test('SourceCache#loaded (not loaded when no update)', () => new Promise<void>(done => {
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'errored';
@@ -1606,9 +1605,9 @@ describe('source cache loaded', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('SourceCache#loaded (on last tile load)', done => {
+    test('SourceCache#loaded (on last tile load)', () => new Promise<void>(done => {
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'loading';
@@ -1643,9 +1642,9 @@ describe('source cache loaded', () => {
 
         sourceCache.onAdd(undefined);
         sourceCache.update(tr);
-    });
+    }));
 
-    test('SourceCache#loaded (tiles outside bounds, idle)', done => {
+    test('SourceCache#loaded (tiles outside bounds, idle)', () => new Promise<void>(done => {
         const japan = new TileBounds([122.74, 19.33, 149.0, 45.67]);
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
@@ -1685,11 +1684,11 @@ describe('source cache loaded', () => {
         tr.zoom = 10;
         tr.resize(512, 512);
         sourceCache.update(tr);
-    });
+    }));
 });
 
 describe('source cache get ids', () => {
-    test('SourceCache#getIds (ascending order by zoom level)', done => {
+    test('SourceCache#getIds (ascending order by zoom level)', () => {
         const ids = [
             new OverscaledTileID(0, 0, 0, 0, 0),
             new OverscaledTileID(3, 0, 3, 0, 0),
@@ -1708,7 +1707,6 @@ describe('source cache get ids', () => {
             new OverscaledTileID(2, 0, 2, 0, 0).key,
             new OverscaledTileID(3, 0, 3, 0, 0).key
         ]);
-        done();
     });
 });
 
@@ -1917,7 +1915,7 @@ describe('SourceCache#reload', () => {
 });
 
 describe('SourceCache reloads expiring tiles', () => {
-    test('calls reloadTile when tile expires', done => {
+    test('calls reloadTile when tile expires', () => new Promise<void>(done => {
         const coord = new OverscaledTileID(1, 0, 1, 0, 1);
 
         const expiryDate = new Date();
@@ -1930,7 +1928,7 @@ describe('SourceCache reloads expiring tiles', () => {
         };
 
         sourceCache._addTile(coord);
-    });
+    }));
 
 });
 
@@ -1988,7 +1986,7 @@ describe('SourceCache#onRemove', () => {
 });
 
 describe('SourceCache#usedForTerrain', () => {
-    test('loads covering tiles with usedForTerrain with source zoom 0-14', done => {
+    test('loads covering tiles with usedForTerrain with source zoom 0-14', () => new Promise<void>(done => {
         const transform = new Transform();
         transform.resize(511, 511);
         transform.zoom = 10;
@@ -2007,9 +2005,9 @@ describe('SourceCache#usedForTerrain', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('loads covering tiles with usedForTerrain with source zoom 8-14', done => {
+    test('loads covering tiles with usedForTerrain with source zoom 8-14', () => new Promise<void>(done => {
         const transform = new Transform();
         transform.resize(511, 511);
         transform.zoom = 10;
@@ -2027,9 +2025,9 @@ describe('SourceCache#usedForTerrain', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('loads covering tiles with usedForTerrain with source zoom 0-4', done => {
+    test('loads covering tiles with usedForTerrain with source zoom 0-4', () => new Promise<void>(done => {
         const transform = new Transform();
         transform.resize(511, 511);
         transform.zoom = 10;
@@ -2047,9 +2045,9 @@ describe('SourceCache#usedForTerrain', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('loads covering tiles with usedForTerrain with source zoom 4-4', done => {
+    test('loads covering tiles with usedForTerrain with source zoom 4-4', () => new Promise<void>(done => {
         const transform = new Transform();
         transform.resize(511, 511);
         transform.zoom = 10;
@@ -2067,5 +2065,5 @@ describe('SourceCache#usedForTerrain', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 });
