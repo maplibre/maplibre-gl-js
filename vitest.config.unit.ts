@@ -1,6 +1,9 @@
 import {defineConfig} from 'vitest/config';
 
 export default defineConfig({
+    server: {
+        port: 80
+    },
     test: {
         name: 'unit',
         environment: 'jsdom',
