@@ -327,6 +327,13 @@ describe('hash', () => {
         expect(window.location.hash).toBe('#baz&foo=bar');
     });
 
+    test('url ending with hash', ()=>{
+        window.location.href = 'http://localhost/#';
+        createHash().addTo(map);
+        map.setZoom(3);
+        expect(window.location.hash).toBe('#3/0/0');
+    });
+
     test('map#remove', () => {
         const container = window.document.createElement('div');
         Object.defineProperty(container, 'clientWidth', {value: 512});
