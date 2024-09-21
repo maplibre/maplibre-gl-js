@@ -327,7 +327,7 @@ describe('hash', () => {
         expect(window.location.hash).toBe('#baz&foo=bar');
     });
 
-    test('url ending with hash', ()=>{
+    test('url ending with hash', () => {
         window.location.href = 'http://localhost/#';
         createHash().addTo(map);
         map.setZoom(3);
