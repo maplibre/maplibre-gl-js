@@ -1,5 +1,5 @@
 import fs from 'fs';
-import sourcemaps from 'rollup-plugin-sourcemaps';
+import sourcemaps from 'rollup-plugin-sourcemaps2';
 import {plugins, watchStagingPlugin} from './build/rollup_plugins';
 import banner from './build/banner';
 import {RollupOptions} from 'rollup';
