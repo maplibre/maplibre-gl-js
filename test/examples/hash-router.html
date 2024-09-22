@@ -38,7 +38,7 @@
         maplibreLogo: true
     });
 
-    // Sets an interval to update the url in an overlay on the map
+    // Set an interval to update the url hash in a map overlay
     const urlHash = document.getElementById('urlHash');
     setInterval(() => {
         urlHash.textContent = `URL hash: ${window.location.hash}`;
