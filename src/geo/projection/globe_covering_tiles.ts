@@ -5,6 +5,7 @@ import {OverscaledTileID} from '../../source/tile_id';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {EXTENT} from '../../data/extent';
 import {projectTileCoordinatesToSphere} from './globe_utils';
+import {scaleZoom} from '../transform_helper';
 
 type CoveringTilesResult = {
     tileID: OverscaledTileID;
@@ -67,21 +68,6 @@ function distanceToTile(pointX: number, pointY: number, tileCornerX: number, til
     smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX + halfWorld, worldSize + worldSize - tileCornerY - tileSize, tileSize));
 
     return smallestDistance;
-}
-
-function shouldSplitTile(centerCoord: MercatorCoordinate, cameraCoord: MercatorCoordinate, tileX: number, tileY: number, tileSize: number, radiusOfMaxLvlLodInTiles: number): boolean {
-    // Determine whether the tile needs any further splitting.
-    // At each level, we want at least `radiusOfMaxLvlLodInTiles` tiles loaded in each axis from the map center point.
-    // For radiusOfMaxLvlLodInTiles=1, this would result in something like this:
-    // z=4 |--------------||--------------||--------------|
-    // z=5         |------||------||------|
-    // z=6             |--||--||--|
-    //                       ^map center
-    // ...where "|--|" symbolizes a tile viewed sideways.
-    // This logic might be slightly different from what mercator_transform.ts does, but should result in very similar (if not the same) set of tiles being loaded.
-    const centerDist = distanceToTile(centerCoord.x, centerCoord.y, tileX, tileY, tileSize);
-    const cameraDist = distanceToTile(cameraCoord.x, cameraCoord.y, tileX, tileY, tileSize);
-    return Math.min(centerDist, cameraDist) * 2 <= radiusOfMaxLvlLodInTiles; // Multiply distance by 2, because the subdivided tiles would be half the size
 }
 
 // Returns the wrap value for a given tile, computed so that tiles will remain loaded when crossing the antimeridian.
@@ -215,28 +201,23 @@ function isTileVisible(frustum: Frustum, plane: vec4, x: number, y: number, z: n
  * @param options - Additional coveringTiles options.
  * @returns A list of tile coordinates, ordered by ascending distance from camera.
  */
-export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: MercatorCoordinate, centerCoord: MercatorCoordinate, coveringZoom: number, options: CoveringTilesOptions): OverscaledTileID[] {
-    let z = coveringZoom;
-    const actualZ = z;
+export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: MercatorCoordinate, centerCoord: MercatorCoordinate, zoom: number, pitch: number, fov: number, options: CoveringTilesOptions): OverscaledTileID[] {
+    let nominalZ = (options.roundZoom ? Math.round : Math.floor)(zoom);
+    const minZoom = options.minzoom || 0;
+    const maxZoom = options.maxzoom !== undefined ? options.maxzoom : nominalZ + 3;
+    nominalZ = Math.min(Math.max(0, nominalZ), maxZoom);
+    let actualZ = nominalZ;
 
-    if (options.minzoom !== undefined && z < options.minzoom) {
-        return [];
-    }
-    if (options.maxzoom !== undefined && z > options.maxzoom) {
-        z = options.maxzoom;
-    }
-
-    const numTiles = Math.pow(2, z);
+    const numTiles = Math.pow(2, nominalZ);
     const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
     const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
-
-    const radiusOfMaxLvlLodInTiles = 3; // Matches the value in the mercator variant of coveringTiles
+    const distanceToCenter2d = Math.hypot(centerCoord.x - cameraCoord.x, centerCoord.y - cameraCoord.y);
+    const distanceZ = Math.abs(centerCoord.z - cameraCoord.z);
+    const distanceToCenter3d = Math.hypot(distanceToCenter2d, distanceZ);
 
     // Do a depth-first traversal to find visible tiles and proper levels of detail
     const stack: Array<CoveringTilesStackEntry> = [];
     const result: Array<CoveringTilesResult> = [];
-    const maxZoom = z;
-    const overscaledZ = options.reparseOverscaled ? actualZ : z;
     stack.push({
         zoom: 0,
         x: 0,
@@ -265,13 +246,25 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
         const tileX = x / scale; // In range 0..1
         const tileY = y / scale; // In range 0..1
 
-        const split = shouldSplitTile(centerCoord, cameraCoord, tileX, tileY, tileSize, radiusOfMaxLvlLodInTiles);
+        const distToTile2d = distanceToTile(cameraCoord.x, cameraCoord.y, tileX, tileY, tileSize);
+        const distToTile3d = Math.hypot(distToTile2d, distanceZ);
 
-        // Have we reached the target depth or is the tile too far away to be any split further?
-        if (it.zoom === maxZoom || !split) {
+        // if distance to candidate tile is a tiny bit farther than distance to center,
+        // use the same zoom as the canter. This is achieved by the scaling distance ratio by cos(fov/2) 
+        actualZ = (options.roundZoom ? Math.round : Math.floor)(
+            nominalZ + scaleZoom(distanceToCenter3d / distToTile3d / Math.cos(fov / 2.0 * 180.0 / Math.PI))
+        );
+        const z = Math.min(actualZ, maxZoom);
+
+        // Have we reached the target depth?
+        if (it.zoom >= z) {
+            if (it.zoom < minZoom) {
+                continue;
+            }
             const dz = maxZoom - it.zoom;
             const dx = cameraPoint[0] - 0.5 - (x << dz);
             const dy = cameraPoint[1] - 0.5 - (y << dz);
+            const overscaledZ = options.reparseOverscaled ? actualZ : it.zoom;
             // We need to compute a valid wrap value for the tile to keep compatibility with mercator
             const wrap = getWrap(centerCoord, tileX, tileSize);
             result.push({

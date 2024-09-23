@@ -663,9 +663,9 @@ describe('GlobeTransform', () => {
                 new OverscaledTileID(8, 0, 8, 127, 126),
                 new OverscaledTileID(8, 0, 8, 127, 127),
                 new OverscaledTileID(8, 0, 8, 128, 126),
-                new OverscaledTileID(8, 0, 8, 127, 128),
                 new OverscaledTileID(8, 0, 8, 128, 127),
-                new OverscaledTileID(8, 0, 8, 128, 128),
+                new OverscaledTileID(10, 0, 10, 511, 512),
+                new OverscaledTileID(10, 0, 10, 512, 512)
             ]);
         });
 
@@ -683,15 +683,17 @@ describe('GlobeTransform', () => {
             });
 
             expect(tiles).toEqual([
-                new OverscaledTileID(8, 0, 8, 128, 125),
+                new OverscaledTileID(7, 0, 7, 64, 62),
                 new OverscaledTileID(8, 0, 8, 127, 127),
                 new OverscaledTileID(8, 0, 8, 128, 126),
-                new OverscaledTileID(8, 0, 8, 127, 128),
                 new OverscaledTileID(8, 0, 8, 128, 127),
                 new OverscaledTileID(8, 0, 8, 129, 126),
+                new OverscaledTileID(10, 0, 10, 510, 512),
+                new OverscaledTileID(10, 0, 10, 511, 512),
                 new OverscaledTileID(8, 0, 8, 128, 128),
+                new OverscaledTileID(10, 0, 10, 511, 513),
                 new OverscaledTileID(8, 0, 8, 129, 127),
-                new OverscaledTileID(8, 0, 8, 130, 127),
+                new OverscaledTileID(7, 0, 7, 65, 63)
             ]);
         });
 
