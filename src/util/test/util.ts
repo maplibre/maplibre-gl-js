@@ -183,7 +183,7 @@ export function bufferToArrayBuffer(data: Buffer): ArrayBuffer {
  * @returns - a promise that resolves after the specified amount of time
  */
 export const sleep = (milliseconds: number = 0) => {
-    return new Promise(resolve => setTimeout(resolve, milliseconds));
+    return new Promise<void>(resolve => setTimeout(resolve, milliseconds));
 };
 
 export function waitForMetadataEvent(source: Evented): Promise<void> {

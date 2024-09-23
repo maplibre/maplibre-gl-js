@@ -244,7 +244,7 @@ describe('vector tile worker source', () => {
         expect(await promise).toBeNull();
     });
 
-    test('VectorTileWorkerSource#returns a good error message when failing to parse a tile', done => {
+    test('VectorTileWorkerSource#returns a good error message when failing to parse a tile', () => new Promise<void>(done => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
         const parse = jest.fn();
 
@@ -265,9 +265,9 @@ describe('vector tile worker source', () => {
         server.respond();
 
         expect(parse).not.toHaveBeenCalled();
-    });
+    }));
 
-    test('VectorTileWorkerSource#returns a good error message when failing to parse a gzipped tile', done => {
+    test('VectorTileWorkerSource#returns a good error message when failing to parse a gzipped tile', () => new Promise<void>(done => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
         const parse = jest.fn();
 
@@ -286,7 +286,7 @@ describe('vector tile worker source', () => {
         server.respond();
 
         expect(parse).not.toHaveBeenCalled();
-    });
+    }));
 
     test('VectorTileWorkerSource provides resource timing information', async () => {
         const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf'));

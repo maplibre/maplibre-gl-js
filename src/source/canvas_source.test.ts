@@ -52,7 +52,7 @@ describe('CanvasSource', () => {
         map = new StubMap();
     });
 
-    test('constructor', done => {
+    test('constructor', () => new Promise<void>(done => {
         const source = createSource();
 
         expect(source.minzoom).toBe(0);
@@ -67,7 +67,7 @@ describe('CanvasSource', () => {
         });
 
         source.onAdd(map);
-    });
+    }));
 
     test('self-validates', () => {
         const stub = jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -94,7 +94,7 @@ describe('CanvasSource', () => {
 
     });
 
-    test('can be initialized with HTML element', done => {
+    test('can be initialized with HTML element', () => new Promise<void>(done => {
         const el = window.document.createElement('canvas');
         const source = createSource({
             canvas: el
@@ -108,9 +108,9 @@ describe('CanvasSource', () => {
         });
 
         source.onAdd(map);
-    });
+    }));
 
-    test('rerenders if animated', done => {
+    test('rerenders if animated', () => new Promise<void>(done => {
         const source = createSource();
 
         map.on('rerender', () => {
@@ -119,9 +119,9 @@ describe('CanvasSource', () => {
         });
 
         source.onAdd(map);
-    });
+    }));
 
-    test('can be static', done => {
+    test('can be static', () => new Promise<void>(done => {
         const source = createSource({
             animate: false
         });
@@ -140,7 +140,7 @@ describe('CanvasSource', () => {
         });
 
         source.onAdd(map);
-    });
+    }));
 
     test('onRemove stops animation', () => {
         const source = createSource();
@@ -176,7 +176,7 @@ describe('CanvasSource', () => {
 
     });
 
-    test('fires idle event on prepare call when there is at least one not loaded tile', done => {
+    test('fires idle event on prepare call when there is at least one not loaded tile', () => new Promise<void>(done => {
         const source = createSource();
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
         source.on('data', (e) => {
@@ -193,7 +193,7 @@ describe('CanvasSource', () => {
             update: () => {}
         } as any;
         source.prepare();
-    });
+    }));
 
 });
 

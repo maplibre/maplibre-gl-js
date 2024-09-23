@@ -14,14 +14,13 @@ beforeEach(() => {
 
 describe('Map#isZooming', () => {
 
-    test('returns false by default', done => {
+    test('returns false by default', () => {
         const map = createMap();
         expect(map.isZooming()).toBe(false);
         map.remove();
-        done();
     });
 
-    test('returns true during a camera zoom animation', done => {
+    test('returns true during a camera zoom animation', () => new Promise<void>(done => {
         const map = createMap();
 
         map.on('zoomstart', () => {
@@ -35,9 +34,9 @@ describe('Map#isZooming', () => {
         });
 
         map.zoomTo(5, {duration: 0});
-    });
+    }));
 
-    test('returns true when scroll zooming', done => {
+    test('returns true when scroll zooming', () => new Promise<void>(done => {
         const map = createMap();
 
         map.on('zoomstart', () => {
@@ -60,9 +59,9 @@ describe('Map#isZooming', () => {
         setTimeout(() => {
             map._renderTaskQueue.run();
         }, 400);
-    });
+    }));
 
-    test('returns true when double-click zooming', done => {
+    test('returns true when double-click zooming', () => new Promise<void>(done => {
         const map = createMap();
 
         map.on('zoomstart', () => {
@@ -83,5 +82,5 @@ describe('Map#isZooming', () => {
 
         now += 500;
         map._renderTaskQueue.run();
-    });
+    }));
 });

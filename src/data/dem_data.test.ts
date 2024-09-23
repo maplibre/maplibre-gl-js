@@ -133,7 +133,7 @@ function testDEMBackfill(dem0: DEMData, dem1: DEMData) {
 }
 
 describe('DEMData#backfillBorder with encoding', () => {
-    describe('mabox encoding', () => {
+    describe('mapbox encoding', () => {
         const dem0 = new DEMData('0', createMockImage(4, 4), 'mapbox');
         const dem1 = new DEMData('1', createMockImage(4, 4), 'mapbox');
 

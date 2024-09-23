@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import typedocConfig from '../typedoc.json' with {type: 'json'};
 import packageJson from '../package.json' with {type: 'json'};
+import {get} from 'https';
 
 type HtmlDoc = {
     title: string;
@@ -110,6 +111,73 @@ function generateExamplesFolder() {
     fs.writeFileSync(path.join(examplesDocsFolder, 'index.md'), indexMarkdown);
 }
 
+async function fetchUrlContent(url: string) {
+    return new Promise<string>((resolve, reject) => {
+        get(url, (res) => {
+            let data = '';
+            if (res.statusCode && (res.statusCode < 200 || res.statusCode >= 300)) {
+                reject(new Error(res.statusMessage));
+                return;
+            }
+
+            res.on('data', (chunk) => {
+                data += chunk;
+            });
+
+            res.on('end', () => {
+                resolve(data);
+            });
+        }).on('error', reject);
+    });
+}
+
+async function generatePluginsPage() {
+    /**
+     * It extract some sections from Awesome MapLibre README.md so we can integrate it into our plugins page
+     *
+     * ```
+     *    header
+     *    <!-- [SOME-ID]:BEGIN -->
+     *    CONTENT-TO-EXTRACT
+     *    <!-- [SOME-ID]:END -->
+     *    footer
+     * ```
+     */
+    const awesomeReadmeUrl = 'https://raw.githubusercontent.com/maplibre/awesome-maplibre/main/README.md';
+    const awesomeReadme = await fetchUrlContent(awesomeReadmeUrl);
+
+    const contentGroupsRE = /<!--\s*\[([-a-zA-Z]+)\]:BEGIN\s*-->([\s\S]*?)<!--\s*\[\1\]:END\s*-->/g;
+
+    const matches = awesomeReadme.matchAll(contentGroupsRE);
+    const groups = Object.fromEntries(
+        Array.from(matches).map(([, key, content]) => [key, content])
+    );
+
+    const pluginsContent = `# Plugins
+
+${groups['JAVASCRIPT-PLUGINS']}
+
+## Framework Integrations
+
+${groups['JAVASCRIPT-BINDINGS']}
+`;
+
+    fs.writeFileSync('docs/plugins.md', pluginsContent, {encoding: 'utf-8'});
+}
+
+function updateMapLibreVersionForUNPKG() {
+
+    // Read index.md
+    const indexPath = 'docs/index.md';
+    let indexContent = fs.readFileSync(indexPath, 'utf-8');
+
+    // Replace the version number
+    indexContent = indexContent.replace(/unpkg\.com\/maplibre-gl@\^(\d+\.\d+\.\d+)/g, `unpkg.com/maplibre-gl@^${packageJson.version}`);
+
+    // Save index.md
+    fs.writeFileSync(indexPath, indexContent);
+}
+
 // !!Main flow start here!!
 if (!fs.existsSync(typedocConfig.out)) {
     throw new Error('Please run typedoc generation first!');
@@ -117,4 +185,6 @@ if (!fs.existsSync(typedocConfig.out)) {
 fs.rmSync(path.join(typedocConfig.out, 'README.md'));
 generateReadme();
 generateExamplesFolder();
+await generatePluginsPage();
+updateMapLibreVersionForUNPKG();
 console.log('Docs generation completed, to see it in action run\n npm run start-docs');

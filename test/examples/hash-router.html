@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Hash routing</title>
+    <meta property="og:description" content="Keep the viewport state in the url with hash routing." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+        #urlHash {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 30px;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            border-radius: 10px;
+            padding: 0 10px;
+            margin: 10px;
+            border: 1px solid #888;
+        }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<span id="urlHash"></span>
+<script>
+    const map = new maplibregl.Map({
+        container: 'map',
+        hash: true, // <- Enable hash routing
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [0, 0],
+        zoom: 1,
+        maplibreLogo: true
+    });
+
+    // Set an interval to update the url hash in a map overlay
+    const urlHash = document.getElementById('urlHash');
+    setInterval(() => {
+        urlHash.textContent = `URL hash: ${window.location.hash}`;
+    }, 100);
+
+</script>
+</body>
+</html>
