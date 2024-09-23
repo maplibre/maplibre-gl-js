@@ -7,6 +7,7 @@
 - Fix circle won't render on mesa 24.1 with AMD GPU ([#4062](https://github.com/maplibre/maplibre-gl-js/issues/4062))
 - Fix hash router for urls ending with a hashtag ([#4730](https://github.com/maplibre/maplibre-gl-js/pull/4730))
 - Replace rollup-plugin-sourcemaps with rollup-plugin-sourcemaps2 ([#4740](https://github.com/maplibre/maplibre-gl-js/pull/4740))
+- Fix level of detail at high pitch angle ([#3983](https://github.com/maplibre/maplibre-gl-js/issues/3983))
 - _...Add new stuff here..._
 
 ## 4.7.0
