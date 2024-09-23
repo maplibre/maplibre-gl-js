@@ -190,7 +190,7 @@ describe('transform', () => {
             tileSize: 512
         };
 
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform(0, 22, 0, 85, true);
         transform.resize(200, 200);
 
         test('general', () => {
@@ -259,6 +259,24 @@ describe('transform', () => {
             ]);
 
             transform.setZoom(8);
+            transform.setPitch(85.0);
+            transform.setBearing(0.0);
+            transform.setCenter(new LngLat(20.918, 39.232));
+            transform.resize(50, 1000);
+            expect(transform.coveringTiles(options)).toEqual([
+                new OverscaledTileID(8, 0, 8, 142, 97),
+                new OverscaledTileID(8, 0, 8, 142, 98),
+                new OverscaledTileID(8, 0, 8, 142, 96),
+                new OverscaledTileID(7, 0, 7, 71, 47),
+                new OverscaledTileID(7, 0, 7, 71, 46),
+                new OverscaledTileID(6, 0, 6, 35, 22),
+                new OverscaledTileID(5, 0, 5, 17, 10),
+                new OverscaledTileID(9, 0, 9, 285, 198),
+                new OverscaledTileID(10, 0, 10, 571, 398),
+                new OverscaledTileID(10, 0, 10, 571, 399)
+            ]);
+
+            transform.setZoom(8);
             transform.setPitch(60);
             transform.setBearing(45.0);
             transform.setCenter(new LngLat(25.02, 60.15));
@@ -324,6 +342,22 @@ describe('transform', () => {
             ]);
         });
 
+    });
+
+    test('maxzoom-0', () => {
+        const options = {
+            minzoom: 0,
+            maxzoom: 0,
+            tileSize: 512
+        };
+
+        const transform = new MercatorTransform(0, 0, 0, 60, true);
+        transform.resize(200, 200);
+        transform.setCenter(new LngLat(0.01, 0.01));
+        transform.setZoom(8);
+        expect(transform.coveringTiles(options)).toEqual([
+            new OverscaledTileID(0, 0, 0, 0, 0)
+        ]);
     });
 
     test('coveringZoomLevel', () => {
