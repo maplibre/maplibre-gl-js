@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.34">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.36">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.35f28582.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.06209087.min.css">
       
         
         <link rel="stylesheet" href="assets/stylesheets/palette.06af60db.min.css">
@@ -505,21 +505,6 @@
       CDN
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="CDN">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      Examples
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -6581,6 +6566,27 @@
   
   
     <li class="md-nav__item">
+      <a href="examples/hash-router/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Hash routing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="examples/heatmap-layer/" class="md-nav__link">
         
   
@@ -7337,6 +7343,27 @@
   
   
     <li class="md-nav__item">
+      <a href="examples/sync-move/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sync movement of multiple maps
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="examples/timeline-animation/" class="md-nav__link">
         
   
@@ -7735,21 +7762,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="CDN">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      Examples
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
     </ul>
@@ -7835,30 +7847,10 @@
 <p>Including it with a <code>&lt;link&gt;</code> in the head of the document via the UNPKG CDN is the simplest and easiest way to provide the CSS, but it is also bundled in the MapLibre module, meaning that if you have a bundler that can handle CSS, you can import the CSS from <code>maplibre-gl/dist/maplibre-gl.css</code>.</p>
 <p>Note too that if the CSS isn't available by the first render, as soon as the CSS is provided, the DOM elements that depend on this CSS should recover.</p>
 <h2 id="cdn">CDN</h2>
-<p>The MapLibre GL JS (<code>.js</code> &amp; <code>.css</code>) are distributed via <a href="https://unpkg.com">UNPKG.com</a>.
-You can view a listing of all the files in the MapLibre GL JS package by appending a <code>/</code> at the end of the MapLibre slug. This is useful to review other revisions or to review the files at UNPKG or the LICENSE. See examples in the following table:</p>
-<h3 id="examples">Examples</h3>
-<table>
-<thead>
-<tr>
-<th style="text-align: left;">Use Case</th>
-<th style="text-align: center;"><code>.js</code></th>
-<th style="text-align: center;"><code>.css</code></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: left;"><code>latest</code></td>
-<td style="text-align: center;"><a href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js">https://unpkg.com/maplibre-gl/dist/maplibre-gl.js</a></td>
-<td style="text-align: center;"><a href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css">https://unpkg.com/maplibre-gl/dist/maplibre-gl.css</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">Use at least <code>2.4.x</code></td>
-<td style="text-align: center;"><a href="https://unpkg.com/maplibre-gl@^2.4/dist/maplibre-gl.js">https://unpkg.com/maplibre-gl@^2.4/dist/maplibre-gl.js</a></td>
-<td style="text-align: center;"><a href="https://unpkg.com/maplibre-gl@^2.4/dist/maplibre-gl.css">https://unpkg.com/maplibre-gl@^2.4/dist/maplibre-gl.css</a></td>
-</tr>
-</tbody>
-</table>
+<p>MapLibre GL JS is also distributed via UNPKG. Our latest version can installed by adding below tags this in the html <code>&lt;head&gt;</code>. Further instructions on how to select specific versions and semver ranges can be found on at <a href="https://unpkg.com">unpkg.com</a>.</p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;https://unpkg.com/maplibre-gl@^4.7.1/dist/maplibre-gl.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="p">&lt;</span><span class="nt">link</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;https://unpkg.com/maplibre-gl@^4.7.1/dist/maplibre-gl.css&quot;</span> <span class="na">rel</span><span class="o">=</span><span class="s">&quot;stylesheet&quot;</span> <span class="p">/&gt;</span>
+</span></code></pre></div>
 
 
 
@@ -7975,7 +7967,7 @@ You can view a listing of all the files in the MapLibre GL JS package by appendi
     </div>
     
     
-    <script id="__config" type="application/json">{"base": ".", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky", "toc.follow", "search.suggest", "navigation.instant", "navigation.sections", "navigation.top"], "search": "assets/javascripts/workers/search.07f07601.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": ".", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky", "toc.follow", "search.suggest", "navigation.instant", "navigation.sections", "navigation.top"], "search": "assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
       <script src="assets/javascripts/bundle.56dfad97.min.js"></script>
