@@ -83,7 +83,7 @@
     "devtools-protocol": "^0.0.1358005",
     "diff": "^7.0.0",
     "dts-bundle-generator": "^9.5.1",
-    "eslint": "^9.10.0",
+    "eslint": "^9.11.0",
     "eslint-config-mourner": "^4.0.2",
     "eslint-plugin-html": "^8.1.2",
     "eslint-plugin-import": "^2.30.0",
