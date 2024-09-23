@@ -89,7 +89,7 @@
     "diff": "^7.0.0",
     "dts-bundle-generator": "^9.5.1",
     "eslint": "^8.57.0",
-    "eslint-config-mourner": "^3.0.0",
+    "eslint-config-mourner": "^4.0.2",
     "eslint-plugin-html": "^8.1.1",
     "eslint-plugin-import": "^2.30.0",
     "eslint-plugin-jest": "^28.8.3",
