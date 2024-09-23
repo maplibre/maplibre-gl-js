@@ -333,6 +333,22 @@ describe('transform', () => {
         });
 
     });
+    
+    test('maxzoom-0', () => {
+        const options = {
+            minzoom: 0,
+            maxzoom: 0,
+            tileSize: 512
+        };
+
+        const transform = new Transform(0, 0, 0, 60, true);
+        transform.resize(200, 200);
+        transform.center = new LngLat(0.01, 0.01);
+        transform.zoom = 8;
+        expect(transform.coveringTiles(options)).toEqual([
+            new OverscaledTileID(0, 0, 0, 0, 0)
+        ]);
+    });
 
     test('coveringZoomLevel', () => {
         const options = {
