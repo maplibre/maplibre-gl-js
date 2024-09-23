@@ -353,27 +353,22 @@ export class Transform {
             terrain?: Terrain;
         }
     ): Array<OverscaledTileID> {
-        let z = this.coveringZoomLevel(options);
-        const actualZ = z;
+        let nominalZ = this.coveringZoomLevel(options);
+        let actualZ = nominalZ;
 
-        if (options.minzoom !== undefined && z < options.minzoom) return [];
-        if (options.maxzoom !== undefined && z > options.maxzoom) z = options.maxzoom;
+        const minZoom = options.minzoom || 0;
+        const maxZoom = options.maxzoom || this.maxZoom;
+        nominalZ = Math.min(Math.max(minZoom, nominalZ), maxZoom);
 
         const cameraCoord = this.pointCoordinate(this.getCameraPoint());
         const centerCoord = MercatorCoordinate.fromLngLat(this.center);
-        const numTiles = Math.pow(2, z);
+        const numTiles = Math.pow(2, nominalZ);
         const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
         const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
-        const cameraFrustum = Frustum.fromInvProjectionMatrix(this.invModelViewProjectionMatrix, this.worldSize, z);
-
-        // No change of LOD behavior for pitch lower than 60 and when there is no top padding: return only tile ids from the requested zoom level
-        let minZoom = options.minzoom || 0;
-        // Use 0.1 as an epsilon to avoid for explicit == 0.0 floating point checks
-        if (!options.terrain && this.pitch <= 60.0 && this._edgeInsets.top < 0.1)
-            minZoom = z;
-
-        // There should always be a certain number of maximum zoom level tiles surrounding the center location in 2D or in front of the camera in 3D
-        const radiusOfMaxLvlLodInTiles = options.terrain ? 2 / Math.min(this.tileSize, options.tileSize) * this.tileSize : 3;
+        const cameraFrustum = Frustum.fromInvProjectionMatrix(this.invModelViewProjectionMatrix, this.worldSize, nominalZ);
+        const distanceToCenter2d = Math.hypot(centerPoint[0] - cameraPoint[0], centerPoint[1] - cameraPoint[1]);
+        let distanceZ = distanceToCenter2d / Math.max(0.001, Math.tan(this._pitch));
+        const distanceToCenter3d = Math.hypot(distanceToCenter2d, distanceZ);
 
         const newRootTile = (wrap: number): any => {
             return {
@@ -389,8 +384,6 @@ export class Transform {
         // Do a depth-first traversal to find visible tiles and proper levels of detail
         const stack = [];
         const result = [];
-        const maxZoom = z;
-        const overscaledZ = options.reparseOverscaled ? actualZ : z;
 
         if (this._renderWorldCopies) {
             // Render copy of the globe thrice on both sides
@@ -418,21 +411,27 @@ export class Transform {
                 fullyVisible = intersectResult === 2;
             }
 
-            const refPoint = options.terrain ? cameraPoint : centerPoint;
-            const distanceX = it.aabb.distanceX(refPoint);
-            const distanceY = it.aabb.distanceY(refPoint);
-            const longestDim = Math.max(Math.abs(distanceX), Math.abs(distanceY));
+            const distanceX = it.aabb.distanceX(cameraPoint);
+            const distanceY = it.aabb.distanceY(cameraPoint);
+            const distToTile2d = Math.hypot(distanceX, distanceY);
+            const distToTile3d = Math.hypot(distanceZ, distToTile2d);
 
-            // We're using distance based heuristics to determine if a tile should be split into quadrants or not.
-            // radiusOfMaxLvlLodInTiles defines that there's always a certain number of maxLevel tiles next to the map center.
-            // Using the fact that a parent node in quadtree is twice the size of its children (per dimension)
-            // we can define distance thresholds for each relative level:
-            // f(k) = offset + 2 + 4 + 8 + 16 + ... + 2^k. This is the same as "offset+2^(k+1)-2"
-            const distToSplit = radiusOfMaxLvlLodInTiles + (1 << (maxZoom - it.zoom)) - 2;
+            // No change of LOD behavior for pitch lower than 60 and when there is no top padding: return only tile ids from the requested zoom level
+            // Use 0.1 as an epsilon to avoid for explicit == 0.0 floating point checks
+            if (options.terrain || this.pitch > 60.0 || this._edgeInsets.top >= 0.1) {
+                actualZ = (options.roundZoom ? Math.round : Math.floor)(
+                    this.zoom + this.scaleZoom(this.tileSize / options.tileSize * distanceToCenter3d / distToTile3d) 
+                );
+            }
+            const z = Math.min(actualZ, maxZoom);
 
-            // Have we reached the target depth or is the tile too far away to be any split further?
-            if (it.zoom === maxZoom || (longestDim > distToSplit && it.zoom >= minZoom)) {
-                const dz = maxZoom - it.zoom, dx = cameraPoint[0] - 0.5 - (x << dz), dy = cameraPoint[1] - 0.5 - (y << dz);
+            // Have we reached the target depth?
+            if (it.zoom >= z) {
+                if (it.zoom < minZoom) {
+                    continue;
+                }
+                const dz = nominalZ - it.zoom, dx = cameraPoint[0] - 0.5 - (x << dz), dy = cameraPoint[1] - 0.5 - (y << dz);
+                const overscaledZ = options.reparseOverscaled ? actualZ : it.zoom;
                 result.push({
                     tileID: new OverscaledTileID(it.zoom === maxZoom ? overscaledZ : it.zoom, it.wrap, it.zoom, x, y),
                     distanceSq: vec2.sqrLen([centerPoint[0] - 0.5 - x, centerPoint[1] - 0.5 - y]),
