@@ -28,7 +28,7 @@ void main(void) {
     #pragma mapbox: initialize mediump float stroke_width
     #pragma mapbox: initialize lowp float stroke_opacity
 
-    // dencode the extrusion vector that we snuck into the a_pos vector
+    // decode the extrusion vector that we snuck into the a_pos vector
     vec2 pos_raw = a_pos + 32768.0;
     vec2 extrude = vec2(mod(pos_raw, 8.0) / 7.0 * 2.0 - 1.0);
 
