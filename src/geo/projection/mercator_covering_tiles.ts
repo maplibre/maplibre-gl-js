@@ -37,7 +37,8 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, options: Co
     let actualZ = nominalZ;
 
     const cameraCoord = transform.screenPointToMercatorCoordinate(transform.getCameraPoint());
-    const centerCoord = MercatorCoordinate.fromLngLat(transform.center);        const numTiles = Math.pow(2, nominalZ);
+    const centerCoord = MercatorCoordinate.fromLngLat(transform.center);
+    const numTiles = Math.pow(2, nominalZ);
     const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
     const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
     const cameraFrustum = Frustum.fromInvProjectionMatrix(invViewProjMatrix, transform.worldSize, nominalZ);
