@@ -367,7 +367,7 @@ export class Transform {
         const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
         const cameraFrustum = Frustum.fromInvProjectionMatrix(this.invModelViewProjectionMatrix, this.worldSize, nominalZ);
         const distanceToCenter2d = Math.hypot(centerPoint[0] - cameraPoint[0], centerPoint[1] - cameraPoint[1]);
-        let distanceZ = distanceToCenter2d / Math.max(0.001, Math.tan(this._pitch));
+        const distanceZ = distanceToCenter2d / Math.max(0.001, Math.tan(this._pitch));
         const distanceToCenter3d = Math.hypot(distanceToCenter2d, distanceZ);
 
         const newRootTile = (wrap: number): any => {
@@ -420,7 +420,7 @@ export class Transform {
             // Use 0.1 as an epsilon to avoid for explicit == 0.0 floating point checks
             if (options.terrain || this.pitch > 60.0 || this._edgeInsets.top >= 0.1) {
                 actualZ = (options.roundZoom ? Math.round : Math.floor)(
-                    this.zoom + this.scaleZoom(this.tileSize / options.tileSize * distanceToCenter3d / distToTile3d) 
+                    this.zoom + this.scaleZoom(this.tileSize / options.tileSize * distanceToCenter3d / distToTile3d)
                 );
             }
             const z = Math.min(actualZ, maxZoom);
