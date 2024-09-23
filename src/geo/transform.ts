@@ -354,11 +354,11 @@ export class Transform {
         }
     ): Array<OverscaledTileID> {
         let nominalZ = this.coveringZoomLevel(options);
-        let actualZ = nominalZ;
 
         const minZoom = options.minzoom || 0;
-        const maxZoom = options.maxzoom || this.maxZoom;
-        nominalZ = Math.min(Math.max(minZoom, nominalZ), maxZoom);
+        const maxZoom = options.maxzoom !== undefined ? options.maxzoom : this.maxZoom;
+        nominalZ = Math.min(Math.max(0, nominalZ), maxZoom);
+        let actualZ = nominalZ;
 
         const cameraCoord = this.pointCoordinate(this.getCameraPoint());
         const centerCoord = MercatorCoordinate.fromLngLat(this.center);
