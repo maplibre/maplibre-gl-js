@@ -43,7 +43,7 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, options: Co
     const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
     const cameraFrustum = Frustum.fromInvProjectionMatrix(invViewProjMatrix, transform.worldSize, nominalZ);
     const distanceToCenter2d = Math.hypot(centerPoint[0] - cameraPoint[0], centerPoint[1] - cameraPoint[1]);
-    const distanceZ = Math.cos(transform.pitch * Math.PI / 180.0) * transform.cameraToCenterDistance / transform.worldSize;
+    const distanceZ = numTiles * Math.cos(transform.pitch * Math.PI / 180.0) * transform.cameraToCenterDistance / transform.worldSize;
     const distanceToCenter3d = Math.hypot(distanceToCenter2d, distanceZ);
 
     const newRootTile = (wrap: number): any => {
