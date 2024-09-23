@@ -685,7 +685,7 @@ export class GlobeTransform implements ITransform {
             return this._mercatorTransform.coveringTiles(options);
         }
 
-        let cameraCoord = this.screenPointToMercatorCoordinate(this.getCameraPoint());
+        const cameraCoord = this.screenPointToMercatorCoordinate(this.getCameraPoint());
         const centerCoord = MercatorCoordinate.fromLngLat(this.center, this.elevation);
         cameraCoord.z = centerCoord.z + Math.cos(this._helper._pitch) * this.cameraToCenterDistance / this.worldSize;
 
