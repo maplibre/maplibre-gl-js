@@ -583,7 +583,7 @@ describe('SourceCache#update', () => {
         sourceCache.onAdd(undefined);
     }));
 
-    test('removes unused tiles',() => new Promise<void>(done => {
+    test('removes unused tiles', () => new Promise<void>(done => {
         const transform = new MercatorTransform();
         transform.resize(511, 511);
         transform.setZoom(0);
