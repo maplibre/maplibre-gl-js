@@ -96,7 +96,7 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, options: Co
         // Use 0.1 as an epsilon to avoid for explicit == 0.0 floating point checks
         if (options.terrain || transform.pitch > 60.0 || transform.padding.top >= 0.1) {
             thisTileDesiredZ = (options.roundZoom ? Math.round : Math.floor)(
-                transform.zoom + scaleZoom(transform.tileSize / options.tileSize * distanceToCenter3d / distToTile3d / Math.cos(transform.fov / 2.0 * 180.0 / Math.PI))
+                transform.zoom + scaleZoom(transform.tileSize / options.tileSize * distanceToCenter3d / distToTile3d / Math.cos(transform.fov / 2.0 * Math.PI / 180.0))
             );
         }
         const z = Math.min(thisTileDesiredZ, maxZoom);

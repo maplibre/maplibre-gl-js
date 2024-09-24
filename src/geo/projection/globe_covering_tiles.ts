@@ -251,7 +251,7 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
         // if distance to candidate tile is a tiny bit farther than distance to center,
         // use the same zoom as the canter. This is achieved by the scaling distance ratio by cos(fov/2)
         const thisTileDesiredZ = (options.roundZoom ? Math.round : Math.floor)(
-            zoom + scaleZoom(distanceToCenter3d / distToTile3d / Math.cos(fov / 2.0 * 180.0 / Math.PI))
+            zoom + scaleZoom(distanceToCenter3d / distToTile3d / Math.cos(fov / 2.0 * Math.PI / 180.0))
         );
         const z = Math.min(thisTileDesiredZ, maxZoom);
 
