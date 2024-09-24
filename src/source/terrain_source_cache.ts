@@ -87,7 +87,7 @@ export class TerrainSourceCache extends Evented {
         this._renderableTilesKeys = [];
         const keys = {};
         for (const tileID of transform.coveringTiles({
-            tileSize: this.tileSize,
+            tileSize: this.sourceCache.tileSize,
             minzoom: this.minzoom,
             maxzoom: this.maxzoom,
             reparseOverscaled: false,
