@@ -265,14 +265,12 @@ describe('transform', () => {
             transform.resize(50, 1000);
             expect(transform.coveringTiles(options)).toEqual([
                 new OverscaledTileID(8, 0, 8, 142, 97),
+                new OverscaledTileID(8, 0, 8, 142, 98),
                 new OverscaledTileID(8, 0, 8, 142, 96),
                 new OverscaledTileID(7, 0, 7, 71, 47),
                 new OverscaledTileID(7, 0, 7, 71, 46),
                 new OverscaledTileID(6, 0, 6, 35, 22),
-                new OverscaledTileID(6, 0, 6, 35, 21),
-                new OverscaledTileID(6, 0, 6, 35, 20),
-                new OverscaledTileID(9, 0, 9, 285, 196),
-                new OverscaledTileID(9, 0, 9, 285, 197),
+                new OverscaledTileID(5, 0, 5, 17, 10),
                 new OverscaledTileID(9, 0, 9, 285, 198),
                 new OverscaledTileID(10, 0, 10, 571, 398),
                 new OverscaledTileID(10, 0, 10, 571, 399)
