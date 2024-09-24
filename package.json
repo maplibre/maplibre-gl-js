@@ -43,7 +43,7 @@
   "devDependencies": {
     "@mapbox/mapbox-gl-rtl-text": "^0.2.3",
     "@mapbox/mvt-fixtures": "^3.10.0",
-    "@rollup/plugin-commonjs": "^26.0.1",
+    "@rollup/plugin-commonjs": "^28.0.0",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.4",
     "@rollup/plugin-replace": "^6.0.1",
