@@ -206,7 +206,6 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
     const minZoom = options.minzoom || 0;
     const maxZoom = options.maxzoom !== undefined ? options.maxzoom : nominalZ + 3;
     nominalZ = Math.min(Math.max(0, nominalZ), maxZoom);
-    let actualZ = nominalZ;
 
     const numTiles = Math.pow(2, nominalZ);
     const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
@@ -251,10 +250,10 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
 
         // if distance to candidate tile is a tiny bit farther than distance to center,
         // use the same zoom as the canter. This is achieved by the scaling distance ratio by cos(fov/2)
-        actualZ = (options.roundZoom ? Math.round : Math.floor)(
+        const thisTileDesiredZ = (options.roundZoom ? Math.round : Math.floor)(
             zoom + scaleZoom(distanceToCenter3d / distToTile3d / Math.cos(fov / 2.0 * 180.0 / Math.PI))
         );
-        const z = Math.min(actualZ, maxZoom);
+        const z = Math.min(thisTileDesiredZ, maxZoom);
 
         // Have we reached the target depth?
         if (it.zoom >= z) {
@@ -264,7 +263,7 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
             const dz = maxZoom - it.zoom;
             const dx = cameraPoint[0] - 0.5 - (x << dz);
             const dy = cameraPoint[1] - 0.5 - (y << dz);
-            const overscaledZ = options.reparseOverscaled ? actualZ : it.zoom;
+            const overscaledZ = options.reparseOverscaled ? thisTileDesiredZ : it.zoom;
             // We need to compute a valid wrap value for the tile to keep compatibility with mercator
             const wrap = getWrap(centerCoord, tileX, tileSize);
             result.push({

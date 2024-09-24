@@ -29,12 +29,11 @@ type CoveringTilesStackEntry = {
  * @returns A list of tile coordinates, ordered by ascending distance from camera.
  */
 export function mercatorCoveringTiles(transform: IReadonlyTransform, options: CoveringTilesOptions, invViewProjMatrix: mat4): Array<OverscaledTileID> {
-    let nominalZ = transform.coveringZoomLevel(options);
+    const desiredZ = transform.coveringZoomLevel(options);
 
     const minZoom = options.minzoom || 0;
     const maxZoom = options.maxzoom !== undefined ? options.maxzoom : transform.maxZoom;
-    nominalZ = Math.min(Math.max(0, nominalZ), maxZoom);
-    let actualZ = nominalZ;
+    const nominalZ = Math.min(Math.max(0, desiredZ), maxZoom);
 
     const cameraCoord = transform.screenPointToMercatorCoordinate(transform.getCameraPoint());
     const centerCoord = MercatorCoordinate.fromLngLat(transform.center);
@@ -93,13 +92,14 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, options: Co
         const distToTile3d = Math.hypot(distanceZ, distToTile2d);
 
         // No change of LOD behavior for pitch lower than 60 and when there is no top padding: return only tile ids from the requested zoom level
+        let thisTileDesiredZ = desiredZ;
         // Use 0.1 as an epsilon to avoid for explicit == 0.0 floating point checks
         if (options.terrain || transform.pitch > 60.0 || transform.padding.top >= 0.1) {
-            actualZ = (options.roundZoom ? Math.round : Math.floor)(
+            thisTileDesiredZ = (options.roundZoom ? Math.round : Math.floor)(
                 transform.zoom + scaleZoom(transform.tileSize / options.tileSize * distanceToCenter3d / distToTile3d / Math.cos(transform.fov / 2.0 * 180.0 / Math.PI))
             );
         }
-        const z = Math.min(actualZ, maxZoom);
+        const z = Math.min(thisTileDesiredZ, maxZoom);
 
         // Have we reached the target depth?
         if (it.zoom >= z) {
@@ -107,7 +107,7 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, options: Co
                 continue;
             }
             const dz = nominalZ - it.zoom, dx = cameraPoint[0] - 0.5 - (x << dz), dy = cameraPoint[1] - 0.5 - (y << dz);
-            const overscaledZ = options.reparseOverscaled ? actualZ : it.zoom;
+            const overscaledZ = options.reparseOverscaled ? thisTileDesiredZ : it.zoom;
             result.push({
                 tileID: new OverscaledTileID(it.zoom === maxZoom ? overscaledZ : it.zoom, it.wrap, it.zoom, x, y),
                 distanceSq: vec2.sqrLen([centerPoint[0] - 0.5 - x, centerPoint[1] - 0.5 - y]),
