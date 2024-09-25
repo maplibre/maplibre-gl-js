@@ -733,7 +733,7 @@ describe('GlobeTransform', () => {
             ]);
         });
 
-        test('overscaled', () => {
+        test('zoom < 0', () => {
             const transform = new GlobeTransform(globeProjectionMock);
             transform.resize(128, 128);
             transform.setCenter(new LngLat(0.0, 80.0));

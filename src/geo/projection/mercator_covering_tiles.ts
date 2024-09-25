@@ -98,6 +98,7 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, options: Co
             thisTileDesiredZ = (options.roundZoom ? Math.round : Math.floor)(
                 transform.zoom + scaleZoom(transform.tileSize / options.tileSize * distanceToCenter3d / distToTile3d / Math.cos(transform.fov / 2.0 * Math.PI / 180.0))
             );
+            thisTileDesiredZ = Math.max(0, thisTileDesiredZ);
         }
         const z = Math.min(thisTileDesiredZ, maxZoom);
 
