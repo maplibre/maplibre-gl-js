@@ -205,7 +205,9 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
     let nominalZ = (options.roundZoom ? Math.round : Math.floor)(zoom + scaleZoom(tileSize / options.tileSize));
     const minZoom = options.minzoom || 0;
     const maxZoom = options.maxzoom !== undefined ? options.maxzoom : nominalZ + 3;
+    console.log(zoom, nominalZ, tileSize, options.tileSize, maxZoom);
     nominalZ = Math.min(Math.max(0, nominalZ), maxZoom);
+
 
     const numTiles = Math.pow(2, nominalZ);
     const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
@@ -252,13 +254,14 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
         // use the same zoom as the canter. This is achieved by the scaling distance ratio by cos(fov/2)
         let thisTileDesiredZ = nominalZ;
         // Only allow tiles of varying z for z > 4
-        if(nominalZ > 4) {
+        if (nominalZ > 4) {
             thisTileDesiredZ = (options.roundZoom ? Math.round : Math.floor)(
                 zoom + scaleZoom(tileSize / options.tileSize * distanceToCenter3d / distToTile3d / Math.cos(fov / 2.0 * Math.PI / 180.0))
             );
         }
         thisTileDesiredZ = Math.max(0, thisTileDesiredZ);
         const z = Math.min(thisTileDesiredZ, maxZoom);
+        console.log(thisTileDesiredZ, distanceToCenter3d, distToTile3d);
 
         // Have we reached the target depth?
         if (it.zoom >= z) {
