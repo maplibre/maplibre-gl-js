@@ -16,7 +16,7 @@
       "maxzoom": 15,
       "tileSize": 256
     },
-    "satellite": {
+    "osm": {
       "type": "raster",
       "tiles": ["local://tiles/osm/{z}-{x}-{y}.osm.png"],
       "maxzoom": 17,
@@ -34,7 +34,7 @@
     {
       "id": "raster",
       "type": "raster",
-      "source": "satellite",
+      "source": "osm",
       "paint": {
         "raster-opacity": 1.0
       }
