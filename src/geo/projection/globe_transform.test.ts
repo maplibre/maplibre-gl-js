@@ -732,5 +732,23 @@ describe('GlobeTransform', () => {
                 new OverscaledTileID(5, -1, 5, 31, 16),
             ]);
         });
+
+        test('overscaled', () => {
+            const transform = new GlobeTransform(globeProjectionMock);
+            transform.resize(128, 128);
+            transform.setCenter(new LngLat(0.0, 80.0));
+            transform.setZoom(-0.5);
+
+            const tiles = transform.coveringTiles({
+                tileSize: 512,
+                minzoom: 0,
+                maxzoom: 0,
+                reparseOverscaled: true
+            });
+
+            expect(tiles).toEqual([
+                new OverscaledTileID(0, 0, 0, 0, 0)
+            ]);
+        });
     });
 });
