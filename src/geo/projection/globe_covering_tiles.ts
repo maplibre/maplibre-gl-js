@@ -208,7 +208,6 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
     console.log(zoom, nominalZ, tileSize, options.tileSize, maxZoom);
     nominalZ = Math.min(Math.max(0, nominalZ), maxZoom);
 
-
     const numTiles = Math.pow(2, nominalZ);
     const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
     const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
