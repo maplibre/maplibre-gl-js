@@ -64,10 +64,10 @@ export class TerrainSourceCache extends Evented {
         this._sourceTileCache = {};
         this.minzoom = 0;
         this.maxzoom = 22;
-        this.tileSize = 512;
         this.deltaZoom = 1;
+        this.tileSize = sourceCache._source.tileSize * 2 ** this.deltaZoom;
         sourceCache.usedForTerrain = true;
-        sourceCache.tileSize = this.tileSize * 2 ** this.deltaZoom;
+        sourceCache.tileSize = this.tileSize;
     }
 
     destruct() {
@@ -87,7 +87,7 @@ export class TerrainSourceCache extends Evented {
         this._renderableTilesKeys = [];
         const keys = {};
         for (const tileID of transform.coveringTiles({
-            tileSize: this.sourceCache.tileSize,
+            tileSize: this.tileSize,
             minzoom: this.minzoom,
             maxzoom: this.maxzoom,
             reparseOverscaled: false,
