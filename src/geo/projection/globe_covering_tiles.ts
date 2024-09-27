@@ -201,7 +201,7 @@ function isTileVisible(frustum: Frustum, plane: vec4, x: number, y: number, z: n
  * @param options - Additional coveringTiles options.
  * @returns A list of tile coordinates, ordered by ascending distance from camera.
  */
-export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: MercatorCoordinate, centerCoord: MercatorCoordinate, tileSize: number, zoom: number, pitch: number, fov: number, options: CoveringTilesOptions): OverscaledTileID[] {
+export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: MercatorCoordinate, centerCoord: MercatorCoordinate, tileSize: number, zoom: number, pitch: number, fov: number, pitchBehavior: number, options: CoveringTilesOptions): OverscaledTileID[] {
     let nominalZ = (options.roundZoom ? Math.round : Math.floor)(zoom + scaleZoom(tileSize / options.tileSize));
     const minZoom = options.minzoom || 0;
     const maxZoom = options.maxzoom !== undefined ? options.maxzoom : nominalZ + 3;
@@ -254,8 +254,9 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
         let thisTileDesiredZ = nominalZ;
         // Only allow tiles of varying z for z > 4
         if (nominalZ > 4) {
+            const thisTilePitch = Math.atan(distToTile2d/distanceZ);
             thisTileDesiredZ = (options.roundZoom ? Math.round : Math.floor)(
-                zoom + scaleZoom(tileSize / options.tileSize * distanceToCenter3d / distToTile3d / Math.cos(fov / 2.0 * Math.PI / 180.0))
+                zoom + pitchBehavior*scaleZoom(Math.cos(thisTilePitch)) / 2 + scaleZoom(tileSize / options.tileSize * distanceToCenter3d / distToTile3d / Math.cos(fov / 2.0 * Math.PI / 180.0))
             );
         }
         thisTileDesiredZ = Math.max(0, thisTileDesiredZ);

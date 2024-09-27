@@ -87,6 +87,10 @@ export class GlobeTransform implements ITransform {
     setRenderWorldCopies(renderWorldCopies: boolean): void {
         this._helper.setRenderWorldCopies(renderWorldCopies);
     }
+    setPitchBehavior(pitchBehavior: number): void {
+        this._helper.setPitchBehavior(pitchBehavior);
+        this._mercatorTransform.setPitchBehavior(pitchBehavior);
+    }
     setBearing(bearing: number): void {
         this._helper.setBearing(bearing);
     }
@@ -201,6 +205,9 @@ export class GlobeTransform implements ITransform {
     }
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
+    }
+    get pitchBehavior(): number {
+        return this._helper.pitchBehavior;
     }
 
     //
@@ -689,7 +696,7 @@ export class GlobeTransform implements ITransform {
         const centerCoord = MercatorCoordinate.fromLngLat(this.center, this.elevation);
         cameraCoord.z = centerCoord.z + Math.cos(this._helper._pitch) * this.cameraToCenterDistance / this.worldSize;
 
-        return globeCoveringTiles(this._cachedFrustum, this._cachedClippingPlane, cameraCoord, centerCoord, this.tileSize, this.zoom, this.pitch, this.fov, options);
+        return globeCoveringTiles(this._cachedFrustum, this._cachedClippingPlane, cameraCoord, centerCoord, this.tileSize, this.zoom, this.pitch, this.fov, this.pitchBehavior,  options);
     }
 
     recalculateZoom(terrain: Terrain): void {

@@ -41,6 +41,11 @@ export type CoveringTilesOptions = CoveringZoomOptions & {
      * When terrain is present, tile visibility will be computed in regards to the min and max elevations for each tile.
      */
     terrain?: Terrain;
+    /**
+     * Controls how tiles are loaded at high pitch angles. Higher numbers cause fewer, lower resolution
+     * tiles to be loaded. A reasonable range for this parameter is [0,2].
+     */
+    pitchBehavior?: number;
 };
 
 export type TransformUpdateResult = {
@@ -110,6 +115,8 @@ export interface ITransformGetters {
     get unmodified(): boolean;
 
     get renderWorldCopies(): boolean;
+
+    get pitchBehavior(): number;
 }
 
 /**
@@ -142,6 +149,12 @@ interface ITransformMutators {
      */
     setMaxPitch(pitch: number): void;
     setRenderWorldCopies(renderWorldCopies: boolean): void;
+    
+    /**
+     * Changes how tiles are loaded at high pitch angles. Higher numbers cause fewer, lower resolution
+     * tiles to be loaded. A reasonable range for `pitchBehavior` is [0,2].
+     */
+    setPitchBehavior(pitchBehavior: number): void;
     /**
      * Sets the transform's bearing, in degrees.
      * Recomputes internal matrices if needed.

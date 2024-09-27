@@ -654,6 +654,7 @@ describe('GlobeTransform', () => {
             transform.setZoom(8);
             transform.setMaxPitch(80);
             transform.setPitch(80);
+            transform.setPitchBehavior(0.0);
 
             const tiles = transform.coveringTiles({
                 tileSize: 512,
@@ -677,6 +678,7 @@ describe('GlobeTransform', () => {
             transform.setMaxPitch(80);
             transform.setPitch(80);
             transform.setBearing(45);
+            transform.setPitchBehavior(0.0);
 
             const tiles = transform.coveringTiles({
                 tileSize: 512,
