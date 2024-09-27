@@ -93,6 +93,9 @@ export class GlobeTransform implements ITransform {
     setPitch(pitch: number): void {
         this._helper.setPitch(pitch);
     }
+    setRoll(roll: number): void {
+        this._helper.setRoll(roll);
+    }
     setFov(fov: number): void {
         this._helper.setFov(fov);
     }
@@ -180,6 +183,9 @@ export class GlobeTransform implements ITransform {
     }
     get pitch(): number {
         return this._helper.pitch;
+    }
+    get roll(): number {
+        return this._helper.roll;
     }
     get bearing(): number {
         return this._helper.bearing;
@@ -628,6 +634,7 @@ export class GlobeTransform implements ITransform {
         this._globeProjMatrixInverted = createMat4f64();
         mat4.invert(this._globeProjMatrixInverted, globeMatrix);
         mat4.translate(globeMatrix, globeMatrix, [0, 0, -this.cameraToCenterDistance]);
+        mat4.rotateZ(globeMatrix, globeMatrix, -this.roll * Math.PI / 180);
         mat4.rotateX(globeMatrix, globeMatrix, -this.pitch * Math.PI / 180);
         mat4.rotateZ(globeMatrix, globeMatrix, -this.angle);
         mat4.translate(globeMatrix, globeMatrix, [0.0, 0, -globeRadiusPixels]);
@@ -655,6 +662,7 @@ export class GlobeTransform implements ITransform {
         const zero = createVec3f64();
         this._cameraPosition = createVec3f64();
         this._cameraPosition[2] = this.cameraToCenterDistance / globeRadiusPixels;
+        vec3.rotateZ(this._cameraPosition, this._cameraPosition, zero, this.roll * Math.PI / 180);
         vec3.rotateX(this._cameraPosition, this._cameraPosition, zero, this.pitch * Math.PI / 180);
         vec3.rotateZ(this._cameraPosition, this._cameraPosition, zero, this.angle);
         vec3.add(this._cameraPosition, this._cameraPosition, [0, 0, 1]);

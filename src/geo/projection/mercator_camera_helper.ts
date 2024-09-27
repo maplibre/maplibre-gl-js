@@ -121,6 +121,7 @@ export class MercatorCameraHelper implements ICameraHelper {
         const startZoom = tr.zoom;
         const startBearing = tr.bearing;
         const startPitch = tr.pitch;
+        const startRoll = tr.roll;
         const startPadding = tr.padding;
 
         const optionsZoom = typeof options.zoom !== 'undefined';
@@ -154,6 +155,9 @@ export class MercatorCameraHelper implements ICameraHelper {
             }
             if (startPitch !== options.pitch) {
                 tr.setPitch(interpolates.number(startPitch, options.pitch, k));
+            }
+            if (startRoll !== options.roll) {
+                tr.setRoll(interpolates.number(startRoll, options.roll, k));
             }
             if (doPadding) {
                 tr.interpolatePadding(startPadding, options.padding, k);

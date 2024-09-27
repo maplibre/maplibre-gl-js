@@ -91,6 +91,10 @@ export interface ITransformGetters {
     get minPitch(): number;
     get maxPitch(): number;
     /**
+     * Roll in degrees.
+     */
+    get roll(): number;
+    /**
      * Pitch in degrees.
      */
     get pitch(): number;
@@ -152,6 +156,11 @@ interface ITransformMutators {
      * Recomputes internal matrices if needed.
      */
     setPitch(pitch: number): void;
+    /**
+     * Sets the transform's roll, in degrees.
+     * Recomputes internal matrices if needed.
+     */
+    setRoll(roll: number): void;
     /**
      * Sets the transform's vertical field of view, in degrees.
      * Recomputes internal matrices if needed.

@@ -191,6 +191,7 @@ export class GlobeCameraHelper implements ICameraHelper {
         clonedTr.setCenter(result.center);
         clonedTr.setBearing(result.bearing);
         clonedTr.setPitch(0);
+        clonedTr.setRoll(0);
         clonedTr.setZoom(result.zoom);
         const matrix = clonedTr.modelViewProjectionMatrix;
 
@@ -261,6 +262,7 @@ export class GlobeCameraHelper implements ICameraHelper {
         const startZoom = tr.zoom;
         const startBearing = tr.bearing;
         const startPitch = tr.pitch;
+        const startRoll = tr.roll;
         const startCenter = tr.center;
 
         const optionsZoom = typeof options.zoom !== 'undefined';
@@ -317,6 +319,9 @@ export class GlobeCameraHelper implements ICameraHelper {
             }
             if (startPitch !== options.pitch) {
                 tr.setPitch(interpolates.number(startPitch, options.pitch, k));
+            }
+            if (startRoll !== options.roll) {
+                tr.setRoll(interpolates.number(startRoll, options.roll, k));
             }
 
             if (options.around) {

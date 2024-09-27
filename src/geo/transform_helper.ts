@@ -103,6 +103,10 @@ export class TransformHelper implements ITransformGetters {
      * Pitch in radians.
      */
     _pitch: number;
+    /**
+     * Roll in radians.
+     */
+    _roll: number;
     _zoom: number;
     _renderWorldCopies: boolean;
     _minZoom: number;
@@ -145,6 +149,7 @@ export class TransformHelper implements ITransformGetters {
         this._angle = 0;
         this._fov = 0.6435011087932844;
         this._pitch = 0;
+        this._roll = 0;
         this._unmodified = true;
         this._edgeInsets = new EdgeInsets();
         this._minElevationForCurrentTile = 0;
@@ -164,6 +169,7 @@ export class TransformHelper implements ITransformGetters {
         this._angle = -thatI.bearing * Math.PI / 180;
         this._fov = thatI.fov * Math.PI / 180;
         this._pitch = thatI.pitch * Math.PI / 180;
+        this._roll = thatI.roll * Math.PI / 180;
         this._unmodified = thatI.unmodified;
         this._edgeInsets = new EdgeInsets(thatI.padding.top, thatI.padding.bottom, thatI.padding.left, thatI.padding.right);
         this._minZoom = thatI.minZoom;
@@ -288,6 +294,17 @@ export class TransformHelper implements ITransformGetters {
         if (this._pitch === p) return;
         this._unmodified = false;
         this._pitch = p;
+        this._calcMatrices();
+    }
+
+    get roll(): number {
+        return this._roll / Math.PI * 180;
+    }
+    setRoll(roll: number) {
+        const r = roll / 180 * Math.PI;
+        if (this._roll === r) return;
+        this._unmodified = false;
+        this._roll = r;
         this._calcMatrices();
     }
 

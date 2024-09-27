@@ -68,6 +68,9 @@ export class MercatorTransform implements ITransform {
     setPitch(pitch: number): void {
         this._helper.setPitch(pitch);
     }
+    setRoll(roll: number): void {
+        this._helper.setRoll(roll);
+    }
     setFov(fov: number): void {
         this._helper.setFov(fov);
     }
@@ -155,6 +158,9 @@ export class MercatorTransform implements ITransform {
     }
     get pitch(): number {
         return this._helper.pitch;
+    }
+    get roll(): number {
+        return this._helper.roll;
     }
     get bearing(): number {
         return this._helper.bearing;
@@ -531,7 +537,8 @@ export class MercatorTransform implements ITransform {
         // 1 Z unit is equivalent to 1 horizontal px at the center of the map
         // (the distance between[width/2, height/2] and [width/2 + 1, height/2])
         const groundAngle = Math.PI / 2 + this._helper._pitch;
-        const fovAboveCenter = this._helper._fov * (0.5 + offset.y / this._helper._height);
+        const zfov = this._helper._fov * (Math.abs(Math.cos(this._helper._roll))*this._helper._height + Math.abs(Math.sin(this._helper._roll))*this._helper._width) / this._helper._height;
+        const fovAboveCenter = zfov * (0.5 + offset.y / this._helper._height);
         const topHalfSurfaceDistance = Math.sin(fovAboveCenter) * lowestPlane / Math.sin(clamp(Math.PI - groundAngle - fovAboveCenter, 0.01, Math.PI - 0.01));
 
         // Find the distance from the center point to the horizon
@@ -568,6 +575,7 @@ export class MercatorTransform implements ITransform {
 
         mat4.scale(m, m, [1, -1, 1]);
         mat4.translate(m, m, [0, 0, -this._cameraToCenterDistance]);
+        mat4.rotateZ(m, m, this._helper._roll);
         mat4.rotateX(m, m, this._helper._pitch);
         mat4.rotateZ(m, m, this._helper._angle);
         mat4.translate(m, m, [-x, -y, 0]);
@@ -603,6 +611,7 @@ export class MercatorTransform implements ITransform {
         this._fogMatrix[9] = offset.y * 2 / this.height;
         mat4.scale(this._fogMatrix, this._fogMatrix, [1, -1, 1]);
         mat4.translate(this._fogMatrix, this._fogMatrix, [0, 0, -this.cameraToCenterDistance]);
+        mat4.rotateZ(this._fogMatrix, this._fogMatrix, this._helper._roll);
         mat4.rotateX(this._fogMatrix, this._fogMatrix, this._helper._pitch);
         mat4.rotateZ(this._fogMatrix, this._fogMatrix, this.angle);
         mat4.translate(this._fogMatrix, this._fogMatrix, [-x, -y, 0]);

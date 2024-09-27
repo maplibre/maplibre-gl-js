@@ -23,6 +23,7 @@ export type CameraForBoxAndBearingHandlerResult = {
 export type EaseToHandlerOptions = {
     bearing: number;
     pitch: number;
+    roll: number;
     padding: PaddingOptions;
     offsetAsPoint: Point;
     around?: LngLat;
@@ -41,6 +42,7 @@ export type EaseToHandlerResult = {
 export type FlyToHandlerOptions = {
     bearing: number;
     pitch: number;
+    roll: number;
     padding: PaddingOptions;
     offsetAsPoint: Point;
     center?: LngLatLike;
