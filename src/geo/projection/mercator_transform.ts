@@ -537,7 +537,7 @@ export class MercatorTransform implements ITransform {
         // 1 Z unit is equivalent to 1 horizontal px at the center of the map
         // (the distance between[width/2, height/2] and [width/2 + 1, height/2])
         const groundAngle = Math.PI / 2 + this._helper._pitch;
-        const zfov = this._helper._fov * (Math.abs(Math.cos(this._helper._roll))*this._helper._height + Math.abs(Math.sin(this._helper._roll))*this._helper._width) / this._helper._height;
+        const zfov = this._helper._fov * (Math.abs(Math.cos(this._helper._roll)) * this._helper._height + Math.abs(Math.sin(this._helper._roll)) * this._helper._width) / this._helper._height;
         const fovAboveCenter = zfov * (0.5 + offset.y / this._helper._height);
         const topHalfSurfaceDistance = Math.sin(fovAboveCenter) * lowestPlane / Math.sin(clamp(Math.PI - groundAngle - fovAboveCenter, 0.01, Math.PI - 0.01));
 

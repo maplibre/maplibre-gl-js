@@ -635,7 +635,6 @@ export abstract class Camera extends Evented {
         return this;
     }
 
-
     /**
      * Returns the map's current roll angle.
      *
