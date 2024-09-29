@@ -6,9 +6,10 @@ import {CameraForBoundsOptions} from '../../ui/camera';
 import {PaddingOptions} from '../edge_insets';
 import {LngLatBounds} from '../lng_lat_bounds';
 import {normalizeCenter, scaleZoom, zoomScale} from '../transform_helper';
-import {degreesToRadians} from '../../util/util';
+import {degreesToRadians, getRollPitchBearing} from '../../util/util';
 import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
+import {quat} from 'gl-matrix';
 
 /**
  * @internal
@@ -119,10 +120,14 @@ export class MercatorCameraHelper implements ICameraHelper {
 
     handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandlerResult {
         const startZoom = tr.zoom;
-        const startBearing = tr.bearing;
-        const startPitch = tr.pitch;
-        const startRoll = tr.roll;
         const startPadding = tr.padding;
+        let startRotation: quat = new Float64Array(4) as any;
+        quat.fromEuler(startRotation, tr.roll, tr.pitch - 90.0, tr.bearing);
+        let endRotation: quat = new Float64Array(4) as any;
+        quat.fromEuler(endRotation, 
+            options.roll === undefined ? tr.roll : options.roll,
+            options.pitch === undefined ? tr.pitch - 90.0 : options.pitch - 90.0,
+            options.bearing === undefined ? tr.bearing : options.bearing);
 
         const optionsZoom = typeof options.zoom !== 'undefined';
 
@@ -150,14 +155,13 @@ export class MercatorCameraHelper implements ICameraHelper {
             if (isZooming) {
                 tr.setZoom(interpolates.number(startZoom, endZoom, k));
             }
-            if (startBearing !== options.bearing) {
-                tr.setBearing(interpolates.number(startBearing, options.bearing, k));
-            }
-            if (startPitch !== options.pitch) {
-                tr.setPitch(interpolates.number(startPitch, options.pitch, k));
-            }
-            if (startRoll !== options.roll) {
-                tr.setRoll(interpolates.number(startRoll, options.roll, k));
+            if (!quat.equals(startRotation, endRotation)) {
+                let rotation: quat = new Float64Array(4) as any;
+                quat.slerp(rotation, startRotation, endRotation, k);
+                const eulerAngles = getRollPitchBearing(rotation);
+                tr.setRoll(eulerAngles.roll);
+                tr.setPitch(eulerAngles.pitch);
+                tr.setBearing(eulerAngles.bearing);
             }
             if (doPadding) {
                 tr.interpolatePadding(startPadding, options.padding, k);

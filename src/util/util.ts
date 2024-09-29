@@ -3,7 +3,7 @@ import UnitBezier from '@mapbox/unitbezier';
 import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';
 import type {Size} from './image';
 import type {WorkerGlobalScopeInterface} from './web_worker';
-import {mat4, vec3, vec4} from 'gl-matrix';
+import {mat3, mat4, quat, vec3, vec4} from 'gl-matrix';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
 import {OverscaledTileID} from '../source/tile_id';
 
@@ -880,6 +880,38 @@ export function subscribe(target: Subscriber, message: keyof WindowEventMap, lis
  */
 export function degreesToRadians(degrees: number): number {
     return degrees * Math.PI / 180;
+}
+
+/**
+ * This method converts radians to degrees.
+ * The return value is the degrees value.
+ * @param degrees - The number of radians
+ * @returns degrees
+ */
+export function radiansToDegrees(degrees: number): number {
+    return degrees / Math.PI * 180;
+}
+
+export type RollPitchBearing = {
+    roll: number;
+    pitch: number;
+    bearing: number;
+};
+
+/**
+ * This method converts a rotation quaternion to roll, pitch, and bearing angles in degrees.
+ * @param rotation - The rotation quaternion
+ * @returns roll, pitch, and bearing angles in degrees
+ */
+export function getRollPitchBearing(rotation: quat): RollPitchBearing {
+    let m: mat3 = new Float64Array(9) as any;
+    mat3.fromQuat(m, rotation);
+    
+    const roll = radiansToDegrees((m[5] == 0.0 && m[8] == 0.0) ? 0.0 :  Math.atan2(m[5], m[8]));
+    const x_angle = radiansToDegrees(-Math.asin(m[2]));
+    const bearing = radiansToDegrees((m[1] == 0.0 && m[0] == 0.0) ? 0.0 : Math.atan2(m[1], m[0]));
+
+    return {roll, pitch: x_angle + 90.0, bearing}
 }
 
 /**

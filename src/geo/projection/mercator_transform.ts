@@ -575,7 +575,7 @@ export class MercatorTransform implements ITransform {
 
         mat4.scale(m, m, [1, -1, 1]);
         mat4.translate(m, m, [0, 0, -this._cameraToCenterDistance]);
-        mat4.rotateZ(m, m, this._helper._roll);
+        mat4.rotateZ(m, m, -this._helper._roll);
         mat4.rotateX(m, m, this._helper._pitch);
         mat4.rotateZ(m, m, this._helper._angle);
         mat4.translate(m, m, [-x, -y, 0]);
@@ -611,7 +611,7 @@ export class MercatorTransform implements ITransform {
         this._fogMatrix[9] = offset.y * 2 / this.height;
         mat4.scale(this._fogMatrix, this._fogMatrix, [1, -1, 1]);
         mat4.translate(this._fogMatrix, this._fogMatrix, [0, 0, -this.cameraToCenterDistance]);
-        mat4.rotateZ(this._fogMatrix, this._fogMatrix, this._helper._roll);
+        mat4.rotateZ(this._fogMatrix, this._fogMatrix, -this._helper._roll);
         mat4.rotateX(this._fogMatrix, this._fogMatrix, this._helper._pitch);
         mat4.rotateZ(this._fogMatrix, this._fogMatrix, this.angle);
         mat4.translate(this._fogMatrix, this._fogMatrix, [-x, -y, 0]);

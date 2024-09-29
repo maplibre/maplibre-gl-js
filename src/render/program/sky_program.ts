@@ -28,9 +28,9 @@ const skyUniformValues = (sky: Sky, transform: IReadonlyTransform, pixelRatio: n
     return {
         'u_sky_color': sky.properties.get('sky-color'),
         'u_horizon_color': sky.properties.get('horizon-color'),
-        'u_horizon': [(transform.width / 2 + mercator_horizon * sin_roll)  * pixelRatio,
+        'u_horizon': [(transform.width / 2 - mercator_horizon * sin_roll)  * pixelRatio,
             (transform.height / 2 + mercator_horizon * cos_roll) * pixelRatio],
-        'u_horizon_normal' : [sin_roll, cos_roll],
+        'u_horizon_normal' : [-sin_roll, cos_roll],
         'u_sky_horizon_blend': (sky.properties.get('sky-horizon-blend') * transform.height / 2) * pixelRatio,
     };
 };
