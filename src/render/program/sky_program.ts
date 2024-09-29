@@ -24,7 +24,8 @@ const skyUniforms = (context: Context, locations: UniformLocations): SkyUniforms
 const skyUniformValues = (sky: Sky, transform: IReadonlyTransform, pixelRatio: number): UniformValues<SkyUniformsType> => ({
     'u_sky_color': sky.properties.get('sky-color'),
     'u_horizon_color': sky.properties.get('horizon-color'),
-    'u_horizon': [transform.width / 2, (transform.height / 2 + getMercatorHorizon(transform)) * pixelRatio],
+    'u_horizon': [(transform.width / 2 + getMercatorHorizon(transform) * Math.sin(transform.roll * Math.PI / 180.0))  * pixelRatio,
+        (transform.height / 2 + getMercatorHorizon(transform) * Math.cos(transform.roll * Math.PI / 180.0)) * pixelRatio],
     'u_horizon_normal' : [Math.sin(transform.roll * Math.PI / 180.0), Math.cos(transform.roll * Math.PI / 180.0)],
     'u_sky_horizon_blend': (sky.properties.get('sky-horizon-blend') * transform.height / 2) * pixelRatio,
 });
