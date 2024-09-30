@@ -4,10 +4,23 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 5.0.0-pre.1
+
+### ✨ Features and improvements
+
+- Support globe mode ([#3963](https://github.com/maplibre/maplibre-gl-js/issues/3963))
+- Merge atmosphere an sky implementation ([#3888](https://github.com/maplibre/maplibre-gl-js/issues/3888))
+- Add option to display a realistic atmosphere when using a Globe projection ([#3888](https://github.com/maplibre/maplibre-gl-js/issues/3888))
+
+## 4.7.1
+
+### 🐞 Bug fixes
+
 - Fix circle won't render on mesa 24.1 with AMD GPU ([#4062](https://github.com/maplibre/maplibre-gl-js/issues/4062))
 - Fix hash router for urls ending with a hashtag ([#4730](https://github.com/maplibre/maplibre-gl-js/pull/4730))
 - Replace rollup-plugin-sourcemaps with rollup-plugin-sourcemaps2 ([#4740](https://github.com/maplibre/maplibre-gl-js/pull/4740))
-- _...Add new stuff here..._
 
 ## 4.7.0
 
