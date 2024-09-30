@@ -15,6 +15,8 @@ import {quat} from 'gl-matrix';
  * @internal
  */
 export class MercatorCameraHelper implements ICameraHelper {
+    useSlerp: boolean = true;
+
     get useGlobeControls(): boolean { return false; }
 
     handlePanInertia(pan: Point, transform: IReadonlyTransform): {
@@ -120,6 +122,9 @@ export class MercatorCameraHelper implements ICameraHelper {
 
     handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandlerResult {
         const startZoom = tr.zoom;
+        const startBearing = tr.bearing;
+        const startPitch = tr.pitch;
+        const startRoll = tr.roll;
         const startPadding = tr.padding;
         let startRotation: quat = new Float64Array(4) as any;
         quat.fromEuler(startRotation, tr.roll, tr.pitch - 90.0, tr.bearing);
@@ -155,13 +160,25 @@ export class MercatorCameraHelper implements ICameraHelper {
             if (isZooming) {
                 tr.setZoom(interpolates.number(startZoom, endZoom, k));
             }
-            if (!quat.equals(startRotation, endRotation)) {
-                let rotation: quat = new Float64Array(4) as any;
-                quat.slerp(rotation, startRotation, endRotation, k);
-                const eulerAngles = getRollPitchBearing(rotation);
-                tr.setRoll(eulerAngles.roll);
-                tr.setPitch(eulerAngles.pitch);
-                tr.setBearing(eulerAngles.bearing);
+            if (this.useSlerp) {
+                if (!quat.equals(startRotation, endRotation)) {
+                    let rotation: quat = new Float64Array(4) as any;
+                    quat.slerp(rotation, startRotation, endRotation, k);
+                    const eulerAngles = getRollPitchBearing(rotation);
+                    tr.setRoll(eulerAngles.roll);
+                    tr.setPitch(eulerAngles.pitch);
+                    tr.setBearing(eulerAngles.bearing);
+                }
+            } else {
+                if (startBearing !== options.bearing) {
+                    tr.setBearing(interpolates.number(startBearing, options.bearing, k));
+                }
+                if (startPitch !== options.pitch) {
+                    tr.setPitch(interpolates.number(startPitch, options.pitch, k));
+                }
+                if (startRoll !== options.roll) {
+                    tr.setRoll(interpolates.number(startRoll, options.roll, k));
+                }
             }
             if (doPadding) {
                 tr.interpolatePadding(startPadding, options.padding, k);
