@@ -95,12 +95,14 @@ describe('#calculateCameraOptionsFromTo', () => {
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.center).toBeDefined();
         expect(cameraOptions.bearing).toBeCloseTo(0);
+        expect(cameraOptions.roll).toBeUndefined();
     });
 
     test('look at west', () => {
         const cameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 0, {lng: 0, lat: 0});
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.bearing).toBeCloseTo(-90);
+        expect(cameraOptions.roll).toBeUndefined();
     });
 
     test('pitch 45', () => {
@@ -109,12 +111,14 @@ describe('#calculateCameraOptionsFromTo', () => {
         const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 111200, {lng: 0, lat: 0});
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.pitch).toBeCloseTo(45);
+        expect(cameraOptions.roll).toBeUndefined();
     });
 
     test('pitch 90', () => {
         const cameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 0, {lng: 0, lat: 0});
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.pitch).toBeCloseTo(90);
+        expect(cameraOptions.roll).toBeUndefined();
     });
 
     test('pitch 153.435', () => {
@@ -125,6 +129,7 @@ describe('#calculateCameraOptionsFromTo', () => {
         const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 111200, {lng: 0, lat: 0}, 111200 * 3);
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.pitch).toBeCloseTo(153.435);
+        expect(cameraOptions.roll).toBeUndefined();
     });
 
     test('zoom distance 1000', () => {
@@ -133,6 +138,7 @@ describe('#calculateCameraOptionsFromTo', () => {
 
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.zoom).toBeCloseTo(expectedZoom);
+        expect(cameraOptions.roll).toBeUndefined();
     });
 
     test('zoom distance 1 lng (111.2km), 111.2km altitude away', () => {
@@ -141,6 +147,7 @@ describe('#calculateCameraOptionsFromTo', () => {
 
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.zoom).toBeCloseTo(expectedZoom);
+        expect(cameraOptions.roll).toBeUndefined();
     });
 
     test('same To as From error', () => {
@@ -198,6 +205,17 @@ describe('#jumpTo', () => {
         expect(camera.getPitch()).toBe(45);
     });
 
+    test('sets roll', () => {
+        camera.jumpTo({pitch: 0, roll: 45});
+        expect(camera.getRoll()).toBe(45);
+        expect(camera.getPitch()).toBe(0);
+    });
+
+    test('keeps current roll if not specified', () => {
+        camera.jumpTo({});
+        expect(camera.getRoll()).toBe(45);
+    });
+
     test('sets multiple properties', () => {
         camera.jumpTo({
             center: [10, 20],
@@ -209,6 +227,21 @@ describe('#jumpTo', () => {
         expect(camera.getZoom()).toBe(10);
         expect(camera.getBearing()).toBe(180);
         expect(camera.getPitch()).toBe(60);
+    });
+
+    test('sets more properties', () => {
+        camera.jumpTo({
+            center: [1, 2],
+            zoom: 9,
+            bearing: 120,
+            pitch: 40,
+            roll: 20
+        });
+        expect(camera.getCenter()).toEqual({lng: 1, lat: 2});
+        expect(camera.getZoom()).toBe(9);
+        expect(camera.getBearing()).toBe(120);
+        expect(camera.getPitch()).toBe(40);
+        expect(camera.getRoll()).toBe(20);
     });
 
     test('emits move events, preserving eventData', () => {
@@ -268,6 +301,21 @@ describe('#jumpTo', () => {
         camera.jumpTo({pitch: 10}, eventData);
         expect(started).toBe('ok');
         expect(pitched).toBe('ok');
+        expect(ended).toBe('ok');
+    });
+
+    test('emits roll events, preserving eventData', () => {
+        let started, rolled, ended;
+        const eventData = {data: 'ok'};
+
+        camera
+            .on('rollstart', (d) => { started = d.data; })
+            .on('roll', (d) => { rolled = d.data; })
+            .on('rollend', (d) => { ended = d.data; });
+
+        camera.jumpTo({roll: 10}, eventData);
+        expect(started).toBe('ok');
+        expect(rolled).toBe('ok');
         expect(ended).toBe('ok');
     });
 
@@ -383,9 +431,46 @@ describe('#setBearing', () => {
     });
 
     test('cancels in-progress easing', () => {
-        camera.panTo([3, 4]);
+        camera.panTo([4, 3]);
         expect(camera.isEasing()).toBeTruthy();
         camera.setBearing(6);
+        expect(!camera.isEasing()).toBeTruthy();
+    });
+});
+
+describe('#setRoll', () => {
+    const camera = createCamera();
+
+    test('sets roll', () => {
+        camera.setRoll(4);
+        expect(camera.getRoll()).toBe(4);
+    });
+
+    test('emits move and roll events, preserving eventData', () => {
+        let movestarted, moved, moveended, rollstarted, rolled, rollended;
+        const eventData = {data: 'ok'};
+
+        camera
+            .on('movestart', (d) => { movestarted = d.data; })
+            .on('move', (d) => { moved = d.data; })
+            .on('moveend', (d) => { moveended = d.data; })
+            .on('rollstart', (d) => { rollstarted = d.data; })
+            .on('roll', (d) => { rolled = d.data; })
+            .on('rollend', (d) => { rollended = d.data; });
+
+        camera.setRoll(5, eventData);
+        expect(movestarted).toBe('ok');
+        expect(moved).toBe('ok');
+        expect(moveended).toBe('ok');
+        expect(rollstarted).toBe('ok');
+        expect(rolled).toBe('ok');
+        expect(rollended).toBe('ok');
+    });
+
+    test('cancels in-progress easing', () => {
+        camera.panTo([3, 4]);
+        expect(camera.isEasing()).toBeTruthy();
+        camera.setRoll(6);
         expect(!camera.isEasing()).toBeTruthy();
     });
 });
@@ -688,6 +773,28 @@ describe('#easeTo', () => {
         expect(camera.getPitch()).toBeCloseTo(45, 6);
     });
 
+    test('rolls to specified roll', () => {
+        const camera = createCamera();
+        camera.easeTo({pitch: 1, roll: 45, duration: 0});
+        expect(camera.getRoll()).toBeCloseTo(45, 6);
+    });
+
+    test('roll behavior at Euler angle singularity', () => {
+        const camera = createCamera();
+        camera.easeTo({bearing: 0, pitch: 0, roll: 45, duration: 0});
+        expect(camera.getRoll()).toBeCloseTo(45, 6);
+        expect(camera.getPitch()).toBeCloseTo(0, 6);
+        expect(camera.getBearing()).toBeCloseTo(0, 6);
+    });
+
+    test('bearing behavior at Euler angle singularity', () => {
+        const camera = createCamera();
+        camera.easeTo({bearing: 45, pitch: 0, roll: 0, duration: 0});
+        expect(camera.getRoll()).toBeCloseTo(0, 6);
+        expect(camera.getPitch()).toBeCloseTo(0, 6);
+        expect(camera.getBearing()).toBeCloseTo(45, 6);
+    });
+
     test('pans and zooms', () => {
         const camera = createCamera();
         camera.easeTo({center: [100, 0], zoom: 3.2, duration: 0});
@@ -780,12 +887,12 @@ describe('#easeTo', () => {
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: -70.3125, lat: 0.000002552471840999715}));
     });
 
-    test('emits move, zoom, rotate, and pitch events, preserving eventData', () => {
+    test('emits move, zoom, rotate, pitch, and roll events, preserving eventData', () => {
         const camera = createCamera();
-        let movestarted, moved, zoomstarted, zoomed, rotatestarted, rotated, pitchstarted, pitched;
+        let movestarted, moved, zoomstarted, zoomed, rotatestarted, rotated, pitchstarted, pitched, rollstarted, rolled;
         const eventData = {data: 'ok'};
 
-        expect.assertions(18);
+        expect.assertions(23);
 
         camera
             .on('movestart', (d) => { movestarted = d.data; })
@@ -794,11 +901,13 @@ describe('#easeTo', () => {
                 expect(camera._zooming).toBeFalsy();
                 expect(camera._panning).toBeFalsy();
                 expect(camera._rotating).toBeFalsy();
+                expect(camera._rolling).toBeFalsy();
 
                 expect(movestarted).toBe('ok');
                 expect(moved).toBe('ok');
                 expect(zoomed).toBe('ok');
                 expect(rotated).toBe('ok');
+                expect(rolled).toBe('ok');
                 expect(pitched).toBe('ok');
                 expect(d.data).toBe('ok');
             });
@@ -830,8 +939,17 @@ describe('#easeTo', () => {
                 expect(d.data).toBe('ok');
             });
 
+        camera
+            .on('rollstart', (d) => { rollstarted = d.data; })
+            .on('roll', (d) => { rolled = d.data; })
+            .on('rollend', (d) => {
+                expect(rollstarted).toBe('ok');
+                expect(rolled).toBe('ok');
+                expect(d.data).toBe('ok');
+            });
+
         camera.easeTo(
-            {center: [100, 0], zoom: 3.2, bearing: 90, duration: 0, pitch: 45},
+            {center: [100, 0], zoom: 3.2, bearing: 90, duration: 0, pitch: 45, roll: 30},
             eventData);
     });
 
@@ -1166,6 +1284,28 @@ describe('#flyTo', () => {
         expect(camera.getPitch()).toBeCloseTo(45, 6);
     });
 
+    test('rolls to specified roll', () => {
+        const camera = createCamera();
+        camera.flyTo({pitch: 1, roll: 45, animate: false});
+        expect(camera.getRoll()).toBeCloseTo(45, 6);
+    });
+
+    test('roll behavior at Euler angle singularity', () => {
+        const camera = createCamera();
+        camera.flyTo({bearing: 0, pitch: 0, roll: 45, animate: false});
+        expect(camera.getRoll()).toBeCloseTo(45, 6);
+        expect(camera.getPitch()).toBeCloseTo(0, 6);
+        expect(camera.getBearing()).toBeCloseTo(0, 6);
+    });
+
+    test('bearing behavior at Euler angle singularity', () => {
+        const camera = createCamera();
+        camera.flyTo({bearing: 45, pitch: 0, roll: 0, animate: false});
+        expect(camera.getRoll()).toBeCloseTo(0, 6);
+        expect(camera.getPitch()).toBeCloseTo(0, 6);
+        expect(camera.getBearing()).toBeCloseTo(45, 6);
+    });
+
     test('pans and zooms', () => {
         const camera = createCamera();
         camera.flyTo({center: [100, 0], zoom: 3.2, animate: false});
@@ -1223,11 +1363,11 @@ describe('#flyTo', () => {
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 170.3125, lat: 0});
     });
 
-    test('emits move, zoom, rotate, and pitch events, preserving eventData', () => {
-        expect.assertions(18);
+    test('emits move, zoom, rotate, pitch, and roll events, preserving eventData', () => {
+        expect.assertions(22);
 
         const camera = createCamera();
-        let movestarted, moved, zoomstarted, zoomed, rotatestarted, rotated, pitchstarted, pitched;
+        let movestarted, moved, zoomstarted, zoomed, rotatestarted, rotated, pitchstarted, pitched, rollstarted, rolled;
         const eventData = {data: 'ok'};
 
         camera
@@ -1235,6 +1375,7 @@ describe('#flyTo', () => {
             .on('move', (d) => { moved = d.data; })
             .on('rotate', (d) => { rotated = d.data; })
             .on('pitch', (d) => { pitched = d.data; })
+            .on('roll', (d) => { rolled = d.data; })
             .on('moveend', (d) => {
                 expect(camera._zooming).toBeFalsy();
                 expect(camera._panning).toBeFalsy();
@@ -1245,6 +1386,7 @@ describe('#flyTo', () => {
                 expect(zoomed).toBe('ok');
                 expect(rotated).toBe('ok');
                 expect(pitched).toBe('ok');
+                expect(rolled).toBe('ok');
                 expect(d.data).toBe('ok');
             });
 
@@ -1275,8 +1417,17 @@ describe('#flyTo', () => {
                 expect(d.data).toBe('ok');
             });
 
+        camera
+            .on('rollstart', (d) => { rollstarted = d.data; })
+            .on('roll', (d) => { rolled = d.data; })
+            .on('rollend', (d) => {
+                expect(rollstarted).toBe('ok');
+                expect(rolled).toBe('ok');
+                expect(d.data).toBe('ok');
+            });
+
         camera.flyTo(
-            {center: [100, 0], zoom: 3.2, bearing: 90, duration: 0, pitch: 45, animate: false},
+            {center: [100, 0], zoom: 3.2, bearing: 90, duration: 0, pitch: 45, roll: 20, animate: false},
             eventData);
     });
 
@@ -2403,6 +2554,16 @@ describe('#jumpTo globe projection', () => {
             expect(camera.getPitch()).toBe(45);
         });
 
+        test('sets roll', () => {
+            camera.jumpTo({roll: 45});
+            expect(camera.getRoll()).toBe(45);
+        });
+
+        test('keeps current roll if not specified', () => {
+            camera.jumpTo({});
+            expect(camera.getRoll()).toBe(45);
+        });
+
         test('sets multiple properties', () => {
             camera.jumpTo({
                 center: [10, 20],
@@ -2529,6 +2690,29 @@ describe('#easeTo globe projection', () => {
             const camera = createCameraGlobe();
             camera.easeTo({pitch: 45, duration: 0});
             expect(camera.getPitch()).toBe(45);
+        });
+
+        test('rolls to specified roll', () => {
+            const camera = createCameraGlobe();
+            camera.easeTo({pitch: 1, roll: 45, duration: 0});
+            expect(camera.getPitch()).toBeCloseTo(1, 6);
+            expect(camera.getRoll()).toBeCloseTo(45, 6);
+        });
+
+        test('roll behavior at Euler angle singularity', () => {
+            const camera = createCameraGlobe();
+            camera.easeTo({bearing: 0, pitch: 0, roll: 45, duration: 0});
+            expect(camera.getRoll()).toBeCloseTo(45, 6);
+            expect(camera.getPitch()).toBeCloseTo(0, 6);
+            expect(camera.getBearing()).toBeCloseTo(0, 6);
+        });
+    
+        test('bearing behavior at Euler angle singularity', () => {
+            const camera = createCameraGlobe();
+            camera.easeTo({bearing: 45, pitch: 0, roll: 0, duration: 0});
+            expect(camera.getRoll()).toBeCloseTo(0, 6);
+            expect(camera.getPitch()).toBeCloseTo(0, 6);
+            expect(camera.getBearing()).toBeCloseTo(45, 6);
         });
 
         test('pans and zooms', () => {
@@ -2830,6 +3014,29 @@ describe('#flyTo globe projection', () => {
             expect(camera.getPitch()).toBe(45);
         });
 
+        test('rolls to specified roll', () => {
+            const camera = createCameraGlobe();
+            camera.flyTo({pitch: 1, roll: 45, animate: false});
+            expect(camera.getPitch()).toBeCloseTo(1, 6);
+            expect(camera.getRoll()).toBeCloseTo(45, 6);
+        });
+
+        test('roll behavior at Euler angle singularity', () => {
+            const camera = createCameraGlobe();
+            camera.flyTo({bearing: 0, pitch: 0, roll: 45, animate: false});
+            expect(camera.getRoll()).toBeCloseTo(45, 6);
+            expect(camera.getPitch()).toBeCloseTo(0, 6);
+            expect(camera.getBearing()).toBeCloseTo(0, 6);
+        });
+    
+        test('bearing behavior at Euler angle singularity', () => {
+            const camera = createCameraGlobe();
+            camera.flyTo({bearing: 45, pitch: 0, roll: 0, animate: false});
+            expect(camera.getRoll()).toBeCloseTo(0, 6);
+            expect(camera.getPitch()).toBeCloseTo(0, 6);
+            expect(camera.getBearing()).toBeCloseTo(45, 6);
+        });
+
         test('pans and zooms', () => {
             const camera = createCameraGlobe();
             camera.flyTo({center: [100, 0], zoom: 3.2, animate: false});
@@ -2890,11 +3097,11 @@ describe('#flyTo globe projection', () => {
             expect(fixedLngLat(camera.getCenter())).toEqual({lng: -174.079717746, lat: 0});
         });
 
-        test('emits move, zoom, rotate, and pitch events, preserving eventData', () => {
-            expect.assertions(18);
+        test('emits move, zoom, rotate, pitch, and roll events, preserving eventData', () => {
+            expect.assertions(24);
 
             const camera = createCameraGlobe();
-            let movestarted, moved, zoomstarted, zoomed, rotatestarted, rotated, pitchstarted, pitched;
+            let movestarted, moved, zoomstarted, zoomed, rotatestarted, rotated, pitchstarted, pitched, rollstarted, rolled;
             const eventData = {data: 'ok'};
 
             camera
@@ -2902,16 +3109,20 @@ describe('#flyTo globe projection', () => {
                 .on('move', (d) => { moved = d.data; })
                 .on('rotate', (d) => { rotated = d.data; })
                 .on('pitch', (d) => { pitched = d.data; })
+                .on('roll', (d) => { rolled = d.data; })
                 .on('moveend', (d) => {
                     expect(camera._zooming).toBeFalsy();
                     expect(camera._panning).toBeFalsy();
                     expect(camera._rotating).toBeFalsy();
+                    expect(camera._pitching).toBeFalsy();
+                    expect(camera._rolling).toBeFalsy();
 
                     expect(movestarted).toBe('ok');
                     expect(moved).toBe('ok');
                     expect(zoomed).toBe('ok');
                     expect(rotated).toBe('ok');
                     expect(pitched).toBe('ok');
+                    expect(rolled).toBe('ok');
                     expect(d.data).toBe('ok');
                 });
 
@@ -2942,8 +3153,17 @@ describe('#flyTo globe projection', () => {
                     expect(d.data).toBe('ok');
                 });
 
+            camera
+                .on('rollstart', (d) => { rollstarted = d.data; })
+                .on('roll', (d) => { rolled = d.data; })
+                .on('rollend', (d) => {
+                    expect(rollstarted).toBe('ok');
+                    expect(rolled).toBe('ok');
+                    expect(d.data).toBe('ok');
+                });
+
             camera.flyTo(
-                {center: [100, 0], zoom: 3.2, bearing: 90, duration: 0, pitch: 45, animate: false},
+                {center: [100, 0], zoom: 3.2, bearing: 90, duration: 0, pitch: 45, roll: 10, animate: false},
                 eventData);
         });
 
