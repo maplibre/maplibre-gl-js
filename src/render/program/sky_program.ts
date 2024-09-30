@@ -22,15 +22,15 @@ const skyUniforms = (context: Context, locations: UniformLocations): SkyUniforms
 });
 
 const skyUniformValues = (sky: Sky, transform: IReadonlyTransform, pixelRatio: number): UniformValues<SkyUniformsType> => {
-    const cos_roll = Math.cos(transform.roll * Math.PI / 180.0);
-    const sin_roll = Math.sin(transform.roll * Math.PI / 180.0);
-    const mercator_horizon  = getMercatorHorizon(transform);
+    const cosRoll = Math.cos(transform.roll * Math.PI / 180.0);
+    const sinRoll = Math.sin(transform.roll * Math.PI / 180.0);
+    const mercatorHorizon  = getMercatorHorizon(transform);
     return {
         'u_sky_color': sky.properties.get('sky-color'),
         'u_horizon_color': sky.properties.get('horizon-color'),
-        'u_horizon': [(transform.width / 2 - mercator_horizon * sin_roll)  * pixelRatio,
-            (transform.height / 2 + mercator_horizon * cos_roll) * pixelRatio],
-        'u_horizon_normal' : [-sin_roll, cos_roll],
+        'u_horizon': [(transform.width / 2 - mercatorHorizon * sinRoll)  * pixelRatio,
+            (transform.height / 2 + mercatorHorizon * cosRoll) * pixelRatio],
+        'u_horizon_normal' : [-sinRoll, cosRoll],
         'u_sky_horizon_blend': (sky.properties.get('sky-horizon-blend') * transform.height / 2) * pixelRatio,
     };
 };

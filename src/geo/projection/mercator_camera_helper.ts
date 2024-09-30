@@ -126,10 +126,10 @@ export class MercatorCameraHelper implements ICameraHelper {
         const startPitch = tr.pitch;
         const startRoll = tr.roll;
         const startPadding = tr.padding;
-        let startRotation: quat = new Float64Array(4) as any;
+        const startRotation: quat = new Float64Array(4) as any;
         quat.fromEuler(startRotation, tr.roll, tr.pitch - 90.0, tr.bearing);
-        let endRotation: quat = new Float64Array(4) as any;
-        quat.fromEuler(endRotation, 
+        const endRotation: quat = new Float64Array(4) as any;
+        quat.fromEuler(endRotation,
             options.roll === undefined ? tr.roll : options.roll,
             options.pitch === undefined ? tr.pitch - 90.0 : options.pitch - 90.0,
             options.bearing === undefined ? tr.bearing : options.bearing);
@@ -162,7 +162,7 @@ export class MercatorCameraHelper implements ICameraHelper {
             }
             if (this.useSlerp) {
                 if (!quat.equals(startRotation, endRotation)) {
-                    let rotation: quat = new Float64Array(4) as any;
+                    const rotation: quat = new Float64Array(4) as any;
                     quat.slerp(rotation, startRotation, endRotation, k);
                     const eulerAngles = getRollPitchBearing(rotation);
                     tr.setRoll(eulerAngles.roll);

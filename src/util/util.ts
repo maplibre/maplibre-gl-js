@@ -904,21 +904,21 @@ export type RollPitchBearing = {
  * @returns roll, pitch, and bearing angles in degrees
  */
 export function getRollPitchBearing(rotation: quat): RollPitchBearing {
-    let m: mat3 = new Float64Array(9) as any;
+    const m: mat3 = new Float64Array(9) as any;
     mat3.fromQuat(m, rotation);
-    
-    const x_angle = radiansToDegrees(-Math.asin(clamp(m[2], -1, 1)));
-    let roll: number
+
+    const xAngle = radiansToDegrees(-Math.asin(clamp(m[2], -1, 1)));
+    let roll: number;
     let bearing: number;
     if (Math.hypot(m[5], m[8]) < 1.0e-3) {
         roll = 0.0;
         bearing = radiansToDegrees(Math.atan2(m[3], m[4]));
     } else {
-        roll = radiansToDegrees((m[5] == 0.0 && m[8] == 0.0) ? 0.0 :  Math.atan2(m[5], m[8]));
-        bearing = radiansToDegrees((m[1] == 0.0 && m[0] == 0.0) ? 0.0 : Math.atan2(m[1], m[0]));
+        roll = radiansToDegrees((m[5] === 0.0 && m[8] === 0.0) ? 0.0 :  Math.atan2(m[5], m[8]));
+        bearing = radiansToDegrees((m[1] === 0.0 && m[0] === 0.0) ? 0.0 : Math.atan2(m[1], m[0]));
     }
 
-    return {roll, pitch: x_angle + 90.0, bearing}
+    return {roll, pitch: xAngle + 90.0, bearing};
 }
 
 /**
