@@ -15,7 +15,7 @@ import {Tile} from './tile';
  */
 export type QueryRenderedFeaturesOptions = {
     /**
-     * An array of [style layer IDs](https://maplibre.org/maplibre-style-spec/#layer-id) for the query to inspect.
+     * An array or set of [style layer IDs](https://maplibre.org/maplibre-style-spec/#layer-id) for the query to inspect.
      * Only features within these layers will be returned. If this parameter is undefined, all layers will be checked.
      */
     layers?: Array<string> | Set<string>;
