@@ -127,9 +127,10 @@ export class MercatorCameraHelper implements ICameraHelper {
         const startRoll = tr.roll;
         const startPadding = tr.padding;
         const startRotation = rollPitchBearingToQuat(tr.roll, tr.pitch, tr.bearing);
-        const endRotation = rollPitchBearingToQuat(options.roll === undefined ? tr.roll : options.roll,
-            options.pitch === undefined ? tr.pitch : options.pitch,
-            options.bearing === undefined ? tr.bearing : options.bearing);
+        const endRoll = options.roll === undefined ? tr.roll : options.roll;
+        const endPitch = options.pitch === undefined ? tr.pitch : options.pitch;
+        const endBearing = options.bearing === undefined ? tr.bearing : options.bearing;
+        const endRotation = rollPitchBearingToQuat(endRoll, endPitch, endBearing);
 
         const optionsZoom = typeof options.zoom !== 'undefined';
 
@@ -159,12 +160,22 @@ export class MercatorCameraHelper implements ICameraHelper {
             }
             if (this.useSlerp) {
                 if (!quat.equals(startRotation, endRotation)) {
-                    const rotation: quat = new Float64Array(4) as any;
-                    quat.slerp(rotation, startRotation, endRotation, k);
-                    const eulerAngles = getRollPitchBearing(rotation);
-                    tr.setRoll(eulerAngles.roll);
-                    tr.setPitch(eulerAngles.pitch);
-                    tr.setBearing(eulerAngles.bearing);
+                    // At pitch ==0, the Euler angle representation is ambiguous. In this case, set the Euler angles
+                    // to the representation requested by the caller
+                    if (k < 1) {
+                        const rotation: quat = new Float64Array(4) as any;
+                        quat.slerp(rotation, startRotation, endRotation, k);
+                        const eulerAngles = getRollPitchBearing(rotation);
+                        tr.setRoll(eulerAngles.roll);
+                        tr.setPitch(eulerAngles.pitch);
+                        tr.setBearing(eulerAngles.bearing);
+                    }
+                    else
+                    {
+                        tr.setRoll(endRoll);
+                        tr.setPitch(endPitch);
+                        tr.setBearing(endBearing);
+                    }
                 }
             } else {
                 if (startBearing !== options.bearing) {
