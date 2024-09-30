@@ -4,7 +4,6 @@ import {members as layoutAttributes} from './fill_attributes';
 import {SegmentVector} from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
 import {LineIndexArray, TriangleIndexArray} from '../index_array_type';
-import earcut from 'earcut';
 import {classifyRings} from '@maplibre/maplibre-gl-style-spec';
 const EARCUT_MAX_RINGS = 500;
 import {register} from '../../util/web_worker_transfer';
@@ -29,6 +28,9 @@ import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
+import {subdividePolygon} from '../../render/subdivision';
+import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
+import {fillLargeMeshArrays} from '../../render/fill_large_mesh_arrays';
 
 export class FillBucket implements Bucket {
     index: number;
@@ -116,7 +118,7 @@ export class FillBucket implements Bucket {
                 // so are stored during populate until later updated with positions by tile worker in addFeatures
                 this.patternFeatures.push(patternFeature);
             } else {
-                this.addFeature(bucketFeature, geometry, index, canonical, {});
+                this.addFeature(bucketFeature, geometry, index, canonical, {}, options.subdivisionGranularity);
             }
 
             const feature = features[index].feature;
@@ -135,7 +137,7 @@ export class FillBucket implements Bucket {
         [_: string]: ImagePosition;
     }) {
         for (const feature of this.patternFeatures) {
-            this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions);
+            this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions, options.subdivisionGranularity);
         }
     }
 
@@ -168,58 +170,25 @@ export class FillBucket implements Bucket {
 
     addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {
         [_: string]: ImagePosition;
-    }) {
+    }, subdivisionGranularity: SubdivisionGranularitySetting) {
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
-            let numVertices = 0;
-            for (const ring of polygon) {
-                numVertices += ring.length;
-            }
+            const subdivided = subdividePolygon(polygon, canonical, subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z));
 
-            const triangleSegment = this.segments.prepareSegment(numVertices, this.layoutVertexArray, this.indexArray);
-            const triangleIndex = triangleSegment.vertexLength;
+            const vertexArray = this.layoutVertexArray;
 
-            const flattened = [];
-            const holeIndices = [];
-
-            for (const ring of polygon) {
-                if (ring.length === 0) {
-                    continue;
-                }
-
-                if (ring !== polygon[0]) {
-                    holeIndices.push(flattened.length / 2);
-                }
-
-                const lineSegment = this.segments2.prepareSegment(ring.length, this.layoutVertexArray, this.indexArray2);
-                const lineIndex = lineSegment.vertexLength;
-
-                this.layoutVertexArray.emplaceBack(ring[0].x, ring[0].y);
-                this.indexArray2.emplaceBack(lineIndex + ring.length - 1, lineIndex);
-                flattened.push(ring[0].x);
-                flattened.push(ring[0].y);
-
-                for (let i = 1; i < ring.length; i++) {
-                    this.layoutVertexArray.emplaceBack(ring[i].x, ring[i].y);
-                    this.indexArray2.emplaceBack(lineIndex + i - 1, lineIndex + i);
-                    flattened.push(ring[i].x);
-                    flattened.push(ring[i].y);
-                }
-
-                lineSegment.vertexLength += ring.length;
-                lineSegment.primitiveLength += ring.length;
-            }
-
-            const indices = earcut(flattened, holeIndices);
-
-            for (let i = 0; i < indices.length; i += 3) {
-                this.indexArray.emplaceBack(
-                    triangleIndex + indices[i],
-                    triangleIndex + indices[i + 1],
-                    triangleIndex + indices[i + 2]);
-            }
-
-            triangleSegment.vertexLength += numVertices;
-            triangleSegment.primitiveLength += indices.length / 3;
+            fillLargeMeshArrays(
+                (x, y) => {
+                    vertexArray.emplaceBack(x, y);
+                },
+                this.segments,
+                this.layoutVertexArray,
+                this.indexArray,
+                subdivided.verticesFlattened,
+                subdivided.indicesTriangles,
+                this.segments2,
+                this.indexArray2,
+                subdivided.indicesLineList,
+            );
         }
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, imagePositions, canonical);
     }

@@ -19,7 +19,7 @@ vec4 linearToGamma(vec4 color) {
 }
 
 void main() {
-    vec4 surface_color = texture2D(u_texture, v_texture_pos);
+    vec4 surface_color = texture(u_texture, vec2(v_texture_pos.x, 1.0 - v_texture_pos.y));
     if (v_fog_depth > u_fog_ground_blend) {
         vec4 surface_color_linear = gammaToLinear(surface_color);
         float blend_color = smoothstep(0.0, 1.0, max((v_fog_depth - u_horizon_fog_blend) / (1.0 - u_horizon_fog_blend), 0.0));

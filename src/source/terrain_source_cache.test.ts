@@ -3,37 +3,14 @@ import {Style} from '../style/style';
 import {RequestManager} from '../util/request_manager';
 import {Dispatcher} from '../util/dispatcher';
 import {fakeServer, type FakeServer} from 'nise';
-import {Transform} from '../geo/transform';
-import {Evented} from '../util/evented';
-import {Painter} from '../render/painter';
 import {RasterDEMTileSource} from './raster_dem_tile_source';
 import {OverscaledTileID} from './tile_id';
 import {Tile} from './tile';
 import {DEMData} from '../data/dem_data';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {StubMap} from '../util/test/util';
 
-const transform = new Transform();
-
-class StubMap extends Evented {
-    transform: Transform;
-    painter: Painter;
-    _requestManager: RequestManager;
-
-    constructor() {
-        super();
-        this.transform = transform;
-        this._requestManager = {
-            transformRequest: (url) => {
-                return {url};
-            }
-        } as any as RequestManager;
-    }
-
-    _getMapId() {
-        return 1;
-    }
-
-    setTerrain() {}
-}
+const transform = new MercatorTransform();
 
 function createSource(options, transformCallback?) {
     const source = new RasterDEMTileSource('id', options, {send() {}} as any as Dispatcher, null);

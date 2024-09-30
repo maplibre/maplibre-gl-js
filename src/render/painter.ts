@@ -1,8 +1,7 @@
 import {browser} from '../util/browser';
-import {mat4, vec3} from 'gl-matrix';
+import {mat4} from 'gl-matrix';
 import {SourceCache} from '../source/source_cache';
 import {EXTENT} from '../data/extent';
-import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
 import {SegmentVector} from '../data/segment';
 import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types.g';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes';
@@ -18,7 +17,6 @@ import {StencilMode} from '../gl/stencil_mode';
 import {ColorMode} from '../gl/color_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
 import {Texture} from './texture';
-import {clippingMaskUniformValues} from './program/clipping_mask_program';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {drawSymbols} from './draw_symbol';
 import {drawCircles} from './draw_circle';
@@ -33,11 +31,11 @@ import {drawDebug, drawDebugPadding, selectDebugSource} from './draw_debug';
 import {drawCustom} from './draw_custom';
 import {drawDepth, drawCoords} from './draw_terrain';
 import {OverscaledTileID} from '../source/tile_id';
-import {RenderToTexture} from './render_to_texture';
-import {drawSky} from './draw_sky';
+import {drawSky, drawAtmosphere} from './draw_sky';
+import {Mesh} from './mesh';
+import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator';
 
-import type {Transform} from '../geo/transform';
-import type {Tile} from '../source/tile';
+import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {Style} from '../style/style';
 import type {StyleLayer} from '../style/style_layer';
 import type {CrossFaded} from '../style/properties';
@@ -48,6 +46,8 @@ import type {VertexBuffer} from '../gl/vertex_buffer';
 import type {IndexBuffer} from '../gl/index_buffer';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
+import type {RenderToTexture} from './render_to_texture';
+import type {ProjectionData} from '../geo/projection/projection_data';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -67,7 +67,7 @@ type PainterOptions = {
  */
 export class Painter {
     context: Context;
-    transform: Transform;
+    transform: IReadonlyTransform;
     renderToTexture: RenderToTexture;
     _tileTextures: {
         [_: number]: Array<Texture>;
@@ -80,10 +80,14 @@ export class Painter {
     pixelRatio: number;
     tileExtentBuffer: VertexBuffer;
     tileExtentSegments: SegmentVector;
+    tileExtentMesh: Mesh;
+
     debugBuffer: VertexBuffer;
     debugSegments: SegmentVector;
     rasterBoundsBuffer: VertexBuffer;
     rasterBoundsSegments: SegmentVector;
+    rasterBoundsBufferPosOnly: VertexBuffer;
+    rasterBoundsSegmentsPosOnly: SegmentVector;
     viewportBuffer: VertexBuffer;
     viewportSegments: SegmentVector;
     quadTriangleIndexBuffer: IndexBuffer;
@@ -113,7 +117,7 @@ export class Painter {
     // every time the camera-matrix changes the terrain-facilitators will be redrawn.
     terrainFacilitator: {dirty: boolean; matrix: mat4; renderTime: number};
 
-    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext, transform: Transform) {
+    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext, transform: IReadonlyTransform) {
         this.context = new Context(gl);
         this.transform = transform;
         this._tileTextures = {};
@@ -173,6 +177,14 @@ export class Painter {
         this.rasterBoundsBuffer = context.createVertexBuffer(rasterBoundsArray, rasterBoundsAttributes.members);
         this.rasterBoundsSegments = SegmentVector.simpleSegment(0, 0, 4, 2);
 
+        const rasterBoundsArrayPosOnly = new PosArray();
+        rasterBoundsArrayPosOnly.emplaceBack(0, 0);
+        rasterBoundsArrayPosOnly.emplaceBack(EXTENT, 0);
+        rasterBoundsArrayPosOnly.emplaceBack(0, EXTENT);
+        rasterBoundsArrayPosOnly.emplaceBack(EXTENT, EXTENT);
+        this.rasterBoundsBufferPosOnly = context.createVertexBuffer(rasterBoundsArrayPosOnly, posAttributes.members);
+        this.rasterBoundsSegmentsPosOnly = SegmentVector.simpleSegment(0, 0, 4, 5);
+
         const viewportArray = new PosArray();
         viewportArray.emplaceBack(0, 0);
         viewportArray.emplaceBack(1, 0);
@@ -190,12 +202,14 @@ export class Painter {
         this.tileBorderIndexBuffer = context.createIndexBuffer(tileLineStripIndices);
 
         const quadTriangleIndices = new TriangleIndexArray();
-        quadTriangleIndices.emplaceBack(0, 1, 2);
-        quadTriangleIndices.emplaceBack(2, 1, 3);
+        quadTriangleIndices.emplaceBack(1, 0, 2);
+        quadTriangleIndices.emplaceBack(1, 2, 3);
         this.quadTriangleIndexBuffer = context.createIndexBuffer(quadTriangleIndices);
 
         const gl = this.context.gl;
         this.stencilClearMode = new StencilMode({func: gl.ALWAYS, mask: 0}, 0x0, 0xFF, gl.ZERO, gl.ZERO, gl.ZERO);
+
+        this.tileExtentMesh = new Mesh(this.tileExtentBuffer, this.quadTriangleIndexBuffer, this.tileExtentSegments);
     }
 
     /*
@@ -218,43 +232,79 @@ export class Painter {
         mat4.ortho(matrix, 0, this.width, this.height, 0, 0, 1);
         mat4.scale(matrix, matrix, [gl.drawingBufferWidth, gl.drawingBufferHeight, 0]);
 
-        this.useProgram('clippingMask').draw(context, gl.TRIANGLES,
+        const projectionData: ProjectionData = {
+            mainMatrix: matrix,
+            tileMercatorCoords: [0, 0, 1, 1],
+            clippingPlane: [0, 0, 0, 0],
+            projectionTransition: 0.0,
+            fallbackMatrix: matrix,
+        };
+
+        // Note: we force a simple mercator projection for the shader, since we want to draw a fullscreen quad.
+        this.useProgram('clippingMask', null, true).draw(context, gl.TRIANGLES,
             DepthMode.disabled, this.stencilClearMode, ColorMode.disabled, CullFaceMode.disabled,
-            clippingMaskUniformValues(matrix), null,
+            null, null, projectionData,
             '$clipping', this.viewportBuffer,
             this.quadTriangleIndexBuffer, this.viewportSegments);
     }
 
-    _renderTileClippingMasks(layer: StyleLayer, tileIDs: Array<OverscaledTileID>) {
-        if (this.currentStencilSource === layer.source || !layer.isTileClipped() || !tileIDs || !tileIDs.length) return;
+    _renderTileClippingMasks(layer: StyleLayer, tileIDs: Array<OverscaledTileID>, renderToTexture: boolean) {
+        if (this.currentStencilSource === layer.source || !layer.isTileClipped() || !tileIDs || !tileIDs.length) {
+            return;
+        }
 
         this.currentStencilSource = layer.source;
-
-        const context = this.context;
-        const gl = context.gl;
 
         if (this.nextStencilID + tileIDs.length > 256) {
             // we'll run out of fresh IDs so we need to clear and start from scratch
             this.clearStencil();
         }
 
+        const context = this.context;
         context.setColorMode(ColorMode.disabled);
         context.setDepthMode(DepthMode.disabled);
 
+        const stencilRefs = {};
+
+        // Set stencil ref values for all tiles
+        for (const tileID of tileIDs) {
+            stencilRefs[tileID.key] = this.nextStencilID++;
+        }
+
+        // A two-pass approach is needed. See comment in draw_raster.ts for more details.
+        // However, we use a simpler approach because we don't care about overdraw here.
+
+        // First pass - draw tiles with borders and with GL_ALWAYS
+        this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, true);
+        // Second pass - draw borderless tiles with GL_ALWAYS
+        this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, false);
+
+        this._tileClippingMaskIDs = stencilRefs;
+    }
+
+    _renderTileMasks(tileStencilRefs: {[_: string]: number}, tileIDs: Array<OverscaledTileID>, renderToTexture: boolean, useBorders: boolean) {
+        const context = this.context;
+        const gl = context.gl;
+        const projection = this.style.projection;
+        const transform = this.transform;
+
         const program = this.useProgram('clippingMask');
 
-        this._tileClippingMaskIDs = {};
-
+        // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
-            const id = this._tileClippingMaskIDs[tileID.key] = this.nextStencilID++;
+            const stencilRef = tileStencilRefs[tileID.key];
             const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
+
+            const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true, 'stencil');
+
+            const projectionData = transform.getProjectionData(tileID);
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.
-                new StencilMode({func: gl.ALWAYS, mask: 0}, id, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE),
-                ColorMode.disabled, CullFaceMode.disabled, clippingMaskUniformValues(tileID.posMatrix),
-                terrainData, '$clipping', this.tileExtentBuffer,
-                this.quadTriangleIndexBuffer, this.tileExtentSegments);
+                new StencilMode({func: gl.ALWAYS, mask: 0}, stencilRef, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE),
+                ColorMode.disabled, renderToTexture ? CullFaceMode.disabled : CullFaceMode.backCCW, null,
+                terrainData, projectionData, '$clipping', mesh.vertexBuffer,
+                mesh.indexBuffer, mesh.segments);
         }
     }
 
@@ -305,6 +355,41 @@ export class Painter {
             return [zToStencilMode, coords];
         }
         return [{[minTileZ]: StencilMode.disabled}, coords];
+    }
+
+    stencilConfigForOverlapTwoPass(tileIDs: Array<OverscaledTileID>): [
+        { [_: number]: Readonly<StencilMode> }, // borderless tiles - high priority & high stencil values
+        { [_: number]: Readonly<StencilMode> }, // tiles with border - low priority
+        Array<OverscaledTileID>
+    ] {
+        const gl = this.context.gl;
+        const coords = tileIDs.sort((a, b) => b.overscaledZ - a.overscaledZ);
+        const minTileZ = coords[coords.length - 1].overscaledZ;
+        const stencilValues = coords[0].overscaledZ - minTileZ + 1;
+
+        this.clearStencil();
+
+        if (stencilValues > 1) {
+            const zToStencilModeHigh = {};
+            const zToStencilModeLow = {};
+            for (let i = 0; i < stencilValues; i++) {
+                zToStencilModeHigh[i + minTileZ] = new StencilMode({func: gl.GREATER, mask: 0xFF}, stencilValues + 1 + i, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE);
+                zToStencilModeLow[i + minTileZ] = new StencilMode({func: gl.GREATER, mask: 0xFF}, 1 + i, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE);
+            }
+            this.nextStencilID = stencilValues * 2 + 1;
+            return [
+                zToStencilModeHigh,
+                zToStencilModeLow,
+                coords
+            ];
+        } else {
+            this.nextStencilID = 3;
+            return [
+                {[minTileZ]: new StencilMode({func: gl.GREATER, mask: 0xFF}, 2, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE)},
+                {[minTileZ]: new StencilMode({func: gl.GREATER, mask: 0xFF}, 1, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE)},
+                coords
+            ];
+        }
     }
 
     colorModeForRenderPass(): Readonly<ColorMode> {
@@ -363,7 +448,7 @@ export class Painter {
                 sourceCache.prepare(this.context);
             }
 
-            coordsAscending[id] = sourceCache.getVisibleCoordinates();
+            coordsAscending[id] = sourceCache.getVisibleCoordinates(false);
             coordsDescending[id] = coordsAscending[id].slice().reverse();
             coordsDescendingSymbol[id] = sourceCache.getVisibleCoordinates(true).reverse();
         }
@@ -401,7 +486,14 @@ export class Painter {
             this.renderLayer(this, sourceCaches[layer.source], layer, coords);
         }
 
+        // Execute offscreen GPU tasks of the projection manager
+        this.style.projection.updateGPUdependent({
+            context: this.context,
+            useProgram: (name: string) => this.useProgram(name)
+        });
+
         // Rebind the main framebuffer now that all offscreen layers have been rendered:
+        this.context.viewport.set([0, 0, this.width, this.height]);
         this.context.bindFramebuffer.set(null);
 
         // Clear buffers in preparation for drawing to the main framebuffer
@@ -424,7 +516,7 @@ export class Painter {
                 const sourceCache = sourceCaches[layer.source];
                 const coords = coordsAscending[layer.source];
 
-                this._renderTileClippingMasks(layer, coords);
+                this._renderTileClippingMasks(layer, coords, false);
                 this.renderLayer(this, sourceCache, layer, coords);
             }
         }
@@ -444,8 +536,13 @@ export class Painter {
             // separate clipping masks
             const coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
 
-            this._renderTileClippingMasks(layer, coordsAscending[layer.source]);
+            this._renderTileClippingMasks(layer, coordsAscending[layer.source], false);
             this.renderLayer(this, sourceCache, layer, coords);
+        }
+
+        // Render atmosphere, only for Globe projection
+        if (this.style.projection.name === 'globe') {
+            drawAtmosphere(this, this.style.sky, this.style.light);
         }
 
         if (this.options.showTileBoundaries) {
@@ -479,7 +576,7 @@ export class Painter {
         // Update coords/depth-framebuffer on camera movement, or tile reloading
         let doUpdate = this.terrainFacilitator.dirty;
         doUpdate ||= requireExact ? !mat4.exactEquals(prevMatrix, currMatrix) : !mat4.equals(prevMatrix, currMatrix);
-        doUpdate ||= this.style.map.terrain.sourceCache.tilesAfterTime(this.terrainFacilitator.renderTime).length > 0;
+        doUpdate ||= this.style.map.terrain.sourceCache.anyTilesAfterTime(this.terrainFacilitator.renderTime);
 
         if (!doUpdate) {
             return;
@@ -531,38 +628,6 @@ export class Painter {
         }
     }
 
-    /**
-     * Transform a matrix to incorporate the *-translate and *-translate-anchor properties into it.
-     * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
-     * @returns matrix
-     */
-    translatePosMatrix(matrix: mat4, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport', inViewportPixelUnitsUnits?: boolean): mat4 {
-        if (!translate[0] && !translate[1]) return matrix;
-
-        const angle = inViewportPixelUnitsUnits ?
-            (translateAnchor === 'map' ? this.transform.angle : 0) :
-            (translateAnchor === 'viewport' ? -this.transform.angle : 0);
-
-        if (angle) {
-            const sinA = Math.sin(angle);
-            const cosA = Math.cos(angle);
-            translate = [
-                translate[0] * cosA - translate[1] * sinA,
-                translate[0] * sinA + translate[1] * cosA
-            ];
-        }
-
-        const translation = [
-            inViewportPixelUnitsUnits ? translate[0] : pixelsToTileUnits(tile, translate[0], this.transform.zoom),
-            inViewportPixelUnitsUnits ? translate[1] : pixelsToTileUnits(tile, translate[1], this.transform.zoom),
-            0
-        ] as vec3;
-
-        const translatedMatrix = new Float32Array(16);
-        mat4.translate(translatedMatrix, matrix, translation);
-        return translatedMatrix;
-    }
-
     saveTileTexture(texture: Texture) {
         const textures = this._tileTextures[texture.size[0]];
         if (!textures) {
@@ -590,12 +655,31 @@ export class Painter {
         return !imagePosA || !imagePosB;
     }
 
-    useProgram(name: string, programConfiguration?: ProgramConfiguration | null): Program<any> {
+    /**
+     * Finds the required shader and its variant (base/terrain/globe, etc.) and binds it, compiling a new shader if required.
+     * @param name - Name of the desired shader.
+     * @param programConfiguration - Configuration of shader's inputs.
+     * @param defines - Additional macros to be injected at the beginning of the shader. Expected format is `['#define XYZ']`, etc.
+     * @param forceSimpleProjection - Whether to force the use of a shader variant with simple mercator projection vertex shader.
+     * False by default. Use true when drawing with a simple projection matrix is desired, eg. when drawing a fullscreen quad.
+     * @returns
+     */
+    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, forceSimpleProjection: boolean = false): Program<any> {
         this.cache = this.cache || {};
-        const key = name +
-            (programConfiguration ? programConfiguration.cacheKey : '') +
-            (this._showOverdrawInspector ? '/overdraw' : '') +
-            (this.style.map.terrain ? '/terrain' : '');
+        const useTerrain = !!this.style.map.terrain;
+
+        const projection = this.style.projection;
+
+        const projectionPrelude = forceSimpleProjection ? shaders.projectionMercator : projection.shaderPreludeCode;
+        const projectionDefine = forceSimpleProjection ? MercatorShaderDefine : projection.shaderDefine;
+        const projectionKey = `/${forceSimpleProjection ? MercatorShaderVariantKey : projection.shaderVariantName}`;
+
+        const configurationKey = (programConfiguration ? programConfiguration.cacheKey : '');
+        const overdrawKey = (this._showOverdrawInspector ? '/overdraw' : '');
+        const terrainKey = (useTerrain ? '/terrain' : '');
+
+        const key = name + configurationKey + projectionKey + overdrawKey + terrainKey;
+
         if (!this.cache[key]) {
             this.cache[key] = new Program(
                 this.context,
@@ -603,7 +687,9 @@ export class Painter {
                 programConfiguration,
                 programUniforms[name],
                 this._showOverdrawInspector,
-                this.style.map.terrain
+                useTerrain,
+                projectionPrelude,
+                projectionDefine
             );
         }
         return this.cache[key];

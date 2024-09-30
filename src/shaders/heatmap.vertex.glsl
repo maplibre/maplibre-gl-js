@@ -1,8 +1,8 @@
 
-uniform mat4 u_matrix;
 uniform float u_extrude_scale;
 uniform float u_opacity;
 uniform float u_intensity;
+uniform highp float u_globe_extrude_scale;
 
 in vec2 a_pos;
 
@@ -24,7 +24,8 @@ void main(void) {
     #pragma mapbox: initialize mediump float radius
 
     // decode the extrusion vector that we snuck into the a_pos vector
-    vec2 unscaled_extrude = vec2(mod(a_pos, 2.0) * 2.0 - 1.0);
+    vec2 pos_raw = a_pos + 32768.0;
+    vec2 unscaled_extrude = vec2(mod(pos_raw, 8.0) / 7.0 * 2.0 - 1.0);
 
     // This 'extrude' comes in ranging from [-1, -1], to [1, 1].  We'll use
     // it to produce the vertices of a square mesh framing the point feature
@@ -46,9 +47,16 @@ void main(void) {
     // mesh position
     vec2 extrude = v_extrude * radius * u_extrude_scale;
 
-    // multiply a_pos by 0.5, since we had it * 2 in order to sneak
+    // Divide a_pos by 8, since we had it * 8 in order to sneak
     // in extrusion data
-    vec4 pos = vec4(floor(a_pos * 0.5) + extrude, get_elevation(floor(a_pos * 0.5)), 1);
+    vec2 circle_center = floor(pos_raw / 8.0);
 
-    gl_Position = u_matrix * pos;
+#ifdef GLOBE
+    vec2 angles = v_extrude * radius * u_globe_extrude_scale;
+    vec3 center_vector = projectToSphere(circle_center);
+    vec3 corner_vector = globeRotateVector(center_vector, angles);
+    gl_Position = interpolateProjection(circle_center + extrude, corner_vector, 0.0);
+#else
+    gl_Position = projectTileFor3D(circle_center + extrude, get_elevation(circle_center));
+#endif
 }

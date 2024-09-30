@@ -3,9 +3,10 @@ import {Tile} from './tile';
 import {EXTENT} from '../data/extent';
 import {mat4} from 'gl-matrix';
 import {Evented} from '../util/evented';
-import type {Transform} from '../geo/transform';
+import type {ITransform} from '../geo/transform_interface';
 import type {SourceCache} from '../source/source_cache';
 import {Terrain} from '../render/terrain';
+import {browser} from '../util/browser';
 
 /**
  * @internal
@@ -50,6 +51,10 @@ export class TerrainSourceCache extends Evented {
      * raster-dem tiles will load for performance the actualZoom - deltaZoom zoom-level.
      */
     deltaZoom: number;
+    /**
+     * used to determine whether depth & coord framebuffers need updating
+     */
+    _lastTilesetChange: number = browser.now();
 
     constructor(sourceCache: SourceCache) {
         super();
@@ -75,7 +80,7 @@ export class TerrainSourceCache extends Evented {
      * @param transform - the operation to do
      * @param terrain - the terrain
      */
-    update(transform: Transform, terrain: Terrain): void {
+    update(transform: ITransform, terrain: Terrain): void {
         // load raster-dem tiles for the current scene.
         this.sourceCache.update(transform, terrain);
         // create internal render-to-texture tiles for the current scene.
@@ -91,9 +96,10 @@ export class TerrainSourceCache extends Evented {
             keys[tileID.key] = true;
             this._renderableTilesKeys.push(tileID.key);
             if (!this._tiles[tileID.key]) {
-                tileID.posMatrix = new Float64Array(16) as any;
-                mat4.ortho(tileID.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
+                tileID.terrainRttPosMatrix = new Float64Array(16) as any;
+                mat4.ortho(tileID.terrainRttPosMatrix, 0, EXTENT, EXTENT, 0, 0, 1);
                 this._tiles[tileID.key] = new Tile(tileID, this.tileSize);
+                this._lastTilesetChange = browser.now();
             }
         }
         // free unused tiles
@@ -142,29 +148,29 @@ export class TerrainSourceCache extends Evented {
             const _tileID = this._tiles[key].tileID;
             if (_tileID.canonical.equals(tileID.canonical)) {
                 const coord = tileID.clone();
-                coord.posMatrix = new Float64Array(16) as any;
-                mat4.ortho(coord.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
+                coord.terrainRttPosMatrix = new Float64Array(16) as any;
+                mat4.ortho(coord.terrainRttPosMatrix, 0, EXTENT, EXTENT, 0, 0, 1);
                 coords[key] = coord;
             } else if (_tileID.canonical.isChildOf(tileID.canonical)) {
                 const coord = tileID.clone();
-                coord.posMatrix = new Float64Array(16) as any;
+                coord.terrainRttPosMatrix = new Float64Array(16) as any;
                 const dz = _tileID.canonical.z - tileID.canonical.z;
                 const dx = _tileID.canonical.x - (_tileID.canonical.x >> dz << dz);
                 const dy = _tileID.canonical.y - (_tileID.canonical.y >> dz << dz);
                 const size = EXTENT >> dz;
-                mat4.ortho(coord.posMatrix, 0, size, 0, size, 0, 1);
-                mat4.translate(coord.posMatrix, coord.posMatrix, [-dx * size, -dy * size, 0]);
+                mat4.ortho(coord.terrainRttPosMatrix, 0, size, size, 0, 0, 1); // Note: we are using `size` instead of `EXTENT` here
+                mat4.translate(coord.terrainRttPosMatrix, coord.terrainRttPosMatrix, [-dx * size, -dy * size, 0]);
                 coords[key] = coord;
             } else if (tileID.canonical.isChildOf(_tileID.canonical)) {
                 const coord = tileID.clone();
-                coord.posMatrix = new Float64Array(16) as any;
+                coord.terrainRttPosMatrix = new Float64Array(16) as any;
                 const dz = tileID.canonical.z - _tileID.canonical.z;
                 const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
                 const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
                 const size = EXTENT >> dz;
-                mat4.ortho(coord.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
-                mat4.translate(coord.posMatrix, coord.posMatrix, [dx * size, dy * size, 0]);
-                mat4.scale(coord.posMatrix, coord.posMatrix, [1 / (2 ** dz), 1 / (2 ** dz), 0]);
+                mat4.ortho(coord.terrainRttPosMatrix, 0, EXTENT, EXTENT, 0, 0, 1);
+                mat4.translate(coord.terrainRttPosMatrix, coord.terrainRttPosMatrix, [dx * size, dy * size, 0]);
+                mat4.scale(coord.terrainRttPosMatrix, coord.terrainRttPosMatrix, [1 / (2 ** dz), 1 / (2 ** dz), 0]);
                 coords[key] = coord;
             }
         }
@@ -174,7 +180,7 @@ export class TerrainSourceCache extends Evented {
     /**
      * find the covering raster-dem tile
      * @param tileID - the tile to look for
-     * @param searchForDEM - Optional parameter to search for (parent) sourcetiles with loaded dem.
+     * @param searchForDEM - Optional parameter to search for (parent) source tiles with loaded dem.
      * @returns the tile
      */
     getSourceTile(tileID: OverscaledTileID, searchForDEM?: boolean): Tile {
@@ -194,11 +200,11 @@ export class TerrainSourceCache extends Evented {
     }
 
     /**
-     * get a list of tiles, loaded after a specific time. This is used to update depth & coords framebuffers.
+     * gets whether any tiles were loaded after a specific time. This is used to update depth & coords framebuffers.
      * @param time - the time
-     * @returns the relevant tiles
+     * @returns true if any tiles came into view at or after the specified time
      */
-    tilesAfterTime(time = Date.now()): Array<Tile> {
-        return Object.values(this._tiles).filter(t => t.timeAdded >= time);
+    anyTilesAfterTime(time = Date.now()): boolean {
+        return this._lastTilesetChange >= time;
     }
 }

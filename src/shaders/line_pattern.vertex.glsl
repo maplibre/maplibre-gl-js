@@ -13,7 +13,7 @@
 in vec2 a_pos_normal;
 in vec4 a_data;
 
-uniform mat4 u_matrix;
+uniform vec2 u_translation;
 uniform vec2 u_units_to_pixels;
 uniform mediump float u_ratio;
 uniform lowp float u_device_pixel_ratio;
@@ -23,6 +23,9 @@ out vec2 v_width2;
 out float v_linesofar;
 out float v_gamma_scale;
 out float v_width;
+#ifdef GLOBE
+out float v_depth;
+#endif
 
 #pragma mapbox: define lowp float blur
 #pragma mapbox: define lowp float opacity
@@ -85,15 +88,20 @@ void main() {
     mediump float t = 1.0 - abs(u);
     mediump vec2 offset2 = offset * a_extrude * scale * normal.y * mat2(t, -u, u, t);
 
-    vec4 projected_extrude = u_matrix * vec4(dist / u_ratio, 0.0, 0.0);
-    gl_Position = u_matrix * vec4(pos + offset2 / u_ratio, 0.0, 1.0) + projected_extrude;
+    float adjustedThickness = projectLineThickness(pos.y);
+    vec4 projected_no_extrude = projectTile(pos + offset2 / u_ratio * adjustedThickness + u_translation);
+    vec4 projected_with_extrude = projectTile(pos + offset2 / u_ratio * adjustedThickness + u_translation + dist / u_ratio * adjustedThickness);
+    gl_Position = projected_with_extrude;
+    #ifdef GLOBE
+    v_depth = gl_Position.z / gl_Position.w;
+    #endif
 
     // calculate how much the perspective view squishes or stretches the extrude
     #ifdef TERRAIN3D
         v_gamma_scale = 1.0; // not needed, because this is done automatically via the mesh
     #else
         float extrude_length_without_perspective = length(dist);
-        float extrude_length_with_perspective = length(projected_extrude.xy / gl_Position.w * u_units_to_pixels);
+        float extrude_length_with_perspective = length((projected_with_extrude.xy - projected_no_extrude.xy) / projected_with_extrude.w * u_units_to_pixels);
         v_gamma_scale = extrude_length_without_perspective / extrude_length_with_perspective;
     #endif
 

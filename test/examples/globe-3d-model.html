@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Add a 3D model to globe with three.js</title>
+    <meta property="og:description" content="Use a custom style layer with three.js to add a 3D model to a globe." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body,
+        #map {
+            height: 100%;
+        }
+        #project {
+            display: block;
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translate(-50%);
+            width: 50%;
+            height: 40px;
+            padding: 10px;
+            border: none;
+            border-radius: 3px;
+            font-size: 12px;
+            text-align: center;
+            color: #fff;
+            background: #ee8a65;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="https://unpkg.com/three@0.147.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
+    <div id="map"></div>
+    <br />
+    <button id="project">Toggle projection</button>
+    <script>
+        const map = (window.map = new maplibregl.Map({
+            container: 'map',
+            style: 'https://api.maptiler.com/maps/basic/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+            zoom: 5.5,
+            center: [150.16546137527212, -35.017179237129994],
+            maxPitch: 80,
+            pitch: 70,
+            antialias: true, // create the gl context with MSAA antialiasing, so custom layers are antialiased
+        }));
+
+        map.on('style.load', () => {
+            map.setProjection({
+                type: 'globe', // Set projection to globe
+            });
+        });
+
+        // The API demonstrated in this example will work regardless of projection.
+        // Click this button to toggle it.
+        document.getElementById('project').addEventListener('click', () => {
+            // Toggle projection
+            const currentProjection = map.getProjection();
+            map.setProjection({
+                type: currentProjection.type === 'globe' ? 'mercator' : 'globe',
+            });
+        });
+
+        const THREE = window.THREE;
+
+        // configuration of the custom layer for a 3D model per the CustomLayerInterface
+        const customLayer = {
+            id: '3d-model',
+            type: 'custom',
+            renderingMode: '3d',
+            onAdd(map, gl) {
+                this.camera = new THREE.Camera();
+                this.scene = new THREE.Scene();
+
+                // create two three.js lights to illuminate the model
+                const directionalLight = new THREE.DirectionalLight(0xffffff);
+                directionalLight.position.set(0, -70, 100).normalize();
+                this.scene.add(directionalLight);
+
+                const directionalLight2 = new THREE.DirectionalLight(0xffffff);
+                directionalLight2.position.set(0, 70, 100).normalize();
+                this.scene.add(directionalLight2);
+
+                // use the three.js GLTF loader to add the 3D model to the three.js scene
+                const loader = new THREE.GLTFLoader();
+                loader.load(
+                    'https://maplibre.org/maplibre-gl-js/docs/assets/34M_17/34M_17.gltf',
+                    (gltf) => {
+                        this.scene.add(gltf.scene);
+                    }
+                );
+                this.map = map;
+
+                // use the MapLibre GL JS map canvas for three.js
+                this.renderer = new THREE.WebGLRenderer({
+                    canvas: map.getCanvas(),
+                    context: gl,
+                    antialias: true
+                });
+
+                this.renderer.autoClear = false;
+            },
+            render(gl, args) {
+                // parameters to ensure the model is georeferenced correctly on the map
+                const modelOrigin = [148.9819, -35.39847];
+                const modelAltitude = 0;
+
+                // Make the object ~10s of km tall to make it visible at planetary scale.
+                const scaling = 10_000.0;
+
+                // We can use this API to get the correct model matrix.
+                // It will work regardless of current projection.
+                // See MapLibre source code, files mercator_transform.ts or globe_transform.ts, function "getCustomLayerArgs".
+                const modelMatrix = map.transform.getMatrixForModel(modelOrigin, modelAltitude);
+                const m = new THREE.Matrix4().fromArray(args.defaultProjectionData.mainMatrix);
+                const l = new THREE.Matrix4().fromArray(modelMatrix).scale(
+                    new THREE.Vector3(
+                        scaling,
+                        scaling,
+                        scaling
+                    )
+                );
+
+                this.camera.projectionMatrix = m.multiply(l);
+                this.renderer.resetState();
+                this.renderer.render(this.scene, this.camera);
+                this.map.triggerRepaint();
+            }
+        };
+
+        map.on('style.load', () => {
+            map.addLayer(customLayer);
+        });
+    </script>
+</body>
+
+</html>

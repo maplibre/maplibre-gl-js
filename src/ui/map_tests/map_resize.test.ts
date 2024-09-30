@@ -1,3 +1,4 @@
+import {MercatorProjection} from '../../geo/projection/mercator';
 import {createMap, beforeMapTest, sleep} from '../../util/test/util';
 
 beforeEach(() => {
@@ -71,7 +72,7 @@ describe('#resize', () => {
         }));
 
         const map = createMap();
-
+        map.style.projection = new MercatorProjection();
         const resizeSpy = jest.spyOn(map, 'resize');
         const redrawSpy = jest.spyOn(map, 'redraw');
         const renderSpy = jest.spyOn(map, '_render');

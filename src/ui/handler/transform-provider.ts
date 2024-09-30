@@ -1,6 +1,6 @@
 import type {Map} from '../map';
 import type {PointLike} from '../camera';
-import type {Transform} from '../../geo/transform';
+import type {IReadonlyTransform} from '../../geo/transform_interface';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../../geo/lng_lat';
 
@@ -18,7 +18,7 @@ export class TransformProvider {
         this._map = map;
     }
 
-    get transform(): Transform {
+    get transform(): IReadonlyTransform {
         return this._map._requestedCameraState || this._map.transform;
     }
 
@@ -39,6 +39,6 @@ export class TransformProvider {
     }
 
     unproject(point: PointLike): LngLat {
-        return this.transform.pointLocation(Point.convert(point), this._map.terrain);
+        return this.transform.screenPointToLocation(Point.convert(point), this._map.terrain);
     }
 }

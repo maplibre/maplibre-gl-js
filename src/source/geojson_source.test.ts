@@ -1,13 +1,15 @@
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {GeoJSONSource, GeoJSONSourceOptions} from './geojson_source';
-import {Transform} from '../geo/transform';
+import {IReadonlyTransform} from '../geo/transform_interface';
 import {LngLat} from '../geo/lng_lat';
 import {extend} from '../util/util';
 import {Dispatcher} from '../util/dispatcher';
 import {RequestManager} from '../util/request_manager';
+import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 import {ActorMessage, MessageType} from '../util/actor_messages';
 import {Actor} from '../util/actor';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 const wrapDispatcher = (dispatcher) => {
     return {
@@ -205,11 +207,11 @@ describe('GeoJSONSource#onRemove', () => {
 });
 
 describe('GeoJSONSource#update', () => {
-    const transform = new Transform();
+    const transform = new MercatorTransform();
     transform.resize(200, 200);
     const lngLat = LngLat.convert([-122.486052, 37.830348]);
-    const point = transform.locationPoint(lngLat);
-    transform.zoom = 15;
+    const point = transform.locationToScreenPoint(lngLat);
+    transform.setZoom(15);
     transform.setLocationAtPoint(lngLat, point);
 
     test('sends initial loadData request to dispatcher', () => new Promise<void>(done => {
@@ -407,8 +409,15 @@ describe('GeoJSONSource#update', () => {
 
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.map = {
-            transform: {} as Transform,
-            getPixelRatio() { return 1; }
+            transform: {} as IReadonlyTransform,
+            getPixelRatio() { return 1; },
+            style: {
+                projection: {
+                    get subdivisionGranularity() {
+                        return SubdivisionGranularitySetting.noSubdivision;
+                    }
+                }
+            }
         } as any;
 
         source.on('data', (e) => {

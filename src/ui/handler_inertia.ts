@@ -3,6 +3,7 @@ import type {Map} from './map';
 import {bezier, clamp, extend} from '../util/util';
 import Point from '@mapbox/point-geometry';
 import type {DragPanOptions} from './handler/shim/drag_pan';
+import {EaseToOptions} from './camera';
 
 const defaultInertiaOptions = {
     linearity: 0.3,
@@ -66,7 +67,7 @@ export class HandlerInertia {
             inertia.shift();
     }
 
-    _onMoveEnd(panInertiaOptions?: DragPanOptions | boolean) {
+    _onMoveEnd(panInertiaOptions?: DragPanOptions | boolean): EaseToOptions {
         this._drainInertiaBuffer();
         if (this._inertiaBuffer.length < 2) {
             return;
@@ -97,8 +98,10 @@ export class HandlerInertia {
 
         if (deltas.pan.mag()) {
             const result = calculateEasing(deltas.pan.mag(), duration, extend({}, defaultPanInertiaOptions, panInertiaOptions || {}));
-            easeOptions.offset = deltas.pan.mult(result.amount / deltas.pan.mag());
-            easeOptions.center = this._map.transform.center;
+            const finalPan = deltas.pan.mult(result.amount / deltas.pan.mag());
+            const computedEaseOptions = this._map.cameraHelper.handlePanInertia(finalPan, this._map.transform);
+            easeOptions.center = computedEaseOptions.easingCenter;
+            easeOptions.offset = computedEaseOptions.easingOffset;
             extendDuration(easeOptions, result);
         }
 

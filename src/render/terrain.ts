@@ -319,9 +319,9 @@ export class Terrain {
     }
 
     /**
-     * Reads a pixel from the coords-framebuffer and translate this to mercator.
+     * Reads a pixel from the coords-framebuffer and translate this to mercator, or null, if the pixel doesn't lie on the terrain's surface (but the sky instead).
      * @param p - Screen-Coordinate
-     * @returns mercator coordinate for a screen pixel
+     * @returns Mercator coordinate for a screen pixel, or null, if the pixel is not covered by terrain (is in the sky).
      */
     pointCoordinate(p: Point): MercatorCoordinate {
         // First, ensure the coords framebuffer is up to date.
@@ -341,7 +341,11 @@ export class Terrain {
         const y = rgba[1] + ((rgba[2] & 15) << 8);
         const tileID = this.coordsIndex[255 - rgba[3]];
         const tile = tileID && this.sourceCache.getTileByID(tileID);
-        if (!tile) return null;
+
+        if (!tile) {
+            return null;
+        }
+
         const coordsSize = this._coordsTextureSize;
         const worldSize = (1 << tile.tileID.canonical.z) * coordsSize;
         return new MercatorCoordinate(
@@ -386,7 +390,7 @@ export class Terrain {
             indexArray.emplaceBack(x + y, meshSize + x + y + 1, meshSize + x + y + 2);
             indexArray.emplaceBack(x + y, meshSize + x + y + 2, x + y + 1);
         }
-        // add an extra frame around the mesh to avoid stiching on tile boundaries with different zoomlevels
+        // add an extra frame around the mesh to avoid stitching on tile boundaries with different zoomlevels
         // first code-block is for top-bottom frame and second for left-right frame
         const offsetTop = vertexArray.length, offsetBottom = offsetTop + (meshSize + 1) * 2;
         for (const y of [0, 1]) for (let x = 0; x <= meshSize; x++) for (const z of [0, 1])
@@ -415,7 +419,7 @@ export class Terrain {
     }
 
     /**
-     * Calculates a height of the frame around the terrain-mesh to avoid stiching between
+     * Calculates a height of the frame around the terrain-mesh to avoid stitching between
      * tile boundaries in different zoomlevels.
      * @param zoom - current zoomlevel
      * @returns the elevation delta in meters

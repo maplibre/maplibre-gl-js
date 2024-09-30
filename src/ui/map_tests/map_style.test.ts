@@ -6,6 +6,7 @@ import {extend} from '../../util/util';
 import {fakeServer, FakeServer} from 'nise';
 import {Style} from '../../style/style';
 import {GeoJSONSourceSpecification, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {LngLatBounds} from '../../geo/lng_lat_bounds';
 
 let server: FakeServer;
 
@@ -113,10 +114,9 @@ describe('#setStyle', () => {
 
     test('style transform overrides unmodified map transform', () => new Promise<void>(done => {
         const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
-        map.transform.lngRange = [-120, 140];
-        map.transform.latRange = [-60, 80];
+        map.transform.setMaxBounds(new LngLatBounds([-120, -60], [140, 80]));
         map.transform.resize(600, 400);
-        expect(map.transform.zoom).toBe(0.6983039737971014);
+        expect(map.transform.zoom).toBe(0.6983039737971013);
         expect(map.transform.unmodified).toBeTruthy();
         map.setStyle(createStyle());
         map.on('style.load', () => {

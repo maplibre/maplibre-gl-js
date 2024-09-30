@@ -72,6 +72,19 @@ vec2 get_pattern_pos(const vec2 pixel_coord_upper, const vec2 pixel_coord_lower,
     return (tile_units_to_pixels * pos + offset) / pattern_size;
 }
 
+// Axis must be a normalized vector
+// Angle is in radians
+mat3 rotationMatrixFromAxisAngle(vec3 u, float angle) {
+    float c = cos(angle);
+    float s = sin(angle);
+    float c2 = 1.0 - c;
+    return mat3(
+        u.x*u.x * c2 +       c, u.x*u.y * c2 - u.z*s, u.x*u.z * c2 + u.y*s,
+        u.y*u.x * c2 + u.z * s, u.y*u.y * c2 +     c, u.y*u.z * c2 - u.x*s,
+        u.z*u.x * c2 - u.y * s, u.z*u.y * c2 + u.x*s, u.z*u.z * c2 +     c
+    );
+}
+
 // logic for terrain 3d
 
 #ifdef TERRAIN3D
@@ -146,3 +159,8 @@ float get_elevation(vec2 pos) {
         return 0.0;
     #endif
 }
+
+
+const float PI = 3.141592653589793;
+
+uniform mat4 u_projection_matrix;
