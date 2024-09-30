@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate, radiansToDegrees, degreesToRadians} from './util';
+import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate, radiansToDegrees, degreesToRadians, rollPitchBearingToQuat, getRollPitchBearing} from './util';
 import {Canvas} from 'canvas';
 
 describe('util', () => {
@@ -471,5 +471,33 @@ describe('util readImageDataUsingOffscreenCanvas', () => {
             10, 0, 0, 255, 0, 20, 0, 255,
             0, 0, 30, 255, 40, 40, 40, 255,
         ]);
+    });
+});
+
+
+describe('util rotations', () => {
+    test('rollPitchBearingToQuat', () => {
+        const roll = 10;
+        const pitch = 20;
+        const bearing = 30;
+
+        const rotation = rollPitchBearingToQuat(roll, pitch, bearing);
+        const angles = getRollPitchBearing(rotation);
+
+        expect(angles.roll).toBeCloseTo(roll, 6);
+        expect(angles.pitch).toBeCloseTo(pitch, 6);
+        expect(angles.bearing).toBeCloseTo(bearing, 6);
+    });
+
+    test('rollPitchBearingToQuat sinuglarity', () => {
+        const roll = 10;
+        const pitch = 0;
+        const bearing = 30;
+
+        const rotation = rollPitchBearingToQuat(roll, pitch, bearing);
+        const angles = getRollPitchBearing(rotation);
+
+        expect(angles.pitch).toBeCloseTo(0, 5);
+        expect(wrap(angles.bearing + angles.roll, -180, 180)).toBeCloseTo(wrap(bearing + roll, -180, 180), 6);
     });
 });
