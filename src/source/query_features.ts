@@ -7,8 +7,6 @@ import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
-import type {FeatureIndex} from '../data/feature_index';
-import {Tile} from './tile';
 
 /**
  * Options to pass to query the map for the rendered features
@@ -108,7 +106,7 @@ export function queryRenderedFeatures(
     for (const tileIn of tilesIn) {
         renderedFeatureLayers.push({
             wrappedTileID: tileIn.tileID.wrapped().key,
-            queryResults: (tileIn.tile as Tile).queryRenderedFeatures(
+            queryResults: tileIn.tile.queryRenderedFeatures(
                 styleLayers,
                 serializedLayers,
                 sourceCache._state,
@@ -150,14 +148,14 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
     }) {
     const result = {};
     const renderedSymbols = collisionIndex.queryRenderedSymbols(queryGeometry);
-    const bucketQueryData = [];
+    const bucketQueryData: RetainedQueryData[] = [];
     for (const bucketInstanceId of Object.keys(renderedSymbols).map(Number)) {
         bucketQueryData.push(retainedQueryData[bucketInstanceId]);
     }
     bucketQueryData.sort(sortTilesIn);
 
     for (const queryData of bucketQueryData) {
-        const bucketSymbols = (queryData.featureIndex as FeatureIndex).lookupSymbolFeatures(
+        const bucketSymbols = queryData.featureIndex.lookupSymbolFeatures(
             renderedSymbols[queryData.bucketInstanceId],
             serializedLayers,
             queryData.bucketIndex,

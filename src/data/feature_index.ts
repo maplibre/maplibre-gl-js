@@ -196,7 +196,7 @@ export class FeatureIndex {
         ) => boolean | number) {
 
         const layerIDs = this.bucketLayerIDs[bucketIndex];
-        if (filterLayerIDs && !layerIDs.filter(i => filterLayerIDs.has(i)))
+        if (filterLayerIDs && !layerIDs.some(id => filterLayerIDs.has(id)))
             return;
 
         const sourceLayerName = this.sourceLayerCoder.decode(sourceLayerIndex);
