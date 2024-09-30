@@ -7,7 +7,7 @@ import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
-import {FeatureIndex} from '../data/feature_index';
+import type {FeatureIndex} from '../data/feature_index';
 import {Tile} from './tile';
 
 /**
