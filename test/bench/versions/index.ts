@@ -75,7 +75,8 @@ register('FilterEvaluate', new FilterEvaluate());
 register('HillshadeLoad', new HillshadeLoad());
 register('CustomLayer', new CustomLayer());
 register('MapIdle', new MapIdle());
-register('SymbolCollisionBox', new SymbolCollisionBox());
+register('SymbolCollisionBox', new SymbolCollisionBox(false));
+register('SymbolCollisionBoxGlobe', new SymbolCollisionBox(true));
 register('Subdivide', new Subdivide());
 
 Promise.resolve().then(() => {

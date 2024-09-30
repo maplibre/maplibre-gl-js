@@ -230,12 +230,6 @@ interface ITransformMutators {
  */
 export interface IReadonlyTransform extends ITransformGetters {
     /**
-     * @internal
-     * When true, any transform changes resulting from user interactions with the map (panning, zooming, etc.)
-     * will assume the underlying map is a spherical surface, as opposed to a plane.
-     */
-    get useGlobeControls(): boolean;
-    /**
      * Distance from camera origin to view plane, in pixels.
      * Calculated using vertical fov and viewport height.
      * Center is considered to be in the middle of the viewport.
@@ -435,6 +429,13 @@ export interface IReadonlyTransform extends ITransformGetters {
 
     /**
      * @internal
+     * Returns whether the supplied location, defined by in-tile coordinates and tileID, is occluded in this projection.
+     * For example during globe rendering a location on the backfacing side of the globe is occluded.
+     */
+    tileCoordinatesOccluded(inTileX: number, inTileY: number, canonicalTileID: {x: number; y: number; z: number}): boolean;
+
+    /**
+     * @internal
      */
     getPixelScale(): number;
 
@@ -450,10 +451,11 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Allows the projection to adjust the scale of `text-pitch-alignment: 'map'` symbols's collision boxes based on the map's center and the text anchor.
      * Only affects the collision boxes (and click areas), scaling of the rendered text is mostly handled in shaders.
      * @param transform - The map's transform, with only the `center` property, describing the map's longitude and latitude.
-     * @param textAnchor - Text anchor position inside the tile.
+     * @param textAnchorX - Text anchor position inside the tile, X axis.
+     * @param textAnchorY - Text anchor position inside the tile, Y axis.
      * @param tileID - The tile coordinates.
      */
-    getPitchedTextCorrection(textAnchor: Point, tileID: UnwrappedTileID): number;
+    getPitchedTextCorrection(textAnchorX: number, textAnchorY: number, tileID: UnwrappedTileID): number;
 
     /**
      * @internal
@@ -483,6 +485,11 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Return projection data such that coordinates in mercator projection in range 0..1 will get projected to the map correctly.
      */
     getProjectionDataForCustomLayer(): ProjectionData;
+
+    /**
+     * Returns a tile-specific projection matrix. Used for symbol placement fast-path for mercator transform.
+     */
+    getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 | undefined;
 }
 
 /**

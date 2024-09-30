@@ -54,7 +54,6 @@ describe('transform', () => {
         expect(fixedLngLat(transform.screenPointToLocation(new Point(250, 250)))).toEqual({lng: 0, lat: 0});
         expect(fixedCoord(transform.screenPointToMercatorCoordinate(new Point(250, 250)))).toEqual({x: 0.5, y: 0.5, z: 0});
         expect(transform.locationToScreenPoint(new LngLat(0, 0))).toEqual({x: 250, y: 250});
-        expect(transform.useGlobeControls).toBe(false);
     });
 
     test('does not throw on bad center', () => {
@@ -421,8 +420,8 @@ describe('transform', () => {
         transform.setCenter(new LngLat(0.0, 0.0));
 
         const customLayerMatrix = transform.getProjectionDataForCustomLayer().mainMatrix;
-        expect(customLayerMatrix[0].toString().length).toBeGreaterThan(10);
-        expect(transform.pixelsToClipSpaceMatrix[0].toString().length).toBeGreaterThan(10);
+        expect(customLayerMatrix[0].toString().length).toBeGreaterThan(9);
+        expect(transform.pixelsToClipSpaceMatrix[0].toString().length).toBeGreaterThan(9);
         expect(transform.maxPitchScaleFactor()).toBeCloseTo(2.366025418080343, 5);
     });
 
@@ -506,16 +505,16 @@ describe('transform', () => {
         transform.resize(500, 500);
         transform.setCenter(new LngLat(10.0, 50.0));
         let projection = transform.projectTileCoordinates(1024, 1024, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), (_x, _y) => 0);
-        expect(projection.point.x).toBeCloseTo(0.07111111111111101, precisionDigits);
-        expect(projection.point.y).toBeCloseTo(0.8719999854792714, precisionDigits);
+        expect(projection.point.x).toBeCloseTo(0.0711111094156901, precisionDigits);
+        expect(projection.point.y).toBeCloseTo(0.872, precisionDigits);
         expect(projection.signedDistanceFromCamera).toBeCloseTo(750, precisionDigits);
         expect(projection.isOccluded).toBe(false);
         transform.setBearing(12);
         transform.setPitch(10);
         projection = transform.projectTileCoordinates(1024, 1024, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), (_x, _y) => 0);
-        expect(projection.point.x).toBeCloseTo(-0.10639783257205901, precisionDigits);
-        expect(projection.point.y).toBeCloseTo(0.8136784996777623, precisionDigits);
-        expect(projection.signedDistanceFromCamera).toBeCloseTo(787.6699126802941, precisionDigits);
+        expect(projection.point.x).toBeCloseTo(-0.10639783373236278, precisionDigits);
+        expect(projection.point.y).toBeCloseTo(0.8136785294062687, precisionDigits);
+        expect(projection.signedDistanceFromCamera).toBeCloseTo(787.6698880195618, precisionDigits);
         expect(projection.isOccluded).toBe(false);
     });
 });

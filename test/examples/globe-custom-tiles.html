@@ -246,7 +246,7 @@
 
             gl.useProgram(program);
 
-            const isGlobeProjection = args.shader.variantName === 'globe';
+            const isGlobeProjection = args.shaderData.variantName === 'globe';
 
             for (const tile of tilesToRender) {
                 if (isGlobeProjection && tile.wrap !== 0) {

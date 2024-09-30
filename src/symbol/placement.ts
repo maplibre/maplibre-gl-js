@@ -332,7 +332,8 @@ export class Placement {
         translationText: [number, number],
         translationIcon: [number, number],
         iconBox?: SingleCollisionBox | null,
-        getElevation?: (x: number, y: number) => number
+        getElevation?: (x: number, y: number) => number,
+        simpleProjectionMatrix?: mat4,
     ): {
             shift: Point;
             placedGlyphBoxes: PlacedBox;
@@ -352,7 +353,8 @@ export class Placement {
             translationText,
             collisionGroup.predicate,
             getElevation,
-            shift
+            shift,
+            simpleProjectionMatrix,
         );
 
         if (iconBox) {
@@ -366,7 +368,8 @@ export class Placement {
                 translationIcon,
                 collisionGroup.predicate,
                 getElevation,
-                shift
+                shift,
+                simpleProjectionMatrix,
             );
             if (!placedIconBoxes.placeable) return;
         }
@@ -453,6 +456,7 @@ export class Placement {
 
         const tileID = this.retainedQueryData[bucket.bucketInstanceId].tileID;
         const getElevation = this._getTerrainElevationFunc(tileID);
+        const simpleProjectionMatrix = this.transform.getFastPathSimpleProjectionMatrix(tileID);
 
         const placeSymbol = (symbolInstance: SymbolInstance, collisionArrays: CollisionArrays, symbolIndex: number) => {
             if (seenCrossTileIDs[symbolInstance.crossTileID]) return;
@@ -534,7 +538,9 @@ export class Placement {
                             rotateWithMap,
                             translationText,
                             collisionGroup.predicate,
-                            getElevation
+                            getElevation,
+                            undefined,
+                            simpleProjectionMatrix,
                         );
                         if (placedFeature && placedFeature.placeable) {
                             this.markUsedOrientation(bucket, orientation, symbolInstance);
@@ -619,7 +625,8 @@ export class Placement {
                                 translationText,
                                 collisionGroup.predicate,
                                 getElevation,
-                                new Point(0, 0)
+                                undefined,
+                                simpleProjectionMatrix,
                             );
                             placedBox = {
                                 box: placedFakeGlyphBox.box,
@@ -724,6 +731,7 @@ export class Placement {
                         collisionGroup.predicate,
                         getElevation,
                         (hasIconTextFit && shift) ? shift : undefined,
+                        simpleProjectionMatrix,
                     );
                 };
 
