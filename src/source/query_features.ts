@@ -7,6 +7,8 @@ import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
+import {FeatureIndex} from '../data/feature_index';
+import {Tile} from './tile';
 
 /**
  * Options to pass to query the map for the rendered features
@@ -16,7 +18,7 @@ export type QueryRenderedFeaturesOptions = {
      * An array of [style layer IDs](https://maplibre.org/maplibre-style-spec/#layer-id) for the query to inspect.
      * Only features within these layers will be returned. If this parameter is undefined, all layers will be checked.
      */
-    layers?: Array<string>;
+    layers?: Array<string> | Set<string>;
     /**
      * A [filter](https://maplibre.org/maplibre-style-spec/layers/#filter) to limit query results.
      */
@@ -30,6 +32,10 @@ export type QueryRenderedFeaturesOptions = {
      */
     validate?: boolean;
 };
+
+export type QueryRenderedFeaturesOptionsStrict = Omit<QueryRenderedFeaturesOptions, 'layers'> & {
+    layers: Set<string> | null;
+}
 
 /**
  * The options object related to the {@link Map#querySourceFeatures} method
@@ -65,7 +71,7 @@ function getPixelPosMatrix(transform, tileID) {
     }
 }
 
-function queryIncludes3DLayer(layers: Array<string>, styleLayers: {[_: string]: StyleLayer}, sourceID: string) {
+function queryIncludes3DLayer(layers: Set<string> | undefined, styleLayers: {[_: string]: StyleLayer}, sourceID: string) {
     if (layers) {
         for (const layerID of layers) {
             const layer = styleLayers[layerID];
@@ -89,11 +95,11 @@ export function queryRenderedFeatures(
     styleLayers: {[_: string]: StyleLayer},
     serializedLayers: {[_: string]: any},
     queryGeometry: Array<Point>,
-    params: QueryRenderedFeaturesOptions,
+    params: QueryRenderedFeaturesOptionsStrict | undefined,
     transform: IReadonlyTransform
 ): { [key: string]: Array<{featureIndex: number; feature: MapGeoJSONFeature}> } {
 
-    const has3DLayer = queryIncludes3DLayer(params && params.layers, styleLayers, sourceCache.id);
+    const has3DLayer = queryIncludes3DLayer(params?.layers ?? null, styleLayers, sourceCache.id);
     const maxPitchScaleFactor = transform.maxPitchScaleFactor();
     const tilesIn = sourceCache.tilesIn(queryGeometry, maxPitchScaleFactor, has3DLayer);
 
@@ -102,7 +108,7 @@ export function queryRenderedFeatures(
     for (const tileIn of tilesIn) {
         renderedFeatureLayers.push({
             wrappedTileID: tileIn.tileID.wrapped().key,
-            queryResults: tileIn.tile.queryRenderedFeatures(
+            queryResults: (tileIn.tile as Tile).queryRenderedFeatures(
                 styleLayers,
                 serializedLayers,
                 sourceCache._state,
@@ -137,7 +143,7 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
     serializedLayers: {[_: string]: StyleLayer},
     sourceCaches: {[_: string]: SourceCache},
     queryGeometry: Array<Point>,
-    params: QueryRenderedFeaturesOptions,
+    params: QueryRenderedFeaturesOptionsStrict,
     collisionIndex: CollisionIndex,
     retainedQueryData: {
         [_: number]: RetainedQueryData;
@@ -151,7 +157,7 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
     bucketQueryData.sort(sortTilesIn);
 
     for (const queryData of bucketQueryData) {
-        const bucketSymbols = queryData.featureIndex.lookupSymbolFeatures(
+        const bucketSymbols = (queryData.featureIndex as FeatureIndex).lookupSymbolFeatures(
             renderedSymbols[queryData.bucketInstanceId],
             serializedLayers,
             queryData.bucketIndex,

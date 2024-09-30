@@ -1411,8 +1411,9 @@ export class Style extends Evented {
 
         const includedSources = {};
         if (params && params.layers) {
-            if (!Array.isArray(params.layers)) {
-                this.fire(new ErrorEvent(new Error('parameters.layers must be an Array.')));
+            const isArrayOrSet = Array.isArray(params.layers) || params.layers instanceof Set;
+            if (!isArrayOrSet) {
+                this.fire(new ErrorEvent(new Error('parameters.layers must be an Array or a Set of strings')));
                 return [];
             }
             for (const layerId of params.layers) {
@@ -1433,6 +1434,12 @@ export class Style extends Evented {
         // LayerSpecification is serialized StyleLayer, and this casting is safe.
         const serializedLayers = this._serializedAllLayers() as {[_: string]: StyleLayer};
 
+        const layersAsSet = params.layers instanceof Set ? params.layers : Array.isArray(params.layers) ? new Set(params.layers) : undefined;
+        const paramsStrict = {
+            ...params,
+            layers: layersAsSet,
+        };
+
         for (const id in this.sourceCaches) {
             if (params.layers && !includedSources[id]) continue;
             sourceResults.push(
@@ -1441,7 +1448,7 @@ export class Style extends Evented {
                     this._layers,
                     serializedLayers,
                     queryGeometry,
-                    params,
+                    paramsStrict,
                     transform)
             );
         }
@@ -1455,7 +1462,7 @@ export class Style extends Evented {
                     serializedLayers,
                     this.sourceCaches,
                     queryGeometry,
-                    params,
+                    paramsStrict,
                     this.placement.collisionIndex,
                     this.placement.retainedQueryData)
             );

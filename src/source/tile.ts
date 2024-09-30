@@ -33,6 +33,7 @@ import type Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 import {ExpiryData} from '../util/ajax';
+import {QueryRenderedFeaturesOptionsStrict} from './query_features';
 
 /**
  * The tile's state, can be:
@@ -285,11 +286,7 @@ export class Tile {
         queryGeometry: Array<Point>,
         cameraQueryGeometry: Array<Point>,
         scale: number,
-        params: {
-            filter: FilterSpecification;
-            layers: Array<string>;
-            availableImages: Array<string>;
-        },
+        params: Pick<QueryRenderedFeaturesOptionsStrict, 'filter' | 'layers' | 'availableImages'> | undefined,
         transform: IReadonlyTransform,
         maxPitchScaleFactor: number,
         pixelPosMatrix: mat4

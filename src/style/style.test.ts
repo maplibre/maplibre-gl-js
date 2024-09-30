@@ -2221,7 +2221,7 @@ describe('Style#queryRenderedFeatures', () => {
 
             if (params.layers) {
                 for (const l in features) {
-                    if (params.layers.indexOf(l) < 0) {
+                    if (!params.layers.has(l)) {
                         delete features[l];
                     }
                 }
@@ -2319,7 +2319,7 @@ describe('Style#queryRenderedFeatures', () => {
     test('checks type of `layers` option', () => {
         let errors = 0;
         jest.spyOn(style, 'fire').mockImplementation((event) => {
-            if (event['error'] && event['error'].message.includes('parameters.layers must be an Array.')) {
+            if (event['error'] && event['error'].message.includes('parameters.layers must be an Array')) {
                 errors++;
             }
         });

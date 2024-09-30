@@ -9,7 +9,7 @@ import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
 import {GeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
-import {arraysIntersect, mapObject, extend} from '../util/util';
+import {mapObject, extend} from '../util/util';
 import {OverscaledTileID} from '../source/tile_id';
 import {register} from '../util/web_worker_transfer';
 import {EvaluationParameters} from '../style/evaluation_parameters';
@@ -33,9 +33,9 @@ type QueryParameters = {
     cameraQueryGeometry: Array<Point>;
     queryPadding: number;
     params: {
-        filter: FilterSpecification;
-        layers: Array<string>;
-        availableImages: Array<string>;
+        filter?: FilterSpecification;
+        layers?: Set<string> | null;
+        availableImages?: Array<string>;
     };
 };
 
@@ -113,7 +113,7 @@ export class FeatureIndex {
     ): {[_: string]: Array<{featureIndex: number; feature: GeoJSONFeature}>} {
         this.loadVTLayers();
 
-        const params = args.params || {} as { filter: any; layers: string[]; availableImages: string[] },
+        const params = args.params || {} as QueryParameters['params'],
             pixelsToTileUnits = EXTENT / args.tileSize / args.scale,
             filter = featureFilter(params.filter);
 
@@ -183,7 +183,7 @@ export class FeatureIndex {
         sourceLayerIndex: number,
         featureIndex: number,
         filter: FeatureFilter,
-        filterLayerIDs: Array<string>,
+        filterLayerIDs: Set<string> | undefined,
         availableImages: Array<string>,
         styleLayers: {[_: string]: StyleLayer},
         serializedLayers: {[_: string]: any},
@@ -196,7 +196,7 @@ export class FeatureIndex {
         ) => boolean | number) {
 
         const layerIDs = this.bucketLayerIDs[bucketIndex];
-        if (filterLayerIDs && !arraysIntersect(filterLayerIDs, layerIDs))
+        if (filterLayerIDs && !layerIDs.filter(i => filterLayerIDs.has(i)))
             return;
 
         const sourceLayerName = this.sourceLayerCoder.decode(sourceLayerIndex);
@@ -217,7 +217,7 @@ export class FeatureIndex {
         for (let l = 0; l < layerIDs.length; l++) {
             const layerID = layerIDs[l];
 
-            if (filterLayerIDs && filterLayerIDs.indexOf(layerID) < 0) {
+            if (filterLayerIDs && !filterLayerIDs.has(layerID)) {
                 continue;
             }
 
@@ -259,7 +259,7 @@ export class FeatureIndex {
         bucketIndex: number,
         sourceLayerIndex: number,
         filterSpec: FilterSpecification,
-        filterLayerIDs: Array<string>,
+        filterLayerIDs: Set<string> | null,
         availableImages: Array<string>,
         styleLayers: {[_: string]: StyleLayer}) {
         const result = {};
