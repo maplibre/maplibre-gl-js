@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate} from './util';
+import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate, radiansToDegrees, degreesToRadians} from './util';
 import {Canvas} from 'canvas';
 
 describe('util', () => {
@@ -118,6 +118,14 @@ describe('util', () => {
         expect(mod(4, 3)).toBe(1);
         expect(mod(-1, 3)).toBe(2);
         expect(mod(-1, 3)).toBe(2);
+    });
+
+    test('degreesToRadians', () => {
+        expect(degreesToRadians(1.0)).toBe(Math.PI/180.0);
+    });
+
+    test('radiansToDegrees', () => {
+        expect(radiansToDegrees(1.0)).toBe(180.0/Math.PI);
     });
 
     test('distanceOfAnglesRadians', () => {
