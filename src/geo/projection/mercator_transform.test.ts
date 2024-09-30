@@ -50,7 +50,7 @@ describe('transform', () => {
             0, 1, 0, 0,
             0, 0, 1, 0,
             0, 0, 0, 1], 6);
-        expect([...transform.modelViewProjectionMatrix.values()]).toEqual([3, 0, 0, 0, 0, -2.954423259036624, -0.1780177690666898, -0.17364817766693033, 0, 0.006822967915294533, -0.013222891287479163, -0.012898324631281611, -786432, 774484.3308168967, 47414.91102496082, 46270.827886319785]);
+        expect([...transform.modelViewProjectionMatrix.values()]).toEqual([3, 0, 0, 0, 0, -2.954423259036624, -0.1780177690666898, -0.17364817766693033, -0, 0.006822967915294533, -0.013222891287479163, -0.012898324631281611, -786432, 774484.3308168967, 47414.91102496082, 46270.827886319785]);
         expect(fixedLngLat(transform.screenPointToLocation(new Point(250, 250)))).toEqual({lng: 0, lat: 0});
         expect(fixedCoord(transform.screenPointToMercatorCoordinate(new Point(250, 250)))).toEqual({x: 0.5, y: 0.5, z: 0});
         expect(transform.locationToScreenPoint(new LngLat(0, 0))).toEqual({x: 250, y: 250});
@@ -79,6 +79,17 @@ describe('transform', () => {
         transform.resize(500, 500);
         transform.setZoom(4);
         transform.setPitch(50);
+        expect(transform.center).toEqual({lng: 0, lat: 0});
+        transform.setLocationAtPoint(new LngLat(13, 10), new Point(15, 45));
+        expect(fixedLngLat(transform.screenPointToLocation(new Point(15, 45)))).toEqual({lng: 13, lat: 10});
+    });
+
+    test('setLocationAt tilted rolled', () => {
+        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        transform.resize(500, 500);
+        transform.setZoom(4);
+        transform.setPitch(50);
+        transform.setRoll(50);
         expect(transform.center).toEqual({lng: 0, lat: 0});
         transform.setLocationAtPoint(new LngLat(13, 10), new Point(15, 45));
         expect(fixedLngLat(transform.screenPointToLocation(new Point(15, 45)))).toEqual({lng: 13, lat: 10});

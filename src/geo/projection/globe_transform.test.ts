@@ -127,6 +127,16 @@ describe('GlobeTransform', () => {
             globeTransform.setBearing(70);
             expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [-0.7098603286961542, 2.002400604307631, 0.6154310261827212], precisionDigits);
 
+            globeTransform.setPitch(35);
+            globeTransform.setBearing(70);
+            globeTransform.setRoll(40);
+            expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [-0.7098603286961542, 2.002400604307631, 0.6154310261827212], precisionDigits);
+
+            globeTransform.setPitch(35);
+            globeTransform.setBearing(70);
+            globeTransform.setRoll(180);
+            expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [-0.7098603286961542, 2.002400604307631, 0.6154310261827212], precisionDigits);
+
             globeTransform.setCenter(new LngLat(-10, 42));
             expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [-3.8450970996236364, 2.9368285470351516, 4.311953269048194], precisionDigits);
         });
