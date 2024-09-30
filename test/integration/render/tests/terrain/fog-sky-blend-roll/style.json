@@ -1,0 +1,63 @@
+{
+    "version": 8,
+    "sprite": "local://sprites/sprite",
+    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+    "timeout": 60000,
+    "metadata": {
+        "test": {
+            "height": 512,
+            "width": 512,
+            "maxPitch": 85,
+            "operations": [
+                ["wait"]
+            ]
+        }
+    },
+    "center": [
+        35.38,
+        31.55
+    ],
+    "zoom": 15,
+    "pitch": 85,
+    "roll": -135,
+    "sources": {
+        "hillshadeSource": {
+            "type": "raster-dem",
+            "tiles": [
+                "local://tiles/zero-elevation-terrain-tile.png"
+            ],
+            "minzoom": 0,
+            "maxzoom": 12
+        },
+        "terrain": {
+            "type": "raster-dem",
+            "tiles": [
+                "local://tiles/zero-elevation-terrain-tile.png"
+            ],
+            "minzoom": 7,
+            "maxzoom": 12,
+            "tileSize": 256
+        }
+    },
+    "layers": [
+        {
+          "id": "background",
+          "type": "background",
+          "paint": {
+            "background-color": "white"
+          }
+        }
+    ],
+    "terrain": {
+        "source": "terrain",
+        "exaggeration": 1
+    },
+    "sky": {
+        "sky-color": "#00ff00",
+        "horizon-color": "#00ff00",
+        "fog-color": "#ff0000",
+        "sky-horizon-blend": 1,
+        "horizon-fog-blend": 0,
+        "fog-ground-blend": 0
+    }
+}
