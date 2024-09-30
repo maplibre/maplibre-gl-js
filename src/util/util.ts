@@ -931,7 +931,7 @@ export function getRollPitchBearing(rotation: quat): RollPitchBearing {
 export function rollPitchBearingToQuat(roll: number, pitch: number, bearing: number): quat {
     const rotation: quat = new Float64Array(4) as any;
     quat.fromEuler(rotation, roll, pitch - 90.0, bearing);
-    return rotation
+    return rotation;
 }
 
 /**

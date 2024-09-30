@@ -169,9 +169,7 @@ export class MercatorCameraHelper implements ICameraHelper {
                         tr.setRoll(eulerAngles.roll);
                         tr.setPitch(eulerAngles.pitch);
                         tr.setBearing(eulerAngles.bearing);
-                    }
-                    else
-                    {
+                    } else {
                         tr.setRoll(endRoll);
                         tr.setPitch(endPitch);
                         tr.setBearing(endBearing);

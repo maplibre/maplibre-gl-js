@@ -121,11 +121,11 @@ describe('util', () => {
     });
 
     test('degreesToRadians', () => {
-        expect(degreesToRadians(1.0)).toBe(Math.PI/180.0);
+        expect(degreesToRadians(1.0)).toBe(Math.PI / 180.0);
     });
 
     test('radiansToDegrees', () => {
-        expect(radiansToDegrees(1.0)).toBe(180.0/Math.PI);
+        expect(radiansToDegrees(1.0)).toBe(180.0 / Math.PI);
     });
 
     test('distanceOfAnglesRadians', () => {
@@ -473,7 +473,6 @@ describe('util readImageDataUsingOffscreenCanvas', () => {
         ]);
     });
 });
-
 
 describe('util rotations', () => {
     test('rollPitchBearingToQuat', () => {
