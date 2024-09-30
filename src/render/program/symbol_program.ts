@@ -16,7 +16,6 @@ export type SymbolIconUniformsType = {
     'u_rotate_symbol': Uniform1i;
     'u_aspect_ratio': Uniform1f;
     'u_fade_change': Uniform1f;
-    'u_matrix': UniformMatrix4f;
     'u_label_plane_matrix': UniformMatrix4f;
     'u_coord_matrix': UniformMatrix4f;
     'u_is_text': Uniform1i;
@@ -39,7 +38,6 @@ export type SymbolSDFUniformsType = {
     'u_rotate_symbol': Uniform1i;
     'u_aspect_ratio': Uniform1f;
     'u_fade_change': Uniform1f;
-    'u_matrix': UniformMatrix4f;
     'u_label_plane_matrix': UniformMatrix4f;
     'u_coord_matrix': UniformMatrix4f;
     'u_is_text': Uniform1i;
@@ -65,7 +63,6 @@ export type symbolTextAndIconUniformsType = {
     'u_rotate_symbol': Uniform1i;
     'u_aspect_ratio': Uniform1f;
     'u_fade_change': Uniform1f;
-    'u_matrix': UniformMatrix4f;
     'u_label_plane_matrix': UniformMatrix4f;
     'u_coord_matrix': UniformMatrix4f;
     'u_is_text': Uniform1i;
@@ -93,7 +90,6 @@ const symbolIconUniforms = (context: Context, locations: UniformLocations): Symb
     'u_rotate_symbol': new Uniform1i(context, locations.u_rotate_symbol),
     'u_aspect_ratio': new Uniform1f(context, locations.u_aspect_ratio),
     'u_fade_change': new Uniform1f(context, locations.u_fade_change),
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
     'u_label_plane_matrix': new UniformMatrix4f(context, locations.u_label_plane_matrix),
     'u_coord_matrix': new UniformMatrix4f(context, locations.u_coord_matrix),
     'u_is_text': new Uniform1i(context, locations.u_is_text),
@@ -116,7 +112,6 @@ const symbolSDFUniforms = (context: Context, locations: UniformLocations): Symbo
     'u_rotate_symbol': new Uniform1i(context, locations.u_rotate_symbol),
     'u_aspect_ratio': new Uniform1f(context, locations.u_aspect_ratio),
     'u_fade_change': new Uniform1f(context, locations.u_fade_change),
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
     'u_label_plane_matrix': new UniformMatrix4f(context, locations.u_label_plane_matrix),
     'u_coord_matrix': new UniformMatrix4f(context, locations.u_coord_matrix),
     'u_is_text': new Uniform1i(context, locations.u_is_text),
@@ -142,7 +137,6 @@ const symbolTextAndIconUniforms = (context: Context, locations: UniformLocations
     'u_rotate_symbol': new Uniform1i(context, locations.u_rotate_symbol),
     'u_aspect_ratio': new Uniform1f(context, locations.u_aspect_ratio),
     'u_fade_change': new Uniform1f(context, locations.u_fade_change),
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
     'u_label_plane_matrix': new UniformMatrix4f(context, locations.u_label_plane_matrix),
     'u_coord_matrix': new UniformMatrix4f(context, locations.u_coord_matrix),
     'u_is_text': new Uniform1i(context, locations.u_is_text),
@@ -171,7 +165,6 @@ const symbolIconUniformValues = (
     isAlongLine: boolean,
     isVariableAnchor: boolean,
     painter: Painter,
-    matrix: mat4,
     labelPlaneMatrix: mat4,
     glCoordMatrix: mat4,
     translation: [number, number],
@@ -191,7 +184,6 @@ const symbolIconUniformValues = (
         'u_rotate_symbol': +rotateInShader,
         'u_aspect_ratio': transform.width / transform.height,
         'u_fade_change': painter.options.fadeDuration ? painter.symbolFadeChange : 1,
-        'u_matrix': matrix,
         'u_label_plane_matrix': labelPlaneMatrix,
         'u_coord_matrix': glCoordMatrix,
         'u_is_text': +isText,
@@ -216,7 +208,6 @@ const symbolSDFUniformValues = (
     isAlongLine: boolean,
     isVariableAnchor: boolean,
     painter: Painter,
-    matrix: mat4,
     labelPlaneMatrix: mat4,
     glCoordMatrix: mat4,
     translation: [number, number],
@@ -228,9 +219,9 @@ const symbolSDFUniformValues = (
     const transform = painter.transform;
 
     return extend(symbolIconUniformValues(functionType, size,
-        rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, painter, matrix, labelPlaneMatrix,
+        rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, painter, labelPlaneMatrix,
         glCoordMatrix, translation, isText, texSize, pitchedScale), {
-        'u_gamma_scale': (pitchWithMap ? Math.cos(transform._pitch) * transform.cameraToCenterDistance : 1),
+        'u_gamma_scale': (pitchWithMap ? Math.cos(transform.pitch * Math.PI / 180.0) * transform.cameraToCenterDistance : 1),
         'u_device_pixel_ratio': painter.pixelRatio,
         'u_is_halo': +isHalo
     });
@@ -247,7 +238,6 @@ const symbolTextAndIconUniformValues = (
     isAlongLine: boolean,
     isVariableAnchor: boolean,
     painter: Painter,
-    matrix: mat4,
     labelPlaneMatrix: mat4,
     glCoordMatrix: mat4,
     translation: [number, number],
@@ -256,7 +246,7 @@ const symbolTextAndIconUniformValues = (
     pitchedScale: number
 ): UniformValues<SymbolIconUniformsType> => {
     return extend(symbolSDFUniformValues(functionType, size,
-        rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, painter, matrix, labelPlaneMatrix,
+        rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, painter, labelPlaneMatrix,
         glCoordMatrix, translation, true, texSizeSDF, true, pitchedScale), {
         'u_texsize_icon': texSizeIcon,
         'u_texture_icon': 1

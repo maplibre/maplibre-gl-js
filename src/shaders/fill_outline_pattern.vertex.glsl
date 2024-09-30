@@ -1,14 +1,17 @@
-uniform mat4 u_matrix;
 uniform vec2 u_world;
 uniform vec2 u_pixel_coord_upper;
 uniform vec2 u_pixel_coord_lower;
 uniform vec3 u_scale;
+uniform vec2 u_fill_translate;
 
 in vec2 a_pos;
 
 out vec2 v_pos_a;
 out vec2 v_pos_b;
 out vec2 v_pos;
+#ifdef GLOBE
+out float v_depth;
+#endif
 
 #pragma mapbox: define lowp float opacity
 #pragma mapbox: define lowp vec4 pattern_from
@@ -32,7 +35,7 @@ void main() {
     float fromScale = u_scale.y;
     float toScale = u_scale.z;
 
-    gl_Position = u_matrix * vec4(a_pos, 0, 1);
+    gl_Position = projectTile(a_pos + u_fill_translate);
 
     vec2 display_size_a = (pattern_br_a - pattern_tl_a) / pixel_ratio_from;
     vec2 display_size_b = (pattern_br_b - pattern_tl_b) / pixel_ratio_to;
@@ -41,4 +44,7 @@ void main() {
     v_pos_b = get_pattern_pos(u_pixel_coord_upper, u_pixel_coord_lower, toScale * display_size_b, tileRatio, a_pos);
 
     v_pos = (gl_Position.xy / gl_Position.w + 1.0) / 2.0 * u_world;
+    #ifdef GLOBE
+    v_depth = gl_Position.z / gl_Position.w;
+    #endif
 }

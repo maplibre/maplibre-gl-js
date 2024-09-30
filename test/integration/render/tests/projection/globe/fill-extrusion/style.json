@@ -1,0 +1,146 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [
+    0.0,
+    -30.0
+  ],
+  "zoom": 1,
+  "projection": { "type": "globe" },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -180,
+              -90
+            ],
+            [
+              -180,
+              90
+            ],
+            [
+              180,
+              90
+            ],
+            [
+              180,
+              -90
+            ],
+            [
+              -180,
+              -90
+            ]
+          ]
+        ]
+      }
+    },
+    "extrusion": {
+      "type": "geojson",
+      "data": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -180,
+              -10
+            ],
+            [
+              -180,
+              10
+            ],
+            [
+              180,
+              10
+            ],
+            [
+              180,
+              -10
+            ],
+            [
+              -180,
+              -10
+            ]
+          ]
+        ]
+      }
+    },
+    "extrusion2": {
+      "type": "geojson",
+      "data": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -10,
+              40
+            ],
+            [
+              -10,
+              50
+            ],
+            [
+              10,
+              50
+            ],
+            [
+              10,
+              40
+            ],
+            [
+              -10,
+              40
+            ]
+          ]
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "fill",
+      "type": "fill",
+      "source": "geojson",
+      "paint": {
+        "fill-antialias": false,
+        "fill-color": "#0000ff"
+      }
+    },
+    {
+      "id": "extrusion",
+      "type": "fill-extrusion",
+      "source": "extrusion",
+      "paint": {
+        "fill-extrusion-color": "#ff0000",
+        "fill-extrusion-opacity": 1,
+        "fill-extrusion-height": 450000
+      }
+    },
+    {
+      "id": "extrusion2",
+      "type": "fill-extrusion",
+      "source": "extrusion2",
+      "paint": {
+        "fill-extrusion-color": "#00ff00",
+        "fill-extrusion-opacity": 1,
+        "fill-extrusion-height": 450000
+      }
+    }
+  ]
+}

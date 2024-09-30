@@ -322,6 +322,7 @@ export class Marker extends Evented {
         map.on('move', this._update);
         map.on('moveend', this._update);
         map.on('terrain', this._update);
+        map.on('projectiontransition', this._update);
 
         this.setDraggable(this._draggable);
         this._update();
@@ -352,6 +353,7 @@ export class Marker extends Evented {
             this._map.off('move', this._update);
             this._map.off('moveend', this._update);
             this._map.off('terrain', this._update);
+            this._map.off('projectiontransition', this._update);
             this._map.off('mousedown', this._addDragHandler);
             this._map.off('touchstart', this._addDragHandler);
             this._map.off('mouseup', this._onUp);
@@ -550,7 +552,9 @@ export class Marker extends Evented {
     _updateOpacity(force: boolean = false) {
         const terrain = this._map?.terrain;
         if (!terrain) {
-            if (this._element.style.opacity !== this._opacity) { this._element.style.opacity = this._opacity; }
+            const occluded = this._map.transform.isLocationOccluded(this._lngLat);
+            const targetOpacity = occluded ? this._opacityWhenCovered : this._opacity;
+            if (this._element.style.opacity !== targetOpacity) { this._element.style.opacity = targetOpacity; }
             return;
         }
         if (force) {
@@ -576,7 +580,7 @@ export class Marker extends Evented {
             return;
         }
         // If the base is obscured, use the offset to check if the marker's center is obscured.
-        const metersToCenter = -this._offset.y / map.transform._pixelPerMeter;
+        const metersToCenter = -this._offset.y / map.transform.pixelsPerMeter;
         const elevationToCenter = Math.sin(map.getPitch() * Math.PI / 180) * metersToCenter;
         const terrainDistanceCenter = map.terrain.depthAtPoint(new Point(this._pos.x, this._pos.y - this._offset.y));
         const markerDistanceCenter = map.transform.lngLatToCameraDepth(this._lngLat, elevation + elevationToCenter);
@@ -604,7 +608,7 @@ export class Marker extends Evented {
         this._flatPos = this._pos = this._map.project(this._lngLat)._add(this._offset);
         if (this._map.terrain) {
             // flat position is saved because smartWrap needs non-elevated points
-            this._flatPos = this._map.transform.locationPoint(this._lngLat)._add(this._offset);
+            this._flatPos = this._map.transform.locationToScreenPoint(this._lngLat)._add(this._offset);
         }
 
         let rotation = '';

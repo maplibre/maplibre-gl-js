@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Display a globe with a fill extrusion layer</title>
+    <meta property="og:description" content="Display a globe with a fill extrusion layer." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://api.maptiler.com/maps/basic/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        center: [30.0, 40.0],
+    });
+
+    map.on('style.load', () => {
+        map.setProjection({
+            type: 'globe', // Set projection to globe
+        });
+    });
+
+    map.on('load', () => {
+        map.addSource('extrude-polygons', {
+            'type': 'geojson',
+            'data': {
+                'type': 'FeatureCollection',
+                'features': [
+                    {
+                        'type': 'Feature',
+                        'geometry': {
+                            'type': 'Polygon',
+                            'coordinates': [
+                                [
+                                    [-120.0, 10.0],
+                                    [120.0, 10.0],
+                                    [120.0, -10.0],
+                                    [-120.0, -10.0]
+                                ]
+                            ]
+                        },
+                        'properties': {
+                            'height': 150000,
+                            'color': '#ff0044'
+                        }
+                    },
+                    {
+                        'type': 'Feature',
+                        'geometry': {
+                            'type': 'Polygon',
+                            'coordinates': [
+                                [
+                                    [10.0, 50.0],
+                                    [20.0, 50.0],
+                                    [20.0, 40.0],
+                                    [10.0, 40.0]
+                                ]
+                            ]
+                        },
+                        'properties': {
+                            'height': 450000,
+                            'color': '#22ff44'
+                        }
+                    },
+                    {
+                        'type': 'Feature',
+                        'geometry': {
+                            'type': 'Polygon',
+                            'coordinates': [
+                                [
+                                    [-70.0, 55.0],
+                                    [-65.0, 55.0],
+                                    [-65.0, 50.0],
+                                    [-70.0, 50.0]
+                                ]
+                            ]
+                        },
+                        'properties': {
+                            'height': 600000,
+                            'color': '#4400ff'
+                        }
+                    }
+                ]
+            }
+        });
+        map.addLayer({
+            'id': 'extrude-polygon-layer',
+            'source': 'extrude-polygons',
+            'type': 'fill-extrusion',
+            'paint': {
+                'fill-extrusion-color': ['get', 'color'],
+                'fill-extrusion-opacity': 1,
+                'fill-extrusion-height': ['get', 'height'],
+            }
+        }, 'waterway');
+    });
+</script>
+</body>
+</html>

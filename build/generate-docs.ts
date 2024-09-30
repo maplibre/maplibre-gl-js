@@ -165,6 +165,19 @@ ${groups['JAVASCRIPT-BINDINGS']}
     fs.writeFileSync('docs/plugins.md', pluginsContent, {encoding: 'utf-8'});
 }
 
+function updateMapLibreVersionForUNPKG() {
+
+    // Read index.md
+    const indexPath = 'docs/index.md';
+    let indexContent = fs.readFileSync(indexPath, 'utf-8');
+
+    // Replace the version number
+    indexContent = indexContent.replace(/unpkg\.com\/maplibre-gl@\^(\d+\.\d+\.\d+)/g, `unpkg.com/maplibre-gl@^${packageJson.version}`);
+
+    // Save index.md
+    fs.writeFileSync(indexPath, indexContent);
+}
+
 // !!Main flow start here!!
 if (!fs.existsSync(typedocConfig.out)) {
     throw new Error('Please run typedoc generation first!');
@@ -173,4 +186,5 @@ fs.rmSync(path.join(typedocConfig.out, 'README.md'));
 generateReadme();
 generateExamplesFolder();
 await generatePluginsPage();
+updateMapLibreVersionForUNPKG();
 console.log('Docs generation completed, to see it in action run\n npm run start-docs');

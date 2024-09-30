@@ -2,8 +2,6 @@ import {getVideo} from '../util/ajax';
 import {ResourceType} from '../util/request_manager';
 
 import {ImageSource} from './image_source';
-import rasterBoundsAttributes from '../data/raster_bounds_attributes';
-import {SegmentVector} from '../data/segment';
 import {Texture} from '../render/texture';
 import {Event, ErrorEvent} from '../util/evented';
 import {ValidationError} from '@maplibre/maplibre-gl-style-spec';
@@ -158,14 +156,6 @@ export class VideoSource extends ImageSource {
 
         const context = this.map.painter.context;
         const gl = context.gl;
-
-        if (!this.boundsBuffer) {
-            this.boundsBuffer = context.createVertexBuffer(this._boundsArray, rasterBoundsAttributes.members);
-        }
-
-        if (!this.boundsSegments) {
-            this.boundsSegments = SegmentVector.simpleSegment(0, 0, 4, 2);
-        }
 
         if (!this.texture) {
             this.texture = new Texture(context, this.video, gl.RGBA);

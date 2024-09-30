@@ -41,6 +41,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
 
     const context = painter.context;
     const gl = context.gl;
+    const transform = painter.transform;
 
     let firstTile = true;
 
@@ -66,11 +67,13 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
         }
 
-        const terrainCoord = terrainData ? coord : null;
-        const uniformValues = image ? linePatternUniformValues(painter, tile, layer, crossfade, terrainCoord) :
-            dasharray ? lineSDFUniformValues(painter, tile, layer, dasharray, crossfade, terrainCoord) :
-                gradient ? lineGradientUniformValues(painter, tile, layer, bucket.lineClipsArray.length, terrainCoord) :
-                    lineUniformValues(painter, tile, layer, terrainCoord);
+        const projectionData = transform.getProjectionData(coord);
+        const pixelRatio = transform.getPixelScale();
+
+        const uniformValues = image ? linePatternUniformValues(painter, tile, layer, pixelRatio, crossfade) :
+            dasharray ? lineSDFUniformValues(painter, tile, layer, pixelRatio, dasharray, crossfade) :
+                gradient ? lineGradientUniformValues(painter, tile, layer, pixelRatio, bucket.lineClipsArray.length) :
+                    lineUniformValues(painter, tile, layer, pixelRatio);
 
         if (image) {
             context.activeTexture.set(gl.TEXTURE0);
@@ -115,7 +118,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
         }
 
         program.draw(context, gl.TRIANGLES, depthMode,
-            painter.stencilModeForClipping(coord), colorMode, CullFaceMode.disabled, uniformValues, terrainData,
+            painter.stencilModeForClipping(coord), colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,
             layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments,
             layer.paint, painter.transform.zoom, programConfiguration, bucket.layoutVertexBuffer2);
 

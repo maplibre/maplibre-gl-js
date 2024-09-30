@@ -1,10 +1,11 @@
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {StyleLayer} from '../../style/style_layer';
-import {createMap, beforeMapTest, createStyle} from '../../util/test/util';
+import {createMap, beforeMapTest, createStyle, sleep} from '../../util/test/util';
 import {MapGeoJSONFeature} from '../../util/vectortile_to_geojson';
 import {MapLayerEventType, MapLibreEvent} from '../events';
 import {Map, MapOptions} from '../map';
 import {Event as EventedEvent, ErrorEvent} from '../../util/evented';
+import {GlobeProjection} from '../../geo/projection/globe';
 
 type IsAny<T> = 0 extends T & 1 ? T : never;
 type NotAny<T> = T extends IsAny<T> ? never : T;
@@ -924,10 +925,10 @@ describe('map events', () => {
         map.remove();
     });
 
-    test('emits load event after a style is set', done => {
+    test('emits load event after a style is set', () => new Promise<void>((done) => {
         const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
 
-        const fail = () => done('test failed');
+        const fail = () => { throw new Error('test failed'); };
         const pass = () => done();
 
         map.on('load', fail);
@@ -937,7 +938,7 @@ describe('map events', () => {
             map.on('load', pass);
             map.setStyle(createStyle());
         }, 1);
-    });
+    }));
 
     test('no idle event during move', async () => {
         const style = createStyle();
@@ -987,7 +988,7 @@ describe('map events', () => {
             expect(stub.mock.calls[0][0]).toBe(error);
         });
 
-        test('calls listeners', done => {
+        test('calls listeners', () => new Promise<void>(done => {
             const map = createMap();
             const error = new Error('test');
             map.on('error', (event) => {
@@ -995,7 +996,56 @@ describe('map events', () => {
                 done();
             });
             map.fire(new ErrorEvent(error));
-        });
+        }));
 
+    });
+
+    describe('projectiontransition event', () => {
+        test('projectiontransition events is fired when setProjection is called', async () => {
+            const map = createMap();
+
+            await map.once('load');
+
+            const spy = jest.fn();
+            map.on('projectiontransition', (e) => spy(e.newProjection));
+            map.setProjection({
+                type: 'globe',
+            });
+            map.setProjection({
+                type: 'mercator',
+            });
+            expect(spy).toHaveBeenCalledTimes(2);
+            expect(spy).toHaveBeenNthCalledWith(1, 'globe');
+            expect(spy).toHaveBeenNthCalledWith(2, 'mercator');
+        });
+        test('projectiontransition is fired when globe transitions to mercator', async () => {
+            const map = createMap();
+            jest.spyOn(GlobeProjection.prototype, 'updateGPUdependent').mockImplementation(() => {});
+            await map.once('load');
+
+            const spy = jest.fn();
+            map.on('projectiontransition', (e) => spy(e.newProjection));
+
+            map.setProjection({
+                type: 'globe',
+            });
+            map.setZoom(18);
+            map.redraw();
+            await sleep(550);
+            map.redraw();
+            map.setZoom(0);
+            map.redraw();
+            await sleep(550);
+            map.redraw();
+            map.setProjection({
+                type: 'mercator',
+            });
+
+            expect(spy).toHaveBeenCalledTimes(4);
+            expect(spy).toHaveBeenNthCalledWith(1, 'globe');
+            expect(spy).toHaveBeenNthCalledWith(2, 'globe-mercator');
+            expect(spy).toHaveBeenNthCalledWith(3, 'globe');
+            expect(spy).toHaveBeenNthCalledWith(4, 'mercator');
+        });
     });
 });

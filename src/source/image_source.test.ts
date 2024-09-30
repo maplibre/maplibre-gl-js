@@ -1,16 +1,15 @@
 import {ImageSource} from './image_source';
 import {Evented} from '../util/evented';
-import {Transform} from '../geo/transform';
+import {IReadonlyTransform} from '../geo/transform_interface';
 import {extend} from '../util/util';
 import {type FakeServer, fakeServer} from 'nise';
 import {RequestManager} from '../util/request_manager';
 import {sleep, stubAjaxGetImage} from '../util/test/util';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
-import {VertexBuffer} from '../gl/vertex_buffer';
-import {SegmentVector} from '../data/segment';
 import {Texture} from '../render/texture';
 import type {ImageSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 function createSource(options) {
     options = extend({
@@ -22,13 +21,13 @@ function createSource(options) {
 }
 
 class StubMap extends Evented {
-    transform: Transform;
+    transform: IReadonlyTransform;
     painter: any;
     _requestManager: RequestManager;
 
     constructor() {
         super();
-        this.transform = new Transform();
+        this.transform = new MercatorTransform();
         this._requestManager = {
             transformRequest: (url) => {
                 return {url};
@@ -128,7 +127,7 @@ describe('ImageSource', () => {
         expect(afterSerialized.coordinates).toEqual([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
     });
 
-    test('fires data event when content is loaded', done => {
+    test('fires data event when content is loaded', () => new Promise<void>(done => {
         const source = createSource({url: '/image.png'});
         source.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'content') {
@@ -138,9 +137,9 @@ describe('ImageSource', () => {
         });
         source.onAdd(new StubMap() as any);
         server.respond();
-    });
+    }));
 
-    test('fires data event when metadata is loaded', done => {
+    test('fires data event when metadata is loaded', () => new Promise<void>(done => {
         const source = createSource({url: '/image.png'});
         source.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
@@ -149,9 +148,9 @@ describe('ImageSource', () => {
         });
         source.onAdd(new StubMap() as any);
         server.respond();
-    });
+    }));
 
-    test('fires idle event on prepare call when there is at least one not loaded tile', done => {
+    test('fires idle event on prepare call when there is at least one not loaded tile', () => new Promise<void>(done => {
         const source = createSource({url: '/image.png'});
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
         source.on('data', (e) => {
@@ -166,11 +165,9 @@ describe('ImageSource', () => {
         source.tiles[String(tile.tileID.wrap)] = tile;
         source.image = new ImageBitmap();
         // assign dummies directly so we don't need to stub the gl things
-        source.boundsBuffer = {destroy: () => {}} as VertexBuffer;
-        source.boundsSegments = {} as SegmentVector;
         source.texture = {} as Texture;
         source.prepare();
-    });
+    }));
 
     test('serialize url and coordinates', () => {
         const source = createSource({url: '/image.png'});

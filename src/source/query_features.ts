@@ -1,7 +1,7 @@
 import type {SourceCache} from './source_cache';
 import type {StyleLayer} from '../style/style_layer';
 import type {CollisionIndex} from '../symbol/collision_index';
-import type {Transform} from '../geo/transform';
+import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {RetainedQueryData} from '../symbol/placement';
 import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
@@ -58,7 +58,11 @@ function getPixelPosMatrix(transform, tileID) {
     const t = mat4.create();
     mat4.translate(t, t, [1, 1, 0]);
     mat4.scale(t, t, [transform.width * 0.5, transform.height * 0.5, 1]);
-    return mat4.multiply(t, t, transform.calculatePosMatrix(tileID.toUnwrapped()));
+    if (transform.calculatePosMatrix) { // Globe: TODO: remove this hack once queryRendererFeatures supports globe properly
+        return mat4.multiply(t, t, transform.calculatePosMatrix(tileID.toUnwrapped()));
+    } else {
+        return t;
+    }
 }
 
 function queryIncludes3DLayer(layers: Array<string>, styleLayers: {[_: string]: StyleLayer}, sourceID: string) {
@@ -86,7 +90,7 @@ export function queryRenderedFeatures(
     serializedLayers: {[_: string]: any},
     queryGeometry: Array<Point>,
     params: QueryRenderedFeaturesOptions,
-    transform: Transform
+    transform: IReadonlyTransform
 ): { [key: string]: Array<{featureIndex: number; feature: MapGeoJSONFeature}> } {
 
     const has3DLayer = queryIncludes3DLayer(params && params.layers, styleLayers, sourceCache.id);

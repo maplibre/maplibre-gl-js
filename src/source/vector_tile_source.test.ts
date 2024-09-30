@@ -9,6 +9,7 @@ import fixturesSource from '../../test/unit/assets/source.json' with {type: 'jso
 import {getMockDispatcher, getWrapDispatcher, sleep, waitForMetadataEvent} from '../util/test/util';
 import {Map} from '../ui/map';
 import {WorkerTileParameters} from './worker_source';
+import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 import {ActorMessage, MessageType} from '../util/actor_messages';
 
 function createSource(options, transformCallback?, clearTiles = () => {}) {
@@ -17,8 +18,15 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
         transform: {showCollisionBoxes: false},
         _getMapId: () => 1,
         _requestManager: new RequestManager(transformCallback),
-        style: {sourceCaches: {id: {clearTiles}}},
-        getPixelRatio() { return 1; }
+        style: {
+            sourceCaches: {id: {clearTiles}},
+            projection: {
+                get subdivisionGranularity() {
+                    return SubdivisionGranularitySetting.noSubdivision;
+                }
+            }
+        },
+        getPixelRatio() { return 1; },
     } as any as Map);
 
     source.on('error', () => { }); // to prevent console log of errors
@@ -78,14 +86,14 @@ describe('VectorTileSource', () => {
         expect(transformSpy).toHaveBeenCalledWith('/source.json', 'Source');
     });
 
-    test('fires event with metadata property', done => {
+    test('fires event with metadata property', () => new Promise<void>(done => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
         const source = createSource({url: '/source.json'});
         source.on('data', (e) => {
             if (e.sourceDataType === 'content') done();
         });
         server.respond();
-    });
+    }));
 
     test('fires "dataloading" event', async () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));

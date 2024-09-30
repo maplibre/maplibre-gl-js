@@ -1,0 +1,565 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "collisionDebug": true,
+      "height": 512,
+      "width": 512
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "zoom": 2,
+  "bearing": 60,
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "projection": { "type": "globe" },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -35.0,
+                0.0
+              ]
+            },
+            "properties": {
+              "index": 0
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -25.0,
+                0.0
+              ]
+            },
+            "properties": {
+              "index": 1
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                0.0
+              ]
+            },
+            "properties": {
+              "index": 2
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -5.0,
+                0.0
+              ]
+            },
+            "properties": {
+              "index": 3
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.0,
+                0.0
+              ]
+            },
+            "properties": {
+              "index": 4
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                0.0
+              ]
+            },
+            "properties": {
+              "index": 5
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                25.0,
+                0.0
+              ]
+            },
+            "properties": {
+              "index": 6
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                35.0,
+                0.0
+              ]
+            },
+            "properties": {
+              "index": 7
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "circle-untranslated",
+      "type": "circle",
+      "source": "geojson",
+      "paint": {
+        "circle-radius": 5,
+        "circle-color": "blue"
+      }
+    },
+    {
+      "id": "circle_red_0",
+      "type": "circle",
+      "source": "geojson",
+      "filter": [
+        "==",
+        "index",
+        0
+      ],
+      "paint": {
+        "circle-radius": 5,
+        "circle-color": "red",
+        "circle-translate-anchor": "viewport",
+        "circle-translate": [
+          10,
+          -20
+        ]
+      }
+    },
+    {
+      "id": "text_0",
+      "type": "symbol",
+      "source": "geojson",
+      "filter": [
+        "==",
+        "index",
+        0
+      ],
+      "layout": {
+        "text-field": "AAA",
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ],
+        "text-variable-anchor": [
+          "left",
+          "right",
+          "bottom",
+          "top"
+        ],
+        "text-size": 12,
+        "text-rotation-alignment": "viewport",
+        "text-pitch-alignment": "viewport"
+      },
+      "paint": {
+        "text-translate-anchor": "viewport",
+        "text-translate": [
+          10,
+          -20
+        ]
+      }
+    },
+    {
+      "id": "circle_red_1",
+      "type": "circle",
+      "source": "geojson",
+      "filter": [
+        "==",
+        "index",
+        1
+      ],
+      "paint": {
+        "circle-radius": 5,
+        "circle-color": "red",
+        "circle-translate-anchor": "map",
+        "circle-translate": [
+          10,
+          -20
+        ]
+      }
+    },
+    {
+      "id": "text_1",
+      "type": "symbol",
+      "source": "geojson",
+      "filter": [
+        "==",
+        "index",
+        1
+      ],
+      "layout": {
+        "text-field": "AAA",
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ],
+        "text-variable-anchor": [
+          "left",
+          "right",
+          "bottom",
+          "top"
+        ],
+        "text-size": 12,
+        "text-rotation-alignment": "viewport",
+        "text-pitch-alignment": "viewport"
+      },
+      "paint": {
+        "text-translate-anchor": "map",
+        "text-translate": [
+          10,
+          -20
+        ]
+      }
+    },
+    {
+      "id": "circle_red_2",
+      "type": "circle",
+      "source": "geojson",
+      "filter": [
+        "==",
+        "index",
+        2
+      ],
+      "paint": {
+        "circle-radius": 5,
+        "circle-color": "red",
+        "circle-translate-anchor": "viewport",
+        "circle-translate": [
+          10,
+          -20
+        ]
+      }
+    },
+    {
+      "id": "text_2",
+      "type": "symbol",
+      "source": "geojson",
+      "filter": [
+        "==",
+        "index",
+        2
+      ],
+      "layout": {
+        "text-field": "AAA",
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ],
+        "text-variable-anchor": [
+          "left",
+          "right",
+          "bottom",
+          "top"
+        ],
+        "text-size": 12,
+        "text-rotation-alignment": "viewport",
+        "text-pitch-alignment": "map"
+      },
+      "paint": {
+        "text-translate-anchor": "viewport",
+        "text-translate": [
+          10,
+          -20
+        ]
+      }
+    },
+    {
+      "id": "circle_red_3",
+      "type": "circle",
+      "source": "geojson",
+      "filter": [
+        "==",
+        "index",
+        3
+      ],
+      "paint": {
+        "circle-radius": 5,
+        "circle-color": "red",
+        "circle-translate-anchor": "map",
+        "circle-translate": [
+          10,
+          -20
+        ]
+      }
+    },
+    {
+      "id": "text_3",
+      "type": "symbol",
+      "source": "geojson",
+      "filter": [
+        "==",
+        "index",
+        3
+      ],
+      "layout": {
+        "text-field": "AAA",
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ],
+        "text-variable-anchor": [
+          "left",
+          "right",
+          "bottom",
+          "top"
+        ],
+        "text-size": 12,
+        "text-rotation-alignment": "viewport",
+        "text-pitch-alignment": "map"
+      },
+      "paint": {
+        "text-translate-anchor": "map",
+        "text-translate": [
+          10,
+          -20
+        ]
+      }
+    },
+    {
+      "id": "circle_red_4",
+      "type": "circle",
+      "source": "geojson",
+      "filter": [
+        "==",
+        "index",
+        4
+      ],
+      "paint": {
+        "circle-radius": 5,
+        "circle-color": "red",
+        "circle-translate-anchor": "viewport",
+        "circle-translate": [
+          10,
+          -20
+        ]
+      }
+    },
+    {
+      "id": "text_4",
+      "type": "symbol",
+      "source": "geojson",
+      "filter": [
+        "==",
+        "index",
+        4
+      ],
+      "layout": {
+        "text-field": "AAA",
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ],
+        "text-variable-anchor": [
+          "left",
+          "right",
+          "bottom",
+          "top"
+        ],
+        "text-size": 12,
+        "text-rotation-alignment": "map",
+        "text-pitch-alignment": "viewport"
+      },
+      "paint": {
+        "text-translate-anchor": "viewport",
+        "text-translate": [
+          10,
+          -20
+        ]
+      }
+    },
+    {
+      "id": "circle_red_5",
+      "type": "circle",
+      "source": "geojson",
+      "filter": [
+        "==",
+        "index",
+        5
+      ],
+      "paint": {
+        "circle-radius": 5,
+        "circle-color": "red",
+        "circle-translate-anchor": "map",
+        "circle-translate": [
+          10,
+          -20
+        ]
+      }
+    },
+    {
+      "id": "text_5",
+      "type": "symbol",
+      "source": "geojson",
+      "filter": [
+        "==",
+        "index",
+        5
+      ],
+      "layout": {
+        "text-field": "AAA",
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ],
+        "text-variable-anchor": [
+          "left",
+          "right",
+          "bottom",
+          "top"
+        ],
+        "text-size": 12,
+        "text-rotation-alignment": "map",
+        "text-pitch-alignment": "viewport"
+      },
+      "paint": {
+        "text-translate-anchor": "map",
+        "text-translate": [
+          10,
+          -20
+        ]
+      }
+    },
+    {
+      "id": "circle_red_6",
+      "type": "circle",
+      "source": "geojson",
+      "filter": [
+        "==",
+        "index",
+        6
+      ],
+      "paint": {
+        "circle-radius": 5,
+        "circle-color": "red",
+        "circle-translate-anchor": "viewport",
+        "circle-translate": [
+          10,
+          -20
+        ]
+      }
+    },
+    {
+      "id": "text_6",
+      "type": "symbol",
+      "source": "geojson",
+      "filter": [
+        "==",
+        "index",
+        6
+      ],
+      "layout": {
+        "text-field": "AAA",
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ],
+        "text-variable-anchor": [
+          "left",
+          "right",
+          "bottom",
+          "top"
+        ],
+        "text-size": 12,
+        "text-rotation-alignment": "map",
+        "text-pitch-alignment": "map"
+      },
+      "paint": {
+        "text-translate-anchor": "viewport",
+        "text-translate": [
+          10,
+          -20
+        ]
+      }
+    },
+    {
+      "id": "circle_red_7",
+      "type": "circle",
+      "source": "geojson",
+      "filter": [
+        "==",
+        "index",
+        7
+      ],
+      "paint": {
+        "circle-radius": 5,
+        "circle-color": "red",
+        "circle-translate-anchor": "map",
+        "circle-translate": [
+          10,
+          -20
+        ]
+      }
+    },
+    {
+      "id": "text_7",
+      "type": "symbol",
+      "source": "geojson",
+      "filter": [
+        "==",
+        "index",
+        7
+      ],
+      "layout": {
+        "text-field": "AAA",
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ],
+        "text-variable-anchor": [
+          "left",
+          "right",
+          "bottom",
+          "top"
+        ],
+        "text-size": 12,
+        "text-rotation-alignment": "map",
+        "text-pitch-alignment": "map"
+      },
+      "paint": {
+        "text-translate-anchor": "map",
+        "text-translate": [
+          10,
+          -20
+        ]
+      }
+    }
+  ]
+}

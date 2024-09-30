@@ -20,6 +20,7 @@ import {CooperativeGesturesHandler} from './handler/cooperative_gestures';
 import {extend} from '../util/util';
 import {browser} from '../util/browser';
 import Point from '@mapbox/point-geometry';
+import {MapControlsDeltas} from '../geo/projection/camera_helper';
 
 const isMoving = (p: EventsInProgress) => p.zoom || p.drag || p.pitch || p.rotate;
 
@@ -490,24 +491,43 @@ export class HandlerManager {
             return this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
         }
 
+        // stop any ongoing camera animations (easeTo, flyTo)
+        map._stop(true);
+
         let {panDelta, zoomDelta, bearingDelta, pitchDelta, around, pinchAround} = combinedResult;
 
         if (pinchAround !== undefined) {
             around = pinchAround;
         }
 
-        // stop any ongoing camera animations (easeTo, flyTo)
-        map._stop(true);
-
         around = around || map.transform.centerPoint;
-        const loc = tr.pointLocation(panDelta ? around.sub(panDelta) : around);
-        if (bearingDelta) tr.bearing += bearingDelta;
-        if (pitchDelta) tr.pitch += pitchDelta;
-        if (zoomDelta) tr.zoom += zoomDelta;
+
+        if (terrain && !tr.isPointOnMapSurface(around)) {
+            around = tr.centerPoint;
+        }
+
+        const deltasForHelper: MapControlsDeltas = {
+            panDelta,
+            zoomDelta,
+            pitchDelta,
+            bearingDelta,
+            around,
+        };
+
+        // Pre-zoom location under the mouse cursor is required for accurate mercator panning and zooming
+        if (this._map.cameraHelper.useGlobeControls && !tr.isPointOnMapSurface(around)) {
+            around = tr.centerPoint;
+        }
+        const preZoomAroundLoc = tr.screenPointToLocation(panDelta ? around.sub(panDelta) : around);
 
         if (!terrain) {
-            tr.setLocationAtPoint(loc, around);
+            // Apply zoom, bearing, pitch
+            this._map.cameraHelper.handleMapControlsPitchBearingZoom(deltasForHelper, tr);
+            // Apply panning
+            this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
         } else {
+            // Apply zoom, bearing, pitch
+            this._map.cameraHelper.handleMapControlsPitchBearingZoom(deltasForHelper, tr);
             // when 3d-terrain is enabled act a little different:
             //    - dragging do not drag the picked point itself, instead it drags the map by pixel-delta.
             //      With this approach it is no longer possible to pick a point from somewhere near
@@ -518,12 +538,12 @@ export class HandlerManager {
                 // When starting to drag or move, flag it and register moveend to clear flagging
                 this._terrainMovement = true;
                 this._map._elevationFreeze = true;
-                tr.setLocationAtPoint(loc, around);
+                this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
             } else if (combinedEventsInProgress.drag && this._terrainMovement) {
                 // drag map
-                tr.center = tr.pointLocation(tr.centerPoint.sub(panDelta));
+                tr.setCenter(tr.screenPointToLocation(tr.centerPoint.sub(panDelta)));
             } else {
-                tr.setLocationAtPoint(loc, around);
+                this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
             }
         }
 

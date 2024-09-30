@@ -320,7 +320,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 gl.linkProgram(this.program);
             }
 
-            render(gl: WebGL2RenderingContext, matrix) {
+            render(gl: WebGL2RenderingContext, args) {
                 const vertexArray = new Float32Array([0.5, 0.5, 0.0]);
                 gl.useProgram(this.program);
                 const vertexBuffer = gl.createBuffer();
@@ -329,7 +329,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 const posAttrib = gl.getAttribLocation(this.program, 'aPos');
                 gl.enableVertexAttribArray(posAttrib);
                 gl.vertexAttribPointer(posAttrib, 3, gl.FLOAT, false, 0, 0);
-                gl.uniformMatrix4fv(gl.getUniformLocation(this.program, 'u_matrix'), false, matrix);
+                gl.uniformMatrix4fv(gl.getUniformLocation(this.program, 'u_matrix'), false, args.defaultProjectionData.mainMatrix);
                 gl.drawArrays(gl.POINTS, 0, 1);
             }
         }
@@ -412,13 +412,13 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexArray, gl.STATIC_DRAW);
             }
 
-            render(gl: WebGL2RenderingContext, matrix) {
+            render(gl: WebGL2RenderingContext, args) {
                 gl.useProgram(this.program);
                 gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
                 gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
                 gl.enableVertexAttribArray(this.program.a_pos);
                 gl.vertexAttribPointer(this.program.aPos, 3, gl.FLOAT, false, 0, 0);
-                gl.uniformMatrix4fv(this.program.uMatrix, false, matrix);
+                gl.uniformMatrix4fv(this.program.uMatrix, false, args.defaultProjectionData.mainMatrix);
                 gl.drawElements(gl.TRIANGLES, 12, gl.UNSIGNED_SHORT, 0);
             }
         }

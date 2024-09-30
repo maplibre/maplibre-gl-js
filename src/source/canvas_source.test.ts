@@ -1,13 +1,12 @@
 import {CanvasSource} from '../source/canvas_source';
-import {Transform} from '../geo/transform';
+import {IReadonlyTransform} from '../geo/transform_interface';
 import {Event, Evented} from '../util/evented';
 import {extend} from '../util/util';
 
 import type {Dispatcher} from '../util/dispatcher';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
-import {VertexBuffer} from '../gl/vertex_buffer';
-import {SegmentVector} from '../data/segment';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 function createSource(options?) {
     const c = options && options.canvas || window.document.createElement('canvas');
@@ -27,13 +26,13 @@ function createSource(options?) {
 }
 
 class StubMap extends Evented {
-    transform: Transform;
+    transform: IReadonlyTransform;
     style: any;
     painter: any;
 
     constructor() {
         super();
-        this.transform = new Transform();
+        this.transform = new MercatorTransform();
         this.style = {};
         this.painter = {
             context: {
@@ -53,7 +52,7 @@ describe('CanvasSource', () => {
         map = new StubMap();
     });
 
-    test('constructor', done => {
+    test('constructor', () => new Promise<void>(done => {
         const source = createSource();
 
         expect(source.minzoom).toBe(0);
@@ -68,7 +67,7 @@ describe('CanvasSource', () => {
         });
 
         source.onAdd(map);
-    });
+    }));
 
     test('self-validates', () => {
         const stub = jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -95,7 +94,7 @@ describe('CanvasSource', () => {
 
     });
 
-    test('can be initialized with HTML element', done => {
+    test('can be initialized with HTML element', () => new Promise<void>(done => {
         const el = window.document.createElement('canvas');
         const source = createSource({
             canvas: el
@@ -109,9 +108,9 @@ describe('CanvasSource', () => {
         });
 
         source.onAdd(map);
-    });
+    }));
 
-    test('rerenders if animated', done => {
+    test('rerenders if animated', () => new Promise<void>(done => {
         const source = createSource();
 
         map.on('rerender', () => {
@@ -120,9 +119,9 @@ describe('CanvasSource', () => {
         });
 
         source.onAdd(map);
-    });
+    }));
 
-    test('can be static', done => {
+    test('can be static', () => new Promise<void>(done => {
         const source = createSource({
             animate: false
         });
@@ -141,7 +140,7 @@ describe('CanvasSource', () => {
         });
 
         source.onAdd(map);
-    });
+    }));
 
     test('onRemove stops animation', () => {
         const source = createSource();
@@ -177,7 +176,7 @@ describe('CanvasSource', () => {
 
     });
 
-    test('fires idle event on prepare call when there is at least one not loaded tile', done => {
+    test('fires idle event on prepare call when there is at least one not loaded tile', () => new Promise<void>(done => {
         const source = createSource();
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
         source.on('data', (e) => {
@@ -190,13 +189,11 @@ describe('CanvasSource', () => {
 
         source.tiles[String(tile.tileID.wrap)] = tile;
         // assign dummies directly so we don't need to stub the gl things
-        source.boundsBuffer = {} as VertexBuffer;
-        source.boundsSegments = {} as SegmentVector;
         source.texture = {
             update: () => {}
         } as any;
         source.prepare();
-    });
+    }));
 
 });
 

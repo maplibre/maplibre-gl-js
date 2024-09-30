@@ -28,6 +28,18 @@ void main() {
 
     fragColor = v_visibility * opacity_t * mix(color * opacity, stroke_color * stroke_opacity, color_t);
 
+    const float epsilon = 0.5 / 255.0;
+    if (fragColor.r < epsilon && fragColor.g < epsilon && fragColor.b < epsilon && fragColor.a < epsilon) {
+        // If this pixel wouldn't affect the framebuffer contents in any way, discard it for performance.
+        // This disables early-Z test, but that is likely irrelevant for circles, performance wise.
+        // But many circles might put a lot of load on the blending and framebuffer output hardware due to using a lot of pixels,
+        // and this discard will help in that case.
+        // Also, each circle will at most use ~3/4 of its rasterized pixels, due to being a circle approximated with a square,
+        // this will discard the unused 1/4.
+        // Also note that this discard happens even if overdraw inspection is enabled - because discarded pixels never contribute to overdraw.
+        discard;
+    }
+
 #ifdef OVERDRAW_INSPECTOR
     fragColor = vec4(1.0);
 #endif

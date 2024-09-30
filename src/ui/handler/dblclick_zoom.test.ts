@@ -1,23 +1,22 @@
 import simulate from '../../../test/unit/lib/simulate_interaction';
-import {beforeMapTest} from '../../util/test/util';
+import {beforeMapTest, sleep} from '../../util/test/util';
 import {Map, MapOptions} from '../map';
 
 function createMap() {
     return new Map({container: window.document.createElement('div')} as any as MapOptions);
 }
 
-function simulateDoubleTap(map, delay = 100) {
+async function simulateDoubleTap(map, delay = 100) {
     const canvas = map.getCanvas();
-    return new Promise(resolve => {
-        simulate.touchstart(canvas, {touches: [{target: canvas, clientX: 0, clientY: 0}]});
-        simulate.touchend(canvas);
-        setTimeout(() => {
-            simulate.touchstart(canvas, {touches: [{target: canvas, clientX: 0, clientY: 0}]});
-            simulate.touchend(canvas);
-            map._renderTaskQueue.run();
-            resolve(undefined);
-        }, delay);
-    });
+
+    simulate.touchstart(canvas, {touches: [{target: canvas, clientX: 0, clientY: 0}]});
+    simulate.touchend(canvas);
+
+    await sleep(delay);
+
+    simulate.touchstart(canvas, {touches: [{target: canvas, clientX: 0, clientY: 0}]});
+    simulate.touchend(canvas);
+    map._renderTaskQueue.run();
 }
 
 beforeEach(() => {
@@ -87,16 +86,12 @@ describe('dbclick_zoom', () => {
 
         const canvas = map.getCanvas();
 
-        await new Promise(resolve => {
-            simulate.touchstart(canvas, {touches: [{clientX: 0, clientY: 0}]});
-            simulate.touchend(canvas);
-            setTimeout(() => {
-                simulate.touchstart(canvas, {touches: [{clientX: 30.5, clientY: 30.5}]});
-                simulate.touchend(canvas);
-                map._renderTaskQueue.run();
-                resolve(undefined);
-            }, 100);
-        });
+        simulate.touchstart(canvas, {touches: [{clientX: 0, clientY: 0}]});
+        simulate.touchend(canvas);
+        await sleep(100);
+        simulate.touchstart(canvas, {touches: [{clientX: 30.5, clientY: 30.5}]});
+        simulate.touchend(canvas);
+        map._renderTaskQueue.run();
 
         expect(zoom).not.toHaveBeenCalled();
 
@@ -145,17 +140,12 @@ describe('dbclick_zoom', () => {
 
         const canvas = map.getCanvas();
 
-        await new Promise(resolve => {
-            simulate.touchstart(canvas);
-            simulate.touchend(canvas);
-            simulate.touchstart(canvas);
-            setTimeout(() => {
-                simulate.touchend(canvas);
-                map._renderTaskQueue.run();
-                resolve(undefined);
-            }, 300);
-        });
-
+        simulate.touchstart(canvas);
+        simulate.touchend(canvas);
+        simulate.touchstart(canvas);
+        await sleep(300);
+        simulate.touchend(canvas);
+        map._renderTaskQueue.run();
         expect(zoom).not.toHaveBeenCalled();
     });
 });
