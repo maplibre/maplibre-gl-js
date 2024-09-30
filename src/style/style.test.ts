@@ -2182,8 +2182,8 @@ describe('Style#getLayersOrder', () => {
 
 describe('Style#queryRenderedFeatures', () => {
 
-    let style;
-    let transform;
+    let style: Style;
+    let transform: MercatorTransform;
 
     beforeEach(() => new Promise<void>(callback => {
         style = new Style(getStubMap());
@@ -2316,14 +2316,20 @@ describe('Style#queryRenderedFeatures', () => {
         expect(results).toHaveLength(2);
     });
 
+    test('filters by `layers` option as a Set', () => {
+        const results = style.queryRenderedFeatures([{x: 0, y: 0}], {layers: new Set(['land'])}, transform);
+        expect(results).toHaveLength(2);
+    });
+
     test('checks type of `layers` option', () => {
         let errors = 0;
         jest.spyOn(style, 'fire').mockImplementation((event) => {
             if (event['error'] && event['error'].message.includes('parameters.layers must be an Array')) {
                 errors++;
             }
+            return style;
         });
-        style.queryRenderedFeatures([{x: 0, y: 0}], {layers: 'string'}, transform);
+        style.queryRenderedFeatures([{x: 0, y: 0}], {layers: 'string' as any}, transform);
         expect(errors).toBe(1);
     });
 
@@ -2347,19 +2353,21 @@ describe('Style#queryRenderedFeatures', () => {
     });
 
     test('include multiple layers', () => {
-        const results = style.queryRenderedFeatures([{x: 0, y: 0}], {layers: ['land', 'landref']}, transform);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0}], {layers: new Set(['land', 'landref'])}, transform);
         expect(results).toHaveLength(3);
     });
 
     test('does not query sources not implicated by `layers` parameter', () => {
-        style.sourceCaches.mapLibre.queryRenderedFeatures = () => { expect(true).toBe(false); };
+        style.sourceCaches.mapLibre.map.queryRenderedFeatures = jest.fn();
         style.queryRenderedFeatures([{x: 0, y: 0}], {layers: ['land--other']}, transform);
+        expect(style.sourceCaches.mapLibre.map.queryRenderedFeatures).not.toHaveBeenCalled();
     });
 
     test('fires an error if layer included in params does not exist on the style', () => {
         let errors = 0;
         jest.spyOn(style, 'fire').mockImplementation((event) => {
             if (event['error'] && event['error'].message.includes('does not exist in the map\'s style and cannot be queried for features.')) errors++;
+            return style;
         });
         const results = style.queryRenderedFeatures([{x: 0, y: 0}], {layers: ['merp']}, transform);
         expect(errors).toBe(1);
