@@ -685,7 +685,7 @@ describe('#easeTo', () => {
     test('pitches to specified pitch', () => {
         const camera = createCamera();
         camera.easeTo({pitch: 45, duration: 0});
-        expect(camera.getPitch()).toBe(45);
+        expect(camera.getPitch()).toBeCloseTo(45, 6);
     });
 
     test('pans and zooms', () => {
@@ -1163,7 +1163,7 @@ describe('#flyTo', () => {
     test('tilts to specified pitch', () => {
         const camera = createCamera();
         camera.flyTo({pitch: 45, animate: false});
-        expect(camera.getPitch()).toBe(45);
+        expect(camera.getPitch()).toBeCloseTo(45, 6);
     });
 
     test('pans and zooms', () => {

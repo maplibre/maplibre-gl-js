@@ -912,13 +912,26 @@ export function getRollPitchBearing(rotation: quat): RollPitchBearing {
     let bearing: number;
     if (Math.hypot(m[5], m[8]) < 1.0e-3) {
         roll = 0.0;
-        bearing = radiansToDegrees(Math.atan2(m[3], m[4]));
+        bearing = -radiansToDegrees(Math.atan2(m[3], m[4]));
     } else {
         roll = radiansToDegrees((m[5] === 0.0 && m[8] === 0.0) ? 0.0 :  Math.atan2(m[5], m[8]));
         bearing = radiansToDegrees((m[1] === 0.0 && m[0] === 0.0) ? 0.0 : Math.atan2(m[1], m[0]));
     }
 
     return {roll, pitch: xAngle + 90.0, bearing};
+}
+
+/**
+ * This method converts roll, pitch, and bearing angles in degrees to a rotation quaternion.
+ * @param roll - Roll angle in degrees
+ * @param pitch - Pitch angle in degrees
+ * @param bearing - Bearing angle in degrees
+ * @returns The rotation quaternion
+ */
+export function rollPitchBearingToQuat(roll: number, pitch: number, bearing: number): quat {
+    const rotation: quat = new Float64Array(4) as any;
+    quat.fromEuler(rotation, roll, pitch - 90.0, bearing);
+    return rotation
 }
 
 /**

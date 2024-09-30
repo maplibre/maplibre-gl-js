@@ -6,7 +6,7 @@ import {CameraForBoundsOptions} from '../../ui/camera';
 import {PaddingOptions} from '../edge_insets';
 import {LngLatBounds} from '../lng_lat_bounds';
 import {normalizeCenter, scaleZoom, zoomScale} from '../transform_helper';
-import {degreesToRadians, getRollPitchBearing} from '../../util/util';
+import {degreesToRadians, getRollPitchBearing, rollPitchBearingToQuat} from '../../util/util';
 import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {quat} from 'gl-matrix';
@@ -126,12 +126,9 @@ export class MercatorCameraHelper implements ICameraHelper {
         const startPitch = tr.pitch;
         const startRoll = tr.roll;
         const startPadding = tr.padding;
-        const startRotation: quat = new Float64Array(4) as any;
-        quat.fromEuler(startRotation, tr.roll, tr.pitch - 90.0, tr.bearing);
-        const endRotation: quat = new Float64Array(4) as any;
-        quat.fromEuler(endRotation,
-            options.roll === undefined ? tr.roll : options.roll,
-            options.pitch === undefined ? tr.pitch - 90.0 : options.pitch - 90.0,
+        const startRotation = rollPitchBearingToQuat(tr.roll, tr.pitch, tr.bearing);
+        const endRotation = rollPitchBearingToQuat(options.roll === undefined ? tr.roll : options.roll,
+            options.pitch === undefined ? tr.pitch : options.pitch,
             options.bearing === undefined ? tr.bearing : options.bearing);
 
         const optionsZoom = typeof options.zoom !== 'undefined';
