@@ -16,6 +16,7 @@ import {StubMap, sleep} from '../util/test/util';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
 import {MessageType} from '../util/actor_messages';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {Tile} from '../source/tile';
 
 function createStyleJSON(properties?): StyleSpecification {
     return extend({
@@ -35,7 +36,7 @@ function createSource() {
     } as any as SourceSpecification;
 }
 
-function createGeoJSONSource() {
+function createGeoJSONSource(): GeoJSONSourceSpecification {
     return {
         'type': 'geojson',
         'data': {
@@ -1962,7 +1963,7 @@ describe('Style#setFilter', () => {
         style.loadJSON({
             version: 8,
             sources: {
-                geojson: createGeoJSONSource() as GeoJSONSourceSpecification
+                geojson: createGeoJSONSource()
             },
             layers: [
                 {id: 'symbol', type: 'symbol', source: 'geojson', filter: ['==', 'id', 0]}
@@ -2089,7 +2090,7 @@ describe('Style#setLayerZoomRange', () => {
         style.loadJSON({
             'version': 8,
             'sources': {
-                'geojson': createGeoJSONSource() as GeoJSONSourceSpecification
+                'geojson': createGeoJSONSource()
             },
             'layers': [{
                 'id': 'symbol',
@@ -2282,10 +2283,11 @@ describe('Style#queryRenderedFeatures', () => {
         style.on('style.load', () => {
             style.sourceCaches.mapLibre.tilesIn = () => {
                 return [{
-                    tile: {queryRenderedFeatures: queryMapLibreFeatures},
+                    tile: {queryRenderedFeatures: queryMapLibreFeatures} as unknown as Tile,
                     tileID: new OverscaledTileID(0, 0, 0, 0, 0),
                     queryGeometry: [],
-                    scale: 1
+                    scale: 1,
+                    cameraQueryGeometry: []
                 }];
             };
             style.sourceCaches.other.tilesIn = () => {
@@ -2423,7 +2425,7 @@ describe('Style#query*Features', () => {
     // These tests only cover filter validation. Most tests for these methods
     // live in the integration tests.
 
-    let style;
+    let style: Style;
     let onError;
     let transform;
 
@@ -2452,12 +2454,12 @@ describe('Style#query*Features', () => {
     }));
 
     test('querySourceFeatures emits an error on incorrect filter', () => {
-        expect(style.querySourceFeatures([10, 100], {filter: 7}, transform)).toEqual([]);
+        expect(style.querySourceFeatures([10, 100] as any, {filter: 7} as any)).toEqual([]);
         expect(onError.mock.calls[0][0].error.message).toMatch(/querySourceFeatures\.filter/);
     });
 
     test('queryRenderedFeatures emits an error on incorrect filter', () => {
-        expect(style.queryRenderedFeatures([{x: 0, y: 0}], {filter: 7}, transform)).toEqual([]);
+        expect(style.queryRenderedFeatures([{x: 0, y: 0}], {filter: 7 as any}, transform)).toEqual([]);
         expect(onError.mock.calls[0][0].error.message).toMatch(/queryRenderedFeatures\.filter/);
     });
 
@@ -2467,8 +2469,9 @@ describe('Style#query*Features', () => {
             if (event['error']) {
                 errors++;
             }
+            return style;
         });
-        style.queryRenderedFeatures([{x: 0, y: 0}], {filter: 'invalidFilter', validate: false}, transform);
+        style.queryRenderedFeatures([{x: 0, y: 0}], {filter: 'invalidFilter' as any, validate: false}, transform);
         expect(errors).toBe(0);
     });
 
@@ -2476,8 +2479,9 @@ describe('Style#query*Features', () => {
         let errors = 0;
         jest.spyOn(style, 'fire').mockImplementation((event) => {
             if (event['error']) errors++;
+            return style;
         });
-        style.querySourceFeatures([{x: 0, y: 0}], {filter: 'invalidFilter', validate: false}, transform);
+        style.querySourceFeatures([{x: 0, y: 0}] as any, {filter: 'invalidFilter' as any, validate: false});
         expect(errors).toBe(0);
     });
 
