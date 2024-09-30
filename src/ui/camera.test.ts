@@ -2706,7 +2706,7 @@ describe('#easeTo globe projection', () => {
             expect(camera.getPitch()).toBeCloseTo(0, 6);
             expect(camera.getBearing()).toBeCloseTo(0, 6);
         });
-    
+
         test('bearing behavior at Euler angle singularity', () => {
             const camera = createCameraGlobe();
             camera.easeTo({bearing: 45, pitch: 0, roll: 0, duration: 0});
@@ -3028,7 +3028,7 @@ describe('#flyTo globe projection', () => {
             expect(camera.getPitch()).toBeCloseTo(0, 6);
             expect(camera.getBearing()).toBeCloseTo(0, 6);
         });
-    
+
         test('bearing behavior at Euler angle singularity', () => {
             const camera = createCameraGlobe();
             camera.flyTo({bearing: 45, pitch: 0, roll: 0, animate: false});
