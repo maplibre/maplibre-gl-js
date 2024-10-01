@@ -1182,7 +1182,7 @@ export class Map extends Camera {
 
     /**
      * Returns the state of `pitchBehavior`.
-     * 
+     *
      * This parameter controls how tiles are loaded at high pitch angles. Higher numbers cause fewer, lower resolution
      * tiles to be loaded. A reasonable range for this parameter is [0,2].
      * @returns The pitchBehavior
@@ -1195,8 +1195,8 @@ export class Map extends Camera {
 
     /**
      * Sets the state of `pitchBehavior`.
-     * 
-     * @param pitchBehavior Controls how tiles are loaded at high pitch angles. Higher numbers cause fewer, lower resolution
+     *
+     * @param pitchBehavior - Controls how tiles are loaded at high pitch angles. Higher numbers cause fewer, lower resolution
      * tiles to be loaded. A reasonable range for this parameter is [0,2].
      * @example
      * ```ts

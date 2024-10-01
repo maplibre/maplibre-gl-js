@@ -251,7 +251,6 @@ export class TransformHelper implements ITransformGetters {
         this._renderWorldCopies = renderWorldCopies;
     }
 
-    
     get pitchBehavior(): number { return this._pitchBehavior; }
     setPitchBehavior(pitchBehavior: number): void {
         if (pitchBehavior === undefined || pitchBehavior === null) {

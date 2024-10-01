@@ -149,7 +149,7 @@ interface ITransformMutators {
      */
     setMaxPitch(pitch: number): void;
     setRenderWorldCopies(renderWorldCopies: boolean): void;
-    
+
     /**
      * Changes how tiles are loaded at high pitch angles. Higher numbers cause fewer, lower resolution
      * tiles to be loaded. A reasonable range for `pitchBehavior` is [0,2].

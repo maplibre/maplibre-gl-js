@@ -253,9 +253,9 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
         let thisTileDesiredZ = nominalZ;
         // Only allow tiles of varying z for z > 4
         if (nominalZ > 4) {
-            const thisTilePitch = Math.atan(distToTile2d/distanceZ);
+            const thisTilePitch = Math.atan(distToTile2d / distanceZ);
             thisTileDesiredZ = (options.roundZoom ? Math.round : Math.floor)(
-                zoom + pitchBehavior*scaleZoom(Math.cos(thisTilePitch)) / 2 + scaleZoom(tileSize / options.tileSize * distanceToCenter3d / distToTile3d / Math.cos(fov / 2.0 * Math.PI / 180.0))
+                zoom + pitchBehavior * scaleZoom(Math.cos(thisTilePitch)) / 2 + scaleZoom(tileSize / options.tileSize * distanceToCenter3d / distToTile3d / Math.cos(fov / 2.0 * Math.PI / 180.0))
             );
         }
         thisTileDesiredZ = Math.max(0, thisTileDesiredZ);
