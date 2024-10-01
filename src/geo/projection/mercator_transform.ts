@@ -15,6 +15,7 @@ import {EXTENT} from '../../data/extent';
 import type {ProjectionData} from './projection_data';
 import {scaleZoom, TransformHelper, zoomScale} from '../transform_helper';
 import {mercatorCoveringTiles} from './mercator_covering_tiles';
+import {Frustum} from '../../util/primitives';
 
 export class MercatorTransform implements ITransform {
     private _helper: TransformHelper;
@@ -263,7 +264,8 @@ export class MercatorTransform implements ITransform {
     }
 
     coveringTiles(options: CoveringTilesOptions): Array<OverscaledTileID> {
-        return mercatorCoveringTiles(this, options, this._invViewProjMatrix);
+        const cameraFrustum = Frustum.fromInvProjectionMatrix(this._invViewProjMatrix, this.worldSize);
+        return mercatorCoveringTiles(this, cameraFrustum, options);
     }
 
     recalculateZoom(terrain: Terrain): void {

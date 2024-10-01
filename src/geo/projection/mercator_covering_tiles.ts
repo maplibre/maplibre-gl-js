@@ -33,7 +33,7 @@ export function getTileAABB(tileId: {x: number; y: number; z: number}, wrap: num
  * @param invViewProjMatrix - Inverse view projection matrix, for computing camera frustum.
  * @returns A list of tile coordinates, ordered by ascending distance from camera.
  */
-export function mercatorCoveringTiles(transform: IReadonlyTransform, options: CoveringTilesOptions, invViewProjMatrix: mat4): Array<OverscaledTileID> {
+export function mercatorCoveringTiles(transform: IReadonlyTransform, frustum: Frustum, options: CoveringTilesOptions): Array<OverscaledTileID> {
     const desiredZ = transform.coveringZoomLevel(options);
 
     const minZoom = options.minzoom || 0;
@@ -45,7 +45,6 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, options: Co
     const numTiles = Math.pow(2, nominalZ);
     const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
     const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
-    const cameraFrustum = Frustum.fromInvProjectionMatrix(invViewProjMatrix, transform.worldSize);
     const distanceToCenter2d = Math.hypot(centerCoord.x - cameraCoord.x, centerCoord.y - cameraCoord.y);
     const distanceZ = Math.cos(transform.pitch * Math.PI / 180.0) * transform.cameraToCenterDistance / transform.worldSize;
     const distanceToCenter3d = Math.hypot(distanceToCenter2d, distanceZ);
@@ -85,7 +84,7 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, options: Co
 
         // Visibility of a tile is not required if any of its ancestor is fully visible
         if (!fullyVisible) {
-            const intersectResult = isTileVisible(cameraFrustum, null, aabb);
+            const intersectResult = isTileVisible(frustum, null, aabb);
 
             if (intersectResult === IntersectionResult.None)
                 continue;
@@ -103,6 +102,8 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, options: Co
         // Use 0.1 as an epsilon to avoid for explicit == 0.0 floating point checks
         if (options.terrain || transform.pitch > 60.0 || transform.padding.top >= 0.1) {
             const thisTilePitch = Math.atan(distToTile2d / distanceZ);
+            // if distance to candidate tile is a tiny bit farther than distance to center,
+            // use the same zoom as the center. This is achieved by the scaling distance ratio by cos(fov/2)
             thisTileDesiredZ = (options.roundZoom ? Math.round : Math.floor)(
                 transform.zoom + transform.pitchBehavior * scaleZoom(Math.cos(thisTilePitch)) / 2 + scaleZoom(transform.tileSize / options.tileSize * distanceToCenter3d / distToTile3d / Math.cos(transform.fov / 2.0 * Math.PI / 180.0))
             );

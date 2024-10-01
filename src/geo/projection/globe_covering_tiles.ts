@@ -222,12 +222,12 @@ export function globeCoveringTiles(transform: IReadonlyTransform, frustum: Frust
         const distToTile2d = distanceToTile(cameraCoord.x, cameraCoord.y, tileX, tileY, scaledTileSize);
         const distToTile3d = Math.hypot(distToTile2d, distanceZ);
 
-        // if distance to candidate tile is a tiny bit farther than distance to center,
-        // use the same zoom as the canter. This is achieved by the scaling distance ratio by cos(fov/2)
-        let thisTileDesiredZ = nominalZ;
+        let thisTileDesiredZ = desiredZ;
         // Only allow tiles of varying z for z > 4
         if (nominalZ > 4) {
             const thisTilePitch = Math.atan(distToTile2d / distanceZ);
+            // if distance to candidate tile is a tiny bit farther than distance to center,
+            // use the same zoom as the center. This is achieved by the scaling distance ratio by cos(fov/2)
             thisTileDesiredZ = (options.roundZoom ? Math.round : Math.floor)(
                 transform.zoom + transform.pitchBehavior * scaleZoom(Math.cos(thisTilePitch)) / 2 + scaleZoom(transform.tileSize / options.tileSize * distanceToCenter3d / distToTile3d / Math.cos(transform.fov / 2.0 * Math.PI / 180.0))
             );
