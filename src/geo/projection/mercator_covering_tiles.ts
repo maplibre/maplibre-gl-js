@@ -7,22 +7,28 @@ import {scaleZoom} from '../transform_helper';
 import {CoveringTilesResult, CoveringTilesStackEntry, isTileVisible} from './covering_tiles'
 
 
+
+// Returns the wrap value for a given tile, computed so that tiles will remain loaded when crossing the antimeridian.
+function getWrap(centerCoord: MercatorCoordinate, tileID: {x:number, y: number, z: number}, parentWrap: number): number {
+    return parentWrap;
+}
+
 /**
  * Returns the AABB of the specified tile.
- * @param tileId - Tile x, y and z for zoom.
+ * @param tileID - Tile x, y and z for zoom.
  */
-export function getTileAABB(tileId: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions): Aabb {
+export function getTileAABB(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions): Aabb {
     let minElevation = elevation;
     let maxElevation = elevation;
     if (options.terrain) {
-        const tileID = new OverscaledTileID(tileId.z, wrap, tileId.z, tileId.x, tileId.y);
+        const tileID = new OverscaledTileID(tileID.z, wrap, tileID.z, tileID.x, tileID.y);
         const minMax = options.terrain.getMinMaxElevation(tileID);
         minElevation = minMax.minElevation ?? elevation;
         maxElevation = minMax.maxElevation ?? elevation;
     }
-    const numTiles = 1 << tileId.z;
-    return new Aabb([wrap + tileId.x / numTiles, tileId.y / numTiles, minElevation],
-        [wrap + (tileId.x + 1) / numTiles, (tileId.y + 1) / numTiles, maxElevation]);
+    const numTiles = 1 << tileID.z;
+    return new Aabb([wrap + tileID.x / numTiles, tileID.y / numTiles, minElevation],
+        [wrap + (tileID.x + 1) / numTiles, (tileID.y + 1) / numTiles, maxElevation]);
 }
 
 /**
@@ -108,6 +114,9 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, frustum: Fr
         }
         thisTileDesiredZ = Math.max(0, thisTileDesiredZ);
         const z = Math.min(thisTileDesiredZ, maxZoom);
+        
+        // We need to compute a valid wrap value for the tile to keep globe compatibility with mercator
+        it.wrap = getWrap(centerCoord, tileID, it.wrap);
 
         // Have we reached the target depth?
         if (it.zoom >= z) {

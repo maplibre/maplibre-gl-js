@@ -59,10 +59,13 @@ function distanceToTile(pointX: number, pointY: number, tileCornerX: number, til
 }
 
 // Returns the wrap value for a given tile, computed so that tiles will remain loaded when crossing the antimeridian.
-function getWrap(centerCoord: MercatorCoordinate, tileX: number, tileSize: number): number {
-    const distanceCurrent = distanceToTileSimple(centerCoord.x, tileX, tileSize);
-    const distanceLeft = distanceToTileSimple(centerCoord.x, tileX - 1.0, tileSize);
-    const distanceRight = distanceToTileSimple(centerCoord.x, tileX + 1.0, tileSize);
+function getWrap(centerCoord: MercatorCoordinate, tileID: {x:number, y: number, z: number}, parentWrap: number): number {
+    const scale = 1 << tileID.z;
+    const tileMercatorSize = 1.0 / scale;
+    const tileX = tileID.x / scale; // In range 0..1
+    const distanceCurrent = distanceToTileSimple(centerCoord.x, tileX, tileMercatorSize);
+    const distanceLeft = distanceToTileSimple(centerCoord.x, tileX - 1.0, tileMercatorSize);
+    const distanceRight = distanceToTileSimple(centerCoord.x, tileX + 1.0, tileMercatorSize);
     const distanceSmallest = Math.min(distanceCurrent, distanceLeft, distanceRight);
     if (distanceSmallest === distanceRight) {
         return 1;
@@ -237,8 +240,8 @@ export function globeCoveringTiles(transform: IReadonlyTransform, frustum: Frust
         thisTileDesiredZ = Math.max(0, thisTileDesiredZ);
         const z = Math.min(thisTileDesiredZ, maxZoom);
         
-        // We need to compute a valid wrap value for the tile to keep compatibility with mercator
-        it.wrap = getWrap(centerCoord, tileX, scaledTileSize);
+        // We need to compute a valid wrap value for the tile to keep globe compatibility with mercator
+        it.wrap = getWrap(centerCoord, tileID, it.wrap);
 
         // Have we reached the target depth?
         if (it.zoom >= z) {
