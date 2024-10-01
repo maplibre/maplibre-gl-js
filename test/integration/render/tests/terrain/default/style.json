@@ -13,7 +13,7 @@
     "terrain": {
       "type": "raster-dem",
       "tiles": ["local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"],
-      "maxzoom": 15,
+      "maxzoom": 12,
       "tileSize": 256
     },
     "osm": {
