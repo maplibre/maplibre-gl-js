@@ -95,7 +95,7 @@ export function coveringTiles(transform: IReadonlyTransform, frustum: Frustum, p
     const distanceZ = Math.abs(centerCoord.z - cameraCoord.z);
     const distanceToCenter3d = Math.hypot(distanceToCenter2d, distanceZ);
 
-    const newRootTile = (wrap: number): any => {
+    const newRootTile = (wrap: number): CoveringTilesStackEntry => {
         return {
             zoom: 0,
             x: 0,
