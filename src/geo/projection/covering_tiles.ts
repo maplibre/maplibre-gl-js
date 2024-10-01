@@ -62,6 +62,21 @@ export function isTileVisible(frustum: Frustum, plane: vec4, aabb: Aabb): Inters
     return IntersectionResult.Partial;
 }
 
+/**
+ * Returns a list of tiles that optimally covers the screen. Adapted for globe projection.
+ * Correctly handles LOD when moving over the antimeridian.
+ * @param transform - The transform instance.
+ * @param frustum - The covering frustum.
+ * @param plane - The clipping plane used by globe transform, or null.
+ * @param cameraCoord - The x, y, z position of the camera in MercatorCoordinates.
+ * @param cameraCoord - The x, y, z position of the center point in MercatorCoordinates.
+ * @param options - Additional coveringTiles options.
+ * @param allowVariableZoom - Whether to allow variable zoom, which is used at high pitch angle to avoid loading an excessive amount of tiles.
+ * @param distanceToTile2d - Function used to calculate distance from a point to a tile
+ * @param getWrap - Function used to calculate the tile's "wrap" number
+ * @param getTileAABB - Function used to calculate the tile's AABB
+ * @returns A list of tile coordinates, ordered by ascending distance from camera.
+ */
 export function coveringTiles(transform: IReadonlyTransform, frustum: Frustum, plane: vec4, cameraCoord: MercatorCoordinate, centerCoord: MercatorCoordinate, options: CoveringTilesOptions, allowVariableZoom: boolean, distanceToTile2d: DistanceToTile2dFunc, getWrap: GetWrapFunc, getTileAABB: GetTileAABBFunc): OverscaledTileID[] {
     const desiredZ = transform.coveringZoomLevel(options);
     const minZoom = options.minzoom || 0;

@@ -39,7 +39,6 @@ export function getTileAABB(tileID: {x: number; y: number; z: number}, wrap: num
  * Correctly handles LOD when moving over the antimeridian.
  * @param transform - The mercator transform instance.
  * @param options - Additional coveringTiles options.
- * @param invViewProjMatrix - Inverse view projection matrix, for computing camera frustum.
  * @returns A list of tile coordinates, ordered by ascending distance from camera.
  */
 export function mercatorCoveringTiles(transform: IReadonlyTransform, frustum: Frustum, plane: vec4, cameraCoord: MercatorCoordinate, centerCoord: MercatorCoordinate, options: CoveringTilesOptions): Array<OverscaledTileID> {
