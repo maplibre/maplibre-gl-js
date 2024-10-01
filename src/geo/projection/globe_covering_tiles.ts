@@ -230,7 +230,7 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
         const y = it.y;
         let fullyVisible = it.fullyVisible;
 
-        // Visibility of a tile is not required if any of its ancestor if fully visible
+        // Visibility of a tile is not required if any of its ancestor is fully visible
         if (!fullyVisible) {
             const intersectResult = isTileVisible(frustum, plane, it.x, it.y, it.zoom);
 

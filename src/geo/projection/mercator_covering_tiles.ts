@@ -76,7 +76,7 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, options: Co
         const y = it.y;
         let fullyVisible = it.fullyVisible;
 
-        // Visibility of a tile is not required if any of its ancestor if fully inside the frustum
+        // Visibility of a tile is not required if any of its ancestor is fully visible
         if (!fullyVisible) {
             const intersectResult = it.aabb.intersectsFrustum(cameraFrustum);
 
@@ -99,8 +99,8 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, options: Co
             thisTileDesiredZ = (options.roundZoom ? Math.round : Math.floor)(
                 transform.zoom + transform.pitchBehavior * scaleZoom(Math.cos(thisTilePitch)) / 2 + scaleZoom(transform.tileSize / options.tileSize * distanceToCenter3d / distToTile3d / Math.cos(transform.fov / 2.0 * Math.PI / 180.0))
             );
-            thisTileDesiredZ = Math.max(0, thisTileDesiredZ);
         }
+        thisTileDesiredZ = Math.max(0, thisTileDesiredZ);
         const z = Math.min(thisTileDesiredZ, maxZoom);
 
         // Have we reached the target depth?
@@ -108,7 +108,9 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, options: Co
             if (it.zoom < minZoom) {
                 continue;
             }
-            const dz = nominalZ - it.zoom, dx = cameraPoint[0] - 0.5 - (x << dz), dy = cameraPoint[1] - 0.5 - (y << dz);
+            const dz = nominalZ - it.zoom;
+            const dx = cameraPoint[0] - 0.5 - (x << dz);
+            const dy = cameraPoint[1] - 0.5 - (y << dz);
             const overscaledZ = options.reparseOverscaled ? thisTileDesiredZ : it.zoom;
             result.push({
                 tileID: new OverscaledTileID(it.zoom === maxZoom ? overscaledZ : it.zoom, it.wrap, it.zoom, x, y),
