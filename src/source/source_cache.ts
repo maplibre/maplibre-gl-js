@@ -956,7 +956,7 @@ export class SourceCache extends Evented {
             cameraQueryGeometry: Array<Point>;
             scale: number;
         };
-        const tileResults: Array<TileResult> = [];
+        const tileResults: TileResult[] = [];
 
         const transform = this.transform;
         if (!transform) return tileResults;
