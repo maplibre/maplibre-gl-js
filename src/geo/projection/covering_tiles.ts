@@ -41,7 +41,7 @@ type GetTileAABBFunc = (tileID: {x: number; y: number; z: number}, wrap: number,
 
 /**
  * A simple/heuristic function that returns whether the tile is visible under the current transform.
- * @returns 0 is not visible, 1 if partially visible, 2 if fully visible.
+ * @returns an {@link IntersectionResult}.
  */
 export function isTileVisible(frustum: Frustum, aabb: Aabb, plane?: vec4): IntersectionResult {
 
