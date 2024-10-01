@@ -44,7 +44,7 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, frustum: Fr
     const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
     const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
     const distanceToCenter2d = Math.hypot(centerCoord.x - cameraCoord.x, centerCoord.y - cameraCoord.y);
-    const distanceZ = Math.cos(transform.pitch * Math.PI / 180.0) * transform.cameraToCenterDistance / transform.worldSize;
+    const distanceZ = Math.abs(centerCoord.z - cameraCoord.z);
     const distanceToCenter3d = Math.hypot(distanceToCenter2d, distanceZ);
 
     const newRootTile = (wrap: number): any => {
