@@ -6,21 +6,7 @@ import {MercatorCoordinate} from '../mercator_coordinate';
 import {EXTENT} from '../../data/extent';
 import {projectTileCoordinatesToSphere} from './globe_utils';
 import {scaleZoom} from '../transform_helper';
-
-type CoveringTilesResult = {
-    tileID: OverscaledTileID;
-    distanceSq: number;
-    tileDistanceToCamera: number;
-};
-
-type CoveringTilesStackEntry = {
-    aabb: Aabb;
-    zoom: number;
-    x: number;
-    y: number;
-    wrap: number;
-    fullyVisible: boolean;
-};
+import {CoveringTilesResult, CoveringTilesStackEntry, isTileVisible} from './covering_tiles'
 
 /**
  * Computes distance of a point to a tile in an arbitrary axis.
@@ -175,28 +161,6 @@ export function getTileAABB(tileID: {x: number; y: number; z: number}): Aabb {
 }
 
 /**
- * A simple/heuristic function that returns whether the tile is visible under the current transform.
- * @returns 0 is not visible, 1 if partially visible, 2 if fully visible.
- */
-function isTileVisible(frustum: Frustum, plane: vec4, x: number, y: number, z: number): IntersectionResult {
-    const tileID = {x, y, z};
-    const aabb = getTileAABB(tileID);
-
-    const frustumTest = aabb.intersectsFrustum(frustum);
-    const planeTest = aabb.intersectsPlane(plane);
-
-    if (frustumTest === IntersectionResult.None || planeTest === IntersectionResult.None) {
-        return IntersectionResult.None;
-    }
-
-    if (frustumTest === IntersectionResult.Full && planeTest === IntersectionResult.Full) {
-        return IntersectionResult.Full;
-    }
-
-    return IntersectionResult.Partial;
-}
-
-/**
  * Returns a list of tiles that optimally covers the screen. Adapted for globe projection.
  * Correctly handles LOD when moving over the antimeridian.
  * @param transform - The globe transform instance.
@@ -218,7 +182,6 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
 
     const newRootTile = (wrap: number): any => {
         return {
-            aabb: new Aabb([wrap, 0, 0], [(wrap + 1), 1, 0]),
             zoom: 0,
             x: 0,
             y: 0,
@@ -241,7 +204,9 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
 
         // Visibility of a tile is not required if any of its ancestor is fully visible
         if (!fullyVisible) {
-            const intersectResult = isTileVisible(frustum, plane, it.x, it.y, it.zoom);
+            const tileID = {x, y, z: it.zoom};
+            const aabb = getTileAABB(tileID);
+            const intersectResult = isTileVisible(frustum, plane, aabb);
 
             if (intersectResult === IntersectionResult.None)
                 continue;
@@ -295,18 +260,7 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
             const childX = (x << 1) + (i % 2);
             const childY = (y << 1) + (i >> 1);
             const childZ = it.zoom + 1;
-            let quadrant = it.aabb.quadrant(i);
-            if (options.terrain) {
-                const tileID = new OverscaledTileID(childZ, it.wrap, childZ, childX, childY);
-                const minMax = options.terrain.getMinMaxElevation(tileID);
-                const minElevation = minMax.minElevation ?? 0;
-                const maxElevation = minMax.maxElevation ?? 0;
-                quadrant = new Aabb(
-                    [quadrant.min[0], quadrant.min[1], minElevation] as vec3,
-                    [quadrant.max[0], quadrant.max[1], maxElevation] as vec3
-                );
-            }
-            stack.push({aabb: quadrant, zoom: childZ, x: childX, y: childY, wrap: it.wrap, fullyVisible});
+            stack.push({zoom: childZ, x: childX, y: childY, wrap: it.wrap, fullyVisible});
         }
     }
 

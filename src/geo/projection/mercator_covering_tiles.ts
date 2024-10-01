@@ -4,21 +4,26 @@ import {Aabb, Frustum, IntersectionResult} from '../../util/primitives';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {CoveringTilesOptions, IReadonlyTransform} from '../transform_interface';
 import {scaleZoom} from '../transform_helper';
+import {CoveringTilesResult, CoveringTilesStackEntry, isTileVisible} from './covering_tiles'
 
-type CoveringTilesResult = {
-    tileID: OverscaledTileID;
-    distanceSq: number;
-    tileDistanceToCamera: number;
-};
 
-type CoveringTilesStackEntry = {
-    aabb: Aabb;
-    zoom: number;
-    x: number;
-    y: number;
-    wrap: number;
-    fullyVisible: boolean;
-};
+/**
+ * Returns the AABB of the specified tile.
+ * @param tileId - Tile x, y and z for zoom.
+ */
+export function getTileAABB(tileId: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions): Aabb {
+    let minElevation = elevation;
+    let maxElevation = elevation;
+    if (options.terrain) {
+        const tileID = new OverscaledTileID(tileId.z, wrap, tileId.z, tileId.x, tileId.y);
+        const minMax = options.terrain.getMinMaxElevation(tileID);
+        minElevation = minMax.minElevation ?? elevation;
+        maxElevation = minMax.maxElevation ?? elevation;
+    }
+    const numTiles = 1 << tileId.z;
+    return new Aabb([wrap + tileId.x / numTiles, tileId.y / numTiles, minElevation],
+        [wrap + (tileId.x + 1) / numTiles, (tileId.y + 1) / numTiles, maxElevation]);
+}
 
 /**
  * Returns a list of tiles that optimally covers the screen.
@@ -75,10 +80,12 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, options: Co
         const x = it.x;
         const y = it.y;
         let fullyVisible = it.fullyVisible;
+        const tileID = {x, y, z: it.zoom};
+        const aabb = getTileAABB(tileID, it.wrap, transform.elevation, options);
 
         // Visibility of a tile is not required if any of its ancestor is fully visible
         if (!fullyVisible) {
-            const intersectResult = it.aabb.intersectsFrustum(cameraFrustum);
+            const intersectResult = isTileVisible(cameraFrustum, null, aabb);
 
             if (intersectResult === IntersectionResult.None)
                 continue;
@@ -86,8 +93,8 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, options: Co
             fullyVisible = intersectResult === IntersectionResult.Full;
         }
 
-        const distanceX = it.aabb.distanceX([cameraCoord.x, cameraCoord.y]);
-        const distanceY = it.aabb.distanceY([cameraCoord.x, cameraCoord.y]);
+        const distanceX = aabb.distanceX([cameraCoord.x, cameraCoord.y]);
+        const distanceY = aabb.distanceY([cameraCoord.x, cameraCoord.y]);
         const distToTile2d = Math.hypot(distanceX, distanceY);
         const distToTile3d = Math.hypot(distanceZ, distToTile2d);
 
@@ -125,18 +132,7 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, options: Co
             const childX = (x << 1) + (i % 2);
             const childY = (y << 1) + (i >> 1);
             const childZ = it.zoom + 1;
-            let quadrant = it.aabb.quadrant(i);
-            if (options.terrain) {
-                const tileID = new OverscaledTileID(childZ, it.wrap, childZ, childX, childY);
-                const minMax = options.terrain.getMinMaxElevation(tileID);
-                const minElevation = minMax.minElevation ?? transform.elevation;
-                const maxElevation = minMax.maxElevation ?? transform.elevation;
-                quadrant = new Aabb(
-                    [quadrant.min[0], quadrant.min[1], minElevation] as vec3,
-                    [quadrant.max[0], quadrant.max[1], maxElevation] as vec3
-                );
-            }
-            stack.push({aabb: quadrant, zoom: childZ, x: childX, y: childY, wrap: it.wrap, fullyVisible});
+            stack.push({zoom: childZ, x: childX, y: childY, wrap: it.wrap, fullyVisible});
         }
     }
 
