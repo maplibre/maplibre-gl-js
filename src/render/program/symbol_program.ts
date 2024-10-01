@@ -12,6 +12,7 @@ export type SymbolIconUniformsType = {
     'u_size_t': Uniform1f;
     'u_size': Uniform1f;
     'u_camera_to_center_distance': Uniform1f;
+    'u_symbol_rotation': Uniform1f;
     'u_pitch': Uniform1f;
     'u_rotate_symbol': Uniform1i;
     'u_aspect_ratio': Uniform1f;
@@ -34,6 +35,7 @@ export type SymbolSDFUniformsType = {
     'u_size_t': Uniform1f;
     'u_size': Uniform1f;
     'u_camera_to_center_distance': Uniform1f;
+    'u_symbol_rotation': Uniform1f;
     'u_pitch': Uniform1f;
     'u_rotate_symbol': Uniform1i;
     'u_aspect_ratio': Uniform1f;
@@ -59,6 +61,7 @@ export type symbolTextAndIconUniformsType = {
     'u_size_t': Uniform1f;
     'u_size': Uniform1f;
     'u_camera_to_center_distance': Uniform1f;
+    'u_symbol_rotation': Uniform1f;
     'u_pitch': Uniform1f;
     'u_rotate_symbol': Uniform1i;
     'u_aspect_ratio': Uniform1f;
@@ -86,6 +89,7 @@ const symbolIconUniforms = (context: Context, locations: UniformLocations): Symb
     'u_size_t': new Uniform1f(context, locations.u_size_t),
     'u_size': new Uniform1f(context, locations.u_size),
     'u_camera_to_center_distance': new Uniform1f(context, locations.u_camera_to_center_distance),
+    'u_symbol_rotation': new Uniform1f(context, locations.u_symbol_rotation),
     'u_pitch': new Uniform1f(context, locations.u_pitch),
     'u_rotate_symbol': new Uniform1i(context, locations.u_rotate_symbol),
     'u_aspect_ratio': new Uniform1f(context, locations.u_aspect_ratio),
@@ -108,6 +112,7 @@ const symbolSDFUniforms = (context: Context, locations: UniformLocations): Symbo
     'u_size_t': new Uniform1f(context, locations.u_size_t),
     'u_size': new Uniform1f(context, locations.u_size),
     'u_camera_to_center_distance': new Uniform1f(context, locations.u_camera_to_center_distance),
+    'u_symbol_rotation': new Uniform1f(context, locations.u_symbol_rotation),
     'u_pitch': new Uniform1f(context, locations.u_pitch),
     'u_rotate_symbol': new Uniform1i(context, locations.u_rotate_symbol),
     'u_aspect_ratio': new Uniform1f(context, locations.u_aspect_ratio),
@@ -133,6 +138,7 @@ const symbolTextAndIconUniforms = (context: Context, locations: UniformLocations
     'u_size_t': new Uniform1f(context, locations.u_size_t),
     'u_size': new Uniform1f(context, locations.u_size),
     'u_camera_to_center_distance': new Uniform1f(context, locations.u_camera_to_center_distance),
+    'u_symbol_rotation': new Uniform1f(context, locations.u_symbol_rotation),
     'u_pitch': new Uniform1f(context, locations.u_pitch),
     'u_rotate_symbol': new Uniform1i(context, locations.u_rotate_symbol),
     'u_aspect_ratio': new Uniform1f(context, locations.u_aspect_ratio),
@@ -170,7 +176,8 @@ const symbolIconUniformValues = (
     translation: [number, number],
     isText: boolean,
     texSize: [number, number],
-    pitchedScale: number
+    pitchedScale: number,
+    symbolRotation: number
 ): UniformValues<SymbolIconUniformsType> => {
     const transform = painter.transform;
 
@@ -193,7 +200,8 @@ const symbolIconUniformValues = (
         'u_texsize': texSize,
         'u_texture': 0,
         'u_translation': translation,
-        'u_pitched_scale': pitchedScale
+        'u_pitched_scale': pitchedScale,
+        'u_symbol_rotation': symbolRotation
     };
 };
 
@@ -214,13 +222,14 @@ const symbolSDFUniformValues = (
     isText: boolean,
     texSize: [number, number],
     isHalo: boolean,
-    pitchedScale: number
+    pitchedScale: number,
+    symbolRotation: number
 ): UniformValues<SymbolSDFUniformsType> => {
     const transform = painter.transform;
 
     return extend(symbolIconUniformValues(functionType, size,
         rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, painter, labelPlaneMatrix,
-        glCoordMatrix, translation, isText, texSize, pitchedScale), {
+        glCoordMatrix, translation, isText, texSize, pitchedScale, symbolRotation), {
         'u_gamma_scale': (pitchWithMap ? Math.cos(transform.pitch * Math.PI / 180.0) * transform.cameraToCenterDistance : 1),
         'u_device_pixel_ratio': painter.pixelRatio,
         'u_is_halo': +isHalo
@@ -243,11 +252,12 @@ const symbolTextAndIconUniformValues = (
     translation: [number, number],
     texSizeSDF: [number, number],
     texSizeIcon: [number, number],
-    pitchedScale: number
+    pitchedScale: number,
+    symbolRotation: number
 ): UniformValues<SymbolIconUniformsType> => {
     return extend(symbolSDFUniformValues(functionType, size,
         rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, painter, labelPlaneMatrix,
-        glCoordMatrix, translation, true, texSizeSDF, true, pitchedScale), {
+        glCoordMatrix, translation, true, texSizeSDF, true, pitchedScale, symbolRotation), {
         'u_texsize_icon': texSizeIcon,
         'u_texture_icon': 1
     });
