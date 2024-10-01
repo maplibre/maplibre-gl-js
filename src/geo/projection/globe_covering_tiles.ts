@@ -256,13 +256,13 @@ export function globeCoveringTiles(transform: IReadonlyTransform, frustum: Frust
             if (it.zoom < minZoom) {
                 continue;
             }
-            const dz = maxZoom - it.zoom;
+            const dz = nominalZ - it.zoom;
             const dx = cameraPoint[0] - 0.5 - (x << dz);
             const dy = cameraPoint[1] - 0.5 - (y << dz);
             const overscaledZ = options.reparseOverscaled ? thisTileDesiredZ : it.zoom;
             result.push({
                 tileID: new OverscaledTileID(it.zoom === maxZoom ? overscaledZ : it.zoom, it.wrap, it.zoom, x, y),
-                distanceSq: vec2.sqrLen([centerPoint[0] - 0.5 - dx, centerPoint[1] - 0.5 - dy]),
+                distanceSq: vec2.sqrLen([centerPoint[0] - 0.5 - x, centerPoint[1] - 0.5 - y]),
                 // this variable is currently not used, but may be important to reduce the amount of loaded tiles
                 tileDistanceToCamera: Math.sqrt(dx * dx + dy * dy)
             });
