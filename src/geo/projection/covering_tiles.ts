@@ -18,6 +18,26 @@ export type CoveringTilesStackEntry = {
     wrap: number;
     fullyVisible: boolean;
 };
+/**
+ * Returns the distance from the point to the tile
+ * @param pointX - point x.
+ * @param pointY - point y.
+ * @param tileID - Tile x, y and z for zoom.
+ * @param aabb - tile AABB
+ */
+type DistanceToTile2dFunc = (pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, aabb: Aabb) => number;
+
+// Returns the wrap value for a given tile.
+type GetWrapFunc = (centerCoord: MercatorCoordinate, tileID: {x:number; y: number; z: number}, parentWrap: number) =>number;
+
+/**
+ * Returns the AABB of the specified tile.
+ * @param tileID - Tile x, y and z for zoom.
+ * @param wrap - wrap number of the tile.
+ * @param elevation - camera center point elevation.
+ * @param options - CoveringTilesOptions.
+ */
+type GetTileAABBFunc = (tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions) => Aabb;
 
 /**
  * A simple/heuristic function that returns whether the tile is visible under the current transform.
@@ -42,7 +62,7 @@ export function isTileVisible(frustum: Frustum, plane: vec4, aabb: Aabb): Inters
     return IntersectionResult.Partial;
 }
 
-export function coveringTiles(transform: IReadonlyTransform, frustum: Frustum, plane: vec4, cameraCoord: MercatorCoordinate, centerCoord: MercatorCoordinate, options: CoveringTilesOptions, allowVariableZoom: boolean, distanceToTile2d, getWrap, getTileAABB): OverscaledTileID[] {
+export function coveringTiles(transform: IReadonlyTransform, frustum: Frustum, plane: vec4, cameraCoord: MercatorCoordinate, centerCoord: MercatorCoordinate, options: CoveringTilesOptions, allowVariableZoom: boolean, distanceToTile2d: DistanceToTile2dFunc, getWrap: GetWrapFunc, getTileAABB: GetTileAABBFunc): OverscaledTileID[] {
     const desiredZ = transform.coveringZoomLevel(options);
     const minZoom = options.minzoom || 0;
     const maxZoom = options.maxzoom !== undefined ? options.maxzoom : transform.maxZoom;
