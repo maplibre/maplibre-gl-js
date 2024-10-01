@@ -167,10 +167,10 @@ export function getTileAABB(tileID: {x: number; y: number; z: number}): Aabb {
  * @param options - Additional coveringTiles options.
  * @returns A list of tile coordinates, ordered by ascending distance from camera.
  */
-export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: MercatorCoordinate, centerCoord: MercatorCoordinate, tileSize: number, zoom: number, pitch: number, fov: number, pitchBehavior: number, options: CoveringTilesOptions): OverscaledTileID[] {
-    const desiredZ = (options.roundZoom ? Math.round : Math.floor)(zoom + scaleZoom(tileSize / options.tileSize));
+export function globeCoveringTiles(transform: IReadonlyTransform, frustum: Frustum, plane: vec4, cameraCoord: MercatorCoordinate, centerCoord: MercatorCoordinate, options: CoveringTilesOptions): OverscaledTileID[] {
+    const desiredZ = transform.coveringZoomLevel(options);
     const minZoom = options.minzoom || 0;
-    const maxZoom = options.maxzoom !== undefined ? options.maxzoom : desiredZ + 3;
+    const maxZoom = options.maxzoom !== undefined ? options.maxzoom : transform.maxZoom;
     const nominalZ = Math.min(Math.max(0, desiredZ), maxZoom);
 
     const numTiles = Math.pow(2, nominalZ);
@@ -201,11 +201,11 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
         const x = it.x;
         const y = it.y;
         let fullyVisible = it.fullyVisible;
+        const tileID = {x, y, z: it.zoom};
+        const aabb = getTileAABB(tileID);
 
         // Visibility of a tile is not required if any of its ancestor is fully visible
         if (!fullyVisible) {
-            const tileID = {x, y, z: it.zoom};
-            const aabb = getTileAABB(tileID);
             const intersectResult = isTileVisible(frustum, plane, aabb);
 
             if (intersectResult === IntersectionResult.None)
@@ -229,7 +229,7 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
         if (nominalZ > 4) {
             const thisTilePitch = Math.atan(distToTile2d / distanceZ);
             thisTileDesiredZ = (options.roundZoom ? Math.round : Math.floor)(
-                zoom + pitchBehavior * scaleZoom(Math.cos(thisTilePitch)) / 2 + scaleZoom(tileSize / options.tileSize * distanceToCenter3d / distToTile3d / Math.cos(fov / 2.0 * Math.PI / 180.0))
+                transform.zoom + transform.pitchBehavior * scaleZoom(Math.cos(thisTilePitch)) / 2 + scaleZoom(transform.tileSize / options.tileSize * distanceToCenter3d / distToTile3d / Math.cos(transform.fov / 2.0 * Math.PI / 180.0))
             );
         }
         thisTileDesiredZ = Math.max(0, thisTileDesiredZ);

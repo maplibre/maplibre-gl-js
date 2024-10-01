@@ -696,7 +696,7 @@ export class GlobeTransform implements ITransform {
         const centerCoord = MercatorCoordinate.fromLngLat(this.center, this.elevation);
         cameraCoord.z = centerCoord.z + Math.cos(this._helper._pitch) * this.cameraToCenterDistance / this.worldSize;
 
-        return globeCoveringTiles(this._cachedFrustum, this._cachedClippingPlane, cameraCoord, centerCoord, this.tileSize, this.zoom, this.pitch, this.fov, this.pitchBehavior,  options);
+        return globeCoveringTiles(this, this._cachedFrustum, this._cachedClippingPlane, cameraCoord, centerCoord, options);
     }
 
     recalculateZoom(terrain: Terrain): void {
