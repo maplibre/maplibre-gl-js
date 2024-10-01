@@ -40,14 +40,14 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, options: Co
     const numTiles = Math.pow(2, nominalZ);
     const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
     const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
-    const cameraFrustum = Frustum.fromInvProjectionMatrix(invViewProjMatrix, transform.worldSize, nominalZ);
-    const distanceToCenter2d = Math.hypot(centerPoint[0] - cameraPoint[0], centerPoint[1] - cameraPoint[1]);
-    const distanceZ = numTiles * Math.cos(transform.pitch * Math.PI / 180.0) * transform.cameraToCenterDistance / transform.worldSize;
+    const cameraFrustum = Frustum.fromInvProjectionMatrix(invViewProjMatrix, transform.worldSize);
+    const distanceToCenter2d = Math.hypot(centerCoord.x - cameraCoord.x, centerCoord.y - cameraCoord.y);
+    const distanceZ = Math.cos(transform.pitch * Math.PI / 180.0) * transform.cameraToCenterDistance / transform.worldSize;
     const distanceToCenter3d = Math.hypot(distanceToCenter2d, distanceZ);
 
     const newRootTile = (wrap: number): any => {
         return {
-            aabb: new Aabb([wrap * numTiles, 0, 0], [(wrap + 1) * numTiles, numTiles, 0]),
+            aabb: new Aabb([wrap, 0, 0], [(wrap + 1), 1, 0]),
             zoom: 0,
             x: 0,
             y: 0,
@@ -86,8 +86,8 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, options: Co
             fullyVisible = intersectResult === IntersectionResult.Full;
         }
 
-        const distanceX = it.aabb.distanceX(cameraPoint);
-        const distanceY = it.aabb.distanceY(cameraPoint);
+        const distanceX = it.aabb.distanceX([cameraCoord.x, cameraCoord.y]);
+        const distanceY = it.aabb.distanceY([cameraCoord.x, cameraCoord.y]);
         const distToTile2d = Math.hypot(distanceX, distanceY);
         const distToTile3d = Math.hypot(distanceZ, distToTile2d);
 
