@@ -14,9 +14,11 @@ type CoveringTilesResult = {
 };
 
 type CoveringTilesStackEntry = {
+    aabb: Aabb;
+    zoom: number;
     x: number;
     y: number;
-    zoom: number;
+    wrap: number;
     fullyVisible: boolean;
 };
 
@@ -214,15 +216,22 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
     const distanceZ = Math.abs(centerCoord.z - cameraCoord.z);
     const distanceToCenter3d = Math.hypot(distanceToCenter2d, distanceZ);
 
+    const newRootTile = (wrap: number): any => {
+        return {
+            aabb: new Aabb([wrap, 0, 0], [(wrap + 1), 1, 0]),
+            zoom: 0,
+            x: 0,
+            y: 0,
+            wrap,
+            fullyVisible: false
+        };
+    };
+
     // Do a depth-first traversal to find visible tiles and proper levels of detail
     const stack: Array<CoveringTilesStackEntry> = [];
     const result: Array<CoveringTilesResult> = [];
-    stack.push({
-        zoom: 0,
-        x: 0,
-        y: 0,
-        fullyVisible: false
-    });
+
+    stack.push(newRootTile(0));
 
     while (stack.length > 0) {
         const it = stack.pop();
@@ -260,6 +269,9 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
         }
         thisTileDesiredZ = Math.max(0, thisTileDesiredZ);
         const z = Math.min(thisTileDesiredZ, maxZoom);
+        
+        // We need to compute a valid wrap value for the tile to keep compatibility with mercator
+        it.wrap = getWrap(centerCoord, tileX, scaledTileSize);
 
         // Have we reached the target depth?
         if (it.zoom >= z) {
@@ -270,10 +282,8 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
             const dx = cameraPoint[0] - 0.5 - (x << dz);
             const dy = cameraPoint[1] - 0.5 - (y << dz);
             const overscaledZ = options.reparseOverscaled ? thisTileDesiredZ : it.zoom;
-            // We need to compute a valid wrap value for the tile to keep compatibility with mercator
-            const wrap = getWrap(centerCoord, tileX, scaledTileSize);
             result.push({
-                tileID: new OverscaledTileID(it.zoom === maxZoom ? overscaledZ : it.zoom, wrap, it.zoom, x, y),
+                tileID: new OverscaledTileID(it.zoom === maxZoom ? overscaledZ : it.zoom, it.wrap, it.zoom, x, y),
                 distanceSq: vec2.sqrLen([centerPoint[0] - 0.5 - dx, centerPoint[1] - 0.5 - dy]),
                 // this variable is currently not used, but may be important to reduce the amount of loaded tiles
                 tileDistanceToCamera: Math.sqrt(dx * dx + dy * dy)
@@ -285,7 +295,18 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
             const childX = (x << 1) + (i % 2);
             const childY = (y << 1) + (i >> 1);
             const childZ = it.zoom + 1;
-            stack.push({zoom: childZ, x: childX, y: childY, fullyVisible});
+            let quadrant = it.aabb.quadrant(i);
+            if (options.terrain) {
+                const tileID = new OverscaledTileID(childZ, it.wrap, childZ, childX, childY);
+                const minMax = options.terrain.getMinMaxElevation(tileID);
+                const minElevation = minMax.minElevation ?? 0;
+                const maxElevation = minMax.maxElevation ?? 0;
+                quadrant = new Aabb(
+                    [quadrant.min[0], quadrant.min[1], minElevation] as vec3,
+                    [quadrant.max[0], quadrant.max[1], maxElevation] as vec3
+                );
+            }
+            stack.push({aabb: quadrant, zoom: childZ, x: childX, y: childY, wrap: it.wrap, fullyVisible});
         }
     }
 
