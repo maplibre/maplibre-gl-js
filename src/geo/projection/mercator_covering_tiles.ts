@@ -33,9 +33,8 @@ export function getTileAABB(tileId: {x: number; y: number; z: number}, wrap: num
  * @param invViewProjMatrix - Inverse view projection matrix, for computing camera frustum.
  * @returns A list of tile coordinates, ordered by ascending distance from camera.
  */
-export function mercatorCoveringTiles(transform: IReadonlyTransform, frustum: Frustum, cameraCoord: MercatorCoordinate, centerCoord: MercatorCoordinate, options: CoveringTilesOptions): Array<OverscaledTileID> {
+export function mercatorCoveringTiles(transform: IReadonlyTransform, frustum: Frustum, plane: vec4, cameraCoord: MercatorCoordinate, centerCoord: MercatorCoordinate, options: CoveringTilesOptions): Array<OverscaledTileID> {
     const desiredZ = transform.coveringZoomLevel(options);
-
     const minZoom = options.minzoom || 0;
     const maxZoom = options.maxzoom !== undefined ? options.maxzoom : transform.maxZoom;
     const nominalZ = Math.min(Math.max(0, desiredZ), maxZoom);
@@ -47,9 +46,12 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, frustum: Fr
     const distanceZ = Math.abs(centerCoord.z - cameraCoord.z);
     const distanceToCenter3d = Math.hypot(distanceToCenter2d, distanceZ);
 
+    // No change of LOD behavior for pitch lower than 60 and when there is no top padding: return only tile ids from the requested zoom level
+    // Use 0.1 as an epsilon to avoid for explicit == 0.0 floating point checks
+    const allowZariableZoom = options.terrain || transform.pitch > 60.0 || transform.padding.top >= 0.1;
+
     const newRootTile = (wrap: number): any => {
         return {
-            aabb: new Aabb([wrap, 0, 0], [(wrap + 1), 1, 0]),
             zoom: 0,
             x: 0,
             y: 0,
@@ -82,7 +84,7 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, frustum: Fr
 
         // Visibility of a tile is not required if any of its ancestor is fully visible
         if (!fullyVisible) {
-            const intersectResult = isTileVisible(frustum, null, aabb);
+            const intersectResult = isTileVisible(frustum, plane, aabb);
 
             if (intersectResult === IntersectionResult.None)
                 continue;
@@ -93,12 +95,10 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, frustum: Fr
         const distanceX = aabb.distanceX([cameraCoord.x, cameraCoord.y]);
         const distanceY = aabb.distanceY([cameraCoord.x, cameraCoord.y]);
         const distToTile2d = Math.hypot(distanceX, distanceY);
-        const distToTile3d = Math.hypot(distanceZ, distToTile2d);
+        const distToTile3d = Math.hypot(distToTile2d, distanceZ);
 
-        // No change of LOD behavior for pitch lower than 60 and when there is no top padding: return only tile ids from the requested zoom level
         let thisTileDesiredZ = desiredZ;
-        // Use 0.1 as an epsilon to avoid for explicit == 0.0 floating point checks
-        if (options.terrain || transform.pitch > 60.0 || transform.padding.top >= 0.1) {
+        if (allowZariableZoom) {
             const thisTilePitch = Math.atan(distToTile2d / distanceZ);
             // if distance to candidate tile is a tiny bit farther than distance to center,
             // use the same zoom as the center. This is achieved by the scaling distance ratio by cos(fov/2)

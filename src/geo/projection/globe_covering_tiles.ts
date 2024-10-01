@@ -180,6 +180,9 @@ export function globeCoveringTiles(transform: IReadonlyTransform, frustum: Frust
     const distanceZ = Math.abs(centerCoord.z - cameraCoord.z);
     const distanceToCenter3d = Math.hypot(distanceToCenter2d, distanceZ);
 
+    // Only allow tiles of varying z for z > 4
+    const allowZariableZoom = nominalZ > 4;
+
     const newRootTile = (wrap: number): any => {
         return {
             zoom: 0,
@@ -223,8 +226,7 @@ export function globeCoveringTiles(transform: IReadonlyTransform, frustum: Frust
         const distToTile3d = Math.hypot(distToTile2d, distanceZ);
 
         let thisTileDesiredZ = desiredZ;
-        // Only allow tiles of varying z for z > 4
-        if (nominalZ > 4) {
+        if (allowZariableZoom) {
             const thisTilePitch = Math.atan(distToTile2d / distanceZ);
             // if distance to candidate tile is a tiny bit farther than distance to center,
             // use the same zoom as the center. This is achieved by the scaling distance ratio by cos(fov/2)
