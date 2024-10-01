@@ -209,7 +209,7 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
     return result;
 }
 
-export function querySourceFeatures(sourceCache: SourceCache, params: QuerySourceFeatureOptions) {
+export function querySourceFeatures(sourceCache: SourceCache, params: QuerySourceFeatureOptions | undefined) {
     const tiles = sourceCache.getRenderableIds().map((id) => {
         return sourceCache.getTileByID(id);
     });

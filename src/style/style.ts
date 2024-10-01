@@ -15,7 +15,7 @@ import {browser} from '../util/browser';
 import {Dispatcher} from '../util/dispatcher';
 import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
 import {Source} from '../source/source';
-import {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
+import {QueryRenderedFeaturesOptions, QueryRenderedFeaturesOptionsStrict, QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
 import {SourceCache} from '../source/source_cache';
 import {GeoJSONSource} from '../source/geojson_source';
 import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, DiffCommand} from '@maplibre/maplibre-gl-style-spec';
@@ -1434,8 +1434,8 @@ export class Style extends Evented {
         // LayerSpecification is serialized StyleLayer, and this casting is safe.
         const serializedLayers = this._serializedAllLayers() as {[_: string]: StyleLayer};
 
-        const layersAsSet = params.layers instanceof Set ? params.layers : Array.isArray(params.layers) ? new Set(params.layers) : undefined;
-        const paramsStrict = {
+        const layersAsSet = params.layers instanceof Set ? params.layers : Array.isArray(params.layers) ? new Set(params.layers) : null;
+        const paramsStrict: QueryRenderedFeaturesOptionsStrict = {
             ...params,
             layers: layersAsSet,
         };

@@ -113,9 +113,9 @@ export class FeatureIndex {
     ): {[_: string]: Array<{featureIndex: number; feature: GeoJSONFeature}>} {
         this.loadVTLayers();
 
-        const params = args.params || {} as QueryParameters['params'],
-            pixelsToTileUnits = EXTENT / args.tileSize / args.scale,
-            filter = featureFilter(params.filter);
+        const params = args.params;
+        const pixelsToTileUnits = EXTENT / args.tileSize / args.scale;
+        const filter = featureFilter(params.filter);
 
         const queryGeometry = args.queryGeometry;
         const queryPadding = args.queryPadding * pixelsToTileUnits;
