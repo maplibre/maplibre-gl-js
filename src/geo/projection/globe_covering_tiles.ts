@@ -80,7 +80,7 @@ function getWrap(centerCoord: MercatorCoordinate, tileID: {x:number, y: number, 
  * Returns the AABB of the specified tile. The AABB is in the coordinate space where the globe is a unit sphere.
  * @param tileID - Tile x, y and z for zoom.
  */
-export function getTileAABB(tileID: {x: number; y: number; z: number}): Aabb {
+export function getTileAABB(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions): Aabb {
     // We can get away with only checking the 4 tile corners for AABB construction, because for any tile of zoom level 2 or higher
     // it holds that the extremes (minimal or maximal value) of X, Y or Z coordinates must lie in one of the tile corners.
     //
@@ -200,6 +200,14 @@ export function globeCoveringTiles(transform: IReadonlyTransform, frustum: Frust
     const stack: Array<CoveringTilesStackEntry> = [];
     const result: Array<CoveringTilesResult> = [];
 
+    if (transform.renderWorldCopies) {
+        // Render copy of the globe thrice on both sides
+        for (let i = 1; i <= 3; i++) {
+            stack.push(newRootTile(-i));
+            stack.push(newRootTile(i));
+        }
+    }
+
     stack.push(newRootTile(0));
 
     while (stack.length > 0) {
@@ -208,7 +216,7 @@ export function globeCoveringTiles(transform: IReadonlyTransform, frustum: Frust
         const y = it.y;
         let fullyVisible = it.fullyVisible;
         const tileID = {x, y, z: it.zoom};
-        const aabb = getTileAABB(tileID);
+        const aabb = getTileAABB(tileID, it.wrap, transform.elevation, options);
 
         // Visibility of a tile is not required if any of its ancestor is fully visible
         if (!fullyVisible) {

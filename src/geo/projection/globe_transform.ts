@@ -85,7 +85,6 @@ export class GlobeTransform implements ITransform {
         this._helper.setMaxPitch(pitch);
     }
     setRenderWorldCopies(renderWorldCopies: boolean): void {
-        this._helper.setRenderWorldCopies(renderWorldCopies);
     }
     setPitchBehavior(pitchBehavior: number): void {
         this._helper.setPitchBehavior(pitchBehavior);
@@ -204,7 +203,7 @@ export class GlobeTransform implements ITransform {
         return this._helper.unmodified;
     }
     get renderWorldCopies(): boolean {
-        return this._helper.renderWorldCopies;
+        return false;
     }
     get pitchBehavior(): number {
         return this._helper.pitchBehavior;
