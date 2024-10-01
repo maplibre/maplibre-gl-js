@@ -43,7 +43,7 @@ type GetTileAABBFunc = (tileID: {x: number; y: number; z: number}, wrap: number,
  * A simple/heuristic function that returns whether the tile is visible under the current transform.
  * @returns 0 is not visible, 1 if partially visible, 2 if fully visible.
  */
-export function isTileVisible(frustum: Frustum, plane: vec4, aabb: Aabb): IntersectionResult {
+export function isTileVisible(frustum: Frustum, aabb: Aabb, plane?: vec4): IntersectionResult {
 
     const frustumTest = aabb.intersectsFrustum(frustum);
     if (!plane) {
@@ -124,7 +124,7 @@ export function coveringTiles(transform: IReadonlyTransform, frustum: Frustum, p
 
         // Visibility of a tile is not required if any of its ancestor is fully visible
         if (!fullyVisible) {
-            const intersectResult = isTileVisible(frustum, plane, aabb);
+            const intersectResult = isTileVisible(frustum, aabb, plane);
 
             if (intersectResult === IntersectionResult.None)
                 continue;
