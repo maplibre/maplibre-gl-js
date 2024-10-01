@@ -5,39 +5,47 @@ import {CoveringTilesOptions, IReadonlyTransform} from '../transform_interface';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {scaleZoom} from '../transform_helper';
 
-export type CoveringTilesResult = {
+type CoveringTilesResult = {
     tileID: OverscaledTileID;
     distanceSq: number;
     tileDistanceToCamera: number;
 };
 
-export type CoveringTilesStackEntry = {
+type CoveringTilesStackEntry = {
     zoom: number;
     x: number;
     y: number;
     wrap: number;
     fullyVisible: boolean;
 };
-/**
- * Returns the distance from the point to the tile
- * @param pointX - point x.
- * @param pointY - point y.
- * @param tileID - Tile x, y and z for zoom.
- * @param aabb - tile AABB
- */
-type DistanceToTile2dFunc = (pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, aabb: Aabb) => number;
 
-// Returns the wrap value for a given tile.
-type GetWrapFunc = (centerCoord: MercatorCoordinate, tileID: {x:number; y: number; z: number}, parentWrap: number) =>number;
+export interface CoveringTilesDetails {
+    /**
+     * Returns the distance from the point to the tile
+     * @param pointX - point x.
+     * @param pointY - point y.
+     * @param tileID - Tile x, y and z for zoom.
+     * @param aabb - tile AABB
+     */
+    distanceToTile2d: (pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, aabb: Aabb) => number;
 
-/**
- * Returns the AABB of the specified tile.
- * @param tileID - Tile x, y and z for zoom.
- * @param wrap - wrap number of the tile.
- * @param elevation - camera center point elevation.
- * @param options - CoveringTilesOptions.
- */
-type GetTileAABBFunc = (tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions) => Aabb;
+    // Returns the wrap value for a given tile.
+    getWrap: (centerCoord: MercatorCoordinate, tileID: {x:number; y: number; z: number}, parentWrap: number) => number;
+
+    /**
+     * Returns the AABB of the specified tile.
+     * @param tileID - Tile x, y and z for zoom.
+     * @param wrap - wrap number of the tile.
+     * @param elevation - camera center point elevation.
+     * @param options - CoveringTilesOptions.
+     */
+    getTileAABB: (tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions) => Aabb;
+
+    /**
+     * Whether to allow variable zoom, which is used at high pitch angle to avoid loading an excessive amount of tiles.
+     */
+    allowVariableZoom: boolean;
+}
 
 /**
  * A simple/heuristic function that returns whether the tile is visible under the current transform.
@@ -71,13 +79,10 @@ export function isTileVisible(frustum: Frustum, aabb: Aabb, plane?: vec4): Inter
  * @param cameraCoord - The x, y, z position of the camera in MercatorCoordinates.
  * @param cameraCoord - The x, y, z position of the center point in MercatorCoordinates.
  * @param options - Additional coveringTiles options.
- * @param allowVariableZoom - Whether to allow variable zoom, which is used at high pitch angle to avoid loading an excessive amount of tiles.
- * @param distanceToTile2d - Function used to calculate distance from a point to a tile
- * @param getWrap - Function used to calculate the tile's "wrap" number
- * @param getTileAABB - Function used to calculate the tile's AABB
+ * @param details - Interface to define required helper functions.
  * @returns A list of tile coordinates, ordered by ascending distance from camera.
  */
-export function coveringTiles(transform: IReadonlyTransform, frustum: Frustum, plane: vec4, cameraCoord: MercatorCoordinate, centerCoord: MercatorCoordinate, options: CoveringTilesOptions, allowVariableZoom: boolean, distanceToTile2d: DistanceToTile2dFunc, getWrap: GetWrapFunc, getTileAABB: GetTileAABBFunc): OverscaledTileID[] {
+export function coveringTiles(transform: IReadonlyTransform, frustum: Frustum, plane: vec4, cameraCoord: MercatorCoordinate, centerCoord: MercatorCoordinate, options: CoveringTilesOptions, details: CoveringTilesDetails): OverscaledTileID[] {
     const desiredZ = transform.coveringZoomLevel(options);
     const minZoom = options.minzoom || 0;
     const maxZoom = options.maxzoom !== undefined ? options.maxzoom : transform.maxZoom;
@@ -120,7 +125,7 @@ export function coveringTiles(transform: IReadonlyTransform, frustum: Frustum, p
         const y = it.y;
         let fullyVisible = it.fullyVisible;
         const tileID = {x, y, z: it.zoom};
-        const aabb = getTileAABB(tileID, it.wrap, transform.elevation, options);
+        const aabb = details.getTileAABB(tileID, it.wrap, transform.elevation, options);
 
         // Visibility of a tile is not required if any of its ancestor is fully visible
         if (!fullyVisible) {
@@ -132,11 +137,11 @@ export function coveringTiles(transform: IReadonlyTransform, frustum: Frustum, p
             fullyVisible = intersectResult === IntersectionResult.Full;
         }
 
-        const distToTile2d = distanceToTile2d(cameraCoord.x, cameraCoord.y, tileID, aabb);
+        const distToTile2d = details.distanceToTile2d(cameraCoord.x, cameraCoord.y, tileID, aabb);
         const distToTile3d = Math.hypot(distToTile2d, distanceZ);
 
         let thisTileDesiredZ = desiredZ;
-        if (allowVariableZoom) {
+        if (details.allowVariableZoom) {
             const thisTilePitch = Math.atan(distToTile2d / distanceZ);
             // if distance to candidate tile is a tiny bit farther than distance to center,
             // use the same zoom as the center. This is achieved by the scaling distance ratio by cos(fov/2)
@@ -148,7 +153,7 @@ export function coveringTiles(transform: IReadonlyTransform, frustum: Frustum, p
         const z = Math.min(thisTileDesiredZ, maxZoom);
 
         // We need to compute a valid wrap value for the tile to keep globe compatibility with mercator
-        it.wrap = getWrap(centerCoord, tileID, it.wrap);
+        it.wrap = details.getWrap(centerCoord, tileID, it.wrap);
 
         // Have we reached the target depth?
         if (it.zoom >= z) {

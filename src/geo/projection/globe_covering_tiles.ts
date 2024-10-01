@@ -5,7 +5,7 @@ import {OverscaledTileID} from '../../source/tile_id';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {EXTENT} from '../../data/extent';
 import {projectTileCoordinatesToSphere} from './globe_utils';
-import {coveringTiles} from './covering_tiles';
+import {coveringTiles, CoveringTilesDetails} from './covering_tiles';
 
 /**
  * Computes distance of a point to a tile in an arbitrary axis.
@@ -176,5 +176,11 @@ export function getTileAABB(tileID: {x: number; y: number; z: number}, _wrap: nu
  */
 export function globeCoveringTiles(transform: IReadonlyTransform, frustum: Frustum, plane: vec4, cameraCoord: MercatorCoordinate, centerCoord: MercatorCoordinate, options: CoveringTilesOptions): OverscaledTileID[] {
     const allowVariableZoom = transform.coveringZoomLevel(options) > 4;
-    return coveringTiles(transform, frustum, plane, cameraCoord, centerCoord, options, allowVariableZoom, distanceToTile2d, getWrap, getTileAABB);
+    const details: CoveringTilesDetails = {
+        distanceToTile2d,
+        getWrap,
+        getTileAABB,
+        allowVariableZoom
+    };
+    return coveringTiles(transform, frustum, plane, cameraCoord, centerCoord, options, details);
 }

@@ -3,7 +3,7 @@ import {OverscaledTileID} from '../../source/tile_id';
 import {Aabb, Frustum} from '../../util/primitives';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {CoveringTilesOptions, IReadonlyTransform} from '../transform_interface';
-import {coveringTiles} from './covering_tiles';
+import {coveringTiles, CoveringTilesDetails} from './covering_tiles';
 
 function distanceToTile2d(pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, aabb: Aabb): number {
     const distanceX = aabb.distanceX([pointX, pointY]);
@@ -45,5 +45,11 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, frustum: Fr
     // No change of LOD behavior for pitch lower than 60 and when there is no top padding: return only tile ids from the requested zoom level
     // Use 0.1 as an epsilon to avoid for explicit == 0.0 floating point checks
     const allowVariableZoom = !!options.terrain || transform.pitch > 60.0 || transform.padding.top >= 0.1;
-    return coveringTiles(transform, frustum, plane, cameraCoord, centerCoord, options, allowVariableZoom, distanceToTile2d, getWrap, getTileAABB);
+    const details: CoveringTilesDetails = {
+        distanceToTile2d,
+        getWrap,
+        getTileAABB,
+        allowVariableZoom
+    };
+    return coveringTiles(transform, frustum, plane, cameraCoord, centerCoord, options, details);
 }
