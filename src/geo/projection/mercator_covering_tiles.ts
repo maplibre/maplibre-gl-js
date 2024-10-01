@@ -33,15 +33,13 @@ export function getTileAABB(tileId: {x: number; y: number; z: number}, wrap: num
  * @param invViewProjMatrix - Inverse view projection matrix, for computing camera frustum.
  * @returns A list of tile coordinates, ordered by ascending distance from camera.
  */
-export function mercatorCoveringTiles(transform: IReadonlyTransform, frustum: Frustum, options: CoveringTilesOptions): Array<OverscaledTileID> {
+export function mercatorCoveringTiles(transform: IReadonlyTransform, frustum: Frustum, cameraCoord: MercatorCoordinate, centerCoord: MercatorCoordinate, options: CoveringTilesOptions): Array<OverscaledTileID> {
     const desiredZ = transform.coveringZoomLevel(options);
 
     const minZoom = options.minzoom || 0;
     const maxZoom = options.maxzoom !== undefined ? options.maxzoom : transform.maxZoom;
     const nominalZ = Math.min(Math.max(0, desiredZ), maxZoom);
 
-    const cameraCoord = transform.screenPointToMercatorCoordinate(transform.getCameraPoint());
-    const centerCoord = MercatorCoordinate.fromLngLat(transform.center);
     const numTiles = Math.pow(2, nominalZ);
     const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
     const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];

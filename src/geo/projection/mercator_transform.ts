@@ -264,8 +264,10 @@ export class MercatorTransform implements ITransform {
     }
 
     coveringTiles(options: CoveringTilesOptions): Array<OverscaledTileID> {
+        const cameraCoord = this.screenPointToMercatorCoordinate(this.getCameraPoint());
+        const centerCoord = MercatorCoordinate.fromLngLat(this.center);
         const cameraFrustum = Frustum.fromInvProjectionMatrix(this._invViewProjMatrix, this.worldSize);
-        return mercatorCoveringTiles(this, cameraFrustum, options);
+        return mercatorCoveringTiles(this, cameraFrustum, cameraCoord, centerCoord, options);
     }
 
     recalculateZoom(terrain: Terrain): void {
