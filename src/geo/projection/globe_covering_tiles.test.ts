@@ -8,7 +8,7 @@ describe('aabb', () => {
             x: 0,
             y: 0,
             z: 0,
-        });
+        }, null, null, null);
         expect(aabb).toEqual(new Aabb(
             [-1, -1, -1],
             [1, 1, 1],
@@ -20,7 +20,7 @@ describe('aabb', () => {
             x: 0,
             y: 0,
             z: 1,
-        });
+        }, null, null, null);
         expect(aabb).toEqual(new Aabb(
             [-1, 0, -1],
             [0, 1, 1],
@@ -32,7 +32,7 @@ describe('aabb', () => {
             x: 1,
             y: 0,
             z: 1,
-        });
+        }, null, null, null);
         expect(aabb).toEqual(new Aabb(
             [0, 0, -1],
             [1, 1, 1],
@@ -44,7 +44,7 @@ describe('aabb', () => {
             x: 1,
             y: 0,
             z: 2,
-        });
+        }, null, null, null);
         expectToBeCloseToArray([...aabb.min], [-0.3985368153383868, 0.9171523356672743, -7.321002528698027e-17,]);
         expectToBeCloseToArray([...aabb.max], [0, 1, 0.3985368153383868]);
     });

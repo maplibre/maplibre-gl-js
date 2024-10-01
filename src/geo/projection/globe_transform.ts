@@ -84,7 +84,7 @@ export class GlobeTransform implements ITransform {
     setMaxPitch(pitch: number): void {
         this._helper.setMaxPitch(pitch);
     }
-    setRenderWorldCopies(renderWorldCopies: boolean): void {
+    setRenderWorldCopies(_renderWorldCopies: boolean): void {
     }
     setPitchBehavior(pitchBehavior: number): void {
         this._helper.setPitchBehavior(pitchBehavior);
