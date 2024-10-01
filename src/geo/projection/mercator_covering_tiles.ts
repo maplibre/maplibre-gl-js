@@ -1,19 +1,19 @@
-import {mat4, vec2, vec3} from 'gl-matrix';
+import {vec2} from 'gl-matrix';
 import {OverscaledTileID} from '../../source/tile_id';
 import {Aabb, Frustum, IntersectionResult} from '../../util/primitives';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {CoveringTilesOptions, IReadonlyTransform} from '../transform_interface';
 import {scaleZoom} from '../transform_helper';
-import {CoveringTilesResult, CoveringTilesStackEntry, isTileVisible} from './covering_tiles'
+import {CoveringTilesResult, CoveringTilesStackEntry, isTileVisible} from './covering_tiles';
 
-function distanceToTile2d(pointX: number, pointY: number, tileID: {x: number, y: number, z: number}, aabb: Aabb): number {
+function distanceToTile2d(pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, aabb: Aabb): number {
     const distanceX = aabb.distanceX([pointX, pointY]);
     const distanceY = aabb.distanceY([pointX, pointY]);
     return Math.hypot(distanceX, distanceY);
 }
 
 // Returns the wrap value for a given tile, computed so that tiles will remain loaded when crossing the antimeridian.
-function getWrap(centerCoord: MercatorCoordinate, tileID: {x:number, y: number, z: number}, parentWrap: number): number {
+function getWrap(centerCoord: MercatorCoordinate, tileID: {x:number; y: number; z: number}, parentWrap: number): number {
     return parentWrap;
 }
 
@@ -116,7 +116,7 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, frustum: Fr
         }
         thisTileDesiredZ = Math.max(0, thisTileDesiredZ);
         const z = Math.min(thisTileDesiredZ, maxZoom);
-        
+
         // We need to compute a valid wrap value for the tile to keep globe compatibility with mercator
         it.wrap = getWrap(centerCoord, tileID, it.wrap);
 

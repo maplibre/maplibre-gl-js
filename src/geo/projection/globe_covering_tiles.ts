@@ -6,7 +6,7 @@ import {MercatorCoordinate} from '../mercator_coordinate';
 import {EXTENT} from '../../data/extent';
 import {projectTileCoordinatesToSphere} from './globe_utils';
 import {scaleZoom} from '../transform_helper';
-import {CoveringTilesResult, CoveringTilesStackEntry, isTileVisible} from './covering_tiles'
+import {CoveringTilesResult, CoveringTilesStackEntry, isTileVisible} from './covering_tiles';
 
 /**
  * Computes distance of a point to a tile in an arbitrary axis.
@@ -44,7 +44,7 @@ function distanceToTileWrapX(pointX: number, pointY: number, tileCornerX: number
  * Handles distances on a sphere correctly: X is wrapped when crossing the antimeridian,
  * when crossing the poles Y is mirrored and X is shifted by half world size.
  */
-function distanceToTile2d(pointX: number, pointY: number, tileID: {x: number, y: number, z: number}, aabb: Aabb): number {
+function distanceToTile2d(pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, aabb: Aabb): number {
     const scale = 1 << tileID.z;
     const tileMercatorSize = 1.0 / scale;
     const tileCornerX = tileID.x / scale; // In range 0..1
@@ -64,7 +64,7 @@ function distanceToTile2d(pointX: number, pointY: number, tileID: {x: number, y:
 }
 
 // Returns the wrap value for a given tile, computed so that tiles will remain loaded when crossing the antimeridian.
-function getWrap(centerCoord: MercatorCoordinate, tileID: {x:number, y: number, z: number}, parentWrap: number): number {
+function getWrap(centerCoord: MercatorCoordinate, tileID: {x: number; y: number; z: number}, parentWrap: number): number {
     const scale = 1 << tileID.z;
     const tileMercatorSize = 1.0 / scale;
     const tileX = tileID.x / scale; // In range 0..1
@@ -247,7 +247,7 @@ export function globeCoveringTiles(transform: IReadonlyTransform, frustum: Frust
         }
         thisTileDesiredZ = Math.max(0, thisTileDesiredZ);
         const z = Math.min(thisTileDesiredZ, maxZoom);
-        
+
         // We need to compute a valid wrap value for the tile to keep globe compatibility with mercator
         it.wrap = getWrap(centerCoord, tileID, it.wrap);
 
