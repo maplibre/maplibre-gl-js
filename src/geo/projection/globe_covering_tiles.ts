@@ -44,16 +44,21 @@ function distanceToTileWrapX(pointX: number, pointY: number, tileCornerX: number
  * Handles distances on a sphere correctly: X is wrapped when crossing the antimeridian,
  * when crossing the poles Y is mirrored and X is shifted by half world size.
  */
-function distanceToTile(pointX: number, pointY: number, tileCornerX: number, tileCornerY: number, tileSize: number): number {
+function distanceToTile2d(pointX: number, pointY: number, tileID: {x: number, y: number, z: number}, aabb: Aabb): number {
+    const scale = 1 << tileID.z;
+    const tileMercatorSize = 1.0 / scale;
+    const tileCornerX = tileID.x / scale; // In range 0..1
+    const tileCornerY = tileID.y / scale; // In range 0..1
+
     const worldSize = 1.0;
     const halfWorld = 0.5 * worldSize;
     let smallestDistance = 2.0 * worldSize;
     // Original tile
-    smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX, tileCornerY, tileSize));
+    smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX, tileCornerY, tileMercatorSize));
     // Up
-    smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX + halfWorld, -tileCornerY - tileSize, tileSize));
+    smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX + halfWorld, -tileCornerY - tileMercatorSize, tileMercatorSize));
     // Down
-    smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX + halfWorld, worldSize + worldSize - tileCornerY - tileSize, tileSize));
+    smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX + halfWorld, worldSize + worldSize - tileCornerY - tileMercatorSize, tileMercatorSize));
 
     return smallestDistance;
 }
@@ -228,12 +233,7 @@ export function globeCoveringTiles(transform: IReadonlyTransform, frustum: Frust
             fullyVisible = intersectResult === IntersectionResult.Full;
         }
 
-        const scale = 1 << (Math.max(it.zoom, 0));
-        const scaledTileSize = 1.0 / scale;
-        const tileX = x / scale; // In range 0..1
-        const tileY = y / scale; // In range 0..1
-
-        const distToTile2d = distanceToTile(cameraCoord.x, cameraCoord.y, tileX, tileY, scaledTileSize);
+        const distToTile2d = distanceToTile2d(cameraCoord.x, cameraCoord.y, tileID, aabb);
         const distToTile3d = Math.hypot(distToTile2d, distanceZ);
 
         let thisTileDesiredZ = desiredZ;

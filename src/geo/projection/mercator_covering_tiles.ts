@@ -6,7 +6,11 @@ import {CoveringTilesOptions, IReadonlyTransform} from '../transform_interface';
 import {scaleZoom} from '../transform_helper';
 import {CoveringTilesResult, CoveringTilesStackEntry, isTileVisible} from './covering_tiles'
 
-
+function distanceToTile2d(pointX: number, pointY: number, tileID: {x: number, y: number, z: number}, aabb: Aabb): number {
+    const distanceX = aabb.distanceX([pointX, pointY]);
+    const distanceY = aabb.distanceY([pointX, pointY]);
+    return Math.hypot(distanceX, distanceY);
+}
 
 // Returns the wrap value for a given tile, computed so that tiles will remain loaded when crossing the antimeridian.
 function getWrap(centerCoord: MercatorCoordinate, tileID: {x:number, y: number, z: number}, parentWrap: number): number {
@@ -98,9 +102,7 @@ export function mercatorCoveringTiles(transform: IReadonlyTransform, frustum: Fr
             fullyVisible = intersectResult === IntersectionResult.Full;
         }
 
-        const distanceX = aabb.distanceX([cameraCoord.x, cameraCoord.y]);
-        const distanceY = aabb.distanceY([cameraCoord.x, cameraCoord.y]);
-        const distToTile2d = Math.hypot(distanceX, distanceY);
+        const distToTile2d = distanceToTile2d(cameraCoord.x, cameraCoord.y, tileID, aabb);
         const distToTile3d = Math.hypot(distToTile2d, distanceZ);
 
         let thisTileDesiredZ = desiredZ;
