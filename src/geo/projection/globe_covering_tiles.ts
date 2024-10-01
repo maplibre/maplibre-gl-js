@@ -202,10 +202,10 @@ function isTileVisible(frustum: Frustum, plane: vec4, x: number, y: number, z: n
  * @returns A list of tile coordinates, ordered by ascending distance from camera.
  */
 export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: MercatorCoordinate, centerCoord: MercatorCoordinate, tileSize: number, zoom: number, pitch: number, fov: number, pitchBehavior: number, options: CoveringTilesOptions): OverscaledTileID[] {
-    let nominalZ = (options.roundZoom ? Math.round : Math.floor)(zoom + scaleZoom(tileSize / options.tileSize));
+    const desiredZ = (options.roundZoom ? Math.round : Math.floor)(zoom + scaleZoom(tileSize / options.tileSize));
     const minZoom = options.minzoom || 0;
-    const maxZoom = options.maxzoom !== undefined ? options.maxzoom : nominalZ + 3;
-    nominalZ = Math.min(Math.max(0, nominalZ), maxZoom);
+    const maxZoom = options.maxzoom !== undefined ? options.maxzoom : desiredZ + 3;
+    const nominalZ = Math.min(Math.max(0, desiredZ), maxZoom);
 
     const numTiles = Math.pow(2, nominalZ);
     const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
