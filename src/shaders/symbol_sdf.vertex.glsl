@@ -25,7 +25,6 @@ uniform highp float u_pitch;
 uniform bool u_rotate_symbol;
 uniform highp float u_aspect_ratio;
 uniform highp float u_camera_to_center_distance;
-uniform highp float u_symbol_rotation;
 uniform float u_fade_change;
 uniform vec2 u_texsize;
 uniform vec2 u_translation;
@@ -100,7 +99,7 @@ void main() {
         vec2 a = projectedPoint.xy / projectedPoint.w;
         vec2 b = offsetProjectedPoint.xy / offsetProjectedPoint.w;
 
-        symbol_rotation += atan((b.y - a.y) / u_aspect_ratio, b.x - a.x);
+        symbol_rotation = atan((b.y - a.y) / u_aspect_ratio, b.x - a.x);
     }
 
     highp float angle_sin = sin(segment_angle + symbol_rotation);
@@ -128,20 +127,12 @@ void main() {
     }
 #endif
 
-    vec4 anchorScreenPos = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w, z, 1.0);
-    vec4 screenPos = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (a_offset / 32.0 * fontScale) * projectionScaling, z, 1.0);
+    vec4 finalPos = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (a_offset / 32.0 * fontScale + a_pxoffset) * projectionScaling, z, 1.0);
     if(u_pitch_with_map) {
-        anchorScreenPos = projectTileWithElevation(anchorScreenPos.xy, anchorScreenPos.z);
-        screenPos = projectTileWithElevation(screenPos.xy, screenPos.z);
+        finalPos = projectTileWithElevation(finalPos.xy, finalPos.z);
     }
-
-    highp float angle_sin1 = sin(u_symbol_rotation);
-    highp float angle_cos1 = cos(u_symbol_rotation);
-    mat2 rotation_matrix1 = mat2(angle_cos1, -1.0 * angle_sin1 * u_aspect_ratio, angle_sin1 / u_aspect_ratio, angle_cos1);
-    screenPos.xy = anchorScreenPos.xy + rotation_matrix1 * (screenPos.xy - anchorScreenPos.xy);
-
-    float gamma_scale = screenPos.w;
-    gl_Position = screenPos;
+    float gamma_scale = finalPos.w;
+    gl_Position = finalPos;
 
     vec2 fade_opacity = unpack_opacity(a_fade_opacity);
     float visibility = calculate_visibility(projectedPoint);
