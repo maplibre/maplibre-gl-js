@@ -205,7 +205,6 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
     let nominalZ = (options.roundZoom ? Math.round : Math.floor)(zoom + scaleZoom(tileSize / options.tileSize));
     const minZoom = options.minzoom || 0;
     const maxZoom = options.maxzoom !== undefined ? options.maxzoom : nominalZ + 3;
-    console.log(zoom, nominalZ, tileSize, options.tileSize, maxZoom);
     nominalZ = Math.min(Math.max(0, nominalZ), maxZoom);
 
     const numTiles = Math.pow(2, nominalZ);
@@ -261,7 +260,6 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
         }
         thisTileDesiredZ = Math.max(0, thisTileDesiredZ);
         const z = Math.min(thisTileDesiredZ, maxZoom);
-        console.log(thisTileDesiredZ, distanceToCenter3d, distToTile3d);
 
         // Have we reached the target depth?
         if (it.zoom >= z) {
