@@ -15,8 +15,6 @@ import {quat} from 'gl-matrix';
  * @internal
  */
 export class MercatorCameraHelper implements ICameraHelper {
-    useSlerp: boolean = true;
-
     get useGlobeControls(): boolean { return false; }
 
     handlePanInertia(pan: Point, transform: IReadonlyTransform): {
@@ -122,9 +120,6 @@ export class MercatorCameraHelper implements ICameraHelper {
 
     handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandlerResult {
         const startZoom = tr.zoom;
-        const startBearing = tr.bearing;
-        const startPitch = tr.pitch;
-        const startRoll = tr.roll;
         const startPadding = tr.padding;
         const startRotation = rollPitchBearingToQuat(tr.roll, tr.pitch, tr.bearing);
         const endRoll = options.roll === undefined ? tr.roll : options.roll;
@@ -158,32 +153,20 @@ export class MercatorCameraHelper implements ICameraHelper {
             if (isZooming) {
                 tr.setZoom(interpolates.number(startZoom, endZoom, k));
             }
-            if (this.useSlerp) {
-                if (!quat.equals(startRotation, endRotation)) {
-                    // At pitch ==0, the Euler angle representation is ambiguous. In this case, set the Euler angles
-                    // to the representation requested by the caller
-                    if (k < 1) {
-                        const rotation: quat = new Float64Array(4) as any;
-                        quat.slerp(rotation, startRotation, endRotation, k);
-                        const eulerAngles = getRollPitchBearing(rotation);
-                        tr.setRoll(eulerAngles.roll);
-                        tr.setPitch(eulerAngles.pitch);
-                        tr.setBearing(eulerAngles.bearing);
-                    } else {
-                        tr.setRoll(endRoll);
-                        tr.setPitch(endPitch);
-                        tr.setBearing(endBearing);
-                    }
-                }
-            } else {
-                if (startBearing !== options.bearing) {
-                    tr.setBearing(interpolates.number(startBearing, options.bearing, k));
-                }
-                if (startPitch !== options.pitch) {
-                    tr.setPitch(interpolates.number(startPitch, options.pitch, k));
-                }
-                if (startRoll !== options.roll) {
-                    tr.setRoll(interpolates.number(startRoll, options.roll, k));
+            if (!quat.equals(startRotation, endRotation)) {
+                // At pitch ==0, the Euler angle representation is ambiguous. In this case, set the Euler angles
+                // to the representation requested by the caller
+                if (k < 1) {
+                    const rotation: quat = new Float64Array(4) as any;
+                    quat.slerp(rotation, startRotation, endRotation, k);
+                    const eulerAngles = getRollPitchBearing(rotation);
+                    tr.setRoll(eulerAngles.roll);
+                    tr.setPitch(eulerAngles.pitch);
+                    tr.setBearing(eulerAngles.bearing);
+                } else {
+                    tr.setRoll(endRoll);
+                    tr.setPitch(endPitch);
+                    tr.setBearing(endBearing);
                 }
             }
             if (doPadding) {

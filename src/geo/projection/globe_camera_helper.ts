@@ -5,8 +5,8 @@ import {GlobeProjection} from './globe';
 import {LngLat, LngLatLike} from '../lng_lat';
 import {MercatorCameraHelper} from './mercator_camera_helper';
 import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from './globe_utils';
-import {clamp, createVec3f64, differenceOfAnglesDegrees, remapSaturate, warnOnce} from '../../util/util';
-import {mat4, vec3} from 'gl-matrix';
+import {clamp, createVec3f64, differenceOfAnglesDegrees, getRollPitchBearing, remapSaturate, rollPitchBearingToQuat, warnOnce} from '../../util/util';
+import {mat4, quat, vec3} from 'gl-matrix';
 import {MAX_VALID_LATITUDE, normalizeCenter, scaleZoom, zoomScale} from '../transform_helper';
 import {CameraForBoundsOptions} from '../../ui/camera';
 import {LngLatBounds} from '../lng_lat_bounds';
@@ -260,10 +260,12 @@ export class GlobeCameraHelper implements ICameraHelper {
         }
 
         const startZoom = tr.zoom;
-        const startBearing = tr.bearing;
-        const startPitch = tr.pitch;
-        const startRoll = tr.roll;
         const startCenter = tr.center;
+        const startRotation = rollPitchBearingToQuat(tr.roll, tr.pitch, tr.bearing);
+        const endRoll = options.roll === undefined ? tr.roll : options.roll;
+        const endPitch = options.pitch === undefined ? tr.pitch : options.pitch;
+        const endBearing = options.bearing === undefined ? tr.bearing : options.bearing;
+        const endRotation = rollPitchBearingToQuat(endRoll, endPitch, endBearing);
 
         const optionsZoom = typeof options.zoom !== 'undefined';
 
@@ -314,14 +316,21 @@ export class GlobeCameraHelper implements ICameraHelper {
         isZooming = (endZoomWithShift !== startZoom);
 
         const easeFunc = (k: number) => {
-            if (startBearing !== options.bearing) {
-                tr.setBearing(interpolates.number(startBearing, options.bearing, k));
-            }
-            if (startPitch !== options.pitch) {
-                tr.setPitch(interpolates.number(startPitch, options.pitch, k));
-            }
-            if (startRoll !== options.roll) {
-                tr.setRoll(interpolates.number(startRoll, options.roll, k));
+            if (!quat.equals(startRotation, endRotation)) {
+                // At pitch ==0, the Euler angle representation is ambiguous. In this case, set the Euler angles
+                // to the representation requested by the caller
+                if (k < 1) {
+                    const rotation: quat = new Float64Array(4) as any;
+                    quat.slerp(rotation, startRotation, endRotation, k);
+                    const eulerAngles = getRollPitchBearing(rotation);
+                    tr.setRoll(eulerAngles.roll);
+                    tr.setPitch(eulerAngles.pitch);
+                    tr.setBearing(eulerAngles.bearing);
+                } else {
+                    tr.setRoll(endRoll);
+                    tr.setPitch(endPitch);
+                    tr.setBearing(endBearing);
+                }
             }
 
             if (options.around) {
