@@ -1,7 +1,7 @@
 import {SymbolProjectionContext, ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, projectWithMatrix, transformToOffsetNormal, projectLineVertexToLabelPlane, getPitchedLabelPlaneMatrix, getGlCoordMatrix, getTileSkewMatrix} from './projection';
 
 import Point from '@mapbox/point-geometry';
-import {mat2, mat4} from 'gl-matrix';
+import {mat4} from 'gl-matrix';
 import {SymbolLineVertexArray} from '../data/array_types.g';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {expectToBeCloseToArray} from '../util/test/util';
@@ -274,7 +274,7 @@ describe('Find offset line intersections', () => {
 
         expectToBeCloseToArray([...getTileSkewMatrix(transform).values()],
             [1, 0, 0, 1], 9);
-            
+
         transform.setPitch(90);
         expectToBeCloseToArray([...getTileSkewMatrix(transform).values()],
             [0, 0, 0, 1], 9);

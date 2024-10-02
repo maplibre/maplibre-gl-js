@@ -512,7 +512,6 @@ export class CollisionIndex {
             const skew = getTileSkewMatrix(this.transform);
             vecEast = new Point(skew[0], skew[1]);
             vecSouth = new Point(skew[2], skew[3]);
-            console.log("after:", vecEast, vecSouth);
         }
 
         // Configuration for screen space offsets

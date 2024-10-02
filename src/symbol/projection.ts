@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
 
-import {mat2, mat3, mat4, vec2, vec4} from 'gl-matrix';
+import {mat2, mat4, vec2, vec4} from 'gl-matrix';
 import * as symbolSize from './symbol_size';
 import {addDynamicAttributes} from '../data/bucket/symbol_bucket';
 
@@ -13,7 +13,7 @@ import type {
     SymbolDynamicLayoutArray
 } from '../data/array_types.g';
 import {WritingMode} from '../symbol/shaping';
-import {findLineIntersection, rollPitchBearingToQuat} from '../util/util';
+import {degreesToRadians, findLineIntersection} from '../util/util';
 import {UnwrappedTileID} from '../source/tile_id';
 import {StructArray} from '../util/struct_array';
 
@@ -135,23 +135,36 @@ export function getGlCoordMatrix(
 }
 
 export function getTileSkewMatrix(transform: IReadonlyTransform): mat2 {
-    const r = rollPitchBearingToQuat(transform.roll, transform.pitch, transform.bearing);
-    const rotation = mat3.create();
-    mat3.fromQuat(rotation, r);
-    const screenRight = vec2.create();
-    screenRight[0] = rotation[3];
-    screenRight[1] = rotation[4];
-    const screenDown = vec2.create();
-    screenDown[0] = rotation[6];
-    screenDown[1] = rotation[7];
-    vec2.normalize(screenRight, screenRight);
-    vec2.normalize(screenDown, screenDown);
+    const cosRoll = Math.cos(degreesToRadians(transform.roll));
+    const sinRoll = Math.sin(degreesToRadians(transform.roll));
+    const cosPitch = Math.cos(degreesToRadians(transform.pitch));
+    const cosBearing = Math.cos(degreesToRadians(transform.bearing));
+    const sinBearing = Math.sin(degreesToRadians(transform.bearing));
+    const vecSouth = vec2.create();
+    vecSouth[0] = -cosBearing * cosPitch * sinRoll - sinBearing * cosRoll;
+    vecSouth[1] = -sinBearing * cosPitch * sinRoll + cosBearing * cosRoll;
+    const vecSouthLen = vec2.length(vecSouth);
+    if (vecSouthLen < 1.0e-9) {
+        vec2.zero(vecSouth);
+    } else {
+        vec2.scale(vecSouth, vecSouth, 1 / vecSouthLen);
+    }
+    const vecEast = vec2.create();
+    vecEast[0] = cosBearing * cosPitch * cosRoll - sinBearing * sinRoll;
+    vecEast[1] = sinBearing * cosPitch * cosRoll + cosBearing * sinRoll;
+    const vecEastLen = vec2.length(vecEast);
+    if (vecEastLen < 1.0e-9) {
+        vec2.zero(vecEast);
+    } else {
+        vec2.scale(vecEast, vecEast, 1 / vecEastLen);
+    }
+
     const skew = mat2.create();
 
-    skew[0] = -screenDown[0];
-    skew[1] = -screenDown[1];
-    skew[2] = screenRight[0];
-    skew[3] = screenRight[1];
+    skew[0] = vecEast[0];
+    skew[1] = vecEast[1];
+    skew[2] = vecSouth[0];
+    skew[3] = vecSouth[1];
     return skew;
 }
 
