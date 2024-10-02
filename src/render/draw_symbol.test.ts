@@ -1,3 +1,4 @@
+import {describe, test, expect, vi, Mock} from 'vitest';
 import {mat4} from 'gl-matrix';
 import {OverscaledTileID} from '../source/tile_id';
 import {SymbolBucket} from '../data/bucket/symbol_bucket';
@@ -17,13 +18,13 @@ import {Style} from '../style/style';
 import {MercatorProjection} from '../geo/projection/mercator';
 import type {ProjectionData} from '../geo/projection/projection_data';
 
-jest.mock('./painter');
-jest.mock('./program');
-jest.mock('../source/source_cache');
-jest.mock('../source/tile');
-jest.mock('../data/bucket/symbol_bucket');
-jest.mock('../symbol/projection');
-(symbolProjection.getPitchedLabelPlaneMatrix as jest.Mock).mockReturnValue(mat4.create());
+vi.mock('./painter');
+vi.mock('./program');
+vi.mock('../source/source_cache');
+vi.mock('../source/tile');
+vi.mock('../data/bucket/symbol_bucket');
+vi.mock('../symbol/projection');
+(symbolProjection.getPitchedLabelPlaneMatrix as Mock).mockReturnValue(mat4.create());
 
 function createMockTransform() {
     return {
@@ -85,7 +86,7 @@ describe('drawSymbol', () => {
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
         tileId.terrainRttPosMatrix = mat4.create();
         const programMock = new Program(null, null, null, null, null, null, null, null);
-        (painterMock.useProgram as jest.Mock).mockReturnValue(programMock);
+        (painterMock.useProgram as Mock).mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);
         bucketMock.icon = {
             programConfigurations: {
@@ -147,7 +148,7 @@ describe('drawSymbol', () => {
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
         tileId.terrainRttPosMatrix = mat4.create();
         const programMock = new Program(null, null, null, null, null, null, null, null);
-        (painterMock.useProgram as jest.Mock).mockReturnValue(programMock);
+        (painterMock.useProgram as Mock).mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);
         bucketMock.icon = {
             programConfigurations: {
@@ -167,16 +168,16 @@ describe('drawSymbol', () => {
         tile.imageAtlasTexture = {
             bind: () => { }
         } as any;
-        (tile.getBucket as jest.Mock).mockReturnValue(bucketMock);
+        (tile.getBucket as Mock).mockReturnValue(bucketMock);
         const sourceCacheMock = new SourceCache(null, null, null);
-        (sourceCacheMock.getTile as jest.Mock).mockReturnValue(tile);
+        (sourceCacheMock.getTile as Mock).mockReturnValue(tile);
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
         painterMock.style = {
             map: {},
             projection: new MercatorProjection()
         } as any as Style;
 
-        const spy = jest.spyOn(symbolProjection, 'updateLineLabels');
+        const spy = vi.spyOn(symbolProjection, 'updateLineLabels');
         drawSymbols(painterMock, sourceCacheMock, layer, [tileId], null);
 
         expect(spy.mock.calls[0][7]).toBeFalsy(); // rotateToLine === false
@@ -213,7 +214,7 @@ describe('drawSymbol', () => {
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
         tileId.terrainRttPosMatrix = mat4.create();
         const programMock = new Program(null, null, null, null, null, null, null, null);
-        (painterMock.useProgram as jest.Mock).mockReturnValue(programMock);
+        (painterMock.useProgram as Mock).mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);
         bucketMock.icon = {
             programConfigurations: {
@@ -233,9 +234,9 @@ describe('drawSymbol', () => {
         tile.imageAtlasTexture = {
             bind: () => { }
         } as any;
-        (tile.getBucket as jest.Mock).mockReturnValue(bucketMock);
+        (tile.getBucket as Mock).mockReturnValue(bucketMock);
         const sourceCacheMock = new SourceCache(null, null, null);
-        (sourceCacheMock.getTile as jest.Mock).mockReturnValue(tile);
+        (sourceCacheMock.getTile as Mock).mockReturnValue(tile);
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
 
         drawSymbols(painterMock, sourceCacheMock, layer, [tileId], null);

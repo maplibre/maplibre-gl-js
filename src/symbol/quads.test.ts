@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {ImagePosition} from '../render/image_atlas';
 import {getIconQuads} from './quads';
 

@@ -1,3 +1,4 @@
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {Terrain} from './terrain';
 import {Context} from '../gl/context';
@@ -17,8 +18,8 @@ describe('Terrain', () => {
 
     beforeEach(() => {
         gl = document.createElement('canvas').getContext('webgl');
-        jest.spyOn(gl, 'checkFramebufferStatus').mockReturnValue(gl.FRAMEBUFFER_COMPLETE);
-        jest.spyOn(gl, 'readPixels').mockImplementation((_1, _2, _3, _4, _5, _6, rgba) => {
+        vi.spyOn(gl, 'checkFramebufferStatus').mockReturnValue(gl.FRAMEBUFFER_COMPLETE);
+        vi.spyOn(gl, 'readPixels').mockImplementation((_1, _2, _3, _4, _5, _6, rgba) => {
             rgba[0] = 0;
             rgba[1] = 0;
             rgba[2] = 255;
@@ -27,7 +28,7 @@ describe('Terrain', () => {
     });
 
     afterEach(() => {
-        jest.restoreAllMocks();
+        vi.restoreAllMocks();
     });
 
     test('pointCoordinate should not return null', () => {
@@ -38,7 +39,7 @@ describe('Terrain', () => {
             height: 1,
             pixelRatio: 1,
             transform: {center: {lng: 0}},
-            maybeDrawDepthAndCoords: jest.fn(),
+            maybeDrawDepthAndCoords: vi.fn(),
         } as any as Painter;
         const sourceCache = {} as SourceCache;
         const getTileByID = (tileID) : Tile => {
@@ -72,7 +73,7 @@ describe('Terrain', () => {
             context: new Context(gl),
             width: WORLD_WIDTH,
             height: 1,
-            maybeDrawDepthAndCoords: jest.fn(),
+            maybeDrawDepthAndCoords: vi.fn(),
             pixelRatio,
         } as any as Painter;
         const sourceCache = {} as SourceCache;
@@ -88,7 +89,7 @@ describe('Terrain', () => {
         };
         terrain.getElevation = () => 0;
         terrain.coordsIndex = Object.keys(tileIdsToWraps);
-        jest.spyOn(gl, 'readPixels').mockImplementation((x, _2, _3, _4, _5, _6, rgba) => {
+        vi.spyOn(gl, 'readPixels').mockImplementation((x, _2, _3, _4, _5, _6, rgba) => {
             rgba[0] = 0;
             rgba[1] = 0;
             rgba[2] = 0;

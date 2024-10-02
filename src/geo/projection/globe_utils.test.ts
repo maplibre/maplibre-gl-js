@@ -1,3 +1,4 @@
+import {describe, expect, test} from 'vitest';
 import {LngLat} from '../lng_lat';
 import {getGlobeCircumferencePixels, getZoomAdjustment, globeDistanceOfLocationsPixels} from './globe_utils';
 

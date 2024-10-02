@@ -1,3 +1,4 @@
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {GeoJSONWorkerSource, LoadGeoJSONParameters} from './geojson_worker_source';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {OverscaledTileID} from './tile_id';
@@ -25,7 +26,7 @@ describe('reloadTile', () => {
         ] as LayerSpecification[];
         const layerIndex = new StyleLayerIndex(layers);
         const source = new GeoJSONWorkerSource(actor, layerIndex, []);
-        const spy = jest.spyOn(source, 'loadVectorTile');
+        const spy = vi.spyOn(source, 'loadVectorTile');
         const geoJson = {
             'type': 'Feature',
             'geometry': {
@@ -106,7 +107,7 @@ describe('resourceTiming', () => {
             secureConnectionStart: 0
         } as any as PerformanceEntry;
 
-        window.performance.getEntriesByName = jest.fn().mockReturnValue([exampleResourceTiming]);
+        window.performance.getEntriesByName = vi.fn().mockReturnValue([exampleResourceTiming]);
 
         const layerIndex = new StyleLayerIndex(layers);
         const source = new GeoJSONWorkerSource(actor, layerIndex, []);
@@ -121,12 +122,12 @@ describe('resourceTiming', () => {
         const sampleMarks = [100, 350];
         const marks = {};
         const measures = {};
-        window.performance.getEntriesByName = jest.fn().mockImplementation((name) => { return measures[name] || []; });
-        jest.spyOn(perf, 'mark').mockImplementation((name) => {
+        window.performance.getEntriesByName = vi.fn().mockImplementation((name) => { return measures[name] || []; });
+        vi.spyOn(perf, 'mark').mockImplementation((name) => {
             marks[name] = sampleMarks.shift();
             return null;
         });
-        window.performance.measure = jest.fn().mockImplementation((name, start, end) => {
+        window.performance.measure = vi.fn().mockImplementation((name, start, end) => {
             measures[name] = measures[name] || [];
             measures[name].push({
                 duration: marks[end] - marks[start],
@@ -136,8 +137,8 @@ describe('resourceTiming', () => {
             });
             return null;
         });
-        jest.spyOn(perf, 'clearMarks').mockImplementation(() => { return null; });
-        jest.spyOn(perf, 'clearMeasures').mockImplementation(() => { return null; });
+        vi.spyOn(perf, 'clearMarks').mockImplementation(() => { return null; });
+        vi.spyOn(perf, 'clearMeasures').mockImplementation(() => { return null; });
 
         const layerIndex = new StyleLayerIndex(layers);
         const source = new GeoJSONWorkerSource(actor, layerIndex, []);

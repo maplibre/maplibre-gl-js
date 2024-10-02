@@ -1,3 +1,4 @@
+import {test, expect} from 'vitest';
 import {resolveTokens} from './resolve_tokens';
 
 test('resolveToken', () => {

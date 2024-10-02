@@ -1,3 +1,4 @@
+import {test, expect, vi} from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import {RequestManager} from '../util/request_manager';
@@ -8,7 +9,7 @@ import {bufferToArrayBuffer} from '../util/test/util';
 test('loadGlyphRange', async ()  => {
     global.fetch = null;
 
-    const transform = jest.fn().mockImplementation((url) => {
+    const transform = vi.fn().mockImplementation((url) => {
         return {url};
     });
 

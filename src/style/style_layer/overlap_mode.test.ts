@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {getOverlapMode} from './overlap_mode';
 import {SymbolStyleLayer} from './symbol_style_layer';
 import {ZoomHistory} from '../zoom_history';

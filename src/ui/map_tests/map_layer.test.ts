@@ -1,3 +1,4 @@
+import {describe, beforeEach, afterEach, test, expect} from 'vitest';
 import {createMap, beforeMapTest, createStyle} from '../../util/test/util';
 import {extend} from '../../util/util';
 import {EvaluationParameters} from '../../style/evaluation_parameters';

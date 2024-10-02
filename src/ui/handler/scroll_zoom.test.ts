@@ -1,3 +1,4 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {browser} from '../../util/browser';
 import {Map} from '../../ui/map';
 import {DOM} from '../../util/dom';
@@ -22,7 +23,7 @@ beforeEach(() => {
 describe('ScrollZoomHandler', () => {
 
     test('Zooms for single mouse wheel tick', () => {
-        const browserNow = jest.spyOn(browser, 'now');
+        const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
         browserNow.mockReturnValue(now);
 
@@ -45,7 +46,7 @@ describe('ScrollZoomHandler', () => {
     });
 
     test('Zooms for multiple fast mouse wheel ticks', () => {
-        const browserNow = jest.spyOn(browser, 'now');
+        const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
         browserNow.mockReturnValue(now);
 
@@ -71,7 +72,7 @@ describe('ScrollZoomHandler', () => {
     });
 
     test('Zooms for single mouse wheel tick with non-magical deltaY', () => new Promise<void>(done => {
-        const browserNow = jest.spyOn(browser, 'now');
+        const browserNow = vi.spyOn(browser, 'now');
         const now = 1555555555555;
         browserNow.mockReturnValue(now);
 
@@ -89,7 +90,7 @@ describe('ScrollZoomHandler', () => {
     }));
 
     test('Zooms for multiple mouse wheel ticks', () => {
-        const browserNow = jest.spyOn(browser, 'now');
+        const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
         browserNow.mockReturnValue(now);
 
@@ -132,7 +133,7 @@ describe('ScrollZoomHandler', () => {
     });
 
     test('Gracefully ignores wheel events with deltaY: 0', () => {
-        const browserNow = jest.spyOn(browser, 'now');
+        const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
         browserNow.mockReturnValue(now);
 
@@ -157,7 +158,7 @@ describe('ScrollZoomHandler', () => {
 
     test('Gracefully handle wheel events that cancel each other out before the first scroll frame', () => {
         // See also https://github.com/mapbox/mapbox-gl-js/issues/6782
-        const browserNow = jest.spyOn(browser, 'now');
+        const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
         browserNow.mockReturnValue(now);
 
@@ -179,7 +180,7 @@ describe('ScrollZoomHandler', () => {
     });
 
     test('does not zoom if preventDefault is called on the wheel event', () => {
-        const browserNow = jest.spyOn(browser, 'now');
+        const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
         browserNow.mockReturnValue(now);
 
@@ -200,10 +201,10 @@ describe('ScrollZoomHandler', () => {
     });
 
     test('emits one movestart event and one moveend event while zooming', () => {
-        const browserNow = jest.spyOn(browser, 'now');
+        const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
         browserNow.mockReturnValue(now);
-        jest.useFakeTimers();
+        vi.useFakeTimers();
         setPerformance();
         const map = createMap();
 
@@ -239,7 +240,7 @@ describe('ScrollZoomHandler', () => {
             }
         }
 
-        jest.advanceTimersByTime(200);
+        vi.advanceTimersByTime(200);
 
         map._renderTaskQueue.run();
 
@@ -249,11 +250,11 @@ describe('ScrollZoomHandler', () => {
     });
 
     test('emits one zoomstart event and one zoomend event while zooming', () => {
-        const browserNow = jest.spyOn(browser, 'now');
+        const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
         browserNow.mockReturnValue(now);
 
-        jest.useFakeTimers();
+        vi.useFakeTimers();
         setPerformance();
         const map = createMap();
 
@@ -289,7 +290,7 @@ describe('ScrollZoomHandler', () => {
             }
         }
 
-        jest.advanceTimersByTime(200);
+        vi.advanceTimersByTime(200);
         map._renderTaskQueue.run();
 
         expect(startCount).toBe(1);
@@ -298,7 +299,7 @@ describe('ScrollZoomHandler', () => {
     });
 
     test('Zooms for single mouse wheel tick while not in the center of the map and terrain is on, should zoom according to mouse position', () => {
-        const browserNow = jest.spyOn(browser, 'now');
+        const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
         browserNow.mockReturnValue(now);
 
@@ -325,7 +326,7 @@ describe('ScrollZoomHandler', () => {
 
     test('Terrain 3D zoom is in the same direction when pointing above horizon or under horizon', () => {
         // See also https://github.com/maplibre/maplibre-gl-js/issues/3398
-        const browserNow = jest.spyOn(browser, 'now');
+        const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
         browserNow.mockReturnValue(now);
 

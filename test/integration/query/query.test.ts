@@ -1,3 +1,4 @@
+import {describe, beforeEach, beforeAll, afterEach, afterAll, test, expect} from 'vitest';
 
 import puppeteer, {Page, Browser} from 'puppeteer';
 
@@ -15,8 +16,6 @@ import {globSync} from 'glob';
 
 import * as maplibreglModule from '../../../dist/maplibre-gl';
 let maplibregl: typeof maplibreglModule;
-
-jest.retryTimes(3);
 
 function performQueryOnFixture(fixture)  {
 
@@ -161,7 +160,7 @@ describe('query tests', () => {
         const testCaseRoot = path.dirname(styleJson.replace(/\\/g, '/')); // glob is returning paths that dirname can't handle...
         const caseName = path.relative(allTestsRoot, testCaseRoot);
         // eslint-disable-next-line no-loop-func
-        test(caseName, async () => {
+        test(caseName, {retry: 3, timeout: 20000}, async () => {
             const port = (server.address() as AddressInfo).port;
             const fixture = await dirToJson(testCaseRoot, port);
 
@@ -195,7 +194,7 @@ describe('query tests', () => {
             }
             expect(isEqual).toBeTruthy();
 
-        }, 20000);
+        });
 
     }
 });

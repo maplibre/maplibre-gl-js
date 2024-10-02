@@ -178,7 +178,7 @@ export class Tile {
             }
         }
         this.collisionBoxArray = data.collisionBoxArray;
-        this.buckets = deserializeBucket(data.buckets, painter.style);
+        this.buckets = deserializeBucket(data.buckets, painter?.style);
 
         this.hasSymbolBuckets = false;
         for (const id in this.buckets) {

@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {SymbolProjectionContext, ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, projectWithMatrix, transformToOffsetNormal, projectLineVertexToLabelPlane} from './projection';
 
 import Point from '@mapbox/point-geometry';

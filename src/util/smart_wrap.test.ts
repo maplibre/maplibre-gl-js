@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../geo/lng_lat';
 import {smartWrap} from './smart_wrap';

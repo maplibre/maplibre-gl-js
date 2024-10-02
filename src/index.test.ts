@@ -1,3 +1,4 @@
+import {describe, beforeEach, afterAll, test, expect} from 'vitest';
 import {config} from './util/config';
 import {addProtocol, getWorkerCount, removeProtocol, getVersion} from './index';
 import {getJSON, getArrayBuffer} from './util/ajax';

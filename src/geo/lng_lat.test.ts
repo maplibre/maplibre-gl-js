@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {LngLat} from '../geo/lng_lat';
 
 describe('LngLat', () => {

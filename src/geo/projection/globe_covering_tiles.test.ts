@@ -1,3 +1,4 @@
+import {describe, expect, test} from 'vitest';
 import {Aabb} from '../../util/primitives';
 import {expectToBeCloseToArray} from '../../util/test/util';
 import {getTileAABB} from './globe_covering_tiles';

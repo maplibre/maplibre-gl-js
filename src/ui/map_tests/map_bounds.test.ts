@@ -1,3 +1,4 @@
+import {describe, beforeEach, test, expect} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
 import {fixedLngLat, fixedNum} from '../../../test/unit/lib/fixed';
 import {LngLatBoundsLike} from '../../geo/lng_lat_bounds';

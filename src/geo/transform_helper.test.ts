@@ -1,3 +1,4 @@
+import {describe, expect, test} from 'vitest';
 import {LngLat} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
 import {scaleZoom, TransformHelper, zoomScale} from './transform_helper';

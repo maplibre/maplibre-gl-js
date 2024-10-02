@@ -1,4 +1,4 @@
-import expect from 'expect';
+import {describe, test, expect} from 'vitest';
 import {EdgeInsets} from '../geo/edge_insets';
 
 describe('EdgeInsets', () => {

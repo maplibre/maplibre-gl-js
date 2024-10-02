@@ -1,3 +1,4 @@
+import {describe, test, expect, vi} from 'vitest';
 import {TaskQueue} from './task_queue';
 
 describe('TaskQueue', () => {
@@ -20,7 +21,7 @@ describe('TaskQueue', () => {
 
     test('Allows a given callback to be queued multiple times', () => {
         const q = new TaskQueue();
-        const fn = jest.fn();
+        const fn = vi.fn();
         q.add(fn);
         q.add(fn);
         q.run();
@@ -29,8 +30,8 @@ describe('TaskQueue', () => {
 
     test('Does not call a callback that was cancelled before the queue was run', () => {
         const q = new TaskQueue();
-        const yes = jest.fn();
-        const no = jest.fn();
+        const yes = vi.fn();
+        const no = vi.fn();
         q.add(yes);
         const id = q.add(no);
         q.remove(id);
@@ -41,8 +42,8 @@ describe('TaskQueue', () => {
 
     test('Does not call a callback that was cancelled while the queue was running', () => {
         const q = new TaskQueue();
-        const yes = jest.fn();
-        const no = jest.fn();
+        const yes = vi.fn();
+        const no = vi.fn();
         q.add(yes);
         let id; // eslint-disable-line prefer-const
         q.add(() => q.remove(id));
@@ -54,7 +55,7 @@ describe('TaskQueue', () => {
 
     test('Allows each instance of a multiply-queued callback to be cancelled independently', () => {
         const q = new TaskQueue();
-        const cb = jest.fn();
+        const cb = vi.fn();
         q.add(cb);
         const id = q.add(cb);
         q.remove(id);
@@ -64,7 +65,7 @@ describe('TaskQueue', () => {
 
     test('Does not throw if a remove() is called after running the queue', () => {
         const q = new TaskQueue();
-        const cb = jest.fn();
+        const cb = vi.fn();
         const id = q.add(cb);
         q.run();
         q.remove(id);
@@ -73,7 +74,7 @@ describe('TaskQueue', () => {
 
     test('Does not add tasks to the currently-running queue', () => {
         const q = new TaskQueue();
-        const cb = jest.fn();
+        const cb = vi.fn();
         q.add(() => q.add(cb));
         q.run();
         expect(cb).not.toHaveBeenCalled();
@@ -89,8 +90,8 @@ describe('TaskQueue', () => {
 
     test('TaskQueue#clear() prevents queued task from being executed', () => {
         const q = new TaskQueue();
-        const before = jest.fn();
-        const after = jest.fn();
+        const before = vi.fn();
+        const after = vi.fn();
         q.add(before);
         q.clear();
         q.add(after);
@@ -101,8 +102,8 @@ describe('TaskQueue', () => {
 
     test('TaskQueue#clear() interrupts currently-running queue', () => {
         const q = new TaskQueue();
-        const before = jest.fn();
-        const after = jest.fn();
+        const before = vi.fn();
+        const after = vi.fn();
         q.add(() => q.add(after));
         q.add(() => q.clear());
         q.add(before);

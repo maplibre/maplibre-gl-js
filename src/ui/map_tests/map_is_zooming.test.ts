@@ -1,3 +1,4 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {browser} from '../../util/browser';
 import {Map} from '../map';
 import {DOM} from '../../util/dom';
@@ -50,7 +51,7 @@ describe('Map#isZooming', () => {
         });
 
         let now = 0;
-        jest.spyOn(browser, 'now').mockImplementation(() => { return now; });
+        vi.spyOn(browser, 'now').mockImplementation(() => { return now; });
 
         simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
         map._renderTaskQueue.run();
@@ -75,7 +76,7 @@ describe('Map#isZooming', () => {
         });
 
         let now = 0;
-        jest.spyOn(browser, 'now').mockImplementation(() => { return now; });
+        vi.spyOn(browser, 'now').mockImplementation(() => { return now; });
 
         simulate.dblclick(map.getCanvas());
         map._renderTaskQueue.run();

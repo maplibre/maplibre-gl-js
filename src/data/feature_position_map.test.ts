@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {FeaturePositionMap} from './feature_position_map';
 import {serialize, deserialize} from '../util/web_worker_transfer';
 

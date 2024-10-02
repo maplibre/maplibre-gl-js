@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {EvaluationParameters} from '../evaluation_parameters';
 import {ZoomHistory} from '../zoom_history';
 import {SymbolStyleLayer} from './symbol_style_layer';

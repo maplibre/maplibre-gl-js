@@ -1,3 +1,4 @@
+import {describe, beforeEach, afterEach, test, expect} from 'vitest';
 import {TerrainControl} from './terrain_control';
 import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util';
 
