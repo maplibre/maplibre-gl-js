@@ -1,9 +1,10 @@
-import {SymbolProjectionContext, ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, projectWithMatrix, transformToOffsetNormal, projectLineVertexToLabelPlane} from './projection';
+import {SymbolProjectionContext, ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, projectWithMatrix, transformToOffsetNormal, projectLineVertexToLabelPlane, getPitchedLabelPlaneMatrix} from './projection';
 
 import Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
 import {SymbolLineVertexArray} from '../data/array_types.g';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
+import { expectToBeCloseToArray } from '../util/test/util';
 
 describe('Projection', () => {
     test('matrix float precision', () => {
@@ -169,6 +170,24 @@ describe('Find offset line intersections', () => {
         );
         expect(intersectionPoint.x).toBeCloseTo(0);
         expect(intersectionPoint.y).toBeCloseTo(1);
+    });
+
+    test('getPitchedLabelPlaneMatrix: bearing and pitch', () => {
+        const transform = {roll: 45, pitch: 45, bearing: 0};
+        
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform, 2).values()],
+        [0.4330127239227295, -0.4330127239227295, 0, 0, 0.3061862289905548, 0.3061862289905548, 0, 0, 0, 0, 1, 0, 0, 0,0, 1], 9);
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform, 2).values()],
+        [0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
+    });
+
+    test('getPitchedLabelPlaneMatrix: bearing, pitch, and roll', () => {
+        const transform = {roll: 45, pitch: 45, bearing: 45};
+        
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform, 2).values()],
+        [0.08967986702919006,  -0.5226925611495972, 0, 0, 0.5226925611495972, -0.08967986702919006, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform, 2).values()],
+        [0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
     });
 
 });
