@@ -4,7 +4,7 @@ import Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
 import {SymbolLineVertexArray} from '../data/array_types.g';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
-import { expectToBeCloseToArray } from '../util/test/util';
+import {expectToBeCloseToArray} from '../util/test/util';
 
 describe('Projection', () => {
     test('matrix float precision', () => {
@@ -174,46 +174,46 @@ describe('Find offset line intersections', () => {
 
     test('getPitchedLabelPlaneMatrix: bearing and roll', () => {
         const transform = {roll: 45, pitch: 45, bearing: 0};
-        
+
         expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform, 2).values()],
-        [0.4330127239227295, -0.4330127239227295, 0, 0, 0.3061862289905548, 0.3061862289905548, 0, 0, 0, 0, 1, 0, 0, 0,0, 1], 9);
+            [0.4330127239227295, -0.4330127239227295, 0, 0, 0.3061862289905548, 0.3061862289905548, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
         expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform, 2).values()],
-        [0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
+            [0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
     });
 
     test('getPitchedLabelPlaneMatrix: bearing and pitch', () => {
         const transform = {roll: 0, pitch: 45, bearing: 45};
-        
+
         expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform, 2).values()],
-        [0.3535533845424652, -0.3535533845424652, 0, 0, 0.3535533845424652, 0.3535533845424652, 0, 0, 0, 0, 1, 0, 0, 0,0, 1], 9);
+            [0.3535533845424652, -0.3535533845424652, 0, 0, 0.3535533845424652, 0.3535533845424652, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
         expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform, 2).values()],
-        [0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
+            [0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
     });
 
     test('getPitchedLabelPlaneMatrix: bearing, pitch, and roll', () => {
         const transform = {roll: 45, pitch: 45, bearing: 45};
-        
+
         expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform, 2).values()],
-        [0.08967986702919006,  -0.5226925611495972, 0, 0, 0.5226925611495972, -0.08967986702919006, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
+            [0.08967986702919006,  -0.5226925611495972, 0, 0, 0.5226925611495972, -0.08967986702919006, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
         expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform, 2).values()],
-        [0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
+            [0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
     });
 
     test('getGlCoordMatrix: bearing, pitch, and roll', () => {
         const pixelsToClipSpaceMatrix = mat4.create();
-        for (let i = 0; i < 16; i++){
+        for (let i = 0; i < 16; i++) {
             pixelsToClipSpaceMatrix[i] = i;
         }
         const transform = {roll: 45, pitch: 45, bearing: 45, pixelsToClipSpaceMatrix};
-        
+
         expectToBeCloseToArray([...getGlCoordMatrix(false, false, transform, 2).values()],
-        [...pixelsToClipSpaceMatrix.values()], 9);
+            [...pixelsToClipSpaceMatrix.values()], 9);
         expectToBeCloseToArray([...getGlCoordMatrix(false, true, transform, 2).values()],
-        [...pixelsToClipSpaceMatrix.values()], 9);
+            [...pixelsToClipSpaceMatrix.values()], 9);
         expectToBeCloseToArray([...getGlCoordMatrix(true, false, transform, 2).values()],
-        [-0.33820396661758423, 1.9711971282958984, 0, 0, -1.9711971282958984, 0.33820396661758423, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
+            [-0.33820396661758423, 1.9711971282958984, 0, 0, -1.9711971282958984, 0.33820396661758423, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
         expectToBeCloseToArray([...getGlCoordMatrix(true, true, transform, 2).values()],
-        [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
+            [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
     });
 
 });
