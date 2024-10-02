@@ -1007,7 +1007,7 @@ describe('map events', () => {
 
             await map.once('load');
 
-            const spy = jest.fn();
+            const spy = vi.fn();
             map.on('projectiontransition', (e) => spy(e.newProjection));
             map.setProjection({
                 type: 'globe',
@@ -1021,10 +1021,10 @@ describe('map events', () => {
         });
         test('projectiontransition is fired when globe transitions to mercator', async () => {
             const map = createMap();
-            jest.spyOn(GlobeProjection.prototype, 'updateGPUdependent').mockImplementation(() => {});
+            vi.spyOn(GlobeProjection.prototype, 'updateGPUdependent').mockImplementation(() => {});
             await map.once('load');
 
-            const spy = jest.fn();
+            const spy = vi.fn();
             map.on('projectiontransition', (e) => spy(e.newProjection));
 
             map.setProjection({

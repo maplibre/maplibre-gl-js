@@ -8,7 +8,7 @@ beforeEach(() => {
 describe('#setSky', () => {
     test('calls style setSky when set', () => {
         const map = createMap();
-        const spy = jest.fn();
+        const spy = vi.fn();
         map.style.setSky = spy;
         map.setSky({'atmosphere-blend': 0.5});
 
@@ -24,7 +24,7 @@ describe('#getSky', () => {
 
     test('calls style getSky when invoked', () => {
         const map = createMap();
-        const spy = jest.fn();
+        const spy = vi.fn();
         map.style.getSky = spy;
         map.getSky();
 

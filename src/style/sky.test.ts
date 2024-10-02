@@ -60,8 +60,8 @@ describe('Sky#setSky', () => {
 
     test('validates by default', () => {
         const sky = new Sky({});
-        const skySpy = jest.spyOn(sky, '_validate');
-        jest.spyOn(console, 'error').mockImplementation(() => { });
+        const skySpy = vi.spyOn(sky, '_validate');
+        vi.spyOn(console, 'error').mockImplementation(() => { });
         sky.setSky({'atmosphere-blend': -1});
         sky.updateTransitions({transition: false} as any as TransitionParameters);
         sky.recalculate({zoom: 16, zoomHistory: {}, now: 10} as EvaluationParameters);
@@ -73,7 +73,7 @@ describe('Sky#setSky', () => {
     test('respects validation option', () => {
         const sky = new Sky({});
 
-        const skySpy = jest.spyOn(sky, '_validate');
+        const skySpy = vi.spyOn(sky, '_validate');
         sky.setSky({'atmosphere-blend': -1} as any, {validate: false});
         sky.updateTransitions({transition: false} as any as TransitionParameters);
         sky.recalculate({zoom: 16, zoomHistory: {}, now: 10} as EvaluationParameters);
