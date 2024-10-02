@@ -172,11 +172,20 @@ describe('Find offset line intersections', () => {
         expect(intersectionPoint.y).toBeCloseTo(1);
     });
 
-    test('getPitchedLabelPlaneMatrix: bearing and pitch', () => {
+    test('getPitchedLabelPlaneMatrix: bearing and roll', () => {
         const transform = {roll: 45, pitch: 45, bearing: 0};
         
         expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform, 2).values()],
         [0.4330127239227295, -0.4330127239227295, 0, 0, 0.3061862289905548, 0.3061862289905548, 0, 0, 0, 0, 1, 0, 0, 0,0, 1], 9);
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform, 2).values()],
+        [0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
+    });
+
+    test('getPitchedLabelPlaneMatrix: bearing and pitch', () => {
+        const transform = {roll: 0, pitch: 45, bearing: 45};
+        
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform, 2).values()],
+        [0.3535533845424652, -0.3535533845424652, 0, 0, 0.3535533845424652, 0.3535533845424652, 0, 0, 0, 0, 1, 0, 0, 0,0, 1], 9);
         expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform, 2).values()],
         [0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
     });
