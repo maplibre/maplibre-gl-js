@@ -1641,7 +1641,7 @@ describe('#flyTo', () => {
 
         camera.on('zoom', () => {
             const zoom = camera.getZoom();
-            if (zoom < 1) {
+            if (zoom > 1) {
                 throw new Error(`${zoom} should be >= ${minZoom} during flyTo`);
             }
 
@@ -3272,7 +3272,7 @@ describe('#flyTo globe projection', () => {
             camera.on('zoom', () => {
                 const zoom = camera.getZoom();
                 if (zoom < 1) {
-                    throw (`${zoom} should be >= ${minZoom} during flyTo`);
+                    throw new Error(`${zoom} should be >= ${minZoom} during flyTo`);
                 }
 
                 leastZoom = Math.min(leastZoom, zoom);
