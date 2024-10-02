@@ -173,7 +173,10 @@ describe('Find offset line intersections', () => {
     });
 
     test('getPitchedLabelPlaneMatrix: bearing and roll', () => {
-        const transform = {roll: 45, pitch: 45, bearing: 0};
+        const transform = new MercatorTransform();
+        transform.setBearing(0);
+        transform.setPitch(45);
+        transform.setRoll(45);
 
         expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform, 2).values()],
             [0.4330127239227295, -0.4330127239227295, 0, 0, 0.3061862289905548, 0.3061862289905548, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
@@ -182,7 +185,10 @@ describe('Find offset line intersections', () => {
     });
 
     test('getPitchedLabelPlaneMatrix: bearing and pitch', () => {
-        const transform = {roll: 0, pitch: 45, bearing: 45};
+        const transform = new MercatorTransform();
+        transform.setBearing(45);
+        transform.setPitch(45);
+        transform.setRoll(0);
 
         expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform, 2).values()],
             [0.3535533845424652, -0.3535533845424652, 0, 0, 0.3535533845424652, 0.3535533845424652, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
@@ -191,7 +197,10 @@ describe('Find offset line intersections', () => {
     });
 
     test('getPitchedLabelPlaneMatrix: bearing, pitch, and roll', () => {
-        const transform = {roll: 45, pitch: 45, bearing: 45};
+        const transform = new MercatorTransform();
+        transform.setBearing(45);
+        transform.setPitch(45);
+        transform.setRoll(45);
 
         expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform, 2).values()],
             [0.08967986702919006,  -0.5226925611495972, 0, 0, 0.5226925611495972, -0.08967986702919006, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
@@ -200,16 +209,16 @@ describe('Find offset line intersections', () => {
     });
 
     test('getGlCoordMatrix: bearing, pitch, and roll', () => {
-        const pixelsToClipSpaceMatrix = mat4.create();
-        for (let i = 0; i < 16; i++) {
-            pixelsToClipSpaceMatrix[i] = i;
-        }
-        const transform = {roll: 45, pitch: 45, bearing: 45, pixelsToClipSpaceMatrix};
+        const transform = new MercatorTransform();
+        transform.resize(128, 128);
+        transform.setBearing(45);
+        transform.setPitch(45);
+        transform.setRoll(45);
 
         expectToBeCloseToArray([...getGlCoordMatrix(false, false, transform, 2).values()],
-            [...pixelsToClipSpaceMatrix.values()], 9);
+            [...transform.pixelsToClipSpaceMatrix.values()], 9);
         expectToBeCloseToArray([...getGlCoordMatrix(false, true, transform, 2).values()],
-            [...pixelsToClipSpaceMatrix.values()], 9);
+            [...transform.pixelsToClipSpaceMatrix.values()], 9);
         expectToBeCloseToArray([...getGlCoordMatrix(true, false, transform, 2).values()],
             [-0.33820396661758423, 1.9711971282958984, 0, 0, -1.9711971282958984, 0.33820396661758423, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
         expectToBeCloseToArray([...getGlCoordMatrix(true, true, transform, 2).values()],
