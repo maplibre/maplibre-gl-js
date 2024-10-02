@@ -1,4 +1,4 @@
-import {vi} from 'vitest';
+import {vi, expect} from 'vitest';
 import {Map} from '../../ui/map';
 import {extend} from '../../util/util';
 import {Dispatcher} from '../../util/dispatcher';
