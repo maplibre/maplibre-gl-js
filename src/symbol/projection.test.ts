@@ -1,4 +1,4 @@
-import {SymbolProjectionContext, ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, projectWithMatrix, transformToOffsetNormal, projectLineVertexToLabelPlane, getPitchedLabelPlaneMatrix} from './projection';
+import {SymbolProjectionContext, ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, projectWithMatrix, transformToOffsetNormal, projectLineVertexToLabelPlane, getPitchedLabelPlaneMatrix, getGlCoordMatrix} from './projection';
 
 import Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
@@ -197,6 +197,28 @@ describe('Find offset line intersections', () => {
         [0.08967986702919006,  -0.5226925611495972, 0, 0, 0.5226925611495972, -0.08967986702919006, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
         expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform, 2).values()],
         [0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
+    });
+
+    test('getGlCoordMatrix: bearing, pitch, and roll', () => {
+        const pixelsToClipSpaceMatrix = mat4.create();
+        for (let i = 0; i < 16; i++){
+            pixelsToClipSpaceMatrix[i] = i;
+        }
+        const transform = {roll: 45, pitch: 45, bearing: 45, pixelsToClipSpaceMatrix};
+
+        console.log([...getGlCoordMatrix(false, false, transform, 2).values()]);
+        console.log([...getGlCoordMatrix(false, true, transform, 2).values()]);
+        console.log([...getGlCoordMatrix(true, false, transform, 2).values()]);
+        console.log([...getGlCoordMatrix(true, true, transform, 2).values()]);
+        
+        expectToBeCloseToArray([...getGlCoordMatrix(false, false, transform, 2).values()],
+        [...pixelsToClipSpaceMatrix.values()], 9);
+        expectToBeCloseToArray([...getGlCoordMatrix(false, true, transform, 2).values()],
+        [...pixelsToClipSpaceMatrix.values()], 9);
+        expectToBeCloseToArray([...getGlCoordMatrix(true, false, transform, 2).values()],
+        [-0.33820396661758423, 1.9711971282958984, 0, 0, -1.9711971282958984, 0.33820396661758423, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
+        expectToBeCloseToArray([...getGlCoordMatrix(true, true, transform, 2).values()],
+        [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
     });
 
 });
