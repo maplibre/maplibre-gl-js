@@ -45,7 +45,6 @@ function createMockTransform() {
     } as any as IReadonlyTransform;
 }
 
-
 describe('drawSymbol', () => {
     test('should not do anything', () => {
         const mockPainter = new Painter(null, null);

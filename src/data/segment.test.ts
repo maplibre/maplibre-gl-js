@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import {describe, expect, test} from 'vitest';
 import {FillLayoutArray, TriangleIndexArray} from './array_types.g';
 import {SegmentVector} from './segment';
 

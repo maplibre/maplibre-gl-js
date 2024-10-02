@@ -1,5 +1,5 @@
 
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import {beforeEach, describe, expect, test, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
 
 beforeEach(() => {
