@@ -1,7 +1,7 @@
 import {SymbolProjectionContext, ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, projectWithMatrix, transformToOffsetNormal, projectLineVertexToLabelPlane, getPitchedLabelPlaneMatrix, getGlCoordMatrix, getTileSkewMatrix} from './projection';
 
 import Point from '@mapbox/point-geometry';
-import {mat4} from 'gl-matrix';
+import {mat2, mat4} from 'gl-matrix';
 import {SymbolLineVertexArray} from '../data/array_types.g';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {expectToBeCloseToArray} from '../util/test/util';
@@ -263,6 +263,36 @@ describe('Find offset line intersections', () => {
 
         expectToBeCloseToArray([...getTileSkewMatrix(transform).values()],
             [-0.16910198330879211, 0.9855985641479492, -0.9855985641479492, 0.16910198330879211], 9);
+    });
+
+    test('getTileSkewMatrix: pitch 90 degrees', () => {
+        const transform = new MercatorTransform();
+        transform.setMaxPitch(180);
+        transform.setBearing(0);
+        transform.setPitch(89);
+        transform.setRoll(0);
+
+        expectToBeCloseToArray([...getTileSkewMatrix(transform).values()],
+            [1, 0, 0, 1], 9);
+            
+        transform.setPitch(90);
+        expectToBeCloseToArray([...getTileSkewMatrix(transform).values()],
+            [0, 0, 0, 1], 9);
+    });
+
+    test('getTileSkewMatrix: pitch 90 degrees with roll and bearing', () => {
+        const transform = new MercatorTransform();
+        transform.setMaxPitch(180);
+        transform.setBearing(45);
+        transform.setPitch(89);
+        transform.setRoll(45);
+
+        expectToBeCloseToArray([...getTileSkewMatrix(transform).values()],
+            [-0.6946603059768677, 0.7193379402160645, -0.7193379402160645, 0.6946603059768677], 9);
+
+        transform.setPitch(90);
+        expectToBeCloseToArray([...getTileSkewMatrix(transform).values()],
+            [-0.7071067690849304, 0.7071067690849304, -0.7071067690849304, 0.7071067690849304], 9);
     });
 
 });
