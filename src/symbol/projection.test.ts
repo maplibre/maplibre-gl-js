@@ -1,4 +1,4 @@
-import {SymbolProjectionContext, ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, projectWithMatrix, transformToOffsetNormal, projectLineVertexToLabelPlane, getPitchedLabelPlaneMatrix, getGlCoordMatrix} from './projection';
+import {SymbolProjectionContext, ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, projectWithMatrix, transformToOffsetNormal, projectLineVertexToLabelPlane, getPitchedLabelPlaneMatrix, getGlCoordMatrix, getTileSkewMatrix} from './projection';
 
 import Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
@@ -223,6 +223,46 @@ describe('Find offset line intersections', () => {
             [-0.33820396661758423, 1.9711971282958984, 0, 0, -1.9711971282958984, 0.33820396661758423, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
         expectToBeCloseToArray([...getGlCoordMatrix(true, true, transform, 2).values()],
             [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
+    });
+
+    test('getTileSkewMatrix: bearing', () => {
+        const transform = new MercatorTransform();
+        transform.setBearing(45);
+        transform.setPitch(0);
+        transform.setRoll(0);
+
+        expectToBeCloseToArray([...getTileSkewMatrix(transform).values()],
+            [0.7071067690849304, 0.7071067690849304, -0.7071067690849304, 0.7071067690849304], 9);
+    });
+
+    test('getTileSkewMatrix: roll', () => {
+        const transform = new MercatorTransform();
+        transform.setBearing(0);
+        transform.setPitch(0);
+        transform.setRoll(45);
+
+        expectToBeCloseToArray([...getTileSkewMatrix(transform).values()],
+            [0.7071067690849304, 0.7071067690849304, -0.7071067690849304, 0.7071067690849304], 9);
+    });
+
+    test('getTileSkewMatrix: pitch', () => {
+        const transform = new MercatorTransform();
+        transform.setBearing(0);
+        transform.setPitch(45);
+        transform.setRoll(0);
+
+        expectToBeCloseToArray([...getTileSkewMatrix(transform).values()],
+            [1.0, 0.0, 0.0, 1.0], 9);
+    });
+
+    test('getTileSkewMatrix: roll pitch bearing', () => {
+        const transform = new MercatorTransform();
+        transform.setBearing(45);
+        transform.setPitch(45);
+        transform.setRoll(45);
+
+        expectToBeCloseToArray([...getTileSkewMatrix(transform).values()],
+            [-0.16910198330879211, 0.9855985641479492, -0.9855985641479492, 0.16910198330879211], 9);
     });
 
 });

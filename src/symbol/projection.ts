@@ -134,7 +134,7 @@ export function getGlCoordMatrix(
     }
 }
 
-function getTileSkewMatrix(transform: IReadonlyTransform): mat2 {
+export function getTileSkewMatrix(transform: IReadonlyTransform): mat2 {
     const r = rollPitchBearingToQuat(transform.roll, transform.pitch, transform.bearing);
     const rotation = mat3.create();
     mat3.fromQuat(rotation, r);
