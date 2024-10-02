@@ -2843,7 +2843,7 @@ describe('#easeTo globe projection', () => {
             camera.easeTo({center: [100, 0], duration: 0});
         });
 
-        test('pans eastward across the antimeridian', done => {
+        test('pans eastward across the antimeridian', () => new Promise<void>(done => {
             const camera = createCameraGlobe();
             const stub = jest.spyOn(browser, 'now');
 
@@ -2873,9 +2873,9 @@ describe('#easeTo globe projection', () => {
                     camera.simulateFrame();
                 }, 0);
             }, 0);
-        });
+        }));
 
-        test('does pan eastward across the antimeridian on a renderWorldCopies: false map if globe is enabled', done => {
+        test('does pan eastward across the antimeridian on a renderWorldCopies: false map if globe is enabled', () => new Promise<void>(done => {
             const camera = createCameraGlobe({renderWorldCopies: false, zoom: 2});
             camera.setCenter([170, 0]);
             camera.on('moveend', () => {
@@ -2883,9 +2883,9 @@ describe('#easeTo globe projection', () => {
                 done();
             });
             camera.easeTo({center: [210, 0], duration: 0});
-        });
+        }));
 
-        test('pans westward across the antimeridian', done => {
+        test('pans westward across the antimeridian', () => new Promise<void>(done => {
             const camera = createCameraGlobe();
             const stub = jest.spyOn(browser, 'now');
 
@@ -2915,9 +2915,9 @@ describe('#easeTo globe projection', () => {
                     camera.simulateFrame();
                 }, 0);
             }, 0);
-        });
+        }));
 
-        test('does pan westward across the antimeridian on a renderWorldCopies: false map if globe is enabled', done => {
+        test('does pan westward across the antimeridian on a renderWorldCopies: false map if globe is enabled', () => new Promise<void>(done => {
             const camera = createCameraGlobe({renderWorldCopies: false, zoom: 2});
             camera.setCenter([-170, 0]);
             camera.on('moveend', () => {
@@ -2925,7 +2925,7 @@ describe('#easeTo globe projection', () => {
                 done();
             });
             camera.easeTo({center: [-210, 0], duration: 0});
-        });
+        }));
     });
 });
 
@@ -2984,7 +2984,7 @@ describe('#flyTo globe projection', () => {
             expect(camera.getZoom()).toBe(2);
         });
 
-        test('Zoom out from the same position to the same position with animation', done => {
+        test('Zoom out from the same position to the same position with animation', () => new Promise<void>(done => {
             const pos = {lng: 0, lat: 0};
             const camera = createCameraGlobe({zoom: 20, center: pos});
             const stub = jest.spyOn(browser, 'now');
@@ -3000,7 +3000,7 @@ describe('#flyTo globe projection', () => {
 
             stub.mockImplementation(() => 3);
             camera.simulateFrame();
-        });
+        }));
 
         test('rotates to specified bearing', () => {
             const camera = createCameraGlobe();
@@ -3167,7 +3167,7 @@ describe('#flyTo globe projection', () => {
                 eventData);
         });
 
-        test('for short flights, emits (solely) move events, preserving eventData', done => {
+        test('for short flights, emits (solely) move events, preserving eventData', () => new Promise<void>(done => {
             //As I type this, the code path for guiding super-short flights is (and will probably remain) different.
             //As such; it deserves a separate test case. This test case flies the map from A to A.
             const camera = createCameraGlobe({center: [100, 0]});
@@ -3223,9 +3223,9 @@ describe('#flyTo globe projection', () => {
                     camera.simulateFrame();
                 }, 0);
             }, 0);
-        });
+        }));
 
-        test('ascends', done => {
+        test('ascends', () => new Promise<void>(done => {
             const camera = createCameraGlobe();
             camera.setZoom(18);
             let ascended;
@@ -3256,9 +3256,9 @@ describe('#flyTo globe projection', () => {
                     camera.simulateFrame();
                 }, 0);
             }, 0);
-        });
+        }));
 
-        test('pans eastward across the prime meridian', done => {
+        test('pans eastward across the prime meridian', () => new Promise<void>(done => {
             const camera = createCameraGlobe();
             const stub = jest.spyOn(browser, 'now');
 
@@ -3288,9 +3288,9 @@ describe('#flyTo globe projection', () => {
                     camera.simulateFrame();
                 }, 0);
             }, 0);
-        });
+        }));
 
-        test('pans westward across the prime meridian', done => {
+        test('pans westward across the prime meridian', () => new Promise<void>(done => {
             const camera = createCameraGlobe();
             const stub = jest.spyOn(browser, 'now');
 
@@ -3320,9 +3320,9 @@ describe('#flyTo globe projection', () => {
                     camera.simulateFrame();
                 }, 0);
             }, 0);
-        });
+        }));
 
-        test('pans eastward across the antimeridian', done => {
+        test('pans eastward across the antimeridian', () => new Promise<void>(done => {
             const camera = createCameraGlobe();
             const stub = jest.spyOn(browser, 'now');
 
@@ -3352,9 +3352,9 @@ describe('#flyTo globe projection', () => {
                     camera.simulateFrame();
                 }, 0);
             }, 0);
-        });
+        }));
 
-        test('pans westward across the antimeridian', done => {
+        test('pans westward across the antimeridian', () => new Promise<void>(done => {
             const camera = createCameraGlobe();
             const stub = jest.spyOn(browser, 'now');
 
@@ -3384,9 +3384,9 @@ describe('#flyTo globe projection', () => {
                     camera.simulateFrame();
                 }, 0);
             }, 0);
-        });
+        }));
 
-        test('pans eastward across the antimeridian even if renderWorldCopies: false', done => {
+        test('pans eastward across the antimeridian even if renderWorldCopies: false', () => new Promise<void>(done => {
             const camera = createCameraGlobe({renderWorldCopies: false});
             const stub = jest.spyOn(browser, 'now');
 
@@ -3416,9 +3416,9 @@ describe('#flyTo globe projection', () => {
                     camera.simulateFrame();
                 }, 0);
             }, 0);
-        });
+        }));
 
-        test('pans westward across the antimeridian even if renderWorldCopies: false', done => {
+        test('pans westward across the antimeridian even if renderWorldCopies: false', () => new Promise<void>(done => {
             const camera = createCameraGlobe({renderWorldCopies: false});
             const stub = jest.spyOn(browser, 'now');
 
@@ -3448,9 +3448,9 @@ describe('#flyTo globe projection', () => {
                     camera.simulateFrame();
                 }, 0);
             }, 0);
-        });
+        }));
 
-        test('jumps back to world 0 when crossing the antimeridian', done => {
+        test('jumps back to world 0 when crossing the antimeridian', () => new Promise<void>(done => {
             const camera = createCameraGlobe();
             const stub = jest.spyOn(browser, 'now');
 
@@ -3479,9 +3479,9 @@ describe('#flyTo globe projection', () => {
                     camera.simulateFrame();
                 }, 0);
             }, 0);
-        });
+        }));
 
-        test('peaks at the specified zoom level', done => {
+        test('peaks at the specified zoom level', () => new Promise<void>(done => {
             const camera = createCameraGlobe({zoom: 20});
             const stub = jest.spyOn(browser, 'now');
 
@@ -3492,7 +3492,7 @@ describe('#flyTo globe projection', () => {
             camera.on('zoom', () => {
                 const zoom = camera.getZoom();
                 if (zoom < 1) {
-                    fail(`${zoom} should be >= ${minZoom} during flyTo`);
+                    throw new Error(`${zoom} should be >= ${minZoom} during flyTo`);
                 }
 
                 leastZoom = Math.min(leastZoom, zoom);
@@ -3519,9 +3519,9 @@ describe('#flyTo globe projection', () => {
                     camera.simulateFrame();
                 }, 0);
             }, 0);
-        });
+        }));
 
-        test('respects transform\'s maxZoom', done => {
+        test('respects transform\'s maxZoom', () => new Promise<void>(done => {
             const camera = createCameraGlobe();
             camera.transform.setMinZoom(2);
             camera.transform.setMaxZoom(10);
@@ -3542,9 +3542,9 @@ describe('#flyTo globe projection', () => {
                 stub.mockImplementation(() => 10);
                 camera.simulateFrame();
             }, 0);
-        });
+        }));
 
-        test('respects transform\'s minZoom', done => {
+        test('respects transform\'s minZoom', () => new Promise<void>(done => {
             const transform = createCameraGlobe().transform;
             transform.setMinZoom(2);
             transform.setMaxZoom(10);
@@ -3571,9 +3571,9 @@ describe('#flyTo globe projection', () => {
                 stub.mockImplementation(() => 10);
                 camera.simulateFrame();
             }, 0);
-        });
+        }));
 
-        test('resets duration to 0 if it exceeds maxDuration', done => {
+        test('resets duration to 0 if it exceeds maxDuration', () => new Promise<void>(done => {
             let startTime, endTime, timeDiff;
             const camera = createCameraGlobe({center: [37.63454, 55.75868], zoom: 18});
 
@@ -3587,7 +3587,7 @@ describe('#flyTo globe projection', () => {
                 });
 
             camera.flyTo({center: [-122.3998631, 37.7884307], maxDuration: 100});
-        });
+        }));
 
         // No terrain/elevation tests for globe, as terrain isn't supported (yet?)
     });
