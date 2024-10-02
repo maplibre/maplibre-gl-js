@@ -205,11 +205,6 @@ describe('Find offset line intersections', () => {
             pixelsToClipSpaceMatrix[i] = i;
         }
         const transform = {roll: 45, pitch: 45, bearing: 45, pixelsToClipSpaceMatrix};
-
-        console.log([...getGlCoordMatrix(false, false, transform, 2).values()]);
-        console.log([...getGlCoordMatrix(false, true, transform, 2).values()]);
-        console.log([...getGlCoordMatrix(true, false, transform, 2).values()]);
-        console.log([...getGlCoordMatrix(true, true, transform, 2).values()]);
         
         expectToBeCloseToArray([...getGlCoordMatrix(false, false, transform, 2).values()],
         [...pixelsToClipSpaceMatrix.values()], 9);
