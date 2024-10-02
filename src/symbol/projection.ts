@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
 
-import {mat4, vec4} from 'gl-matrix';
+import {mat2, mat3, mat4, vec2, vec4} from 'gl-matrix';
 import * as symbolSize from './symbol_size';
 import {addDynamicAttributes} from '../data/bucket/symbol_bucket';
 
@@ -13,7 +13,7 @@ import type {
     SymbolDynamicLayoutArray
 } from '../data/array_types.g';
 import {WritingMode} from '../symbol/shaping';
-import {findLineIntersection} from '../util/util';
+import {findLineIntersection, rollPitchBearingToQuat} from '../util/util';
 import {UnwrappedTileID} from '../source/tile_id';
 import {StructArray} from '../util/struct_array';
 
@@ -97,10 +97,15 @@ export function getPitchedLabelPlaneMatrix(
     transform: IReadonlyTransform,
     pixelsToTileUnits: number) {
     const m = mat4.create();
-    mat4.scale(m, m, [1 / pixelsToTileUnits, 1 / pixelsToTileUnits, 1]);
     if (!rotateWithMap) {
-        mat4.rotateZ(m, m, transform.angle);
+        const skew = getTileSkewMatrix(transform);
+        mat2.invert(skew, skew);
+        m[0] = skew[0];
+        m[1] = skew[1];
+        m[4] = skew[2];
+        m[5] = skew[3];
     }
+    mat4.scale(m, m, [1 / pixelsToTileUnits, 1 / pixelsToTileUnits, 1]);
     return m;
 }
 
@@ -115,14 +120,39 @@ export function getGlCoordMatrix(
     pixelsToTileUnits: number) {
     if (pitchWithMap) {
         const m = mat4.create();
-        mat4.scale(m, m, [pixelsToTileUnits, pixelsToTileUnits, 1]);
         if (!rotateWithMap) {
-            mat4.rotateZ(m, m, -transform.angle);
+            const skew = getTileSkewMatrix(transform);
+            m[0] = skew[0];
+            m[1] = skew[1];
+            m[4] = skew[2];
+            m[5] = skew[3];
         }
+        mat4.scale(m, m, [pixelsToTileUnits, pixelsToTileUnits, 1]);
         return m;
     } else {
         return transform.pixelsToClipSpaceMatrix;
     }
+}
+
+function getTileSkewMatrix(transform: IReadonlyTransform): mat2 {
+    const r = rollPitchBearingToQuat(transform.roll, transform.pitch, transform.bearing);
+    const rotation = mat3.create();
+    mat3.fromQuat(rotation, r);
+    const screenRight = vec2.create();
+    screenRight[0] = rotation[3];
+    screenRight[1] = rotation[4];
+    const screenDown = vec2.create();
+    screenDown[0] = rotation[6];
+    screenDown[1] = rotation[7];
+    vec2.normalize(screenRight, screenRight);
+    vec2.normalize(screenDown, screenDown);
+    const skew = mat2.create();
+
+    skew[0] = -screenDown[0];
+    skew[1] = -screenDown[1];
+    skew[2] = screenRight[0];
+    skew[3] = screenRight[1];
+    return skew;
 }
 
 /**
