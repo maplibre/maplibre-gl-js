@@ -278,6 +278,10 @@ describe('Find offset line intersections', () => {
         transform.setPitch(90);
         expectToBeCloseToArray([...getTileSkewMatrix(transform).values()],
             [0, 0, 0, 1], 9);
+
+        transform.setBearing(90);
+        expectToBeCloseToArray([...getTileSkewMatrix(transform).values()],
+            [0, 0, -1, 0], 9);
     });
 
     test('getTileSkewMatrix: pitch 90 degrees with roll and bearing', () => {
