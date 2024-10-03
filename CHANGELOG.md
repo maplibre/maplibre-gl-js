@@ -59,8 +59,6 @@ using `transformCameraUpdate` caused the `maxBounds` to stop working just for ea
 
 ### ✨ Features and improvements
 
-- Merge atmosphere an sky implementation ([#3888](https://github.com/maplibre/maplibre-gl-js/issues/3888))
-- Add option to display a realistic atmosphere when using a Globe projection ([#3888](https://github.com/maplibre/maplibre-gl-js/issues/3888))
 - Emit events when the cooperative gestures option has prevented a gesture. ([#4470](https://github.com/maplibre/maplibre-gl-js/pull/4470))
 - Enable anisotropic filtering only when the pitch is greater than 20 degrees to preserve image sharpness on flat or slightly tilted maps.
 
