@@ -949,13 +949,6 @@ export class SourceCache extends Evented {
      * @returns result items have `{tile, minX, maxX, minY, maxY}`, where min/max bounding values are the given bounds transformed in into the coordinate space of this tile.
      */
     tilesIn(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean) {
-        type TileResult = {
-            tile: Tile;
-            tileID: OverscaledTileID;
-            queryGeometry: Array<Point>;
-            cameraQueryGeometry: Array<Point>;
-            scale: number;
-        };
         const tileResults: TileResult[] = [];
 
         const transform = this.transform;
@@ -1105,4 +1098,12 @@ function compareTileId(a: OverscaledTileID, b: OverscaledTileID): number {
 
 function isRasterType(type) {
     return type === 'raster' || type === 'image' || type === 'video';
+}
+
+type TileResult = {
+    tile: Tile;
+    tileID: OverscaledTileID;
+    queryGeometry: Array<Point>;
+    cameraQueryGeometry: Array<Point>;
+    scale: number;
 }
