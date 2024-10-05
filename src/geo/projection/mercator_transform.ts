@@ -1,7 +1,7 @@
 import {LngLat, LngLatLike} from '../lng_lat';
 import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp, createIdentityMat4f64, createMat4f64} from '../../util/util';
+import {wrap, clamp, createIdentityMat4f64, createMat4f64, degreesToRadians} from '../../util/util';
 import {mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID, calculateTileKey} from '../../source/tile_id';
 import {Terrain} from '../../render/terrain';
@@ -537,8 +537,8 @@ export class MercatorTransform implements ITransform {
         // 1 Z unit is equivalent to 1 horizontal px at the center of the map
         // (the distance between[width/2, height/2] and [width/2 + 1, height/2])
         const groundAngle = Math.PI / 2 + this._helper._pitch;
-        const zfov = this._helper._fov * (Math.abs(Math.cos(this._helper._roll)) * this._helper._height + Math.abs(Math.sin(this._helper._roll)) * this._helper._width) / this._helper._height;
-        const fovAboveCenter = zfov * (0.5 + offset.y / this._helper._height);
+        const zfov = degreesToRadians(this.fov) * (Math.abs(Math.cos(degreesToRadians(this.roll))) * this.height + Math.abs(Math.sin(degreesToRadians(this.roll))) * this.width) / this.height;
+        const fovAboveCenter = zfov * (0.5 + offset.y / this.height);
         const topHalfSurfaceDistance = Math.sin(fovAboveCenter) * lowestPlane / Math.sin(clamp(Math.PI - groundAngle - fovAboveCenter, 0.01, Math.PI - 0.01));
 
         // Find the distance from the center point to the horizon
