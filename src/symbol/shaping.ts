@@ -671,7 +671,9 @@ function shapeLines(shaping: Shaping,
                 // at 24 points, we can calculate how much it will move when
                 // we scale up or down.
                 if (section.verticalAlign === 'top') {
-                    verticalAlignOffset = -(lineMaxScale - section.scale) * metrics.top + metrics.top;
+                    verticalAlignOffset = (lineMaxScale - section.scale) * (ONE_EM / 3) - (ONE_EM / 3);
+                } else if (section.verticalAlign === 'center') {
+                    verticalAlignOffset = (lineMaxScale - section.scale) * (ONE_EM * 2 / 3) - (ONE_EM / 6);
                 } else {
                     verticalAlignOffset = (lineMaxScale - section.scale) * ONE_EM;
                 }
@@ -697,6 +699,9 @@ function shapeLines(shaping: Shaping,
                 // Aligns bottom of an image to a baseline level.
                 if (section.verticalAlign === 'top') {
                     verticalAlignOffset = 0;
+                } else if (section.verticalAlign === 'center') {
+                    const imageOffset = ONE_EM - size[1] * section.scale;
+                    verticalAlignOffset = (maxLineOffset + imageOffset) / 2;
                 } else {
                     const imageOffset = ONE_EM - size[1] * section.scale;
                     verticalAlignOffset = maxLineOffset + imageOffset;
