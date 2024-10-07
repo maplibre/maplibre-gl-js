@@ -81,23 +81,28 @@ class SectionOptions {
     fontStack: string;
     // Image options
     imageName: string | null;
+    // Common options
+    verticalAlign: 'baseline' | 'top' | 'center';
 
     constructor() {
         this.scale = 1.0;
         this.fontStack = '';
         this.imageName = null;
+        this.verticalAlign = 'baseline';
     }
 
-    static forText(scale: number | null, fontStack: string) {
+    static forText(scale: number | null, fontStack: string, verticalAlign: 'baseline' | 'top' | 'center' | null) {
         const textOptions = new SectionOptions();
         textOptions.scale = scale || 1;
         textOptions.fontStack = fontStack;
+        textOptions.verticalAlign = verticalAlign || 'baseline';
         return textOptions;
     }
 
-    static forImage(imageName: string) {
+    static forImage(imageName: string, verticalAlign: 'baseline' | 'top' | 'center' | null) {
         const imageOptions = new SectionOptions();
         imageOptions.imageName = imageName;
+        imageOptions.verticalAlign = verticalAlign || 'baseline';
         return imageOptions;
     }
 
@@ -184,7 +189,7 @@ class TaggedString {
 
     addTextSection(section: FormattedSection, defaultFontStack: string) {
         this.text += section.text;
-        this.sections.push(SectionOptions.forText(section.scale, section.fontStack || defaultFontStack));
+        this.sections.push(SectionOptions.forText(section.scale, section.fontStack || defaultFontStack, section.verticalAlign));
         const index = this.sections.length - 1;
         for (let i = 0; i < section.text.length; ++i) {
             this.sectionIndex.push(index);
@@ -205,7 +210,7 @@ class TaggedString {
         }
 
         this.text += String.fromCharCode(nextImageSectionCharCode);
-        this.sections.push(SectionOptions.forImage(imageName));
+        this.sections.push(SectionOptions.forImage(imageName, section.verticalAlign));
         this.sectionIndex.push(this.sections.length - 1);
     }
 
@@ -637,7 +642,7 @@ function shapeLines(shaping: Shaping,
             const section = line.getSection(i);
             const sectionIndex = line.getSectionIndex(i);
             const codePoint = line.getCharCode(i);
-            let baselineOffset = 0.0;
+            let verticalAlignOffset = 0.0;
             let metrics = null;
             let rect = null;
             let imageName = null;
@@ -665,7 +670,11 @@ function shapeLines(shaping: Shaping,
                 // We don't know the baseline, but since we're laying out
                 // at 24 points, we can calculate how much it will move when
                 // we scale up or down.
-                baselineOffset = (lineMaxScale - section.scale) * ONE_EM;
+                if (section.verticalAlign === 'top') {
+                    verticalAlignOffset = -(lineMaxScale - section.scale) * metrics.top + metrics.top;
+                } else {
+                    verticalAlignOffset = (lineMaxScale - section.scale) * ONE_EM;
+                }
             } else {
                 const imagePosition = imagePositions[section.imageName];
                 if (!imagePosition) continue;
@@ -686,8 +695,12 @@ function shapeLines(shaping: Shaping,
 
                 // Difference between one EM and an image size.
                 // Aligns bottom of an image to a baseline level.
-                const imageOffset = ONE_EM - size[1] * section.scale;
-                baselineOffset = maxLineOffset + imageOffset;
+                if (section.verticalAlign === 'top') {
+                    verticalAlignOffset = 0;
+                } else {
+                    const imageOffset = ONE_EM - size[1] * section.scale;
+                    verticalAlignOffset = maxLineOffset + imageOffset;
+                }
                 verticalAdvance = metrics.advance;
 
                 // Difference between height of an image and one EM at max line scale.
@@ -700,11 +713,11 @@ function shapeLines(shaping: Shaping,
             }
 
             if (!vertical) {
-                positionedGlyphs.push({glyph: codePoint, imageName, x, y: y + baselineOffset, vertical, scale: section.scale, fontStack: section.fontStack, sectionIndex, metrics, rect});
+                positionedGlyphs.push({glyph: codePoint, imageName, x, y: y + verticalAlignOffset, vertical, scale: section.scale, fontStack: section.fontStack, sectionIndex, metrics, rect});
                 x += metrics.advance * section.scale + spacing;
             } else {
                 shaping.verticalizable = true;
-                positionedGlyphs.push({glyph: codePoint, imageName, x, y: y + baselineOffset, vertical, scale: section.scale, fontStack: section.fontStack, sectionIndex, metrics, rect});
+                positionedGlyphs.push({glyph: codePoint, imageName, x, y: y + verticalAlignOffset, vertical, scale: section.scale, fontStack: section.fontStack, sectionIndex, metrics, rect});
                 x += verticalAdvance * section.scale + spacing;
             }
         }
