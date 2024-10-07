@@ -24,6 +24,14 @@ import type {MapSourceDataEvent} from '../ui/events';
 import type {Terrain} from '../render/terrain';
 import type {CanvasSourceSpecification} from './canvas_source';
 
+type TileResult = {
+    tile: Tile;
+    tileID: OverscaledTileID;
+    queryGeometry: Array<Point>;
+    cameraQueryGeometry: Array<Point>;
+    scale: number;
+}
+
 /**
  * @internal
  * `SourceCache` is responsible for
@@ -1098,12 +1106,4 @@ function compareTileId(a: OverscaledTileID, b: OverscaledTileID): number {
 
 function isRasterType(type) {
     return type === 'raster' || type === 'image' || type === 'video';
-}
-
-type TileResult = {
-    tile: Tile;
-    tileID: OverscaledTileID;
-    queryGeometry: Array<Point>;
-    cameraQueryGeometry: Array<Point>;
-    scale: number;
 }
