@@ -16,6 +16,7 @@ import {StubMap, sleep} from '../util/test/util';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
 import {MessageType} from '../util/actor_messages';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {Tile} from '../source/tile';
 
 function createStyleJSON(properties?): StyleSpecification {
     return extend({
@@ -35,7 +36,7 @@ function createSource() {
     } as any as SourceSpecification;
 }
 
-function createGeoJSONSource() {
+function createGeoJSONSource(): GeoJSONSourceSpecification {
     return {
         'type': 'geojson',
         'data': {
@@ -1962,7 +1963,7 @@ describe('Style#setFilter', () => {
         style.loadJSON({
             version: 8,
             sources: {
-                geojson: createGeoJSONSource() as GeoJSONSourceSpecification
+                geojson: createGeoJSONSource()
             },
             layers: [
                 {id: 'symbol', type: 'symbol', source: 'geojson', filter: ['==', 'id', 0]}
@@ -2089,7 +2090,7 @@ describe('Style#setLayerZoomRange', () => {
         style.loadJSON({
             'version': 8,
             'sources': {
-                'geojson': createGeoJSONSource() as GeoJSONSourceSpecification
+                'geojson': createGeoJSONSource()
             },
             'layers': [{
                 'id': 'symbol',
@@ -2182,8 +2183,8 @@ describe('Style#getLayersOrder', () => {
 
 describe('Style#queryRenderedFeatures', () => {
 
-    let style;
-    let transform;
+    let style: Style;
+    let transform: MercatorTransform;
 
     beforeEach(() => new Promise<void>(callback => {
         style = new Style(getStubMap());
@@ -2221,7 +2222,7 @@ describe('Style#queryRenderedFeatures', () => {
 
             if (params.layers) {
                 for (const l in features) {
-                    if (params.layers.indexOf(l) < 0) {
+                    if (!params.layers.has(l)) {
                         delete features[l];
                     }
                 }
@@ -2282,10 +2283,11 @@ describe('Style#queryRenderedFeatures', () => {
         style.on('style.load', () => {
             style.sourceCaches.mapLibre.tilesIn = () => {
                 return [{
-                    tile: {queryRenderedFeatures: queryMapLibreFeatures},
+                    tile: {queryRenderedFeatures: queryMapLibreFeatures} as unknown as Tile,
                     tileID: new OverscaledTileID(0, 0, 0, 0, 0),
                     queryGeometry: [],
-                    scale: 1
+                    scale: 1,
+                    cameraQueryGeometry: []
                 }];
             };
             style.sourceCaches.other.tilesIn = () => {
@@ -2316,14 +2318,20 @@ describe('Style#queryRenderedFeatures', () => {
         expect(results).toHaveLength(2);
     });
 
+    test('filters by `layers` option as a Set', () => {
+        const results = style.queryRenderedFeatures([{x: 0, y: 0}], {layers: new Set(['land'])}, transform);
+        expect(results).toHaveLength(2);
+    });
+
     test('checks type of `layers` option', () => {
         let errors = 0;
         jest.spyOn(style, 'fire').mockImplementation((event) => {
-            if (event['error'] && event['error'].message.includes('parameters.layers must be an Array.')) {
+            if (event['error'] && event['error'].message.includes('parameters.layers must be an Array')) {
                 errors++;
             }
+            return style;
         });
-        style.queryRenderedFeatures([{x: 0, y: 0}], {layers: 'string'}, transform);
+        style.queryRenderedFeatures([{x: 0, y: 0}], {layers: 'string' as any}, transform);
         expect(errors).toBe(1);
     });
 
@@ -2347,19 +2355,21 @@ describe('Style#queryRenderedFeatures', () => {
     });
 
     test('include multiple layers', () => {
-        const results = style.queryRenderedFeatures([{x: 0, y: 0}], {layers: ['land', 'landref']}, transform);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0}], {layers: new Set(['land', 'landref'])}, transform);
         expect(results).toHaveLength(3);
     });
 
     test('does not query sources not implicated by `layers` parameter', () => {
-        style.sourceCaches.mapLibre.queryRenderedFeatures = () => { expect(true).toBe(false); };
+        style.sourceCaches.mapLibre.map.queryRenderedFeatures = jest.fn();
         style.queryRenderedFeatures([{x: 0, y: 0}], {layers: ['land--other']}, transform);
+        expect(style.sourceCaches.mapLibre.map.queryRenderedFeatures).not.toHaveBeenCalled();
     });
 
     test('fires an error if layer included in params does not exist on the style', () => {
         let errors = 0;
         jest.spyOn(style, 'fire').mockImplementation((event) => {
             if (event['error'] && event['error'].message.includes('does not exist in the map\'s style and cannot be queried for features.')) errors++;
+            return style;
         });
         const results = style.queryRenderedFeatures([{x: 0, y: 0}], {layers: ['merp']}, transform);
         expect(errors).toBe(1);
@@ -2415,7 +2425,7 @@ describe('Style#query*Features', () => {
     // These tests only cover filter validation. Most tests for these methods
     // live in the integration tests.
 
-    let style;
+    let style: Style;
     let onError;
     let transform;
 
@@ -2444,12 +2454,12 @@ describe('Style#query*Features', () => {
     }));
 
     test('querySourceFeatures emits an error on incorrect filter', () => {
-        expect(style.querySourceFeatures([10, 100], {filter: 7}, transform)).toEqual([]);
+        expect(style.querySourceFeatures([10, 100] as any, {filter: 7} as any)).toEqual([]);
         expect(onError.mock.calls[0][0].error.message).toMatch(/querySourceFeatures\.filter/);
     });
 
     test('queryRenderedFeatures emits an error on incorrect filter', () => {
-        expect(style.queryRenderedFeatures([{x: 0, y: 0}], {filter: 7}, transform)).toEqual([]);
+        expect(style.queryRenderedFeatures([{x: 0, y: 0}], {filter: 7 as any}, transform)).toEqual([]);
         expect(onError.mock.calls[0][0].error.message).toMatch(/queryRenderedFeatures\.filter/);
     });
 
@@ -2459,8 +2469,9 @@ describe('Style#query*Features', () => {
             if (event['error']) {
                 errors++;
             }
+            return style;
         });
-        style.queryRenderedFeatures([{x: 0, y: 0}], {filter: 'invalidFilter', validate: false}, transform);
+        style.queryRenderedFeatures([{x: 0, y: 0}], {filter: 'invalidFilter' as any, validate: false}, transform);
         expect(errors).toBe(0);
     });
 
@@ -2468,8 +2479,9 @@ describe('Style#query*Features', () => {
         let errors = 0;
         jest.spyOn(style, 'fire').mockImplementation((event) => {
             if (event['error']) errors++;
+            return style;
         });
-        style.querySourceFeatures([{x: 0, y: 0}], {filter: 'invalidFilter', validate: false}, transform);
+        style.querySourceFeatures([{x: 0, y: 0}] as any, {filter: 'invalidFilter' as any, validate: false});
         expect(errors).toBe(0);
     });
 
