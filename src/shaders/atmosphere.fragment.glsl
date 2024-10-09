@@ -129,9 +129,12 @@ vec4 atmosphere(vec3 r, vec3 r0, vec3 pSun, float iSun, float rPlanet, float rAt
         iTime += iStepSize;
     }
 
+    
     // Calculate opacity
     //float opacity = exp(-(length(kRlh) * iOdRlh + kMie * iOdMie));
     float opacity = min(0.75, exp(-(length(kRlh) * length(totalRlh) + kMie * length(totalMie))));
+    opacity = max(0.0,opacity-0.6);
+    opacity = min(0.75,opacity*1.35);
 
     // Calculate the final color.
     vec3 color = iSun * (pRlh * kRlh * totalRlh + pMie * kMie * totalMie);
@@ -152,10 +155,10 @@ void main() {
         22.0,                           // intensity of the sun
         EARTH_RADIUS,                   // radius of the planet in meters
         ATMOS_RADIUS,                   // radius of the atmosphere in meters
-        vec3(5.5e-6, 13.0e-6, 22.4e-6), // Rayleigh scattering coefficient
-        21e-6,                          // Mie scattering coefficient
+        vec3(6.0e-6, 6.0e-6, 6.0e-6), // Rayleigh scattering coefficient
+        10e-6,                          // Mie scattering coefficient
         8e3,                            // Rayleigh scale height
-        1.2e3,                          // Mie scale height
+        1.1e3,                          // Mie scale height
         0.758                           // Mie preferred scattering direction
     );
 

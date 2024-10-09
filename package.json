@@ -138,7 +138,7 @@
     "typedoc-plugin-missing-exports": "^3.0.0",
     "typescript": "^5.5.4"
   },
-  "scripts": {
+  "scripts": { 
     "generate-dist-package": "node --no-warnings --loader ts-node/esm build/generate-dist-package.js",
     "generate-shaders": "node --no-warnings --loader ts-node/esm build/generate-shaders.ts",
     "generate-struct-arrays": "node --no-warnings --loader ts-node/esm build/generate-struct-arrays.ts",

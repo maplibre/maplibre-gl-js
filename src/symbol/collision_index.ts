@@ -118,6 +118,7 @@ export class CollisionIndex {
             unwrappedTileID,
             getElevation
         );
+        const placedCollisionCircles = [];
 
         const tileToViewport = textPixelRatio * projectedPoint.perspectiveRatio;
 
@@ -151,6 +152,8 @@ export class CollisionIndex {
         }
 
         const [tlX, tlY, brX, brY] = projectedBox.box;
+
+        placedCollisionCircles.push(tlX, tlY, 20, 0);
 
         const projectionOccluded = (pitchWithMap ? projectedBox.allPointsOccluded : this.transform.isLocationOccluded(tileCoordinatesToLocation(x, y, unwrappedTileID.canonical)));
 
@@ -226,7 +229,10 @@ export class CollisionIndex {
         let entirelyOffscreen = true;
 
         if (firstAndLastGlyph) {
-            const radius = circlePixelDiameter * 0.5 * perspectiveRatio + textPixelPadding;
+            const zoomFraction = this.transform.zoom - Math.floor(this.transform.zoom);
+            const circlePixelDiameterMultiplier = 1 / Math.pow(2, -zoomFraction);
+            const radius = circlePixelDiameterMultiplier * circlePixelDiameter * 0.25 * perspectiveRatio + textPixelPadding;
+            //const radius = circlePixelDiameter * 0.5 * perspectiveRatio + textPixelPadding;
             const screenPlaneMin = new Point(-viewportPadding, -viewportPadding);
             const screenPlaneMax = new Point(this.screenRightBoundary, this.screenBottomBoundary);
             const interpolator = new PathInterpolator();
@@ -244,7 +250,8 @@ export class CollisionIndex {
             }
 
             // Tolerate a slightly longer distance than one diameter between two adjacent circles
-            const circleDist = radius * 2.5;
+            const circleDist = radius * 1.7;
+            // TODO: For clickable labels the distance should be shorter to avoid unclickable gaps
 
             // The path might need to be converted into screen space if a pitched map is used as the label space
             if (pitchWithMap) {
