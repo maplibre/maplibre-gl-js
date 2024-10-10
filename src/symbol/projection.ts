@@ -135,11 +135,11 @@ export function getGlCoordMatrix(
 }
 
 export function getTileSkewMatrix(transform: IReadonlyTransform): mat2 {
-    const cosRoll = Math.cos(degreesToRadians(transform.roll));
-    const sinRoll = Math.sin(degreesToRadians(transform.roll));
-    const cosPitch = Math.cos(degreesToRadians(transform.pitch));
-    const cosBearing = Math.cos(degreesToRadians(transform.bearing));
-    const sinBearing = Math.sin(degreesToRadians(transform.bearing));
+    const cosRoll = Math.cos(transform.rollInRadians);
+    const sinRoll = Math.sin(transform.rollInRadians);
+    const cosPitch = Math.cos(transform.pitchInRadians);
+    const cosBearing = Math.cos(transform.bearingInRadians);
+    const sinBearing = Math.sin(transform.bearingInRadians);
     const vecSouth = vec2.create();
     vecSouth[0] = -cosBearing * cosPitch * sinRoll - sinBearing * cosRoll;
     vecSouth[1] = -sinBearing * cosPitch * sinRoll + cosBearing * cosRoll;

@@ -22,8 +22,8 @@ const skyUniforms = (context: Context, locations: UniformLocations): SkyUniforms
 });
 
 const skyUniformValues = (sky: Sky, transform: IReadonlyTransform, pixelRatio: number): UniformValues<SkyUniformsType> => {
-    const cosRoll = Math.cos(transform.roll * Math.PI / 180.0);
-    const sinRoll = Math.sin(transform.roll * Math.PI / 180.0);
+    const cosRoll = Math.cos(transform.rollInRadians);
+    const sinRoll = Math.sin(transform.rollInRadians);
     const mercatorHorizon  = getMercatorHorizon(transform);
     return {
         'u_sky_color': sky.properties.get('sky-color'),
