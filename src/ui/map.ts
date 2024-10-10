@@ -3322,11 +3322,15 @@ export class Map extends Camera {
     triggerRepaint() {
         if (this.style && !this._frameRequest) {
             this._frameRequest = new AbortController();
-            browser.frameAsync(this._frameRequest).then((paintStartTimeStamp: number) => {
-                PerformanceUtils.frame(paintStartTimeStamp);
-                this._frameRequest = null;
-                this._render(paintStartTimeStamp);
-            }).catch(() => {}); // ignore abort error
+            browser.frame(
+                this._frameRequest,
+                (paintStartTimeStamp) => {
+                    PerformanceUtils.frame(paintStartTimeStamp);
+                    this._frameRequest = null;
+                    this._render(paintStartTimeStamp);
+                },
+                () => {}
+            );
         }
     }
 
