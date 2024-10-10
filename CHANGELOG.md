@@ -4,7 +4,7 @@
 - Improve performance of `queryRenderedFeatures` by using JavaScript `Set`s to assess layer membership internally.
 
 ### 🐞 Bug fixes
-- _...Add new stuff here..._
+- Fix crashes when camera is inside terrain. Add padding between camera and surface to prevent cases like this. ([#1542](https://github.com/maplibre/maplibre-gl-js/issues/1542))
 
 ## 5.0.0-pre.1
 

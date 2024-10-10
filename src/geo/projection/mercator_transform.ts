@@ -260,6 +260,14 @@ export class MercatorTransform implements ITransform {
         return mercatorCoveringTiles(this, options, this._invViewProjMatrix);
     }
 
+    /**
+     * Recalculates the zoom.
+     *
+     * If any of the values would lead to an invalid zoom, the recalculation is
+     * skipped and an error logged to the console.
+     *
+     * @param terrain - the terrain
+     */
     recalculateZoom(terrain: Terrain): void {
         const origElevation = this.elevation;
         const origAltitude = Math.cos(this._helper._pitch) * this._cameraToCenterDistance / this._helper._pixelPerMeter;
@@ -280,6 +288,18 @@ export class MercatorTransform implements ITransform {
         // Since worldSize = this.tileSize * scale:
         const requiredScale = requiredWorldSize / this.tileSize;
         const zoom = scaleZoom(requiredScale);
+
+        // First try the recalculation on a clone. If setting the zoom throws,
+        // don't recalculate the zoom.
+        const clonedTransform = this.clone();
+        clonedTransform.setElevation(elevation);
+        clonedTransform.setCenter(center);
+        try {
+            clonedTransform.setZoom(zoom);
+        } catch (_e) {
+            console.error(`Could not recalculate zoom. requiredScale: ${requiredScale}`);
+            return;
+        }
 
         // update matrices
         this._helper._elevation = elevation;
