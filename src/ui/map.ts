@@ -228,6 +228,11 @@ export type MapOptions = {
      */
     pitch?: number;
     /**
+     * The initial roll angle of the map, measured in degrees counter-clockwise about the camera boresight. If `roll` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
+     * @defaultValue 0
+     */
+    roll?: number;
+    /**
      * If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
      *
      * - When the map is zoomed out far enough that a single representation of the world does not fill the map's entire
@@ -394,6 +399,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     zoom: 0,
     bearing: 0,
     pitch: 0,
+    roll: 0,
 
     renderWorldCopies: true,
     maxTileCacheSize: null,
@@ -687,7 +693,8 @@ export class Map extends Camera {
                 center: resolvedOptions.center,
                 zoom: resolvedOptions.zoom,
                 bearing: resolvedOptions.bearing,
-                pitch: resolvedOptions.pitch
+                pitch: resolvedOptions.pitch,
+                roll: resolvedOptions.roll
             });
 
             if (resolvedOptions.bounds) {
