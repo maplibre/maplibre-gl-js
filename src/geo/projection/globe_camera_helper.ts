@@ -1,11 +1,11 @@
 import Point from '@mapbox/point-geometry';
 import {IReadonlyTransform, ITransform} from '../transform_interface';
-import {cameraBoundsWarning, CameraForBoxAndBearingHandlerResult, EaseToHandlerResult, EaseToHandlerOptions, FlyToHandlerResult, FlyToHandlerOptions, ICameraHelper, MapControlsDeltas} from './camera_helper';
+import {cameraBoundsWarning, CameraForBoxAndBearingHandlerResult, EaseToHandlerResult, EaseToHandlerOptions, FlyToHandlerResult, FlyToHandlerOptions, ICameraHelper, MapControlsDeltas, updateRotation} from './camera_helper';
 import {GlobeProjection} from './globe';
 import {LngLat, LngLatLike} from '../lng_lat';
 import {MercatorCameraHelper} from './mercator_camera_helper';
 import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from './globe_utils';
-import {clamp, createVec3f64, differenceOfAnglesDegrees, getRollPitchBearing, remapSaturate, rollPitchBearingToQuat, warnOnce} from '../../util/util';
+import {clamp, createVec3f64, differenceOfAnglesDegrees, remapSaturate, rollPitchBearingToQuat, warnOnce} from '../../util/util';
 import {mat4, quat, vec3} from 'gl-matrix';
 import {MAX_VALID_LATITUDE, normalizeCenter, scaleZoom, zoomScale} from '../transform_helper';
 import {CameraForBoundsOptions} from '../../ui/camera';
@@ -317,20 +317,7 @@ export class GlobeCameraHelper implements ICameraHelper {
 
         const easeFunc = (k: number) => {
             if (!quat.equals(startRotation, endRotation)) {
-                // At pitch ==0, the Euler angle representation is ambiguous. In this case, set the Euler angles
-                // to the representation requested by the caller
-                if (k < 1) {
-                    const rotation: quat = new Float64Array(4) as any;
-                    quat.slerp(rotation, startRotation, endRotation, k);
-                    const eulerAngles = getRollPitchBearing(rotation);
-                    tr.setRoll(eulerAngles.roll);
-                    tr.setPitch(eulerAngles.pitch);
-                    tr.setBearing(eulerAngles.bearing);
-                } else {
-                    tr.setRoll(endRoll);
-                    tr.setPitch(endPitch);
-                    tr.setBearing(endBearing);
-                }
+                updateRotation(startRotation, endRotation, {roll: endRoll, pitch: endPitch, bearing: endBearing}, tr, k);
             }
 
             if (options.around) {

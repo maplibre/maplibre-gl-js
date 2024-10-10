@@ -1,12 +1,12 @@
 import Point from '@mapbox/point-geometry';
 import {LngLat, LngLatLike} from '../lng_lat';
 import {IReadonlyTransform, ITransform} from '../transform_interface';
-import {cameraBoundsWarning, CameraForBoxAndBearingHandlerResult, EaseToHandlerResult, EaseToHandlerOptions, FlyToHandlerResult, FlyToHandlerOptions, ICameraHelper, MapControlsDeltas} from './camera_helper';
+import {cameraBoundsWarning, CameraForBoxAndBearingHandlerResult, EaseToHandlerResult, EaseToHandlerOptions, FlyToHandlerResult, FlyToHandlerOptions, ICameraHelper, MapControlsDeltas, updateRotation} from './camera_helper';
 import {CameraForBoundsOptions} from '../../ui/camera';
 import {PaddingOptions} from '../edge_insets';
 import {LngLatBounds} from '../lng_lat_bounds';
 import {normalizeCenter, scaleZoom, zoomScale} from '../transform_helper';
-import {degreesToRadians, getRollPitchBearing, rollPitchBearingToQuat} from '../../util/util';
+import {degreesToRadians, rollPitchBearingToQuat} from '../../util/util';
 import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {quat} from 'gl-matrix';
@@ -154,20 +154,7 @@ export class MercatorCameraHelper implements ICameraHelper {
                 tr.setZoom(interpolates.number(startZoom, endZoom, k));
             }
             if (!quat.equals(startRotation, endRotation)) {
-                // At pitch ==0, the Euler angle representation is ambiguous. In this case, set the Euler angles
-                // to the representation requested by the caller
-                if (k < 1) {
-                    const rotation: quat = new Float64Array(4) as any;
-                    quat.slerp(rotation, startRotation, endRotation, k);
-                    const eulerAngles = getRollPitchBearing(rotation);
-                    tr.setRoll(eulerAngles.roll);
-                    tr.setPitch(eulerAngles.pitch);
-                    tr.setBearing(eulerAngles.bearing);
-                } else {
-                    tr.setRoll(endRoll);
-                    tr.setPitch(endPitch);
-                    tr.setBearing(endBearing);
-                }
+                updateRotation(startRotation, endRotation, {roll: endRoll, pitch: endPitch, bearing: endBearing}, tr, k);
             }
             if (doPadding) {
                 tr.interpolatePadding(startPadding, options.padding, k);
