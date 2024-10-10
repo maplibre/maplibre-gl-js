@@ -238,6 +238,12 @@ export type MapOptions = {
      */
     renderWorldCopies?: boolean;
     /**
+     * Controls how tiles are loaded at high pitch angles. Higher numbers cause fewer, lower resolution
+     * tiles to be loaded. A reasonable range for this parameter is [0,2].
+     * @defaultValue 1.0
+     */
+    pitchTileLoadingBehavior?: number;
+    /**
      * The maximum number of tiles stored in the tile cache for a given source. If omitted, the cache will be dynamically sized based on the current viewport which can be set using `maxTileCacheZoomLevels` constructor options.
      * @defaultValue null
      */
@@ -396,6 +402,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     pitch: 0,
 
     renderWorldCopies: true,
+    pitchTileLoadingBehavior: 1.0,
     maxTileCacheSize: null,
     maxTileCacheZoomLevels: config.MAX_TILE_CACHE_ZOOM_LEVELS,
     transformRequest: null,
@@ -604,6 +611,9 @@ export class Map extends Camera {
         }
         if (resolvedOptions.renderWorldCopies !== undefined) {
             transform.setRenderWorldCopies(resolvedOptions.renderWorldCopies);
+        }
+        if (resolvedOptions.pitchTileLoadingBehavior !== undefined) {
+            transform.setPitchTileLoadingBehavior(resolvedOptions.pitchTileLoadingBehavior);
         }
 
         super(transform, cameraHelper, {bearingSnap: resolvedOptions.bearingSnap});
@@ -1167,6 +1177,34 @@ export class Map extends Camera {
      */
     setRenderWorldCopies(renderWorldCopies?: boolean | null): Map {
         this.transform.setRenderWorldCopies(renderWorldCopies);
+        return this._update();
+    }
+
+    /**
+     * Returns the state of `pitchTileLoadingBehavior`.
+     *
+     * This parameter controls how tiles are loaded at high pitch angles. Higher numbers cause fewer, lower resolution
+     * tiles to be loaded. A reasonable range for this parameter is [0,2].
+     * @returns The pitchTileLoadingBehavior
+     * @example
+     * ```ts
+     * let pitchTileLoadingBehavior = map.getPitchTileLoadingBehavior();
+     * ```
+     */
+    getPitchTileLoadingBehavior(): number { return this.transform.pitchTileLoadingBehavior; }
+
+    /**
+     * Sets the state of `pitchTileLoadingBehavior`.
+     *
+     * @param pitchTileLoadingBehavior - Controls how tiles are loaded at high pitch angles. Higher numbers cause fewer, lower resolution
+     * tiles to be loaded. A reasonable range for this parameter is [0,2].
+     * @example
+     * ```ts
+     * map.setPitchTileLoadingBehavior(0.0);
+     * ```
+     */
+    setPitchTileLoadingBehavior(pitchTileLoadingBehavior?: number): Map {
+        this.transform.setPitchTileLoadingBehavior(pitchTileLoadingBehavior);
         return this._update();
     }
 

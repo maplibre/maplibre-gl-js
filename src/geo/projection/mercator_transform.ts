@@ -15,6 +15,7 @@ import {EXTENT} from '../../data/extent';
 import type {ProjectionData} from './projection_data';
 import {scaleZoom, TransformHelper, zoomScale} from '../transform_helper';
 import {mercatorCoveringTiles} from './mercator_covering_tiles';
+import {Frustum} from '../../util/primitives';
 
 export class MercatorTransform implements ITransform {
     private _helper: TransformHelper;
@@ -61,6 +62,9 @@ export class MercatorTransform implements ITransform {
     }
     setRenderWorldCopies(renderWorldCopies: boolean): void {
         this._helper.setRenderWorldCopies(renderWorldCopies);
+    }
+    setPitchTileLoadingBehavior(pitchTileLoadingBehavior: number): void {
+        this._helper.setPitchTileLoadingBehavior(pitchTileLoadingBehavior);
     }
     setBearing(bearing: number): void {
         this._helper.setBearing(bearing);
@@ -177,6 +181,9 @@ export class MercatorTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
     }
+    get pitchTileLoadingBehavior(): number {
+        return this._helper.pitchTileLoadingBehavior;
+    }
 
     //
     // Implementation of mercator transform
@@ -257,7 +264,11 @@ export class MercatorTransform implements ITransform {
     }
 
     coveringTiles(options: CoveringTilesOptions): Array<OverscaledTileID> {
-        return mercatorCoveringTiles(this, options, this._invViewProjMatrix);
+        const cameraCoord = this.screenPointToMercatorCoordinate(this.getCameraPoint());
+        const centerCoord = MercatorCoordinate.fromLngLat(this.center, this.elevation);
+        cameraCoord.z = centerCoord.z + Math.cos(this._helper._pitch) * this.cameraToCenterDistance / this.worldSize;
+        const cameraFrustum = Frustum.fromInvProjectionMatrix(this._invViewProjMatrix, this.worldSize);
+        return mercatorCoveringTiles(this, cameraFrustum, null, cameraCoord, centerCoord, options);
     }
 
     recalculateZoom(terrain: Terrain): void {

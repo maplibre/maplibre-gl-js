@@ -4,6 +4,7 @@
 - Improve performance of `queryRenderedFeatures` by using JavaScript `Set`s to assess layer membership internally.
 
 ### 🐞 Bug fixes
+- Fix level of detail at high pitch angle ([#3983](https://github.com/maplibre/maplibre-gl-js/issues/3983))
 - _...Add new stuff here..._
 
 ## 5.0.0-pre.1

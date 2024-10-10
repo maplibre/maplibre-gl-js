@@ -84,8 +84,11 @@ export class GlobeTransform implements ITransform {
     setMaxPitch(pitch: number): void {
         this._helper.setMaxPitch(pitch);
     }
-    setRenderWorldCopies(renderWorldCopies: boolean): void {
-        this._helper.setRenderWorldCopies(renderWorldCopies);
+    setRenderWorldCopies(_renderWorldCopies: boolean): void {
+    }
+    setPitchTileLoadingBehavior(pitchTileLoadingBehavior: number): void {
+        this._helper.setPitchTileLoadingBehavior(pitchTileLoadingBehavior);
+        this._mercatorTransform.setPitchTileLoadingBehavior(pitchTileLoadingBehavior);
     }
     setBearing(bearing: number): void {
         this._helper.setBearing(bearing);
@@ -200,7 +203,10 @@ export class GlobeTransform implements ITransform {
         return this._helper.unmodified;
     }
     get renderWorldCopies(): boolean {
-        return this._helper.renderWorldCopies;
+        return false;
+    }
+    get pitchTileLoadingBehavior(): number {
+        return this._helper.pitchTileLoadingBehavior;
     }
 
     //
@@ -685,11 +691,11 @@ export class GlobeTransform implements ITransform {
             return this._mercatorTransform.coveringTiles(options);
         }
 
-        const coveringZ = this.coveringZoomLevel(options);
         const cameraCoord = this.screenPointToMercatorCoordinate(this.getCameraPoint());
-        const centerCoord = MercatorCoordinate.fromLngLat(this.center);
+        const centerCoord = MercatorCoordinate.fromLngLat(this.center, this.elevation);
+        cameraCoord.z = centerCoord.z + Math.cos(this._helper._pitch) * this.cameraToCenterDistance / this.worldSize;
 
-        return globeCoveringTiles(this._cachedFrustum, this._cachedClippingPlane, cameraCoord, centerCoord, coveringZ, options);
+        return globeCoveringTiles(this, this._cachedFrustum, this._cachedClippingPlane, cameraCoord, centerCoord, options);
     }
 
     recalculateZoom(terrain: Terrain): void {
