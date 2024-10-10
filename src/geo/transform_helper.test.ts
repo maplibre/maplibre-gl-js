@@ -41,7 +41,7 @@ describe('TransformHelper', () => {
         expect(cloned.worldSize).toEqual(original.worldSize);
         expect(cloned.width).toEqual(original.width);
         expect(cloned.height).toEqual(original.height);
-        expect(cloned.angle).toEqual(original.angle);
+        expect(cloned.bearingInRadians).toEqual(original.bearingInRadians);
         expect(cloned.lngRange).toEqual(original.lngRange);
         expect(cloned.latRange).toEqual(original.latRange);
         expect(cloned.minZoom).toEqual(original.minZoom);

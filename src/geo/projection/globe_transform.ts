@@ -154,9 +154,6 @@ export class GlobeTransform implements ITransform {
     get height(): number {
         return this._helper.height;
     }
-    get angle(): number {
-        return this._helper.angle;
-    }
     get lngRange(): [number, number] {
         return this._helper.lngRange;
     }
@@ -184,14 +181,26 @@ export class GlobeTransform implements ITransform {
     get pitch(): number {
         return this._helper.pitch;
     }
+    get pitchInRadians(): number {
+        return this._helper.pitchInRadians;
+    }
     get roll(): number {
         return this._helper.roll;
+    }
+    get rollInRadians(): number {
+        return this._helper.rollInRadians;
     }
     get bearing(): number {
         return this._helper.bearing;
     }
+    get bearingInRadians(): number {
+        return this._helper.bearingInRadians;
+    }
     get fov(): number {
         return this._helper.fov;
+    }
+    get fovInRadians(): number {
+        return this._helper.fovInRadians;
     }
     get elevation(): number {
         return this._helper.elevation;
@@ -488,13 +497,13 @@ export class GlobeTransform implements ITransform {
         // - "cam" is camera origin
         // - "C" is globe center
         // - "B" is the point on "top" of the globe - camera is looking at B - "B" is the intersection between the camera center ray and the globe
-        // - this._pitch is the angle at B between points cam,B,A
+        // - this._pitchInRadians is the angle at B between points cam,B,A
         // - this.cameraToCenterDistance is the distance from camera to "B"
         // - globe radius is (0.5 * this.worldSize)
         // - "T" is any point where a tangent line from "cam" touches the globe surface
         // - elevation is assumed to be zero - globe rendering must be separate from terrain rendering anyway
 
-        const pitch = this.pitch * Math.PI / 180.0;
+        const pitch = this.pitchInRadians;
         // scale things so that the globe radius is 1
         const distanceCameraToB = this.cameraToCenterDistance / globeRadiusPixels;
         const radius = 1;
@@ -520,7 +529,7 @@ export class GlobeTransform implements ITransform {
         // Note the swizzled components
         const planeVector: vec3 = [0, vectorCtoCamX, vectorCtoCamY];
         // Apply transforms - lat, lng and angle (NOT pitch - already accounted for, as it affects the tangent plane)
-        vec3.rotateZ(planeVector, planeVector, [0, 0, 0], this.angle);
+        vec3.rotateZ(planeVector, planeVector, [0, 0, 0], -this.bearingInRadians);
         vec3.rotateX(planeVector, planeVector, [0, 0, 0], -1 * this.center.lat * Math.PI / 180.0);
         vec3.rotateY(planeVector, planeVector, [0, 0, 0], this.center.lng * Math.PI / 180.0);
         // Scale the plane vector up
@@ -623,7 +632,7 @@ export class GlobeTransform implements ITransform {
         const globeMatrixUncorrected = createMat4f64();
         this._nearZ = 0.5;
         this._farZ = this.cameraToCenterDistance + globeRadiusPixels * 2.0; // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
-        mat4.perspective(globeMatrix, this.fov * Math.PI / 180, this.width / this.height, this._nearZ, this._farZ);
+        mat4.perspective(globeMatrix, this.fovInRadians, this.width / this.height, this._nearZ, this._farZ);
 
         // Apply center of perspective offset
         const offset = this.centerOffset;
@@ -634,9 +643,9 @@ export class GlobeTransform implements ITransform {
         this._globeProjMatrixInverted = createMat4f64();
         mat4.invert(this._globeProjMatrixInverted, globeMatrix);
         mat4.translate(globeMatrix, globeMatrix, [0, 0, -this.cameraToCenterDistance]);
-        mat4.rotateZ(globeMatrix, globeMatrix, this.roll * Math.PI / 180);
-        mat4.rotateX(globeMatrix, globeMatrix, -this.pitch * Math.PI / 180);
-        mat4.rotateZ(globeMatrix, globeMatrix, -this.angle);
+        mat4.rotateZ(globeMatrix, globeMatrix, this.rollInRadians);
+        mat4.rotateX(globeMatrix, globeMatrix, -this.pitchInRadians);
+        mat4.rotateZ(globeMatrix, globeMatrix, this.bearingInRadians);
         mat4.translate(globeMatrix, globeMatrix, [0.0, 0, -globeRadiusPixels]);
         // Rotate the sphere to center it on viewed coordinates
 
@@ -662,9 +671,9 @@ export class GlobeTransform implements ITransform {
         const zero = createVec3f64();
         this._cameraPosition = createVec3f64();
         this._cameraPosition[2] = this.cameraToCenterDistance / globeRadiusPixels;
-        vec3.rotateZ(this._cameraPosition, this._cameraPosition, zero, -this.roll * Math.PI / 180);
-        vec3.rotateX(this._cameraPosition, this._cameraPosition, zero, this.pitch * Math.PI / 180);
-        vec3.rotateZ(this._cameraPosition, this._cameraPosition, zero, this.angle);
+        vec3.rotateZ(this._cameraPosition, this._cameraPosition, zero, -this.rollInRadians);
+        vec3.rotateX(this._cameraPosition, this._cameraPosition, zero, this.pitchInRadians);
+        vec3.rotateZ(this._cameraPosition, this._cameraPosition, zero, -this.bearingInRadians);
         vec3.add(this._cameraPosition, this._cameraPosition, [0, 0, 1]);
         vec3.rotateX(this._cameraPosition, this._cameraPosition, zero, -this.center.lat * Math.PI / 180.0);
         vec3.rotateY(this._cameraPosition, this._cameraPosition, zero, this.center.lng * Math.PI / 180.0);

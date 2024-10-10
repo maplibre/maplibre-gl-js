@@ -75,11 +75,6 @@ export interface ITransformGetters {
      */
     get height(): number;
 
-    /**
-     * Gets the transform's bearing in radians.
-     */
-    get angle(): number;
-
     get lngRange(): [number, number];
     get latRange(): [number, number];
 
@@ -94,18 +89,22 @@ export interface ITransformGetters {
      * Roll in degrees.
      */
     get roll(): number;
+    get rollInRadians(): number;
     /**
      * Pitch in degrees.
      */
     get pitch(): number;
+    get pitchInRadians(): number;
     /**
      * Bearing in degrees.
      */
     get bearing(): number;
+    get bearingInRadians(): number;
     /**
      * Vertical field of view in degrees.
      */
     get fov(): number;
+    get fovInRadians(): number;
 
     get elevation(): number;
     get minElevationForCurrentTile(): number;

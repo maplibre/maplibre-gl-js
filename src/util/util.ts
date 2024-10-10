@@ -33,7 +33,7 @@ export function createIdentityMat4f64(): mat4 {
  * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
  */
 export function translatePosition(
-    transform: { angle: number; zoom: number },
+    transform: { bearingInRadians: number; zoom: number },
     tile: { tileID: OverscaledTileID; tileSize: number },
     translate: [number, number],
     translateAnchor: 'map' | 'viewport',
@@ -42,8 +42,8 @@ export function translatePosition(
     if (!translate[0] && !translate[1]) return [0, 0];
 
     const angle = inViewportPixelUnitsUnits ?
-        (translateAnchor === 'map' ? transform.angle : 0) :
-        (translateAnchor === 'viewport' ? -transform.angle : 0);
+        (translateAnchor === 'map' ? -transform.bearingInRadians : 0) :
+        (translateAnchor === 'viewport' ? transform.bearingInRadians : 0);
 
     if (angle) {
         const sinA = Math.sin(angle);

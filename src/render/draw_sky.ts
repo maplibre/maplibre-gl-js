@@ -64,9 +64,9 @@ function getSunPos(light: Light, transform: IReadonlyTransform): vec3 {
     const lightMat = mat4.identity(new Float64Array(16) as any);
 
     if (light.properties.get('anchor') === 'map') {
-        mat4.rotateZ(lightMat, lightMat, transform.roll * Math.PI / 180);
-        mat4.rotateX(lightMat, lightMat, -transform.pitch * Math.PI / 180);
-        mat4.rotateZ(lightMat, lightMat, -transform.angle);
+        mat4.rotateZ(lightMat, lightMat, transform.rollInRadians);
+        mat4.rotateX(lightMat, lightMat, -transform.pitchInRadians);
+        mat4.rotateZ(lightMat, lightMat, transform.bearingInRadians);
         mat4.rotateX(lightMat, lightMat, transform.center.lat * Math.PI / 180.0);
         mat4.rotateY(lightMat, lightMat, -transform.center.lng * Math.PI / 180.0);
     }

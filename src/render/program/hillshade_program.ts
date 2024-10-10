@@ -65,7 +65,7 @@ const hillshadeUniformValues = (
     let azimuthal = layer.paint.get('hillshade-illumination-direction') * (Math.PI / 180);
     // modify azimuthal angle by map rotation if light is anchored at the viewport
     if (layer.paint.get('hillshade-illumination-anchor') === 'viewport') {
-        azimuthal -= painter.transform.angle;
+        azimuthal += painter.transform.bearingInRadians;
     }
     return {
         'u_image': 0,

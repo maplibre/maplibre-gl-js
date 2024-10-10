@@ -93,20 +93,19 @@ export class TransformHelper implements ITransformGetters {
     /**
      * Vertical field of view in radians.
      */
-    _fov: number;
+    _fovInRadians: number;
     /**
      * This transform's bearing in radians.
-     * Note that the sign of this variable is *opposite* to the sign of {@link bearing}
      */
-    _angle: number;
+    _bearingInRadians: number;
     /**
      * Pitch in radians.
      */
-    _pitch: number;
+    _pitchInRadians: number;
     /**
      * Roll in radians.
      */
-    _roll: number;
+    _rollInRadians: number;
     _zoom: number;
     _renderWorldCopies: boolean;
     _minZoom: number;
@@ -146,10 +145,10 @@ export class TransformHelper implements ITransformGetters {
         this._zoom = 0;
         this._tileZoom = getTileZoom(this._zoom);
         this._scale = zoomScale(this._zoom);
-        this._angle = 0;
-        this._fov = 0.6435011087932844;
-        this._pitch = 0;
-        this._roll = 0;
+        this._bearingInRadians = 0;
+        this._fovInRadians = 0.6435011087932844;
+        this._pitchInRadians = 0;
+        this._rollInRadians = 0;
         this._unmodified = true;
         this._edgeInsets = new EdgeInsets();
         this._minElevationForCurrentTile = 0;
@@ -166,10 +165,10 @@ export class TransformHelper implements ITransformGetters {
         this._zoom = thatI.zoom;
         this._tileZoom = getTileZoom(this._zoom);
         this._scale = zoomScale(this._zoom);
-        this._angle = -thatI.bearing * Math.PI / 180;
-        this._fov = thatI.fov * Math.PI / 180;
-        this._pitch = thatI.pitch * Math.PI / 180;
-        this._roll = thatI.roll * Math.PI / 180;
+        this._bearingInRadians = thatI.bearingInRadians;
+        this._fovInRadians = thatI.fovInRadians;
+        this._pitchInRadians = thatI.pitchInRadians;
+        this._rollInRadians = thatI.rollInRadians;
         this._unmodified = thatI.unmodified;
         this._edgeInsets = new EdgeInsets(thatI.padding.top, thatI.padding.bottom, thatI.padding.left, thatI.padding.right);
         this._minZoom = thatI.minZoom;
@@ -208,7 +207,7 @@ export class TransformHelper implements ITransformGetters {
     /**
      * Gets the transform's bearing in radians.
      */
-    get angle(): number { return this._angle; }
+    get bearingInRadians(): number { return this._bearingInRadians; }
 
     get lngRange(): [number, number] { return this._lngRange; }
     get latRange(): [number, number] { return this._latRange; }
@@ -270,52 +269,61 @@ export class TransformHelper implements ITransformGetters {
     }
 
     get bearing(): number {
-        return -this._angle / Math.PI * 180;
+        return this._bearingInRadians / Math.PI * 180;
     }
     setBearing(bearing: number) {
-        const b = -wrap(bearing, -180, 180) * Math.PI / 180;
-        if (this._angle === b) return;
+        const b = wrap(bearing, -180, 180) * Math.PI / 180;
+        if (this._bearingInRadians === b) return;
         this._unmodified = false;
-        this._angle = b;
+        this._bearingInRadians = b;
         this._calcMatrices();
 
         // 2x2 matrix for rotating points
         this._rotationMatrix = mat2.create();
-        mat2.rotate(this._rotationMatrix, this._rotationMatrix, this._angle);
+        mat2.rotate(this._rotationMatrix, this._rotationMatrix, -this._bearingInRadians);
     }
 
     get rotationMatrix(): mat2 { return this._rotationMatrix; }
 
+    get pitchInRadians(): number {
+        return this._pitchInRadians;
+    }
     get pitch(): number {
-        return this._pitch / Math.PI * 180;
+        return this._pitchInRadians / Math.PI * 180;
     }
     setPitch(pitch: number) {
         const p = clamp(pitch, this.minPitch, this.maxPitch) / 180 * Math.PI;
-        if (this._pitch === p) return;
+        if (this._pitchInRadians === p) return;
         this._unmodified = false;
-        this._pitch = p;
+        this._pitchInRadians = p;
         this._calcMatrices();
     }
 
+    get rollInRadians(): number {
+        return this._rollInRadians;
+    }
     get roll(): number {
-        return this._roll / Math.PI * 180;
+        return this._rollInRadians / Math.PI * 180;
     }
     setRoll(roll: number) {
         const r = roll / 180 * Math.PI;
-        if (this._roll === r) return;
+        if (this._rollInRadians === r) return;
         this._unmodified = false;
-        this._roll = r;
+        this._rollInRadians = r;
         this._calcMatrices();
     }
 
+    get fovInRadians(): number {
+        return this._fovInRadians;
+    }
     get fov(): number {
-        return this._fov / Math.PI * 180;
+        return this._fovInRadians / Math.PI * 180;
     }
     setFov(fov: number) {
         fov = Math.max(0.01, Math.min(60, fov));
-        if (this._fov === fov) return;
+        if (this._fovInRadians === fov) return;
         this._unmodified = false;
-        this._fov = fov / 180 * Math.PI;
+        this._fovInRadians = fov / 180 * Math.PI;
         this._calcMatrices();
     }
 
