@@ -45,7 +45,7 @@ export type CoveringTilesOptions = CoveringZoomOptions & {
      * Controls how tiles are loaded at high pitch angles. Higher numbers cause fewer, lower resolution
      * tiles to be loaded. A reasonable range for this parameter is [0,2].
      */
-    pitchBehavior?: number;
+    pitchTileLoadingBehavior?: number;
 };
 
 export type TransformUpdateResult = {
@@ -116,7 +116,7 @@ export interface ITransformGetters {
 
     get renderWorldCopies(): boolean;
 
-    get pitchBehavior(): number;
+    get pitchTileLoadingBehavior(): number;
 }
 
 /**
@@ -152,9 +152,9 @@ interface ITransformMutators {
 
     /**
      * Changes how tiles are loaded at high pitch angles. Higher numbers cause fewer, lower resolution
-     * tiles to be loaded. A reasonable range for `pitchBehavior` is [0,2].
+     * tiles to be loaded. A reasonable range for `pitchTileLoadingBehavior` is [0,2].
      */
-    setPitchBehavior(pitchBehavior: number): void;
+    setPitchTileLoadingBehavior(pitchTileLoadingBehavior: number): void;
     /**
      * Sets the transform's bearing, in degrees.
      * Recomputes internal matrices if needed.

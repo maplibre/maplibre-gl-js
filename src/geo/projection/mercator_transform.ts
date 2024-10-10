@@ -63,8 +63,8 @@ export class MercatorTransform implements ITransform {
     setRenderWorldCopies(renderWorldCopies: boolean): void {
         this._helper.setRenderWorldCopies(renderWorldCopies);
     }
-    setPitchBehavior(pitchBehavior: number): void {
-        this._helper.setPitchBehavior(pitchBehavior);
+    setPitchTileLoadingBehavior(pitchTileLoadingBehavior: number): void {
+        this._helper.setPitchTileLoadingBehavior(pitchTileLoadingBehavior);
     }
     setBearing(bearing: number): void {
         this._helper.setBearing(bearing);
@@ -181,8 +181,8 @@ export class MercatorTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
     }
-    get pitchBehavior(): number {
-        return this._helper.pitchBehavior;
+    get pitchTileLoadingBehavior(): number {
+        return this._helper.pitchTileLoadingBehavior;
     }
 
     //

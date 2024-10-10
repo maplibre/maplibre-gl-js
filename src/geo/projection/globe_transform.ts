@@ -86,9 +86,9 @@ export class GlobeTransform implements ITransform {
     }
     setRenderWorldCopies(_renderWorldCopies: boolean): void {
     }
-    setPitchBehavior(pitchBehavior: number): void {
-        this._helper.setPitchBehavior(pitchBehavior);
-        this._mercatorTransform.setPitchBehavior(pitchBehavior);
+    setPitchTileLoadingBehavior(pitchTileLoadingBehavior: number): void {
+        this._helper.setPitchTileLoadingBehavior(pitchTileLoadingBehavior);
+        this._mercatorTransform.setPitchTileLoadingBehavior(pitchTileLoadingBehavior);
     }
     setBearing(bearing: number): void {
         this._helper.setBearing(bearing);
@@ -205,8 +205,8 @@ export class GlobeTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return false;
     }
-    get pitchBehavior(): number {
-        return this._helper.pitchBehavior;
+    get pitchTileLoadingBehavior(): number {
+        return this._helper.pitchTileLoadingBehavior;
     }
 
     //
