@@ -4,7 +4,8 @@ import {CoveringTilesOptions} from '../transform_interface';
 import {OverscaledTileID} from '../../source/tile_id';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {EXTENT} from '../../data/extent';
-import {projectTileCoordinatesToSphere} from './globe_utils';
+import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, sphereSurfacePointToCoordinates} from './globe_utils';
+import {createVec3f64, pointPlaneSignedDistance} from '../../util/util';
 
 type CoveringTilesResult = {
     tileID: OverscaledTileID;
@@ -18,6 +19,78 @@ type CoveringTilesStackEntry = {
     zoom: number;
     fullyVisible: boolean;
 };
+
+function mercatorToVector(mercatorX: number, mercatorY: number): vec3 {
+    const angular = mercatorCoordinatesToAngularCoordinatesRadians(mercatorX, mercatorY);
+    return angularCoordinatesRadiansToVector(angular[0], angular[1]);
+}
+
+/**
+ * A more accurate function for determining whether a tile is hidden below horizon.
+ * @param cameraX - Camera mercator X (0..1)
+ * @param cameraY - Camera mercator Y (0..1)
+ * @param tileX - Tile X (0..2^z)
+ * @param tileY - Tile Y (0..2^z)
+ * @param tileZ - Tile Z (zoom)
+ * @param plane - Horizon plane.
+ * @returns True if the tile is entirely below horizon.
+ */
+function tileBelowHorizon(cameraX: number, cameraY: number, tileX: number, tileY: number, tileZ: number, plane: vec4): boolean {
+    const scale = 1.0 / (1 << tileZ);
+    const tileStartX = tileX * scale;
+    const tileStartY = tileY * scale;
+    const tileEndX = tileStartX + scale;
+    const tileEndY = tileStartY + scale;
+    if (cameraX >= tileStartX && cameraY >= tileStartY && cameraX <= tileEndX && cameraY <= tileEndY) {
+        // Camera is above the tile
+        return false;
+    }
+
+    // Naive
+    const naiveClosestX = Math.min(Math.max(cameraX, tileStartX), tileEndX);
+    const naiveClosestY = Math.min(Math.max(cameraY, tileStartY), tileEndY);
+    if (pointPlaneSignedDistance(plane, mercatorToVector(naiveClosestX, naiveClosestY)) >= 0) {
+        return false;
+    }
+
+    // Wrapped left
+    const wrappedLeftClosestX = Math.min(Math.max(cameraX - 1, tileStartX), tileEndX);
+    if (pointPlaneSignedDistance(plane, mercatorToVector(wrappedLeftClosestX, naiveClosestY)) >= 0) {
+        return false;
+    }
+
+    // Wrapped right
+    const wrappedRightClosestX = Math.min(Math.max(cameraX + 1, tileStartX), tileEndX);
+    if (pointPlaneSignedDistance(plane, mercatorToVector(wrappedRightClosestX, naiveClosestY)) >= 0) {
+        return false;
+    }
+
+    // Over north pole, shift left
+    const shiftLeftClosestX = Math.min(Math.max(cameraX - 0.5, tileStartX), tileEndX);
+    const overNorthClosestY = Math.min(Math.max(-cameraY, tileStartY), tileEndY);
+    if (pointPlaneSignedDistance(plane, mercatorToVector(shiftLeftClosestX, overNorthClosestY)) >= 0) {
+        return false;
+    }
+
+    // Over north pole, shift right
+    const shiftRightClosestX = Math.min(Math.max(cameraX + 0.5, tileStartX), tileEndX);
+    if (pointPlaneSignedDistance(plane, mercatorToVector(shiftRightClosestX, overNorthClosestY)) >= 0) {
+        return false;
+    }
+
+    // Over south pole, shift left
+    const overSouthClosestY = Math.min(Math.max(-cameraY, tileStartY), tileEndY);
+    if (pointPlaneSignedDistance(plane, mercatorToVector(shiftLeftClosestX, overSouthClosestY)) >= 0) {
+        return false;
+    }
+
+    // Over south pole, shift right
+    if (pointPlaneSignedDistance(plane, mercatorToVector(shiftRightClosestX, overSouthClosestY)) >= 0) {
+        return false;
+    }
+
+    return true;
+}
 
 /**
  * Computes distance of a point to a tile in an arbitrary axis.
@@ -81,7 +154,7 @@ function shouldSplitTile(centerCoord: MercatorCoordinate, cameraCoord: MercatorC
     // This logic might be slightly different from what mercator_transform.ts does, but should result in very similar (if not the same) set of tiles being loaded.
     const centerDist = distanceToTile(centerCoord.x, centerCoord.y, tileX, tileY, tileSize);
     const cameraDist = distanceToTile(cameraCoord.x, cameraCoord.y, tileX, tileY, tileSize);
-    return Math.min(centerDist, cameraDist) * 2 <= radiusOfMaxLvlLodInTiles; // Multiply distance by 2, because the subdivided tiles would be half the size
+    return Math.min(centerDist, cameraDist) * 2 <= radiusOfMaxLvlLodInTiles * tileSize; // Multiply distance by 2, because the subdivided tiles would be half the size
 }
 
 // Returns the wrap value for a given tile, computed so that tiles will remain loaded when crossing the antimeridian.
@@ -99,11 +172,20 @@ function getWrap(centerCoord: MercatorCoordinate, tileX: number, tileSize: numbe
     return 0;
 }
 
+// Tile AABBs are static, cache them!
+const tileAabbCache: Map<string, Aabb> = new Map();
+
 /**
  * Returns the AABB of the specified tile. The AABB is in the coordinate space where the globe is a unit sphere.
  * @param tileID - Tile x, y and z for zoom.
  */
-export function getTileAABB(tileID: {x: number; y: number; z: number}): Aabb {
+export function getTileAABB(tileIdX: number, tileIdY: number, tileIdZ: number): Aabb {
+    const key = `${tileIdX}_${tileIdY}_${tileIdZ}`;
+    if (tileAabbCache.has(key)) {
+        return tileAabbCache.get(key);
+    }
+
+    let aabb: Aabb;
     // We can get away with only checking the 4 tile corners for AABB construction, because for any tile of zoom level 2 or higher
     // it holds that the extremes (minimal or maximal value) of X, Y or Z coordinates must lie in one of the tile corners.
     //
@@ -134,29 +216,29 @@ export function getTileAABB(tileID: {x: number; y: number; z: number}): Aabb {
     // - zoom level 0 tile is the entire sphere
     // - zoom level 1 tiles are "quarters of a sphere"
 
-    if (tileID.z <= 0) {
+    if (tileIdZ <= 0) {
         // Tile covers the entire sphere.
-        return new Aabb(
+        aabb = new Aabb(
             [-1, -1, -1],
             [1, 1, 1]
         );
-    } else if (tileID.z === 1) {
+    } else if (tileIdZ === 1) {
         // Tile covers a quarter of the sphere.
         // X is 1 at lng=E90°
         // Y is 1 at **north** pole
         // Z is 1 at null island
-        return new Aabb(
-            [tileID.x === 0 ? -1 : 0, tileID.y === 0 ? 0 : -1, -1],
-            [tileID.x === 0 ? 0 : 1, tileID.y === 0 ? 1 : 0, 1]
+        aabb = new Aabb(
+            [tileIdX === 0 ? -1 : 0, tileIdY === 0 ? 0 : -1, -1],
+            [tileIdX === 0 ? 0 : 1, tileIdY === 0 ? 1 : 0, 1]
         );
     } else {
         // Compute AABB using the 4 corners.
 
         const corners = [
-            projectTileCoordinatesToSphere(0, 0, tileID),
-            projectTileCoordinatesToSphere(EXTENT, 0, tileID),
-            projectTileCoordinatesToSphere(EXTENT, EXTENT, tileID),
-            projectTileCoordinatesToSphere(0, EXTENT, tileID),
+            projectTileCoordinatesToSphere(0, 0, tileIdX, tileIdY, tileIdZ),
+            projectTileCoordinatesToSphere(EXTENT, 0, tileIdX, tileIdY, tileIdZ),
+            projectTileCoordinatesToSphere(EXTENT, EXTENT, tileIdX, tileIdY, tileIdZ),
+            projectTileCoordinatesToSphere(0, EXTENT, tileIdX, tileIdY, tileIdZ),
         ];
 
         const min: vec3 = [1, 1, 1];
@@ -171,28 +253,37 @@ export function getTileAABB(tileID: {x: number; y: number; z: number}): Aabb {
 
         // Special handling of poles - we need to extend the tile AABB
         // to include the pole for tiles that border mercator north/south edge.
-        if (tileID.y === 0 || (tileID.y === (1 << tileID.z) - 1)) {
-            const pole = [0, tileID.y === 0 ? 1 : -1, 0];
+        if (tileIdY === 0 || (tileIdY === (1 << tileIdZ) - 1)) {
+            const pole = [0, tileIdY === 0 ? 1 : -1, 0];
             for (let i = 0; i < 3; i++) {
                 min[i] = Math.min(min[i], pole[i]);
                 max[i] = Math.max(max[i], pole[i]);
             }
         }
 
-        return new Aabb(
+        aabb = new Aabb(
             min,
             max
         );
     }
+
+    tileAabbCache.set(key, aabb);
+    return aabb;
 }
 
 /**
  * A simple/heuristic function that returns whether the tile is visible under the current transform.
  * @returns 0 is not visible, 1 if partially visible, 2 if fully visible.
  */
-function isTileVisible(frustum: Frustum, plane: vec4, x: number, y: number, z: number): IntersectionResult {
-    const tileID = {x, y, z};
-    const aabb = getTileAABB(tileID);
+function isTileVisible(frustum: Frustum, plane: vec4, x: number, y: number, z: number, cameraX: number, cameraY: number): IntersectionResult {
+    // First test if the tile is below horzion.
+    // This alone cannot determine whether the tile is only partially hidden,
+    // so the AABB-plane test below is still needed.
+    if (tileBelowHorizon(cameraX, cameraY, x, y, z, plane)) {
+        return IntersectionResult.None;
+    }
+
+    const aabb = getTileAABB(x, y, z);
 
     const frustumTest = aabb.intersectsFrustum(frustum);
     const planeTest = aabb.intersectsPlane(plane);
@@ -215,7 +306,7 @@ function isTileVisible(frustum: Frustum, plane: vec4, x: number, y: number, z: n
  * @param options - Additional coveringTiles options.
  * @returns A list of tile coordinates, ordered by ascending distance from camera.
  */
-export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: MercatorCoordinate, centerCoord: MercatorCoordinate, coveringZoom: number, options: CoveringTilesOptions): OverscaledTileID[] {
+export function globeCoveringTiles(frustum: Frustum, plane: vec4, centerCoord: MercatorCoordinate, cameraPosition: vec3, coveringZoom: number, options: CoveringTilesOptions): OverscaledTileID[] {
     let z = coveringZoom;
     const actualZ = z;
 
@@ -225,6 +316,11 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
     if (options.maxzoom !== undefined && z > options.maxzoom) {
         z = options.maxzoom;
     }
+
+    const normalizedCamera = createVec3f64();
+    vec3.normalize(normalizedCamera, cameraPosition);
+    const cameraLocation = sphereSurfacePointToCoordinates(normalizedCamera);
+    const cameraCoord = MercatorCoordinate.fromLngLat(cameraLocation);
 
     const numTiles = Math.pow(2, z);
     const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
@@ -252,7 +348,7 @@ export function globeCoveringTiles(frustum: Frustum, plane: vec4, cameraCoord: M
 
         // Visibility of a tile is not required if any of its ancestor if fully visible
         if (!fullyVisible) {
-            const intersectResult = isTileVisible(frustum, plane, it.x, it.y, it.zoom);
+            const intersectResult = isTileVisible(frustum, plane, it.x, it.y, it.zoom, cameraCoord.x, cameraCoord.y);
 
             if (intersectResult === IntersectionResult.None)
                 continue;
