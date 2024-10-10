@@ -1,14 +1,15 @@
 import Point from '@mapbox/point-geometry';
 import {LngLat, LngLatLike} from '../lng_lat';
 import {IReadonlyTransform, ITransform} from '../transform_interface';
-import {cameraBoundsWarning, CameraForBoxAndBearingHandlerResult, EaseToHandlerResult, EaseToHandlerOptions, FlyToHandlerResult, FlyToHandlerOptions, ICameraHelper, MapControlsDeltas} from './camera_helper';
+import {cameraBoundsWarning, CameraForBoxAndBearingHandlerResult, EaseToHandlerResult, EaseToHandlerOptions, FlyToHandlerResult, FlyToHandlerOptions, ICameraHelper, MapControlsDeltas, updateRotation} from './camera_helper';
 import {CameraForBoundsOptions} from '../../ui/camera';
 import {PaddingOptions} from '../edge_insets';
 import {LngLatBounds} from '../lng_lat_bounds';
 import {normalizeCenter, scaleZoom, zoomScale} from '../transform_helper';
-import {degreesToRadians} from '../../util/util';
+import {degreesToRadians, rollPitchBearingToQuat} from '../../util/util';
 import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
+import {quat} from 'gl-matrix';
 
 /**
  * @internal
@@ -119,9 +120,12 @@ export class MercatorCameraHelper implements ICameraHelper {
 
     handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandlerResult {
         const startZoom = tr.zoom;
-        const startBearing = tr.bearing;
-        const startPitch = tr.pitch;
         const startPadding = tr.padding;
+        const startRotation = rollPitchBearingToQuat(tr.roll, tr.pitch, tr.bearing);
+        const endRoll = options.roll === undefined ? tr.roll : options.roll;
+        const endPitch = options.pitch === undefined ? tr.pitch : options.pitch;
+        const endBearing = options.bearing === undefined ? tr.bearing : options.bearing;
+        const endRotation = rollPitchBearingToQuat(endRoll, endPitch, endBearing);
 
         const optionsZoom = typeof options.zoom !== 'undefined';
 
@@ -149,11 +153,8 @@ export class MercatorCameraHelper implements ICameraHelper {
             if (isZooming) {
                 tr.setZoom(interpolates.number(startZoom, endZoom, k));
             }
-            if (startBearing !== options.bearing) {
-                tr.setBearing(interpolates.number(startBearing, options.bearing, k));
-            }
-            if (startPitch !== options.pitch) {
-                tr.setPitch(interpolates.number(startPitch, options.pitch, k));
+            if (!quat.equals(startRotation, endRotation)) {
+                updateRotation(startRotation, endRotation, {roll: endRoll, pitch: endPitch, bearing: endBearing}, tr, k);
             }
             if (doPadding) {
                 tr.interpolatePadding(startPadding, options.padding, k);

@@ -75,11 +75,6 @@ export interface ITransformGetters {
      */
     get height(): number;
 
-    /**
-     * Gets the transform's bearing in radians.
-     */
-    get angle(): number;
-
     get lngRange(): [number, number];
     get latRange(): [number, number];
 
@@ -91,17 +86,25 @@ export interface ITransformGetters {
     get minPitch(): number;
     get maxPitch(): number;
     /**
+     * Roll in degrees.
+     */
+    get roll(): number;
+    get rollInRadians(): number;
+    /**
      * Pitch in degrees.
      */
     get pitch(): number;
+    get pitchInRadians(): number;
     /**
      * Bearing in degrees.
      */
     get bearing(): number;
+    get bearingInRadians(): number;
     /**
      * Vertical field of view in degrees.
      */
     get fov(): number;
+    get fovInRadians(): number;
 
     get elevation(): number;
     get minElevationForCurrentTile(): number;
@@ -152,6 +155,11 @@ interface ITransformMutators {
      * Recomputes internal matrices if needed.
      */
     setPitch(pitch: number): void;
+    /**
+     * Sets the transform's roll, in degrees.
+     * Recomputes internal matrices if needed.
+     */
+    setRoll(roll: number): void;
     /**
      * Sets the transform's vertical field of view, in degrees.
      * Recomputes internal matrices if needed.
