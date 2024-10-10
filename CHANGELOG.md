@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Improve performance of `queryRenderedFeatures` by using JavaScript `Set`s to assess layer membership internally.
 - Add support for camera roll angle ([#4717](https://github.com/maplibre/maplibre-gl-js/issues/4717))
 - _...Add new stuff here..._
 
