@@ -114,8 +114,16 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
             gradientTexture.bind(layer.stepInterpolant ? gl.NEAREST : gl.LINEAR, gl.CLAMP_TO_EDGE);
         }
 
+        let isOffset = false;
+        let propLineOffset = layer.paint.get("line-offset");
+        if (propLineOffset && propLineOffset.hasOwnProperty("value")) {
+            if (propLineOffset.value.hasOwnProperty("value")) {
+                // @ts-ignore
+                isOffset = propLineOffset.value.value !== 0;
+            }
+        }
         program.draw(context, gl.TRIANGLES, depthMode,
-            painter.stencilModeForClipping(coord), colorMode, CullFaceMode.disabled, uniformValues, terrainData,
+            painter.stencilModeForClipping(coord, isOffset), colorMode, CullFaceMode.disabled, uniformValues, terrainData,
             layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments,
             layer.paint, painter.transform.zoom, programConfiguration, bucket.layoutVertexBuffer2);
 

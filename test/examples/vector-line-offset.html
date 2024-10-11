@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Offset a vector tile line</title>
+    <meta
+      property="og:description"
+      content="Offset vector tile line features."
+    />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="../../dist/maplibre-gl.css" />
+    <script src="../../dist/maplibre-gl-dev.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body,
+      #map {
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script>
+      const map = new maplibregl.Map({
+          container: 'map',
+          style: 'https://demotiles.maplibre.org/style.json',
+          center: [-122.1, 36.37],
+          zoom: 8,
+      });
+
+      map.on('load', () => {
+          map.addSource('terrain', {
+              type: 'vector',
+              tiles: ['https://demotiles.maplibre.org/tiles/{z}/{x}/{y}.pbf'],
+          });
+          map.addLayer({
+              id: 'terrain-data',
+              type: 'line',
+              source: 'terrain',
+              'source-layer': 'countries',
+              paint: {
+                  'line-color': '#ff0000',
+                  'line-width': 3,
+                  'line-offset': 128,
+              },
+          });
+          map.addLayer({
+              id: 'terrain-data2',
+              type: 'line',
+              source: 'terrain',
+              'source-layer': 'countries',
+              paint: {
+                  'line-color': '#0000ff',
+                  'line-width': 2,
+              },
+          });
+      });
+    </script>
+  </body>
+</html>

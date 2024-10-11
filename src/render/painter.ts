@@ -270,8 +270,11 @@ export class Painter {
         return new StencilMode({func: gl.NOTEQUAL, mask: 0xFF}, id, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE);
     }
 
-    stencilModeForClipping(tileID: OverscaledTileID): StencilMode {
+    stencilModeForClipping(tileID: OverscaledTileID, isOffset=false): StencilMode {
         const gl = this.context.gl;
+        if (isOffset) {
+            return new StencilMode({func: gl.EQUAL, mask: 0}, 0, 0x00, gl.KEEP, gl.KEEP, gl.REPLACE);
+        }
         return new StencilMode({func: gl.EQUAL, mask: 0xFF}, this._tileClippingMaskIDs[tileID.key], 0x00, gl.KEEP, gl.KEEP, gl.REPLACE);
     }
 
