@@ -54,7 +54,7 @@ export class GlobeCameraHelper implements ICameraHelper {
             return;
         }
 
-        console.log('handleMapControlsPitchBearingZoom');
+        //console.log('handleMapControlsPitchBearingZoom');
 
         const zoomPixel = deltas.around;
         const zoomLoc = tr.screenPointToLocation(zoomPixel);
@@ -114,7 +114,6 @@ export class GlobeCameraHelper implements ICameraHelper {
 
         // Compute how much to move towards the zoom location
         const factor = (1.0 - zoomScale(-actualZoomDelta)) * Math.min(distanceFactor, radiusFactor);
-
         const oldCenterLat = tr.center.lat;
         const oldZoom = tr.zoom;
         const heuristicCenter = new LngLat(
@@ -159,7 +158,6 @@ export class GlobeCameraHelper implements ICameraHelper {
         tr.setCenter(computeGlobePanCenter(deltas.panDelta, tr).wrap());
         // Setting the center might adjust zoom to keep globe size constant, we need to avoid adding this adjustment a second time
         //tr.setZoom(oldZoom + getZoomAdjustment(oldLat, tr.center.lat));
-        //todo: zoom jumps around a little bit because of adjustments of setCenter?
         tr.setZoom(oldZoom);
     }
 
