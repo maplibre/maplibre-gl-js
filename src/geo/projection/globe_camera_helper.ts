@@ -54,6 +54,8 @@ export class GlobeCameraHelper implements ICameraHelper {
             return;
         }
 
+        console.log('handleMapControlsPitchBearingZoom');
+
         const zoomPixel = deltas.around;
         const zoomLoc = tr.screenPointToLocation(zoomPixel);
 
@@ -156,7 +158,9 @@ export class GlobeCameraHelper implements ICameraHelper {
         const oldZoom = tr.zoom;
         tr.setCenter(computeGlobePanCenter(deltas.panDelta, tr).wrap());
         // Setting the center might adjust zoom to keep globe size constant, we need to avoid adding this adjustment a second time
-        tr.setZoom(oldZoom + getZoomAdjustment(oldLat, tr.center.lat));
+        //tr.setZoom(oldZoom + getZoomAdjustment(oldLat, tr.center.lat));
+        //todo: zoom jumps around a little bit because of adjustments of setCenter?
+        tr.setZoom(oldZoom);
     }
 
     cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
@@ -165,6 +169,8 @@ export class GlobeCameraHelper implements ICameraHelper {
         if (!this.useGlobeControls) {
             return result;
         }
+
+        console.log('cameraForBoxAndBearing');
 
         // If globe is enabled, we use the parameters computed for mercator, and just update the zoom to fit the bounds.
 
@@ -240,6 +246,8 @@ export class GlobeCameraHelper implements ICameraHelper {
             return;
         }
 
+        console.log('handleJumpToCenterZoom');
+
         // Special zoom & center handling for globe:
         // Globe constrained center isn't dependent on zoom level
         const startingLat = tr.center.lat;
@@ -257,6 +265,10 @@ export class GlobeCameraHelper implements ICameraHelper {
         if (!this.useGlobeControls) {
             return this._mercatorCameraHelper.handleEaseTo(tr, options);
         }
+
+        //console.log('handleEaseTo');
+        //console.log(options);
+        //console.log(tr);
 
         const startZoom = tr.zoom;
         const startBearing = tr.bearing;
@@ -339,7 +351,8 @@ export class GlobeCameraHelper implements ICameraHelper {
             if (isZooming) {
                 const normalizedInterpolatedZoom = interpolates.number(normalizedStartZoom, normalizedEndZoom, k);
                 const interpolatedZoom = normalizedInterpolatedZoom + getZoomAdjustment(0, tr.center.lat);
-                tr.setZoom(interpolatedZoom);
+                if (optionsZoom) tr.setZoom(interpolatedZoom);
+                else tr.setZoom(startZoom);
             }
         };
 
@@ -355,6 +368,8 @@ export class GlobeCameraHelper implements ICameraHelper {
             return this._mercatorCameraHelper.handleFlyTo(tr, options);
         }
         const optionsZoom = typeof options.zoom !== 'undefined';
+
+        console.log('handleFlyTo');
 
         const startCenter = tr.center;
         const startZoom = tr.zoom;
@@ -461,6 +476,9 @@ export class GlobeCameraHelper implements ICameraHelper {
             // The computed result is invalid.
             return null;
         }
+
+        console.log('solveVectorScale');
+
         return t;
     }
 
