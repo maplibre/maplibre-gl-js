@@ -4,7 +4,7 @@
 - Improve performance of `queryRenderedFeatures` by using JavaScript `Set`s to assess layer membership internally.
 
 ### 🐞 Bug fixes
-- Fix a memory leak due to missing unregistration of event listener ([#4824](https://github.com/maplibre/maplibre-gl-js/pull/4824))
+- Fix a memory leak due to missing removal of event listener registration ([#4824](https://github.com/maplibre/maplibre-gl-js/pull/4824))
 - _...Add new stuff here..._
 
 ## 5.0.0-pre.1
