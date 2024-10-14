@@ -34,6 +34,8 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
     const gradient = layer.paint.get('line-gradient');
     const crossfade = layer.getCrossfadeParameters();
 
+    const offset = layer.paint.get('line-offset');
+
     const programId =
         image ? 'linePattern' :
             dasharray ? 'lineSDF' :
@@ -114,14 +116,8 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
             gradientTexture.bind(layer.stepInterpolant ? gl.NEAREST : gl.LINEAR, gl.CLAMP_TO_EDGE);
         }
 
-        let isOffset = false;
-        const propLineOffset = layer.paint.get('line-offset');
-        if (propLineOffset && Object.prototype.hasOwnProperty.call(propLineOffset, 'value')) {
-            if (Object.prototype.hasOwnProperty.call(propLineOffset.value, 'value')) {
-                // @ts-ignore
-                isOffset = propLineOffset.value.value > 0;
-            }
-        }
+        const isOffset = offset.constantOr(0) > 0;
+
         program.draw(context, gl.TRIANGLES, depthMode,
             painter.stencilModeForClipping(coord, isOffset), colorMode, CullFaceMode.disabled, uniformValues, terrainData,
             layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments,
