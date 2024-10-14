@@ -36,10 +36,8 @@ jobs:
           rm -rf docs/API/_media
           docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build --strict
       - name: Check spelling
-        uses: streetsidesoftware/cspell-action@v6
-        with:
-          files: "**/*.{html,md}"
-          incremental_files_only: false
+        # This need to run after the docs are built
+        run: npm run spellcheck
 
   unit-tests:
     name: Unit tests and Coverage
