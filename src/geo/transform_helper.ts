@@ -106,6 +106,7 @@ export class TransformHelper implements ITransformGetters {
     _zoom: number;
     _renderWorldCopies: boolean;
     _pitchTileLoadingBehavior: number;
+    _tileZoomDeadband: number;
     _minZoom: number;
     _maxZoom: number;
     _minPitch: number;
@@ -150,6 +151,7 @@ export class TransformHelper implements ITransformGetters {
         this._edgeInsets = new EdgeInsets();
         this._minElevationForCurrentTile = 0;
         this._pitchTileLoadingBehavior = 1.0;
+        this._tileZoomDeadband = 1.0
     }
 
     public apply(thatI: ITransformGetters, constrain?: boolean): void {
@@ -174,6 +176,7 @@ export class TransformHelper implements ITransformGetters {
         this._maxPitch = thatI.maxPitch;
         this._renderWorldCopies = thatI.renderWorldCopies;
         this._pitchTileLoadingBehavior = thatI.pitchTileLoadingBehavior;
+        this._tileZoomDeadband = thatI.tileZoomDeadband;
         if (constrain) {
             this._constrain();
         }
@@ -257,6 +260,14 @@ export class TransformHelper implements ITransformGetters {
             pitchTileLoadingBehavior = 1.0;
         }
         this._pitchTileLoadingBehavior = pitchTileLoadingBehavior;
+    }
+
+    get tileZoomDeadband(): number { return this._tileZoomDeadband; }
+    setTileZoomDeadband(tileZoomDeadband: number): void {
+        if (tileZoomDeadband === undefined || tileZoomDeadband === null) {
+            tileZoomDeadband = 1.0;
+        }
+        this._tileZoomDeadband = Math.max(tileZoomDeadband, 0.0);
     }
 
     get worldSize(): number {

@@ -46,6 +46,13 @@ export type CoveringTilesOptions = CoveringZoomOptions & {
      * tiles to be loaded. A reasonable range for this parameter is [0,2].
      */
     pitchTileLoadingBehavior?: number;
+    /**
+     * Controls how tiles are loaded at high pitch angles. Controls how different the distance to a tile must be (compared with the center point)
+     * before a new zoom level is requested. For example, if tileZoomDeadband = 1 and the center zoom is 14, tiles distant enough to be loaded at
+     * z13 will be loaded at z14, and tiles distant enough to be loaded at z14 will be loaded at z15. A higher number causes more tiles to be loaded
+     * at the center zoom level. This also results in more tiles be loaded overall.
+     */
+    tileZoomDeadband?: number;
 };
 
 export type TransformUpdateResult = {
@@ -117,6 +124,7 @@ export interface ITransformGetters {
     get renderWorldCopies(): boolean;
 
     get pitchTileLoadingBehavior(): number;
+    get tileZoomDeadband(): number;
 }
 
 /**
@@ -155,6 +163,14 @@ interface ITransformMutators {
      * tiles to be loaded. A reasonable range for `pitchTileLoadingBehavior` is [0,2].
      */
     setPitchTileLoadingBehavior(pitchTileLoadingBehavior: number): void;
+
+    /**
+     * Controls how tiles are loaded at high pitch angles. Controls how different the distance to a tile must be (compared with the center point)
+     * before a new zoom level is requested. For example, if tileZoomDeadband = 1 and the center zoom is 14, tiles distant enough to be loaded at
+     * z13 will be loaded at z14, and tiles distant enough to be loaded at z14 will be loaded at z15. A higher number causes more tiles to be loaded
+     * at the center zoom level. This also results in more tiles be loaded overall.
+     */
+    setTileZoomDeadband(tileZoomDeadband: number): void;
     /**
      * Sets the transform's bearing, in degrees.
      * Recomputes internal matrices if needed.

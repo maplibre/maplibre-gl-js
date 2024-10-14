@@ -1209,6 +1209,39 @@ export class Map extends Camera {
     }
 
     /**
+     * Returns the state of `tileZoomDeadband`.
+     *
+     * This parameter controls how tiles are loaded at high pitch angles. Controls how different the distance to a tile must be (compared with the center point)
+     * before a new zoom level is requested. For example, if tileZoomDeadband = 1 and the center zoom is 14, tiles distant enough to be loaded at
+     * z13 will be loaded at z14, and tiles distant enough to be loaded at z14 will be loaded at z15. A higher number causes more tiles to be loaded
+     * at the center zoom level. This also results in more tiles be loaded overall.
+     * @returns The tileZoomDeadband
+     * @example
+     * ```ts
+     * let tileZoomDeadband = map.getTileZoomDeadband();
+     * ```
+     */
+    getTileZoomDeadband(): number { return this.transform.tileZoomDeadband; }
+
+    /**
+     * Sets the state of `tileZoomDeadband`.
+     *
+     * @param tileZoomDeadband - Controls how tiles are loaded at high pitch angles. Controls how different the distance to a tile must be (compared with the center point)
+     * before a new zoom level is requested. For example, if tileZoomDeadband = 1 and the center zoom is 14, tiles distant enough to be loaded at
+     * z13 will be loaded at z14, and tiles distant enough to be loaded at z14 will be loaded at z15. A higher number causes more tiles to be loaded
+     * at the center zoom level. This also results in more tiles be loaded overall.
+     * @returns The tileZoomDeadband
+     * @example
+     * ```ts
+     * map.setTileZoomDeadband(0.0);
+     * ```
+     */
+    setTileZoomDeadband(tileZoomDeadband?: number): Map {
+        this.transform.setTileZoomDeadband(tileZoomDeadband);
+        return this._update();
+    }
+
+    /**
      * Returns a [Point](https://github.com/mapbox/point-geometry) representing pixel coordinates, relative to the map's `container`,
      * that correspond to the specified geographical location.
      *

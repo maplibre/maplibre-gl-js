@@ -66,6 +66,9 @@ export class MercatorTransform implements ITransform {
     setPitchTileLoadingBehavior(pitchTileLoadingBehavior: number): void {
         this._helper.setPitchTileLoadingBehavior(pitchTileLoadingBehavior);
     }
+    setTileZoomDeadband(tileZoomDeadband: number): void {
+        this._helper.setTileZoomDeadband(tileZoomDeadband);
+    }
     setBearing(bearing: number): void {
         this._helper.setBearing(bearing);
     }
@@ -183,6 +186,9 @@ export class MercatorTransform implements ITransform {
     }
     get pitchTileLoadingBehavior(): number {
         return this._helper.pitchTileLoadingBehavior;
+    }
+    get tileZoomDeadband(): number {
+        return this._helper.tileZoomDeadband;
     }
 
     //
