@@ -7,7 +7,7 @@ import type {RequestResponseMessageMap} from './actor_messages';
 import {MessageType} from './actor_messages';
 
 /**
- * Responsible for sending messages from a {@link Source} to an associated worker source (usualy with the same name).
+ * Responsible for sending messages from a {@link Source} to an associated worker source (usually with the same name).
  */
 export class Dispatcher {
     workerPool: WorkerPool;
