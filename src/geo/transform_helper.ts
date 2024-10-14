@@ -151,7 +151,7 @@ export class TransformHelper implements ITransformGetters {
         this._edgeInsets = new EdgeInsets();
         this._minElevationForCurrentTile = 0;
         this._pitchTileLoadingBehavior = 1.0;
-        this._tileZoomDeadband = 1.0;
+        this._tileZoomDeadband = 0.0;
     }
 
     public apply(thatI: ITransformGetters, constrain?: boolean): void {
