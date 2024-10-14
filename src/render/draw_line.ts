@@ -115,11 +115,11 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
         }
 
         let isOffset = false;
-        let propLineOffset = layer.paint.get("line-offset");
-        if (propLineOffset && propLineOffset.hasOwnProperty("value")) {
-            if (propLineOffset.value.hasOwnProperty("value")) {
+        const propLineOffset = layer.paint.get('line-offset');
+        if (propLineOffset && Object.prototype.hasOwnProperty.call(propLineOffset, 'value')) {
+            if (Object.prototype.hasOwnProperty.call(propLineOffset.value, 'value')) {
                 // @ts-ignore
-                isOffset = propLineOffset.value.value !== 0;
+                isOffset = propLineOffset.value.value > 0;
             }
         }
         program.draw(context, gl.TRIANGLES, depthMode,
