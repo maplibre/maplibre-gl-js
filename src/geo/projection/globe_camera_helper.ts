@@ -157,6 +157,7 @@ export class GlobeCameraHelper implements ICameraHelper {
         const oldZoom = tr.zoom;
         tr.setCenter(computeGlobePanCenter(deltas.panDelta, tr).wrap());
         // Setting the center might adjust zoom to keep globe size constant, we need to avoid adding this adjustment a second time
+        //ZERDA
         //tr.setZoom(oldZoom + getZoomAdjustment(oldLat, tr.center.lat));
         tr.setZoom(oldZoom);
     }
@@ -475,7 +476,7 @@ export class GlobeCameraHelper implements ICameraHelper {
             return null;
         }
 
-        console.log('solveVectorScale');
+        //sconsole.log('solveVectorScale');
 
         return t;
     }
