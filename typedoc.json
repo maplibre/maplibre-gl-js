@@ -29,5 +29,12 @@
     "parametersFormat": "table",
     "textContentMappings": {
         "title.memberPage": "{name}"
+    },
+    "externalSymbolLinkMappings": {
+        "@maplibre/maplibre-gl-style-spec": {
+            "ProjectionSpecification": "https://maplibre.org/maplibre-style-spec/projection/",
+            "LayerSpecification": "https://maplibre.org/maplibre-style-spec/layers/",
+            "SourceSpecification": "https://maplibre.org/maplibre-style-spec/sources/"
+        }
     }
   }

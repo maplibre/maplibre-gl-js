@@ -3,13 +3,11 @@ import {getGlobalWorkerPool} from './global_worker_pool';
 import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax';
 
 import type {WorkerPool} from './worker_pool';
-import type {WorkerSource} from '../source/worker_source'; /* eslint-disable-line */ // this is used for the docs' import
 import type {RequestResponseMessageMap} from './actor_messages';
 import {MessageType} from './actor_messages';
 
 /**
- * Responsible for sending messages from a {@link Source} to an associated
- * {@link WorkerSource}.
+ * Responsible for sending messages from a {@link Source} to an associated worker source (usually with the same name).
  */
 export class Dispatcher {
     workerPool: WorkerPool;

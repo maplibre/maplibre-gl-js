@@ -14,7 +14,7 @@ import {LngLat, LngLatLike} from './geo/lng_lat';
 import {LngLatBounds, LngLatBoundsLike} from './geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from './geo/mercator_coordinate';
-import {Evented} from './util/evented';
+import {Evented, ErrorEvent} from './util/evented';
 import {config} from './util/config';
 import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread';
 import {WorkerPool} from './util/worker_pool';
@@ -233,6 +233,7 @@ export {
     type MapEventType,
     type MapDataEvent,
     type MapContextEvent,
+    type ErrorEvent,
     setRTLTextPlugin,
     getRTLTextPluginStatus,
     prewarm,
