@@ -197,8 +197,8 @@ export class MercatorTransform implements ITransform {
     private _fogMatrix: mat4;
 
     private _posMatrixCache: {[_: string]: mat4};
-    private _alignedPosMatrixCache: {[_: string]: mat4};
     private _fogMatrixCache: {[_: string]: mat4};
+    private _alignedPosMatrixCache: {[_: string]: mat4};
 
     private _nearZ;
     private _farZ;
@@ -677,10 +677,6 @@ export class MercatorTransform implements ITransform {
     }
 
     isLocationOccluded(_: LngLat): boolean {
-        return false;
-    }
-
-    tileCoordinatesOccluded(_inTileX: number, _inTileY: number, _canonicalTileID: {x: number; y: number; z: number}): boolean {
         return false;
     }
 
