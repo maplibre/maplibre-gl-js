@@ -254,7 +254,12 @@ export class GlobeTransform implements ITransform {
     private _projectionInstance: GlobeProjection;
     private _globeLatitudeErrorCorrectionRadians: number = 0;
 
-    private get _globeRendering(): boolean {
+    /**
+     * True when globe render path should be used instead of the old but simpler mercator rendering.
+     * Globe automatically transitions to mercator at high zoom levels, which causes a switch from
+     * globe to mercator render path.
+     */
+    get IsGlobeRendering(): boolean {
         return this._globeness > 0;
     }
 
@@ -296,13 +301,13 @@ export class GlobeTransform implements ITransform {
         this._globeLatitudeErrorCorrectionRadians = that._globeLatitudeErrorCorrectionRadians;
     }
 
-    public get projectionMatrix(): mat4 { return this._globeRendering ? this._projectionMatrix : this._mercatorTransform.projectionMatrix; }
+    public get projectionMatrix(): mat4 { return this.IsGlobeRendering ? this._projectionMatrix : this._mercatorTransform.projectionMatrix; }
 
-    public get modelViewProjectionMatrix(): mat4 { return this._globeRendering ? this._globeViewProjMatrixNoCorrection : this._mercatorTransform.modelViewProjectionMatrix; }
+    public get modelViewProjectionMatrix(): mat4 { return this.IsGlobeRendering ? this._globeViewProjMatrixNoCorrection : this._mercatorTransform.modelViewProjectionMatrix; }
 
-    public get inverseProjectionMatrix(): mat4 { return this._globeRendering ? this._globeProjMatrixInverted : this._mercatorTransform.inverseProjectionMatrix; }
+    public get inverseProjectionMatrix(): mat4 { return this.IsGlobeRendering ? this._globeProjMatrixInverted : this._mercatorTransform.inverseProjectionMatrix; }
 
-    public get useGlobeControls(): boolean { return this._globeRendering; }
+    public get useGlobeControls(): boolean { return this.IsGlobeRendering; }
 
     public get cameraPosition(): vec3 {
         // Return a copy - don't let outside code mutate our precomputed camera position.
@@ -359,12 +364,12 @@ export class GlobeTransform implements ITransform {
         this._updateErrorCorrectionValue();
 
         this._lastUpdateTime = browser.now();
-        const oldGlobeRendering = this._globeRendering;
+        const oldGlobeRendering = this.IsGlobeRendering;
         this._globeness = this._computeGlobenessAnimation();
 
         this._calcMatrices();
 
-        if (oldGlobeRendering === this._globeRendering) {
+        if (oldGlobeRendering === this.IsGlobeRendering) {
             return {
                 forcePlacementUpdate: false,
             };
@@ -373,7 +378,7 @@ export class GlobeTransform implements ITransform {
                 forcePlacementUpdate: true,
                 fireProjectionEvent: {
                     type: 'projectiontransition',
-                    newProjection: this._globeRendering ? 'globe' : 'globe-mercator',
+                    newProjection: this.IsGlobeRendering ? 'globe' : 'globe-mercator',
                 },
                 forceSourceUpdate: true,
             };
@@ -388,7 +393,7 @@ export class GlobeTransform implements ITransform {
         if (!this._projectionInstance) {
             return;
         }
-        this._projectionInstance.useGlobeRendering = this._globeRendering;
+        this._projectionInstance.useGlobeRendering = this.IsGlobeRendering;
         this._projectionInstance.errorQueryLatitudeDegrees = this.center.lat;
         this._globeLatitudeErrorCorrectionRadians = this._projectionInstance.latitudeErrorCorrectionRadians;
     }
@@ -448,7 +453,7 @@ export class GlobeTransform implements ITransform {
         const data = this._mercatorTransform.getProjectionData(overscaledTileID, aligned, ignoreTerrainMatrix);
 
         // Set 'projectionMatrix' to actual globe transform
-        if (this._globeRendering) {
+        if (this.IsGlobeRendering) {
             data.mainMatrix = this._globeViewProjMatrix32f;
         }
 
@@ -530,7 +535,7 @@ export class GlobeTransform implements ITransform {
     }
 
     public tileCoordinatesOccluded(inTileX: number, inTileY: number, canonicalTileID: {x: number; y: number; z: number}): boolean {
-        if (!this._globeRendering) {
+        if (!this.IsGlobeRendering) {
             return this._mercatorTransform.tileCoordinatesOccluded(inTileX, inTileY, canonicalTileID);
         }
         const location = tileCoordinatesToLocation(inTileX, inTileY, canonicalTileID);
@@ -579,7 +584,7 @@ export class GlobeTransform implements ITransform {
 
     public getPitchedTextCorrection(textAnchorX: number, textAnchorY: number, tileID: UnwrappedTileID): number {
         const mercatorCorrection = this._mercatorTransform.getPitchedTextCorrection(textAnchorX, textAnchorY, tileID);
-        if (!this._globeRendering) {
+        if (!this.IsGlobeRendering) {
             return mercatorCorrection;
         }
         const mercator = tileCoordinatesToMercatorCoordinates(textAnchorX, textAnchorY, tileID.canonical);
@@ -588,7 +593,7 @@ export class GlobeTransform implements ITransform {
     }
 
     public projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection {
-        if (!this._globeRendering) {
+        if (!this.IsGlobeRendering) {
             return this._mercatorTransform.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
         }
 
@@ -693,7 +698,7 @@ export class GlobeTransform implements ITransform {
     }
 
     coveringTiles(options: CoveringTilesOptions): OverscaledTileID[] {
-        if (!this._globeRendering) {
+        if (!this.IsGlobeRendering) {
             return this._mercatorTransform.coveringTiles(options);
         }
 
@@ -723,7 +728,7 @@ export class GlobeTransform implements ITransform {
     }
 
     lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
-        if (!this._globeRendering) {
+        if (!this.IsGlobeRendering) {
             return this._mercatorTransform.lngLatToCameraDepth(lngLat, elevation);
         }
         if (!this._globeViewProjMatrixNoCorrection) {
@@ -741,7 +746,7 @@ export class GlobeTransform implements ITransform {
     }
 
     getBounds(): LngLatBounds {
-        if (!this._globeRendering) {
+        if (!this.IsGlobeRendering) {
             return this._mercatorTransform.getBounds();
         }
 
@@ -835,7 +840,7 @@ export class GlobeTransform implements ITransform {
      * (same size before and after a {@link setLocationAtPoint} call).
      */
     setLocationAtPoint(lnglat: LngLat, point: Point): void {
-        if (!this._globeRendering) {
+        if (!this.IsGlobeRendering) {
             this._mercatorTransform.setLocationAtPoint(lnglat, point);
             this.apply(this._mercatorTransform);
             return;
@@ -937,7 +942,7 @@ export class GlobeTransform implements ITransform {
     }
 
     locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
-        if (!this._globeRendering) {
+        if (!this.IsGlobeRendering) {
             return this._mercatorTransform.locationToScreenPoint(lnglat, terrain);
         }
 
@@ -967,7 +972,7 @@ export class GlobeTransform implements ITransform {
     }
 
     screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
-        if (!this._globeRendering || terrain) {
+        if (!this.IsGlobeRendering || terrain) {
             // Mercator has terrain handling implemented properly and since terrain
             // simply draws tile coordinates into a special framebuffer, this works well even for globe.
             return this._mercatorTransform.screenPointToMercatorCoordinate(p, terrain);
@@ -976,7 +981,7 @@ export class GlobeTransform implements ITransform {
     }
 
     screenPointToLocation(p: Point, terrain?: Terrain): LngLat {
-        if (!this._globeRendering || terrain) {
+        if (!this.IsGlobeRendering || terrain) {
             // Mercator has terrain handling implemented properly and since terrain
             // simply draws tile coordinates into a special framebuffer, this works well even for globe.
             return this._mercatorTransform.screenPointToLocation(p, terrain);
@@ -985,7 +990,7 @@ export class GlobeTransform implements ITransform {
     }
 
     isPointOnMapSurface(p: Point, terrain?: Terrain): boolean {
-        if (!this._globeRendering) {
+        if (!this.IsGlobeRendering) {
             return this._mercatorTransform.isPointOnMapSurface(p, terrain);
         }
 
@@ -1024,7 +1029,7 @@ export class GlobeTransform implements ITransform {
      * camera's position (not taking into account camera rotation at all).
      */
     private isSurfacePointVisible(p: vec3): boolean {
-        if (!this._globeRendering) {
+        if (!this.IsGlobeRendering) {
             return true;
         }
         const plane = this._cachedClippingPlane;
@@ -1160,7 +1165,7 @@ export class GlobeTransform implements ITransform {
     }
 
     getMatrixForModel(location: LngLatLike, altitude?: number): mat4 {
-        if (!this._globeRendering) {
+        if (!this.IsGlobeRendering) {
             return this._mercatorTransform.getMatrixForModel(location, altitude);
         }
         const lnglat = LngLat.convert(location);
@@ -1193,7 +1198,7 @@ export class GlobeTransform implements ITransform {
     }
 
     getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 {
-        if (!this._globeRendering) {
+        if (!this.IsGlobeRendering) {
             return this._mercatorTransform.getFastPathSimpleProjectionMatrix(tileID);
         }
         return undefined;

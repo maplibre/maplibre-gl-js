@@ -439,7 +439,7 @@ describe('GlobeTransform', () => {
             const globeTransform = createGlobeTransform(globeProjectionMock);
 
             expect(globeTransform.getGlobeViewAllowed()).toBe(true);
-            expect(globeTransform['_globeRendering']).toBe(true);
+            expect(globeTransform.IsGlobeRendering).toBe(true);
         });
 
         test('animates to false', async () => {
@@ -450,12 +450,12 @@ describe('GlobeTransform', () => {
             await sleep(20);
             globeTransform.newFrameUpdate();
             expect(globeTransform.getGlobeViewAllowed()).toBe(false);
-            expect(globeTransform['_globeRendering']).toBe(true);
+            expect(globeTransform.IsGlobeRendering).toBe(true);
 
             await sleep(1000);
             globeTransform.newFrameUpdate();
             expect(globeTransform.getGlobeViewAllowed()).toBe(false);
-            expect(globeTransform['_globeRendering']).toBe(false);
+            expect(globeTransform.IsGlobeRendering).toBe(false);
         });
 
         test('can skip animation if requested', async () => {
@@ -466,7 +466,7 @@ describe('GlobeTransform', () => {
             await sleep(20);
             globeTransform.newFrameUpdate();
             expect(globeTransform.getGlobeViewAllowed()).toBe(false);
-            expect(globeTransform['_globeRendering']).toBe(false);
+            expect(globeTransform.IsGlobeRendering).toBe(false);
         });
     });
 
