@@ -43,6 +43,15 @@ export function angularCoordinatesRadiansToVector(lngRadians: number, latRadians
     return vec;
 }
 
+/**
+ * Projects a point within a tile to the surface of the unit sphere globe.
+ * @param inTileX - X coordinate inside the tile in range [0 .. 8192].
+ * @param inTileY - Y coordinate inside the tile in range [0 .. 8192].
+ * @param tileIdX - Tile's X coordinate in range [0 .. 2^zoom - 1].
+ * @param tileIdY - Tile's Y coordinate in range [0 .. 2^zoom - 1].
+ * @param tileIdZ - Tile's zoom.
+ * @returns A 3D vector - coordinates of the projected point on a unit sphere.
+ */
 export function projectTileCoordinatesToSphere(inTileX: number, inTileY: number, tileIdX: number, tileIdY: number, tileIdZ: number): vec3 {
     // This code could be assembled from 3 fuctions, but this is a hot path for symbol placement,
     // so for optimization purposes everything is inlined by hand.
