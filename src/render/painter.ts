@@ -49,7 +49,7 @@ import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {RenderToTexture} from './render_to_texture';
 import type {ProjectionData} from '../geo/projection/projection_data';
 
-export type RenderPass = 'offscreen' | 'opaque' | 'translucent' | '3d';
+export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
 type PainterOptions = {
     showOverdrawInspector: boolean;
@@ -557,11 +557,22 @@ export class Painter {
         // Draw all other layers bottom-to-top.
         this.renderPass = 'translucent';
 
+        let globeDepthRendered = false;
+
         for (this.currentLayer = 0; this.currentLayer < layerIds.length; this.currentLayer++) {
             const layer = this.style._layers[layerIds[this.currentLayer]];
             const sourceCache = sourceCaches[layer.source];
 
             if (this.renderToTexture && this.renderToTexture.renderLayer(layer)) continue;
+
+            if (!this.opaquePassEnabledForLayer() && !globeDepthRendered) {
+                globeDepthRendered = true;
+                // Render the globe sphere into the depth buffer - but only if globe is enabled and terrain is disabled.
+                // There should be no need for explicitly writing tile depths when terrain is enabled.
+                if (this.style.projection.name === 'globe' && !this.style.map.terrain) {
+                    this._renderTilesDepthBuffer();
+                }
+            }
 
             // For symbol layers in the translucent pass, we add extra tiles to the renderable set
             // for cross-tile symbol fading. Symbol layers don't use tile clipping, so no need to render
@@ -575,25 +586,6 @@ export class Painter {
         // Render atmosphere, only for Globe projection
         if (this.style.projection.name === 'globe') {
             drawAtmosphere(this, this.style.sky, this.style.light);
-        }
-
-        // 3D pass ===============================================
-        // Draw all 3D layers last. If globe is enabled, fill depth-buffer with proper depth values for globe.
-        if (!this.renderToTexture) {
-            this.renderPass = '3d';
-
-            // Render the globe sphere into the depth buffer - but only if globe is enabled and terrain is disabled.
-            // There should be no need for explicitly writing tile depths when terrain is enabled.
-            if (this.style.projection.name === 'globe' && !this.style.map.terrain) {
-                this._renderTilesDepthBuffer();
-            }
-
-            for (this.currentLayer = 0; this.currentLayer < layerIds.length; this.currentLayer++) {
-                const layer = this.style._layers[layerIds[this.currentLayer]];
-                const sourceCache = sourceCaches[layer.source];
-                const coords = coordsAscending[layer.source];
-                this.renderLayer(this, sourceCache, layer, coords);
-            }
         }
 
         if (this.options.showTileBoundaries) {

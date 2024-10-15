@@ -41,7 +41,7 @@ export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: Cu
             context.setDirty();
             painter.setBaseState();
         }
-    } else if ((painter.renderPass === 'translucent' && renderingMode === '2d') || (painter.renderPass === '3d' && renderingMode === '3d')) {
+    } else if (painter.renderPass === 'translucent') {
 
         painter.setCustomLayerDefaults();
 
