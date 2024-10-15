@@ -98,7 +98,12 @@ export function getPitchedLabelPlaneMatrix(
     pixelsToTileUnits: number) {
     const m = mat4.create();
     if (!rotateWithMap) {
-        const skew = getTileSkewMatrix(transform);
+        const {vecSouth, vecEast} = getTileSkewVectors(transform);
+        const skew = mat2.create();
+        skew[0] = vecEast[0];
+        skew[1] = vecEast[1];
+        skew[2] = vecSouth[0];
+        skew[3] = vecSouth[1];
         mat2.invert(skew, skew);
         m[0] = skew[0];
         m[1] = skew[1];
@@ -121,11 +126,11 @@ export function getGlCoordMatrix(
     if (pitchWithMap) {
         const m = mat4.create();
         if (!rotateWithMap) {
-            const skew = getTileSkewMatrix(transform);
-            m[0] = skew[0];
-            m[1] = skew[1];
-            m[4] = skew[2];
-            m[5] = skew[3];
+            const {vecSouth, vecEast} = getTileSkewVectors(transform);
+            m[0] = vecEast[0];
+            m[1] = vecEast[1];
+            m[4] = vecSouth[0];
+            m[5] = vecSouth[1];
         }
         mat4.scale(m, m, [pixelsToTileUnits, pixelsToTileUnits, 1]);
         return m;
@@ -134,7 +139,7 @@ export function getGlCoordMatrix(
     }
 }
 
-export function getTileSkewMatrix(transform: IReadonlyTransform): mat2 {
+export function getTileSkewVectors(transform: IReadonlyTransform): {vecEast: vec2, vecSouth: vec2} {
     const cosRoll = Math.cos(transform.rollInRadians);
     const sinRoll = Math.sin(transform.rollInRadians);
     const cosPitch = Math.cos(transform.pitchInRadians);
@@ -159,13 +164,7 @@ export function getTileSkewMatrix(transform: IReadonlyTransform): mat2 {
         vec2.scale(vecEast, vecEast, 1 / vecEastLen);
     }
 
-    const skew = mat2.create();
-
-    skew[0] = vecEast[0];
-    skew[1] = vecEast[1];
-    skew[2] = vecSouth[0];
-    skew[3] = vecSouth[1];
-    return skew;
+    return {vecEast, vecSouth};
 }
 
 /**

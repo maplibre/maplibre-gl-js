@@ -1,4 +1,4 @@
-import {SymbolProjectionContext, ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, projectWithMatrix, transformToOffsetNormal, projectLineVertexToLabelPlane, getPitchedLabelPlaneMatrix, getGlCoordMatrix, getTileSkewMatrix} from './projection';
+import {SymbolProjectionContext, ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, projectWithMatrix, transformToOffsetNormal, projectLineVertexToLabelPlane, getPitchedLabelPlaneMatrix, getGlCoordMatrix, getTileSkewVectors} from './projection';
 
 import Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
@@ -225,78 +225,96 @@ describe('Find offset line intersections', () => {
             [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
     });
 
-    test('getTileSkewMatrix: bearing', () => {
+    test('getTileSkewVectors: bearing', () => {
         const transform = new MercatorTransform();
         transform.setBearing(45);
         transform.setPitch(0);
         transform.setRoll(0);
 
-        expectToBeCloseToArray([...getTileSkewMatrix(transform).values()],
-            [0.7071067690849304, 0.7071067690849304, -0.7071067690849304, 0.7071067690849304], 9);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+            [0.7071067690849304, 0.7071067690849304]);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+        [-0.7071067690849304, 0.7071067690849304], 9);
     });
 
-    test('getTileSkewMatrix: roll', () => {
+    test('getTileSkewVectors: roll', () => {
         const transform = new MercatorTransform();
         transform.setBearing(0);
         transform.setPitch(0);
         transform.setRoll(45);
 
-        expectToBeCloseToArray([...getTileSkewMatrix(transform).values()],
-            [0.7071067690849304, 0.7071067690849304, -0.7071067690849304, 0.7071067690849304], 9);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+            [0.7071067690849304, 0.7071067690849304]);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+            [-0.7071067690849304, 0.7071067690849304], 9);
     });
 
-    test('getTileSkewMatrix: pitch', () => {
+    test('getTileSkewVectors: pitch', () => {
         const transform = new MercatorTransform();
         transform.setBearing(0);
         transform.setPitch(45);
         transform.setRoll(0);
 
-        expectToBeCloseToArray([...getTileSkewMatrix(transform).values()],
-            [1.0, 0.0, 0.0, 1.0], 9);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+            [1.0, 0.0]);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+            [0.0, 1.0], 9);
     });
 
-    test('getTileSkewMatrix: roll pitch bearing', () => {
+    test('getTileSkewVectors: roll pitch bearing', () => {
         const transform = new MercatorTransform();
         transform.setBearing(45);
         transform.setPitch(45);
         transform.setRoll(45);
 
-        expectToBeCloseToArray([...getTileSkewMatrix(transform).values()],
-            [-0.16910198330879211, 0.9855985641479492, -0.9855985641479492, 0.16910198330879211], 9);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+            [-0.16910198330879211, 0.9855985641479492]);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+            [-0.9855985641479492, 0.16910198330879211], 9);
     });
 
-    test('getTileSkewMatrix: pitch 90 degrees', () => {
+    test('getTileSkewVectors: pitch 90 degrees', () => {
         const transform = new MercatorTransform();
         transform.setMaxPitch(180);
         transform.setBearing(0);
         transform.setPitch(89);
         transform.setRoll(0);
 
-        expectToBeCloseToArray([...getTileSkewMatrix(transform).values()],
-            [1, 0, 0, 1], 9);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+            [1, 0]);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+            [0, 1], 9);
 
         transform.setPitch(90);
-        expectToBeCloseToArray([...getTileSkewMatrix(transform).values()],
-            [0, 0, 0, 1], 9);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+            [0, 0]);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+            [0, 1], 9);
 
         transform.setBearing(90);
-        expectToBeCloseToArray([...getTileSkewMatrix(transform).values()],
-            [0, 0, -1, 0], 9);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+            [0, 0]);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+            [-1, 0], 9);
     });
 
-    test('getTileSkewMatrix: pitch 90 degrees with roll and bearing', () => {
+    test('getTileSkewVectors: pitch 90 degrees with roll and bearing', () => {
         const transform = new MercatorTransform();
         transform.setMaxPitch(180);
         transform.setBearing(45);
         transform.setPitch(89);
         transform.setRoll(45);
 
-        expectToBeCloseToArray([...getTileSkewMatrix(transform).values()],
-            [-0.6946603059768677, 0.7193379402160645, -0.7193379402160645, 0.6946603059768677], 9);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+            [-0.6946603059768677, 0.7193379402160645]);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+            [-0.7193379402160645, 0.6946603059768677], 9);
 
         transform.setPitch(90);
-        expectToBeCloseToArray([...getTileSkewMatrix(transform).values()],
-            [-0.7071067690849304, 0.7071067690849304, -0.7071067690849304, 0.7071067690849304], 9);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+            [-0.7071067690849304, 0.7071067690849304]);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+            [-0.7071067690849304, 0.7071067690849304], 9);
     });
 
 });

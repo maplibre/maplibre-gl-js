@@ -15,7 +15,7 @@ import type {
 } from '../data/array_types.g';
 import type {OverlapMode} from '../style/style_layer/overlap_mode';
 import {UnwrappedTileID} from '../source/tile_id';
-import {type PointProjection, SymbolProjectionContext, getTileSkewMatrix, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, projectPathSpecialProjection} from '../symbol/projection';
+import {type PointProjection, SymbolProjectionContext, getTileSkewVectors, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, projectPathSpecialProjection} from '../symbol/projection';
 import {clamp, getAABB} from '../util/util';
 import {tileCoordinatesToLocation} from '../geo/projection/mercator_utils';
 
@@ -509,9 +509,9 @@ export class CollisionIndex {
             vecSouth = new Point(-sin, cos);
         } else if (!rotateWithMap && pitchWithMap) {
             // Handles pitch-align: map texts that are always aligned with the viewport's X axis.
-            const skew = getTileSkewMatrix(this.transform);
-            vecEast = new Point(skew[0], skew[1]);
-            vecSouth = new Point(skew[2], skew[3]);
+            const skew = getTileSkewVectors(this.transform);
+            vecEast = new Point(skew.vecEast[0], skew.vecEast[1])
+            vecSouth = new Point(skew.vecSouth[0], skew.vecSouth[1]);
         }
 
         // Configuration for screen space offsets
