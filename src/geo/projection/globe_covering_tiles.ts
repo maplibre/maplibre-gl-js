@@ -81,7 +81,7 @@ function shouldSplitTile(centerCoord: MercatorCoordinate, cameraCoord: MercatorC
     // This logic might be slightly different from what mercator_transform.ts does, but should result in very similar (if not the same) set of tiles being loaded.
     const centerDist = distanceToTile(centerCoord.x, centerCoord.y, tileX, tileY, tileSize);
     const cameraDist = distanceToTile(cameraCoord.x, cameraCoord.y, tileX, tileY, tileSize);
-    return Math.min(centerDist, cameraDist) * 2 <= radiusOfMaxLvlLodInTiles; // Multiply distance by 2, because the subdivided tiles would be half the size
+    return Math.min(centerDist, cameraDist) * 2 <= radiusOfMaxLvlLodInTiles * tileSize; // Multiply distance by 2, because the subdivided tiles would be half the size
 }
 
 // Returns the wrap value for a given tile, computed so that tiles will remain loaded when crossing the antimeridian.
@@ -153,10 +153,10 @@ export function getTileAABB(tileID: {x: number; y: number; z: number}): Aabb {
         // Compute AABB using the 4 corners.
 
         const corners = [
-            projectTileCoordinatesToSphere(0, 0, tileID),
-            projectTileCoordinatesToSphere(EXTENT, 0, tileID),
-            projectTileCoordinatesToSphere(EXTENT, EXTENT, tileID),
-            projectTileCoordinatesToSphere(0, EXTENT, tileID),
+            projectTileCoordinatesToSphere(0, 0, tileID.x, tileID.y, tileID.z),
+            projectTileCoordinatesToSphere(EXTENT, 0, tileID.x, tileID.y, tileID.z),
+            projectTileCoordinatesToSphere(EXTENT, EXTENT, tileID.x, tileID.y, tileID.z),
+            projectTileCoordinatesToSphere(0, EXTENT, tileID.x, tileID.y, tileID.z),
         ];
 
         const min: vec3 = [1, 1, 1];
