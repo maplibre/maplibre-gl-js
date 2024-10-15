@@ -12,6 +12,6 @@ describe('CollisionIndex', () => {
         jest.spyOn(transform, 'calculatePosMatrix').mockImplementation(() => mat4.create());
 
         const ci = new CollisionIndex(transform);
-        expect(ci.projectAndGetPerspectiveRatio(x, y, tile, null).point.x).toBeCloseTo(10000212.3456, 10);
+        expect(ci.projectAndGetPerspectiveRatio(x, y, tile, null).x).toBeCloseTo(10000212.3456, 10);
     });
 });
