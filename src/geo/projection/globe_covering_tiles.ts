@@ -153,10 +153,10 @@ export function getTileAABB(tileID: {x: number; y: number; z: number}): Aabb {
         // Compute AABB using the 4 corners.
 
         const corners = [
-            projectTileCoordinatesToSphere(0, 0, tileID),
-            projectTileCoordinatesToSphere(EXTENT, 0, tileID),
-            projectTileCoordinatesToSphere(EXTENT, EXTENT, tileID),
-            projectTileCoordinatesToSphere(0, EXTENT, tileID),
+            projectTileCoordinatesToSphere(0, 0, tileID.x, tileID.y, tileID.z),
+            projectTileCoordinatesToSphere(EXTENT, 0, tileID.x, tileID.y, tileID.z),
+            projectTileCoordinatesToSphere(EXTENT, EXTENT, tileID.x, tileID.y, tileID.z),
+            projectTileCoordinatesToSphere(0, EXTENT, tileID.x, tileID.y, tileID.z),
         ];
 
         const min: vec3 = [1, 1, 1];

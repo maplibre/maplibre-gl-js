@@ -698,9 +698,10 @@ export class GlobeTransform implements ITransform {
         }
 
         const coveringZ = this.coveringZoomLevel(options);
+        const cameraCoord = this.screenPointToMercatorCoordinate(this.getCameraPoint());
         const centerCoord = MercatorCoordinate.fromLngLat(this.center);
 
-        return globeCoveringTiles(this._cachedFrustum, this._cachedClippingPlane, centerCoord, this.cameraPosition, coveringZ, options);
+        return globeCoveringTiles(this._cachedFrustum, this._cachedClippingPlane, cameraCoord, centerCoord, coveringZ, options);
     }
 
     recalculateZoom(terrain: Terrain): void {
