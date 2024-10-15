@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 - Improve performance of `queryRenderedFeatures` by using JavaScript `Set`s to assess layer membership internally.
+- Catches CORS fetching error as actual `AJAXError` to expose HTTP request details to the `"error"` event (https://github.com/maplibre/maplibre-gl-js/pull/4822)
 
 ### 🐞 Bug fixes
 - Fix a memory leak due to missing removal of event listener registration ([#4824](https://github.com/maplibre/maplibre-gl-js/pull/4824))
