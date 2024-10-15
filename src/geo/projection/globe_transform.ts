@@ -1181,7 +1181,7 @@ export class GlobeTransform implements ITransform {
         const fallbackMatrixScaled = createMat4f64();
         mat4.scale(fallbackMatrixScaled, projectionData.fallbackMatrix, [EXTENT, EXTENT, 1]);
 
-        projectionData.fallbackMatrix = new Float32Array(fallbackMatrixScaled);
+        projectionData.fallbackMatrix = fallbackMatrixScaled;
         return projectionData;
     }
 
