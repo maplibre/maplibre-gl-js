@@ -77,7 +77,7 @@
         const customLayer = {
             id: '3d-model',
             type: 'custom',
-            renderingMode: '3d', // The layer MUST be marked as 3din order to get the proper depth buffer with globe depths in it.
+            renderingMode: '3d', // The layer MUST be marked as 3D in order to get the proper depth buffer with globe depths in it.
             onAdd(map, gl) {
                 this.camera = new THREE.Camera();
                 this.scene = new THREE.Scene();
