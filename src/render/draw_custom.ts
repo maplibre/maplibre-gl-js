@@ -28,8 +28,9 @@ export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: Cu
         defaultProjectionData: projectionData,
     };
 
-    if (painter.renderPass === 'offscreen') {
+    const renderingMode = implementation.renderingMode ? implementation.renderingMode : '2d';
 
+    if (painter.renderPass === 'offscreen') {
         const prerender = implementation.prerender;
         if (prerender) {
             painter.setCustomLayerDefaults();
@@ -40,15 +41,14 @@ export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: Cu
             context.setDirty();
             painter.setBaseState();
         }
-
-    } else if ((painter.renderPass === 'translucent' && implementation.renderingMode === '2d') || (painter.renderPass === '3d' && implementation.renderingMode === '3d')) {
+    } else if ((painter.renderPass === 'translucent' && renderingMode === '2d') || (painter.renderPass === '3d' && renderingMode === '3d')) {
 
         painter.setCustomLayerDefaults();
 
         context.setColorMode(painter.colorModeForRenderPass());
         context.setStencilMode(StencilMode.disabled);
 
-        const depthMode = implementation.renderingMode === '3d' ?
+        const depthMode = renderingMode === '3d' ?
             painter.depthModeFor3D() :
             painter.depthModeForSublayer(0, DepthMode.ReadOnly);
 
