@@ -9,9 +9,11 @@
 ## 5.0.0-pre.2
 
 ### ✨ Features and improvements
+
 - Improve performance of `queryRenderedFeatures` by using JavaScript `Set`s to assess layer membership internally.
 
 ### 🐞 Bug fixes
+
 - Fix a memory leak due to missing removal of event listener registration ([#4824](https://github.com/maplibre/maplibre-gl-js/pull/4824))
 - Improve symbol collision performance for both mercator and globe projections ([#4778](https://github.com/maplibre/maplibre-gl-js/pull/4778))
 - Fix bad line scaling near the poles under globe projection ([#4778](https://github.com/maplibre/maplibre-gl-js/pull/4778))
