@@ -27,9 +27,10 @@ export class MercatorCameraHelper implements ICameraHelper {
         };
     }
 
-    handleMapControlsPitchBearingZoom(deltas: MapControlsDeltas, tr: ITransform): void {
+    handleMapControlsRollPitchBearingZoom(deltas: MapControlsDeltas, tr: ITransform): void {
         if (deltas.bearingDelta) tr.setBearing(tr.bearing + deltas.bearingDelta);
         if (deltas.pitchDelta) tr.setPitch(tr.pitch + deltas.pitchDelta);
+        if (deltas.rollDelta) tr.setRoll(tr.roll + deltas.rollDelta);
         if (deltas.zoomDelta) tr.setZoom(tr.zoom + deltas.zoomDelta);
     }
 

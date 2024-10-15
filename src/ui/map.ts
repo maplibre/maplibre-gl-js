@@ -319,6 +319,11 @@ export type MapOptions = {
      */
     pitchWithRotate?: boolean;
     /**
+     * If `false`, the map's roll control with "drag to rotate" interaction will be disabled.
+     * @defaultValue false
+     */
+    rollEnabled?: boolean;
+    /**
      * The pixel ratio.
      * The canvas' `width` attribute will be `container.clientWidth * pixelRatio` and its `height` attribute will be `container.clientHeight * pixelRatio`. Defaults to `devicePixelRatio` if not specified.
      */
@@ -411,6 +416,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     clickTolerance: 3,
     localIdeographFontFamily: 'sans-serif',
     pitchWithRotate: true,
+    rollEnabled: false,
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096],

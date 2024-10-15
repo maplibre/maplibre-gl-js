@@ -12,6 +12,7 @@ export type MapControlsDeltas = {
     zoomDelta: number;
     bearingDelta: number;
     pitchDelta: number;
+    rollDelta: number;
     around: Point;
 }
 
@@ -81,7 +82,7 @@ export interface ICameraHelper {
         easingOffset: Point;
     };
 
-    handleMapControlsPitchBearingZoom(deltas: MapControlsDeltas, tr: ITransform): void;
+    handleMapControlsRollPitchBearingZoom(deltas: MapControlsDeltas, tr: ITransform): void;
 
     handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void;
 
