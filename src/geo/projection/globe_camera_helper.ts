@@ -350,6 +350,7 @@ export class GlobeCameraHelper implements ICameraHelper {
             if (isZooming) {
                 const normalizedInterpolatedZoom = interpolates.number(normalizedStartZoom, normalizedEndZoom, k);
                 const interpolatedZoom = normalizedInterpolatedZoom + getZoomAdjustment(0, tr.center.lat);
+                //ZERDA
                 if (optionsZoom) tr.setZoom(interpolatedZoom);
                 else tr.setZoom(startZoom);
             }

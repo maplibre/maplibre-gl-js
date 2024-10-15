@@ -17,7 +17,7 @@ void main() {
     #pragma mapbox: initialize lowp float opacity
 
     // Calculate the distance of the pixel from the line in pixels.
-    float dist = length(v_normal) * v_width2.s * 0.5;
+    float dist = length(v_normal) * v_width2.s;
 
     // Calculate the antialiasing fade factor. This is either when fading in
     // the line in case of an offset line (v_width2.t) or when fading out
