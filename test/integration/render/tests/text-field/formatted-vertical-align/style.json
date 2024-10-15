@@ -19,9 +19,6 @@
             "geometry": {
               "type": "Point",
               "coordinates": [0, 0]
-            },
-            "properties": {
-              "label": "abc"
             }
           }
         ]
