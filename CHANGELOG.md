@@ -10,7 +10,7 @@
 
 ### ✨ Features and improvements
 
-- Improve performance of `queryRenderedFeatures` by using JavaScript `Set`s to assess layer membership internally.
+- Improve performance of `queryRenderedFeatures` by using JavaScript `Set`s to assess layer membership internally ([#4777](https://github.com/maplibre/maplibre-gl-js/pull/4777))
 
 ### 🐞 Bug fixes
 
