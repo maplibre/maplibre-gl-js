@@ -41,7 +41,7 @@ export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: Cu
             painter.setBaseState();
         }
 
-    } else if (painter.renderPass === 'translucent') {
+    } else if ((painter.renderPass === 'translucent' && implementation.renderingMode === '2d') || (painter.renderPass === '3d' && implementation.renderingMode === '3d')) {
 
         painter.setCustomLayerDefaults();
 
@@ -49,7 +49,7 @@ export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: Cu
         context.setStencilMode(StencilMode.disabled);
 
         const depthMode = implementation.renderingMode === '3d' ?
-            new DepthMode(painter.context.gl.LEQUAL, DepthMode.ReadWrite, painter.depthRangeFor3D) :
+            painter.depthModeFor3D() :
             painter.depthModeForSublayer(0, DepthMode.ReadOnly);
 
         context.setDepthMode(depthMode);

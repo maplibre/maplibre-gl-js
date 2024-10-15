@@ -49,7 +49,7 @@ import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {RenderToTexture} from './render_to_texture';
 import type {ProjectionData} from '../geo/projection/projection_data';
 
-export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
+export type RenderPass = 'offscreen' | 'opaque' | 'translucent' | '3d';
 
 type PainterOptions = {
     showOverdrawInspector: boolean;
@@ -308,6 +308,34 @@ export class Painter {
         }
     }
 
+    /**
+     * Fills the depth buffer with the geometry of all supplied tiles.
+     * Does not change the color buffer or the stencil buffer.
+     */
+    _renderTilesDepthBuffer() {
+        const context = this.context;
+        const gl = context.gl;
+        const projection = this.style.projection;
+        const transform = this.transform;
+
+        const program = this.useProgram('depth');
+        const depthMode = this.depthModeFor3D();
+        const tileIDs = transform.coveringTiles({tileSize: transform.tileSize});
+
+        // tiles are usually supplied in ascending order of z, then y, then x
+        for (const tileID of tileIDs) {
+            const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
+            const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, true, true, 'raster');
+
+            const projectionData = transform.getProjectionData(tileID);
+
+            program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled,
+                ColorMode.disabled, CullFaceMode.backCCW, null,
+                terrainData, projectionData, '$clipping', mesh.vertexBuffer,
+                mesh.indexBuffer, mesh.segments);
+        }
+    }
+
     stencilModeFor3D(): StencilMode {
         this.currentStencilSource = undefined;
 
@@ -410,6 +438,10 @@ export class Painter {
         if (!this.opaquePassEnabledForLayer()) return DepthMode.disabled;
         const depth = 1 - ((1 + this.currentLayer) * this.numSublayers + n) * this.depthEpsilon;
         return new DepthMode(func || this.context.gl.LEQUAL, mask, [depth, depth]);
+    }
+
+    depthModeFor3D(): Readonly<DepthMode> {
+        return new DepthMode(this.context.gl.LEQUAL, DepthMode.ReadWrite, this.depthRangeFor3D);
     }
 
     /*
@@ -543,6 +575,25 @@ export class Painter {
         // Render atmosphere, only for Globe projection
         if (this.style.projection.name === 'globe') {
             drawAtmosphere(this, this.style.sky, this.style.light);
+        }
+
+        // 3D pass ===============================================
+        // Draw all 3D layers last. If globe is enabled, fill depth-buffer with proper depth values for globe.
+        if (!this.renderToTexture) {
+            this.renderPass = '3d';
+
+            // Render the globe sphere into the depth buffer - but only if globe is enabled and terrain is disabled.
+            // There should be no need for explicitly writing tile depths when terrain is enabled.
+            if (this.style.projection.name === 'globe' && !this.style.map.terrain) {
+                this._renderTilesDepthBuffer();
+            }
+
+            for (this.currentLayer = 0; this.currentLayer < layerIds.length; this.currentLayer++) {
+                const layer = this.style._layers[layerIds[this.currentLayer]];
+                const sourceCache = sourceCaches[layer.source];
+                const coords = coordsAscending[layer.source];
+                this.renderLayer(this, sourceCache, layer, coords);
+            }
         }
 
         if (this.options.showTileBoundaries) {
