@@ -232,7 +232,6 @@ export class GlobeTransform implements ITransform {
 
     private _projectionMatrix: mat4 = createIdentityMat4f64();
     private _globeViewProjMatrix: mat4 = createIdentityMat4f64();
-    private _globeViewProjMatrix32f: mat4;
     private _globeViewProjMatrixNoCorrection: mat4 = createIdentityMat4f64();
     private _globeViewProjMatrixNoCorrectionInverted: mat4 = createIdentityMat4f64();
     private _globeProjMatrixInverted: mat4 = createIdentityMat4f64();
@@ -454,7 +453,7 @@ export class GlobeTransform implements ITransform {
 
         // Set 'projectionMatrix' to actual globe transform
         if (this.IsGlobeRendering) {
-            data.mainMatrix = this._globeViewProjMatrix32f;
+            data.mainMatrix = this._globeViewProjMatrix;
         }
 
         data.clippingPlane = this._cachedClippingPlane as [number, number, number, number];
@@ -664,7 +663,6 @@ export class GlobeTransform implements ITransform {
         mat4.rotateY(globeMatrix, globeMatrix, -this.center.lng * Math.PI / 180.0);
         mat4.scale(globeMatrix, globeMatrix, scaleVec); // Scale the unit sphere to a sphere with diameter of 1
         this._globeViewProjMatrix = globeMatrix;
-        this._globeViewProjMatrix32f = new Float32Array(globeMatrix);
 
         this._globeViewProjMatrixNoCorrectionInverted = createMat4f64();
         mat4.invert(this._globeViewProjMatrixNoCorrectionInverted, globeMatrixUncorrected);
