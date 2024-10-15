@@ -49,8 +49,8 @@ export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: Cu
         context.setStencilMode(StencilMode.disabled);
 
         const depthMode = renderingMode === '3d' ?
-            painter.depthModeFor3D() :
-            painter.depthModeForSublayer(0, DepthMode.ReadOnly);
+            painter.getDepthModeFor3D() :
+            painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
 
         context.setDepthMode(depthMode);
 

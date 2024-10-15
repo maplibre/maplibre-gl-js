@@ -319,7 +319,7 @@ export class Painter {
         const transform = this.transform;
 
         const program = this.useProgram('depth');
-        const depthMode = this.depthModeFor3D();
+        const depthMode = this.getDepthModeFor3D();
         const tileIDs = transform.coveringTiles({tileSize: transform.tileSize});
 
         // tiles are usually supplied in ascending order of z, then y, then x
@@ -434,13 +434,13 @@ export class Painter {
         }
     }
 
-    depthModeForSublayer(n: number, mask: DepthMaskType, func?: DepthFuncType | null): Readonly<DepthMode> {
+    getDepthModeForSublayer(n: number, mask: DepthMaskType, func?: DepthFuncType | null): Readonly<DepthMode> {
         if (!this.opaquePassEnabledForLayer()) return DepthMode.disabled;
         const depth = 1 - ((1 + this.currentLayer) * this.numSublayers + n) * this.depthEpsilon;
         return new DepthMode(func || this.context.gl.LEQUAL, mask, [depth, depth]);
     }
 
-    depthModeFor3D(): Readonly<DepthMode> {
+    getDepthModeFor3D(): Readonly<DepthMode> {
         return new DepthMode(this.context.gl.LEQUAL, DepthMode.ReadWrite, this.depthRangeFor3D);
     }
 
