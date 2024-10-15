@@ -234,7 +234,7 @@ describe('Find offset line intersections', () => {
         expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
             [0.7071067690849304, 0.7071067690849304]);
         expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
-        [-0.7071067690849304, 0.7071067690849304], 9);
+            [-0.7071067690849304, 0.7071067690849304], 9);
     });
 
     test('getTileSkewVectors: roll', () => {

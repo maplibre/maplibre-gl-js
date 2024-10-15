@@ -139,7 +139,7 @@ export function getGlCoordMatrix(
     }
 }
 
-export function getTileSkewVectors(transform: IReadonlyTransform): {vecEast: vec2, vecSouth: vec2} {
+export function getTileSkewVectors(transform: IReadonlyTransform): {vecEast: vec2; vecSouth: vec2} {
     const cosRoll = Math.cos(transform.rollInRadians);
     const sinRoll = Math.sin(transform.rollInRadians);
     const cosPitch = Math.cos(transform.pitchInRadians);

@@ -510,7 +510,7 @@ export class CollisionIndex {
         } else if (!rotateWithMap && pitchWithMap) {
             // Handles pitch-align: map texts that are always aligned with the viewport's X axis.
             const skew = getTileSkewVectors(this.transform);
-            vecEast = new Point(skew.vecEast[0], skew.vecEast[1])
+            vecEast = new Point(skew.vecEast[0], skew.vecEast[1]);
             vecSouth = new Point(skew.vecSouth[0], skew.vecSouth[1]);
         }
 
