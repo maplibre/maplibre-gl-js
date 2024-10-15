@@ -667,18 +667,21 @@ function shapeLines(shaping: Shaping,
                     metrics = glyph.metrics;
                 }
 
-                if (section.verticalAlign === 'top') {
-                    // We arbitrarily set the distance between the top of the glyph set
-                    // and top of uppercase letters to be 1/3 em.
-                    verticalAlignOffset = (lineMaxScale - section.scale) * (ONE_EM / 3) - (ONE_EM / 3);
-                } else if (section.verticalAlign === 'center') {
-                    // We calculate center as the middle between top and baseline alignment.
-                    verticalAlignOffset = (lineMaxScale - section.scale) * (ONE_EM * 2 / 3) - (ONE_EM / 6);
-                } else {
-                    // We don't know the baseline, but since we're laying out
-                    // at 24 points, we can calculate how much it will move when
-                    // we scale up or down.
-                    verticalAlignOffset = (lineMaxScale - section.scale) * ONE_EM;
+                // We don't know the baseline, but since we're laying out
+                // at 24 points, we can calculate how much it will move when
+                // we scale up or down.
+                verticalAlignOffset = (lineMaxScale - section.scale) * ONE_EM;
+                
+                // Do not offset vertical alignment for vertical text.
+                if (writingMode !== WritingMode.vertical) {
+                    if (section.verticalAlign === 'top') {
+                        // Arbitrarily set the distance between the top of the glyph set
+                        // and top of uppercase letters to be 1/3 em.
+                        verticalAlignOffset = (lineMaxScale - section.scale) * (ONE_EM / 3) - (ONE_EM / 3);
+                    } else if (section.verticalAlign === 'center') {
+                        // Calculate center as the middle between top and baseline alignment.
+                        verticalAlignOffset = (lineMaxScale - section.scale) * (ONE_EM * 2 / 3) - (ONE_EM / 6);
+                    }
                 }
             } else {
                 const imagePosition = imagePositions[section.imageName];
@@ -698,19 +701,22 @@ function shapeLines(shaping: Shaping,
                     top: -GLYPH_PBF_BORDER,
                     advance: vertical ? size[1] : size[0]};
 
-                if (section.verticalAlign === 'top') {
-                    // Aligns top of an image to top of a line.
-                    verticalAlignOffset = 0;
-                } else if (section.verticalAlign === 'center') {
-                    // We calculate center as the middle between top and baseline alignment.
-                    const imageOffset = ONE_EM - size[1] * section.scale;
-                    verticalAlignOffset = (maxLineOffset + imageOffset) / 2;
-                } else {
-                    // Difference between one EM and an image size.
-                    // Aligns bottom of an image to a baseline level.
-                    const imageOffset = ONE_EM - size[1] * section.scale;
-                    verticalAlignOffset = maxLineOffset + imageOffset;
+                // Difference between one EM and an image size.
+                // Aligns bottom of an image to a baseline level.
+                const imageOffset = ONE_EM - size[1] * section.scale;
+                verticalAlignOffset = maxLineOffset + imageOffset;
+
+                // Do not offset vertical alignment for vertical text.
+                if (writingMode !== WritingMode.vertical) {
+                    if (section.verticalAlign === 'top') {
+                        // Aligns top of an image to top of a line.
+                        verticalAlignOffset = 0;
+                    } else if (section.verticalAlign === 'center') {
+                        // We calculate center as the middle between top and baseline alignment.
+                        verticalAlignOffset = (maxLineOffset + imageOffset) / 2;
+                    }
                 }
+                    
                 verticalAdvance = metrics.advance;
 
                 // Difference between height of an image and one EM at max line scale.
