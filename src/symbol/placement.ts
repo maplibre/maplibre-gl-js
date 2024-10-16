@@ -676,7 +676,6 @@ export class Placement {
 
             placedGlyphBoxes = placed;
             placeText = placedGlyphBoxes && placedGlyphBoxes.placeable;
-            const occluded = placedGlyphBoxes && placedGlyphBoxes.occluded;
             offscreen = placedGlyphBoxes && placedGlyphBoxes.offscreen;
 
             if (symbolInstance.useRuntimeCollisionCircles) {
@@ -810,7 +809,10 @@ export class Placement {
             if (symbolInstance.crossTileID === 0) throw new Error('symbolInstance.crossTileID can\'t be 0');
             if (bucket.bucketInstanceId === 0) throw new Error('bucket.bucketInstanceId can\'t be 0');
 
-            this.placements[symbolInstance.crossTileID] = new JointPlacement((placeText || alwaysShowText) && !occluded, placeIcon || alwaysShowIcon, offscreen || bucket.justReloaded);
+            const textOccluded = placedGlyphBoxes && placedGlyphBoxes.occluded;
+            // Do not show text or icons that are occluded by the globe, even if overlap mode is 'always'!
+            const iconOccluded = placedIconBoxes && placedIconBoxes.occluded;
+            this.placements[symbolInstance.crossTileID] = new JointPlacement((placeText || alwaysShowText) && !textOccluded, (placeIcon || alwaysShowIcon) && !iconOccluded, offscreen || bucket.justReloaded);
             seenCrossTileIDs[symbolInstance.crossTileID] = true;
         };
 
