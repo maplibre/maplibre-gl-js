@@ -703,8 +703,8 @@ function shapeLines(shaping: Shaping,
             }
             //ZERDA start
             //const factor = canonical.y;
-            const factor = (x / 500) + 0.9;
-            //const factor = 1;
+            //const factor = (x / 500) + 0.9;
+            const factor = 1;
             if (!vertical) {
                 positionedGlyphs.push({glyph: codePoint, imageName, x, y: y + baselineOffset, vertical, scale: section.scale * factor, fontStack: section.fontStack, sectionIndex, metrics, rect});
                 x += metrics.advance * section.scale * factor + spacing;
