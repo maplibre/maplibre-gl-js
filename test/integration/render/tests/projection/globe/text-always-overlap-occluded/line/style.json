@@ -1,0 +1,226 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 256,
+      "width": 256
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "zoom": 1,
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "projection": {
+    "type": "globe"
+  },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "geometry": {
+          "type": "MultiLineString",
+          "coordinates": [
+            [
+              [
+                -160,
+                -25
+              ],
+              [
+                -160,
+                25
+              ]
+            ],
+            [
+              [
+                -140,
+                -25
+              ],
+              [
+                -140,
+                25
+              ]
+            ],
+            [
+              [
+                -120,
+                -25
+              ],
+              [
+                -120,
+                25
+              ]
+            ],
+            [
+              [
+                -250,
+                -25
+              ],
+              [
+                -250,
+                25
+              ]
+            ],
+            [
+              [
+                -80,
+                -25
+              ],
+              [
+                -80,
+                25
+              ]
+            ],
+            [
+              [
+                -60,
+                -25
+              ],
+              [
+                -60,
+                25
+              ]
+            ],
+            [
+              [
+                -40,
+                -25
+              ],
+              [
+                -40,
+                25
+              ]
+            ],
+            [
+              [
+                -20,
+                -25
+              ],
+              [
+                -20,
+                25
+              ]
+            ],
+            [
+              [
+                0,
+                -25
+              ],
+              [
+                0,
+                25
+              ]
+            ],
+            [
+              [
+                20,
+                -25
+              ],
+              [
+                20,
+                25
+              ]
+            ],
+            [
+              [
+                40,
+                -25
+              ],
+              [
+                40,
+                25
+              ]
+            ],
+            [
+              [
+                60,
+                -25
+              ],
+              [
+                60,
+                25
+              ]
+            ],
+            [
+              [
+                80,
+                -25
+              ],
+              [
+                80,
+                25
+              ]
+            ],
+            [
+              [
+                100,
+                -25
+              ],
+              [
+                100,
+                25
+              ]
+            ],
+            [
+              [
+                120,
+                -25
+              ],
+              [
+                120,
+                25
+              ]
+            ],
+            [
+              [
+                140,
+                -25
+              ],
+              [
+                140,
+                25
+              ]
+            ],
+            [
+              [
+                160,
+                -25
+              ],
+              [
+                160,
+                25
+              ]
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "blue"
+      }
+    },
+    {
+      "id": "text",
+      "type": "symbol",
+      "source": "geojson",
+      "layout": {
+        "symbol-placement": "line-center",
+        "text-field": "A",
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ],
+        "text-overlap": "always"
+      },
+      "paint": {
+        "text-color": "yellow"
+      }
+    }
+  ]
+}

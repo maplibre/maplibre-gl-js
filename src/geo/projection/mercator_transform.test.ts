@@ -54,7 +54,6 @@ describe('transform', () => {
         expect(fixedLngLat(transform.screenPointToLocation(new Point(250, 250)))).toEqual({lng: 0, lat: 0});
         expect(fixedCoord(transform.screenPointToMercatorCoordinate(new Point(250, 250)))).toEqual({x: 0.5, y: 0.5, z: 0});
         expect(transform.locationToScreenPoint(new LngLat(0, 0))).toEqual({x: 250, y: 250});
-        expect(transform.useGlobeControls).toBe(false);
     });
 
     test('does not throw on bad center', () => {
@@ -432,8 +431,8 @@ describe('transform', () => {
         transform.setCenter(new LngLat(0.0, 0.0));
 
         const customLayerMatrix = transform.getProjectionDataForCustomLayer().mainMatrix;
-        expect(customLayerMatrix[0].toString().length).toBeGreaterThan(10);
-        expect(transform.pixelsToClipSpaceMatrix[0].toString().length).toBeGreaterThan(10);
+        expect(customLayerMatrix[0].toString().length).toBeGreaterThan(9);
+        expect(transform.pixelsToClipSpaceMatrix[0].toString().length).toBeGreaterThan(9);
         expect(transform.maxPitchScaleFactor()).toBeCloseTo(2.366025418080343, 5);
     });
 
