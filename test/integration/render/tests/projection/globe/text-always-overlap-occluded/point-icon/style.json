@@ -1,0 +1,128 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 256,
+      "width": 256
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "zoom": 1,
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "projection": {
+    "type": "globe"
+  },
+  "sprite": "local://sprites/sprite",
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "geometry": {
+          "type": "MultiPoint",
+          "coordinates": [
+            [
+              -160,
+              0
+            ],
+            [
+              -140,
+              0
+            ],
+            [
+              -120,
+              0
+            ],
+            [
+              -100,
+              0
+            ],
+            [
+              -80,
+              0
+            ],
+            [
+              -60,
+              0
+            ],
+            [
+              -40,
+              0
+            ],
+            [
+              -20,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              20,
+              0
+            ],
+            [
+              40,
+              0
+            ],
+            [
+              60,
+              0
+            ],
+            [
+              80,
+              0
+            ],
+            [
+              100,
+              0
+            ],
+            [
+              120,
+              0
+            ],
+            [
+              140,
+              0
+            ],
+            [
+              160,
+              0
+            ],
+            [
+              180,
+              0
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "blue"
+      }
+    },
+    {
+      "id": "text",
+      "type": "symbol",
+      "source": "geojson",
+      "layout": {
+        "symbol-placement": "point",
+        "icon-image": "fav-airport-18",
+        "icon-rotation-alignment": "viewport",
+        "icon-overlap": "always",
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true
+      },
+      "paint": {
+        "icon-opacity": 1
+      }
+    }
+  ]
+}
