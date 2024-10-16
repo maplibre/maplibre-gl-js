@@ -731,4 +731,26 @@ describe('GlobeTransform', () => {
             ]);
         });
     });
+
+    test('transform and projection instance are synchronized properly', async () => {
+        const projectionMock = getGlobeProjectionMock();
+        const globeTransform = createGlobeTransform(projectionMock);
+        // projectionMock.useGlobeRendering and globeTransform.isGlobeRendering must have the same value
+        expect(projectionMock.useGlobeRendering).toBe(true);
+        expect(globeTransform.isGlobeRendering).toBe(projectionMock.useGlobeRendering);
+        globeTransform.setGlobeViewAllowed(false);
+        globeTransform.newFrameUpdate();
+        expect(projectionMock.useGlobeRendering).toBe(false);
+        expect(globeTransform.isGlobeRendering).toBe(projectionMock.useGlobeRendering);
+
+        await sleep(1000);
+        globeTransform.setGlobeViewAllowed(true);
+        globeTransform.newFrameUpdate();
+        expect(projectionMock.useGlobeRendering).toBe(false);
+        expect(globeTransform.isGlobeRendering).toBe(projectionMock.useGlobeRendering);
+        await sleep(20);
+        globeTransform.newFrameUpdate();
+        expect(projectionMock.useGlobeRendering).toBe(true);
+        expect(globeTransform.isGlobeRendering).toBe(projectionMock.useGlobeRendering);
+    });
 });
