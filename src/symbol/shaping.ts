@@ -671,13 +671,11 @@ function shapeLines(shaping: Shaping,
                 // at 24 points, we can calculate how much it will move when
                 // we scale up or down.
                 verticalAlignOffset = (lineMaxScale - section.scale) * ONE_EM;
-                
+
                 // Do not offset vertical alignment for vertical text.
                 if (writingMode !== WritingMode.vertical) {
                     if (section.verticalAlign === 'top') {
-                        // Arbitrarily set the distance between the top of the glyph set
-                        // and top of uppercase letters to be 1/3 em.
-                        verticalAlignOffset = (lineMaxScale - section.scale) * (ONE_EM / 3) - (ONE_EM / 3);
+                        verticalAlignOffset = 0;
                     } else if (section.verticalAlign === 'center') {
                         // Calculate center as the middle between top and baseline alignment.
                         verticalAlignOffset = (lineMaxScale - section.scale) * (ONE_EM * 2 / 3) - (ONE_EM / 6);
