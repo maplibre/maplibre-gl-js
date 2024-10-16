@@ -453,18 +453,18 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 ${shaderDescription.vertexShaderPrelude}
                 ${shaderDescription.define}
                 
-                in vec2 a_pos;
+                in vec3 a_pos;
 
                 void main() {
-                    gl_Position = projectTile(a_pos);
+                    gl_Position = projectTileFor3D(a_pos.xy, a_pos.z);
                 }`;
 
                 // create GLSL source for fragment shader
                 const fragmentSource = `#version 300 es
-
+                uniform mediump vec4 u_color;
                 out highp vec4 fragColor;
                 void main() {
-                    fragColor = vec4(1.0, 0.0, 1.0, 0.75);
+                    fragColor = u_color;
                 }`;
 
                 // create a vertex shader
@@ -496,7 +496,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             onAdd (map, gl) {
                 const x = 0.5 - 0.015;
                 const y = 0.5 - 0.01;
-                const z = 0.01;
+                const z = 500_000;
                 const d = 0.01;
 
                 const vertexArray = new Float32Array([
@@ -507,9 +507,9 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                     x, y + d + d, 0,
                     x + d, y + d + d, 0]);
                 const indexArray = new Uint16Array([
-                    0, 1, 2,
+                    0, 2, 1,
                     1, 2, 3,
-                    2, 3, 4,
+                    2, 4, 3,
                     3, 4, 5
                 ]);
 
@@ -547,13 +547,19 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                     args.defaultProjectionData.projectionTransition
                 );
 
-                gl.enable(gl.BLEND);
-                gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+                gl.enable(gl.CULL_FACE);
                 gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
                 gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
                 gl.enableVertexAttribArray(shader.aPos);
                 gl.vertexAttribPointer(shader.aPos, 3, gl.FLOAT, false, 0, 0);
-                gl.drawElements(gl.TRIANGLES, 12, gl.UNSIGNED_SHORT, 0);
+                for (let i = 0; i < 2; i++) {
+                    gl.uniform4f(
+                        gl.getUniformLocation(shader.program, 'u_color'),
+                        i === 0 ? 1 : 0.25, 0, 0, 1
+                    );
+                    gl.cullFace(i === 0 ? gl.BACK : gl.FRONT);
+                    gl.drawElements(gl.TRIANGLES, 12, gl.UNSIGNED_SHORT, 0);
+                }
             }
         }
 
