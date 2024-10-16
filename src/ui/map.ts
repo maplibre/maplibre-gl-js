@@ -1,4 +1,4 @@
-import {extend, warnOnce, uniqueId, isImageBitmap, Complete} from '../util/util';
+import {extend, warnOnce, uniqueId, isImageBitmap, Complete, pick} from '../util/util';
 import {browser} from '../util/browser';
 import {DOM} from '../util/dom';
 import packageJSON from '../../package.json' with {type: 'json'};
@@ -724,7 +724,8 @@ export class Map extends Camera {
 
         this.on('style.load', () => {
             if (this.transform.unmodified) {
-                this.jumpTo(this.style.stylesheet as any);
+                const coercedOptions = pick(this.style.stylesheet, ['center', 'zoom', 'bearing', 'pitch', 'roll']) as CameraOptions;
+                this.jumpTo(coercedOptions);
             }
         });
         this.on('data', (event: MapDataEvent) => {
