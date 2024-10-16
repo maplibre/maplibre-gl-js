@@ -213,20 +213,17 @@ export class GlobeTransform implements ITransform {
     // Transition handling
     private _lastGlobeStateEnabled: boolean = true;
 
-    private _lastLargeZoomStateChange: number = -1000.0;
-    private _lastLargeZoomState: boolean = false;
-
     /**
      * Stores when {@link newFrameUpdate} was last called.
      * Serves as a unified clock for globe (instead of each function using a slightly different value from `browser.now()`).
      */
-    private _lastUpdateTime = browser.now();
+    private _lastUpdateTimeSeconds = browser.now() / 1000.0;
     /**
      * Stores when switch from globe to mercator or back last occurred, for animation purposes.
      * This switch can be caused either by the map passing the threshold zoom level,
      * or by {@link setGlobeViewAllowed} being called.
      */
-    private _lastGlobeChangeTime: number = browser.now() - 10_000; // Ten seconds before transform creation
+    private _lastGlobeChangeTimeSeconds: number = browser.now() / 1000 - 10; // Ten seconds before transform creation
 
     private _skipNextAnimation: boolean = true;
 
@@ -351,16 +348,17 @@ export class GlobeTransform implements ITransform {
             this._skipNextAnimation = true;
         }
         this._globeProjectionAllowed = allow;
-        this._lastGlobeChangeTime = this._lastUpdateTime;
+        this._lastGlobeChangeTimeSeconds = this._lastUpdateTimeSeconds;
     }
 
     /**
      * Should be called at the beginning of every frame to synchronize the transform with the underlying projection.
      */
     newFrameUpdate(): TransformUpdateResult {
-        this._lastUpdateTime = browser.now();
+        this._lastUpdateTimeSeconds = browser.now() / 1000.0;
         const oldGlobeRendering = this.isGlobeRendering;
         this._globeness = this._computeGlobenessAnimation();
+        // Everything below this comment must happen AFTER globeness update
         this._updateErrorCorrectionValue();
         this._calcMatrices();
 
@@ -398,34 +396,25 @@ export class GlobeTransform implements ITransform {
      */
     private _computeGlobenessAnimation(): number {
         // Update globe transition animation
-        const globeState = this._globeProjectionAllowed;
-        const currentTime = this._lastUpdateTime;
+        const globeState = this._globeProjectionAllowed && this.zoom < globeConstants.maxGlobeZoom;
+        const currentTimeSeconds = this._lastUpdateTimeSeconds;
         if (globeState !== this._lastGlobeStateEnabled) {
-            this._lastGlobeChangeTime = currentTime;
+            this._lastGlobeChangeTimeSeconds = currentTimeSeconds;
             this._lastGlobeStateEnabled = globeState;
         }
 
         const oldGlobeness = this._globeness;
 
         // Transition parameter, where 0 is the start and 1 is end.
-        const globeTransition = Math.min(Math.max((currentTime - this._lastGlobeChangeTime) / 1000.0 / globeConstants.globeTransitionTimeSeconds, 0.0), 1.0);
+        const globeTransition = Math.min(Math.max((currentTimeSeconds - this._lastGlobeChangeTimeSeconds) / globeConstants.globeTransitionTimeSeconds, 0.0), 1.0);
         let newGlobeness = globeState ? globeTransition : (1.0 - globeTransition);
 
         if (this._skipNextAnimation) {
             newGlobeness = globeState ? 1.0 : 0.0;
-            this._lastGlobeChangeTime = currentTime - globeConstants.globeTransitionTimeSeconds * 1000.0 * 2.0;
+            this._lastGlobeChangeTimeSeconds = currentTimeSeconds - globeConstants.globeTransitionTimeSeconds * 2.0;
             this._skipNextAnimation = false;
         }
 
-        // Update globe zoom transition
-        const currentZoomState = this.zoom >= globeConstants.maxGlobeZoom;
-        if (currentZoomState !== this._lastLargeZoomState) {
-            this._lastLargeZoomState = currentZoomState;
-            this._lastLargeZoomStateChange = currentTime;
-        }
-        const zoomTransition = Math.min(Math.max((currentTime - this._lastLargeZoomStateChange) / 1000.0 / globeConstants.zoomTransitionTimeSeconds, 0.0), 1.0);
-        const zoomGlobenessBound = currentZoomState ? (1.0 - zoomTransition) : zoomTransition;
-        newGlobeness = Math.min(newGlobeness, zoomGlobenessBound);
         newGlobeness = easeCubicInOut(newGlobeness); // Smooth animation
 
         if (oldGlobeness !== newGlobeness) {
@@ -441,7 +430,7 @@ export class GlobeTransform implements ITransform {
 
     isRenderingDirty(): boolean {
         // Globe transition
-        return (this._lastUpdateTime - this._lastGlobeChangeTime) / 1000.0 < (Math.max(globeConstants.globeTransitionTimeSeconds, globeConstants.zoomTransitionTimeSeconds));
+        return (this._lastUpdateTimeSeconds - this._lastGlobeChangeTimeSeconds) < globeConstants.globeTransitionTimeSeconds;
     }
 
     getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData {
