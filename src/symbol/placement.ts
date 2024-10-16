@@ -472,7 +472,7 @@ export class Placement {
             let offscreen = true;
             let shift = null;
 
-            let placed: PlacedBox = {box: null, placeable: false, offscreen: null};
+            let placed: PlacedBox = {box: null, placeable: false, offscreen: null, occluded: false};
             let placedVerticalText = {box: null, placeable: false, offscreen: null};
 
             let placedGlyphBoxes: PlacedBox = null;
@@ -631,7 +631,8 @@ export class Placement {
                             placedBox = {
                                 box: placedFakeGlyphBox.box,
                                 offscreen: false,
-                                placeable: false
+                                placeable: false,
+                                occluded: false,
                             };
                         }
 
@@ -675,7 +676,7 @@ export class Placement {
 
             placedGlyphBoxes = placed;
             placeText = placedGlyphBoxes && placedGlyphBoxes.placeable;
-
+            const occluded = placedGlyphBoxes && placedGlyphBoxes.occluded;
             offscreen = placedGlyphBoxes && placedGlyphBoxes.offscreen;
 
             if (symbolInstance.useRuntimeCollisionCircles) {
@@ -809,7 +810,7 @@ export class Placement {
             if (symbolInstance.crossTileID === 0) throw new Error('symbolInstance.crossTileID can\'t be 0');
             if (bucket.bucketInstanceId === 0) throw new Error('bucket.bucketInstanceId can\'t be 0');
 
-            this.placements[symbolInstance.crossTileID] = new JointPlacement(placeText || alwaysShowText, placeIcon || alwaysShowIcon, offscreen || bucket.justReloaded);
+            this.placements[symbolInstance.crossTileID] = new JointPlacement((placeText || alwaysShowText) && !occluded, placeIcon || alwaysShowIcon, offscreen || bucket.justReloaded);
             seenCrossTileIDs[symbolInstance.crossTileID] = true;
         };
 
