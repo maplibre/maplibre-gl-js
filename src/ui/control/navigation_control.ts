@@ -98,19 +98,19 @@ export class NavigationControl implements IControl {
     };
 
     _rotateCompassArrow = () => {
-        if (this.options.visualizePitch) {
-            if (this.options.visualizeRoll) {
-                this._compassIcon.style.transform = `scale(${1 / Math.pow(Math.cos(this._map.transform.pitchInRadians), 0.5)}) rotateZ(${-this._map.transform.roll}deg) rotateX(${this._map.transform.pitch}deg) rotateZ(${-this._map.transform.bearing}deg)`;
-            } else {
-                this._compassIcon.style.transform = `scale(${1 / Math.pow(Math.cos(this._map.transform.pitchInRadians), 0.5)}) rotateX(${this._map.transform.pitch}deg) rotateZ(${-this._map.transform.bearing}deg)`;
-            }
-        } else {
-            if (this.options.visualizeRoll) {
-                this._compassIcon.style.transform = `rotate(${-this._map.transform.bearing - this._map.transform.roll}deg)`;
-            } else {
-                this._compassIcon.style.transform = `rotate(${-this._map.transform.bearing}deg)`;
-            }
+        if (this.options.visualizePitch && this.options.visualizeRoll) {
+            this._compassIcon.style.transform = `scale(${1 / Math.pow(Math.cos(this._map.transform.pitchInRadians), 0.5)}) rotateZ(${-this._map.transform.roll}deg) rotateX(${this._map.transform.pitch}deg) rotateZ(${-this._map.transform.bearing}deg)`;
+            return;
         }
+        if (this.options.visualizePitch) {
+            this._compassIcon.style.transform = `scale(${1 / Math.pow(Math.cos(this._map.transform.pitchInRadians), 0.5)}) rotateX(${this._map.transform.pitch}deg) rotateZ(${-this._map.transform.bearing}deg)`;
+            return;
+        }
+        if (this.options.visualizeRoll) {
+            this._compassIcon.style.transform = `rotate(${-this._map.transform.bearing - this._map.transform.roll}deg)`;
+            return;
+        }
+        this._compassIcon.style.transform = `rotate(${-this._map.transform.bearing}deg)`;
     };
 
     /** {@inheritDoc IControl.onAdd} */
