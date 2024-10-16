@@ -358,12 +358,10 @@ export class GlobeTransform implements ITransform {
      * Should be called at the beginning of every frame to synchronize the transform with the underlying projection.
      */
     newFrameUpdate(): TransformUpdateResult {
-        this._updateErrorCorrectionValue();
-
         this._lastUpdateTime = browser.now();
         const oldGlobeRendering = this.isGlobeRendering;
         this._globeness = this._computeGlobenessAnimation();
-
+        this._updateErrorCorrectionValue();
         this._calcMatrices();
 
         if (oldGlobeRendering === this.isGlobeRendering) {
