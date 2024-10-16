@@ -809,10 +809,10 @@ export class Placement {
             if (symbolInstance.crossTileID === 0) throw new Error('symbolInstance.crossTileID can\'t be 0');
             if (bucket.bucketInstanceId === 0) throw new Error('bucket.bucketInstanceId can\'t be 0');
 
-            const textOccluded = placedGlyphBoxes && placedGlyphBoxes.occluded;
             // Do not show text or icons that are occluded by the globe, even if overlap mode is 'always'!
-            const iconOccluded = placedIconBoxes && placedIconBoxes.occluded;
-            this.placements[symbolInstance.crossTileID] = new JointPlacement((placeText || alwaysShowText) && !textOccluded, (placeIcon || alwaysShowIcon) && !iconOccluded, offscreen || bucket.justReloaded);
+            const textVisible: boolean = (placeText || alwaysShowText) && !(placedGlyphBoxes?.occluded);
+            const iconVisible = (placeIcon || alwaysShowIcon) && !(placedIconBoxes?.occluded);
+            this.placements[symbolInstance.crossTileID] = new JointPlacement(textVisible, iconVisible, offscreen || bucket.justReloaded);
             seenCrossTileIDs[symbolInstance.crossTileID] = true;
         };
 
