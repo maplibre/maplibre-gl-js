@@ -82,7 +82,7 @@
     "autoprefixer": "^10.4.20",
     "benchmark": "^2.1.4",
     "canvas": "^2.11.2",
-    "cspell": "^8.15.2",
+    "cspell": "^8.15.3",
     "cssnano": "^7.0.6",
     "d3": "^7.9.0",
     "d3-queue": "^3.0.7",
