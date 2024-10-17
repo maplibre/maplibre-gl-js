@@ -411,7 +411,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     maxTileCacheZoomLevels: config.MAX_TILE_CACHE_ZOOM_LEVELS,
     transformRequest: null,
     transformCameraUpdate: null,
-    fadeDuration: 300,
+    fadeDuration: 0,
     crossSourceCollisions: true,
     clickTolerance: 3,
     localIdeographFontFamily: 'sans-serif',
@@ -661,8 +661,17 @@ export class Map extends Camera {
         this._setupContainer();
         this._setupPainter();
 
-        this.on('move', () => this._update(false))
-            .on('moveend', () => this._update(false))
+        this.on('moveend', () => {
+            if (!this.style || !this.style.sourceCaches || !this.transform) {
+                return;
+            }
+            for (const id in this.style.sourceCaches) {
+                this.style.sourceCaches[id].update(this.transform, this.terrain);
+            }
+            if (this.areTilesLoaded()) {
+                this._update(false);
+            }
+        })
             .on('zoom', () => this._update(true))
             .on('terrain', () => {
                 this.painter.terrainFacilitator.dirty = true;
@@ -729,6 +738,9 @@ export class Map extends Camera {
             }
         });
         this.on('data', (event: MapDataEvent) => {
+            if (!this.areTilesLoaded()) {
+                return;
+            }
             this._update(event.dataType === 'style');
             this.fire(new Event(`${event.dataType}data`, event));
         });
@@ -3203,6 +3215,11 @@ export class Map extends Camera {
         }
 
         this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, transformUpdateResult.forcePlacementUpdate);
+
+        if (this._placementDirty) {
+            this.triggerRepaint();
+            return this;
+        }
 
         if (transformUpdateResult.fireProjectionEvent) {
             this.fire(new Event('projectiontransition', transformUpdateResult.fireProjectionEvent));
