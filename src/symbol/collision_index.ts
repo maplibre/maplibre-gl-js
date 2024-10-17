@@ -36,6 +36,7 @@ export type PlacedBox = {
     box: Array<number>;
     placeable: boolean;
     offscreen: boolean;
+    occluded: boolean;
 };
 
 export type FeatureKey = {
@@ -154,12 +155,9 @@ export class CollisionIndex {
         const [tlX, tlY, brX, brY] = projectedBox.box;
 
         // Conditions are ordered from the fastest to evaluate to the slowest.
-        let unplaceable = false;
-        if (pitchWithMap) {
-            unplaceable ||= projectedBox.allPointsOccluded;
-        } else {
-            unplaceable ||= projectedPoint.isOccluded;
-        }
+        const occluded = pitchWithMap ? projectedBox.allPointsOccluded : projectedPoint.isOccluded;
+
+        let unplaceable = occluded;
         unplaceable ||= projectedPoint.perspectiveRatio < this.perspectiveRatioCutoff;
         unplaceable ||= !this.isInsideGrid(tlX, tlY, brX, brY);
 
@@ -168,14 +166,16 @@ export class CollisionIndex {
             return {
                 box: [tlX, tlY, brX, brY],
                 placeable: false,
-                offscreen: false
+                offscreen: false,
+                occluded
             };
         }
 
         return {
             box: [tlX, tlY, brX, brY],
             placeable: true,
-            offscreen: this.isOffscreen(tlX, tlY, brX, brY)
+            offscreen: this.isOffscreen(tlX, tlY, brX, brY),
+            occluded
         };
     }
 
