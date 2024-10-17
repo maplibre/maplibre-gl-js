@@ -557,14 +557,14 @@ export class MercatorTransform implements ITransform {
         } while (Math.abs(distanceToCenterMeters - dMerc * metersPerMercUnit) > 1.0e-12);
 
         const center = centerMerc.toLngLat();
-        const zoom = scaleZoom(this.height / 2 / Math.tan(this._helper._fov / 2) / dMerc / this.tileSize);
+        const zoom = scaleZoom(this.height / 2 / Math.tan(this.fovInRadians / 2) / dMerc / this.tileSize);
         return {center, elevation, zoom};
     }
 
     _calcMatrices(): void {
         if (!this._helper._height) return;
 
-        const halfFov = this._helper._fovInRadians / 2;
+        const halfFov = this.fovInRadians / 2;
         const offset = this.centerOffset;
         const point = projectToWorldCoordinates(this.worldSize, this.center);
         const x = point.x, y = point.y;
@@ -718,7 +718,7 @@ export class MercatorTransform implements ITransform {
     }
 
     getCameraLngLat(): LngLat {
-        const cameraToCenterDistance = 0.5 / Math.tan(this._helper._fov / 2) * this._helper._height;
+        const cameraToCenterDistance = 0.5 / Math.tan(this.fovInRadians / 2) * this.height;
         const pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
         const cameraToCenterDistanceMeters = cameraToCenterDistance / pixelPerMeter;
         const camMerc = camMercFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
