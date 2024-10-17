@@ -453,7 +453,6 @@ describe('transform', () => {
         expect(expectedCamLngLat.lng).toBeCloseTo(10, 10);
         expect(expectedCamLngLat.lat).toBeCloseTo(49.9850171656428, 10);
 
-
         // expect same values because of no elevation change
         const terrain = {
             getElevationForLngLatZoom: () => 200,
@@ -472,7 +471,7 @@ describe('transform', () => {
         expect(transform.getCameraLngLat().lng).toBeCloseTo(expectedCamLngLat.lng, 10);
         expect(transform.getCameraLngLat().lat).toBeCloseTo(expectedCamLngLat.lat, 10);
         expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 10);
-        expect(transform.zoom).toBeCloseTo( 14.184585886440686, 10);
+        expect(transform.zoom).toBeCloseTo(14.184585886440686, 10);
 
         // expect new zoom because of elevation change to point below sea level
         terrain.getElevationForLngLatZoom = () => -200;

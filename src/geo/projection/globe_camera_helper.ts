@@ -5,7 +5,7 @@ import {GlobeProjection} from './globe';
 import {LngLat, LngLatLike} from '../lng_lat';
 import {MercatorCameraHelper} from './mercator_camera_helper';
 import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from './globe_utils';
-import {clamp, createVec3f64, differenceOfAnglesDegrees, getRollPitchBearing, remapSaturate, rollPitchBearingToQuat, warnOnce} from '../../util/util';
+import {clamp, createVec3f64, differenceOfAnglesDegrees, remapSaturate, rollPitchBearingToQuat, warnOnce} from '../../util/util';
 import {mat4, quat, vec3} from 'gl-matrix';
 import {MAX_VALID_LATITUDE, normalizeCenter, scaleZoom, zoomScale} from '../transform_helper';
 import {CameraForBoundsOptions} from '../../ui/camera';
