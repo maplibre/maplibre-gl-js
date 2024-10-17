@@ -6,7 +6,7 @@ import {CameraForBoundsOptions} from '../../ui/camera';
 import {PaddingOptions} from '../edge_insets';
 import {LngLatBounds} from '../lng_lat_bounds';
 import {normalizeCenter, scaleZoom, zoomScale} from '../transform_helper';
-import {degreesToRadians, getRollPitchBearing, rollPitchBearingToQuat} from '../../util/util';
+import {degreesToRadians, rollPitchBearingToQuat} from '../../util/util';
 import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {quat} from 'gl-matrix';
