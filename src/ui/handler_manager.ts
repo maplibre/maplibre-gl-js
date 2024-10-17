@@ -5,7 +5,7 @@ import {HandlerInertia} from './handler_inertia';
 import {MapEventHandler, BlockableMapEventHandler} from './handler/map_event';
 import {BoxZoomHandler} from './handler/box_zoom';
 import {TapZoomHandler} from './handler/tap_zoom';
-import {generateMouseRotationHandler, generateMousePitchHandler, generateMousePanHandler} from './handler/mouse';
+import {generateMouseRotationHandler, generateMousePitchHandler, generateMousePanHandler, generateMouseRollHandler} from './handler/mouse';
 import {TouchPanHandler} from './handler/touch_pan';
 import {TwoFingersTouchZoomHandler, TwoFingersTouchRotateHandler, TwoFingersTouchPitchHandler} from './handler/two_fingers_touch';
 import {KeyboardHandler} from './handler/keyboard';
@@ -22,7 +22,7 @@ import {browser} from '../util/browser';
 import Point from '@mapbox/point-geometry';
 import {MapControlsDeltas} from '../geo/projection/camera_helper';
 
-const isMoving = (p: EventsInProgress) => p.zoom || p.drag || p.pitch || p.rotate;
+const isMoving = (p: EventsInProgress) => p.zoom || p.drag || p.roll || p.pitch || p.rotate;
 
 class RenderFrameEvent extends Event {
     type: 'renderFrame';
@@ -83,6 +83,7 @@ export type HandlerResult = {
     zoomDelta?: number;
     bearingDelta?: number;
     pitchDelta?: number;
+    rollDelta?: number;
     /**
      * the point to not move when changing the camera
      */
@@ -117,13 +118,14 @@ export type EventInProgress = {
 
 export type EventsInProgress = {
     zoom?: EventInProgress;
+    roll?: EventInProgress;
     pitch?: EventInProgress;
     rotate?: EventInProgress;
     drag?: EventInProgress;
 }
 
 function hasChange(result: HandlerResult) {
-    return (result.panDelta && result.panDelta.mag()) || result.zoomDelta || result.bearingDelta || result.pitchDelta;
+    return (result.panDelta && result.panDelta.mag()) || result.zoomDelta || result.bearingDelta || result.pitchDelta || result.rollDelta;
 }
 
 export class HandlerManager {
@@ -254,9 +256,11 @@ export class HandlerManager {
 
         const mouseRotate = generateMouseRotationHandler(options);
         const mousePitch = generateMousePitchHandler(options);
-        map.dragRotate = new DragRotateHandler(options, mouseRotate, mousePitch);
+        const mouseRoll = generateMouseRollHandler(options);
+        map.dragRotate = new DragRotateHandler(options, mouseRotate, mousePitch, mouseRoll);
         this._add('mouseRotate', mouseRotate, ['mousePitch']);
-        this._add('mousePitch', mousePitch, ['mouseRotate']);
+        this._add('mousePitch', mousePitch, ['mouseRotate', 'mouseRoll']);
+        this._add('mouseRoll', mouseRoll, ['mousePitch']);
         if (options.interactive && options.dragRotate) {
             map.dragRotate.enable();
         }
@@ -448,6 +452,9 @@ export class HandlerManager {
         if (handlerResult.panDelta !== undefined) {
             eventsInProgress.drag = eventData;
         }
+        if (handlerResult.rollDelta !== undefined) {
+            eventsInProgress.roll = eventData;
+        }
         if (handlerResult.pitchDelta !== undefined) {
             eventsInProgress.pitch = eventData;
         }
@@ -468,6 +475,7 @@ export class HandlerManager {
             if (change.zoomDelta) combined.zoomDelta = (combined.zoomDelta || 0) + change.zoomDelta;
             if (change.bearingDelta) combined.bearingDelta = (combined.bearingDelta || 0) + change.bearingDelta;
             if (change.pitchDelta) combined.pitchDelta = (combined.pitchDelta || 0) + change.pitchDelta;
+            if (change.rollDelta) combined.rollDelta = (combined.rollDelta || 0) + change.rollDelta;
             if (change.around !== undefined) combined.around = change.around;
             if (change.pinchAround !== undefined) combined.pinchAround = change.pinchAround;
             if (change.noInertia) combined.noInertia = change.noInertia;
@@ -494,7 +502,7 @@ export class HandlerManager {
         // stop any ongoing camera animations (easeTo, flyTo)
         map._stop(true);
 
-        let {panDelta, zoomDelta, bearingDelta, pitchDelta, around, pinchAround} = combinedResult;
+        let {panDelta, zoomDelta, bearingDelta, pitchDelta, rollDelta, around, pinchAround} = combinedResult;
 
         if (pinchAround !== undefined) {
             around = pinchAround;
@@ -509,6 +517,7 @@ export class HandlerManager {
         const deltasForHelper: MapControlsDeltas = {
             panDelta,
             zoomDelta,
+            rollDelta,
             pitchDelta,
             bearingDelta,
             around,
@@ -521,13 +530,13 @@ export class HandlerManager {
         const preZoomAroundLoc = tr.screenPointToLocation(panDelta ? around.sub(panDelta) : around);
 
         if (!terrain) {
-            // Apply zoom, bearing, pitch
-            this._map.cameraHelper.handleMapControlsPitchBearingZoom(deltasForHelper, tr);
+            // Apply zoom, bearing, pitch, roll
+            this._map.cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
             // Apply panning
             this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
         } else {
-            // Apply zoom, bearing, pitch
-            this._map.cameraHelper.handleMapControlsPitchBearingZoom(deltasForHelper, tr);
+            // Apply zoom, bearing, pitch, roll
+            this._map.cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
             // when 3d-terrain is enabled act a little different:
             //    - dragging do not drag the picked point itself, instead it drags the map by pixel-delta.
             //      With this approach it is no longer possible to pick a point from somewhere near

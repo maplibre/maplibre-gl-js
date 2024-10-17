@@ -15,7 +15,7 @@ import type {
 } from '../data/array_types.g';
 import type {OverlapMode} from '../style/style_layer/overlap_mode';
 import {UnwrappedTileID} from '../source/tile_id';
-import {type PointProjection, SymbolProjectionContext, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, projectPathSpecialProjection, xyTransformMat4} from '../symbol/projection';
+import {type PointProjection, SymbolProjectionContext, getTileSkewVectors, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, projectPathSpecialProjection, xyTransformMat4} from '../symbol/projection';
 import {clamp, getAABB} from '../util/util';
 
 // When a symbol crosses the edge that causes it to be included in
@@ -542,13 +542,11 @@ export class CollisionIndex {
             vecSouthY = cos;
         } else if (!rotateWithMap && pitchWithMap) {
             // Handles pitch-align: map texts that are always aligned with the viewport's X axis.
-            const angle = -this.transform.angle;
-            const sin = Math.sin(angle);
-            const cos = Math.cos(angle);
-            vecEastX = cos;
-            vecEastY = sin;
-            vecSouthX = -sin;
-            vecSouthY = cos;
+            const skew = getTileSkewVectors(this.transform);
+            vecEastX = skew.vecEast[0];
+            vecEastY = skew.vecEast[1];
+            vecSouthX = skew.vecSouth[0];
+            vecSouthY = skew.vecSouth[1];
         }
 
         // Configuration for screen space offsets
