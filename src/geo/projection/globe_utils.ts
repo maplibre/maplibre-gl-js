@@ -137,13 +137,13 @@ export function getDegreesPerPixel(worldSize: number, lat: number): number {
  * @returns New center location to set to the map's transform to apply the specified panning.
  */
 export function computeGlobePanCenter(panDelta: Point, tr: {
-    readonly angle: number;
+    readonly bearingInRadians: number;
     readonly worldSize: number;
     readonly center: LngLat;
     readonly zoom: number;
 }): LngLat {
     // Apply map bearing to the panning vector
-    const rotatedPanDelta = panDelta.rotate(-tr.angle);
+    const rotatedPanDelta = panDelta.rotate(tr.bearingInRadians);
     // Compute what the current zoom would be if the transform center would be moved to latitude 0.
     const normalizedGlobeZoom = tr.zoom + getZoomAdjustment(tr.center.lat, 0);
     // Note: we divide longitude speed by planet width at the given latitude. But we diminish this effect when the globe is zoomed out a lot.

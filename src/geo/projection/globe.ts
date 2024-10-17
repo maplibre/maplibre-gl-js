@@ -17,7 +17,6 @@ export const globeConstants = {
      * Used for globe rendering.
      */
     globeTransitionTimeSeconds: 0.5,
-    zoomTransitionTimeSeconds: 0.5,
     maxGlobeZoom: 12.0,
     errorTransitionTimeSeconds: 0.5
 };

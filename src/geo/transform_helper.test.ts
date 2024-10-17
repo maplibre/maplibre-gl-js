@@ -27,6 +27,7 @@ describe('TransformHelper', () => {
             left: 3,
         });
         original.setPitch(3);
+        original.setRoll(7);
         original.setRenderWorldCopies(false);
         original.setZoom(2.3);
 
@@ -40,7 +41,7 @@ describe('TransformHelper', () => {
         expect(cloned.worldSize).toEqual(original.worldSize);
         expect(cloned.width).toEqual(original.width);
         expect(cloned.height).toEqual(original.height);
-        expect(cloned.angle).toEqual(original.angle);
+        expect(cloned.bearingInRadians).toEqual(original.bearingInRadians);
         expect(cloned.lngRange).toEqual(original.lngRange);
         expect(cloned.latRange).toEqual(original.latRange);
         expect(cloned.minZoom).toEqual(original.minZoom);
@@ -50,6 +51,7 @@ describe('TransformHelper', () => {
         expect(cloned.minPitch).toEqual(original.minPitch);
         expect(cloned.maxPitch).toEqual(original.maxPitch);
         expect(cloned.pitch).toEqual(original.pitch);
+        expect(cloned.roll).toEqual(original.roll);
         expect(cloned.bearing).toEqual(original.bearing);
         expect(cloned.fov).toEqual(original.fov);
         expect(cloned.elevation).toEqual(original.elevation);

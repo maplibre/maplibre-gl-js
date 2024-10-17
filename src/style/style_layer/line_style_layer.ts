@@ -105,7 +105,7 @@ export class LineStyleLayer extends StyleLayer {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('line-translate'),
             this.paint.get('line-translate-anchor'),
-            transform.angle, pixelsToTileUnits);
+            -transform.bearingInRadians, pixelsToTileUnits);
         const halfWidth = pixelsToTileUnits / 2 * getLineWidth(
             this.paint.get('line-width').evaluate(feature, featureState),
             this.paint.get('line-gap-width').evaluate(feature, featureState));
