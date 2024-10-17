@@ -119,7 +119,7 @@
     "postcss-cli": "^11.0.0",
     "postcss-inline-svg": "^6.0.0",
     "pretty-bytes": "^6.1.1",
-    "puppeteer": "^23.5.3",
+    "puppeteer": "^23.6.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "rollup": "^4.24.0",
