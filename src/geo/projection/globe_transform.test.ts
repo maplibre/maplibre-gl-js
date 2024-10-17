@@ -1,4 +1,4 @@
-import {GlobeProjection} from './globe';
+import {globeConstants, GlobeProjection} from './globe';
 import {EXTENT} from '../../data/extent';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
@@ -34,6 +34,9 @@ function createGlobeTransform(globeProjection: GlobeProjection) {
 
 describe('GlobeTransform', () => {
     const globeProjectionMock = getGlobeProjectionMock();
+    // Force faster animations so we can use shorter sleeps when testing them
+    globeConstants.globeTransitionTimeSeconds = 0.1;
+    globeConstants.errorTransitionTimeSeconds = 0.1;
 
     describe('getProjectionData', () => {
         const globeTransform = createGlobeTransform(globeProjectionMock);
@@ -447,12 +450,12 @@ describe('GlobeTransform', () => {
             globeTransform.newFrameUpdate();
             globeTransform.setGlobeViewAllowed(false);
 
-            await sleep(20);
+            await sleep(10);
             globeTransform.newFrameUpdate();
             expect(globeTransform.getGlobeViewAllowed()).toBe(false);
             expect(globeTransform.isGlobeRendering).toBe(true);
 
-            await sleep(1000);
+            await sleep(150);
             globeTransform.newFrameUpdate();
             expect(globeTransform.getGlobeViewAllowed()).toBe(false);
             expect(globeTransform.isGlobeRendering).toBe(false);
@@ -463,7 +466,7 @@ describe('GlobeTransform', () => {
             globeTransform.newFrameUpdate();
             globeTransform.setGlobeViewAllowed(false, false);
 
-            await sleep(20);
+            await sleep(10);
             globeTransform.newFrameUpdate();
             expect(globeTransform.getGlobeViewAllowed()).toBe(false);
             expect(globeTransform.isGlobeRendering).toBe(false);
@@ -743,12 +746,12 @@ describe('GlobeTransform', () => {
         expect(projectionMock.useGlobeRendering).toBe(false);
         expect(globeTransform.isGlobeRendering).toBe(projectionMock.useGlobeRendering);
 
-        await sleep(1000);
+        await sleep(150);
         globeTransform.setGlobeViewAllowed(true);
         globeTransform.newFrameUpdate();
         expect(projectionMock.useGlobeRendering).toBe(false);
         expect(globeTransform.isGlobeRendering).toBe(projectionMock.useGlobeRendering);
-        await sleep(20);
+        await sleep(10);
         globeTransform.newFrameUpdate();
         expect(projectionMock.useGlobeRendering).toBe(true);
         expect(globeTransform.isGlobeRendering).toBe(projectionMock.useGlobeRendering);
