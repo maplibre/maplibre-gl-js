@@ -100,6 +100,9 @@ export class GlobeTransform implements ITransform {
     setPitch(pitch: number): void {
         this._helper.setPitch(pitch);
     }
+    setRoll(roll: number): void {
+        this._helper.setRoll(roll);
+    }
     setFov(fov: number): void {
         this._helper.setFov(fov);
     }
@@ -158,9 +161,6 @@ export class GlobeTransform implements ITransform {
     get height(): number {
         return this._helper.height;
     }
-    get angle(): number {
-        return this._helper.angle;
-    }
     get lngRange(): [number, number] {
         return this._helper.lngRange;
     }
@@ -188,11 +188,26 @@ export class GlobeTransform implements ITransform {
     get pitch(): number {
         return this._helper.pitch;
     }
+    get pitchInRadians(): number {
+        return this._helper.pitchInRadians;
+    }
+    get roll(): number {
+        return this._helper.roll;
+    }
+    get rollInRadians(): number {
+        return this._helper.rollInRadians;
+    }
     get bearing(): number {
         return this._helper.bearing;
     }
+    get bearingInRadians(): number {
+        return this._helper.bearingInRadians;
+    }
     get fov(): number {
         return this._helper.fov;
+    }
+    get fovInRadians(): number {
+        return this._helper.fovInRadians;
     }
     get elevation(): number {
         return this._helper.elevation;
@@ -226,20 +241,17 @@ export class GlobeTransform implements ITransform {
     // Transition handling
     private _lastGlobeStateEnabled: boolean = true;
 
-    private _lastLargeZoomStateChange: number = -1000.0;
-    private _lastLargeZoomState: boolean = false;
-
     /**
      * Stores when {@link newFrameUpdate} was last called.
      * Serves as a unified clock for globe (instead of each function using a slightly different value from `browser.now()`).
      */
-    private _lastUpdateTime = browser.now();
+    private _lastUpdateTimeSeconds = browser.now() / 1000.0;
     /**
      * Stores when switch from globe to mercator or back last occurred, for animation purposes.
      * This switch can be caused either by the map passing the threshold zoom level,
      * or by {@link setGlobeViewAllowed} being called.
      */
-    private _lastGlobeChangeTime: number = browser.now() - 10_000; // Ten seconds before transform creation
+    private _lastGlobeChangeTimeSeconds: number = browser.now() / 1000 - 10; // Ten seconds before transform creation
 
     private _skipNextAnimation: boolean = true;
 
@@ -364,19 +376,18 @@ export class GlobeTransform implements ITransform {
             this._skipNextAnimation = true;
         }
         this._globeProjectionAllowed = allow;
-        this._lastGlobeChangeTime = this._lastUpdateTime;
+        this._lastGlobeChangeTimeSeconds = this._lastUpdateTimeSeconds;
     }
 
     /**
      * Should be called at the beginning of every frame to synchronize the transform with the underlying projection.
      */
     newFrameUpdate(): TransformUpdateResult {
-        this._updateErrorCorrectionValue();
-
-        this._lastUpdateTime = browser.now();
+        this._lastUpdateTimeSeconds = browser.now() / 1000.0;
         const oldGlobeRendering = this.isGlobeRendering;
         this._globeness = this._computeGlobenessAnimation();
-
+        // Everything below this comment must happen AFTER globeness update
+        this._updateErrorCorrectionValue();
         this._calcMatrices();
 
         if (oldGlobeRendering === this.isGlobeRendering) {
@@ -413,34 +424,25 @@ export class GlobeTransform implements ITransform {
      */
     private _computeGlobenessAnimation(): number {
         // Update globe transition animation
-        const globeState = this._globeProjectionAllowed;
-        const currentTime = this._lastUpdateTime;
+        const globeState = this._globeProjectionAllowed && this.zoom < globeConstants.maxGlobeZoom;
+        const currentTimeSeconds = this._lastUpdateTimeSeconds;
         if (globeState !== this._lastGlobeStateEnabled) {
-            this._lastGlobeChangeTime = currentTime;
+            this._lastGlobeChangeTimeSeconds = currentTimeSeconds;
             this._lastGlobeStateEnabled = globeState;
         }
 
         const oldGlobeness = this._globeness;
 
         // Transition parameter, where 0 is the start and 1 is end.
-        const globeTransition = Math.min(Math.max((currentTime - this._lastGlobeChangeTime) / 1000.0 / globeConstants.globeTransitionTimeSeconds, 0.0), 1.0);
+        const globeTransition = Math.min(Math.max((currentTimeSeconds - this._lastGlobeChangeTimeSeconds) / globeConstants.globeTransitionTimeSeconds, 0.0), 1.0);
         let newGlobeness = globeState ? globeTransition : (1.0 - globeTransition);
 
         if (this._skipNextAnimation) {
             newGlobeness = globeState ? 1.0 : 0.0;
-            this._lastGlobeChangeTime = currentTime - globeConstants.globeTransitionTimeSeconds * 1000.0 * 2.0;
+            this._lastGlobeChangeTimeSeconds = currentTimeSeconds - globeConstants.globeTransitionTimeSeconds * 2.0;
             this._skipNextAnimation = false;
         }
 
-        // Update globe zoom transition
-        const currentZoomState = this.zoom >= globeConstants.maxGlobeZoom;
-        if (currentZoomState !== this._lastLargeZoomState) {
-            this._lastLargeZoomState = currentZoomState;
-            this._lastLargeZoomStateChange = currentTime;
-        }
-        const zoomTransition = Math.min(Math.max((currentTime - this._lastLargeZoomStateChange) / 1000.0 / globeConstants.zoomTransitionTimeSeconds, 0.0), 1.0);
-        const zoomGlobenessBound = currentZoomState ? (1.0 - zoomTransition) : zoomTransition;
-        newGlobeness = Math.min(newGlobeness, zoomGlobenessBound);
         newGlobeness = easeCubicInOut(newGlobeness); // Smooth animation
 
         if (oldGlobeness !== newGlobeness) {
@@ -456,7 +458,7 @@ export class GlobeTransform implements ITransform {
 
     isRenderingDirty(): boolean {
         // Globe transition
-        return (this._lastUpdateTime - this._lastGlobeChangeTime) / 1000.0 < (Math.max(globeConstants.globeTransitionTimeSeconds, globeConstants.zoomTransitionTimeSeconds));
+        return (this._lastUpdateTimeSeconds - this._lastGlobeChangeTimeSeconds) < globeConstants.globeTransitionTimeSeconds;
     }
 
     getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData {
@@ -498,13 +500,13 @@ export class GlobeTransform implements ITransform {
         // - "cam" is camera origin
         // - "C" is globe center
         // - "B" is the point on "top" of the globe - camera is looking at B - "B" is the intersection between the camera center ray and the globe
-        // - this._pitch is the angle at B between points cam,B,A
+        // - this._pitchInRadians is the angle at B between points cam,B,A
         // - this.cameraToCenterDistance is the distance from camera to "B"
         // - globe radius is (0.5 * this.worldSize)
         // - "T" is any point where a tangent line from "cam" touches the globe surface
         // - elevation is assumed to be zero - globe rendering must be separate from terrain rendering anyway
 
-        const pitch = this.pitch * Math.PI / 180.0;
+        const pitch = this.pitchInRadians;
         // scale things so that the globe radius is 1
         const distanceCameraToB = this.cameraToCenterDistance / globeRadiusPixels;
         const radius = 1;
@@ -530,7 +532,7 @@ export class GlobeTransform implements ITransform {
         // Note the swizzled components
         const planeVector: vec3 = [0, vectorCtoCamX, vectorCtoCamY];
         // Apply transforms - lat, lng and angle (NOT pitch - already accounted for, as it affects the tangent plane)
-        vec3.rotateZ(planeVector, planeVector, [0, 0, 0], this.angle);
+        vec3.rotateZ(planeVector, planeVector, [0, 0, 0], -this.bearingInRadians);
         vec3.rotateX(planeVector, planeVector, [0, 0, 0], -1 * this.center.lat * Math.PI / 180.0);
         vec3.rotateY(planeVector, planeVector, [0, 0, 0], this.center.lng * Math.PI / 180.0);
         // Scale the plane vector up
@@ -635,7 +637,7 @@ export class GlobeTransform implements ITransform {
         const globeMatrixUncorrected = createMat4f64();
         this._nearZ = 0.5;
         this._farZ = this.cameraToCenterDistance + globeRadiusPixels * 2.0; // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
-        mat4.perspective(globeMatrix, this.fov * Math.PI / 180, this.width / this.height, this._nearZ, this._farZ);
+        mat4.perspective(globeMatrix, this.fovInRadians, this.width / this.height, this._nearZ, this._farZ);
 
         // Apply center of perspective offset
         const offset = this.centerOffset;
@@ -646,8 +648,9 @@ export class GlobeTransform implements ITransform {
         this._globeProjMatrixInverted = createMat4f64();
         mat4.invert(this._globeProjMatrixInverted, globeMatrix);
         mat4.translate(globeMatrix, globeMatrix, [0, 0, -this.cameraToCenterDistance]);
-        mat4.rotateX(globeMatrix, globeMatrix, -this.pitch * Math.PI / 180);
-        mat4.rotateZ(globeMatrix, globeMatrix, -this.angle);
+        mat4.rotateZ(globeMatrix, globeMatrix, this.rollInRadians);
+        mat4.rotateX(globeMatrix, globeMatrix, -this.pitchInRadians);
+        mat4.rotateZ(globeMatrix, globeMatrix, this.bearingInRadians);
         mat4.translate(globeMatrix, globeMatrix, [0.0, 0, -globeRadiusPixels]);
         // Rotate the sphere to center it on viewed coordinates
 
@@ -673,8 +676,9 @@ export class GlobeTransform implements ITransform {
         const zero = createVec3f64();
         this._cameraPosition = createVec3f64();
         this._cameraPosition[2] = this.cameraToCenterDistance / globeRadiusPixels;
-        vec3.rotateX(this._cameraPosition, this._cameraPosition, zero, this.pitch * Math.PI / 180);
-        vec3.rotateZ(this._cameraPosition, this._cameraPosition, zero, this.angle);
+        vec3.rotateZ(this._cameraPosition, this._cameraPosition, zero, -this.rollInRadians);
+        vec3.rotateX(this._cameraPosition, this._cameraPosition, zero, this.pitchInRadians);
+        vec3.rotateZ(this._cameraPosition, this._cameraPosition, zero, -this.bearingInRadians);
         vec3.add(this._cameraPosition, this._cameraPosition, [0, 0, 1]);
         vec3.rotateX(this._cameraPosition, this._cameraPosition, zero, -this.center.lat * Math.PI / 180.0);
         vec3.rotateY(this._cameraPosition, this._cameraPosition, zero, this.center.lng * Math.PI / 180.0);

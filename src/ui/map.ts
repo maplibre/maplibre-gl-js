@@ -1,4 +1,4 @@
-import {extend, warnOnce, uniqueId, isImageBitmap, Complete} from '../util/util';
+import {extend, warnOnce, uniqueId, isImageBitmap, Complete, pick} from '../util/util';
 import {browser} from '../util/browser';
 import {DOM} from '../util/dom';
 import packageJSON from '../../package.json' with {type: 'json'};
@@ -228,6 +228,11 @@ export type MapOptions = {
      */
     pitch?: number;
     /**
+     * The initial roll angle of the map, measured in degrees counter-clockwise about the camera boresight. If `roll` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
+     * @defaultValue 0
+     */
+    roll?: number;
+    /**
      * If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
      *
      * - When the map is zoomed out far enough that a single representation of the world does not fill the map's entire
@@ -320,6 +325,11 @@ export type MapOptions = {
      */
     pitchWithRotate?: boolean;
     /**
+     * If `false`, the map's roll control with "drag to rotate" interaction will be disabled.
+     * @defaultValue false
+     */
+    rollEnabled?: boolean;
+    /**
      * The pixel ratio.
      * The canvas' `width` attribute will be `container.clientWidth * pixelRatio` and its `height` attribute will be `container.clientHeight * pixelRatio`. Defaults to `devicePixelRatio` if not specified.
      */
@@ -400,6 +410,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     zoom: 0,
     bearing: 0,
     pitch: 0,
+    roll: 0,
 
     renderWorldCopies: true,
     pitchTileLoadingBehavior: 1.0,
@@ -412,6 +423,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     clickTolerance: 3,
     localIdeographFontFamily: 'sans-serif',
     pitchWithRotate: true,
+    rollEnabled: false,
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096],
@@ -697,7 +709,8 @@ export class Map extends Camera {
                 center: resolvedOptions.center,
                 zoom: resolvedOptions.zoom,
                 bearing: resolvedOptions.bearing,
-                pitch: resolvedOptions.pitch
+                pitch: resolvedOptions.pitch,
+                roll: resolvedOptions.roll
             });
 
             if (resolvedOptions.bounds) {
@@ -721,7 +734,8 @@ export class Map extends Camera {
 
         this.on('style.load', () => {
             if (this.transform.unmodified) {
-                this.jumpTo(this.style.stylesheet as any);
+                const coercedOptions = pick(this.style.stylesheet, ['center', 'zoom', 'bearing', 'pitch', 'roll']) as CameraOptions;
+                this.jumpTo(coercedOptions);
             }
         });
         this.on('data', (event: MapDataEvent) => {

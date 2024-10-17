@@ -818,7 +818,7 @@ export class Placement {
 
         if (zOrderByViewportY) {
             if (bucketPart.symbolInstanceStart !== 0) throw new Error('bucket.bucketInstanceId should be 0');
-            const symbolIndexes = bucket.getSortedSymbolIndexes(this.transform.angle);
+            const symbolIndexes = bucket.getSortedSymbolIndexes(-this.transform.bearingInRadians);
             for (let i = symbolIndexes.length - 1; i >= 0; --i) {
                 const symbolIndex = symbolIndexes[i];
                 placeSymbol(bucket.symbolInstances.get(symbolIndex), bucket.collisionArrays[symbolIndex], symbolIndex);
@@ -1174,7 +1174,7 @@ export class Placement {
                                     variableOffset.textOffset,
                                     variableOffset.textBoxScale);
                                 if (rotateWithMap) {
-                                    shift._rotate(pitchWithMap ? this.transform.angle : -this.transform.angle);
+                                    shift._rotate(pitchWithMap ? -this.transform.bearingInRadians : this.transform.bearingInRadians);
                                 }
                             } else {
                                 // No offset -> this symbol hasn't been placed since coming on-screen
@@ -1213,7 +1213,7 @@ export class Placement {
             }
         }
 
-        bucket.sortFeatures(this.transform.angle);
+        bucket.sortFeatures(-this.transform.bearingInRadians);
         if (this.retainedQueryData[bucket.bucketInstanceId]) {
             this.retainedQueryData[bucket.bucketInstanceId].featureSortOrder = bucket.featureSortOrder;
         }

@@ -6,6 +6,7 @@ import {Handler} from '../handler_manager';
 interface DragMovementResult {
     bearingDelta?: number;
     pitchDelta?: number;
+    rollDelta?: number;
     around?: Point;
     panDelta?: Point;
 }
@@ -21,6 +22,10 @@ export interface DragRotateResult extends DragMovementResult {
 
 export interface DragPitchResult extends DragMovementResult {
     pitchDelta: number;
+}
+
+export interface DragRollResult extends DragMovementResult {
+    rollDelta: number;
 }
 
 type DragMoveFunction<T extends DragMovementResult> = (lastPoint: Point, point: Point) => T;
@@ -103,7 +108,7 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
 
     _move(...params: Parameters<DragMoveFunction<T>>) {
         const move = this._moveFunction(...params);
-        if (move.bearingDelta || move.pitchDelta || move.around || move.panDelta) {
+        if (move.bearingDelta || move.pitchDelta || move.rollDelta || move.around || move.panDelta) {
             this._active = true;
             return move;
         }
