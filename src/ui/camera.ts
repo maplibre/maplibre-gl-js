@@ -910,11 +910,11 @@ export abstract class Camera extends Evented {
      * @returns the calculated camera options
      */
     calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo: number = 0): CameraOptions {
-        const fromMerc = MercatorCoordinate.fromLngLat(from, altitudeFrom);
-        const toMerc = MercatorCoordinate.fromLngLat(to, altitudeTo);
-        const dx = toMerc.x - fromMerc.x;
-        const dy = toMerc.y - fromMerc.y;
-        const dz = toMerc.z - fromMerc.z;
+        const fromMercator = MercatorCoordinate.fromLngLat(from, altitudeFrom);
+        const toMercator = MercatorCoordinate.fromLngLat(to, altitudeTo);
+        const dx = toMercator.x - fromMercator.x;
+        const dy = toMercator.y - fromMercator.y;
+        const dz = toMercator.z - fromMercator.z;
 
         const distance3D = Math.hypot(dx, dy, dz);
         if (distance3D === 0) throw new Error('Can\'t calculate camera options with same From and To');
@@ -927,7 +927,7 @@ export abstract class Camera extends Evented {
         pitch = dz < 0 ? 90 - pitch : 90 + pitch;
 
         return {
-            center: toMerc.toLngLat(),
+            center: toMercator.toLngLat(),
             zoom,
             pitch,
             bearing
