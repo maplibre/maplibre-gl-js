@@ -9,7 +9,7 @@
             "width": 512,
             "maxPitch": 95,
             "operations": [
-                ["setElevation", 10000],
+                ["setCenterElevation", 10000],
                 ["setPitch", 95],
                 ["wait"]
             ]

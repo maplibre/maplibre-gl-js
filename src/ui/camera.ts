@@ -373,6 +373,26 @@ export abstract class Camera extends Evented {
     }
 
     /**
+     * Returns the elevation of the map's center point.
+     *
+     * @returns The elevation of the map's center point, in meters above sea level.
+     */
+    getCenterElevation(): number { return this.transform.elevation; }
+
+    /**
+     * Sets the elevation of the map's center point, in meters above sea level. Equivalent to `jumpTo({elevation: elevation})`.
+     *
+     * Triggers the following events: `movestart` and `moveend`.
+     *
+     * @param elevation - The elevation to set, in meters above sea level.
+     * @param eventData - Additional properties to be added to event objects of events triggered by this method.
+     */
+    setCenterElevation(elevation: number, eventData?: any): this {
+        this.jumpTo({elevation}, eventData);
+        return this;
+    }
+
+    /**
      * Pans the map by the specified offset.
      *
      * Triggers the following events: `movestart` and `moveend`.
