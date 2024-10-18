@@ -1949,7 +1949,7 @@ describe('#flyTo', () => {
         };
         camera.transform = {
             elevation: 0,
-            recalculateZoom: () => true,
+            recalculateZoomAndCenter: () => true,
             setMinElevationForCurrentTile: (_a) => true,
             setElevation: (e) => { camera.transform.elevation = e; }
         };
