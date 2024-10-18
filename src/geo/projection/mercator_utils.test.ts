@@ -36,6 +36,24 @@ describe('mercator utils', () => {
         expect(horizon).toBeCloseTo(170.8176101748407, 10);
     });
 
+    test('getMercatorHorizon90', () => {
+        const transform = new MercatorTransform(0, 22, 0, 180, true);
+        transform.resize(500, 500);
+        transform.setPitch(90);
+        const horizon = getMercatorHorizon(transform);
+
+        expect(horizon).toBeCloseTo(-13.09129869616319, 10);
+    });
+
+    test('getMercatorHorizon95', () => {
+        const transform = new MercatorTransform(0, 22, 0, 180, true);
+        transform.resize(500, 500);
+        transform.setPitch(95);
+        const horizon = getMercatorHorizon(transform);
+
+        expect(horizon).toBeCloseTo(-78.82817644925734, 10);
+    });
+
     describe('getBasicProjectionData', () => {
         test('posMatrix is set', () => {
             const mat = mat4.create();
