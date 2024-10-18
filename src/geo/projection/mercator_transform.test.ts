@@ -483,6 +483,34 @@ describe('transform', () => {
         expect(transform.zoom).toBeCloseTo(13.689399565250616, 10);
     });
 
+    test('recalculateZoomAndCenterNoTerrain', () => {
+        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        transform.setElevation(200);
+        transform.setCenter(new LngLat(10.0, 50.0));
+        transform.setZoom(14);
+        transform.setPitch(45);
+        transform.resize(512, 512);
+
+        // This should be an invariant throughout - the zoom is greater when the camera is
+        // closer to the terrain (and therefore also when the terrain is closer to the camera),
+        // but that shouldn't change the camera's position in world space if that wasn't requested.
+        const expectedAltitude = 1865.7579397718;
+        expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 10);
+        const expectedCamLngLat = transform.getCameraLngLat();
+        expect(expectedCamLngLat.lng).toBeCloseTo(10, 10);
+        expect(expectedCamLngLat.lat).toBeCloseTo(49.9850171656428, 10);
+
+        // expect same values because of no elevation change
+        transform.recalculateZoomAndCenter();
+        expect(transform.elevation).toBeCloseTo(0, 10);
+        expect(transform.center.lng).toBeCloseTo(10, 10);
+        expect(transform.center.lat).toBeCloseTo(50.00179923503546, 10);
+        expect(transform.getCameraLngLat().lng).toBeCloseTo(expectedCamLngLat.lng, 10);
+        expect(transform.getCameraLngLat().lat).toBeCloseTo(expectedCamLngLat.lat, 10);
+        expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 10);
+        expect(transform.zoom).toBeCloseTo(13.836362951286565, 10);
+    });
+
     test('pointCoordinate with terrain when returning null should fall back to 2D', () => {
         const transform = new MercatorTransform(0, 22, 0, 60, true);
         transform.resize(500, 500);
