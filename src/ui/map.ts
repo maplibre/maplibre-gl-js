@@ -213,7 +213,7 @@ export type MapOptions = {
      */
     center?: LngLatLike;
     /**
-     * The elevation of the initial geographical centerpoint of the map, in meters above sea level. If `elevation` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
+     * The elevation of the initial geographical centerpoint of the map, in meters above sea level. If `elevation` is not specified in the constructor options, it will default to `0`.
      * @defaultValue 0
      */
     elevation?: number;

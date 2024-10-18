@@ -718,9 +718,9 @@ export class MercatorTransform implements ITransform {
     }
 
     getCameraLngLat(): LngLat {
-        const cameraToCenterDistance = 0.5 / Math.tan(this.fovInRadians / 2) * this.height;
+        const cameraToCenterDistancePixels = 0.5 / Math.tan(this.fovInRadians / 2) * this.height;
         const pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
-        const cameraToCenterDistanceMeters = cameraToCenterDistance / pixelPerMeter;
+        const cameraToCenterDistanceMeters = cameraToCenterDistancePixels / pixelPerMeter;
         const camMerc = camMercFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
         return camMerc.toLngLat();
     }
