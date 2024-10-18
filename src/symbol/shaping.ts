@@ -14,7 +14,7 @@ import {TextFit} from '../style/style_image';
 import type {ImagePosition} from '../render/image_atlas';
 import {IMAGE_PADDING} from '../render/image_atlas';
 import type {Rect, GlyphPosition} from '../render/glyph_atlas';
-import {Formatted, FormattedSection} from '@maplibre/maplibre-gl-style-spec';
+import {Formatted, FormattedSection, VerticalAlign} from '@maplibre/maplibre-gl-style-spec';
 
 enum WritingMode {
     none = 0,
@@ -590,6 +590,78 @@ function getAnchorAlignment(anchor: SymbolAnchor) {
     return {horizontalAlign, verticalAlign};
 }
 
+function calculateTallestLineItems(
+    glyphMap: {
+        [_: string]: {
+            [_: number]: StyleGlyph;
+        };
+    }, glyphPositions: {
+        [_: string]: {
+            [_: number]: GlyphPosition;
+        };
+    },
+    imagePositions: {[_: string]: ImagePosition},
+    line: TaggedString
+) {
+    let maxGlyphHeight = 0;
+    let maxImageHeight = 0;
+
+    for (let i = 0; i < line.length(); i++) {
+        const section = line.getSection(i);
+
+        if (section.imageName) {
+            const imagePosition = imagePositions[section.imageName];
+            if (!imagePosition) continue;
+            maxImageHeight = Math.max(maxImageHeight, imagePosition.displaySize[1]);
+        } else {
+            const codePoint = line.getCharCode(i);
+            const positions = glyphPositions[section.fontStack];
+            const glyphPosition = positions && positions[codePoint];
+            const rectAndMetrics = extractRectAndMetrics(glyphPosition, glyphMap, section, codePoint);
+            if (rectAndMetrics === null) continue;
+            const {metrics} = rectAndMetrics;
+            maxGlyphHeight = Math.max(maxGlyphHeight, metrics.height * section.scale);
+        }
+    }
+
+    return {maxGlyphHeight, maxImageHeight};
+}
+
+function calculateVerticalOffset(verticalAlign: VerticalAlign, lineHeight: number, itemHeight: number) {
+    if (verticalAlign === 'top') {
+        return 0;
+    } else if (verticalAlign === 'center') {
+        return (lineHeight - itemHeight) * 0.5;
+    } else {
+        return lineHeight - itemHeight;
+    }
+}
+
+function extractRectAndMetrics(
+    glyphPosition: GlyphPosition,
+    glyphMap: {
+        [_: string]: {
+            [_: number]: StyleGlyph;
+        };
+    },
+    section: SectionOptions, codePoint: number
+) {
+    let rect = null;
+    let metrics = null;
+
+    if (glyphPosition && glyphPosition.rect) {
+        rect = glyphPosition.rect;
+        metrics = glyphPosition.metrics;
+    } else {
+        const glyphs = glyphMap[section.fontStack];
+        const glyph = glyphs && glyphs[codePoint];
+        if (!glyph) return null;
+        metrics = glyph.metrics;
+    }
+
+    return {rect, metrics};
+}
+
 function shapeLines(shaping: Shaping,
     glyphMap: {
         [_: string]: {
@@ -609,13 +681,14 @@ function shapeLines(shaping: Shaping,
     writingMode: WritingMode.horizontal | WritingMode.vertical,
     spacing: number,
     allowVerticalPlacement: boolean,
+    // TODO: find out what this is used for
     layoutTextSizeThisZoom: number) {
 
     let x = 0;
-    let y = SHAPING_DEFAULT_OFFSET;
+    let y = 0;
+    let bboxBottom = 0;
 
     let maxLineLength = 0;
-    let maxLineHeight = 0;
 
     const justify =
         textJustify === 'right' ? 1 :
@@ -626,14 +699,20 @@ function shapeLines(shaping: Shaping,
         line.trim();
 
         const lineMaxScale = line.getMaxScale();
-        const maxLineOffset = (lineMaxScale - 1) * ONE_EM;
         const positionedLine = {positionedGlyphs: [], lineOffset: 0};
         shaping.positionedLines[lineIndex] = positionedLine;
         const positionedGlyphs = positionedLine.positionedGlyphs;
-        let lineOffset = 0.0;
+
+        const {maxGlyphHeight, maxImageHeight} = calculateTallestLineItems(
+            glyphMap,
+            glyphPositions,
+            imagePositions,
+            line
+        );
+        const tallestLineItem = Math.max(maxGlyphHeight, maxImageHeight);
 
         if (!line.length()) {
-            y += lineHeight; // Still need a line feed after empty line
+            y += tallestLineItem; // Still need a line feed after empty line
             ++lineIndex;
             continue;
         }
@@ -657,30 +736,19 @@ function shapeLines(shaping: Shaping,
             if (!section.imageName) {
                 const positions = glyphPositions[section.fontStack];
                 const glyphPosition = positions && positions[codePoint];
-                if (glyphPosition && glyphPosition.rect) {
-                    rect = glyphPosition.rect;
-                    metrics = glyphPosition.metrics;
-                } else {
-                    const glyphs = glyphMap[section.fontStack];
-                    const glyph = glyphs && glyphs[codePoint];
-                    if (!glyph) continue;
-                    metrics = glyph.metrics;
-                }
 
-                // We don't know the baseline, but since we're laying out
-                // at 24 points, we can calculate how much it will move when
-                // we scale up or down.
-                verticalAlignOffset = (lineMaxScale - section.scale) * ONE_EM;
+                const rectAndMetrics = extractRectAndMetrics(glyphPosition, glyphMap, section, codePoint);
 
-                // Do not offset vertical alignment for vertical text.
-                if (writingMode !== WritingMode.vertical) {
-                    if (section.verticalAlign === 'top') {
-                        verticalAlignOffset = 0;
-                    } else if (section.verticalAlign === 'center') {
-                        // Calculate center as the middle between top and baseline alignment.
-                        verticalAlignOffset = (lineMaxScale - section.scale) * (ONE_EM * 2 / 3) - (ONE_EM / 6);
-                    }
-                }
+                if (rectAndMetrics === null) continue;
+
+                rect = rectAndMetrics.rect;
+                metrics = rectAndMetrics.metrics;
+
+                verticalAlignOffset = calculateVerticalOffset(
+                    vertical ? 'center' : section.verticalAlign,
+                    tallestLineItem,
+                    section.scale * ONE_EM
+                );
             } else {
                 const imagePosition = imagePositions[section.imageName];
                 if (!imagePosition) continue;
@@ -691,7 +759,7 @@ function shapeLines(shaping: Shaping,
                 // If needed, allow to set scale factor for an image using
                 // alias "image-scale" that could be alias for "font-scale"
                 // when FormattedSection is an image section.
-                section.scale = section.scale * ONE_EM / layoutTextSizeThisZoom;
+                // section.scale = section.scale * ONE_EM / layoutTextSizeThisZoom;
 
                 metrics = {width: size[0],
                     height: size[1],
@@ -701,29 +769,14 @@ function shapeLines(shaping: Shaping,
 
                 // Difference between one EM and an image size.
                 // Aligns bottom of an image to a baseline level.
-                const imageOffset = ONE_EM - size[1] * section.scale;
-                verticalAlignOffset = maxLineOffset + imageOffset;
 
-                // Do not offset vertical alignment for vertical text.
-                if (writingMode !== WritingMode.vertical) {
-                    if (section.verticalAlign === 'top') {
-                        // Aligns top of an image to top of a line.
-                        verticalAlignOffset = 0;
-                    } else if (section.verticalAlign === 'center') {
-                        // We calculate center as the middle between top and baseline alignment.
-                        verticalAlignOffset = (maxLineOffset + imageOffset) / 2;
-                    }
-                }
-                    
+                verticalAlignOffset = calculateVerticalOffset(
+                    vertical ? 'center' : section.verticalAlign,
+                    tallestLineItem,
+                    imagePosition.displaySize[1]
+                );
+
                 verticalAdvance = metrics.advance;
-
-                // Difference between height of an image and one EM at max line scale.
-                // Pushes current line down if an image size is over 1 EM at max line scale.
-                const offset = vertical ? size[0] * section.scale - ONE_EM * lineMaxScale :
-                    size[1] * section.scale - ONE_EM * lineMaxScale;
-                if (offset > 0 && offset > lineOffset) {
-                    lineOffset = offset;
-                }
             }
 
             if (!vertical) {
@@ -740,24 +793,36 @@ function shapeLines(shaping: Shaping,
         if (positionedGlyphs.length !== 0) {
             const lineLength = x - spacing;
             maxLineLength = Math.max(lineLength, maxLineLength);
-            justifyLine(positionedGlyphs, 0, positionedGlyphs.length - 1, justify, lineOffset);
+            justifyLine(positionedGlyphs, 0, positionedGlyphs.length - 1, justify, 0);
         }
 
         x = 0;
-        const currentLineHeight = lineHeight * lineMaxScale + lineOffset;
-        positionedLine.lineOffset = Math.max(lineOffset, maxLineOffset);
-        y += currentLineHeight;
-        maxLineHeight = Math.max(currentLineHeight, maxLineHeight);
+
+        const isImageTheTallestInLine = tallestLineItem >= maxGlyphHeight;
+
+        if (lineIndex === lines.length - 1) {
+            bboxBottom = y + Math.max(lineHeight * lineMaxScale, tallestLineItem);
+        }
+
+        // TODO: review this logic, compare with the current behavior
+        if (isImageTheTallestInLine) {
+            const textLineHeight = lineHeight / ONE_EM;
+            y += tallestLineItem + textLineHeight * maxGlyphHeight;
+        } else {
+            y += lineHeight * lineMaxScale;
+        }
+        y += lineHeight * lineMaxScale;
+
         ++lineIndex;
     }
 
     // Calculate the bounding box and justify / align text block.
-    const height = y - SHAPING_DEFAULT_OFFSET;
+    // const height = y;
     const {horizontalAlign, verticalAlign} = getAnchorAlignment(textAnchor);
-    align(shaping.positionedLines, justify, horizontalAlign, verticalAlign, maxLineLength, maxLineHeight, lineHeight, height, lines.length);
+    // align(shaping.positionedLines, justify, horizontalAlign, verticalAlign, maxLineLength, maxLineHeight, lineHeight, height, lines.length);
 
-    shaping.top += -verticalAlign * height;
-    shaping.bottom = shaping.top + height;
+    shaping.top = 0;
+    shaping.bottom = shaping.top + bboxBottom;
     shaping.left += -horizontalAlign * maxLineLength;
     shaping.right = shaping.left + maxLineLength;
 }
