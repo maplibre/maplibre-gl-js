@@ -436,7 +436,7 @@ describe('transform', () => {
         expect(transform.maxPitchScaleFactor()).toBeCloseTo(2.366025418080343, 5);
     });
 
-    test('recalculateZoom', () => {
+    test('recalculateZoomAndCenter', () => {
         const transform = new MercatorTransform(0, 22, 0, 60, true);
         transform.setElevation(200);
         transform.setCenter(new LngLat(10.0, 50.0));
@@ -458,13 +458,13 @@ describe('transform', () => {
             getElevationForLngLatZoom: () => 200,
             pointCoordinate: () => null
         };
-        transform.recalculateZoom(terrain as any);
+        transform.recalculateZoomAndCenter(terrain as any);
         expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 10);
         expect(transform.zoom).toBe(14);
 
         // expect new zoom and center because of elevation change
         terrain.getElevationForLngLatZoom = () => 400;
-        transform.recalculateZoom(terrain as any);
+        transform.recalculateZoomAndCenter(terrain as any);
         expect(transform.elevation).toBe(400);
         expect(transform.center.lng).toBeCloseTo(10, 10);
         expect(transform.center.lat).toBeCloseTo(49.99820083233254, 10);
@@ -475,7 +475,7 @@ describe('transform', () => {
 
         // expect new zoom because of elevation change to point below sea level
         terrain.getElevationForLngLatZoom = () => -200;
-        transform.recalculateZoom(terrain as any);
+        transform.recalculateZoomAndCenter(terrain as any);
         expect(transform.elevation).toBe(-200);
         expect(transform.getCameraLngLat().lng).toBeCloseTo(expectedCamLngLat.lng, 10);
         expect(transform.getCameraLngLat().lat).toBeCloseTo(expectedCamLngLat.lat, 10);
