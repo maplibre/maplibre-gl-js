@@ -288,7 +288,7 @@ export class MercatorTransform implements ITransform {
 
         // update elevation to the new terrain intercept elevation and recalculate the center point
         this._helper._elevation = elevation;
-        const centerInfo = this.calculateCenterFromCameraLLA(cameraMerc.toLngLat(), altitudeFromMercatorZ(cameraMerc.z, origCenterMerc.y), this.bearing, this.pitch);
+        const centerInfo = this.calculateCenterFromCameraLngLatAlt(cameraMerc.toLngLat(), altitudeFromMercatorZ(cameraMerc.z, origCenterMerc.y), this.bearing, this.pitch);
 
         // update matrices
         this._helper._elevation = centerInfo.elevation;
@@ -519,7 +519,7 @@ export class MercatorTransform implements ITransform {
         return result;
     }
 
-    calculateCenterFromCameraLLA(ll: LngLat, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
+    calculateCenterFromCameraLngLatAlt(ll: LngLat, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
         bearing = bearing !== undefined ? bearing : this.bearing;
         pitch = pitch !== undefined ? pitch : this.pitch;
 
