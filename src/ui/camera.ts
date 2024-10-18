@@ -1248,7 +1248,7 @@ export abstract class Camera extends Evented {
     flyTo(options: FlyToOptions, eventData?: any): this {
         // Fall through to jumpTo if user has set prefers-reduced-motion
         if (!options.essential && browser.prefersReducedMotion) {
-            const coercedOptions = pick(options, ['center', 'zoom', 'bearing', 'pitch', 'roll']) as CameraOptions;
+            const coercedOptions = pick(options, ['center', 'zoom', 'bearing', 'pitch', 'roll', 'elevation']) as CameraOptions;
             return this.jumpTo(coercedOptions, eventData);
         }
 
