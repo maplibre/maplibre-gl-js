@@ -1,11 +1,6 @@
 uniform vec2 u_texsize;
 uniform float u_fade;
 
-#ifdef GLOBE
-    in vec3 v_sphere_pos;
-    uniform vec3 u_camera_pos_globe;
-#endif
-
 uniform sampler2D u_image;
 
 in vec2 v_pos_a;
@@ -46,18 +41,5 @@ void main() {
 
     #ifdef OVERDRAW_INSPECTOR
         fragColor = vec4(1.0);
-    #endif
-
-    #ifdef GLOBE
-        // Discard fragments that are occluded by the planet
-        // See comment in fill_extrusion.fragment.glsl
-        vec3 toPlanetCenter = -v_sphere_pos;
-        vec3 toCameraNormalized = normalize(u_camera_pos_globe - v_sphere_pos);
-        float t = dot(toPlanetCenter, toCameraNormalized);
-        vec3 nearest = v_sphere_pos + toCameraNormalized * max(t, 0.0);
-        float distance_to_planet_center_squared = dot(nearest, nearest);
-        if (distance_to_planet_center_squared < u_projection_transition) {
-            discard;
-        }
     #endif
 }

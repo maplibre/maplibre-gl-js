@@ -21,6 +21,7 @@ import collisionCircleFrag from './collision_circle.fragment.glsl.g';
 import collisionCircleVert from './collision_circle.vertex.glsl.g';
 import debugFrag from './debug.fragment.glsl.g';
 import debugVert from './debug.vertex.glsl.g';
+import depthVert from './depth.vertex.glsl.g';
 import fillFrag from './fill.fragment.glsl.g';
 import fillVert from './fill.vertex.glsl.g';
 import fillOutlineFrag from './fill_outline.fragment.glsl.g';
@@ -88,6 +89,7 @@ export const shaders = {
     collisionBox: compile(collisionBoxFrag, collisionBoxVert),
     collisionCircle: compile(collisionCircleFrag, collisionCircleVert),
     debug: compile(debugFrag, debugVert),
+    depth: compile(clippingMaskFrag, depthVert),
     fill: compile(fillFrag, fillVert),
     fillOutline: compile(fillOutlineFrag, fillOutlineVert),
     fillOutlinePattern: compile(fillOutlinePatternFrag, fillOutlinePatternVert),
@@ -109,7 +111,7 @@ export const shaders = {
     terrainCoords: compile(terrainCoordsFrag, terrainVertCoords),
     projectionErrorMeasurement: compile(projectionErrorMeasurementFrag, projectionErrorMeasurementVert),
     atmosphere: compile(atmosphereFrag, atmosphereVert),
-    sky: compile(skyFrag, skyVert)
+    sky: compile(skyFrag, skyVert),
 };
 
 // Expand #pragmas to #ifdefs.

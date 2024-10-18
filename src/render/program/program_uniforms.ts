@@ -27,6 +27,7 @@ export const programUniforms = {
     collisionBox: collisionUniforms,
     collisionCircle: collisionCircleUniforms,
     debug: debugUniforms,
+    depth: emptyUniforms,
     clippingMask: emptyUniforms,
     heatmap: heatmapUniforms,
     heatmapTexture: heatmapTextureUniforms,

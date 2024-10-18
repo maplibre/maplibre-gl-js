@@ -20,7 +20,7 @@ export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer:
     const projection = painter.style.projection;
     const useSubdivision = projection.useSubdivision;
 
-    const depthMode = painter.depthModeForSublayer(0, DepthMode.ReadOnly);
+    const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
 
     if (painter.renderPass === 'offscreen') {
