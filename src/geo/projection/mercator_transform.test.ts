@@ -436,7 +436,7 @@ describe('transform', () => {
         expect(transform.maxPitchScaleFactor()).toBeCloseTo(2.366025418080343, 5);
     });
 
-    test('recalculateZoom', () => {
+    test('recalculateZoomAndCenter', () => {
         const transform = new MercatorTransform(0, 22, 0, 60, true);
         transform.setElevation(200);
         transform.setCenter(new LngLat(10.0, 50.0));
@@ -449,31 +449,66 @@ describe('transform', () => {
         // but that shouldn't change the camera's position in world space if that wasn't requested.
         const expectedAltitude = 1865.7579397718;
         expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 10);
+        const expectedCamLngLat = transform.getCameraLngLat();
+        expect(expectedCamLngLat.lng).toBeCloseTo(10, 10);
+        expect(expectedCamLngLat.lat).toBeCloseTo(49.9850171656428, 10);
 
         // expect same values because of no elevation change
         const terrain = {
             getElevationForLngLatZoom: () => 200,
             pointCoordinate: () => null
         };
-        transform.recalculateZoom(terrain as any);
+        transform.recalculateZoomAndCenter(terrain as any);
         expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 10);
         expect(transform.zoom).toBe(14);
 
-        // expect new zoom because of elevation change
+        // expect new zoom and center because of elevation change
         terrain.getElevationForLngLatZoom = () => 400;
-        transform.recalculateZoom(terrain as any);
+        transform.recalculateZoomAndCenter(terrain as any);
         expect(transform.elevation).toBe(400);
         expect(transform.center.lng).toBeCloseTo(10, 10);
-        expect(transform.center.lat).toBeCloseTo(50, 10);
+        expect(transform.center.lat).toBeCloseTo(49.99820083233254, 10);
+        expect(transform.getCameraLngLat().lng).toBeCloseTo(expectedCamLngLat.lng, 10);
+        expect(transform.getCameraLngLat().lat).toBeCloseTo(expectedCamLngLat.lat, 10);
         expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 10);
-        expect(transform.zoom).toBeCloseTo(14.1845318986, 10);
+        expect(transform.zoom).toBeCloseTo(14.184585886440686, 10);
 
         // expect new zoom because of elevation change to point below sea level
         terrain.getElevationForLngLatZoom = () => -200;
-        transform.recalculateZoom(terrain as any);
+        transform.recalculateZoomAndCenter(terrain as any);
         expect(transform.elevation).toBe(-200);
+        expect(transform.getCameraLngLat().lng).toBeCloseTo(expectedCamLngLat.lng, 10);
+        expect(transform.getCameraLngLat().lat).toBeCloseTo(expectedCamLngLat.lat, 10);
         expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 10);
-        expect(transform.zoom).toBeCloseTo(13.6895075574, 10);
+        expect(transform.zoom).toBeCloseTo(13.689399565250616, 10);
+    });
+
+    test('recalculateZoomAndCenterNoTerrain', () => {
+        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        transform.setElevation(200);
+        transform.setCenter(new LngLat(10.0, 50.0));
+        transform.setZoom(14);
+        transform.setPitch(45);
+        transform.resize(512, 512);
+
+        // This should be an invariant throughout - the zoom is greater when the camera is
+        // closer to the terrain (and therefore also when the terrain is closer to the camera),
+        // but that shouldn't change the camera's position in world space if that wasn't requested.
+        const expectedAltitude = 1865.7579397718;
+        expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 10);
+        const expectedCamLngLat = transform.getCameraLngLat();
+        expect(expectedCamLngLat.lng).toBeCloseTo(10, 10);
+        expect(expectedCamLngLat.lat).toBeCloseTo(49.9850171656428, 10);
+
+        // expect same values because of no elevation change
+        transform.recalculateZoomAndCenter();
+        expect(transform.elevation).toBeCloseTo(0, 10);
+        expect(transform.center.lng).toBeCloseTo(10, 10);
+        expect(transform.center.lat).toBeCloseTo(50.00179923503546, 10);
+        expect(transform.getCameraLngLat().lng).toBeCloseTo(expectedCamLngLat.lng, 10);
+        expect(transform.getCameraLngLat().lat).toBeCloseTo(expectedCamLngLat.lat, 10);
+        expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 10);
+        expect(transform.zoom).toBeCloseTo(13.836362951286565, 10);
     });
 
     test('pointCoordinate with terrain when returning null should fall back to 2D', () => {
@@ -527,5 +562,25 @@ describe('transform', () => {
         expect(projection.point.y).toBeCloseTo(0.8136784996777623, precisionDigits);
         expect(projection.signedDistanceFromCamera).toBeCloseTo(787.6699126802941, precisionDigits);
         expect(projection.isOccluded).toBe(false);
+    });
+
+    test('getCameraLngLat', () => {
+        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        transform.setElevation(200);
+        transform.setCenter(new LngLat(15.0, 55.0));
+        transform.setZoom(14);
+        transform.setPitch(55);
+        transform.setBearing(75);
+        transform.resize(512, 512);
+
+        expect(transform.getCameraAltitude()).toBeCloseTo(1405.7075926414002, 10);
+        expect(transform.getCameraLngLat().lng).toBeCloseTo(14.973921529405033, 10);
+        expect(transform.getCameraLngLat().lat).toBeCloseTo(54.99599181678275, 10);
+
+        transform.setRoll(31);
+
+        expect(transform.getCameraAltitude()).toBeCloseTo(1405.7075926414002, 10);
+        expect(transform.getCameraLngLat().lng).toBeCloseTo(14.973921529405033, 10);
+        expect(transform.getCameraLngLat().lat).toBeCloseTo(54.99599181678275, 10);
     });
 });
