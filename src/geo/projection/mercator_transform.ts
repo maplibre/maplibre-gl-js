@@ -283,12 +283,12 @@ export class MercatorTransform implements ITransform {
         // Find the current camera position
         const origPixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
         const cameraToCenterDistanceMeters = this._cameraToCenterDistance / origPixelPerMeter;
-        const origCenterMerc = MercatorCoordinate.fromLngLat(this.center, this.elevation);
-        const cameraMerc = camMercFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
+        const origCenterMercator = MercatorCoordinate.fromLngLat(this.center, this.elevation);
+        const cameraMercator = cameraMercatorCoordinateFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
 
         // update elevation to the new terrain intercept elevation and recalculate the center point
         this._helper._elevation = elevation;
-        const centerInfo = this.calculateCenterFromCameraLngLatAlt(cameraMerc.toLngLat(), altitudeFromMercatorZ(cameraMerc.z, origCenterMerc.y), this.bearing, this.pitch);
+        const centerInfo = this.calculateCenterFromCameraLngLatAlt(cameraMercator.toLngLat(), altitudeFromMercatorZ(cameraMercator.z, origCenterMercator.y), this.bearing, this.pitch);
 
         // update matrices
         this._helper._elevation = centerInfo.elevation;
@@ -523,7 +523,7 @@ export class MercatorTransform implements ITransform {
         bearing = bearing !== undefined ? bearing : this.bearing;
         pitch = pitch !== undefined ? pitch : this.pitch;
 
-        const camMerc = MercatorCoordinate.fromLngLat(ll, alt);
+        const camMercator = MercatorCoordinate.fromLngLat(ll, alt);
         const dzNormalized = -Math.cos(degreesToRadians(pitch));
         const dhNormalized = Math.sin(degreesToRadians(pitch));
         const dxNormalized = dhNormalized * Math.sin(degreesToRadians(bearing));
@@ -539,9 +539,9 @@ export class MercatorTransform implements ITransform {
             distanceToCenterMeters = -altitudeAGL / dzNormalized;
         }
 
-        let metersPerMercUnit = altitudeFromMercatorZ(1, camMerc.y);
-        let centerMerc: MercatorCoordinate;
-        let dMerc: number;
+        let metersPerMercUnit = altitudeFromMercatorZ(1, camMercator.y);
+        let centerMercator: MercatorCoordinate;
+        let dMercator: number;
         let iter = 0;
         const maxIter = 10;
         do {
@@ -549,15 +549,15 @@ export class MercatorTransform implements ITransform {
             if (iter > maxIter) {
                 break;
             }
-            dMerc = distanceToCenterMeters / metersPerMercUnit;
-            const dx = dxNormalized * dMerc;
-            const dy = dyNormalized * dMerc;
-            centerMerc = new MercatorCoordinate(camMerc.x + dx, camMerc.y + dy);
-            metersPerMercUnit = 1 / centerMerc.meterInMercatorCoordinateUnits();
-        } while (Math.abs(distanceToCenterMeters - dMerc * metersPerMercUnit) > 1.0e-12);
+            dMercator = distanceToCenterMeters / metersPerMercUnit;
+            const dx = dxNormalized * dMercator;
+            const dy = dyNormalized * dMercator;
+            centerMercator = new MercatorCoordinate(camMercator.x + dx, camMercator.y + dy);
+            metersPerMercUnit = 1 / centerMercator.meterInMercatorCoordinateUnits();
+        } while (Math.abs(distanceToCenterMeters - dMercator * metersPerMercUnit) > 1.0e-12);
 
-        const center = centerMerc.toLngLat();
-        const zoom = scaleZoom(this.height / 2 / Math.tan(this.fovInRadians / 2) / dMerc / this.tileSize);
+        const center = centerMercator.toLngLat();
+        const zoom = scaleZoom(this.height / 2 / Math.tan(this.fovInRadians / 2) / dMercator / this.tileSize);
         return {center, elevation, zoom};
     }
 
@@ -721,8 +721,8 @@ export class MercatorTransform implements ITransform {
         const cameraToCenterDistancePixels = 0.5 / Math.tan(this.fovInRadians / 2) * this.height;
         const pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
         const cameraToCenterDistanceMeters = cameraToCenterDistancePixels / pixelPerMeter;
-        const camMerc = camMercFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
-        return camMerc.toLngLat();
+        const camMercator = cameraMercatorCoordinateFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
+        return camMercator.toLngLat();
     }
 
     lngLatToCameraDepth(lngLat: LngLat, elevation: number) {
@@ -845,13 +845,13 @@ export class MercatorTransform implements ITransform {
     }
 }
 
-function camMercFromCenterAndRotation(center: LngLat, elevation: number, pitch: number, bearing: number, distance: number): MercatorCoordinate {
-    const centerMerc = MercatorCoordinate.fromLngLat(center, elevation);
+function cameraMercatorCoordinateFromCenterAndRotation(center: LngLat, elevation: number, pitch: number, bearing: number, distance: number): MercatorCoordinate {
+    const centerMercator = MercatorCoordinate.fromLngLat(center, elevation);
     const mercUnitsPerMeter = mercatorZfromAltitude(1, center.lat);
-    const dMerc = distance * mercUnitsPerMeter;
-    const dzMerc = dMerc * Math.cos(degreesToRadians(pitch));
-    const dhMerc = Math.sqrt(dMerc * dMerc - dzMerc * dzMerc);
-    const dxMerc = dhMerc * Math.sin(degreesToRadians(-bearing));
-    const dyMerc = dhMerc * Math.cos(degreesToRadians(-bearing));
-    return new MercatorCoordinate(centerMerc.x + dxMerc, centerMerc.y + dyMerc, centerMerc.z + dzMerc);
+    const dMercator = distance * mercUnitsPerMeter;
+    const dzMercator = dMercator * Math.cos(degreesToRadians(pitch));
+    const dhMercator = Math.sqrt(dMercator * dMercator - dzMercator * dzMercator);
+    const dxMercator = dhMercator * Math.sin(degreesToRadians(-bearing));
+    const dyMercator = dhMercator * Math.cos(degreesToRadians(-bearing));
+    return new MercatorCoordinate(centerMercator.x + dxMercator, centerMercator.y + dyMercator, centerMercator.z + dzMercator);
 }
