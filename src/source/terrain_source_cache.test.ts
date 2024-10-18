@@ -64,7 +64,7 @@ describe('TerrainSourceCache', () => {
 
     test('#constructor', () => {
         expect(tsc.sourceCache.usedForTerrain).toBeTruthy();
-        expect(tsc.sourceCache.tileSize).toBe(tsc.tileSize * 2 ** tsc.deltaZoom);
+        expect(tsc.sourceCache.tileSize).toBe(tsc.sourceCache._source.tileSize * 2 ** tsc.deltaZoom);
     });
 
     test('#getSourceTile', () => {
