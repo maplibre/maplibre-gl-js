@@ -385,8 +385,8 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Given the camera position (lng, lat, alt), calculate the center point and zoom level
      * @param ll - lng, lat of the camera
      * @param alt - altitude of the camera above sea level, in meters
-     * @param bearing bearing of the camera, in degrees
-     * @param pitch pitch angle of the camera, in degrees
+     * @param bearing - bearing of the camera, in degrees
+     * @param pitch - pitch angle of the camera, in degrees
      */
     calculateCenterFromCameraLngLatAlt(ll: LngLat, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number};
 
