@@ -9,6 +9,8 @@
             "width": 512,
             "maxPitch": 95,
             "operations": [
+                ["setElevation", 10000],
+                ["setPitch", 95],
                 ["wait"]
             ]
         }
@@ -17,9 +19,7 @@
         35.38,
         31.55
     ],
-    "elevation": 10000,
     "zoom": 10,
-    "pitch": 95,
     "sources": { },
     "layers": [
         {
