@@ -535,6 +535,9 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                     case 'pauseSource':
                         map.style.sourceCaches[operation[1]].pause();
                         break;
+                    case 'setElevation':
+                        map.transform.setElevation(operation[1]);
+                        break;
                     default:
                         if (typeof map[operation[0]] === 'function') {
                             map[operation[0]](...operation.slice(1));
