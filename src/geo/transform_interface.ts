@@ -381,7 +381,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      */
     getCameraAltitude(): number;
 
-    calculateCenterFromLLA(ll: LngLat, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number};
+    calculateCenterFromCameraLLA(ll: LngLat, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number};
 
     getRayDirectionFromPixel(p: Point): vec3;
 

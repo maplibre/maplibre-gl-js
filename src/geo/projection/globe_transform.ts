@@ -827,8 +827,8 @@ export class GlobeTransform implements ITransform {
         };
     }
 
-    calculateCenterFromLLA(ll: LngLat, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
-        return this._mercatorTransform.calculateCenterFromLLA(ll, alt, bearing, pitch);
+    calculateCenterFromCameraLLA(ll: LngLat, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
+        return this._mercatorTransform.calculateCenterFromCameraLLA(ll, alt, bearing, pitch);
     }
 
     /**
