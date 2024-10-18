@@ -23,6 +23,17 @@ export function tileCoordinatesToMercatorCoordinates(inTileX: number, inTileY: n
     );
 }
 
+export function lngLatToTileCoordinates(
+    coordinates: LngLat,
+    canonicalTileID: {x: number; y: number; z: number}
+): { tileX: number; tileY: number } {
+    const scale = 1.0 / (1 << canonicalTileID.z);
+    const coords = locationToMercatorCoordinate(coordinates);
+    const tileX = (coords.x - canonicalTileID.x * scale) * EXTENT / scale;
+    const tileY = (coords.y - canonicalTileID.y * scale) * EXTENT / scale;
+    return {tileX, tileY};
+}
+
 /**
  * Returns LngLat for given in-tile coordinates and tile ID.
  * @param inTileX - X coordinate in tile units - range [0..EXTENT].

@@ -233,7 +233,8 @@ export class CollisionIndex {
             /*flip*/ false,
             symbol,
             false,
-            projectionContext);
+            projectionContext,
+            unwrappedTileID);
 
         let collisionDetected = false;
         let inGrid = false;

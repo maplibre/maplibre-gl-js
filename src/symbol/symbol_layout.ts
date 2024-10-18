@@ -16,7 +16,7 @@ import {SymbolBucket} from '../data/bucket/symbol_bucket';
 import {EvaluationParameters} from '../style/evaluation_parameters';
 import {SIZE_PACK_FACTOR, MAX_PACKED_SIZE, MAX_GLYPH_ICON_SIZE} from './symbol_size';
 import ONE_EM from './one_em';
-import type {CanonicalTileID} from '../source/tile_id';
+import {CanonicalTileID} from '../source/tile_id';
 import type {Shaping, PositionedIcon, TextJustify} from './shaping';
 import type {CollisionBoxArray, TextAnchorOffsetArray} from '../data/array_types.g';
 import type {SymbolFeature} from '../data/bucket/symbol_bucket';
@@ -375,6 +375,7 @@ function addFeature(bucket: SymbolBucket,
             }
         }
     } else if (symbolPlacement === 'line-center') {
+        const textProjection = true;
         // No clipping, multiple lines per feature are allowed
         // "lines" with only one point are ignored as in clipLines
         for (const line of feature.geometry) {
@@ -386,7 +387,10 @@ function addFeature(bucket: SymbolBucket,
                     shapedTextOrientations.vertical || defaultHorizontalShaping,
                     shapedIcon,
                     glyphSize,
-                    textMaxBoxScale);
+                    textMaxBoxScale,
+                    textProjection,
+                    canonical
+                );
                 if (anchor) {
                     addSymbolAtAnchor(subdividedLine, anchor);
                 }
@@ -535,8 +539,6 @@ function addSymbol(bucket: SymbolBucket,
     layoutTextSize: number) {
 
     const lineArray = bucket.addToLineVertexArray(anchor, line);
-    console.log(line);
-    console.log(feature);
     let textCollisionFeature, iconCollisionFeature, verticalTextCollisionFeature, verticalIconCollisionFeature;
 
     let numIconVertices = 0;

@@ -20,3 +20,8 @@ TODO: scale with glyph size (latitude dependend)
         
         
         width of line stays constant when globe is pitched
+
+
+
+TODO:
+addDynamicAttributes (..., scale) where it is currently (..., 1.0)

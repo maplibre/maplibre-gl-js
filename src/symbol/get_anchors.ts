@@ -2,9 +2,12 @@ import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
 import {Anchor} from '../symbol/anchor';
 import {checkMaxAngle} from './check_max_angle';
+import {tileCoordinatesToLocation, lngLatToTileCoordinates} from '../geo/projection/mercator_utils';
 
 import type Point from '@mapbox/point-geometry';
 import type {Shaping, PositionedIcon} from './shaping';
+import type {CanonicalTileID} from '../source/tile_id';
+import { LngLat } from '../geo/lng_lat';
 
 export {getAnchors, getCenterAnchor};
 
@@ -12,6 +15,19 @@ function getLineLength(line: Array<Point>): number {
     let lineLength = 0;
     for (let k = 0; k < line.length - 1; k++) {
         lineLength += line[k].dist(line[k + 1]);
+    }
+    return lineLength;
+}
+
+function getLineLengthHaversine(
+    line: Array<Point>,
+    canonical: CanonicalTileID
+): number {
+    let lineLength = 0;
+    for (let k = 0; k < line.length - 1; k++) {
+        const a = tileCoordinatesToLocation(line[k].x, line[k].y, canonical),
+            b = tileCoordinatesToLocation(line[k + 1].x, line[k + 1].y, canonical);
+        lineLength += a.distanceTo(b);
     }
     return lineLength;
 }
@@ -37,26 +53,45 @@ function getCenterAnchor(line: Array<Point>,
     shapedText: Shaping,
     shapedIcon: PositionedIcon,
     glyphSize: number,
-    boxScale: number) {
+    boxScale: number,
+    textProjection: boolean,
+    canonical: CanonicalTileID) {
     const angleWindowSize = getAngleWindowSize(shapedText, glyphSize, boxScale);
     const labelLength = getShapedLabelLength(shapedText, shapedIcon) * boxScale;
 
     let prevDistance = 0;
-    const centerDistance = getLineLength(line) / 2;
+    const centerDistance = textProjection ? getLineLengthHaversine(line, canonical) / 2 : getLineLength(line) / 2;
 
     for (let i = 0; i < line.length - 1; i++) {
 
-        const a = line[i],
+        let a = null, b = null;
+        let segmentDistance = 0;
+        if (textProjection) {
+            a = tileCoordinatesToLocation(line[i].x, line[i].y, canonical);
+            b = tileCoordinatesToLocation(line[i + 1].x, line[i + 1].y, canonical);
+            segmentDistance = a.distanceTo(b);
+            a.x = a.lng;
+            a.y = a.lat;
+            b.x = b.lng;
+            b.y = b.lat;
+        } else {
+            a = line[i];
             b = line[i + 1];
-
-        const segmentDistance = a.dist(b);
+            segmentDistance = a.dist(b);
+        }
 
         if (prevDistance + segmentDistance > centerDistance) {
             // The center is on this segment
-            const t = (centerDistance - prevDistance) / segmentDistance,
-                x = interpolates.number(a.x, b.x, t),
-                y = interpolates.number(a.y, b.y, t);
-
+            const t = (centerDistance - prevDistance) / segmentDistance;
+            let x = interpolates.number(a.x, b.x, t);
+            let y = interpolates.number(a.y, b.y, t);
+            if (textProjection) {
+                const tileCoord = lngLatToTileCoordinates(new LngLat(x, y), canonical);
+                x = tileCoord.tileX;
+                y = tileCoord.tileY;
+                a = line[i];
+                b = line[i + 1];
+            }
             const anchor = new Anchor(x, y, b.angleTo(a), i);
             anchor._round();
             if (!angleWindowSize || checkMaxAngle(line, anchor, labelLength, angleWindowSize, maxAngle)) {

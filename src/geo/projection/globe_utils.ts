@@ -122,7 +122,7 @@ export function sphereSurfacePointToCoordinates(surface: vec3): LngLat {
     }
 }
 
-function planetScaleAtLatitude(latitudeDegrees: number): number {
+export function planetScaleAtLatitude(latitudeDegrees: number): number {
     return Math.cos(latitudeDegrees * Math.PI / 180);
 }
 
