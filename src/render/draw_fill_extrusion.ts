@@ -80,7 +80,10 @@ function drawExtrusionTiles(
             programConfiguration.updatePaintBuffers(crossfade);
         }
 
-        const projectionData = transform.getProjectionData(coord);
+        const align = false;
+        const ignoreTerrainMatrix = false;
+        const ignoreGlobeMatrix = painter.isRenderingToTexture;
+        const projectionData = transform.getProjectionData(coord, align, ignoreTerrainMatrix, ignoreGlobeMatrix);
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
         const translate = translatePosition(

@@ -120,7 +120,9 @@ function drawTiles(
         }
 
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
-        const projectionData = transform.getProjectionData(coord, align);
+        const ignoreTerrainMatrix = false;
+        const ignoreGlobeMatrix = painter.isRenderingToTexture;
+        const projectionData = transform.getProjectionData(coord, align, ignoreTerrainMatrix, ignoreGlobeMatrix);
         const uniformValues = rasterUniformValues(parentTL || [0, 0], parentScaleBy || 1, fade, layer, corners);
 
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, allowPoles, 'raster');

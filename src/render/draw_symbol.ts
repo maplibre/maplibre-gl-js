@@ -379,7 +379,10 @@ function drawLayerSymbols(
         const glCoordMatrixForShader = getGlCoordMatrix(pitchWithMap, rotateWithMap, painter.transform, s);
 
         const translation = translatePosition(transform, tile, translate, translateAnchor);
-        const projectionData = transform.getProjectionData(coord);
+        const align = false;
+        const ignoreTerrainMatrix = false;
+        const ignoreGlobeMatrix = painter.isRenderingToTexture;
+        const projectionData = transform.getProjectionData(coord, align, ignoreTerrainMatrix, ignoreGlobeMatrix);
 
         const hasVariableAnchors = hasVariablePlacement && bucket.hasTextData();
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' &&

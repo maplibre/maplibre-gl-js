@@ -425,8 +425,10 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Generates a `ProjectionData` instance to be used while rendering the supplied tile.
      * @param overscaledTileID - The ID of the current tile.
      * @param aligned - Set to true if a pixel-aligned matrix should be used, if possible (mostly used for raster tiles under mercator projection).
+     * @param ignoreTerrainMatrix - Set to true if the terrain matrix should be ignored.
+     * @param ignoreGlobeMatrix - Set to true if the globe projection matrix should be ignored.
      */
-    getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData;
+    getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean, ignoreGlobeMatrix?: boolean): ProjectionData;
 
     /**
      * @internal

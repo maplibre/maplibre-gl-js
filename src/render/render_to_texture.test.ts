@@ -106,7 +106,7 @@ describe('render to texture', () => {
 
     test('check state', () => {
         expect(rtt._renderableTiles.map(t => t.tileID.key)).toStrictEqual(['923']);
-        expect(rtt._coordsDescendingInv).toEqual({
+        expect(rtt._coordsAscending).toEqual({
             'maine': {
                 '923': [
                     {
@@ -124,7 +124,7 @@ describe('render to texture', () => {
                 ]
             }
         });
-        expect(rtt._coordsDescendingInvStr).toStrictEqual({maine: {'923': '923'}});
+        expect(rtt._coordsAscendingStr).toStrictEqual({maine: {'923': '923'}});
     });
 
     test('should render text after a line by not adding the text to the stack', () => {
