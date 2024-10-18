@@ -388,7 +388,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @param bearing bearing of the camera, in degrees
      * @param pitch pitch angle of the camera, in degrees
      */
-    calculateCenterFromCameraLLA(ll: LngLat, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number};
+    calculateCenterFromCameraLngLatAlt(ll: LngLat, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number};
 
     getRayDirectionFromPixel(p: Point): vec3;
 
