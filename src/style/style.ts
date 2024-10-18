@@ -747,6 +747,7 @@ export class Style extends Evented {
                 case 'setZoom':
                 case 'setBearing':
                 case 'setPitch':
+                case 'setRoll':
                     continue;
                 case 'addLayer':
                     operations.push(() => this.addLayer.apply(this, op.args));
