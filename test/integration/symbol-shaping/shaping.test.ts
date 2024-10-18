@@ -22,11 +22,11 @@ if (typeof process !== 'undefined' && process.env !== undefined) {
 }
 
 function sectionForImage(name: string) {
-    return new FormattedSection('', ResolvedImage.fromString(name), null, null, null);
+    return new FormattedSection('', ResolvedImage.fromString(name), null, null, null, null);
 }
 
 function sectionForText(name: string, scale?: number) {
-    return new FormattedSection(name, null, scale, null, null);
+    return new FormattedSection(name, null, scale, null, null, null);
 }
 
 describe('shaping', () => {
