@@ -104,15 +104,6 @@ export type JumpToOptions = CameraOptions & {
     padding?: PaddingOptions;
 }
 
-export type JumpToLLAOptions = CameraOptions & {
-    camLngLat: LngLat;
-    camAlt: number;
-    bearing?: number;
-    pitch?: number;
-    roll?: number;
-    padding?: PaddingOptions;
-}
-
 /**
  * A options object for the {@link Map#cameraForBounds} method
  */
@@ -907,28 +898,6 @@ export abstract class Camera extends Evented {
         }
 
         return this.fire(new Event('moveend', eventData));
-    }
-
-    jumpToLLA(options: JumpToLLAOptions, eventData?: any): this {
-        const jumpToOptions = this.calculateCameraOptionsFromLLA(options);
-        return this.jumpTo(jumpToOptions, eventData);
-    }
-
-    calculateCameraOptionsFromLLA(camOptions: JumpToLLAOptions): CameraOptions {
-        const bearing = camOptions.bearing !== undefined ? camOptions.bearing : this.getBearing();
-        const pitch = camOptions.pitch !== undefined ? camOptions.pitch : this.getPitch();
-        const roll = camOptions.roll !== undefined ? camOptions.roll : this.getRoll();
-
-        const centerInfo = this.transform.calculateCenterFromLLA(camOptions.camLngLat, camOptions.camAlt, bearing, pitch);
-
-        return {
-            center: centerInfo.center,
-            elevation: centerInfo.elevation,
-            zoom: centerInfo.zoom,
-            bearing,
-            pitch,
-            roll
-        };
     }
 
     /**
