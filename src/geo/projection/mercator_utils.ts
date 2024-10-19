@@ -82,10 +82,8 @@ export function unprojectFromWorldCoordinates(worldSize: number, point: Point): 
  * @returns Horizon above center in pixels.
  */
 export function getMercatorHorizon(transform: {pitch: number; cameraToCenterDistance: number}): number {
-    if (transform.pitch > 85.01) {
-        return Math.tan(degreesToRadians(89 - transform.pitch)) * transform.cameraToCenterDistance;
-    }
-    return Math.tan(degreesToRadians(90 - transform.pitch)) * transform.cameraToCenterDistance * 0.85;
+    return transform.cameraToCenterDistance * Math.min(Math.tan(degreesToRadians(90 - transform.pitch)) * 0.85,
+        Math.tan(degreesToRadians(89 - transform.pitch)));
 }
 
 export function getBasicProjectionData(overscaledTileID: OverscaledTileID, tilePosMatrix?: mat4, ignoreTerrainMatrix?: boolean): ProjectionData {
