@@ -375,7 +375,7 @@ function addFeature(bucket: SymbolBucket,
             }
         }
     } else if (symbolPlacement === 'line-center') {
-        const textProjection = true;
+        const textProjection = layout.get('text-projection');
         // No clipping, multiple lines per feature are allowed
         // "lines" with only one point are ignored as in clipLines
         for (const line of feature.geometry) {
