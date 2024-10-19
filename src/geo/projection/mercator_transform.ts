@@ -86,6 +86,9 @@ export class MercatorTransform implements ITransform {
     setMinElevationForCurrentTile(elevation: number): void {
         this._helper.setMinElevationForCurrentTile(elevation);
     }
+    setElevationIfCenterPointBelowHorizon(elevation: number): void {
+        this._helper.setElevationIfCenterPointBelowHorizon(elevation);
+    }
     setPadding(padding: PaddingOptions): void {
         this._helper.setPadding(padding);
     }

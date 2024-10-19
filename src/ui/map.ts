@@ -2031,9 +2031,7 @@ export class Map extends Camera {
             if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
             this.painter.renderToTexture = null;
             this.transform.setMinElevationForCurrentTile(0);
-            if (this.transform.pitch <= 89) {
-                this.transform.setElevation(0);
-            }
+            this.transform.setElevationIfCenterPointBelowHorizon(0);
         } else {
             // add terrain
             const sourceCache = this.style.sourceCaches[options.source];
@@ -2057,9 +2055,7 @@ export class Map extends Camera {
                 } else if (e.dataType === 'source' && e.tile) {
                     if (e.sourceId === options.source && !this._elevationFreeze) {
                         this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
-                        if (this.transform.pitch <= 89) {
-                            this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
-                        }
+                        this.transform.setElevationIfCenterPointBelowHorizon(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
                     }
                     this.terrain.sourceCache.freeRtt(e.tile.tileID);
                 }
@@ -3205,14 +3201,12 @@ export class Map extends Camera {
         if (this.terrain) {
             this.terrain.sourceCache.update(this.transform, this.terrain);
             this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
-            if (!this._elevationFreeze && this.transform.pitch <= 89) {
-                this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
+            if (!this._elevationFreeze) {
+                this.transform.setElevationIfCenterPointBelowHorizon(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             }
         } else {
             this.transform.setMinElevationForCurrentTile(0);
-            if (this.transform.pitch <= 89) {
-                this.transform.setElevation(0);
-            }
+            this.transform.setElevationIfCenterPointBelowHorizon(0);
         }
 
         this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, transformUpdateResult.forcePlacementUpdate);
