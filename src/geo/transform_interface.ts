@@ -198,7 +198,7 @@ interface ITransformMutators {
      * After panning finished, call this method to recalculate the zoom level for the current camera-height in current terrain.
      * @param terrain - the terrain
      */
-    recalculateZoom(terrain: Terrain): void;
+    recalculateZoom(terrain?: Terrain): void;
 
     /**
      * Set's the transform's center so that the given point on screen is at the given world coordinates.
@@ -380,6 +380,8 @@ export interface IReadonlyTransform extends ITransformGetters {
      * The altitude of the camera above the center of the map in meters.
      */
     getCameraAltitude(): number;
+
+    calculateCenterFromLLA(ll: LngLat, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number};
 
     getRayDirectionFromPixel(p: Point): vec3;
 

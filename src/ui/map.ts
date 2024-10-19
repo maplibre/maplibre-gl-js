@@ -213,6 +213,11 @@ export type MapOptions = {
      */
     center?: LngLatLike;
     /**
+     * The elevation of the initial geographical centerpoint of the map, in meters above sea level. If `elevation` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
+     * @defaultValue 0
+     */
+    elevation?: number;
+    /**
      * The initial zoom level of the map. If `zoom` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
      * @defaultValue 0
      */
@@ -371,7 +376,7 @@ const defaultMinPitch = 0;
 const defaultMaxPitch = 60;
 
 // use this variable to check maxPitch for validity
-const maxPitchThreshold = 85;
+const maxPitchThreshold = 180;
 
 const defaultOptions: Readonly<Partial<MapOptions>> = {
     hash: false,
@@ -401,6 +406,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     trackResize: true,
 
     center: [0, 0],
+    elevation: 0,
     zoom: 0,
     bearing: 0,
     pitch: 0,
@@ -697,6 +703,7 @@ export class Map extends Camera {
         if (!this._hash || !this._hash._onHashChange()) {
             this.jumpTo({
                 center: resolvedOptions.center,
+                elevation: resolvedOptions.elevation,
                 zoom: resolvedOptions.zoom,
                 bearing: resolvedOptions.bearing,
                 pitch: resolvedOptions.pitch,
@@ -2024,7 +2031,7 @@ export class Map extends Camera {
             if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
             this.painter.renderToTexture = null;
             this.transform.setMinElevationForCurrentTile(0);
-            this.transform.setElevation(0);
+            this.transform.recalculateZoom();
         } else {
             // add terrain
             const sourceCache = this.style.sourceCaches[options.source];
@@ -2048,7 +2055,7 @@ export class Map extends Camera {
                 } else if (e.dataType === 'source' && e.tile) {
                     if (e.sourceId === options.source && !this._elevationFreeze) {
                         this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
-                        this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
+                        this.transform.recalculateZoom(this.terrain);
                     }
                     this.terrain.sourceCache.freeRtt(e.tile.tileID);
                 }
@@ -3195,11 +3202,11 @@ export class Map extends Camera {
             this.terrain.sourceCache.update(this.transform, this.terrain);
             this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             if (!this._elevationFreeze) {
-                this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
+                this.transform.recalculateZoom(this.terrain);
             }
         } else {
             this.transform.setMinElevationForCurrentTile(0);
-            this.transform.setElevation(0);
+            this.transform.recalculateZoom();
         }
 
         this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, transformUpdateResult.forcePlacementUpdate);
