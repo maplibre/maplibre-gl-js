@@ -40,3 +40,5 @@ npm-debug.log
 /.vs/
 .*.swp
 junit.xml
+KEYCHANGES.md
+build-sh

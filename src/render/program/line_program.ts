@@ -100,6 +100,7 @@ const lineUniformValues = (
     ratioScale: number,
 ): UniformValues<LineUniformsType> => {
     const transform = painter.transform;
+
     return {
         'u_translation': calculateTranslation(painter, tile, layer),
         'u_ratio': ratioScale / pixelsToTileUnits(tile, 1, transform.zoom),

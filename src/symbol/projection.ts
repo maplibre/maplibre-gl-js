@@ -18,7 +18,6 @@ import {UnwrappedTileID} from '../source/tile_id';
 import {StructArray} from '../util/struct_array';
 import {tileCoordinatesToLocation} from '../geo/projection/mercator_utils';
 import {planetScaleAtLatitude} from '../geo/projection/globe_utils';
-import { Numeric } from 'd3';
 
 /**
  * The result of projecting a point to the screen, with some additional information about the projection.
@@ -856,7 +855,7 @@ export function placeGlyphAlongLine(
         currentSegmentDistance = currentLineSegment.mag() * distanceAdjustment;
     }
 
-    const segmentInterpolationT = (absOffsetX - (distanceFromAnchor)) / currentSegmentDistance;
+    const segmentInterpolationT = (absOffsetX - distanceFromAnchor) / currentSegmentDistance;
     const p = currentLineSegment._mult(segmentInterpolationT)._add(offsetPreviousVertex || previousVertex);
 
     const segmentAngle = angle + Math.atan2(currentVertex.y - previousVertex.y, currentVertex.x - previousVertex.x);

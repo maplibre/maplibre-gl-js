@@ -54,8 +54,6 @@ export class GlobeCameraHelper implements ICameraHelper {
             return;
         }
 
-        //console.log('handleMapControlsPitchBearingZoom');
-
         const zoomPixel = deltas.around;
         const zoomLoc = tr.screenPointToLocation(zoomPixel);
 
@@ -114,6 +112,7 @@ export class GlobeCameraHelper implements ICameraHelper {
 
         // Compute how much to move towards the zoom location
         const factor = (1.0 - zoomScale(-actualZoomDelta)) * Math.min(distanceFactor, radiusFactor);
+
         const oldCenterLat = tr.center.lat;
         const oldZoom = tr.zoom;
         const heuristicCenter = new LngLat(
@@ -168,8 +167,6 @@ export class GlobeCameraHelper implements ICameraHelper {
         if (!this.useGlobeControls) {
             return result;
         }
-
-        console.log('cameraForBoxAndBearing');
 
         // If globe is enabled, we use the parameters computed for mercator, and just update the zoom to fit the bounds.
 
@@ -245,8 +242,6 @@ export class GlobeCameraHelper implements ICameraHelper {
             return;
         }
 
-        console.log('handleJumpToCenterZoom');
-
         // Special zoom & center handling for globe:
         // Globe constrained center isn't dependent on zoom level
         const startingLat = tr.center.lat;
@@ -264,10 +259,6 @@ export class GlobeCameraHelper implements ICameraHelper {
         if (!this.useGlobeControls) {
             return this._mercatorCameraHelper.handleEaseTo(tr, options);
         }
-
-        //console.log('handleEaseTo');
-        //console.log(options);
-        //console.log(tr);
 
         const startZoom = tr.zoom;
         const startBearing = tr.bearing;
@@ -368,8 +359,6 @@ export class GlobeCameraHelper implements ICameraHelper {
             return this._mercatorCameraHelper.handleFlyTo(tr, options);
         }
         const optionsZoom = typeof options.zoom !== 'undefined';
-
-        console.log('handleFlyTo');
 
         const startCenter = tr.center;
         const startZoom = tr.zoom;
@@ -476,8 +465,6 @@ export class GlobeCameraHelper implements ICameraHelper {
             // The computed result is invalid.
             return null;
         }
-
-        //sconsole.log('solveVectorScale');
 
         return t;
     }

@@ -7,7 +7,6 @@ import {verticalizePunctuation} from '../util/verticalize_punctuation';
 import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker';
 import ONE_EM from './one_em';
 import {warnOnce} from '../util/util';
-import type {CanonicalTileID} from '../source/tile_id';
 
 import type {StyleGlyph, GlyphMetrics} from '../style/style_glyph';
 import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf';
@@ -259,8 +258,7 @@ function shapeText(
     writingMode: WritingMode.horizontal | WritingMode.vertical,
     allowVerticalPlacement: boolean,
     layoutTextSize: number,
-    layoutTextSizeThisZoom: number,
-    canonical: CanonicalTileID
+    layoutTextSizeThisZoom: number
 ): Shaping | false {
     const logicalInput = TaggedString.fromFeature(text, defaultFontStack);
 
@@ -318,7 +316,7 @@ function shapeText(
         verticalizable: false
     };
 
-    shapeLines(shaping, glyphMap, glyphPositions, imagePositions, lines, lineHeight, textAnchor, textJustify, writingMode, spacing, allowVerticalPlacement, layoutTextSizeThisZoom, canonical);
+    shapeLines(shaping, glyphMap, glyphPositions, imagePositions, lines, lineHeight, textAnchor, textJustify, writingMode, spacing, allowVerticalPlacement, layoutTextSizeThisZoom);
     if (isEmpty(positionedLines)) return false;
 
     return shaping;
@@ -606,8 +604,7 @@ function shapeLines(shaping: Shaping,
     writingMode: WritingMode.horizontal | WritingMode.vertical,
     spacing: number,
     allowVerticalPlacement: boolean,
-    layoutTextSizeThisZoom: number,
-    canonical: CanonicalTileID) {
+    layoutTextSizeThisZoom: number) {
 
     let x = 0;
     let y = SHAPING_DEFAULT_OFFSET;
@@ -701,16 +698,14 @@ function shapeLines(shaping: Shaping,
                     lineOffset = offset;
                 }
             }
-            const factor = 1;
             if (!vertical) {
-                positionedGlyphs.push({glyph: codePoint, imageName, x, y: y + baselineOffset, vertical, scale: section.scale * factor, fontStack: section.fontStack, sectionIndex, metrics, rect});
+                positionedGlyphs.push({glyph: codePoint, imageName, x, y: y + baselineOffset, vertical, scale: section.scale, fontStack: section.fontStack, sectionIndex, metrics, rect});
                 x += metrics.advance * section.scale  + spacing;
             } else {
                 shaping.verticalizable = true;
-                positionedGlyphs.push({glyph: codePoint, imageName, x, y: y + baselineOffset, vertical, scale: section.scale * factor, fontStack: section.fontStack, sectionIndex, metrics, rect});
+                positionedGlyphs.push({glyph: codePoint, imageName, x, y: y + baselineOffset, vertical, scale: section.scale, fontStack: section.fontStack, sectionIndex, metrics, rect});
                 x += verticalAdvance * section.scale  + spacing;
             }
-            //ZERDA end
         }
 
         // Only justify if we placed at least one glyph
