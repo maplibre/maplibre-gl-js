@@ -465,7 +465,6 @@ export class GlobeCameraHelper implements ICameraHelper {
             // The computed result is invalid.
             return null;
         }
-
         return t;
     }
 
