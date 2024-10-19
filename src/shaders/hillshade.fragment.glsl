@@ -44,8 +44,14 @@ void main() {
     vec4 accent_color = (1.0 - accent) * u_accent * clamp(intensity * 2.0, 0.0, 1.0);
     float shade = abs(mod((aspect + azimuth) / PI + 0.5, 2.0) - 1.0);
     vec4 shade_color = mix(u_shadow, u_highlight, shade) * sin(scaledSlope) * clamp(intensity * 2.0, 0.0, 1.0);
-    fragColor = accent_color * (1.0 - shade_color.a) + shade_color;
 
+    // Normalizing the elevation
+    float elevation = 1.0 - pixel.b;
+    float darkeningFactor = clamp(elevation*0.5, 0.0, 1.0);
+    vec4 finalColor = (accent_color * (1.0 - shade_color.a) + shade_color);
+    finalColor = mix(finalColor, vec4(0.0,0.13,0.7,1.0), vec4(darkeningFactor));
+    fragColor = finalColor;
+    
 #ifdef OVERDRAW_INSPECTOR
     fragColor = vec4(1.0);
 #endif
