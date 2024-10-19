@@ -13,7 +13,7 @@ import type {
     SymbolDynamicLayoutArray
 } from '../data/array_types.g';
 import {WritingMode} from '../symbol/shaping';
-import {findLineIntersection} from '../util/util';
+import {degreesToRadians, findLineIntersection} from '../util/util';
 import {UnwrappedTileID} from '../source/tile_id';
 import {StructArray} from '../util/struct_array';
 

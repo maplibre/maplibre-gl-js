@@ -69,6 +69,10 @@ export type CameraOptions = CenterZoomBearing & {
      * The desired roll in degrees. The roll is the angle about the camera boresight.
      */
     roll?: number;
+    /**
+     * The elevation of the center point in meters above sea level.
+     */
+    elevation?: number;
 };
 
 /**
@@ -97,6 +101,15 @@ export type JumpToOptions = CameraOptions & {
     /**
      * Dimensions in pixels applied on each side of the viewport for shifting the vanishing point.
      */
+    padding?: PaddingOptions;
+}
+
+export type JumpToLLAOptions = CameraOptions & {
+    camLngLat: LngLat;
+    camAlt: number;
+    bearing?: number;
+    pitch?: number;
+    roll?: number;
     padding?: PaddingOptions;
 }
 
@@ -842,6 +855,10 @@ export abstract class Camera extends Evented {
 
         const zoomChanged = tr.zoom !== oldZoom;
 
+        if ('elevation' in options && tr.elevation !== +options.elevation) {
+            tr.setElevation(+options.elevation);
+        }
+
         if ('bearing' in options && tr.bearing !== +options.bearing) {
             bearingChanged = true;
             tr.setBearing(+options.bearing);
@@ -890,6 +907,28 @@ export abstract class Camera extends Evented {
         }
 
         return this.fire(new Event('moveend', eventData));
+    }
+
+    jumpToLLA(options: JumpToLLAOptions, eventData?: any): this {
+        const jumpToOptions = this.calculateCameraOptionsFromLLA(options);
+        return this.jumpTo(jumpToOptions, eventData);
+    }
+
+    calculateCameraOptionsFromLLA(camOptions: JumpToLLAOptions): CameraOptions {
+        const bearing = camOptions.bearing !== undefined ? camOptions.bearing : this.getBearing();
+        const pitch = camOptions.pitch !== undefined ? camOptions.pitch : this.getPitch();
+        const roll = camOptions.roll !== undefined ? camOptions.roll : this.getRoll();
+
+        const centerInfo = this.transform.calculateCenterFromLLA(camOptions.camLngLat, camOptions.camAlt, bearing, pitch);
+
+        return {
+            center: centerInfo.center,
+            elevation: centerInfo.elevation,
+            zoom: centerInfo.zoom,
+            bearing,
+            pitch,
+            roll
+        };
     }
 
     /**
@@ -1142,11 +1181,11 @@ export abstract class Camera extends Evented {
                 elevation
             } = modifier(nextTransform);
             if (center) nextTransform.setCenter(center);
+            if (elevation !== undefined) nextTransform.setElevation(elevation);
             if (zoom !== undefined) nextTransform.setZoom(zoom);
             if (roll !== undefined) nextTransform.setRoll(roll);
             if (pitch !== undefined) nextTransform.setPitch(pitch);
             if (bearing !== undefined) nextTransform.setBearing(bearing);
-            if (elevation !== undefined) nextTransform.setElevation(elevation);
             finalTransform.apply(nextTransform);
         }
         this.transform.apply(finalTransform);
