@@ -190,6 +190,12 @@ export class TransformHelper implements ITransformGetters {
         this._minElevationForCurrentTile = ele;
     }
 
+    setElevationIfCenterPointBelowHorizon(elevation: number): void {
+        if (this.pitch <= 89.0) {
+            this.setElevation(elevation);
+        }
+    }
+
     get tileSize(): number { return this._tileSize; }
     get tileZoom(): number { return this._tileZoom; }
     get scale(): number { return this._scale; }
