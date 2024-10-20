@@ -9,7 +9,10 @@ import Point from '@mapbox/point-geometry';
 import type {ProjectionData} from './projection_data';
 
 /*
-* The maximum angle to use for the Mercator horizon.
+* The maximum angle to use for the Mercator horizon. This must be less than 90 
+* to prevent errors in `MercatorTransform::_calcMatrices()`. It shouldn't be too close
+* to 90, or the distance to the horizon will become vary large, unnecessarily increasing
+* the number of tiles needed to render the map.
 */
 export const maxMercatorHorizonAngle = 89.25;
 
