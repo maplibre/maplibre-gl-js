@@ -3502,7 +3502,6 @@ describe('#flyTo globe projection', () => {
             });
 
             camera.on('moveend', () => {
-                console.log(leastZoom);
                 expect(zoomed).toBeTruthy();
                 done();
             });
