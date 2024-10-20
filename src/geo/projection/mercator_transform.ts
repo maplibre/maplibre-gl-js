@@ -13,7 +13,7 @@ import {PaddingOptions} from '../edge_insets';
 import {mercatorCoordinateToLocation, getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix} from './mercator_utils';
 import {EXTENT} from '../../data/extent';
 import type {ProjectionData} from './projection_data';
-import {scaleZoom, TransformHelper, zoomScale} from '../transform_helper';
+import {maxMercatorHorizonAngle, scaleZoom, TransformHelper, zoomScale} from '../transform_helper';
 import {mercatorCoveringTiles} from './mercator_covering_tiles';
 
 export class MercatorTransform implements ITransform {
@@ -575,7 +575,7 @@ export class MercatorTransform implements ITransform {
         this._helper._pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
 
         // Calculate the camera to sea-level distance in pixel in respect of terrain
-        const limitedPitchRadians = degreesToRadians(Math.min(this.pitch, 89));
+        const limitedPitchRadians = degreesToRadians(Math.min(this.pitch, maxMercatorHorizonAngle));
         const cameraToSeaLevelDistance = Math.max(this._cameraToCenterDistance / 2, this._cameraToCenterDistance + this._helper._elevation * this._helper._pixelPerMeter / Math.cos(limitedPitchRadians));
         // In case of negative minimum elevation (e.g. the dead see, under the sea maps) use a lower plane for calculation
         const minElevation = Math.min(this.elevation, this.minElevationForCurrentTile, this.getCameraAltitude() - 100);
@@ -594,7 +594,7 @@ export class MercatorTransform implements ITransform {
         // Find the distance from the center point to the horizon
         const horizon = getMercatorHorizon(this);
         const horizonAngle = Math.atan(horizon / this._cameraToCenterDistance);
-        const fovCenterToHorizon = horizonAngle > degreesToRadians(1) ? 2 * horizonAngle * (0.5 + offset.y / (horizon * 2)) : degreesToRadians(1);
+        const fovCenterToHorizon = horizonAngle > degreesToRadians(90 - maxMercatorHorizonAngle) ? 2 * horizonAngle * (0.5 + offset.y / (horizon * 2)) : degreesToRadians(90 - maxMercatorHorizonAngle);
         const topHalfSurfaceDistanceHorizon = Math.sin(fovCenterToHorizon) * lowestPlane / Math.sin(clamp(Math.PI - groundAngle - fovCenterToHorizon, 0.01, Math.PI - 0.01));
 
         // Calculate z distance of the farthest fragment that should be rendered.
