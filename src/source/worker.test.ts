@@ -46,7 +46,7 @@ describe('Worker RTLTextPlugin', () => {
         expect(spy).toHaveBeenCalled();
     });
 
-    test('should call syncState message is received', async () => {
+    test('should call syncState when rtl message is received', async () => {
         const syncStateSpy = jest.spyOn(rtlWorkerPlugin, 'syncState').mockImplementation((_, __) => Promise.resolve({} as any));
 
         await worker.actor.messageHandlers[MessageType.syncRTLPluginState]('', {} as any) as any;
