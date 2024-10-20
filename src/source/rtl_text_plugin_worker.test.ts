@@ -59,7 +59,7 @@ describe('RTLWorkerPlugin', () => {
         expect(workerResult.pluginURL).toBe(originalUrl);
     });
 
-    test('should do a full cycle of rtl loading', async () => {
+    test('should do a full cycle of rtl loading synchronously', async () => {
         const originalUrl = 'https://somehost/somescript1';
         const loadScriptsMock = jest.fn().mockImplementation((_) => {
             rtlWorkerPlugin.setMethods({
@@ -67,6 +67,29 @@ describe('RTLWorkerPlugin', () => {
                 processBidirectionalText: jest.fn(),
                 processStyledBidirectionalText: jest.fn(),
             });
+        });
+
+        const workerResult: PluginState = await rtlWorkerPlugin.syncState({
+            pluginURL: originalUrl,
+            pluginStatus: 'loading'
+        }, loadScriptsMock);
+
+        expect(rtlWorkerPlugin.getRTLTextPluginStatus()).toBe('loaded');
+        expect(rtlWorkerPlugin.pluginURL).toBe(originalUrl);
+        expect(workerResult.pluginStatus).toBe('loaded');
+        expect(workerResult.pluginURL).toBe(originalUrl);
+    });
+
+    test('should do a full cycle of rtl loading asynchronously', async () => {
+        const originalUrl = 'https://somehost/somescript1';
+        const loadScriptsMock = jest.fn().mockImplementation((_) => {
+            setTimeout(() => {
+                rtlWorkerPlugin.setMethods({
+                    applyArabicShaping: jest.fn(),
+                    processBidirectionalText: jest.fn(),
+                    processStyledBidirectionalText: jest.fn(),
+                });
+            }, 10);
         });
 
         const workerResult: PluginState = await rtlWorkerPlugin.syncState({
