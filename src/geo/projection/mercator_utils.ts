@@ -11,7 +11,7 @@ import type {ProjectionData} from './projection_data';
 /*
 * The maximum angle to use for the Mercator horizon.
 */
-export const maxMercatorHorizonAngle = 89;
+export const maxMercatorHorizonAngle = 89.25;
 
 /**
  * Returns mercator coordinates in range 0..1 for given coordinates inside a specified tile.
