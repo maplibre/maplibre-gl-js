@@ -10,10 +10,10 @@ import {PointProjection, xyTransformMat4} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
 import {CoveringTilesOptions, CoveringZoomOptions, IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
 import {PaddingOptions} from '../edge_insets';
-import {mercatorCoordinateToLocation, getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix} from './mercator_utils';
+import {mercatorCoordinateToLocation, getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle} from './mercator_utils';
 import {EXTENT} from '../../data/extent';
 import type {ProjectionData} from './projection_data';
-import {maxMercatorHorizonAngle, scaleZoom, TransformHelper, zoomScale} from '../transform_helper';
+import {scaleZoom, TransformHelper, zoomScale} from '../transform_helper';
 import {mercatorCoveringTiles} from './mercator_covering_tiles';
 
 export class MercatorTransform implements ITransform {
@@ -85,9 +85,6 @@ export class MercatorTransform implements ITransform {
     }
     setMinElevationForCurrentTile(elevation: number): void {
         this._helper.setMinElevationForCurrentTile(elevation);
-    }
-    setElevationIfCenterPointBelowHorizon(elevation: number): void {
-        this._helper.setElevationIfCenterPointBelowHorizon(elevation);
     }
     setPadding(padding: PaddingOptions): void {
         this._helper.setPadding(padding);
