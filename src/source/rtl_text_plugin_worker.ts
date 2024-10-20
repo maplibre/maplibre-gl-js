@@ -38,7 +38,7 @@ class RTLWorkerPlugin implements RTLTextPlugin {
         this.loadScriptResolve();
     }
 
-    private isParsed(): boolean {
+    public isParsed(): boolean {
         return this.applyArabicShaping != null &&
             this.processBidirectionalText != null &&
             this.processStyledBidirectionalText != null;
@@ -64,7 +64,7 @@ class RTLWorkerPlugin implements RTLTextPlugin {
             this.loadScriptResolve = resolve;
         });
         importScripts(urlToLoad);
-        const dontWaitForeverTimeoutPromise = new Promise<void>((resolve) => setTimeout(() => resolve(), RTLWorkerPlugin.TIMEOUT));
+        const dontWaitForeverTimeoutPromise = new Promise<void>((resolve) => setTimeout(() => resolve(), this.TIMEOUT));
         await Promise.race([loadScriptPromise, dontWaitForeverTimeoutPromise]);
         const complete = this.isParsed();
         if (complete) {
