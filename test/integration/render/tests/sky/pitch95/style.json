@@ -10,7 +10,6 @@
             "maxPitch": 95,
             "operations": [
                 ["setCenterElevation", 10000],
-                ["setPitch", 95],
                 ["wait"]
             ]
         }
@@ -19,6 +18,7 @@
         35.38,
         31.55
     ],
+    "pitch": 95,
     "zoom": 10,
     "sources": { },
     "layers": [
