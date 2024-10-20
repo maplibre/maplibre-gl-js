@@ -9,11 +9,6 @@ import {CoveringZoomOptions, IReadonlyTransform, ITransformGetters} from './tran
 
 export const MAX_VALID_LATITUDE = 85.051129;
 
-/*
-* The maximum angle to use for the Mercator horizon.
-*/
-export const maxMercatorHorizonAngle = 89;
-
 /**
  * If a path crossing the antimeridian would be shorter, extend the final coordinate so that
  * interpolating between the two endpoints will cross it.
@@ -193,12 +188,6 @@ export class TransformHelper implements ITransformGetters {
     get minElevationForCurrentTile(): number { return this._minElevationForCurrentTile; }
     setMinElevationForCurrentTile(ele: number) {
         this._minElevationForCurrentTile = ele;
-    }
-
-    setElevationIfCenterPointBelowHorizon(elevation: number): void {
-        if (this.pitch <= maxMercatorHorizonAngle) {
-            this.setElevation(elevation);
-        }
     }
 
     get tileSize(): number { return this._tileSize; }

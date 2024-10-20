@@ -2,11 +2,16 @@ import {mat4} from 'gl-matrix';
 import {EXTENT} from '../../data/extent';
 import {OverscaledTileID} from '../../source/tile_id';
 import {clamp, degreesToRadians} from '../../util/util';
-import {MAX_VALID_LATITUDE, maxMercatorHorizonAngle, UnwrappedTileIDType, zoomScale} from '../transform_helper';
+import {MAX_VALID_LATITUDE, UnwrappedTileIDType, zoomScale} from '../transform_helper';
 import {LngLat} from '../lng_lat';
 import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat} from '../mercator_coordinate';
 import Point from '@mapbox/point-geometry';
 import type {ProjectionData} from './projection_data';
+
+/*
+* The maximum angle to use for the Mercator horizon.
+*/
+export const maxMercatorHorizonAngle = 89;
 
 /**
  * Returns mercator coordinates in range 0..1 for given coordinates inside a specified tile.

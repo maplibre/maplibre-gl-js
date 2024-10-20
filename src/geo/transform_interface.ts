@@ -178,14 +178,6 @@ interface ITransformMutators {
     setElevation(elevation: number): void;
     setMinElevationForCurrentTile(elevation: number): void;
 
-    /**
-     * Sets the transform's center elevation above sea level, in meters.
-     * Only takes effect if the current center point is below the horizon.
-     * If the current center point is above the horizon, setting the elevation to ground level will cause
-     * the camera to move below the map.
-     */
-    setElevationIfCenterPointBelowHorizon(elevation: number): void;
-
     setPadding(padding: PaddingOptions): void;
 
     /**

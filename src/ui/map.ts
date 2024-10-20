@@ -64,6 +64,7 @@ import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {ITransform} from '../geo/transform_interface';
 import {ICameraHelper} from '../geo/projection/camera_helper';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
+import {maxMercatorHorizonAngle} from '../geo/projection/mercator_utils';
 
 const version = packageJSON.version;
 
@@ -2031,7 +2032,7 @@ export class Map extends Camera {
             if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
             this.painter.renderToTexture = null;
             this.transform.setMinElevationForCurrentTile(0);
-            this.transform.setElevationIfCenterPointBelowHorizon(0);
+            this._setElevationIfCenterPointBelowHorizon(0);
         } else {
             // add terrain
             const sourceCache = this.style.sourceCaches[options.source];
@@ -2055,7 +2056,7 @@ export class Map extends Camera {
                 } else if (e.dataType === 'source' && e.tile) {
                     if (e.sourceId === options.source && !this._elevationFreeze) {
                         this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
-                        this.transform.setElevationIfCenterPointBelowHorizon(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
+                        this._setElevationIfCenterPointBelowHorizon(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
                     }
                     this.terrain.sourceCache.freeRtt(e.tile.tileID);
                 }
@@ -3202,11 +3203,11 @@ export class Map extends Camera {
             this.terrain.sourceCache.update(this.transform, this.terrain);
             this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             if (!this._elevationFreeze) {
-                this.transform.setElevationIfCenterPointBelowHorizon(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
+                this._setElevationIfCenterPointBelowHorizon(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             }
         } else {
             this.transform.setMinElevationForCurrentTile(0);
-            this.transform.setElevationIfCenterPointBelowHorizon(0);
+            this._setElevationIfCenterPointBelowHorizon(0);
         }
 
         this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, transformUpdateResult.forcePlacementUpdate);
@@ -3473,5 +3474,17 @@ export class Map extends Camera {
         this._lazyInitEmptyStyle();
         this.style.setProjection(projection);
         return this._update(true);
+    }
+
+    /**
+     * Sets the transform's center elevation above sea level, in meters.
+     * Only takes effect if the current center point is below the horizon.
+     * If the current center point is above the horizon, setting the elevation to ground level will cause
+     * the camera to move below the map.
+     */
+    _setElevationIfCenterPointBelowHorizon(elevation: number): void {
+        if (this.transform.pitch <= maxMercatorHorizonAngle) {
+            this.transform.setElevation(elevation);
+        }
     }
 }
