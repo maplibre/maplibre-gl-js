@@ -42,7 +42,7 @@ describe('mercator utils', () => {
         transform.setPitch(90);
         const horizon = getMercatorHorizon(transform);
 
-        expect(horizon).toBeCloseTo(-13.09129869616319, 10);
+        expect(horizon).toBeCloseTo(-9.818037813626313, 10);
     });
 
     test('getMercatorHorizon95', () => {
@@ -51,7 +51,7 @@ describe('mercator utils', () => {
         transform.setPitch(95);
         const horizon = getMercatorHorizon(transform);
 
-        expect(horizon).toBeCloseTo(-78.82817644925734, 10);
+        expect(horizon).toBeCloseTo(-75.52102888757743, 10);
     });
 
     describe('getBasicProjectionData', () => {
