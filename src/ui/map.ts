@@ -153,12 +153,12 @@ export type MapOptions = {
      */
     maxZoom?: number | null;
     /**
-     * The minimum pitch of the map (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
+     * The minimum pitch of the map (0-180). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
      * @defaultValue 0
      */
     minPitch?: number | null;
     /**
-     * The maximum pitch of the map (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
+     * The maximum pitch of the map (0-180). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
      * @defaultValue 60
      */
     maxPitch?: number | null;
@@ -1088,7 +1088,7 @@ export class Map extends Camera {
      *
      * A {@link ErrorEvent} event will be fired if minPitch is out of bounds.
      *
-     * @param minPitch - The minimum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
+     * @param minPitch - The minimum pitch to set (0-180). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
      * If `null` or `undefined` is provided, the function removes the current minimum pitch (i.e. sets it to 0).
      */
     setMinPitch(minPitch?: number | null): Map {
@@ -1124,7 +1124,7 @@ export class Map extends Camera {
      *
      * A {@link ErrorEvent} event will be fired if maxPitch is out of bounds.
      *
-     * @param maxPitch - The maximum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
+     * @param maxPitch - The maximum pitch to set (0-180). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
      * If `null` or `undefined` is provided, the function removes the current maximum pitch (sets it to 60).
      */
     setMaxPitch(maxPitch?: number | null): Map {
