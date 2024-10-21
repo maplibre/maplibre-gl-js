@@ -601,7 +601,8 @@ function calculateTallestLineItems(
         };
     },
     imagePositions: {[_: string]: ImagePosition},
-    line: TaggedString
+    line: TaggedString,
+    layoutTextSizeThisZoom: number
 ) {
     let maxGlyphHeight = 0;
     let maxImageHeight = 0;
@@ -612,7 +613,7 @@ function calculateTallestLineItems(
         if (section.imageName) {
             const imagePosition = imagePositions[section.imageName];
             if (!imagePosition) continue;
-            maxImageHeight = Math.max(maxImageHeight, imagePosition.displaySize[1]);
+            maxImageHeight = Math.max(maxImageHeight, imagePosition.displaySize[1] * ONE_EM / layoutTextSizeThisZoom);
         } else {
             const codePoint = line.getCharCode(i);
             const positions = glyphPositions[section.fontStack];
@@ -624,7 +625,7 @@ function calculateTallestLineItems(
         }
     }
 
-    return {maxGlyphHeight, maxImageHeight};
+    return {maxGlyphHeight,  maxImageHeight};
 }
 
 function calculateVerticalOffset(verticalAlign: VerticalAlign, lineHeight: number, itemHeight: number) {
@@ -710,7 +711,8 @@ function shapeLines(shaping: Shaping,
             glyphMap,
             glyphPositions,
             imagePositions,
-            line
+            line,
+            layoutTextSizeThisZoom
         );
         const tallestLineItem = Math.max(maxGlyphHeight, maxImageHeight);
 
@@ -725,7 +727,7 @@ function shapeLines(shaping: Shaping,
             const sectionIndex = line.getSectionIndex(i);
             const codePoint = line.getCharCode(i);
             let verticalAlignOffset = 0.0;
-            let metrics = null;
+            let metrics: GlyphMetrics | null = null;
             let rect = null;
             let imageName = null;
             let verticalAdvance = ONE_EM;
@@ -762,7 +764,7 @@ function shapeLines(shaping: Shaping,
                 // If needed, allow to set scale factor for an image using
                 // alias "image-scale" that could be alias for "font-scale"
                 // when FormattedSection is an image section.
-                // section.scale = section.scale * ONE_EM / layoutTextSizeThisZoom;
+                section.scale = 1 * ONE_EM / layoutTextSizeThisZoom;
 
                 metrics = {width: size[0],
                     height: size[1],
@@ -773,7 +775,7 @@ function shapeLines(shaping: Shaping,
                 verticalAlignOffset = calculateVerticalOffset(
                     vertical ? 'center' : section.verticalAlign,
                     tallestLineItem,
-                    imagePosition.displaySize[1]
+                    imagePosition.displaySize[1] * section.scale
                 );
 
                 verticalAdvance = metrics.advance;
@@ -799,7 +801,10 @@ function shapeLines(shaping: Shaping,
         x = 0;
 
         if (lineIndex === lines.length - 1) {
-            blockHeight = y + Math.max(lineHeight * lineMaxScale, tallestLineItem);
+            // When items are aligned to the baseline, part of the glyph will be below the image
+            // We need to add this part to the block height
+            const belowBaselineOffset = lineMaxScale * (ONE_EM + SHAPING_DEFAULT_OFFSET);
+            blockHeight = y + Math.max(lineHeight * lineMaxScale, tallestLineItem + belowBaselineOffset);
         }
 
         const isImageTheTallestInLine = tallestLineItem >= maxGlyphHeight;
