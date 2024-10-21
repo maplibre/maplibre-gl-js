@@ -297,15 +297,13 @@ export class MercatorTransform implements ITransform {
     }
 
     setLocationAtPoint(lnglat: LngLat, point: Point) {
-        if (!point.equals(this.centerPoint)) {
-            const a = this.screenPointToMercatorCoordinate(point);
-            const b = this.screenPointToMercatorCoordinate(this.centerPoint);
-            const loc = locationToMercatorCoordinate(lnglat);
-            const newCenter = new MercatorCoordinate(
-                loc.x - (a.x - b.x),
-                loc.y - (a.y - b.y));
-            this.setCenter(mercatorCoordinateToLocation(newCenter));
-        }
+        const a = this.screenPointToMercatorCoordinate(point);
+        const b = this.screenPointToMercatorCoordinate(this.centerPoint);
+        const loc = locationToMercatorCoordinate(lnglat);
+        const newCenter = new MercatorCoordinate(
+            loc.x - (a.x - b.x),
+            loc.y - (a.y - b.y));
+        this.setCenter(mercatorCoordinateToLocation(newCenter));
         if (this._helper._renderWorldCopies) {
             this.setCenter(this.center.wrap());
         }
