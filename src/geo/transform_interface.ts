@@ -177,7 +177,6 @@ interface ITransformMutators {
     setCenter(center: LngLat): void;
     setElevation(elevation: number): void;
     setMinElevationForCurrentTile(elevation: number): void;
-
     setPadding(padding: PaddingOptions): void;
 
     /**
