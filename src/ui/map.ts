@@ -153,12 +153,12 @@ export type MapOptions = {
      */
     maxZoom?: number | null;
     /**
-     * The minimum pitch of the map (0-180). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
+     * The minimum pitch of the map (0-180).
      * @defaultValue 0
      */
     minPitch?: number | null;
     /**
-     * The maximum pitch of the map (0-180). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
+     * The maximum pitch of the map (0-180).
      * @defaultValue 60
      */
     maxPitch?: number | null;
