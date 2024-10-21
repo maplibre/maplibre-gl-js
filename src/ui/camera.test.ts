@@ -163,8 +163,9 @@ describe('#calculateCameraOptionsFromCameraLngLatAltRotation', () => {
         const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromCameraLngLatAltRotation({lng: 1, lat: 0}, 0, 0, 0);
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.center).toBeDefined();
-        expect(cameraOptions.center.lng).toBeCloseTo(1);
-        expect(cameraOptions.center.lat).toBeCloseTo(0);
+        const center = cameraOptions.center as LngLat;
+        expect(center.lng).toBeCloseTo(1);
+        expect(center.lat).toBeCloseTo(0);
         expect(cameraOptions.elevation).toBeDefined();
         expect(cameraOptions.elevation).toBeLessThan(0);
         expect(cameraOptions.zoom).toBeGreaterThan(0);
@@ -177,8 +178,9 @@ describe('#calculateCameraOptionsFromCameraLngLatAltRotation', () => {
         const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromCameraLngLatAltRotation({lng: 1, lat: 0}, 0, 0, 180);
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.center).toBeDefined();
-        expect(cameraOptions.center.lng).toBeCloseTo(1);
-        expect(cameraOptions.center.lat).toBeCloseTo(0);
+        const center = cameraOptions.center as LngLat;
+        expect(center.lng).toBeCloseTo(1);
+        expect(center.lat).toBeCloseTo(0);
         expect(cameraOptions.elevation).toBeDefined();
         expect(cameraOptions.elevation).toBeGreaterThan(0);
         expect(cameraOptions.zoom).toBeGreaterThan(0);
