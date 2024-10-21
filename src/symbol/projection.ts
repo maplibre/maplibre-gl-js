@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
 
-import {mat4, vec4} from 'gl-matrix';
+import {mat2, mat4, vec2, vec4} from 'gl-matrix';
 import * as symbolSize from './symbol_size';
 import {addDynamicAttributes} from '../data/bucket/symbol_bucket';
 
@@ -99,10 +99,20 @@ export function getPitchedLabelPlaneMatrix(
     transform: IReadonlyTransform,
     pixelsToTileUnits: number) {
     const m = mat4.create();
-    mat4.scale(m, m, [1 / pixelsToTileUnits, 1 / pixelsToTileUnits, 1]);
     if (!rotateWithMap) {
-        mat4.rotateZ(m, m, transform.angle);
+        const {vecSouth, vecEast} = getTileSkewVectors(transform);
+        const skew = mat2.create();
+        skew[0] = vecEast[0];
+        skew[1] = vecEast[1];
+        skew[2] = vecSouth[0];
+        skew[3] = vecSouth[1];
+        mat2.invert(skew, skew);
+        m[0] = skew[0];
+        m[1] = skew[1];
+        m[4] = skew[2];
+        m[5] = skew[3];
     }
+    mat4.scale(m, m, [1 / pixelsToTileUnits, 1 / pixelsToTileUnits, 1]);
     return m;
 }
 
@@ -117,14 +127,46 @@ export function getGlCoordMatrix(
     pixelsToTileUnits: number) {
     if (pitchWithMap) {
         const m = mat4.create();
-        mat4.scale(m, m, [pixelsToTileUnits, pixelsToTileUnits, 1]);
         if (!rotateWithMap) {
-            mat4.rotateZ(m, m, -transform.angle);
+            const {vecSouth, vecEast} = getTileSkewVectors(transform);
+            m[0] = vecEast[0];
+            m[1] = vecEast[1];
+            m[4] = vecSouth[0];
+            m[5] = vecSouth[1];
         }
+        mat4.scale(m, m, [pixelsToTileUnits, pixelsToTileUnits, 1]);
         return m;
     } else {
         return transform.pixelsToClipSpaceMatrix;
     }
+}
+
+export function getTileSkewVectors(transform: IReadonlyTransform): {vecEast: vec2; vecSouth: vec2} {
+    const cosRoll = Math.cos(transform.rollInRadians);
+    const sinRoll = Math.sin(transform.rollInRadians);
+    const cosPitch = Math.cos(transform.pitchInRadians);
+    const cosBearing = Math.cos(transform.bearingInRadians);
+    const sinBearing = Math.sin(transform.bearingInRadians);
+    const vecSouth = vec2.create();
+    vecSouth[0] = -cosBearing * cosPitch * sinRoll - sinBearing * cosRoll;
+    vecSouth[1] = -sinBearing * cosPitch * sinRoll + cosBearing * cosRoll;
+    const vecSouthLen = vec2.length(vecSouth);
+    if (vecSouthLen < 1.0e-9) {
+        vec2.zero(vecSouth);
+    } else {
+        vec2.scale(vecSouth, vecSouth, 1 / vecSouthLen);
+    }
+    const vecEast = vec2.create();
+    vecEast[0] = cosBearing * cosPitch * cosRoll - sinBearing * sinRoll;
+    vecEast[1] = sinBearing * cosPitch * cosRoll + cosBearing * sinRoll;
+    const vecEastLen = vec2.length(vecEast);
+    if (vecEastLen < 1.0e-9) {
+        vec2.zero(vecEast);
+    } else {
+        vec2.scale(vecEast, vecEast, 1 / vecEastLen);
+    }
+
+    return {vecEast, vecSouth};
 }
 
 /**

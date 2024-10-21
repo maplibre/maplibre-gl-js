@@ -472,7 +472,7 @@ export class Placement {
             let offscreen = true;
             let shift = null;
 
-            let placed: PlacedBox = {box: null, placeable: false, offscreen: null};
+            let placed: PlacedBox = {box: null, placeable: false, offscreen: null, occluded: false};
             let placedVerticalText = {box: null, placeable: false, offscreen: null};
 
             let placedGlyphBoxes: PlacedBox = null;
@@ -631,7 +631,8 @@ export class Placement {
                             placedBox = {
                                 box: placedFakeGlyphBox.box,
                                 offscreen: false,
-                                placeable: false
+                                placeable: false,
+                                occluded: false,
                             };
                         }
 
@@ -675,7 +676,6 @@ export class Placement {
 
             placedGlyphBoxes = placed;
             placeText = placedGlyphBoxes && placedGlyphBoxes.placeable;
-
             offscreen = placedGlyphBoxes && placedGlyphBoxes.offscreen;
 
             if (symbolInstance.useRuntimeCollisionCircles) {
@@ -809,13 +809,16 @@ export class Placement {
             if (symbolInstance.crossTileID === 0) throw new Error('symbolInstance.crossTileID can\'t be 0');
             if (bucket.bucketInstanceId === 0) throw new Error('bucket.bucketInstanceId can\'t be 0');
 
-            this.placements[symbolInstance.crossTileID] = new JointPlacement(placeText || alwaysShowText, placeIcon || alwaysShowIcon, offscreen || bucket.justReloaded);
+            // Do not show text or icons that are occluded by the globe, even if overlap mode is 'always'!
+            const textVisible: boolean = (placeText || alwaysShowText) && !(placedGlyphBoxes?.occluded);
+            const iconVisible = (placeIcon || alwaysShowIcon) && !(placedIconBoxes?.occluded);
+            this.placements[symbolInstance.crossTileID] = new JointPlacement(textVisible, iconVisible, offscreen || bucket.justReloaded);
             seenCrossTileIDs[symbolInstance.crossTileID] = true;
         };
 
         if (zOrderByViewportY) {
             if (bucketPart.symbolInstanceStart !== 0) throw new Error('bucket.bucketInstanceId should be 0');
-            const symbolIndexes = bucket.getSortedSymbolIndexes(this.transform.angle);
+            const symbolIndexes = bucket.getSortedSymbolIndexes(-this.transform.bearingInRadians);
             for (let i = symbolIndexes.length - 1; i >= 0; --i) {
                 const symbolIndex = symbolIndexes[i];
                 placeSymbol(bucket.symbolInstances.get(symbolIndex), bucket.collisionArrays[symbolIndex], symbolIndex);
@@ -1171,7 +1174,7 @@ export class Placement {
                                     variableOffset.textOffset,
                                     variableOffset.textBoxScale);
                                 if (rotateWithMap) {
-                                    shift._rotate(pitchWithMap ? this.transform.angle : -this.transform.angle);
+                                    shift._rotate(pitchWithMap ? -this.transform.bearingInRadians : this.transform.bearingInRadians);
                                 }
                             } else {
                                 // No offset -> this symbol hasn't been placed since coming on-screen
@@ -1210,7 +1213,7 @@ export class Placement {
             }
         }
 
-        bucket.sortFeatures(this.transform.angle);
+        bucket.sortFeatures(-this.transform.bearingInRadians);
         if (this.retainedQueryData[bucket.bucketInstanceId]) {
             this.retainedQueryData[bucket.bucketInstanceId].featureSortOrder = bucket.featureSortOrder;
         }

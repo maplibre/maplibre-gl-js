@@ -15,7 +15,7 @@ import type {
 } from '../data/array_types.g';
 import type {OverlapMode} from '../style/style_layer/overlap_mode';
 import {UnwrappedTileID} from '../source/tile_id';
-import {type PointProjection, SymbolProjectionContext, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, projectPathSpecialProjection, xyTransformMat4} from '../symbol/projection';
+import {type PointProjection, SymbolProjectionContext, getTileSkewVectors, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, projectPathSpecialProjection, xyTransformMat4} from '../symbol/projection';
 import {clamp, getAABB} from '../util/util';
 
 // When a symbol crosses the edge that causes it to be included in
@@ -36,6 +36,7 @@ export type PlacedBox = {
     box: Array<number>;
     placeable: boolean;
     offscreen: boolean;
+    occluded: boolean;
 };
 
 export type FeatureKey = {
@@ -159,12 +160,9 @@ export class CollisionIndex {
         placedCollisionCircles.push(tlX, tlY, 20, 0);
 
         // Conditions are ordered from the fastest to evaluate to the slowest.
-        let unplaceable = false;
-        if (pitchWithMap) {
-            unplaceable ||= projectedBox.allPointsOccluded;
-        } else {
-            unplaceable ||= projectedPoint.isOccluded;
-        }
+        const occluded = pitchWithMap ? projectedBox.allPointsOccluded : projectedPoint.isOccluded;
+
+        let unplaceable = occluded;
         unplaceable ||= projectedPoint.perspectiveRatio < this.perspectiveRatioCutoff;
         unplaceable ||= !this.isInsideGrid(tlX, tlY, brX, brY);
 
@@ -173,14 +171,16 @@ export class CollisionIndex {
             return {
                 box: [tlX, tlY, brX, brY],
                 placeable: false,
-                offscreen: false
+                offscreen: false,
+                occluded
             };
         }
 
         return {
             box: [tlX, tlY, brX, brY],
             placeable: true,
-            offscreen: this.isOffscreen(tlX, tlY, brX, brY)
+            offscreen: this.isOffscreen(tlX, tlY, brX, brY),
+            occluded
         };
     }
 
@@ -552,13 +552,11 @@ export class CollisionIndex {
             vecSouthY = cos;
         } else if (!rotateWithMap && pitchWithMap) {
             // Handles pitch-align: map texts that are always aligned with the viewport's X axis.
-            const angle = -this.transform.angle;
-            const sin = Math.sin(angle);
-            const cos = Math.cos(angle);
-            vecEastX = cos;
-            vecEastY = sin;
-            vecSouthX = -sin;
-            vecSouthY = cos;
+            const skew = getTileSkewVectors(this.transform);
+            vecEastX = skew.vecEast[0];
+            vecEastY = skew.vecEast[1];
+            vecSouthX = skew.vecSouth[0];
+            vecSouthY = skew.vecSouth[1];
         }
 
         // Configuration for screen space offsets
