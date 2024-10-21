@@ -9,6 +9,7 @@
             "width": 512,
             "maxPitch": 95,
             "operations": [
+                ["setCenterClampedToGround", false],
                 ["setCenterElevation", 10000],
                 ["wait"]
             ]
