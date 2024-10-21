@@ -163,7 +163,7 @@
 
             /// example: `map.setFilter("earthquakes", ["any", [">", "tsunami", 0]])`
             case 'tsunami':
-                tsunami = document.querySelector('input[type=\'radio\'][name=tsunami]:checked');
+                tsunami = document.querySelector('input[type="radio"][name=tsunami]:checked');
                 operator = '==';
 
                 e.target.checked ? data.tsunami = Number(tsunami.value) : delete data['tsunami'];
