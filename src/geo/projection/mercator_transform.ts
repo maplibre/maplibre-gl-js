@@ -539,6 +539,12 @@ export class MercatorTransform implements ITransform {
             distanceToCenterMeters = -altitudeAGL / dzNormalized;
         }
 
+        // The mercator transform scale changes with latitude. At high latitudes, there are more "Merc units" per meter
+        // than at the equator. We treat the center point as our fundamental quantity. This means we want to convert
+        // elevation to Mercator Z using the scale factor at the center point (not the camera point). Since the center point is
+        // initially unknown, we compute it using the scale factor at the camera point. This gives us a better estimate of the
+        // center point scale factor, which we use to recompute the center point. We repeat until the error is very small.
+        // This typically takes about 5 iterations.
         let metersPerMercUnit = altitudeFromMercatorZ(1, camMercator.y);
         let centerMercator: MercatorCoordinate;
         let dMercator: number;

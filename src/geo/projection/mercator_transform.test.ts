@@ -565,7 +565,7 @@ describe('transform', () => {
     });
 
     test('getCameraLngLat', () => {
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform(0, 22, 0, 180, true);
         transform.setElevation(200);
         transform.setCenter(new LngLat(15.0, 55.0));
         transform.setZoom(14);
@@ -582,5 +582,177 @@ describe('transform', () => {
         expect(transform.getCameraAltitude()).toBeCloseTo(1405.7075926414002, 10);
         expect(transform.getCameraLngLat().lng).toBeCloseTo(14.973921529405033, 10);
         expect(transform.getCameraLngLat().lat).toBeCloseTo(54.99599181678275, 10);
+    });
+
+    test('calculateCenterFromCameraLngLatAlt no pitch no bearing', () => {
+        const transform = new MercatorTransform(0, 22, 0, 180, true);
+        transform.setPitch(55);
+        transform.setBearing(75);
+        transform.resize(512, 512);
+
+        const camLngLat = new LngLat(15, 55);
+        const camAlt = 400;
+        const centerInfo = transform.calculateCenterFromCameraLngLatAlt(camLngLat, camAlt);
+        transform.setZoom(centerInfo.zoom);
+        transform.setCenter(centerInfo.center);
+        transform.setElevation(centerInfo.elevation);
+        expect(transform.zoom).toBeGreaterThan(0);
+        expect(transform.getCameraAltitude()).toBeCloseTo(camAlt, 10);
+        expect(transform.getCameraLngLat().lng).toBeCloseTo(camLngLat.lng, 10);
+        expect(transform.getCameraLngLat().lat).toBeCloseTo(camLngLat.lat, 10);
+    });
+
+    test('calculateCenterFromCameraLngLatAlt no pitch', () => {
+        const transform = new MercatorTransform(0, 22, 0, 180, true);
+        transform.setPitch(55);
+        transform.setBearing(75);
+        transform.resize(512, 512);
+
+        const camLngLat = new LngLat(15, 55);
+        const camAlt = 400;
+        const bearing = 20;
+        const centerInfo = transform.calculateCenterFromCameraLngLatAlt(camLngLat, camAlt, bearing);
+        transform.setZoom(centerInfo.zoom);
+        transform.setCenter(centerInfo.center);
+        transform.setElevation(centerInfo.elevation);
+        transform.setBearing(bearing);
+        expect(transform.zoom).toBeGreaterThan(0);
+        expect(transform.getCameraAltitude()).toBeCloseTo(camAlt, 10);
+        expect(transform.getCameraLngLat().lng).toBeCloseTo(camLngLat.lng, 10);
+        expect(transform.getCameraLngLat().lat).toBeCloseTo(camLngLat.lat, 10);
+    });
+
+    test('calculateCenterFromCameraLngLatAlt', () => {
+        const transform = new MercatorTransform(0, 22, 0, 180, true);
+        transform.setPitch(55);
+        transform.setBearing(75);
+        transform.resize(512, 512);
+
+        const camLngLat = new LngLat(15, 55);
+        const camAlt = 400;
+        const bearing = 40;
+        const pitch = 30;
+        const centerInfo = transform.calculateCenterFromCameraLngLatAlt(camLngLat, camAlt, bearing, pitch);
+        transform.setZoom(centerInfo.zoom);
+        transform.setCenter(centerInfo.center);
+        transform.setElevation(centerInfo.elevation);
+        transform.setBearing(bearing);
+        transform.setPitch(pitch);
+        expect(transform.zoom).toBeGreaterThan(0);
+        expect(transform.getCameraAltitude()).toBeCloseTo(camAlt, 10);
+        expect(transform.getCameraLngLat().lng).toBeCloseTo(camLngLat.lng, 10);
+        expect(transform.getCameraLngLat().lat).toBeCloseTo(camLngLat.lat, 10);
+    });
+
+    test('calculateCenterFromCameraLngLatAlt 89 degrees pitch', () => {
+        const transform = new MercatorTransform(0, 22, 0, 180, true);
+        transform.setPitch(55);
+        transform.setBearing(75);
+        transform.resize(512, 512);
+
+        const camLngLat = new LngLat(15, 55);
+        const camAlt = 400;
+        const bearing = 40;
+        const pitch = 88;
+        const centerInfo = transform.calculateCenterFromCameraLngLatAlt(camLngLat, camAlt, bearing, pitch);
+        transform.setZoom(centerInfo.zoom);
+        transform.setCenter(centerInfo.center);
+        transform.setElevation(centerInfo.elevation);
+        transform.setBearing(bearing);
+        transform.setPitch(pitch);
+        console.log(centerInfo);
+        console.log(transform);
+        expect(transform.zoom).toBeGreaterThan(0);
+        expect(transform.getCameraAltitude()).toBeCloseTo(camAlt, 10);
+        expect(transform.getCameraLngLat().lng).toBeCloseTo(camLngLat.lng, 10);
+        expect(transform.getCameraLngLat().lat).toBeCloseTo(camLngLat.lat, 10);
+    });
+
+    test('calculateCenterFromCameraLngLatAlt 89.99 degrees pitch', () => {
+        const transform = new MercatorTransform(0, 22, 0, 180, true);
+        transform.setPitch(55);
+        transform.setBearing(75);
+        transform.resize(512, 512);
+
+        const camLngLat = new LngLat(15, 55);
+        const camAlt = 400;
+        const bearing = 40;
+        const pitch = 89.99;
+        const centerInfo = transform.calculateCenterFromCameraLngLatAlt(camLngLat, camAlt, bearing, pitch);
+        transform.setZoom(centerInfo.zoom);
+        transform.setCenter(centerInfo.center);
+        transform.setElevation(centerInfo.elevation);
+        transform.setBearing(bearing);
+        transform.setPitch(pitch);
+        expect(transform.zoom).toBeGreaterThan(0);
+        expect(transform.getCameraAltitude()).toBeCloseTo(camAlt, 10);
+        expect(transform.getCameraLngLat().lng).toBeCloseTo(camLngLat.lng, 10);
+        expect(transform.getCameraLngLat().lat).toBeCloseTo(camLngLat.lat, 10);
+    });
+
+    test('calculateCenterFromCameraLngLatAlt 90 degrees pitch', () => {
+        const transform = new MercatorTransform(0, 22, 0, 180, true);
+        transform.setPitch(55);
+        transform.setBearing(75);
+        transform.resize(512, 512);
+
+        const camLngLat = new LngLat(15, 55);
+        const camAlt = 400;
+        const bearing = 40;
+        const pitch = 90;
+        const centerInfo = transform.calculateCenterFromCameraLngLatAlt(camLngLat, camAlt, bearing, pitch);
+        transform.setZoom(centerInfo.zoom);
+        transform.setCenter(centerInfo.center);
+        transform.setElevation(centerInfo.elevation);
+        transform.setBearing(bearing);
+        transform.setPitch(pitch);
+        expect(transform.zoom).toBeGreaterThan(0);
+        expect(transform.getCameraAltitude()).toBeCloseTo(camAlt, 10);
+        expect(transform.getCameraLngLat().lng).toBeCloseTo(camLngLat.lng, 10);
+        expect(transform.getCameraLngLat().lat).toBeCloseTo(camLngLat.lat, 10);
+    });
+
+    test('calculateCenterFromCameraLngLatAlt 95 degrees pitch', () => {
+        const transform = new MercatorTransform(0, 22, 0, 180, true);
+        transform.setPitch(55);
+        transform.setBearing(75);
+        transform.resize(512, 512);
+
+        const camLngLat = new LngLat(15, 55);
+        const camAlt = 400;
+        const bearing = 40;
+        const pitch = 95;
+        const centerInfo = transform.calculateCenterFromCameraLngLatAlt(camLngLat, camAlt, bearing, pitch);
+        transform.setZoom(centerInfo.zoom);
+        transform.setCenter(centerInfo.center);
+        transform.setElevation(centerInfo.elevation);
+        transform.setBearing(bearing);
+        transform.setPitch(pitch);
+        expect(transform.zoom).toBeGreaterThan(0);
+        expect(transform.getCameraAltitude()).toBeCloseTo(camAlt, 10);
+        expect(transform.getCameraLngLat().lng).toBeCloseTo(camLngLat.lng, 10);
+        expect(transform.getCameraLngLat().lat).toBeCloseTo(camLngLat.lat, 10);
+    });
+
+    test('calculateCenterFromCameraLngLatAlt 180 degrees pitch', () => {
+        const transform = new MercatorTransform(0, 22, 0, 180, true);
+        transform.setPitch(55);
+        transform.setBearing(75);
+        transform.resize(512, 512);
+
+        const camLngLat = new LngLat(15, 55);
+        const camAlt = 400;
+        const bearing = 40;
+        const pitch = 180;
+        const centerInfo = transform.calculateCenterFromCameraLngLatAlt(camLngLat, camAlt, bearing, pitch);
+        transform.setZoom(centerInfo.zoom);
+        transform.setCenter(centerInfo.center);
+        transform.setElevation(centerInfo.elevation);
+        transform.setBearing(bearing);
+        transform.setPitch(pitch);
+        expect(transform.zoom).toBeGreaterThan(0);
+        expect(transform.getCameraAltitude()).toBeCloseTo(camAlt, 10);
+        expect(transform.getCameraLngLat().lng).toBeCloseTo(camLngLat.lng, 10);
+        expect(transform.getCameraLngLat().lat).toBeCloseTo(camLngLat.lat, 10);
     });
 });
