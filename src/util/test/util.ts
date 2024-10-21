@@ -153,7 +153,6 @@ export function stubAjaxGetImage(createImageBitmap) {
     global.URL.revokeObjectURL = () => {};
     global.URL.createObjectURL = (_) => { return null; };
 
-    // eslint-disable-next-line accessor-pairs
     Object.defineProperty(global.Image.prototype, 'src', {
         set(url: string) {
             if (url === 'error') {

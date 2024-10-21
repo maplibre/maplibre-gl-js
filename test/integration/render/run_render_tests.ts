@@ -1,4 +1,3 @@
-/* eslint-disable no-process-exit */
 import path, {dirname} from 'path';
 import fs from 'fs';
 import st from 'st';
@@ -216,7 +215,7 @@ function getTestStyles(options: RenderOptions, directory: string, port: number):
             const style = JSON.parse(fs.readFileSync(path.join(directory, fixture), 'utf8')) as StyleWithTestData;
             style.metadata = style.metadata || {} as any;
 
-            style.metadata.test = Object.assign({
+            style.metadata.test = {
                 id,
                 width: 512,
                 height: 512,
@@ -224,7 +223,8 @@ function getTestStyles(options: RenderOptions, directory: string, port: number):
                 recycleMap: options.recycleMap || false,
                 allowed: 0.00025,
                 threshold: 0.1285,
-            }, style.metadata.test);
+                ...style.metadata.test
+            };
 
             return style;
         })
@@ -708,7 +708,6 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             return fakeCanvas;
         }
 
-        // eslint-disable-next-line no-async-promise-executor
         return new Promise(async (resolve, reject) => {
             setTimeout(() => {
                 reject(new Error('Test timed out'));

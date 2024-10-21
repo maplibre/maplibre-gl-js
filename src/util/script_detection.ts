@@ -1,5 +1,3 @@
-/* eslint-disable new-cap */
-
 import {unicodeBlockLookup as isChar} from './is_char_in_unicode_block';
 
 export function allowsIdeographicBreaking(chars: string) {
@@ -31,7 +29,7 @@ function sanitizedRegExpFromScriptCodes(scriptCodes: Array<string>): RegExp {
     const supportedPropertyEscapes = scriptCodes.map(code => {
         try {
             return new RegExp(`\\p{sc=${code}}`, 'u').source;
-        } catch (e) {
+        } catch {
             return null;
         }
     }).filter(pe => pe);
