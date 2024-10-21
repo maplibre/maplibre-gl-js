@@ -4,7 +4,7 @@ import {OverscaledTileID} from '../../source/tile_id';
 import {clamp, degreesToRadians} from '../../util/util';
 import {MAX_VALID_LATITUDE, UnwrappedTileIDType, zoomScale} from '../transform_helper';
 import {LngLat} from '../lng_lat';
-import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat} from '../mercator_coordinate';
+import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate';
 import Point from '@mapbox/point-geometry';
 import type {ProjectionData} from './projection_data';
 
@@ -138,4 +138,15 @@ export function calculateTileMatrix(unwrappedTileID: UnwrappedTileIDType, worldS
     mat4.translate(worldMatrix, worldMatrix, [unwrappedX * scale, canonical.y * scale, 0]);
     mat4.scale(worldMatrix, worldMatrix, [scale / EXTENT, scale / EXTENT, 1]);
     return worldMatrix;
+}
+
+export function cameraMercatorCoordinateFromCenterAndRotation(center: LngLat, elevation: number, pitch: number, bearing: number, distance: number): MercatorCoordinate {
+    const centerMercator = MercatorCoordinate.fromLngLat(center, elevation);
+    const mercUnitsPerMeter = mercatorZfromAltitude(1, center.lat);
+    const dMercator = distance * mercUnitsPerMeter;
+    const dzMercator = dMercator * Math.cos(degreesToRadians(pitch));
+    const dhMercator = Math.sqrt(dMercator * dMercator - dzMercator * dzMercator);
+    const dxMercator = dhMercator * Math.sin(degreesToRadians(-bearing));
+    const dyMercator = dhMercator * Math.cos(degreesToRadians(-bearing));
+    return new MercatorCoordinate(centerMercator.x + dxMercator, centerMercator.y + dyMercator, centerMercator.z + dzMercator);
 }

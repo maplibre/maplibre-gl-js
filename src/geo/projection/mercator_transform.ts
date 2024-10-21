@@ -10,7 +10,7 @@ import {PointProjection, xyTransformMat4} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
 import {CoveringTilesOptions, CoveringZoomOptions, IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
 import {PaddingOptions} from '../edge_insets';
-import {mercatorCoordinateToLocation, getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle} from './mercator_utils';
+import {mercatorCoordinateToLocation, getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle, cameraMercatorCoordinateFromCenterAndRotation} from './mercator_utils';
 import {EXTENT} from '../../data/extent';
 import type {ProjectionData} from './projection_data';
 import {scaleZoom, TransformHelper, zoomScale} from '../transform_helper';
@@ -845,15 +845,4 @@ export class MercatorTransform implements ITransform {
     getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 {
         return this.calculatePosMatrix(tileID);
     }
-}
-
-function cameraMercatorCoordinateFromCenterAndRotation(center: LngLat, elevation: number, pitch: number, bearing: number, distance: number): MercatorCoordinate {
-    const centerMercator = MercatorCoordinate.fromLngLat(center, elevation);
-    const mercUnitsPerMeter = mercatorZfromAltitude(1, center.lat);
-    const dMercator = distance * mercUnitsPerMeter;
-    const dzMercator = dMercator * Math.cos(degreesToRadians(pitch));
-    const dhMercator = Math.sqrt(dMercator * dMercator - dzMercator * dzMercator);
-    const dxMercator = dhMercator * Math.sin(degreesToRadians(-bearing));
-    const dyMercator = dhMercator * Math.cos(degreesToRadians(-bearing));
-    return new MercatorCoordinate(centerMercator.x + dxMercator, centerMercator.y + dyMercator, centerMercator.z + dzMercator);
 }
