@@ -686,7 +686,10 @@ function shapeLines(shaping: Shaping,
 
     let x = 0;
     let y = 0;
-    let bboxBottom = 0;
+    /**
+     * Height of the block of text (a sum of all line heights).
+     */
+    let blockHeight = 0;
 
     let maxLineLength = 0;
 
@@ -767,9 +770,6 @@ function shapeLines(shaping: Shaping,
                     top: -GLYPH_PBF_BORDER,
                     advance: vertical ? size[1] : size[0]};
 
-                // Difference between one EM and an image size.
-                // Aligns bottom of an image to a baseline level.
-
                 verticalAlignOffset = calculateVerticalOffset(
                     vertical ? 'center' : section.verticalAlign,
                     tallestLineItem,
@@ -798,12 +798,11 @@ function shapeLines(shaping: Shaping,
 
         x = 0;
 
-        const isImageTheTallestInLine = tallestLineItem >= maxGlyphHeight;
-
         if (lineIndex === lines.length - 1) {
-            bboxBottom = y + Math.max(lineHeight * lineMaxScale, tallestLineItem);
+            blockHeight = y + Math.max(lineHeight * lineMaxScale, tallestLineItem);
         }
 
+        const isImageTheTallestInLine = tallestLineItem >= maxGlyphHeight;
         // TODO: review this logic, compare with the current behavior
         if (isImageTheTallestInLine) {
             const textLineHeight = lineHeight / ONE_EM;
@@ -811,18 +810,19 @@ function shapeLines(shaping: Shaping,
         } else {
             y += lineHeight * lineMaxScale;
         }
-        y += lineHeight * lineMaxScale;
 
         ++lineIndex;
     }
 
-    // Calculate the bounding box and justify / align text block.
-    // const height = y;
+    // verticalAlign top = 0, center = 0.5, bottom = 1
     const {horizontalAlign, verticalAlign} = getAnchorAlignment(textAnchor);
-    // align(shaping.positionedLines, justify, horizontalAlign, verticalAlign, maxLineLength, maxLineHeight, lineHeight, height, lines.length);
 
-    shaping.top = 0;
-    shaping.bottom = shaping.top + bboxBottom;
+    // Align text block
+    align(shaping.positionedLines, justify, horizontalAlign, verticalAlign, maxLineLength, blockHeight);
+
+    // Calculate the bounding box
+    shaping.top = -verticalAlign * blockHeight;
+    shaping.bottom = shaping.top + blockHeight;
     shaping.left += -horizontalAlign * maxLineLength;
     shaping.right = shaping.left + maxLineLength;
 }
@@ -846,23 +846,17 @@ function justifyLine(positionedGlyphs: Array<PositionedGlyph>,
     }
 }
 
+/**
+ * Aligns the lines based on horizontal and vertical alignment.
+ */
 function align(positionedLines: Array<PositionedLine>,
     justify: number,
     horizontalAlign: number,
     verticalAlign: number,
     maxLineLength: number,
-    maxLineHeight: number,
-    lineHeight: number,
-    blockHeight: number,
-    lineCount: number) {
+    blockHeight: number) {
     const shiftX = (justify - horizontalAlign) * maxLineLength;
-    let shiftY = 0;
-
-    if (maxLineHeight !== lineHeight) {
-        shiftY = -blockHeight * verticalAlign - SHAPING_DEFAULT_OFFSET;
-    } else {
-        shiftY = (-verticalAlign * lineCount + 0.5) * lineHeight;
-    }
+    const shiftY = -verticalAlign * blockHeight;
 
     for (const line of positionedLines) {
         for (const positionedGlyph of line.positionedGlyphs) {
