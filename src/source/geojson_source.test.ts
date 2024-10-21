@@ -302,6 +302,7 @@ describe('GeoJSONSource#update', () => {
     }));
 
     test('forwards Supercluster options with worker request, ignore max zoom of source', () => new Promise<void>(done => {
+        jest.spyOn(console, 'warn').mockImplementation(() => {});
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
                 expect(message.type).toBe(MessageType.loadData);
