@@ -139,8 +139,8 @@
               radiusMaxPixels: 100,
               lineWidthMinPixels: 5,
               getPosition: (d) => d.geometry.coordinates,
-              getFillColor: (d) => [49, 130, 206],
-              getLineColor: (d) => [175, 0, 32],
+              getFillColor: (_d) => [49, 130, 206],
+              getLineColor: (_d) => [175, 0, 32],
               onClick: (info) => {
                   const {coordinate, object} = info;
                   const description = `<div>

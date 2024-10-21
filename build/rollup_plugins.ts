@@ -33,7 +33,6 @@ export const plugins = (production: boolean, minified: boolean): Plugin[] => [
     }),
     minified && terser({
         compress: {
-            // eslint-disable-next-line camelcase
             pure_getters: true,
             passes: 3
         },

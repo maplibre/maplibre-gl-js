@@ -617,7 +617,7 @@ export function storageAvailable(type: string): boolean {
         storage.setItem('_mapbox_test_', 1);
         storage.removeItem('_mapbox_test_');
         return true;
-    } catch (e) {
+    } catch {
         return false;
     }
 }
@@ -838,7 +838,7 @@ export async function getImageData(
     if (isOffscreenCanvasDistorted()) {
         try {
             return await readImageUsingVideoFrame(image, x, y, width, height);
-        } catch (e) {
+        } catch {
             // fall back to OffscreenCanvas
         }
     }

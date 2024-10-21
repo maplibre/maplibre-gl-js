@@ -8,7 +8,7 @@
 <script>
 // stub performance.now for deterministic rendering per-frame;
 // we'll later increment the value by 16 on every frame (16ms per frame for 60fps)
-let now = performance.now(); //eslint-disable-line prefer-const
+let now = performance.now();
 window.performance.now = () => now;
 </script>
 <script src="/dist/maplibre-gl.js"></script>
