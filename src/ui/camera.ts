@@ -312,6 +312,14 @@ export abstract class Camera extends Evented {
      */
     transformCameraUpdate: CameraUpdateTransformFunction | null;
 
+    /**
+     * If true, the elevation of the center point will automatically be set to the terrain elevation
+     * (or zero if terrain is not enabled). If false, the elevation of the center point will default
+     * to sea level and will not automatically update. Defaults to true. Needs to be set to false to
+     * keep the camera above ground when pitch \> 90 degrees.
+     */
+    _centerClampedToGround: boolean;
+
     abstract _requestRenderFrame(a: () => void): TaskID;
     abstract _cancelRenderFrame(_: TaskID): void;
 
@@ -390,6 +398,28 @@ export abstract class Camera extends Evented {
     setCenterElevation(elevation: number, eventData?: any): this {
         this.jumpTo({elevation}, eventData);
         return this;
+    }
+
+    /**
+     * Returns the value of `centerClampedToGround`.
+     *
+     * If true, the elevation of the center point will automatically be set to the terrain elevation
+     * (or zero if terrain is not enabled). If false, the elevation of the center point will default
+     * to sea level and will not automatically update. Defaults to true. Needs to be set to false to
+     * keep the camera above ground when pitch \> 90 degrees.
+     */
+    get centerClampedToGround(): boolean { return this._centerClampedToGround; }
+
+    /**
+     * Sets the value of `centerClampedToGround`.
+     *
+     * If true, the elevation of the center point will automatically be set to the terrain elevation
+     * (or zero if terrain is not enabled). If false, the elevation of the center point will default
+     * to sea level and will not automatically update. Defaults to true. Needs to be set to false to
+     * keep the camera above ground when pitch \> 90 degrees.
+     */
+    setCenterClampedToGround(centerClampedToGround: boolean): void {
+        this._centerClampedToGround = centerClampedToGround;
     }
 
     /**
@@ -1093,7 +1123,9 @@ export abstract class Camera extends Evented {
 
     _finalizeElevation() {
         this._elevationFreeze = false;
-        this.transform.recalculateZoomAndCenter(this.terrain);
+        if (this.centerClampedToGround) {
+            this.transform.recalculateZoomAndCenter(this.terrain);
+        }
     }
 
     /**

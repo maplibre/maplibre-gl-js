@@ -64,7 +64,6 @@ import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {ITransform} from '../geo/transform_interface';
 import {ICameraHelper} from '../geo/projection/camera_helper';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
-import {maxMercatorHorizonAngle} from '../geo/projection/mercator_utils';
 
 const version = packageJSON.version;
 
@@ -352,6 +351,13 @@ export type MapOptions = {
      * @defaultValue true
      */
     cancelPendingTileRequestsWhileZooming?: boolean;
+    /**
+     * If true, the elevation of the center point will automatically be set to the terrain elevation
+     * (or zero if terrain is not enabled). If false, the elevation of the center point will default
+     * to sea level and will not automatically update. Defaults to true. Needs to be set to false to
+     * keep the camera above ground when pitch \> 90 degrees.
+     */
+    centerClampedToGround?: boolean;
 };
 
 export type AddImageOptions = {
@@ -427,7 +433,8 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096],
-    cancelPendingTileRequestsWhileZooming: true
+    cancelPendingTileRequestsWhileZooming: true,
+    centerClampedToGround: true
 };
 
 /**
@@ -635,6 +642,7 @@ export class Map extends Camera {
         this._antialias = resolvedOptions.antialias === true;
         this._trackResize = resolvedOptions.trackResize === true;
         this._bearingSnap = resolvedOptions.bearingSnap;
+        this._centerClampedToGround = resolvedOptions.centerClampedToGround;
         this._refreshExpiredTiles = resolvedOptions.refreshExpiredTiles === true;
         this._fadeDuration = resolvedOptions.fadeDuration;
         this._crossSourceCollisions = resolvedOptions.crossSourceCollisions === true;
@@ -2032,7 +2040,9 @@ export class Map extends Camera {
             if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
             this.painter.renderToTexture = null;
             this.transform.setMinElevationForCurrentTile(0);
-            this._setElevationIfCenterPointBelowHorizon(0);
+            if (this.centerClampedToGround) {
+                this.transform.setElevation(0);
+            }
         } else {
             // add terrain
             const sourceCache = this.style.sourceCaches[options.source];
@@ -2056,7 +2066,9 @@ export class Map extends Camera {
                 } else if (e.dataType === 'source' && e.tile) {
                     if (e.sourceId === options.source && !this._elevationFreeze) {
                         this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
-                        this._setElevationIfCenterPointBelowHorizon(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
+                        if (this.centerClampedToGround) {
+                            this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
+                        }
                     }
                     this.terrain.sourceCache.freeRtt(e.tile.tileID);
                 }
@@ -3202,12 +3214,14 @@ export class Map extends Camera {
         if (this.terrain) {
             this.terrain.sourceCache.update(this.transform, this.terrain);
             this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
-            if (!this._elevationFreeze) {
-                this._setElevationIfCenterPointBelowHorizon(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
+            if (!this._elevationFreeze && this.centerClampedToGround) {
+                this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             }
         } else {
             this.transform.setMinElevationForCurrentTile(0);
-            this._setElevationIfCenterPointBelowHorizon(0);
+            if (this.centerClampedToGround) {
+                this.transform.setElevation(0);
+            }
         }
 
         this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, transformUpdateResult.forcePlacementUpdate);
@@ -3474,17 +3488,5 @@ export class Map extends Camera {
         this._lazyInitEmptyStyle();
         this.style.setProjection(projection);
         return this._update(true);
-    }
-
-    /**
-     * Sets the transform's center elevation above sea level, in meters.
-     * Only takes effect if the current center point is below the horizon.
-     * If the current center point is above the horizon, setting the elevation to ground level will cause
-     * the camera to move below the map.
-     */
-    _setElevationIfCenterPointBelowHorizon(elevation: number): void {
-        if (this.transform.pitch <= maxMercatorHorizonAngle) {
-            this.transform.setElevation(elevation);
-        }
     }
 }
