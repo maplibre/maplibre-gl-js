@@ -15,6 +15,7 @@
 ### 🐞 Bug fixes
 
 - Fix text not being hidden behind the globe when overlap mode was set to `always` ([#4802](https://github.com/maplibre/maplibre-gl-js/issues/4802))
+- Fix 3D models in custom layers not being properly occluded by the globe ([#4817](https://github.com/maplibre/maplibre-gl-js/issues/4817))
 - Fix a single white frame being displayed when the map internally transitions from mercator to globe projection ([#4816](https://github.com/maplibre/maplibre-gl-js/issues/4816))
 - Fix loading of RTL plugin version 0.3.0 ([#4860](https://github.com/maplibre/maplibre-gl-js/pull/4860))
 
