@@ -986,6 +986,27 @@ export abstract class Camera extends Evented {
     }
 
     /**
+     * Given a camera position and rotation, calculates zoom and center point and returns them as {@link CameraOptions}.
+     * @param cameraLngLat - The lng, lat of the camera to look from
+     * @param cameraAlt - The altitude of the camera to look from, in meters above sea level
+     * @param bearing - Bearing of the camera, in degrees
+     * @param pitch - Pitch of the camera, in degrees
+     * @param roll - Roll of the camera, in degrees
+     * @returns the calculated camera options
+     */
+    calculateCameraOptionsFromCameraLngLatAltRotation(cameraLngLat: LngLat, cameraAlt: number, bearing: number, pitch: number, roll?: number): CameraOptions {
+        const centerInfo = this.transform.calculateCenterFromCameraLngLatAlt(cameraLngLat, cameraAlt, bearing, pitch);
+        return {
+            center: centerInfo.center,
+            elevation: centerInfo.elevation,
+            zoom: centerInfo.zoom,
+            bearing,
+            pitch,
+            roll
+        };
+    }
+
+    /**
      * Changes any combination of `center`, `zoom`, `bearing`, `pitch`, `roll`, and `padding` with an animated transition
      * between old and new values. The map will retain its current values for any
      * details not specified in `options`.

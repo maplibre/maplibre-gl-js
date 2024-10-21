@@ -155,6 +155,63 @@ describe('#calculateCameraOptionsFromTo', () => {
     });
 });
 
+describe('#calculateCameraOptionsFromCameraLngLatAltRotation', () => {
+    // Choose initial zoom to avoid center being constrained by mercator latitude limits.
+    const camera = createCamera({zoom: 1, maxPitch: 180});
+
+    test('look straight down', () => {
+        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromCameraLngLatAltRotation({lng: 1, lat: 0}, 0, 0, 0);
+        expect(cameraOptions).toBeDefined();
+        expect(cameraOptions.center).toBeDefined();
+        expect(cameraOptions.center.lng).toBeCloseTo(1);
+        expect(cameraOptions.center.lat).toBeCloseTo(0);
+        expect(cameraOptions.elevation).toBeDefined();
+        expect(cameraOptions.elevation).toBeLessThan(0);
+        expect(cameraOptions.zoom).toBeGreaterThan(0);
+        expect(cameraOptions.bearing).toBeCloseTo(0);
+        expect(cameraOptions.pitch).toBeCloseTo(0);
+        expect(cameraOptions.roll).toBeUndefined();
+    });
+
+    test('look straight up', () => {
+        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromCameraLngLatAltRotation({lng: 1, lat: 0}, 0, 0, 180);
+        expect(cameraOptions).toBeDefined();
+        expect(cameraOptions.center).toBeDefined();
+        expect(cameraOptions.center.lng).toBeCloseTo(1);
+        expect(cameraOptions.center.lat).toBeCloseTo(0);
+        expect(cameraOptions.elevation).toBeDefined();
+        expect(cameraOptions.elevation).toBeGreaterThan(0);
+        expect(cameraOptions.zoom).toBeGreaterThan(0);
+        expect(cameraOptions.bearing).toBeCloseTo(0);
+        expect(cameraOptions.pitch).toBeCloseTo(180);
+        expect(cameraOptions.roll).toBeUndefined();
+    });
+
+    test('look level', () => {
+        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromCameraLngLatAltRotation({lng: 1, lat: 0}, 0, 0, 90);
+        expect(cameraOptions).toBeDefined();
+        expect(cameraOptions.center).toBeDefined();
+        expect(cameraOptions.elevation).toBeDefined();
+        expect(cameraOptions.elevation).toBeCloseTo(0);
+        expect(cameraOptions.zoom).toBeGreaterThan(0);
+        expect(cameraOptions.bearing).toBeCloseTo(0);
+        expect(cameraOptions.pitch).toBeCloseTo(90);
+        expect(cameraOptions.roll).toBeUndefined();
+    });
+
+    test('roll passthru', () => {
+        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromCameraLngLatAltRotation({lng: 1, lat: 55}, 0, 34, 45, 123.4);
+        expect(cameraOptions).toBeDefined();
+        expect(cameraOptions.center).toBeDefined();
+        expect(cameraOptions.elevation).toBeDefined();
+        expect(cameraOptions.elevation).toBeLessThan(0);
+        expect(cameraOptions.zoom).toBeGreaterThan(0);
+        expect(cameraOptions.bearing).toBeCloseTo(34);
+        expect(cameraOptions.pitch).toBeCloseTo(45);
+        expect(cameraOptions.roll).toBeCloseTo(123.4);
+    });
+});
+
 describe('#jumpTo', () => {
     // Choose initial zoom to avoid center being constrained by mercator latitude limits.
     const camera = createCamera({zoom: 1});
