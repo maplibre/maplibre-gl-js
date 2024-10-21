@@ -619,7 +619,9 @@ export class HandlerManager {
             this._map._elevationFreeze = false;
             this._terrainMovement = false;
             const tr = this._map._getTransformForUpdate();
-            tr.recalculateZoomAndCenter(this._map.terrain);
+            if (this._map.centerClampedToGround) {
+                tr.recalculateZoomAndCenter(this._map.terrain);
+            }
             this._map._applyUpdatedTransform(tr);
         }
         if (allowEndAnimation && finishedMoving) {
