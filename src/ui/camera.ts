@@ -313,6 +313,7 @@ export abstract class Camera extends Evented {
     transformCameraUpdate: CameraUpdateTransformFunction | null;
 
     /**
+     * @internal
      * If true, the elevation of the center point will automatically be set to the terrain elevation
      * (or zero if terrain is not enabled). If false, the elevation of the center point will default
      * to sea level and will not automatically update. Defaults to true. Needs to be set to false to
