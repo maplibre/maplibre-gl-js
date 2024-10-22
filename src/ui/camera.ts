@@ -551,6 +551,40 @@ export abstract class Camera extends Evented {
     }
 
     /**
+     * Returns the map's current vertical field of view, in degrees.
+     *
+     * @returns The map's current vertical field of view.
+     * @example
+     * ```ts
+     * map.getFov();
+     * ```
+     */
+    getFov(): number { return this.transform.fov; }
+
+    /**
+     * Sets the map's vertical field of view, in degrees.
+     *
+     * Triggers the following events: `movestart`, `move`, and `moveend`.
+     *
+     * @param fov - The vertical field of view to set, in degrees (0-180).
+     * @param eventData - Additional properties to be added to event objects of events triggered by this method.
+     * @example
+     * Change vertical field of view to 30 degrees
+     * ```ts
+     * map.setFov(30);
+     * ```
+     */
+    setFov(fov: number, eventData?: any): this {
+        if (fov != this.transform.fov) {
+            this.transform.setFov(fov);
+            this.fire(new Event('movestart', eventData))
+                .fire(new Event('move', eventData))
+                .fire(new Event('moveend', eventData));
+        }
+        return this;
+    }
+
+    /**
      * Returns the map's current bearing. The bearing is the compass direction that is "up"; for example, a bearing
      * of 90° orients the map so that east is up.
      *

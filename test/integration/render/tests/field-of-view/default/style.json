@@ -1,0 +1,25 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+          "height": 512,
+          "width": 512
+        }
+    },
+    "center": [35.372566, 31.556437],
+    "zoom": 16.25,
+    "pitch": 30,
+    "bearing": 22.5,
+    "sources": {
+        "repeat": {
+            "type": "raster",
+            "tiles": ["local://tiles/white-with-x.png"],
+            "minzoom": 0,
+            "maxzoom": 22,
+            "tileSize": 256
+        }
+    },
+    "layers": [
+        {"id": "repeat", "type": "raster", "source": "repeat"}
+    ]
+} 
