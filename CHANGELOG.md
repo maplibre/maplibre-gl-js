@@ -5,6 +5,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix level of detail at high pitch angle ([#3983](https://github.com/maplibre/maplibre-gl-js/issues/3983))
 - _...Add new stuff here..._
 
 ## v5.0.0-pre.3

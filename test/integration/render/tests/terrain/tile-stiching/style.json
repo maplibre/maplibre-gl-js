@@ -6,8 +6,8 @@
           "width": 1024
         }
     },
-    "center": [-113.2233, 35.97287],
-    "zoom": 12.77,
+    "center": [11.52517, 47.34487],
+    "zoom": 13,
     "pitch": 60,
     "sources": {
         "repeat": {
@@ -17,9 +17,8 @@
         },
         "terrain": {
           "type": "raster-dem",
-          "tiles": ["local://tiles/terrain/{z}-{x}-{y}.terrain.png"],
-          "encoding": "terrarium",
-          "maxzoom": 15,
+          "tiles": ["local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"],
+          "maxzoom": 12,
           "tileSize": 256
         }
     },
