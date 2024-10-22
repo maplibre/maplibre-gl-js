@@ -9,7 +9,7 @@ The `Transform` variables `center`, `elevation`, `zoom`, `pitch`, `bearing`, and
 
 Together, `zoom`,  `elevation`, and `pitch` set the altitude of the camera:
 
-Pseuodcode (implemented in `MercatorTransform::_calcMatrices()`):
+Pseudocode (implemented in `MercatorTransform::_calcMatrices()`):
 ```
 cameraToCenterDistancePixels = 0.5 / tan(fov/2) * viewportHeight
 pixelPerMeter = mercatorUnitsPerMeter(center.lat) * worldSize
