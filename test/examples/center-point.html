@@ -17,34 +17,21 @@
 <script>
   const MAPTILER_KEY = 'get_your_own_OpIi9ZULNHzrESv6T2vL';
   const map = new maplibregl.Map({
-      style: `https://api.maptiler.com/maps/basic-v2/style.json?key=${MAPTILER_KEY}`,
-      center: [-74.01318, 40.713],
-      zoom: 15.5,
-      pitch: 105,
-      bearing: -17.6,
-      container: 'map',
-      antialias: true,
-      centerClampedToGround: false,
-      elevation: 541,
-      maxPitch: 105
-  });
-  
-  // The 'building' layer in the streets vector source contains building-height
-  // data from OpenStreetMap.
-  map.on('load', () => {
-
-      map.addSource('openmaptiles', {
-          url: `https://api.maptiler.com/tiles/v3/tiles.json?key=${MAPTILER_KEY}`,
-          type: 'vector',
-      });
-
-      map.addLayer(
-          {
+      style: {
+        version: 8,
+        sources: {
+            openmaptiles: {
+                url: `https://api.maptiler.com/tiles/v3/tiles.json?key=${MAPTILER_KEY}`,
+                type: 'vector',
+            }
+        },
+        layers: [
+            {
               'id': '3d-buildings',
               'source': 'openmaptiles',
               'source-layer': 'building',
               'type': 'fill-extrusion',
-              'minzoom': 14,
+              'minzoom': 13,
               'filter': ['!=', ['get', 'hide_3d'], true],
               'paint': {
                   'fill-extrusion-color': [
@@ -67,7 +54,17 @@
                   ]
               }
           }
-      );
+        ]
+      },
+      center: [-74.01318, 40.713],
+      zoom: 15.5,
+      pitch: 85,
+      bearing: -17.6,
+      container: 'map',
+      antialias: true,
+      centerClampedToGround: false,
+      elevation: 541,
+      maxPitch: 105
   });
 </script>
 </body>
