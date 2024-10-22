@@ -15,6 +15,7 @@ import type {ImagePosition} from '../render/image_atlas';
 import {IMAGE_PADDING} from '../render/image_atlas';
 import type {Rect, GlyphPosition} from '../render/glyph_atlas';
 import {Formatted, FormattedSection, VerticalAlign} from '@maplibre/maplibre-gl-style-spec';
+import {text} from 'd3';
 
 enum WritingMode {
     none = 0,
@@ -682,7 +683,6 @@ function shapeLines(shaping: Shaping,
     writingMode: WritingMode.horizontal | WritingMode.vertical,
     spacing: number,
     allowVerticalPlacement: boolean,
-    // TODO: find out what this is used for
     layoutTextSizeThisZoom: number) {
 
     let x = 0;
@@ -800,21 +800,17 @@ function shapeLines(shaping: Shaping,
 
         x = 0;
 
+        // When items are aligned to the baseline, part of the glyph will be below the image
+        // We need to add this part to the block height
+        const belowBaselineOffset = lineMaxScale * (ONE_EM + SHAPING_DEFAULT_OFFSET);
+        const currentLineHeight = Math.max(lineHeight * lineMaxScale, tallestLineItem + belowBaselineOffset);
         if (lineIndex === lines.length - 1) {
-            // When items are aligned to the baseline, part of the glyph will be below the image
-            // We need to add this part to the block height
-            const belowBaselineOffset = lineMaxScale * (ONE_EM + SHAPING_DEFAULT_OFFSET);
-            blockHeight = y + Math.max(lineHeight * lineMaxScale, tallestLineItem + belowBaselineOffset);
+            blockHeight = y + currentLineHeight;
         }
 
-        const isImageTheTallestInLine = tallestLineItem >= maxGlyphHeight;
-        // TODO: review this logic, compare with the current behavior
-        if (isImageTheTallestInLine) {
-            const textLineHeight = lineHeight / ONE_EM;
-            y += tallestLineItem + textLineHeight * maxGlyphHeight;
-        } else {
-            y += lineHeight * lineMaxScale;
-        }
+        // If image is taller than the text, the block height should be adjusted
+        const imageOffset = tallestLineItem - maxGlyphHeight;
+        y += lineHeight * lineMaxScale + imageOffset;
 
         ++lineIndex;
     }
