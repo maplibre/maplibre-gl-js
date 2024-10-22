@@ -15,7 +15,6 @@ import type {ImagePosition} from '../render/image_atlas';
 import {IMAGE_PADDING} from '../render/image_atlas';
 import type {Rect, GlyphPosition} from '../render/glyph_atlas';
 import {Formatted, FormattedSection, VerticalAlign} from '@maplibre/maplibre-gl-style-spec';
-import {text} from 'd3';
 
 enum WritingMode {
     none = 0,
@@ -591,7 +590,7 @@ function getAnchorAlignment(anchor: SymbolAnchor) {
     return {horizontalAlign, verticalAlign};
 }
 
-function calculateTallestLineItems(
+function calculateLineBlockMetrics(
     glyphMap: {
         [_: string]: {
             [_: number]: StyleGlyph;
@@ -607,7 +606,6 @@ function calculateTallestLineItems(
 ) {
     let maxGlyphHeight = 0;
     let maxImageHeight = 0;
-
     for (let i = 0; i < line.length(); i++) {
         const section = line.getSection(i);
 
@@ -626,7 +624,7 @@ function calculateTallestLineItems(
         }
     }
 
-    return {maxGlyphHeight,  maxImageHeight};
+    return {maxGlyphHeight, maxImageHeight};
 }
 
 function calculateVerticalOffset(verticalAlign: VerticalAlign, lineHeight: number, itemHeight: number) {
@@ -703,21 +701,22 @@ function shapeLines(shaping: Shaping,
         line.trim();
 
         const lineMaxScale = line.getMaxScale();
+        const maxLineOffset = (lineMaxScale - 1) * ONE_EM;
         const positionedLine = {positionedGlyphs: [], lineOffset: 0};
         shaping.positionedLines[lineIndex] = positionedLine;
         const positionedGlyphs = positionedLine.positionedGlyphs;
 
-        const {maxGlyphHeight, maxImageHeight} = calculateTallestLineItems(
+        const {maxGlyphHeight, maxImageHeight} = calculateLineBlockMetrics(
             glyphMap,
             glyphPositions,
             imagePositions,
             line,
             layoutTextSizeThisZoom
         );
-        const tallestLineItem = Math.max(maxGlyphHeight, maxImageHeight);
+        const maxLineHeight = Math.max(maxGlyphHeight, maxImageHeight);
 
         if (!line.length()) {
-            y += tallestLineItem; // Still need a line feed after empty line
+            y += maxLineHeight; // Still need a line feed after empty line
             ++lineIndex;
             continue;
         }
@@ -749,11 +748,17 @@ function shapeLines(shaping: Shaping,
                 rect = rectAndMetrics.rect;
                 metrics = rectAndMetrics.metrics;
 
-                verticalAlignOffset = calculateVerticalOffset(
-                    vertical ? 'center' : section.verticalAlign,
-                    tallestLineItem,
-                    section.scale * ONE_EM
-                );
+                if (vertical) {
+                    // If text is layed out verically, the verticalAlignOffset affetcs horizontal alignment.
+                    // We set this offset to a const value.
+                    verticalAlignOffset = (lineMaxScale - section.scale) * ONE_EM - SHAPING_DEFAULT_OFFSET;
+                } else {
+                    verticalAlignOffset = calculateVerticalOffset(
+                        section.verticalAlign,
+                        maxLineHeight,
+                        section.scale * ONE_EM
+                    );
+                }
             } else {
                 const imagePosition = imagePositions[section.imageName];
                 if (!imagePosition) continue;
@@ -772,11 +777,18 @@ function shapeLines(shaping: Shaping,
                     top: -GLYPH_PBF_BORDER,
                     advance: vertical ? size[1] : size[0]};
 
-                verticalAlignOffset = calculateVerticalOffset(
-                    vertical ? 'center' : section.verticalAlign,
-                    tallestLineItem,
-                    imagePosition.displaySize[1] * section.scale
-                );
+                if (vertical) {
+                    // If text is layed out verically, the verticalAlignOffset affetcs horizontal alignment.
+                    // We set this offset to a const value.
+                    const imageOffset = ONE_EM - size[1] * section.scale;
+                    verticalAlignOffset = maxLineOffset + imageOffset - SHAPING_DEFAULT_OFFSET;
+                } else {
+                    verticalAlignOffset = calculateVerticalOffset(
+                        section.verticalAlign,
+                        maxLineHeight,
+                        imagePosition.displaySize[1] * section.scale
+                    );
+                }
 
                 verticalAdvance = metrics.advance;
             }
@@ -803,13 +815,13 @@ function shapeLines(shaping: Shaping,
         // When items are aligned to the baseline, part of the glyph will be below the image
         // We need to add this part to the block height
         const belowBaselineOffset = lineMaxScale * (ONE_EM + SHAPING_DEFAULT_OFFSET);
-        const currentLineHeight = Math.max(lineHeight * lineMaxScale, tallestLineItem + belowBaselineOffset);
+        const currentLineHeight = Math.max(lineHeight * lineMaxScale, maxLineHeight + belowBaselineOffset);
         if (lineIndex === lines.length - 1) {
             blockHeight = y + currentLineHeight;
         }
 
         // If image is taller than the text, the block height should be adjusted
-        const imageOffset = tallestLineItem - maxGlyphHeight;
+        const imageOffset = maxLineHeight - maxGlyphHeight;
         y += lineHeight * lineMaxScale + imageOffset;
 
         ++lineIndex;
