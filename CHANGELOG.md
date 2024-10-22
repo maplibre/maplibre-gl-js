@@ -5,8 +5,6 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix text not being hidden behind the globe when overlap mode was set to `always` ([#4802](https://github.com/maplibre/maplibre-gl-js/issues/4802))
-- Fix a single white frame being displayed when the map internally transitions from mercator to globe projection ([#4816](https://github.com/maplibre/maplibre-gl-js/issues/4816))
 - Fix level of detail at high pitch angle ([#3983](https://github.com/maplibre/maplibre-gl-js/issues/3983))
 - _...Add new stuff here..._
 
