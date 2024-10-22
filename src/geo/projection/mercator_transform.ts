@@ -297,8 +297,9 @@ export class MercatorTransform implements ITransform {
     }
 
     setLocationAtPoint(lnglat: LngLat, point: Point) {
-        const a = this.screenPointToMercatorCoordinate(point);
-        const b = this.screenPointToMercatorCoordinate(this.centerPoint);
+        const z = mercatorZfromAltitude(this.elevation, this.center.lat);
+        const a = this.screenPointToMercatorCoordinateAtZ(point, z);
+        const b = this.screenPointToMercatorCoordinateAtZ(this.centerPoint, z);
         const loc = locationToMercatorCoordinate(lnglat);
         const newCenter = new MercatorCoordinate(
             loc.x - (a.x - b.x),
@@ -327,9 +328,13 @@ export class MercatorTransform implements ITransform {
                 return coordinate;
             }
         }
+        return this.screenPointToMercatorCoordinateAtZ(p);
+    }
+
+    screenPointToMercatorCoordinateAtZ(p: Point, mercatorZ?: number): MercatorCoordinate {
 
         // calculate point-coordinate on flat earth
-        const targetZ = 0;
+        const targetZ = mercatorZ ? mercatorZ : 0;
         // since we don't know the correct projected z value for the point,
         // unproject two points to get a line and then find the point on that
         // line with z=0
@@ -353,7 +358,8 @@ export class MercatorTransform implements ITransform {
 
         return new MercatorCoordinate(
             interpolates.number(x0, x1, t) / this.worldSize,
-            interpolates.number(y0, y1, t) / this.worldSize);
+            interpolates.number(y0, y1, t) / this.worldSize,
+            targetZ);
     }
 
     /**

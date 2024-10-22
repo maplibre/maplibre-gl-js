@@ -53,6 +53,7 @@ describe('transform', () => {
         expect([...transform.modelViewProjectionMatrix.values()]).toEqual([3, 0, 0, 0, 0, -2.954423259036624, -0.1780177690666898, -0.17364817766693033, -0, 0.006822967915294533, -0.013222891287479163, -0.012898324631281611, -786432, 774484.3308168967, 47414.91102496082, 46270.827886319785]);
         expect(fixedLngLat(transform.screenPointToLocation(new Point(250, 250)))).toEqual({lng: 0, lat: 0});
         expect(fixedCoord(transform.screenPointToMercatorCoordinate(new Point(250, 250)))).toEqual({x: 0.5, y: 0.5, z: 0});
+        expect(fixedCoord(transform.screenPointToMercatorCoordinateAtZ(new Point(250, 250), 1))).toEqual({x: 0.5, y: 0.5000000044, z: 1});
         expect(transform.locationToScreenPoint(new LngLat(0, 0))).toEqual({x: 250, y: 250});
     });
 
@@ -660,8 +661,6 @@ describe('transform', () => {
         transform.setElevation(centerInfo.elevation);
         transform.setBearing(bearing);
         transform.setPitch(pitch);
-        console.log(centerInfo);
-        console.log(transform);
         expect(transform.zoom).toBeGreaterThan(0);
         expect(transform.getCameraAltitude()).toBeCloseTo(camAlt, 10);
         expect(transform.getCameraLngLat().lng).toBeCloseTo(camLngLat.lng, 10);
