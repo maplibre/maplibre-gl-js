@@ -42,7 +42,10 @@ export function drawBackground(painter: Painter, sourceCache: SourceCache, layer
     const crossfade = layer.getCrossfadeParameters();
 
     for (const tileID of tileIDs) {
-        const projectionData = transform.getProjectionData(tileID);
+        const align = false;
+        const ignoreTerrainMatrix = false;
+        const ignoreGlobeMatrix = painter.isRenderingToTexture;
+        const projectionData = transform.getProjectionData(tileID, align, ignoreTerrainMatrix, ignoreGlobeMatrix);
 
         const uniformValues = image ?
             backgroundPatternUniformValues(opacity, painter, image, {tileID, tileSize}, crossfade) :

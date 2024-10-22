@@ -6,6 +6,10 @@ import {NORTH_POLE_Y, SOUTH_POLE_Y} from '../render/subdivision';
 import {EXTENT} from '../data/extent';
 import posAttributes from '../data/pos_attributes';
 
+/**
+ * The size of border region for stencil masks, in internal tile coordinates.
+ * Used for globe rendering.
+ */
 const EXTENT_STENCIL_BORDER = EXTENT / 128;
 
 /**

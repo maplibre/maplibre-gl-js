@@ -12,10 +12,6 @@ import {ProjectionErrorMeasurement} from './globe_projection_error_measurement';
 import {createTileMeshWithBuffers, CreateTileMeshOptions} from '../../util/create_tile_mesh';
 
 export const globeConstants = {
-    /**
-     * The size of border region for stencil masks, in internal tile coordinates.
-     * Used for globe rendering.
-     */
     globeTransitionTimeSeconds: 0.5,
     maxGlobeZoom: 12.0,
     errorTransitionTimeSeconds: 0.5
