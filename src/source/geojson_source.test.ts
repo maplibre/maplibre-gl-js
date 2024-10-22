@@ -302,6 +302,7 @@ describe('GeoJSONSource#update', () => {
     }));
 
     test('forwards Supercluster options with worker request, ignore max zoom of source', () => new Promise<void>(done => {
+        jest.spyOn(console, 'warn').mockImplementation(() => {});
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
                 expect(message.type).toBe(MessageType.loadData);
@@ -382,7 +383,7 @@ describe('GeoJSONSource#update', () => {
     test('fires "error"', () => new Promise<void>(done => {
         const mockDispatcher = wrapDispatcher({
             sendAsync(_message) {
-                return Promise.reject('error'); // eslint-disable-line prefer-promise-reject-errors
+                return Promise.reject('error');
             }
         });
 

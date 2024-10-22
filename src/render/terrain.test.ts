@@ -259,7 +259,6 @@ describe('Terrain', () => {
             getDEMElevation: Terrain.prototype.getDEMElevation,
             getTerrainData() {
                 return {
-                    // eslint-disable-next-line camelcase
                     u_terrain_matrix: mat4.create(),
                     tile: {
                         dem: {

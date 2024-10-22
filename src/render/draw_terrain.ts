@@ -74,7 +74,7 @@ function drawTerrain(painter: Painter, terrain: Terrain, tiles: Array<Tile>) {
     const gl = context.gl;
     const tr = painter.transform;
     const colorMode = painter.colorModeForRenderPass();
-    const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, painter.depthRangeFor3D);
+    const depthMode = painter.getDepthModeFor3D();
     const program = painter.useProgram('terrain');
     const mesh = terrain.getTerrainMesh();
 

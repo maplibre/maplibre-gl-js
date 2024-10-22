@@ -34,7 +34,7 @@ async function createImage(exampleName) {
         const waitTime = (exampleName.includes('3d-model') || exampleName.includes('globe')) ? 5000 : 1500;
         console.log(`waiting for ${waitTime} ms`);
         await new Promise(resolve => setTimeout(resolve, waitTime));
-    } catch (err) {
+    } catch {
         // map.loaded() does not evaluate to true within 3 seconds, it's probably an animated example.
         // In this case we take the screenshot immediately.
         console.log(`Timed out waiting for map load on ${exampleName}.`);
