@@ -281,8 +281,8 @@ export class MercatorTransform implements ITransform {
         if (!deltaElevation) return;
 
         // Find the current camera position
-        const origPixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
-        const cameraToCenterDistanceMeters = this._cameraToCenterDistance / origPixelPerMeter;
+        const originalPixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
+        const cameraToCenterDistanceMeters = this._cameraToCenterDistance / originalPixelPerMeter;
         const origCenterMercator = MercatorCoordinate.fromLngLat(this.center, this.elevation);
         const cameraMercator = cameraMercatorCoordinateFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
 
