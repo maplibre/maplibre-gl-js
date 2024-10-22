@@ -952,7 +952,7 @@ export abstract class Camera extends Evented {
     }
 
     /**
-     * Given a camera 'from' position and  a position to look at (`to`), calculates zoom and camera rotation and returns them as {@link CameraOptions}.
+     * Given a camera 'from' position and a position to look at (`to`), calculates zoom and camera rotation and returns them as {@link CameraOptions}.
      * @param from - The camera to look from
      * @param altitudeFrom - The altitude of the camera to look from
      * @param to - The center to look at
