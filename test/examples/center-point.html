@@ -32,16 +32,6 @@
   // The 'building' layer in the streets vector source contains building-height
   // data from OpenStreetMap.
   map.on('load', () => {
-      // Insert the layer beneath any symbol layer.
-      const layers = map.getStyle().layers;
-
-      let labelLayerId;
-      for (let i = 0; i < layers.length; i++) {
-          if (layers[i].type === 'symbol' && layers[i].layout['text-field']) {
-              labelLayerId = layers[i].id;
-              break;
-          }
-      }
 
       map.addSource('openmaptiles', {
           url: `https://api.maptiler.com/tiles/v3/tiles.json?key=${MAPTILER_KEY}`,
@@ -76,8 +66,7 @@
                       ['get', 'render_min_height'], 0
                   ]
               }
-          },
-          labelLayerId
+          }
       );
   });
 </script>
