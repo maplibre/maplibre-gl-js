@@ -952,13 +952,23 @@ export abstract class Camera extends Evented {
     }
 
     /**
-     * Calculates pitch, zoom and bearing for looking at `newCenter` with the camera position being `newCenter`
-     * and returns them as {@link CameraOptions}.
+     * Given a camera 'from' position and  a position to look at (`to`), calculates zoom and camera rotation and returns them as {@link CameraOptions}.
      * @param from - The camera to look from
      * @param altitudeFrom - The altitude of the camera to look from
      * @param to - The center to look at
      * @param altitudeTo - Optional altitude of the center to look at. If none given the ground height will be used.
      * @returns the calculated camera options
+     * @example
+     * ```ts
+     * // Calculate options to look from (1°, 0°, 1000m) to (1°, 1°, 0m)
+     * const cameraLngLat = new LngLat(1, 0);
+     * const cameraAltitude = 1000;
+     * const targetLngLat = new LngLat(1, 1);
+     * const targetAltitude = 0;
+     * const cameraOptions = map.calculateCameraOptionsFromTo(cameraLngLat, cameraAltitude, targetLngLat, targetAltitude);
+     * // Apply calculated options
+     * map.jumpTo(cameraOptions);
+     * ```
      */
     calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo: number = 0): CameraOptions {
         const fromMercator = MercatorCoordinate.fromLngLat(from, altitudeFrom);
@@ -979,6 +989,7 @@ export abstract class Camera extends Evented {
 
         return {
             center: toMercator.toLngLat(),
+            elevation: altitudeTo,
             zoom,
             pitch,
             bearing
@@ -993,6 +1004,18 @@ export abstract class Camera extends Evented {
      * @param pitch - Pitch of the camera, in degrees
      * @param roll - Roll of the camera, in degrees
      * @returns the calculated camera options
+     * @example
+     * ```ts
+     * // Calculate options to look from camera position(1°, 0°, 1000m) with bearing = 90°, pitch = 30°, and roll = 45°
+     * const cameraLngLat = new LngLat(1, 0);
+     * const cameraAltitude = 1000;
+     * const bearing = 90;
+     * const pitch = 30;
+     * const roll = 45;
+     * const cameraOptions = map.calculateCameraOptionsFromCameraLngLatAltRotation(cameraLngLat, cameraAltitude, bearing, pitch, roll);
+     * // Apply calculated options
+     * map.jumpTo(cameraOptions);
+     * ```
      */
     calculateCameraOptionsFromCameraLngLatAltRotation(cameraLngLat: LngLat, cameraAlt: number, bearing: number, pitch: number, roll?: number): CameraOptions {
         const centerInfo = this.transform.calculateCenterFromCameraLngLatAlt(cameraLngLat, cameraAlt, bearing, pitch);
