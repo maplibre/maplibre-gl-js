@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 - ⚠️ Changed `geometry-type` to identify "Multi-" features ([#4877](https://github.com/maplibre/maplibre-gl-js/pull/4877))
+- Disable sky when using globe and blend it in when changing to mercator ([#4853](https://github.com/maplibre/maplibre-gl-js/issues/4853))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
