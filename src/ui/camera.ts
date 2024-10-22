@@ -409,7 +409,7 @@ export abstract class Camera extends Evented {
      * to sea level and will not automatically update. Defaults to true. Needs to be set to false to
      * keep the camera above ground when pitch \> 90 degrees.
      */
-    get centerClampedToGround(): boolean { return this._centerClampedToGround; }
+    getCenterClampedToGround(): boolean { return this._centerClampedToGround; }
 
     /**
      * Sets the value of `centerClampedToGround`.
@@ -1145,7 +1145,7 @@ export abstract class Camera extends Evented {
 
     _finalizeElevation() {
         this._elevationFreeze = false;
-        if (this.centerClampedToGround) {
+        if (this.getCenterClampedToGround()) {
             this.transform.recalculateZoomAndCenter(this.terrain);
         }
     }

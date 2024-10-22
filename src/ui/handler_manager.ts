@@ -623,7 +623,7 @@ export class HandlerManager {
             this._map._elevationFreeze = false;
             this._terrainMovement = false;
             const tr = this._map._getTransformForUpdate();
-            if (this._map.centerClampedToGround) {
+            if (this._map.getCenterClampedToGround()) {
                 tr.recalculateZoomAndCenter(this._map.terrain);
             }
             this._map._applyUpdatedTransform(tr);

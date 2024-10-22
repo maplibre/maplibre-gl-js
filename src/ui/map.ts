@@ -2040,7 +2040,7 @@ export class Map extends Camera {
             if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
             this.painter.renderToTexture = null;
             this.transform.setMinElevationForCurrentTile(0);
-            if (this.centerClampedToGround) {
+            if (this._centerClampedToGround) {
                 this.transform.setElevation(0);
             }
         } else {
@@ -2066,7 +2066,7 @@ export class Map extends Camera {
                 } else if (e.dataType === 'source' && e.tile) {
                     if (e.sourceId === options.source && !this._elevationFreeze) {
                         this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
-                        if (this.centerClampedToGround) {
+                        if (this._centerClampedToGround) {
                             this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
                         }
                     }
@@ -3214,12 +3214,12 @@ export class Map extends Camera {
         if (this.terrain) {
             this.terrain.sourceCache.update(this.transform, this.terrain);
             this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
-            if (!this._elevationFreeze && this.centerClampedToGround) {
+            if (!this._elevationFreeze && this._centerClampedToGround) {
                 this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             }
         } else {
             this.transform.setMinElevationForCurrentTile(0);
-            if (this.centerClampedToGround) {
+            if (this._centerClampedToGround) {
                 this.transform.setElevation(0);
             }
         }
