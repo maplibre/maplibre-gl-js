@@ -1485,7 +1485,7 @@ export abstract class Camera extends Evented {
      * @param lngLatLike - the coordinates of the location
      * @returns elevation in meters
      */
-    queryTerrainElevation(lngLatLike: LngLatLike): number {
+    queryTerrainElevation(lngLatLike: LngLatLike): number | null {
         if (!this.terrain) {
             return null;
         }
