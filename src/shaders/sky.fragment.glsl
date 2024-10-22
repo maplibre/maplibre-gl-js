@@ -4,6 +4,7 @@ uniform vec4 u_horizon_color;
 uniform vec2 u_horizon;
 uniform vec2 u_horizon_normal;
 uniform float u_sky_horizon_blend;
+uniform float u_sky_blend;
 
 void main() {
     float x = gl_FragCoord.x;
@@ -16,4 +17,5 @@ void main() {
             gl_FragColor = u_sky_color;
         }
     }
+    gl_FragColor = mix(gl_FragColor, vec4(vec3(0.0), 1.0), u_sky_blend);
 }
