@@ -140,7 +140,7 @@
                     const axesHelper = new THREE.AxesHelper(60);
                     this.scene.add(axesHelper);
 
-                    // Getting model elevations (in meters) relative to scene origin from maplibre's terrain.
+                    // Getting model elevations in meters above sea level
                     const sceneElevation = map.queryTerrainElevation(sceneOrigin) || 0;
                     const model1Elevation = map.queryTerrainElevation(model1Location) || 0;
                     const model2Elevation = map.queryTerrainElevation(model2Location) || 0;

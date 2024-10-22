@@ -1480,19 +1480,15 @@ export abstract class Camera extends Evented {
     }
 
     /**
-     * Get the elevation difference between a given point
-     * and a point that is currently in the middle of the screen.
-     * This method should be used for proper positioning of custom 3d objects, as explained [here](https://maplibre.org/maplibre-gl-js/docs/examples/add-3d-model-with-terrain/)
+     * Get the elevation of a point above mean sea level in meters.
      * Returns null if terrain is not enabled.
-     * This method is subject to change in Maplibre GL JS v5.
-     * @param lngLatLike - [x,y] or LngLat coordinates of the location
-     * @returns elevation offset in meters
+     * @param lngLatLike - the coordinates of the location
+     * @returns elevation in meters
      */
-    queryTerrainElevation(lngLatLike: LngLatLike): number | null {
+    queryTerrainElevation(lngLatLike: LngLatLike): number {
         if (!this.terrain) {
             return null;
         }
-        const elevation = this.terrain.getElevationForLngLatZoom(LngLat.convert(lngLatLike), this.transform.tileZoom);
-        return elevation - this.transform.elevation;
+        return this.terrain.getElevationForLngLatZoom(LngLat.convert(lngLatLike), this.transform.tileZoom);
     }
 }
