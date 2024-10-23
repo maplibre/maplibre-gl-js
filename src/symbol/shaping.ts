@@ -845,7 +845,7 @@ function shapeLines(shaping: Shaping,
 
     // Calculate the bounding box
     // shaping.top & shaping.left already include text offset (text-radial-offset or text-offset)
-    shaping.top += -verticalAlign * blockHeight + spacing;
+    shaping.top += -verticalAlign * blockHeight;
     shaping.bottom = shaping.top + blockHeight;
     shaping.left += -horizontalAlign * maxLineLength;
     shaping.right = shaping.left + maxLineLength;
