@@ -525,15 +525,15 @@ export class MercatorTransform implements ITransform {
         return result;
     }
 
-    calculateCenterFromCameraLngLatAlt(ll: LngLat, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
-        bearing = bearing !== undefined ? bearing : this.bearing;
-        pitch = pitch !== undefined ? pitch : this.pitch;
+    calculateCenterFromCameraLngLatAlt(lnglat: LngLat, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
+        const cameraBearing = bearing !== undefined ? bearing : this.bearing;
+        const cameraPitch = pitch = pitch !== undefined ? pitch : this.pitch;
 
-        const camMercator = MercatorCoordinate.fromLngLat(ll, alt);
-        const dzNormalized = -Math.cos(degreesToRadians(pitch));
-        const dhNormalized = Math.sin(degreesToRadians(pitch));
-        const dxNormalized = dhNormalized * Math.sin(degreesToRadians(bearing));
-        const dyNormalized = -dhNormalized * Math.cos(degreesToRadians(bearing));
+        const camMercator = MercatorCoordinate.fromLngLat(lnglat, alt);
+        const dzNormalized = -Math.cos(degreesToRadians(cameraPitch));
+        const dhNormalized = Math.sin(degreesToRadians(cameraPitch));
+        const dxNormalized = dhNormalized * Math.sin(degreesToRadians(cameraBearing));
+        const dyNormalized = -dhNormalized * Math.cos(degreesToRadians(cameraBearing));
 
         let elevation = this.elevation;
         const altitudeAGL = alt - elevation;
