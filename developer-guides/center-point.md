@@ -1,6 +1,6 @@
 # How Camera position is calculated
 
-This guide describes how camera position is calculated from the center point, zoom,  and camera rotation.
+This guide describes how camera position is calculated from the center point, zoom, and camera rotation.
 The `Transform` variables `center`, `elevation`, `zoom`, `pitch`, `bearing`, and `fov` control the location of the camera indirectly.
 
  `elevation` sets the height of the "center point" above sea level. In the typical use case (`centerClampedToGround = true`), the library modifies `elevation` in an attempt to keep the center point always on the terrain (or 0 MSL if no terrain is enabled). When `centerClampedToGround = false`, the user provides the elevation of the center point.
