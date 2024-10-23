@@ -17,5 +17,5 @@ void main() {
             gl_FragColor = u_sky_color;
         }
     }
-    gl_FragColor = mix(gl_FragColor, vec4(vec3(0.0), 1.0), u_sky_blend);
+    gl_FragColor = mix(gl_FragColor, vec4(vec3(0.0), 0.0), u_sky_blend);
 }
