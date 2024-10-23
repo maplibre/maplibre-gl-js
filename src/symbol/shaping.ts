@@ -602,7 +602,7 @@ function calculateLineBlockMetrics(
     },
     imagePositions: {[_: string]: ImagePosition},
     line: TaggedString,
-    layoutTextSizeThisZoom: number
+    layoutTextSizeFactor: number
 ) {
     let maxGlyphHeight = 0;
     let maxImageHeight = 0;
@@ -612,15 +612,20 @@ function calculateLineBlockMetrics(
         if (section.imageName) {
             const imagePosition = imagePositions[section.imageName];
             if (!imagePosition) continue;
-            maxImageHeight = Math.max(maxImageHeight, imagePosition.displaySize[1] * ONE_EM / layoutTextSizeThisZoom);
+            maxImageHeight = Math.max(
+                maxImageHeight,
+                imagePosition.displaySize[1] * layoutTextSizeFactor
+            );
         } else {
             const codePoint = line.getCharCode(i);
             const positions = glyphPositions[section.fontStack];
             const glyphPosition = positions && positions[codePoint];
-            const rectAndMetrics = extractRectAndMetrics(glyphPosition, glyphMap, section, codePoint);
+            const rectAndMetrics = getRectAndMetrics(glyphPosition, glyphMap, section, codePoint);
             if (rectAndMetrics === null) continue;
-            const {metrics} = rectAndMetrics;
-            maxGlyphHeight = Math.max(maxGlyphHeight, metrics.height * section.scale);
+            maxGlyphHeight = Math.max(
+                maxGlyphHeight,
+                rectAndMetrics.metrics.height * section.scale
+            );
         }
     }
 
@@ -637,7 +642,7 @@ function calculateVerticalOffset(verticalAlign: VerticalAlign, lineHeight: numbe
     }
 }
 
-function extractRectAndMetrics(
+function getRectAndMetrics(
     glyphPosition: GlyphPosition,
     glyphMap: {
         [_: string]: {
@@ -695,6 +700,7 @@ function shapeLines(shaping: Shaping,
     const justify =
         textJustify === 'right' ? 1 :
             textJustify === 'left' ? 0 : 0.5;
+    const layoutTextSizeFactor = ONE_EM / layoutTextSizeThisZoom;
 
     let lineIndex = 0;
     for (const line of lines) {
@@ -711,7 +717,7 @@ function shapeLines(shaping: Shaping,
             glyphPositions,
             imagePositions,
             line,
-            layoutTextSizeThisZoom
+            layoutTextSizeFactor
         );
         const maxLineHeight = Math.max(maxGlyphHeight, maxImageHeight);
 
@@ -741,7 +747,7 @@ function shapeLines(shaping: Shaping,
                 const positions = glyphPositions[section.fontStack];
                 const glyphPosition = positions && positions[codePoint];
 
-                const rectAndMetrics = extractRectAndMetrics(glyphPosition, glyphMap, section, codePoint);
+                const rectAndMetrics = getRectAndMetrics(glyphPosition, glyphMap, section, codePoint);
 
                 if (rectAndMetrics === null) continue;
 
@@ -768,8 +774,8 @@ function shapeLines(shaping: Shaping,
                 const size = imagePosition.displaySize;
                 // If needed, allow to set scale factor for an image using
                 // alias "image-scale" that could be alias for "font-scale"
-                // when FormattedSection is an image section.
-                section.scale = 1 * ONE_EM / layoutTextSizeThisZoom;
+                // when FormattedSection is an image section.A
+                section.scale = 1 * layoutTextSizeFactor;
 
                 metrics = {width: size[0],
                     height: size[1],
@@ -820,7 +826,7 @@ function shapeLines(shaping: Shaping,
             blockHeight = y + currentLineHeight;
         }
 
-        // If image is taller than the text, the block height should be adjusted
+        // Image can be higher than the text, so we need to account for that
         const imageOffset = maxLineHeight - maxGlyphHeight;
         y += lineHeight * lineMaxScale + imageOffset;
 
