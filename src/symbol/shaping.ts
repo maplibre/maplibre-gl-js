@@ -632,7 +632,11 @@ function calculateLineBlockMetrics(
     return {maxGlyphHeight, maxImageHeight};
 }
 
-function calculateVerticalOffset(verticalAlign: VerticalAlign, lineHeight: number, itemHeight: number) {
+function calculateVerticalOffset(
+    verticalAlign: VerticalAlign,
+    lineHeight: number,
+    itemHeight: number
+) {
     if (verticalAlign === 'top') {
         return 0;
     } else if (verticalAlign === 'center') {
@@ -651,8 +655,8 @@ function getRectAndMetrics(
     },
     section: SectionOptions, codePoint: number
 ) {
-    let rect = null;
-    let metrics = null;
+    let rect: Rect = null;
+    let metrics: GlyphMetrics = null;
 
     if (glyphPosition && glyphPosition.rect) {
         rect = glyphPosition.rect;
@@ -792,7 +796,7 @@ function shapeLines(shaping: Shaping,
                     verticalAlignOffset = calculateVerticalOffset(
                         section.verticalAlign,
                         maxLineHeight,
-                        imagePosition.displaySize[1] * section.scale
+                        imagePosition.displaySize[1] * section.scale,
                     );
                 }
 
@@ -840,7 +844,8 @@ function shapeLines(shaping: Shaping,
     align(shaping.positionedLines, justify, horizontalAlign, verticalAlign, maxLineLength, blockHeight);
 
     // Calculate the bounding box
-    shaping.top = -verticalAlign * blockHeight;
+    // shaping.top & shaping.left already include text offset (text-radial-offset or text-offset)
+    shaping.top += -verticalAlign * blockHeight + spacing;
     shaping.bottom = shaping.top + blockHeight;
     shaping.left += -horizontalAlign * maxLineLength;
     shaping.right = shaping.left + maxLineLength;
