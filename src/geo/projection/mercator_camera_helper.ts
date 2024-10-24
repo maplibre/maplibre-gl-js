@@ -35,6 +35,12 @@ export class MercatorCameraHelper implements ICameraHelper {
     }
 
     handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void {
+        // If we are rotating about the center point, there is no need to update the transform center. Doing so causes
+        // a small amount of drift of the center point, especially when pitch is close to 90 degrees.
+        // In this case, return early.
+        if (deltas.around.distSqr(tr.centerPoint) < 1.0e-2) {
+            return;
+        }
         tr.setLocationAtPoint(preZoomAroundLoc, deltas.around);
     }
 
