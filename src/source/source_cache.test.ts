@@ -532,6 +532,41 @@ describe('SourceCache / Source lifecycle', () => {
 
     });
 
+    test('clears errored tiles on initial data load', () => {
+        const preserveTiles = [
+            new OverscaledTileID(2, 0, 2, 2, 2),
+            new OverscaledTileID(2, 0, 2, 1, 2),
+        ];
+        const errorTiles = [
+            new OverscaledTileID(2, 0, 2, 2, 1),
+            new OverscaledTileID(2, 0, 2, 1, 1)
+        ];
+
+        const sourceCache = createSourceCache();
+
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+        preserveTiles.forEach((id) => sourceCache._addTile(id));
+        expect(Object.keys(sourceCache._tiles)).toHaveLength(preserveTiles.length);
+
+        // Reset load tile to apply error state
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'errored';
+        };
+        errorTiles.forEach((id) => sourceCache._addTile(id));
+        expect(Object.keys(sourceCache._tiles)).toHaveLength(preserveTiles.length + errorTiles.length);
+
+        // Expect no change on a tile dataloading event
+        sourceCache.getSource().fire(new Event('dataloading', {tile: {}}));
+        expect(Object.keys(sourceCache._tiles)).toHaveLength(preserveTiles.length + errorTiles.length);
+
+        // Expect errored tiles to be removed on a generic dataloading event
+        sourceCache.getSource().fire(new Event('dataloading'));
+        expect(Object.keys(sourceCache._tiles)).toHaveLength(preserveTiles.length);
+
+    });
+
 });
 
 describe('SourceCache#update', () => {
