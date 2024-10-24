@@ -450,6 +450,7 @@ export type MapSourceDataEvent = MapLibreEvent & {
     source: SourceSpecification;
     sourceId: string;
     sourceDataType: MapSourceDataType;
+    sourceDataChanged?: boolean;
     /**
      * The tile being loaded or changed, if the event has a `dataType` of `source` and
      * the event is related to loading of a tile.

@@ -87,10 +87,6 @@ export class SourceCache extends Evented {
 
         this.on('dataloading', (e) => {
             this._sourceErrored = false;
-            // Clear errored tiles on init data load event, not on subsequent tile updates
-            if (!e.tile) {
-                this.clearErroredTiles();
-            }
         });
 
         this.on('error', () => {
@@ -248,7 +244,7 @@ export class SourceCache extends Evented {
             !this._coveredTiles[id] && (symbolLayer || !this._tiles[id].holdingForFade());
     }
 
-    reload() {
+    reload(sourceDataChanged?: boolean) {
         if (this._paused) {
             this._shouldReloadOnResume = true;
             return;
@@ -257,7 +253,9 @@ export class SourceCache extends Evented {
         this._cache.reset();
 
         for (const i in this._tiles) {
-            if (this._tiles[i].state !== 'errored') this._reloadTile(i, 'reloading');
+            if (sourceDataChanged || this._tiles[i].state !== 'errored') {
+                this._reloadTile(i, 'reloading');
+            }
         }
     }
 
@@ -585,15 +583,6 @@ export class SourceCache extends Evented {
                 if (!idealRasterTileIDs[key]) this._coveredTiles[key] = true;
             }
         }
-    }
-
-    // Remove previously errored tiles from the retain list
-    clearErroredTiles() {
-        Object.values(this._tiles).forEach((tile: Tile) => {
-            if (tile.state === 'errored') {
-                this._removeTile(tile.tileID.key);
-            }
-        });
     }
 
     /**
@@ -932,7 +921,8 @@ export class SourceCache extends Evented {
         // for sources with mutable data, this event fires when the underlying data
         // to a source is changed. (i.e. GeoJSONSource#setData and ImageSource#serCoordinates)
         if (this._sourceLoaded && !this._paused && e.dataType === 'source' && eventSourceDataType === 'content') {
-            this.reload();
+            const sourceDataChanged = Boolean(e.sourceDataChanged);
+            this.reload(sourceDataChanged);
             if (this.transform) {
                 this.update(this.transform, this.terrain);
             }

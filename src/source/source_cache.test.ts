@@ -532,38 +532,30 @@ describe('SourceCache / Source lifecycle', () => {
 
     });
 
-    test('clears errored tiles on initial data load', () => {
-        const preserveTiles = [
-            new OverscaledTileID(2, 0, 2, 2, 2),
-            new OverscaledTileID(2, 0, 2, 1, 2),
-        ];
-        const errorTiles = [
-            new OverscaledTileID(2, 0, 2, 2, 1),
-            new OverscaledTileID(2, 0, 2, 1, 1)
-        ];
+    test('does reload errored tiles, if event is source data change', () => {
+        const transform = new Transform();
+        transform.resize(511, 511);
+        transform.zoom = 1;
 
         const sourceCache = createSourceCache();
-
         sourceCache._source.loadTile = async (tile) => {
-            tile.state = 'loaded';
+            // this transform will try to load the four tiles at z1 and a single z0 tile
+            // we only expect _reloadTile to be called with the 'loaded' z0 tile
+            tile.state = tile.tileID.canonical.z === 1 ? 'errored' : 'loaded';
         };
-        preserveTiles.forEach((id) => sourceCache._addTile(id));
-        expect(Object.keys(sourceCache._tiles)).toHaveLength(preserveTiles.length);
 
-        // Reset load tile to apply error state
-        sourceCache._source.loadTile = async (tile) => {
-            tile.state = 'errored';
-        };
-        errorTiles.forEach((id) => sourceCache._addTile(id));
-        expect(Object.keys(sourceCache._tiles)).toHaveLength(preserveTiles.length + errorTiles.length);
-
-        // Expect no change on a tile dataloading event
-        sourceCache.getSource().fire(new Event('dataloading', {tile: {}}));
-        expect(Object.keys(sourceCache._tiles)).toHaveLength(preserveTiles.length + errorTiles.length);
-
-        // Expect errored tiles to be removed on a generic dataloading event
-        sourceCache.getSource().fire(new Event('dataloading'));
-        expect(Object.keys(sourceCache._tiles)).toHaveLength(preserveTiles.length);
+        const reloadTileSpy = jest.spyOn(sourceCache, '_reloadTile');
+        sourceCache.on('data', (e) => {
+            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
+                sourceCache.update(transform);
+                sourceCache.getSource().fire(new Event('data', {dataType: 'source', sourceDataType: 'content', sourceDataChanged: true}));
+            }
+        });
+        sourceCache.onAdd(undefined);
+        // We expect the source cache to have five tiles, and for all of them
+        // to be reloaded
+        expect(Object.keys(sourceCache._tiles)).toHaveLength(5);
+        expect(reloadTileSpy).toHaveBeenCalledTimes(5);
 
     });
 
