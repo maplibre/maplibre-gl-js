@@ -85,7 +85,7 @@ export class SourceCache extends Evented {
 
         this.on('data', (e: MapSourceDataEvent) => this._dataHandler(e));
 
-        this.on('dataloading', (e) => {
+        this.on('dataloading', () => {
             this._sourceErrored = false;
         });
 
