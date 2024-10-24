@@ -17,7 +17,7 @@
     11.64,
     84.6794
   ],
-  "zoom": 11.64,
+  "zoom": 11,
   "pitch": 80,
   "sources": { },
   "layers": [
@@ -33,7 +33,8 @@
       "sky-color": "#199EF3",
       "horizon-color": "#daeff0",
       "sky-horizon-blend": 1,
-      "fog-ground-blend": 1
+      "fog-ground-blend": 1,
+      "atmosphere-blend": 0
   },
   "projection": {
     "type": "globe"
