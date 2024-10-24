@@ -38,7 +38,7 @@
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-        const map = (window.map = new maplibregl.Map({
+        const map = new maplibregl.Map({
             container: 'map',
             style:
                 'https://api.maptiler.com/maps/basic/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
@@ -46,7 +46,7 @@
             center: [148.9819, -35.3981],
             pitch: 60,
             antialias: true
-        }));
+        });
 
         const modelOrigin = [148.9819, -35.39847];
         const modelAltitude = 0;

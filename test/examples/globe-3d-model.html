@@ -56,7 +56,7 @@
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-        const map = (window.map = new maplibregl.Map({
+        const map = new maplibregl.Map({
             container: 'map',
             style: 'https://api.maptiler.com/maps/basic/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
             zoom: 5.5,
@@ -64,7 +64,7 @@
             maxPitch: 80,
             pitch: 70,
             antialias: true, // create the gl context with MSAA antialiasing, so custom layers are antialiased
-        }));
+        });
 
         map.on('style.load', () => {
             map.setProjection({
