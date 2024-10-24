@@ -11,6 +11,7 @@ export type SkyUniformsType = {
     'u_horizon': Uniform2f;
     'u_horizon_normal': Uniform2f;
     'u_sky_horizon_blend': Uniform1f;
+    'u_sky_blend': Uniform1f;
 };
 
 const skyUniforms = (context: Context, locations: UniformLocations): SkyUniformsType => ({
@@ -19,12 +20,15 @@ const skyUniforms = (context: Context, locations: UniformLocations): SkyUniforms
     'u_horizon': new Uniform2f(context, locations.u_horizon),
     'u_horizon_normal': new Uniform2f(context, locations.u_horizon_normal),
     'u_sky_horizon_blend': new Uniform1f(context, locations.u_sky_horizon_blend),
+    'u_sky_blend': new Uniform1f(context, locations.u_sky_blend),
 });
 
 const skyUniformValues = (sky: Sky, transform: IReadonlyTransform, pixelRatio: number): UniformValues<SkyUniformsType> => {
     const cosRoll = Math.cos(transform.rollInRadians);
     const sinRoll = Math.sin(transform.rollInRadians);
     const mercatorHorizon  = getMercatorHorizon(transform);
+    const projectionData = transform.getProjectionData(null);
+    const skyBlend = projectionData.projectionTransition;
     return {
         'u_sky_color': sky.properties.get('sky-color'),
         'u_horizon_color': sky.properties.get('horizon-color'),
@@ -32,6 +36,7 @@ const skyUniformValues = (sky: Sky, transform: IReadonlyTransform, pixelRatio: n
             (transform.height / 2 + mercatorHorizon * cosRoll) * pixelRatio],
         'u_horizon_normal': [-sinRoll, cosRoll],
         'u_sky_horizon_blend': (sky.properties.get('sky-horizon-blend') * transform.height / 2) * pixelRatio,
+        'u_sky_blend': skyBlend,
     };
 };
 
