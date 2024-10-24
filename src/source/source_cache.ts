@@ -85,8 +85,12 @@ export class SourceCache extends Evented {
 
         this.on('data', (e: MapSourceDataEvent) => this._dataHandler(e));
 
-        this.on('dataloading', () => {
+        this.on('dataloading', (e) => {
             this._sourceErrored = false;
+            // Clear errored tiles on init data load event, not on subsequent tile updates
+            if (!e.tile) {
+                this.clearErroredTiles();
+            }
         });
 
         this.on('error', () => {
@@ -581,6 +585,15 @@ export class SourceCache extends Evented {
                 if (!idealRasterTileIDs[key]) this._coveredTiles[key] = true;
             }
         }
+    }
+
+    // Remove previously errored tiles from the retain list
+    clearErroredTiles() {
+        Object.values(this._tiles).forEach((tile: Tile) => {
+            if (tile.state === 'errored') {
+                this._removeTile(tile.tileID.key);
+            }
+        });
     }
 
     /**
