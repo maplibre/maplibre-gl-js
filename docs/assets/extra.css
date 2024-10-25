@@ -1,4 +1,5 @@
 /* see https://github.com/squidfunk/mkdocs-material/issues/4278 */
+/* stylelint-disable-next-line selector-class-pattern */
 .md-search-result .md-typeset {
     display: -webkit-box;
     -webkit-line-clamp: 5;

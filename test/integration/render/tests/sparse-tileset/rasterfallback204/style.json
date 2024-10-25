@@ -11,7 +11,7 @@
   ],
   "zoom": 1,
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "raster",
       "tiles": [
         "local://tiles/sparse204/{z}-{x}-{y}.png"
@@ -29,7 +29,7 @@
     {
       "id": "raster-layer",
       "type": "raster",
-      "source": "mapbox",
+      "source": "maplibre",
       "paint": {
         "raster-fade-duration": 0
       }

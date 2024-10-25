@@ -12,7 +12,7 @@
   ],
   "zoom": 0,
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "vector",
       "maxzoom": 14,
       "tiles": [
@@ -31,7 +31,7 @@
     {
       "id": "fill-visible",
       "type": "fill",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "water",
       "layout": {
         "visibility": "visible"
@@ -44,7 +44,7 @@
     {
       "id": "fill-none",
       "type": "fill",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "water",
       "layout": {
         "visibility": "none"

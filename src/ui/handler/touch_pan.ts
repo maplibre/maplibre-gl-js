@@ -29,8 +29,9 @@ export class TouchPanHandler implements Handler {
         this._sum = new Point(0, 0);
     }
 
-    minTouchs() {
-        return this._map.cooperativeGestures.isEnabled() ? 2 : 1;
+    _shouldBePrevented(touchesCount: number) {
+        const minTouches = this._map.cooperativeGestures.isEnabled() ? 2 : 1;
+        return touchesCount < minTouches;
     }
 
     touchstart(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
@@ -38,7 +39,11 @@ export class TouchPanHandler implements Handler {
     }
 
     touchmove(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
-        if (!this._active || mapTouches.length < this.minTouchs()) return;
+        if (!this._active) return;
+        if (this._shouldBePrevented(mapTouches.length)) {
+            this._map.cooperativeGestures.notifyGestureBlocked('touch_pan', e);
+            return;
+        }
         e.preventDefault();
         return this._calculateTransform(e, points, mapTouches);
     }
@@ -46,7 +51,7 @@ export class TouchPanHandler implements Handler {
     touchend(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
         this._calculateTransform(e, points, mapTouches);
 
-        if (this._active && mapTouches.length < this.minTouchs()) {
+        if (this._active && this._shouldBePrevented(mapTouches.length)) {
             this.reset();
         }
     }
@@ -77,7 +82,7 @@ export class TouchPanHandler implements Handler {
 
         this._touches = touches;
 
-        if (touchDeltaCount < this.minTouchs() || !touchDeltaSum.mag()) return;
+        if (this._shouldBePrevented(touchDeltaCount) || !touchDeltaSum.mag()) return;
 
         const panDelta = touchDeltaSum.div(touchDeltaCount);
         this._sum._add(panDelta);

@@ -11,7 +11,7 @@
   ],
   "zoom": 14,
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "vector",
       "maxzoom": 14,
       "tiles": [
@@ -30,7 +30,7 @@
     {
       "id": "road",
       "type": "line",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "road",
       "paint": {
         "line-width": 2,

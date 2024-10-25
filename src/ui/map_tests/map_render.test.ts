@@ -13,7 +13,7 @@ afterEach(() => {
     server.restore();
 });
 
-test('render stabilizes', done => {
+test('render stabilizes', () => new Promise<void>((done) => {
     const style = createStyle();
     style.sources.mapbox = {
         type: 'vector',
@@ -35,41 +35,41 @@ test('render stabilizes', done => {
         timer = setTimeout(() => {
             map.off('render', undefined);
             map.on('render', () => {
-                done('test failed');
+                throw new Error('test failed');
             });
             expect((map as any)._frameId).toBeFalsy();
             done();
         }, 100);
     });
-});
+}));
 
-test('no render after idle event', done => {
+test('no render after idle event', () => new Promise<void>((done) => {
     const style = createStyle();
     const map = createMap({style});
     map.on('idle', () => {
         map.on('render', () => {
-            done('test failed');
+            throw new Error('test failed');
         });
         setTimeout(() => {
             done();
         }, 100);
     });
-});
+}));
 
-test('no render before style loaded', done => {
+test('no render before style loaded', () => new Promise<void>((done) => {
     server.respondWith('/styleUrl', JSON.stringify(createStyle()));
     const map = createMap({style: '/styleUrl'});
 
     jest.spyOn(map, 'triggerRepaint').mockImplementationOnce(() => {
         if (!map.style._loaded) {
-            done('test failed');
+            throw new Error('test failed');
         }
     });
     map.on('render', () => {
         if (map.style._loaded) {
             done();
         } else {
-            done('test failed');
+            throw new Error('test failed');
         }
     });
 
@@ -77,7 +77,7 @@ test('no render before style loaded', done => {
     // Once style is loaded, it will trigger the update.
     map._update();
     server.respond();
-});
+}));
 
 test('#redraw', async () => {
     const map = createMap();

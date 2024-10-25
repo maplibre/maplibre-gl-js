@@ -10,7 +10,7 @@ import Point from '@mapbox/point-geometry';
 import type {FeatureState, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {BucketParameters} from '../../data/bucket';
 import type {FillExtrusionPaintProps} from './fill_extrusion_style_layer_properties.g';
-import type {Transform} from '../../geo/transform';
+import type {IReadonlyTransform} from '../../geo/transform_interface';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 export class Point3D extends Point {
@@ -44,7 +44,7 @@ export class FillExtrusionStyleLayer extends StyleLayer {
         featureState: FeatureState,
         geometry: Array<Array<Point>>,
         zoom: number,
-        transform: Transform,
+        transform: IReadonlyTransform,
         pixelsToTileUnits: number,
         pixelPosMatrix: mat4
     ): boolean | number {
@@ -52,7 +52,7 @@ export class FillExtrusionStyleLayer extends StyleLayer {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('fill-extrusion-translate'),
             this.paint.get('fill-extrusion-translate-anchor'),
-            transform.angle, pixelsToTileUnits);
+            -transform.bearingInRadians, pixelsToTileUnits);
 
         const height = this.paint.get('fill-extrusion-height').evaluate(feature, featureState);
         const base = this.paint.get('fill-extrusion-base').evaluate(feature, featureState);
@@ -213,7 +213,7 @@ function projectExtrusion(geometry: Array<Array<Point>>, zBase: number, zTop: nu
     return [projectedBase, projectedTop];
 }
 
-function projectQueryGeometry(queryGeometry: Array<Point>, pixelPosMatrix: mat4, transform: Transform, z: number) {
+function projectQueryGeometry(queryGeometry: Array<Point>, pixelPosMatrix: mat4, transform: IReadonlyTransform, z: number) {
     const projectedQueryGeometry = [];
     for (const p of queryGeometry) {
         const v = [p.x, p.y, z, 1] as vec4;

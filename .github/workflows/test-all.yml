@@ -30,7 +30,14 @@ jobs:
       - run: npm run typecheck
         if: '!cancelled()'
       - run: npm run generate-docs
-      - run: docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build
+      - name: Build docs using docker and mkdocs-material
+        run: |
+          rm docs/README.md
+          rm -rf docs/API/_media
+          docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build --strict
+      - name: Check spelling
+        # This need to run after the docs are built
+        run: npm run spellcheck
 
   unit-tests:
     name: Unit tests and Coverage
@@ -46,17 +53,19 @@ jobs:
           echo "DISPLAY=:0" >> $GITHUB_ENV
       - run: npm ci
       - run: npm run test-unit-ci
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          files: ${{ github.workspace }}/coverage/unit/codecov.json
-          verbose: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-          disable_search: true
       - name: Upload test results to Codecov
+        if: '!cancelled()'
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ${{ github.workspace }}/coverage/jest/codecov.json
+          verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          disable_search: true
+
 
 
   integration-tests:
@@ -79,6 +88,14 @@ jobs:
           name: build-dist-${{ matrix.os }}
           path: dist/maplibre-gl.js
       - run: npm run test-integration-ci
+      - name: Upload coverage reports to Codecov
+        if: '!cancelled()'
+        uses: codecov/codecov-action@v4
+        with:
+          files: ${{ github.workspace }}/coverage/jest/codecov.json
+          verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          disable_search: true
 
   render-tests:
     name: Render tests

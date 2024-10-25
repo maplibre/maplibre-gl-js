@@ -114,20 +114,20 @@ export class SymbolStyleLayer extends StyleLayer {
             if (!SymbolStyleLayer.hasPaintOverride(this.layout, overridable)) {
                 continue;
             }
-            const overriden = this.paint.get(overridable as keyof SymbolPaintPropsPossiblyEvaluated) as PossiblyEvaluatedPropertyValue<number>;
-            const override = new FormatSectionOverride(overriden);
-            const styleExpression = new StyleExpression(override, overriden.property.specification);
+            const overridden = this.paint.get(overridable as keyof SymbolPaintPropsPossiblyEvaluated) as PossiblyEvaluatedPropertyValue<number>;
+            const override = new FormatSectionOverride(overridden);
+            const styleExpression = new StyleExpression(override, overridden.property.specification);
             let expression = null;
-            if (overriden.value.kind === 'constant' || overriden.value.kind === 'source') {
+            if (overridden.value.kind === 'constant' || overridden.value.kind === 'source') {
                 expression = new ZoomConstantExpression('source', styleExpression) as SourceExpression;
             } else {
                 expression = new ZoomDependentExpression('composite',
                     styleExpression,
-                    overriden.value.zoomStops);
+                    overridden.value.zoomStops);
             }
-            this.paint._values[overridable] = new PossiblyEvaluatedPropertyValue(overriden.property,
+            this.paint._values[overridable] = new PossiblyEvaluatedPropertyValue(overridden.property,
                 expression,
-                overriden.parameters);
+                overridden.parameters);
         }
     }
 

@@ -1,4 +1,5 @@
 import {createMap, beforeMapTest} from '../../util/test/util';
+import simulate from '../../../test/unit/lib/simulate_interaction';
 
 beforeEach(() => {
     beforeMapTest();
@@ -77,3 +78,18 @@ test('throw on maxZoom smaller than minZoom at init with falsey maxZoom', () => 
     }).toThrow(new Error('maxZoom must be greater than or equal to minZoom'));
 });
 
+test('recalculate zoom is done on the camera update transform', () => {
+    const map = createMap({
+        interactive: true,
+        clickTolerance: 4,
+        transformCameraUpdate: ({zoom}) => ({zoom: zoom + 0.1})
+    });
+    map.terrain = {
+        pointCoordinate: () => null,
+        getElevationForLngLatZoom: () => 1000
+    } as any;
+    const canvas = map.getCanvas();
+    simulate.dragWithMove(canvas, {x: 100, y: 100}, {x: 100, y: 150});
+    map._renderTaskQueue.run();
+    expect(map.getZoom()).toBe(0.20007702699728983);
+});

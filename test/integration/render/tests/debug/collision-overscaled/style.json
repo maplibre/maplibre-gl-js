@@ -12,7 +12,7 @@
   ],
   "zoom": 17,
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "vector",
       "maxzoom": 14,
       "tiles": [
@@ -33,7 +33,7 @@
     {
       "id": "line",
       "type": "symbol",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "road_label",
       "layout": {
         "icon-image": "triangle-stroked-12",

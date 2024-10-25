@@ -116,7 +116,7 @@ describe('Actor', () => {
         expect(spy).not.toHaveBeenCalled();
     });
 
-    test('#remove unbinds event listener', done => {
+    test('#remove unbinds event listener', () => new Promise<void>(done => {
         const actor = new Actor({
             addEventListener(type, callback, useCapture) {
                 this._addEventListenerArgs = [type, callback, useCapture];
@@ -127,9 +127,9 @@ describe('Actor', () => {
             }
         } as ActorTarget, null);
         actor.remove();
-    });
+    }));
 
-    test('send a messege that is rejected', async () => {
+    test('send a message that is rejected', async () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
@@ -138,7 +138,7 @@ describe('Actor', () => {
         await expect(async () => actor.sendAsync({type: MessageType.abortTile, data: {} as any})).rejects.toThrow(ABORT_ERROR);
     });
 
-    test('send a messege that must be queued, it should still arrive', async () => {
+    test('send a message that must be queued, it should still arrive', async () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
@@ -196,6 +196,20 @@ describe('Actor', () => {
         worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, spy);
 
         actor.target.postMessage({type: MessageType.getClusterExpansionZoom, data: {} as any, origin: 'file://'});
+
+        await sleep(0);
+
+        expect(spy).toHaveBeenCalled();
+    });
+
+    test('should process a message when origin is "resource://android"', async () => {
+        const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
+        const actor = new Actor(worker, '1');
+
+        const spy = jest.fn().mockReturnValue(Promise.resolve({}));
+        worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, spy);
+
+        actor.target.postMessage({type: MessageType.getClusterExpansionZoom, data: {} as any, origin: 'resource://android'});
 
         await sleep(0);
 

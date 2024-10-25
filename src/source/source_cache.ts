@@ -11,17 +11,26 @@ import Point from '@mapbox/point-geometry';
 import {browser} from '../util/browser';
 import {OverscaledTileID} from './tile_id';
 import {SourceFeatureState} from './source_state';
+import {config} from '../util/config';
 
 import type {Source} from './source';
 import type {Map} from '../ui/map';
 import type {Style} from '../style/style';
 import type {Dispatcher} from '../util/dispatcher';
-import type {Transform} from '../geo/transform';
+import type {IReadonlyTransform, ITransform} from '../geo/transform_interface';
 import type {TileState} from './tile';
 import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapSourceDataEvent} from '../ui/events';
-import {Terrain} from '../render/terrain';
-import {config} from '../util/config';
+import type {Terrain} from '../render/terrain';
+import type {CanvasSourceSpecification} from './canvas_source';
+
+type TileResult = {
+    tile: Tile;
+    tileID: OverscaledTileID;
+    queryGeometry: Array<Point>;
+    cameraQueryGeometry: Array<Point>;
+    scale: number;
+}
 
 /**
  * @internal
@@ -64,7 +73,7 @@ export class SourceCache extends Evented {
     _paused: boolean;
     _shouldReloadOnResume: boolean;
     _coveredTiles: {[_: string]: boolean};
-    transform: Transform;
+    transform: ITransform;
     terrain: Terrain;
     used: boolean;
     usedForTerrain: boolean;
@@ -78,7 +87,7 @@ export class SourceCache extends Evented {
     static maxUnderzooming: number;
     static maxOverzooming: number;
 
-    constructor(id: string, options: SourceSpecification, dispatcher: Dispatcher) {
+    constructor(id: string, options: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher) {
         super();
         this.id = id;
         this.dispatcher = dispatcher;
@@ -223,8 +232,8 @@ export class SourceCache extends Evented {
             return renderables.sort((a_: Tile, b_: Tile) => {
                 const a = a_.tileID;
                 const b = b_.tileID;
-                const rotatedA = (new Point(a.canonical.x, a.canonical.y))._rotate(this.transform.angle);
-                const rotatedB = (new Point(b.canonical.x, b.canonical.y))._rotate(this.transform.angle);
+                const rotatedA = (new Point(a.canonical.x, a.canonical.y))._rotate(-this.transform.bearingInRadians);
+                const rotatedB = (new Point(b.canonical.x, b.canonical.y))._rotate(-this.transform.bearingInRadians);
                 return a.overscaledZ - b.overscaledZ || rotatedB.y - rotatedA.y || rotatedB.x - rotatedA.x;
             }).map(tile => tile.tileID.key);
         }
@@ -440,7 +449,7 @@ export class SourceCache extends Evented {
      * are more likely to be found on devices with more memory and on pages where
      * the map is more important.
      */
-    updateCacheSize(transform: Transform) {
+    updateCacheSize(transform: IReadonlyTransform) {
         const widthInTiles = Math.ceil(transform.width / this._source.tileSize) + 1;
         const heightInTiles = Math.ceil(transform.height / this._source.tileSize) + 1;
         const approxTilesInView = widthInTiles * heightInTiles;
@@ -455,7 +464,7 @@ export class SourceCache extends Evented {
 
     handleWrapJump(lng: number) {
         // On top of the regular z/x/y values, TileIDs have a `wrap` value that specify
-        // which cppy of the world the tile belongs to. For example, at `lng: 10` you
+        // which copy of the world the tile belongs to. For example, at `lng: 10` you
         // might render z/x/y/0 while at `lng: 370` you would render z/x/y/1.
         //
         // When lng values get wrapped (going from `lng: 370` to `long: 10`) you expect
@@ -589,7 +598,7 @@ export class SourceCache extends Evented {
      * Removes tiles that are outside the viewport and adds new tiles that
      * are inside the viewport.
      */
-    update(transform: Transform, terrain?: Terrain) {
+    update(transform: ITransform, terrain?: Terrain) {
         if (!this._sourceLoaded || this._paused) {
             return;
         }
@@ -950,9 +959,8 @@ export class SourceCache extends Evented {
      * @param pointQueryGeometry - coordinates of the corners of bounding rectangle
      * @returns result items have `{tile, minX, maxX, minY, maxY}`, where min/max bounding values are the given bounds transformed in into the coordinate space of this tile.
      */
-    tilesIn(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean): any[] {
-
-        const tileResults = [];
+    tilesIn(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean) {
+        const tileResults: TileResult[] = [];
 
         const transform = this.transform;
         if (!transform) return tileResults;
@@ -961,8 +969,8 @@ export class SourceCache extends Evented {
             transform.getCameraQueryGeometry(pointQueryGeometry) :
             pointQueryGeometry;
 
-        const queryGeometry = pointQueryGeometry.map((p: Point) => transform.pointCoordinate(p, this.terrain));
-        const cameraQueryGeometry = cameraPointQueryGeometry.map((p: Point) => transform.pointCoordinate(p, this.terrain));
+        const queryGeometry = pointQueryGeometry.map((p: Point) => transform.screenPointToMercatorCoordinate(p, this.terrain));
+        const cameraQueryGeometry = cameraPointQueryGeometry.map((p: Point) => transform.screenPointToMercatorCoordinate(p, this.terrain));
 
         const ids = this.getIds();
 
@@ -1014,8 +1022,8 @@ export class SourceCache extends Evented {
 
     getVisibleCoordinates(symbolLayer?: boolean): Array<OverscaledTileID> {
         const coords = this.getRenderableIds(symbolLayer).map((id) => this._tiles[id].tileID);
-        for (const coord of coords) {
-            coord.posMatrix = this.transform.calculatePosMatrix(coord.toUnwrapped());
+        if (this.transform) {
+            this.transform.precacheTiles(coords);
         }
         return coords;
     }

@@ -46,7 +46,7 @@ export interface IActor {
 export type MessageHandler<T extends MessageType> = (mapId: string | number, params: RequestResponseMessageMap[T][0], abortController?: AbortController) => Promise<RequestResponseMessageMap[T][1]>
 
 /**
- * An implementation of the [Actor design pattern](http://en.wikipedia.org/wiki/Actor_model)
+ * An implementation of the [Actor design pattern](https://en.wikipedia.org/wiki/Actor_model)
  * that maintains the relationship between asynchronous tasks and the objects
  * that spin them off - in this case, tasks like parsing parts of styles,
  * owned by the styles
@@ -132,7 +132,7 @@ export class Actor implements IActor {
     receive(message: {data: MessageData}) {
         const data = message.data;
         const id = data.id;
-        if (data.origin !== 'file://' && location.origin !== 'file://' && data.origin !== location.origin) {
+        if (data.origin !== 'file://' && location.origin !== 'file://' && data.origin !== 'resource://android' && location.origin !== 'resource://android' && data.origin !== location.origin) {
             return;
         }
         if (data.targetMapId && this.mapId !== data.targetMapId) {

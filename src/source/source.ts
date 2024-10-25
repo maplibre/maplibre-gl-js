@@ -63,7 +63,7 @@ export interface Source {
     reparseOverscaled?: boolean;
     vectorLayerIds?: Array<string>;
     /**
-     * True if the source has transiotion, false otherwise.
+     * True if the source has transition, false otherwise.
      */
     hasTransition(): boolean;
     /**
@@ -175,7 +175,7 @@ const setSourceType = (name: string, type: SourceClass) => {
 /**
  * Adds a custom source type, making it available for use with {@link Map#addSource}.
  * @param name - The name of the source type; source definition objects use this name in the `{type: ...}` field.
- * @param sourceType - A {@link SourceClass} - which is a constructor for the `Source` interface.
+ * @param SourceType - A {@link SourceClass} - which is a constructor for the `Source` interface.
  * @returns a promise that is resolved when the source type is ready or rejected with an error.
  */
 export const addSourceType = async (name: string, SourceType: SourceClass): Promise<void> => {

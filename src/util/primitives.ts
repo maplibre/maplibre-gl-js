@@ -1,10 +1,16 @@
 import {mat4, vec3, vec4} from 'gl-matrix';
 
-class Frustum {
+export const enum IntersectionResult {
+    None = 0,
+    Partial = 1,
+    Full = 2,
+}
+
+export class Frustum {
 
     constructor(public points: vec4[], public planes: vec4[]) { }
 
-    public static fromInvProjectionMatrix(invProj: mat4, worldSize: number, zoom: number): Frustum {
+    public static fromInvProjectionMatrix(invProj: mat4, worldSize: number = 1, zoom: number = 0): Frustum {
         const clipSpaceCorners = [
             [-1, 1, -1, 1],
             [1, 1, -1, 1],
@@ -46,7 +52,7 @@ class Frustum {
     }
 }
 
-class Aabb {
+export class Aabb {
     min: vec3;
     max: vec3;
     center: vec3;
@@ -80,13 +86,15 @@ class Aabb {
         return pointOnAabb - point[1];
     }
 
-    // Performs a frustum-aabb intersection test. Returns 0 if there's no intersection,
-    // 1 if shapes are intersecting and 2 if the aabb if fully inside the frustum.
-    intersects(frustum: Frustum): number {
+    /**
+     * Performs a frustum-aabb intersection test. Returns 0 if there's no intersection,
+     * 1 if shapes are intersecting and 2 if the aabb if fully inside the frustum.
+     */
+    intersectsFrustum(frustum: Frustum): IntersectionResult {
         // Execute separating axis test between two convex objects to find intersections
         // Each frustum plane together with 3 major axes define the separating axes
 
-        const aabbPoints = [
+        const aabbPoints: Array<vec4> = [
             [this.min[0], this.min[1], this.min[2], 1],
             [this.max[0], this.min[1], this.min[2], 1],
             [this.max[0], this.max[1], this.min[2], 1],
@@ -104,20 +112,20 @@ class Aabb {
             let pointsInside = 0;
 
             for (let i = 0; i < aabbPoints.length; i++) {
-                if (vec4.dot(plane, aabbPoints[i] as any) >= 0) {
+                if (vec4.dot(plane, aabbPoints[i]) >= 0) {
                     pointsInside++;
                 }
             }
 
             if (pointsInside === 0)
-                return 0;
+                return IntersectionResult.None;
 
             if (pointsInside !== aabbPoints.length)
                 fullyInside = false;
         }
 
         if (fullyInside)
-            return 2;
+            return IntersectionResult.Full;
 
         for (let axis = 0; axis < 3; axis++) {
             let projMin = Number.MAX_VALUE;
@@ -131,13 +139,41 @@ class Aabb {
             }
 
             if (projMax < 0 || projMin > this.max[axis] - this.min[axis])
-                return 0;
+                return IntersectionResult.None;
         }
 
-        return 1;
+        return IntersectionResult.Partial;
+    }
+
+    /**
+     * Performs a halfspace-aabb intersection test. Returns 0 if there's no intersection,
+     * 1 if shapes are intersecting and 2 if the aabb if fully inside the plane's positive halfspace.
+     */
+    intersectsPlane(plane: vec4): IntersectionResult {
+        const aabbPoints: Array<vec4> = [
+            [this.min[0], this.min[1], this.min[2], 1],
+            [this.max[0], this.min[1], this.min[2], 1],
+            [this.max[0], this.max[1], this.min[2], 1],
+            [this.min[0], this.max[1], this.min[2], 1],
+            [this.min[0], this.min[1], this.max[2], 1],
+            [this.max[0], this.min[1], this.max[2], 1],
+            [this.max[0], this.max[1], this.max[2], 1],
+            [this.min[0], this.max[1], this.max[2], 1]
+        ];
+
+        let pointsInside = 0;
+        for (let i = 0; i < aabbPoints.length; i++) {
+            if (vec4.dot(plane, aabbPoints[i]) >= 0) {
+                pointsInside++;
+            }
+        }
+
+        if (pointsInside === 0) {
+            return IntersectionResult.None;
+        } else if (pointsInside < aabbPoints.length) {
+            return IntersectionResult.Partial;
+        } else {
+            return IntersectionResult.Full;
+        }
     }
 }
-export {
-    Aabb,
-    Frustum
-};

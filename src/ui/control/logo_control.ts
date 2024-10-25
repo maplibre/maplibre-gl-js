@@ -30,6 +30,9 @@ export class LogoControl implements IControl {
     _compact: boolean;
     _container: HTMLElement;
 
+    /**
+     * @param options - the control's options
+     */
     constructor(options: LogoControlOptions = {}) {
         this.options = options;
     }

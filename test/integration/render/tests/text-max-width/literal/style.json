@@ -6,7 +6,7 @@
     }
   },
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "geojson",
       "data": {
         "type": "FeatureCollection",
@@ -38,7 +38,7 @@
     {
       "id": "literal",
       "type": "symbol",
-      "source": "mapbox",
+      "source": "maplibre",
       "layout": {
         "text-field": "For every fact there is an infinity of hypotheses.",
         "text-font": [

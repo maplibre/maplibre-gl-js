@@ -1,6 +1,6 @@
-in vec2 a_pos;
+uniform vec2 u_fill_translate;
 
-uniform mat4 u_matrix;
+in vec2 a_pos;
 
 #pragma mapbox: define highp vec4 color
 #pragma mapbox: define lowp float opacity
@@ -9,5 +9,5 @@ void main() {
     #pragma mapbox: initialize highp vec4 color
     #pragma mapbox: initialize lowp float opacity
 
-    gl_Position = u_matrix * vec4(a_pos, 0, 1);
+    gl_Position = projectTile(a_pos + u_fill_translate);
 }

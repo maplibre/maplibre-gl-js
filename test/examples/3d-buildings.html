@@ -52,6 +52,7 @@
               'source-layer': 'building',
               'type': 'fill-extrusion',
               'minzoom': 15,
+              'filter': ['!=', ['get', 'hide_3d'], true],
               'paint': {
                   'fill-extrusion-color': [
                       'interpolate',

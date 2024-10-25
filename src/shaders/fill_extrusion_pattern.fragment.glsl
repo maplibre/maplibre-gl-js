@@ -14,8 +14,6 @@ in vec4 v_lighting;
 #pragma mapbox: define lowp float pixel_ratio_from
 #pragma mapbox: define lowp float pixel_ratio_to
 
-
-
 void main() {
     #pragma mapbox: initialize lowp float base
     #pragma mapbox: initialize lowp float height
@@ -41,7 +39,7 @@ void main() {
 
     fragColor = mixedColor * v_lighting;
 
-#ifdef OVERDRAW_INSPECTOR
-    fragColor = vec4(1.0);
-#endif
+    #ifdef OVERDRAW_INSPECTOR
+        fragColor = vec4(1.0);
+    #endif
 }

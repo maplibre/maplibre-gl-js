@@ -1,0 +1,105 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 256,
+      "width": 256
+    }
+  },
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -20.0,
+                30.0
+              ]
+            },
+            "properties": {
+              "text": "Text"
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -60.0,
+                -30.0
+              ]
+            },
+            "properties": {
+              "text": "Some more text"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "circle",
+      "type": "circle",
+      "source": "geojson",
+      "paint": {
+        "circle-radius": 5,
+        "circle-color": "blue"
+      }
+    },
+    {
+      "id": "circle2",
+      "type": "circle",
+      "source": "geojson",
+      "paint": {
+        "circle-radius": 5,
+        "circle-color": "red",
+        "circle-translate": [
+          10,
+          -20
+        ]
+      }
+    },
+    {
+      "id": "text",
+      "type": "symbol",
+      "source": "geojson",
+      "layout": {
+        "text-field": [
+          "get",
+          "text"
+        ],
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ],
+        "text-variable-anchor": [
+          "left",
+          "right",
+          "bottom",
+          "top"
+        ],
+        "text-size": 16
+      },
+      "paint": {
+        "text-translate": [
+          10,
+          -20
+        ]
+      }
+    }
+  ]
+}

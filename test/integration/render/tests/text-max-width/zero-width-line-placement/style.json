@@ -1,0 +1,66 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 128,
+      "width": 512
+    }
+  },
+  "center": [
+    10,
+    0
+  ],
+  "zoom": 4,
+  "sources": {
+    "maplibre": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -20,
+                  0
+                ],
+                [
+                  20,
+                  0
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "literal",
+      "type": "symbol",
+      "source": "maplibre",
+      "layout": {
+        "symbol-placement": "line",
+        "text-field": "Lorem ipsum dolor sit amet.",
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ],
+        "text-max-width": 0,
+        "text-anchor": "left"
+      }
+    }
+  ]
+}

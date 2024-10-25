@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Sky, Fog, Terrain</title>
+    <meta property="og:description" content="Allows changing the sky, fog and horizon color and blends." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+        .listing-group {
+            font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            color: #fff;
+            background-color: gray;
+            padding: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<table id="listing-group" class="listing-group">
+    <tr><td><label for="sky-enabled">enabled</label></td><td><input type="checkbox" id="sky-enabled" checked/></td></tr>
+    <tr><td><label for="sky-color-picker">sky-color</label></td><td><input type="color" id="sky-color-picker" value="#0000ff" style="width: 100%"/></td></tr>
+    <tr><td><label for="horizon-color-picker">horizon-color</label></td><td><input type="color" id="horizon-color-picker" value="#00ff00" style="width: 100%"/></td></tr>
+    <tr><td><label for="fog-color-picker">fog-color</label></td><td><input type="color" id="fog-color-picker" value="#ff0000" style="width: 100%"/></td></tr>
+    <tr><td><label for="sky-horizon-blend-slider">sky-horizon-blend</label></td><td><input type="range" id="sky-horizon-blend-slider" min="0" max="1" step="0.01" value="0.5" /></td></tr>
+    <tr><td><label for="horizon-fog-blend-slider">horizon-fog-blend</label></td><td><input type="range" id="horizon-fog-blend-slider" min="0" max="1" step="0.01" value="0.5" /></td></tr>
+    <tr><td><label for="fog-ground-blend-slider">fog-ground-blend</label></td><td><input type="range" id="fog-ground-blend-slider" min="0" max="1" step="0.01" value="0.1" /></td></tr>
+</table>
+<script>
+    function setSkyFromUi() {
+        if (!document.getElementById('sky-enabled').checked) {
+            map.setSky(undefined);
+            return;
+        }
+        map.setSky({
+            'sky-color': document.getElementById('sky-color-picker').value,
+            'sky-horizon-blend': +document.getElementById('sky-horizon-blend-slider').value,
+            'horizon-color': document.getElementById('horizon-color-picker').value,
+            'horizon-fog-blend': +document.getElementById('horizon-fog-blend-slider').value,
+            'fog-color': document.getElementById('fog-color-picker').value,
+            'fog-ground-blend': +document.getElementById('fog-ground-blend-slider').value
+        });
+    }
+
+    const map = (window.map = new maplibregl.Map({
+        container: 'map',
+        zoom: 12,
+        center: [11.2953, 47.5479],
+        pitch: 77,
+        hash: true,
+        style: {
+            version: 8,
+            sources: {
+                osm: {
+                    type: 'raster',
+                    tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                    tileSize: 256,
+                    attribution: '&copy; OpenStreetMap Contributors',
+                    maxzoom: 19
+                },
+                // Use a different source for terrain and hillshade layers, to improve render quality
+                terrainSource: {
+                    type: 'raster-dem',
+                    url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                    tileSize: 256
+                },
+                hillshadeSource: {
+                    type: 'raster-dem',
+                    url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                    tileSize: 256
+                }
+            },
+            layers: [
+                {
+                    id: 'osm',
+                    type: 'raster',
+                    source: 'osm'
+                },
+                {
+                    id: 'hills',
+                    type: 'hillshade',
+                    source: 'hillshadeSource',
+                    layout: {visibility: 'visible'},
+                    paint: {'hillshade-shadow-color': '#473B24'}
+                }
+            ],
+            terrain: {
+                source: 'terrainSource',
+                exaggeration: 1
+            }
+        },
+        maxZoom: 18,
+        maxPitch: 85
+    }));
+
+    map.addControl(
+        new maplibregl.NavigationControl({
+            visualizePitch: true,
+            showZoom: true,
+            showCompass: true
+        })
+    );
+
+    map.addControl(
+        new maplibregl.TerrainControl({
+            source: 'terrainSource',
+            exaggeration: 1
+        })
+    );
+    map.on('load', () => {
+        document.getElementById('sky-color-picker').addEventListener('change', setSkyFromUi);
+        document.getElementById('horizon-color-picker').addEventListener('change', setSkyFromUi);
+        document.getElementById('fog-color-picker').addEventListener('change', setSkyFromUi);
+        document.getElementById('sky-horizon-blend-slider').addEventListener('change', setSkyFromUi);
+        document.getElementById('horizon-fog-blend-slider').addEventListener('change', setSkyFromUi);
+        document.getElementById('fog-ground-blend-slider').addEventListener('change', setSkyFromUi);
+        document.getElementById('sky-enabled').addEventListener('change', setSkyFromUi);
+        setSkyFromUi();
+    });
+</script>
+</body>
+</html>

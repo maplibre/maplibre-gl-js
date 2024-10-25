@@ -6,6 +6,9 @@
 /docs/API
 /docs/examples
 /docs/example
+/docs/plugins.md
+/site/
+.cache/
 *.es.js
 *.js.map
 node_modules

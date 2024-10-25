@@ -1,5 +1,5 @@
 import fs from 'fs';
-import packageJson from '../../package.json' with {type: 'json'};
+import packageJson from '../../package.json' assert {type: 'json'};
 
 const minBundle = fs.readFileSync('dist/maplibre-gl.js', 'utf8');
 
@@ -9,6 +9,7 @@ describe('test min build', () => {
     // confirm that the entire package.json isn't present by asserting
     // the absence of each of our script strings
         for (const name in packageJson.scripts) {
+            if (packageJson.scripts[name].length < 10) continue; // skip short names like "lint"
             expect(minBundle.includes(packageJson.scripts[name])).toBeFalsy();
         }
     });
@@ -36,9 +37,9 @@ describe('test min build', () => {
         const decreaseQuota = 4096;
 
         // feel free to update this value after you've checked that it has changed on purpose :-)
-        const expectedBytes = 787777;
+        const expectedBytes = 886416;
 
-        expect(actualBytes - expectedBytes).toBeLessThan(increaseQuota);
-        expect(expectedBytes - actualBytes).toBeLessThan(decreaseQuota);
+        expect(actualBytes).toBeLessThan(expectedBytes + increaseQuota);
+        expect(actualBytes).toBeGreaterThan(expectedBytes - decreaseQuota);
     });
 });

@@ -14,7 +14,7 @@ function createMap(options?) {
     window.document.body.appendChild(container);
     Object.defineProperty(container, 'clientWidth', {value: options.width || containerWidth});
     Object.defineProperty(container, 'clientHeight', {value: options.height || containerHeight});
-    return globalCreateMap({container});
+    return globalCreateMap({...options, container});
 }
 
 beforeEach(() => {
@@ -706,10 +706,14 @@ describe('popup', () => {
         const popup = new Popup({closeButton: true})
             .setHTML('<span>Test</span>')
             .setLngLat([0, 0])
-            .addTo(createMap());
+            .addTo(createMap({
+                locale: {
+                    'Popup.Close': 'Alt close label'
+                }
+            }));
 
         // Suboptimal because the string matching is case-sensitive
-        const closeButton = popup._container.querySelector('[aria-label^=\'Close\']');
+        const closeButton = popup._container.querySelector('[aria-label^=\'Alt close label\']');
 
         expect(window.document.activeElement).toBe(closeButton);
     });

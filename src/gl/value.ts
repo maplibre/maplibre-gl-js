@@ -47,7 +47,7 @@ class BaseValue<T> implements IValue<T> {
     }
 
     getDefault(): T {
-        return this.default; // overriden in child classes
+        return this.default; // overridden in child classes
     }
     setDefault() {
         this.set(this.default);

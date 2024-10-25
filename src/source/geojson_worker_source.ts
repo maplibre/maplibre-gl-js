@@ -34,7 +34,7 @@ export type GeoJSONWorkerOptions = {
 }
 
 /**
- * Parameters needed to load a geojson to the wokrer
+ * Parameters needed to load a geojson to the worker
  */
 export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
     type: 'geojson';
@@ -226,7 +226,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
                 const parsed = JSON.parse(params.data);
                 this._dataUpdateable = isUpdateableGeoJSON(parsed, promoteId) ? toUpdateable(parsed, promoteId) : undefined;
                 return parsed;
-            } catch (e) {
+            } catch {
                 throw new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`);
             }
         }

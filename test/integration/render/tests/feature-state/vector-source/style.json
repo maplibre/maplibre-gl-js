@@ -7,7 +7,7 @@
         [
           "setFeatureState",
           {
-            "source": "mapbox",
+            "source": "maplibre",
             "sourceLayer": "poi_label",
             "id": "1000059876748"
           },
@@ -27,7 +27,7 @@
   ],
   "zoom": 14,
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "vector",
       "maxzoom": 14,
       "tiles": [
@@ -46,7 +46,7 @@
     {
       "id": "poi_label",
       "type": "circle",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "poi_label",
       "paint": {
         "circle-radius": 5,

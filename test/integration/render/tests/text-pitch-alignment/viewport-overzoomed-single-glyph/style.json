@@ -8,7 +8,7 @@
   "pitch": 60,
   "bearing": 161.5,
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "vector",
       "maxzoom": 16,
       "tiles": [
@@ -28,7 +28,7 @@
     {
       "id": "road-label-large",
       "type": "symbol",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "road_label",
       "layout": {
         "text-size": { "base": 1, "stops": [ [ 9, 10 ], [ 20, 16 ] ] },

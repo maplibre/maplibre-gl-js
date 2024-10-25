@@ -23,6 +23,9 @@ export class TerrainControl implements IControl {
     _container: HTMLElement;
     _terrainButton: HTMLButtonElement;
 
+    /**
+     * @param options - the control's options
+     */
     constructor(options: TerrainSpecification) {
         this.options = options;
     }

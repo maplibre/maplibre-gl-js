@@ -11,7 +11,7 @@
   "center": [-73, 15],
   "zoom": 4,
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "vector",
       "maxzoom": 14,
       "tiles": ["local://tiles/mapbox.mapbox-streets-v7/{z}-{x}-{y}.mvt"]
@@ -29,7 +29,7 @@
     {
       "id": "line-center",
       "type": "symbol",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "marine_label",
       "layout": {
         "text-field": "This used to be the Carribean",
@@ -44,7 +44,7 @@
     {
       "id": "line",
       "type": "line",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "marine_label",
       "paint": {
         "line-width": 1

@@ -1,6 +1,6 @@
 import {Event, ErrorEvent, Evented} from '../util/evented';
 
-import {extend} from '../util/util';
+import {extend, warnOnce} from '../util/util';
 import {EXTENT} from '../data/extent';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
@@ -13,6 +13,7 @@ import type {Actor} from '../util/actor';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {GeoJSONSourceDiff} from './geojson_source_diff';
 import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
+import {WorkerTileParameters} from './worker_source';
 import {MessageType} from '../util/actor_messages';
 
 /**
@@ -24,7 +25,7 @@ export type GeoJSONSourceOptions = GeoJSONSourceSpecification & {
     data: GeoJSON.GeoJSON | string;
 }
 
-export type GeoJSONSourceIntenalOptions = {
+export type GeoJSONSourceInternalOptions = {
     data?: GeoJSON.GeoJSON | string | undefined;
     cluster?: boolean;
     clusterMaxZoom?: number;
@@ -102,7 +103,7 @@ export type SetClusterOptions = {
  * ```
  * @see [Draw GeoJSON points](https://maplibre.org/maplibre-gl-js/docs/examples/geojson-markers/)
  * @see [Add a GeoJSON line](https://maplibre.org/maplibre-gl-js/docs/examples/geojson-line/)
- * @see [Create a heatmap from points](https://maplibre.org/maplibre-gl-js/docs/examples/heatmap/)
+ * @see [Create a heatmap from points](https://maplibre.org/maplibre-gl-js/docs/examples/heatmap-layer/)
  * @see [Create and style clusters](https://maplibre.org/maplibre-gl-js/docs/examples/cluster/)
  */
 export class GeoJSONSource extends Evented implements Source {
@@ -117,7 +118,7 @@ export class GeoJSONSource extends Evented implements Source {
     isTileClipped: boolean;
     reparseOverscaled: boolean;
     _data: GeoJSON.GeoJSON | string | undefined;
-    _options: GeoJSONSourceIntenalOptions;
+    _options: GeoJSONSourceInternalOptions;
     workerOptions: GeoJSONWorkerOptions;
     map: Map;
     actor: Actor;
@@ -157,6 +158,10 @@ export class GeoJSONSource extends Evented implements Source {
         this.promoteId = options.promoteId;
 
         const scale = EXTENT / this.tileSize;
+
+        if (options.clusterMaxZoom !== undefined && this.maxzoom <= options.clusterMaxZoom) {
+            warnOnce(`The maxzoom value "${this.maxzoom}" is expected to be greater than the clusterMaxZoom value "${options.clusterMaxZoom}".`);
+        }
 
         // sent to the worker, along with `url: ...` or `data: literal geojson`,
         // so that it can load/parse/index the geojson data
@@ -287,7 +292,7 @@ export class GeoJSONSource extends Evented implements Source {
      * @param clusterId - The value of the cluster's `cluster_id` property.
      * @param limit - The maximum number of features to return.
      * @param offset - The number of features to skip (e.g. for pagination).
-     * @returns a promise that is resolved when the features are retreived
+     * @returns a promise that is resolved when the features are retrieved
      * @example
      * Retrieve cluster leaves on click
      * ```ts
@@ -373,7 +378,7 @@ export class GeoJSONSource extends Evented implements Source {
     async loadTile(tile: Tile): Promise<void> {
         const message = !tile.actor ?  MessageType.loadTile :  MessageType.reloadTile;
         tile.actor = this.actor;
-        const params = {
+        const params: WorkerTileParameters = {
             type: this.type,
             uid: tile.uid,
             tileID: tile.tileID,
@@ -383,7 +388,8 @@ export class GeoJSONSource extends Evented implements Source {
             source: this.id,
             pixelRatio: this.map.getPixelRatio(),
             showCollisionBoxes: this.map.showCollisionBoxes,
-            promoteId: this.promoteId
+            promoteId: this.promoteId,
+            subdivisionGranularity: this.map.style.projection.subdivisionGranularity
         };
 
         tile.abortController = new AbortController();

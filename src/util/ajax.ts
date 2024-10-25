@@ -150,7 +150,8 @@ async function makeFetchRequest(requestParameters: RequestParameters, abortContr
         signal: abortController.signal
     });
 
-    if (requestParameters.type === 'json') {
+    // If the user has already set an Accept header, do not overwrite it here
+    if (requestParameters.type === 'json' && !request.headers.has('Accept')) {
         request.headers.set('Accept', 'application/json');
     }
 
@@ -187,7 +188,10 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, abortControlle
         }
         if (requestParameters.type === 'json') {
             xhr.responseType = 'text';
-            xhr.setRequestHeader('Accept', 'application/json');
+            // Do not overwrite the user-provided Accept header
+            if (!requestParameters.headers?.Accept) {
+                xhr.setRequestHeader('Accept', 'application/json');
+            }
         }
         xhr.withCredentials = requestParameters.credentials === 'include';
         xhr.onerror = () => {

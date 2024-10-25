@@ -42,7 +42,7 @@ export class RenderToTexture {
      * store for render-stacks
      * a render stack is a set of layers which should be rendered into one texture
      * every stylesheet can have multiple stacks. A new stack is created if layers which should
-     * not rendered to texture sit inbetween layers which should rendered to texture. e.g. hillshading or symbols
+     * not rendered to texture sit between layers which should rendered to texture. e.g. hillshading or symbols
      */
     _stacks: Array<Array<string>>;
     /**
@@ -179,7 +179,7 @@ export class RenderToTexture {
                     const layer = painter.style._layers[layers[l]];
                     const coords = layer.source ? this._coordsDescendingInv[layer.source][tile.tileID.key] : [tile.tileID];
                     painter.context.viewport.set([0, 0, obj.fbo.width, obj.fbo.height]);
-                    painter._renderTileClippingMasks(layer, coords);
+                    painter._renderTileClippingMasks(layer, coords, true);
                     painter.renderLayer(painter, painter.style.sourceCaches[layer.source], layer, coords);
                     if (layer.source) tile.rttCoords[layer.source] = this._coordsDescendingInvStr[layer.source][tile.tileID.key];
                 }

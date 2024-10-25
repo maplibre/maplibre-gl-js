@@ -16,7 +16,7 @@
   "zoom": 14,
   "pitch": 60,
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "vector",
       "maxzoom": 14,
       "tiles": [
@@ -37,7 +37,7 @@
     {
       "id": "top",
       "type": "symbol",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "poi_label",
       "filter": [
         "==",

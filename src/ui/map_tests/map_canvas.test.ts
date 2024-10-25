@@ -30,7 +30,7 @@ describe('Max Canvas Size option', () => {
         expect(map.getCanvas().height).toBe(4096);
     });
 
-    test('maxCanvasSize below clientWidth and clientHeigth', () => {
+    test('maxCanvasSize below clientWidth and clientHeight', () => {
         const container = window.document.createElement('div');
         Object.defineProperty(container, 'clientWidth', {value: 12834});
         Object.defineProperty(container, 'clientHeight', {value: 9000});

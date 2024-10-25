@@ -48,14 +48,14 @@ class LightPositionProperty implements Property<[number, number, number], LightP
     }
 }
 
-type Props = {
+type LightProps = {
     'anchor': DataConstantProperty<'map' | 'viewport'>;
     'position': LightPositionProperty;
     'color': DataConstantProperty<Color>;
     'intensity': DataConstantProperty<number>;
 };
 
-type PropsPossiblyEvaluated = {
+type LightPropsPossiblyEvaluated = {
     'anchor': 'map' | 'viewport';
     'position': LightPosition;
     'color': Color;
@@ -64,15 +64,15 @@ type PropsPossiblyEvaluated = {
 
 const TRANSITION_SUFFIX = '-transition';
 
-let lightProperties: Properties<Props>;
+let lightProperties: Properties<LightProps>;
 
 /*
  * Represents the light used to light extruded features.
  */
 export class Light extends Evented {
-    _transitionable: Transitionable<Props>;
-    _transitioning: Transitioning<Props>;
-    properties: PossiblyEvaluated<Props, PropsPossiblyEvaluated>;
+    _transitionable: Transitionable<LightProps>;
+    _transitioning: Transitioning<LightProps>;
+    properties: PossiblyEvaluated<LightProps, LightPropsPossiblyEvaluated>;
 
     constructor(lightOptions?: LightSpecification) {
         super();
@@ -99,9 +99,9 @@ export class Light extends Evented {
         for (const name in light) {
             const value = light[name];
             if (name.endsWith(TRANSITION_SUFFIX)) {
-                this._transitionable.setTransition(name.slice(0, -TRANSITION_SUFFIX.length) as keyof Props, value);
+                this._transitionable.setTransition(name.slice(0, -TRANSITION_SUFFIX.length) as keyof LightProps, value);
             } else {
-                this._transitionable.setValue(name as keyof Props, value);
+                this._transitionable.setValue(name as keyof LightProps, value);
             }
         }
     }

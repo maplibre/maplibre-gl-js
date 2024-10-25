@@ -11,7 +11,7 @@
   ],
   "zoom": 16,
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "vector",
       "maxzoom": 14,
       "tiles": [
@@ -30,7 +30,7 @@
     {
       "id": "fill",
       "type": "fill",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "building",
       "paint": {
         "fill-color": "black"

@@ -9,7 +9,7 @@
   ],
   "zoom": 0,
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "vector",
       "maxzoom": 14,
       "tiles": [
@@ -26,9 +26,9 @@
       }
     },
     {
-      "id": "mapbox",
+      "id": "maplibre",
       "type": "circle",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "poi_label",
       "paint": {
         "circle-color": "black",

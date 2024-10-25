@@ -7,8 +7,6 @@ import {warnOnce} from '../util/util';
 import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g';
 import pos3dAttributes from '../data/pos3d_attributes';
 import {SegmentVector} from '../data/segment';
-import {VertexBuffer} from '../gl/vertex_buffer';
-import {IndexBuffer} from '../gl/index_buffer';
 import {Painter} from './painter';
 import {Texture} from '../render/texture';
 import type {Framebuffer} from '../gl/framebuffer';
@@ -19,6 +17,8 @@ import {SourceCache} from '../source/source_cache';
 import {EXTENT} from '../data/extent';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {LngLat, earthRadius} from '../geo/lng_lat';
+import {Mesh} from './mesh';
+import {isInBoundsForZoomLngLat} from '../util/world_bounds';
 
 /**
  * @internal
@@ -34,16 +34,6 @@ export type TerrainData = {
     texture: WebGLTexture;
     depthTexture: WebGLTexture;
     tile: Tile;
-}
-
-/**
- * @internal
- * A terrain mesh object
- */
-export type TerrainMesh = {
-    indexBuffer: IndexBuffer;
-    vertexBuffer: VertexBuffer;
-    segments: SegmentVector;
 }
 
 /**
@@ -118,7 +108,7 @@ export class Terrain {
      * GL Objects for the terrain-mesh
      * The mesh is a regular mesh, which has the advantage that it can be reused for all tiles.
      */
-    _mesh: TerrainMesh;
+    _mesh: Mesh;
     /**
      * coords index contains a list of tileID.keys. This index is used to identify
      * the tile via the alpha-cannel in the coords-texture.
@@ -195,6 +185,7 @@ export class Terrain {
      * @returns the elevation
      */
     getElevationForLngLatZoom(lnglat: LngLat, zoom: number) {
+        if (!isInBoundsForZoomLngLat(zoom, lnglat.wrap())) return 0;
         const {tileID, mercatorX, mercatorY} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
         return this.getElevation(tileID, mercatorX % EXTENT, mercatorY % EXTENT, EXTENT);
     }
@@ -328,9 +319,9 @@ export class Terrain {
     }
 
     /**
-     * Reads a pixel from the coords-framebuffer and translate this to mercator.
+     * Reads a pixel from the coords-framebuffer and translate this to mercator, or null, if the pixel doesn't lie on the terrain's surface (but the sky instead).
      * @param p - Screen-Coordinate
-     * @returns mercator coordinate for a screen pixel
+     * @returns Mercator coordinate for a screen pixel, or null, if the pixel is not covered by terrain (is in the sky).
      */
     pointCoordinate(p: Point): MercatorCoordinate {
         // First, ensure the coords framebuffer is up to date.
@@ -350,7 +341,11 @@ export class Terrain {
         const y = rgba[1] + ((rgba[2] & 15) << 8);
         const tileID = this.coordsIndex[255 - rgba[3]];
         const tile = tileID && this.sourceCache.getTileByID(tileID);
-        if (!tile) return null;
+
+        if (!tile) {
+            return null;
+        }
+
         const coordsSize = this._coordsTextureSize;
         const worldSize = (1 << tile.tileID.canonical.z) * coordsSize;
         return new MercatorCoordinate(
@@ -381,7 +376,7 @@ export class Terrain {
      * create a regular mesh which will be used by all terrain-tiles
      * @returns the created regular mesh
      */
-    getTerrainMesh(): TerrainMesh {
+    getTerrainMesh(): Mesh {
         if (this._mesh) return this._mesh;
         const context = this.painter.context;
         const vertexArray = new Pos3dArray();
@@ -395,7 +390,7 @@ export class Terrain {
             indexArray.emplaceBack(x + y, meshSize + x + y + 1, meshSize + x + y + 2);
             indexArray.emplaceBack(x + y, meshSize + x + y + 2, x + y + 1);
         }
-        // add an extra frame around the mesh to avoid stiching on tile boundaries with different zoomlevels
+        // add an extra frame around the mesh to avoid stitching on tile boundaries with different zoomlevels
         // first code-block is for top-bottom frame and second for left-right frame
         const offsetTop = vertexArray.length, offsetBottom = offsetTop + (meshSize + 1) * 2;
         for (const y of [0, 1]) for (let x = 0; x <= meshSize; x++) for (const z of [0, 1])
@@ -415,16 +410,16 @@ export class Terrain {
             indexArray.emplaceBack(offsetRight + y, offsetRight + y + 3, offsetRight + y + 1);
             indexArray.emplaceBack(offsetRight + y, offsetRight + y + 2, offsetRight + y + 3);
         }
-        this._mesh = {
-            indexBuffer: context.createIndexBuffer(indexArray),
-            vertexBuffer: context.createVertexBuffer(vertexArray, pos3dAttributes.members),
-            segments: SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
-        };
+        this._mesh = new Mesh(
+            context.createVertexBuffer(vertexArray, pos3dAttributes.members),
+            context.createIndexBuffer(indexArray),
+            SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
+        );
         return this._mesh;
     }
 
     /**
-     * Calculates a height of the frame around the terrain-mesh to avoid stiching between
+     * Calculates a height of the frame around the terrain-mesh to avoid stitching between
      * tile boundaries in different zoomlevels.
      * @param zoom - current zoomlevel
      * @returns the elevation delta in meters

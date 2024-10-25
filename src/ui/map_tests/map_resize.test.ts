@@ -1,3 +1,4 @@
+import {MercatorProjection} from '../../geo/projection/mercator';
 import {createMap, beforeMapTest, sleep} from '../../util/test/util';
 
 beforeEach(() => {
@@ -71,22 +72,26 @@ describe('#resize', () => {
         }));
 
         const map = createMap();
-
-        const updateSpy = jest.spyOn(map, '_update');
+        map.style.projection = new MercatorProjection();
         const resizeSpy = jest.spyOn(map, 'resize');
+        const redrawSpy = jest.spyOn(map, 'redraw');
+        const renderSpy = jest.spyOn(map, '_render');
 
         // The initial "observe" event fired by ResizeObserver should be captured/muted
         // in the map constructor
 
         observerCallback();
-        expect(updateSpy).not.toHaveBeenCalled();
         expect(resizeSpy).not.toHaveBeenCalled();
+        expect(redrawSpy).not.toHaveBeenCalled();
+        expect(renderSpy).not.toHaveBeenCalled();
 
-        // The next "observe" event should fire a resize / _update
+        // The next "observe" event should fire a resize and redraw
+        // Resizing canvas clears it immediately. This is why synchronous "redraw" is necessary
 
         observerCallback();
-        expect(updateSpy).toHaveBeenCalled();
         expect(resizeSpy).toHaveBeenCalledTimes(1);
+        expect(redrawSpy).toHaveBeenCalledTimes(1);
+        expect(renderSpy).toHaveBeenCalledTimes(1);
 
         // Additional "observe" events should be throttled
         observerCallback();
@@ -94,8 +99,10 @@ describe('#resize', () => {
         observerCallback();
         observerCallback();
         expect(resizeSpy).toHaveBeenCalledTimes(1);
+        expect(redrawSpy).toHaveBeenCalledTimes(1);
         await sleep(100);
         expect(resizeSpy).toHaveBeenCalledTimes(2);
+        expect(redrawSpy).toHaveBeenCalledTimes(2);
     });
 
     test('width and height correctly rounded', () => {

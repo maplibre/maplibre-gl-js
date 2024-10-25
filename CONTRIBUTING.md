@@ -1,6 +1,9 @@
+# Contributing to MapLibre GL JS
+
 Hi, and thanks in advance for contributing to MapLibre GL JS. Here's how we work. Please follow these conventions when submitting an issue or pull request.
 
 ## Do not violate Mapbox copyright!
+
 In December 2020 Mapbox decided to publish future versions of mapbox-gl-js under a proprietary license. **You are not allowed to backport code from Mapbox projects which has been contributed under this new license**. Unauthorized backports are the biggest threat to the MapLibre project. If you are unsure about this issue, [please ask](https://github.com/maplibre/maplibre-gl-js/discussions)!
 
 ## Best Practices for Contributions
@@ -10,7 +13,7 @@ MapLibre welcomes contributions from community! This codebase is large and compl
 It is a good idea to discuss proposed changes before proceeding to an issue ticket or PR. The project team is active in the following forums:
 
 * For informal chat discussions, visit the project's [Slack Channel](https://osmus.slack.com/archives/C01G3D28DAB).
-* For discussions whose output and outcomes should not be ephemeral, consider starting a thread on [GitHub Discussions](https://github.com/maplibre/maplibre-gl-js/discussions). This makes it easier to find and reference the discussion in the future. 
+* For discussions whose output and outcomes should not be ephemeral, consider starting a thread on [GitHub Discussions](https://github.com/maplibre/maplibre-gl-js/discussions). This makes it easier to find and reference the discussion in the future.
 
 MapLibre software relies heavily on automated testing, and the project includes a suite of unit and integration tests. For both new features and bugfixes, contributions should update or add test cases to prevent regressions.
 
@@ -18,7 +21,7 @@ MapLibre software relies heavily on automated testing, and the project includes 
 
 For new features, it is usually a good idea to start with an issue ticket. If the feature requires changes to the style specification, an issue ticket should be created in the [style specification GitHub repository](https://github.com/maplibre/maplibre-gl-style-spec). Style specification changes are hard to change later, so there will be particularly close scrutiny on changes to the specification.
 
-If possible, it is beneficial to demonstrate proposed new features and assess the performance implications of the proposed change. You can use `npm install <location-of-maplibre-source-code>` to test changes in an npm context, or `npm run build-prod` to build a .js package for this purpose. 
+If possible, it is beneficial to demonstrate proposed new features and assess the performance implications of the proposed change. You can use `npm install <location-of-maplibre-source-code>` to test changes in an npm context, or `npm run build-prod` to build a .js package for this purpose.
 
 For more complex proposed features that require deeper discussion, you should consider bringing it up in the [Technical Steering Committee](https://maplibre.org/categories/steering-committee/) meeting for a video discussion with the team about the proposed change. We find that sometimes it's easier to have a focused, face-to-face discussion for more consequential decisions.
 
@@ -41,17 +44,17 @@ This is not intended to be a strict process but rather a guideline that will bui
 
 ### CodeSpaces
 
-By creating a code spcace you should be able to start working immidiately after the post create script finishes running.
+By creating a code space you should be able to start working immediately after the post create script finishes running.
 This script basically installes everything written here in the linux part.
 
-### OSX
+### macOS
 
 Install the Xcode Command Line Tools Package
 ```bash
 xcode-select --install
 ```
 
-Install [node.js](https://nodejs.org/) version ^18
+Install [node.js](https://nodejs.org/) version in [.nvmrc](.nvmrc)
 ```bash
 brew install node
 ```
@@ -72,8 +75,9 @@ cd maplibre-gl-js &&
 npm install
 ```
 
-**Apple silicon**
-If you have one of the newer arm64 machines, you might find that canvas.node or webgl.node can't be found for your architecture. In that case go to node_modules/canvas and node_modules/gl and run:
+#### Apple silicon
+
+If you have one of the newer arm64 machines, you might find that canvas.node or webgl.node can't be found for your architecture. In that case go to `node_modules/canvas` and `node_modules/gl` and run:
 
 ```
 npm install --build-from-source
@@ -92,9 +96,9 @@ Try
 - Run `arch -arm64 brew install pkg-config cairo pango libpng jpeg giflib librsvg`
 - delete `node_modules` folder and re-run `npm install`
 
-### Linux (and by extension Github codespaces)
+### Linux (and by extension GitHub codespaces)
 
-Install [git](https://git-scm.com/), [GNU Make](http://www.gnu.org/software/make/), and libglew-dev
+Install [git](https://git-scm.com/), [GNU Make](https://www.gnu.org/software/make/), and libglew-dev
 ```bash
 sudo apt-get update &&
 sudo apt-get install build-essential git libglew-dev libxi-dev default-jre default-jdk xvfb
@@ -134,13 +138,12 @@ Before you can [run the docs](./docs/README.md), you need to ensure Docker is in
 
 Consider using WSL and follow the above Linux guide or follow the next steps
 
-Install [git](https://git-scm.com/), [node.js](https://nodejs.org/) (version ^18), [npm and node-gyp](https://github.com/Microsoft/nodejs-guidelines/blob/master/windows-environment.md#compiling-native-addon-modules).
+Install [git](https://git-scm.com/), [node.js](https://nodejs.org/) (version in [.nvmrc](.nvmrc)), [npm and node-gyp](https://github.com/Microsoft/nodejs-guidelines/blob/master/windows-environment.md#compiling-native-addon-modules).
 
 Clone the repository
 ```bash
 git clone git@github.com:maplibre/maplibre-gl-js.git
 ```
-
 
 Install node module dependencies
 ```bash
@@ -214,6 +217,7 @@ Additionally, if you're using VSCode, the "Format Document" action or "Editor: F
 ### Version Control Conventions
 
 Here is a recommended way to get setup:
+
 1. Fork this project
 2. Clone your new fork, `git clone git@github.com:GithubUser/maplibre-gl-js.git`
 3. `cd maplibre-gl-js`
@@ -242,17 +246,16 @@ How to add your changelog?
 
 ### Learning WebGL
 
-- [Greggman's WebGL articles](http://webglfundamentals.org/)
-- [WebGL reference card](http://www.khronos.org/files/webgl/webgl-reference-card-1_0.pdf)
+- [Greggman's WebGL articles](https://webglfundamentals.org/)
+- [WebGL reference card](https://www.khronos.org/files/webgl/webgl-reference-card-1_0.pdf)
 
 ### GL Performance
 
 - [Debugging and Optimizing WebGL applications](https://docs.google.com/presentation/d/12AGAUmElB0oOBgbEEBfhABkIMCL3CUX7kdAPLuwZ964)
-- [Graphics Pipeline Performance](http://developer.download.nvidia.com/books/HTML/gpugems/gpugems_ch28.html)
 
 ### Misc
 
-- [drawing antialiased lines](https://www.mapbox.com/blog/drawing-antialiased-lines/)
-- [drawing text with signed distance fields](https://www.mapbox.com/blog/text-signed-distance-fields/)
+- [drawing antialiased lines](https://blog.mapbox.com/drawing-antialiased-lines-with-opengl-8766f34192dc)
+- [drawing text with signed distance fields](https://blog.mapbox.com/drawing-text-with-signed-distance-fields-in-mapbox-gl-b0933af6f817)
 - [label placement](https://www.mapbox.com/blog/placing-labels/)
-- [distance fields](http://bytewrangler.blogspot.com/2011/10/signed-distance-fields.html)
+- [distance fields](https://bytewrangler.blogspot.com/2011/10/signed-distance-fields.html)

@@ -16,7 +16,8 @@ export const placementOpacityAttributes = createLayout([
 
 export const collisionVertexAttributes = createLayout([
     {name: 'a_placed', components: 2, type: 'Uint8'},
-    {name: 'a_shift', components: 2, type: 'Float32'}
+    {name: 'a_shift', components: 2, type: 'Float32'},
+    {name: 'a_box_real', components: 2, type: 'Int16'},
 ]);
 
 export const collisionBox = createLayout([

@@ -46,6 +46,9 @@ export class FullscreenControl extends Evented implements IControl {
     _container: HTMLElement;
     _prevCooperativeGesturesEnabled: boolean;
 
+    /**
+     * @param options - the control's options
+     */
     constructor(options: FullscreenControlOptions = {}) {
         super();
         this._fullscreen = false;

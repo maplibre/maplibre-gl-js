@@ -6,7 +6,7 @@ import {Painter} from './painter';
 import {Program} from './program';
 import type {ZoomHistory} from '../style/zoom_history';
 import type {Map} from '../ui/map';
-import {Transform} from '../geo/transform';
+import {IReadonlyTransform} from '../geo/transform_interface';
 import type {EvaluationParameters} from '../style/evaluation_parameters';
 import type {FillLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {Style} from '../style/style';
@@ -14,6 +14,7 @@ import {FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import {drawFill} from './draw_fill';
 import {FillBucket} from '../data/bucket/fill_bucket';
 import {ProgramConfiguration, ProgramConfigurationSet} from '../data/program_configuration';
+import type {ProjectionData} from '../geo/projection/projection_data';
 
 jest.mock('./painter');
 jest.mock('./program');
@@ -25,10 +26,10 @@ jest.mock('../symbol/projection');
 describe('drawFill', () => {
     test('should call programConfiguration.setConstantPatternPositions for transitioning fill-pattern', () => {
 
-        const painterMock: Painter = constructMockPainer();
+        const painterMock: Painter = constructMockPainter();
         const layer: FillStyleLayer = constructMockLayer();
 
-        const programMock = new Program(null as any, null as any, null as any, null as any, null as any, null as any);
+        const programMock = new Program(null as any, null as any, null as any, null as any, null as any, null as any, null as any, null as any);
         (painterMock.useProgram as jest.Mock).mockReturnValue(programMock);
 
         const mockTile = constructMockTile(layer);
@@ -65,7 +66,7 @@ describe('drawFill', () => {
         // Important: this setup is on purpose -- to NOT match layerspec
         // 'fill-pattern': 'pattern0'
         // so tile.imageAtlas.patternPositions['pattern0'] would return nothing
-        // mimicing the transitiong fill-pattern value
+        // mimicing the transitioning fill-pattern value
         layer.getPaintProperty = () => {
             return 'pattern1';
         };
@@ -73,7 +74,7 @@ describe('drawFill', () => {
         return layer;
     }
 
-    function constructMockPainer(): Painter {
+    function constructMockPainter(): Painter {
         const painterMock = new Painter(null as any, null as any);
         painterMock.context = {
             gl: {},
@@ -82,10 +83,26 @@ describe('drawFill', () => {
             }
         } as any;
         painterMock.renderPass = 'translucent';
-        painterMock.transform = {pitch: 0, labelPlaneMatrix: mat4.create()} as any as Transform;
+        painterMock.transform = {
+            pitch: 0,
+            labelPlaneMatrix: mat4.create(),
+            zoom: 0,
+            angle: 0,
+            getProjectionData(_canonical, fallback): ProjectionData {
+                return {
+                    mainMatrix: fallback,
+                    tileMercatorCoords: [0, 0, 1, 1],
+                    clippingPlane: [0, 0, 0, 0],
+                    projectionTransition: 0.0,
+                    fallbackMatrix: fallback,
+                };
+            },
+        } as any as IReadonlyTransform;
         painterMock.options = {} as any;
         painterMock.style = {
-            map: {}
+            map: {
+                projection: {}
+            }
         } as any as Style;
 
         return painterMock;
@@ -93,7 +110,7 @@ describe('drawFill', () => {
 
     function constructMockTile(layer: FillStyleLayer): Tile {
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
-        tileId.posMatrix = mat4.create();
+        tileId.terrainRttPosMatrix = mat4.create();
 
         const tile = new Tile(tileId, 256);
         tile.tileID = tileId;
@@ -101,7 +118,7 @@ describe('drawFill', () => {
         // Important: this setup is on purpose -- to NOT match layerspec
         // 'fill-pattern': 'pattern0'
         // so tile.imageAtlas.patternPositions['pattern0'] would return nothing
-        // mimicing the transitiong fill-pattern value
+        // mimicing the transitioning fill-pattern value
         tile.imageAtlas = {
             patternPositions: {
                 'pattern1': {}

@@ -2,11 +2,14 @@ import {createMap as globalCreateMap, beforeMapTest, sleep} from '../util/test/u
 import {Marker} from './marker';
 import {Popup} from './popup';
 import {LngLat} from '../geo/lng_lat';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 import Point from '@mapbox/point-geometry';
 import simulate from '../../test/unit/lib/simulate_interaction';
 import type {Terrain} from '../render/terrain';
+import type {defaultLocale} from './default_locale';
 
 type MapOptions = {
+    locale?: Partial<typeof defaultLocale>;
     width?: number;
     renderWorldCopies?: boolean;
 }
@@ -248,6 +251,13 @@ describe('marker', () => {
         const marker = new Marker({element})
             .setPopup(popup);
         expect(marker.getElement().getAttribute('tabindex')).toBe('5');
+    });
+
+    test('Marker aria-label is set accordingly to its label value', () => {
+        const map = createMap({locale: {'Marker.Title': 'alt title'}});
+        const marker = new Marker().setLngLat([0, 0]).addTo(map);
+
+        expect(marker.getElement().getAttribute('aria-label')).toBe('alt title');
     });
 
     test('Marker anchor defaults to center', () => {
@@ -934,7 +944,7 @@ describe('marker', () => {
 
     test('Marker changes opacity behind terrain and when terrain is removed', async () => {
         const map = createMap();
-        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        jest.spyOn(MercatorTransform.prototype, 'lngLatToCameraDepth').mockImplementation((_lngLat, _ele) => 0.95); // Mocking distance to marker
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map);
@@ -946,22 +956,22 @@ describe('marker', () => {
             getElevationForLngLatZoom: () => 0,
             depthAtPoint: () => .95 // Mocking distance to terrain
         } as any as Terrain;
-        await sleep(100);
         map.fire('terrain');
+        await sleep(100);
 
         expect(marker.getElement().style.opacity).toMatch('1');
 
         // Terrain blocks marker
         map.terrain.depthAtPoint = () => .92; // Mocking terrain blocking marker
-        await sleep(100);
         map.fire('moveend');
+        await sleep(100);
 
         expect(marker.getElement().style.opacity).toMatch('.2');
 
         // Remove terrain
         map.terrain = null;
-        await sleep(100);
         map.fire('terrain');
+        await sleep(100);
         expect(marker.getElement().style.opacity).toMatch('1');
 
         map.remove();
@@ -969,7 +979,7 @@ describe('marker', () => {
 
     test('Applies options.opacity when 3d terrain is enabled and marker is in clear view', async () => {
         const map = createMap();
-        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        jest.spyOn(MercatorTransform.prototype, 'lngLatToCameraDepth').mockImplementation((_lngLat, _ele) => 0.95); // Mocking distance to marker
         const marker = new Marker({opacity: '0.7'})
             .setLngLat([0, 0])
             .addTo(map);
@@ -987,7 +997,7 @@ describe('marker', () => {
 
     test('Applies options.opacity when marker\'s base is hidden by 3d terrain but its center is visible', async () => {
         const map = createMap();
-        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        jest.spyOn(MercatorTransform.prototype, 'lngLatToCameraDepth').mockImplementation((_lngLat, _ele) => 0.95); // Mocking distance to marker
         const marker = new Marker({opacity: '0.7'})
             .setLngLat([0, 0])
             .addTo(map);
@@ -1099,5 +1109,42 @@ describe('marker', () => {
         marker.setLngLat([181, 0]);
 
         expect(marker._lngLat.lng).toBe(-179);
+    });
+
+    test('should round the marker transform position to whole pixels when subpixel positioning is disabled', () => {
+        const map = createMap();
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        const transform = marker.getElement().style.transform;
+        expect(transform)
+            .toContain('translate(256px, 242px)');
+
+        marker.setLngLat([4.5, 4.5]);
+
+        const adjustedTransform = marker.getElement().style.transform;
+        expect(adjustedTransform)
+            .toContain('translate(262px, 236px)');
+
+    });
+
+    test('should round the marker transform position to sub pixels when subpixel positioning is enabled', () => {
+        const map = createMap();
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .setSubpixelPositioning(true)
+            .addTo(map);
+
+        const transform = marker.getElement().style.transform;
+
+        expect(transform)
+            .toContain('translate(256px, 242px)');
+
+        marker.setLngLat([4.5, 4.5]);
+
+        const adjustedTransform = marker.getElement().style.transform;
+        expect(adjustedTransform)
+            .toContain('translate(262.4px, 235.5934100987358px)');
     });
 });

@@ -11,7 +11,7 @@
   ],
   "zoom": 18,
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "vector",
       "maxzoom": 14,
       "tiles": [
@@ -31,13 +31,13 @@
     {
       "id": "lines_pole_of_inaccessibility",
       "type": "line",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "building"
     },
     {
       "id": "pole_of_inaccessibility",
       "type": "symbol",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "building",
       "layout": {
         "symbol-placement": "point",
