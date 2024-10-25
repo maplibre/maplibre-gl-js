@@ -1203,9 +1203,9 @@ export abstract class Camera extends Evented {
      * @param tr - The transform to check.
      */
     _elevateCameraIfInsideTerrain(tr: ITransform) : { pitch?: number; zoom?: number } {
-        const cameraLngLat = tr.screenPointToLocation(tr.getCameraPoint());
+        const cameraLngLat = tr.getCameraLngLat();
         const cameraAltitude = tr.getCameraAltitude();
-        const minAltitude = this.terrain.getElevationForLngLatZoom(cameraLngLat, tr.zoom);
+        const minAltitude = this.terrain ? this.terrain.getElevationForLngLatZoom(cameraLngLat, tr.zoom) : 0;
         if (cameraAltitude < minAltitude) {
             const newCamera = this.calculateCameraOptionsFromTo(
                 cameraLngLat, minAltitude, tr.center, tr.elevation);
@@ -1226,9 +1226,7 @@ export abstract class Camera extends Evented {
      */
     _applyUpdatedTransform(tr: ITransform) {
         const modifiers : ((tr: ITransform) => ReturnType<CameraUpdateTransformFunction>)[] = [];
-        if (this.terrain) {
-            modifiers.push(tr => this._elevateCameraIfInsideTerrain(tr));
-        }
+        modifiers.push(tr => this._elevateCameraIfInsideTerrain(tr));
         if (this.transformCameraUpdate) {
             modifiers.push(tr => this.transformCameraUpdate(tr));
         }

@@ -382,6 +382,11 @@ export interface IReadonlyTransform extends ITransformGetters {
     getCameraAltitude(): number;
 
     /**
+     * The longitude and latitude of the camera.
+     */
+    getCameraLngLat(): LngLat;
+
+    /**
      * Given the camera position (lng, lat, alt), calculate the center point and zoom level
      * @param lngLat - lng, lat of the camera
      * @param alt - altitude of the camera above sea level, in meters

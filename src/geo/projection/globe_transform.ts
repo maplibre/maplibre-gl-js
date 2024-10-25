@@ -719,6 +719,10 @@ export class GlobeTransform implements ITransform {
         return this._mercatorTransform.getCameraAltitude();
     }
 
+    getCameraLngLat(): LngLat {
+        return this._mercatorTransform.getCameraLngLat();
+    }
+
     lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
         if (!this.isGlobeRendering) {
             return this._mercatorTransform.lngLatToCameraDepth(lngLat, elevation);
