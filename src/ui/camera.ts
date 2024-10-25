@@ -1203,6 +1203,9 @@ export abstract class Camera extends Evented {
      * @param tr - The transform to check.
      */
     _elevateCameraIfInsideTerrain(tr: ITransform) : { pitch?: number; zoom?: number } {
+        if (!this.terrain && tr.elevation >= 0 && tr.pitch <= 90) {
+            return {};
+        }
         const cameraLngLat = tr.getCameraLngLat();
         const cameraAltitude = tr.getCameraAltitude();
         const minAltitude = this.terrain ? this.terrain.getElevationForLngLatZoom(cameraLngLat, tr.zoom) : 0;
