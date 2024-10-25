@@ -528,9 +528,9 @@ describe('SourceCache / Source lifecycle', () => {
     });
 
     test('does reload errored tiles, if event is source data change', () => {
-        const transform = new Transform();
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
-        transform.zoom = 1;
+        transform.setZoom(1);
 
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
