@@ -11,6 +11,7 @@
             "operations": [
                 ["setCenterClampedToGround", false],
                 ["setCenterElevation", 10000],
+                ["setPitch", 95],
                 ["wait"]
             ]
         }
@@ -20,7 +21,6 @@
         31.55
     ],
     "roll": 135,
-    "pitch": 95,
     "zoom": 10,
     "sources": { },
     "layers": [
