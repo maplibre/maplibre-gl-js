@@ -133,9 +133,7 @@ export class RasterTileSource extends Evented implements Source {
 
         callback();
 
-        const sourceDataChanged = true;
-
-        this.load(sourceDataChanged);
+        this.load(true);
     }
 
     /**
