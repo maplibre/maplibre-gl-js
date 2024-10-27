@@ -2,7 +2,6 @@
 
 ### ✨ Features and improvements
 - ⚠️ Changed `geometry-type` to identify "Multi-" features ([#4877](https://github.com/maplibre/maplibre-gl-js/pull/4877))
-- Update measure.html example in documentation to use turf v7
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
