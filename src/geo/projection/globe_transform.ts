@@ -86,14 +86,6 @@ export class GlobeTransform implements ITransform {
     }
     setRenderWorldCopies(_renderWorldCopies: boolean): void {
     }
-    setPitchTileLoadingBehavior(pitchTileLoadingBehavior: number): void {
-        this._helper.setPitchTileLoadingBehavior(pitchTileLoadingBehavior);
-        this._mercatorTransform.setPitchTileLoadingBehavior(pitchTileLoadingBehavior);
-    }
-    setTileZoomDeadband(tileZoomDeadband: number): void {
-        this._helper.setTileZoomDeadband(tileZoomDeadband);
-        this._mercatorTransform.setTileZoomDeadband(tileZoomDeadband);
-    }
     setBearing(bearing: number): void {
         this._helper.setBearing(bearing);
     }
@@ -223,12 +215,6 @@ export class GlobeTransform implements ITransform {
     }
     get renderWorldCopies(): boolean {
         return false;
-    }
-    get pitchTileLoadingBehavior(): number {
-        return this._helper.pitchTileLoadingBehavior;
-    }
-    get tileZoomDeadband(): number {
-        return this._helper.tileZoomDeadband;
     }
 
     //

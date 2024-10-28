@@ -667,17 +667,14 @@ describe('GlobeTransform', () => {
             transform.setZoom(8);
             transform.setMaxPitch(80);
             transform.setPitch(80);
-            transform.setPitchTileLoadingBehavior(0.0);
 
             const tiles = transform.coveringTiles({
                 tileSize: 512,
             });
 
             expect(tiles).toEqual([
-                new OverscaledTileID(8, 0, 8, 127, 127),
-                new OverscaledTileID(8, 0, 8, 128, 127),
-                new OverscaledTileID(8, 0, 8, 127, 126),
-                new OverscaledTileID(8, 0, 8, 128, 126),
+                new OverscaledTileID(7, 0, 7, 64, 63),
+                new OverscaledTileID(7, 0, 7, 63, 63),
                 new OverscaledTileID(10, 0, 10, 511, 512),
                 new OverscaledTileID(10, 0, 10, 512, 512)
             ]);
@@ -691,20 +688,16 @@ describe('GlobeTransform', () => {
             transform.setMaxPitch(80);
             transform.setPitch(80);
             transform.setBearing(45);
-            transform.setPitchTileLoadingBehavior(0.0);
 
             const tiles = transform.coveringTiles({
                 tileSize: 512,
             });
 
             expect(tiles).toEqual([
-                new OverscaledTileID(8, 0, 8, 127, 127),
-                new OverscaledTileID(8, 0, 8, 128, 127),
-                new OverscaledTileID(8, 0, 8, 128, 128),
-                new OverscaledTileID(8, 0, 8, 128, 126),
-                new OverscaledTileID(8, 0, 8, 129, 127),
-                new OverscaledTileID(8, 0, 8, 129, 126),
+                new OverscaledTileID(7, 0, 7, 64, 64),
                 new OverscaledTileID(7, 0, 7, 65, 63),
+                new OverscaledTileID(7, 0, 7, 64, 63),
+                new OverscaledTileID(7, 0, 7, 63, 63),
                 new OverscaledTileID(7, 0, 7, 64, 62),
                 new OverscaledTileID(10, 0, 10, 510, 512),
                 new OverscaledTileID(10, 0, 10, 511, 512),

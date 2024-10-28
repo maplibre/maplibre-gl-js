@@ -244,7 +244,6 @@ describe('transform', () => {
             transform.setBearing(32.0);
             transform.setCenter(new LngLat(56.90, 48.20));
             transform.resize(1024, 768);
-            transform.setPitchTileLoadingBehavior(0.0);
             expect(transform.coveringTiles(options)).toEqual([
                 new OverscaledTileID(5, 0, 5, 21, 11),
                 new OverscaledTileID(5, 0, 5, 20, 11),
@@ -274,18 +273,13 @@ describe('transform', () => {
             transform.setBearing(0.0);
             transform.setCenter(new LngLat(20.918, 39.232));
             transform.resize(50, 1000);
-            transform.setPitchTileLoadingBehavior(0.0);
             expect(transform.coveringTiles(options)).toEqual([
-                new OverscaledTileID(8, 0, 8, 142, 97),
                 new OverscaledTileID(8, 0, 8, 142, 98),
-                new OverscaledTileID(8, 0, 8, 142, 96),
-                new OverscaledTileID(7, 0, 7, 71, 47),
-                new OverscaledTileID(7, 0, 7, 71, 46),
-                new OverscaledTileID(6, 0, 6, 35, 22),
+                new OverscaledTileID(7, 0, 7, 71, 48),
+                new OverscaledTileID(5, 0, 5, 17, 11),
                 new OverscaledTileID(5, 0, 5, 17, 10),
                 new OverscaledTileID(9, 0, 9, 285, 198),
-                new OverscaledTileID(10, 0, 10, 571, 398),
-                new OverscaledTileID(10, 0, 10, 571, 399)
+                new OverscaledTileID(9, 0, 9, 285, 199)
             ]);
 
             transform.setZoom(8);

@@ -4,7 +4,7 @@ import {vec2, vec4} from 'gl-matrix';
 import {CoveringTilesOptions, IReadonlyTransform} from '../transform_interface';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {scaleZoom} from '../transform_helper';
-import {clamp} from '../../util/util';
+import {clamp, degreesToRadians} from '../../util/util';
 
 type CoveringTilesResult = {
     tileID: OverscaledTileID;
@@ -69,6 +69,36 @@ export function isTileVisible(frustum: Frustum, aabb: Aabb, plane?: vec4): Inter
     }
 
     return IntersectionResult.Partial;
+}
+
+function calculateTileZoom(requestedCenterZoom: number,
+    distanceToTile2D: number,
+    distanceToTileZ: number,
+    distanceToCenter3D: number,
+    cameraVFOV: number) : number {
+    /**
+    * Controls how tiles are loaded at high pitch angles. Higher numbers cause fewer, lower resolution
+    * tiles to be loaded. At 0, tiles are loaded with approximately constant screen X resolution.
+    * At 1, tiles are loaded with approximately constant screen area.
+    * At 2, tiles are loaded with approximately constant screen Y resolution.
+    */
+    const pitchTileLoadingBehavior = 1.0;
+    /**
+    * Controls how tiles are loaded at high pitch angles. Controls how different the distance to a tile must be (compared with the center point)
+    * before a new zoom level is requested. For example, if tileZoomDeadband = 1 and the center zoom is 14, tiles distant enough to be loaded at
+    * z13 will be loaded at z14, and tiles distant enough to be loaded at z14 will be loaded at z15. A higher number causes more tiles to be loaded
+    * at the center zoom level. This also results in more tiles being loaded overall.
+    */
+    const tileZoomDeadband = 0.0;
+    let thisTileDesiredZ = requestedCenterZoom;
+    const thisTilePitch = Math.atan(distanceToTile2D / distanceToTileZ);
+    const distanceToTile3D = Math.hypot(distanceToTile2D, distanceToTileZ);
+    // if distance to candidate tile is a tiny bit farther than distance to center,
+    // use the same zoom as the center. This is achieved by the scaling distance ratio by cos(fov/2)
+    thisTileDesiredZ = requestedCenterZoom + scaleZoom(distanceToCenter3D / distanceToTile3D / Math.cos(degreesToRadians(cameraVFOV)));
+    thisTileDesiredZ += pitchTileLoadingBehavior * scaleZoom(Math.cos(thisTilePitch)) / 2;
+    thisTileDesiredZ = thisTileDesiredZ + clamp(requestedCenterZoom - thisTileDesiredZ, -tileZoomDeadband, tileZoomDeadband);
+    return thisTileDesiredZ;
 }
 
 /**
@@ -139,18 +169,15 @@ export function coveringTiles(transform: IReadonlyTransform, frustum: Frustum, p
         }
 
         const distToTile2d = details.distanceToTile2d(cameraCoord.x, cameraCoord.y, tileID, aabb);
-        const distToTile3d = Math.hypot(distToTile2d, distanceZ);
 
-        let thisTileDesiredZ = desiredZ;
-        if (details.allowVariableZoom) {
-            const thisTilePitch = Math.atan(distToTile2d / distanceZ);
-            // if distance to candidate tile is a tiny bit farther than distance to center,
-            // use the same zoom as the center. This is achieved by the scaling distance ratio by cos(fov/2)
-            thisTileDesiredZ = transform.zoom + scaleZoom(transform.tileSize / options.tileSize * distanceToCenter3d / distToTile3d / Math.cos(transform.fov / 2.0 * Math.PI / 180.0));
-            thisTileDesiredZ += transform.pitchTileLoadingBehavior * scaleZoom(Math.cos(thisTilePitch)) / 2;
-            thisTileDesiredZ = thisTileDesiredZ + clamp(nominalZ - thisTileDesiredZ, -transform.tileZoomDeadband, transform.tileZoomDeadband);
-            thisTileDesiredZ = (options.roundZoom ? Math.round : Math.floor)(thisTileDesiredZ);
-        }
+        let thisTileDesiredZ = details.allowVariableZoom ?
+            calculateTileZoom(transform.zoom + scaleZoom(transform.tileSize / options.tileSize),
+                distToTile2d,
+                distanceZ,
+                distanceToCenter3d,
+                transform.fov) :
+            desiredZ;
+        thisTileDesiredZ = (options.roundZoom ? Math.round : Math.floor)(thisTileDesiredZ);
         thisTileDesiredZ = Math.max(0, thisTileDesiredZ);
         const z = Math.min(thisTileDesiredZ, maxZoom);
 
