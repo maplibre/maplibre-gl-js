@@ -685,9 +685,9 @@ export class GlobeTransform implements ITransform {
 
     calculateFogMatrix(_unwrappedTileID: UnwrappedTileID): mat4 {
         warnOnce('calculateFogMatrix is not supported on globe projection.');
-        const m = createMat4f64();
-        mat4.identity(m);
-        return m;
+        // Since fog is computed on the terrain vertex shader using a perspective division,
+        // we can't use an identity matrix here.
+        return this._projectionMatrix;
     }
 
     getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): UnwrappedTileID[] {
