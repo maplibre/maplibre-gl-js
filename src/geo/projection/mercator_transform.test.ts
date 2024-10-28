@@ -309,7 +309,7 @@ describe('transform', () => {
                     _distanceToTile2D: number,
                     _distanceToTileZ: number,
                     _distanceToCenter3D: number,
-                    _cameraVFOV: number) => { return 7; }
+                    _cameraVerticalFOV: number) => { return 7; }
             };
             transform.resize(50, 300);
             transform.setPitch(70);

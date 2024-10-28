@@ -26,7 +26,7 @@ type CoveringTilesStackEntry = {
  * @param distanceToTile2D - 2D distance from the camera to the candidate tile, in mercator units.
  * @param distanceToTileZ - vertical distance from the camera to the candidate tile, in mercator units.
  * @param distanceToCenter3D - distance from camera to center point, in mercator units
- * @param cameraVFOV - camera vertical field of view, in degrees
+ * @param cameraVerticalFOV - camera vertical field of view, in degrees
  * @return the desired zoom level for this tile. May not be an integer.
  */
 export type CalculateTileZoomFunction = (requestedCenterZoom: number,
@@ -90,7 +90,7 @@ function calculateTileZoom(requestedCenterZoom: number,
     distanceToTile2D: number,
     distanceToTileZ: number,
     distanceToCenter3D: number,
-    cameraVFOV: number) : number {
+    cameraVerticalFOV: number) : number {
     /**
     * Controls how tiles are loaded at high pitch angles. Higher numbers cause fewer, lower resolution
     * tiles to be loaded. At 0, tiles are loaded with approximately constant screen X resolution.
@@ -110,7 +110,7 @@ function calculateTileZoom(requestedCenterZoom: number,
     const distanceToTile3D = Math.hypot(distanceToTile2D, distanceToTileZ);
     // if distance to candidate tile is a tiny bit farther than distance to center,
     // use the same zoom as the center. This is achieved by the scaling distance ratio by cos(fov/2)
-    thisTileDesiredZ = requestedCenterZoom + scaleZoom(distanceToCenter3D / distanceToTile3D / Math.cos(degreesToRadians(cameraVFOV)));
+    thisTileDesiredZ = requestedCenterZoom + scaleZoom(distanceToCenter3D / distanceToTile3D / Math.cos(degreesToRadians(cameraVerticalFOV)));
     thisTileDesiredZ += pitchTileLoadingBehavior * scaleZoom(Math.cos(thisTilePitch)) / 2;
     thisTileDesiredZ = thisTileDesiredZ + clamp(requestedCenterZoom - thisTileDesiredZ, -tileZoomDeadband, tileZoomDeadband);
     return thisTileDesiredZ;
