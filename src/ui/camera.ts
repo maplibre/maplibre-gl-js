@@ -556,10 +556,10 @@ export abstract class Camera extends Evented {
      * @returns The map's current vertical field of view.
      * @example
      * ```ts
-     * map.getFov();
+     * const verticalFieldOfView = map.getVerticalFieldOfView();
      * ```
      */
-    getFov(): number { return this.transform.fov; }
+    getVerticalFieldOfView(): number { return this.transform.fov; }
 
     /**
      * Sets the map's vertical field of view, in degrees.
@@ -571,10 +571,10 @@ export abstract class Camera extends Evented {
      * @example
      * Change vertical field of view to 30 degrees
      * ```ts
-     * map.setFov(30);
+     * map.setVerticalFieldOfView(30);
      * ```
      */
-    setFov(fov: number, eventData?: any): this {
+    setVerticalFieldOfView(fov: number, eventData?: any): this {
         if (fov != this.transform.fov) {
             this.transform.setFov(fov);
             this.fire(new Event('movestart', eventData))

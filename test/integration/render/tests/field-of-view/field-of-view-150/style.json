@@ -5,7 +5,7 @@
           "height": 512,
           "width": 512,
           "operations": [
-              ["setFov", 150],
+              ["setVerticalFieldOfView", 150],
               ["wait"]
           ]
         }
