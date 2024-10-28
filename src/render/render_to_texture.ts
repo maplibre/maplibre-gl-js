@@ -180,7 +180,7 @@ export class RenderToTexture {
                     const coords = layer.source ? this._coordsAscending[layer.source][tile.tileID.key] : [tile.tileID];
                     painter.context.viewport.set([0, 0, obj.fbo.width, obj.fbo.height]);
                     painter._renderTileClippingMasks(layer, coords, true);
-                    painter.renderLayer(painter, painter.style.sourceCaches[layer.source], layer, coords);
+                    painter.renderLayer(painter, painter.style.sourceCaches[layer.source], layer, coords, true);
                     if (layer.source) tile.rttCoords[layer.source] = this._coordsAscendingStr[layer.source][tile.tileID.key];
                 }
             }
