@@ -20,6 +20,21 @@ type CoveringTilesStackEntry = {
     fullyVisible: boolean;
 };
 
+/**
+ * Function to define how tiles are loaded at high pitch angles
+ * @param requestedCenterZoom - the requested zoom level, valid at the center point.
+ * @param distanceToTile2D - 2D distance from the camera to the candidate tile, in mercator units.
+ * @param distanceToTileZ - vertical distance from the camera to the candidate tile, in mercator units.
+ * @param distanceToCenter3D - distance from camera to center point, in mercator units
+ * @param cameraVFOV - camera vertical field of view, in degrees
+ * @return the desired zoom level for this tile. May not be an integer.
+ */
+export type CalculateTileZoomFunction = (requestedCenterZoom: number,
+    distanceToTile2D: number,
+    distanceToTileZ: number,
+    distanceToCenter3D: number,
+    cameraVFOV: number) => number;
+
 export interface CoveringTilesDetails {
     /**
      * Returns the distance from the point to the tile
@@ -170,13 +185,15 @@ export function coveringTiles(transform: IReadonlyTransform, frustum: Frustum, p
 
         const distToTile2d = details.distanceToTile2d(cameraCoord.x, cameraCoord.y, tileID, aabb);
 
-        let thisTileDesiredZ = details.allowVariableZoom ?
-            calculateTileZoom(transform.zoom + scaleZoom(transform.tileSize / options.tileSize),
+        let thisTileDesiredZ = desiredZ;
+        if (details.allowVariableZoom) {
+            const tileZoomFunc = options.calculateTileZoom || calculateTileZoom;
+            thisTileDesiredZ = tileZoomFunc(transform.zoom + scaleZoom(transform.tileSize / options.tileSize),
                 distToTile2d,
                 distanceZ,
                 distanceToCenter3d,
-                transform.fov) :
-            desiredZ;
+                transform.fov);
+        }
         thisTileDesiredZ = (options.roundZoom ? Math.round : Math.floor)(thisTileDesiredZ);
         thisTileDesiredZ = Math.max(0, thisTileDesiredZ);
         const z = Math.min(thisTileDesiredZ, maxZoom);

@@ -626,7 +626,8 @@ export class SourceCache extends Evented {
                 maxzoom: this._source.maxzoom,
                 roundZoom: this.usedForTerrain ? false : this._source.roundZoom,
                 reparseOverscaled: this._source.reparseOverscaled,
-                terrain
+                terrain,
+                calculateTileZoom: this._source.calculateTileZoom
             });
 
             if (this._source.hasTile) {

@@ -300,6 +300,28 @@ describe('transform', () => {
                 new OverscaledTileID(8, 0, 8, 146, 74),
                 new OverscaledTileID(8, 0, 8, 146, 73)
             ]);
+            
+            const optionsWithCustomTileLoading = { 
+                minzoom: 1,
+                maxzoom: 10,
+                tileSize: 512,
+                calculateTileZoom: (_requestedCenterZoom: number,
+                    _distanceToTile2D: number,
+                    _distanceToTileZ: number,
+                    _distanceToCenter3D: number,
+                    _cameraVFOV: number) => { return 7; }
+            };
+            transform.resize(50, 300);
+            transform.setPitch(70);
+            expect(transform.coveringTiles(optionsWithCustomTileLoading)).toEqual([
+                new OverscaledTileID(7, 0, 7, 74, 36),
+                new OverscaledTileID(7, 0, 7, 73, 37),
+                new OverscaledTileID(7, 0, 7, 74, 35),
+                new OverscaledTileID(7, 0, 7, 73, 36),
+                new OverscaledTileID(7, 0, 7, 72, 37),
+                new OverscaledTileID(7, 0, 7, 73, 35),
+                new OverscaledTileID(7, 0, 7, 72, 36)
+            ]);
 
             transform.setZoom(2);
             transform.setPitch(0);

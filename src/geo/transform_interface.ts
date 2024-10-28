@@ -9,6 +9,7 @@ import {Terrain} from '../render/terrain';
 import {PointProjection} from '../symbol/projection';
 import {MapProjectionEvent} from '../ui/events';
 import type {ProjectionData} from './projection/projection_data';
+import {CalculateTileZoomFunction} from './projection/covering_tiles';
 
 export type CoveringZoomOptions = {
     /**
@@ -41,6 +42,10 @@ export type CoveringTilesOptions = CoveringZoomOptions & {
      * When terrain is present, tile visibility will be computed in regards to the min and max elevations for each tile.
      */
     terrain?: Terrain;
+    /**
+     * Optional function to redefine how tiles are loaded at high pitch angles.
+     */
+    calculateTileZoom?: CalculateTileZoomFunction;
 };
 
 export type TransformUpdateResult = {
