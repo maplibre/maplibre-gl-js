@@ -448,8 +448,9 @@ export class GlobeTransform implements ITransform {
         return (this._lastUpdateTimeSeconds - this._lastGlobeChangeTimeSeconds) < globeConstants.globeTransitionTimeSeconds;
     }
 
-    getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData {
-        const data = this._mercatorTransform.getProjectionData(overscaledTileID, aligned, ignoreTerrainMatrix);
+    getProjectionData(params: ProjectionDataParams): ProjectionData {
+        const {overscaledTileID, aligned, ignoreTerrainMatrix, ignoreGlobeMatrix} = params;
+        const data = this._mercatorTransform.getProjectionData({overscaledTileID, aligned, ignoreTerrainMatrix});
 
         // Set 'projectionMatrix' to actual globe transform
         if (this.isGlobeRendering) {

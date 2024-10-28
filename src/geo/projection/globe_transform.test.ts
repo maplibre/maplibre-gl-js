@@ -41,7 +41,7 @@ describe('GlobeTransform', () => {
     describe('getProjectionData', () => {
         const globeTransform = createGlobeTransform(globeProjectionMock);
         test('mercator tile extents are set', () => {
-            const projectionData = globeTransform.getProjectionData(new OverscaledTileID(1, 0, 1, 1, 0));
+            const projectionData = globeTransform.getProjectionData({overscaledTileID: new OverscaledTileID(1, 0, 1, 1, 0)});
             expectToBeCloseToArray(projectionData.tileMercatorCoords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
         });
     });
@@ -50,7 +50,7 @@ describe('GlobeTransform', () => {
         const globeTransform = createGlobeTransform(globeProjectionMock);
 
         describe('general plane properties', () => {
-            const projectionData = globeTransform.getProjectionData(new OverscaledTileID(0, 0, 0, 0, 0));
+            const projectionData = globeTransform.getProjectionData({overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0)});
 
             test('plane vector length', () => {
                 const len = Math.sqrt(

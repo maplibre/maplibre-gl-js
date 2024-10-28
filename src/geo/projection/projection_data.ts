@@ -1,4 +1,5 @@
 import type {mat4} from 'gl-matrix';
+import {OverscaledTileID} from '../../source/tile_id';
 
 /**
  * This type contains all data necessary to project a tile to screen in MapLibre's shader system.
@@ -43,4 +44,23 @@ export type ProjectionData = {
      * Uniform name: `u_projection_fallback_matrix`.
      */
     fallbackMatrix: mat4;
+}
+
+export type ProjectionDataParams = {
+    /**
+     * The ID of the current tile
+     */
+    overscaledTileID: OverscaledTileID | null;
+    /**
+     * Set to true if a pixel-aligned matrix should be used, if possible (mostly used for raster tiles under mercator projection)
+     */
+    aligned?: boolean;
+    /**
+     * Set to true if the terrain matrix should be ignored
+     */
+    ignoreTerrainMatrix?: boolean;
+    /**
+     * Set to true if the globe matrix should be ignored (i.e. when rendering to texture for terrain)
+     */
+    ignoreGlobeMatrix?: boolean;
 }
