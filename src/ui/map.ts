@@ -64,6 +64,7 @@ import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {type ITransform} from '../geo/transform_interface';
 import {type ICameraHelper} from '../geo/projection/camera_helper';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
+import {isAbortError} from '../util/abort_error';
 
 const version = packageJSON.version;
 
@@ -3382,7 +3383,7 @@ export class Map extends Camera {
                 this._frameRequest = null;
                 this._render(paintStartTimeStamp);
             }).catch((error: Error) => {
-                if (error.message.startsWith('WebGL:')) {
+                if (!isAbortError(error)) {
                     throw error;
                 }
             }); // ignore abort error
