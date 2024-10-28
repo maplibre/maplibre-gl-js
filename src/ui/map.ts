@@ -3341,7 +3341,11 @@ export class Map extends Camera {
                 PerformanceUtils.frame(paintStartTimeStamp);
                 this._frameRequest = null;
                 this._render(paintStartTimeStamp);
-            }).catch(() => {}); // ignore abort error
+            }).catch((error: Error) => {
+                if (error.message.startsWith('WebGL:')) {
+                    throw error;
+                }
+            }); // ignore abort error
         }
     }
 
