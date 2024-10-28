@@ -708,6 +708,7 @@ export abstract class Camera extends Evented {
      * Returns the map's current pitch (tilt).
      *
      * @returns The map's current pitch, measured in degrees away from the plane of the screen.
+     * @defaultValue 36.87
      */
     getPitch(): number { return this.transform.pitch; }
 
@@ -718,6 +719,7 @@ export abstract class Camera extends Evented {
      *
      * @param pitch - The pitch to set, measured in degrees away from the plane of the screen (0-60).
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
+     * @defaultValue 36.87
      */
     setPitch(pitch: number, eventData?: any): this {
         this.jumpTo({pitch}, eventData);
