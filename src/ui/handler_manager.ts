@@ -527,7 +527,11 @@ export class HandlerManager {
         if (this._map.cameraHelper.useGlobeControls && !tr.isPointOnMapSurface(around)) {
             around = tr.centerPoint;
         }
-        const preZoomAroundLoc = tr.screenPointToLocation(panDelta ? around.sub(panDelta) : around);
+        // If we are rotating about the center point, avoid numerical issues near the horizon by using the transform's
+        // center directly, instead of computing it from the screen point
+        const preZoomAroundLoc = around.distSqr(tr.centerPoint) < 1.0e-2 ?
+            tr.center :
+            tr.screenPointToLocation(panDelta ? around.sub(panDelta) : around);
 
         if (!terrain) {
             // Apply zoom, bearing, pitch, roll
@@ -619,7 +623,9 @@ export class HandlerManager {
             this._map._elevationFreeze = false;
             this._terrainMovement = false;
             const tr = this._map._getTransformForUpdate();
-            tr.recalculateZoom(this._map.terrain);
+            if (this._map.getCenterClampedToGround()) {
+                tr.recalculateZoomAndCenter(this._map.terrain);
+            }
             this._map._applyUpdatedTransform(tr);
         }
         if (allowEndAnimation && finishedMoving) {

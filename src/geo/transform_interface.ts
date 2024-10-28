@@ -195,10 +195,10 @@ interface ITransformMutators {
     /**
      * This method works in combination with freezeElevation activated.
      * freezeElevation is enabled during map-panning because during this the camera should sit in constant height.
-     * After panning finished, call this method to recalculate the zoom level for the current camera-height in current terrain.
+     * After panning finished, call this method to recalculate the zoom level and center point for the current camera-height in current terrain.
      * @param terrain - the terrain
      */
-    recalculateZoom(terrain: Terrain): void;
+    recalculateZoomAndCenter(terrain?: Terrain): void;
 
     /**
      * Set's the transform's center so that the given point on screen is at the given world coordinates.
@@ -377,9 +377,23 @@ export interface IReadonlyTransform extends ITransformGetters {
     getCameraPoint(): Point;
 
     /**
-     * The altitude of the camera above the center of the map in meters.
+     * The altitude of the camera above the sea level in meters.
      */
     getCameraAltitude(): number;
+
+    /**
+     * The longitude and latitude of the camera.
+     */
+    getCameraLngLat(): LngLat;
+
+    /**
+     * Given the camera position (lng, lat, alt), calculate the center point and zoom level
+     * @param lngLat - lng, lat of the camera
+     * @param alt - altitude of the camera above sea level, in meters
+     * @param bearing - bearing of the camera, in degrees
+     * @param pitch - pitch angle of the camera, in degrees
+     */
+    calculateCenterFromCameraLngLatAlt(lngLat: LngLat, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number};
 
     getRayDirectionFromPixel(p: Point): vec3;
 
