@@ -16,7 +16,7 @@ export const nodeResolve = resolve({
     preferBuiltins: false
 });
 
-export const plugins = (production: boolean, minified: boolean): Plugin[] => [
+export const plugins = (production: boolean): Plugin[] => [
     json(),
     // https://github.com/zaach/jison/issues/351
     replace({
@@ -31,7 +31,7 @@ export const plugins = (production: boolean, minified: boolean): Plugin[] => [
         sourceMap: true,
         functions: ['PerformanceUtils.*']
     }),
-    minified && terser({
+    terser({
         compress: {
             pure_getters: true,
             passes: 3
