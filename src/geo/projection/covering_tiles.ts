@@ -33,7 +33,7 @@ export type CalculateTileZoomFunction = (requestedCenterZoom: number,
     distanceToTile2D: number,
     distanceToTileZ: number,
     distanceToCenter3D: number,
-    cameraVFOV: number) => number;
+    cameraVerticalFOV: number) => number;
 
 export interface CoveringTilesDetails {
     /**
