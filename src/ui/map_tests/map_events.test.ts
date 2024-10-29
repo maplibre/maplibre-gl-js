@@ -975,6 +975,30 @@ describe('map events', () => {
         expect(actualZoom).toBe(map.getZoom());
     });
 
+    test('drag from center', () => {
+        const map = createMap({interactive: true, clickTolerance: 4});
+        map.on('moveend', () => {
+            expect(map.getCenter().lng).toBeCloseTo(0, 10);
+            expect(map.getCenter().lat).toBeCloseTo(33.13755119234696, 10);
+            expect(map.getCenterElevation()).toBeCloseTo(0, 10);
+        });
+        const canvas = map.getCanvas();
+        simulate.dragWithMove(canvas, {x: 100, y: 100}, {x: 100, y: 150});
+        map._renderTaskQueue.run();
+    });
+
+    test('drag from off center', () => {
+        const map = createMap({interactive: true, clickTolerance: 4});
+        map.on('moveend', () => {
+            expect(map.getCenter().lng).toBeCloseTo(0, 10);
+            expect(map.getCenter().lat).toBeCloseTo(33.13755119234696, 10);
+            expect(map.getCenterElevation()).toBeCloseTo(0, 10);
+        });
+        const canvas = map.getCanvas();
+        simulate.dragWithMove(canvas, {x: 50, y: 50}, {x: 50, y: 100});
+        map._renderTaskQueue.run();
+    });
+
     describe('error event', () => {
         test('logs errors to console when it has NO listeners', () => {
             // to avoid seeing error in the console in Jest

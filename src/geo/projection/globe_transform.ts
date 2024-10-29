@@ -698,8 +698,8 @@ export class GlobeTransform implements ITransform {
         return globeCoveringTiles(this, this._cachedFrustum, this._cachedClippingPlane, cameraCoord, centerCoord, options);
     }
 
-    recalculateZoom(terrain: Terrain): void {
-        this._mercatorTransform.recalculateZoom(terrain);
+    recalculateZoomAndCenter(terrain?: Terrain): void {
+        this._mercatorTransform.recalculateZoomAndCenter(terrain);
         this.apply(this._mercatorTransform);
     }
 
@@ -714,6 +714,10 @@ export class GlobeTransform implements ITransform {
 
     getCameraAltitude(): number {
         return this._mercatorTransform.getCameraAltitude();
+    }
+
+    getCameraLngLat(): LngLat {
+        return this._mercatorTransform.getCameraLngLat();
     }
 
     lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
@@ -822,6 +826,10 @@ export class GlobeTransform implements ITransform {
             ),
             zoom: constrainedZoom
         };
+    }
+
+    calculateCenterFromCameraLngLatAlt(ll: LngLat, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
+        return this._mercatorTransform.calculateCenterFromCameraLngLatAlt(ll, alt, bearing, pitch);
     }
 
     /**

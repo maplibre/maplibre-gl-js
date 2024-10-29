@@ -1,5 +1,5 @@
 import {LngLat, LngLatLike} from '../lng_lat';
-import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate';
+import {altitudeFromMercatorZ, MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate';
 import Point from '@mapbox/point-geometry';
 import {wrap, clamp, createIdentityMat4f64, createMat4f64, degreesToRadians} from '../../util/util';
 import {mat2, mat4, vec3, vec4} from 'gl-matrix';
@@ -10,7 +10,7 @@ import {PointProjection, xyTransformMat4} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
 import {IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
 import {PaddingOptions} from '../edge_insets';
-import {mercatorCoordinateToLocation, getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix} from './mercator_utils';
+import {mercatorCoordinateToLocation, getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle, cameraMercatorCoordinateFromCenterAndRotation} from './mercator_utils';
 import {EXTENT} from '../../data/extent';
 import type {ProjectionData} from './projection_data';
 import {scaleZoom, TransformHelper, zoomScale} from '../transform_helper';
@@ -276,36 +276,33 @@ export class MercatorTransform implements ITransform {
         return mercatorCoveringTiles(this, cameraFrustum, null, cameraCoord, centerCoord, options);
     }
 
-    recalculateZoom(terrain: Terrain): void {
-        const origElevation = this.elevation;
-        const origAltitude = Math.cos(this.pitchInRadians) * this._cameraToCenterDistance / this._helper._pixelPerMeter;
-
+    recalculateZoomAndCenter(terrain?: Terrain): void {
         // find position the camera is looking on
         const center = this.screenPointToLocation(this.centerPoint, terrain);
-        const elevation = terrain.getElevationForLngLatZoom(center, this._helper._tileZoom);
+        const elevation = terrain ? terrain.getElevationForLngLatZoom(center, this._helper._tileZoom) : 0;
         const deltaElevation = this.elevation - elevation;
         if (!deltaElevation) return;
 
-        // The camera's altitude off the ground + the ground's elevation = a constant:
-        // this means the camera stays at the same total height.
-        const requiredAltitude = origAltitude + origElevation - elevation;
-        // Since altitude = Math.cos(this._pitchInRadians) * this.cameraToCenterDistance / pixelPerMeter:
-        const requiredPixelPerMeter = Math.cos(this.pitchInRadians) * this._cameraToCenterDistance / requiredAltitude;
-        // Since pixelPerMeter = mercatorZfromAltitude(1, center.lat) * worldSize:
-        const requiredWorldSize = requiredPixelPerMeter / mercatorZfromAltitude(1, center.lat);
-        // Since worldSize = this.tileSize * scale:
-        const requiredScale = requiredWorldSize / this.tileSize;
-        const zoom = scaleZoom(requiredScale);
+        // Find the current camera position
+        const originalPixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
+        const cameraToCenterDistanceMeters = this._cameraToCenterDistance / originalPixelPerMeter;
+        const origCenterMercator = MercatorCoordinate.fromLngLat(this.center, this.elevation);
+        const cameraMercator = cameraMercatorCoordinateFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
+
+        // update elevation to the new terrain intercept elevation and recalculate the center point
+        this._helper._elevation = elevation;
+        const centerInfo = this.calculateCenterFromCameraLngLatAlt(cameraMercator.toLngLat(), altitudeFromMercatorZ(cameraMercator.z, origCenterMercator.y), this.bearing, this.pitch);
 
         // update matrices
-        this._helper._elevation = elevation;
-        this._helper._center = center;
-        this.setZoom(zoom);
+        this._helper._elevation = centerInfo.elevation;
+        this._helper._center = centerInfo.center;
+        this.setZoom(centerInfo.zoom);
     }
 
     setLocationAtPoint(lnglat: LngLat, point: Point) {
-        const a = this.screenPointToMercatorCoordinate(point);
-        const b = this.screenPointToMercatorCoordinate(this.centerPoint);
+        const z = mercatorZfromAltitude(this.elevation, this.center.lat);
+        const a = this.screenPointToMercatorCoordinateAtZ(point, z);
+        const b = this.screenPointToMercatorCoordinateAtZ(this.centerPoint, z);
         const loc = locationToMercatorCoordinate(lnglat);
         const newCenter = new MercatorCoordinate(
             loc.x - (a.x - b.x),
@@ -334,9 +331,13 @@ export class MercatorTransform implements ITransform {
                 return coordinate;
             }
         }
+        return this.screenPointToMercatorCoordinateAtZ(p);
+    }
+
+    screenPointToMercatorCoordinateAtZ(p: Point, mercatorZ?: number): MercatorCoordinate {
 
         // calculate point-coordinate on flat earth
-        const targetZ = 0;
+        const targetZ = mercatorZ ? mercatorZ : 0;
         // since we don't know the correct projected z value for the point,
         // unproject two points to get a line and then find the point on that
         // line with z=0
@@ -360,7 +361,8 @@ export class MercatorTransform implements ITransform {
 
         return new MercatorCoordinate(
             interpolates.number(x0, x1, t) / this.worldSize,
-            interpolates.number(y0, y1, t) / this.worldSize);
+            interpolates.number(y0, y1, t) / this.worldSize,
+            targetZ);
     }
 
     /**
@@ -526,10 +528,58 @@ export class MercatorTransform implements ITransform {
         return result;
     }
 
+    calculateCenterFromCameraLngLatAlt(lnglat: LngLat, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
+        const cameraBearing = bearing !== undefined ? bearing : this.bearing;
+        const cameraPitch = pitch = pitch !== undefined ? pitch : this.pitch;
+
+        const camMercator = MercatorCoordinate.fromLngLat(lnglat, alt);
+        const dzNormalized = -Math.cos(degreesToRadians(cameraPitch));
+        const dhNormalized = Math.sin(degreesToRadians(cameraPitch));
+        const dxNormalized = dhNormalized * Math.sin(degreesToRadians(cameraBearing));
+        const dyNormalized = -dhNormalized * Math.cos(degreesToRadians(cameraBearing));
+
+        let elevation = this.elevation;
+        const altitudeAGL = alt - elevation;
+        let distanceToCenterMeters;
+        if (dzNormalized * altitudeAGL >= 0.0 || Math.abs(dzNormalized) < 0.1) {
+            distanceToCenterMeters = 10000;
+            elevation = alt + distanceToCenterMeters * dzNormalized;
+        } else {
+            distanceToCenterMeters = -altitudeAGL / dzNormalized;
+        }
+
+        // The mercator transform scale changes with latitude. At high latitudes, there are more "Merc units" per meter
+        // than at the equator. We treat the center point as our fundamental quantity. This means we want to convert
+        // elevation to Mercator Z using the scale factor at the center point (not the camera point). Since the center point is
+        // initially unknown, we compute it using the scale factor at the camera point. This gives us a better estimate of the
+        // center point scale factor, which we use to recompute the center point. We repeat until the error is very small.
+        // This typically takes about 5 iterations.
+        let metersPerMercUnit = altitudeFromMercatorZ(1, camMercator.y);
+        let centerMercator: MercatorCoordinate;
+        let dMercator: number;
+        let iter = 0;
+        const maxIter = 10;
+        do {
+            iter += 1;
+            if (iter > maxIter) {
+                break;
+            }
+            dMercator = distanceToCenterMeters / metersPerMercUnit;
+            const dx = dxNormalized * dMercator;
+            const dy = dyNormalized * dMercator;
+            centerMercator = new MercatorCoordinate(camMercator.x + dx, camMercator.y + dy);
+            metersPerMercUnit = 1 / centerMercator.meterInMercatorCoordinateUnits();
+        } while (Math.abs(distanceToCenterMeters - dMercator * metersPerMercUnit) > 1.0e-12);
+
+        const center = centerMercator.toLngLat();
+        const zoom = scaleZoom(this.height / 2 / Math.tan(this.fovInRadians / 2) / dMercator / this.tileSize);
+        return {center, elevation, zoom};
+    }
+
     _calcMatrices(): void {
         if (!this._helper._height) return;
 
-        const halfFov = this._helper._fovInRadians / 2;
+        const halfFov = this.fovInRadians / 2;
         const offset = this.centerOffset;
         const point = projectToWorldCoordinates(this.worldSize, this.center);
         const x = point.x, y = point.y;
@@ -537,10 +587,12 @@ export class MercatorTransform implements ITransform {
         this._helper._pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
 
         // Calculate the camera to sea-level distance in pixel in respect of terrain
-        const cameraToSeaLevelDistance = this._cameraToCenterDistance + this._helper._elevation * this._helper._pixelPerMeter / Math.cos(this.pitchInRadians);
+        const limitedPitchRadians = degreesToRadians(Math.min(this.pitch, maxMercatorHorizonAngle));
+        const cameraToSeaLevelDistance = Math.max(this._cameraToCenterDistance / 2, this._cameraToCenterDistance + this._helper._elevation * this._helper._pixelPerMeter / Math.cos(limitedPitchRadians));
         // In case of negative minimum elevation (e.g. the dead see, under the sea maps) use a lower plane for calculation
-        const minElevation = Math.min(this.elevation, this.minElevationForCurrentTile);
-        const cameraToLowestPointDistance = cameraToSeaLevelDistance - minElevation * this._helper._pixelPerMeter / Math.cos(this.pitchInRadians);
+        const minRenderDistanceBelowCameraInMeters = 100;
+        const minElevation = Math.min(this.elevation, this.minElevationForCurrentTile, this.getCameraAltitude() - minRenderDistanceBelowCameraInMeters);
+        const cameraToLowestPointDistance = cameraToSeaLevelDistance - minElevation * this._helper._pixelPerMeter / Math.cos(limitedPitchRadians);
         const lowestPlane = minElevation < 0 ? cameraToLowestPointDistance : cameraToSeaLevelDistance;
 
         // Find the distance from the center point [width/2 + offset.x, height/2 + offset.y] to the
@@ -555,13 +607,14 @@ export class MercatorTransform implements ITransform {
         // Find the distance from the center point to the horizon
         const horizon = getMercatorHorizon(this);
         const horizonAngle = Math.atan(horizon / this._cameraToCenterDistance);
-        const fovCenterToHorizon = 2 * horizonAngle * (0.5 + offset.y / (horizon * 2));
+        const minFovCenterToHorizonRadians = degreesToRadians(90 - maxMercatorHorizonAngle);
+        const fovCenterToHorizon = horizonAngle > minFovCenterToHorizonRadians ? 2 * horizonAngle * (0.5 + offset.y / (horizon * 2)) : minFovCenterToHorizonRadians;
         const topHalfSurfaceDistanceHorizon = Math.sin(fovCenterToHorizon) * lowestPlane / Math.sin(clamp(Math.PI - groundAngle - fovCenterToHorizon, 0.01, Math.PI - 0.01));
 
         // Calculate z distance of the farthest fragment that should be rendered.
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
         const topHalfMinDistance = Math.min(topHalfSurfaceDistance, topHalfSurfaceDistanceHorizon);
-        this._farZ = (Math.cos(Math.PI / 2 - this.pitchInRadians) * topHalfMinDistance + lowestPlane) * 1.01;
+        this._farZ = (Math.cos(Math.PI / 2 - limitedPitchRadians) * topHalfMinDistance + lowestPlane) * 1.01;
 
         // The larger the value of nearZ is
         // - the more depth precision is available for features (good)
@@ -679,6 +732,14 @@ export class MercatorTransform implements ITransform {
     getCameraAltitude(): number {
         const altitude = Math.cos(this.pitchInRadians) * this._cameraToCenterDistance / this._helper._pixelPerMeter;
         return altitude + this.elevation;
+    }
+
+    getCameraLngLat(): LngLat {
+        const cameraToCenterDistancePixels = 0.5 / Math.tan(this.fovInRadians / 2) * this.height;
+        const pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
+        const cameraToCenterDistanceMeters = cameraToCenterDistancePixels / pixelPerMeter;
+        const camMercator = cameraMercatorCoordinateFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
+        return camMercator.toLngLat();
     }
 
     lngLatToCameraDepth(lngLat: LngLat, elevation: number) {

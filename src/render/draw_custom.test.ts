@@ -62,7 +62,7 @@ describe('drawCustom', () => {
         });
         drawCustom(mockPainter, sourceCacheMock, mockLayer);
         expect(result.gl).toBeDefined();
-        expect(result.args.farZ).toBe(804.8028169246645);
+        expect(result.args.farZ).toBeCloseTo(804.8028169246645, 6);
         expect(result.args.farZ).toBe(mockPainter.transform.farZ);
         expect(result.args.nearZ).toBe(mockPainter.transform.nearZ);
         expect(result.args.fov).toBe(mockPainter.transform.fov * Math.PI / 180);
