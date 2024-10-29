@@ -91,7 +91,7 @@ function drawDebugTile(painter: Painter, sourceCache: SourceCache, coord: Oversc
     const tileLabel = `${tileIdText} ${tileSizeKb}kB`;
     drawTextToOverlay(painter, tileLabel);
 
-    const projectionData = painter.transform.getProjectionData(coord);
+    const projectionData = painter.transform.getProjectionData({overscaledTileID: coord});
 
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, ColorMode.alphaBlended, CullFaceMode.disabled,
         debugUniformValues(Color.transparent, scaleRatio), null, projectionData, id,
