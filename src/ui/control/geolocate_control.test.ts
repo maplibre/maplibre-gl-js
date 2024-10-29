@@ -37,7 +37,7 @@ describe('GeolocateControl with no options', () => {
         map.remove();
     });
 
-    test('is disabled when there\'s no support', async () => {
+    test('is disabled when there is no support', async () => {
         (checkGeolocationSupport as any as jest.SpyInstance).mockReset().mockImplementationOnce(() => Promise.resolve(false));
         const geolocate = new GeolocateControl(undefined);
         const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
@@ -47,7 +47,7 @@ describe('GeolocateControl with no options', () => {
         spy.mockRestore();
     });
 
-    test('is enabled when there no support', async () => {
+    test('is enabled when there is support', async () => {
         const geolocate = new GeolocateControl(undefined);
         map.addControl(geolocate);
         await sleep(0);
@@ -85,11 +85,7 @@ describe('GeolocateControl with no options', () => {
     test('does not throw if removed quickly', () => {
         (checkGeolocationSupport as any as jest.SpyInstance).mockReset()
             .mockImplementationOnce(() => {
-                return new Promise(resolve => {
-                    setTimeout(() => {
-                        resolve(true);
-                    }, 10);
-                });
+                return sleep(10);
             });
 
         const geolocate = new GeolocateControl(undefined);

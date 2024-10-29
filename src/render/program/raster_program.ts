@@ -1,12 +1,11 @@
-import {Uniform1i, Uniform1f, Uniform2f, Uniform3f, UniformMatrix4f} from '../uniform_binding';
+import {Uniform1i, Uniform1f, Uniform2f, Uniform3f, Uniform4f} from '../uniform_binding';
 
 import type {Context} from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {RasterStyleLayer} from '../../style/style_layer/raster_style_layer';
-import {mat4} from 'gl-matrix';
+import Point from '@mapbox/point-geometry';
 
 export type RasterUniformsType = {
-    'u_matrix': UniformMatrix4f;
     'u_tl_parent': Uniform2f;
     'u_scale_parent': Uniform1f;
     'u_buffer_scale': Uniform1f;
@@ -19,10 +18,11 @@ export type RasterUniformsType = {
     'u_saturation_factor': Uniform1f;
     'u_contrast_factor': Uniform1f;
     'u_spin_weights': Uniform3f;
+    'u_coords_top': Uniform4f;
+    'u_coords_bottom': Uniform4f;
 };
 
 const rasterUniforms = (context: Context, locations: UniformLocations): RasterUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
     'u_tl_parent': new Uniform2f(context, locations.u_tl_parent),
     'u_scale_parent': new Uniform1f(context, locations.u_scale_parent),
     'u_buffer_scale': new Uniform1f(context, locations.u_buffer_scale),
@@ -34,22 +34,27 @@ const rasterUniforms = (context: Context, locations: UniformLocations): RasterUn
     'u_brightness_high': new Uniform1f(context, locations.u_brightness_high),
     'u_saturation_factor': new Uniform1f(context, locations.u_saturation_factor),
     'u_contrast_factor': new Uniform1f(context, locations.u_contrast_factor),
-    'u_spin_weights': new Uniform3f(context, locations.u_spin_weights)
+    'u_spin_weights': new Uniform3f(context, locations.u_spin_weights),
+    'u_coords_top': new Uniform4f(context, locations.u_coords_top),
+    'u_coords_bottom': new Uniform4f(context, locations.u_coords_bottom)
 });
 
 const rasterUniformValues = (
-    matrix: mat4,
     parentTL: [number, number],
     parentScaleBy: number,
     fade: {
         mix: number;
         opacity: number;
     },
-    layer: RasterStyleLayer
+    layer: RasterStyleLayer,
+    cornerCoords: Array<Point>,
 ): UniformValues<RasterUniformsType> => ({
-    'u_matrix': matrix,
     'u_tl_parent': parentTL,
     'u_scale_parent': parentScaleBy,
+    // If u_buffer_scale is ever something else than a constant 1,
+    // the north/south pole handling in the vertex shader might need modification
+    // so that the texture coordinares for poles always lie beyond the edge of the texture.
+    // Right now the coordinates are placed right at the texture border.
     'u_buffer_scale': 1,
     'u_fade_t': fade.mix,
     'u_opacity': fade.opacity * layer.paint.get('raster-opacity'),
@@ -59,7 +64,9 @@ const rasterUniformValues = (
     'u_brightness_high': layer.paint.get('raster-brightness-max'),
     'u_saturation_factor': saturationFactor(layer.paint.get('raster-saturation')),
     'u_contrast_factor': contrastFactor(layer.paint.get('raster-contrast')),
-    'u_spin_weights': spinWeights(layer.paint.get('raster-hue-rotate'))
+    'u_spin_weights': spinWeights(layer.paint.get('raster-hue-rotate')),
+    'u_coords_top': [cornerCoords[0].x, cornerCoords[0].y, cornerCoords[1].x, cornerCoords[1].y],
+    'u_coords_bottom': [cornerCoords[3].x, cornerCoords[3].y, cornerCoords[2].x, cornerCoords[2].y]
 });
 
 function spinWeights(angle) {

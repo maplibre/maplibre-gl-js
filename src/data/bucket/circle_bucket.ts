@@ -27,11 +27,16 @@ import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
+import {CircleGranularity} from '../../render/subdivision_granularity_settings';
 
+const VERTEX_MIN_VALUE = -32768; // -(2^15)
+
+// Extrude is in range 0..7, which will be mapped to -1..1 in the shader.
 function addCircleVertex(layoutVertexArray, x, y, extrudeX, extrudeY) {
+    // We pack circle position and extrude into range 0..65535, but vertices are stored as *signed* 16-bit integers, so we need to offset the number by 2^15.
     layoutVertexArray.emplaceBack(
-        (x * 2) + ((extrudeX + 1) / 2),
-        (y * 2) + ((extrudeY + 1) / 2));
+        VERTEX_MIN_VALUE + (x * 8) + extrudeX,
+        VERTEX_MIN_VALUE + (y * 8) + extrudeY);
 }
 
 /**
@@ -82,11 +87,20 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
         let circleSortKey = null;
         let sortFeaturesByKey = false;
 
+        // Heatmap circles are usually large (and map-pitch-aligned), tessellate them to allow curvature along the globe.
+        let subdivide = styleLayer.type === 'heatmap';
+
         // Heatmap layers are handled in this bucket and have no evaluated properties, so we check our access
         if (styleLayer.type === 'circle') {
-            circleSortKey = (styleLayer as CircleStyleLayer).layout.get('circle-sort-key');
+            const circleStyle = (styleLayer as CircleStyleLayer);
+            circleSortKey = circleStyle.layout.get('circle-sort-key');
             sortFeaturesByKey = !circleSortKey.isConstant();
+
+            // Circles that are "printed" onto the map surface should be tessellated to follow the globe's curvature.
+            subdivide = subdivide || circleStyle.paint.get('circle-pitch-alignment') === 'map';
         }
+
+        const granularity = subdivide ? options.subdivisionGranularity.circle : 1;
 
         for (const {feature, id, index, sourceLayerIndex} of features) {
             const needGeometry = this.layers[0]._featureFilter.needGeometry;
@@ -121,7 +135,7 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
             const {geometry, index, sourceLayerIndex} = bucketFeature;
             const feature = features[index].feature;
 
-            this.addFeature(bucketFeature, geometry, index, canonical);
+            this.addFeature(bucketFeature, geometry, index, canonical, granularity);
             options.featureIndex.insert(feature, geometry, index, sourceLayerIndex, this.index);
         }
     }
@@ -156,37 +170,63 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
         this.segments.destroy();
     }
 
-    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID) {
+    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, granularity: CircleGranularity = 1) {
+        // Since we store the circle's center in each vertex, we only have 3 bits for actual vertex position in each axis.
+        // Thus the valid range of positions is 0..7.
+        // This gives us 4 possible granularity settings that are symmetrical.
+
+        // This array stores vertex positions that should by used by the tessellated quad.
+        let extrudes: Array<number>;
+
+        switch (granularity) {
+            case 1:
+                extrudes = [0, 7];
+                break;
+            case 3:
+                extrudes = [0, 2, 5, 7];
+                break;
+            case 5:
+                extrudes = [0, 1, 3, 4, 6, 7];
+                break;
+            case 7:
+                extrudes = [0, 1, 2, 3, 4, 5, 6, 7];
+                break;
+            default:
+                throw new Error(`Invalid circle bucket granularity: ${granularity}; valid values are 1, 3, 5, 7.`);
+        }
+
+        const verticesPerAxis = extrudes.length;
+
         for (const ring of geometry) {
             for (const point of ring) {
-                const x = point.x;
-                const y = point.y;
+                const vx = point.x;
+                const vy = point.y;
 
                 // Do not include points that are outside the tile boundaries.
-                if (x < 0 || x >= EXTENT || y < 0 || y >= EXTENT) continue;
+                if (vx < 0 || vx >= EXTENT || vy < 0 || vy >= EXTENT) {
+                    continue;
+                }
 
-                // this geometry will be of the Point type, and we'll derive
-                // two triangles from it.
-                //
-                // ┌─────────┐
-                // │ 3     2 │
-                // │         │
-                // │ 0     1 │
-                // └─────────┘
-
-                const segment = this.segments.prepareSegment(4, this.layoutVertexArray, this.indexArray, feature.sortKey);
+                const segment = this.segments.prepareSegment(verticesPerAxis * verticesPerAxis, this.layoutVertexArray, this.indexArray, feature.sortKey);
                 const index = segment.vertexLength;
 
-                addCircleVertex(this.layoutVertexArray, x, y, -1, -1);
-                addCircleVertex(this.layoutVertexArray, x, y, 1, -1);
-                addCircleVertex(this.layoutVertexArray, x, y, 1, 1);
-                addCircleVertex(this.layoutVertexArray, x, y, -1, 1);
+                for (let y = 0; y < verticesPerAxis; y++) {
+                    for (let x = 0; x < verticesPerAxis; x++) {
+                        addCircleVertex(this.layoutVertexArray, vx, vy, extrudes[x], extrudes[y]);
+                    }
+                }
 
-                this.indexArray.emplaceBack(index, index + 1, index + 2);
-                this.indexArray.emplaceBack(index, index + 3, index + 2);
+                for (let y = 0; y < verticesPerAxis - 1; y++) {
+                    for (let x = 0; x < verticesPerAxis - 1; x++) {
+                        const lowerIndex = index + y * verticesPerAxis + x;
+                        const upperIndex = index + (y + 1) * verticesPerAxis + x;
+                        this.indexArray.emplaceBack(lowerIndex, upperIndex + 1, lowerIndex + 1);
+                        this.indexArray.emplaceBack(lowerIndex, upperIndex, upperIndex + 1);
+                    }
+                }
 
-                segment.vertexLength += 4;
-                segment.primitiveLength += 2;
+                segment.vertexLength += verticesPerAxis * verticesPerAxis;
+                segment.primitiveLength += (verticesPerAxis - 1) * (verticesPerAxis - 1) * 2;
             }
         }
 

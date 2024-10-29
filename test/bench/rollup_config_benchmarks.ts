@@ -1,5 +1,5 @@
 import fs from 'fs';
-import sourcemaps from 'rollup-plugin-sourcemaps';
+import sourcemaps from 'rollup-plugin-sourcemaps2';
 import replace from '@rollup/plugin-replace';
 import {plugins, nodeResolve} from '../../build/rollup_plugins';
 import commonjs from '@rollup/plugin-commonjs';
@@ -41,7 +41,7 @@ const replaceConfig = {
     'process.env.NODE_ENV': JSON.stringify('production')
 };
 
-const allPlugins = plugins(true, true).concat(replace(replaceConfig));
+const allPlugins = plugins(true).concat(replace(replaceConfig));
 const intro = fs.readFileSync('build/rollup/bundle_prelude.js', 'utf8');
 
 const splitConfig = (name: string): RollupOptions[] => [{

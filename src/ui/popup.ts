@@ -24,9 +24,9 @@ const defaultOptions = {
 /**
  * A pixel offset specified as:
  *
- * - a single number specifying a distance from the location
- * - a {@link PointLike} specifying a constant offset
- * - an object of {@link Point}s specifying an offset for each anchor position
+ * - A single number specifying a distance from the location
+ * - A {@link PointLike} specifying a constant offset
+ * - An object of {@link PointLike}s specifying an offset for each anchor position
  *
  * Negative offsets indicate left and up.
  */
@@ -606,7 +606,7 @@ export class Popup extends Evented {
         const pos = this._flatPos = this._pos = this._trackPointer && cursor ? cursor : this._map.project(this._lngLat);
         if (this._map.terrain) {
             // flat position is saved because smartWrap needs non-elevated points
-            this._flatPos = this._trackPointer && cursor ? cursor : this._map.transform.locationPoint(this._lngLat);
+            this._flatPos = this._trackPointer && cursor ? cursor : this._map.transform.locationToScreenPoint(this._lngLat);
         }
 
         let anchor = this.options.anchor;

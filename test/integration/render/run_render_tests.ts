@@ -1,4 +1,3 @@
-/* eslint-disable no-process-exit */
 import path, {dirname} from 'path';
 import fs from 'fs';
 import st from 'st';
@@ -10,7 +9,7 @@ import http from 'http';
 import puppeteer, {Page, Browser} from 'puppeteer';
 import {CoverageReport} from 'monocart-coverage-reports';
 import {localizeURLs} from '../lib/localize-urls';
-import type {Map, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
+import type {Map as MaplibreMap, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
 import junitReportBuilder, {type TestSuite} from 'junit-report-builder';
 import * as maplibreglModule from '../../../dist/maplibre-gl';
 
@@ -216,7 +215,7 @@ function getTestStyles(options: RenderOptions, directory: string, port: number):
             const style = JSON.parse(fs.readFileSync(path.join(directory, fixture), 'utf8')) as StyleWithTestData;
             style.metadata = style.metadata || {} as any;
 
-            style.metadata.test = Object.assign({
+            style.metadata.test = {
                 id,
                 width: 512,
                 height: 512,
@@ -224,7 +223,8 @@ function getTestStyles(options: RenderOptions, directory: string, port: number):
                 recycleMap: options.recycleMap || false,
                 allowed: 0.00025,
                 threshold: 0.1285,
-            }, style.metadata.test);
+                ...style.metadata.test
+            };
 
             return style;
         })
@@ -291,7 +291,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 this.renderingMode = '2d';
             }
 
-            onAdd(map: Map, gl: WebGL2RenderingContext) {
+            onAdd(map: MaplibreMap, gl: WebGL2RenderingContext) {
                 const vertexSource = `#version 300 es
                 in vec3 aPos;
                 uniform mat4 u_matrix;
@@ -320,7 +320,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 gl.linkProgram(this.program);
             }
 
-            render(gl: WebGL2RenderingContext, matrix) {
+            render(gl: WebGL2RenderingContext, args) {
                 const vertexArray = new Float32Array([0.5, 0.5, 0.0]);
                 gl.useProgram(this.program);
                 const vertexBuffer = gl.createBuffer();
@@ -329,7 +329,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 const posAttrib = gl.getAttribLocation(this.program, 'aPos');
                 gl.enableVertexAttribArray(posAttrib);
                 gl.vertexAttribPointer(posAttrib, 3, gl.FLOAT, false, 0, 0);
-                gl.uniformMatrix4fv(gl.getUniformLocation(this.program, 'u_matrix'), false, matrix);
+                gl.uniformMatrix4fv(gl.getUniformLocation(this.program, 'u_matrix'), false, args.defaultProjectionData.mainMatrix);
                 gl.drawArrays(gl.POINTS, 0, 1);
             }
         }
@@ -351,7 +351,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 this.renderingMode = '3d';
             }
 
-            onAdd(map: Map, gl: WebGL2RenderingContext) {
+            onAdd(map: MaplibreMap, gl: WebGL2RenderingContext) {
 
                 const vertexSource = `#version 300 es
 
@@ -412,19 +412,160 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexArray, gl.STATIC_DRAW);
             }
 
-            render(gl: WebGL2RenderingContext, matrix) {
+            render(gl: WebGL2RenderingContext, args) {
                 gl.useProgram(this.program);
                 gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
                 gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
                 gl.enableVertexAttribArray(this.program.a_pos);
                 gl.vertexAttribPointer(this.program.aPos, 3, gl.FLOAT, false, 0, 0);
-                gl.uniformMatrix4fv(this.program.uMatrix, false, matrix);
+                gl.uniformMatrix4fv(this.program.uMatrix, false, args.defaultProjectionData.mainMatrix);
                 gl.drawElements(gl.TRIANGLES, 12, gl.UNSIGNED_SHORT, 0);
+            }
+        }
+
+        class Tent3DGlobe {
+            id: string;
+            type: string;
+            renderingMode: string;
+
+            vertexBuffer: WebGLBuffer;
+            indexBuffer: WebGLBuffer;
+            shaderMap: Map<string, {
+                program: WebGLProgram;
+                a_pos?: number;
+                aPos?: number;
+                uMatrix?:  WebGLUniformLocation;
+            }> = new Map();
+
+            constructor() {
+                this.id = 'tent-3d-globe';
+                this.type = 'custom';
+                this.renderingMode = '3d';
+            }
+
+            getShader(gl, shaderDescription) {
+                if (this.shaderMap.has(shaderDescription.variantName)) {
+                    return this.shaderMap.get(shaderDescription.variantName);
+                }
+
+                const vertexSource = `#version 300 es
+                // Inject MapLibre projection code
+                ${shaderDescription.vertexShaderPrelude}
+                ${shaderDescription.define}
+                
+                in vec3 a_pos;
+
+                void main() {
+                    gl_Position = projectTileFor3D(a_pos.xy, a_pos.z);
+                }`;
+
+                // create GLSL source for fragment shader
+                const fragmentSource = `#version 300 es
+                uniform mediump vec4 u_color;
+                out highp vec4 fragColor;
+                void main() {
+                    fragColor = u_color;
+                }`;
+
+                // create a vertex shader
+                const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+                gl.shaderSource(vertexShader, vertexSource);
+                gl.compileShader(vertexShader);
+
+                // create a fragment shader
+                const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+                gl.shaderSource(fragmentShader, fragmentSource);
+                gl.compileShader(fragmentShader);
+
+                // link the two shaders into a WebGL program
+                const program = gl.createProgram();
+                gl.attachShader(program, vertexShader);
+                gl.attachShader(program, fragmentShader);
+                gl.linkProgram(program);
+
+                const result = {
+                    program,
+                    aPos: gl.getAttribLocation(program, 'a_pos'),
+                };
+
+                this.shaderMap.set(shaderDescription.variantName, result);
+
+                return result;
+            }
+
+            onAdd (map, gl) {
+                const x = 0.5 - 0.015;
+                const y = 0.5 - 0.01;
+                const z = 500_000;
+                const d = 0.01;
+
+                const vertexArray = new Float32Array([
+                    x, y, 0,
+                    x + d, y, 0,
+                    x, y + d, z,
+                    x + d, y + d, z,
+                    x, y + d + d, 0,
+                    x + d, y + d + d, 0]);
+                const indexArray = new Uint16Array([
+                    0, 2, 1,
+                    1, 2, 3,
+                    2, 4, 3,
+                    3, 4, 5
+                ]);
+
+                this.vertexBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, vertexArray, gl.STATIC_DRAW);
+                this.indexBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexArray, gl.STATIC_DRAW);
+            }
+
+            render (gl, args) {
+                const shader = this.getShader(gl, args.shaderData);
+                gl.useProgram(shader.program);
+                gl.uniformMatrix4fv(
+                    gl.getUniformLocation(shader.program, 'u_projection_fallback_matrix'),
+                    false,
+                    args.defaultProjectionData.fallbackMatrix
+                );
+                gl.uniformMatrix4fv(
+                    gl.getUniformLocation(shader.program, 'u_projection_matrix'),
+                    false,
+                    args.defaultProjectionData.mainMatrix
+                );
+                gl.uniform4f(
+                    gl.getUniformLocation(shader.program, 'u_projection_tile_mercator_coords'),
+                    ...args.defaultProjectionData.tileMercatorCoords
+                );
+                gl.uniform4f(
+                    gl.getUniformLocation(shader.program, 'u_projection_clipping_plane'),
+                    ...args.defaultProjectionData.clippingPlane
+                );
+                gl.uniform1f(
+                    gl.getUniformLocation(shader.program, 'u_projection_transition'),
+                    args.defaultProjectionData.projectionTransition
+                );
+
+                gl.enable(gl.CULL_FACE);
+                gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+                gl.enableVertexAttribArray(shader.aPos);
+                gl.vertexAttribPointer(shader.aPos, 3, gl.FLOAT, false, 0, 0);
+                for (let i = 0; i < 2; i++) {
+                    gl.uniform4f(
+                        gl.getUniformLocation(shader.program, 'u_color'),
+                        i === 0 ? 1 : 0.25, 0, 0, 1
+                    );
+                    gl.cullFace(i === 0 ? gl.BACK : gl.FRONT);
+                    gl.drawElements(gl.TRIANGLES, 12, gl.UNSIGNED_SHORT, 0);
+                }
             }
         }
 
         const customLayerImplementations = {
             'tent-3d': Tent3D,
+            'tent-3d-globe': Tent3DGlobe,
             'null-island': NullIsland
         };
 
@@ -458,7 +599,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
          * @param operations - The operations
          * @param callback - The callback to use when all the operations are executed
          */
-        async function applyOperations(testData: TestData, map: Map & { _render: () => void}, idle: boolean) {
+        async function applyOperations(testData: TestData, map: MaplibreMap & { _render: () => void}, idle: boolean) {
             if (!testData.operations || testData.operations.length === 0) {
                 return;
             }
@@ -519,7 +660,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                         map._render();
                         break;
                     case 'updateFakeCanvas': {
-                        const canvasSource = map.getSource(operation[1]) as CanvasSource;
+                        const canvasSource = map.getSource<CanvasSource>(operation[1]);
                         canvasSource.play();
                         // update before pause should be rendered
                         await updateFakeCanvas(window.document, testData.addFakeCanvas.id, operation[2]);
@@ -567,7 +708,6 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             return fakeCanvas;
         }
 
-        // eslint-disable-next-line no-async-promise-executor
         return new Promise(async (resolve, reject) => {
             setTimeout(() => {
                 reject(new Error('Test timed out'));
@@ -580,7 +720,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
 
             if (maplibregl.getRTLTextPluginStatus() === 'unavailable') {
                 maplibregl.setRTLTextPlugin(
-                    'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js',
+                    'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js',
                     false // Don't lazy load the plugin
                 );
             }

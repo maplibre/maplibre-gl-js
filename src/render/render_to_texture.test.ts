@@ -15,6 +15,7 @@ import {FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
 import {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
 import {BackgroundStyleLayer} from '../style/style_layer/background_style_layer';
+import {DepthMode} from '../gl/depth_mode';
 
 describe('render to texture', () => {
     const gl = document.createElement('canvas').getContext('webgl');
@@ -64,8 +65,9 @@ describe('render to texture', () => {
     const painter = {
         layersDrawn: 0,
         context: new Context(gl),
-        transform: {zoom: 10, calculatePosMatrix: () => {}, calculateFogMatrix: () => {}},
+        transform: {zoom: 10, calculatePosMatrix: () => {}, getProjectionData(_a) {}, calculateFogMatrix: () => {}},
         colorModeForRenderPass: () => ColorMode.alphaBlended,
+        getDepthModeFor3D: () => DepthMode.disabled,
         useProgram: () => { return {draw: () => { layersDrawn++; }}; },
         _renderTileClippingMasks: () => {},
         renderLayer: () => {}
@@ -106,7 +108,24 @@ describe('render to texture', () => {
 
     test('check state', () => {
         expect(rtt._renderableTiles.map(t => t.tileID.key)).toStrictEqual(['923']);
-        expect(rtt._coordsDescendingInv).toEqual({'maine': {'923': [{'canonical': {'key': '922', 'x': 1, 'y': 2, 'z': 2}, 'key': '923', 'overscaledZ': 3, 'wrap': 0}]}});
+        expect(rtt._coordsDescendingInv).toEqual({
+            'maine': {
+                '923': [
+                    {
+                        'canonical': {
+                            'key': '922',
+                            'x': 1,
+                            'y': 2,
+                            'z': 2
+                        },
+                        'key': '923',
+                        'overscaledZ': 3,
+                        'wrap': 0,
+                        'terrainRttPosMatrix': null,
+                    }
+                ]
+            }
+        });
         expect(rtt._coordsDescendingInvStr).toStrictEqual({maine: {'923': '923'}});
     });
 

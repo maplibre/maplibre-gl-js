@@ -160,7 +160,6 @@ describe('query tests', () => {
     for (const styleJson of testStyles) {
         const testCaseRoot = path.dirname(styleJson.replace(/\\/g, '/')); // glob is returning paths that dirname can't handle...
         const caseName = path.relative(allTestsRoot, testCaseRoot);
-        // eslint-disable-next-line no-loop-func
         test(caseName, async () => {
             const port = (server.address() as AddressInfo).port;
             const fixture = await dirToJson(testCaseRoot, port);
@@ -246,14 +245,15 @@ function processStyle(testName:string, style: unknown, port:number) {
 
     clone.metadata = clone.metadata || {};
 
-    clone.metadata.test = Object.assign({
+    clone.metadata.test = {
         testName,
         width: 512,
         height: 512,
         pixelRatio: 1,
         recycleMap: false,
-        allowed: 0.00015
-    }, clone.metadata.test);
+        allowed: 0.00015,
+        ...clone.metadata.test
+    };
 
     return clone;
 }

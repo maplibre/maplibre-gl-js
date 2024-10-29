@@ -1,4 +1,4 @@
-import {Aabb, Frustum} from './primitives';
+import {Aabb, Frustum, IntersectionResult} from './primitives';
 import {mat4, vec3, vec4} from 'gl-matrix';
 
 describe('primitives', () => {
@@ -68,7 +68,7 @@ describe('primitives', () => {
         ];
 
         for (const aabb of aabbList)
-            expect(aabb.intersects(frustum)).toBe(2);
+            expect(aabb.intersectsFrustum(frustum)).toBe(IntersectionResult.Full);
 
     });
 
@@ -81,7 +81,7 @@ describe('primitives', () => {
         ];
 
         for (const aabb of aabbList)
-            expect(aabb.intersects(frustum)).toBe(1);
+            expect(aabb.intersectsFrustum(frustum)).toBe(IntersectionResult.Partial);
 
     });
 
@@ -95,7 +95,7 @@ describe('primitives', () => {
         ];
 
         for (const aabb of aabbList)
-            expect(aabb.intersects(frustum)).toBe(0);
+            expect(aabb.intersectsFrustum(frustum)).toBe(IntersectionResult.None);
 
     });
 

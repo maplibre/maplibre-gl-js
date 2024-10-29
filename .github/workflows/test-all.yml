@@ -35,7 +35,9 @@ jobs:
           rm docs/README.md
           rm -rf docs/API/_media
           docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build --strict
-
+      - name: Check spelling
+        # This need to run after the docs are built
+        run: npm run spellcheck
 
   unit-tests:
     name: Unit tests and Coverage
@@ -63,7 +65,7 @@ jobs:
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
           disable_search: true
-      
+
 
 
   integration-tests:

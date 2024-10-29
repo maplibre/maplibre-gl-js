@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Sync movement of multiple maps</title>
+    <meta property="og:description" content="Synchronize MapLibre GL JS maps with the sync-move plugin." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <script src="https://unpkg.com/@mapbox/mapbox-gl-sync-move@0.3.1"></script>
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body { height: 100%; }
+        #map1, #map2, #map3 { height: 100%; width: 100%; }
+        .maps {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="maps">
+    <div id="map1"></div>
+    <div id="map2"></div>
+    <div id="map3"></div>
+    </div>
+<script>
+    const map1 = new maplibregl.Map({
+        container: 'map1',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [0, 0],
+        zoom: 1,
+        maplibreLogo: true
+    });
+    const map2 = new maplibregl.Map({
+        container: 'map2',
+        style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+        center: [0, 0],
+        zoom: 1,
+        maplibreLogo: true
+    });
+    const map3 = new maplibregl.Map({
+        container: 'map3',
+        style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+        center: [0, 0],
+        zoom: 1,
+        maplibreLogo: true
+    });
+
+    syncMaps(map1, map2, map3);
+</script>
+</body>
+</html>

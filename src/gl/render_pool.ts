@@ -42,6 +42,9 @@ export class RenderPool {
         const fbo = this._context.createFramebuffer(this._tileSize, this._tileSize, true, true);
         const texture = new Texture(this._context, {width: this._tileSize, height: this._tileSize, data: null}, this._context.gl.RGBA);
         texture.bind(this._context.gl.LINEAR, this._context.gl.CLAMP_TO_EDGE);
+        if (this._context.extTextureFilterAnisotropic) {
+            this._context.gl.texParameterf(this._context.gl.TEXTURE_2D, this._context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, this._context.extTextureFilterAnisotropicMax);
+        }
         fbo.depthAttachment.set(this._context.createRenderbuffer(this._context.gl.DEPTH_STENCIL, this._tileSize, this._tileSize));
         fbo.colorAttachment.set(texture.texture);
         return {id, fbo, texture, stamp: -1, inUse: false};

@@ -7,7 +7,7 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 
 import type {Map} from './map';
 import type {LngLat} from '../geo/lng_lat';
-import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {ProjectionSpecification, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 /**
  * An event from the mouse relevant to a specific layer.
@@ -418,6 +418,10 @@ export type MapEventType = {
     cooperativegestureprevented: MapLibreEvent<WheelEvent | TouchEvent> & {
         gestureType: 'wheel_zoom' | 'touch_pan';
     };
+    /**
+     * Fired when map's projection is modified in other ways than by map being moved.
+     */
+    projectiontransition: MapProjectionEvent;
 };
 
 /**
@@ -457,6 +461,7 @@ export type MapSourceDataEvent = MapLibreEvent & {
     source: SourceSpecification;
     sourceId: string;
     sourceDataType: MapSourceDataType;
+    sourceDataChanged?: boolean;
     /**
      * The tile being loaded or changed, if the event has a `dataType` of `source` and
      * the event is related to loading of a tile.
@@ -734,6 +739,20 @@ export type MapDataEvent = {
 export type MapTerrainEvent = {
     type: 'terrain';
 };
+
+/**
+ * The map projection event
+ *
+ * @group Event Related
+ */
+export type MapProjectionEvent = {
+    type: 'projectiontransition';
+    /**
+     * Specifies the name of the new projection.
+     * Additionally includes 'globe-mercator' to describe globe that has internally switched to mercator.
+     */
+    newProjection: ProjectionSpecification['type'] | 'globe-mercator';
+}
 
 /**
  * An event related to the web gl context

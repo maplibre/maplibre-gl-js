@@ -47,6 +47,7 @@ export class Sky extends Evented {
      * This is used to cache the gl mesh for the sky, it should be initialized only once.
      */
     mesh: Mesh | undefined;
+    atmosphereMesh: Mesh | undefined;
     _transitionable: Transitionable<SkyProps>;
     _transitioning: Transitioning<SkyProps>;
 
@@ -55,10 +56,21 @@ export class Sky extends Evented {
         this._transitionable = new Transitionable(properties);
         this.setSky(sky);
         this._transitioning = this._transitionable.untransitioned();
+        this.recalculate(new EvaluationParameters(0));
     }
 
     setSky(sky?: SkySpecification, options: StyleSetterOptions = {}) {
         if (this._validate(validateSky, sky, options)) return;
+
+        if (!sky) {
+            sky = {
+                'sky-color': 'transparent',
+                'horizon-color': 'transparent',
+                'fog-color': 'transparent',
+                'fog-ground-blend': 1,
+                'atmosphere-blend': 0,
+            };
+        }
 
         for (const name in sky) {
             const value = sky[name];

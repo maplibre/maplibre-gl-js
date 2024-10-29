@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Draw geometries with terra-draw</title>
+    <meta property="og:description" content="Use maplibre-gl-terradraw to draw a geometry in various forms such as point, line or polygon on your map." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+
+<script src="https://cdn.jsdelivr.net/npm/@watergis/maplibre-gl-terradraw@0.1.1/dist/maplibre-gl-terradraw.umd.js"></script>
+<link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@watergis/maplibre-gl-terradraw@0.1.1/dist/maplibre-gl-terradraw.css"
+/>
+<div id="map"></div>
+
+<script>
+    const map = new maplibregl.Map({
+        container: 'map', // container id
+        style:
+            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL', //hosted style id
+        center: [-91.874, 42.76], // starting position
+        zoom: 12 // starting zoom
+    });
+
+    // By default, all terra-draw drawing modes are enabled.
+    // you can disable some of modes in the constructor options if you want.
+    const draw = new MaplibreTerradrawControl({
+        modes: [
+            'point',
+            'linestring',
+            'polygon',
+            'rectangle',
+            'angled-rectangle',
+            'circle',
+            'freehand',
+            'select'
+        ],
+        open: true,
+    });
+    map.addControl(draw, 'top-right');
+</script>
+</body>
+</html>

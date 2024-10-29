@@ -1,10 +1,11 @@
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {StyleLayer} from '../../style/style_layer';
-import {createMap, beforeMapTest, createStyle} from '../../util/test/util';
+import {createMap, beforeMapTest, createStyle, sleep} from '../../util/test/util';
 import {MapGeoJSONFeature} from '../../util/vectortile_to_geojson';
 import {MapLayerEventType, MapLibreEvent} from '../events';
 import {Map, MapOptions} from '../map';
 import {Event as EventedEvent, ErrorEvent} from '../../util/evented';
+import {GlobeProjection} from '../../geo/projection/globe';
 
 type IsAny<T> = 0 extends T & 1 ? T : never;
 type NotAny<T> = T extends IsAny<T> ? never : T;
@@ -58,6 +59,57 @@ describe('map events', () => {
         });
 
         map.on('click', 'layer', spy);
+        simulate.click(map.getCanvas());
+
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    test('Map#on adds a listener for an event on multiple layers', () => {
+        const map = createMap();
+        const features = [{} as MapGeoJSONFeature];
+
+        jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        jest.spyOn(map, 'queryRenderedFeatures')
+            .mockImplementationOnce((_point, options) => {
+                expect(options).toEqual({layers: ['layer1', 'layer2']});
+                return features;
+            });
+
+        const spy = jest.fn(function (e) {
+            expect(this).toBe(map);
+            expect(e.type).toBe('click');
+            expect(e.features).toBe(features);
+        });
+
+        map.on('click', ['layer1', 'layer2'], spy);
+        simulate.click(map.getCanvas());
+
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    test('Map#on adds listener which calls queryRenderedFeatures only for existing layers', () => {
+        const map = createMap();
+        const features = [{} as MapGeoJSONFeature];
+
+        jest.spyOn(map, 'getLayer').mockImplementation((id: string) => {
+            if (id === 'nonExistingLayer') {
+                return undefined;
+            }
+            return {} as StyleLayer;
+        });
+        jest.spyOn(map, 'queryRenderedFeatures')
+            .mockImplementationOnce((_point, options) => {
+                expect(options).toEqual({layers: ['layer1', 'layer2']});
+                return features;
+            });
+
+        const spy = jest.fn(function (e) {
+            expect(this).toBe(map);
+            expect(e.type).toBe('click');
+            expect(e.features).toBe(features);
+        });
+
+        map.on('click', ['layer1', 'layer2', 'nonExistingLayer'], spy);
         simulate.click(map.getCanvas());
 
         expect(spy).toHaveBeenCalledTimes(1);
@@ -203,7 +255,21 @@ describe('map events', () => {
         simulate.click(map.getCanvas());
 
         expect(spy).not.toHaveBeenCalled();
+    });
 
+    test('Map#off removes a delegated event listener for multiple layers', () => {
+        const map = createMap();
+
+        jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
+
+        const spy = jest.fn();
+
+        map.on('click', ['layer1', 'layer2'], spy);
+        map.off('click', ['layer1', 'layer2'], spy);
+        simulate.click(map.getCanvas());
+
+        expect(spy).not.toHaveBeenCalled();
     });
 
     test('Map#off distinguishes distinct event types', () => {
@@ -241,6 +307,53 @@ describe('map events', () => {
         map.on('click', 'A', spy);
         map.on('click', 'B', spy);
         map.off('click', 'B', spy);
+        simulate.click(map.getCanvas());
+
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    test('Map#off distinguishes distinct layer arrays', () => {
+        const map = createMap();
+        const featuresAB = [{} as MapGeoJSONFeature];
+
+        jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        jest.spyOn(map, 'queryRenderedFeatures').mockImplementation((point, options) => {
+            expect(options).toEqual({layers: ['A', 'B']});
+            return featuresAB;
+        });
+
+        const spy = jest.fn((e) => {
+            expect(e.features).toBe(featuresAB);
+        });
+
+        map.on('click', ['A', 'B'], spy);
+        map.on('click', ['A', 'C'], spy);
+        map.off('click', ['A', 'C'], spy);
+        simulate.click(map.getCanvas());
+
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    test('Map#off compares full layer array list, including layers missing in style', () => {
+        const map = createMap();
+
+        jest.spyOn(map, 'getLayer').mockImplementation((id: string) => {
+            if (id === 'nonExistingLayer') {
+                return undefined;
+            }
+            return {} as StyleLayer;
+        });
+        jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
+
+        const spy = jest.fn();
+
+        map.on('click', ['A', 'C', 'nonExistingLayer'], spy);
+        map.off('click', ['A', 'C'], spy);
+
+        simulate.click(map.getCanvas());
+
+        map.off('click', ['A', 'C', 'nonExistingLayer'], spy);
+
         simulate.click(map.getCanvas());
 
         expect(spy).toHaveBeenCalledTimes(1);
@@ -320,6 +433,21 @@ describe('map events', () => {
 
         simulate.mousemove(map.getCanvas());
         expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    test('Map#off removes listener registered with Map#once', () => {
+        const map = createMap();
+
+        jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
+
+        const spy = jest.fn();
+
+        map.once('click', 'layer', spy);
+        map.off('click', 'layer', spy);
+        simulate.click(map.getCanvas());
+
+        expect(spy).not.toHaveBeenCalled();
     });
 
     (['mouseenter', 'mouseover'] as (keyof MapLayerEventType)[]).forEach((event) => {
@@ -439,6 +567,56 @@ describe('map events', () => {
             expect(spyB).toHaveBeenCalledTimes(1);
         });
 
+        test(`Map#on ${event} distinguishes distinct layers when multiple layers provided`, () => {
+            const map = createMap();
+
+            const nonEmptyFeatures = [{} as MapGeoJSONFeature];
+            const emptyFeatures = [];
+
+            jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+            jest.spyOn(map, 'queryRenderedFeatures').mockImplementation((_point, options) => {
+                const layers = (options as any).layers as string[];
+                if (layers.includes('A')) {
+                    return nonEmptyFeatures;
+                }
+                return emptyFeatures;
+            });
+
+            const spyA = jest.fn();
+            const spyAB = jest.fn();
+            const spyC = jest.fn();
+
+            map.on(event, 'A', spyA);
+            map.on(event, ['A', 'B'], spyAB);
+            map.on(event, 'C', spyC);
+
+            simulate.mousemove(map.getCanvas());
+            simulate.mousemove(map.getCanvas());
+
+            expect(spyA).toHaveBeenCalledTimes(1);
+            expect(spyAB).toHaveBeenCalledTimes(1);
+            expect(spyC).not.toHaveBeenCalled();
+        });
+
+        test(`Map#on ${event} filters non-existing layers`, () => {
+            const map = createMap();
+
+            jest.spyOn(map, 'getLayer').mockImplementation((id: string) => id === 'B' ? undefined : {} as StyleLayer);
+            jest.spyOn(map, 'queryRenderedFeatures').mockImplementation((_point, options) => {
+                expect((options as any).layers).toStrictEqual(['A', 'C']);
+                return [{} as MapGeoJSONFeature];
+            });
+
+            const spyAC = jest.fn();
+
+            map.on(event, ['A', 'B', 'C'], spyAC);
+
+            simulate.mousemove(map.getCanvas());
+
+            expect(map.queryRenderedFeatures).toHaveBeenCalled();
+            expect(spyAC).toHaveBeenCalledTimes(1);
+        });
+
         test(`Map#on ${event} distinguishes distinct listeners`, () => {
             const map = createMap();
 
@@ -494,6 +672,29 @@ describe('map events', () => {
             expect(spy).toHaveBeenCalledTimes(1);
         });
 
+        test(`Map#off ${event} distinguishes distinct layers when multiple layers provided`, () => {
+            const map = createMap();
+            const featuresAB = [{} as MapGeoJSONFeature];
+
+            jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+            jest.spyOn(map, 'queryRenderedFeatures').mockImplementation((_point, options) => {
+                expect(options).toEqual({layers: ['A', 'B']});
+                return featuresAB;
+            });
+
+            const spy = jest.fn((e) => {
+                expect(e.features).toBe(featuresAB);
+            });
+
+            map.on(event, ['A', 'B'], spy);
+            map.on(event, ['B', 'C'], spy);
+            map.off(event, ['B', 'C'], spy);
+            simulate.mousemove(map.getCanvas());
+
+            expect(spy).toHaveBeenCalledTimes(1);
+            expect(map.queryRenderedFeatures).toHaveBeenCalledTimes(1);
+        });
+
         test(`Map#off ${event} distinguishes distinct listeners`, () => {
             const map = createMap();
 
@@ -517,7 +718,8 @@ describe('map events', () => {
         test(`Map#on ${event} does not fire if the specified layer does not exist`, () => {
             const map = createMap();
 
-            jest.spyOn(map, 'getLayer').mockReturnValue(null as unknown as StyleLayer);
+            jest.spyOn(map, 'getLayer').mockReturnValue(undefined);
+            jest.spyOn(map, 'queryRenderedFeatures');
 
             const spy = jest.fn();
 
@@ -526,7 +728,24 @@ describe('map events', () => {
             simulate.mousemove(map.getCanvas());
 
             expect(spy).not.toHaveBeenCalled();
+            expect(map.queryRenderedFeatures).not.toHaveBeenCalled();
+        });
 
+        test(`Map#on ${event} fires if one of specified layers exists`, () => {
+            const map = createMap();
+
+            jest.spyOn(map, 'getLayer').mockImplementation((id: string) => id === 'A' ? {} as StyleLayer : undefined);
+            jest.spyOn(map, 'queryRenderedFeatures')
+                .mockReturnValueOnce([{} as MapGeoJSONFeature])
+                .mockReturnValueOnce([]);
+
+            const spy = jest.fn();
+
+            map.on(event, ['A', 'B'], spy);
+            simulate.mousemove(map.getCanvas());
+            simulate.mousemove(map.getCanvas());
+
+            expect(spy).toHaveBeenCalledTimes(1);
         });
 
         test(`Map#on ${event} does not fire on mousemove when entering or within the specified layer`, () => {
@@ -706,10 +925,10 @@ describe('map events', () => {
         map.remove();
     });
 
-    test('emits load event after a style is set', done => {
+    test('emits load event after a style is set', () => new Promise<void>((done) => {
         const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
 
-        const fail = () => done('test failed');
+        const fail = () => { throw new Error('test failed'); };
         const pass = () => done();
 
         map.on('load', fail);
@@ -719,7 +938,7 @@ describe('map events', () => {
             map.on('load', pass);
             map.setStyle(createStyle());
         }, 1);
-    });
+    }));
 
     test('no idle event during move', async () => {
         const style = createStyle();
@@ -756,6 +975,30 @@ describe('map events', () => {
         expect(actualZoom).toBe(map.getZoom());
     });
 
+    test('drag from center', () => {
+        const map = createMap({interactive: true, clickTolerance: 4});
+        map.on('moveend', () => {
+            expect(map.getCenter().lng).toBeCloseTo(0, 10);
+            expect(map.getCenter().lat).toBeCloseTo(33.13755119234696, 10);
+            expect(map.getCenterElevation()).toBeCloseTo(0, 10);
+        });
+        const canvas = map.getCanvas();
+        simulate.dragWithMove(canvas, {x: 100, y: 100}, {x: 100, y: 150});
+        map._renderTaskQueue.run();
+    });
+
+    test('drag from off center', () => {
+        const map = createMap({interactive: true, clickTolerance: 4});
+        map.on('moveend', () => {
+            expect(map.getCenter().lng).toBeCloseTo(0, 10);
+            expect(map.getCenter().lat).toBeCloseTo(33.13755119234696, 10);
+            expect(map.getCenterElevation()).toBeCloseTo(0, 10);
+        });
+        const canvas = map.getCanvas();
+        simulate.dragWithMove(canvas, {x: 50, y: 50}, {x: 50, y: 100});
+        map._renderTaskQueue.run();
+    });
+
     describe('error event', () => {
         test('logs errors to console when it has NO listeners', () => {
             // to avoid seeing error in the console in Jest
@@ -769,7 +1012,7 @@ describe('map events', () => {
             expect(stub.mock.calls[0][0]).toBe(error);
         });
 
-        test('calls listeners', done => {
+        test('calls listeners', () => new Promise<void>(done => {
             const map = createMap();
             const error = new Error('test');
             map.on('error', (event) => {
@@ -777,7 +1020,56 @@ describe('map events', () => {
                 done();
             });
             map.fire(new ErrorEvent(error));
-        });
+        }));
 
+    });
+
+    describe('projectiontransition event', () => {
+        test('projectiontransition events is fired when setProjection is called', async () => {
+            const map = createMap();
+
+            await map.once('load');
+
+            const spy = jest.fn();
+            map.on('projectiontransition', (e) => spy(e.newProjection));
+            map.setProjection({
+                type: 'globe',
+            });
+            map.setProjection({
+                type: 'mercator',
+            });
+            expect(spy).toHaveBeenCalledTimes(2);
+            expect(spy).toHaveBeenNthCalledWith(1, 'globe');
+            expect(spy).toHaveBeenNthCalledWith(2, 'mercator');
+        });
+        test('projectiontransition is fired when globe transitions to mercator', async () => {
+            const map = createMap();
+            jest.spyOn(GlobeProjection.prototype, 'updateGPUdependent').mockImplementation(() => {});
+            await map.once('load');
+
+            const spy = jest.fn();
+            map.on('projectiontransition', (e) => spy(e.newProjection));
+
+            map.setProjection({
+                type: 'globe',
+            });
+            map.setZoom(18);
+            map.redraw();
+            await sleep(550);
+            map.redraw();
+            map.setZoom(0);
+            map.redraw();
+            await sleep(550);
+            map.redraw();
+            map.setProjection({
+                type: 'mercator',
+            });
+
+            expect(spy).toHaveBeenCalledTimes(4);
+            expect(spy).toHaveBeenNthCalledWith(1, 'globe');
+            expect(spy).toHaveBeenNthCalledWith(2, 'globe-mercator');
+            expect(spy).toHaveBeenNthCalledWith(3, 'globe');
+            expect(spy).toHaveBeenNthCalledWith(4, 'mercator');
+        });
     });
 });

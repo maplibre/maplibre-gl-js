@@ -26,13 +26,14 @@ import type {ImageManager} from '../render/image_manager';
 import type {Context} from '../gl/context';
 import type {OverscaledTileID} from './tile_id';
 import type {Framebuffer} from '../gl/framebuffer';
-import type {Transform} from '../geo/transform';
+import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {LayerFeatureStates} from './source_state';
 import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 import {ExpiryData} from '../util/ajax';
+import {QueryRenderedFeaturesOptionsStrict} from './query_features';
 
 /**
  * The tile's state, can be:
@@ -285,12 +286,8 @@ export class Tile {
         queryGeometry: Array<Point>,
         cameraQueryGeometry: Array<Point>,
         scale: number,
-        params: {
-            filter: FilterSpecification;
-            layers: Array<string>;
-            availableImages: Array<string>;
-        },
-        transform: Transform,
+        params: Pick<QueryRenderedFeaturesOptionsStrict, 'filter' | 'layers' | 'availableImages'> | undefined,
+        transform: IReadonlyTransform,
         maxPitchScaleFactor: number,
         pixelPosMatrix: mat4
     ): {[_: string]: Array<{featureIndex: number; feature: GeoJSONFeature}>} {

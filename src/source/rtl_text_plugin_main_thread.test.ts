@@ -23,7 +23,6 @@ describe('RTLMainThreadPlugin', () => {
     });
 
     function broadcastMockSuccess(message: MessageType, payload: PluginState): Promise<PluginState[]> {
-        console.log('broadcastMockSuccessDefer', payload.pluginStatus);
         if (message === SyncRTLPluginStateMessageName) {
             if (payload.pluginStatus === 'loading') {
                 const resultState: PluginState = {

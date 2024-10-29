@@ -70,7 +70,7 @@ describe('ScrollZoomHandler', () => {
         map.remove();
     });
 
-    test('Zooms for single mouse wheel tick with non-magical deltaY', done => {
+    test('Zooms for single mouse wheel tick with non-magical deltaY', () => new Promise<void>(done => {
         const browserNow = jest.spyOn(browser, 'now');
         const now = 1555555555555;
         browserNow.mockReturnValue(now);
@@ -86,7 +86,7 @@ describe('ScrollZoomHandler', () => {
             map.remove();
             done();
         });
-    });
+    }));
 
     test('Zooms for multiple mouse wheel ticks', () => {
         const browserNow = jest.spyOn(browser, 'now');
@@ -295,6 +295,58 @@ describe('ScrollZoomHandler', () => {
         expect(startCount).toBe(1);
         expect(endCount).toBe(1);
 
+    });
+
+    test('Zooms for single mouse wheel tick while in the center of the map, should zoom to center', () => {
+        const browserNow = jest.spyOn(browser, 'now');
+        let now = 1555555555555;
+        browserNow.mockReturnValue(now);
+
+        const map = createMap();
+        map._renderTaskQueue.run();
+        expect(map.getCenter().lat).toBeCloseTo(0, 10);
+        expect(map.getCenter().lng).toBeCloseTo(0, 10);
+
+        // simulate a single 'wheel' event
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta, clientX: 200, clientY: 150});
+        map._renderTaskQueue.run();
+
+        now += 400;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+
+        expect(map.getCenter().lat).toBeCloseTo(0, 10);
+        expect(map.getCenter().lng).toBeCloseTo(0, 10);
+        expect(map.getZoom()).toBeCloseTo(0.028567106927402726, 10);
+
+        map.remove();
+    });
+
+    test('Zooms for single mouse wheel tick while not in the center of the map, should zoom according to mouse position', () => {
+        const browserNow = jest.spyOn(browser, 'now');
+        let now = 1555555555555;
+        browserNow.mockReturnValue(now);
+
+        const map = createMap();
+        map._elevateCameraIfInsideTerrain = (_tr : any) => ({});
+        map._renderTaskQueue.run();
+        map.terrain = {
+            pointCoordinate: () => null
+        } as any;
+
+        // simulate a single 'wheel' event
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta, clientX: 1000, clientY: 1000});
+        map._renderTaskQueue.run();
+
+        now += 400;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+
+        expect(map.getCenter().lat).toBeCloseTo(-11.6371, 3);
+        expect(map.getCenter().lng).toBeCloseTo(11.0286, 3);
+        expect(map.getZoom()).toBeCloseTo(0.028567106927402726, 10);
+
+        map.remove();
     });
 
     test('Zooms for single mouse wheel tick while not in the center of the map and terrain is on, should zoom according to mouse position', () => {

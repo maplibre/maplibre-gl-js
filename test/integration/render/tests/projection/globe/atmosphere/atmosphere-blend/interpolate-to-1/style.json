@@ -1,0 +1,56 @@
+{
+    "version": 8,
+    "metadata": {
+      "test": {
+        "description": "Tests atmosphere with atmosphere-blend interpolated to a mid zoom level."
+      }
+    },
+    "projection": { "type": "globe" },
+    "sky": {
+      "atmosphere-blend": [
+        "interpolate",
+        ["linear"],
+        ["zoom"],
+        0, 1,
+        10, 1,
+        12, 0
+    ]
+    },
+    "light": {
+        "anchor": "map",
+        "position": [1.5, 0, 180]
+    },
+    "center": [
+      0.0,
+      0.0
+    ],
+    "zoom": 10,
+    "sources": {
+      "source": {
+        "type": "raster",
+        "tiles": [
+          "local://tiles/{z}-{x}-{y}.satellite.png"
+        ],
+        "minzoom": 1,
+        "maxzoom": 1,
+        "tileSize": 256
+      }
+    },
+    "layers": [
+      {
+        "id": "background",
+        "type": "background",
+        "paint": {
+          "background-color": "white"
+        }
+      },
+      {
+        "id": "raster",
+        "type": "raster",
+        "source": "source",
+        "paint": {
+          "raster-fade-duration": 0
+        }
+      }
+    ]
+  }

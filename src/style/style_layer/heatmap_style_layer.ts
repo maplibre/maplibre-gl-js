@@ -11,12 +11,14 @@ import type {Framebuffer} from '../../gl/framebuffer';
 import type {HeatmapPaintProps} from './heatmap_style_layer_properties.g';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
+export const HEATMAP_FULL_RENDER_FBO_KEY = 'big-fb';
+
 /**
  * A style layer that defines a heatmap
  */
 export class HeatmapStyleLayer extends StyleLayer {
 
-    heatmapFbo: Framebuffer;
+    heatmapFbos: Map<string, Framebuffer>;
     colorRamp: RGBAImage;
     colorRampTexture: Texture;
 
@@ -31,6 +33,7 @@ export class HeatmapStyleLayer extends StyleLayer {
     constructor(layer: LayerSpecification) {
         super(layer, properties);
 
+        this.heatmapFbos = new Map();
         // make sure color ramp texture is generated for default heatmap color too
         this._updateColorRamp();
     }
@@ -52,9 +55,8 @@ export class HeatmapStyleLayer extends StyleLayer {
     }
 
     resize() {
-        if (this.heatmapFbo) {
-            this.heatmapFbo.destroy();
-            this.heatmapFbo = null;
+        if (this.heatmapFbos.has(HEATMAP_FULL_RENDER_FBO_KEY)) {
+            this.heatmapFbos.delete(HEATMAP_FULL_RENDER_FBO_KEY);
         }
     }
 

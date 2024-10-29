@@ -125,7 +125,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             }
 
             workerTile.vectorTile = response.vectorTile;
-            const parsePromise = workerTile.parse(response.vectorTile, this.layerIndex, this.availableImages, this.actor);
+            const parsePromise = workerTile.parse(response.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
             this.loaded[tileUid] = workerTile;
             // keep the original fetching state so that reload tile can pick it up if the original parse is cancelled by reloads' parse
             this.fetching[tileUid] = {rawTileData, cacheControl, resourceTiming};
@@ -156,7 +156,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         const workerTile = this.loaded[uid];
         workerTile.showCollisionBoxes = params.showCollisionBoxes;
         if (workerTile.status === 'parsing') {
-            const result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor);
+            const result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
             // if we have cancelled the original parse, make sure to pass the rawTileData from the original fetch
             let parseResult: WorkerTileResult;
             if (this.fetching[uid]) {
@@ -172,7 +172,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         // if there was no vector tile data on the initial load, don't try and re-parse tile
         if (workerTile.status === 'done' && workerTile.vectorTile) {
             // this seems like a missing case where cache control is lost? see #3309
-            return workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor);
+            return workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
         }
     }
 

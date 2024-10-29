@@ -10,7 +10,7 @@
     "importHelpers": false,
     "jsx": "react",
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "skipLibCheck": false,
     "strict": false,

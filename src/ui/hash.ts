@@ -118,7 +118,7 @@ export class Hash {
 
     _updateHashUnthrottled = () => {
         // Replace if already present, else append the updated hash string
-        const location = window.location.href.replace(/(#.+)?$/, this.getHashString());
+        const location = window.location.href.replace(/(#.*)?$/, this.getHashString());
         window.history.replaceState(window.history.state, null, location);
     };
 

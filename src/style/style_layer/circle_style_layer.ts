@@ -8,7 +8,7 @@ import {Transitionable, Transitioning, Layout, PossiblyEvaluated} from '../prope
 import {mat4, vec4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
 import type {FeatureState, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {Transform} from '../../geo/transform';
+import type {IReadonlyTransform} from '../../geo/transform_interface';
 import type {Bucket, BucketParameters} from '../../data/bucket';
 import type {CircleLayoutProps, CirclePaintProps} from './circle_style_layer_properties.g';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
@@ -45,14 +45,14 @@ export class CircleStyleLayer extends StyleLayer {
         featureState: FeatureState,
         geometry: Array<Array<Point>>,
         zoom: number,
-        transform: Transform,
+        transform: IReadonlyTransform,
         pixelsToTileUnits: number,
         pixelPosMatrix: mat4
     ): boolean {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('circle-translate'),
             this.paint.get('circle-translate-anchor'),
-            transform.angle, pixelsToTileUnits);
+            -transform.bearingInRadians, pixelsToTileUnits);
         const radius = this.paint.get('circle-radius').evaluate(feature, featureState);
         const stroke = this.paint.get('circle-stroke-width').evaluate(feature, featureState);
         const size  = radius + stroke;

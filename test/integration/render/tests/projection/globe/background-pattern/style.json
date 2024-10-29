@@ -1,0 +1,23 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "zoom": 2,
+  "sources": {},
+  "sprite": "local://sprites/emerald",
+  "projection": { "type": "globe" },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-pattern": "cemetery_icon"
+      }
+    }
+  ]
+}

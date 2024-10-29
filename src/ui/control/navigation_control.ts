@@ -24,12 +24,17 @@ type NavigationControlOptions = {
      * If `true` the pitch is visualized by rotating X-axis of compass.
      */
     visualizePitch?: boolean;
+    /**
+     * If `true` the roll is visualized by rotating the compass.
+     */
+    visualizeRoll?: boolean;
 };
 
 const defaultOptions: NavigationControlOptions = {
     showCompass: true,
     showZoom: true,
-    visualizePitch: false
+    visualizePitch: false,
+    visualizeRoll: true
 };
 
 /**
@@ -93,11 +98,19 @@ export class NavigationControl implements IControl {
     };
 
     _rotateCompassArrow = () => {
-        const rotate = this.options.visualizePitch ?
-            `scale(${1 / Math.pow(Math.cos(this._map.transform.pitch * (Math.PI / 180)), 0.5)}) rotateX(${this._map.transform.pitch}deg) rotateZ(${this._map.transform.angle * (180 / Math.PI)}deg)` :
-            `rotate(${this._map.transform.angle * (180 / Math.PI)}deg)`;
-
-        this._compassIcon.style.transform = rotate;
+        if (this.options.visualizePitch && this.options.visualizeRoll) {
+            this._compassIcon.style.transform = `scale(${1 / Math.pow(Math.cos(this._map.transform.pitchInRadians), 0.5)}) rotateZ(${-this._map.transform.roll}deg) rotateX(${this._map.transform.pitch}deg) rotateZ(${-this._map.transform.bearing}deg)`;
+            return;
+        }
+        if (this.options.visualizePitch) {
+            this._compassIcon.style.transform = `scale(${1 / Math.pow(Math.cos(this._map.transform.pitchInRadians), 0.5)}) rotateX(${this._map.transform.pitch}deg) rotateZ(${-this._map.transform.bearing}deg)`;
+            return;
+        }
+        if (this.options.visualizeRoll) {
+            this._compassIcon.style.transform = `rotate(${-this._map.transform.bearing - this._map.transform.roll}deg)`;
+            return;
+        }
+        this._compassIcon.style.transform = `rotate(${-this._map.transform.bearing}deg)`;
     };
 
     /** {@inheritDoc IControl.onAdd} */
@@ -113,6 +126,9 @@ export class NavigationControl implements IControl {
             this._setButtonTitle(this._compass, 'ResetBearing');
             if (this.options.visualizePitch) {
                 this._map.on('pitch', this._rotateCompassArrow);
+            }
+            if (this.options.visualizeRoll) {
+                this._map.on('roll', this._rotateCompassArrow);
             }
             this._map.on('rotate', this._rotateCompassArrow);
             this._rotateCompassArrow();
@@ -130,6 +146,9 @@ export class NavigationControl implements IControl {
         if (this.options.showCompass) {
             if (this.options.visualizePitch) {
                 this._map.off('pitch', this._rotateCompassArrow);
+            }
+            if (this.options.visualizeRoll) {
+                this._map.off('roll', this._rotateCompassArrow);
             }
             this._map.off('rotate', this._rotateCompassArrow);
             this._handler.off();

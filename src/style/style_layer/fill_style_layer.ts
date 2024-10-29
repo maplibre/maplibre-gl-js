@@ -11,7 +11,7 @@ import type {BucketParameters} from '../../data/bucket';
 import type Point from '@mapbox/point-geometry';
 import type {FillLayoutProps, FillPaintProps} from './fill_style_layer_properties.g';
 import type {EvaluationParameters} from '../evaluation_parameters';
-import type {Transform} from '../../geo/transform';
+import type {IReadonlyTransform} from '../../geo/transform_interface';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 export class FillStyleLayer extends StyleLayer {
@@ -49,13 +49,13 @@ export class FillStyleLayer extends StyleLayer {
         featureState: FeatureState,
         geometry: Array<Array<Point>>,
         zoom: number,
-        transform: Transform,
+        transform: IReadonlyTransform,
         pixelsToTileUnits: number
     ): boolean {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('fill-translate'),
             this.paint.get('fill-translate-anchor'),
-            transform.angle, pixelsToTileUnits);
+            -transform.bearingInRadians, pixelsToTileUnits);
         return polygonIntersectsMultiPolygon(translatedPolygon, geometry);
     }
 
