@@ -29,28 +29,17 @@
             container: 'map',
             zoom: 10,
             center: [11.39085, 47.27574],
-            style: {
-                "version": 8,
-                "name": "Satellite Hybrid",
-                "metadata": { "maputnik:renderer": "mlgljs" },
-                "center": [0, 0],
-                "zoom": 1,
-                "bearing": 0,
-                "pitch": 0,
-                "sources": {
-                    "maptiler_planet": {
-                        "url": "https://api.maptiler.com/tiles/v3/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL",
-                        "type": "vector"
-                    },
-                    "satellite": {
-                        "url": "https://api.maptiler.com/tiles/satellite-v2/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL",
-                        "type": "raster"
-                    },
-                    "satellite_medimures": {
-                        "url": "https://api.maptiler.com/tiles/satellite-mediumres-2021/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL",
-                        "type": "raster"
-                    },
-                    terrainSource: {
+            maxPitch: 180,
+            pitch: 60,
+            maxZoom: 18,
+            maxPitch: 85
+        }));
+
+        map.setStyle('https://api.maptiler.com/maps/hybrid/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL', {
+            transformStyle: (previousStyle, nextStyle) => {
+                nextStyle.projection = { type: 'globe' }
+                nextStyle.sources = {
+                    ...nextStyle.sources, terrainSource: {
                         type: 'raster-dem',
                         url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
                         tileSize: 256
@@ -60,174 +49,25 @@
                         url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
                         tileSize: 256
                     }
-                },
-                "sprite": "https://api.maptiler.com/maps/hybrid/sprite",
-                "glyphs": "https://api.maptiler.com/fonts/{fontstack}/{range}.pbf?key=get_your_own_OpIi9ZULNHzrESv6T2vL",
-                "layers": [
-                    {
-                        "id": "Satellite",
-                        "type": "raster",
-                        "source": "satellite",
-                        "minzoom": 0,
-                        "filter": ["all"],
-                        "layout": { "visibility": "visible" },
-                        "paint": { "raster-opacity": 1 }
-                    },
-                    {
-                        "id": "Road",
-                        "type": "line",
-                        "source": "maptiler_planet",
-                        "source-layer": "transportation",
-                        "minzoom": 6,
-                        "filter": [
-                            "all",
-                            ["==", "$type", "LineString"],
-                            ["!in", "class", "rail", "ferry", "path", "track"],
-                            ["!=", "brunnel", "tunnel"]
-                        ],
-                        "layout": {
-                            "line-cap": "butt",
-                            "line-join": "round",
-                            "visibility": "visible"
-                        },
-                        "paint": {
-                            "line-color": {
-                                "stops": [
-                                    [8, "hsla(0, 0%, 100%, 0.2)"],
-                                    [14, "hsla(0, 0%, 100%, 0.4)"],
-                                    [18, "hsla(0, 0%, 100%, 0.5)"]
-                                ]
-                            },
-                            "line-width": [
-                                "interpolate",
-                                ["linear"],
-                                ["zoom"],
-                                5,
-                                ["match", ["get", "class"], ["motorway", "motorway_link"], 1, 0],
-                                7,
-                                [
-                                    "match",
-                                    ["get", "class"],
-                                    ["motorway", "motorway_link", "trunk"],
-                                    1.4,
-                                    0
-                                ],
-                                8,
-                                [
-                                    "match",
-                                    ["get", "class"],
-                                    ["motorway", "motorway_link", "primary", "trunk"],
-                                    0.75,
-                                    0
-                                ],
-                                9,
-                                ["match", ["get", "class"], ["secondary", "tertiary"], 0.7, 1],
-                                10,
-                                ["match", ["get", "class"], ["motorway", "motorway_link"], 1.3, 1.3],
-                                14,
-                                ["match", ["get", "class"], ["minor", "service"], 0.5, 2.4]
-                            ]
-                        }
-                    },
-                    {
-                        "id": "Road labels",
-                        "type": "symbol",
-                        "source": "maptiler_planet",
-                        "source-layer": "transportation_name",
-                        "filter": [
-                            "all",
-                            ["==", "$type", "LineString"],
-                            ["!=", "class", "ferry"]
-                        ],
-                        "layout": {
-                            "symbol-placement": "line",
-                            "text-field": ["coalesce", ["get", "name:en"], ["get", "name"]],
-                            "text-font": ["Noto Sans Regular"],
-                            "text-letter-spacing": 0.1,
-                            "text-rotation-alignment": "map",
-                            "text-size": [
-                                "interpolate",
-                                ["linear", 0.75, 1, 0.75, 1],
-                                ["zoom"],
-                                10,
-                                8,
-                                16,
-                                10,
-                                24,
-                                14
-                            ],
-                            "text-transform": "none",
-                            "visibility": "visible"
-                        },
-                        "paint": {
-                            "text-color": "hsl(0, 0%, 100%)",
-                            "text-halo-color": "hsl(0, 0%, 17%)",
-                            "text-halo-width": 1
-                        }
-                    },
-                    {
-                        "id": "City labels",
-                        "type": "symbol",
-                        "source": "maptiler_planet",
-                        "source-layer": "place",
-                        "minzoom": 3,
-                        "maxzoom": 16,
-                        "filter": [
-                            "all",
-                            ["==", "$type", "Point"],
-                            ["==", "class", "city"],
-                            ["!=", "capital", 2]
-                        ],
-                        "layout": {
-                            "symbol-sort-key": ["to-number", ["get", "rank"]],
-                            "text-field": "{name:en}",
-                            "text-font": ["Noto Sans Regular"],
-                            "text-max-width": 10,
-                            "text-size": [
-                                "interpolate",
-                                ["linear", 0.5, 1, 0.5, 1],
-                                ["zoom"],
-                                4,
-                                11,
-                                6,
-                                13,
-                                8,
-                                16,
-                                12,
-                                18,
-                                16,
-                                20
-                            ],
-                            "visibility": "visible"
-                        },
-                        "paint": {
-                            "text-color": "hsl(0, 0%, 100%)",
-                            "text-halo-blur": 0.5,
-                            "text-halo-color": "hsl(0, 0%, 0%)",
-                            "text-halo-width": 1
-                        }
-                    },
-                    {
-                        id: 'hills',
-                        type: 'hillshade',
-                        source: 'hillshadeSource',
-                        layout: { visibility: 'visible' },
-                        paint: { 'hillshade-shadow-color': '#473B24' }
-                    }
-                ],
-                "id": "hybrid",
-                projection: { type: 'globe' },
-                terrain: {
+                }
+                nextStyle.terrain = {
                     source: 'terrainSource',
                     exaggeration: 1
-                },
-                sky: {}
-            },
-            maxPitch: 180,
-            pitch: 60,
-            maxZoom: 18,
-            maxPitch: 85
-        }));
+                }
+
+                nextStyle.sky = {}
+
+                nextStyle.layers.push({
+                    id: 'hills',
+                    type: 'hillshade',
+                    source: 'hillshadeSource',
+                    layout: { visibility: 'visible' },
+                    paint: { 'hillshade-shadow-color': '#473B24' }
+                })
+
+                return nextStyle
+            }
+        })
 
         map.addControl(
             new maplibregl.NavigationControl({
