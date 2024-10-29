@@ -4,6 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix line-placed map-pitch-aligned texts being too large when viewed from some latitudes on a globe ([#4786](https://github.com/maplibre/maplibre-gl-js/issues/4786))
 - ⚠️ Fix level of detail at high pitch angle by changing which tiles to load ([#3983](https://github.com/maplibre/maplibre-gl-js/issues/3983))
 - _...Add new stuff here..._
 
