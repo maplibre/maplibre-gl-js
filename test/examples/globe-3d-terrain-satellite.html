@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Globe with 3d terrain and hybrid satellite</title>
+    <meta property="og:description" content="Globe with 3D terrain elevation and hybrid satellite tiles." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body,
+        #map {
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+
+
+
+    <script type="module">
+
+        async function downloadStyleObject(url) {
+            return await fetch(url)
+                .then((response) => response.json())
+                .then((data) => data)
+                .catch((error) => {
+                    console.error("Error fetching or parsing JSON:", error);
+                    return null;
+                });
+        }
+
+        let style = await downloadStyleObject('https://api.maptiler.com/maps/hybrid/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL')
+
+
+        style.projection = { type: 'globe' }
+        style.sources = {
+            ...style.sources, terrainSource: {
+                type: 'raster-dem',
+                url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                tileSize: 256
+            },
+            hillshadeSource: {
+                type: 'raster-dem',
+                url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                tileSize: 256
+            }
+        }
+
+        style.layers.push({
+            id: 'hills',
+            type: 'hillshade',
+            source: 'hillshadeSource',
+            layout: { visibility: 'visible' },
+            paint: { 'hillshade-shadow-color': '#473B24' }
+        })
+
+        style.terrain = {
+            source: 'terrainSource',
+            exaggeration: 1
+        },
+
+        style.sky = {}
+
+
+
+
+
+        const map = (window.map = new maplibregl.Map({
+            container: 'map',
+            zoom: 10,
+            center: [11.39085, 47.27574],
+            maxPitch: 180,
+            pitch: 60,
+            style: style,
+            maxZoom: 18,
+            maxPitch: 85
+        }));
+
+        map.addControl(
+            new maplibregl.NavigationControl({
+                visualizePitch: true,
+                showZoom: true,
+                showCompass: true
+            })
+        );
+
+        map.addControl(
+            new maplibregl.TerrainControl({
+                source: 'terrainSource',
+                exaggeration: 1
+            })
+        );
+    </script>
+</body>
+
+</html>
