@@ -11,6 +11,7 @@
 - ⚠️ Remove unminified prod build ([#4906](https://github.com/maplibre/maplibre-gl-js/pull/4906))
 - Fix issue where raster tile source won't fetch updates following request error ([#4890](https://github.com/maplibre/maplibre-gl-js/pull/4890))
 - Fix 3D models in custom layers not being properly occluded by the globe ([#4817](https://github.com/maplibre/maplibre-gl-js/issues/4817))
+- Fix issue where raster tiles were not rendered correctly when using globe and terrain ([#4912](https://github.com/maplibre/maplibre-gl-js/pull/4912))
 - _...Add new stuff here..._
 
 ## v5.0.0-pre.3

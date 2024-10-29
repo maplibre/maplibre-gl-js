@@ -107,7 +107,7 @@ function drawFillTiles(
 
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        const projectionData = transform.getProjectionData(coord);
+        const projectionData = transform.getProjectionData({overscaledTileID: coord});
 
         const translateForUniforms = translatePosition(transform, tile, propertyFillTranslate, propertyFillTranslateAnchor);
 
