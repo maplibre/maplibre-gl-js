@@ -167,6 +167,13 @@ export function getTileAABB(tileID: {x: number; y: number; z: number}, _wrap: nu
     }
 }
 
+const globeCoveringTilesDetails: CoveringTilesDetails = {
+    distanceToTile2d,
+    getWrap,
+    getTileAABB,
+    allowVariableZoom: true
+};
+
 /**
  * Returns a list of tiles that optimally covers the screen. Adapted for globe projection.
  * Correctly handles LOD when moving over the antimeridian.
@@ -175,12 +182,6 @@ export function getTileAABB(tileID: {x: number; y: number; z: number}, _wrap: nu
  * @returns A list of tile coordinates, ordered by ascending distance from camera.
  */
 export function globeCoveringTiles(transform: IReadonlyTransform, frustum: Frustum, plane: vec4, cameraCoord: MercatorCoordinate, centerCoord: MercatorCoordinate, options: CoveringTilesOptions): OverscaledTileID[] {
-    const allowVariableZoom = coveringZoomLevel(transform, options) > 4;
-    const details: CoveringTilesDetails = {
-        distanceToTile2d,
-        getWrap,
-        getTileAABB,
-        allowVariableZoom
-    };
-    return coveringTiles(transform, frustum, plane, cameraCoord, centerCoord, options, details);
+    globeCoveringTilesDetails.allowVariableZoom = coveringZoomLevel(transform, options) > 4;
+    return coveringTiles(transform, frustum, plane, cameraCoord, centerCoord, options, globeCoveringTilesDetails);
 }
