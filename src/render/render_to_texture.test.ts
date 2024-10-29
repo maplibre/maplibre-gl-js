@@ -15,6 +15,7 @@ import {FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
 import {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
 import {BackgroundStyleLayer} from '../style/style_layer/background_style_layer';
+import {DepthMode} from '../gl/depth_mode';
 
 describe('render to texture', () => {
     const gl = document.createElement('canvas').getContext('webgl');
@@ -66,6 +67,7 @@ describe('render to texture', () => {
         context: new Context(gl),
         transform: {zoom: 10, calculatePosMatrix: () => {}, getProjectionData(_a) {}, calculateFogMatrix: () => {}},
         colorModeForRenderPass: () => ColorMode.alphaBlended,
+        getDepthModeFor3D: () => DepthMode.disabled,
         useProgram: () => { return {draw: () => { layersDrawn++; }}; },
         _renderTileClippingMasks: () => {},
         renderLayer: () => {}

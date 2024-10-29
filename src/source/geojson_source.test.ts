@@ -383,7 +383,7 @@ describe('GeoJSONSource#update', () => {
     test('fires "error"', () => new Promise<void>(done => {
         const mockDispatcher = wrapDispatcher({
             sendAsync(_message) {
-                return Promise.reject('error'); // eslint-disable-line prefer-promise-reject-errors
+                return Promise.reject('error');
             }
         });
 
