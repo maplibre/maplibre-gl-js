@@ -24,9 +24,6 @@
 
 <body>
     <div id="map"></div>
-
-
-
     <script type="module">
 
         async function downloadStyleObject(url) {
@@ -40,7 +37,6 @@
         }
 
         let style = await downloadStyleObject('https://api.maptiler.com/maps/hybrid/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL')
-
 
         style.projection = { type: 'globe' }
         style.sources = {
@@ -70,10 +66,6 @@
         },
 
         style.sky = {}
-
-
-
-
 
         const map = (window.map = new maplibregl.Map({
             container: 'map',
