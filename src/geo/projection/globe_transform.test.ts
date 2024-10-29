@@ -44,6 +44,16 @@ describe('GlobeTransform', () => {
             const projectionData = globeTransform.getProjectionData({overscaledTileID: new OverscaledTileID(1, 0, 1, 1, 0)});
             expectToBeCloseToArray(projectionData.tileMercatorCoords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
         });
+
+        test('Globe transition is not 0 when not ignoring the globe matrix', () => {
+            const projectionData = globeTransform.getProjectionData({overscaledTileID: new OverscaledTileID(1, 0, 1, 1, 0)});
+            expect(projectionData.projectionTransition).not.toBe(0);
+        });
+
+        test('Ignoring the globe matrix sets transition to 0', () => {
+            const projectionData = globeTransform.getProjectionData({overscaledTileID: new OverscaledTileID(1, 0, 1, 1, 0), ignoreGlobeMatrix: true});
+            expect(projectionData.projectionTransition).toBe(0);
+        });
     });
 
     describe('clipping plane', () => {
