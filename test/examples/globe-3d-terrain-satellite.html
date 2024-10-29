@@ -35,7 +35,8 @@
             maxPitch: 85
         }));
 
-        map.setStyle('https://api.maptiler.com/maps/hybrid/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL', {
+
+        map.setStyle('https://tiles.stadiamaps.com/styles/alidade_satellite.json', {
             transformStyle: (previousStyle, nextStyle) => {
                 nextStyle.projection = { type: 'globe' }
                 nextStyle.sources = {
@@ -68,6 +69,7 @@
                 return nextStyle
             }
         })
+
 
         map.addControl(
             new maplibregl.NavigationControl({
