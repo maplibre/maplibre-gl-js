@@ -20,7 +20,7 @@ function getWrap(centerCoord: MercatorCoordinate, tileID: {x:number; y: number; 
  * Returns the AABB of the specified tile.
  * @param tileID - Tile x, y and z for zoom.
  */
-export function getTileAABB(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions): Aabb {
+function getTileAABB(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions): Aabb {
     let minElevation = elevation;
     let maxElevation = elevation;
     if (options.terrain) {
