@@ -12,7 +12,9 @@
   },
   "zoom": 1,
   "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
-  "projection": { "type": "globe" },
+  "projection": {
+    "type": "globe"
+  },
   "sources": {
     "geojson": {
       "type": "geojson",
@@ -39,7 +41,7 @@
       "id": "background",
       "type": "background",
       "paint": {
-        "background-color": "white"
+        "background-color": "grey"
       }
     },
     {
@@ -61,7 +63,7 @@
       "source": "geojson",
       "layout": {
         "symbol-placement": "line",
-        "text-field": "AAAA AAAAAA A AAAAA AAAA BB",
+        "text-field": "AAAAAAAAAA",
         "text-font": [
           "Open Sans Semibold",
           "Arial Unicode MS Bold"
