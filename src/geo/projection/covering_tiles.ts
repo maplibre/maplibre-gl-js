@@ -1,10 +1,11 @@
 import {OverscaledTileID} from '../../source/tile_id';
 import {Aabb, Frustum, IntersectionResult} from '../../util/primitives';
 import {vec2, vec4} from 'gl-matrix';
-import {CoveringTilesOptions, IReadonlyTransform} from '../transform_interface';
+import {IReadonlyTransform} from '../transform_interface';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {scaleZoom} from '../transform_helper';
 import {clamp, degreesToRadians} from '../../util/util';
+import {Terrain} from '../../render/terrain';
 
 type CoveringTilesResult = {
     tileID: OverscaledTileID;
@@ -18,6 +19,43 @@ type CoveringTilesStackEntry = {
     y: number;
     wrap: number;
     fullyVisible: boolean;
+};
+
+export type CoveringZoomOptions = {
+    /**
+     * Whether to round or floor the target zoom level. If true, the value will be rounded to the closest integer. Otherwise the value will be floored.
+     */
+    roundZoom?: boolean;
+    /**
+     * Tile size, expressed in screen pixels.
+     */
+    tileSize: number;
+};
+
+export type CoveringTilesOptions = CoveringZoomOptions & {
+    /**
+     * Smallest allowed tile zoom.
+     */
+    minzoom?: number;
+    /**
+     * Largest allowed tile zoom.
+     */
+    maxzoom?: number;
+    /**
+     * `true` if tiles should be sent back to the worker for each overzoomed zoom level, `false` if not.
+     * Fill this option when computing covering tiles for a source.
+     * When true, any tile at `maxzoom` level that should be overscaled to a greater zoom will have
+     * its zoom set to the overscaled greater zoom. When false, such tiles will have zoom set to `maxzoom`.
+     */
+    reparseOverscaled?: boolean;
+    /**
+     * When terrain is present, tile visibility will be computed in regards to the min and max elevations for each tile.
+     */
+    terrain?: Terrain;
+    /**
+     * Optional function to redefine how tiles are loaded at high pitch angles.
+     */
+    calculateTileZoom?: CalculateTileZoomFunction;
 };
 
 /**
@@ -117,6 +155,19 @@ function calculateTileZoom(requestedCenterZoom: number,
 }
 
 /**
+ * Return what zoom level of a tile source would most closely cover the tiles displayed by this transform.
+ * @param options - The options, most importantly the source's tile size.
+ * @returns An integer zoom level at which all tiles will be visible.
+ */
+export function coveringZoomLevel(transform: IReadonlyTransform, options: CoveringZoomOptions): number {
+    const z = (options.roundZoom ? Math.round : Math.floor)(
+        transform.zoom + scaleZoom(transform.tileSize / options.tileSize)
+    );
+    // At negative zoom levels load tiles from z0 because negative tile zoom levels don't exist.
+    return Math.max(0, z);
+}
+
+/**
  * Returns a list of tiles that optimally covers the screen. Adapted for globe projection.
  * Correctly handles LOD when moving over the antimeridian.
  * @param transform - The transform instance.
@@ -129,7 +180,7 @@ function calculateTileZoom(requestedCenterZoom: number,
  * @returns A list of tile coordinates, ordered by ascending distance from camera.
  */
 export function coveringTiles(transform: IReadonlyTransform, frustum: Frustum, plane: vec4, cameraCoord: MercatorCoordinate, centerCoord: MercatorCoordinate, options: CoveringTilesOptions, details: CoveringTilesDetails): OverscaledTileID[] {
-    const desiredZ = transform.coveringZoomLevel(options);
+    const desiredZ = coveringZoomLevel(transform, options);
     const minZoom = options.minzoom || 0;
     const maxZoom = options.maxzoom !== undefined ? options.maxzoom : transform.maxZoom;
     const nominalZ = Math.min(Math.max(0, desiredZ), maxZoom);

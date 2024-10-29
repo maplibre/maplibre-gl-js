@@ -2,8 +2,8 @@ import {vec4} from 'gl-matrix';
 import {OverscaledTileID} from '../../source/tile_id';
 import {Aabb, Frustum} from '../../util/primitives';
 import {MercatorCoordinate} from '../mercator_coordinate';
-import {CoveringTilesOptions, IReadonlyTransform} from '../transform_interface';
-import {coveringTiles, CoveringTilesDetails} from './covering_tiles';
+import {IReadonlyTransform} from '../transform_interface';
+import {coveringTiles, CoveringTilesDetails, CoveringTilesOptions} from './covering_tiles';
 
 function distanceToTile2d(pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, aabb: Aabb): number {
     const distanceX = aabb.distanceX([pointX, pointY]);

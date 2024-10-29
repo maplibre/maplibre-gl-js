@@ -8,7 +8,7 @@ import {Terrain} from '../../render/terrain';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {PointProjection, xyTransformMat4} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
-import {CoveringTilesOptions, CoveringZoomOptions, IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
+import {IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
 import {PaddingOptions} from '../edge_insets';
 import {mercatorCoordinateToLocation, getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix} from './mercator_utils';
 import {EXTENT} from '../../data/extent';
@@ -16,6 +16,7 @@ import type {ProjectionData} from './projection_data';
 import {scaleZoom, TransformHelper, zoomScale} from '../transform_helper';
 import {mercatorCoveringTiles} from './mercator_covering_tiles';
 import {Frustum} from '../../util/primitives';
+import {CoveringTilesOptions} from './covering_tiles';
 
 export class MercatorTransform implements ITransform {
     private _helper: TransformHelper;
@@ -95,9 +96,6 @@ export class MercatorTransform implements ITransform {
     }
     isPaddingEqual(padding: PaddingOptions): boolean {
         return this._helper.isPaddingEqual(padding);
-    }
-    coveringZoomLevel(options: CoveringZoomOptions): number {
-        return this._helper.coveringZoomLevel(options);
     }
     resize(width: number, height: number): void {
         this._helper.resize(width, height);

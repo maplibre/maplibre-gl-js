@@ -1,11 +1,11 @@
 import {vec3, vec4} from 'gl-matrix';
 import {Aabb, Frustum} from '../../util/primitives';
-import {CoveringTilesOptions, IReadonlyTransform} from '../transform_interface';
+import {IReadonlyTransform} from '../transform_interface';
 import {OverscaledTileID} from '../../source/tile_id';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {EXTENT} from '../../data/extent';
 import {projectTileCoordinatesToSphere} from './globe_utils';
-import {coveringTiles, CoveringTilesDetails} from './covering_tiles';
+import {coveringTiles, CoveringTilesDetails, CoveringTilesOptions, coveringZoomLevel} from './covering_tiles';
 
 /**
  * Computes distance of a point to a tile in an arbitrary axis.
@@ -175,7 +175,7 @@ export function getTileAABB(tileID: {x: number; y: number; z: number}, _wrap: nu
  * @returns A list of tile coordinates, ordered by ascending distance from camera.
  */
 export function globeCoveringTiles(transform: IReadonlyTransform, frustum: Frustum, plane: vec4, cameraCoord: MercatorCoordinate, centerCoord: MercatorCoordinate, options: CoveringTilesOptions): OverscaledTileID[] {
-    const allowVariableZoom = transform.coveringZoomLevel(options) > 4;
+    const allowVariableZoom = coveringZoomLevel(transform, options) > 4;
     const details: CoveringTilesDetails = {
         distanceToTile2d,
         getWrap,

@@ -8,6 +8,7 @@ import {LngLatBounds} from '../lng_lat_bounds';
 import {getMercatorHorizon} from './mercator_utils';
 import {mat4} from 'gl-matrix';
 import {expectToBeCloseToArray} from '../../util/test/util';
+import {coveringZoomLevel} from './covering_tiles';
 
 describe('transform', () => {
     test('creates a transform', () => {
@@ -399,52 +400,52 @@ describe('transform', () => {
         const transform = new MercatorTransform(0, 22, 0, 60, true);
 
         transform.setZoom(0);
-        expect(transform.coveringZoomLevel(options)).toBe(0);
+        expect(coveringZoomLevel(transform, options)).toBe(0);
 
         transform.setZoom(0.1);
-        expect(transform.coveringZoomLevel(options)).toBe(0);
+        expect(coveringZoomLevel(transform, options)).toBe(0);
 
         transform.setZoom(1);
-        expect(transform.coveringZoomLevel(options)).toBe(1);
+        expect(coveringZoomLevel(transform, options)).toBe(1);
 
         transform.setZoom(2.4);
-        expect(transform.coveringZoomLevel(options)).toBe(2);
+        expect(coveringZoomLevel(transform, options)).toBe(2);
 
         transform.setZoom(10);
-        expect(transform.coveringZoomLevel(options)).toBe(10);
+        expect(coveringZoomLevel(transform, options)).toBe(10);
 
         transform.setZoom(11);
-        expect(transform.coveringZoomLevel(options)).toBe(11);
+        expect(coveringZoomLevel(transform, options)).toBe(11);
 
         transform.setZoom(11.5);
-        expect(transform.coveringZoomLevel(options)).toBe(11);
+        expect(coveringZoomLevel(transform, options)).toBe(11);
 
         options.tileSize = 256;
 
         transform.setZoom(0);
-        expect(transform.coveringZoomLevel(options)).toBe(1);
+        expect(coveringZoomLevel(transform, options)).toBe(1);
 
         transform.setZoom(0.1);
-        expect(transform.coveringZoomLevel(options)).toBe(1);
+        expect(coveringZoomLevel(transform, options)).toBe(1);
 
         transform.setZoom(1);
-        expect(transform.coveringZoomLevel(options)).toBe(2);
+        expect(coveringZoomLevel(transform, options)).toBe(2);
 
         transform.setZoom(2.4);
-        expect(transform.coveringZoomLevel(options)).toBe(3);
+        expect(coveringZoomLevel(transform, options)).toBe(3);
 
         transform.setZoom(10);
-        expect(transform.coveringZoomLevel(options)).toBe(11);
+        expect(coveringZoomLevel(transform, options)).toBe(11);
 
         transform.setZoom(11);
-        expect(transform.coveringZoomLevel(options)).toBe(12);
+        expect(coveringZoomLevel(transform, options)).toBe(12);
 
         transform.setZoom(11.5);
-        expect(transform.coveringZoomLevel(options)).toBe(12);
+        expect(coveringZoomLevel(transform, options)).toBe(12);
 
         options.roundZoom = true;
 
-        expect(transform.coveringZoomLevel(options)).toBe(13);
+        expect(coveringZoomLevel(transform, options)).toBe(13);
     });
 
     test('clamps pitch', () => {

@@ -9,44 +9,7 @@ import {Terrain} from '../render/terrain';
 import {PointProjection} from '../symbol/projection';
 import {MapProjectionEvent} from '../ui/events';
 import type {ProjectionData} from './projection/projection_data';
-import {CalculateTileZoomFunction} from './projection/covering_tiles';
-
-export type CoveringZoomOptions = {
-    /**
-     * Whether to round or floor the target zoom level. If true, the value will be rounded to the closest integer. Otherwise the value will be floored.
-     */
-    roundZoom?: boolean;
-    /**
-     * Tile size, expressed in screen pixels.
-     */
-    tileSize: number;
-};
-
-export type CoveringTilesOptions = CoveringZoomOptions & {
-    /**
-     * Smallest allowed tile zoom.
-     */
-    minzoom?: number;
-    /**
-     * Largest allowed tile zoom.
-     */
-    maxzoom?: number;
-    /**
-     * `true` if tiles should be sent back to the worker for each overzoomed zoom level, `false` if not.
-     * Fill this option when computing covering tiles for a source.
-     * When true, any tile at `maxzoom` level that should be overscaled to a greater zoom will have
-     * its zoom set to the overscaled greater zoom. When false, such tiles will have zoom set to `maxzoom`.
-     */
-    reparseOverscaled?: boolean;
-    /**
-     * When terrain is present, tile visibility will be computed in regards to the min and max elevations for each tile.
-     */
-    terrain?: Terrain;
-    /**
-     * Optional function to redefine how tiles are loaded at high pitch angles.
-     */
-    calculateTileZoom?: CalculateTileZoomFunction;
-};
+import {CoveringTilesOptions} from './projection/covering_tiles';
 
 export type TransformUpdateResult = {
     forcePlacementUpdate?: boolean;
@@ -288,13 +251,6 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @returns true if they are equal, false otherwise
      */
     isPaddingEqual(padding: PaddingOptions): boolean;
-
-    /**
-     * Return what zoom level of a tile source would most closely cover the tiles displayed by this transform.
-     * @param options - The options, most importantly the source's tile size.
-     * @returns An integer zoom level at which all tiles will be visible.
-     */
-    coveringZoomLevel(options: CoveringZoomOptions): number;
 
     /**
      * @internal

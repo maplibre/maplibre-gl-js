@@ -11,7 +11,7 @@ import {GlobeProjection, globeConstants} from './globe';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {PointProjection} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
-import {CoveringTilesOptions, CoveringZoomOptions, IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
+import {IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
 import {PaddingOptions} from '../edge_insets';
 import {tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 import {angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, sphereSurfacePointToCoordinates} from './globe_utils';
@@ -19,6 +19,7 @@ import {EXTENT} from '../../data/extent';
 import type {ProjectionData} from './projection_data';
 import {globeCoveringTiles} from './globe_covering_tiles';
 import {Frustum} from '../../util/primitives';
+import {CoveringTilesOptions} from './covering_tiles';
 
 /**
  * Describes the intersection of ray and sphere.
@@ -118,9 +119,6 @@ export class GlobeTransform implements ITransform {
     }
     isPaddingEqual(padding: PaddingOptions): boolean {
         return this._helper.isPaddingEqual(padding);
-    }
-    coveringZoomLevel(options: CoveringZoomOptions): number {
-        return this._helper.coveringZoomLevel(options);
     }
     resize(width: number, height: number): void {
         this._helper.resize(width, height);

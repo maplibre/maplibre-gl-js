@@ -23,6 +23,7 @@ import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapSourceDataEvent} from '../ui/events';
 import type {Terrain} from '../render/terrain';
 import type {CanvasSourceSpecification} from './canvas_source';
+import {coveringZoomLevel} from '../geo/projection/covering_tiles';
 
 type TileResult = {
     tile: Tile;
@@ -636,7 +637,7 @@ export class SourceCache extends Evented {
         }
 
         // Determine the overzooming/underzooming amounts.
-        const zoom = transform.coveringZoomLevel(this._source);
+        const zoom = coveringZoomLevel(transform, this._source);
         const minCoveringZoom = Math.max(zoom - SourceCache.maxOverzooming, this._source.minzoom);
         const maxCoveringZoom = Math.max(zoom + SourceCache.maxUnderzooming,  this._source.minzoom);
 
