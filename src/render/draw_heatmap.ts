@@ -79,7 +79,7 @@ function prepareHeatmapFlat(painter: Painter, sourceCache: SourceCache, layer: H
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram('heatmap', programConfiguration);
 
-        const projectionData = transform.getProjectionData(coord);
+        const projectionData = transform.getProjectionData({overscaledTileID: coord});
 
         const radiusCorrectionFactor = transform.getCircleRadiusCorrection();
 
@@ -145,7 +145,7 @@ function prepareHeatmapTerrain(painter: Painter, tile: Tile, layer: HeatmapStyle
     const programConfiguration = bucket.programConfigurations.get(layer.id);
     const program = painter.useProgram('heatmap', programConfiguration, true);
 
-    const projectionData = painter.transform.getProjectionData(tile.tileID);
+    const projectionData = painter.transform.getProjectionData({overscaledTileID: tile.tileID});
 
     const terrainData = painter.style.map.terrain.getTerrainData(coord);
     program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.disabled,
@@ -177,7 +177,7 @@ function renderHeatmapTerrain(painter: Painter, layer: HeatmapStyleLayer, coord:
     context.activeTexture.set(gl.TEXTURE1);
     colorRampTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
 
-    const projectionData = transform.getProjectionData(coord, false, true);
+    const projectionData = transform.getProjectionData({overscaledTileID: coord, ignoreTerrainMatrix: true});
 
     painter.useProgram('heatmapTexture').draw(context, gl.TRIANGLES,
         DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled,
