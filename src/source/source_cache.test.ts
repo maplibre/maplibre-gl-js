@@ -527,6 +527,33 @@ describe('SourceCache / Source lifecycle', () => {
 
     });
 
+    test('does reload errored tiles, if event is source data change', () => {
+        const transform = new MercatorTransform();
+        transform.resize(511, 511);
+        transform.setZoom(1);
+
+        const sourceCache = createSourceCache();
+        sourceCache._source.loadTile = async (tile) => {
+            // this transform will try to load the four tiles at z1 and a single z0 tile
+            // we only expect _reloadTile to be called with the 'loaded' z0 tile
+            tile.state = tile.tileID.canonical.z === 1 ? 'errored' : 'loaded';
+        };
+
+        const reloadTileSpy = jest.spyOn(sourceCache, '_reloadTile');
+        sourceCache.on('data', (e) => {
+            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
+                sourceCache.update(transform);
+                sourceCache.getSource().fire(new Event('data', {dataType: 'source', sourceDataType: 'content', sourceDataChanged: true}));
+            }
+        });
+        sourceCache.onAdd(undefined);
+        // We expect the source cache to have five tiles, and for all of them
+        // to be reloaded
+        expect(Object.keys(sourceCache._tiles)).toHaveLength(5);
+        expect(reloadTileSpy).toHaveBeenCalledTimes(5);
+
+    });
+
 });
 
 describe('SourceCache#update', () => {

@@ -75,11 +75,6 @@ export interface ITransformGetters {
      */
     get height(): number;
 
-    /**
-     * Gets the transform's bearing in radians.
-     */
-    get angle(): number;
-
     get lngRange(): [number, number];
     get latRange(): [number, number];
 
@@ -91,17 +86,25 @@ export interface ITransformGetters {
     get minPitch(): number;
     get maxPitch(): number;
     /**
+     * Roll in degrees.
+     */
+    get roll(): number;
+    get rollInRadians(): number;
+    /**
      * Pitch in degrees.
      */
     get pitch(): number;
+    get pitchInRadians(): number;
     /**
      * Bearing in degrees.
      */
     get bearing(): number;
+    get bearingInRadians(): number;
     /**
      * Vertical field of view in degrees.
      */
     get fov(): number;
+    get fovInRadians(): number;
 
     get elevation(): number;
     get minElevationForCurrentTile(): number;
@@ -153,6 +156,11 @@ interface ITransformMutators {
      */
     setPitch(pitch: number): void;
     /**
+     * Sets the transform's roll, in degrees.
+     * Recomputes internal matrices if needed.
+     */
+    setRoll(roll: number): void;
+    /**
      * Sets the transform's vertical field of view, in degrees.
      * Recomputes internal matrices if needed.
      */
@@ -187,10 +195,10 @@ interface ITransformMutators {
     /**
      * This method works in combination with freezeElevation activated.
      * freezeElevation is enabled during map-panning because during this the camera should sit in constant height.
-     * After panning finished, call this method to recalculate the zoom level for the current camera-height in current terrain.
+     * After panning finished, call this method to recalculate the zoom level and center point for the current camera-height in current terrain.
      * @param terrain - the terrain
      */
-    recalculateZoom(terrain: Terrain): void;
+    recalculateZoomAndCenter(terrain?: Terrain): void;
 
     /**
      * Set's the transform's center so that the given point on screen is at the given world coordinates.
@@ -229,12 +237,6 @@ interface ITransformMutators {
  * by code that has a reference to in under the {@link ITransform} type.
  */
 export interface IReadonlyTransform extends ITransformGetters {
-    /**
-     * @internal
-     * When true, any transform changes resulting from user interactions with the map (panning, zooming, etc.)
-     * will assume the underlying map is a spherical surface, as opposed to a plane.
-     */
-    get useGlobeControls(): boolean;
     /**
      * Distance from camera origin to view plane, in pixels.
      * Calculated using vertical fov and viewport height.
@@ -375,9 +377,23 @@ export interface IReadonlyTransform extends ITransformGetters {
     getCameraPoint(): Point;
 
     /**
-     * The altitude of the camera above the center of the map in meters.
+     * The altitude of the camera above the sea level in meters.
      */
     getCameraAltitude(): number;
+
+    /**
+     * The longitude and latitude of the camera.
+     */
+    getCameraLngLat(): LngLat;
+
+    /**
+     * Given the camera position (lng, lat, alt), calculate the center point and zoom level
+     * @param lngLat - lng, lat of the camera
+     * @param alt - altitude of the camera above sea level, in meters
+     * @param bearing - bearing of the camera, in degrees
+     * @param pitch - pitch angle of the camera, in degrees
+     */
+    calculateCenterFromCameraLngLatAlt(lngLat: LngLat, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number};
 
     getRayDirectionFromPixel(p: Point): vec3;
 
@@ -450,10 +466,11 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Allows the projection to adjust the scale of `text-pitch-alignment: 'map'` symbols's collision boxes based on the map's center and the text anchor.
      * Only affects the collision boxes (and click areas), scaling of the rendered text is mostly handled in shaders.
      * @param transform - The map's transform, with only the `center` property, describing the map's longitude and latitude.
-     * @param textAnchor - Text anchor position inside the tile.
+     * @param textAnchorX - Text anchor position inside the tile, X axis.
+     * @param textAnchorY - Text anchor position inside the tile, Y axis.
      * @param tileID - The tile coordinates.
      */
-    getPitchedTextCorrection(textAnchor: Point, tileID: UnwrappedTileID): number;
+    getPitchedTextCorrection(textAnchorX: number, textAnchorY: number, tileID: UnwrappedTileID): number;
 
     /**
      * @internal
@@ -483,6 +500,11 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Return projection data such that coordinates in mercator projection in range 0..1 will get projected to the map correctly.
      */
     getProjectionDataForCustomLayer(): ProjectionData;
+
+    /**
+     * Returns a tile-specific projection matrix. Used for symbol placement fast-path for mercator transform.
+     */
+    getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 | undefined;
 }
 
 /**

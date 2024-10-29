@@ -74,6 +74,41 @@ describe('drag rotate', () => {
         map.remove();
     });
 
+    test('DragRotateHandler fires rollstart, roll, and rollend events at appropriate times in response to a Ctrl-right-click drag', () => {
+        const map = createMap({rollEnabled: true});
+
+        // Prevent inertial rotation.
+        jest.spyOn(browser, 'now').mockReturnValue(0);
+
+        const rollstart = jest.fn();
+        const roll      = jest.fn();
+        const rollend   = jest.fn();
+
+        map.on('rollstart', rollstart);
+        map.on('roll',      roll);
+        map.on('rollend',   rollend);
+
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, ctrlKey: true});
+        map._renderTaskQueue.run();
+        expect(rollstart).toHaveBeenCalledTimes(0);
+        expect(roll).toHaveBeenCalledTimes(0);
+        expect(rollend).toHaveBeenCalledTimes(0);
+
+        simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 10});
+        map._renderTaskQueue.run();
+        expect(rollstart).toHaveBeenCalledTimes(1);
+        expect(roll).toHaveBeenCalledTimes(1);
+        expect(rollend).toHaveBeenCalledTimes(0);
+
+        simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2});
+        map._renderTaskQueue.run();
+        expect(rollstart).toHaveBeenCalledTimes(1);
+        expect(roll).toHaveBeenCalledTimes(1);
+        expect(rollend).toHaveBeenCalledTimes(1);
+
+        map.remove();
+    });
+
     test('DragRotateHandler stops firing events after mouseup', () => {
         const map = createMap();
 

@@ -14,7 +14,7 @@ import {LngLat, LngLatLike} from './geo/lng_lat';
 import {LngLatBounds, LngLatBoundsLike} from './geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from './geo/mercator_coordinate';
-import {Evented} from './util/evented';
+import {Evented, ErrorEvent} from './util/evented';
 import {config} from './util/config';
 import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread';
 import {WorkerPool} from './util/worker_pool';
@@ -60,7 +60,7 @@ export type * from '@maplibre/maplibre-gl-style-spec';
  * rtl text will then be rendered only after the plugin finishes loading.
  * @example
  * ```ts
- * setRTLTextPlugin('https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.js', false);
+ * setRTLTextPlugin('https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js', false);
  * ```
  * @see [Add support for right-to-left scripts](https://maplibre.org/maplibre-gl-js/docs/examples/mapbox-gl-rtl-text/)
  */
@@ -233,6 +233,7 @@ export {
     type MapEventType,
     type MapDataEvent,
     type MapContextEvent,
+    type ErrorEvent,
     setRTLTextPlugin,
     getRTLTextPluginStatus,
     prewarm,

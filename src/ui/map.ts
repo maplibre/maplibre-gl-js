@@ -1,4 +1,4 @@
-import {extend, warnOnce, uniqueId, isImageBitmap, Complete} from '../util/util';
+import {extend, warnOnce, uniqueId, isImageBitmap, Complete, pick} from '../util/util';
 import {browser} from '../util/browser';
 import {DOM} from '../util/dom';
 import packageJSON from '../../package.json' with {type: 'json'};
@@ -153,12 +153,12 @@ export type MapOptions = {
      */
     maxZoom?: number | null;
     /**
-     * The minimum pitch of the map (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
+     * The minimum pitch of the map (0-180).
      * @defaultValue 0
      */
     minPitch?: number | null;
     /**
-     * The maximum pitch of the map (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
+     * The maximum pitch of the map (0-180).
      * @defaultValue 60
      */
     maxPitch?: number | null;
@@ -213,6 +213,11 @@ export type MapOptions = {
      */
     center?: LngLatLike;
     /**
+     * The elevation of the initial geographical centerpoint of the map, in meters above sea level. If `elevation` is not specified in the constructor options, it will default to `0`.
+     * @defaultValue 0
+     */
+    elevation?: number;
+    /**
      * The initial zoom level of the map. If `zoom` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
      * @defaultValue 0
      */
@@ -227,6 +232,11 @@ export type MapOptions = {
      * @defaultValue 0
      */
     pitch?: number;
+    /**
+     * The initial roll angle of the map, measured in degrees counter-clockwise about the camera boresight. If `roll` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
+     * @defaultValue 0
+     */
+    roll?: number;
     /**
      * If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
      *
@@ -314,6 +324,11 @@ export type MapOptions = {
      */
     pitchWithRotate?: boolean;
     /**
+     * If `false`, the map's roll control with "drag to rotate" interaction will be disabled.
+     * @defaultValue false
+     */
+    rollEnabled?: boolean;
+    /**
      * The pixel ratio.
      * The canvas' `width` attribute will be `container.clientWidth * pixelRatio` and its `height` attribute will be `container.clientHeight * pixelRatio`. Defaults to `devicePixelRatio` if not specified.
      */
@@ -336,6 +351,13 @@ export type MapOptions = {
      * @defaultValue true
      */
     cancelPendingTileRequestsWhileZooming?: boolean;
+    /**
+     * If true, the elevation of the center point will automatically be set to the terrain elevation
+     * (or zero if terrain is not enabled). If false, the elevation of the center point will default
+     * to sea level and will not automatically update. Defaults to true. Needs to be set to false to
+     * keep the camera above ground when pitch \> 90 degrees.
+     */
+    centerClampedToGround?: boolean;
 };
 
 export type AddImageOptions = {
@@ -361,7 +383,7 @@ const defaultMinPitch = 0;
 const defaultMaxPitch = 60;
 
 // use this variable to check maxPitch for validity
-const maxPitchThreshold = 85;
+const maxPitchThreshold = 180;
 
 const defaultOptions: Readonly<Partial<MapOptions>> = {
     hash: false,
@@ -391,9 +413,11 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     trackResize: true,
 
     center: [0, 0],
+    elevation: 0,
     zoom: 0,
     bearing: 0,
     pitch: 0,
+    roll: 0,
 
     renderWorldCopies: true,
     maxTileCacheSize: null,
@@ -405,10 +429,12 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     clickTolerance: 3,
     localIdeographFontFamily: 'sans-serif',
     pitchWithRotate: true,
+    rollEnabled: false,
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096],
-    cancelPendingTileRequestsWhileZooming: true
+    cancelPendingTileRequestsWhileZooming: true,
+    centerClampedToGround: true
 };
 
 /**
@@ -616,6 +642,7 @@ export class Map extends Camera {
         this._antialias = resolvedOptions.antialias === true;
         this._trackResize = resolvedOptions.trackResize === true;
         this._bearingSnap = resolvedOptions.bearingSnap;
+        this._centerClampedToGround = resolvedOptions.centerClampedToGround;
         this._refreshExpiredTiles = resolvedOptions.refreshExpiredTiles === true;
         this._fadeDuration = resolvedOptions.fadeDuration;
         this._crossSourceCollisions = resolvedOptions.crossSourceCollisions === true;
@@ -685,9 +712,11 @@ export class Map extends Camera {
         if (!this._hash || !this._hash._onHashChange()) {
             this.jumpTo({
                 center: resolvedOptions.center,
+                elevation: resolvedOptions.elevation,
                 zoom: resolvedOptions.zoom,
                 bearing: resolvedOptions.bearing,
-                pitch: resolvedOptions.pitch
+                pitch: resolvedOptions.pitch,
+                roll: resolvedOptions.roll
             });
 
             if (resolvedOptions.bounds) {
@@ -711,7 +740,8 @@ export class Map extends Camera {
 
         this.on('style.load', () => {
             if (this.transform.unmodified) {
-                this.jumpTo(this.style.stylesheet as any);
+                const coercedOptions = pick(this.style.stylesheet, ['center', 'zoom', 'bearing', 'pitch', 'roll']) as CameraOptions;
+                this.jumpTo(coercedOptions);
             }
         });
         this.on('data', (event: MapDataEvent) => {
@@ -1067,7 +1097,7 @@ export class Map extends Camera {
      *
      * A {@link ErrorEvent} event will be fired if minPitch is out of bounds.
      *
-     * @param minPitch - The minimum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
+     * @param minPitch - The minimum pitch to set (0-180). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
      * If `null` or `undefined` is provided, the function removes the current minimum pitch (i.e. sets it to 0).
      */
     setMinPitch(minPitch?: number | null): Map {
@@ -1103,7 +1133,7 @@ export class Map extends Camera {
      *
      * A {@link ErrorEvent} event will be fired if maxPitch is out of bounds.
      *
-     * @param maxPitch - The maximum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
+     * @param maxPitch - The maximum pitch to set (0-180). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
      * If `null` or `undefined` is provided, the function removes the current maximum pitch (sets it to 60).
      */
     setMaxPitch(maxPitch?: number | null): Map {
@@ -2010,7 +2040,9 @@ export class Map extends Camera {
             if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
             this.painter.renderToTexture = null;
             this.transform.setMinElevationForCurrentTile(0);
-            this.transform.setElevation(0);
+            if (this._centerClampedToGround) {
+                this.transform.setElevation(0);
+            }
         } else {
             // add terrain
             const sourceCache = this.style.sourceCaches[options.source];
@@ -2034,7 +2066,9 @@ export class Map extends Camera {
                 } else if (e.dataType === 'source' && e.tile) {
                     if (e.sourceId === options.source && !this._elevationFreeze) {
                         this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
-                        this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
+                        if (this._centerClampedToGround) {
+                            this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
+                        }
                     }
                     this.terrain.sourceCache.freeRtt(e.tile.tileID);
                 }
@@ -3180,12 +3214,14 @@ export class Map extends Camera {
         if (this.terrain) {
             this.terrain.sourceCache.update(this.transform, this.terrain);
             this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
-            if (!this._elevationFreeze) {
+            if (!this._elevationFreeze && this._centerClampedToGround) {
                 this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             }
         } else {
             this.transform.setMinElevationForCurrentTile(0);
-            this.transform.setElevation(0);
+            if (this._centerClampedToGround) {
+                this.transform.setElevation(0);
+            }
         }
 
         this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, transformUpdateResult.forcePlacementUpdate);
@@ -3300,6 +3336,7 @@ export class Map extends Camera {
         this._canvas.removeEventListener('webglcontextlost', this._contextLost, false);
         DOM.remove(this._canvasContainer);
         DOM.remove(this._controlContainer);
+        this._container.removeEventListener('scroll', this._onMapScroll, false);
         this._container.classList.remove('maplibregl-map');
 
         PerformanceUtils.clearMetrics();

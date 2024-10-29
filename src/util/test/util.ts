@@ -153,7 +153,6 @@ export function stubAjaxGetImage(createImageBitmap) {
     global.URL.revokeObjectURL = () => {};
     global.URL.createObjectURL = (_) => { return null; };
 
-    // eslint-disable-next-line accessor-pairs
     Object.defineProperty(global.Image.prototype, 'src', {
         set(url: string) {
             if (url === 'error') {
@@ -230,12 +229,7 @@ export function getGlobeProjectionMock(): GlobeProjection {
         get useGlobeControls(): boolean {
             return true;
         },
-        get useGlobeRendering(): boolean {
-            return true;
-        },
-        set useGlobeRendering(_value: boolean) {
-            // do not set
-        },
+        useGlobeRendering: true,
         latitudeErrorCorrectionRadians: 0,
         errorQueryLatitudeDegrees: 0,
     } as GlobeProjection;

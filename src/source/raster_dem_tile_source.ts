@@ -86,13 +86,11 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
 
                 if (!tile.actor || tile.state === 'expired') {
                     tile.actor = this.dispatcher.getActor();
-                    /* eslint-disable require-atomic-updates */
                     const data = await tile.actor.sendAsync({type: MessageType.loadDEMTile, data: params});
                     tile.dem = data;
                     tile.needsHillshadePrepare = true;
                     tile.needsTerrainPrepare = true;
                     tile.state = 'loaded';
-                    /* eslint-enable require-atomic-updates */
                 }
             }
         } catch (err) {
@@ -112,7 +110,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
             const height = img.height + 2;
             try {
                 return new RGBAImage({width, height}, await readImageUsingVideoFrame(img, -1, -1, width, height));
-            } catch (e) {
+            } catch {
                 // fall-back to browser canvas decoding
             }
         }
