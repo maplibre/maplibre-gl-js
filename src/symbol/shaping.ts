@@ -624,7 +624,7 @@ function calculateLineBlockMetrics(
             if (rectAndMetrics === null) continue;
             maxGlyphHeight = Math.max(
                 maxGlyphHeight,
-                rectAndMetrics.metrics.height * section.scale
+                ONE_EM * section.scale
             );
         }
     }
@@ -796,7 +796,7 @@ function shapeLines(shaping: Shaping,
                     verticalAlignOffset = calculateVerticalOffset(
                         section.verticalAlign,
                         maxLineHeight,
-                        imagePosition.displaySize[1] * section.scale,
+                        imagePosition.displaySize[1] * section.scale
                     );
                 }
 
