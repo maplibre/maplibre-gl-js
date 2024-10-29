@@ -155,18 +155,18 @@ async function makeFetchRequest(requestParameters: RequestParameters, abortContr
         request.headers.set('Accept', 'application/json');
     }
 
-    // When the error is due to CORS policy, the fetch call does not resolve but throws a generic TypeError instead.
+    // When the error is due to CORS policy, DNS issue or malformed URL, the fetch call does not resolve but throws a generic TypeError instead.
     // It is preferable to throw an AJAXError so that the Map event "error" can catch it and still have
     // access to the faulty url.
     let response: Response;
     try {
         response = await fetch(request);
     } catch (e) {
-        if (isCorsError(e)) {
+        if (isNetworkError(e)) {
             // There is no HTTP status code associated with CORS as it is blocked
-            // by the browser. They could actually be anything, even 200, but to complt with
+            // by the browser. They could actually be anything, even 200, but to comply with
             // the AJAXError definition, we provide the arbitrary code `0`
-            throw new AJAXError(0, 'CORS Error', requestParameters.url, new Blob());
+            throw new AJAXError(0, e.message, requestParameters.url, new Blob());
         }
         throw e;
     }
@@ -312,23 +312,23 @@ export const getVideo = (urls: Array<string>): Promise<HTMLVideoElement> => {
 };
 
 /**
- * Check whether the provided error is due to CORS policy
+ * Check whether the provided error is due to a network error (DNS, CORS) or a malformed URL
  */
-function isCorsError(error: unknown): boolean {
+function isNetworkError(error: unknown): boolean {
     if (error instanceof TypeError) {
-        // Common CORS error messages can include:
+        // Common network error messages can include:
         // - "Failed to fetch"
         // - "Network request failed"
         // - "CORS error"
         // - "Cross-Origin Request Blocked"
-        const corsErrorMessages = [
+        const networkErrorMessages = [
             'cors',
             'failed to fetch',
             'cross-origin',
             'network request failed'
         ];
 
-        return corsErrorMessages.some(msg =>
+        return networkErrorMessages.some(msg =>
             error.message.toLowerCase().includes(msg)
         );
     }
