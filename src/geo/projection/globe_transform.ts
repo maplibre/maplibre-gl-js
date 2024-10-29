@@ -16,7 +16,7 @@ import {PaddingOptions} from '../edge_insets';
 import {tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 import {angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, sphereSurfacePointToCoordinates} from './globe_utils';
 import {EXTENT} from '../../data/extent';
-import type {ProjectionData} from './projection_data';
+import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import {globeCoveringTiles} from './globe_covering_tiles';
 import {Frustum} from '../../util/primitives';
 import {CoveringTilesOptions} from './covering_tiles';
@@ -445,8 +445,9 @@ export class GlobeTransform implements ITransform {
         return (this._lastUpdateTimeSeconds - this._lastGlobeChangeTimeSeconds) < globeConstants.globeTransitionTimeSeconds;
     }
 
-    getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData {
-        const data = this._mercatorTransform.getProjectionData(overscaledTileID, aligned, ignoreTerrainMatrix);
+    getProjectionData(params: ProjectionDataParams): ProjectionData {
+        const {overscaledTileID, aligned, ignoreTerrainMatrix, ignoreGlobeMatrix} = params;
+        const data = this._mercatorTransform.getProjectionData({overscaledTileID, aligned, ignoreTerrainMatrix});
 
         // Set 'projectionMatrix' to actual globe transform
         if (this.isGlobeRendering) {
@@ -454,7 +455,7 @@ export class GlobeTransform implements ITransform {
         }
 
         data.clippingPlane = this._cachedClippingPlane as [number, number, number, number];
-        data.projectionTransition = this._globeness;
+        data.projectionTransition = ignoreGlobeMatrix ? 0 : this._globeness;
 
         return data;
     }
@@ -1178,7 +1179,7 @@ export class GlobeTransform implements ITransform {
     }
 
     getProjectionDataForCustomLayer(): ProjectionData {
-        const projectionData = this.getProjectionData(new OverscaledTileID(0, 0, 0, 0, 0));
+        const projectionData = this.getProjectionData({overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0)});
         projectionData.tileMercatorCoords = [0, 0, 1, 1];
 
         // Even though we requested projection data for the mercator base tile which covers the entire mercator range,

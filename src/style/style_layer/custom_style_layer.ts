@@ -86,7 +86,7 @@ export type CustomRenderMethodInput = {
      * For more details of this object's internals, see its doc comments in `src/geo/projection/projection_data.ts`.
      *
      * These uniforms are set so that `projectTile` in shader accepts a vec2 in range 0..1 in web mercator coordinates.
-     * Use `map.transform.getProjectionData(tileID)` to get uniforms for a given tile and pass vec2 in tile-local range 0..EXTENT instead.
+     * Use `map.transform.getProjectionData({overscaledTileID: tileID})` to get uniforms for a given tile and pass vec2 in tile-local range 0..EXTENT instead.
      *
      * For projection 3D features, use `projectTileFor3D` in the shader.
      *

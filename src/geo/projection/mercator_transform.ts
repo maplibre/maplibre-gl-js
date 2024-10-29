@@ -12,7 +12,7 @@ import {IReadonlyTransform, ITransform, TransformUpdateResult} from '../transfor
 import {PaddingOptions} from '../edge_insets';
 import {mercatorCoordinateToLocation, getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle, cameraMercatorCoordinateFromCenterAndRotation} from './mercator_utils';
 import {EXTENT} from '../../data/extent';
-import type {ProjectionData} from './projection_data';
+import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import {scaleZoom, TransformHelper, zoomScale} from '../transform_helper';
 import {mercatorCoveringTiles} from './mercator_covering_tiles';
 import {Frustum} from '../../util/primitives';
@@ -753,7 +753,8 @@ export class MercatorTransform implements ITransform {
         return false;
     }
 
-    getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData {
+    getProjectionData(params: ProjectionDataParams): ProjectionData {
+        const {overscaledTileID, aligned, ignoreTerrainMatrix} = params;
         const matrix = overscaledTileID ? this.calculatePosMatrix(overscaledTileID, aligned) : null;
         return getBasicProjectionData(overscaledTileID, matrix, ignoreTerrainMatrix);
     }
@@ -829,7 +830,7 @@ export class MercatorTransform implements ITransform {
 
     getProjectionDataForCustomLayer(): ProjectionData {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        const projectionData = this.getProjectionData(tileID, false, true);
+        const projectionData = this.getProjectionData({overscaledTileID: tileID, ignoreTerrainMatrix: true});
 
         const tileMatrix = calculateTileMatrix(tileID, this.worldSize);
         mat4.multiply(tileMatrix, this._viewProjMatrix, tileMatrix);
