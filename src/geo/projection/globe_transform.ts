@@ -17,7 +17,7 @@ import {tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 import {angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, sphereSurfacePointToCoordinates} from './globe_utils';
 import {EXTENT} from '../../data/extent';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
-import {globeCoveringTiles} from './globe_covering_tiles';
+import {globeCoveringTiles, GlobeTileAABBCache} from './globe_covering_tiles';
 import {Frustum} from '../../util/primitives';
 
 /**
@@ -249,6 +249,7 @@ export class GlobeTransform implements ITransform {
     private _globeProjMatrixInverted: mat4 = createIdentityMat4f64();
 
     private _cameraPosition: vec3 = createVec3f64();
+    private _aabbCache = new GlobeTileAABBCache();
 
     /**
      * Whether globe projection is allowed to be used.
@@ -375,6 +376,7 @@ export class GlobeTransform implements ITransform {
         this._globeness = this._computeGlobenessAnimation();
         // Everything below this comment must happen AFTER globeness update
         this._updateErrorCorrectionValue();
+        this._aabbCache.swapCaches();
         this._calcMatrices();
 
         if (oldGlobeRendering === this.isGlobeRendering) {
@@ -699,7 +701,7 @@ export class GlobeTransform implements ITransform {
         const cameraCoord = this.screenPointToMercatorCoordinate(this.getCameraPoint());
         const centerCoord = MercatorCoordinate.fromLngLat(this.center);
 
-        return globeCoveringTiles(this._cachedFrustum, this._cachedClippingPlane, cameraCoord, centerCoord, coveringZ, options);
+        return globeCoveringTiles(this._cachedFrustum, this._cachedClippingPlane, cameraCoord, centerCoord, coveringZ, options, this._aabbCache);
     }
 
     recalculateZoomAndCenter(terrain?: Terrain): void {
