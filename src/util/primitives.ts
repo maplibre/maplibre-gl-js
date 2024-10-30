@@ -8,7 +8,7 @@ export const enum IntersectionResult {
 
 export class Frustum {
 
-    constructor(public points: vec4[], public planes: vec4[]) { }
+    constructor(public points: vec4[], public planes: vec4[], public aabb: Aabb) { }
 
     public static fromInvProjectionMatrix(invProj: mat4, worldSize: number = 1, zoom: number = 0): Frustum {
         const clipSpaceCorners = [
@@ -48,7 +48,17 @@ export class Frustum {
             return n.concat(d);
         });
 
-        return new Frustum(frustumCoords, frustumPlanes);
+        const min: vec3 = [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY];
+        const max: vec3 = [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY];
+
+        for (const p of frustumCoords) {
+            for (let i = 0; i < 3; i++) {
+                min[i] = Math.min(min[i], p[i]);
+                max[i] = Math.max(max[i], p[i]);
+            }
+        }
+
+        return new Frustum(frustumCoords, frustumPlanes, new Aabb(min, max));
     }
 }
 
@@ -109,19 +119,9 @@ export class Aabb {
             return IntersectionResult.Full;
         }
 
-        for (let axis = 0; axis < 3; axis++) {
-            let projMin = Number.MAX_VALUE;
-            let projMax = -Number.MAX_VALUE;
-
-            for (let p = 0; p < frustum.points.length; p++) {
-                const projectedPoint = frustum.points[p][axis] - this.min[axis];
-
-                projMin = Math.min(projMin, projectedPoint);
-                projMax = Math.max(projMax, projectedPoint);
-            }
-
-            if (projMax < 0 || projMin > this.max[axis] - this.min[axis])
-                return IntersectionResult.None;
+        if (frustum.aabb.min[0] > this.max[0] || frustum.aabb.min[1] > this.max[1] || frustum.aabb.min[2] > this.max[2] ||
+            frustum.aabb.max[0] < this.min[0] || frustum.aabb.max[1] < this.min[1] || frustum.aabb.max[2] < this.min[2]) {
+            return IntersectionResult.None;
         }
 
         return IntersectionResult.Partial;
