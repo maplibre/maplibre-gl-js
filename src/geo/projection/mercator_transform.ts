@@ -839,15 +839,12 @@ export class MercatorTransform implements ITransform {
         // both matrices by EXTENT. We also need to rescale Z.
 
         const scale: vec3 = [EXTENT, EXTENT, this.worldSize / this._helper.pixelsPerMeter];
-        const translate: vec3 = [0, 0, this.elevation];
 
         const fallbackMatrixScaled = createMat4f64();
-        mat4.translate(fallbackMatrixScaled, tileMatrix, translate);
-        mat4.scale(fallbackMatrixScaled, fallbackMatrixScaled, scale);
+        mat4.scale(fallbackMatrixScaled, tileMatrix, scale);
 
         const projectionMatrixScaled = createMat4f64();
-        mat4.translate(projectionMatrixScaled, tileMatrix, translate);
-        mat4.scale(projectionMatrixScaled, projectionMatrixScaled, scale);
+        mat4.scale(projectionMatrixScaled, tileMatrix, scale);
 
         projectionData.fallbackMatrix = fallbackMatrixScaled;
         projectionData.mainMatrix = projectionMatrixScaled;
