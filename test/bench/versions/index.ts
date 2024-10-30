@@ -81,7 +81,8 @@ register('MapIdle', new MapIdle());
 register('SymbolCollisionBox', new SymbolCollisionBox(false));
 register('SymbolCollisionBoxGlobe', new SymbolCollisionBox(true));
 register('Subdivide', new Subdivide());
-register('CoveringTilesGlobe', new CoveringTilesGlobe());
+register('CoveringTilesGlobe', new CoveringTilesGlobe(0));
+register('CoveringTilesGlobePitched', new CoveringTilesGlobe(60));
 
 Promise.resolve().then(() => {
     // Ensure the global worker pool is never drained. Browsers have resource limits
