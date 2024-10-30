@@ -87,45 +87,27 @@ export class Aabb {
     }
 
     /**
-     * Performs a frustum-aabb intersection test. Returns 0 if there's no intersection,
-     * 1 if shapes are intersecting and 2 if the aabb if fully inside the frustum.
+     * Performs a frustum-aabb intersection test.
      */
     intersectsFrustum(frustum: Frustum): IntersectionResult {
         // Execute separating axis test between two convex objects to find intersections
         // Each frustum plane together with 3 major axes define the separating axes
-
-        const aabbPoints: Array<vec4> = [
-            [this.min[0], this.min[1], this.min[2], 1],
-            [this.max[0], this.min[1], this.min[2], 1],
-            [this.max[0], this.max[1], this.min[2], 1],
-            [this.min[0], this.max[1], this.min[2], 1],
-            [this.min[0], this.min[1], this.max[2], 1],
-            [this.max[0], this.min[1], this.max[2], 1],
-            [this.max[0], this.max[1], this.max[2], 1],
-            [this.min[0], this.max[1], this.max[2], 1]
-        ];
-
         let fullyInside = true;
 
         for (let p = 0; p < frustum.planes.length; p++) {
-            const plane = frustum.planes[p];
-            let pointsInside = 0;
+            const planeIntersection = this.intersectsPlane(frustum.planes[p]);
 
-            for (let i = 0; i < aabbPoints.length; i++) {
-                if (vec4.dot(plane, aabbPoints[i]) >= 0) {
-                    pointsInside++;
-                }
-            }
-
-            if (pointsInside === 0)
+            if (planeIntersection === IntersectionResult.None) {
                 return IntersectionResult.None;
-
-            if (pointsInside !== aabbPoints.length)
+            }
+            if (planeIntersection === IntersectionResult.Partial) {
                 fullyInside = false;
+            }
         }
 
-        if (fullyInside)
+        if (fullyInside) {
             return IntersectionResult.Full;
+        }
 
         for (let axis = 0; axis < 3; axis++) {
             let projMin = Number.MAX_VALUE;
