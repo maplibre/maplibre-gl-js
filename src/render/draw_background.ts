@@ -29,7 +29,7 @@ export function drawBackground(painter: Painter, sourceCache: SourceCache, layer
     if (painter.renderPass !== pass) return;
 
     const stencilMode = StencilMode.disabled;
-    const depthMode = painter.depthModeForSublayer(0, pass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
+    const depthMode = painter.getDepthModeForSublayer(0, pass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
     const program = painter.useProgram(image ? 'backgroundPattern' : 'background');
     const tileIDs = coords ? coords : transform.coveringTiles({tileSize, terrain: painter.style.map.terrain});
@@ -42,7 +42,7 @@ export function drawBackground(painter: Painter, sourceCache: SourceCache, layer
     const crossfade = layer.getCrossfadeParameters();
 
     for (const tileID of tileIDs) {
-        const projectionData = transform.getProjectionData(tileID);
+        const projectionData = transform.getProjectionData({overscaledTileID: tileID});
 
         const uniformValues = image ?
             backgroundPatternUniformValues(opacity, painter, image, {tileID, tileSize}, crossfade) :

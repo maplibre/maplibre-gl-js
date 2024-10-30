@@ -4,13 +4,15 @@ import {LngLat, LngLatLike} from '../lng_lat';
 import {CameraForBoundsOptions, PointLike} from '../../ui/camera';
 import {PaddingOptions} from '../edge_insets';
 import {LngLatBounds} from '../lng_lat_bounds';
-import {warnOnce} from '../../util/util';
+import {getRollPitchBearing, RollPitchBearing, warnOnce} from '../../util/util';
+import {quat} from 'gl-matrix';
 
 export type MapControlsDeltas = {
     panDelta: Point;
     zoomDelta: number;
     bearingDelta: number;
     pitchDelta: number;
+    rollDelta: number;
     around: Point;
 }
 
@@ -23,6 +25,7 @@ export type CameraForBoxAndBearingHandlerResult = {
 export type EaseToHandlerOptions = {
     bearing: number;
     pitch: number;
+    roll: number;
     padding: PaddingOptions;
     offsetAsPoint: Point;
     around?: LngLat;
@@ -41,6 +44,7 @@ export type EaseToHandlerResult = {
 export type FlyToHandlerOptions = {
     bearing: number;
     pitch: number;
+    roll: number;
     padding: PaddingOptions;
     offsetAsPoint: Point;
     center?: LngLatLike;
@@ -78,7 +82,7 @@ export interface ICameraHelper {
         easingOffset: Point;
     };
 
-    handleMapControlsPitchBearingZoom(deltas: MapControlsDeltas, tr: ITransform): void;
+    handleMapControlsRollPitchBearingZoom(deltas: MapControlsDeltas, tr: ITransform): void;
 
     handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void;
 
@@ -89,4 +93,30 @@ export interface ICameraHelper {
     handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandlerResult;
 
     handleFlyTo(tr: ITransform, options: FlyToHandlerOptions): FlyToHandlerResult;
+}
+
+/**
+ * @internal
+ * Set a transform's rotation to a value interpolated between startRotation and endRotation
+ * @param startRotation - the starting rotation (rotation when k = 0)
+ * @param endRotation - the end rotation (rotation when k = 1)
+ * @param endEulerAngles - the end Euler angles. This is needed in case `endRotation` has an ambiguous Euler angle representation.
+ * @param tr - the transform to be updated
+ * @param k - the interpolation fraction, between 0 and 1.
+ */
+export function updateRotation(startRotation: quat, endRotation: quat, endEulerAngles: RollPitchBearing, tr: ITransform, k: number) {
+    // At pitch ==0, the Euler angle representation is ambiguous. In this case, set the Euler angles
+    // to the representation requested by the caller
+    if (k < 1) {
+        const rotation: quat = new Float64Array(4) as any;
+        quat.slerp(rotation, startRotation, endRotation, k);
+        const eulerAngles = getRollPitchBearing(rotation);
+        tr.setRoll(eulerAngles.roll);
+        tr.setPitch(eulerAngles.pitch);
+        tr.setBearing(eulerAngles.bearing);
+    } else {
+        tr.setRoll(endEulerAngles.roll);
+        tr.setPitch(endEulerAngles.pitch);
+        tr.setBearing(endEulerAngles.bearing);
+    }
 }

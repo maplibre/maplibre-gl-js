@@ -3,7 +3,7 @@ import UnitBezier from '@mapbox/unitbezier';
 import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';
 import type {Size} from './image';
 import type {WorkerGlobalScopeInterface} from './web_worker';
-import {mat4, vec3, vec4} from 'gl-matrix';
+import {mat3, mat4, quat, vec3, vec4} from 'gl-matrix';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
 import {OverscaledTileID} from '../source/tile_id';
 
@@ -33,7 +33,7 @@ export function createIdentityMat4f64(): mat4 {
  * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
  */
 export function translatePosition(
-    transform: { angle: number; zoom: number },
+    transform: { bearingInRadians: number; zoom: number },
     tile: { tileID: OverscaledTileID; tileSize: number },
     translate: [number, number],
     translateAnchor: 'map' | 'viewport',
@@ -42,8 +42,8 @@ export function translatePosition(
     if (!translate[0] && !translate[1]) return [0, 0];
 
     const angle = inViewportPixelUnitsUnits ?
-        (translateAnchor === 'map' ? transform.angle : 0) :
-        (translateAnchor === 'viewport' ? -transform.angle : 0);
+        (translateAnchor === 'map' ? -transform.bearingInRadians : 0) :
+        (translateAnchor === 'viewport' ? transform.bearingInRadians : 0);
 
     if (angle) {
         const sinA = Math.sin(angle);
@@ -617,7 +617,7 @@ export function storageAvailable(type: string): boolean {
         storage.setItem('_mapbox_test_', 1);
         storage.removeItem('_mapbox_test_');
         return true;
-    } catch (e) {
+    } catch {
         return false;
     }
 }
@@ -838,7 +838,7 @@ export async function getImageData(
     if (isOffscreenCanvasDistorted()) {
         try {
             return await readImageUsingVideoFrame(image, x, y, width, height);
-        } catch (e) {
+        } catch {
             // fall back to OffscreenCanvas
         }
     }
@@ -880,6 +880,58 @@ export function subscribe(target: Subscriber, message: keyof WindowEventMap, lis
  */
 export function degreesToRadians(degrees: number): number {
     return degrees * Math.PI / 180;
+}
+
+/**
+ * This method converts radians to degrees.
+ * The return value is the degrees value.
+ * @param degrees - The number of radians
+ * @returns degrees
+ */
+export function radiansToDegrees(degrees: number): number {
+    return degrees / Math.PI * 180;
+}
+
+export type RollPitchBearing = {
+    roll: number;
+    pitch: number;
+    bearing: number;
+};
+
+/**
+ * This method converts a rotation quaternion to roll, pitch, and bearing angles in degrees.
+ * @param rotation - The rotation quaternion
+ * @returns roll, pitch, and bearing angles in degrees
+ */
+export function getRollPitchBearing(rotation: quat): RollPitchBearing {
+    const m: mat3 = new Float64Array(9) as any;
+    mat3.fromQuat(m, rotation);
+
+    const xAngle = radiansToDegrees(-Math.asin(clamp(m[2], -1, 1)));
+    let roll: number;
+    let bearing: number;
+    if (Math.hypot(m[5], m[8]) < 1.0e-3) {
+        roll = 0.0;
+        bearing = -radiansToDegrees(Math.atan2(m[3], m[4]));
+    } else {
+        roll = radiansToDegrees((m[5] === 0.0 && m[8] === 0.0) ? 0.0 :  Math.atan2(m[5], m[8]));
+        bearing = radiansToDegrees((m[1] === 0.0 && m[0] === 0.0) ? 0.0 : Math.atan2(m[1], m[0]));
+    }
+
+    return {roll, pitch: xAngle + 90.0, bearing};
+}
+
+/**
+ * This method converts roll, pitch, and bearing angles in degrees to a rotation quaternion.
+ * @param roll - Roll angle in degrees
+ * @param pitch - Pitch angle in degrees
+ * @param bearing - Bearing angle in degrees
+ * @returns The rotation quaternion
+ */
+export function rollPitchBearingToQuat(roll: number, pitch: number, bearing: number): quat {
+    const rotation: quat = new Float64Array(4) as any;
+    quat.fromEuler(rotation, roll, pitch - 90.0, bearing);
+    return rotation;
 }
 
 /**
