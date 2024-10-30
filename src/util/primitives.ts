@@ -146,34 +146,27 @@ export class Aabb {
     }
 
     /**
-     * Performs a halfspace-aabb intersection test. Returns 0 if there's no intersection,
-     * 1 if shapes are intersecting and 2 if the aabb if fully inside the plane's positive halfspace.
+     * Performs a halfspace-aabb intersection test.
      */
     intersectsPlane(plane: vec4): IntersectionResult {
-        const aabbPoints: Array<vec4> = [
-            [this.min[0], this.min[1], this.min[2], 1],
-            [this.max[0], this.min[1], this.min[2], 1],
-            [this.max[0], this.max[1], this.min[2], 1],
-            [this.min[0], this.max[1], this.min[2], 1],
-            [this.min[0], this.min[1], this.max[2], 1],
-            [this.max[0], this.min[1], this.max[2], 1],
-            [this.max[0], this.max[1], this.max[2], 1],
-            [this.min[0], this.max[1], this.max[2], 1]
-        ];
-
-        let pointsInside = 0;
-        for (let i = 0; i < aabbPoints.length; i++) {
-            if (vec4.dot(plane, aabbPoints[i]) >= 0) {
-                pointsInside++;
+        let distMin = plane[3];
+        let distMax = plane[3];
+        for (let i = 0; i < 3; i++) {
+            if (plane[i] > 0) {
+                distMin += plane[i] * this.min[i];
+                distMax += plane[i] * this.max[i];
+            } else {
+                distMax += plane[i] * this.min[i];
+                distMin += plane[i] * this.max[i];
             }
         }
 
-        if (pointsInside === 0) {
-            return IntersectionResult.None;
-        } else if (pointsInside < aabbPoints.length) {
-            return IntersectionResult.Partial;
-        } else {
+        if (distMin >= 0) {
             return IntersectionResult.Full;
         }
+        if (distMax < 0) {
+            return IntersectionResult.None;
+        }
+        return IntersectionResult.Partial;
     }
 }
