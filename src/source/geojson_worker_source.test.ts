@@ -347,6 +347,42 @@ describe('getData', () => {
         properties: {},
     } as GeoJSON.GeoJSON;
 
+    const multiPointGeoJson = {
+        type: 'FeatureCollection',
+        features: [
+            {
+                type: 'Feature',
+                geometry: {
+                    type: 'Point',
+                    coordinates: [0, 0]
+                },
+                properties: {
+                    id: 'point1'
+                }
+            },
+            {
+                type: 'Feature', 
+                geometry: {
+                    type: 'Point',
+                    coordinates: [1, 1]
+                },
+                properties: {
+                    id: 'point2'
+                }
+            },
+            {
+                type: 'Feature',
+                geometry: {
+                    type: 'Point', 
+                    coordinates: [2, 2]
+                },
+                properties: {
+                    id: 'point3'
+                }
+            }
+        ]
+    } as GeoJSON.GeoJSON;
+
     const layerIndex = new StyleLayerIndex(layers);
 
     test('getData returns correct geojson when the source was loaded with geojson', async () => {
