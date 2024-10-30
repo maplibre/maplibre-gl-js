@@ -193,14 +193,14 @@ export class GlobeTileAABBCache {
 
     public get(x: number, y: number, z: number): Aabb {
         const key = `${z}_${x}_${y}`;
-        const cached1 = this._nextCache.get(key);
-        if (cached1) {
-            return cached1;
+        const cachedNext = this._nextCache.get(key);
+        if (cachedNext) {
+            return cachedNext;
         }
-        const cached2 = this._cache.get(key);
-        if (cached2) {
-            this._nextCache.set(key, cached2);
-            return cached2;
+        const cachedOld = this._cache.get(key);
+        if (cachedOld) {
+            this._nextCache.set(key, cachedOld);
+            return cachedOld;
         }
         const aabb = getTileAABB(x, y, z);
         this._cache.set(key, aabb);
