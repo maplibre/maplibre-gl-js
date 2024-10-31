@@ -275,6 +275,11 @@ describe('#jumpTo', () => {
         expect(camera.getRoll()).toBe(45);
     });
 
+    test('sets field of view', () => {
+        camera.setVerticalFieldOfView(29);
+        expect(camera.getVerticalFieldOfView()).toBeCloseTo(29, 10);
+    });
+
     test('sets multiple properties', () => {
         camera.jumpTo({
             center: [10, 20],
@@ -313,6 +318,21 @@ describe('#jumpTo', () => {
             .on('moveend', (d) => { ended = d.data; });
 
         camera.jumpTo({center: [1, 2]}, eventData);
+        expect(started).toBe('ok');
+        expect(moved).toBe('ok');
+        expect(ended).toBe('ok');
+    });
+
+    test('emits move events when FOV changes, preserving eventData', () => {
+        let started, moved, ended;
+        const eventData = {data: 'ok'};
+
+        camera
+            .on('movestart', (d) => { started = d.data; })
+            .on('move', (d) => { moved = d.data; })
+            .on('moveend', (d) => { ended = d.data; });
+
+        camera.setVerticalFieldOfView(44, eventData);
         expect(started).toBe('ok');
         expect(moved).toBe('ok');
         expect(ended).toBe('ok');
