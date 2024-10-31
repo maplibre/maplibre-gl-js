@@ -7,7 +7,6 @@
       "test": {
           "height": 512,
           "width": 512,
-          "maxPitch": 85,
           "operations": [
               [
                 "wait",
@@ -17,11 +16,12 @@
       }
   },
   "center": [
-    11.64,
-    84.6794
+    0,
+    0
   ],
-  "zoom": 11,
+  "zoom": 1,
   "pitch": 80,
+  "maxPitch": 85,
   "sources": { },
   "layers": [
       {
