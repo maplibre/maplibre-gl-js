@@ -684,8 +684,8 @@ describe('GlobeTransform', () => {
             });
 
             expect(tiles).toEqual([
-                new OverscaledTileID(7, 0, 7, 64, 63),
-                new OverscaledTileID(7, 0, 7, 63, 63),
+                new OverscaledTileID(6, 0, 6, 32, 31),
+                new OverscaledTileID(6, 0, 6, 31, 31),
                 new OverscaledTileID(10, 0, 10, 511, 512),
                 new OverscaledTileID(10, 0, 10, 512, 512)
             ]);
