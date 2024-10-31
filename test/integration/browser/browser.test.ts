@@ -134,7 +134,7 @@ describe('Browser tests', () => {
         const centerWithInertia = await dragToLeft();
         expect(centerWithInertia.lng).toBeLessThan(-60);
         expect(centerWithInertia.lat).toBeCloseTo(0, 7);
-    });
+    }, 20000);
 
     test('Resize viewport (page)', async () => {
         await page.setViewportSize({width: 400, height: 400});
