@@ -140,6 +140,7 @@ describe('query tests', () => {
     }, 60000);
 
     afterAll(async () => {
+        await context.close();
         await browser.close();
         await new Promise(resolve => server.close(resolve));
     });
