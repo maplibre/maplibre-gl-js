@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <title>Animate symbol to follow the mouse</title>
     <meta property="og:description" content="Animate symbol to follow the mouse." />
@@ -8,65 +9,64 @@
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
     <script src='../../dist/maplibre-gl-dev.js'></script>
     <style>
-        body { margin: 0; padding: 0; }
-        html, body, #map { height: 100%; }
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body,
+        #map {
+            height: 100%;
+        }
     </style>
 </head>
+
 <body>
-<div id="map"></div>
-<script>
-    const map = new maplibregl.Map({
-        container: 'map',
-        style:
-            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
-        center: [0, 0],
-        zoom: 2
-    });
-
-    let position;
-    map.on('mousemove', (e) => {
-        position = {
-            point: e.point,
-            lngLat: e.lngLat.wrap()
-        };
-    });
-
-
-    function getPoint() {
-        return {
-            'type': 'Point',
-            'coordinates': [position.lngLat.lng, position.lngLat.lat]
-        };
-    }
-
-    map.on('load', () => {
-    
-        map.addSource('point', {
-            'type': 'geojson',
-            'data': getPoint()
+    <div id="map"></div>
+    <script>
+        const map = new maplibregl.Map({
+            container: 'map',
+            style:
+                'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+            center: [0, 0],
+            zoom: 2
         });
 
+        map.on('mousemove', (e) => {
+            const lngLat = e.lngLat.wrap();
+            const pointSource = map.getSource('point');
 
-        map.addLayer({
-            'id': 'point',
-            'source': 'point',
-            'type': 'symbol',
-            'layout': {
-                'icon-image': 'airport_15',
-                'icon-rotate': ['get', 'bearing'],
-                'icon-rotation-alignment': 'map',
-                'icon-overlap': 'always',
-                'icon-ignore-placement': true
+            if (pointSource && lngLat.lng && lngLat.lat) {
+                pointSource.setData({
+                    'type': 'Point',
+                    'coordinates': [lngLat.lng, lngLat.lat]
+                });
             }
         });
 
-        function animateMarker(timestamp) {
-            map.getSource('point').setData(getPoint());
-            requestAnimationFrame(animateMarker);
-        }
+        map.on('load', () => {
 
-        animateMarker(0);
-    });
-</script>
+            map.addSource('point', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Point',
+                    'coordinates': [0, 0]
+                }
+            });
+
+            map.addLayer({
+                'id': 'point',
+                'source': 'point',
+                'type': 'symbol',
+                'layout': {
+                    'icon-image': 'airport_15',
+                    'icon-allow-overlap': true,
+                    'icon-ignore-placement': true
+                },
+            });
+        });
+    </script>
 </body>
+
 </html>
