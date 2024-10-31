@@ -148,7 +148,7 @@ function calculateTileZoom(requestedCenterZoom: number,
     const distanceToTile3D = Math.hypot(distanceToTile2D, distanceToTileZ);
     // if distance to candidate tile is a tiny bit farther than distance to center,
     // use the same zoom as the center. This is achieved by the scaling distance ratio by cos(fov/2)
-    thisTileDesiredZ = requestedCenterZoom + scaleZoom(distanceToCenter3D / distanceToTile3D / Math.cos(degreesToRadians(cameraVerticalFOV)));
+    thisTileDesiredZ = requestedCenterZoom + scaleZoom(distanceToCenter3D / distanceToTile3D / Math.cos(degreesToRadians(cameraVerticalFOV / 2)));
     thisTileDesiredZ += pitchTileLoadingBehavior * scaleZoom(Math.cos(thisTilePitch)) / 2;
     thisTileDesiredZ = thisTileDesiredZ + clamp(requestedCenterZoom - thisTileDesiredZ, -tileZoomDeadband, tileZoomDeadband);
     return thisTileDesiredZ;
