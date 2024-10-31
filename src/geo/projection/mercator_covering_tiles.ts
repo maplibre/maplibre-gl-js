@@ -1,5 +1,6 @@
 import {OverscaledTileID} from '../../source/tile_id';
 import {Aabb} from '../../util/primitives';
+import {clamp} from '../../util/util';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {IReadonlyTransform} from '../transform_interface';
 import {CoveringTilesDetailsProvider, CoveringTilesOptions} from './covering_tiles';
@@ -36,6 +37,8 @@ export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetail
     }
     
     allowVariableZoom(transform: IReadonlyTransform, options: CoveringTilesOptions): boolean {
-        return (!!options.terrain || transform.pitch > 60.0 || transform.padding.top >= 0.1)
+        const zfov = transform.fov * (Math.abs(Math.cos(transform.rollInRadians)) * transform.height + Math.abs(Math.sin(transform.rollInRadians)) * transform.width) / transform.height;
+        const maxConstantZoomPitch = clamp(78.5 - zfov / 2, 0.0, 60.0);
+        return (!!options.terrain || transform.pitch > maxConstantZoomPitch || transform.padding.top >= 0.1)
     }
 }
