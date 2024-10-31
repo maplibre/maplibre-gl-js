@@ -1,5 +1,5 @@
 
-import puppeteer, {Page, Browser} from 'puppeteer';
+import {chromium, Page, Browser, BrowserContext} from 'playwright';
 
 import {deepEqual} from '../lib/json-diff';
 import st from 'st';
@@ -18,7 +18,7 @@ let maplibregl: typeof maplibreglModule;
 
 jest.retryTimes(3);
 
-function performQueryOnFixture(fixture)  {
+function performQueryOnFixture(fixture) {
 
     return new Promise((resolve, _reject) => {
 
@@ -83,7 +83,7 @@ function performQueryOnFixture(fixture)  {
         const options = style.metadata.test;
         const skipLayerDelete = style.metadata.skipLayerDelete;
 
-        const map =  new maplibregl.Map({
+        const map = new maplibregl.Map({
             container: 'map',
             style,
             interactive: false,
@@ -124,6 +124,7 @@ function performQueryOnFixture(fixture)  {
 
 describe('query tests', () => {
     let browser: Browser;
+    let context: BrowserContext;
     let server: Server;
 
     beforeAll(async () => {
@@ -133,7 +134,8 @@ describe('query tests', () => {
                 cors: true,
             })
         );
-        browser = await puppeteer.launch({headless: true});
+        browser = await chromium.launch({headless: true});
+        context = await browser.newContext({deviceScaleFactor: 2});
         await new Promise<void>((resolve) => server.listen(resolve));
     }, 60000);
 
@@ -145,10 +147,10 @@ describe('query tests', () => {
     let page: Page;
 
     beforeEach(async () => {
-        page = await browser.newPage();
-        await page.setViewport({width: 512, height: 512, deviceScaleFactor: 2});
+        page = await context.newPage();
+        await page.setViewportSize({width: 512, height: 512});
     });
-    afterEach(async() => {
+    afterEach(async () => {
         await page.close();
     });
 
@@ -212,7 +214,7 @@ async function dirToJson(dir: string, port: number) {
         style?: any;
         expected?: any;
         actual?: any;
-        [s:string]:unknown;
+        [s: string]: unknown;
     };
 
     for (const file of files) {
@@ -239,7 +241,7 @@ async function dirToJson(dir: string, port: number) {
     return result;
 }
 
-function processStyle(testName:string, style: unknown, port:number) {
+function processStyle(testName: string, style: unknown, port: number) {
     const clone = JSON.parse(JSON.stringify(style));
     localizeURLs(clone, port, 'test/integration');
 

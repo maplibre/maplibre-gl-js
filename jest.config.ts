@@ -49,7 +49,7 @@ const config: Config = {
             displayName: 'integration',
             testEnvironment: 'node',
             testMatch: [
-                '<rootDir>/test/integration/**/*.test.{ts,js}',
+                '<rootDir>/test/integration/browser/*.test.{ts,js}',
             ],
             ...sharedConfig,
         },

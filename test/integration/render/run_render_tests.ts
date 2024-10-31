@@ -6,7 +6,7 @@ import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
 import {globSync} from 'glob';
 import http from 'http';
-import puppeteer, {Page, Browser} from 'puppeteer';
+import {chromium, Page, Browser} from 'playwright';
 import {CoverageReport} from 'monocart-coverage-reports';
 import {localizeURLs} from '../lib/localize-urls';
 import type {Map as MaplibreMap, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
@@ -256,7 +256,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
     const width = styleForTest.metadata.test.width;
     const height = styleForTest.metadata.test.height;
 
-    await page.setViewport({width, height, deviceScaleFactor: 2});
+    await page.setViewportSize({width, height});
 
     await page.setContent(`
 <!DOCTYPE html>
@@ -301,7 +301,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 }`;
 
                 const fragmentSource = `#version 300 es
-                
+
                 out highp vec4 fragColor;
                 void main() {
                     fragColor = vec4(1.0, 0.0, 0.0, 1.0);
@@ -452,7 +452,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 // Inject MapLibre projection code
                 ${shaderDescription.vertexShaderPrelude}
                 ${shaderDescription.define}
-                
+
                 in vec3 a_pos;
 
                 void main() {
@@ -915,8 +915,9 @@ async function runTests(page: Page, testStyles: StyleWithTestData[], directory: 
 }
 
 async function createPageAndStart(browser: Browser, testStyles: StyleWithTestData[], directory: string, options: RenderOptions) {
-    const page = await browser.newPage();
-    await page.coverage.startJSCoverage({includeRawScriptCoverage: true});
+    const context = await browser.newContext({deviceScaleFactor: 2});
+    const page = await context.newPage();
+    await page.coverage.startJSCoverage({});
     applyDebugParameter(options, page);
     await page.addScriptTag({path: 'dist/maplibre-gl-dev.js'});
     await runTests(page, testStyles, directory);
@@ -930,17 +931,16 @@ async function closePageAndFinish(page: Page, reportCoverage: boolean) {
         return;
     }
 
-    const rawV8CoverageData = coverage.map((it) => {
-        // Convert to raw v8 coverage format
-        const entry: any =  {
-            source: it.text,
-            ...it.rawScriptCoverage
-        };
-        if (entry.url.endsWith('maplibre-gl-dev.js')) {
-            entry.sourceMap = JSON.parse(fs.readFileSync('dist/maplibre-gl-dev.js.map').toString('utf-8'));
-        }
-        return entry;
-    });
+
+    const rawV8CoverageData = coverage.map((entry) => ({
+        source: entry.source,
+        url: entry.url,
+        functions: entry.functions,
+        scriptId: entry.scriptId,
+        sourceMap: entry.url.endsWith('maplibre-gl-dev.js')
+            ? JSON.parse(fs.readFileSync('dist/maplibre-gl-dev.js.map', 'utf-8'))
+            : undefined
+    }));
 
     const coverageReport = new CoverageReport({
         name: 'MapLibre Coverage Report',
@@ -982,7 +982,7 @@ async function executeRenderTests() {
         options.openBrowser = checkParameter(options, '--open-browser');
     }
 
-    const browser = await puppeteer.launch({headless: !options.openBrowser, args: ['--enable-webgl', '--no-sandbox',
+    const browser = await chromium.launch({headless: !options.openBrowser, args: ['--enable-webgl', '--no-sandbox',
         '--disable-web-security']});
 
     const server = http.createServer(

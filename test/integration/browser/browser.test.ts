@@ -1,4 +1,4 @@
-import puppeteer, {Page, Browser} from 'puppeteer';
+import {Page, Browser, chromium, BrowserContext} from 'playwright';
 import st from 'st';
 import http, {type Server} from 'http';
 import type {AddressInfo} from 'net';
@@ -11,6 +11,7 @@ const deviceScaleFactor = 2;
 
 let server: Server;
 let browser: Browser;
+let context: BrowserContext;
 let page: Page;
 let map: Map;
 let maplibregl: typeof MapLibreGL;
@@ -26,19 +27,21 @@ describe('Browser tests', () => {
         );
         await new Promise<void>((resolve) => server.listen(resolve));
 
-        browser = await puppeteer.launch({
+        browser = await chromium.launch({
             headless: true,
             args: [
                 '--use-gl=angle',
                 '--use-angle=gl'
             ],
         });
+        context = await browser.newContext({deviceScaleFactor})
 
     }, 40000);
 
     beforeEach(async () => {
-        page = await browser.newPage();
-        await page.setViewport({width: testWidth, height: testHeight, deviceScaleFactor});
+        page = await context.newPage();
+        await page.setViewportSize({width: testWidth, height: testHeight});
+        await page.evaluate(`window.devicePixelRatio = ${deviceScaleFactor}`);
 
         const port = (server.address() as AddressInfo).port;
 
@@ -56,10 +59,11 @@ describe('Browser tests', () => {
     }, 40000);
 
     afterEach(async() => {
-        page.close();
+        await page.close();
     }, 40000);
 
     afterAll(async () => {
+        await context.close();
         await browser.close();
         if (server) {
             server.close();
@@ -104,8 +108,8 @@ describe('Browser tests', () => {
     }, 20000);
 
     test('Drag to the left', async () => {
-        const canvas = await page.$('.maplibregl-canvas');
-        const canvasBB = await canvas?.boundingBox();
+        const canvas = page.locator('.maplibregl-canvas');
+        const canvasBB = await canvas.boundingBox();
 
         const dragToLeft = async () => {
             await page.mouse.move(canvasBB!.x, canvasBB!.y);
@@ -121,56 +125,49 @@ describe('Browser tests', () => {
             });
         };
 
-        await page.emulateMediaFeatures([
-            {name: 'prefers-reduced-motion', value: 'reduce'},
-        ]);
+        await page.emulateMedia({reducedMotion: 'reduce'});
         const centerWithoutInertia = await dragToLeft();
         expect(centerWithoutInertia.lng).toBeCloseTo(-35.15625, 4);
         expect(centerWithoutInertia.lat).toBeCloseTo(0, 7);
 
-        await page.emulateMediaFeatures([
-            {name: 'prefers-reduced-motion', value: 'reduce'},
-        ]);
+        await page.emulateMedia({reducedMotion: 'reduce'});
         const centerWithInertia = await dragToLeft();
         expect(centerWithInertia.lng).toBeLessThan(-60);
         expect(centerWithInertia.lat).toBeCloseTo(0, 7);
-    }, 20000);
+    });
 
     test('Resize viewport (page)', async () => {
-
-        await page.setViewport({width: 400, height: 400, deviceScaleFactor: 2});
-
+        await page.setViewportSize({width: 400, height: 400});
+        await page.evaluate(`window.devicePixelRatio = ${deviceScaleFactor}`);
         await sleep(200);
 
-        const canvas = await page.$('.maplibregl-canvas');
-        const canvasBB = await canvas?.boundingBox();
+        const canvas = page.locator('.maplibregl-canvas');
+        const canvasBB = await canvas.boundingBox();
         expect(canvasBB?.width).toBeCloseTo(400);
         expect(canvasBB?.height).toBeCloseTo(400);
     }, 20000);
 
     test('Resize div', async () => {
-
         await page.evaluate(() => {
             document.getElementById('map')!.style.width = '200px';
             document.getElementById('map')!.style.height = '200px';
         });
         await sleep(1000);
 
-        const canvas = await page.$('.maplibregl-canvas');
-        const canvasBB = await canvas?.boundingBox();
+        const canvas = page.locator('.maplibregl-canvas');
+        const canvasBB = await canvas.boundingBox();
         expect(canvasBB!.width).toBeCloseTo(200);
         expect(canvasBB!.height).toBeCloseTo(200);
     }, 20000);
 
     test('Zoom: Double click at the center', async () => {
-
-        const canvas = await page.$('.maplibregl-canvas');
-        const canvasBB = await canvas?.boundingBox()!;
-        await page.mouse.click(canvasBB?.x!, canvasBB?.y!, {clickCount: 2});
+        const canvas = page.locator('.maplibregl-canvas');
+        const canvasBB = await canvas.boundingBox()!;
+        await page.mouse.dblclick(canvasBB?.x! + canvasBB?.width! / 2, canvasBB?.y! + canvasBB?.height! / 2);
 
         // Wait until the map has settled, then report the zoom level back.
         const zoom = await page.evaluate(() => {
-            return new Promise((resolve, _reject) => {
+            return new Promise<number>((resolve, _reject) => {
                 map.once('idle', () => resolve(map.getZoom()));
             });
         });
@@ -187,8 +184,8 @@ describe('Browser tests', () => {
                 .addTo(map);
             return map.getCenter();
         });
-        const canvas = await page.$('.maplibregl-canvas');
-        const canvasBB = await canvas?.boundingBox()!;
+        const canvas = page.locator('.maplibregl-canvas');
+        const canvasBB = await canvas.boundingBox()!;
         const dragToLeft = async () => {
             await page.mouse.move(canvasBB!.x + canvasBB!.width / 2, canvasBB!.y + canvasBB!.height / 2);
             await page.mouse.down();
@@ -393,9 +390,8 @@ describe('Browser tests', () => {
     }, 20000);
 
     test('Load map with RTL plugin should throw exception for invalid URL', async () => {
-
+    
         const rtlPromise = page.evaluate(() => {
-            // console.log('Testing start');
             return maplibregl.setRTLTextPlugin('badURL', false);
         });
 
@@ -404,7 +400,6 @@ describe('Browser tests', () => {
         const regex = new RegExp('Failed to execute \'importScripts\'.*');
 
         await expect(rtlPromise).rejects.toThrow(regex);
-
     }, 2000);
 
     test('Movement with transformCameraUpdate and terrain', async () => {
@@ -431,8 +426,8 @@ describe('Browser tests', () => {
             map.transformCameraUpdate = () => ({});
         });
 
-        const canvas = await page.$('.maplibregl-canvas');
-        const canvasBB = await canvas?.boundingBox();
+        const canvas = page.locator('.maplibregl-canvas');
+        const canvasBB = await canvas.boundingBox();
         await page.mouse.move(canvasBB!.x, canvasBB!.y);
         await page.mouse.down();
         await page.mouse.move(100, 0, {

@@ -1,20 +1,21 @@
 import path from 'path';
 import fs from 'fs';
-import puppeteer from 'puppeteer';
+import playwright from 'playwright';
 import packageJson from '../package.json' with { type: 'json' };
 
 const exampleName = process.argv[2];
 const useLocalhost = (process.argv.length > 3) && (process.argv[3] === 'serve');
 const examplePath = path.resolve('test', 'examples');
 
-const browser = await puppeteer.launch({headless: true});
-
-const page = await browser.newPage();
-// set viewport and double deviceScaleFactor to get a closer shot of the map
-await page.setViewport({
-    width: 600,
-    height: 250,
+const browser = await playwright.chromium.launch({headless: true});
+const context = await browser.newContext({
     deviceScaleFactor: 2
+});
+const page = await context.newPage();
+// set viewport and double deviceScaleFactor to get a closer shot of the map
+await page.setViewportSize({
+    width: 600,
+    height: 250
 });
 
 async function createImage(exampleName) {

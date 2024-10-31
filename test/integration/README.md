@@ -92,7 +92,7 @@ npm run test-render -- raster-masking/overlapping-zoom --debug
 
 ### Viewing render test results
 
-During a render test run, the test harness will use puppeteer to drive real browser and create an `actual.png` image from the given `style.json`, and will then use [pixelmatch](https://github.com/mapbox/pixelmatch) to compare that image to `expected.png`, generating a `diff.png` highlighting the mismatching pixels (if any) in red.
+During a render test run, the test harness will use playwright to drive real browser and create an `actual.png` image from the given `style.json`, and will then use [pixelmatch](https://github.com/mapbox/pixelmatch) to compare that image to `expected.png`, generating a `diff.png` highlighting the mismatching pixels (if any) in red.
 
 By default render tests generate reports in <code>./test/integration/render/</code> directory:
 ```
