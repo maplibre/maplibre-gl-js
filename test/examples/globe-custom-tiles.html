@@ -262,7 +262,7 @@
                     }
                 };
 
-                const projectionData = map.transform.getProjectionData(tileID);
+                const projectionData = map.transform.getProjectionData({overscaledTileID: tileID});
 
                 gl.uniform4f(
                     locations['u_projection_clipping_plane'],

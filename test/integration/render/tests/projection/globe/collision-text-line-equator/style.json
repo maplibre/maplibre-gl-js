@@ -2,6 +2,7 @@
   "version": 8,
   "metadata": {
     "test": {
+      "collisionDebug": true,
       "height": 256,
       "width": 256
     }
@@ -9,9 +10,15 @@
   "sky": {
     "atmosphere-blend": 0.0
   },
-  "zoom": 1,
+  "zoom": 0,
+  "center": [
+    0,
+    45
+  ],
   "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
-  "projection": { "type": "globe" },
+  "projection": {
+    "type": "globe"
+  },
   "sources": {
     "geojson": {
       "type": "geojson",
@@ -21,12 +28,12 @@
           "type": "LineString",
           "coordinates": [
             [
-              0,
-              -85
+              -45,
+              0
             ],
             [
-              0,
-              85
+              45,
+              0
             ]
           ]
         }
@@ -38,7 +45,7 @@
       "id": "background",
       "type": "background",
       "paint": {
-        "background-color": "white"
+        "background-color": "grey"
       }
     },
     {
@@ -60,7 +67,7 @@
       "source": "geojson",
       "layout": {
         "symbol-placement": "line",
-        "text-field": "AAAA AAAAAA A AAAAA AAAA BB",
+        "text-field": "AAAAAAAAAAA",
         "text-font": [
           "Open Sans Semibold",
           "Arial Unicode MS Bold"
