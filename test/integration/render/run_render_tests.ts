@@ -6,7 +6,7 @@ import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
 import {globSync} from 'glob';
 import http from 'http';
-import {chromium, Page, Browser} from 'playwright';
+import {chromium, Page, Browser, BrowserContext} from 'playwright';
 import {CoverageReport} from 'monocart-coverage-reports';
 import {localizeURLs} from '../lib/localize-urls';
 import type {Map as MaplibreMap, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
@@ -914,8 +914,8 @@ async function runTests(page: Page, testStyles: StyleWithTestData[], directory: 
     }
 }
 
-async function createPageAndStart(browser: Browser, testStyles: StyleWithTestData[], directory: string, options: RenderOptions) {
-    const context = await browser.newContext({deviceScaleFactor: 2});
+async function createPageAndStart(context: BrowserContext, testStyles: StyleWithTestData[], directory: string, options: RenderOptions) {
+    
     const page = await context.newPage();
     await page.coverage.startJSCoverage({});
     applyDebugParameter(options, page);
@@ -984,6 +984,8 @@ async function executeRenderTests() {
     const browser = await chromium.launch({headless: !options.openBrowser, args: ['--enable-webgl', '--no-sandbox',
         '--disable-web-security']});
 
+    const context = await browser.newContext({deviceScaleFactor: 2});
+
     const server = http.createServer(
         st({
             path: 'test/integration/assets',
@@ -1009,13 +1011,13 @@ async function executeRenderTests() {
         testStyles = testStyles.splice(+process.env.CURRENT_SPLIT_INDEX * numberOfTestsForThisPart, numberOfTestsForThisPart);
     }
 
-    let page = await createPageAndStart(browser, testStyles, directory, options);
+    let page = await createPageAndStart(context, testStyles, directory, options);
     const failedTests = testStyles.filter(t => t.metadata.test.error || !t.metadata.test.ok);
     await closePageAndFinish(page, failedTests.length === 0);
     if (failedTests.length > 0 && failedTests.length < testStyles.length) {
         console.log(`Re-running failed tests: ${failedTests.length}`);
         options.debug = true;
-        page = await createPageAndStart(browser, failedTests, directory, options);
+        page = await createPageAndStart(context, failedTests, directory, options);
         await closePageAndFinish(page, true);
     }
 
