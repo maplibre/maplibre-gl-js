@@ -17,9 +17,9 @@ import {tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 import {angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, sphereSurfacePointToCoordinates} from './globe_utils';
 import {EXTENT} from '../../data/extent';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
-import {globeCoveringTiles} from './globe_covering_tiles';
+import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles';
 import {Frustum} from '../../util/primitives';
-import {CoveringTilesOptions} from './covering_tiles';
+import {CoveringTilesDetailsProvider} from './covering_tiles';
 
 /**
  * Describes the intersection of ray and sphere.
@@ -281,6 +281,8 @@ export class GlobeTransform implements ITransform {
     private _nearZ;
     private _farZ;
 
+    private _coveringTilesDetailsProvider;
+
     public constructor(globeProjection: GlobeProjection, globeProjectionEnabled: boolean = true) {
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
@@ -290,6 +292,7 @@ export class GlobeTransform implements ITransform {
         this._globeness = globeProjectionEnabled ? 1 : 0; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.
         this._projectionInstance = globeProjection;
         this._mercatorTransform = new MercatorTransform();
+        this._coveringTilesDetailsProvider = new GlobeCoveringTilesDetailsProvider();
     }
 
     clone(): ITransform {
@@ -687,16 +690,14 @@ export class GlobeTransform implements ITransform {
         return [new UnwrappedTileID(0, tileID)];
     }
 
-    coveringTiles(options: CoveringTilesOptions): OverscaledTileID[] {
-        if (!this.isGlobeRendering) {
-            return this._mercatorTransform.coveringTiles(options);
-        }
-
-        const cameraCoord = this.screenPointToMercatorCoordinate(this.getCameraPoint());
-        const centerCoord = MercatorCoordinate.fromLngLat(this.center, this.elevation);
-        cameraCoord.z = centerCoord.z + Math.cos(this.pitchInRadians) * this.cameraToCenterDistance / this.worldSize;
-
-        return globeCoveringTiles(this, this._cachedFrustum, this._cachedClippingPlane, cameraCoord, centerCoord, options);
+    getCameraFrustum(): Frustum {
+        return this.isGlobeRendering ? this._cachedFrustum : this._mercatorTransform.getCameraFrustum();
+    }
+    getClippingPlane(): vec4 | null {
+        return this.isGlobeRendering ? this._cachedClippingPlane : this._mercatorTransform.getClippingPlane();
+    }
+    getCoveringTilesDetailsProvider(): CoveringTilesDetailsProvider {
+        return this.isGlobeRendering ? this._coveringTilesDetailsProvider : this._mercatorTransform.getCoveringTilesDetailsProvider();
     }
 
     recalculateZoomAndCenter(terrain?: Terrain): void {

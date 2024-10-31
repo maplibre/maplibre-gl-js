@@ -73,7 +73,7 @@ export type CalculateTileZoomFunction = (requestedCenterZoom: number,
     distanceToCenter3D: number,
     cameraVerticalFOV: number) => number;
 
-export interface CoveringTilesDetails {
+export interface CoveringTilesDetailsProvider {
     /**
      * Returns the distance from the point to the tile
      * @param pointX - point x.
@@ -98,7 +98,7 @@ export interface CoveringTilesDetails {
     /**
      * Whether to allow variable zoom, which is used at high pitch angle to avoid loading an excessive amount of tiles.
      */
-    allowVariableZoom: boolean;
+    allowVariableZoom: (transform: IReadonlyTransform, options: CoveringTilesOptions) => boolean;
 }
 
 /**
@@ -179,7 +179,15 @@ export function coveringZoomLevel(transform: IReadonlyTransform, options: Coveri
  * @param details - Interface to define required helper functions.
  * @returns A list of tile coordinates, ordered by ascending distance from camera.
  */
-export function coveringTiles(transform: IReadonlyTransform, frustum: Frustum, plane: vec4, cameraCoord: MercatorCoordinate, centerCoord: MercatorCoordinate, options: CoveringTilesOptions, details: CoveringTilesDetails): OverscaledTileID[] {
+export function coveringTiles(transform: IReadonlyTransform, options: CoveringTilesOptions): OverscaledTileID[] {
+    const frustum = transform.getCameraFrustum();
+    const plane = transform.getClippingPlane();
+    const cameraCoord = transform.screenPointToMercatorCoordinate(transform.getCameraPoint());
+    const centerCoord = MercatorCoordinate.fromLngLat(transform.center, transform.elevation);
+    cameraCoord.z = centerCoord.z + Math.cos(transform.pitchInRadians) * transform.cameraToCenterDistance / transform.worldSize;
+    const detailsProvider = transform.getCoveringTilesDetailsProvider();
+    const allowVariableZoom = detailsProvider.allowVariableZoom(transform, options);
+    
     const desiredZ = coveringZoomLevel(transform, options);
     const minZoom = options.minzoom || 0;
     const maxZoom = options.maxzoom !== undefined ? options.maxzoom : transform.maxZoom;
@@ -222,7 +230,7 @@ export function coveringTiles(transform: IReadonlyTransform, frustum: Frustum, p
         const y = it.y;
         let fullyVisible = it.fullyVisible;
         const tileID = {x, y, z: it.zoom};
-        const aabb = details.getTileAABB(tileID, it.wrap, transform.elevation, options);
+        const aabb = detailsProvider.getTileAABB(tileID, it.wrap, transform.elevation, options);
 
         // Visibility of a tile is not required if any of its ancestor is fully visible
         if (!fullyVisible) {
@@ -234,10 +242,10 @@ export function coveringTiles(transform: IReadonlyTransform, frustum: Frustum, p
             fullyVisible = intersectResult === IntersectionResult.Full;
         }
 
-        const distToTile2d = details.distanceToTile2d(cameraCoord.x, cameraCoord.y, tileID, aabb);
+        const distToTile2d = detailsProvider.distanceToTile2d(cameraCoord.x, cameraCoord.y, tileID, aabb);
 
         let thisTileDesiredZ = desiredZ;
-        if (details.allowVariableZoom) {
+        if (allowVariableZoom) {
             const tileZoomFunc = options.calculateTileZoom || calculateTileZoom;
             thisTileDesiredZ = tileZoomFunc(transform.zoom + scaleZoom(transform.tileSize / options.tileSize),
                 distToTile2d,
@@ -250,7 +258,7 @@ export function coveringTiles(transform: IReadonlyTransform, frustum: Frustum, p
         const z = Math.min(thisTileDesiredZ, maxZoom);
 
         // We need to compute a valid wrap value for the tile to keep globe compatibility with mercator
-        it.wrap = details.getWrap(centerCoord, tileID, it.wrap);
+        it.wrap = detailsProvider.getWrap(centerCoord, tileID, it.wrap);
 
         // Have we reached the target depth?
         if (it.zoom >= z) {

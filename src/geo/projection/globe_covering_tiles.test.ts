@@ -1,10 +1,11 @@
 import {Aabb} from '../../util/primitives';
 import {expectToBeCloseToArray} from '../../util/test/util';
-import {getTileAABB} from './globe_covering_tiles';
+import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles';
 
 describe('aabb', () => {
     test('z=0', () => {
-        const aabb = getTileAABB({
+        const detailsProvider = new GlobeCoveringTilesDetailsProvider();
+        const aabb = detailsProvider.getTileAABB({
             x: 0,
             y: 0,
             z: 0,
@@ -16,7 +17,8 @@ describe('aabb', () => {
     });
 
     test('z=1,x=0', () => {
-        const aabb = getTileAABB({
+        const detailsProvider = new GlobeCoveringTilesDetailsProvider();
+        const aabb = detailsProvider.getTileAABB({
             x: 0,
             y: 0,
             z: 1,
@@ -28,7 +30,8 @@ describe('aabb', () => {
     });
 
     test('z=1,x=1', () => {
-        const aabb = getTileAABB({
+        const detailsProvider = new GlobeCoveringTilesDetailsProvider();
+        const aabb = detailsProvider.getTileAABB({
             x: 1,
             y: 0,
             z: 1,
@@ -40,7 +43,8 @@ describe('aabb', () => {
     });
 
     test('z=2,x=1', () => {
-        const aabb = getTileAABB({
+        const detailsProvider = new GlobeCoveringTilesDetailsProvider();
+        const aabb = detailsProvider.getTileAABB({
             x: 1,
             y: 0,
             z: 2,

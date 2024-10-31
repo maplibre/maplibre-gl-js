@@ -2,14 +2,15 @@ import {LngLat, LngLatLike} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
 import {MercatorCoordinate} from './mercator_coordinate';
 import Point from '@mapbox/point-geometry';
-import {mat4, mat2, vec3} from 'gl-matrix';
+import {mat4, mat2, vec3, vec4} from 'gl-matrix';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import type {PaddingOptions} from './edge_insets';
 import {Terrain} from '../render/terrain';
 import {PointProjection} from '../symbol/projection';
 import {MapProjectionEvent} from '../ui/events';
 import type {ProjectionData, ProjectionDataParams} from './projection/projection_data';
-import {CoveringTilesOptions} from './projection/covering_tiles';
+import {CoveringTilesDetailsProvider} from './projection/covering_tiles';
+import {Frustum} from '../util/primitives';
 
 export type TransformUpdateResult = {
     forcePlacementUpdate?: boolean;
@@ -259,13 +260,9 @@ export interface IReadonlyTransform extends ITransformGetters {
      */
     getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): Array<UnwrappedTileID>;
 
-    /**
-     * Returns a list of tile coordinates that when rendered cover the entire screen at an optimal detail level.
-     * Tiles are ordered by ascending distance from camera.
-     * @param options - Additional options - min & max zoom, terrain presence, etc.
-     * @returns Array of OverscaledTileID. All OverscaledTileID instances are newly created.
-     */
-    coveringTiles(options: CoveringTilesOptions): Array<OverscaledTileID>;
+    getCameraFrustum(): Frustum;
+    getClippingPlane(): vec4 | null;
+    getCoveringTilesDetailsProvider(): CoveringTilesDetailsProvider;
 
     /**
      * @internal

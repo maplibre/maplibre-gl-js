@@ -14,9 +14,9 @@ import {mercatorCoordinateToLocation, getBasicProjectionData, getMercatorHorizon
 import {EXTENT} from '../../data/extent';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import {scaleZoom, TransformHelper, zoomScale} from '../transform_helper';
-import {mercatorCoveringTiles} from './mercator_covering_tiles';
+import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles';
 import {Frustum} from '../../util/primitives';
-import {CoveringTilesOptions} from './covering_tiles';
+import {CoveringTilesDetailsProvider} from './covering_tiles';
 
 export class MercatorTransform implements ITransform {
     private _helper: TransformHelper;
@@ -217,12 +217,15 @@ export class MercatorTransform implements ITransform {
     private _nearZ;
     private _farZ;
 
+    private _coveringTilesDetailsProvider;
+
     constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
             getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
         }, minZoom, maxZoom, minPitch, maxPitch, renderWorldCopies);
         this._clearMatrixCaches();
+        this._coveringTilesDetailsProvider = new MercatorCoveringTilesDetailsProvider();
     }
 
     public clone(): ITransform {
@@ -268,12 +271,14 @@ export class MercatorTransform implements ITransform {
         return result;
     }
 
-    coveringTiles(options: CoveringTilesOptions): Array<OverscaledTileID> {
-        const cameraCoord = this.screenPointToMercatorCoordinate(this.getCameraPoint());
-        const centerCoord = MercatorCoordinate.fromLngLat(this.center, this.elevation);
-        cameraCoord.z = centerCoord.z + Math.cos(this.pitchInRadians) * this.cameraToCenterDistance / this.worldSize;
-        const cameraFrustum = Frustum.fromInvProjectionMatrix(this._invViewProjMatrix, this.worldSize);
-        return mercatorCoveringTiles(this, cameraFrustum, null, cameraCoord, centerCoord, options);
+    getCameraFrustum(): Frustum {
+        return Frustum.fromInvProjectionMatrix(this._invViewProjMatrix, this.worldSize);
+    }
+    getClippingPlane(): vec4 | null {
+        return null;
+    }
+    getCoveringTilesDetailsProvider(): CoveringTilesDetailsProvider {
+        return this._coveringTilesDetailsProvider;
     }
 
     recalculateZoomAndCenter(terrain?: Terrain): void {

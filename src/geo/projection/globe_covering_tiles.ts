@@ -1,11 +1,10 @@
-import {vec3, vec4} from 'gl-matrix';
-import {Aabb, Frustum} from '../../util/primitives';
+import {vec3} from 'gl-matrix';
+import {Aabb} from '../../util/primitives';
 import {IReadonlyTransform} from '../transform_interface';
-import {OverscaledTileID} from '../../source/tile_id';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {EXTENT} from '../../data/extent';
 import {projectTileCoordinatesToSphere} from './globe_utils';
-import {coveringTiles, CoveringTilesDetails, CoveringTilesOptions, coveringZoomLevel} from './covering_tiles';
+import {CoveringTilesDetailsProvider, CoveringTilesOptions, coveringZoomLevel} from './covering_tiles';
 
 /**
  * Computes distance of a point to a tile in an arbitrary axis.
@@ -37,151 +36,139 @@ function distanceToTileWrapX(pointX: number, pointY: number, tileCornerX: number
     return Math.max(distanceX, distanceToTileSimple(pointY, tileCornerY, tileSize));
 }
 
-/**
- * Returns the distance of a point to a square tile. If the point is inside the tile, returns 0.
- * Assumes the world to be of size 1.
- * Handles distances on a sphere correctly: X is wrapped when crossing the antimeridian,
- * when crossing the poles Y is mirrored and X is shifted by half world size.
- */
-function distanceToTile2d(pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, _aabb: Aabb): number {
-    const scale = 1 << tileID.z;
-    const tileMercatorSize = 1.0 / scale;
-    const tileCornerX = tileID.x / scale; // In range 0..1
-    const tileCornerY = tileID.y / scale; // In range 0..1
+export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsProvider {
 
-    const worldSize = 1.0;
-    const halfWorld = 0.5 * worldSize;
-    let smallestDistance = 2.0 * worldSize;
-    // Original tile
-    smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX, tileCornerY, tileMercatorSize));
-    // Up
-    smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX + halfWorld, -tileCornerY - tileMercatorSize, tileMercatorSize));
-    // Down
-    smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX + halfWorld, worldSize + worldSize - tileCornerY - tileMercatorSize, tileMercatorSize));
+    /**
+     * Returns the distance of a point to a square tile. If the point is inside the tile, returns 0.
+     * Assumes the world to be of size 1.
+     * Handles distances on a sphere correctly: X is wrapped when crossing the antimeridian,
+     * when crossing the poles Y is mirrored and X is shifted by half world size.
+     */
+    distanceToTile2d(pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, _aabb: Aabb): number {
+        const scale = 1 << tileID.z;
+        const tileMercatorSize = 1.0 / scale;
+        const tileCornerX = tileID.x / scale; // In range 0..1
+        const tileCornerY = tileID.y / scale; // In range 0..1
 
-    return smallestDistance;
-}
+        const worldSize = 1.0;
+        const halfWorld = 0.5 * worldSize;
+        let smallestDistance = 2.0 * worldSize;
+        // Original tile
+        smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX, tileCornerY, tileMercatorSize));
+        // Up
+        smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX + halfWorld, -tileCornerY - tileMercatorSize, tileMercatorSize));
+        // Down
+        smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX + halfWorld, worldSize + worldSize - tileCornerY - tileMercatorSize, tileMercatorSize));
 
-// Returns the wrap value for a given tile, computed so that tiles will remain loaded when crossing the antimeridian.
-function getWrap(centerCoord: MercatorCoordinate, tileID: {x: number; y: number; z: number}, _parentWrap: number): number {
-    const scale = 1 << tileID.z;
-    const tileMercatorSize = 1.0 / scale;
-    const tileX = tileID.x / scale; // In range 0..1
-    const distanceCurrent = distanceToTileSimple(centerCoord.x, tileX, tileMercatorSize);
-    const distanceLeft = distanceToTileSimple(centerCoord.x, tileX - 1.0, tileMercatorSize);
-    const distanceRight = distanceToTileSimple(centerCoord.x, tileX + 1.0, tileMercatorSize);
-    const distanceSmallest = Math.min(distanceCurrent, distanceLeft, distanceRight);
-    if (distanceSmallest === distanceRight) {
-        return 1;
+        return smallestDistance;
     }
-    if (distanceSmallest === distanceLeft) {
-        return -1;
-    }
-    return 0;
-}
 
-/**
- * Returns the AABB of the specified tile. The AABB is in the coordinate space where the globe is a unit sphere.
- * @param tileID - Tile x, y and z for zoom.
- */
-export function getTileAABB(tileID: {x: number; y: number; z: number}, _wrap: number, _elevation: number, _options: CoveringTilesOptions): Aabb {
-    // We can get away with only checking the 4 tile corners for AABB construction, because for any tile of zoom level 2 or higher
-    // it holds that the extremes (minimal or maximal value) of X, Y or Z coordinates must lie in one of the tile corners.
-    //
-    // To see why this holds, consider the formula for computing X,Y and Z from angular coordinates.
-    // It goes something like this:
-    //
-    // X = sin(lng) * cos(lat)
-    // Y = sin(lat)
-    // Z = cos(lng) * cos(lat)
-    //
-    // Note that a tile always covers a continuous range of lng and lat values,
-    // and that tiles that border the mercator north/south edge are assumed to extend all the way to the poles.
-    //
-    // We will consider each coordinate separately and show that an extreme must always lie in a tile corner for every axis, and must not lie inside the tile.
-    //
-    // For Y, it is clear that the only way for an extreme to not lie on an edge of the lat range is for the range to contain lat=90° or lat=-90° without either being the tile edge.
-    // This cannot happen for any tile, these latitudes will always:
-    // - either lie outside the tile entirely, thus Y will be monotonically increasing or decreasing across the entire tile, thus the extreme must lie at a corner/edge
-    // - or be the tile edge itself, thus the extreme will lie at the tile edge
-    //
-    // For X, considering only longitude, the tile would also have to contain lng=90° or lng=-90° (with neither being the tile edge) for the extreme to not lie on a tile edge.
-    // This can only happen at zoom levels 0 and 1, which are handled separately.
-    // But X is also scaled by cos(lat)! However, this can only cause an extreme to lie inside the tile if the tile crosses lat=0°, which cannot happen for zoom levels other than 0.
-    //
-    // For Z, similarly to X, the extremes must lie at lng=0° or lng=180°, but for zoom levels other than 0 these cannot lie inside the tile. Scaling by cos(lat) has the same effect as with the X axis.
-    //
-    // So checking the 4 tile corners only fails for tiles with zoom level <2, and these are handled separately with hardcoded AABBs:
-    // - zoom level 0 tile is the entire sphere
-    // - zoom level 1 tiles are "quarters of a sphere"
-
-    if (tileID.z <= 0) {
-        // Tile covers the entire sphere.
-        return new Aabb(
-            [-1, -1, -1],
-            [1, 1, 1]
-        );
-    } else if (tileID.z === 1) {
-        // Tile covers a quarter of the sphere.
-        // X is 1 at lng=E90°
-        // Y is 1 at **north** pole
-        // Z is 1 at null island
-        return new Aabb(
-            [tileID.x === 0 ? -1 : 0, tileID.y === 0 ? 0 : -1, -1],
-            [tileID.x === 0 ? 0 : 1, tileID.y === 0 ? 1 : 0, 1]
-        );
-    } else {
-        // Compute AABB using the 4 corners.
-
-        const corners = [
-            projectTileCoordinatesToSphere(0, 0, tileID.x, tileID.y, tileID.z),
-            projectTileCoordinatesToSphere(EXTENT, 0, tileID.x, tileID.y, tileID.z),
-            projectTileCoordinatesToSphere(EXTENT, EXTENT, tileID.x, tileID.y, tileID.z),
-            projectTileCoordinatesToSphere(0, EXTENT, tileID.x, tileID.y, tileID.z),
-        ];
-
-        const min: vec3 = [1, 1, 1];
-        const max: vec3 = [-1, -1, -1];
-
-        for (const c of corners) {
-            for (let i = 0; i < 3; i++) {
-                min[i] = Math.min(min[i], c[i]);
-                max[i] = Math.max(max[i], c[i]);
-            }
+    // Returns the wrap value for a given tile, computed so that tiles will remain loaded when crossing the antimeridian.
+    getWrap(centerCoord: MercatorCoordinate, tileID: {x: number; y: number; z: number}, _parentWrap: number): number {
+        const scale = 1 << tileID.z;
+        const tileMercatorSize = 1.0 / scale;
+        const tileX = tileID.x / scale; // In range 0..1
+        const distanceCurrent = distanceToTileSimple(centerCoord.x, tileX, tileMercatorSize);
+        const distanceLeft = distanceToTileSimple(centerCoord.x, tileX - 1.0, tileMercatorSize);
+        const distanceRight = distanceToTileSimple(centerCoord.x, tileX + 1.0, tileMercatorSize);
+        const distanceSmallest = Math.min(distanceCurrent, distanceLeft, distanceRight);
+        if (distanceSmallest === distanceRight) {
+            return 1;
         }
-
-        // Special handling of poles - we need to extend the tile AABB
-        // to include the pole for tiles that border mercator north/south edge.
-        if (tileID.y === 0 || (tileID.y === (1 << tileID.z) - 1)) {
-            const pole = [0, tileID.y === 0 ? 1 : -1, 0];
-            for (let i = 0; i < 3; i++) {
-                min[i] = Math.min(min[i], pole[i]);
-                max[i] = Math.max(max[i], pole[i]);
-            }
+        if (distanceSmallest === distanceLeft) {
+            return -1;
         }
-
-        return new Aabb(
-            min,
-            max
-        );
+        return 0;
     }
-}
 
-const globeCoveringTilesDetails: CoveringTilesDetails = {
-    distanceToTile2d,
-    getWrap,
-    getTileAABB,
-    allowVariableZoom: true
-};
+    /**
+     * Returns the AABB of the specified tile. The AABB is in the coordinate space where the globe is a unit sphere.
+     * @param tileID - Tile x, y and z for zoom.
+     */
+    getTileAABB(tileID: {x: number; y: number; z: number}, _wrap: number, _elevation: number, _options: CoveringTilesOptions): Aabb {
+        // We can get away with only checking the 4 tile corners for AABB construction, because for any tile of zoom level 2 or higher
+        // it holds that the extremes (minimal or maximal value) of X, Y or Z coordinates must lie in one of the tile corners.
+        //
+        // To see why this holds, consider the formula for computing X,Y and Z from angular coordinates.
+        // It goes something like this:
+        //
+        // X = sin(lng) * cos(lat)
+        // Y = sin(lat)
+        // Z = cos(lng) * cos(lat)
+        //
+        // Note that a tile always covers a continuous range of lng and lat values,
+        // and that tiles that border the mercator north/south edge are assumed to extend all the way to the poles.
+        //
+        // We will consider each coordinate separately and show that an extreme must always lie in a tile corner for every axis, and must not lie inside the tile.
+        //
+        // For Y, it is clear that the only way for an extreme to not lie on an edge of the lat range is for the range to contain lat=90° or lat=-90° without either being the tile edge.
+        // This cannot happen for any tile, these latitudes will always:
+        // - either lie outside the tile entirely, thus Y will be monotonically increasing or decreasing across the entire tile, thus the extreme must lie at a corner/edge
+        // - or be the tile edge itself, thus the extreme will lie at the tile edge
+        //
+        // For X, considering only longitude, the tile would also have to contain lng=90° or lng=-90° (with neither being the tile edge) for the extreme to not lie on a tile edge.
+        // This can only happen at zoom levels 0 and 1, which are handled separately.
+        // But X is also scaled by cos(lat)! However, this can only cause an extreme to lie inside the tile if the tile crosses lat=0°, which cannot happen for zoom levels other than 0.
+        //
+        // For Z, similarly to X, the extremes must lie at lng=0° or lng=180°, but for zoom levels other than 0 these cannot lie inside the tile. Scaling by cos(lat) has the same effect as with the X axis.
+        //
+        // So checking the 4 tile corners only fails for tiles with zoom level <2, and these are handled separately with hardcoded AABBs:
+        // - zoom level 0 tile is the entire sphere
+        // - zoom level 1 tiles are "quarters of a sphere"
 
-/**
- * Returns a list of tiles that optimally covers the screen. Adapted for globe projection.
- * Correctly handles LOD when moving over the antimeridian.
- * @param transform - The globe transform instance.
- * @param options - Additional coveringTiles options.
- * @returns A list of tile coordinates, ordered by ascending distance from camera.
- */
-export function globeCoveringTiles(transform: IReadonlyTransform, frustum: Frustum, plane: vec4, cameraCoord: MercatorCoordinate, centerCoord: MercatorCoordinate, options: CoveringTilesOptions): OverscaledTileID[] {
-    globeCoveringTilesDetails.allowVariableZoom = coveringZoomLevel(transform, options) > 4;
-    return coveringTiles(transform, frustum, plane, cameraCoord, centerCoord, options, globeCoveringTilesDetails);
+        if (tileID.z <= 0) {
+            // Tile covers the entire sphere.
+            return new Aabb(
+                [-1, -1, -1],
+                [1, 1, 1]
+            );
+        } else if (tileID.z === 1) {
+            // Tile covers a quarter of the sphere.
+            // X is 1 at lng=E90°
+            // Y is 1 at **north** pole
+            // Z is 1 at null island
+            return new Aabb(
+                [tileID.x === 0 ? -1 : 0, tileID.y === 0 ? 0 : -1, -1],
+                [tileID.x === 0 ? 0 : 1, tileID.y === 0 ? 1 : 0, 1]
+            );
+        } else {
+            // Compute AABB using the 4 corners.
+
+            const corners = [
+                projectTileCoordinatesToSphere(0, 0, tileID.x, tileID.y, tileID.z),
+                projectTileCoordinatesToSphere(EXTENT, 0, tileID.x, tileID.y, tileID.z),
+                projectTileCoordinatesToSphere(EXTENT, EXTENT, tileID.x, tileID.y, tileID.z),
+                projectTileCoordinatesToSphere(0, EXTENT, tileID.x, tileID.y, tileID.z),
+            ];
+
+            const min: vec3 = [1, 1, 1];
+            const max: vec3 = [-1, -1, -1];
+
+            for (const c of corners) {
+                for (let i = 0; i < 3; i++) {
+                    min[i] = Math.min(min[i], c[i]);
+                    max[i] = Math.max(max[i], c[i]);
+                }
+            }
+
+            // Special handling of poles - we need to extend the tile AABB
+            // to include the pole for tiles that border mercator north/south edge.
+            if (tileID.y === 0 || (tileID.y === (1 << tileID.z) - 1)) {
+                const pole = [0, tileID.y === 0 ? 1 : -1, 0];
+                for (let i = 0; i < 3; i++) {
+                    min[i] = Math.min(min[i], pole[i]);
+                    max[i] = Math.max(max[i], pole[i]);
+                }
+            }
+
+            return new Aabb(
+                min,
+                max
+            );
+        }
+    }
+    
+    allowVariableZoom(transform: IReadonlyTransform, options: CoveringTilesOptions): boolean {
+        return coveringZoomLevel(transform, options) > 4;
+    }
 }

@@ -23,7 +23,7 @@ import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapSourceDataEvent} from '../ui/events';
 import type {Terrain} from '../render/terrain';
 import type {CanvasSourceSpecification} from './canvas_source';
-import {coveringZoomLevel} from '../geo/projection/covering_tiles';
+import {coveringTiles, coveringZoomLevel} from '../geo/projection/covering_tiles';
 
 type TileResult = {
     tile: Tile;
@@ -621,7 +621,7 @@ export class SourceCache extends Evented {
             idealTileIDs = transform.getVisibleUnwrappedCoordinates(this._source.tileID)
                 .map((unwrapped) => new OverscaledTileID(unwrapped.canonical.z, unwrapped.wrap, unwrapped.canonical.z, unwrapped.canonical.x, unwrapped.canonical.y));
         } else {
-            idealTileIDs = transform.coveringTiles({
+            idealTileIDs = coveringTiles(transform, {
                 tileSize: this.usedForTerrain ? this.tileSize : this._source.tileSize,
                 minzoom: this._source.minzoom,
                 maxzoom: this._source.maxzoom,

@@ -8,6 +8,7 @@ import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinat
 import {expectToBeCloseToArray, getGlobeProjectionMock, sleep} from '../../util/test/util';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {tileCoordinatesToLocation} from './mercator_utils';
+import {coveringTiles} from './covering_tiles';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: Array<number>) {
     const lat = latDegrees / 180.0 * Math.PI;
@@ -617,7 +618,7 @@ describe('GlobeTransform', () => {
             transform.setCenter(new LngLat(0.0, 0.0));
             transform.setZoom(-1);
 
-            const tiles = transform.coveringTiles({
+            const tiles = coveringTiles(transform, {
                 tileSize: 512,
             });
 
@@ -632,7 +633,7 @@ describe('GlobeTransform', () => {
             transform.setCenter(new LngLat(-0.02, 0.01));
             transform.setZoom(3);
 
-            const tiles = transform.coveringTiles({
+            const tiles = coveringTiles(transform, {
                 tileSize: 512,
             });
 
@@ -650,7 +651,7 @@ describe('GlobeTransform', () => {
             transform.setCenter(new LngLat(-0.02, 0.01));
             transform.setZoom(3);
 
-            const tiles = transform.coveringTiles({
+            const tiles = coveringTiles(transform, {
                 tileSize: 512,
             });
 
@@ -678,7 +679,7 @@ describe('GlobeTransform', () => {
             transform.setMaxPitch(80);
             transform.setPitch(80);
 
-            const tiles = transform.coveringTiles({
+            const tiles = coveringTiles(transform, {
                 tileSize: 512,
             });
 
@@ -699,7 +700,7 @@ describe('GlobeTransform', () => {
             transform.setPitch(80);
             transform.setBearing(45);
 
-            const tiles = transform.coveringTiles({
+            const tiles = coveringTiles(transform, {
                 tileSize: 512,
             });
 
@@ -721,7 +722,7 @@ describe('GlobeTransform', () => {
             transform.setCenter(new LngLat(179.99, -0.001));
             transform.setZoom(5);
 
-            const tiles = transform.coveringTiles({
+            const tiles = coveringTiles(transform, {
                 tileSize: 512,
             });
 
@@ -739,7 +740,7 @@ describe('GlobeTransform', () => {
             transform.setCenter(new LngLat(-179.99, 0.001));
             transform.setZoom(5);
 
-            const tiles = transform.coveringTiles({
+            const tiles = coveringTiles(transform, {
                 tileSize: 512,
             });
 
@@ -757,7 +758,7 @@ describe('GlobeTransform', () => {
             transform.setCenter(new LngLat(0.0, 80.0));
             transform.setZoom(-0.5);
 
-            const tiles = transform.coveringTiles({
+            const tiles = coveringTiles(transform, {
                 tileSize: 512,
                 minzoom: 0,
                 maxzoom: 0,
