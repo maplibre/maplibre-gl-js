@@ -1,5 +1,5 @@
 
-import {chromium, Page, Browser, BrowserContext} from 'playwright';
+import {chromium, Page, Browser, BrowserContext} from '@playwright/test';
 
 import {deepEqual} from '../lib/json-diff';
 import st from 'st';

@@ -1,5 +1,5 @@
 import fs from 'fs';
-import {chromium} from 'playwright';
+import {chromium} from '@playwright/test';
 import PDFMerger from 'pdf-merger-js';
 import minimist from 'minimist';
 

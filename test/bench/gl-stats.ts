@@ -1,4 +1,4 @@
-import { chromium, Page } from 'playwright';
+import { chromium, Page } from '@playwright/test';
 import fs from 'fs';
 import zlib from 'zlib';
 import {execSync} from 'child_process';

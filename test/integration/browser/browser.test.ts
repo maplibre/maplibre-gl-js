@@ -1,4 +1,4 @@
-import {Page, Browser, chromium, BrowserContext} from 'playwright';
+import {Page, Browser, chromium, BrowserContext} from '@playwright/test';
 import st from 'st';
 import http, {type Server} from 'http';
 import type {AddressInfo} from 'net';

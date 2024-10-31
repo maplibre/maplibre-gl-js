@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import playwright from 'playwright';
+import playwright from '@playwright/test';
 import packageJson from '../package.json' with { type: 'json' };
 
 const exampleName = process.argv[2];
