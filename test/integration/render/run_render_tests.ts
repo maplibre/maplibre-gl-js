@@ -931,7 +931,6 @@ async function closePageAndFinish(page: Page, reportCoverage: boolean) {
         return;
     }
 
-
     const rawV8CoverageData = coverage.map((entry) => ({
         source: entry.source,
         url: entry.url,
