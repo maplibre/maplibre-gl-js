@@ -9,7 +9,10 @@
           "width": 512,
           "maxPitch": 85,
           "operations": [
-              ["idle"]
+              [
+                "wait",
+                1000
+              ]
           ]
       }
   },
