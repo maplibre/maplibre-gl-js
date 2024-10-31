@@ -81,6 +81,8 @@ jobs:
         with:
           node-version-file: '.nvmrc'
       - run: npm ci
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
       - run: npm run build-dist
       - uses: actions/upload-artifact@v4
         if: '!cancelled()'
@@ -117,6 +119,8 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt install fonts-noto-cjk
       - run: npm ci
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
       - name: Start display server
         if: runner.os == 'Linux'
         run: nohup Xvfb &
