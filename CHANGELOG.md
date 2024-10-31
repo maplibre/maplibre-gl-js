@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Catches network fetching errors such as CORS, DNS or malformed URL as actual `AJAXError` to expose HTTP request details to the `"error"` event (https://github.com/maplibre/maplibre-gl-js/pull/4822)
 - Add setVerticalFieldOfView() to public API ([#4717](https://github.com/maplibre/maplibre-gl-js/issues/4717))
 - _...Add new stuff here..._
 
