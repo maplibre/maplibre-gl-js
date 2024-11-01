@@ -574,6 +574,16 @@ describe("getData", () => {
     });
 
     test("promoteId uses properties.id when not clustered and cluster_id when clustered", async () => {
+        const layers = [
+            {
+                id: "layer1",
+                source: "source1",
+                type: "circle",
+            },
+        ] as LayerSpecification[];
+
+        const layerIndex = new StyleLayerIndex(layers);
+
         const worker = new GeoJSONWorkerSource(
             actor,
             layerIndex,
@@ -590,7 +600,7 @@ describe("getData", () => {
         const nonClusteredData =
             (await worker.getData()) as GeoJSON.FeatureCollection;
 
-        console.log("nonClusteredData", nonClusteredData.features[0].id);
+        console.log("nonClusteredData", nonClusteredData.features[0]);
 
         expect(nonClusteredData.features[0].id).toBe("point1");
         expect(nonClusteredData.features[1].id).toBe("point2");
