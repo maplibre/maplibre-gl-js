@@ -26,7 +26,7 @@ afterEach(() => {
     map.remove();
 });
 
-describe.only('GlobeControl', () => {
+describe('GlobeControl', () => {
     test('appears in top-right by default', () => {
         map.addControl(new GlobeControl());
 
