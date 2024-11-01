@@ -9,7 +9,9 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+
 - Fix line-placed map-pitch-aligned texts being too large when viewed from some latitudes on a globe ([#4786](https://github.com/maplibre/maplibre-gl-js/issues/4786))
+- Fix crashes when camera is inside terrain. Add padding between camera and surface to prevent cases like this. ([#1542](https://github.com/maplibre/maplibre-gl-js/issues/1542))
 - _...Add new stuff here..._
 
 ## 5.0.0-pre.4

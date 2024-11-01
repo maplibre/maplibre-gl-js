@@ -1205,7 +1205,9 @@ export abstract class Camera extends Evented {
     _finalizeElevation() {
         this._elevationFreeze = false;
         if (this.getCenterClampedToGround()) {
-            this.transform.recalculateZoomAndCenter(this.terrain);
+            const tr = this._getTransformForUpdate();
+            tr.recalculateZoomAndCenter(this.terrain);
+            this._applyUpdatedTransform(tr);
         }
     }
 
@@ -1238,13 +1240,14 @@ export abstract class Camera extends Evented {
      *
      * @param tr - The transform to check.
      */
-    _elevateCameraIfInsideTerrain(tr: ITransform) : { pitch?: number; zoom?: number } {
+    _elevateCameraIfInsideTerrain(tr: ITransform): { pitch?: number; zoom?: number } {
         if (!this.terrain && tr.elevation >= 0 && tr.pitch <= 90) {
             return {};
         }
+        const surfacePadding = Math.min(500, 20 * (25 - tr.zoom));
         const cameraLngLat = tr.getCameraLngLat();
         const cameraAltitude = tr.getCameraAltitude();
-        const minAltitude = this.terrain ? this.terrain.getElevationForLngLatZoom(cameraLngLat, tr.zoom) : 0;
+        const minAltitude = this.terrain ? this.terrain.getElevationForLngLatZoom(cameraLngLat, tr.zoom) + surfacePadding : 0;
         if (cameraAltitude < minAltitude) {
             const newCamera = this.calculateCameraOptionsFromTo(
                 cameraLngLat, minAltitude, tr.center, tr.elevation);
