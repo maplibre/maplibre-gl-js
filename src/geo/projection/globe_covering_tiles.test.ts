@@ -1,6 +1,6 @@
 import {Aabb} from '../../util/primitives';
 import {expectToBeCloseToArray} from '../../util/test/util';
-import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles';
+import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider';
 
 describe('aabb', () => {
     test('z=0', () => {

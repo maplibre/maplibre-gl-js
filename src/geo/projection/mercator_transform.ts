@@ -14,7 +14,7 @@ import {mercatorCoordinateToLocation, getBasicProjectionData, getMercatorHorizon
 import {EXTENT} from '../../data/extent';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import {scaleZoom, TransformHelper, zoomScale} from '../transform_helper';
-import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles';
+import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider';
 import {Frustum} from '../../util/primitives';
 import {CoveringTilesDetailsProvider} from './covering_tiles';
 
