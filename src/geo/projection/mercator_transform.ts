@@ -730,8 +730,8 @@ export class MercatorTransform implements ITransform {
 
     getCameraPoint(): Point {
         const pitch = this.pitchInRadians;
-        const yOffset = Math.tan(pitch) * (this._cameraToCenterDistance || 1);
-        return this.centerPoint.add(new Point(0, yOffset));
+        const offset = Math.tan(pitch) * (this._cameraToCenterDistance || 1);
+        return this.centerPoint.add(new Point(offset*Math.sin(this.rollInRadians), offset*Math.cos(this.rollInRadians)));
     }
 
     getCameraAltitude(): number {

@@ -146,7 +146,7 @@ export function coveringZoomLevel(transform: IReadonlyTransform, options: Coveri
  * @param frustum - The covering frustum.
  * @param plane - The clipping plane used by globe transform, or null.
  * @param cameraCoord - The x, y, z position of the camera in MercatorCoordinates.
- * @param cameraCoord - The x, y, z position of the center point in MercatorCoordinates.
+ * @param centerCoord - The x, y, z position of the center point in MercatorCoordinates.
  * @param options - Additional coveringTiles options.
  * @param details - Interface to define required helper functions.
  * @returns A list of tile coordinates, ordered by ascending distance from camera.
