@@ -3,7 +3,6 @@ import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util'
 
 function createMap() {
     return globalCreateMap({
-        projection: 'mercator',
         attributionControl: false,
         style: {
             version: 8,
@@ -27,7 +26,7 @@ afterEach(() => {
     map.remove();
 });
 
-describe('GlobeControl', () => {
+describe.only('GlobeControl', () => {
     test('appears in top-right by default', () => {
         map.addControl(new GlobeControl());
 
@@ -48,4 +47,19 @@ describe('GlobeControl', () => {
         ).toHaveLength(0);
     });
 
+    test('toggles projection when clicked', async () => {
+        await new Promise(resolve => map.on('load', resolve));
+
+        map.addControl(new GlobeControl());
+        expect(map.style.projection.name).toBe('mercator');
+        const button = map.getContainer().querySelector('.maplibregl-ctrl-globe');
+
+        button.click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        expect(map.style.projection.name).toBe('globe');
+
+        button.click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        expect(map.style.projection.name).toBe('mercator');
+    });
 });
