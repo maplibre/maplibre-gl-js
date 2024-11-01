@@ -3,7 +3,8 @@ import {Aabb} from '../../util/primitives';
 import {clamp} from '../../util/util';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {IReadonlyTransform} from '../transform_interface';
-import {CoveringTilesDetailsProvider, CoveringTilesOptions} from './covering_tiles';
+import {CoveringTilesOptions} from './covering_tiles';
+import {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
 
 export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetailsProvider {
 

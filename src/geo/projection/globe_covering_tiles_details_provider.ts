@@ -4,7 +4,8 @@ import {IReadonlyTransform} from '../transform_interface';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {EXTENT} from '../../data/extent';
 import {projectTileCoordinatesToSphere} from './globe_utils';
-import {CoveringTilesDetailsProvider, CoveringTilesOptions, coveringZoomLevel} from './covering_tiles';
+import {CoveringTilesOptions, coveringZoomLevel} from './covering_tiles';
+import {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
 
 /**
  * Computes distance of a point to a tile in an arbitrary axis.
