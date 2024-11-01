@@ -10,7 +10,6 @@ import { Actor } from "../util/actor";
 import { WorkerTileParameters } from "./worker_source";
 import { setPerformance, sleep } from "../util/test/util";
 import { type FakeServer, fakeServer } from "nise";
-import { log } from "console";
 
 const actor = { send: () => {} } as any as Actor;
 
@@ -600,7 +599,6 @@ describe("getData", () => {
         const nonClusteredData =
             (await worker.getData()) as GeoJSON.FeatureCollection;
 
-        console.log("nonClusteredData", nonClusteredData.features[0]);
 
         expect(nonClusteredData.features[0].id).toBe("point1");
         expect(nonClusteredData.features[1].id).toBe("point2");
