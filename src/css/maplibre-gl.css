@@ -283,13 +283,10 @@
 
 @svg-load ctrl-globe url("svg/maplibregl-ctrl-globe.svg") {
     stroke: #333;
-    
-    
 }
 
 @svg-load ctrl-globe-enabled url("svg/maplibregl-ctrl-globe.svg") {
     stroke: #33b5e5;
-    
 }
 
 .maplibregl-ctrl button.maplibregl-ctrl-globe .maplibregl-ctrl-icon {
