@@ -1513,7 +1513,7 @@ export class Style extends Evented {
     }
 
     getProjection(): ProjectionSpecification {
-        return this.stylesheet.projection;
+        return this.stylesheet?.projection;
     }
 
     setProjection(projection: ProjectionSpecification) {

@@ -5,6 +5,7 @@
 - Add setVerticalFieldOfView() to public API ([#4717](https://github.com/maplibre/maplibre-gl-js/issues/4717))
 - ⚠️ Return actual altitude from queryTerrainElevation + Pass non-translated matrices to custom layer on mercator map ([#3854](https://github.com/maplibre/maplibre-gl-js/pull/3854))
 - Disable sky when using globe and blend it in when changing to mercator ([#4853](https://github.com/maplibre/maplibre-gl-js/issues/4853))
+- New GlobeControl ([#4960](https://github.com/maplibre/maplibre-gl-js/pull/4960))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
