@@ -13,6 +13,8 @@ import type {IControl} from './control';
  * let map = new Map()
  *     .addControl(new GlobeControl());
  * ```
+ * 
+ * @see [Display a globe with a fill extrusion layer](https://maplibre.org/maplibre-gl-js/docs/examples/globe-fill-extrusion/)
  */
 export class GlobeControl implements IControl {
     _map: Map;
