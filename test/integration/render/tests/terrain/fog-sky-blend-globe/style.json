@@ -4,13 +4,16 @@
         "test": {
             "height": 256,
             "width": 256,
-            "maxPitch": 120
+            "maxPitch": 120,
+            "operations": [
+                ["idle"]
+            ]
         }
     },
     "timeout": 60000,
     "center": [
-        -113.33496,
-        35.96022
+        -113.335,
+        35.96
     ],
     "zoom": 13,
     "pitch": 80,
@@ -48,17 +51,7 @@
             "paint": {
                 "raster-opacity": 1.0
             }
-        },
-        {
-            "id": "hills",
-            "type": "hillshade",
-            "source": "terrain",
-            "layout": {
-                "visibility": "visible"
-            },
-            "paint": {
-                "hillshade-shadow-color": "#473B24"
-            }
+
         }
     ],
     "terrain": {
