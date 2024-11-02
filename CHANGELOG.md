@@ -7,7 +7,7 @@
 - Disable sky when using globe and blend it in when changing to mercator ([#4853](https://github.com/maplibre/maplibre-gl-js/issues/4853))
 - New GlobeControl ([#4960](https://github.com/maplibre/maplibre-gl-js/pull/4960))
 - _...Add new stuff here..._
-- Fix URL parsing in `normalizeSpriteURL`, now requires a valid URL.
+- ⚠️ Fix URL parsing in `normalizeSpriteURL`, sprite URLs must be absolute.
 
 ### 🐞 Bug fixes
 - Fix line-placed map-pitch-aligned texts being too large when viewed from some latitudes on a globe ([#4786](https://github.com/maplibre/maplibre-gl-js/issues/4786))
