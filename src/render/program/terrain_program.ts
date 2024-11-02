@@ -75,13 +75,15 @@ const terrainUniformValues = (
     eleDelta: number,
     fogMatrix: mat4,
     sky: Sky,
-    pitch: number): UniformValues<TerrainUniformsType> => ({
+    pitch: number,
+    isGlobeMode: boolean): UniformValues<TerrainUniformsType> => ({
     'u_texture': 0,
     'u_ele_delta': eleDelta,
     'u_fog_matrix': fogMatrix,
     'u_fog_color': sky ? sky.properties.get('fog-color') : Color.white,
     'u_fog_ground_blend': sky ? sky.properties.get('fog-ground-blend') : 1,
-    'u_fog_ground_blend_opacity': sky ? sky.calculateFogBlendOpacity(pitch) : 0,
+    // Set opacity to 0 when in globe mode to disable fog
+    'u_fog_ground_blend_opacity': isGlobeMode ? 0 : (sky ? sky.calculateFogBlendOpacity(pitch) : 0),
     'u_horizon_color': sky ? sky.properties.get('horizon-color') : Color.white,
     'u_horizon_fog_blend': sky ? sky.properties.get('horizon-fog-blend') : 1
 });
