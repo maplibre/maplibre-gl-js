@@ -101,7 +101,6 @@ function updateScale(map, container, options) {
     // found between the two coordinates.
     // Minimum maxWidth is calculated for the scale box.
 
-
     const optWidth = options && options.maxWidth || 100;
     const y = map._container.clientHeight / 2;
     const x = map._container.clientWidth / 2;
