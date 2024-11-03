@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 - When clustering circles and the promoteId is set to some parameter, the promoted id is used on non-clustered features and the cluster_id is used on clustered features. Previously the id was undefined for non-clustered features.
+- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Fix `line` layer on Globe with Terrain Elevation
