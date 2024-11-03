@@ -26,8 +26,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
 
     const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
-    const hasTerrain = !!painter.style.map.terrain;
-    const isGlobe = painter.style.projection.name === 'globe';
+    const globeWithTerrain = !!painter.style.map.terrain && painter.style.projection.name === 'globe';
     
     const dasharray = layer.paint.get('line-dasharray');
     const patternProperty = layer.paint.get('line-pattern');
@@ -71,7 +70,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
 
         const projectionData = transform.getProjectionData({
             overscaledTileID: coord,
-            ignoreGlobeMatrix: hasTerrain && isGlobe
+            ignoreGlobeMatrix: globeWithTerrain
         });
 
         const pixelRatio = transform.getPixelScale();
@@ -124,7 +123,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
         }
 
         const [stencilModes] = painter.stencilConfigForOverlap(coords);
-        const stencil = (hasTerrain && isGlobe) ? stencilModes[coord.overscaledZ] : painter.stencilModeForClipping(coord);
+        const stencil = globeWithTerrain ? stencilModes[coord.overscaledZ] : painter.stencilModeForClipping(coord);
 
         program.draw(context, gl.TRIANGLES, depthMode,
             stencil, colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,
