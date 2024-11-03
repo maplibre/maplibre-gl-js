@@ -260,8 +260,23 @@ export interface IReadonlyTransform extends ITransformGetters {
      */
     getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): Array<UnwrappedTileID>;
 
+    /**
+     * @internal
+     * Return the camera frustum for the current view.
+     */
     getCameraFrustum(): Frustum;
+
+    /**
+     * @internal
+     * Return the clipping plane, behind wich nothing should be rendered. If the camera frustum is sufficient
+     * to describe the render geometry (additional clipping is not required), this may be null.
+     */
     getClippingPlane(): vec4 | null;
+
+    /**
+     * @internal
+     * Returns this transform's CoveringTilesDetailsProvider.
+     */
     getCoveringTilesDetailsProvider(): CoveringTilesDetailsProvider;
 
     /**
