@@ -747,6 +747,7 @@ export class Style extends Evented {
                 case 'setZoom':
                 case 'setBearing':
                 case 'setPitch':
+                case 'setRoll':
                     continue;
                 case 'addLayer':
                     operations.push(() => this.addLayer.apply(this, op.args));
@@ -1512,7 +1513,7 @@ export class Style extends Evented {
     }
 
     getProjection(): ProjectionSpecification {
-        return this.stylesheet.projection;
+        return this.stylesheet?.projection;
     }
 
     setProjection(projection: ProjectionSpecification) {

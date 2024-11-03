@@ -91,5 +91,5 @@ test('recalculate zoom is done on the camera update transform', () => {
     const canvas = map.getCanvas();
     simulate.dragWithMove(canvas, {x: 100, y: 100}, {x: 100, y: 150});
     map._renderTaskQueue.run();
-    expect(map.getZoom()).toBe(0.20007702699728983);
+    expect(map.getZoom()).toBeCloseTo(0.20007702699730118, 10);
 });

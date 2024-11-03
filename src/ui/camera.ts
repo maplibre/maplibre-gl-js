@@ -69,6 +69,10 @@ export type CameraOptions = CenterZoomBearing & {
      * The desired roll in degrees. The roll is the angle about the camera boresight.
      */
     roll?: number;
+    /**
+     * The elevation of the center point in meters above sea level.
+     */
+    elevation?: number;
 };
 
 /**
@@ -308,6 +312,15 @@ export abstract class Camera extends Evented {
      */
     transformCameraUpdate: CameraUpdateTransformFunction | null;
 
+    /**
+     * @internal
+     * If true, the elevation of the center point will automatically be set to the terrain elevation
+     * (or zero if terrain is not enabled). If false, the elevation of the center point will default
+     * to sea level and will not automatically update. Defaults to true. Needs to be set to false to
+     * keep the camera above ground when pitch \> 90 degrees.
+     */
+    _centerClampedToGround: boolean;
+
     abstract _requestRenderFrame(a: () => void): TaskID;
     abstract _cancelRenderFrame(_: TaskID): void;
 
@@ -366,6 +379,48 @@ export abstract class Camera extends Evented {
      */
     setCenter(center: LngLatLike, eventData?: any) {
         return this.jumpTo({center}, eventData);
+    }
+
+    /**
+     * Returns the elevation of the map's center point.
+     *
+     * @returns The elevation of the map's center point, in meters above sea level.
+     */
+    getCenterElevation(): number { return this.transform.elevation; }
+
+    /**
+     * Sets the elevation of the map's center point, in meters above sea level. Equivalent to `jumpTo({elevation: elevation})`.
+     *
+     * Triggers the following events: `movestart` and `moveend`.
+     *
+     * @param elevation - The elevation to set, in meters above sea level.
+     * @param eventData - Additional properties to be added to event objects of events triggered by this method.
+     */
+    setCenterElevation(elevation: number, eventData?: any): this {
+        this.jumpTo({elevation}, eventData);
+        return this;
+    }
+
+    /**
+     * Returns the value of `centerClampedToGround`.
+     *
+     * If true, the elevation of the center point will automatically be set to the terrain elevation
+     * (or zero if terrain is not enabled). If false, the elevation of the center point will default
+     * to sea level and will not automatically update. Defaults to true. Needs to be set to false to
+     * keep the camera above ground when pitch \> 90 degrees.
+     */
+    getCenterClampedToGround(): boolean { return this._centerClampedToGround; }
+
+    /**
+     * Sets the value of `centerClampedToGround`.
+     *
+     * If true, the elevation of the center point will automatically be set to the terrain elevation
+     * (or zero if terrain is not enabled). If false, the elevation of the center point will default
+     * to sea level and will not automatically update. Defaults to true. Needs to be set to false to
+     * keep the camera above ground when pitch \> 90 degrees.
+     */
+    setCenterClampedToGround(centerClampedToGround: boolean): void {
+        this._centerClampedToGround = centerClampedToGround;
     }
 
     /**
@@ -492,6 +547,42 @@ export abstract class Camera extends Evented {
      */
     zoomOut(options?: AnimationOptions, eventData?: any): this {
         this.zoomTo(this.getZoom() - 1, options, eventData);
+        return this;
+    }
+
+    /**
+     * Returns the map's current vertical field of view, in degrees.
+     *
+     * @returns The map's current vertical field of view.
+     * @defaultValue 36.87
+     * @example
+     * ```ts
+     * const verticalFieldOfView = map.getVerticalFieldOfView();
+     * ```
+     */
+    getVerticalFieldOfView(): number { return this.transform.fov; }
+
+    /**
+     * Sets the map's vertical field of view, in degrees.
+     *
+     * Triggers the following events: `movestart`, `move`, and `moveend`.
+     *
+     * @param fov - The vertical field of view to set, in degrees (0-180).
+     * @param eventData - Additional properties to be added to event objects of events triggered by this method.
+     * @defaultValue 36.87
+     * @example
+     * Change vertical field of view to 30 degrees
+     * ```ts
+     * map.setVerticalFieldOfView(30);
+     * ```
+     */
+    setVerticalFieldOfView(fov: number, eventData?: any): this {
+        if (fov != this.transform.fov) {
+            this.transform.setFov(fov);
+            this.fire(new Event('movestart', eventData))
+                .fire(new Event('move', eventData))
+                .fire(new Event('moveend', eventData));
+        }
         return this;
     }
 
@@ -842,6 +933,10 @@ export abstract class Camera extends Evented {
 
         const zoomChanged = tr.zoom !== oldZoom;
 
+        if ('elevation' in options && tr.elevation !== +options.elevation) {
+            tr.setElevation(+options.elevation);
+        }
+
         if ('bearing' in options && tr.bearing !== +options.bearing) {
             bearingChanged = true;
             tr.setBearing(+options.bearing);
@@ -893,20 +988,30 @@ export abstract class Camera extends Evented {
     }
 
     /**
-     * Calculates pitch, zoom and bearing for looking at `newCenter` with the camera position being `newCenter`
-     * and returns them as {@link CameraOptions}.
+     * Given a camera 'from' position and a position to look at (`to`), calculates zoom and camera rotation and returns them as {@link CameraOptions}.
      * @param from - The camera to look from
      * @param altitudeFrom - The altitude of the camera to look from
      * @param to - The center to look at
      * @param altitudeTo - Optional altitude of the center to look at. If none given the ground height will be used.
      * @returns the calculated camera options
+     * @example
+     * ```ts
+     * // Calculate options to look from (1°, 0°, 1000m) to (1°, 1°, 0m)
+     * const cameraLngLat = new LngLat(1, 0);
+     * const cameraAltitude = 1000;
+     * const targetLngLat = new LngLat(1, 1);
+     * const targetAltitude = 0;
+     * const cameraOptions = map.calculateCameraOptionsFromTo(cameraLngLat, cameraAltitude, targetLngLat, targetAltitude);
+     * // Apply calculated options
+     * map.jumpTo(cameraOptions);
+     * ```
      */
     calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo: number = 0): CameraOptions {
-        const fromMerc = MercatorCoordinate.fromLngLat(from, altitudeFrom);
-        const toMerc = MercatorCoordinate.fromLngLat(to, altitudeTo);
-        const dx = toMerc.x - fromMerc.x;
-        const dy = toMerc.y - fromMerc.y;
-        const dz = toMerc.z - fromMerc.z;
+        const fromMercator = MercatorCoordinate.fromLngLat(from, altitudeFrom);
+        const toMercator = MercatorCoordinate.fromLngLat(to, altitudeTo);
+        const dx = toMercator.x - fromMercator.x;
+        const dy = toMercator.y - fromMercator.y;
+        const dz = toMercator.z - fromMercator.z;
 
         const distance3D = Math.hypot(dx, dy, dz);
         if (distance3D === 0) throw new Error('Can\'t calculate camera options with same From and To');
@@ -919,10 +1024,44 @@ export abstract class Camera extends Evented {
         pitch = dz < 0 ? 90 - pitch : 90 + pitch;
 
         return {
-            center: toMerc.toLngLat(),
+            center: toMercator.toLngLat(),
+            elevation: altitudeTo,
             zoom,
             pitch,
             bearing
+        };
+    }
+
+    /**
+     * Given a camera position and rotation, calculates zoom and center point and returns them as {@link CameraOptions}.
+     * @param cameraLngLat - The lng, lat of the camera to look from
+     * @param cameraAlt - The altitude of the camera to look from, in meters above sea level
+     * @param bearing - Bearing of the camera, in degrees
+     * @param pitch - Pitch of the camera, in degrees
+     * @param roll - Roll of the camera, in degrees
+     * @returns the calculated camera options
+     * @example
+     * ```ts
+     * // Calculate options to look from camera position(1°, 0°, 1000m) with bearing = 90°, pitch = 30°, and roll = 45°
+     * const cameraLngLat = new LngLat(1, 0);
+     * const cameraAltitude = 1000;
+     * const bearing = 90;
+     * const pitch = 30;
+     * const roll = 45;
+     * const cameraOptions = map.calculateCameraOptionsFromCameraLngLatAltRotation(cameraLngLat, cameraAltitude, bearing, pitch, roll);
+     * // Apply calculated options
+     * map.jumpTo(cameraOptions);
+     * ```
+     */
+    calculateCameraOptionsFromCameraLngLatAltRotation(cameraLngLat: LngLat, cameraAlt: number, bearing: number, pitch: number, roll?: number): CameraOptions {
+        const centerInfo = this.transform.calculateCenterFromCameraLngLatAlt(cameraLngLat, cameraAlt, bearing, pitch);
+        return {
+            center: centerInfo.center,
+            elevation: centerInfo.elevation,
+            zoom: centerInfo.zoom,
+            bearing,
+            pitch,
+            roll
         };
     }
 
@@ -1065,7 +1204,9 @@ export abstract class Camera extends Evented {
 
     _finalizeElevation() {
         this._elevationFreeze = false;
-        this.transform.recalculateZoom(this.terrain);
+        if (this.getCenterClampedToGround()) {
+            this.transform.recalculateZoomAndCenter(this.terrain);
+        }
     }
 
     /**
@@ -1098,9 +1239,12 @@ export abstract class Camera extends Evented {
      * @param tr - The transform to check.
      */
     _elevateCameraIfInsideTerrain(tr: ITransform) : { pitch?: number; zoom?: number } {
-        const cameraLngLat = tr.screenPointToLocation(tr.getCameraPoint());
+        if (!this.terrain && tr.elevation >= 0 && tr.pitch <= 90) {
+            return {};
+        }
+        const cameraLngLat = tr.getCameraLngLat();
         const cameraAltitude = tr.getCameraAltitude();
-        const minAltitude = this.terrain.getElevationForLngLatZoom(cameraLngLat, tr.zoom);
+        const minAltitude = this.terrain ? this.terrain.getElevationForLngLatZoom(cameraLngLat, tr.zoom) : 0;
         if (cameraAltitude < minAltitude) {
             const newCamera = this.calculateCameraOptionsFromTo(
                 cameraLngLat, minAltitude, tr.center, tr.elevation);
@@ -1121,9 +1265,7 @@ export abstract class Camera extends Evented {
      */
     _applyUpdatedTransform(tr: ITransform) {
         const modifiers : ((tr: ITransform) => ReturnType<CameraUpdateTransformFunction>)[] = [];
-        if (this.terrain) {
-            modifiers.push(tr => this._elevateCameraIfInsideTerrain(tr));
-        }
+        modifiers.push(tr => this._elevateCameraIfInsideTerrain(tr));
         if (this.transformCameraUpdate) {
             modifiers.push(tr => this.transformCameraUpdate(tr));
         }
@@ -1142,11 +1284,11 @@ export abstract class Camera extends Evented {
                 elevation
             } = modifier(nextTransform);
             if (center) nextTransform.setCenter(center);
+            if (elevation !== undefined) nextTransform.setElevation(elevation);
             if (zoom !== undefined) nextTransform.setZoom(zoom);
             if (roll !== undefined) nextTransform.setRoll(roll);
             if (pitch !== undefined) nextTransform.setPitch(pitch);
             if (bearing !== undefined) nextTransform.setBearing(bearing);
-            if (elevation !== undefined) nextTransform.setElevation(elevation);
             finalTransform.apply(nextTransform);
         }
         this.transform.apply(finalTransform);
@@ -1240,7 +1382,7 @@ export abstract class Camera extends Evented {
     flyTo(options: FlyToOptions, eventData?: any): this {
         // Fall through to jumpTo if user has set prefers-reduced-motion
         if (!options.essential && browser.prefersReducedMotion) {
-            const coercedOptions = pick(options, ['center', 'zoom', 'bearing', 'pitch', 'roll']) as CameraOptions;
+            const coercedOptions = pick(options, ['center', 'zoom', 'bearing', 'pitch', 'roll', 'elevation']) as CameraOptions;
             return this.jumpTo(coercedOptions, eventData);
         }
 
@@ -1492,7 +1634,6 @@ export abstract class Camera extends Evented {
         if (!this.terrain) {
             return null;
         }
-        const elevation = this.terrain.getElevationForLngLatZoom(LngLat.convert(lngLatLike), this.transform.tileZoom);
-        return elevation - this.transform.elevation;
+        return this.terrain.getElevationForLngLatZoom(LngLat.convert(lngLatLike), this.transform.tileZoom);
     }
 }

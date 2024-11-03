@@ -85,7 +85,7 @@ export function drawAtmosphere(painter: Painter, sky: Sky, light: Light) {
 
     const sunPos = getSunPos(light, painter.transform);
 
-    const projectionData = transform.getProjectionData(null);
+    const projectionData = transform.getProjectionData({overscaledTileID: null});
     const atmosphereBlend = sky.properties.get('atmosphere-blend') * projectionData.projectionTransition;
 
     if (atmosphereBlend === 0) {

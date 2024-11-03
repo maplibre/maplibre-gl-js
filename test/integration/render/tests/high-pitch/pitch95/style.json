@@ -1,0 +1,40 @@
+{
+    "version": 8,
+    "sprite": "local://sprites/sprite",
+    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+    "timeout": 60000,
+    "metadata": {
+        "test": {
+            "height": 512,
+            "width": 512,
+            "maxPitch": 95,
+            "operations": [
+                ["setCenterClampedToGround", false],
+                ["setCenterElevation", 10000],
+                ["setPitch", 95],
+                ["wait"]
+            ]
+        }
+    },
+    "center": [
+        35.38,
+        31.55
+    ],
+    "zoom": 10,
+    "sources": { },
+    "layers": [
+        {
+          "id": "background",
+          "type": "background",
+          "paint": {
+            "background-color": "#ccaa83"
+          }
+        }
+    ],
+    "sky": {
+        "sky-color": "#199EF3",
+        "horizon-color": "#daeff0",
+        "sky-horizon-blend": 1,
+        "fog-ground-blend": 1
+    }
+}

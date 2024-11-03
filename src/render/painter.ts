@@ -297,7 +297,7 @@ export class Painter {
 
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true, 'stencil');
 
-            const projectionData = transform.getProjectionData(tileID);
+            const projectionData = transform.getProjectionData({overscaledTileID: tileID});
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.
@@ -327,7 +327,7 @@ export class Painter {
             const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, true, true, 'raster');
 
-            const projectionData = transform.getProjectionData(tileID);
+            const projectionData = transform.getProjectionData({overscaledTileID: tileID});
 
             program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled,
                 ColorMode.disabled, CullFaceMode.backCCW, null,
@@ -632,7 +632,7 @@ export class Painter {
         drawCoords(this, this.style.map.terrain);
     }
 
-    renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>) {
+    renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, isRenderingToTexture: boolean = false) {
         if (layer.isHidden(this.transform.zoom)) return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;
@@ -660,7 +660,7 @@ export class Painter {
                 drawHillshade(painter, sourceCache, layer as any, coords);
                 break;
             case 'raster':
-                drawRaster(painter, sourceCache, layer as any, coords);
+                drawRaster(painter, sourceCache, layer as any, coords, isRenderingToTexture);
                 break;
             case 'background':
                 drawBackground(painter, sourceCache, layer as any, coords);
