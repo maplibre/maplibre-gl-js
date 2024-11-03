@@ -560,7 +560,7 @@ export class CollisionIndex {
             basePointX = translatedAnchorX;
             basePointY = translatedAnchorY;
 
-            const zoomFraction = this.transform.zoom - Math.floor(this.transform.zoom);
+            const zoomFraction = this.transform.zoom - unwrappedTileID.canonical.z;
             distanceMultiplier = Math.pow(2, -zoomFraction);
             distanceMultiplier *= this.transform.getPitchedTextCorrection(translatedAnchorX, translatedAnchorY, unwrappedTileID);
 
