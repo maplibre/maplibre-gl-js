@@ -64,7 +64,9 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
         return smallestDistance;
     }
 
-    // Returns the wrap value for a given tile, computed so that tiles will remain loaded when crossing the antimeridian.
+    /**
+     * Returns the wrap value for a given tile, computed so that tiles will remain loaded when crossing the antimeridian.
+     */
     getWrap(centerCoord: MercatorCoordinate, tileID: {x: number; y: number; z: number}, _parentWrap: number): number {
         const scale = 1 << tileID.z;
         const tileMercatorSize = 1.0 / scale;

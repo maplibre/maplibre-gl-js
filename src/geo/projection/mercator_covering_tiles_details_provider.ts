@@ -14,7 +14,9 @@ export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetail
         return Math.hypot(distanceX, distanceY);
     }
 
-    // Returns the wrap value for a given tile, computed so that tiles will remain loaded when crossing the antimeridian.
+    /**
+     * Returns the wrap value for a given tile, computed so that tiles will remain loaded when crossing the antimeridian.
+     */
     getWrap(centerCoord: MercatorCoordinate, tileID: {x:number; y: number; z: number}, parentWrap: number): number {
         return parentWrap;
     }

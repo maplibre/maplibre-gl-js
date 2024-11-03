@@ -13,7 +13,9 @@ export interface CoveringTilesDetailsProvider {
      */
     distanceToTile2d: (pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, aabb: Aabb) => number;
 
-    // Returns the wrap value for a given tile.
+    /**
+     * Returns the wrap value for a given tile.
+     */
     getWrap: (centerCoord: MercatorCoordinate, tileID: {x:number; y: number; z: number}, parentWrap: number) => number;
 
     /**
