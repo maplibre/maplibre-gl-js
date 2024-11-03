@@ -6,6 +6,7 @@
 
 ### 🐞 Bug fixes
 - ⚠️ Fix order of normalizeSpriteURL and transformRequest in loadSprite ([#3897](https://github.com/maplibre/maplibre-gl-js/issues/3897))
+- Fixes scale control for globe on zoom out ([#4897](https://github.com/maplibre/maplibre-gl-js/pull/4897))
 - _...Add new stuff here..._
 
 ## v5.0.0-pre.3
