@@ -26,15 +26,16 @@
     },
     "line": {
       "type": "geojson",
+      "lineMetrics": true,
       "data": {
         "type": "LineString",
         "coordinates": [
           [
-            -1440,
+            -90,
             -85
           ],
           [
-            1440,
+            90,
             85
           ]
         ]
@@ -42,14 +43,40 @@
     }
   },
   "layers": [
-    
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "gray"
+      }
+    },
     {
       "id": "line",
       "type": "line",
       "source": "line",
       "paint": {
         "line-width": 10,
-        "line-color": "red"
+        "line-gradient": [
+          "interpolate-lab",
+          [
+            "linear"
+          ],
+          [
+            "line-progress"
+          ],
+          0,
+          "blue",
+          0.1,
+          "royalblue",
+          0.3,
+          "cyan",
+          0.5,
+          "lime",
+          0.7,
+          "yellow",
+          1,
+          "red"
+        ]
       }
     }
   ]

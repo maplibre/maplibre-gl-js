@@ -4,7 +4,8 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix `line` layer on Globe with Terrain Elevation
+- Support `line` layer on Globe with Terrain Elevation ([#4970](https://github.com/maplibre/maplibre-gl-js/pull/4970))
+- Support `background` layer on Globe with Terrain Elevation ([#4972](https://github.com/maplibre/maplibre-gl-js/pull/4972))
 - _...Add new stuff here..._
 
 ## 5.0.0-pre.5

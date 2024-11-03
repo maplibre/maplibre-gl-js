@@ -23,33 +23,14 @@
       "tiles": ["local://tiles/{z}-{x}-{y}.terrain.png"],
       "maxzoom": 15,
       "tileSize": 256
-    },
-    "line": {
-      "type": "geojson",
-      "data": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            -1440,
-            -85
-          ],
-          [
-            1440,
-            85
-          ]
-        ]
-      }
     }
   },
   "layers": [
-    
     {
-      "id": "line",
-      "type": "line",
-      "source": "line",
+      "id": "background",
+      "type": "background",
       "paint": {
-        "line-width": 10,
-        "line-color": "red"
+        "background-color": "green"
       }
     }
   ]
