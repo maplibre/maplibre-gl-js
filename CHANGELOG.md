@@ -4,6 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix `line` layer on Globe with Terrain Elevation
 - _...Add new stuff here..._
 
 ## 5.0.0-pre.5
