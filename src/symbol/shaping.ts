@@ -694,12 +694,9 @@ function shapeLines(shaping: Shaping,
 
     let x = 0;
     let y = 0;
-    /**
-     * Height of the block of text (a sum of all line heights).
-     */
-    let blockHeight = 0;
 
     let maxLineLength = 0;
+    let maxLineHeight = 0;
 
     const justify =
         textJustify === 'right' ? 1 :
@@ -716,6 +713,12 @@ function shapeLines(shaping: Shaping,
         shaping.positionedLines[lineIndex] = positionedLine;
         const positionedGlyphs = positionedLine.positionedGlyphs;
 
+        if (!line.length()) {
+            y += lineHeight; // Still need a line feed after empty line
+            ++lineIndex;
+            continue;
+        }
+
         const {maxGlyphHeight, maxImageHeight} = calculateLineBlockMetrics(
             glyphMap,
             glyphPositions,
@@ -723,13 +726,7 @@ function shapeLines(shaping: Shaping,
             line,
             layoutTextSizeFactor
         );
-        const maxLineHeight = Math.max(maxGlyphHeight, maxImageHeight);
-
-        if (!line.length()) {
-            y += maxLineHeight; // Still need a line feed after empty line
-            ++lineIndex;
-            continue;
-        }
+        const lineContentHeight = Math.max(maxGlyphHeight, maxImageHeight);
 
         for (let i = 0; i < line.length(); i++) {
             const section = line.getSection(i);
@@ -765,7 +762,7 @@ function shapeLines(shaping: Shaping,
                 } else {
                     verticalAlignOffset = calculateVerticalOffset(
                         section.verticalAlign,
-                        maxLineHeight,
+                        lineContentHeight,
                         section.scale * ONE_EM
                     );
                 }
@@ -795,7 +792,7 @@ function shapeLines(shaping: Shaping,
                 } else {
                     verticalAlignOffset = calculateVerticalOffset(
                         section.verticalAlign,
-                        maxLineHeight,
+                        lineContentHeight,
                         imagePosition.displaySize[1] * section.scale
                     );
                 }
@@ -804,11 +801,11 @@ function shapeLines(shaping: Shaping,
             }
 
             if (!vertical) {
-                positionedGlyphs.push({glyph: codePoint, imageName, x, y: y + verticalAlignOffset, vertical, scale: section.scale, fontStack: section.fontStack, sectionIndex, metrics, rect});
+                positionedGlyphs.push({glyph: codePoint, imageName, x, y: y + verticalAlignOffset + SHAPING_DEFAULT_OFFSET, vertical, scale: section.scale, fontStack: section.fontStack, sectionIndex, metrics, rect});
                 x += metrics.advance * section.scale + spacing;
             } else {
                 shaping.verticalizable = true;
-                positionedGlyphs.push({glyph: codePoint, imageName, x, y: y + verticalAlignOffset, vertical, scale: section.scale, fontStack: section.fontStack, sectionIndex, metrics, rect});
+                positionedGlyphs.push({glyph: codePoint, imageName, x, y: y + verticalAlignOffset + SHAPING_DEFAULT_OFFSET, vertical, scale: section.scale, fontStack: section.fontStack, sectionIndex, metrics, rect});
                 x += verticalAdvance * section.scale + spacing;
             }
         }
@@ -822,31 +819,21 @@ function shapeLines(shaping: Shaping,
 
         x = 0;
 
-        // When items are aligned to the baseline, part of the glyph will be below the image
-        // We need to add this part to the block height
-        const belowBaselineOffset = lineMaxScale * (ONE_EM + SHAPING_DEFAULT_OFFSET);
-        const currentLineHeight = Math.max(lineHeight * lineMaxScale, maxLineHeight + belowBaselineOffset);
-        if (lineIndex === lines.length - 1) {
-            blockHeight = y + currentLineHeight;
-        }
+        const currentLineHeight = Math.max(lineHeight * lineMaxScale, maxImageHeight);
 
-        // Image can be higher than the text, so we need to account for that
-        const imageOffset = maxLineHeight - maxGlyphHeight;
-        y += lineHeight * lineMaxScale + imageOffset;
-
+        y += currentLineHeight;
+        maxLineHeight = Math.max(currentLineHeight, maxLineHeight);
         ++lineIndex;
     }
 
-    // verticalAlign top = 0, center = 0.5, bottom = 1
+    // Calculate the bounding box and justify / align text block.
     const {horizontalAlign, verticalAlign} = getAnchorAlignment(textAnchor);
-
-    // Align text block
-    align(shaping.positionedLines, justify, horizontalAlign, verticalAlign, maxLineLength, blockHeight);
+    align(shaping.positionedLines, justify, horizontalAlign, verticalAlign, maxLineLength, maxLineHeight, lineHeight, y, lines.length);
 
     // Calculate the bounding box
     // shaping.top & shaping.left already include text offset (text-radial-offset or text-offset)
-    shaping.top += -verticalAlign * blockHeight;
-    shaping.bottom = shaping.top + blockHeight;
+    shaping.top += -verticalAlign * y;
+    shaping.bottom = shaping.top + y;
     shaping.left += -horizontalAlign * maxLineLength;
     shaping.right = shaping.left + maxLineLength;
 }
@@ -878,9 +865,18 @@ function align(positionedLines: Array<PositionedLine>,
     horizontalAlign: number,
     verticalAlign: number,
     maxLineLength: number,
-    blockHeight: number) {
+    maxLineHeight: number,
+    lineHeight: number,
+    blockHeight: number,
+    lineCount: number) {
     const shiftX = (justify - horizontalAlign) * maxLineLength;
-    const shiftY = -verticalAlign * blockHeight;
+    let shiftY = 0;
+
+    if (maxLineHeight !== lineHeight) {
+        shiftY = -blockHeight * verticalAlign - SHAPING_DEFAULT_OFFSET;
+    } else {
+        shiftY = -verticalAlign * lineCount * lineHeight + 0.5 * lineHeight;
+    }
 
     for (const line of positionedLines) {
         for (const positionedGlyph of line.positionedGlyphs) {
