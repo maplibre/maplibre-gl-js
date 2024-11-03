@@ -54,8 +54,16 @@ describe('FeatureIndex', () => {
                     cluster: false,
                     cluster_id: '123',
                     someProperty: undefined
-                }
-            };
+                },
+                geometry: {
+                    type: 'Point',
+                    coordinates: [0, 0]
+                },
+                extent: 4096,
+                type: 1,
+                loadGeometry: () => [],
+                toGeoJSON: () => ({})
+            } as unknown as VectorTileFeature;
             
             expect(featureIndex.getId(feature, 'sourceLayer')).toBeUndefined();
         });
