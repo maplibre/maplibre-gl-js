@@ -41,6 +41,6 @@ npm-debug.log
 .*.swp
 junit.xml
 test.html
-package-lock.json
+
 .vscode/launch.json
 package-lock.json
