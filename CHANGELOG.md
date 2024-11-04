@@ -1,8 +1,8 @@
 ## main
 
 ### ✨ Features and improvements
-- Support `line` layer on Globe with Terrain Elevation ([#4970](https://github.com/maplibre/maplibre-gl-js/issues/4970))
-- Support `hillshade` layer on Globe with Terrain Elevation ([#4976](https://github.com/maplibre/maplibre-gl-js/issues/4976))
+- Support `line` layer on Globe with Terrain Elevation ([#4970](https://github.com/maplibre/maplibre-gl-js/pull/4970))
+- Support `hillshade` layer on Globe with Terrain Elevation ([#4976](https://github.com/maplibre/maplibre-gl-js/pull/4976))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
