@@ -25,6 +25,7 @@
 
     map.setStyle('https://tiles.openfreemap.org/styles/liberty', {
             transformStyle: (previousStyle, nextStyle) => {
+                nextStyle.projection = {type: 'globe'};
                 nextStyle.sources = {
                     ...nextStyle.sources, terrainSource: {
                         type: 'raster-dem',
