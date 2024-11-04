@@ -5,6 +5,7 @@
 
 ### 🐞 Bug fixes
 - Fix `line` layer on Globe with Terrain Elevation
+- Fix `hillshade` layer on Globe with Terrain Elevation ([#4976](https://github.com/maplibre/maplibre-gl-js/issues/4976))
 - _...Add new stuff here..._
 
 ## 5.0.0-pre.5
