@@ -26,36 +26,6 @@
       "maxzoom": 15,
       "tileSize": 256
     },
-    "fill": {
-      "type": "geojson",
-      "data": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -180,
-              -90
-            ],
-            [
-              -180,
-              90
-            ],
-            [
-              180,
-              90
-            ],
-            [
-              180,
-              -90
-            ],
-            [
-              -180,
-              -90
-            ]
-          ]
-        ]
-      }
-    },
     "line": {
       "type": "geojson",
       "lineMetrics": true,
@@ -75,22 +45,7 @@
     }
   },
   "layers": [
-    {
-      "id": "background",
-      "type": "background",
-      "paint": {
-        "background-color": "white"
-      }
-    },
-    {
-      "id": "fill",
-      "type": "fill",
-      "source": "fill",
-      "paint": {
-        "fill-antialias": false,
-        "fill-color": "grey"
-      }
-    },
+    
     {
       "id": "line",
       "type": "line",
