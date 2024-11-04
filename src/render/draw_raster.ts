@@ -13,6 +13,7 @@ import type {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
 import type {OverscaledTileID} from '../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {EXTENT} from '../data/extent';
+import {coveringZoomLevel} from '../geo/projection/covering_tiles';
 
 const cornerCoords = [
     new Point(0, 0),
@@ -143,7 +144,7 @@ function getFadeValues(tile, parentTile, sourceCache, layer, transform, terrain)
         const sinceParent = parentTile ? (now - parentTile.timeAdded) / fadeDuration : -1;
 
         const source = sourceCache.getSource();
-        const idealZ = transform.coveringZoomLevel({
+        const idealZ = coveringZoomLevel(transform, {
             tileSize: source.tileSize,
             roundZoom: source.roundZoom
         });

@@ -14,7 +14,7 @@ import type {
     SymbolLineVertexArray
 } from '../data/array_types.g';
 import type {OverlapMode} from '../style/style_layer/overlap_mode';
-import {UnwrappedTileID} from '../source/tile_id';
+import {OverscaledTileID, UnwrappedTileID} from '../source/tile_id';
 import {type PointProjection, SymbolProjectionContext, getTileSkewVectors, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, projectPathSpecialProjection, xyTransformMat4} from '../symbol/projection';
 import {clamp, getAABB} from '../util/util';
 
@@ -102,6 +102,7 @@ export class CollisionIndex {
         collisionBox: SingleCollisionBox,
         overlapMode: OverlapMode,
         textPixelRatio: number,
+        tileID: OverscaledTileID,
         unwrappedTileID: UnwrappedTileID,
         pitchWithMap: boolean,
         rotateWithMap: boolean,
@@ -141,6 +142,7 @@ export class CollisionIndex {
             projectedBox = this._projectCollisionBox(
                 collisionBox,
                 tileToViewport,
+                tileID,
                 unwrappedTileID,
                 pitchWithMap,
                 rotateWithMap,
@@ -505,6 +507,7 @@ export class CollisionIndex {
     private _projectCollisionBox(
         collisionBox: SingleCollisionBox,
         tileToViewport: number,
+        tileID: OverscaledTileID,
         unwrappedTileID: UnwrappedTileID,
         pitchWithMap: boolean,
         rotateWithMap: boolean,
@@ -560,7 +563,7 @@ export class CollisionIndex {
             basePointX = translatedAnchorX;
             basePointY = translatedAnchorY;
 
-            const zoomFraction = this.transform.zoom - Math.floor(this.transform.zoom);
+            const zoomFraction = this.transform.zoom - tileID.overscaledZ;
             distanceMultiplier = Math.pow(2, -zoomFraction);
             distanceMultiplier *= this.transform.getPitchedTextCorrection(translatedAnchorX, translatedAnchorY, unwrappedTileID);
 
