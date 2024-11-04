@@ -1,7 +1,7 @@
 import {LngLat} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp} from '../util/util';
+import {wrap, clamp, degreesToRadians, radiansToDegrees} from '../util/util';
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets';
 import type {PaddingOptions} from './edge_insets';
@@ -317,13 +317,13 @@ export class TransformHelper implements ITransformGetters {
         return this._fovInRadians;
     }
     get fov(): number {
-        return this._fovInRadians / Math.PI * 180;
+        return radiansToDegrees(this._fovInRadians);
     }
     setFov(fov: number) {
-        fov = Math.max(0.01, Math.min(60, fov));
-        if (this._fovInRadians === fov) return;
+        fov = clamp(fov, 0.1, 150);
+        if (this.fov === fov) return;
         this._unmodified = false;
-        this._fovInRadians = fov / 180 * Math.PI;
+        this._fovInRadians = degreesToRadians(fov);
         this._calcMatrices();
     }
 
