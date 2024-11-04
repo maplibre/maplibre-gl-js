@@ -127,7 +127,7 @@ function drawFillTiles(
                 fillOutlineUniformValues(drawingBufferSize, translateForUniforms);
         }
 
-         // Stencil is not really needed for anything unless we are drawing transparent things.
+        // Stencil is not really needed for anything unless we are drawing transparent things.
         //
         // For translucent layers, we must draw any pixel of a given layer at most once,
         // otherwise we might get artifacts from the transparent geometry being drawn twice over itself,
