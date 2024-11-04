@@ -1,6 +1,7 @@
 import {FeatureIndex} from './feature_index';
 import {OverscaledTileID} from '../source/tile_id';
-import {VectorTileFeature} from '@mapbox/vector-tile';
+import type {VectorTileFeature} from '@mapbox/vector-tile';
+
 describe('FeatureIndex', () => {
     describe('getId', () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
@@ -8,7 +9,7 @@ describe('FeatureIndex', () => {
         test('converts boolean ids to numbers', () => {
             const featureIndex = new FeatureIndex(tileID, 'someProperty');
             const feature = {
-                id: true,
+                id: 1,
                 properties: {
                     someProperty: true
                 },
