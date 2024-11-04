@@ -38,6 +38,25 @@ function distanceToTileWrapX(pointX: number, pointY: number, tileCornerX: number
 }
 
 export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsProvider {
+    private _cache: Map<string, Aabb> = new Map();
+    private _nextCache: Map<string, Aabb> = new Map();
+    private _hadAnyChanges = false;
+
+    /**
+     * Prepares AABB cache for next frame. Call at the beginning of a frame.
+     * Any tile accesses in the last frame is kept in the cache, other tiles are deleted.
+     * @returns 
+     */
+    newFrame() {
+        if (!this._hadAnyChanges) {
+            return;
+        }
+        const oldCache = this._cache;
+        this._cache = this._nextCache;
+        this._nextCache = oldCache;
+        this._nextCache.clear();
+        this._hadAnyChanges = false;
+    }
 
     /**
      * Returns the distance of a point to a square tile. If the point is inside the tile, returns 0.
@@ -88,7 +107,29 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
      * Returns the AABB of the specified tile. The AABB is in the coordinate space where the globe is a unit sphere.
      * @param tileID - Tile x, y and z for zoom.
      */
-    getTileAABB(tileID: {x: number; y: number; z: number}, _wrap: number, _elevation: number, _options: CoveringTilesOptions): Aabb {
+    getTileAABB(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions): Aabb {
+        const key = `${tileID.z}_${tileID.x}_${tileID.y}`;
+        const cachedNext = this._nextCache.get(key);
+        if (cachedNext) {
+            return cachedNext;
+        }
+        const cachedOld = this._cache.get(key);
+        if (cachedOld) {
+            this._nextCache.set(key, cachedOld);
+            return cachedOld;
+        }
+        const aabb = this._computeTileAABB(tileID, wrap, elevation, options);
+        this._cache.set(key, aabb);
+        this._nextCache.set(key, aabb);
+        this._hadAnyChanges = true;
+        return aabb;
+    }
+    
+    allowVariableZoom(transform: IReadonlyTransform, options: CoveringTilesOptions): boolean {
+        return coveringZoomLevel(transform, options) > 4;
+    }
+
+    private _computeTileAABB(tileID: {x: number; y: number; z: number}, _wrap: number, _elevation: number, _options: CoveringTilesOptions): Aabb {
         // We can get away with only checking the 4 tile corners for AABB construction, because for any tile of zoom level 2 or higher
         // it holds that the extremes (minimal or maximal value) of X, Y or Z coordinates must lie in one of the tile corners.
         //
@@ -169,9 +210,5 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
                 max
             );
         }
-    }
-    
-    allowVariableZoom(transform: IReadonlyTransform, options: CoveringTilesOptions): boolean {
-        return coveringZoomLevel(transform, options) > 4;
     }
 }

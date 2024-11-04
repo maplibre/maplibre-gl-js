@@ -2,6 +2,7 @@ import Benchmark from '../lib/benchmark';
 import { GlobeTransform } from '../../../src/geo/projection/globe_transform';
 import { GlobeProjection } from '../../../src/geo/projection/globe';
 import { LngLat } from '../styles';
+import { coveringTiles } from '../../../src/geo/projection/covering_tiles';
 
 export default class CoveringTilesGlobe extends Benchmark {
     _pitch: number;
@@ -22,7 +23,7 @@ export default class CoveringTilesGlobe extends Benchmark {
 
         for (let i = 0; i < 40; i++) {
             transform.setCenter(new LngLat(i * 0.2, 0));
-            transform.coveringTiles({
+            coveringTiles(transform, {
                 tileSize: 256,
             });
         }
