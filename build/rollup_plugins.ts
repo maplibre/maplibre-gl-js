@@ -31,7 +31,7 @@ export const plugins = (production: boolean): Plugin[] => [
         sourceMap: true,
         functions: ['PerformanceUtils.*']
     }),
-    terser({
+    production && terser({
         compress: {
             pure_getters: true,
             passes: 3

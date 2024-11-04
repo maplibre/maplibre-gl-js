@@ -6,6 +6,7 @@
 
 ### 🐞 Bug fixes
 - Fix `line` layer on Globe with Terrain Elevation
+- ⚠️ Fix level of detail at high pitch angle by changing which tiles to load ([#3983](https://github.com/maplibre/maplibre-gl-js/issues/3983))
 - _...Add new stuff here..._
 
 ## 5.0.0-pre.5

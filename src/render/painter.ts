@@ -48,6 +48,7 @@ import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {RenderToTexture} from './render_to_texture';
 import type {ProjectionData} from '../geo/projection/projection_data';
+import {coveringTiles} from '../geo/projection/covering_tiles';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -320,7 +321,7 @@ export class Painter {
 
         const program = this.useProgram('depth');
         const depthMode = this.getDepthModeFor3D();
-        const tileIDs = transform.coveringTiles({tileSize: transform.tileSize});
+        const tileIDs = coveringTiles(transform, {tileSize: transform.tileSize});
 
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {

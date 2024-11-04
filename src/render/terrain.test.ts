@@ -40,7 +40,7 @@ describe('Terrain', () => {
             transform: {center: {lng: 0}},
             maybeDrawDepthAndCoords: jest.fn(),
         } as any as Painter;
-        const sourceCache = {} as SourceCache;
+        const sourceCache = {_source: {tileSize: 512}} as SourceCache;
         const getTileByID = (tileID) : Tile => {
             if (tileID !== 'abcd') {
                 return null as any as Tile;
@@ -75,7 +75,7 @@ describe('Terrain', () => {
             maybeDrawDepthAndCoords: jest.fn(),
             pixelRatio,
         } as any as Painter;
-        const sourceCache = {} as SourceCache;
+        const sourceCache = {_source: {tileSize: 512}} as SourceCache;
         const terrain = new Terrain(painter, sourceCache, {} as any as TerrainSpecification);
         const tileIdsToWraps = {a: -1, b: 0, c: 1, d: 2};
         terrain.sourceCache.getTileByID = (id) => {
@@ -155,7 +155,7 @@ describe('Terrain', () => {
             getTileTexture: () => null
         } as any as Painter;
         const sourceCache = {
-            _source: {maxzoom: 12},
+            _source: {maxzoom: 12, tileSize: 512},
             _cache: {max: 10},
             getTileByID: () => {
                 return tile;
@@ -183,7 +183,7 @@ describe('Terrain', () => {
             getTileTexture: () => null
         } as any as Painter;
         const sourceCache = {
-            _source: {maxzoom: 12},
+            _source: {maxzoom: 12, tileSize: 512},
             _cache: {max: 10},
             getTileByID: () => null,
         } as any as SourceCache;
@@ -210,7 +210,7 @@ describe('Terrain', () => {
             getTileTexture: () => null
         } as any as Painter;
         const sourceCache = {
-            _source: {maxzoom: 12},
+            _source: {maxzoom: 12, tileSize: 512},
             _cache: {max: 10},
             getTileByID: () => {
                 return tile;
@@ -239,7 +239,7 @@ describe('Terrain', () => {
             height: 1,
         } as any as Painter;
         const sourceCache = {
-            _source: {maxzoom: 12},
+            _source: {maxzoom: 12, tileSize: 512},
             _cache: {max: 10}
         } as any as SourceCache;
         const terrain = new Terrain(
@@ -283,7 +283,7 @@ describe('Terrain', () => {
     });
 
     test('getElevationForLngLatZoom with lng less than -180 wraps correctly', () => {
-        const terrain = new Terrain(null, {} as any, {} as any);
+        const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {} as any);
 
         const OVERSCALETILEID_DOES_NOT_THROW = 4;
         terrain.getElevation = () => OVERSCALETILEID_DOES_NOT_THROW;
@@ -291,7 +291,7 @@ describe('Terrain', () => {
     });
 
     test('getMinTileElevationForLngLatZoom with lng less than -180 wraps correctly', () => {
-        const terrain = new Terrain(null, {} as any, {} as any);
+        const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {} as any);
 
         const OVERSCALETILEID_DOES_NOT_THROW = 4;
         terrain.getMinMaxElevation = () => ({minElevation: OVERSCALETILEID_DOES_NOT_THROW, maxElevation: 42});
@@ -299,7 +299,7 @@ describe('Terrain', () => {
     });
 
     describe('getElevationForLngLatZoom returns 0 for out of bounds', () => {
-        const terrain = new Terrain(null, {} as any, {} as any);
+        const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {} as any);
 
         test('lng', () => {
             expect(terrain.getElevationForLngLatZoom(new LngLat(180, 0), 0)).toBe(0);

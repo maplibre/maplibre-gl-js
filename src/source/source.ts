@@ -13,6 +13,7 @@ import type {Map} from '../ui/map';
 import type {Tile} from './tile';
 import type {OverscaledTileID, CanonicalTileID} from './tile_id';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
+import {CalculateTileZoomFunction} from '../geo/projection/covering_tiles';
 
 const registeredSources = {} as {[key:string]: SourceClass};
 
@@ -116,6 +117,10 @@ export interface Source {
      * Allows to execute a prepare step before the source is used.
      */
     prepare?(): void;
+    /**
+     * Optional function to redefine how tiles are loaded at high pitch angles.
+     */
+    calculateTileZoom?: CalculateTileZoomFunction;
 }
 
 /**

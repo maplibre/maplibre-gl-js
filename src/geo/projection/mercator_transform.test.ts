@@ -8,6 +8,7 @@ import {LngLatBounds} from '../lng_lat_bounds';
 import {getMercatorHorizon} from './mercator_utils';
 import {mat4} from 'gl-matrix';
 import {expectToBeCloseToArray} from '../../util/test/util';
+import {coveringTiles, coveringZoomLevel} from './covering_tiles';
 
 describe('transform', () => {
     test('creates a transform', () => {
@@ -201,7 +202,7 @@ describe('transform', () => {
             tileSize: 512
         };
 
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform(0, 22, 0, 85, true);
         transform.resize(200, 200);
 
         test('general', () => {
@@ -210,31 +211,31 @@ describe('transform', () => {
             transform.setCenter(new LngLat(-0.01, 0.01));
 
             transform.setZoom(0);
-            expect(transform.coveringTiles(options)).toEqual([]);
+            expect(coveringTiles(transform, options)).toEqual([]);
 
             transform.setZoom(1);
-            expect(transform.coveringTiles(options)).toEqual([
+            expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(1, 0, 1, 0, 0),
                 new OverscaledTileID(1, 0, 1, 1, 0),
                 new OverscaledTileID(1, 0, 1, 0, 1),
                 new OverscaledTileID(1, 0, 1, 1, 1)]);
 
             transform.setZoom(2.4);
-            expect(transform.coveringTiles(options)).toEqual([
+            expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(2, 0, 2, 1, 1),
                 new OverscaledTileID(2, 0, 2, 2, 1),
                 new OverscaledTileID(2, 0, 2, 1, 2),
                 new OverscaledTileID(2, 0, 2, 2, 2)]);
 
             transform.setZoom(10);
-            expect(transform.coveringTiles(options)).toEqual([
+            expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(10, 0, 10, 511, 511),
                 new OverscaledTileID(10, 0, 10, 512, 511),
                 new OverscaledTileID(10, 0, 10, 511, 512),
                 new OverscaledTileID(10, 0, 10, 512, 512)]);
 
             transform.setZoom(11);
-            expect(transform.coveringTiles(options)).toEqual([
+            expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(10, 0, 10, 511, 511),
                 new OverscaledTileID(10, 0, 10, 512, 511),
                 new OverscaledTileID(10, 0, 10, 511, 512),
@@ -245,7 +246,7 @@ describe('transform', () => {
             transform.setBearing(32.0);
             transform.setCenter(new LngLat(56.90, 48.20));
             transform.resize(1024, 768);
-            expect(transform.coveringTiles(options)).toEqual([
+            expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(5, 0, 5, 21, 11),
                 new OverscaledTileID(5, 0, 5, 20, 11),
                 new OverscaledTileID(5, 0, 5, 21, 10),
@@ -270,22 +271,58 @@ describe('transform', () => {
             ]);
 
             transform.setZoom(8);
+            transform.setPitch(85.0);
+            transform.setBearing(0.0);
+            transform.setCenter(new LngLat(20.918, 39.232));
+            transform.resize(50, 1000);
+            expect(coveringTiles(transform, options)).toEqual([
+                new OverscaledTileID(8, 0, 8, 142, 98),
+                new OverscaledTileID(7, 0, 7, 71, 48),
+                new OverscaledTileID(5, 0, 5, 17, 11),
+                new OverscaledTileID(5, 0, 5, 17, 10),
+                new OverscaledTileID(9, 0, 9, 285, 198),
+                new OverscaledTileID(9, 0, 9, 285, 199)
+            ]);
+
+            transform.setZoom(8);
             transform.setPitch(60);
             transform.setBearing(45.0);
             transform.setCenter(new LngLat(25.02, 60.15));
             transform.resize(300, 50);
-            expect(transform.coveringTiles(options)).toEqual([
+            expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(8, 0, 8, 145, 74),
                 new OverscaledTileID(8, 0, 8, 145, 73),
                 new OverscaledTileID(8, 0, 8, 146, 74)
             ]);
 
             transform.resize(50, 300);
-            expect(transform.coveringTiles(options)).toEqual([
+            expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(8, 0, 8, 145, 74),
                 new OverscaledTileID(8, 0, 8, 145, 73),
                 new OverscaledTileID(8, 0, 8, 146, 74),
                 new OverscaledTileID(8, 0, 8, 146, 73)
+            ]);
+            
+            const optionsWithCustomTileLoading = { 
+                minzoom: 1,
+                maxzoom: 10,
+                tileSize: 512,
+                calculateTileZoom: (_requestedCenterZoom: number,
+                    _distanceToTile2D: number,
+                    _distanceToTileZ: number,
+                    _distanceToCenter3D: number,
+                    _cameraVerticalFOV: number) => { return 7; }
+            };
+            transform.resize(50, 300);
+            transform.setPitch(70);
+            expect(coveringTiles(transform, optionsWithCustomTileLoading)).toEqual([
+                new OverscaledTileID(7, 0, 7, 74, 36),
+                new OverscaledTileID(7, 0, 7, 73, 37),
+                new OverscaledTileID(7, 0, 7, 74, 35),
+                new OverscaledTileID(7, 0, 7, 73, 36),
+                new OverscaledTileID(7, 0, 7, 72, 37),
+                new OverscaledTileID(7, 0, 7, 73, 35),
+                new OverscaledTileID(7, 0, 7, 72, 36)
             ]);
 
             transform.setZoom(2);
@@ -296,7 +333,7 @@ describe('transform', () => {
 
         test('calculates tile coverage at w > 0', () => {
             transform.setCenter(new LngLat(630.01, 0.01));
-            expect(transform.coveringTiles(options)).toEqual([
+            expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(2, 2, 2, 1, 1),
                 new OverscaledTileID(2, 2, 2, 1, 2),
                 new OverscaledTileID(2, 2, 2, 0, 1),
@@ -306,7 +343,7 @@ describe('transform', () => {
 
         test('calculates tile coverage at w = -1', () => {
             transform.setCenter(new LngLat(-360.01, 0.01));
-            expect(transform.coveringTiles(options)).toEqual([
+            expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(2, -1, 2, 1, 1),
                 new OverscaledTileID(2, -1, 2, 1, 2),
                 new OverscaledTileID(2, -1, 2, 2, 1),
@@ -317,7 +354,7 @@ describe('transform', () => {
         test('calculates tile coverage across meridian', () => {
             transform.setZoom(1);
             transform.setCenter(new LngLat(-180.01, 0.01));
-            expect(transform.coveringTiles(options)).toEqual([
+            expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(1, 0, 1, 0, 0),
                 new OverscaledTileID(1, 0, 1, 0, 1),
                 new OverscaledTileID(1, -1, 1, 1, 0),
@@ -329,12 +366,28 @@ describe('transform', () => {
             transform.setZoom(1);
             transform.setCenter(new LngLat(-180.01, 0.01));
             transform.setRenderWorldCopies(false);
-            expect(transform.coveringTiles(options)).toEqual([
+            expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(1, 0, 1, 0, 0),
                 new OverscaledTileID(1, 0, 1, 0, 1)
             ]);
         });
 
+    });
+
+    test('maxzoom-0', () => {
+        const options = {
+            minzoom: 0,
+            maxzoom: 0,
+            tileSize: 512
+        };
+
+        const transform = new MercatorTransform(0, 0, 0, 60, true);
+        transform.resize(200, 200);
+        transform.setCenter(new LngLat(0.01, 0.01));
+        transform.setZoom(8);
+        expect(coveringTiles(transform, options)).toEqual([
+            new OverscaledTileID(0, 0, 0, 0, 0)
+        ]);
     });
 
     test('coveringZoomLevel', () => {
@@ -348,52 +401,52 @@ describe('transform', () => {
         const transform = new MercatorTransform(0, 22, 0, 60, true);
 
         transform.setZoom(0);
-        expect(transform.coveringZoomLevel(options)).toBe(0);
+        expect(coveringZoomLevel(transform, options)).toBe(0);
 
         transform.setZoom(0.1);
-        expect(transform.coveringZoomLevel(options)).toBe(0);
+        expect(coveringZoomLevel(transform, options)).toBe(0);
 
         transform.setZoom(1);
-        expect(transform.coveringZoomLevel(options)).toBe(1);
+        expect(coveringZoomLevel(transform, options)).toBe(1);
 
         transform.setZoom(2.4);
-        expect(transform.coveringZoomLevel(options)).toBe(2);
+        expect(coveringZoomLevel(transform, options)).toBe(2);
 
         transform.setZoom(10);
-        expect(transform.coveringZoomLevel(options)).toBe(10);
+        expect(coveringZoomLevel(transform, options)).toBe(10);
 
         transform.setZoom(11);
-        expect(transform.coveringZoomLevel(options)).toBe(11);
+        expect(coveringZoomLevel(transform, options)).toBe(11);
 
         transform.setZoom(11.5);
-        expect(transform.coveringZoomLevel(options)).toBe(11);
+        expect(coveringZoomLevel(transform, options)).toBe(11);
 
         options.tileSize = 256;
 
         transform.setZoom(0);
-        expect(transform.coveringZoomLevel(options)).toBe(1);
+        expect(coveringZoomLevel(transform, options)).toBe(1);
 
         transform.setZoom(0.1);
-        expect(transform.coveringZoomLevel(options)).toBe(1);
+        expect(coveringZoomLevel(transform, options)).toBe(1);
 
         transform.setZoom(1);
-        expect(transform.coveringZoomLevel(options)).toBe(2);
+        expect(coveringZoomLevel(transform, options)).toBe(2);
 
         transform.setZoom(2.4);
-        expect(transform.coveringZoomLevel(options)).toBe(3);
+        expect(coveringZoomLevel(transform, options)).toBe(3);
 
         transform.setZoom(10);
-        expect(transform.coveringZoomLevel(options)).toBe(11);
+        expect(coveringZoomLevel(transform, options)).toBe(11);
 
         transform.setZoom(11);
-        expect(transform.coveringZoomLevel(options)).toBe(12);
+        expect(coveringZoomLevel(transform, options)).toBe(12);
 
         transform.setZoom(11.5);
-        expect(transform.coveringZoomLevel(options)).toBe(12);
+        expect(coveringZoomLevel(transform, options)).toBe(12);
 
         options.roundZoom = true;
 
-        expect(transform.coveringZoomLevel(options)).toBe(13);
+        expect(coveringZoomLevel(transform, options)).toBe(13);
     });
 
     test('clamps pitch', () => {
