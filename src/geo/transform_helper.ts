@@ -5,7 +5,7 @@ import {wrap, clamp, degreesToRadians, radiansToDegrees} from '../util/util';
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets';
 import type {PaddingOptions} from './edge_insets';
-import {CoveringZoomOptions, IReadonlyTransform, ITransformGetters} from './transform_interface';
+import {IReadonlyTransform, ITransformGetters} from './transform_interface';
 
 export const MAX_VALID_LATITUDE = 85.051129;
 
@@ -405,19 +405,6 @@ export class TransformHelper implements ITransformGetters {
         this._edgeInsets.interpolate(start, target, t);
         this._constrain();
         this._calcMatrices();
-    }
-
-    /**
-     * Return what zoom level of a tile source would most closely cover the tiles displayed by this transform.
-     * @param options - The options, most importantly the source's tile size.
-     * @returns An integer zoom level at which all tiles will be visible.
-     */
-    coveringZoomLevel(options: CoveringZoomOptions): number {
-        const z = (options.roundZoom ? Math.round : Math.floor)(
-            this.zoom + scaleZoom(this._tileSize / options.tileSize)
-        );
-        // At negative zoom levels load tiles from z0 because negative tile zoom levels don't exist.
-        return Math.max(0, z);
     }
 
     resize(width: number, height: number) {
