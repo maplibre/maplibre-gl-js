@@ -25,6 +25,7 @@
 
     map.setStyle('https://api.maptiler.com/maps/hybrid/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL', {
             transformStyle: (previousStyle, nextStyle) => {
+                nextStyle.projection = {type: 'globe'};
                 nextStyle.sources = {
                     ...nextStyle.sources, terrainSource: {
                         type: 'raster-dem',
@@ -42,7 +43,15 @@
                     exaggeration: 1
                 }
 
-                nextStyle.sky = {}
+                nextStyle.sky = {
+                    'atmosphere-blend': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        0, 1,
+                        2, 0
+                    ],
+                }
 
                 nextStyle.layers.push({
                     id: 'hills',
@@ -63,6 +72,7 @@
             showCompass: true
         })
     );
+
 
     map.addControl(
         new maplibregl.GlobeControl()
