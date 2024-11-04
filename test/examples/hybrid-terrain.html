@@ -23,8 +23,7 @@
         maxPitch: 95
     });
 
-    map.setStyle('https://tiles.openfreemap.org/styles/liberty', {
-            transformStyle: (previousStyle, nextStyle) => {
+    map.setStyle('https://api.maptiler.com/maps/hybrid/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL', {            transformStyle: (previousStyle, nextStyle) => {
                 nextStyle.projection = {type: 'globe'};
                 nextStyle.sources = {
                     ...nextStyle.sources, terrainSource: {
