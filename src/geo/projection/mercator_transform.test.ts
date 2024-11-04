@@ -392,7 +392,7 @@ describe('transform', () => {
         transform.setZoom(10);
         const tiles = coveringTiles(transform, options);
         for (const tile of tiles) {
-            expect(tile.canonical.z <= tile.overscaledZ);
+            expect(tile.overscaledZ).toBeGreaterThanOrEqual(tile.canonical.z);
         }
     });
 
