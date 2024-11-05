@@ -374,6 +374,28 @@ describe('transform', () => {
 
     });
 
+    test('coveringTiles: overscaledZ', () => {
+        const options = {
+            minzoom: 1,
+            maxzoom: 10,
+            tileSize: 256,
+            reparseOverscaled: true
+        };
+
+        const transform = new MercatorTransform(0, 10, 0, 85, true);
+        transform.resize(10, 400);
+        // make slightly off center so that sort order is not subject to precision issues
+        transform.setCenter(new LngLat(-0.01, 0.01));
+        transform.setPitch(85);
+        transform.setFov(10);
+
+        transform.setZoom(10);
+        const tiles = coveringTiles(transform, options);
+        for (const tile of tiles) {
+            expect(tile.overscaledZ).toBeGreaterThanOrEqual(tile.canonical.z);
+        }
+    });
+
     test('maxzoom-0', () => {
         const options = {
             minzoom: 0,
