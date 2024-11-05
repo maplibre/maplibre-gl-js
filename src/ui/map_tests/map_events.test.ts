@@ -1065,11 +1065,17 @@ describe('map events', () => {
                 type: 'mercator',
             });
 
-            expect(spy).toHaveBeenCalledTimes(4);
+            // Non-adaptive globe
+            expect(spy).toHaveBeenCalledTimes(2);
             expect(spy).toHaveBeenNthCalledWith(1, 'globe');
-            expect(spy).toHaveBeenNthCalledWith(2, 'globe-mercator');
-            expect(spy).toHaveBeenNthCalledWith(3, 'globe');
-            expect(spy).toHaveBeenNthCalledWith(4, 'mercator');
+            expect(spy).toHaveBeenNthCalledWith(2, 'mercator');
+
+            // Adaptive globe
+            // expect(spy).toHaveBeenCalledTimes(4);
+            // expect(spy).toHaveBeenNthCalledWith(1, 'globe');
+            // expect(spy).toHaveBeenNthCalledWith(2, 'globe-mercator');
+            // expect(spy).toHaveBeenNthCalledWith(3, 'globe');
+            // expect(spy).toHaveBeenNthCalledWith(4, 'mercator');
         });
     });
 });
