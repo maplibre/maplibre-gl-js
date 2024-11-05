@@ -414,8 +414,6 @@ export class GlobeTransform implements ITransform {
      */
     private _computeGlobenessAnimation(): number {
 
-        console.log(this._adaptive, this._globeProjectionAllowed, 'new globeness')
-
         if (!this._adaptive && this._globeProjectionAllowed) {
             return 1;
         }
