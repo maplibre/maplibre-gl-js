@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-- When clustering circles and the promoteId is set to some parameter, the promoted id is used on non-clustered features and the cluster_id is used on clustered features. Previously the id was undefined for non-clustered features.
+- When clustering circles and the promoteId is set to some parameter, the promoted ID is used on non-clustered features and the cluster_id is used on clustered features. Previously the ID was undefined for non-clustered features.
 - Support Terrain in Globe projection ([#4976](https://github.com/maplibre/maplibre-gl-js/pull/4976))
 - _...Add new stuff here..._
 
