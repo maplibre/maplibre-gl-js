@@ -1,7 +1,6 @@
 import {FeatureIndex} from './feature_index';
 import {OverscaledTileID} from '../source/tile_id';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
-import {log} from 'console';
 
 describe('FeatureIndex', () => {
     describe('getId', () => {
