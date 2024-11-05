@@ -759,7 +759,7 @@ function shapeLines(shaping: Shaping,
                 if (vertical) {
                     // If text is layed out verically, the verticalAlignOffset affetcs horizontal alignment.
                     // We set this offset to a const value.
-                    verticalAlignOffset = (lineMaxScale - section.scale) * ONE_EM - SHAPING_DEFAULT_OFFSET;
+                    verticalAlignOffset = (lineMaxScale - section.scale) * ONE_EM;
                 } else {
                     verticalAlignOffset = calculateVerticalOffset(
                         section.verticalAlign,
@@ -789,7 +789,7 @@ function shapeLines(shaping: Shaping,
                     // If text is layed out verically, the verticalAlignOffset affetcs horizontal alignment.
                     // We set this offset to a const value.
                     const imageOffset = ONE_EM - size[1] * section.scale;
-                    verticalAlignOffset = maxLineOffset + imageOffset - SHAPING_DEFAULT_OFFSET;
+                    verticalAlignOffset = maxLineOffset + imageOffset;
                 } else {
                     verticalAlignOffset = calculateVerticalOffset(
                         section.verticalAlign,
@@ -823,13 +823,12 @@ function shapeLines(shaping: Shaping,
         if (positionedGlyphs.length !== 0) {
             const lineLength = x - spacing;
             maxLineLength = Math.max(lineLength, maxLineLength);
-            justifyLine(positionedGlyphs, 0, positionedGlyphs.length - 1, justify, 0);
+            justifyLine(positionedGlyphs, 0, positionedGlyphs.length - 1, justify, writingMode === WritingMode.vertical ? imageOffset : 0);
         }
 
         x = 0;
-
         const currentLineHeight = lineHeight * lineMaxScale + imageOffset;
-
+        positionedLine.lineOffset = Math.max(imageOffset, maxLineOffset);
         y += currentLineHeight;
         maxLineHeight = Math.max(currentLineHeight, maxLineHeight);
         ++lineIndex;
