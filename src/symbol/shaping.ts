@@ -712,6 +712,7 @@ function shapeLines(shaping: Shaping,
         const positionedLine = {positionedGlyphs: [], lineOffset: 0};
         shaping.positionedLines[lineIndex] = positionedLine;
         const positionedGlyphs = positionedLine.positionedGlyphs;
+        let imageOffset = 0.0;
 
         if (!line.length()) {
             y += lineHeight; // Still need a line feed after empty line
@@ -798,6 +799,14 @@ function shapeLines(shaping: Shaping,
                 }
 
                 verticalAdvance = metrics.advance;
+
+                // Difference between height of an image and one EM at max line scale.
+                // Pushes current line down if an image size is over 1 EM at max line scale.
+                const offset = vertical ? size[0] * section.scale - ONE_EM * lineMaxScale :
+                    size[1] * section.scale - ONE_EM * lineMaxScale;
+                if (offset > 0 && offset > imageOffset) {
+                    imageOffset = offset;
+                }
             }
 
             if (!vertical) {
@@ -819,7 +828,7 @@ function shapeLines(shaping: Shaping,
 
         x = 0;
 
-        const currentLineHeight = Math.max(lineHeight * lineMaxScale, maxImageHeight);
+        const currentLineHeight = lineHeight * lineMaxScale + imageOffset;
 
         y += currentLineHeight;
         maxLineHeight = Math.max(currentLineHeight, maxLineHeight);
