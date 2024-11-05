@@ -1,0 +1,142 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [
+    10.0,
+    -15.0
+  ],
+  "pitch": 15,
+  "bearing": 45,
+  "zoom": 1,
+  "projection": { "type": "globe" },
+  "terrain": {
+    "source": "terrain",
+    "exaggeration": 2
+  },
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": ["local://tiles/{z}-{x}-{y}.terrain.png"],
+      "maxzoom": 15,
+      "tileSize": 256
+    },
+    "fill": {
+      "type": "geojson",
+      "data": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -180,
+              -90
+            ],
+            [
+              -180,
+              90
+            ],
+            [
+              180,
+              90
+            ],
+            [
+              180,
+              -90
+            ],
+            [
+              -180,
+              -90
+            ]
+          ]
+        ]
+      }
+    },
+    "test": {
+      "type": "geojson",
+      "data": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -10,
+              -10
+            ],
+            [
+              -10,
+              10
+            ],
+            [
+              10,
+              10
+            ],
+            [
+              10,
+              -10
+            ],
+            [
+              -10,
+              -10
+            ]
+          ]
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "fill",
+      "type": "fill",
+      "source": "fill",
+      "paint": {
+        "fill-antialias": false,
+        "fill-color": "grey"
+      }
+    },
+    {
+      "id": "fill-test-base",
+      "type": "fill",
+      "source": "test",
+      "paint": {
+        "fill-color": "#ff0000"
+      }
+    },
+    {
+      "id": "fill-test-translate-map",
+      "type": "fill",
+      "source": "test",
+      "paint": {
+        "fill-color": "#00ff00",
+        "fill-translate": [
+          10,
+          50
+        ],
+        "fill-translate-anchor": "map"
+      }
+    },
+    {
+      "id": "fill-test-translate-viewport",
+      "type": "fill",
+      "source": "test",
+      "paint": {
+        "fill-color": "#0000ff",
+        "fill-translate": [
+          10,
+          50
+        ],
+        "fill-translate-anchor": "viewport"
+      }
+    }
+  ]
+}
