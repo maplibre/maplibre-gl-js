@@ -255,6 +255,8 @@ export class GlobeTransform implements ITransform {
      */
     private _globeProjectionAllowed = true;
 
+    private _adaptive = true;
+
     /**
      * Note: projection instance should only be accessed in the {@link newFrameUpdate} function.
      * to ensure the transform's state isn't unintentionally changed.
@@ -283,12 +285,13 @@ export class GlobeTransform implements ITransform {
 
     private _coveringTilesDetailsProvider;
 
-    public constructor(globeProjection: GlobeProjection, globeProjectionEnabled: boolean = true) {
+    public constructor(globeProjection: GlobeProjection, globeProjectionEnabled: boolean = true, adaptive: boolean = true) {
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
             getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
         });
         this._globeProjectionAllowed = globeProjectionEnabled;
+        this._adaptive = adaptive;
         this._globeness = globeProjectionEnabled ? 1 : 0; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.
         this._projectionInstance = globeProjection;
         this._mercatorTransform = new MercatorTransform();
@@ -334,7 +337,7 @@ export class GlobeTransform implements ITransform {
 
     public get nearZ(): number { return this._nearZ; }
     public get farZ(): number { return this._farZ; }
-
+    
     /**
      * Returns whether globe view is allowed.
      * When allowed, globe fill function as normal, displaying a 3D planet,
@@ -410,6 +413,13 @@ export class GlobeTransform implements ITransform {
      * Compute new globeness, if needed.
      */
     private _computeGlobenessAnimation(): number {
+
+        console.log(this._adaptive, this._globeProjectionAllowed, 'new globeness')
+
+        if (!this._adaptive && this._globeProjectionAllowed) {
+            return 1;
+        }
+
         // Update globe transition animation
         const globeState = this._globeProjectionAllowed && this.zoom < globeConstants.maxGlobeZoom;
         const currentTimeSeconds = this._lastUpdateTimeSeconds;
