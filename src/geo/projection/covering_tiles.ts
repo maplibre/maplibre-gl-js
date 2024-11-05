@@ -240,7 +240,7 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
             const dz = nominalZ - it.zoom;
             const dx = cameraPoint[0] - 0.5 - (x << dz);
             const dy = cameraPoint[1] - 0.5 - (y << dz);
-            const overscaledZ = options.reparseOverscaled ? thisTileDesiredZ : it.zoom;
+            const overscaledZ = options.reparseOverscaled ? Math.max(it.zoom, thisTileDesiredZ) : it.zoom;
             result.push({
                 tileID: new OverscaledTileID(it.zoom === maxZoom ? overscaledZ : it.zoom, it.wrap, it.zoom, x, y),
                 distanceSq: vec2.sqrLen([centerPoint[0] - 0.5 - x, centerPoint[1] - 0.5 - y]),

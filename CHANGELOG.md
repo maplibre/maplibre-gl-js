@@ -2,10 +2,10 @@
 
 ### ✨ Features and improvements
 - When clustering circles and the promoteId is set to some parameter, the promoted id is used on non-clustered features and the cluster_id is used on clustered features. Previously the id was undefined for non-clustered features.
+- Support Terrain in Globe projection ([#4976](https://github.com/maplibre/maplibre-gl-js/pull/4976))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix `line` layer on Globe with Terrain Elevation
 - ⚠️ Fix level of detail at high pitch angle by changing which tiles to load ([#3983](https://github.com/maplibre/maplibre-gl-js/issues/3983))
 - _...Add new stuff here..._
 
