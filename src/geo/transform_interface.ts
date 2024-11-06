@@ -10,7 +10,7 @@ import {PointProjection} from '../symbol/projection';
 import {MapProjectionEvent} from '../ui/events';
 import type {ProjectionData, ProjectionDataParams} from './projection/projection_data';
 import {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider';
-import {Frustum} from '../util/primitives';
+import {Frustum} from '../util/primitives/frustum';
 
 export type TransformUpdateResult = {
     forcePlacementUpdate?: boolean;

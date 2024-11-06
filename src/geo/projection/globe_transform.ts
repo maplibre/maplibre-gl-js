@@ -18,7 +18,7 @@ import {angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustme
 import {EXTENT} from '../../data/extent';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider';
-import {Frustum} from '../../util/primitives';
+import {Frustum} from '../../util/primitives/frustum';
 import {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
 
 /**

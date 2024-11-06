@@ -1,11 +1,11 @@
 import {vec3} from 'gl-matrix';
-import {Aabb} from '../../util/primitives';
 import {IReadonlyTransform} from '../transform_interface';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {EXTENT} from '../../data/extent';
 import {projectTileCoordinatesToSphere} from './globe_utils';
 import {CoveringTilesOptions, coveringZoomLevel} from './covering_tiles';
 import {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
+import {Aabb} from '../../util/primitives/aabb';
 
 /**
  * Computes distance of a point to a tile in an arbitrary axis.

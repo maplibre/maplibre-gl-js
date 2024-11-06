@@ -1,5 +1,6 @@
-import {Aabb, Frustum, IntersectionResult} from './primitives';
 import {mat4, vec3, vec4} from 'gl-matrix';
+import {Aabb, IntersectionResult} from './aabb';
+import {Frustum} from './frustum';
 
 describe('primitives', () => {
     test('Create an aabb', () => {
