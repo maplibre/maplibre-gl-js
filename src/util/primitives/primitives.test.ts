@@ -1,5 +1,6 @@
-import {Aabb, Frustum, IntersectionResult} from './primitives';
 import {mat4, vec3, vec4} from 'gl-matrix';
+import {Aabb, IntersectionResult} from './aabb';
+import {Frustum} from './frustum';
 
 describe('primitives', () => {
     test('Create an aabb', () => {
@@ -99,6 +100,62 @@ describe('primitives', () => {
 
     });
 
+    test('Aabb fully inside a half-space', () => {
+        const plane: vec4 = [1, 0, 0, 6];
+
+        const aabbList = [
+            new Aabb(vec3.fromValues(-6, 0, 0), vec3.fromValues(-5.5, 0, 0)),
+            new Aabb(vec3.fromValues(-6, -6, 0), vec3.fromValues(-5.5, -5.5, 0)),
+            new Aabb(vec3.fromValues(7, -10, 0), vec3.fromValues(7.1, 20, 4))
+        ];
+
+        for (const aabb of aabbList)
+            expect(aabb.intersectsPlane(plane)).toBe(IntersectionResult.Full);
+
+    });
+
+    test('Aabb intersecting a half-space', () => {
+        const plane: vec4 = [1, 0, -10, 5.75];
+
+        const aabbList = [
+            new Aabb(vec3.fromValues(-6, 0, 0), vec3.fromValues(-5.5, 0, 0)),
+            new Aabb(vec3.fromValues(-6, -6, 0), vec3.fromValues(-5.5, -5.5, 0)),
+            new Aabb(vec3.fromValues(7, -10, 0), vec3.fromValues(7.1, 20, 4))
+        ];
+
+        for (const aabb of aabbList)
+            expect(aabb.intersectsPlane(plane)).toBe(IntersectionResult.Partial);
+
+    });
+
+    test('No intersection between aabb and half-space', () => {
+        const plane: vec4 = [1, 0, 0, -8];
+
+        const aabbList = [
+            new Aabb(vec3.fromValues(-6, 0, 0), vec3.fromValues(-5.5, 0, 0)),
+            new Aabb(vec3.fromValues(-6, -6, 0), vec3.fromValues(-5.5, -5.5, 0)),
+            new Aabb(vec3.fromValues(7, -10, 0), vec3.fromValues(7.1, 20, 4))
+        ];
+
+        for (const aabb of aabbList)
+            expect(aabb.intersectsPlane(plane)).toBe(IntersectionResult.None);
+
+    });
+
+    test('Aabb and halfspace intersection edge cases', () => {
+        // Plane at box edge, box inside halfspace
+        expect(new Aabb([0, 0, 0], [1, 1, 1]).intersectsPlane([1, 0, 0, 0])).toBe(IntersectionResult.Full);
+        // Plane at box edge, box outside halfspace
+        expect(new Aabb([0, 0, 0], [1, 1, 1]).intersectsPlane([-1, 0, 0, 0])).toBe(IntersectionResult.Partial);
+        // Plane intersects a single vertex, box outside halfspace
+        expect(new Aabb([0, 0, 0], [1, 1, 1]).intersectsPlane([-1, -1, -1, 0])).toBe(IntersectionResult.Partial);
+        // Box inside halfspace
+        expect(new Aabb([0, 0, 0], [1, 1, 1]).intersectsPlane([1, 1, 1, 0])).toBe(IntersectionResult.Full);
+        // Box barely outside halfspace
+        expect(new Aabb([0, 0, 0], [1, 1, 1]).intersectsPlane([-1, -1, -1, -0.00000001])).toBe(IntersectionResult.None);
+        // Same plane as last time, but different box, with a single vertex barely outside the halfspace
+        expect(new Aabb([-1, -1, -1], [0, 0, 0]).intersectsPlane([-1, -1, -1, -0.00000001])).toBe(IntersectionResult.Partial);
+    });
 });
 
 describe('frustum', () => {

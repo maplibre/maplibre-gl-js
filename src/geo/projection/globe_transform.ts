@@ -18,7 +18,7 @@ import {angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustme
 import {EXTENT} from '../../data/extent';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider';
-import {Frustum} from '../../util/primitives';
+import {Frustum} from '../../util/primitives/frustum';
 import {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
 
 /**
@@ -278,10 +278,10 @@ export class GlobeTransform implements ITransform {
     private _globeness: number = 1.0;
     private _mercatorTransform: MercatorTransform;
 
-    private _nearZ;
-    private _farZ;
+    private _nearZ: number;
+    private _farZ: number;
 
-    private _coveringTilesDetailsProvider;
+    private _coveringTilesDetailsProvider: GlobeCoveringTilesDetailsProvider;
 
     public constructor(globeProjection: GlobeProjection, globeProjectionEnabled: boolean = true) {
         this._helper = new TransformHelper({
@@ -376,6 +376,7 @@ export class GlobeTransform implements ITransform {
         // Everything below this comment must happen AFTER globeness update
         this._updateErrorCorrectionValue();
         this._calcMatrices();
+        this._coveringTilesDetailsProvider.newFrame();
 
         if (oldGlobeRendering === this.isGlobeRendering) {
             return {

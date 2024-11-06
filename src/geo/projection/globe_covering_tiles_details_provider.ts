@@ -1,11 +1,12 @@
 import {vec3} from 'gl-matrix';
-import {Aabb} from '../../util/primitives';
 import {IReadonlyTransform} from '../transform_interface';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {EXTENT} from '../../data/extent';
 import {projectTileCoordinatesToSphere} from './globe_utils';
 import {CoveringTilesOptions, coveringZoomLevel} from './covering_tiles';
 import {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
+import {Aabb} from '../../util/primitives/aabb';
+import {AabbCache} from '../../util/primitives/aabb_cache';
 
 /**
  * Computes distance of a point to a tile in an arbitrary axis.
@@ -38,6 +39,15 @@ function distanceToTileWrapX(pointX: number, pointY: number, tileCornerX: number
 }
 
 export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsProvider {
+    private _aabbCache: AabbCache = new AabbCache(this._computeTileAABB);
+
+    /**
+     * Prepares the internal AABB cache for the next frame.
+     * @returns 
+     */
+    newFrame() {
+        this._aabbCache.newFrame();
+    }
 
     /**
      * Returns the distance of a point to a square tile. If the point is inside the tile, returns 0.
@@ -83,12 +93,16 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
         }
         return 0;
     }
+    
+    allowVariableZoom(transform: IReadonlyTransform, options: CoveringTilesOptions): boolean {
+        return coveringZoomLevel(transform, options) > 4;
+    }
 
-    /**
-     * Returns the AABB of the specified tile. The AABB is in the coordinate space where the globe is a unit sphere.
-     * @param tileID - Tile x, y and z for zoom.
-     */
-    getTileAABB(tileID: {x: number; y: number; z: number}, _wrap: number, _elevation: number, _options: CoveringTilesOptions): Aabb {
+    getTileAABB(tileID: { x: number; y: number; z: number }, wrap: number, elevation: number, options: CoveringTilesOptions) {
+        return this._aabbCache.getTileAABB(tileID, wrap, elevation, options);
+    }
+
+    private _computeTileAABB(tileID: {x: number; y: number; z: number}, _wrap: number, _elevation: number, _options: CoveringTilesOptions): Aabb {
         // We can get away with only checking the 4 tile corners for AABB construction, because for any tile of zoom level 2 or higher
         // it holds that the extremes (minimal or maximal value) of X, Y or Z coordinates must lie in one of the tile corners.
         //
@@ -169,9 +183,5 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
                 max
             );
         }
-    }
-    
-    allowVariableZoom(transform: IReadonlyTransform, options: CoveringTilesOptions): boolean {
-        return coveringZoomLevel(transform, options) > 4;
     }
 }
