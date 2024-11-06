@@ -12,7 +12,7 @@ import type {BackgroundStyleLayer} from '../style/style_layer/background_style_l
 import {OverscaledTileID} from '../source/tile_id';
 import {coveringTiles} from '../geo/projection/covering_tiles';
 
-export function drawBackground(painter: Painter, sourceCache: SourceCache, layer: BackgroundStyleLayer, coords?: Array<OverscaledTileID>) {
+export function drawBackground(painter: Painter, sourceCache: SourceCache, layer: BackgroundStyleLayer, coords?: Array<OverscaledTileID>, isRenderingToTexture: boolean = false) {
     const color = layer.paint.get('background-color');
     const opacity = layer.paint.get('background-opacity');
 
@@ -24,7 +24,6 @@ export function drawBackground(painter: Painter, sourceCache: SourceCache, layer
     const transform = painter.transform;
     const tileSize = transform.tileSize;
     const image = layer.paint.get('background-pattern');
-    const globeWithTerrain = painter.style.map.terrain && painter.style.projection.name === 'globe';
 
     if (painter.isPatternMissing(image)) return;
 
@@ -47,7 +46,7 @@ export function drawBackground(painter: Painter, sourceCache: SourceCache, layer
     for (const tileID of tileIDs) {
         const projectionData = transform.getProjectionData({
             overscaledTileID: tileID,
-            ignoreGlobeMatrix: globeWithTerrain
+            ignoreGlobeMatrix: isRenderingToTexture
         });
 
         const uniformValues = image ?

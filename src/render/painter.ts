@@ -643,28 +643,28 @@ export class Painter {
                 drawSymbols(painter, sourceCache, layer as any, coords, this.style.placement.variableOffsets);
                 break;
             case 'circle':
-                drawCircles(painter, sourceCache, layer as any, coords);
+                drawCircles(painter, sourceCache, layer as any, coords, isRenderingToTexture);
                 break;
             case 'heatmap':
-                drawHeatmap(painter, sourceCache, layer as any, coords);
+                drawHeatmap(painter, sourceCache, layer as any, coords, isRenderingToTexture);
                 break;
             case 'line':
-                drawLine(painter, sourceCache, layer as any, coords);
+                drawLine(painter, sourceCache, layer as any, coords, isRenderingToTexture);
                 break;
             case 'fill':
-                drawFill(painter, sourceCache, layer as any, coords);
+                drawFill(painter, sourceCache, layer as any, coords, isRenderingToTexture);
                 break;
             case 'fill-extrusion':
-                drawFillExtrusion(painter, sourceCache, layer as any, coords);
+                drawFillExtrusion(painter, sourceCache, layer as any, coords, isRenderingToTexture);
                 break;
             case 'hillshade':
-                drawHillshade(painter, sourceCache, layer as any, coords);
+                drawHillshade(painter, sourceCache, layer as any, coords, isRenderingToTexture);
                 break;
             case 'raster':
                 drawRaster(painter, sourceCache, layer as any, coords, isRenderingToTexture);
                 break;
             case 'background':
-                drawBackground(painter, sourceCache, layer as any, coords);
+                drawBackground(painter, sourceCache, layer as any, coords, isRenderingToTexture);
                 break;
             case 'custom':
                 drawCustom(painter, sourceCache, layer as any);

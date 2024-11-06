@@ -18,7 +18,7 @@ import {updatePatternPositionsInProgram} from './update_pattern_positions_in_pro
 import {StencilMode} from '../gl/stencil_mode';
 import {translatePosition} from '../util/util';
 
-export function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>) {
+export function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>, isRenderingToTexture: boolean = false) {
     const color = layer.paint.get('fill-color');
     const opacity = layer.paint.get('fill-opacity');
 
@@ -37,7 +37,7 @@ export function drawFill(painter: Painter, sourceCache: SourceCache, layer: Fill
     if (painter.renderPass === pass) {
         const depthMode = painter.getDepthModeForSublayer(
             1, painter.renderPass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
-        drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, false);
+        drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, false, isRenderingToTexture);
     }
 
     // Draw stroke
@@ -53,7 +53,7 @@ export function drawFill(painter: Painter, sourceCache: SourceCache, layer: Fill
         // the (non-antialiased) fill.
         const depthMode = painter.getDepthModeForSublayer(
             layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
-        drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, true);
+        drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, true, isRenderingToTexture);
     }
 }
 
@@ -64,7 +64,8 @@ function drawFillTiles(
     coords: Array<OverscaledTileID>,
     depthMode: Readonly<DepthMode>,
     colorMode: Readonly<ColorMode>,
-    isOutline: boolean) {
+    isOutline: boolean,
+    isRenderingToTexture: boolean) {
     const gl = painter.context.gl;
     const fillPropertyName = 'fill-pattern';
     const patternProperty = layer.paint.get(fillPropertyName);
@@ -106,10 +107,9 @@ function drawFillTiles(
 
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        const globeWithTerrain = painter.style.map.terrain && painter.style.projection.name === 'globe';
         const projectionData = transform.getProjectionData({
             overscaledTileID: coord,
-            ignoreGlobeMatrix: globeWithTerrain
+            ignoreGlobeMatrix: isRenderingToTexture
         });
 
         const translateForUniforms = translatePosition(transform, tile, propertyFillTranslate, propertyFillTranslateAnchor);
@@ -149,7 +149,7 @@ function drawFillTiles(
         // greatly increasing subdivision granularity for both fill layers and stencil masks, at least at tile edges.
         let stencil: StencilMode;
         if (painter.renderPass === 'translucent') {
-            if (globeWithTerrain) {
+            if (isRenderingToTexture) {
                 const [stencilModes] = painter.stencilConfigForOverlap(coords);
                 stencil = stencilModes[coord.overscaledZ];
             } else {

@@ -17,7 +17,7 @@ import {clamp, nextPowerOfTwo} from '../util/util';
 import {renderColorRamp} from '../util/color_ramp';
 import {EXTENT} from '../data/extent';
 
-export function drawLine(painter: Painter, sourceCache: SourceCache, layer: LineStyleLayer, coords: Array<OverscaledTileID>) {
+export function drawLine(painter: Painter, sourceCache: SourceCache, layer: LineStyleLayer, coords: Array<OverscaledTileID>, isRenderingToTexture: boolean = false) {
     if (painter.renderPass !== 'translucent') return;
 
     const opacity = layer.paint.get('line-opacity');
@@ -26,7 +26,6 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
 
     const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
-    const globeWithTerrain = !!painter.style.map.terrain && painter.style.projection.name === 'globe';
     
     const dasharray = layer.paint.get('line-dasharray');
     const patternProperty = layer.paint.get('line-pattern');
@@ -70,7 +69,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
 
         const projectionData = transform.getProjectionData({
             overscaledTileID: coord,
-            ignoreGlobeMatrix: globeWithTerrain
+            ignoreGlobeMatrix: isRenderingToTexture
         });
 
         const pixelRatio = transform.getPixelScale();
@@ -123,7 +122,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
         }
 
         const [stencilModes] = painter.stencilConfigForOverlap(coords);
-        const stencil = globeWithTerrain ? stencilModes[coord.overscaledZ] : painter.stencilModeForClipping(coord);
+        const stencil = isRenderingToTexture ? stencilModes[coord.overscaledZ] : painter.stencilModeForClipping(coord);
 
         program.draw(context, gl.TRIANGLES, depthMode,
             stencil, colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,

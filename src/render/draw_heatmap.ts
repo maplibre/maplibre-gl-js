@@ -19,13 +19,13 @@ import type {HeatmapStyleLayer} from '../style/style_layer/heatmap_style_layer';
 import type {HeatmapBucket} from '../data/bucket/heatmap_bucket';
 import type {OverscaledTileID} from '../source/tile_id';
 
-export function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: HeatmapStyleLayer, tileIDs: Array<OverscaledTileID>) {
+export function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: HeatmapStyleLayer, tileIDs: Array<OverscaledTileID>, isRenderingToTexture: boolean = false) {
     if (layer.paint.get('heatmap-opacity') === 0) {
         return;
     }
     const context = painter.context;
 
-    if (painter.style.map.terrain) {
+    if (isRenderingToTexture) {
         for (const coord of tileIDs) {
             const tile = sourceCache.getTile(coord);
             // Skip tiles that have uncovered parents to avoid flickering; we don't need
