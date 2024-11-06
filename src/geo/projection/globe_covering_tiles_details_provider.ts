@@ -6,6 +6,7 @@ import {projectTileCoordinatesToSphere} from './globe_utils';
 import {CoveringTilesOptions, coveringZoomLevel} from './covering_tiles';
 import {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
 import {Aabb} from '../../util/primitives/aabb';
+import {AabbCache} from '../../util/primitives/aabb_cache';
 
 /**
  * Computes distance of a point to a tile in an arbitrary axis.
@@ -38,25 +39,14 @@ function distanceToTileWrapX(pointX: number, pointY: number, tileCornerX: number
 }
 
 export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsProvider {
-    private _cachePrevious: Map<string, Aabb> = new Map();
-    private _cache: Map<string, Aabb> = new Map();
-    private _hadAnyChanges = false;
+    private _aabbCache: AabbCache = new AabbCache(this._computeTileAABB);
 
     /**
-     * Prepares AABB cache for next frame. Call at the beginning of a frame.
-     * Any tile accesses in the last frame is kept in the cache, other tiles are deleted.
+     * Prepares the internal AABB cache for the next frame.
      * @returns 
      */
     newFrame() {
-        if (!this._hadAnyChanges) {
-            // If no new boxes were added this frame, no need to conserve memory, do not clear caches.
-            return;
-        }
-        const oldCache = this._cachePrevious;
-        this._cachePrevious = this._cache;
-        this._cache = oldCache;
-        this._cache.clear();
-        this._hadAnyChanges = false;
+        this._aabbCache.newFrame();
     }
 
     /**
@@ -103,30 +93,13 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
         }
         return 0;
     }
-
-    /**
-     * Returns the AABB of the specified tile. The AABB is in the coordinate space where the globe is a unit sphere.
-     * @param tileID - Tile x, y and z for zoom.
-     */
-    getTileAABB(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions): Aabb {
-        const key = `${tileID.z}_${tileID.x}_${tileID.y}`;
-        const cached = this._cache.get(key);
-        if (cached) {
-            return cached;
-        }
-        const cachedPrevious = this._cachePrevious.get(key);
-        if (cachedPrevious) {
-            this._cache.set(key, cachedPrevious);
-            return cachedPrevious;
-        }
-        const aabb = this._computeTileAABB(tileID, wrap, elevation, options);
-        this._cache.set(key, aabb);
-        this._hadAnyChanges = true;
-        return aabb;
-    }
     
     allowVariableZoom(transform: IReadonlyTransform, options: CoveringTilesOptions): boolean {
         return coveringZoomLevel(transform, options) > 4;
+    }
+
+    getTileAABB(tileID: { x: number; y: number; z: number }, wrap: number, elevation: number, options: CoveringTilesOptions) {
+        return this._aabbCache.getTileAABB(tileID, wrap, elevation, options);
     }
 
     private _computeTileAABB(tileID: {x: number; y: number; z: number}, _wrap: number, _elevation: number, _options: CoveringTilesOptions): Aabb {
