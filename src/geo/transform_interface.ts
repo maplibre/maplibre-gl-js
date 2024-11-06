@@ -8,7 +8,7 @@ import type {PaddingOptions} from './edge_insets';
 import {Terrain} from '../render/terrain';
 import {PointProjection} from '../symbol/projection';
 import {MapProjectionEvent} from '../ui/events';
-import type {ProjectionData} from './projection/projection_data';
+import type {ProjectionData, ProjectionDataParams} from './projection/projection_data';
 
 export type CoveringZoomOptions = {
     /**
@@ -195,10 +195,10 @@ interface ITransformMutators {
     /**
      * This method works in combination with freezeElevation activated.
      * freezeElevation is enabled during map-panning because during this the camera should sit in constant height.
-     * After panning finished, call this method to recalculate the zoom level for the current camera-height in current terrain.
+     * After panning finished, call this method to recalculate the zoom level and center point for the current camera-height in current terrain.
      * @param terrain - the terrain
      */
-    recalculateZoom(terrain: Terrain): void;
+    recalculateZoomAndCenter(terrain?: Terrain): void;
 
     /**
      * Set's the transform's center so that the given point on screen is at the given world coordinates.
@@ -377,9 +377,23 @@ export interface IReadonlyTransform extends ITransformGetters {
     getCameraPoint(): Point;
 
     /**
-     * The altitude of the camera above the center of the map in meters.
+     * The altitude of the camera above the sea level in meters.
      */
     getCameraAltitude(): number;
+
+    /**
+     * The longitude and latitude of the camera.
+     */
+    getCameraLngLat(): LngLat;
+
+    /**
+     * Given the camera position (lng, lat, alt), calculate the center point and zoom level
+     * @param lngLat - lng, lat of the camera
+     * @param alt - altitude of the camera above sea level, in meters
+     * @param bearing - bearing of the camera, in degrees
+     * @param pitch - pitch angle of the camera, in degrees
+     */
+    calculateCenterFromCameraLngLatAlt(lngLat: LngLat, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number};
 
     getRayDirectionFromPixel(p: Point): vec3;
 
@@ -423,10 +437,9 @@ export interface IReadonlyTransform extends ITransformGetters {
     /**
      * @internal
      * Generates a `ProjectionData` instance to be used while rendering the supplied tile.
-     * @param overscaledTileID - The ID of the current tile.
-     * @param aligned - Set to true if a pixel-aligned matrix should be used, if possible (mostly used for raster tiles under mercator projection).
+     * @param params - Parameters for the projection data generation.
      */
-    getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData;
+    getProjectionData(params: ProjectionDataParams): ProjectionData;
 
     /**
      * @internal

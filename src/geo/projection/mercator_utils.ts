@@ -1,12 +1,20 @@
 import {mat4} from 'gl-matrix';
 import {EXTENT} from '../../data/extent';
 import {OverscaledTileID} from '../../source/tile_id';
-import {clamp} from '../../util/util';
+import {clamp, degreesToRadians} from '../../util/util';
 import {MAX_VALID_LATITUDE, UnwrappedTileIDType, zoomScale} from '../transform_helper';
 import {LngLat} from '../lng_lat';
-import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat} from '../mercator_coordinate';
+import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate';
 import Point from '@mapbox/point-geometry';
 import type {ProjectionData} from './projection_data';
+
+/*
+* The maximum angle to use for the Mercator horizon. This must be less than 90
+* to prevent errors in `MercatorTransform::_calcMatrices()`. It shouldn't be too close
+* to 90, or the distance to the horizon will become very large, unnecessarily increasing
+* the number of tiles needed to render the map.
+*/
+export const maxMercatorHorizonAngle = 89.25;
 
 /**
  * Returns mercator coordinates in range 0..1 for given coordinates inside a specified tile.
@@ -93,7 +101,8 @@ export function unprojectFromWorldCoordinates(worldSize: number, point: Point): 
  * @returns Horizon above center in pixels.
  */
 export function getMercatorHorizon(transform: {pitch: number; cameraToCenterDistance: number}): number {
-    return Math.tan(Math.PI / 2 - transform.pitch * Math.PI / 180.0) * transform.cameraToCenterDistance * 0.85;
+    return transform.cameraToCenterDistance * Math.min(Math.tan(degreesToRadians(90 - transform.pitch)) * 0.85,
+        Math.tan(degreesToRadians(maxMercatorHorizonAngle - transform.pitch)));
 }
 
 export function getBasicProjectionData(overscaledTileID: OverscaledTileID, tilePosMatrix?: mat4, ignoreTerrainMatrix?: boolean): ProjectionData {
@@ -140,4 +149,15 @@ export function calculateTileMatrix(unwrappedTileID: UnwrappedTileIDType, worldS
     mat4.translate(worldMatrix, worldMatrix, [unwrappedX * scale, canonical.y * scale, 0]);
     mat4.scale(worldMatrix, worldMatrix, [scale / EXTENT, scale / EXTENT, 1]);
     return worldMatrix;
+}
+
+export function cameraMercatorCoordinateFromCenterAndRotation(center: LngLat, elevation: number, pitch: number, bearing: number, distance: number): MercatorCoordinate {
+    const centerMercator = MercatorCoordinate.fromLngLat(center, elevation);
+    const mercUnitsPerMeter = mercatorZfromAltitude(1, center.lat);
+    const dMercator = distance * mercUnitsPerMeter;
+    const dzMercator = dMercator * Math.cos(degreesToRadians(pitch));
+    const dhMercator = Math.sqrt(dMercator * dMercator - dzMercator * dzMercator);
+    const dxMercator = dhMercator * Math.sin(degreesToRadians(-bearing));
+    const dyMercator = dhMercator * Math.cos(degreesToRadians(-bearing));
+    return new MercatorCoordinate(centerMercator.x + dxMercator, centerMercator.y + dyMercator, centerMercator.z + dzMercator);
 }

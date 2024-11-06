@@ -253,7 +253,7 @@ export class SourceCache extends Evented {
             !this._coveredTiles[id] && (symbolLayer || !this._tiles[id].holdingForFade());
     }
 
-    reload() {
+    reload(sourceDataChanged?: boolean) {
         if (this._paused) {
             this._shouldReloadOnResume = true;
             return;
@@ -262,7 +262,9 @@ export class SourceCache extends Evented {
         this._cache.reset();
 
         for (const i in this._tiles) {
-            if (this._tiles[i].state !== 'errored') this._reloadTile(i, 'reloading');
+            if (sourceDataChanged || this._tiles[i].state !== 'errored') {
+                this._reloadTile(i, 'reloading');
+            }
         }
     }
 
@@ -928,7 +930,7 @@ export class SourceCache extends Evented {
         // for sources with mutable data, this event fires when the underlying data
         // to a source is changed. (i.e. GeoJSONSource#setData and ImageSource#serCoordinates)
         if (this._sourceLoaded && !this._paused && e.dataType === 'source' && eventSourceDataType === 'content') {
-            this.reload();
+            this.reload(e.sourceDataChanged);
             if (this.transform) {
                 this.update(this.transform, this.terrain);
             }

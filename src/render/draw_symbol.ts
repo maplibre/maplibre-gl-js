@@ -320,7 +320,7 @@ function drawLayerSymbols(
     const hasSortKey = !layer.layout.get('symbol-sort-key').isConstant();
     let sortFeaturesByKey = false;
 
-    const depthMode = painter.depthModeForSublayer(0, DepthMode.ReadOnly);
+    const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
 
     const hasVariablePlacement = layer._unevaluatedLayout.hasValue('text-variable-anchor') || layer._unevaluatedLayout.hasValue('text-variable-anchor-offset');
 
@@ -379,7 +379,7 @@ function drawLayerSymbols(
         const glCoordMatrixForShader = getGlCoordMatrix(pitchWithMap, rotateWithMap, painter.transform, s);
 
         const translation = translatePosition(transform, tile, translate, translateAnchor);
-        const projectionData = transform.getProjectionData(coord);
+        const projectionData = transform.getProjectionData({overscaledTileID: coord});
 
         const hasVariableAnchors = hasVariablePlacement && bucket.hasTextData();
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' &&

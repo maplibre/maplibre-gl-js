@@ -51,7 +51,7 @@ export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: C
     const gl = context.gl;
     const transform = painter.transform;
 
-    const depthMode = painter.depthModeForSublayer(0, DepthMode.ReadOnly);
+    const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     // Turn off stencil testing to allow circles to be drawn across boundaries,
     // so that large circles are not clipped to tiles
     const stencilMode = StencilMode.disabled;
@@ -80,7 +80,7 @@ export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: C
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
         const uniformValues = circleUniformValues(painter, tile, layer, translateForUniforms, radiusCorrectionFactor);
 
-        const projectionData = transform.getProjectionData(coord);
+        const projectionData = transform.getProjectionData({overscaledTileID: coord});
 
         const state: TileRenderState = {
             programConfiguration,

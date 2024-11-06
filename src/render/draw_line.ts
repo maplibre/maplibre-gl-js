@@ -24,7 +24,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
     const width = layer.paint.get('line-width');
     if (opacity.constantOr(1) === 0 || width.constantOr(1) === 0) return;
 
-    const depthMode = painter.depthModeForSublayer(0, DepthMode.ReadOnly);
+    const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
 
     const dasharray = layer.paint.get('line-dasharray');
@@ -67,7 +67,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
         }
 
-        const projectionData = transform.getProjectionData(coord);
+        const projectionData = transform.getProjectionData({overscaledTileID: coord});
         //ZERDA: keep pixelRation constant. otherwise lines would scale when globe is pitched.
         //TODO: needs checking if pixelRatio is influenced for example by high display resolutions
         //const pixelRatio = transform.getPixelScale();

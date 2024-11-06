@@ -65,7 +65,6 @@ export class Context {
     pixelStoreUnpackPremultiplyAlpha: PixelStoreUnpackPremultiplyAlpha;
     pixelStoreUnpackFlipY: PixelStoreUnpackFlipY;
 
-    // eslint-disable-next-line camelcase
     extTextureFilterAnisotropic: EXT_texture_filter_anisotropic | null;
     extTextureFilterAnisotropicMax?: GLfloat;
     HALF_FLOAT?: GLenum;

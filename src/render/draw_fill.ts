@@ -36,7 +36,7 @@ export function drawFill(painter: Painter, sourceCache: SourceCache, layer: Fill
 
     // Draw fill
     if (painter.renderPass === pass) {
-        const depthMode = painter.depthModeForSublayer(
+        const depthMode = painter.getDepthModeForSublayer(
             1, painter.renderPass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
         drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, false);
     }
@@ -52,7 +52,7 @@ export function drawFill(painter: Painter, sourceCache: SourceCache, layer: Fill
         // or stroke color is translucent. If we wouldn't clip to outside
         // the current shape, some pixels from the outline stroke overlapped
         // the (non-antialiased) fill.
-        const depthMode = painter.depthModeForSublayer(
+        const depthMode = painter.getDepthModeForSublayer(
             layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
         drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, true);
     }
@@ -107,7 +107,7 @@ function drawFillTiles(
 
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        const projectionData = transform.getProjectionData(coord);
+        const projectionData = transform.getProjectionData({overscaledTileID: coord});
 
         const translateForUniforms = translatePosition(transform, tile, propertyFillTranslate, propertyFillTranslateAnchor);
 
