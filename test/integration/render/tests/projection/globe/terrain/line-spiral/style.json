@@ -1,0 +1,56 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [
+    0.0,
+    0.0
+  ],
+  "zoom": 1,
+  "projection": { "type": "globe" },
+  "terrain": {
+    "source": "terrain",
+    "exaggeration": 2
+  },
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": ["local://tiles/{z}-{x}-{y}.terrain.png"],
+      "maxzoom": 15,
+      "tileSize": 256
+    },
+    "line": {
+      "type": "geojson",
+      "data": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -1440,
+            -85
+          ],
+          [
+            1440,
+            85
+          ]
+        ]
+      }
+    }
+  },
+  "layers": [
+    
+    {
+      "id": "line",
+      "type": "line",
+      "source": "line",
+      "paint": {
+        "line-width": 10,
+        "line-color": "red"
+      }
+    }
+  ]
+}

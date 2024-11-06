@@ -1,0 +1,57 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Tests that tiny seams caused by improper stencil mask border handling are not visible.",
+      "width": 256,
+      "height": 256
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [
+    -151.855,
+    61.590
+  ],
+  "zoom": 7.95,
+  "projection": {
+    "type": "globe"
+  },
+  "terrain": {
+    "source": "terrain",
+    "exaggeration": 2
+  },
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": ["local://tiles/{z}-{x}-{y}.terrain.png"],
+      "maxzoom": 15,
+      "tileSize": 256
+    },
+    "vector_tiles": {
+      "type": "vector",
+      "tiles": [
+        "local://tiles/checkerboard.mvt"
+      ]
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "ocean",
+      "type": "fill",
+      "source": "vector_tiles",
+      "source-layer": "water",
+      "paint": {
+        "fill-color": "black"
+      }
+    }
+  ]
+}

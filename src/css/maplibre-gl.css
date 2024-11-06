@@ -281,14 +281,30 @@
     }
 }
 
+@svg-load ctrl-globe url("svg/maplibregl-ctrl-globe.svg") {
+    stroke: #333;
+}
+
+@svg-load ctrl-globe-enabled url("svg/maplibregl-ctrl-globe.svg") {
+    stroke: #33b5e5;
+}
+
+.maplibregl-ctrl button.maplibregl-ctrl-globe .maplibregl-ctrl-icon {
+    background-image: svg-inline(ctrl-globe);
+}
+
+.maplibregl-ctrl button.maplibregl-ctrl-globe-enabled .maplibregl-ctrl-icon {
+    background-image: svg-inline(ctrl-globe-enabled);
+}
+
 @svg-load ctrl-terrain url("svg/maplibregl-ctrl-terrain.svg") {
     fill: #333;
-    #stroke { display: none; }
+    
 }
 
 @svg-load ctrl-terrain-enabled url("svg/maplibregl-ctrl-terrain.svg") {
     fill: #33b5e5;
-    #stroke { display: none; }
+    
 }
 
 .maplibregl-ctrl button.maplibregl-ctrl-terrain .maplibregl-ctrl-icon {

@@ -8,13 +8,15 @@ import {Terrain} from '../../render/terrain';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {PointProjection, xyTransformMat4} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
-import {CoveringTilesOptions, CoveringZoomOptions, IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
+import {IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
 import {PaddingOptions} from '../edge_insets';
 import {mercatorCoordinateToLocation, getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle, cameraMercatorCoordinateFromCenterAndRotation} from './mercator_utils';
 import {EXTENT} from '../../data/extent';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import {scaleZoom, TransformHelper, zoomScale} from '../transform_helper';
-import {mercatorCoveringTiles} from './mercator_covering_tiles';
+import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider';
+import {Frustum} from '../../util/primitives';
+import {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
 
 export class MercatorTransform implements ITransform {
     private _helper: TransformHelper;
@@ -94,9 +96,6 @@ export class MercatorTransform implements ITransform {
     }
     isPaddingEqual(padding: PaddingOptions): boolean {
         return this._helper.isPaddingEqual(padding);
-    }
-    coveringZoomLevel(options: CoveringZoomOptions): number {
-        return this._helper.coveringZoomLevel(options);
     }
     resize(width: number, height: number): void {
         this._helper.resize(width, height);
@@ -218,12 +217,15 @@ export class MercatorTransform implements ITransform {
     private _nearZ;
     private _farZ;
 
+    private _coveringTilesDetailsProvider;
+
     constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
             getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
         }, minZoom, maxZoom, minPitch, maxPitch, renderWorldCopies);
         this._clearMatrixCaches();
+        this._coveringTilesDetailsProvider = new MercatorCoveringTilesDetailsProvider();
     }
 
     public clone(): ITransform {
@@ -269,8 +271,14 @@ export class MercatorTransform implements ITransform {
         return result;
     }
 
-    coveringTiles(options: CoveringTilesOptions): Array<OverscaledTileID> {
-        return mercatorCoveringTiles(this, options, this._invViewProjMatrix);
+    getCameraFrustum(): Frustum {
+        return Frustum.fromInvProjectionMatrix(this._invViewProjMatrix, this.worldSize);
+    }
+    getClippingPlane(): vec4 | null {
+        return null;
+    }
+    getCoveringTilesDetailsProvider(): CoveringTilesDetailsProvider {
+        return this._coveringTilesDetailsProvider;
     }
 
     recalculateZoomAndCenter(terrain?: Terrain): void {
@@ -722,8 +730,8 @@ export class MercatorTransform implements ITransform {
 
     getCameraPoint(): Point {
         const pitch = this.pitchInRadians;
-        const yOffset = Math.tan(pitch) * (this._cameraToCenterDistance || 1);
-        return this.centerPoint.add(new Point(0, yOffset));
+        const offset = Math.tan(pitch) * (this._cameraToCenterDistance || 1);
+        return this.centerPoint.add(new Point(offset*Math.sin(this.rollInRadians), offset*Math.cos(this.rollInRadians)));
     }
 
     getCameraAltitude(): number {
@@ -840,15 +848,12 @@ export class MercatorTransform implements ITransform {
         // both matrices by EXTENT. We also need to rescale Z.
 
         const scale: vec3 = [EXTENT, EXTENT, this.worldSize / this._helper.pixelsPerMeter];
-        const translate: vec3 = [0, 0, this.elevation];
 
         const fallbackMatrixScaled = createMat4f64();
-        mat4.translate(fallbackMatrixScaled, tileMatrix, translate);
-        mat4.scale(fallbackMatrixScaled, fallbackMatrixScaled, scale);
+        mat4.scale(fallbackMatrixScaled, tileMatrix, scale);
 
         const projectionMatrixScaled = createMat4f64();
-        mat4.translate(projectionMatrixScaled, tileMatrix, translate);
-        mat4.scale(projectionMatrixScaled, projectionMatrixScaled, scale);
+        mat4.scale(projectionMatrixScaled, tileMatrix, scale);
 
         projectionData.fallbackMatrix = fallbackMatrixScaled;
         projectionData.mainMatrix = projectionMatrixScaled;
