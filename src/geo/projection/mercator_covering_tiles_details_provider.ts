@@ -1,5 +1,5 @@
 import {OverscaledTileID} from '../../source/tile_id';
-import {Aabb} from '../../util/primitives';
+import {Aabb} from '../../util/primitives/aabb';
 import {clamp} from '../../util/util';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {IReadonlyTransform} from '../transform_interface';
