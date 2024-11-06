@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Improved performance of the `coveringTiles` (tile culling) function for globe ([#4937](https://github.com/maplibre/maplibre-gl-js/pull/4937))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
