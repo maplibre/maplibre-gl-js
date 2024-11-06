@@ -38,8 +38,8 @@ function distanceToTileWrapX(pointX: number, pointY: number, tileCornerX: number
 }
 
 export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsProvider {
+    private _cachePrevious: Map<string, Aabb> = new Map();
     private _cache: Map<string, Aabb> = new Map();
-    private _nextCache: Map<string, Aabb> = new Map();
     private _hadAnyChanges = false;
 
     /**
@@ -49,12 +49,13 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
      */
     newFrame() {
         if (!this._hadAnyChanges) {
+            // If no new boxes were added this frame, no need to conserve memory, do not clear caches.
             return;
         }
-        const oldCache = this._cache;
-        this._cache = this._nextCache;
-        this._nextCache = oldCache;
-        this._nextCache.clear();
+        const oldCache = this._cachePrevious;
+        this._cachePrevious = this._cache;
+        this._cache = oldCache;
+        this._cache.clear();
         this._hadAnyChanges = false;
     }
 
@@ -109,18 +110,17 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
      */
     getTileAABB(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions): Aabb {
         const key = `${tileID.z}_${tileID.x}_${tileID.y}`;
-        const cachedNext = this._nextCache.get(key);
-        if (cachedNext) {
-            return cachedNext;
+        const cached = this._cache.get(key);
+        if (cached) {
+            return cached;
         }
-        const cachedOld = this._cache.get(key);
-        if (cachedOld) {
-            this._nextCache.set(key, cachedOld);
-            return cachedOld;
+        const cachedPrevious = this._cachePrevious.get(key);
+        if (cachedPrevious) {
+            this._cache.set(key, cachedPrevious);
+            return cachedPrevious;
         }
         const aabb = this._computeTileAABB(tileID, wrap, elevation, options);
         this._cache.set(key, aabb);
-        this._nextCache.set(key, aabb);
         this._hadAnyChanges = true;
         return aabb;
     }
