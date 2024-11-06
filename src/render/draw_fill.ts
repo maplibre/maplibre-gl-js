@@ -27,7 +27,6 @@ export function drawFill(painter: Painter, sourceCache: SourceCache, layer: Fill
     }
 
     const colorMode = painter.colorModeForRenderPass();
-
     const pattern = layer.paint.get('fill-pattern');
     const pass = painter.opaquePassEnabledForLayer() &&
         (!pattern.constantOr(1 as any) &&
@@ -107,7 +106,11 @@ function drawFillTiles(
 
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        const projectionData = transform.getProjectionData({overscaledTileID: coord});
+        const globeWithTerrain = painter.style.map.terrain && painter.style.projection.name === 'globe';
+        const projectionData = transform.getProjectionData({
+            overscaledTileID: coord,
+            ignoreGlobeMatrix: globeWithTerrain
+        });
 
         const translateForUniforms = translatePosition(transform, tile, propertyFillTranslate, propertyFillTranslateAnchor);
 
@@ -144,7 +147,17 @@ function drawFillTiles(
         // This doesn't seem to be an issue for transparent fill layers (or they don't get used enough to be noticeable),
         // which is a good thing, since there is no easy solution for this problem for transparency, other than
         // greatly increasing subdivision granularity for both fill layers and stencil masks, at least at tile edges.
-        const stencil = (painter.renderPass === 'translucent') ? painter.stencilModeForClipping(coord) : StencilMode.disabled;
+        let stencil: StencilMode;
+        if (painter.renderPass === 'translucent') {
+            if (globeWithTerrain) {
+                const [stencilModes] = painter.stencilConfigForOverlap(coords);
+                stencil = stencilModes[coord.overscaledZ];
+            } else {
+                stencil = painter.stencilModeForClipping(coord);
+            }
+        } else {
+            stencil = StencilMode.disabled;
+        }
 
         program.draw(painter.context, drawMode, depthMode,
             stencil, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData,

@@ -2,16 +2,22 @@
   "version": 8,
   "metadata": {
     "test": {
-      "height": 256,
-      "width": 256
+      "description": "Tests that globe projection works with the raster layer type."
     }
   },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
   "center": [
-    13.418056,
-    52.499167
+    15.0,
+    0.0
   ],
-  "zoom": 0,
-  "pitch": 0,
+  "zoom": 1,
+  "projection": { "type": "globe" },
+  "terrain": {
+    "source": "terrain",
+    "exaggeration": 2
+  },
   "sources": {
     "terrain": {
       "type": "raster-dem",
@@ -19,10 +25,13 @@
       "maxzoom": 15,
       "tileSize": 256
     },
-    "satellite": {
+    "source": {
       "type": "raster",
-      "tiles": ["local://tiles/{z}-{x}-{y}.satellite.png"],
-      "maxzoom": 17,
+      "tiles": [
+        "local://tiles/{z}-{x}-{y}.satellite.png"
+      ],
+      "minzoom": 1,
+      "maxzoom": 1,
       "tileSize": 256
     }
   },
@@ -37,17 +46,10 @@
     {
       "id": "raster",
       "type": "raster",
-      "source": "satellite",
+      "source": "source",
       "paint": {
-        "raster-opacity": 1.0
+        "raster-fade-duration": 0
       }
     }
-  ],
-  "terrain": {
-    "source": "terrain",
-    "exaggeration": 2
-  },
-  "projection": {
-    "type": "globe"
-  }
+  ]
 }

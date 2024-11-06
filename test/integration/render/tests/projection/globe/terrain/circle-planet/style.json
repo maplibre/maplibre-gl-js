@@ -1,0 +1,129 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 256,
+      "height": 256
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [
+    0,
+    0
+  ],
+  "zoom": 1,
+  "projection": { "type": "globe" },
+  "terrain": {
+    "source": "terrainSource",
+    "exaggeration": 0
+  },
+  "sources": {
+    "terrainSource": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/terrain/{z}-{x}-{y}.terrain.png"
+      ]
+    },
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -60,
+            0
+          ],
+          [
+            -45,
+            0
+          ],
+          [
+            -30,
+            0
+          ],
+          [
+            -15,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            15,
+            0
+          ],
+          [
+            30,
+            0
+          ],
+          [
+            45,
+            0
+          ],
+          [
+            60,
+            0
+          ],
+          [
+            0,
+            -60
+          ],
+          [
+            0,
+            -45
+          ],
+          [
+            0,
+            -30
+          ],
+          [
+            0,
+            -15
+          ],
+          [
+            0,
+            15
+          ],
+          [
+            0,
+            30
+          ],
+          [
+            0,
+            45
+          ],
+          [
+            0,
+            60
+          ]
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "gray"
+      }
+    },
+    {
+      "id": "circles",
+      "type": "circle",
+      "source": "geojson",
+      "paint": {
+        "circle-radius": 20,
+        "circle-color": "rgba(0, 0, 0, 0.5)",
+        "circle-stroke-color": "white",
+        "circle-stroke-width": 4,
+        "circle-pitch-alignment": "map",
+        "circle-pitch-scale": "map",
+        "circle-opacity": 0.5
+      }
+    }
+  ]
+}

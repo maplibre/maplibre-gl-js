@@ -24,6 +24,8 @@ export function drawBackground(painter: Painter, sourceCache: SourceCache, layer
     const transform = painter.transform;
     const tileSize = transform.tileSize;
     const image = layer.paint.get('background-pattern');
+    const globeWithTerrain = painter.style.map.terrain && painter.style.projection.name === 'globe';
+
     if (painter.isPatternMissing(image)) return;
 
     const pass = (!image && color.a === 1 && opacity === 1 && painter.opaquePassEnabledForLayer()) ? 'opaque' : 'translucent';
@@ -41,9 +43,12 @@ export function drawBackground(painter: Painter, sourceCache: SourceCache, layer
     }
 
     const crossfade = layer.getCrossfadeParameters();
-
+    
     for (const tileID of tileIDs) {
-        const projectionData = transform.getProjectionData({overscaledTileID: tileID});
+        const projectionData = transform.getProjectionData({
+            overscaledTileID: tileID,
+            ignoreGlobeMatrix: globeWithTerrain
+        });
 
         const uniformValues = image ?
             backgroundPatternUniformValues(opacity, painter, image, {tileID, tileSize}, crossfade) :

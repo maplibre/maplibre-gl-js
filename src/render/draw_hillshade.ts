@@ -68,12 +68,18 @@ function renderHillshade(
         }
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, true, 'raster');
 
-        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
+        const terrainData = painter.style.map.terrain?.getTerrainData(coord);
 
         context.activeTexture.set(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
 
-        const projectionData = transform.getProjectionData({overscaledTileID: coord, aligned: align});
+        const globeWithTerrain = painter.style.map.terrain && painter.style.projection.name === 'globe';
+
+        const projectionData = transform.getProjectionData({
+            overscaledTileID: coord,
+            aligned: align,
+            ignoreGlobeMatrix: globeWithTerrain
+        });
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
             hillshadeUniformValues(painter, tile, layer), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
