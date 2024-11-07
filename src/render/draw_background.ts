@@ -10,6 +10,7 @@ import type {Painter} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {BackgroundStyleLayer} from '../style/style_layer/background_style_layer';
 import {OverscaledTileID} from '../source/tile_id';
+import {coveringTiles} from '../geo/projection/covering_tiles';
 
 export function drawBackground(painter: Painter, sourceCache: SourceCache, layer: BackgroundStyleLayer, coords?: Array<OverscaledTileID>) {
     const color = layer.paint.get('background-color');
@@ -23,6 +24,8 @@ export function drawBackground(painter: Painter, sourceCache: SourceCache, layer
     const transform = painter.transform;
     const tileSize = transform.tileSize;
     const image = layer.paint.get('background-pattern');
+    const globeWithTerrain = painter.style.map.terrain && painter.style.projection.name === 'globe';
+
     if (painter.isPatternMissing(image)) return;
 
     const pass = (!image && color.a === 1 && opacity === 1 && painter.opaquePassEnabledForLayer()) ? 'opaque' : 'translucent';
@@ -32,7 +35,7 @@ export function drawBackground(painter: Painter, sourceCache: SourceCache, layer
     const depthMode = painter.getDepthModeForSublayer(0, pass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
     const program = painter.useProgram(image ? 'backgroundPattern' : 'background');
-    const tileIDs = coords ? coords : transform.coveringTiles({tileSize, terrain: painter.style.map.terrain});
+    const tileIDs = coords ? coords : coveringTiles(transform, {tileSize, terrain: painter.style.map.terrain});
 
     if (image) {
         context.activeTexture.set(gl.TEXTURE0);
@@ -40,9 +43,12 @@ export function drawBackground(painter: Painter, sourceCache: SourceCache, layer
     }
 
     const crossfade = layer.getCrossfadeParameters();
-
+    
     for (const tileID of tileIDs) {
-        const projectionData = transform.getProjectionData(tileID);
+        const projectionData = transform.getProjectionData({
+            overscaledTileID: tileID,
+            ignoreGlobeMatrix: globeWithTerrain
+        });
 
         const uniformValues = image ?
             backgroundPatternUniformValues(opacity, painter, image, {tileID, tileSize}, crossfade) :

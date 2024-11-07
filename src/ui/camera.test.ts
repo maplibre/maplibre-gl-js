@@ -5,7 +5,7 @@ import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
 import {setMatchMedia} from '../util/test/util';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
 import {Terrain} from '../render/terrain';
-import {LngLat, LngLatLike} from '../geo/lng_lat';
+import {LngLat} from '../geo/lng_lat';
 import {Event} from '../util/evented';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
@@ -155,6 +155,65 @@ describe('#calculateCameraOptionsFromTo', () => {
     });
 });
 
+describe('#calculateCameraOptionsFromCameraLngLatAltRotation', () => {
+    // Choose initial zoom to avoid center being constrained by mercator latitude limits.
+    const camera = createCamera({zoom: 1, maxPitch: 180});
+
+    test('look straight down', () => {
+        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromCameraLngLatAltRotation({lng: 1, lat: 0}, 0, 0, 0);
+        expect(cameraOptions).toBeDefined();
+        expect(cameraOptions.center).toBeDefined();
+        const center = cameraOptions.center as LngLat;
+        expect(center.lng).toBeCloseTo(1);
+        expect(center.lat).toBeCloseTo(0);
+        expect(cameraOptions.elevation).toBeDefined();
+        expect(cameraOptions.elevation).toBeLessThan(0);
+        expect(cameraOptions.zoom).toBeGreaterThan(0);
+        expect(cameraOptions.bearing).toBeCloseTo(0);
+        expect(cameraOptions.pitch).toBeCloseTo(0);
+        expect(cameraOptions.roll).toBeUndefined();
+    });
+
+    test('look straight up', () => {
+        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromCameraLngLatAltRotation({lng: 1, lat: 0}, 0, 0, 180);
+        expect(cameraOptions).toBeDefined();
+        expect(cameraOptions.center).toBeDefined();
+        const center = cameraOptions.center as LngLat;
+        expect(center.lng).toBeCloseTo(1);
+        expect(center.lat).toBeCloseTo(0);
+        expect(cameraOptions.elevation).toBeDefined();
+        expect(cameraOptions.elevation).toBeGreaterThan(0);
+        expect(cameraOptions.zoom).toBeGreaterThan(0);
+        expect(cameraOptions.bearing).toBeCloseTo(0);
+        expect(cameraOptions.pitch).toBeCloseTo(180);
+        expect(cameraOptions.roll).toBeUndefined();
+    });
+
+    test('look level', () => {
+        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromCameraLngLatAltRotation({lng: 1, lat: 0}, 0, 0, 90);
+        expect(cameraOptions).toBeDefined();
+        expect(cameraOptions.center).toBeDefined();
+        expect(cameraOptions.elevation).toBeDefined();
+        expect(cameraOptions.elevation).toBeCloseTo(0);
+        expect(cameraOptions.zoom).toBeGreaterThan(0);
+        expect(cameraOptions.bearing).toBeCloseTo(0);
+        expect(cameraOptions.pitch).toBeCloseTo(90);
+        expect(cameraOptions.roll).toBeUndefined();
+    });
+
+    test('roll passthru', () => {
+        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromCameraLngLatAltRotation({lng: 1, lat: 55}, 0, 34, 45, 123.4);
+        expect(cameraOptions).toBeDefined();
+        expect(cameraOptions.center).toBeDefined();
+        expect(cameraOptions.elevation).toBeDefined();
+        expect(cameraOptions.elevation).toBeLessThan(0);
+        expect(cameraOptions.zoom).toBeGreaterThan(0);
+        expect(cameraOptions.bearing).toBeCloseTo(34);
+        expect(cameraOptions.pitch).toBeCloseTo(45);
+        expect(cameraOptions.roll).toBeCloseTo(123.4);
+    });
+});
+
 describe('#jumpTo', () => {
     // Choose initial zoom to avoid center being constrained by mercator latitude limits.
     const camera = createCamera({zoom: 1});
@@ -216,6 +275,11 @@ describe('#jumpTo', () => {
         expect(camera.getRoll()).toBe(45);
     });
 
+    test('sets field of view', () => {
+        camera.setVerticalFieldOfView(29);
+        expect(camera.getVerticalFieldOfView()).toBeCloseTo(29, 10);
+    });
+
     test('sets multiple properties', () => {
         camera.jumpTo({
             center: [10, 20],
@@ -254,6 +318,21 @@ describe('#jumpTo', () => {
             .on('moveend', (d) => { ended = d.data; });
 
         camera.jumpTo({center: [1, 2]}, eventData);
+        expect(started).toBe('ok');
+        expect(moved).toBe('ok');
+        expect(ended).toBe('ok');
+    });
+
+    test('emits move events when FOV changes, preserving eventData', () => {
+        let started, moved, ended;
+        const eventData = {data: 'ok'};
+
+        camera
+            .on('movestart', (d) => { started = d.data; })
+            .on('move', (d) => { moved = d.data; })
+            .on('moveend', (d) => { ended = d.data; });
+
+        camera.setVerticalFieldOfView(44, eventData);
         expect(started).toBe('ok');
         expect(moved).toBe('ok');
         expect(ended).toBe('ok');
@@ -1949,7 +2028,7 @@ describe('#flyTo', () => {
         };
         camera.transform = {
             elevation: 0,
-            recalculateZoom: () => true,
+            recalculateZoomAndCenter: () => true,
             setMinElevationForCurrentTile: (_a) => true,
             setElevation: (e) => { camera.transform.elevation = e; }
         };
@@ -2334,34 +2413,17 @@ describe('queryTerrainElevation', () => {
         expect(result).toBeNull();
     });
 
-    test('should return the correct elevation', () => {
-        // Set up mock transform and terrain objects
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
-        transform.setElevation(50);
-        const terrain = {
-            getElevationForLngLatZoom: jest.fn().mockReturnValue(200)
-        } as any as Terrain;
+    test('Calls getElevationForLngLatZoom with correct arguments', () => {
+        const getElevationForLngLatZoom = jest.fn();
+        camera.terrain = {getElevationForLngLatZoom} as any as Terrain;
+        camera.transform = new MercatorTransform(0, 22, 0, 60, true);
 
-        // Set up camera with mock transform and terrain
-        camera.transform = transform;
-        camera.terrain = terrain;
+        camera.queryTerrainElevation([1, 2]);
 
-        // Call queryTerrainElevation with mock lngLat
-        const lngLatLike: LngLatLike = [1, 2];
-        const expectedElevation = 150; // 200 - 50 = 150
-        const result = camera.queryTerrainElevation(lngLatLike);
-
-        // Check that transform.getElevation was called with the correct arguments
-        expect(terrain.getElevationForLngLatZoom).toHaveBeenCalledWith(
-            expect.objectContaining({
-                lng: lngLatLike[0],
-                lat: lngLatLike[1],
-            }),
-            transform.tileZoom
+        expect(camera.terrain.getElevationForLngLatZoom).toHaveBeenCalledWith(
+            expect.objectContaining({lng: 1, lat: 2,}),
+            camera.transform.tileZoom
         );
-
-        // Check that the correct elevation value was returned
-        expect(result).toEqual(expectedElevation);
     });
 });
 

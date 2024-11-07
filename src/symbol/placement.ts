@@ -323,6 +323,7 @@ export class Placement {
         rotateWithMap: boolean,
         pitchWithMap: boolean,
         textPixelRatio: number,
+        tileID: OverscaledTileID,
         unwrappedTileID,
         collisionGroup: CollisionGroup,
         textOverlapMode: OverlapMode,
@@ -347,6 +348,7 @@ export class Placement {
             textBox,
             textOverlapMode,
             textPixelRatio,
+            tileID,
             unwrappedTileID,
             pitchWithMap,
             rotateWithMap,
@@ -362,6 +364,7 @@ export class Placement {
                 iconBox,
                 textOverlapMode,
                 textPixelRatio,
+                tileID,
                 unwrappedTileID,
                 pitchWithMap,
                 rotateWithMap,
@@ -533,6 +536,7 @@ export class Placement {
                             collisionTextBox,
                             textOverlapMode,
                             textPixelRatio,
+                            tileID,
                             unwrappedTileID,
                             pitchWithMap,
                             rotateWithMap,
@@ -592,7 +596,7 @@ export class Placement {
 
                                 const result = this.attemptAnchorPlacement(
                                     textAnchorOffset, collisionTextBox, width, height,
-                                    textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, unwrappedTileID,
+                                    textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, tileID, unwrappedTileID,
                                     collisionGroup, overlapMode, symbolInstance, bucket, orientation, translationText, translationIcon, variableIconBox, getElevation);
 
                                 if (result) {
@@ -619,6 +623,7 @@ export class Placement {
                                 textBox,
                                 'always', // Skips expensive collision check with already placed boxes
                                 textPixelRatio,
+                                tileID,
                                 unwrappedTileID,
                                 pitchWithMap,
                                 rotateWithMap,
@@ -724,6 +729,7 @@ export class Placement {
                         iconBox,
                         iconOverlapMode,
                         textPixelRatio,
+                        tileID,
                         unwrappedTileID,
                         pitchWithMap,
                         rotateWithMap,

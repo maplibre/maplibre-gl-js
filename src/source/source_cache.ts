@@ -23,6 +23,7 @@ import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapSourceDataEvent} from '../ui/events';
 import type {Terrain} from '../render/terrain';
 import type {CanvasSourceSpecification} from './canvas_source';
+import {coveringTiles, coveringZoomLevel} from '../geo/projection/covering_tiles';
 
 type TileResult = {
     tile: Tile;
@@ -253,7 +254,7 @@ export class SourceCache extends Evented {
             !this._coveredTiles[id] && (symbolLayer || !this._tiles[id].holdingForFade());
     }
 
-    reload() {
+    reload(sourceDataChanged?: boolean) {
         if (this._paused) {
             this._shouldReloadOnResume = true;
             return;
@@ -262,7 +263,9 @@ export class SourceCache extends Evented {
         this._cache.reset();
 
         for (const i in this._tiles) {
-            if (this._tiles[i].state !== 'errored') this._reloadTile(i, 'reloading');
+            if (sourceDataChanged || this._tiles[i].state !== 'errored') {
+                this._reloadTile(i, 'reloading');
+            }
         }
     }
 
@@ -618,13 +621,14 @@ export class SourceCache extends Evented {
             idealTileIDs = transform.getVisibleUnwrappedCoordinates(this._source.tileID)
                 .map((unwrapped) => new OverscaledTileID(unwrapped.canonical.z, unwrapped.wrap, unwrapped.canonical.z, unwrapped.canonical.x, unwrapped.canonical.y));
         } else {
-            idealTileIDs = transform.coveringTiles({
+            idealTileIDs = coveringTiles(transform, {
                 tileSize: this.usedForTerrain ? this.tileSize : this._source.tileSize,
                 minzoom: this._source.minzoom,
                 maxzoom: this._source.maxzoom,
                 roundZoom: this.usedForTerrain ? false : this._source.roundZoom,
                 reparseOverscaled: this._source.reparseOverscaled,
-                terrain
+                terrain,
+                calculateTileZoom: this._source.calculateTileZoom
             });
 
             if (this._source.hasTile) {
@@ -633,7 +637,7 @@ export class SourceCache extends Evented {
         }
 
         // Determine the overzooming/underzooming amounts.
-        const zoom = transform.coveringZoomLevel(this._source);
+        const zoom = coveringZoomLevel(transform, this._source);
         const minCoveringZoom = Math.max(zoom - SourceCache.maxOverzooming, this._source.minzoom);
         const maxCoveringZoom = Math.max(zoom + SourceCache.maxUnderzooming,  this._source.minzoom);
 
@@ -928,7 +932,7 @@ export class SourceCache extends Evented {
         // for sources with mutable data, this event fires when the underlying data
         // to a source is changed. (i.e. GeoJSONSource#setData and ImageSource#serCoordinates)
         if (this._sourceLoaded && !this._paused && e.dataType === 'source' && eventSourceDataType === 'content') {
-            this.reload();
+            this.reload(e.sourceDataChanged);
             if (this.transform) {
                 this.update(this.transform, this.terrain);
             }

@@ -79,7 +79,7 @@ function drawExtrusionTiles(
             programConfiguration.updatePaintBuffers(crossfade);
         }
 
-        const projectionData = transform.getProjectionData(coord);
+        const projectionData = transform.getProjectionData({overscaledTileID: coord});
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
         const translate = translatePosition(

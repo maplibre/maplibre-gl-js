@@ -24,6 +24,7 @@ import {getGlobalWorkerPool} from '../../../src/util/global_worker_pool';
 import SymbolCollisionBox from '../benchmarks/symbol_collision_box';
 import Subdivide from '../benchmarks/subdivide';
 import LoadMatchingFeature from '../benchmarks/feature_index';
+import CoveringTilesGlobe from '../benchmarks/covering_tiles_globe';
 
 const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as GeoJSON.Feature<GeoJSON.Point>[]).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
 
@@ -80,6 +81,8 @@ register('MapIdle', new MapIdle());
 register('SymbolCollisionBox', new SymbolCollisionBox(false));
 register('SymbolCollisionBoxGlobe', new SymbolCollisionBox(true));
 register('Subdivide', new Subdivide());
+register('CoveringTilesGlobe', new CoveringTilesGlobe(0));
+register('CoveringTilesGlobePitched', new CoveringTilesGlobe(60));
 
 Promise.resolve().then(() => {
     // Ensure the global worker pool is never drained. Browsers have resource limits

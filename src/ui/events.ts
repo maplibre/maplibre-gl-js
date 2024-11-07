@@ -77,6 +77,7 @@ export type MapLayerEventType = {
      * @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/mouse-position/)
      * @see [Highlight features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/hover-styles/)
      * @see [Display a popup on over](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-hover/)
+     * @see [Animate symbol to follow the mouse](https://maplibre.org/maplibre-gl-js/docs/examples/animate-symbol-to-follow-mouse/)
      */
     mousemove: MapLayerMouseEvent;
     /**
@@ -461,6 +462,7 @@ export type MapSourceDataEvent = MapLibreEvent & {
     source: SourceSpecification;
     sourceId: string;
     sourceDataType: MapSourceDataType;
+    sourceDataChanged?: boolean;
     /**
      * The tile being loaded or changed, if the event has a `dataType` of `source` and
      * the event is related to loading of a tile.

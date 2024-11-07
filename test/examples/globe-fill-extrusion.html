@@ -21,6 +21,8 @@
         center: [30.0, 40.0],
     });
 
+    map.addControl(new maplibregl.GlobeControl(), 'top-right');
+
     map.on('style.load', () => {
         map.setProjection({
             type: 'globe', // Set projection to globe

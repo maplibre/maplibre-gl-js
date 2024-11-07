@@ -48,6 +48,7 @@ import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {RenderToTexture} from './render_to_texture';
 import type {ProjectionData} from '../geo/projection/projection_data';
+import {coveringTiles} from '../geo/projection/covering_tiles';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -297,7 +298,7 @@ export class Painter {
 
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true, 'stencil');
 
-            const projectionData = transform.getProjectionData(tileID);
+            const projectionData = transform.getProjectionData({overscaledTileID: tileID});
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.
@@ -320,14 +321,14 @@ export class Painter {
 
         const program = this.useProgram('depth');
         const depthMode = this.getDepthModeFor3D();
-        const tileIDs = transform.coveringTiles({tileSize: transform.tileSize});
+        const tileIDs = coveringTiles(transform, {tileSize: transform.tileSize});
 
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
             const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, true, true, 'raster');
 
-            const projectionData = transform.getProjectionData(tileID);
+            const projectionData = transform.getProjectionData({overscaledTileID: tileID});
 
             program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled,
                 ColorMode.disabled, CullFaceMode.backCCW, null,
@@ -632,7 +633,7 @@ export class Painter {
         drawCoords(this, this.style.map.terrain);
     }
 
-    renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>) {
+    renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, isRenderingToTexture: boolean = false) {
         if (layer.isHidden(this.transform.zoom)) return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;
@@ -660,7 +661,7 @@ export class Painter {
                 drawHillshade(painter, sourceCache, layer as any, coords);
                 break;
             case 'raster':
-                drawRaster(painter, sourceCache, layer as any, coords);
+                drawRaster(painter, sourceCache, layer as any, coords, isRenderingToTexture);
                 break;
             case 'background':
                 drawBackground(painter, sourceCache, layer as any, coords);
