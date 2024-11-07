@@ -24,12 +24,21 @@ export function createProjectionFromName(name: ProjectionSpecification['type']):
                 cameraHelper: new MercatorCameraHelper(),
             };
         }
-        case 'globe':
+        case 'stereographic':
         {
             const proj = new GlobeProjection();
             return {
                 projection: proj,
                 transform: new GlobeTransform(proj, true, false),
+                cameraHelper: new GlobeCameraHelper(proj),
+            };
+        }
+        case 'globe':
+        {
+            const proj = new GlobeProjection();
+            return {
+                projection: proj,
+                transform: new GlobeTransform(proj),
                 cameraHelper: new GlobeCameraHelper(proj),
             };
         }
