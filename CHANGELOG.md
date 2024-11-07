@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Export `Error` class
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
