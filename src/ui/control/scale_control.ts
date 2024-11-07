@@ -100,8 +100,6 @@ function updateScale(map, container, options) {
     // Using spherical law of cosines approximation, the real distance is
     // found between the two coordinates.
     // Minimum maxWidth is calculated for the scale box.
-
-
     const optWidth = options && options.maxWidth || 100;
     const y = map._container.clientHeight / 2;
     const x = map._container.clientWidth / 2;
