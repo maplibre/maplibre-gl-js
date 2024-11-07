@@ -1,17 +1,30 @@
 ## main
 
 ### ✨ Features and improvements
+- When clustering circles and the promoteId is set to some parameter, the promoted ID is used on non-clustered features and the cluster_id is used on clustered features. Previously the ID was undefined for non-clustered features.
+- Support Terrain in Globe projection ([#4976](https://github.com/maplibre/maplibre-gl-js/pull/4976))
+- Improved performance of the `coveringTiles` (tile culling) function for globe ([#4937](https://github.com/maplibre/maplibre-gl-js/pull/4937))
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- ⚠️ Fix level of detail at high pitch angle by changing which tiles to load ([#3983](https://github.com/maplibre/maplibre-gl-js/issues/3983))
+- ⚠️ Fix URL parsing in `normalizeSpriteURL`, sprite URLs must be absolute.
+- _...Add new stuff here..._
+
+## 5.0.0-pre.5
+
+### ✨ Features and improvements
+
 - Catches network fetching errors such as CORS, DNS or malformed URL as actual `AJAXError` to expose HTTP request details to the `"error"` event (https://github.com/maplibre/maplibre-gl-js/pull/4822)
 - Add setVerticalFieldOfView() to public API ([#4717](https://github.com/maplibre/maplibre-gl-js/issues/4717))
 - ⚠️ Return actual altitude from queryTerrainElevation + Pass non-translated matrices to custom layer on mercator map ([#3854](https://github.com/maplibre/maplibre-gl-js/pull/3854))
 - Disable sky when using globe and blend it in when changing to mercator ([#4853](https://github.com/maplibre/maplibre-gl-js/issues/4853))
 - New GlobeControl ([#4960](https://github.com/maplibre/maplibre-gl-js/pull/4960))
-- _...Add new stuff here..._
-- ⚠️ Fix URL parsing in `normalizeSpriteURL`, sprite URLs must be absolute.
 
 ### 🐞 Bug fixes
+
 - Fix line-placed map-pitch-aligned texts being too large when viewed from some latitudes on a globe ([#4786](https://github.com/maplibre/maplibre-gl-js/issues/4786))
-- _...Add new stuff here..._
+- Disabled unsupported Fog rendering, for Terrain3D on Globe ([#4963](https://github.com/maplibre/maplibre-gl-js/pull/4963))
 
 ## 5.0.0-pre.4
 

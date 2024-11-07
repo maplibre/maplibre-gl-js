@@ -120,6 +120,7 @@ function renderHeatmapFlat(painter: Painter, layer: HeatmapStyleLayer) {
 }
 
 function prepareHeatmapTerrain(painter: Painter, tile: Tile, layer: HeatmapStyleLayer, coord: OverscaledTileID) {
+    const isGlobe = painter.style.projection.name === 'globe';
     const context = painter.context;
     const gl = context.gl;
 
@@ -143,7 +144,7 @@ function prepareHeatmapTerrain(painter: Painter, tile: Tile, layer: HeatmapStyle
     context.clear({color: Color.transparent});
 
     const programConfiguration = bucket.programConfigurations.get(layer.id);
-    const program = painter.useProgram('heatmap', programConfiguration, true);
+    const program = painter.useProgram('heatmap', programConfiguration, !isGlobe);
 
     const projectionData = painter.transform.getProjectionData({overscaledTileID: tile.tileID});
 
@@ -156,6 +157,7 @@ function prepareHeatmapTerrain(painter: Painter, tile: Tile, layer: HeatmapStyle
 }
 
 function renderHeatmapTerrain(painter: Painter, layer: HeatmapStyleLayer, coord: OverscaledTileID) {
+    const isGlobe = painter.style.projection.name === 'globe';
     const context = painter.context;
     const gl = context.gl;
     const transform = painter.transform;
@@ -177,7 +179,7 @@ function renderHeatmapTerrain(painter: Painter, layer: HeatmapStyleLayer, coord:
     context.activeTexture.set(gl.TEXTURE1);
     colorRampTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
 
-    const projectionData = transform.getProjectionData({overscaledTileID: coord, ignoreTerrainMatrix: true});
+    const projectionData = transform.getProjectionData({overscaledTileID: coord, ignoreTerrainMatrix: !isGlobe});
 
     painter.useProgram('heatmapTexture').draw(context, gl.TRIANGLES,
         DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled,

@@ -2,46 +2,15 @@ import {LngLat, LngLatLike} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
 import {MercatorCoordinate} from './mercator_coordinate';
 import Point from '@mapbox/point-geometry';
-import {mat4, mat2, vec3} from 'gl-matrix';
+import {mat4, mat2, vec3, vec4} from 'gl-matrix';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import type {PaddingOptions} from './edge_insets';
 import {Terrain} from '../render/terrain';
 import {PointProjection} from '../symbol/projection';
 import {MapProjectionEvent} from '../ui/events';
 import type {ProjectionData, ProjectionDataParams} from './projection/projection_data';
-
-export type CoveringZoomOptions = {
-    /**
-     * Whether to round or floor the target zoom level. If true, the value will be rounded to the closest integer. Otherwise the value will be floored.
-     */
-    roundZoom?: boolean;
-    /**
-     * Tile size, expressed in screen pixels.
-     */
-    tileSize: number;
-};
-
-export type CoveringTilesOptions = CoveringZoomOptions & {
-    /**
-     * Smallest allowed tile zoom.
-     */
-    minzoom?: number;
-    /**
-     * Largest allowed tile zoom.
-     */
-    maxzoom?: number;
-    /**
-     * `true` if tiles should be sent back to the worker for each overzoomed zoom level, `false` if not.
-     * Fill this option when computing covering tiles for a source.
-     * When true, any tile at `maxzoom` level that should be overscaled to a greater zoom will have
-     * its zoom set to the overscaled greater zoom. When false, such tiles will have zoom set to `maxzoom`.
-     */
-    reparseOverscaled?: boolean;
-    /**
-     * When terrain is present, tile visibility will be computed in regards to the min and max elevations for each tile.
-     */
-    terrain?: Terrain;
-};
+import {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider';
+import {Frustum} from '../util/primitives/frustum';
 
 export type TransformUpdateResult = {
     forcePlacementUpdate?: boolean;
@@ -285,13 +254,6 @@ export interface IReadonlyTransform extends ITransformGetters {
     isPaddingEqual(padding: PaddingOptions): boolean;
 
     /**
-     * Return what zoom level of a tile source would most closely cover the tiles displayed by this transform.
-     * @param options - The options, most importantly the source's tile size.
-     * @returns An integer zoom level at which all tiles will be visible.
-     */
-    coveringZoomLevel(options: CoveringZoomOptions): number;
-
-    /**
      * @internal
      * Return any "wrapped" copies of a given tile coordinate that are visible
      * in the current view.
@@ -299,12 +261,23 @@ export interface IReadonlyTransform extends ITransformGetters {
     getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): Array<UnwrappedTileID>;
 
     /**
-     * Returns a list of tile coordinates that when rendered cover the entire screen at an optimal detail level.
-     * Tiles are ordered by ascending distance from camera.
-     * @param options - Additional options - min & max zoom, terrain presence, etc.
-     * @returns Array of OverscaledTileID. All OverscaledTileID instances are newly created.
+     * @internal
+     * Return the camera frustum for the current view.
      */
-    coveringTiles(options: CoveringTilesOptions): Array<OverscaledTileID>;
+    getCameraFrustum(): Frustum;
+
+    /**
+     * @internal
+     * Return the clipping plane, behind wich nothing should be rendered. If the camera frustum is sufficient
+     * to describe the render geometry (additional clipping is not required), this may be null.
+     */
+    getClippingPlane(): vec4 | null;
+
+    /**
+     * @internal
+     * Returns this transform's CoveringTilesDetailsProvider.
+     */
+    getCoveringTilesDetailsProvider(): CoveringTilesDetailsProvider;
 
     /**
      * @internal
