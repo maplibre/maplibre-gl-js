@@ -1,15 +1,23 @@
 ## main
 
 ### ✨ Features and improvements
-- When clustering circles and the promoteId is set to some parameter, the promoted ID is used on non-clustered features and the cluster_id is used on clustered features. Previously the ID was undefined for non-clustered features.
-- Support Terrain in Globe projection ([#4976](https://github.com/maplibre/maplibre-gl-js/pull/4976))
-- Improved performance of the `coveringTiles` (tile culling) function for globe ([#4937](https://github.com/maplibre/maplibre-gl-js/pull/4937))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- ⚠️ Fix level of detail at high pitch angle by changing which tiles to load ([#3983](https://github.com/maplibre/maplibre-gl-js/issues/3983))
-- ⚠️ Fix URL parsing in `normalizeSpriteURL`, sprite URLs must be absolute.
 - _...Add new stuff here..._
+
+## 5.0.0-pre.6
+
+### ✨ Features and improvements
+
+- When clustering circles and the promoteId is set to some parameter, the promoted ID is used on non-clustered features and the cluster_id is used on clustered features. Previously the ID was undefined for non-clustered features ([#4899](https://github.com/maplibre/maplibre-gl-js/pull/4899))
+- Support Terrain in Globe projection ([#4976](https://github.com/maplibre/maplibre-gl-js/pull/4976))
+- Improved performance of the `coveringTiles` (tile culling) function for globe ([#4937](https://github.com/maplibre/maplibre-gl-js/pull/4937))
+
+### 🐞 Bug fixes
+
+- ⚠️ Fix level of detail at high pitch angle by changing which tiles to load ([#3983](https://github.com/maplibre/maplibre-gl-js/issues/3983))
+- ~~⚠️~~ Fix URL parsing in `normalizeSpriteURL`, sprite URLs must be absolute ([#4962](https://github.com/maplibre/maplibre-gl-js/issues/4962))
 
 ## 5.0.0-pre.5
 
