@@ -10,7 +10,7 @@ import {GlobeProjection} from './globe';
 import {GlobeTransform} from './globe_transform';
 import {GlobeCameraHelper} from './globe_camera_helper';
 
-export function createProjectionFromName(name: ProjectionSpecification['type']): {
+export function createProjectionFromName(name: 'stereographic'|ProjectionSpecification['type']): {
     projection: Projection;
     transform: ITransform;
     cameraHelper: ICameraHelper;
