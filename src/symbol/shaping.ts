@@ -802,8 +802,7 @@ function shapeLines(shaping: Shaping,
 
                 // Difference between height of an image and one EM at max line scale.
                 // Pushes current line down if an image size is over 1 EM at max line scale.
-                const offset = vertical ? size[0] * section.scale - ONE_EM * lineMaxScale :
-                    size[1] * section.scale - ONE_EM * lineMaxScale;
+                const offset = (vertical ? size[0] : size[1]) * section.scale - ONE_EM * lineMaxScale;
                 if (offset > 0 && offset > imageOffset) {
                     imageOffset = offset;
                 }
