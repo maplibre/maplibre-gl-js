@@ -18,7 +18,7 @@ import {StyleImage} from '../../style/style_image';
 import glyphs from '../../../test/unit/assets/fontstack-glyphs.json' with {type: 'json'};
 import {StyleGlyph} from '../../style/style_glyph';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import {MercatorTransform} from '../../geo/projection/mercator_transform';
+import {MercatorTransform} from '../../geo/projection/mercator/mercator_transform';
 
 // Load a point feature from fixture tile.
 const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))));

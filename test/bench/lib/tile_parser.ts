@@ -17,7 +17,7 @@ import type {Map} from '../../../src/ui/map';
 import type {IActor} from '../../../src/util/actor';
 import {SubdivisionGranularitySetting} from '../../../src/render/subdivision_granularity_settings';
 import {MessageType} from '../../../src/util/actor_messages';
-import {MercatorTransform} from '../../../src/geo/projection/mercator_transform';
+import {MercatorTransform} from '../../../src/geo/projection/mercator/mercator_transform';
 
 class StubMap extends Evented {
     style: Style;

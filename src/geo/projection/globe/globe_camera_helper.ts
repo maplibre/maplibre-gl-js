@@ -3,7 +3,7 @@ import {IReadonlyTransform, ITransform} from '../../transform_interface';
 import {cameraBoundsWarning, CameraForBoxAndBearingHandlerResult, EaseToHandlerResult, EaseToHandlerOptions, FlyToHandlerResult, FlyToHandlerOptions, ICameraHelper, MapControlsDeltas, updateRotation} from '../camera_helper';
 import {GlobeProjection} from './globe';
 import {LngLat, LngLatLike} from '../../lng_lat';
-import {MercatorCameraHelper} from '../mercator_camera_helper';
+import {MercatorCameraHelper} from '../mercator/mercator_camera_helper';
 import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from './globe_utils';
 import {clamp, createVec3f64, differenceOfAnglesDegrees, remapSaturate, rollPitchBearingToQuat, warnOnce} from '../../../util/util';
 import {mat4, quat, vec3} from 'gl-matrix';

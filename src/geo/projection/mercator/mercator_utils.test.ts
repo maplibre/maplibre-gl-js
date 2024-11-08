@@ -1,13 +1,13 @@
 import Point from '@mapbox/point-geometry';
-import {LngLat} from '../lng_lat';
+import {LngLat} from '../../lng_lat';
 import {getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, tileCoordinatesToLocation, tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 import {MercatorTransform} from './mercator_transform';
-import {MAX_VALID_LATITUDE} from '../transform_helper';
+import {MAX_VALID_LATITUDE} from '../../transform_helper';
 import {mat4} from 'gl-matrix';
-import {CanonicalTileID, OverscaledTileID} from '../../source/tile_id';
-import {EXTENT} from '../../data/extent';
-import {expectToBeCloseToArray} from '../../util/test/util';
-import type {ProjectionData} from './projection_data';
+import {CanonicalTileID, OverscaledTileID} from '../../../source/tile_id';
+import {EXTENT} from '../../../data/extent';
+import {expectToBeCloseToArray} from '../../../util/test/util';
+import type {ProjectionData} from '../projection_data';
 
 describe('mercator utils', () => {
     test('projectToWorldCoordinates basic', () => {

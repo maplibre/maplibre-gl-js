@@ -1,5 +1,5 @@
 import {Painter} from './painter';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {MercatorTransform} from '../geo/projection/mercator/mercator_transform';
 import {Style} from '../style/style';
 import {StubMap} from '../util/test/util';
 

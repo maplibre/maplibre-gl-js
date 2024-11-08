@@ -8,12 +8,12 @@ import {Terrain} from '../render/terrain';
 import {LngLat} from '../geo/lng_lat';
 import {Event} from '../util/evented';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {MercatorTransform} from '../geo/projection/mercator/mercator_transform';
 import {GlobeTransform} from '../geo/projection/globe/globe_transform';
 import {getZoomAdjustment} from '../geo/projection/globe/globe_utils';
 import {GlobeCameraHelper} from '../geo/projection/globe/globe_camera_helper';
 import {GlobeProjection} from '../geo/projection/globe/globe';
-import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
+import {MercatorCameraHelper} from '../geo/projection/mercator/mercator_camera_helper';
 
 beforeEach(() => {
     setMatchMedia();

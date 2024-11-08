@@ -1,5 +1,5 @@
 import {CollisionIndex} from './collision_index';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {MercatorTransform} from '../geo/projection/mercator/mercator_transform';
 import {CanonicalTileID, UnwrappedTileID} from '../source/tile_id';
 import {mat4} from 'gl-matrix';
 

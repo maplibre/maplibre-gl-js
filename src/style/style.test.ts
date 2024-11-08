@@ -15,7 +15,7 @@ import {GeoJSONSource} from '../source/geojson_source';
 import {StubMap, sleep} from '../util/test/util';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
 import {MessageType} from '../util/actor_messages';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {MercatorTransform} from '../geo/projection/mercator/mercator_transform';
 import {Tile} from '../source/tile';
 
 function createStyleJSON(properties?): StyleSpecification {

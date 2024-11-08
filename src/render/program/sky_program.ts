@@ -3,7 +3,7 @@ import type {Context} from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import {IReadonlyTransform} from '../../geo/transform_interface';
 import {Sky} from '../../style/sky';
-import {getMercatorHorizon} from '../../geo/projection/mercator_utils';
+import {getMercatorHorizon} from '../../geo/projection/mercator/mercator_utils';
 
 export type SkyUniformsType = {
     'u_sky_color': UniformColor;

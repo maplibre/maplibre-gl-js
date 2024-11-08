@@ -3,7 +3,7 @@ import {SymbolProjectionContext, ProjectionSyntheticVertexArgs, findOffsetInters
 import Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
 import {SymbolLineVertexArray} from '../data/array_types.g';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {MercatorTransform} from '../geo/projection/mercator/mercator_transform';
 import {expectToBeCloseToArray} from '../util/test/util';
 
 describe('Projection', () => {

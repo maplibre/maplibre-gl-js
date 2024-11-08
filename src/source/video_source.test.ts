@@ -7,7 +7,7 @@ import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {Evented} from '../util/evented';
 import {IReadonlyTransform} from '../geo/transform_interface';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {MercatorTransform} from '../geo/projection/mercator/mercator_transform';
 
 class StubMap extends Evented {
     transform: IReadonlyTransform;

@@ -7,7 +7,7 @@ import {RasterDEMTileSource} from './raster_dem_tile_source';
 import {OverscaledTileID} from './tile_id';
 import {Tile} from './tile';
 import {DEMData} from '../data/dem_data';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {MercatorTransform} from '../geo/projection/mercator/mercator_transform';
 import {StubMap} from '../util/test/util';
 
 const transform = new MercatorTransform();

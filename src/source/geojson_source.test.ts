@@ -9,7 +9,7 @@ import {RequestManager} from '../util/request_manager';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 import {ActorMessage, MessageType} from '../util/actor_messages';
 import {Actor} from '../util/actor';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {MercatorTransform} from '../geo/projection/mercator/mercator_transform';
 
 const wrapDispatcher = (dispatcher) => {
     return {

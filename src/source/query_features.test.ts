@@ -4,7 +4,7 @@ import {
 } from './query_features';
 import {SourceCache} from './source_cache';
 import Point from '@mapbox/point-geometry';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {MercatorTransform} from '../geo/projection/mercator/mercator_transform';
 
 describe('QueryFeatures#rendered', () => {
     test('returns empty object if source returns no tiles', () => {

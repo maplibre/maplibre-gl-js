@@ -1,7 +1,7 @@
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../geo/lng_lat';
 import {smartWrap} from './smart_wrap';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {MercatorTransform} from '../geo/projection/mercator/mercator_transform';
 
 const transform = new MercatorTransform();
 transform.resize(100, 100);

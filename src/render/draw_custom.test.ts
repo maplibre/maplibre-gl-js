@@ -5,8 +5,8 @@ import {Painter} from './painter';
 import type {Map} from '../ui/map';
 import {drawCustom} from './draw_custom';
 import {CustomStyleLayer} from '../style/style_layer/custom_style_layer';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {MercatorProjection} from '../geo/projection/mercator';
+import {MercatorTransform} from '../geo/projection/mercator/mercator_transform';
+import {MercatorProjection} from '../geo/projection/mercator/mercator';
 
 jest.mock('./painter');
 jest.mock('./program');

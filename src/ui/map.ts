@@ -60,10 +60,10 @@ import type {CanvasSourceSpecification} from '../source/canvas_source';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {MercatorTransform} from '../geo/projection/mercator/mercator_transform';
 import {ITransform} from '../geo/transform_interface';
 import {ICameraHelper} from '../geo/projection/camera_helper';
-import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
+import {MercatorCameraHelper} from '../geo/projection/mercator/mercator_camera_helper';
 
 const version = packageJSON.version;
 

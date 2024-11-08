@@ -1,4 +1,4 @@
-import {MercatorProjection} from '../../geo/projection/mercator';
+import {MercatorProjection} from '../../geo/projection/mercator/mercator';
 import {createMap, beforeMapTest, sleep} from '../../util/test/util';
 
 beforeEach(() => {

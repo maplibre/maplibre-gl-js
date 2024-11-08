@@ -7,7 +7,7 @@ import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../../sourc
 import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
 import {expectToBeCloseToArray, getGlobeProjectionMock, sleep} from '../../../util/test/util';
 import {MercatorCoordinate} from '../../mercator_coordinate';
-import {tileCoordinatesToLocation} from '../mercator_utils';
+import {tileCoordinatesToLocation} from '../mercator/mercator_utils';
 import {coveringTiles} from '../covering_tiles';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: Array<number>) {

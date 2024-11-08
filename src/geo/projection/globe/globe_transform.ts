@@ -1,6 +1,6 @@
 import {mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {MAX_VALID_LATITUDE, TransformHelper} from '../../transform_helper';
-import {MercatorTransform} from '../mercator_transform';
+import {MercatorTransform} from '../mercator/mercator_transform';
 import {LngLat, LngLatLike, earthRadius} from '../../lng_lat';
 import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, easeCubicInOut, lerp, pointPlaneSignedDistance, warnOnce} from '../../../util/util';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../../../source/tile_id';
@@ -13,7 +13,7 @@ import {PointProjection} from '../../../symbol/projection';
 import {LngLatBounds} from '../../lng_lat_bounds';
 import {IReadonlyTransform, ITransform, TransformUpdateResult} from '../../transform_interface';
 import {PaddingOptions} from '../../edge_insets';
-import {tileCoordinatesToMercatorCoordinates} from '../mercator_utils';
+import {tileCoordinatesToMercatorCoordinates} from '../mercator/mercator_utils';
 import {angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, sphereSurfacePointToCoordinates} from './globe_utils';
 import {EXTENT} from '../../../data/extent';
 import type {ProjectionData, ProjectionDataParams} from '../projection_data';

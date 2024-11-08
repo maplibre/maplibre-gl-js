@@ -4,7 +4,7 @@ import {Dispatcher} from '../../util/dispatcher';
 import {IActor} from '../actor';
 import {Evented} from '../evented';
 import {SourceSpecification, StyleSpecification, TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {MercatorTransform} from '../../geo/projection/mercator_transform';
+import {MercatorTransform} from '../../geo/projection/mercator/mercator_transform';
 import {RequestManager} from '../request_manager';
 import {IReadonlyTransform, ITransform} from '../../geo/transform_interface';
 import {Style} from '../../style/style';

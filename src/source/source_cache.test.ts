@@ -12,7 +12,7 @@ import {Dispatcher} from '../util/dispatcher';
 import {TileBounds} from './tile_bounds';
 import {sleep} from '../util/test/util';
 import {TileCache} from './tile_cache';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {MercatorTransform} from '../geo/projection/mercator/mercator_transform';
 
 class SourceMock extends Evented implements Source {
     id: string;
