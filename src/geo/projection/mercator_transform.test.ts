@@ -506,7 +506,7 @@ describe('transform', () => {
         transform.setPitch(67.25);
         transform.setCenter(new LngLat(0.0, 0.0));
 
-        const customLayerMatrix = transform.getProjectionDataForCustomLayer().mainMatrix;
+        const customLayerMatrix = transform.getProjectionDataForCustomLayer(false).mainMatrix;
         expect(customLayerMatrix[0].toString().length).toBeGreaterThan(9);
         expect(transform.pixelsToClipSpaceMatrix[0].toString().length).toBeGreaterThan(9);
         expect(transform.maxPitchScaleFactor()).toBeCloseTo(2.366025418080343, 5);

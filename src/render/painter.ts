@@ -640,7 +640,7 @@ export class Painter {
 
         switch (layer.type) {
             case 'symbol':
-                drawSymbols(painter, sourceCache, layer as any, coords, this.style.placement.variableOffsets);
+                drawSymbols(painter, sourceCache, layer as any, coords, this.style.placement.variableOffsets, isRenderingToTexture);
                 break;
             case 'circle':
                 drawCircles(painter, sourceCache, layer as any, coords, isRenderingToTexture);
@@ -667,7 +667,7 @@ export class Painter {
                 drawBackground(painter, sourceCache, layer as any, coords, isRenderingToTexture);
                 break;
             case 'custom':
-                drawCustom(painter, sourceCache, layer as any);
+                drawCustom(painter, sourceCache, layer as any, isRenderingToTexture);
                 break;
         }
     }

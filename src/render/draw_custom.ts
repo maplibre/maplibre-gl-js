@@ -5,14 +5,14 @@ import type {Painter} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {CustomRenderMethodInput, CustomStyleLayer} from '../style/style_layer/custom_style_layer';
 
-export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: CustomStyleLayer) {
+export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: CustomStyleLayer, isRenderingToTexture: boolean = false) {
 
     const context = painter.context;
     const implementation = layer.implementation;
     const projection = painter.style.projection;
     const transform = painter.transform;
 
-    const projectionData = transform.getProjectionDataForCustomLayer();
+    const projectionData = transform.getProjectionDataForCustomLayer(isRenderingToTexture);
 
     const customLayerArgs: CustomRenderMethodInput = {
         farZ: transform.farZ,

@@ -62,7 +62,7 @@ const identityMat4 = mat4.identity(new Float32Array(16));
 
 export function drawSymbols(painter: Painter, sourceCache: SourceCache, layer: SymbolStyleLayer, coords: Array<OverscaledTileID>, variableOffsets: {
     [_ in CrossTileID]: VariableOffset;
-}) {
+}, isRenderingToTexture: boolean = false) {
     if (painter.renderPass !== 'translucent') return;
 
     // Disable the stencil test so that labels aren't clipped to tile boundaries.
@@ -89,7 +89,7 @@ export function drawSymbols(painter: Painter, sourceCache: SourceCache, layer: S
             layer.layout.get('icon-rotation-alignment'),
             layer.layout.get('icon-pitch-alignment'),
             layer.layout.get('icon-keep-upright'),
-            stencilMode, colorMode
+            stencilMode, colorMode, isRenderingToTexture
         );
     }
 
@@ -100,7 +100,7 @@ export function drawSymbols(painter: Painter, sourceCache: SourceCache, layer: S
             layer.layout.get('text-rotation-alignment'),
             layer.layout.get('text-pitch-alignment'),
             layer.layout.get('text-keep-upright'),
-            stencilMode, colorMode
+            stencilMode, colorMode, isRenderingToTexture
         );
     }
 
@@ -303,7 +303,8 @@ function drawLayerSymbols(
     pitchAlignment: SymbolLayerSpecification['layout']['text-pitch-alignment'],
     keepUpright: boolean,
     stencilMode: StencilMode,
-    colorMode: Readonly<ColorMode>) {
+    colorMode: Readonly<ColorMode>, 
+    isRenderingToTexture: boolean) {
 
     const context = painter.context;
     const gl = context.gl;
@@ -379,7 +380,7 @@ function drawLayerSymbols(
         const glCoordMatrixForShader = getGlCoordMatrix(pitchWithMap, rotateWithMap, painter.transform, s);
 
         const translation = translatePosition(transform, tile, translate, translateAnchor);
-        const projectionData = transform.getProjectionData({overscaledTileID: coord});
+        const projectionData = transform.getProjectionData({overscaledTileID: coord, ignoreGlobeMatrix: isRenderingToTexture});
 
         const hasVariableAnchors = hasVariablePlacement && bucket.hasTextData();
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' &&

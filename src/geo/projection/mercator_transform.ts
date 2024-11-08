@@ -833,9 +833,9 @@ export class MercatorTransform implements ITransform {
         return m;
     }
 
-    getProjectionDataForCustomLayer(): ProjectionData {
+    getProjectionDataForCustomLayer(ignoreGlobeMatrix: boolean = false): ProjectionData {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        const projectionData = this.getProjectionData({overscaledTileID: tileID, ignoreTerrainMatrix: true});
+        const projectionData = this.getProjectionData({overscaledTileID: tileID, ignoreTerrainMatrix: true, ignoreGlobeMatrix});
 
         const tileMatrix = calculateTileMatrix(tileID, this.worldSize);
         mat4.multiply(tileMatrix, this._viewProjMatrix, tileMatrix);

@@ -25,7 +25,7 @@ export function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: H
     }
     const context = painter.context;
 
-    if (isRenderingToTexture) {
+    if (painter.style.map.terrain) {
         for (const coord of tileIDs) {
             const tile = sourceCache.getTile(coord);
             // Skip tiles that have uncovered parents to avoid flickering; we don't need
@@ -35,7 +35,7 @@ export function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: H
             if (painter.renderPass === 'offscreen') {
                 prepareHeatmapTerrain(painter, tile, layer, coord);
             } else if (painter.renderPass === 'translucent') {
-                renderHeatmapTerrain(painter, layer, coord);
+                renderHeatmapTerrain(painter, layer, coord, isRenderingToTexture);
             }
         }
         context.viewport.set([0, 0, painter.width, painter.height]);
@@ -156,7 +156,7 @@ function prepareHeatmapTerrain(painter: Painter, tile: Tile, layer: HeatmapStyle
         programConfiguration);
 }
 
-function renderHeatmapTerrain(painter: Painter, layer: HeatmapStyleLayer, coord: OverscaledTileID) {
+function renderHeatmapTerrain(painter: Painter, layer: HeatmapStyleLayer, coord: OverscaledTileID, isRenderingToTexture: boolean) {
     const isGlobe = painter.style.projection.name === 'globe';
     const context = painter.context;
     const gl = context.gl;
@@ -179,7 +179,7 @@ function renderHeatmapTerrain(painter: Painter, layer: HeatmapStyleLayer, coord:
     context.activeTexture.set(gl.TEXTURE1);
     colorRampTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
 
-    const projectionData = transform.getProjectionData({overscaledTileID: coord, ignoreTerrainMatrix: !isGlobe});
+    const projectionData = transform.getProjectionData({overscaledTileID: coord, ignoreTerrainMatrix: !isGlobe, ignoreGlobeMatrix: isRenderingToTexture});
 
     painter.useProgram('heatmapTexture').draw(context, gl.TRIANGLES,
         DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled,

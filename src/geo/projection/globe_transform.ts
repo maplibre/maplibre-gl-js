@@ -1184,8 +1184,8 @@ export class GlobeTransform implements ITransform {
         return m;
     }
 
-    getProjectionDataForCustomLayer(): ProjectionData {
-        const projectionData = this.getProjectionData({overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0)});
+    getProjectionDataForCustomLayer(ignoreGlobeMatrix: boolean = false): ProjectionData {
+        const projectionData = this.getProjectionData({overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0), ignoreGlobeMatrix});
         projectionData.tileMercatorCoords = [0, 0, 1, 1];
 
         // Even though we requested projection data for the mercator base tile which covers the entire mercator range,
