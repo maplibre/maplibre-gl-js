@@ -8,8 +8,8 @@ import {SingleCollisionBox} from '../../../src/data/bucket/symbol_bucket';
 import {EXTENT} from '../../../src/data/extent';
 import {MercatorTransform} from '../../../src/geo/projection/mercator_transform';
 import {mat4} from 'gl-matrix';
-import {GlobeProjection} from '../../../src/geo/projection/globe';
-import {GlobeTransform} from '../../../src/geo/projection/globe_transform';
+import {GlobeProjection} from '../../../src/geo/projection/globe/globe';
+import {GlobeTransform} from '../../../src/geo/projection/globe/globe_transform';
 
 type TestSymbol = {
     collisionBox: SingleCollisionBox;

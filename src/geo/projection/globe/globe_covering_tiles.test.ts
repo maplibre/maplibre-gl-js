@@ -1,5 +1,5 @@
-import {Aabb} from '../../util/primitives/aabb';
-import {expectToBeCloseToArray} from '../../util/test/util';
+import {Aabb} from '../../../util/primitives/aabb';
+import {expectToBeCloseToArray} from '../../../util/test/util';
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider';
 
 describe('aabb creation', () => {

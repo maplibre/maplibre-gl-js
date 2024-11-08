@@ -1,4 +1,4 @@
-import {GlobeCoveringTilesDetailsProvider} from '../../geo/projection/globe_covering_tiles_details_provider';
+import {GlobeCoveringTilesDetailsProvider} from '../../geo/projection/globe/globe_covering_tiles_details_provider';
 
 describe('aabb cache', () => {
     test('retains aabbs from last frame', () => {

@@ -1,14 +1,14 @@
 import {globeConstants, GlobeProjection} from './globe';
-import {EXTENT} from '../../data/extent';
+import {EXTENT} from '../../../data/extent';
 import Point from '@mapbox/point-geometry';
-import {LngLat} from '../lng_lat';
+import {LngLat} from '../../lng_lat';
 import {GlobeTransform} from './globe_transform';
-import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../source/tile_id';
+import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../../source/tile_id';
 import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
-import {expectToBeCloseToArray, getGlobeProjectionMock, sleep} from '../../util/test/util';
-import {MercatorCoordinate} from '../mercator_coordinate';
-import {tileCoordinatesToLocation} from './mercator_utils';
-import {coveringTiles} from './covering_tiles';
+import {expectToBeCloseToArray, getGlobeProjectionMock, sleep} from '../../../util/test/util';
+import {MercatorCoordinate} from '../../mercator_coordinate';
+import {tileCoordinatesToLocation} from '../mercator_utils';
+import {coveringTiles} from '../covering_tiles';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: Array<number>) {
     const lat = latDegrees / 180.0 * Math.PI;

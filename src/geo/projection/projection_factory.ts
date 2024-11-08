@@ -6,9 +6,9 @@ import {ICameraHelper} from './camera_helper';
 import {MercatorProjection} from './mercator';
 import {MercatorTransform} from './mercator_transform';
 import {MercatorCameraHelper} from './mercator_camera_helper';
-import {GlobeProjection} from './globe';
-import {GlobeTransform} from './globe_transform';
-import {GlobeCameraHelper} from './globe_camera_helper';
+import {GlobeProjection} from './globe/globe';
+import {GlobeTransform} from './globe/globe_transform';
+import {GlobeCameraHelper} from './globe/globe_camera_helper';
 
 export function createProjectionFromName(name: ProjectionSpecification['type']): {
     projection: Projection;

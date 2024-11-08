@@ -5,7 +5,7 @@ import {MapGeoJSONFeature} from '../../util/vectortile_to_geojson';
 import {MapLayerEventType, MapLibreEvent} from '../events';
 import {Map, MapOptions} from '../map';
 import {Event as EventedEvent, ErrorEvent} from '../../util/evented';
-import {GlobeProjection} from '../../geo/projection/globe';
+import {GlobeProjection} from '../../geo/projection/globe/globe';
 
 type IsAny<T> = 0 extends T & 1 ? T : never;
 type NotAny<T> = T extends IsAny<T> ? never : T;

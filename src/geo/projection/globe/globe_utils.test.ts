@@ -1,4 +1,4 @@
-import {LngLat} from '../lng_lat';
+import {LngLat} from '../../lng_lat';
 import {getGlobeCircumferencePixels, getZoomAdjustment, globeDistanceOfLocationsPixels} from './globe_utils';
 
 describe('globe utils', () => {

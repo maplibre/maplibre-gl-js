@@ -1,17 +1,17 @@
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {ColorMode} from '../../gl/color_mode';
-import {CullFaceMode} from '../../gl/cull_face_mode';
-import {DepthMode} from '../../gl/depth_mode';
-import {StencilMode} from '../../gl/stencil_mode';
-import {warnOnce} from '../../util/util';
-import {projectionErrorMeasurementUniformValues} from '../../render/program/projection_error_measurement_program';
-import {Mesh} from '../../render/mesh';
-import {SegmentVector} from '../../data/segment';
-import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
-import posAttributes from '../../data/pos_attributes';
-import {Framebuffer} from '../../gl/framebuffer';
-import {isWebGL2} from '../../gl/webgl2';
-import {ProjectionGPUContext} from './projection';
+import {ColorMode} from '../../../gl/color_mode';
+import {CullFaceMode} from '../../../gl/cull_face_mode';
+import {DepthMode} from '../../../gl/depth_mode';
+import {StencilMode} from '../../../gl/stencil_mode';
+import {warnOnce} from '../../../util/util';
+import {projectionErrorMeasurementUniformValues} from '../../../render/program/projection_error_measurement_program';
+import {Mesh} from '../../../render/mesh';
+import {SegmentVector} from '../../../data/segment';
+import {PosArray, TriangleIndexArray} from '../../../data/array_types.g';
+import posAttributes from '../../../data/pos_attributes';
+import {Framebuffer} from '../../../gl/framebuffer';
+import {isWebGL2} from '../../../gl/webgl2';
+import {ProjectionGPUContext} from '../projection';
 
 /**
  * For vector globe the vertex shader projects mercator coordinates to angular coordinates on a sphere.

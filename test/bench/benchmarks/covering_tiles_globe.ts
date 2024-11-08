@@ -1,6 +1,6 @@
 import Benchmark from '../lib/benchmark';
-import { GlobeTransform } from '../../../src/geo/projection/globe_transform';
-import { GlobeProjection } from '../../../src/geo/projection/globe';
+import { GlobeTransform } from '../../../src/geo/projection/globe/globe_transform';
+import { GlobeProjection } from '../../../src/geo/projection/globe/globe';
 import { LngLat } from '../styles';
 import { coveringTiles } from '../../../src/geo/projection/covering_tiles';
 
