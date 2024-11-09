@@ -29,7 +29,16 @@ export function createProjectionFromName(name: ProjectionSpecification['type']):
             const proj = new GlobeProjection();
             return {
                 projection: proj,
-                transform: new GlobeTransform(proj),
+                transform: new GlobeTransform(proj, true, true),
+                cameraHelper: new GlobeCameraHelper(proj),
+            };
+        }
+        case 'vertical-perspective':
+        {
+            const proj = new GlobeProjection();
+            return {
+                projection: proj,
+                transform: new GlobeTransform(proj, true, false),
                 cameraHelper: new GlobeCameraHelper(proj),
             };
         }
