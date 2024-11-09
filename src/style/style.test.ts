@@ -340,9 +340,11 @@ describe('Style#loadJSON', () => {
 
         await style.once('style.load');
 
-        expect(transformSpy).toHaveBeenCalledTimes(1);
-        expect(transformSpy.mock.calls[0][0]).toBe('http://example.com/sprites/bright-v8');
-        expect(transformSpy.mock.calls[0][1]).toBe('Sprite');
+        expect(transformSpy).toHaveBeenCalledTimes(2);
+        expect(transformSpy.mock.calls[0][0]).toBe('http://example.com/sprites/bright-v8.json');
+        expect(transformSpy.mock.calls[0][1]).toBe('SpriteJSON');
+        expect(transformSpy.mock.calls[1][0]).toBe('http://example.com/sprites/bright-v8.png');
+        expect(transformSpy.mock.calls[1][1]).toBe('SpriteImage');
     });
 
     test('emits an error on non-existant vector source layer', () => new Promise<void>(done => {

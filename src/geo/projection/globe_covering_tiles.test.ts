@@ -1,8 +1,8 @@
-import {Aabb} from '../../util/primitives';
+import {Aabb} from '../../util/primitives/aabb';
 import {expectToBeCloseToArray} from '../../util/test/util';
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider';
 
-describe('aabb', () => {
+describe('aabb creation', () => {
     test('z=0', () => {
         const detailsProvider = new GlobeCoveringTilesDetailsProvider();
         const aabb = detailsProvider.getTileAABB({

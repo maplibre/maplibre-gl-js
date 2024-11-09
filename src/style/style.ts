@@ -121,6 +121,7 @@ export type StyleSetterOptions = {
  * - when previous style carries certain 'state' that needs to be carried over to a new style gracefully;
  * - when a desired style is a certain combination of previous and incoming style;
  * - when an incoming style requires modification based on external state.
+ * - when an incoming style uses relative paths, which need to be converted to absolute.
  *
  * @param previous - The current style.
  * @param next - The next style.
@@ -131,8 +132,18 @@ export type StyleSetterOptions = {
  * map.setStyle('https://demotiles.maplibre.org/style.json', {
  *   transformStyle: (previousStyle, nextStyle) => ({
  *       ...nextStyle,
+ *       // make relative sprite path like "../sprite" absolute
+ *       sprite: new URL(nextStyle.sprite, "https://demotiles.maplibre.org/styles/osm-bright-gl-style/sprites/").href,
+ *       // make relative glyphs path like "../fonts/{fontstack}/{range}.pbf" absolute
+ *       glyphs: new URL(nextStyle.glyphs, "https://demotiles.maplibre.org/font/").href,
  *       sources: {
- *           ...nextStyle.sources,
+ *           // make relative vector url like "../../" absolute
+ *           ...nextStyle.sources.map(source => {
+ *              if (source.url) {
+     *              source.url = new URL(source.url, "https://api.maptiler.com/tiles/osm-bright-gl-style/");
+ *              }
+ *              return source;
+ *           }),
  *           // copy a source from previous style
  *           'osm': previousStyle.sources.osm
  *       },

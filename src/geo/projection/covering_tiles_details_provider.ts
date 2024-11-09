@@ -1,4 +1,4 @@
-import {Aabb} from '../../util/primitives';
+import {Aabb} from '../../util/primitives/aabb';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {IReadonlyTransform} from '../transform_interface';
 import {CoveringTilesOptions} from './covering_tiles';
