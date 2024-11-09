@@ -85,7 +85,8 @@ export class GlobeTransform implements ITransform {
     setMaxPitch(pitch: number): void {
         this._helper.setMaxPitch(pitch);
     }
-    setRenderWorldCopies(_renderWorldCopies: boolean): void {
+    setRenderWorldCopies(renderWorldCopies: boolean): void {
+        this._helper.setRenderWorldCopies(renderWorldCopies);
     }
     setBearing(bearing: number): void {
         this._helper.setBearing(bearing);
@@ -212,7 +213,7 @@ export class GlobeTransform implements ITransform {
         return this._helper.unmodified;
     }
     get renderWorldCopies(): boolean {
-        return false;
+        return this.isGlobeRendering ? false : this._helper.renderWorldCopies;
     }
 
     //
