@@ -282,9 +282,9 @@ export class GlobeTransform implements ITransform {
     private _farZ: number;
 
     private _coveringTilesDetailsProvider: GlobeCoveringTilesDetailsProvider;
-    private _adaptive: boolean; false;
+    private _adaptive: boolean; true;
 
-    public constructor(globeProjection: GlobeProjection, globeProjectionEnabled: boolean = true, adaptive:boolean = false) {
+    public constructor(globeProjection: GlobeProjection, globeProjectionEnabled: boolean = true, adaptive:boolean = true) {
         this._adaptive = adaptive;
 
         this._helper = new TransformHelper({
