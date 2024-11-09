@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Support Vertical Perspective projection ([#5023](https://github.com/maplibre/maplibre-gl-js/pull/5023))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
