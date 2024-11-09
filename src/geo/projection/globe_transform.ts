@@ -213,7 +213,7 @@ export class GlobeTransform implements ITransform {
         return this._helper.unmodified;
     }
     get renderWorldCopies(): boolean {
-        return this.isGlobeRendering ? false : this._helper.renderWorldCopies;
+        return this._helper.renderWorldCopies;
     }
 
     //

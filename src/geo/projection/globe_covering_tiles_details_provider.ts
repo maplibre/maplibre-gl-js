@@ -98,6 +98,10 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
         return coveringZoomLevel(transform, options) > 4;
     }
 
+    allowWorldCopies(): boolean {
+        return false;
+    }
+
     getTileAABB(tileID: { x: number; y: number; z: number }, wrap: number, elevation: number, options: CoveringTilesOptions) {
         return this._aabbCache.getTileAABB(tileID, wrap, elevation, options);
     }

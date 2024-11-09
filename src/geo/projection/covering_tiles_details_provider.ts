@@ -31,4 +31,9 @@ export interface CoveringTilesDetailsProvider {
      * Whether to allow variable zoom, which is used at high pitch angle to avoid loading an excessive amount of tiles.
      */
     allowVariableZoom: (transform: IReadonlyTransform, options: CoveringTilesOptions) => boolean;
+
+    /**
+     * Whether to allow world copies to be rendered.
+     */
+    allowWorldCopies: () => boolean;
 }
