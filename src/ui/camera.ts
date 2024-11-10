@@ -340,6 +340,7 @@ export abstract class Camera extends Evented {
         this.transform = transform;
         this._bearingSnap = options.bearingSnap;
         this.cameraHelper = cameraHelper;
+        this._terrainCollision = true;
 
         this.on('moveend', () => {
             delete this._requestedCameraState;
