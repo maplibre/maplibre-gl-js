@@ -358,6 +358,12 @@ export type MapOptions = {
      * keep the camera above ground when pitch \> 90 degrees.
      */
     centerClampedToGround?: boolean;
+    /**
+     * If `false`, the camera is allowed to go below terrain surface. When `true`, the camera will
+     * automatically adjust to stay above terrain.
+     * @defaultValue true
+     */
+    terrainCollision?: boolean;
 };
 
 export type AddImageOptions = {
@@ -434,7 +440,8 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096],
     cancelPendingTileRequestsWhileZooming: true,
-    centerClampedToGround: true
+    centerClampedToGround: true,
+    terrainCollision: true
 };
 
 /**
@@ -653,6 +660,7 @@ export class Map extends Camera {
         this._maxCanvasSize = resolvedOptions.maxCanvasSize;
         this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
+        this._terrainCollision = resolvedOptions.terrainCollision;
 
         this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
 
