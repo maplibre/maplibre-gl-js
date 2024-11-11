@@ -712,6 +712,7 @@ function shapeLines(shaping: Shaping,
             const section = line.getSection(i);
             const sectionIndex = line.getSectionIndex(i);
             const codePoint = line.getCharCode(i);
+
             let baselineOffset = 0.0;
             let metrics: GlyphMetrics | null = null;
             let rect = null;
@@ -776,34 +777,23 @@ function shapeLines(shaping: Shaping,
                 }
             }
 
+            positionedGlyphs.push({
+                glyph: codePoint,
+                imageName,
+                x,
+                y: y + baselineOffset + SHAPING_DEFAULT_OFFSET,
+                vertical,
+                scale: section.scale,
+                fontStack: section.fontStack,
+                sectionIndex,
+                metrics,
+                rect
+            });
+
             if (!vertical) {
-                positionedGlyphs.push({
-                    glyph: codePoint,
-                    imageName,
-                    x,
-                    y: y + baselineOffset + SHAPING_DEFAULT_OFFSET,
-                    vertical,
-                    scale: section.scale,
-                    fontStack: section.fontStack,
-                    sectionIndex,
-                    metrics,
-                    rect
-                });
                 x += metrics.advance * section.scale + spacing;
             } else {
                 shaping.verticalizable = true;
-                positionedGlyphs.push({
-                    glyph: codePoint,
-                    imageName,
-                    x,
-                    y: y + baselineOffset + SHAPING_DEFAULT_OFFSET,
-                    vertical,
-                    scale: section.scale,
-                    fontStack: section.fontStack,
-                    sectionIndex,
-                    metrics,
-                    rect
-                });
                 x += verticalAdvance * section.scale + spacing;
             }
         }
