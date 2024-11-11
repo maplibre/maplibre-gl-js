@@ -803,11 +803,33 @@ function shapeLines(shaping: Shaping,
             }
 
             if (!vertical) {
-                positionedGlyphs.push({glyph: codePoint, imageName, x, y: y + baselineOffset + SHAPING_DEFAULT_OFFSET, vertical, scale: section.scale, fontStack: section.fontStack, sectionIndex, metrics, rect});
+                positionedGlyphs.push({
+                    glyph: codePoint,
+                    imageName,
+                    x,
+                    y: y + baselineOffset + SHAPING_DEFAULT_OFFSET,
+                    vertical,
+                    scale: section.scale,
+                    fontStack: section.fontStack,
+                    sectionIndex,
+                    metrics,
+                    rect
+                });
                 x += metrics.advance * section.scale + spacing;
             } else {
                 shaping.verticalizable = true;
-                positionedGlyphs.push({glyph: codePoint, imageName, x, y: y + baselineOffset + SHAPING_DEFAULT_OFFSET, vertical, scale: section.scale, fontStack: section.fontStack, sectionIndex, metrics, rect});
+                positionedGlyphs.push({
+                    glyph: codePoint,
+                    imageName,
+                    x,
+                    y: y + baselineOffset + SHAPING_DEFAULT_OFFSET,
+                    vertical,
+                    scale: section.scale,
+                    fontStack: section.fontStack,
+                    sectionIndex,
+                    metrics,
+                    rect
+                });
                 x += verticalAdvance * section.scale + spacing;
             }
         }
