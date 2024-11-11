@@ -187,6 +187,22 @@ class TaggedString {
         return this.sectionIndex.reduce((max, index) => Math.max(max, this.sections[index].scale), 0);
     }
 
+    getMaxImageSize(imagePositions: {[_: string]: ImagePosition}) {
+        let maxImageWidth = 0;
+        let maxImageHeight = 0;
+        for (let i = 0; i < this.length(); i++) {
+            const section = this.getSection(i);
+            if (section.imageName) {
+                const imagePosition = imagePositions[section.imageName];
+                if (!imagePosition) continue;
+                const size = imagePosition.displaySize;
+                maxImageWidth = Math.max(maxImageWidth, size[0]);
+                maxImageHeight = Math.max(maxImageHeight, size[1]);
+            }
+        }
+        return {maxImageWidth, maxImageHeight};
+    }
+
     addTextSection(section: FormattedSection, defaultFontStack: string) {
         this.text += section.text;
         this.sections.push(SectionOptions.forText(section.scale, section.fontStack || defaultFontStack, section.verticalAlign));
@@ -591,52 +607,15 @@ function getAnchorAlignment(anchor: SymbolAnchor) {
 }
 
 function calculateLineContentSize(
-    glyphMap: {
-        [_: string]: {
-            [_: number]: StyleGlyph;
-        };
-    }, glyphPositions: {
-        [_: string]: {
-            [_: number]: GlyphPosition;
-        };
-    },
     imagePositions: {[_: string]: ImagePosition},
     line: TaggedString,
     layoutTextSizeFactor: number
 ) {
-    let maxGlyphSize = 0;
-    let maxImageHeight = 0;
-    let maxImageWidth = 0;
+    const maxGlyphSize = line.getMaxScale() * ONE_EM;
+    const {maxImageWidth, maxImageHeight} = line.getMaxImageSize(imagePositions);
 
-    for (let i = 0; i < line.length(); i++) {
-        const section = line.getSection(i);
-
-        if (section.imageName) {
-            const imagePosition = imagePositions[section.imageName];
-            if (!imagePosition) continue;
-            maxImageHeight = Math.max(
-                maxImageHeight,
-                imagePosition.displaySize[1] * layoutTextSizeFactor
-            );
-            maxImageWidth = Math.max(
-                maxImageWidth,
-                imagePosition.displaySize[0] * layoutTextSizeFactor
-            );
-        } else {
-            const codePoint = line.getCharCode(i);
-            const positions = glyphPositions[section.fontStack];
-            const glyphPosition = positions && positions[codePoint];
-            const rectAndMetrics = getRectAndMetrics(glyphPosition, glyphMap, section, codePoint);
-            if (rectAndMetrics === null) continue;
-            maxGlyphSize = Math.max(
-                maxGlyphSize,
-                ONE_EM * section.scale
-            );
-        }
-    }
-
-    const lineContentHeight = Math.max(maxGlyphSize, maxImageHeight);
-    const lineContentWidth = Math.max(maxGlyphSize, maxImageWidth);
+    const lineContentHeight = Math.max(maxGlyphSize, maxImageHeight * layoutTextSizeFactor);
+    const lineContentWidth = Math.max(maxGlyphSize, maxImageWidth * layoutTextSizeFactor);
 
     return {lineContentWidth, lineContentHeight};
 }
@@ -726,13 +705,8 @@ function shapeLines(shaping: Shaping,
             continue;
         }
 
-        const {lineContentWidth, lineContentHeight} = calculateLineContentSize(
-            glyphMap,
-            glyphPositions,
-            imagePositions,
-            line,
-            layoutTextSizeFactor
-        );
+        const {lineContentWidth, lineContentHeight} =
+            calculateLineContentSize(imagePositions, line, layoutTextSizeFactor);
 
         for (let i = 0; i < line.length(); i++) {
             const section = line.getSection(i);
