@@ -838,7 +838,7 @@ function shapeLines(shaping: Shaping,
         if (positionedGlyphs.length !== 0) {
             const lineLength = x - spacing;
             maxLineLength = Math.max(lineLength, maxLineLength);
-            justifyLine(positionedGlyphs, 0, positionedGlyphs.length - 1, justify, 0);
+            justifyLine(positionedGlyphs, 0, positionedGlyphs.length - 1, justify);
         }
 
         x = 0;
@@ -866,9 +866,8 @@ function shapeLines(shaping: Shaping,
 function justifyLine(positionedGlyphs: Array<PositionedGlyph>,
     start: number,
     end: number,
-    justify: 1 | 0 | 0.5,
-    lineOffset: number) {
-    if (!justify && !lineOffset)
+    justify: 1 | 0 | 0.5) {
+    if (!justify)
         return;
 
     const lastPositionedGlyph = positionedGlyphs[end];
@@ -877,7 +876,6 @@ function justifyLine(positionedGlyphs: Array<PositionedGlyph>,
 
     for (let j = start; j <= end; j++) {
         positionedGlyphs[j].x -= lineIndent;
-        positionedGlyphs[j].y += lineOffset;
     }
 }
 
