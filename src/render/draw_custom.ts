@@ -5,9 +5,9 @@ import type {Painter, RenderOptions} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {CustomRenderMethodInput, CustomStyleLayer} from '../style/style_layer/custom_style_layer';
 
-export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: CustomStyleLayer, renderFlags: RenderOptions) {
+export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: CustomStyleLayer, renderOptions: RenderOptions) {
 
-    const {isRenderingToTexture} = renderFlags;
+    const {isRenderingToTexture} = renderOptions;
     const context = painter.context;
     const implementation = layer.implementation;
     const projection = painter.style.projection;

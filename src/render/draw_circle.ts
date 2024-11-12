@@ -35,10 +35,10 @@ type SegmentsTileRenderState = {
     state: TileRenderState;
 };
 
-export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: CircleStyleLayer, coords: Array<OverscaledTileID>, renderFlags: RenderOptions) {
+export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: CircleStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
 
-    const {isRenderingToTexture} = renderFlags;
+    const {isRenderingToTexture} = renderOptions;
     const opacity = layer.paint.get('circle-opacity');
     const strokeWidth = layer.paint.get('circle-stroke-width');
     const strokeOpacity = layer.paint.get('circle-stroke-opacity');

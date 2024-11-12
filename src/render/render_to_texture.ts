@@ -126,13 +126,13 @@ export class RenderToTexture {
      * and 'live'-layers (f.e. symbols) it is necessary to create more stacks. For example
      * a symbol-layer is in between of fill-layers.
      * @param layer - the layer to render
-     * @param renderFlags - flags describing how to render the layer
+     * @param renderOptions - flags describing how to render the layer
      * @returns if true layer is rendered to texture, otherwise false
      */
-    renderLayer(layer: StyleLayer, renderFlags: RenderOptions): boolean {
+    renderLayer(layer: StyleLayer, renderOptions: RenderOptions): boolean {
         if (layer.isHidden(this.painter.transform.zoom)) return false;
 
-        const flags: RenderOptions = {...renderFlags, isRenderingToTexture: true};
+        const flags: RenderOptions = {...renderOptions, isRenderingToTexture: true};
         const type = layer.type;
         const painter = this.painter;
         const isLastLayer = this._renderableLayerIds[this._renderableLayerIds.length - 1] === layer.id;

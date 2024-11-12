@@ -25,12 +25,12 @@ const cornerCoords = [
     new Point(0, EXTENT),
 ];
 
-export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterStyleLayer, tileIDs: Array<OverscaledTileID>, renderFlags: RenderOptions) {
+export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
     if (layer.paint.get('raster-opacity') === 0) return;
     if (!tileIDs.length) return;
 
-    const {isRenderingToTexture} = renderFlags;
+    const {isRenderingToTexture} = renderOptions;
     const source = sourceCache.getSource();
 
     const projection = painter.style.projection;

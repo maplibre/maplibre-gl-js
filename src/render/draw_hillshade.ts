@@ -13,10 +13,10 @@ import type {SourceCache} from '../source/source_cache';
 import type {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
 import type {OverscaledTileID} from '../source/tile_id';
 
-export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer: HillshadeStyleLayer, tileIDs: Array<OverscaledTileID>, renderFlags: RenderOptions) {
+export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer: HillshadeStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'offscreen' && painter.renderPass !== 'translucent') return;
 
-    const {isRenderingToTexture} = renderFlags;
+    const {isRenderingToTexture} = renderOptions;
     const context = painter.context;
     const projection = painter.style.projection;
     const useSubdivision = projection.useSubdivision;

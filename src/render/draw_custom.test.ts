@@ -60,8 +60,8 @@ describe('drawCustom', () => {
                 };
             },
         });
-        const renderFlags: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
-        drawCustom(mockPainter, sourceCacheMock, mockLayer, renderFlags);
+        const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
+        drawCustom(mockPainter, sourceCacheMock, mockLayer, renderOptions);
         expect(result.gl).toBeDefined();
         expect(result.args.farZ).toBeCloseTo(804.8028169246645, 6);
         expect(result.args.farZ).toBe(mockPainter.transform.farZ);

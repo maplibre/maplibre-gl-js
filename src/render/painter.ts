@@ -489,7 +489,7 @@ export class Painter {
         const coordsAscending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
-        const renderFlags: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: style.projection.name === 'globe'};
+        const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: style.projection.name === 'globe'};
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
@@ -532,7 +532,7 @@ export class Painter {
             const coords = coordsDescending[layer.source];
             if (layer.type !== 'custom' && !coords.length) continue;
 
-            this.renderLayer(this, sourceCaches[layer.source], layer, coords, renderFlags);
+            this.renderLayer(this, sourceCaches[layer.source], layer, coords, renderOptions);
         }
 
         // Execute offscreen GPU tasks of the projection manager
@@ -566,7 +566,7 @@ export class Painter {
                 const coords = coordsAscending[layer.source];
 
                 this._renderTileClippingMasks(layer, coords, false);
-                this.renderLayer(this, sourceCache, layer, coords, renderFlags);
+                this.renderLayer(this, sourceCache, layer, coords, renderOptions);
             }
         }
 
@@ -580,13 +580,13 @@ export class Painter {
             const layer = this.style._layers[layerIds[this.currentLayer]];
             const sourceCache = sourceCaches[layer.source];
 
-            if (this.renderToTexture && this.renderToTexture.renderLayer(layer, renderFlags)) continue;
+            if (this.renderToTexture && this.renderToTexture.renderLayer(layer, renderOptions)) continue;
 
             if (!this.opaquePassEnabledForLayer() && !globeDepthRendered) {
                 globeDepthRendered = true;
                 // Render the globe sphere into the depth buffer - but only if globe is enabled and terrain is disabled.
                 // There should be no need for explicitly writing tile depths when terrain is enabled.
-                if (renderFlags.isRenderingGlobe && !this.style.map.terrain) {
+                if (renderOptions.isRenderingGlobe && !this.style.map.terrain) {
                     this._renderTilesDepthBuffer();
                 }
             }
@@ -597,11 +597,11 @@ export class Painter {
             const coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
 
             this._renderTileClippingMasks(layer, coordsAscending[layer.source], false);
-            this.renderLayer(this, sourceCache, layer, coords, renderFlags);
+            this.renderLayer(this, sourceCache, layer, coords, renderOptions);
         }
 
         // Render atmosphere, only for Globe projection
-        if (renderFlags.isRenderingGlobe) {
+        if (renderOptions.isRenderingGlobe) {
             drawAtmosphere(this, this.style.sky, this.style.light);
         }
 
@@ -649,42 +649,31 @@ export class Painter {
         drawCoords(this, this.style.map.terrain);
     }
 
-    renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, renderFlags: RenderOptions) {
+    renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
         if (layer.isHidden(this.transform.zoom)) return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;
 
-        switch (true) {
-            case isSymbolStyleLayer(layer):
-                drawSymbols(painter, sourceCache, layer, coords, this.style.placement.variableOffsets, renderFlags);
-                break;
-            case isCircleStyleLayer(layer):
-                drawCircles(painter, sourceCache, layer, coords, renderFlags);
-                break;
-            case isHeatmapStyleLayer(layer):
-                drawHeatmap(painter, sourceCache, layer, coords, renderFlags);
-                break;
-            case isLineStyleLayer(layer):
-                drawLine(painter, sourceCache, layer, coords, renderFlags);
-                break;
-            case isFillStyleLayer(layer):
-                drawFill(painter, sourceCache, layer, coords, renderFlags);
-                break;
-            case isFillExtrusionStyleLayer(layer):
-                drawFillExtrusion(painter, sourceCache, layer, coords, renderFlags);
-                break;
-            case isHillshadeStyleLayer(layer):
-                drawHillshade(painter, sourceCache, layer, coords, renderFlags);
-                break;
-            case isRasterStyleLayer(layer):
-                drawRaster(painter, sourceCache, layer, coords, renderFlags);
-                break;
-            case isBackgroundStyleLayer(layer):
-                drawBackground(painter, sourceCache, layer, coords, renderFlags);
-                break;
-            case isCustomStyleLayer(layer):
-                drawCustom(painter, sourceCache, layer, renderFlags);
-                break;
+        if (isSymbolStyleLayer(layer)) {
+            drawSymbols(painter, sourceCache, layer, coords, this.style.placement.variableOffsets, renderOptions);
+        } else if (isCircleStyleLayer(layer)) {
+            drawCircles(painter, sourceCache, layer, coords, renderOptions);
+        } else if (isHeatmapStyleLayer(layer)) {
+            drawHeatmap(painter, sourceCache, layer, coords, renderOptions);
+        } else if (isLineStyleLayer(layer)) {
+            drawLine(painter, sourceCache, layer, coords, renderOptions);
+        } else if (isFillStyleLayer(layer)) {
+            drawFill(painter, sourceCache, layer, coords, renderOptions);
+        } else if (isFillExtrusionStyleLayer(layer)) {
+            drawFillExtrusion(painter, sourceCache, layer, coords, renderOptions);
+        } else if (isHillshadeStyleLayer(layer)) {
+            drawHillshade(painter, sourceCache, layer, coords, renderOptions);
+        } else if (isRasterStyleLayer(layer)) {
+            drawRaster(painter, sourceCache, layer, coords, renderOptions);
+        } else if (isBackgroundStyleLayer(layer)) {
+            drawBackground(painter, sourceCache, layer, coords, renderOptions);
+        } else if (isCustomStyleLayer(layer)) {
+            drawCustom(painter, sourceCache, layer, renderOptions);
         }
     }
 

@@ -17,10 +17,10 @@ import {clamp, nextPowerOfTwo} from '../util/util';
 import {renderColorRamp} from '../util/color_ramp';
 import {EXTENT} from '../data/extent';
 
-export function drawLine(painter: Painter, sourceCache: SourceCache, layer: LineStyleLayer, coords: Array<OverscaledTileID>, renderFlags: RenderOptions) {
+export function drawLine(painter: Painter, sourceCache: SourceCache, layer: LineStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
 
-    const {isRenderingToTexture} = renderFlags;
+    const {isRenderingToTexture} = renderOptions;
 
     const opacity = layer.paint.get('line-opacity');
     const width = layer.paint.get('line-width');

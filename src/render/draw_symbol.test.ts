@@ -49,8 +49,8 @@ describe('drawSymbol', () => {
         const mockPainter = new Painter(null, null);
         mockPainter.renderPass = 'opaque';
 
-        const renderFlags: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
-        drawSymbols(mockPainter, null, null, null, null, renderFlags);
+        const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
+        drawSymbols(mockPainter, null, null, null, null, renderOptions);
 
         expect(mockPainter.colorModeForRenderPass).not.toHaveBeenCalled();
     });
@@ -111,8 +111,8 @@ describe('drawSymbol', () => {
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
         sourceCacheMock.getTile = (_a) => tile;
 
-        const renderFlags: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
-        drawSymbols(painterMock, sourceCacheMock, layer, [tileId], null, renderFlags);
+        const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
+        drawSymbols(painterMock, sourceCacheMock, layer, [tileId], null, renderOptions);
 
         expect(programMock.draw).toHaveBeenCalledTimes(1);
     });
@@ -179,8 +179,8 @@ describe('drawSymbol', () => {
         } as any as Style;
 
         const spy = jest.spyOn(symbolProjection, 'updateLineLabels');
-        const renderFlags: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
-        drawSymbols(painterMock, sourceCacheMock, layer, [tileId], null, renderFlags);
+        const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
+        drawSymbols(painterMock, sourceCacheMock, layer, [tileId], null, renderOptions);
 
         expect(spy.mock.calls[0][7]).toBeFalsy(); // rotateToLine === false
     });
@@ -241,8 +241,8 @@ describe('drawSymbol', () => {
         (sourceCacheMock.getTile as jest.Mock).mockReturnValue(tile);
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
 
-        const renderFlags: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
-        drawSymbols(painterMock, sourceCacheMock, layer, [tileId], null, renderFlags);
+        const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
+        drawSymbols(painterMock, sourceCacheMock, layer, [tileId], null, renderOptions);
 
         expect(programMock.draw).toHaveBeenCalledTimes(0);
     });

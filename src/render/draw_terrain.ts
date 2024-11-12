@@ -69,8 +69,8 @@ function drawCoords(painter: Painter, terrain: Terrain) {
     context.viewport.set([0, 0, painter.width, painter.height]);
 }
 
-function drawTerrain(painter: Painter, terrain: Terrain, tiles: Array<Tile>, renderFlags: RenderOptions) {
-    const {isRenderingGlobe} = renderFlags;
+function drawTerrain(painter: Painter, terrain: Terrain, tiles: Array<Tile>, renderOptions: RenderOptions) {
+    const {isRenderingGlobe} = renderOptions;
     const context = painter.context;
     const gl = context.gl;
     const tr = painter.transform;

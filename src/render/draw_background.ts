@@ -12,13 +12,13 @@ import type {BackgroundStyleLayer} from '../style/style_layer/background_style_l
 import {OverscaledTileID} from '../source/tile_id';
 import {coveringTiles} from '../geo/projection/covering_tiles';
 
-export function drawBackground(painter: Painter, sourceCache: SourceCache, layer: BackgroundStyleLayer, coords: Array<OverscaledTileID>, renderFlags: RenderOptions) {
+export function drawBackground(painter: Painter, sourceCache: SourceCache, layer: BackgroundStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     const color = layer.paint.get('background-color');
     const opacity = layer.paint.get('background-opacity');
 
     if (opacity === 0) return;
 
-    const {isRenderingToTexture} = renderFlags;
+    const {isRenderingToTexture} = renderOptions;
     const context = painter.context;
     const gl = context.gl;
     const projection = painter.style.projection;

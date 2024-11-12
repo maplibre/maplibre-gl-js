@@ -18,7 +18,7 @@ import {updatePatternPositionsInProgram} from './update_pattern_positions_in_pro
 import {StencilMode} from '../gl/stencil_mode';
 import {translatePosition} from '../util/util';
 
-export function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>, renderFlags: RenderOptions) {
+export function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     const color = layer.paint.get('fill-color');
     const opacity = layer.paint.get('fill-opacity');
 
@@ -26,7 +26,7 @@ export function drawFill(painter: Painter, sourceCache: SourceCache, layer: Fill
         return;
     }
 
-    const {isRenderingToTexture} = renderFlags;
+    const {isRenderingToTexture} = renderOptions;
     const colorMode = painter.colorModeForRenderPass();
     const pattern = layer.paint.get('fill-pattern');
     const pass = painter.opaquePassEnabledForLayer() &&
