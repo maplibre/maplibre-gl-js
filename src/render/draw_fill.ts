@@ -9,7 +9,7 @@ import {
     fillOutlinePatternUniformValues
 } from './program/fill_program';
 
-import type {Painter} from './painter';
+import type {Painter, RenderFlags} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import type {FillBucket} from '../data/bucket/fill_bucket';
@@ -18,7 +18,7 @@ import {updatePatternPositionsInProgram} from './update_pattern_positions_in_pro
 import {StencilMode} from '../gl/stencil_mode';
 import {translatePosition} from '../util/util';
 
-export function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>, isRenderingToTexture: boolean = false) {
+export function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>, renderFlags: RenderFlags) {
     const color = layer.paint.get('fill-color');
     const opacity = layer.paint.get('fill-opacity');
 
@@ -26,6 +26,7 @@ export function drawFill(painter: Painter, sourceCache: SourceCache, layer: Fill
         return;
     }
 
+    const {isRenderingToTexture} = renderFlags;
     const colorMode = painter.colorModeForRenderPass();
     const pattern = layer.paint.get('fill-pattern');
     const pass = painter.opaquePassEnabledForLayer() &&

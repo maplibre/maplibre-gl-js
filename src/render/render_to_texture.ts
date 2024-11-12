@@ -1,4 +1,4 @@
-import {Painter} from './painter';
+import {Painter, RenderFlags} from './painter';
 import {Tile} from '../source/tile';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {OverscaledTileID} from '../source/tile_id';
@@ -126,11 +126,13 @@ export class RenderToTexture {
      * and 'live'-layers (f.e. symbols) it is necessary to create more stacks. For example
      * a symbol-layer is in between of fill-layers.
      * @param layer - the layer to render
+     * @param renderFlags - flags describing how to render the layer
      * @returns if true layer is rendered to texture, otherwise false
      */
-    renderLayer(layer: StyleLayer): boolean {
+    renderLayer(layer: StyleLayer, renderFlags: RenderFlags): boolean {
         if (layer.isHidden(this.painter.transform.zoom)) return false;
 
+        const flags: RenderFlags = {...renderFlags, isRenderingToTexture: true};
         const type = layer.type;
         const painter = this.painter;
         const isLastLayer = this._renderableLayerIds[this._renderableLayerIds.length - 1] === layer.id;
@@ -153,7 +155,7 @@ export class RenderToTexture {
             for (const tile of this._renderableTiles) {
                 // if render pool is full draw current tiles to screen and free pool
                 if (this.pool.isFull()) {
-                    drawTerrain(this.painter, this.terrain, this._rttTiles);
+                    drawTerrain(this.painter, this.terrain, this._rttTiles, flags);
                     this._rttTiles = [];
                     this.pool.freeAllObjects();
                 }
@@ -180,11 +182,11 @@ export class RenderToTexture {
                     const coords = layer.source ? this._coordsAscending[layer.source][tile.tileID.key] : [tile.tileID];
                     painter.context.viewport.set([0, 0, obj.fbo.width, obj.fbo.height]);
                     painter._renderTileClippingMasks(layer, coords, true);
-                    painter.renderLayer(painter, painter.style.sourceCaches[layer.source], layer, coords, true);
+                    painter.renderLayer(painter, painter.style.sourceCaches[layer.source], layer, coords, flags);
                     if (layer.source) tile.rttCoords[layer.source] = this._coordsAscendingStr[layer.source][tile.tileID.key];
                 }
             }
-            drawTerrain(this.painter, this.terrain, this._rttTiles);
+            drawTerrain(this.painter, this.terrain, this._rttTiles, flags);
             this._rttTiles = [];
             this.pool.freeAllObjects();
 

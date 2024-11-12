@@ -20,7 +20,7 @@ import {
     symbolTextAndIconUniformValues
 } from './program/symbol_program';
 
-import type {Painter} from './painter';
+import type {Painter, RenderFlags} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 
@@ -62,9 +62,10 @@ const identityMat4 = mat4.identity(new Float32Array(16));
 
 export function drawSymbols(painter: Painter, sourceCache: SourceCache, layer: SymbolStyleLayer, coords: Array<OverscaledTileID>, variableOffsets: {
     [_ in CrossTileID]: VariableOffset;
-}, isRenderingToTexture: boolean = false) {
+}, renderFlags: RenderFlags) {
     if (painter.renderPass !== 'translucent') return;
 
+    const {isRenderingToTexture} = renderFlags;
     // Disable the stencil test so that labels aren't clipped to tile boundaries.
     const stencilMode = StencilMode.disabled;
     const colorMode = painter.colorModeForRenderPass();

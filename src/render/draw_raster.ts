@@ -10,7 +10,7 @@ import {EXTENT} from '../data/extent';
 import {coveringZoomLevel} from '../geo/projection/covering_tiles';
 import Point from '@mapbox/point-geometry';
 
-import type {Painter} from './painter';
+import type {Painter, RenderFlags} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
 import type {OverscaledTileID} from '../source/tile_id';
@@ -25,11 +25,12 @@ const cornerCoords = [
     new Point(0, EXTENT),
 ];
 
-export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterStyleLayer, tileIDs: Array<OverscaledTileID>, isRenderingToTexture: boolean = false) {
+export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterStyleLayer, tileIDs: Array<OverscaledTileID>, renderFlags: RenderFlags) {
     if (painter.renderPass !== 'translucent') return;
     if (layer.paint.get('raster-opacity') === 0) return;
     if (!tileIDs.length) return;
 
+    const {isRenderingToTexture} = renderFlags;
     const source = sourceCache.getSource();
 
     const projection = painter.style.projection;

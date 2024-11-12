@@ -8,7 +8,7 @@ import {
     lineGradientUniformValues
 } from './program/line_program';
 
-import type {Painter} from './painter';
+import type {Painter, RenderFlags} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {LineStyleLayer} from '../style/style_layer/line_style_layer';
 import type {LineBucket} from '../data/bucket/line_bucket';
@@ -17,8 +17,10 @@ import {clamp, nextPowerOfTwo} from '../util/util';
 import {renderColorRamp} from '../util/color_ramp';
 import {EXTENT} from '../data/extent';
 
-export function drawLine(painter: Painter, sourceCache: SourceCache, layer: LineStyleLayer, coords: Array<OverscaledTileID>, isRenderingToTexture: boolean = false) {
+export function drawLine(painter: Painter, sourceCache: SourceCache, layer: LineStyleLayer, coords: Array<OverscaledTileID>, renderFlags: RenderFlags) {
     if (painter.renderPass !== 'translucent') return;
+
+    const {isRenderingToTexture} = renderFlags;
 
     const opacity = layer.paint.get('line-opacity');
     const width = layer.paint.get('line-width');

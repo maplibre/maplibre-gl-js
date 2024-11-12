@@ -7,7 +7,7 @@ import {
     fillExtrusionPatternUniformValues,
 } from './program/fill_extrusion_program';
 
-import type {Painter} from './painter';
+import type {Painter, RenderFlags} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {FillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer';
 import type {FillExtrusionBucket} from '../data/bucket/fill_extrusion_bucket';
@@ -16,12 +16,13 @@ import type {OverscaledTileID} from '../source/tile_id';
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
 import {translatePosition} from '../util/util';
 
-export function drawFillExtrusion(painter: Painter, source: SourceCache, layer: FillExtrusionStyleLayer, coords: Array<OverscaledTileID>, isRenderingToTexture: boolean = false) {
+export function drawFillExtrusion(painter: Painter, source: SourceCache, layer: FillExtrusionStyleLayer, coords: Array<OverscaledTileID>, renderFlags: RenderFlags) {
     const opacity = layer.paint.get('fill-extrusion-opacity');
     if (opacity === 0) {
         return;
     }
 
+    const {isRenderingToTexture} = renderFlags;
     if (painter.renderPass === 'translucent') {
         const depthMode = new DepthMode(painter.context.gl.LEQUAL, DepthMode.ReadWrite, painter.depthRangeFor3D);
 

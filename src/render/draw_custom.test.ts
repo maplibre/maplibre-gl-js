@@ -1,7 +1,7 @@
 import {OverscaledTileID} from '../source/tile_id';
 import {SourceCache} from '../source/source_cache';
 import {Tile} from '../source/tile';
-import {Painter} from './painter';
+import {Painter, RenderFlags} from './painter';
 import type {Map} from '../ui/map';
 import {drawCustom} from './draw_custom';
 import {CustomStyleLayer} from '../style/style_layer/custom_style_layer';
@@ -60,7 +60,8 @@ describe('drawCustom', () => {
                 };
             },
         });
-        drawCustom(mockPainter, sourceCacheMock, mockLayer);
+        const renderFlags: RenderFlags = {isRenderingToTexture: false, isRenderingGlobe: false};
+        drawCustom(mockPainter, sourceCacheMock, mockLayer, renderFlags);
         expect(result.gl).toBeDefined();
         expect(result.args.farZ).toBeCloseTo(804.8028169246645, 6);
         expect(result.args.farZ).toBe(mockPainter.transform.farZ);
