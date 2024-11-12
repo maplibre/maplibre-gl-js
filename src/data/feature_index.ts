@@ -300,6 +300,11 @@ export class FeatureIndex {
             const propName = typeof this.promoteId === 'string' ? this.promoteId : this.promoteId[sourceLayerId];
             id = feature.properties[propName] as string | number;
             if (typeof id === 'boolean') id = Number(id);
+
+            // When cluster is true, the id is the cluster_id even though promoteId is set
+            if (id === undefined && feature.properties?.cluster && this.promoteId) {
+                id = Number(feature.properties.cluster_id);
+            }
         }
         return id;
     }

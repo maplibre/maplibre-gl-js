@@ -11,14 +11,15 @@ import {GlobeProjection, globeConstants} from './globe';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {PointProjection} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
-import {CoveringTilesOptions, CoveringZoomOptions, IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
+import {IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
 import {PaddingOptions} from '../edge_insets';
 import {tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 import {angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, sphereSurfacePointToCoordinates} from './globe_utils';
 import {EXTENT} from '../../data/extent';
-import type {ProjectionData} from './projection_data';
-import {globeCoveringTiles} from './globe_covering_tiles';
-import {Frustum} from '../../util/primitives';
+import type {ProjectionData, ProjectionDataParams} from './projection_data';
+import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider';
+import {Frustum} from '../../util/primitives/frustum';
+import {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
 
 /**
  * Describes the intersection of ray and sphere.
@@ -84,8 +85,7 @@ export class GlobeTransform implements ITransform {
     setMaxPitch(pitch: number): void {
         this._helper.setMaxPitch(pitch);
     }
-    setRenderWorldCopies(renderWorldCopies: boolean): void {
-        this._helper.setRenderWorldCopies(renderWorldCopies);
+    setRenderWorldCopies(_renderWorldCopies: boolean): void {
     }
     setBearing(bearing: number): void {
         this._helper.setBearing(bearing);
@@ -119,9 +119,6 @@ export class GlobeTransform implements ITransform {
     }
     isPaddingEqual(padding: PaddingOptions): boolean {
         return this._helper.isPaddingEqual(padding);
-    }
-    coveringZoomLevel(options: CoveringZoomOptions): number {
-        return this._helper.coveringZoomLevel(options);
     }
     resize(width: number, height: number): void {
         this._helper.resize(width, height);
@@ -215,7 +212,7 @@ export class GlobeTransform implements ITransform {
         return this._helper.unmodified;
     }
     get renderWorldCopies(): boolean {
-        return this._helper.renderWorldCopies;
+        return false;
     }
 
     //
@@ -281,10 +278,15 @@ export class GlobeTransform implements ITransform {
     private _globeness: number = 1.0;
     private _mercatorTransform: MercatorTransform;
 
-    private _nearZ;
-    private _farZ;
+    private _nearZ: number;
+    private _farZ: number;
 
-    public constructor(globeProjection: GlobeProjection, globeProjectionEnabled: boolean = true) {
+    private _coveringTilesDetailsProvider: GlobeCoveringTilesDetailsProvider;
+    private _adaptive: boolean;
+
+    public constructor(globeProjection: GlobeProjection, globeProjectionEnabled: boolean = true, adaptive:boolean = true) {
+        this._adaptive = adaptive;
+
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
             getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
@@ -293,6 +295,7 @@ export class GlobeTransform implements ITransform {
         this._globeness = globeProjectionEnabled ? 1 : 0; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.
         this._projectionInstance = globeProjection;
         this._mercatorTransform = new MercatorTransform();
+        this._coveringTilesDetailsProvider = new GlobeCoveringTilesDetailsProvider();
     }
 
     clone(): ITransform {
@@ -372,10 +375,12 @@ export class GlobeTransform implements ITransform {
     newFrameUpdate(): TransformUpdateResult {
         this._lastUpdateTimeSeconds = browser.now() / 1000.0;
         const oldGlobeRendering = this.isGlobeRendering;
-        this._globeness = this._computeGlobenessAnimation();
+
+        this._globeness = (!this._adaptive && this._globeProjectionAllowed) ? 1 : this._computeGlobenessAnimation();
         // Everything below this comment must happen AFTER globeness update
         this._updateErrorCorrectionValue();
         this._calcMatrices();
+        this._coveringTilesDetailsProvider.newFrame();
 
         if (oldGlobeRendering === this.isGlobeRendering) {
             return {
@@ -448,8 +453,9 @@ export class GlobeTransform implements ITransform {
         return (this._lastUpdateTimeSeconds - this._lastGlobeChangeTimeSeconds) < globeConstants.globeTransitionTimeSeconds;
     }
 
-    getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData {
-        const data = this._mercatorTransform.getProjectionData(overscaledTileID, aligned, ignoreTerrainMatrix);
+    getProjectionData(params: ProjectionDataParams): ProjectionData {
+        const {overscaledTileID, aligned, ignoreTerrainMatrix, ignoreGlobeMatrix} = params;
+        const data = this._mercatorTransform.getProjectionData({overscaledTileID, aligned, ignoreTerrainMatrix});
 
         // Set 'projectionMatrix' to actual globe transform
         if (this.isGlobeRendering) {
@@ -457,7 +463,7 @@ export class GlobeTransform implements ITransform {
         }
 
         data.clippingPlane = this._cachedClippingPlane as [number, number, number, number];
-        data.projectionTransition = this._globeness;
+        data.projectionTransition = ignoreGlobeMatrix ? 0 : this._globeness;
 
         return data;
     }
@@ -689,16 +695,14 @@ export class GlobeTransform implements ITransform {
         return [new UnwrappedTileID(0, tileID)];
     }
 
-    coveringTiles(options: CoveringTilesOptions): OverscaledTileID[] {
-        if (!this.isGlobeRendering) {
-            return this._mercatorTransform.coveringTiles(options);
-        }
-
-        const coveringZ = this.coveringZoomLevel(options);
-        const cameraCoord = this.screenPointToMercatorCoordinate(this.getCameraPoint());
-        const centerCoord = MercatorCoordinate.fromLngLat(this.center);
-
-        return globeCoveringTiles(this._cachedFrustum, this._cachedClippingPlane, cameraCoord, centerCoord, coveringZ, options);
+    getCameraFrustum(): Frustum {
+        return this.isGlobeRendering ? this._cachedFrustum : this._mercatorTransform.getCameraFrustum();
+    }
+    getClippingPlane(): vec4 | null {
+        return this.isGlobeRendering ? this._cachedClippingPlane : this._mercatorTransform.getClippingPlane();
+    }
+    getCoveringTilesDetailsProvider(): CoveringTilesDetailsProvider {
+        return this.isGlobeRendering ? this._coveringTilesDetailsProvider : this._mercatorTransform.getCoveringTilesDetailsProvider();
     }
 
     recalculateZoomAndCenter(terrain?: Terrain): void {
@@ -1181,7 +1185,7 @@ export class GlobeTransform implements ITransform {
     }
 
     getProjectionDataForCustomLayer(): ProjectionData {
-        const projectionData = this.getProjectionData(new OverscaledTileID(0, 0, 0, 0, 0));
+        const projectionData = this.getProjectionData({overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0)});
         projectionData.tileMercatorCoords = [0, 0, 1, 1];
 
         // Even though we requested projection data for the mercator base tile which covers the entire mercator range,

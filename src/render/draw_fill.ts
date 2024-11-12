@@ -16,6 +16,7 @@ import type {FillBucket} from '../data/bucket/fill_bucket';
 import type {OverscaledTileID} from '../source/tile_id';
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
 import {translatePosition} from '../util/util';
+import {StencilMode} from '../gl/stencil_mode';
 
 export function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>) {
     const color = layer.paint.get('fill-color');
@@ -26,7 +27,6 @@ export function drawFill(painter: Painter, sourceCache: SourceCache, layer: Fill
     }
 
     const colorMode = painter.colorModeForRenderPass();
-
     const pattern = layer.paint.get('fill-pattern');
     const pass = painter.opaquePassEnabledForLayer() &&
         (!pattern.constantOr(1 as any) &&
@@ -106,7 +106,11 @@ function drawFillTiles(
 
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        const projectionData = transform.getProjectionData(coord);
+        const globeWithTerrain = painter.style.map.terrain && painter.style.projection.name === 'globe';
+        const projectionData = transform.getProjectionData({
+            overscaledTileID: coord,
+            ignoreGlobeMatrix: globeWithTerrain
+        });
 
         const translateForUniforms = translatePosition(transform, tile, propertyFillTranslate, propertyFillTranslateAnchor);
 
@@ -123,7 +127,17 @@ function drawFillTiles(
                 fillOutlineUniformValues(drawingBufferSize, translateForUniforms);
         }
 
-        const stencil = painter.stencilModeForClipping(coord);
+        let stencil: StencilMode;
+        if (painter.renderPass === 'translucent') {
+            if (globeWithTerrain) {
+                const [stencilModes] = painter.stencilConfigForOverlap(coords);
+                stencil = stencilModes[coord.overscaledZ];
+            } else {
+                stencil = painter.stencilModeForClipping(coord);
+            }
+        } else {
+            stencil = StencilMode.disabled;
+        }
 
         program.draw(painter.context, drawMode, depthMode,
             stencil, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData,

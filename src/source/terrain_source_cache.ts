@@ -7,6 +7,7 @@ import type {ITransform} from '../geo/transform_interface';
 import type {SourceCache} from '../source/source_cache';
 import {Terrain} from '../render/terrain';
 import {browser} from '../util/browser';
+import {coveringTiles} from '../geo/projection/covering_tiles';
 
 /**
  * @internal
@@ -64,10 +65,10 @@ export class TerrainSourceCache extends Evented {
         this._sourceTileCache = {};
         this.minzoom = 0;
         this.maxzoom = 22;
-        this.tileSize = 512;
         this.deltaZoom = 1;
+        this.tileSize = sourceCache._source.tileSize * 2 ** this.deltaZoom;
         sourceCache.usedForTerrain = true;
-        sourceCache.tileSize = this.tileSize * 2 ** this.deltaZoom;
+        sourceCache.tileSize = this.tileSize;
     }
 
     destruct() {
@@ -86,12 +87,13 @@ export class TerrainSourceCache extends Evented {
         // create internal render-to-texture tiles for the current scene.
         this._renderableTilesKeys = [];
         const keys = {};
-        for (const tileID of transform.coveringTiles({
+        for (const tileID of coveringTiles(transform, {
             tileSize: this.tileSize,
             minzoom: this.minzoom,
             maxzoom: this.maxzoom,
             reparseOverscaled: false,
-            terrain
+            terrain,
+            calculateTileZoom: this.sourceCache._source.calculateTileZoom
         })) {
             keys[tileID.key] = true;
             this._renderableTilesKeys.push(tileID.key);

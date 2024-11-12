@@ -8,6 +8,7 @@ import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinat
 import {expectToBeCloseToArray, getGlobeProjectionMock, sleep} from '../../util/test/util';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {tileCoordinatesToLocation} from './mercator_utils';
+import {coveringTiles} from './covering_tiles';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: Array<number>) {
     const lat = latDegrees / 180.0 * Math.PI;
@@ -41,8 +42,18 @@ describe('GlobeTransform', () => {
     describe('getProjectionData', () => {
         const globeTransform = createGlobeTransform(globeProjectionMock);
         test('mercator tile extents are set', () => {
-            const projectionData = globeTransform.getProjectionData(new OverscaledTileID(1, 0, 1, 1, 0));
+            const projectionData = globeTransform.getProjectionData({overscaledTileID: new OverscaledTileID(1, 0, 1, 1, 0)});
             expectToBeCloseToArray(projectionData.tileMercatorCoords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
+        });
+
+        test('Globe transition is not 0 when not ignoring the globe matrix', () => {
+            const projectionData = globeTransform.getProjectionData({overscaledTileID: new OverscaledTileID(1, 0, 1, 1, 0)});
+            expect(projectionData.projectionTransition).not.toBe(0);
+        });
+
+        test('Ignoring the globe matrix sets transition to 0', () => {
+            const projectionData = globeTransform.getProjectionData({overscaledTileID: new OverscaledTileID(1, 0, 1, 1, 0), ignoreGlobeMatrix: true});
+            expect(projectionData.projectionTransition).toBe(0);
         });
     });
 
@@ -50,7 +61,7 @@ describe('GlobeTransform', () => {
         const globeTransform = createGlobeTransform(globeProjectionMock);
 
         describe('general plane properties', () => {
-            const projectionData = globeTransform.getProjectionData(new OverscaledTileID(0, 0, 0, 0, 0));
+            const projectionData = globeTransform.getProjectionData({overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0)});
 
             test('plane vector length', () => {
                 const len = Math.sqrt(
@@ -607,7 +618,7 @@ describe('GlobeTransform', () => {
             transform.setCenter(new LngLat(0.0, 0.0));
             transform.setZoom(-1);
 
-            const tiles = transform.coveringTiles({
+            const tiles = coveringTiles(transform, {
                 tileSize: 512,
             });
 
@@ -619,10 +630,10 @@ describe('GlobeTransform', () => {
         test('zoomed in', () => {
             const transform = new GlobeTransform(globeProjectionMock);
             transform.resize(128, 128);
-            transform.setCenter(new LngLat(0.0, 0.0));
+            transform.setCenter(new LngLat(-0.02, 0.01));
             transform.setZoom(3);
 
-            const tiles = transform.coveringTiles({
+            const tiles = coveringTiles(transform, {
                 tileSize: 512,
             });
 
@@ -637,25 +648,25 @@ describe('GlobeTransform', () => {
         test('zoomed in 512x512', () => {
             const transform = new GlobeTransform(globeProjectionMock);
             transform.resize(512, 512);
-            transform.setCenter(new LngLat(0.0, 0.0));
+            transform.setCenter(new LngLat(-0.02, 0.01));
             transform.setZoom(3);
 
-            const tiles = transform.coveringTiles({
+            const tiles = coveringTiles(transform, {
                 tileSize: 512,
             });
 
             expect(tiles).toEqual([
-                new OverscaledTileID(3, 0, 3, 2, 2),
-                new OverscaledTileID(3, 0, 3, 2, 3),
                 new OverscaledTileID(3, 0, 3, 3, 3),
-                new OverscaledTileID(3, 0, 3, 2, 4),
                 new OverscaledTileID(3, 0, 3, 3, 4),
                 new OverscaledTileID(3, 0, 3, 4, 3),
-                new OverscaledTileID(3, 0, 3, 2, 5),
-                new OverscaledTileID(3, 0, 3, 5, 2),
                 new OverscaledTileID(3, 0, 3, 4, 4),
+                new OverscaledTileID(3, 0, 3, 2, 3),
+                new OverscaledTileID(3, 0, 3, 2, 4),
                 new OverscaledTileID(3, 0, 3, 5, 3),
                 new OverscaledTileID(3, 0, 3, 5, 4),
+                new OverscaledTileID(3, 0, 3, 2, 2),
+                new OverscaledTileID(3, 0, 3, 2, 5),
+                new OverscaledTileID(3, 0, 3, 5, 2),
                 new OverscaledTileID(3, 0, 3, 5, 5),
             ]);
         });
@@ -663,76 +674,73 @@ describe('GlobeTransform', () => {
         test('pitched', () => {
             const transform = new GlobeTransform(globeProjectionMock);
             transform.resize(128, 128);
-            transform.setCenter(new LngLat(0.0, 0.0));
+            transform.setCenter(new LngLat(-0.002, 0.001));
             transform.setZoom(8);
             transform.setMaxPitch(80);
             transform.setPitch(80);
 
-            const tiles = transform.coveringTiles({
+            const tiles = coveringTiles(transform, {
                 tileSize: 512,
             });
 
             expect(tiles).toEqual([
-                new OverscaledTileID(8, 0, 8, 127, 126),
-                new OverscaledTileID(8, 0, 8, 127, 127),
-                new OverscaledTileID(8, 0, 8, 128, 126),
-                new OverscaledTileID(8, 0, 8, 127, 128),
-                new OverscaledTileID(8, 0, 8, 128, 127),
-                new OverscaledTileID(8, 0, 8, 128, 128),
+                new OverscaledTileID(6, 0, 6, 32, 31),
+                new OverscaledTileID(6, 0, 6, 31, 31),
+                new OverscaledTileID(10, 0, 10, 511, 512),
+                new OverscaledTileID(10, 0, 10, 512, 512)
             ]);
         });
 
         test('pitched+rotated', () => {
             const transform = new GlobeTransform(globeProjectionMock);
             transform.resize(128, 128);
-            transform.setCenter(new LngLat(0.0, 0.0));
+            transform.setCenter(new LngLat(-0.002, 0.001));
             transform.setZoom(8);
             transform.setMaxPitch(80);
             transform.setPitch(80);
             transform.setBearing(45);
 
-            const tiles = transform.coveringTiles({
+            const tiles = coveringTiles(transform, {
                 tileSize: 512,
             });
 
             expect(tiles).toEqual([
-                new OverscaledTileID(8, 0, 8, 128, 125),
-                new OverscaledTileID(8, 0, 8, 127, 127),
-                new OverscaledTileID(8, 0, 8, 128, 126),
-                new OverscaledTileID(8, 0, 8, 127, 128),
-                new OverscaledTileID(8, 0, 8, 128, 127),
-                new OverscaledTileID(8, 0, 8, 129, 126),
-                new OverscaledTileID(8, 0, 8, 128, 128),
-                new OverscaledTileID(8, 0, 8, 129, 127),
-                new OverscaledTileID(8, 0, 8, 130, 127),
+                new OverscaledTileID(7, 0, 7, 64, 64),
+                new OverscaledTileID(7, 0, 7, 65, 63),
+                new OverscaledTileID(7, 0, 7, 64, 63),
+                new OverscaledTileID(7, 0, 7, 63, 63),
+                new OverscaledTileID(7, 0, 7, 64, 62),
+                new OverscaledTileID(10, 0, 10, 510, 512),
+                new OverscaledTileID(10, 0, 10, 511, 512),
+                new OverscaledTileID(10, 0, 10, 511, 513)
             ]);
         });
 
         test('antimeridian1', () => {
             const transform = new GlobeTransform(globeProjectionMock);
             transform.resize(128, 128);
-            transform.setCenter(new LngLat(179.99, 0.0));
+            transform.setCenter(new LngLat(179.99, -0.001));
             transform.setZoom(5);
 
-            const tiles = transform.coveringTiles({
+            const tiles = coveringTiles(transform, {
                 tileSize: 512,
             });
 
             expect(tiles).toEqual([
-                new OverscaledTileID(5, 1, 5, 0, 15),
-                new OverscaledTileID(5, 1, 5, 0, 16),
-                new OverscaledTileID(5, 0, 5, 31, 15),
                 new OverscaledTileID(5, 0, 5, 31, 16),
+                new OverscaledTileID(5, 0, 5, 31, 15),
+                new OverscaledTileID(5, 1, 5, 0, 16),
+                new OverscaledTileID(5, 1, 5, 0, 15),
             ]);
         });
 
         test('antimeridian2', () => {
             const transform = new GlobeTransform(globeProjectionMock);
             transform.resize(128, 128);
-            transform.setCenter(new LngLat(-179.99, 0.0));
+            transform.setCenter(new LngLat(-179.99, 0.001));
             transform.setZoom(5);
 
-            const tiles = transform.coveringTiles({
+            const tiles = coveringTiles(transform, {
                 tileSize: 512,
             });
 
@@ -741,6 +749,24 @@ describe('GlobeTransform', () => {
                 new OverscaledTileID(5, 0, 5, 0, 16),
                 new OverscaledTileID(5, -1, 5, 31, 15),
                 new OverscaledTileID(5, -1, 5, 31, 16),
+            ]);
+        });
+
+        test('zoom < 0', () => {
+            const transform = new GlobeTransform(globeProjectionMock);
+            transform.resize(128, 128);
+            transform.setCenter(new LngLat(0.0, 80.0));
+            transform.setZoom(-0.5);
+
+            const tiles = coveringTiles(transform, {
+                tileSize: 512,
+                minzoom: 0,
+                maxzoom: 0,
+                reparseOverscaled: true
+            });
+
+            expect(tiles).toEqual([
+                new OverscaledTileID(0, 0, 0, 0, 0)
             ]);
         });
     });
