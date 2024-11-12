@@ -14,6 +14,9 @@ import type {OverscaledTileID} from '../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {EXTENT} from '../data/extent';
 import {coveringZoomLevel} from '../geo/projection/covering_tiles';
+import {Tile} from '../source/tile';
+import {ITransform} from '../geo/transform_interface';
+import {Terrain} from './terrain';
 
 const cornerCoords = [
     new Point(0, 0),
@@ -135,7 +138,7 @@ function drawTiles(
     }
 }
 
-function getFadeValues(tile, parentTile, sourceCache, layer, transform, terrain) {
+function getFadeValues(tile: Tile, parentTile: Tile, sourceCache: SourceCache, layer: RasterStyleLayer, transform: ITransform, terrain: Terrain) {
     const fadeDuration = layer.paint.get('raster-fade-duration');
 
     if (!terrain && fadeDuration > 0) {
