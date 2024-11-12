@@ -49,6 +49,16 @@ import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {RenderToTexture} from './render_to_texture';
 import type {ProjectionData} from '../geo/projection/projection_data';
 import {coveringTiles} from '../geo/projection/covering_tiles';
+import {isSymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
+import {isCircleStyleLayer} from '../style/style_layer/circle_style_layer';
+import {isHeatmapStyleLayer} from '../style/style_layer/heatmap_style_layer';
+import {isLineStyleLayer} from '../style/style_layer/line_style_layer';
+import {isFillStyleLayer} from '../style/style_layer/fill_style_layer';
+import {isFillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer';
+import {isHillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
+import {isRasterStyleLayer} from '../style/style_layer/raster_style_layer';
+import {isBackgroundStyleLayer} from '../style/style_layer/background_style_layer';
+import {isCustomStyleLayer} from '../style/style_layer/custom_style_layer';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -638,36 +648,36 @@ export class Painter {
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;
 
-        switch (layer.type) {
-            case 'symbol':
-                drawSymbols(painter, sourceCache, layer as any, coords, this.style.placement.variableOffsets, isRenderingToTexture);
+        switch (true) {
+            case isSymbolStyleLayer(layer):
+                drawSymbols(painter, sourceCache, layer, coords, this.style.placement.variableOffsets, isRenderingToTexture);
                 break;
-            case 'circle':
-                drawCircles(painter, sourceCache, layer as any, coords, isRenderingToTexture);
+            case isCircleStyleLayer(layer):
+                drawCircles(painter, sourceCache, layer, coords, isRenderingToTexture);
                 break;
-            case 'heatmap':
-                drawHeatmap(painter, sourceCache, layer as any, coords, isRenderingToTexture);
+            case isHeatmapStyleLayer(layer):
+                drawHeatmap(painter, sourceCache, layer, coords, isRenderingToTexture);
                 break;
-            case 'line':
-                drawLine(painter, sourceCache, layer as any, coords, isRenderingToTexture);
+            case isLineStyleLayer(layer):
+                drawLine(painter, sourceCache, layer, coords, isRenderingToTexture);
                 break;
-            case 'fill':
-                drawFill(painter, sourceCache, layer as any, coords, isRenderingToTexture);
+            case isFillStyleLayer(layer):
+                drawFill(painter, sourceCache, layer, coords, isRenderingToTexture);
                 break;
-            case 'fill-extrusion':
-                drawFillExtrusion(painter, sourceCache, layer as any, coords, isRenderingToTexture);
+            case isFillExtrusionStyleLayer(layer):
+                drawFillExtrusion(painter, sourceCache, layer, coords, isRenderingToTexture);
                 break;
-            case 'hillshade':
-                drawHillshade(painter, sourceCache, layer as any, coords, isRenderingToTexture);
+            case isHillshadeStyleLayer(layer):
+                drawHillshade(painter, sourceCache, layer, coords, isRenderingToTexture);
                 break;
-            case 'raster':
-                drawRaster(painter, sourceCache, layer as any, coords, isRenderingToTexture);
+            case isRasterStyleLayer(layer):
+                drawRaster(painter, sourceCache, layer, coords, isRenderingToTexture);
                 break;
-            case 'background':
-                drawBackground(painter, sourceCache, layer as any, coords, isRenderingToTexture);
+            case isBackgroundStyleLayer(layer):
+                drawBackground(painter, sourceCache, layer, coords, isRenderingToTexture);
                 break;
-            case 'custom':
-                drawCustom(painter, sourceCache, layer as any, isRenderingToTexture);
+            case isCustomStyleLayer(layer):
+                drawCustom(painter, sourceCache, layer, isRenderingToTexture);
                 break;
         }
     }
