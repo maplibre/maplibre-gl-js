@@ -6,14 +6,17 @@ import {StencilMode} from '../gl/stencil_mode';
 import {DepthMode} from '../gl/depth_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
 import {rasterUniformValues} from './program/raster_program';
+import {EXTENT} from '../data/extent';
+import {coveringZoomLevel} from '../geo/projection/covering_tiles';
+import Point from '@mapbox/point-geometry';
 
 import type {Painter} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
 import type {OverscaledTileID} from '../source/tile_id';
-import Point from '@mapbox/point-geometry';
-import {EXTENT} from '../data/extent';
-import {coveringZoomLevel} from '../geo/projection/covering_tiles';
+import type {IReadonlyTransform} from '../geo/transform_interface';
+import type {Tile} from '../source/tile';
+import type {Terrain} from './terrain';
 
 const cornerCoords = [
     new Point(0, 0),
@@ -135,7 +138,7 @@ function drawTiles(
     }
 }
 
-function getFadeValues(tile, parentTile, sourceCache, layer, transform, terrain) {
+function getFadeValues(tile: Tile, parentTile: Tile, sourceCache: SourceCache, layer: RasterStyleLayer, transform: IReadonlyTransform, terrain: Terrain) {
     const fadeDuration = layer.paint.get('raster-fade-duration');
 
     if (!terrain && fadeDuration > 0) {
