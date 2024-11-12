@@ -282,8 +282,11 @@ export class GlobeTransform implements ITransform {
     private _farZ: number;
 
     private _coveringTilesDetailsProvider: GlobeCoveringTilesDetailsProvider;
+    private _adaptive: boolean;
 
-    public constructor(globeProjection: GlobeProjection, globeProjectionEnabled: boolean = true) {
+    public constructor(globeProjection: GlobeProjection, globeProjectionEnabled: boolean = true, adaptive:boolean = true) {
+        this._adaptive = adaptive;
+
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
             getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
@@ -372,7 +375,8 @@ export class GlobeTransform implements ITransform {
     newFrameUpdate(): TransformUpdateResult {
         this._lastUpdateTimeSeconds = browser.now() / 1000.0;
         const oldGlobeRendering = this.isGlobeRendering;
-        this._globeness = this._computeGlobenessAnimation();
+
+        this._globeness = (!this._adaptive && this._globeProjectionAllowed) ? 1 : this._computeGlobenessAnimation();
         // Everything below this comment must happen AFTER globeness update
         this._updateErrorCorrectionValue();
         this._calcMatrices();
