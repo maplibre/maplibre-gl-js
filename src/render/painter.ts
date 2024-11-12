@@ -72,7 +72,7 @@ type PainterOptions = {
     fadeDuration: number;
 };
 
-export type RenderFlags = {
+export type RenderOptions = {
     isRenderingToTexture: boolean;
     isRenderingGlobe: boolean;
 }
@@ -489,7 +489,7 @@ export class Painter {
         const coordsAscending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
-        const renderFlags: RenderFlags = {isRenderingToTexture: false, isRenderingGlobe: style.projection.name === 'globe'};
+        const renderFlags: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: style.projection.name === 'globe'};
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
@@ -649,7 +649,7 @@ export class Painter {
         drawCoords(this, this.style.map.terrain);
     }
 
-    renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, renderFlags: RenderFlags) {
+    renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, renderFlags: RenderOptions) {
         if (layer.isHidden(this.transform.zoom)) return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;

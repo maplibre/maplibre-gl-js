@@ -1,7 +1,7 @@
 import {StencilMode} from '../gl/stencil_mode';
 import {DepthMode} from '../gl/depth_mode';
 import {terrainUniformValues, terrainDepthUniformValues, terrainCoordsUniformValues} from './program/terrain_program';
-import type {Painter, RenderFlags} from './painter';
+import type {Painter, RenderOptions} from './painter';
 import type {Tile} from '../source/tile';
 import {CullFaceMode} from '../gl/cull_face_mode';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
@@ -69,7 +69,7 @@ function drawCoords(painter: Painter, terrain: Terrain) {
     context.viewport.set([0, 0, painter.width, painter.height]);
 }
 
-function drawTerrain(painter: Painter, terrain: Terrain, tiles: Array<Tile>, renderFlags: RenderFlags) {
+function drawTerrain(painter: Painter, terrain: Terrain, tiles: Array<Tile>, renderFlags: RenderOptions) {
     const {isRenderingGlobe} = renderFlags;
     const context = painter.context;
     const gl = context.gl;

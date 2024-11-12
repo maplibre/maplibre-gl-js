@@ -6,13 +6,13 @@ import {
     backgroundPatternUniformValues
 } from './program/background_program';
 
-import type {Painter, RenderFlags} from './painter';
+import type {Painter, RenderOptions} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {BackgroundStyleLayer} from '../style/style_layer/background_style_layer';
 import {OverscaledTileID} from '../source/tile_id';
 import {coveringTiles} from '../geo/projection/covering_tiles';
 
-export function drawBackground(painter: Painter, sourceCache: SourceCache, layer: BackgroundStyleLayer, coords: Array<OverscaledTileID>, renderFlags: RenderFlags) {
+export function drawBackground(painter: Painter, sourceCache: SourceCache, layer: BackgroundStyleLayer, coords: Array<OverscaledTileID>, renderFlags: RenderOptions) {
     const color = layer.paint.get('background-color');
     const opacity = layer.paint.get('background-opacity');
 

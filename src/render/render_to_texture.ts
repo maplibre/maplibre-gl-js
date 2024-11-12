@@ -1,4 +1,4 @@
-import {Painter, RenderFlags} from './painter';
+import {Painter, RenderOptions} from './painter';
 import {Tile} from '../source/tile';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {OverscaledTileID} from '../source/tile_id';
@@ -129,10 +129,10 @@ export class RenderToTexture {
      * @param renderFlags - flags describing how to render the layer
      * @returns if true layer is rendered to texture, otherwise false
      */
-    renderLayer(layer: StyleLayer, renderFlags: RenderFlags): boolean {
+    renderLayer(layer: StyleLayer, renderFlags: RenderOptions): boolean {
         if (layer.isHidden(this.painter.transform.zoom)) return false;
 
-        const flags: RenderFlags = {...renderFlags, isRenderingToTexture: true};
+        const flags: RenderOptions = {...renderFlags, isRenderingToTexture: true};
         const type = layer.type;
         const painter = this.painter;
         const isLastLayer = this._renderableLayerIds[this._renderableLayerIds.length - 1] === layer.id;

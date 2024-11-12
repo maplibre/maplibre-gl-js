@@ -1,11 +1,11 @@
 import {DepthMode} from '../gl/depth_mode';
 import {StencilMode} from '../gl/stencil_mode';
 
-import type {Painter, RenderFlags} from './painter';
+import type {Painter, RenderOptions} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {CustomRenderMethodInput, CustomStyleLayer} from '../style/style_layer/custom_style_layer';
 
-export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: CustomStyleLayer, renderFlags: RenderFlags) {
+export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: CustomStyleLayer, renderFlags: RenderOptions) {
 
     const {isRenderingToTexture} = renderFlags;
     const context = painter.context;

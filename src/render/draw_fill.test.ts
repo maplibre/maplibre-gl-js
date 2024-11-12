@@ -2,7 +2,7 @@ import {mat4} from 'gl-matrix';
 import {OverscaledTileID} from '../source/tile_id';
 import {SourceCache} from '../source/source_cache';
 import {Tile} from '../source/tile';
-import {Painter, RenderFlags} from './painter';
+import {Painter, RenderOptions} from './painter';
 import {Program} from './program';
 import type {ZoomHistory} from '../style/zoom_history';
 import type {Map} from '../ui/map';
@@ -38,7 +38,7 @@ describe('drawFill', () => {
         (sourceCacheMock.getTile as jest.Mock).mockReturnValue(mockTile);
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
 
-        const renderFlags: RenderFlags = {isRenderingToTexture: false, isRenderingGlobe: false};
+        const renderFlags: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
         drawFill(painterMock, sourceCacheMock, layer, [mockTile.tileID], renderFlags);
 
         // twice: first for fill, second for stroke

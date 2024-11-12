@@ -4,7 +4,7 @@ import {SymbolBucket} from '../data/bucket/symbol_bucket';
 import {SourceCache} from '../source/source_cache';
 import {Tile} from '../source/tile';
 import {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
-import {Painter, RenderFlags} from './painter';
+import {Painter, RenderOptions} from './painter';
 import {Program} from './program';
 import {drawSymbols} from './draw_symbol';
 import * as symbolProjection from '../symbol/projection';
@@ -49,7 +49,7 @@ describe('drawSymbol', () => {
         const mockPainter = new Painter(null, null);
         mockPainter.renderPass = 'opaque';
 
-        const renderFlags: RenderFlags = {isRenderingToTexture: false, isRenderingGlobe: false};
+        const renderFlags: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
         drawSymbols(mockPainter, null, null, null, null, renderFlags);
 
         expect(mockPainter.colorModeForRenderPass).not.toHaveBeenCalled();
@@ -111,7 +111,7 @@ describe('drawSymbol', () => {
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
         sourceCacheMock.getTile = (_a) => tile;
 
-        const renderFlags: RenderFlags = {isRenderingToTexture: false, isRenderingGlobe: false};
+        const renderFlags: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
         drawSymbols(painterMock, sourceCacheMock, layer, [tileId], null, renderFlags);
 
         expect(programMock.draw).toHaveBeenCalledTimes(1);
@@ -179,7 +179,7 @@ describe('drawSymbol', () => {
         } as any as Style;
 
         const spy = jest.spyOn(symbolProjection, 'updateLineLabels');
-        const renderFlags: RenderFlags = {isRenderingToTexture: false, isRenderingGlobe: false};
+        const renderFlags: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
         drawSymbols(painterMock, sourceCacheMock, layer, [tileId], null, renderFlags);
 
         expect(spy.mock.calls[0][7]).toBeFalsy(); // rotateToLine === false
@@ -241,7 +241,7 @@ describe('drawSymbol', () => {
         (sourceCacheMock.getTile as jest.Mock).mockReturnValue(tile);
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
 
-        const renderFlags: RenderFlags = {isRenderingToTexture: false, isRenderingGlobe: false};
+        const renderFlags: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
         drawSymbols(painterMock, sourceCacheMock, layer, [tileId], null, renderFlags);
 
         expect(programMock.draw).toHaveBeenCalledTimes(0);
