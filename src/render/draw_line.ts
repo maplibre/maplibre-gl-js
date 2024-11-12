@@ -69,7 +69,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
 
         const projectionData = transform.getProjectionData({
             overscaledTileID: coord,
-            ignoreGlobeMatrix: isRenderingToTexture
+            applyGlobeMatrix: !isRenderingToTexture
         });
 
         const pixelRatio = transform.getPixelScale();

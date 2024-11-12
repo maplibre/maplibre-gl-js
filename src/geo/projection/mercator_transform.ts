@@ -759,9 +759,9 @@ export class MercatorTransform implements ITransform {
     }
 
     getProjectionData(params: ProjectionDataParams): ProjectionData {
-        const {overscaledTileID, aligned, ignoreTerrainMatrix} = params;
+        const {overscaledTileID, aligned, applyTerrainMatrix} = params;
         const matrix = overscaledTileID ? this.calculatePosMatrix(overscaledTileID, aligned) : null;
-        return getBasicProjectionData(overscaledTileID, matrix, ignoreTerrainMatrix);
+        return getBasicProjectionData(overscaledTileID, matrix, applyTerrainMatrix);
     }
 
     isLocationOccluded(_: LngLat): boolean {
@@ -833,9 +833,9 @@ export class MercatorTransform implements ITransform {
         return m;
     }
 
-    getProjectionDataForCustomLayer(ignoreGlobeMatrix: boolean = false): ProjectionData {
+    getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): ProjectionData {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        const projectionData = this.getProjectionData({overscaledTileID: tileID, ignoreTerrainMatrix: true, ignoreGlobeMatrix});
+        const projectionData = this.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix});
 
         const tileMatrix = calculateTileMatrix(tileID, this.worldSize);
         mat4.multiply(tileMatrix, this._viewProjMatrix, tileMatrix);

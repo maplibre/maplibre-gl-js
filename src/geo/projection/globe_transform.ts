@@ -454,8 +454,8 @@ export class GlobeTransform implements ITransform {
     }
 
     getProjectionData(params: ProjectionDataParams): ProjectionData {
-        const {overscaledTileID, aligned, ignoreTerrainMatrix, ignoreGlobeMatrix} = params;
-        const data = this._mercatorTransform.getProjectionData({overscaledTileID, aligned, ignoreTerrainMatrix});
+        const {overscaledTileID, aligned, applyTerrainMatrix, applyGlobeMatrix} = params;
+        const data = this._mercatorTransform.getProjectionData({overscaledTileID, aligned, applyTerrainMatrix});
 
         // Set 'projectionMatrix' to actual globe transform
         if (this.isGlobeRendering) {
@@ -463,7 +463,7 @@ export class GlobeTransform implements ITransform {
         }
 
         data.clippingPlane = this._cachedClippingPlane as [number, number, number, number];
-        data.projectionTransition = ignoreGlobeMatrix ? 0 : this._globeness;
+        data.projectionTransition = applyGlobeMatrix ? this._globeness : 0;
 
         return data;
     }
@@ -1184,8 +1184,8 @@ export class GlobeTransform implements ITransform {
         return m;
     }
 
-    getProjectionDataForCustomLayer(ignoreGlobeMatrix: boolean = false): ProjectionData {
-        const projectionData = this.getProjectionData({overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0), ignoreGlobeMatrix});
+    getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): ProjectionData {
+        const projectionData = this.getProjectionData({overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0), applyGlobeMatrix});
         projectionData.tileMercatorCoords = [0, 0, 1, 1];
 
         // Even though we requested projection data for the mercator base tile which covers the entire mercator range,

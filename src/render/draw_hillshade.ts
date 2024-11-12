@@ -77,7 +77,7 @@ function renderHillshade(
         const projectionData = transform.getProjectionData({
             overscaledTileID: coord,
             aligned: align,
-            ignoreGlobeMatrix: isRenderingToTexture
+            applyGlobeMatrix: !isRenderingToTexture
         });
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,

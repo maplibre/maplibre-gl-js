@@ -179,7 +179,7 @@ function renderHeatmapTerrain(painter: Painter, layer: HeatmapStyleLayer, coord:
     context.activeTexture.set(gl.TEXTURE1);
     colorRampTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
 
-    const projectionData = transform.getProjectionData({overscaledTileID: coord, ignoreTerrainMatrix: !isGlobe, ignoreGlobeMatrix: isRenderingToTexture});
+    const projectionData = transform.getProjectionData({overscaledTileID: coord, applyTerrainMatrix: isGlobe, applyGlobeMatrix: !isRenderingToTexture});
 
     painter.useProgram('heatmapTexture').draw(context, gl.TRIANGLES,
         DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled,
