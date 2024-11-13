@@ -18,7 +18,7 @@ import {Source} from '../source/source';
 import {QueryRenderedFeaturesOptions, QueryRenderedFeaturesOptionsStrict, QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
 import {SourceCache} from '../source/source_cache';
 import {GeoJSONSource} from '../source/geojson_source';
-import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, DiffCommand} from '@maplibre/maplibre-gl-style-spec';
+import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, DiffCommand, v8, createExpression} from '@maplibre/maplibre-gl-style-spec';
 import {getGlobalWorkerPool} from '../util/global_worker_pool';
 import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
@@ -64,6 +64,7 @@ import {
     type GetImagesResponse
 } from '../util/actor_messages';
 import {Projection} from '../geo/projection/projection';
+
 import {createProjectionFromName} from '../geo/projection/projection_factory';
 
 const empty = emptyStyle() as StyleSpecification;
@@ -579,6 +580,19 @@ export class Style extends Evented {
      * Apply queued style updates in a batch and recalculate zoom-dependent paint properties.
      */
     update(parameters: EvaluationParameters) {
+
+        try {
+            const exprestInt = createExpression(['interpolate', ['linear'], ['zoom'], 10, 'vertical-perspective', 12, 'mercator'], v8.projection.type)
+            if (exprestInt.result === 'success') {
+                console.log(exprestInt.value.evaluate({zoom: parameters.zoom}))
+
+            } else {
+                console.warn('Error parsing 22interpolate', exprestInt.result)
+            }
+        } catch (err) {
+            console.warn('Error parsing 11interpolate', err)
+        }
+
         if (!this._loaded) {
             return;
         }
