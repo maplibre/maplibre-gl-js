@@ -7,13 +7,13 @@ import type {CustomRenderMethodInput, CustomStyleLayer} from '../style/style_lay
 
 export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: CustomStyleLayer, renderOptions: RenderOptions) {
 
-    const {isRenderingToTexture} = renderOptions;
+    const {isRenderingGlobe} = renderOptions;
     const context = painter.context;
     const implementation = layer.implementation;
     const projection = painter.style.projection;
     const transform = painter.transform;
 
-    const projectionData = transform.getProjectionDataForCustomLayer(isRenderingToTexture);
+    const projectionData = transform.getProjectionDataForCustomLayer(isRenderingGlobe);
 
     const customLayerArgs: CustomRenderMethodInput = {
         farZ: transform.farZ,
