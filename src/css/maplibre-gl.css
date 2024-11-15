@@ -850,7 +850,7 @@ a.maplibregl-ctrl-logo.maplibregl-compact {
     display: none;
 }
 
-@media (hover: none), (width <= 480px) {
+@media (hover: none), (pointer: coarse) {
     .maplibregl-cooperative-gesture-screen .maplibregl-desktop-message {
         display: none;
     }
