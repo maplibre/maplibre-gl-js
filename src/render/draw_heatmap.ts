@@ -80,7 +80,7 @@ function prepareHeatmapFlat(painter: Painter, sourceCache: SourceCache, layer: H
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram('heatmap', programConfiguration);
 
-        const projectionData = transform.getProjectionData({overscaledTileID: coord});
+        const projectionData = transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: true, applyTerrainMatrix: false});
 
         const radiusCorrectionFactor = transform.getCircleRadiusCorrection();
 
@@ -146,7 +146,7 @@ function prepareHeatmapTerrain(painter: Painter, tile: Tile, layer: HeatmapStyle
     const programConfiguration = bucket.programConfigurations.get(layer.id);
     const program = painter.useProgram('heatmap', programConfiguration, !isRenderingGlobe);
 
-    const projectionData = painter.transform.getProjectionData({overscaledTileID: tile.tileID});
+    const projectionData = painter.transform.getProjectionData({overscaledTileID: tile.tileID, applyGlobeMatrix: true, applyTerrainMatrix: true});
 
     const terrainData = painter.style.map.terrain.getTerrainData(coord);
     program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.disabled,

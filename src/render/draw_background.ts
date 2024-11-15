@@ -47,7 +47,8 @@ export function drawBackground(painter: Painter, sourceCache: SourceCache, layer
     for (const tileID of tileIDs) {
         const projectionData = transform.getProjectionData({
             overscaledTileID: tileID,
-            applyGlobeMatrix: !isRenderingToTexture
+            applyGlobeMatrix: !isRenderingToTexture,
+            applyTerrainMatrix: true
         });
 
         const uniformValues = image ?

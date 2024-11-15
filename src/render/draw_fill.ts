@@ -110,7 +110,8 @@ function drawFillTiles(
 
         const projectionData = transform.getProjectionData({
             overscaledTileID: coord,
-            applyGlobeMatrix: !isRenderingToTexture
+            applyGlobeMatrix: !isRenderingToTexture,
+            applyTerrainMatrix: true
         });
 
         const translateForUniforms = translatePosition(transform, tile, propertyFillTranslate, propertyFillTranslateAnchor);

@@ -27,7 +27,7 @@ const skyUniformValues = (sky: Sky, transform: IReadonlyTransform, pixelRatio: n
     const cosRoll = Math.cos(transform.rollInRadians);
     const sinRoll = Math.sin(transform.rollInRadians);
     const mercatorHorizon  = getMercatorHorizon(transform);
-    const projectionData = transform.getProjectionData({overscaledTileID: null});
+    const projectionData = transform.getProjectionData({overscaledTileID: null, applyGlobeMatrix: true, applyTerrainMatrix: true});
     const skyBlend = projectionData.projectionTransition;
     return {
         'u_sky_color': sky.properties.get('sky-color'),
