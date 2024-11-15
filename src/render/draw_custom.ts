@@ -1,18 +1,19 @@
 import {DepthMode} from '../gl/depth_mode';
 import {StencilMode} from '../gl/stencil_mode';
 
-import type {Painter} from './painter';
+import type {Painter, RenderOptions} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {CustomRenderMethodInput, CustomStyleLayer} from '../style/style_layer/custom_style_layer';
 
-export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: CustomStyleLayer) {
+export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: CustomStyleLayer, renderOptions: RenderOptions) {
 
+    const {isRenderingGlobe} = renderOptions;
     const context = painter.context;
     const implementation = layer.implementation;
     const projection = painter.style.projection;
     const transform = painter.transform;
 
-    const projectionData = transform.getProjectionDataForCustomLayer();
+    const projectionData = transform.getProjectionDataForCustomLayer(isRenderingGlobe);
 
     const customLayerArgs: CustomRenderMethodInput = {
         farZ: transform.farZ,

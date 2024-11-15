@@ -471,7 +471,7 @@ export interface IReadonlyTransform extends ITransformGetters {
     /**
      * Return projection data such that coordinates in mercator projection in range 0..1 will get projected to the map correctly.
      */
-    getProjectionDataForCustomLayer(): ProjectionData;
+    getProjectionDataForCustomLayer(applyGlobeMatrix: boolean): ProjectionData;
 
     /**
      * Returns a tile-specific projection matrix. Used for symbol placement fast-path for mercator transform.
