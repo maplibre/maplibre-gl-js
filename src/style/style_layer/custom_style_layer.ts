@@ -260,6 +260,8 @@ export function validateCustomStyleLayer(layerObject: CustomLayerInterface) {
     return errors;
 }
 
+export const isCustomStyleLayer = (layer: StyleLayer): layer is CustomStyleLayer => layer.type === 'custom';
+
 export class CustomStyleLayer extends StyleLayer {
 
     implementation: CustomLayerInterface;

@@ -31,6 +31,8 @@ import type {Expression, Feature, SourceExpression, LayerSpecification} from '@m
 import type {CanonicalTileID} from '../../source/tile_id';
 import {FormatSectionOverride} from '../format_section_override';
 
+export const isSymbolStyleLayer = (layer: StyleLayer): layer is SymbolStyleLayer => layer.type === 'symbol';
+
 export class SymbolStyleLayer extends StyleLayer {
     _unevaluatedLayout: Layout<SymbolLayoutProps>;
     layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>;
