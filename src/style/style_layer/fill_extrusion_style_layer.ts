@@ -17,6 +17,8 @@ export class Point3D extends Point {
     z: number;
 }
 
+export const isFillExtrusionStyleLayer = (layer: StyleLayer): layer is FillExtrusionStyleLayer => layer.type === 'fill-extrusion';
+
 export class FillExtrusionStyleLayer extends StyleLayer {
     _transitionablePaint: Transitionable<FillExtrusionPaintProps>;
     _transitioningPaint: Transitioning<FillExtrusionPaintProps>;

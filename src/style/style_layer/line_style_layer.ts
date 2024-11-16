@@ -37,6 +37,8 @@ export class LineFloorwidthProperty extends DataDrivenProperty<number> {
 
 let lineFloorwidthProperty: LineFloorwidthProperty;
 
+export const isLineStyleLayer = (layer: StyleLayer): layer is LineStyleLayer => layer.type === 'line';
+
 export class LineStyleLayer extends StyleLayer {
     _unevaluatedLayout: Layout<LineLayoutProps>;
     layout: PossiblyEvaluated<LineLayoutProps, LineLayoutPropsPossiblyEvaluated>;

@@ -94,7 +94,7 @@ export function getMercatorHorizon(transform: {pitch: number; cameraToCenterDist
         Math.tan(degreesToRadians(maxMercatorHorizonAngle - transform.pitch)));
 }
 
-export function getBasicProjectionData(overscaledTileID: OverscaledTileID, tilePosMatrix?: mat4, ignoreTerrainMatrix?: boolean): ProjectionData {
+export function getBasicProjectionData(overscaledTileID: OverscaledTileID, tilePosMatrix?: mat4, applyTerrainMatrix: boolean = true): ProjectionData {
     let tileOffsetSize: [number, number, number, number];
 
     if (overscaledTileID) {
@@ -110,7 +110,7 @@ export function getBasicProjectionData(overscaledTileID: OverscaledTileID, tileP
     }
 
     let mainMatrix: mat4;
-    if (overscaledTileID && overscaledTileID.terrainRttPosMatrix && !ignoreTerrainMatrix) {
+    if (overscaledTileID && overscaledTileID.terrainRttPosMatrix && applyTerrainMatrix) {
         mainMatrix = overscaledTileID.terrainRttPosMatrix;
     } else if (tilePosMatrix) {
         mainMatrix = tilePosMatrix;

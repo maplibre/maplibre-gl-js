@@ -56,11 +56,11 @@ export type ProjectionDataParams = {
      */
     aligned?: boolean;
     /**
-     * Set to true if the terrain matrix should be ignored
+     * Set to true if the terrain matrix should be applied (i.e. when rendering terrain)
      */
-    ignoreTerrainMatrix?: boolean;
+    applyTerrainMatrix?: boolean;
     /**
-     * Set to true if the globe matrix should be ignored (i.e. when rendering to texture for terrain)
+     * Set to true if the globe matrix should be applied (i.e. when rendering globe)
      */
-    ignoreGlobeMatrix?: boolean;
+    applyGlobeMatrix?: boolean;
 }
