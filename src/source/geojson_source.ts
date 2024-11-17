@@ -259,7 +259,10 @@ export class GeoJSONSource extends Evented implements Source {
     setClusterOptions(options: SetClusterOptions): this {
         this.workerOptions.cluster = options.cluster;
         if (options) {
-            if (options.clusterRadius !== undefined) this.workerOptions.superclusterOptions.radius = options.clusterRadius;
+            if (options.clusterRadius !== undefined) {
+                const scale = EXTENT / this.tileSize;
+                this.workerOptions.superclusterOptions.radius = options.clusterRadius * scale;
+            }
             if (options.clusterMaxZoom !== undefined) this.workerOptions.superclusterOptions.maxZoom = options.clusterMaxZoom;
         }
         this._updateWorkerData();

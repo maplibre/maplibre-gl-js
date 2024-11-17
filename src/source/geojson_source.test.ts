@@ -285,7 +285,7 @@ describe('GeoJSONSource#update', () => {
             sendAsync(message) {
                 expect(message.type).toBe(MessageType.loadData);
                 expect(message.data.cluster).toBe(true);
-                expect(message.data.superclusterOptions.radius).toBe(80);
+                expect(message.data.superclusterOptions.radius).toBe(1280);
                 expect(message.data.superclusterOptions.maxZoom).toBe(16);
                 done();
                 return Promise.resolve({});
