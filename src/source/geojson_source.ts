@@ -182,7 +182,7 @@ export class GeoJSONSource extends Evented implements Source {
                 maxZoom: options.clusterMaxZoom !== undefined ? options.clusterMaxZoom : this.maxzoom - 1,
                 minPoints: Math.max(2, options.clusterMinPoints || 2),
                 extent: EXTENT,
-                radius: (options.clusterRadius || 50) * scale,
+                radius: this._scaleClusterRadius(options.clusterRadius || 50),
                 log: false,
                 generateId: options.generateId || false
             },
@@ -194,6 +194,10 @@ export class GeoJSONSource extends Evented implements Source {
         if (typeof this.promoteId === 'string') {
             this.workerOptions.promoteId = this.promoteId;
         }
+    }
+
+    private _scaleClusterRadius(clusterRadius: number): number {
+        return clusterRadius * EXTENT / this.tileSize;
     }
 
     async load() {
@@ -259,10 +263,7 @@ export class GeoJSONSource extends Evented implements Source {
     setClusterOptions(options: SetClusterOptions): this {
         this.workerOptions.cluster = options.cluster;
         if (options) {
-            if (options.clusterRadius !== undefined) {
-                const scale = EXTENT / this.tileSize;
-                this.workerOptions.superclusterOptions.radius = options.clusterRadius * scale;
-            }
+            if (options.clusterRadius !== undefined) this.workerOptions.superclusterOptions.radius = this._scaleClusterRadius(options.clusterRadius);
             if (options.clusterMaxZoom !== undefined) this.workerOptions.superclusterOptions.maxZoom = options.clusterMaxZoom;
         }
         this._updateWorkerData();

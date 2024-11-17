@@ -2,6 +2,7 @@ import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {GeoJSONSource, GeoJSONSourceOptions} from './geojson_source';
 import {IReadonlyTransform} from '../geo/transform_interface';
+import {EXTENT} from '../data/extent';
 import {LngLat} from '../geo/lng_lat';
 import {extend} from '../util/util';
 import {Dispatcher} from '../util/dispatcher';
@@ -231,7 +232,7 @@ describe('GeoJSONSource#update', () => {
             sendAsync(message: ActorMessage<any>) {
                 expect(message.type).toBe(MessageType.loadData);
                 expect(message.data.geojsonVtOptions).toEqual({
-                    extent: 8192,
+                    extent: EXTENT,
                     maxZoom: 10,
                     tolerance: 4,
                     buffer: 256,
@@ -259,8 +260,8 @@ describe('GeoJSONSource#update', () => {
                 expect(message.data.superclusterOptions).toEqual({
                     maxZoom: 12,
                     minPoints: 3,
-                    extent: 8192,
-                    radius: 1600,
+                    extent: EXTENT,
+                    radius: 100 * EXTENT / 512,
                     log: false,
                     generateId: true
                 });
@@ -285,7 +286,7 @@ describe('GeoJSONSource#update', () => {
             sendAsync(message) {
                 expect(message.type).toBe(MessageType.loadData);
                 expect(message.data.cluster).toBe(true);
-                expect(message.data.superclusterOptions.radius).toBe(1280);
+                expect(message.data.superclusterOptions.radius).toBe(80 * EXTENT / 512);
                 expect(message.data.superclusterOptions.maxZoom).toBe(16);
                 done();
                 return Promise.resolve({});
@@ -309,8 +310,8 @@ describe('GeoJSONSource#update', () => {
                 expect(message.data.superclusterOptions).toEqual({
                     maxZoom: 12,
                     minPoints: 3,
-                    extent: 8192,
-                    radius: 1600,
+                    extent: EXTENT,
+                    radius: 100 * EXTENT / 512,
                     log: false,
                     generateId: true
                 });
