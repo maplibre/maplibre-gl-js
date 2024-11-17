@@ -261,7 +261,7 @@ describe('GeoJSONSource#update', () => {
                     maxZoom: 12,
                     minPoints: 3,
                     extent: EXTENT,
-                    radius: 100 * EXTENT / 512,
+                    radius: 100 * EXTENT / source.tileSize,
                     log: false,
                     generateId: true
                 });
@@ -270,14 +270,15 @@ describe('GeoJSONSource#update', () => {
             }
         });
 
-        new GeoJSONSource('id', {
+        const source = new GeoJSONSource('id', {
             data: {},
             cluster: true,
             clusterMaxZoom: 12,
             clusterRadius: 100,
             clusterMinPoints: 3,
             generateId: true
-        } as GeoJSONSourceOptions, mockDispatcher, undefined).load();
+        } as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.load();
     }));
 
     test('modifying cluster properties after adding a source', () => new Promise<void>(done => {
@@ -286,20 +287,22 @@ describe('GeoJSONSource#update', () => {
             sendAsync(message) {
                 expect(message.type).toBe(MessageType.loadData);
                 expect(message.data.cluster).toBe(true);
-                expect(message.data.superclusterOptions.radius).toBe(80 * EXTENT / 512);
+                expect(message.data.superclusterOptions.radius).toBe(80 * EXTENT / source.tileSize);
                 expect(message.data.superclusterOptions.maxZoom).toBe(16);
                 done();
                 return Promise.resolve({});
             }
         });
-        new GeoJSONSource('id', {
-            data: {},
+        const source = new GeoJSONSource('id', {
+            type: 'geojson',
+            data: {} as GeoJSON.GeoJSON,
             cluster: false,
             clusterMaxZoom: 8,
             clusterRadius: 100,
             clusterMinPoints: 3,
             generateId: true
-        } as GeoJSONSourceOptions, mockDispatcher, undefined).setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
+        }, mockDispatcher, undefined);
+        source.setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
     }));
 
     test('forwards Supercluster options with worker request, ignore max zoom of source', () => new Promise<void>(done => {
@@ -311,7 +314,7 @@ describe('GeoJSONSource#update', () => {
                     maxZoom: 12,
                     minPoints: 3,
                     extent: EXTENT,
-                    radius: 100 * EXTENT / 512,
+                    radius: 100 * EXTENT / source.tileSize,
                     log: false,
                     generateId: true
                 });
@@ -320,7 +323,7 @@ describe('GeoJSONSource#update', () => {
             }
         });
 
-        new GeoJSONSource('id', {
+        const source = new GeoJSONSource('id', {
             data: {},
             maxzoom: 10,
             cluster: true,
@@ -328,7 +331,8 @@ describe('GeoJSONSource#update', () => {
             clusterRadius: 100,
             clusterMinPoints: 3,
             generateId: true
-        } as GeoJSONSourceOptions, mockDispatcher, undefined).load();
+        } as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.load();
     }));
 
     test('transforms url before making request', () => {
@@ -425,7 +429,7 @@ describe('GeoJSONSource#update', () => {
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 source.setData({} as GeoJSON.GeoJSON);
-                source.loadTile(new Tile(new OverscaledTileID(0, 0, 0, 0, 0), 512));
+                source.loadTile(new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize));
             }
         });
 

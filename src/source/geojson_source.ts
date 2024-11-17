@@ -157,8 +157,6 @@ export class GeoJSONSource extends Evented implements Source {
         if (options.attribution) this.attribution = options.attribution;
         this.promoteId = options.promoteId;
 
-        const scale = EXTENT / this.tileSize;
-
         if (options.clusterMaxZoom !== undefined && this.maxzoom <= options.clusterMaxZoom) {
             warnOnce(`The maxzoom value "${this.maxzoom}" is expected to be greater than the clusterMaxZoom value "${options.clusterMaxZoom}".`);
         }
@@ -171,8 +169,8 @@ export class GeoJSONSource extends Evented implements Source {
             source: this.id,
             cluster: options.cluster || false,
             geojsonVtOptions: {
-                buffer: (options.buffer !== undefined ? options.buffer : 128) * scale,
-                tolerance: (options.tolerance !== undefined ? options.tolerance : 0.375) * scale,
+                buffer: this._pixelsToTileUnits(options.buffer !== undefined ? options.buffer : 128),
+                tolerance: this._pixelsToTileUnits(options.tolerance !== undefined ? options.tolerance : 0.375),
                 extent: EXTENT,
                 maxZoom: this.maxzoom,
                 lineMetrics: options.lineMetrics || false,
@@ -182,7 +180,7 @@ export class GeoJSONSource extends Evented implements Source {
                 maxZoom: options.clusterMaxZoom !== undefined ? options.clusterMaxZoom : this.maxzoom - 1,
                 minPoints: Math.max(2, options.clusterMinPoints || 2),
                 extent: EXTENT,
-                radius: this._scaleClusterRadius(options.clusterRadius || 50),
+                radius: this._pixelsToTileUnits(options.clusterRadius || 50),
                 log: false,
                 generateId: options.generateId || false
             },
@@ -196,8 +194,8 @@ export class GeoJSONSource extends Evented implements Source {
         }
     }
 
-    private _scaleClusterRadius(clusterRadius: number): number {
-        return clusterRadius * EXTENT / this.tileSize;
+    private _pixelsToTileUnits(pixelValue: number): number {
+        return pixelValue * (EXTENT / this.tileSize);
     }
 
     async load() {
@@ -263,7 +261,7 @@ export class GeoJSONSource extends Evented implements Source {
     setClusterOptions(options: SetClusterOptions): this {
         this.workerOptions.cluster = options.cluster;
         if (options) {
-            if (options.clusterRadius !== undefined) this.workerOptions.superclusterOptions.radius = this._scaleClusterRadius(options.clusterRadius);
+            if (options.clusterRadius !== undefined) this.workerOptions.superclusterOptions.radius = this._pixelsToTileUnits(options.clusterRadius);
             if (options.clusterMaxZoom !== undefined) this.workerOptions.superclusterOptions.maxZoom = options.clusterMaxZoom;
         }
         this._updateWorkerData();
