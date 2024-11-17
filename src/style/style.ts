@@ -18,7 +18,7 @@ import {Source} from '../source/source';
 import {QueryRenderedFeaturesOptions, QueryRenderedFeaturesOptionsStrict, QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
 import {SourceCache} from '../source/source_cache';
 import {GeoJSONSource} from '../source/geojson_source';
-import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, DiffCommand, v8, createExpression} from '@maplibre/maplibre-gl-style-spec';
+import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, DiffCommand, createExpression} from '@maplibre/maplibre-gl-style-spec';
 import {getGlobalWorkerPool} from '../util/global_worker_pool';
 import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
@@ -582,7 +582,7 @@ export class Style extends Evented {
     update(parameters: EvaluationParameters) {
 
         try {
-            const exprestInt = createExpression(['interpolate', ['linear'], ['zoom'], 10, 'vertical-perspective', 12, 'mercator'], v8.projection.type)
+            const exprestInt = createExpression(['interpolate', ['linear'], ['zoom'], 10, 'vertical-perspective', 12, 'mercator'], styleSpec.projection.type)
             if (exprestInt.result === 'success') {
                 console.log(exprestInt.value.evaluate({zoom: parameters.zoom}))
 
