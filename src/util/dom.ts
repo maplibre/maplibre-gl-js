@@ -182,7 +182,6 @@ export class DOM {
     private static removeAttributes(elem: Element) {
         for (const {name, value} of elem.attributes) {
             if (!DOM.isPossiblyDangerous(name, value)) continue;
-            console.log('here', elem.innerHTML);
             elem.removeAttribute(name);
         }
     }
