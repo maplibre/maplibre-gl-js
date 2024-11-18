@@ -133,9 +133,10 @@ describe('render to texture', () => {
         style._order = ['maine-fill', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
         layersDrawn = 0;
+        const renderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-fill', 'maine-symbol']);
-        expect(rtt.renderLayer(fillLayer)).toBeTruthy();
-        expect(rtt.renderLayer(symbolLayer)).toBeFalsy();
+        expect(rtt.renderLayer(fillLayer, renderOptions)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayer, renderOptions)).toBeFalsy();
         expect(layersDrawn).toBe(1);
     });
 
@@ -143,14 +144,15 @@ describe('render to texture', () => {
         style._order = ['maine-background', 'maine-fill', 'maine-raster', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
         layersDrawn = 0;
+        const renderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-background', 'maine-fill', 'maine-raster', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol']);
-        expect(rtt.renderLayer(backgroundLayer)).toBeTruthy();
-        expect(rtt.renderLayer(fillLayer)).toBeTruthy();
-        expect(rtt.renderLayer(rasterLayer)).toBeTruthy();
-        expect(rtt.renderLayer(hillshadeLayer)).toBeTruthy();
-        expect(rtt.renderLayer(symbolLayer)).toBeFalsy();
-        expect(rtt.renderLayer(lineLayer)).toBeTruthy();
-        expect(rtt.renderLayer(symbolLayer)).toBeFalsy();
+        expect(rtt.renderLayer(backgroundLayer, renderOptions)).toBeTruthy();
+        expect(rtt.renderLayer(fillLayer, renderOptions)).toBeTruthy();
+        expect(rtt.renderLayer(rasterLayer, renderOptions)).toBeTruthy();
+        expect(rtt.renderLayer(hillshadeLayer, renderOptions)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayer, renderOptions)).toBeFalsy();
+        expect(rtt.renderLayer(lineLayer, renderOptions)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayer, renderOptions)).toBeFalsy();
         expect(layersDrawn).toBe(2);
     });
 
@@ -158,13 +160,14 @@ describe('render to texture', () => {
         style._order = ['maine-background', 'maine-symbol', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
         layersDrawn = 0;
+        const renderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-background', 'maine-symbol', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol']);
-        expect(rtt.renderLayer(backgroundLayer)).toBeTruthy();
-        expect(rtt.renderLayer(symbolLayer)).toBeFalsy();
-        expect(rtt.renderLayer(hillshadeLayer)).toBeTruthy();
-        expect(rtt.renderLayer(symbolLayer)).toBeFalsy();
-        expect(rtt.renderLayer(lineLayer)).toBeTruthy();
-        expect(rtt.renderLayer(symbolLayer)).toBeFalsy();
+        expect(rtt.renderLayer(backgroundLayer, renderOptions)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayer, renderOptions)).toBeFalsy();
+        expect(rtt.renderLayer(hillshadeLayer, renderOptions)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayer, renderOptions)).toBeFalsy();
+        expect(rtt.renderLayer(lineLayer, renderOptions)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayer, renderOptions)).toBeFalsy();
         expect(layersDrawn).toBe(3);
     });
 });

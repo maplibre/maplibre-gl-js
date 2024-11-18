@@ -9,7 +9,7 @@ import {
     fillOutlinePatternUniformValues
 } from './program/fill_program';
 
-import type {Painter} from './painter';
+import type {Painter, RenderOptions} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import type {FillBucket} from '../data/bucket/fill_bucket';
@@ -18,7 +18,7 @@ import {updatePatternPositionsInProgram} from './update_pattern_positions_in_pro
 import {translatePosition} from '../util/util';
 import {StencilMode} from '../gl/stencil_mode';
 
-export function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>) {
+export function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     const color = layer.paint.get('fill-color');
     const opacity = layer.paint.get('fill-opacity');
 
@@ -26,6 +26,7 @@ export function drawFill(painter: Painter, sourceCache: SourceCache, layer: Fill
         return;
     }
 
+    const {isRenderingToTexture} = renderOptions;
     const colorMode = painter.colorModeForRenderPass();
     const pattern = layer.paint.get('fill-pattern');
     const pass = painter.opaquePassEnabledForLayer() &&
@@ -37,7 +38,7 @@ export function drawFill(painter: Painter, sourceCache: SourceCache, layer: Fill
     if (painter.renderPass === pass) {
         const depthMode = painter.getDepthModeForSublayer(
             1, painter.renderPass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
-        drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, false);
+        drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, false, isRenderingToTexture);
     }
 
     // Draw stroke
@@ -53,7 +54,7 @@ export function drawFill(painter: Painter, sourceCache: SourceCache, layer: Fill
         // the (non-antialiased) fill.
         const depthMode = painter.getDepthModeForSublayer(
             layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
-        drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, true);
+        drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, true, isRenderingToTexture);
     }
 }
 
@@ -64,7 +65,8 @@ function drawFillTiles(
     coords: Array<OverscaledTileID>,
     depthMode: Readonly<DepthMode>,
     colorMode: Readonly<ColorMode>,
-    isOutline: boolean) {
+    isOutline: boolean,
+    isRenderingToTexture: boolean) {
     const gl = painter.context.gl;
     const fillPropertyName = 'fill-pattern';
     const patternProperty = layer.paint.get(fillPropertyName);
@@ -106,10 +108,10 @@ function drawFillTiles(
 
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        const globeWithTerrain = painter.style.map.terrain && painter.style.projection.name === 'globe';
         const projectionData = transform.getProjectionData({
             overscaledTileID: coord,
-            ignoreGlobeMatrix: globeWithTerrain
+            applyGlobeMatrix: !isRenderingToTexture,
+            applyTerrainMatrix: true
         });
 
         const translateForUniforms = translatePosition(transform, tile, propertyFillTranslate, propertyFillTranslateAnchor);
@@ -129,7 +131,7 @@ function drawFillTiles(
 
         let stencil: StencilMode;
         if (painter.renderPass === 'translucent') {
-            if (globeWithTerrain) {
+            if (isRenderingToTexture) {
                 const [stencilModes] = painter.stencilConfigForOverlap(coords);
                 stencil = stencilModes[coord.overscaledZ];
             } else {

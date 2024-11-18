@@ -13,6 +13,8 @@ import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export const HEATMAP_FULL_RENDER_FBO_KEY = 'big-fb';
 
+export const isHeatmapStyleLayer = (layer: StyleLayer): layer is HeatmapStyleLayer => layer.type === 'heatmap';
+
 /**
  * A style layer that defines a heatmap
  */

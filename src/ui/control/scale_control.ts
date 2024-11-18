@@ -94,7 +94,7 @@ export class ScaleControl implements IControl {
     };
 }
 
-function updateScale(map, container, options) {
+function updateScale(map: Map, container: HTMLElement, options: ScaleControlOptions) {
     // A horizontal scale is imagined to be present at center of the map
     // container with maximum length (Default) as 100px.
     // Using spherical law of cosines approximation, the real distance is
@@ -131,7 +131,7 @@ function updateScale(map, container, options) {
     }
 }
 
-function setScale(container, maxWidth, maxDistance, unit) {
+function setScale(container: HTMLElement, maxWidth: number, maxDistance: number, unit: string) {
     const distance = getRoundNum(maxDistance);
     const ratio = distance / maxDistance;
     container.style.width = `${maxWidth * ratio}px`;

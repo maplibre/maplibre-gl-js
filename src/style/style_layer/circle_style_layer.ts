@@ -13,6 +13,8 @@ import type {Bucket, BucketParameters} from '../../data/bucket';
 import type {CircleLayoutProps, CirclePaintProps} from './circle_style_layer_properties.g';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
+export const isCircleStyleLayer = (layer: StyleLayer): layer is CircleStyleLayer => layer.type === 'circle';
+
 /**
  * A style layer that defines a circle
  */

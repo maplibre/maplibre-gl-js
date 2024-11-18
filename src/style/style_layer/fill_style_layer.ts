@@ -14,6 +14,8 @@ import type {EvaluationParameters} from '../evaluation_parameters';
 import type {IReadonlyTransform} from '../../geo/transform_interface';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
+export const isFillStyleLayer = (layer: StyleLayer): layer is FillStyleLayer => layer.type === 'fill';
+
 export class FillStyleLayer extends StyleLayer {
     _unevaluatedLayout: Layout<FillLayoutProps>;
     layout: PossiblyEvaluated<FillLayoutProps, FillLayoutPropsPossiblyEvaluated>;
