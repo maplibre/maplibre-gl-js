@@ -130,15 +130,11 @@ function drawFillTiles(
         }
 
         let stencil: StencilMode;
-        if (painter.renderPass === 'translucent') {
-            if (isRenderingToTexture) {
-                const [stencilModes] = painter.stencilConfigForOverlap(coords);
-                stencil = stencilModes[coord.overscaledZ];
-            } else {
-                stencil = painter.stencilModeForClipping(coord);
-            }
+        if (painter.renderPass === 'translucent' && isRenderingToTexture) {
+            const [stencilModes] = painter.stencilConfigForOverlap(coords);
+            stencil = stencilModes[coord.overscaledZ];
         } else {
-            stencil = StencilMode.disabled;
+            stencil = painter.stencilModeForClipping(coord);
         }
 
         program.draw(painter.context, drawMode, depthMode,
