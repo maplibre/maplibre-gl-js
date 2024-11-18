@@ -132,4 +132,58 @@ export class DOM {
             node.parentNode.removeChild(node);
         }
     }
+
+    /**
+     * Sanitize an HTML string - this might not be enough to prevent all XSS attacks
+     * Base on https://javascriptsource.com/sanitize-an-html-string-to-reduce-the-risk-of-xss-attacks/
+     * (c) 2021 Chris Ferdinandi, MIT License, https://gomakethings.com
+     */
+    public static sanitize(str: string): string {
+        let parser = new DOMParser();
+        let doc = parser.parseFromString(str, 'text/html');
+        let html = doc.body || document.createElement('body');
+        let scripts = html.querySelectorAll('script');
+        for (let script of scripts) {
+            script.remove();
+        }
+
+        DOM.clean(html);
+
+        return html.innerHTML;
+    }
+
+    /**
+     * Check if the attribute is potentially dangerous
+     */
+    private static isPossiblyDangerous(name: string, value: string): boolean {
+        let val = value.replace(/\s+/g, '').toLowerCase();
+        if (['src', 'href', 'xlink:href'].includes(name)) {
+            if (val.includes('javascript:') || val.includes('data:')) return true;
+        }
+        if (name.startsWith('on')) return true;
+    }
+
+    /**
+	 * Remove dangerous stuff from the HTML document's nodes
+	 * @param html - The HTML document
+	 */
+	private static clean(html: Element) {
+		let nodes = html.children;
+		for (let node of nodes) {
+			DOM.removeAttributes(node);
+			DOM.clean(node);
+		}
+	}
+
+    /**
+	 * Remove potentially dangerous attributes from an element
+	 * @param elem - The element
+	 */
+	private static removeAttributes(elem: Element) {
+		for (let {name, value} of elem.attributes) {
+			if (!DOM.isPossiblyDangerous(name, value)) continue;
+            console.log("here", elem.innerHTML);
+			elem.removeAttribute(name);
+		}
+	}
 }
