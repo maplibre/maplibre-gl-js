@@ -27,6 +27,14 @@ export function createIdentityMat4f64(): mat4 {
     mat4.identity(m);
     return m;
 }
+/**
+ * Returns a new 32 bit float mat4 set to identity.
+ */
+export function createIdentityMat4f32(): mat4 {
+    const m = new Float32Array(16) as any;
+    mat4.identity(m);
+    return m;
+}
 
 /**
  * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.

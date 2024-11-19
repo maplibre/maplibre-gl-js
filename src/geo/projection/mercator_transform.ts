@@ -416,7 +416,7 @@ export class MercatorTransform implements ITransform {
         const tileMatrix = calculateTileMatrix(tileID, this.worldSize);
         mat4.multiply(tileMatrix, aligned ? this._alignedProjMatrix : this._viewProjMatrix, tileMatrix);
 
-        cache[posMatrixKey] = tileMatrix;
+        cache[posMatrixKey] = new Float32Array(tileMatrix); // Must be 32 bit floats, otherwise WebGL calls in Chrome get very slow.
         return cache[posMatrixKey];
     }
 
@@ -430,7 +430,7 @@ export class MercatorTransform implements ITransform {
         const fogMatrix = calculateTileMatrix(unwrappedTileID, this.worldSize);
         mat4.multiply(fogMatrix, this._fogMatrix, fogMatrix);
 
-        cache[posMatrixKey] = fogMatrix;
+        cache[posMatrixKey] = new Float32Array(fogMatrix); // Must be 32 bit floats, otherwise WebGL calls in Chrome get very slow.
         return cache[posMatrixKey];
     }
 
