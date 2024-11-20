@@ -162,6 +162,9 @@ export type FlyToOptions = AnimationOptions & CameraOptions & {
     padding?: number | PaddingOptions;
 }
 
+/**
+ * The {@link Map#easeTo} options object
+ */
 export type EaseToOptions = AnimationOptions & CameraOptions & {
     delayEndEvents?: number;
     padding?: number | PaddingOptions;

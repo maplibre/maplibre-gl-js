@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 - ⚠️ Change drag rotate behavior to be around the center of the screen ([#5074](https://github.com/maplibre/maplibre-gl-js/pull/5074))
+- ⚠️ Change the return type of `on` method to return a `Subscription` to allow for easy unsubscribe ([#5080](https://github.com/maplibre/maplibre-gl-js/pull/5080))
 - Export `Event` class ([#5016](https://github.com/maplibre/maplibre-gl-js/pull/5016))
 - Support Vertical Perspective projection ([#5023](https://github.com/maplibre/maplibre-gl-js/pull/5023))
 - _...Add new stuff here..._

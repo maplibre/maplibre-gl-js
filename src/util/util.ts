@@ -845,7 +845,13 @@ export async function getImageData(
     return readImageDataUsingOffscreenCanvas(image, x, y, width, height);
 }
 
+/**
+ * Allows to unsubscribe from events without the need to store the method reference.
+ */
 export interface Subscription {
+    /**
+     * Unsubscribes from the event.
+     */
     unsubscribe(): void;
 }
 
