@@ -111,7 +111,7 @@ describe('drawFill', () => {
 
     function constructMockTile(layer: FillStyleLayer): Tile {
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
-        tileId.terrainRttPosMatrix = mat4.create();
+        tileId.terrainRttPosMatrix32f = mat4.create();
 
         const tile = new Tile(tileId, 256);
         tile.tileID = tileId;

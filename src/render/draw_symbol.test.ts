@@ -84,7 +84,7 @@ describe('drawSymbol', () => {
         layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
-        tileId.terrainRttPosMatrix = mat4.create();
+        tileId.terrainRttPosMatrix32f = mat4.create();
         const programMock = new Program(null, null, null, null, null, null, null, null);
         (painterMock.useProgram as jest.Mock).mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);
@@ -147,7 +147,7 @@ describe('drawSymbol', () => {
         layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
-        tileId.terrainRttPosMatrix = mat4.create();
+        tileId.terrainRttPosMatrix32f = mat4.create();
         const programMock = new Program(null, null, null, null, null, null, null, null);
         (painterMock.useProgram as jest.Mock).mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);
@@ -214,7 +214,7 @@ describe('drawSymbol', () => {
         layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
-        tileId.terrainRttPosMatrix = mat4.create();
+        tileId.terrainRttPosMatrix32f = mat4.create();
         const programMock = new Program(null, null, null, null, null, null, null, null);
         (painterMock.useProgram as jest.Mock).mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);

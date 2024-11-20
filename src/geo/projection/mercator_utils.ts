@@ -1,7 +1,7 @@
 import {mat4} from 'gl-matrix';
 import {EXTENT} from '../../data/extent';
 import {OverscaledTileID} from '../../source/tile_id';
-import {clamp, degreesToRadians} from '../../util/util';
+import {clamp, createIdentityMat4f32, degreesToRadians} from '../../util/util';
 import {MAX_VALID_LATITUDE, UnwrappedTileIDType, zoomScale} from '../transform_helper';
 import {LngLat} from '../lng_lat';
 import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate';
@@ -110,12 +110,12 @@ export function getBasicProjectionData(overscaledTileID: OverscaledTileID, tileP
     }
 
     let mainMatrix: mat4;
-    if (overscaledTileID && overscaledTileID.terrainRttPosMatrix && applyTerrainMatrix) {
-        mainMatrix = overscaledTileID.terrainRttPosMatrix;
+    if (overscaledTileID && overscaledTileID.terrainRttPosMatrix32f && applyTerrainMatrix) {
+        mainMatrix = overscaledTileID.terrainRttPosMatrix32f;
     } else if (tilePosMatrix) {
-        mainMatrix = tilePosMatrix;
+        mainMatrix = tilePosMatrix; // This matrix should be float32
     } else {
-        mainMatrix = mat4.create();
+        mainMatrix = createIdentityMat4f32();
     }
 
     const data: ProjectionData = {
