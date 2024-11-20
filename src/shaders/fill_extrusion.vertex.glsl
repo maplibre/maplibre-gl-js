@@ -49,7 +49,7 @@ void main() {
     vec2 posInTile = a_pos + u_fill_translate;
 
     #ifdef GLOBE
-        vec3 spherePos = projectToSphere(posInTile);
+        vec3 spherePos = projectToSphere(posInTile, a_pos);
         gl_Position = interpolateProjectionFor3D(posInTile, spherePos, elevation);
     #else
         gl_Position = u_projection_matrix * vec4(posInTile, elevation, 1.0);
