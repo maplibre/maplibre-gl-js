@@ -2,7 +2,7 @@ import {mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {MAX_VALID_LATITUDE, TransformHelper} from '../transform_helper';
 import {MercatorTransform} from './mercator_transform';
 import {LngLat, LngLatLike, earthRadius} from '../lng_lat';
-import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, easeCubicInOut, lerp, pointPlaneSignedDistance, warnOnce} from '../../util/util';
+import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f32, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, easeCubicInOut, lerp, pointPlaneSignedDistance, warnOnce} from '../../util/util';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {browser} from '../../util/browser';
@@ -1194,10 +1194,10 @@ export class GlobeTransform implements ITransform {
         // the fallback projection matrix by EXTENT.
         // Note that the regular projection matrices do not need to be modified, since the rescaling happens by setting
         // the `u_projection_tile_mercator_coords` uniform correctly.
-        const fallbackMatrixScaled = createMat4f64();
+        const fallbackMatrixScaled = createMat4f32();
         mat4.scale(fallbackMatrixScaled, projectionData.fallbackMatrix, [EXTENT, EXTENT, 1]);
 
-        projectionData.fallbackMatrix = new Float32Array(fallbackMatrixScaled);
+        projectionData.fallbackMatrix = fallbackMatrixScaled;
         return projectionData;
     }
 

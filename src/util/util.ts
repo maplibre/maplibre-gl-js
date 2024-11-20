@@ -20,6 +20,10 @@ export function createVec3f64(): vec3 { return new Float64Array(3) as any; }
  */
 export function createMat4f64(): mat4 { return new Float64Array(16) as any; }
 /**
+ * Returns a new 32 bit float mat4 of zeroes.
+ */
+export function createMat4f32(): mat4 { return new Float32Array(16) as any; }
+/**
  * Returns a new 64 bit float mat4 set to identity.
  */
 export function createIdentityMat4f64(): mat4 {
