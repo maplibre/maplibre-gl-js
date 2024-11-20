@@ -122,12 +122,12 @@ describe('popup', () => {
         const map = createMap();
         const onClose = jest.fn();
 
-        new Popup()
+        const popup = new Popup()
             .setText('Test')
-            .setLngLat([0, 0])
-            .on('close', onClose)
-            .addTo(map)
-            .remove();
+            .setLngLat([0, 0]);
+        popup.on('close', onClose);
+        popup.addTo(map);
+        popup.remove();
 
         expect(onClose).toHaveBeenCalled();
     });
@@ -135,11 +135,11 @@ describe('popup', () => {
     test('Popup does not fire close event when removed if it is not on the map', () => {
         const onClose = jest.fn();
 
-        new Popup()
+        const popup = new Popup()
             .setText('Test')
-            .setLngLat([0, 0])
-            .on('close', onClose)
-            .remove();
+            .setLngLat([0, 0]);
+        popup.on('close', onClose);
+        popup.remove();
 
         expect(onClose).not.toHaveBeenCalled();
     });
@@ -148,11 +148,11 @@ describe('popup', () => {
         const map = createMap();
         const onOpen = jest.fn();
 
-        new Popup()
+        const popup = new Popup()
             .setText('Test')
-            .setLngLat([0, 0])
-            .on('open', onOpen)
-            .addTo(map);
+            .setLngLat([0, 0]);
+        popup.on('open', onOpen);
+        popup.addTo(map);
 
         expect(onOpen).toHaveBeenCalled();
     });

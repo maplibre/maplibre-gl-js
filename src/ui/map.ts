@@ -1,4 +1,4 @@
-import {extend, warnOnce, uniqueId, isImageBitmap, Complete, pick} from '../util/util';
+import {extend, warnOnce, uniqueId, isImageBitmap, Complete, pick, Subscription} from '../util/util';
 import {browser} from '../util/browser';
 import {DOM} from '../util/dom';
 import packageJSON from '../../package.json' with {type: 'json'};
@@ -676,14 +676,14 @@ export class Map extends Camera {
         this._setupContainer();
         this._setupPainter();
 
-        this.on('move', () => this._update(false))
-            .on('moveend', () => this._update(false))
-            .on('zoom', () => this._update(true))
-            .on('terrain', () => {
-                this.painter.terrainFacilitator.dirty = true;
-                this._update(true);
-            })
-            .once('idle', () => { this._idleTriggered = true; });
+        this.on('move', () => this._update(false));
+        this.on('moveend', () => this._update(false));
+        this.on('zoom', () => this._update(true));
+        this.on('terrain', () => {
+            this.painter.terrainFacilitator.dirty = true;
+            this._update(true);
+        });
+        this.once('idle', () => { this._idleTriggered = true; });
 
         if (typeof window !== 'undefined') {
             addEventListener('online', this._onWindowOnline, false);
@@ -1458,7 +1458,7 @@ export class Map extends Camera {
         type: T,
         layer: string,
         listener: (ev: MapLayerEventType[T] & Object) => void,
-    ): Map;
+    ): Subscription;
     /**
      * Overload of the `on` method that allows to listen to events specifying multiple layers.
      * @event
@@ -1470,22 +1470,22 @@ export class Map extends Camera {
         type: T,
         layerIds: string[],
         listener: (ev: MapLayerEventType[T] & Object) => void
-    ): this;
+    ): Subscription;
     /**
      * Overload of the `on` method that allows to listen to events without specifying a layer.
      * @event
      * @param type - The type of the event.
      * @param listener - The listener callback.
      */
-    on<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
+    on<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): Subscription;
     /**
      * Overload of the `on` method that allows to listen to events without specifying a layer.
      * @event
      * @param type - The type of the event.
      * @param listener - The listener callback.
      */
-    on(type: keyof MapEventType | string, listener: Listener): this;
-    on(type: keyof MapEventType | string, layerIdsOrListener: string | string[] | Listener, listener?: Listener): this {
+    on(type: keyof MapEventType | string, listener: Listener): Subscription;
+    on(type: keyof MapEventType | string, layerIdsOrListener: string | string[] | Listener, listener?: Listener): Subscription {
         if (listener === undefined) {
             return super.on(type, layerIdsOrListener as Listener);
         }
@@ -1500,7 +1500,11 @@ export class Map extends Camera {
             this.on(event, delegatedListener.delegates[event]);
         }
 
-        return this;
+        return {
+            unsubscribe: () => {
+                this._removeDelegatedListener(type, layerIds, listener);
+            }
+        };
     }
 
     /**

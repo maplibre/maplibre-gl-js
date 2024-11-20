@@ -2447,10 +2447,10 @@ describe('Style#query*Features', () => {
 
         onError = jest.fn();
 
-        style.on('error', onError)
-            .on('style.load', () => {
-                callback();
-            });
+        style.on('error', onError);
+        style.on('style.load', () => {
+            callback();
+        });
     }));
 
     test('querySourceFeatures emits an error on incorrect filter', () => {

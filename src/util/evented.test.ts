@@ -19,7 +19,16 @@ describe('Evented', () => {
         evented.fire(new Event('a'));
         expect(listener).toHaveBeenCalledTimes(1);
         expect(evented.listens('a')).toBeFalsy();
+    });
 
+    test('calls listeners added with "on" and allows to unsubscribe', () => {
+        const evented = new Evented();
+        const listener = jest.fn();
+        const subscription = evented.on('a', listener);
+        evented.fire(new Event('a'));
+        subscription.unsubscribe();
+        evented.fire(new Event('a'));
+        expect(listener).toHaveBeenCalledTimes(1);
     });
 
     test('returns a promise when no listener is provided to "once" method', async () => {

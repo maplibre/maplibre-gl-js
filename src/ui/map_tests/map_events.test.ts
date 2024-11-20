@@ -75,16 +75,34 @@ describe('map events', () => {
                 return features;
             });
 
-        const spy = jest.fn(function (e) {
-            expect(this).toBe(map);
+        const spy = jest.fn((e) => {
             expect(e.type).toBe('click');
             expect(e.features).toBe(features);
         });
-
         map.on('click', ['layer1', 'layer2'], spy);
         simulate.click(map.getCanvas());
 
         expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    test('Map#on adds a listener for an event on multiple layers and allows to unsubscribe', () => {
+        const map = createMap();
+        const features = [{} as MapGeoJSONFeature];
+
+        jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        jest.spyOn(map, 'queryRenderedFeatures')
+            .mockImplementationOnce((_point, options) => {
+                expect(options).toEqual({layers: ['layer1', 'layer2']});
+                return features;
+            });
+
+        const spy = jest.fn();
+
+        const subscription = map.on('click', ['layer1', 'layer2'], spy);
+        subscription.unsubscribe();
+        simulate.click(map.getCanvas());
+
+        expect(spy).not.toHaveBeenCalled();
     });
 
     test('Map#on adds listener which calls queryRenderedFeatures only for existing layers', () => {
@@ -925,20 +943,20 @@ describe('map events', () => {
         map.remove();
     });
 
-    test('emits load event after a style is set', () => new Promise<void>((done) => {
+    test('emits load event after a style is set', async () => {
         const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
 
-        const fail = () => { throw new Error('test failed'); };
-        const pass = () => done();
+        const failSpy = jest.fn();
 
-        map.on('load', fail);
+        map.on('load', failSpy);
+        await sleep(1);
+        map.off('load', failSpy);
+        const promise = map.once('load');
+        map.setStyle(createStyle());
 
-        setTimeout(() => {
-            map.off('load', fail);
-            map.on('load', pass);
-            map.setStyle(createStyle());
-        }, 1);
-    }));
+        await promise;
+        expect(failSpy).not.toHaveBeenCalled();
+    });
 
     test('no idle event during move', async () => {
         const style = createStyle();
@@ -1012,16 +1030,24 @@ describe('map events', () => {
             expect(stub.mock.calls[0][0]).toBe(error);
         });
 
-        test('calls listeners', () => new Promise<void>(done => {
+        test('calls listeners', async () => {
             const map = createMap();
             const error = new Error('test');
-            map.on('error', (event) => {
-                expect(event.error).toBe(error);
-                done();
-            });
+            const promise = map.once('error');
             map.fire(new ErrorEvent(error));
-        }));
+            const event = await promise;
+            expect(event.error).toBe(error);
+        });
 
+        test('does not call listeners after unsubscribe', async () => {
+            const map = createMap();
+            const error = new Error('test');
+            const spy = jest.fn();
+            const subscription = map.on('error', spy);
+            subscription.unsubscribe();
+            map.fire(new ErrorEvent(error));
+            expect(spy).not.toHaveBeenCalled();
+        });
     });
 
     describe('projectiontransition event', () => {
