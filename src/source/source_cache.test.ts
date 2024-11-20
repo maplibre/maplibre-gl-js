@@ -117,7 +117,8 @@ describe('SourceCache#addTile', () => {
 
     test('adds tile when uncached', () => new Promise<void>(done => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        const sourceCache = createSourceCache({}).on('dataloading', (data) => {
+        const sourceCache = createSourceCache({});
+        sourceCache.on('dataloading', (data) => {
             expect(data.tile.tileID).toEqual(tileID);
             expect(data.tile.uses).toBe(1);
             done();
@@ -387,21 +388,23 @@ describe('SourceCache#removeTile', () => {
 
 describe('SourceCache / Source lifecycle', () => {
     test('does not fire load or change before source load event', () => new Promise<void>((done) => {
-        const sourceCache = createSourceCache({noLoad: true})
-            .on('data', () => { throw new Error('test failed: data event fired'); });
+        const sourceCache = createSourceCache({noLoad: true});
+        sourceCache.on('data', () => { throw new Error('test failed: data event fired'); });
         sourceCache.onAdd(undefined);
         setTimeout(() => done(), 1);
     }));
 
     test('forward load event', () => new Promise<void>(done => {
-        const sourceCache = createSourceCache({}).on('data', (e) => {
+        const sourceCache = createSourceCache({});
+        sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') done();
         });
         sourceCache.onAdd(undefined);
     }));
 
     test('forward change event', () => new Promise<void>(done => {
-        const sourceCache = createSourceCache().on('data', (e) => {
+        const sourceCache = createSourceCache();
+        sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') done();
         });
         sourceCache.onAdd(undefined);
@@ -409,7 +412,8 @@ describe('SourceCache / Source lifecycle', () => {
     }));
 
     test('forward error event', () => new Promise<void>(done => {
-        const sourceCache = createSourceCache({error: 'Error loading source'}).on('error', (err) => {
+        const sourceCache = createSourceCache({error: 'Error loading source'});
+        sourceCache.on('error', (err) => {
             expect(err.error).toBe('Error loading source');
             done();
         });
@@ -417,13 +421,14 @@ describe('SourceCache / Source lifecycle', () => {
     }));
 
     test('suppress 404 errors', () => {
-        const sourceCache = createSourceCache({status: 404, message: 'Not found'})
-            .on('error', () => { throw new Error('test failed: error event fired'); });
+        const sourceCache = createSourceCache({status: 404, message: 'Not found'});
+        sourceCache.on('error', () => { throw new Error('test failed: error event fired'); });
         sourceCache.onAdd(undefined);
     });
 
     test('loaded() true after source error', () => new Promise<void>(done => {
-        const sourceCache = createSourceCache({error: 'Error loading source'}).on('error', () => {
+        const sourceCache = createSourceCache({error: 'Error loading source'});
+        sourceCache.on('error', () => {
             expect(sourceCache.loaded()).toBeTruthy();
             done();
         });
@@ -442,7 +447,8 @@ describe('SourceCache / Source lifecycle', () => {
             if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
                 sourceCache.update(transform);
             }
-        }).on('error', () => {
+        });
+        sourceCache.on('error', () => {
             expect(sourceCache.loaded()).toBeTruthy();
             done();
         });
@@ -451,7 +457,8 @@ describe('SourceCache / Source lifecycle', () => {
     }));
 
     test('loaded() false after source begins loading following error', () => new Promise<void>(done => {
-        const sourceCache = createSourceCache({error: 'Error loading source'}).on('error', () => {
+        const sourceCache = createSourceCache({error: 'Error loading source'});
+        sourceCache.on('error', () => {
             sourceCache.on('dataloading', () => {
                 expect(sourceCache.loaded()).toBeFalsy();
                 done();
@@ -469,7 +476,8 @@ describe('SourceCache / Source lifecycle', () => {
             loaded() {
                 return false;
             }
-        }).on('error', () => {
+        });
+        sourceCache.on('error', () => {
             expect(sourceCache.loaded()).toBeFalsy();
             done();
         });

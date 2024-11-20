@@ -533,7 +533,7 @@ export class MercatorTransform implements ITransform {
         return result;
     }
 
-    calculateCenterFromCameraLngLatAlt(lnglat: LngLat, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
+    calculateCenterFromCameraLngLatAlt(lnglat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
         const cameraBearing = bearing !== undefined ? bearing : this.bearing;
         const cameraPitch = pitch = pitch !== undefined ? pitch : this.pitch;
 
