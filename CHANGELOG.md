@@ -1,18 +1,26 @@
 ## main
 
 ### ✨ Features and improvements
-- ⚠️ Change drag rotate behavior to be around the center of the screen ([#5074](https://github.com/maplibre/maplibre-gl-js/pull/5074))
-- Export `Event` class ([#5016](https://github.com/maplibre/maplibre-gl-js/pull/5016))
-- Support Vertical Perspective projection ([#5023](https://github.com/maplibre/maplibre-gl-js/pull/5023))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 5.0.0-pre.7
+
+### ✨ Features and improvements
+
+- ⚠️ Change drag rotate behavior to be around the center of the screen ([#5074](https://github.com/maplibre/maplibre-gl-js/pull/5074))
+- Export `Event` class ([#5016](https://github.com/maplibre/maplibre-gl-js/pull/5016))
+- Support Vertical Perspective projection ([#5023](https://github.com/maplibre/maplibre-gl-js/pull/5023))
+
+### 🐞 Bug fixes
+
 - Fixes scale control for globe on zoom out ([#4897](https://github.com/maplibre/maplibre-gl-js/pull/4897))
 - Fixes cooperative gestures displaying the mobile help text when screen width is smaller than 480px on non-touch devices ([#5053](https://github.com/maplibre/maplibre-gl-js/pull/5053))
 - Fixes incorrect cluster radius scaling in `GeoJSONSource.setClusterOptions()` ([#5055](https://github.com/maplibre/maplibre-gl-js/pull/5055))
 - Improve innerHTML handling in code ([#5057](https://github.com/maplibre/maplibre-gl-js/pull/5057)))
 - Fix geometry beyond tile borders being rendered ([#4868](https://github.com/maplibre/maplibre-gl-js/pull/4868))
-- _...Add new stuff here..._
 
 ## 5.0.0-pre.6
 
