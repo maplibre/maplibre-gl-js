@@ -422,21 +422,21 @@ export class MercatorTransform implements ITransform {
         cacheF64.set(posMatrixKey, tileMatrix);
         cacheF32.set(posMatrixKey, new Float32Array(tileMatrix)); // Must be 32 bit floats, otherwise WebGL calls in Chrome get very slow.
         // Make sure to return the correct precision
-        return cacheRequested[posMatrixKey];
+        return cacheRequested.get(posMatrixKey);
     }
 
     calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {
         const posMatrixKey = unwrappedTileID.key;
         const cache = this._fogMatrixCacheF32;
-        if (cache[posMatrixKey]) {
-            return cache[posMatrixKey];
+        if (cache.has(posMatrixKey)) {
+            return cache.get(posMatrixKey);
         }
 
         const fogMatrix = calculateTileMatrix(unwrappedTileID, this.worldSize);
         mat4.multiply(fogMatrix, this._fogMatrix, fogMatrix);
 
-        cache[posMatrixKey] = new Float32Array(fogMatrix); // Must be 32 bit floats, otherwise WebGL calls in Chrome get very slow.
-        return cache[posMatrixKey];
+        cache.set(posMatrixKey, new Float32Array(fogMatrix)); // Must be 32 bit floats, otherwise WebGL calls in Chrome get very slow.
+        return cache.get(posMatrixKey);
     }
 
     /**
