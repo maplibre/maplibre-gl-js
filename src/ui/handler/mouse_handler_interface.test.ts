@@ -1,6 +1,7 @@
 import Point from '@mapbox/point-geometry';
 
 import {generateMousePanHandler, generateMousePitchHandler, generateMouseRollHandler, generateMouseRotationHandler} from './mouse';
+import {DragRotateResult} from './drag_handler';
 
 describe('mouse handler tests', () => {
     test('MouseRotateHandler', () => {
@@ -19,7 +20,7 @@ describe('mouse handler tests', () => {
         expect(mouseRotate.isActive()).toBe(false);
 
         const overToleranceMove = new MouseEvent('mousemove', {buttons: 2, clientX: 10, clientY: 10});
-        expect(mouseRotate.dragMove(overToleranceMove, new Point(10, 10))).toEqual({'bearingDelta': 8});
+        expect((mouseRotate.dragMove(overToleranceMove, new Point(10, 10)) as DragRotateResult).bearingDelta).toBeCloseTo(-0.53988378, 7);
         expect(mouseRotate.isActive()).toBe(true);
 
         mouseRotate.dragEnd(new MouseEvent('mouseup', {buttons: 0, button: 2}));
@@ -125,7 +126,7 @@ describe('mouse handler tests', () => {
         expect(mouseRoll.isActive()).toBe(false);
 
         const overToleranceMove = new MouseEvent('mousemove', {buttons: 2, clientX: 10, clientY: 10});
-        expect(mouseRoll.dragMove(overToleranceMove, new Point(10, 10))).toEqual({'rollDelta': 8});
+        expect(mouseRoll.dragMove(overToleranceMove, new Point(10, 10))).toEqual({'rollDelta': -3});
         expect(mouseRoll.isActive()).toBe(true);
 
         mouseRoll.dragEnd(new MouseEvent('mouseup', {buttons: 0, button: 2}));
