@@ -1,6 +1,7 @@
 import Point from '@mapbox/point-geometry';
 
 import {generateOneFingerTouchPitchHandler, generateOneFingerTouchRotationHandler} from './one_finger_touch_drag';
+import {DragRotateResult} from './drag_handler';
 
 const testTouch = {identifier: 0} as Touch;
 
@@ -21,7 +22,7 @@ describe('one touch drag handler tests', () => {
         expect(oneTouchRotate.isActive()).toBe(false);
 
         const overToleranceMove = new TouchEvent('touchmove', {targetTouches: [testTouch]});
-        expect(oneTouchRotate.dragMove(overToleranceMove, new Point(10, 10))).toEqual({'bearingDelta': 8});
+        expect((oneTouchRotate.dragMove(overToleranceMove, new Point(10, 10)) as DragRotateResult).bearingDelta).toBeCloseTo(-0.5398837825, 7);
         expect(oneTouchRotate.isActive()).toBe(true);
 
         oneTouchRotate.dragEnd(new TouchEvent('touchend', {targetTouches: [testTouch]}));

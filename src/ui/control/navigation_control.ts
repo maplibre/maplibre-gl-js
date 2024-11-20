@@ -190,7 +190,7 @@ class MouseRotateWrapper {
         const mapRotateTolerance = map.dragRotate._mouseRotate.getClickTolerance();
         const mapPitchTolerance = map.dragRotate._mousePitch.getClickTolerance();
         this.element = element;
-        this.mouseRotate = generateMouseRotationHandler({clickTolerance: mapRotateTolerance, enable: true});
+        this.mouseRotate = generateMouseRotationHandler({clickTolerance: mapRotateTolerance, enable: true, aroundCenter: false});
         this.touchRotate = generateOneFingerTouchRotationHandler({clickTolerance: mapRotateTolerance, enable: true});
         this.map = map;
         if (pitch) {

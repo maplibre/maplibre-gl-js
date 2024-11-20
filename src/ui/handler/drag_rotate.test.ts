@@ -59,7 +59,7 @@ describe('drag rotate', () => {
         expect(rotate).toHaveBeenCalledTimes(0);
         expect(rotateend).toHaveBeenCalledTimes(0);
 
-        simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 10});
+        simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 200, clientY: 10});
         map._renderTaskQueue.run();
         expect(rotatestart).toHaveBeenCalledTimes(1);
         expect(rotate).toHaveBeenCalledTimes(1);
@@ -121,7 +121,7 @@ describe('drag rotate', () => {
         map.on('rotateend',   spy);
 
         simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2});
-        simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 10});
+        simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 200, clientY: 10});
         map._renderTaskQueue.run();
         simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2});
         map._renderTaskQueue.run();
@@ -155,7 +155,7 @@ describe('drag rotate', () => {
         expect(rotate).toHaveBeenCalledTimes(0);
         expect(rotateend).toHaveBeenCalledTimes(0);
 
-        simulate.mousemove(map.getCanvas(), {buttons: 1,            ctrlKey: true, clientX: 10, clientY: 10});
+        simulate.mousemove(map.getCanvas(), {buttons: 1,            ctrlKey: true, clientX: 200, clientY: 10});
         map._renderTaskQueue.run();
         expect(rotatestart).toHaveBeenCalledTimes(1);
         expect(rotate).toHaveBeenCalledTimes(1);
