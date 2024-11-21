@@ -747,16 +747,6 @@ export abstract class Camera extends Evented {
     }
 
     /**
-     * @internal
-     * Sets the value of `rollEnabled`.
-     * @param rollEnabled - If `false`, the map's roll control with "drag to rotate" interaction will be disabled.
-     * @defaultValue false
-     */
-    protected setRollEnabled(rollEnabled: boolean) {
-        this.cameraHelper.setRollEnabled(rollEnabled);
-    }
-
-    /**
      * @param bounds - Calculate the center for these bounds in the viewport and use
      * the highest zoom level up to and including `Map#getMaxZoom()` that fits
      * in the viewport. LngLatBounds represent a box that is always axis-aligned with bearing 0.

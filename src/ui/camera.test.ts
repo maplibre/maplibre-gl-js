@@ -822,14 +822,14 @@ describe('#easeTo', () => {
 
     test('rolls to specified roll', () => {
         const camera = createCamera();
-        camera.setRollEnabled(true);
+        camera.cameraHelper.setRollEnabled(true);
         camera.easeTo({pitch: 1, roll: 45, duration: 0});
         expect(camera.getRoll()).toBeCloseTo(45, 6);
     });
 
     test('roll behavior at Euler angle singularity', () => {
         const camera = createCamera();
-        camera.setRollEnabled(true);
+        camera.cameraHelper.setRollEnabled(true);
         camera.easeTo({bearing: 0, pitch: 0, roll: 45, duration: 0});
         expect(camera.getRoll()).toBeCloseTo(45, 6);
         expect(camera.getPitch()).toBeCloseTo(0, 6);
@@ -838,7 +838,7 @@ describe('#easeTo', () => {
 
     test('bearing behavior at Euler angle singularity', () => {
         const camera = createCamera();
-        camera.setRollEnabled(true);
+        camera.cameraHelper.setRollEnabled(true);
         camera.easeTo({bearing: 45, pitch: 0, roll: 0, duration: 0});
         expect(camera.getRoll()).toBeCloseTo(0, 6);
         expect(camera.getPitch()).toBeCloseTo(0, 6);
@@ -1333,14 +1333,14 @@ describe('#flyTo', () => {
 
     test('rolls to specified roll', () => {
         const camera = createCamera();
-        camera.setRollEnabled(true);
+        camera.cameraHelper.setRollEnabled(true);
         camera.flyTo({pitch: 1, roll: 45, animate: false});
         expect(camera.getRoll()).toBeCloseTo(45, 6);
     });
 
     test('roll behavior at Euler angle singularity', () => {
         const camera = createCamera();
-        camera.setRollEnabled(true);
+        camera.cameraHelper.setRollEnabled(true);
         camera.flyTo({bearing: 0, pitch: 0, roll: 45, animate: false});
         expect(camera.getRoll()).toBeCloseTo(45, 6);
         expect(camera.getPitch()).toBeCloseTo(0, 6);
@@ -1349,7 +1349,7 @@ describe('#flyTo', () => {
 
     test('bearing behavior at Euler angle singularity', () => {
         const camera = createCamera();
-        camera.setRollEnabled(true);
+        camera.cameraHelper.setRollEnabled(true);
         camera.flyTo({bearing: 45, pitch: 0, roll: 0, animate: false});
         expect(camera.getRoll()).toBeCloseTo(0, 6);
         expect(camera.getPitch()).toBeCloseTo(0, 6);
@@ -1545,7 +1545,7 @@ describe('#flyTo', () => {
         const stub = jest.spyOn(browser, 'now');
 
         const camera = createCamera();
-        camera.setRollEnabled(false);
+        camera.cameraHelper.setRollEnabled(false);
         stub.mockImplementation(() => 0);
         camera.easeTo({pitch: 10, bearing: 100, duration: 1000});
         stub.mockImplementation(() => 100);
@@ -1558,7 +1558,7 @@ describe('#flyTo', () => {
         const stub = jest.spyOn(browser, 'now');
 
         const camera = createCameraGlobe();
-        camera.setRollEnabled(false);
+        camera.cameraHelper.setRollEnabled(false);
         stub.mockImplementation(() => 0);
         camera.easeTo({pitch: 10, bearing: 100, duration: 1000});
         stub.mockImplementation(() => 100);
@@ -1571,7 +1571,7 @@ describe('#flyTo', () => {
         const stub = jest.spyOn(browser, 'now');
 
         const camera = createCamera();
-        camera.setRollEnabled(true);
+        camera.cameraHelper.setRollEnabled(true);
         stub.mockImplementation(() => 0);
         camera.easeTo({pitch: 10, bearing: 20, roll: 30, duration: 1000});
         stub.mockImplementation(() => 500);
@@ -1586,7 +1586,7 @@ describe('#flyTo', () => {
         const stub = jest.spyOn(browser, 'now');
 
         const camera = createCameraGlobe();
-        camera.setRollEnabled(true);
+        camera.cameraHelper.setRollEnabled(true);
         stub.mockImplementation(() => 0);
         camera.easeTo({pitch: 10, bearing: 20, roll: 30, duration: 1000});
         stub.mockImplementation(() => 500);
@@ -2775,7 +2775,7 @@ describe('#easeTo globe projection', () => {
 
         test('rolls to specified roll', () => {
             const camera = createCameraGlobe();
-            camera.setRollEnabled(true);
+            camera.cameraHelper.setRollEnabled(true);
             camera.easeTo({pitch: 1, roll: 45, duration: 0});
             expect(camera.getPitch()).toBeCloseTo(1, 6);
             expect(camera.getRoll()).toBeCloseTo(45, 6);
@@ -2783,7 +2783,7 @@ describe('#easeTo globe projection', () => {
 
         test('roll behavior at Euler angle singularity', () => {
             const camera = createCameraGlobe();
-            camera.setRollEnabled(true);
+            camera.cameraHelper.setRollEnabled(true);
             camera.easeTo({bearing: 0, pitch: 0, roll: 45, duration: 0});
             expect(camera.getRoll()).toBeCloseTo(45, 6);
             expect(camera.getPitch()).toBeCloseTo(0, 6);
@@ -2792,7 +2792,7 @@ describe('#easeTo globe projection', () => {
 
         test('bearing behavior at Euler angle singularity', () => {
             const camera = createCameraGlobe();
-            camera.setRollEnabled(true);
+            camera.cameraHelper.setRollEnabled(true);
             camera.easeTo({bearing: 45, pitch: 0, roll: 0, duration: 0});
             expect(camera.getRoll()).toBeCloseTo(0, 6);
             expect(camera.getPitch()).toBeCloseTo(0, 6);
@@ -3097,7 +3097,7 @@ describe('#flyTo globe projection', () => {
 
         test('rolls to specified roll', () => {
             const camera = createCameraGlobe();
-            camera.setRollEnabled(true);
+            camera.cameraHelper.setRollEnabled(true);
             camera.flyTo({pitch: 1, roll: 45, animate: false});
             expect(camera.getPitch()).toBeCloseTo(1, 6);
             expect(camera.getRoll()).toBeCloseTo(45, 6);
@@ -3105,7 +3105,7 @@ describe('#flyTo globe projection', () => {
 
         test('roll behavior at Euler angle singularity', () => {
             const camera = createCameraGlobe();
-            camera.setRollEnabled(true);
+            camera.cameraHelper.setRollEnabled(true);
             camera.flyTo({bearing: 0, pitch: 0, roll: 45, animate: false});
             expect(camera.getRoll()).toBeCloseTo(45, 6);
             expect(camera.getPitch()).toBeCloseTo(0, 6);
@@ -3114,7 +3114,7 @@ describe('#flyTo globe projection', () => {
 
         test('bearing behavior at Euler angle singularity', () => {
             const camera = createCameraGlobe();
-            camera.setRollEnabled(true);
+            camera.cameraHelper.setRollEnabled(true);
             camera.flyTo({bearing: 45, pitch: 0, roll: 0, animate: false});
             expect(camera.getRoll()).toBeCloseTo(0, 6);
             expect(camera.getPitch()).toBeCloseTo(0, 6);
