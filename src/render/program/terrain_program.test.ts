@@ -1,7 +1,7 @@
 import {terrainUniformValues} from './terrain_program';
 import {Sky} from '../../style/sky';
 import {mat4} from 'gl-matrix';
-import { describe, expect, test } from 'vitest';
+import {describe, expect, test} from 'vitest';
 
 describe('terrainUniformValues', () => {
     test('disables fog when in globe projection mode', () => {
