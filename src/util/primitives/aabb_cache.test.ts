@@ -1,3 +1,4 @@
+import { describe, expect, test } from 'vitest';
 import {GlobeCoveringTilesDetailsProvider} from '../../geo/projection/globe_covering_tiles_details_provider';
 
 describe('aabb cache', () => {
