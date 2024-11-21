@@ -31,19 +31,21 @@
         font-size: 13px;
     }
 </style>
-
-<script src="https://www.unpkg.com/turf@3.0.14/turf.min.js"></script>
 <link
     rel="stylesheet"
     href="https://esm.sh/jsr/@birkskyum/maplibre-gl-draw@^2/dist/maplibre-gl-draw.css"
-/>
-<div id="map"></div>
-<div class="calculation-box">
-    <p>Draw a polygon using the draw tools.</p>
-    <div id="calculated-area"></div>
-</div>
+    />
+    <div id="map"></div>
+    <div class="calculation-box">
+        <p>Draw a polygon using the draw tools.</p>
+        <div id="calculated-area"></div>
+    </div>
 
-<script type="module">
+    <script type="module">
+
+
+    import * as turf from 'https://esm.sh/@turf/turf@7.1.0';
+
     import {MapLibreDraw} from 'https://esm.sh/jsr/@birkskyum/maplibre-gl-draw@^2';
     MapLibreDraw.constants.classes.CONTROL_BASE  = 'maplibregl-ctrl';
     MapLibreDraw.constants.classes.CONTROL_PREFIX = 'maplibregl-ctrl-';
