@@ -1,0 +1,52 @@
+{
+  "version": 8,
+  "sources": {
+    "labels": {
+      "type": "geojson",
+      "data": "https://zerda.de/labels_small.geojson"
+    }
+  },
+  "layers": [
+      {
+        "id": "lines-red",
+        "type": "line",
+        "source": "labels",
+        "layout": {
+          "visibility": "visible"
+        },
+        "paint": {
+          "line-color": "rgba(255, 0, 0, 1.0)",
+          "line-width": 20
+        }
+      },
+      {
+        "id": "lines-green",
+        "type": "line",
+        "source": "labels",
+        "layout": {
+          "visibility": "visible"
+        },
+        "paint": {
+          "line-color": "rgba(0, 255, 0, 1.0)",
+          "line-width": 12
+        }
+      },
+      {
+        "id": "lines-blue",
+        "type": "line",
+        "source": "labels",
+        "layout": {
+          "visibility": "visible"
+        },
+        "paint": {
+          "line-color": "rgba(0, 0, 255, 1.0)",
+          "line-width": 4
+        }
+      }
+  ],
+  "zoom": 6.9801106061514195,
+  "center": [10.907878576288454, 31.329259918093854],
+  "pitch": 60,
+  "bearing": -117.25161852328324,
+  "roll": 0.7795022736613696
+}
