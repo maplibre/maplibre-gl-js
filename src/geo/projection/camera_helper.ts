@@ -6,7 +6,7 @@ import {PaddingOptions} from '../edge_insets';
 import {LngLatBounds} from '../lng_lat_bounds';
 import {getRollPitchBearing, RollPitchBearing, warnOnce} from '../../util/util';
 import {quat} from 'gl-matrix';
-import {interpolates} from '@maplibre/maplibre-gl-style-spec';;
+import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
 export type MapControlsDeltas = {
     panDelta: Point;
