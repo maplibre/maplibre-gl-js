@@ -643,6 +643,7 @@ export class Map extends Camera {
         this._trackResize = resolvedOptions.trackResize === true;
         this._bearingSnap = resolvedOptions.bearingSnap;
         this._centerClampedToGround = resolvedOptions.centerClampedToGround;
+        this._rollEnabled = resolvedOptions.rollEnabled === true;
         this._refreshExpiredTiles = resolvedOptions.refreshExpiredTiles === true;
         this._fadeDuration = resolvedOptions.fadeDuration;
         this._crossSourceCollisions = resolvedOptions.crossSourceCollisions === true;

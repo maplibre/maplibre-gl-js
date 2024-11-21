@@ -2,7 +2,7 @@ import {Camera, CameraOptions, PointLike} from '../ui/camera';
 import {TaskQueue, TaskID} from '../util/task_queue';
 import {browser} from '../util/browser';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
-import {setMatchMedia} from '../util/test/util';
+import {setMatchMedia, sleep} from '../util/test/util';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
 import {Terrain} from '../render/terrain';
 import {LngLat, LngLatLike} from '../geo/lng_lat';
@@ -1533,6 +1533,16 @@ describe('#flyTo', () => {
         camera.flyTo({center: [200, 0], duration: 100});
         camera.flyTo({center: [100, 0], duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
+    });
+
+    test('no roll when motion is interrupted', async () => {
+        const camera = createCamera();
+        camera._rollEnabled = false;
+        camera.easeTo({pitch: 10, bearing: 100, duration: 1000});
+        await sleep(100);
+        camera.simulateFrame();
+        camera.easeTo({elevation: 1, duration: 0});
+        expect(camera.getRoll()).toEqual(0);
     });
 
     test('can be called from within a moveend event handler', async () => {
