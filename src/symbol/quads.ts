@@ -137,9 +137,9 @@ export function getIconQuads(
         const angle = iconRotate * Math.PI / 180;
 
         if (angle) {
-            const sin = Math.sin(angle),
-                cos = Math.cos(angle),
-                matrix = [cos, -sin, sin, cos];
+            const sin = Math.sin(angle);
+            const cos = Math.cos(angle);
+            const matrix: [number,number,number,number] = [cos, -sin, sin, cos];
 
             tl._matMult(matrix);
             tr._matMult(matrix);
@@ -327,9 +327,9 @@ export function getGlyphQuads(
             }
 
             if (textRotate) {
-                const sin = Math.sin(textRotate),
-                    cos = Math.cos(textRotate),
-                    matrix = [cos, -sin, sin, cos];
+                const sin = Math.sin(textRotate);
+                const cos = Math.cos(textRotate);
+                const matrix: [number, number, number, number] = [cos, -sin, sin, cos];
 
                 tl._matMult(matrix);
                 tr._matMult(matrix);
