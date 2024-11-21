@@ -1535,11 +1535,27 @@ describe('#flyTo', () => {
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
     });
 
-    test('no roll when motion is interrupted', async () => {
+    test('no roll when motion is interrupted', () => {
+        const stub = jest.spyOn(browser, 'now');
+
         const camera = createCamera();
         camera._rollEnabled = false;
+        stub.mockImplementation(() => 0);
         camera.easeTo({pitch: 10, bearing: 100, duration: 1000});
-        await sleep(100);
+        stub.mockImplementation(() => 100);
+        camera.simulateFrame();
+        camera.easeTo({elevation: 1, duration: 0});
+        expect(camera.getRoll()).toEqual(0);
+    });
+
+    test('no roll when motion is interrupted: globe', () => {
+        const stub = jest.spyOn(browser, 'now');
+
+        const camera = createCameraGlobe();
+        camera._rollEnabled = false;
+        stub.mockImplementation(() => 0);
+        camera.easeTo({pitch: 10, bearing: 100, duration: 1000});
+        stub.mockImplementation(() => 100);
         camera.simulateFrame();
         camera.easeTo({elevation: 1, duration: 0});
         expect(camera.getRoll()).toEqual(0);
