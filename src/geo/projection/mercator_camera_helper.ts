@@ -15,6 +15,22 @@ import {quat} from 'gl-matrix';
  * @internal
  */
 export class MercatorCameraHelper implements ICameraHelper {
+    
+    /**
+     * @internal
+     * If `false`, the map's roll control with "drag to rotate" interaction will be disabled.
+     * @defaultValue false
+     */
+    _rollEnabled: boolean;
+
+    constructor() {
+        this._rollEnabled = false;
+    }
+
+    setRollEnabled(rollEnabled: boolean): void {
+        this._rollEnabled = rollEnabled;
+    }
+
     get useGlobeControls(): boolean { return false; }
 
     handlePanInertia(pan: Point, transform: IReadonlyTransform): {
@@ -129,6 +145,7 @@ export class MercatorCameraHelper implements ICameraHelper {
         const startZoom = tr.zoom;
         const startPadding = tr.padding;
         const startRotation = rollPitchBearingToQuat(tr.roll, tr.pitch, tr.bearing);
+        const startEulerAngles = {roll: tr.roll, pitch: tr.pitch, bearing: tr.bearing};
         const endRoll = options.roll === undefined ? tr.roll : options.roll;
         const endPitch = options.pitch === undefined ? tr.pitch : options.pitch;
         const endBearing = options.bearing === undefined ? tr.bearing : options.bearing;
@@ -161,7 +178,7 @@ export class MercatorCameraHelper implements ICameraHelper {
                 tr.setZoom(interpolates.number(startZoom, endZoom, k));
             }
             if (!quat.equals(startRotation, endRotation)) {
-                updateRotation(startRotation, endRotation, {roll: endRoll, pitch: endPitch, bearing: endBearing}, tr, k);
+                updateRotation(startRotation, endRotation, startEulerAngles, {roll: endRoll, pitch: endPitch, bearing: endBearing}, tr, k, this._rollEnabled);
             }
             if (doPadding) {
                 tr.interpolatePadding(startPadding, options.padding, k);

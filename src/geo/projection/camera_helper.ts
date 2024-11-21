@@ -6,6 +6,7 @@ import {PaddingOptions} from '../edge_insets';
 import {LngLatBounds} from '../lng_lat_bounds';
 import {getRollPitchBearing, RollPitchBearing, warnOnce} from '../../util/util';
 import {quat} from 'gl-matrix';
+import {interpolates} from '@maplibre/maplibre-gl-style-spec';;
 
 export type MapControlsDeltas = {
     panDelta: Point;
@@ -93,6 +94,8 @@ export interface ICameraHelper {
     handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandlerResult;
 
     handleFlyTo(tr: ITransform, options: FlyToHandlerOptions): FlyToHandlerResult;
+
+    setRollEnabled(rollEnabled: boolean): void;
 }
 
 /**
@@ -100,23 +103,28 @@ export interface ICameraHelper {
  * Set a transform's rotation to a value interpolated between startRotation and endRotation
  * @param startRotation - the starting rotation (rotation when k = 0)
  * @param endRotation - the end rotation (rotation when k = 1)
+ * @param startEulerAngles - the starting Euler angles.
  * @param endEulerAngles - the end Euler angles. This is needed in case `endRotation` has an ambiguous Euler angle representation.
  * @param tr - the transform to be updated
  * @param k - the interpolation fraction, between 0 and 1.
+ * @param useSlerp - if true, use spherical linear interpolation. If false, use linear interpolation of Euler angles.
  */
-export function updateRotation(startRotation: quat, endRotation: quat, endEulerAngles: RollPitchBearing, tr: ITransform, k: number) {
-    // At pitch ==0, the Euler angle representation is ambiguous. In this case, set the Euler angles
-    // to the representation requested by the caller
-    if (k < 1) {
-        const rotation: quat = new Float64Array(4) as any;
-        quat.slerp(rotation, startRotation, endRotation, k);
-        const eulerAngles = getRollPitchBearing(rotation);
-        tr.setRoll(eulerAngles.roll);
-        tr.setPitch(eulerAngles.pitch);
-        tr.setBearing(eulerAngles.bearing);
+export function updateRotation(startRotation: quat, endRotation: quat, startEulerAngles: RollPitchBearing, endEulerAngles: RollPitchBearing, tr: ITransform, k: number, useSlerp: boolean) {
+    if (useSlerp) {
+        // At pitch ==0, the Euler angle representation is ambiguous. In this case, set the Euler angles
+        // to the representation requested by the caller
+        if (k < 1) {
+            const rotation: quat = new Float64Array(4) as any;
+            quat.slerp(rotation, startRotation, endRotation, k);
+            const eulerAngles = getRollPitchBearing(rotation);
+            tr.setRoll(eulerAngles.roll);
+            tr.setPitch(eulerAngles.pitch);
+            tr.setBearing(eulerAngles.bearing);
+        } else {
+        }
     } else {
-        tr.setRoll(endEulerAngles.roll);
-        tr.setPitch(endEulerAngles.pitch);
-        tr.setBearing(endEulerAngles.bearing);
+        tr.setRoll(interpolates.number(startEulerAngles.roll, endEulerAngles.roll, k));
+        tr.setPitch(interpolates.number(startEulerAngles.pitch, endEulerAngles.pitch, k));
+        tr.setBearing(interpolates.number(startEulerAngles.bearing, endEulerAngles.bearing, k));
     }
 }

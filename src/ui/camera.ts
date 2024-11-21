@@ -321,13 +321,6 @@ export abstract class Camera extends Evented {
      */
     _centerClampedToGround: boolean;
 
-    /**
-     * @internal
-     * If `false`, the map's roll control with "drag to rotate" interaction will be disabled.
-     * @defaultValue false
-     */
-    _rollEnabled: boolean;
-
     abstract _requestRenderFrame(a: () => void): TaskID;
     abstract _cancelRenderFrame(_: TaskID): void;
 
@@ -752,6 +745,10 @@ export abstract class Camera extends Evented {
     setRoll(roll: number, eventData?: any): this {
         this.jumpTo({roll}, eventData);
         return this;
+    }
+
+    setRollEnabled(rollEnabled: boolean) {
+        this.cameraHelper.setRollEnabled(rollEnabled);
     }
 
     /**

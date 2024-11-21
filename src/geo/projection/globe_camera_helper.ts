@@ -17,12 +17,26 @@ import {interpolates} from '@maplibre/maplibre-gl-style-spec';
  * @internal
  */
 export class GlobeCameraHelper implements ICameraHelper {
+
     private _globe: GlobeProjection;
     private _mercatorCameraHelper: MercatorCameraHelper;
 
     constructor(globe: GlobeProjection) {
         this._globe = globe;
         this._mercatorCameraHelper = new MercatorCameraHelper();
+        this._rollEnabled = false;
+    }
+    
+    /**
+     * @internal
+     * If `false`, the map's roll control with "drag to rotate" interaction will be disabled.
+     * @defaultValue false
+     */
+    _rollEnabled: boolean;
+
+    setRollEnabled(rollEnabled: boolean): void {
+        this._rollEnabled = rollEnabled;
+        this._mercatorCameraHelper.setRollEnabled(rollEnabled);
     }
 
     get useGlobeControls(): boolean { return this._globe.useGlobeRendering; }
@@ -263,6 +277,7 @@ export class GlobeCameraHelper implements ICameraHelper {
         const startZoom = tr.zoom;
         const startCenter = tr.center;
         const startRotation = rollPitchBearingToQuat(tr.roll, tr.pitch, tr.bearing);
+        const startEulerAngles = {roll: tr.roll, pitch: tr.pitch, bearing: tr.bearing};
         const endRoll = options.roll === undefined ? tr.roll : options.roll;
         const endPitch = options.pitch === undefined ? tr.pitch : options.pitch;
         const endBearing = options.bearing === undefined ? tr.bearing : options.bearing;
@@ -318,7 +333,7 @@ export class GlobeCameraHelper implements ICameraHelper {
 
         const easeFunc = (k: number) => {
             if (!quat.equals(startRotation, endRotation)) {
-                updateRotation(startRotation, endRotation, {roll: endRoll, pitch: endPitch, bearing: endBearing}, tr, k);
+                updateRotation(startRotation, endRotation, startEulerAngles, {roll: endRoll, pitch: endPitch, bearing: endBearing}, tr, k, this._rollEnabled);
             }
 
             if (options.around) {

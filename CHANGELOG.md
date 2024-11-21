@@ -5,6 +5,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix unwanted roll when motion is interrupted ([#5083](https://github.com/maplibre/maplibre-gl-js/pull/5083))
 - _...Add new stuff here..._
 
 ## 5.0.0-pre.7
