@@ -2,7 +2,7 @@ import {Camera, CameraOptions, PointLike} from '../ui/camera';
 import {TaskQueue, TaskID} from '../util/task_queue';
 import {browser} from '../util/browser';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
-import {setMatchMedia, sleep} from '../util/test/util';
+import {setMatchMedia} from '../util/test/util';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
 import {Terrain} from '../render/terrain';
 import {LngLat, LngLatLike} from '../geo/lng_lat';
@@ -1534,7 +1534,6 @@ describe('#flyTo', () => {
         camera.flyTo({center: [100, 0], duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
     });
-
 
     test('no roll when motion is interrupted', () => {
         const stub = jest.spyOn(browser, 'now');
