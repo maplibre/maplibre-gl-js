@@ -1,7 +1,7 @@
 import {browser} from '../util/browser';
 import type {Map} from './map';
 import {bezier, clamp, extend} from '../util/util';
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import type {DragPanOptions} from './handler/shim/drag_pan';
 import {EaseToOptions} from './camera';
 

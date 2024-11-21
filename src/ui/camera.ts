@@ -3,7 +3,7 @@ import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {browser} from '../util/browser';
 import {LngLat} from '../geo/lng_lat';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {Event, Evented} from '../util/evented';
 import {Terrain} from '../render/terrain';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
@@ -1160,7 +1160,7 @@ export abstract class Camera extends Evented {
         return this;
     }
 
-    _prepareEase(eventData: any, noMoveStart: boolean, 
+    _prepareEase(eventData: any, noMoveStart: boolean,
         currently: { moving?: boolean; zooming?: boolean; rotating?: boolean; pitching?: boolean; rolling?: boolean} = {}) {
         this._moving = true;
         if (!noMoveStart && !currently.moving) {

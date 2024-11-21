@@ -1,4 +1,4 @@
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {LngLat, LngLatLike} from '../lng_lat';
 import {IReadonlyTransform, ITransform} from '../transform_interface';
 import {cameraBoundsWarning, CameraForBoxAndBearingHandlerResult, EaseToHandlerResult, EaseToHandlerOptions, FlyToHandlerResult, FlyToHandlerOptions, ICameraHelper, MapControlsDeltas, updateRotation} from './camera_helper';

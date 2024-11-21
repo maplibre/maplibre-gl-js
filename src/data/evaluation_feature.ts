@@ -1,5 +1,5 @@
 import {loadGeometry} from './load_geometry';
-import type Point from '@mapbox/point-geometry';
+import type Point from '@birkskyum/point-geometry';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 import type {Feature} from '@maplibre/maplibre-gl-style-spec';
 

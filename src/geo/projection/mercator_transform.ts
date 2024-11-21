@@ -1,6 +1,6 @@
 import {LngLat, LngLatLike} from '../lng_lat';
 import {altitudeFromMercatorZ, MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate';
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {wrap, clamp, createIdentityMat4f64, createMat4f64, degreesToRadians} from '../../util/util';
 import {mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID, calculateTileKey} from '../../source/tile_id';

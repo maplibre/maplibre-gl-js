@@ -1,4 +1,4 @@
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {EXTENT} from '../data/extent';
 import {scanlineTriangulateVertexRing, subdividePolygon, subdivideVertexLine} from './subdivision';
 import {CanonicalTileID} from '../source/tile_id';

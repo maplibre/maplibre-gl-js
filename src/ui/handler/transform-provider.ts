@@ -1,7 +1,7 @@
 import type {Map} from '../map';
 import type {PointLike} from '../camera';
 import type {IReadonlyTransform} from '../../geo/transform_interface';
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {LngLat} from '../../geo/lng_lat';
 
 /**

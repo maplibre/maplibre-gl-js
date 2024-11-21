@@ -1,4 +1,4 @@
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 
 import {DOM} from '../../util/dom';
 import {DragMoveHandler, DragPanResult, DragRotateResult, DragPitchResult, DragHandler, DragRollResult} from './drag_handler';
@@ -91,7 +91,7 @@ export function generateMousePitchHandler({enable, clickTolerance, pitchDegreesP
     });
     return new DragHandler<DragPitchResult, MouseEvent>({
         clickTolerance,
-        move: (lastPoint: Point, point: Point) => 
+        move: (lastPoint: Point, point: Point) =>
             ({pitchDelta: (point.y - lastPoint.y) * pitchDegreesPerPixelMoved}),
         // prevent browser context menu when necessary; we don't allow it with rotation
         // because we can't discern rotation gesture start from contextmenu on Mac

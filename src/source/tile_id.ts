@@ -1,6 +1,6 @@
 import {getTileBBox} from '@mapbox/whoots-js';
 import {EXTENT} from '../data/extent';
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {register} from '../util/web_worker_transfer';
 import {mat4} from 'gl-matrix';

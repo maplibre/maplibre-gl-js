@@ -1,4 +1,4 @@
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {drawCollisionDebug} from './draw_collision_debug';
 
 import {SegmentVector} from '../data/segment';
@@ -304,7 +304,7 @@ function drawLayerSymbols(
     pitchAlignment: SymbolLayerSpecification['layout']['text-pitch-alignment'],
     keepUpright: boolean,
     stencilMode: StencilMode,
-    colorMode: Readonly<ColorMode>, 
+    colorMode: Readonly<ColorMode>,
     isRenderingToTexture: boolean) {
 
     const context = painter.context;

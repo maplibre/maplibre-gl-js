@@ -1,4 +1,4 @@
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 
 import {DOM} from '../../util/dom';
 import {extend} from '../../util/util';

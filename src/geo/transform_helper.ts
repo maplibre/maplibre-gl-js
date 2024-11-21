@@ -1,6 +1,6 @@
 import {LngLat} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {wrap, clamp, degreesToRadians, radiansToDegrees} from '../util/util';
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets';

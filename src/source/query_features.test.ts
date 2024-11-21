@@ -3,7 +3,7 @@ import {
     querySourceFeatures
 } from './query_features';
 import {SourceCache} from './source_cache';
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 describe('QueryFeatures#rendered', () => {

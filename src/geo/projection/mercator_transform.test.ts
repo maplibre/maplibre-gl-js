@@ -1,4 +1,4 @@
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {LngLat} from '../lng_lat';
 import {OverscaledTileID, CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
 import {fixedLngLat, fixedCoord} from '../../../test/unit/lib/fixed';
@@ -302,8 +302,8 @@ describe('transform', () => {
                 new OverscaledTileID(8, 0, 8, 146, 74),
                 new OverscaledTileID(8, 0, 8, 146, 73)
             ]);
-            
-            const optionsWithCustomTileLoading = { 
+
+            const optionsWithCustomTileLoading = {
                 minzoom: 1,
                 maxzoom: 10,
                 tileSize: 512,

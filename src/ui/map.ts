@@ -13,7 +13,7 @@ import {HandlerManager} from './handler_manager';
 import {Camera, CameraOptions, CameraUpdateTransformFunction, FitBoundsOptions} from './camera';
 import {LngLat} from '../geo/lng_lat';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {AttributionControl, AttributionControlOptions, defaultAttributionControlOptions} from './control/attribution_control';
 import {LogoControl} from './control/logo_control';
 import {RGBAImage} from '../util/image';

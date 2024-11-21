@@ -13,7 +13,7 @@ import {Marker} from './ui/marker';
 import {Style} from './style/style';
 import {LngLat, LngLatLike} from './geo/lng_lat';
 import {LngLatBounds, LngLatBoundsLike} from './geo/lng_lat_bounds';
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {MercatorCoordinate} from './geo/mercator_coordinate';
 import {Evented, ErrorEvent, Event} from './util/evented';
 import {config} from './util/config';

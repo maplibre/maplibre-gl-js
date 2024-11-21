@@ -11,7 +11,7 @@ import {Evented} from '../util/evented';
 import {Layout, Transitionable, Transitioning, Properties, PossiblyEvaluated, PossiblyEvaluatedPropertyValue} from './properties';
 
 import type {Bucket} from '../data/bucket';
-import type Point from '@mapbox/point-geometry';
+import type Point from '@birkskyum/point-geometry';
 import type {FeatureFilter, FeatureState,
     LayerSpecification,
     FilterSpecification} from '@maplibre/maplibre-gl-style-spec';

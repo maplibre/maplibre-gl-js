@@ -1,4 +1,4 @@
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {loadGeometry} from './load_geometry';
 import {toEvaluationFeature} from './evaluation_feature';
 import {EXTENT} from './extent';

@@ -17,7 +17,7 @@ import {SymbolLayoutArray,
     TextAnchorOffsetArray
 } from '../array_types.g';
 
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {SegmentVector} from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
 import {TriangleIndexArray, LineIndexArray} from '../index_array_type';

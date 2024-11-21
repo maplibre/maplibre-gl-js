@@ -29,7 +29,7 @@ import type {Framebuffer} from '../gl/framebuffer';
 import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {LayerFeatureStates} from './source_state';
 import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type Point from '@mapbox/point-geometry';
+import type Point from '@birkskyum/point-geometry';
 import {mat4} from 'gl-matrix';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 import {ExpiryData} from '../util/ajax';

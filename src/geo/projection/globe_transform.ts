@@ -4,7 +4,7 @@ import {MercatorTransform} from './mercator_transform';
 import {LngLat, LngLatLike, earthRadius} from '../lng_lat';
 import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, easeCubicInOut, lerp, pointPlaneSignedDistance, warnOnce} from '../../util/util';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../../source/tile_id';
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {browser} from '../../util/browser';
 import {Terrain} from '../../render/terrain';
 import {GlobeProjection, globeConstants} from './globe';

@@ -7,7 +7,7 @@ import {getAnchorJustification} from './symbol_layout';
 import {getAnchorAlignment, WritingMode} from './shaping';
 import {mat4} from 'gl-matrix';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import type {IReadonlyTransform, ITransform} from '../geo/transform_interface';
 import type {StyleLayer} from '../style/style_layer';
 import {PossiblyEvaluated} from '../style/properties';

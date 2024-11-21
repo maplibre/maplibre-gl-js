@@ -10,7 +10,7 @@ import {SegmentVector} from '../data/segment';
 import {Painter} from './painter';
 import {Texture} from '../render/texture';
 import type {Framebuffer} from '../gl/framebuffer';
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {TerrainSourceCache} from '../source/terrain_source_cache';
 import {SourceCache} from '../source/source_cache';

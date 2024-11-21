@@ -1,4 +1,4 @@
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {getAnchors, getCenterAnchor} from './get_anchors';
 import {PositionedIcon, Shaping} from './shaping';
 

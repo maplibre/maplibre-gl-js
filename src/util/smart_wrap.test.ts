@@ -1,4 +1,4 @@
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {LngLat} from '../geo/lng_lat';
 import {smartWrap} from './smart_wrap';
 import {MercatorTransform} from '../geo/projection/mercator_transform';

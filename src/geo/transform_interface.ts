@@ -1,7 +1,7 @@
 import {LngLat, LngLatLike} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
 import {MercatorCoordinate} from './mercator_coordinate';
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {mat4, mat2, vec3, vec4} from 'gl-matrix';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import type {PaddingOptions} from './edge_insets';

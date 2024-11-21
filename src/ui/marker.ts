@@ -1,7 +1,7 @@
 import {DOM} from '../util/dom';
 import {browser} from '../util/browser';
 import {LngLat} from '../geo/lng_lat';
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {smartWrap} from '../util/smart_wrap';
 import {anchorTranslate, applyAnchorClass} from './anchor';
 import type {PositionAnchor} from './anchor';

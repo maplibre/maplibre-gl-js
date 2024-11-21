@@ -6,7 +6,7 @@ import {translateDistance, translate} from '../query_utils';
 import properties, {FillExtrusionPaintPropsPossiblyEvaluated} from './fill_extrusion_style_layer_properties.g';
 import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
 import {mat4, vec4} from 'gl-matrix';
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import type {FeatureState, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {BucketParameters} from '../../data/bucket';
 import type {FillExtrusionPaintProps} from './fill_extrusion_style_layer_properties.g';

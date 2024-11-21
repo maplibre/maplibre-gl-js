@@ -5,7 +5,7 @@ import {clamp, degreesToRadians} from '../../util/util';
 import {MAX_VALID_LATITUDE, UnwrappedTileIDType, zoomScale} from '../transform_helper';
 import {LngLat} from '../lng_lat';
 import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate';
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import type {ProjectionData} from './projection_data';
 
 /*

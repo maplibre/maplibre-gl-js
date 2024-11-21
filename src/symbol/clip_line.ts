@@ -1,4 +1,4 @@
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 
 /**
  * Returns the part of a multiline that intersects with the provided rectangular box.

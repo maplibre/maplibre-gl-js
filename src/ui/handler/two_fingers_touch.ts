@@ -1,4 +1,4 @@
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {DOM} from '../../util/dom';
 import type {Map} from '../map';
 import {Handler, HandlerResult} from '../handler_manager';

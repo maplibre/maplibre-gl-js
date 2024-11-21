@@ -1,4 +1,4 @@
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 
 import {DragMoveHandler, DragRotateResult, DragPitchResult, DragHandler} from './drag_handler';
 import {OneFingerTouchMoveStateManager} from './drag_move_state_manager';

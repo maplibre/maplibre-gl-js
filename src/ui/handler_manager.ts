@@ -19,7 +19,7 @@ import {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch
 import {CooperativeGesturesHandler} from './handler/cooperative_gestures';
 import {extend} from '../util/util';
 import {browser} from '../util/browser';
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {MapControlsDeltas} from '../geo/projection/camera_helper';
 
 const isMoving = (p: EventsInProgress) => p.zoom || p.drag || p.roll || p.pitch || p.rotate;

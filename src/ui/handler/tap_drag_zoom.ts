@@ -1,6 +1,6 @@
 import {Handler} from '../handler_manager';
 import {TapRecognizer, MAX_TAP_INTERVAL, MAX_DIST} from './tap_recognizer';
-import type Point from '@mapbox/point-geometry';
+import type Point from '@birkskyum/point-geometry';
 
 /**
  * A `TapDragZoomHandler` allows the user to zoom the map at a point by double tapping. It also allows the user pan the map by dragging.

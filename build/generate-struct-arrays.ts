@@ -427,7 +427,7 @@ fs.writeFileSync('src/data/array_types.g.ts',
 
 import {Struct, StructArray} from '../util/struct_array';
 import {register} from '../util/web_worker_transfer';
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 
 ${layouts.map(emitStructArrayLayout).join('\n')}
 ${arraysWithStructAccessors.map(emitStructArray).join('\n')}

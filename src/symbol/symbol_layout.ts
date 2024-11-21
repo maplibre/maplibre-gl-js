@@ -27,7 +27,7 @@ import type {ImagePosition} from '../render/image_atlas';
 import type {GlyphPosition} from '../render/glyph_atlas';
 import type {PossiblyEvaluatedPropertyValue} from '../style/properties';
 
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import murmur3 from 'murmurhash-js';
 import {getIconPadding, SymbolPadding} from '../style/style_layer/symbol_style_layer';
 import {VariableAnchorOffsetCollection, classifyRings} from '@maplibre/maplibre-gl-style-spec';

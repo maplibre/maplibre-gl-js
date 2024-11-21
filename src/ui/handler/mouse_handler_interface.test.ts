@@ -1,4 +1,4 @@
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 
 import {generateMousePanHandler, generateMousePitchHandler, generateMouseRollHandler, generateMouseRotationHandler} from './mouse';
 import {DragRotateResult} from './drag_handler';

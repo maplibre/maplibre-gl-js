@@ -8,7 +8,7 @@ import {CullFaceMode} from '../gl/cull_face_mode';
 import {rasterUniformValues} from './program/raster_program';
 import {EXTENT} from '../data/extent';
 import {coveringZoomLevel} from '../geo/projection/covering_tiles';
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 
 import type {Painter, RenderOptions} from './painter';
 import type {SourceCache} from '../source/source_cache';

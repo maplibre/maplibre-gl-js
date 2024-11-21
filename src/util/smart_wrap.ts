@@ -1,6 +1,6 @@
 import {LngLat} from '../geo/lng_lat';
 
-import type Point from '@mapbox/point-geometry';
+import type Point from '@birkskyum/point-geometry';
 import type {IReadonlyTransform} from '../geo/transform_interface';
 
 /**

@@ -1,6 +1,6 @@
 import {globeConstants, GlobeProjection} from './globe';
 import {EXTENT} from '../../data/extent';
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {LngLat} from '../lng_lat';
 import {GlobeTransform} from './globe_transform';
 import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../source/tile_id';

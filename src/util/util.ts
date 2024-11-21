@@ -1,4 +1,4 @@
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import UnitBezier from '@mapbox/unitbezier';
 import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';
 import type {Size} from './image';

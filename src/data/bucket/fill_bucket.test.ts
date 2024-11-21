@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {SegmentVector} from '../segment';
 import {FillBucket} from './fill_bucket';
 import {FillStyleLayer} from '../../style/style_layer/fill_style_layer';

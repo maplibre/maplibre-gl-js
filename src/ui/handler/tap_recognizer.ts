@@ -1,4 +1,4 @@
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {indexTouches} from './handler_util';
 
 function getCentroid(points: Array<Point>) {

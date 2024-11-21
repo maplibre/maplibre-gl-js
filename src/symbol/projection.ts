@@ -1,4 +1,4 @@
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 
 import {mat2, mat4, vec2, vec4} from 'gl-matrix';
 import * as symbolSize from './symbol_size';

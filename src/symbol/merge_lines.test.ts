@@ -1,5 +1,5 @@
 import {mergeLines} from './merge_lines';
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 
 function makeFeatures(lines) {
     const features = [];

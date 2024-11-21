@@ -1,6 +1,6 @@
 import {SymbolProjectionContext, ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, projectWithMatrix, transformToOffsetNormal, projectLineVertexToLabelPlane, getPitchedLabelPlaneMatrix, getGlCoordMatrix, getTileSkewVectors} from './projection';
 
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {mat4} from 'gl-matrix';
 import {SymbolLineVertexArray} from '../data/array_types.g';
 import {MercatorTransform} from '../geo/projection/mercator_transform';

@@ -4,7 +4,7 @@ import {Source, addSourceType} from './source';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {LngLat} from '../geo/lng_lat';
-import Point from '@mapbox/point-geometry';
+import Point from '@birkskyum/point-geometry';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {extend} from '../util/util';
 import {browser} from '../util/browser';
