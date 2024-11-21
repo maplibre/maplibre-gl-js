@@ -752,7 +752,7 @@ export abstract class Camera extends Evented {
      * @param rollEnabled - If `false`, the map's roll control with "drag to rotate" interaction will be disabled.
      * @defaultValue false
      */
-    private setRollEnabled(rollEnabled: boolean) {
+    protected setRollEnabled(rollEnabled: boolean) {
         this.cameraHelper.setRollEnabled(rollEnabled);
     }
 
