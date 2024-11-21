@@ -24,7 +24,7 @@ describe('Evented', () => {
 
     test('calls listeners added with "on" and allows to unsubscribe', () => {
         const evented = new Evented();
-        const listener = jest.fn();
+        const listener = vi.fn();
         const subscription = evented.on('a', listener);
         evented.fire(new Event('a'));
         subscription.unsubscribe();

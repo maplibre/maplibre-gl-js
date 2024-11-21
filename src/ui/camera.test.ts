@@ -1000,7 +1000,7 @@ describe('#easeTo', () => {
 
     test('does not emit zoom events if not zooming', async () => {
         const camera = createCamera();
-        const spy = jest.fn();
+        const spy = vi.fn();
         camera.on('zoomstart', spy);
         camera.on('zoom', spy);
         camera.on('zoomend', spy);
@@ -1193,7 +1193,7 @@ describe('#easeTo', () => {
     test('jumpTo on("move") during easeTo with zoom, pitch, etc', () => {
         const camera = createCamera();
 
-        const spy = jest.fn();
+        const spy = vi.fn();
         camera.on('moveend', spy);
 
         camera.easeTo({zoom: 20, bearing: 90, pitch: 60, duration: 500}, {done: true});
@@ -1210,7 +1210,7 @@ describe('#easeTo', () => {
     test('jumpTo on("zoom") during easeTo', () => {
         const camera = createCamera();
 
-        const spy = jest.fn();
+        const spy = vi.fn();
         camera.on('moveend', spy);
 
         camera.easeTo({zoom: 20, duration: 500}, {done: true});
@@ -1227,7 +1227,7 @@ describe('#easeTo', () => {
     test('jumpTo on("pitch") during easeTo', () => {
         const camera = createCamera();
 
-        const spy = jest.fn();
+        const spy = vi.fn();
         camera.on('moveend', spy);
 
         camera.easeTo({pitch: 60, duration: 500}, {done: true});
@@ -1244,7 +1244,7 @@ describe('#easeTo', () => {
     test('jumpTo on("rotate") during easeTo', () => {
         const camera = createCamera();
 
-        const spy = jest.fn();
+        const spy = vi.fn();
         camera.on('moveend', spy);
 
         camera.easeTo({bearing: 90, duration: 500}, {done: true});
@@ -2142,7 +2142,7 @@ describe('#stop', () => {
         const eventData = {data: 'ok'};
 
         const promise = camera.once('moveend');
-        const spy = jest.fn();
+        const spy = vi.fn();
         camera.on('moveend', spy);
 
         const stub = vi.spyOn(browser, 'now');

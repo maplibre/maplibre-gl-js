@@ -90,14 +90,14 @@ describe('map events', () => {
         const map = createMap();
         const features = [{} as MapGeoJSONFeature];
 
-        jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-        jest.spyOn(map, 'queryRenderedFeatures')
+        vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        vi.spyOn(map, 'queryRenderedFeatures')
             .mockImplementationOnce((_point, options) => {
                 expect(options).toEqual({layers: ['layer1', 'layer2']});
                 return features;
             });
 
-        const spy = jest.fn();
+        const spy = vi.fn();
 
         const subscription = map.on('click', ['layer1', 'layer2'], spy);
         subscription.unsubscribe();
@@ -947,7 +947,7 @@ describe('map events', () => {
     test('emits load event after a style is set', async () => {
         const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
 
-        const failSpy = jest.fn();
+        const failSpy = vi.fn();
 
         map.on('load', failSpy);
         await sleep(1);
@@ -1043,7 +1043,7 @@ describe('map events', () => {
         test('does not call listeners after unsubscribe', async () => {
             const map = createMap();
             const error = new Error('test');
-            const spy = jest.fn();
+            const spy = vi.fn();
             const subscription = map.on('error', spy);
             subscription.unsubscribe();
             map.fire(new ErrorEvent(error));
