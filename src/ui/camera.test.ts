@@ -1571,30 +1571,30 @@ describe('#flyTo', () => {
         const stub = jest.spyOn(browser, 'now');
 
         const camera = createCamera();
-        camera.setRollEnabled(false);
+        camera.setRollEnabled(true);
         stub.mockImplementation(() => 0);
         camera.easeTo({pitch: 10, bearing: 20, roll: 30, duration: 1000});
-        stub.mockImplementation(() => 100);
+        stub.mockImplementation(() => 500);
         camera.simulateFrame();
         camera.easeTo({elevation: 1, duration: 0});
-        expect(camera.getRoll()).toBeCloseTo(2.8438499190451694);
-        expect(camera.getPitch()).toBeCloseTo(0.9479499730150566);
-        expect(camera.getBearing()).toBeCloseTo(1.8958999460301127);
+        expect(camera.getRoll()).toBeCloseTo(25.041890412598942);
+        expect(camera.getPitch()).toBeCloseTo(8.116189398053095);
+        expect(camera.getBearing()).toBeCloseTo(15.041890412599061);
     });
 
     test('angles when motion is interrupted: globe', () => {
         const stub = jest.spyOn(browser, 'now');
 
         const camera = createCameraGlobe();
-        camera.setRollEnabled(false);
+        camera.setRollEnabled(true);
         stub.mockImplementation(() => 0);
         camera.easeTo({pitch: 10, bearing: 20, roll: 30, duration: 1000});
-        stub.mockImplementation(() => 100);
+        stub.mockImplementation(() => 500);
         camera.simulateFrame();
         camera.easeTo({elevation: 1, duration: 0});
-        expect(camera.getRoll()).toBeCloseTo(2.8438499190451694);
-        expect(camera.getPitch()).toBeCloseTo(0.9479499730150566);
-        expect(camera.getBearing()).toBeCloseTo(1.8958999460301127);
+        expect(camera.getRoll()).toBeCloseTo(25.041890412598942);
+        expect(camera.getPitch()).toBeCloseTo(8.116189398053095);
+        expect(camera.getBearing()).toBeCloseTo(15.041890412599061);
     });
 
     test('can be called from within a moveend event handler', async () => {
