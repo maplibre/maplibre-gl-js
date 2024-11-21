@@ -121,6 +121,9 @@ export function updateRotation(startRotation: quat, endRotation: quat, startEule
             tr.setPitch(eulerAngles.pitch);
             tr.setBearing(eulerAngles.bearing);
         } else {
+            tr.setRoll(endEulerAngles.roll);
+            tr.setPitch(endEulerAngles.pitch);
+            tr.setBearing(endEulerAngles.bearing);
         }
     } else {
         tr.setRoll(interpolates.number(startEulerAngles.roll, endEulerAngles.roll, k));
