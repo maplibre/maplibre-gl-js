@@ -19,29 +19,12 @@ The render tests rely on the dev-build of the project, and they will not pass un
 
 To run specific tests:
 
- - Unit test by file name : `npx jest path/to/file.test.ts --reporters=default` (e.g. `npx jest src/style/style_layer.test.ts`)
- - Unit test that matches a test name: `npx jest path/to/file.test.ts --reporters=default -t "test name"`
- - Browser test that matches a test name: `npx jest test/integration/browser/browser.test.ts --reporters=default -t "test name"`, in some cases here you might want to change the headless mode in the test file to be `false` to see what's happening in the browser.
+ - Unit test by file name : `npm run test-unit -- draw_symbol.test.ts`
+ - Integration test by file name : `npm run test-integration -- browser`
+ want to change the headless mode in the test file to be `false` to see what's happening in the browser.
  - Render tests that matches a folder or file names: `npm run test-render -- render-test-name` (e.g. `npm run test-render -- text-rotation-alignment`)
 
 To run folders in watch mode, meaning they will run continuously as you make changes to relevant code, (i.e. for test driven development): use `npm run test-watch-roots *folder1* [*folder2*...]` (e.g. `npm run test-watch-roots ./src/ui/control`)
-
-## Debugging Tests in VSCode
-
-Steps to use Visual Studio Code:
-
- - Install VS Code.
- - Open MapLibre root folder with VS Code UI.
- - Start debugging:
-
-   ![Start debugging](assets/docs/debug_test_in_vscode.png)
-   Before debugging, you might want to set break points in sources.
-
-You may also run tests and view output with the plugin [orta.vscode-jest](https://marketplace.visualstudio.com/items?itemName=Orta.vscode-jest):
-
-![VScode screenshots](assets/docs/vscode-jest.png)
-
-If you do so, note that the initial test run may take a while (3 minutes or so), during which time the test results are not yet available.
 
 ## Integration Tests
 

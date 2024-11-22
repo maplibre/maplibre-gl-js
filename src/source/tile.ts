@@ -10,7 +10,7 @@ import {Texture} from '../render/texture';
 import {browser} from '../util/browser';
 import {toEvaluationFeature} from '../data/evaluation_feature';
 import {EvaluationParameters} from '../style/evaluation_parameters';
-import {SourceFeatureState} from '../source/source_state';
+import {type SourceFeatureState} from '../source/source_state';
 import {rtlMainThreadPluginFactory} from './rtl_text_plugin_main_thread';
 
 const CLOCK_SKEW_RETRY_TIMEOUT = 30000;
@@ -30,10 +30,10 @@ import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {LayerFeatureStates} from './source_state';
 import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type Point from '@mapbox/point-geometry';
-import {mat4} from 'gl-matrix';
+import {type mat4} from 'gl-matrix';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
-import {ExpiryData} from '../util/ajax';
-import {QueryRenderedFeaturesOptionsStrict} from './query_features';
+import {type ExpiryData} from '../util/ajax';
+import {type QueryRenderedFeaturesOptionsStrict} from './query_features';
 
 /**
  * The tile's state, can be:
@@ -179,7 +179,7 @@ export class Tile {
             }
         }
         this.collisionBoxArray = data.collisionBoxArray;
-        this.buckets = deserializeBucket(data.buckets, painter.style);
+        this.buckets = deserializeBucket(data.buckets, painter?.style);
 
         this.hasSymbolBuckets = false;
         for (const id in this.buckets) {

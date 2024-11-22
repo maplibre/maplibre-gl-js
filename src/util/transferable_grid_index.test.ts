@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {TransferableGridIndex} from './transferable_grid_index';
 
 describe('TransferableGridIndex', () => {

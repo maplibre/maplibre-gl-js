@@ -1,7 +1,7 @@
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {DepthMode} from '../gl/depth_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
-import {ColorMode} from '../gl/color_mode';
+import {type ColorMode} from '../gl/color_mode';
 import {
     fillUniformValues,
     fillPatternUniformValues,
@@ -16,7 +16,7 @@ import type {FillBucket} from '../data/bucket/fill_bucket';
 import type {OverscaledTileID} from '../source/tile_id';
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
 import {translatePosition} from '../util/util';
-import {StencilMode} from '../gl/stencil_mode';
+import {type StencilMode} from '../gl/stencil_mode';
 
 export function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     const color = layer.paint.get('fill-color');
@@ -131,7 +131,7 @@ function drawFillTiles(
 
         let stencil: StencilMode;
         if (painter.renderPass === 'translucent' && isRenderingToTexture) {
-            const [stencilModes] = painter.stencilConfigForOverlap(coords);
+            const [stencilModes] = painter.getStencilConfigForOverlapAndUpdateStencilID(coords);
             stencil = stencilModes[coord.overscaledZ];
         } else {
             stencil = painter.stencilModeForClipping(coord);

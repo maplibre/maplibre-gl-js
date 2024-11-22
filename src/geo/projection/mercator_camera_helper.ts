@@ -1,10 +1,10 @@
 import Point from '@mapbox/point-geometry';
-import {LngLat, LngLatLike} from '../lng_lat';
-import {IReadonlyTransform, ITransform} from '../transform_interface';
-import {cameraBoundsWarning, CameraForBoxAndBearingHandlerResult, EaseToHandlerResult, EaseToHandlerOptions, FlyToHandlerResult, FlyToHandlerOptions, ICameraHelper, MapControlsDeltas, updateRotation} from './camera_helper';
-import {CameraForBoundsOptions} from '../../ui/camera';
-import {PaddingOptions} from '../edge_insets';
-import {LngLatBounds} from '../lng_lat_bounds';
+import {LngLat, type LngLatLike} from '../lng_lat';
+import {type IReadonlyTransform, type ITransform} from '../transform_interface';
+import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation} from './camera_helper';
+import {type CameraForBoundsOptions} from '../../ui/camera';
+import {type PaddingOptions} from '../edge_insets';
+import {type LngLatBounds} from '../lng_lat_bounds';
 import {normalizeCenter, scaleZoom, zoomScale} from '../transform_helper';
 import {degreesToRadians, rollPitchBearingToQuat} from '../../util/util';
 import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils';

@@ -1,7 +1,8 @@
+import {describe, afterEach, test, expect, vi} from 'vitest';
 import {parseGlyphPbf} from '../style/parse_glyph_pbf';
 import {GlyphManager} from './glyph_manager';
 import fs from 'fs';
-import {RequestManager} from '../util/request_manager';
+import {type RequestManager} from '../util/request_manager';
 
 describe('GlyphManager', () => {
     const GLYPHS = {};
@@ -12,7 +13,7 @@ describe('GlyphManager', () => {
     const identityTransform = ((url) => ({url})) as any as RequestManager;
 
     const createLoadGlyphRangeStub = () => {
-        return jest.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((stack, range, urlTemplate, transform) => {
+        return vi.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((stack, range, urlTemplate, transform) => {
             expect(stack).toBe('Arial Unicode MS');
             expect(range).toBe(0);
             expect(urlTemplate).toBe('https://localhost/fonts/v1/{fontstack}/{range}.pbf');
@@ -28,7 +29,7 @@ describe('GlyphManager', () => {
     };
 
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     test('GlyphManager requests 0-255 PBF', async () => {
@@ -56,7 +57,7 @@ describe('GlyphManager', () => {
     });
 
     test('GlyphManager requests remote CJK PBF', async () => {
-        jest.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((_stack, _range, _urlTemplate, _transform) => {
+        vi.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((_stack, _range, _urlTemplate, _transform) => {
             return Promise.resolve(GLYPHS);
         });
 
@@ -67,7 +68,7 @@ describe('GlyphManager', () => {
     });
 
     test('GlyphManager does not cache CJK chars that should be rendered locally', async () => {
-        jest.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((_stack, range, _urlTemplate, _transform) => {
+        vi.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((_stack, range, _urlTemplate, _transform) => {
             const overlappingGlyphs = {};
             const start = range * 256;
             const end = start + 256;
@@ -134,7 +135,7 @@ describe('GlyphManager', () => {
     test('GlyphManager caches locally generated glyphs', async () => {
 
         const manager = createGlyphManager('sans-serif');
-        const drawSpy = GlyphManager.TinySDF.prototype.draw = jest.fn().mockImplementation(() => {
+        const drawSpy = GlyphManager.TinySDF.prototype.draw = vi.fn().mockImplementation(() => {
             return {data: new Uint8ClampedArray(60 * 60)} as any;
         });
 

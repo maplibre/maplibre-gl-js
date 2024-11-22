@@ -1,3 +1,4 @@
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {Map} from '../map';
 import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
@@ -39,7 +40,7 @@ describe('Map#isRotating', () => {
 
     test('returns true when drag rotating', () => new Promise<void>(done => {
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockImplementation(() => { return 0; });
+        vi.spyOn(browser, 'now').mockImplementation(() => { return 0; });
 
         map.on('rotatestart', () => {
             expect(map.isRotating()).toBe(true);

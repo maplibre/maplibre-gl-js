@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {charAllowsIdeographicBreaking, charAllowsLetterSpacing, charHasUprightVerticalOrientation, charInComplexShapingScript, charInRTLScript} from './script_detection';
 
 describe('charAllowsIdeographicBreaking', () => {

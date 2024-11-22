@@ -1,19 +1,24 @@
+import {describe, test, expect, vi, type Mock} from 'vitest';
 import {OverscaledTileID} from '../source/tile_id';
 import {SourceCache} from '../source/source_cache';
 import {Tile} from '../source/tile';
-import {Painter, RenderOptions} from './painter';
+import {Painter, type RenderOptions} from './painter';
 import type {Map} from '../ui/map';
 import {drawCustom} from './draw_custom';
 import {CustomStyleLayer} from '../style/style_layer/custom_style_layer';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {MercatorProjection} from '../geo/projection/mercator';
 
-jest.mock('./painter');
-jest.mock('./program');
-jest.mock('../source/source_cache');
-jest.mock('../source/tile');
-jest.mock('../data/bucket/symbol_bucket');
-jest.mock('../symbol/projection');
+vi.mock('./painter');
+vi.mock('./program');
+vi.mock('../source/source_cache');
+vi.mock('../source/tile');
+vi.mock('../data/bucket/symbol_bucket', () => {
+    return {
+        SymbolBucket: vi.fn()
+    };
+});
+vi.mock('../symbol/projection');
 
 describe('drawCustom', () => {
     test('should return custom render method inputs', () => {
@@ -46,7 +51,7 @@ describe('drawCustom', () => {
             bind: () => { }
         } as any;
         const sourceCacheMock = new SourceCache(null, null, null);
-        (sourceCacheMock.getTile as jest.Mock).mockReturnValue(tile);
+        (sourceCacheMock.getTile as Mock).mockReturnValue(tile);
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
 
         let result;

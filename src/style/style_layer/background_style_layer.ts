@@ -1,7 +1,7 @@
 import {StyleLayer} from '../style_layer';
 
-import properties, {BackgroundPaintPropsPossiblyEvaluated} from './background_style_layer_properties.g';
-import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
+import properties, {type BackgroundPaintPropsPossiblyEvaluated} from './background_style_layer_properties.g';
+import {type Transitionable, type Transitioning, type PossiblyEvaluated} from '../properties';
 
 import type {BackgroundPaintProps} from './background_style_layer_properties.g';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';

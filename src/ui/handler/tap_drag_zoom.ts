@@ -1,4 +1,4 @@
-import {Handler} from '../handler_manager';
+import {type Handler} from '../handler_manager';
 import {TapRecognizer, MAX_TAP_INTERVAL, MAX_DIST} from './tap_recognizer';
 import type Point from '@mapbox/point-geometry';
 

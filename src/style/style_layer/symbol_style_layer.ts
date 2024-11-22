@@ -1,16 +1,16 @@
 import {StyleLayer} from '../style_layer';
 
-import {SymbolBucket, SymbolFeature} from '../../data/bucket/symbol_bucket';
+import {SymbolBucket, type SymbolFeature} from '../../data/bucket/symbol_bucket';
 import {resolveTokens} from '../../util/resolve_tokens';
-import properties, {SymbolLayoutPropsPossiblyEvaluated, SymbolPaintPropsPossiblyEvaluated} from './symbol_style_layer_properties.g';
+import properties, {type SymbolLayoutPropsPossiblyEvaluated, type SymbolPaintPropsPossiblyEvaluated} from './symbol_style_layer_properties.g';
 
 import {
-    Transitionable,
-    Transitioning,
-    Layout,
-    PossiblyEvaluated,
+    type Transitionable,
+    type Transitioning,
+    type Layout,
+    type PossiblyEvaluated,
     PossiblyEvaluatedPropertyValue,
-    PropertyValue
+    type PropertyValue
 } from '../properties';
 
 import {

@@ -14,7 +14,7 @@ import {TextFit} from '../style/style_image';
 import type {ImagePosition} from '../render/image_atlas';
 import {IMAGE_PADDING} from '../render/image_atlas';
 import type {Rect, GlyphPosition} from '../render/glyph_atlas';
-import {Formatted, FormattedSection} from '@maplibre/maplibre-gl-style-spec';
+import {type Formatted, type FormattedSection} from '@maplibre/maplibre-gl-style-spec';
 
 enum WritingMode {
     none = 0,

@@ -1,8 +1,9 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
 import {LngLat} from '../../geo/lng_lat';
-import {OverscaledTileID} from '../../source/tile_id';
-import {CameraOptions} from '../camera';
-import {Terrain} from '../../render/terrain';
+import {type OverscaledTileID} from '../../source/tile_id';
+import {type CameraOptions} from '../camera';
+import {type Terrain} from '../../render/terrain';
 import {mercatorZfromAltitude} from '../../geo/mercator_coordinate';
 
 beforeEach(() => {
@@ -15,7 +16,7 @@ describe('#calculateCameraOptionsFromTo', () => {
     test('pitch 90 with terrain', () => {
         const map = createMap();
 
-        const mockedGetElevation = jest.fn((_lngLat: LngLat, _zoom: number) => 111200);
+        const mockedGetElevation = vi.fn((_lngLat: LngLat, _zoom: number) => 111200);
 
         const terrainStub = {} as Terrain;
         terrainStub.getElevationForLngLatZoom = mockedGetElevation;
@@ -32,7 +33,7 @@ describe('#calculateCameraOptionsFromTo', () => {
     test('pitch 153.435 with terrain', () => {
         const map = createMap();
 
-        const mockedGetElevation = jest.fn((_lngLat: LngLat, _zoom: number) => 111200 * 3);
+        const mockedGetElevation = vi.fn((_lngLat: LngLat, _zoom: number) => 111200 * 3);
 
         const terrainStub = {} as Terrain;
         terrainStub.getElevationForLngLatZoom = mockedGetElevation;
@@ -49,7 +50,7 @@ describe('#calculateCameraOptionsFromTo', () => {
     test('pitch 63 with terrain', () => {
         const map = createMap();
 
-        const mockedGetElevation = jest.fn((_lngLat: LngLat, _zoom: number) => 111200 / 2);
+        const mockedGetElevation = vi.fn((_lngLat: LngLat, _zoom: number) => 111200 / 2);
 
         const terrainStub = {} as Terrain;
         terrainStub.getElevationForLngLatZoom = mockedGetElevation;
@@ -67,7 +68,7 @@ describe('#calculateCameraOptionsFromTo', () => {
     test('zoom distance 1000', () => {
         const map = createMap();
 
-        const mockedGetElevation = jest.fn((_lngLat: LngLat, _zoom: number) => 1000);
+        const mockedGetElevation = vi.fn((_lngLat: LngLat, _zoom: number) => 1000);
 
         const terrainStub = {} as Terrain;
         terrainStub.getElevationForLngLatZoom = mockedGetElevation;
@@ -84,7 +85,7 @@ describe('#calculateCameraOptionsFromTo', () => {
     test('don\'t call getElevation when altitude supplied', () => {
         const map = createMap();
 
-        const mockedGetElevation = jest.fn((_tileID: OverscaledTileID, _x: number, _y: number, _extent?: number) => 0);
+        const mockedGetElevation = vi.fn((_tileID: OverscaledTileID, _x: number, _y: number, _extent?: number) => 0);
 
         const terrainStub = {} as Terrain;
         terrainStub.getElevation = mockedGetElevation;
@@ -99,7 +100,7 @@ describe('#calculateCameraOptionsFromTo', () => {
     test('don\'t call getElevation when altitude 0 supplied', () => {
         const map = createMap();
 
-        const mockedGetElevation = jest.fn((_tileID: OverscaledTileID, _x: number, _y: number, _extent?: number) => 0);
+        const mockedGetElevation = vi.fn((_tileID: OverscaledTileID, _x: number, _y: number, _extent?: number) => 0);
 
         const terrainStub = {} as Terrain;
         terrainStub.getElevation = mockedGetElevation;

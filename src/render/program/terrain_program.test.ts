@@ -1,3 +1,4 @@
+import {describe, expect, test} from 'vitest';
 import {terrainUniformValues} from './terrain_program';
 import {Sky} from '../../style/sky';
 import {mat4} from 'gl-matrix';

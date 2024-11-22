@@ -14,8 +14,8 @@ import type {
 } from '../data/array_types.g';
 import {WritingMode} from '../symbol/shaping';
 import {findLineIntersection} from '../util/util';
-import {UnwrappedTileID} from '../source/tile_id';
-import {StructArray} from '../util/struct_array';
+import {type UnwrappedTileID} from '../source/tile_id';
+import {type StructArray} from '../util/struct_array';
 
 /**
  * The result of projecting a point to the screen, with some additional information about the projection.

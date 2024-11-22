@@ -1,11 +1,12 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {fakeServer} from 'nise';
 import Worker from './worker';
-import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {WorkerGlobalScopeInterface} from '../util/web_worker';
-import {CanonicalTileID, OverscaledTileID} from './tile_id';
-import {WorkerSource, WorkerTileParameters, WorkerTileResult} from './worker_source';
+import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {type WorkerGlobalScopeInterface} from '../util/web_worker';
+import {type CanonicalTileID, type OverscaledTileID} from './tile_id';
+import {type WorkerSource, type WorkerTileParameters, type WorkerTileResult} from './worker_source';
 import {rtlWorkerPlugin} from './rtl_text_plugin_worker';
-import {ActorTarget, IActor} from '../util/actor';
+import {type ActorTarget, type IActor} from '../util/actor';
 import {MessageType} from '../util/actor_messages';
 
 class WorkerSourceMock implements WorkerSource {
@@ -39,7 +40,7 @@ describe('Worker RTLTextPlugin', () => {
     });
 
     test('should call setMethods in plugin', () => {
-        const spy = jest.spyOn(rtlWorkerPlugin, 'setMethods').mockImplementation(() => {});
+        const spy = vi.spyOn(rtlWorkerPlugin, 'setMethods').mockImplementation(() => {});
 
         _self.registerRTLTextPlugin({} as any);
 
@@ -47,7 +48,7 @@ describe('Worker RTLTextPlugin', () => {
     });
 
     test('should call syncState when rtl message is received', async () => {
-        const syncStateSpy = jest.spyOn(rtlWorkerPlugin, 'syncState').mockImplementation((_, __) => Promise.resolve({} as any));
+        const syncStateSpy = vi.spyOn(rtlWorkerPlugin, 'syncState').mockImplementation((_, __) => Promise.resolve({} as any));
 
         await worker.actor.messageHandlers[MessageType.syncRTLPluginState]('', {} as any) as any;
 

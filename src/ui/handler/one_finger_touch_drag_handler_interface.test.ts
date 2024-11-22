@@ -1,7 +1,8 @@
+import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
 
 import {generateOneFingerTouchPitchHandler, generateOneFingerTouchRotationHandler} from './one_finger_touch_drag';
-import {DragRotateResult} from './drag_handler';
+import {type DragRotateResult} from './drag_handler';
 
 const testTouch = {identifier: 0} as Touch;
 

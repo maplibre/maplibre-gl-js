@@ -1,15 +1,16 @@
+import {describe, test, expect, vi} from 'vitest';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
-import {GeoJSONSource, GeoJSONSourceOptions} from './geojson_source';
-import {IReadonlyTransform} from '../geo/transform_interface';
+import {GeoJSONSource, type GeoJSONSourceOptions} from './geojson_source';
+import {type IReadonlyTransform} from '../geo/transform_interface';
 import {EXTENT} from '../data/extent';
 import {LngLat} from '../geo/lng_lat';
 import {extend} from '../util/util';
-import {Dispatcher} from '../util/dispatcher';
-import {RequestManager} from '../util/request_manager';
+import {type Dispatcher} from '../util/dispatcher';
+import {type RequestManager} from '../util/request_manager';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
-import {ActorMessage, MessageType} from '../util/actor_messages';
-import {Actor} from '../util/actor';
+import {type ActorMessage, MessageType} from '../util/actor_messages';
+import {type Actor} from '../util/actor';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 const wrapDispatcher = (dispatcher) => {
@@ -65,7 +66,7 @@ describe('GeoJSONSource#constructor', () => {
         }
     } as any;
     test('warn if maxzoom <= clusterMaxZoom', () => {
-        const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
         const source = new GeoJSONSource('id', {data: hawkHill, maxzoom: 4, clusterMaxZoom: 4} as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.map = mapStub;
@@ -306,7 +307,7 @@ describe('GeoJSONSource#update', () => {
     }));
 
     test('forwards Supercluster options with worker request, ignore max zoom of source', () => new Promise<void>(done => {
-        jest.spyOn(console, 'warn').mockImplementation(() => {});
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
                 expect(message.type).toBe(MessageType.loadData);
@@ -341,7 +342,7 @@ describe('GeoJSONSource#update', () => {
                 transformRequest: (url) => { return {url}; }
             }
         } as any;
-        const transformSpy = jest.spyOn(mapStub._requestManager, 'transformRequest');
+        const transformSpy = vi.spyOn(mapStub._requestManager, 'transformRequest');
         const source = new GeoJSONSource('id', {data: 'https://example.com/data.geojson'} as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.onAdd(mapStub);
         expect(transformSpy).toHaveBeenCalledTimes(1);

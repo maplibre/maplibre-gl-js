@@ -1,5 +1,5 @@
 import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from './util';
-import {LngLat} from '../geo/lng_lat';
+import {type LngLat} from '../geo/lng_lat';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 
 /**

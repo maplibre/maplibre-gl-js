@@ -1,3 +1,4 @@
+import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} from 'vitest';
 import {Style} from './style';
 import {SourceCache} from '../source/source_cache';
 import {StyleLayer} from './style_layer';
@@ -9,14 +10,14 @@ import {browser} from '../util/browser';
 import {OverscaledTileID} from '../source/tile_id';
 import {fakeServer, type FakeServer} from 'nise';
 
-import {EvaluationParameters} from './evaluation_parameters';
-import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification, StyleSpecification, SymbolLayerSpecification, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
-import {GeoJSONSource} from '../source/geojson_source';
+import {type EvaluationParameters} from './evaluation_parameters';
+import {type LayerSpecification, type GeoJSONSourceSpecification, type FilterSpecification, type SourceSpecification, type StyleSpecification, type SymbolLayerSpecification, type SkySpecification} from '@maplibre/maplibre-gl-style-spec';
+import {type GeoJSONSource} from '../source/geojson_source';
 import {StubMap, sleep} from '../util/test/util';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
 import {MessageType} from '../util/actor_messages';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {Tile} from '../source/tile';
+import {type Tile} from '../source/tile';
 
 function createStyleJSON(properties?): StyleSpecification {
     return extend({
@@ -55,12 +56,12 @@ function createStyle(map = getStubMap()) {
 }
 
 let server: FakeServer;
-let mockConsoleError: jest.SpyInstance;
+let mockConsoleError: MockInstance;
 
 beforeEach(() => {
     global.fetch = null;
     server = fakeServer.create();
-    mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => { });
+    mockConsoleError = vi.spyOn(console, 'error').mockImplementation(() => { });
 });
 
 afterEach(() => {
@@ -93,8 +94,8 @@ describe('Style', () => {
         });
 
         await style.once('style.load');
-        jest.spyOn(style.sourceCaches['raster'], 'reload');
-        jest.spyOn(style.sourceCaches['vector'], 'reload');
+        vi.spyOn(style.sourceCaches['raster'], 'reload');
+        vi.spyOn(style.sourceCaches['vector'], 'reload');
 
         rtlMainThreadPluginFactory().fire(new Event(RTLPluginLoadedEventName));
 
@@ -106,7 +107,7 @@ describe('Style', () => {
 describe('Style#loadURL', () => {
     test('fires "dataloading"', () => {
         const style = new Style(getStubMap());
-        const spy = jest.fn();
+        const spy = vi.fn();
 
         style.on('dataloading', spy);
         style.loadURL('style.json');
@@ -118,7 +119,7 @@ describe('Style#loadURL', () => {
 
     test('transforms style URL before request', () => {
         const map = getStubMap();
-        const spy = jest.spyOn(map._requestManager, 'transformRequest');
+        const spy = vi.spyOn(map._requestManager, 'transformRequest');
 
         const style = new Style(map);
         style.loadURL('style.json');
@@ -151,7 +152,7 @@ describe('Style#loadURL', () => {
 
     test('does not fire an error if removed', async () => {
         const style = new Style(getStubMap());
-        const spy = jest.fn();
+        const spy = vi.fn();
 
         style.on('error', spy);
         style.loadURL('style.json');
@@ -187,7 +188,7 @@ describe('Style#loadJSON', () => {
 
     test('fires "dataloading" (synchronously)', () => {
         const style = new Style(getStubMap());
-        const spy = jest.fn();
+        const spy = vi.fn();
 
         style.on('dataloading', spy);
         style.loadJSON(createStyleJSON());
@@ -211,7 +212,7 @@ describe('Style#loadJSON', () => {
         // Stubbing to bypass Web APIs that supported by jsdom:
         // * `URL.createObjectURL` in ajax.getImage (https://github.com/tmpvar/jsdom/issues/1721)
         // * `canvas.getContext('2d')` in browser.getImageData
-        jest.spyOn(browser, 'getImageData');
+        vi.spyOn(browser, 'getImageData');
         // stub Image so we can invoke 'onload'
         // https://github.com/jsdom/jsdom/commit/58a7028d0d5b6aacc5b435daee9fd8f9eacbb14c
 
@@ -245,7 +246,7 @@ describe('Style#loadJSON', () => {
         // Stubbing to bypass Web APIs that supported by jsdom:
         // * `URL.createObjectURL` in ajax.getImage (https://github.com/tmpvar/jsdom/issues/1721)
         // * `canvas.getContext('2d')` in browser.getImageData
-        jest.spyOn(browser, 'getImageData');
+        vi.spyOn(browser, 'getImageData');
         // stub Image so we can invoke 'onload'
         // https://github.com/jsdom/jsdom/commit/58a7028d0d5b6aacc5b435daee9fd8f9eacbb14c
 
@@ -331,7 +332,7 @@ describe('Style#loadJSON', () => {
 
     test('transforms sprite json and image URLs before request', async () => {
         const map = getStubMap();
-        const transformSpy = jest.spyOn(map._requestManager, 'transformRequest');
+        const transformSpy = vi.spyOn(map._requestManager, 'transformRequest');
         const style = createStyle(map);
 
         style.loadJSON(extend(createStyleJSON(), {
@@ -405,7 +406,7 @@ describe('Style#loadJSON', () => {
     test('sets terrain if defined', async () => {
         const map = getStubMap();
         const style = new Style(map);
-        map.setTerrain = jest.fn();
+        map.setTerrain = vi.fn();
         style.loadJSON(createStyleJSON({
             sources: {'source-id': createGeoJSONSource()},
             terrain: {source: 'source-id', exaggeration: 0.33}
@@ -470,7 +471,7 @@ describe('Style#_load', () => {
             sprite: 'https://example.com/test2'
         });
 
-        const _loadSpriteSpyOn = jest.spyOn(style, '_loadSprite');
+        const _loadSpriteSpyOn = vi.spyOn(style, '_loadSprite');
         style._load(nextStyleSpec, {}, prevStyleSpec);
 
         expect(_loadSpriteSpyOn).toHaveBeenCalledTimes(1);
@@ -485,7 +486,7 @@ describe('Style#_load', () => {
 
         const nextStyleSpec = createStyleJSON({sprite: undefined});
 
-        const _loadSpriteSpyOn = jest.spyOn(style, '_loadSprite');
+        const _loadSpriteSpyOn = vi.spyOn(style, '_loadSprite');
         style._load(nextStyleSpec, {}, prevStyleSpec);
 
         expect(_loadSpriteSpyOn).not.toHaveBeenCalled();
@@ -502,7 +503,7 @@ describe('Style#_load', () => {
             }]
         });
 
-        const _broadcastSpyOn = jest.spyOn(style.dispatcher, 'broadcast')
+        const _broadcastSpyOn = vi.spyOn(style.dispatcher, 'broadcast')
             .mockImplementation((type, data) => {
                 dispatchType = type;
                 dispatchData = data;
@@ -532,7 +533,7 @@ describe('Style#_load', () => {
                 type: 'custom'
             }]
         });
-        const stub = jest.spyOn(console, 'error');
+        const stub = vi.spyOn(console, 'error');
 
         style._load(styleSpec, {validate: true});
 
@@ -584,9 +585,9 @@ describe('Style#_remove', () => {
 
         await style.once('style.load');
         const sourceCache = style.sourceCaches['source-id'];
-        jest.spyOn(sourceCache, 'setEventedParent');
-        jest.spyOn(sourceCache, 'onRemove');
-        jest.spyOn(sourceCache, 'clearTiles');
+        vi.spyOn(sourceCache, 'setEventedParent');
+        vi.spyOn(sourceCache, 'onRemove');
+        vi.spyOn(sourceCache, 'clearTiles');
 
         style._remove();
 
@@ -598,7 +599,7 @@ describe('Style#_remove', () => {
     test('deregisters plugin listener', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
-        jest.spyOn(rtlMainThreadPluginFactory(), 'off');
+        vi.spyOn(rtlMainThreadPluginFactory(), 'off');
 
         await style.once('style.load');
         style._remove();
@@ -655,17 +656,17 @@ describe('Style#setState', () => {
         const style = createStyle();
         style.loadJSON(createStyleJSON());
         const spys = [];
-        spys.push(jest.spyOn(style, 'addLayer').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'removeLayer').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setPaintProperty').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setLayoutProperty').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setFilter').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'addSource').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'removeSource').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setGeoJSONSourceData').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setLayerZoomRange').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setLight').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setSky').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'addLayer').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'removeLayer').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setPaintProperty').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setLayoutProperty').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setFilter').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'addSource').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'removeSource').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setGeoJSONSourceData').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setLayerZoomRange').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setLight').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setSky').mockImplementation((() => {}) as any));
         await style.once('style.load');
         const didChange = style.setState(createStyleJSON());
         expect(didChange).toBeFalsy();
@@ -703,21 +704,21 @@ describe('Style#setState', () => {
 
         await style.once('style.load');
         const spys = [];
-        spys.push(jest.spyOn(style, 'addLayer').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'removeLayer').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setPaintProperty').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setLayoutProperty').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setFilter').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'addSource').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'removeSource').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setLayerZoomRange').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setLight').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setGeoJSONSourceData').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setGlyphs').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setSprite').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setProjection').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style.map, 'setTerrain').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setSky').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'addLayer').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'removeLayer').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setPaintProperty').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setLayoutProperty').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setFilter').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'addSource').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'removeSource').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setLayerZoomRange').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setLight').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setGeoJSONSourceData').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setGlyphs').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setSprite').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setProjection').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style.map, 'setTerrain').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setSky').mockImplementation((() => {}) as any));
 
         const newStyle = JSON.parse(JSON.stringify(styleJson)) as StyleSpecification;
         newStyle.layers[0].paint = {'text-color': '#7F7F7F',};
@@ -767,20 +768,20 @@ describe('Style#setState', () => {
 
         await style.once('style.load');
         const spys = [];
-        spys.push(jest.spyOn(style, 'addLayer').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'removeLayer').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setPaintProperty').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setLayoutProperty').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setFilter').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'addSource').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'removeSource').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setLayerZoomRange').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setLight').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setGeoJSONSourceData').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setGlyphs').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setSprite').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style.map, 'setTerrain').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setSky').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'addLayer').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'removeLayer').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setPaintProperty').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setLayoutProperty').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setFilter').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'addSource').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'removeSource').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setLayerZoomRange').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setLight').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setGeoJSONSourceData').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setGlyphs').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setSprite').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style.map, 'setTerrain').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setSky').mockImplementation((() => {}) as any));
 
         const newStyleJson = createStyleJSON();
         newStyleJson.transition = {duration: 5};
@@ -805,8 +806,8 @@ describe('Style#setState', () => {
         const promise = style.once('style.load');
         server.respond();
         await promise;
-        const spyRemove = jest.spyOn(style, 'removeSource').mockImplementation((() => {}) as any);
-        const spyAdd = jest.spyOn(style, 'addSource').mockImplementation((() => {}) as any);
+        const spyRemove = vi.spyOn(style, 'removeSource').mockImplementation((() => {}) as any);
+        const spyAdd = vi.spyOn(style, 'addSource').mockImplementation((() => {}) as any);
         style.setState(initial);
         expect(spyRemove).not.toHaveBeenCalled();
         expect(spyAdd).not.toHaveBeenCalled();
@@ -863,8 +864,8 @@ describe('Style#setState', () => {
 
         await style.once('style.load');
         const geoJSONSource = style.sourceCaches['source-id'].getSource() as GeoJSONSource;
-        const mockStyleSetGeoJSONSourceDate = jest.spyOn(style, 'setGeoJSONSourceData');
-        const mockGeoJSONSourceSetData = jest.spyOn(geoJSONSource, 'setData');
+        const mockStyleSetGeoJSONSourceDate = vi.spyOn(style, 'setGeoJSONSourceData');
+        const mockGeoJSONSourceSetData = vi.spyOn(geoJSONSource, 'setData');
         const didChange = style.setState(nextState);
 
         expect(mockStyleSetGeoJSONSourceDate).toHaveBeenCalledWith('source-id', geoJSONSourceData);
@@ -1042,7 +1043,7 @@ describe('Style#removeSource', () => {
 
         await style.once('style.load');
         const sourceCache = style.sourceCaches['source-id'];
-        jest.spyOn(sourceCache, 'clearTiles');
+        vi.spyOn(sourceCache, 'clearTiles');
         style.removeSource('source-id');
         expect(sourceCache.clearTiles).toHaveBeenCalledTimes(1);
     });
@@ -1736,7 +1737,7 @@ describe('Style#setPaintProperty', () => {
             (source as any).on('data', (e) => setTimeout(() => {
                 if (!begun) {
                     begun = true;
-                    jest.spyOn(sourceCache, 'reload').mockImplementation(() => {
+                    vi.spyOn(sourceCache, 'reload').mockImplementation(() => {
                         expect(styleUpdateCalled).toBeTruthy();
                         done();
                     });
@@ -1801,7 +1802,7 @@ describe('Style#setPaintProperty', () => {
 
         await style.once('style.load');
         const backgroundLayer = style.getLayer('background');
-        const validate = jest.spyOn(backgroundLayer, '_validate');
+        const validate = vi.spyOn(backgroundLayer, '_validate');
 
         style.setPaintProperty('background', 'background-color', 'notacolor', {validate: false});
         expect(validate.mock.calls[0][4]).toEqual({validate: false});
@@ -1903,7 +1904,7 @@ describe('Style#setLayoutProperty', () => {
 
         await style.once('style.load');
         const lineLayer = style.getLayer('line');
-        const validate = jest.spyOn(lineLayer, '_validate');
+        const validate = vi.spyOn(lineLayer, '_validate');
 
         style.setLayoutProperty('line', 'line-cap', 'invalidcap', {validate: false});
         expect(validate.mock.calls[0][4]).toEqual({validate: false});
@@ -2145,7 +2146,7 @@ describe('Style#setLayerZoomRange', () => {
         });
 
         await style.once('style.load');
-        jest.spyOn(style, '_reloadSource');
+        vi.spyOn(style, '_reloadSource');
 
         style.setLayerZoomRange('raster', 5, 12);
         style.update(0 as any as EvaluationParameters);
@@ -2325,7 +2326,7 @@ describe('Style#queryRenderedFeatures', () => {
 
     test('checks type of `layers` option', () => {
         let errors = 0;
-        jest.spyOn(style, 'fire').mockImplementation((event) => {
+        vi.spyOn(style, 'fire').mockImplementation((event) => {
             if (event['error'] && event['error'].message.includes('parameters.layers must be an Array')) {
                 errors++;
             }
@@ -2360,14 +2361,14 @@ describe('Style#queryRenderedFeatures', () => {
     });
 
     test('does not query sources not implicated by `layers` parameter', () => {
-        style.sourceCaches.mapLibre.map.queryRenderedFeatures = jest.fn();
+        style.sourceCaches.mapLibre.map.queryRenderedFeatures = vi.fn();
         style.queryRenderedFeatures([{x: 0, y: 0}], {layers: ['land--other']}, transform);
         expect(style.sourceCaches.mapLibre.map.queryRenderedFeatures).not.toHaveBeenCalled();
     });
 
     test('fires an error if layer included in params does not exist on the style', () => {
         let errors = 0;
-        jest.spyOn(style, 'fire').mockImplementation((event) => {
+        vi.spyOn(style, 'fire').mockImplementation((event) => {
             if (event['error'] && event['error'].message.includes('does not exist in the map\'s style and cannot be queried for features.')) errors++;
             return style;
         });
@@ -2391,9 +2392,9 @@ describe('Style defers  ...', () => {
         style.update({} as EvaluationParameters);
 
         // spies to track deferred methods
-        const mockStyleFire = jest.spyOn(style, 'fire');
-        jest.spyOn(style, '_reloadSource');
-        jest.spyOn(style, '_updateWorkerLayers');
+        const mockStyleFire = vi.spyOn(style, 'fire');
+        vi.spyOn(style, '_reloadSource');
+        vi.spyOn(style, '_updateWorkerLayers');
 
         style.addLayer({id: 'first', type: 'symbol', source: 'streets'});
         style.addLayer({id: 'second', type: 'symbol', source: 'streets'});
@@ -2445,7 +2446,7 @@ describe('Style#query*Features', () => {
             }]
         });
 
-        onError = jest.fn();
+        onError = vi.fn();
 
         style.on('error', onError);
         style.on('style.load', () => {
@@ -2465,7 +2466,7 @@ describe('Style#query*Features', () => {
 
     test('querySourceFeatures not raise validation errors if validation was disabled', () => {
         let errors = 0;
-        jest.spyOn(style, 'fire').mockImplementation((event) => {
+        vi.spyOn(style, 'fire').mockImplementation((event) => {
             if (event['error']) {
                 errors++;
             }
@@ -2477,7 +2478,7 @@ describe('Style#query*Features', () => {
 
     test('querySourceFeatures not raise validation errors if validation was disabled', () => {
         let errors = 0;
-        jest.spyOn(style, 'fire').mockImplementation((event) => {
+        vi.spyOn(style, 'fire').mockImplementation((event) => {
             if (event['error']) errors++;
             return style;
         });

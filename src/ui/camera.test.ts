@@ -1,17 +1,18 @@
-import {Camera, CameraOptions, PointLike} from '../ui/camera';
-import {TaskQueue, TaskID} from '../util/task_queue';
+import {describe, beforeEach, test, expect, vi} from 'vitest';
+import {Camera, type CameraOptions, type PointLike} from '../ui/camera';
+import {TaskQueue, type TaskID} from '../util/task_queue';
 import {browser} from '../util/browser';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
 import {setMatchMedia} from '../util/test/util';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
-import {Terrain} from '../render/terrain';
-import {LngLat, LngLatLike} from '../geo/lng_lat';
+import {type Terrain} from '../render/terrain';
+import {LngLat, type LngLatLike} from '../geo/lng_lat';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {GlobeTransform} from '../geo/projection/globe_transform';
 import {getZoomAdjustment} from '../geo/projection/globe_utils';
 import {GlobeCameraHelper} from '../geo/projection/globe_camera_helper';
-import {GlobeProjection} from '../geo/projection/globe';
+import {type GlobeProjection} from '../geo/projection/globe';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 
 beforeEach(() => {
@@ -1002,7 +1003,7 @@ describe('#easeTo', () => {
 
     test('does not emit zoom events if not zooming', async () => {
         const camera = createCamera();
-        const spy = jest.fn();
+        const spy = vi.fn();
         camera.on('zoomstart', spy);
         camera.on('zoom', spy);
         camera.on('zoomend', spy);
@@ -1023,7 +1024,7 @@ describe('#easeTo', () => {
 
     test('can be called from within a moveend event handler', async () => {
         const camera = createCamera();
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
 
         stub.mockImplementation(() => 0);
         camera.easeTo({center: [100, 0], duration: 10});
@@ -1060,7 +1061,7 @@ describe('#easeTo', () => {
 
     test('pans eastward across the antimeridian', async () => {
         const camera = createCamera();
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
 
         camera.setCenter([170, 0]);
         let crossedAntimeridian;
@@ -1103,7 +1104,7 @@ describe('#easeTo', () => {
 
     test('pans westward across the antimeridian', async () => {
         const camera = createCamera();
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
 
         camera.setCenter([-170, 0]);
         let crossedAntimeridian;
@@ -1147,7 +1148,7 @@ describe('#easeTo', () => {
     test('animation occurs when prefers-reduced-motion: reduce is set but overridden by essential: true', async () => {
         const camera = createCamera();
         Object.defineProperty(browser, 'prefersReducedMotion', {value: true});
-        const stubNow = jest.spyOn(browser, 'now');
+        const stubNow = vi.spyOn(browser, 'now');
 
         // camera transition expected to take in this range when prefersReducedMotion is set and essential: true,
         // when a duration of 200 is requested
@@ -1183,7 +1184,7 @@ describe('#easeTo', () => {
         let startTime;
         camera.on('movestart', () => { startTime = new Date(); });
         const promise = camera.once('moveend');
-        
+
         camera.easeTo({center: [100, 0], zoom: 3.2, bearing: 90, duration: 1000});
 
         await promise;
@@ -1195,7 +1196,7 @@ describe('#easeTo', () => {
     test('jumpTo on("move") during easeTo with zoom, pitch, etc', () => {
         const camera = createCamera();
 
-        const spy = jest.fn();
+        const spy = vi.fn();
         camera.on('moveend', spy);
 
         camera.easeTo({zoom: 20, bearing: 90, pitch: 60, duration: 500}, {done: true});
@@ -1212,7 +1213,7 @@ describe('#easeTo', () => {
     test('jumpTo on("zoom") during easeTo', () => {
         const camera = createCamera();
 
-        const spy = jest.fn();
+        const spy = vi.fn();
         camera.on('moveend', spy);
 
         camera.easeTo({zoom: 20, duration: 500}, {done: true});
@@ -1229,7 +1230,7 @@ describe('#easeTo', () => {
     test('jumpTo on("pitch") during easeTo', () => {
         const camera = createCamera();
 
-        const spy = jest.fn();
+        const spy = vi.fn();
         camera.on('moveend', spy);
 
         camera.easeTo({pitch: 60, duration: 500}, {done: true});
@@ -1246,7 +1247,7 @@ describe('#easeTo', () => {
     test('jumpTo on("rotate") during easeTo', () => {
         const camera = createCamera();
 
-        const spy = jest.fn();
+        const spy = vi.fn();
         camera.on('moveend', spy);
 
         camera.easeTo({bearing: 90, duration: 500}, {done: true});
@@ -1304,7 +1305,7 @@ describe('#flyTo', () => {
     test('Zoom out from the same position to the same position with animation', async () => {
         const pos = {lng: 0, lat: 0};
         const camera = createCamera({zoom: 20, center: pos});
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
 
         const promise = camera.once('moveend');
 
@@ -1501,7 +1502,7 @@ describe('#flyTo', () => {
         camera.on('pitchend', (d) => { pitchended = d.data; })
         const promise = camera.once('moveend');
 
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
         stub.mockImplementation(() => 0);
 
         camera.flyTo({center: [100, 0], duration: 10}, eventData);
@@ -1599,7 +1600,7 @@ describe('#flyTo', () => {
 
     test('can be called from within a moveend event handler', async () => {
         const camera = createCamera();
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
         stub.mockImplementation(() => 0);
 
         camera.flyTo({center: [100, 0], duration: 10});
@@ -1640,7 +1641,7 @@ describe('#flyTo', () => {
 
         const promise = camera.once('moveend');
 
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
         stub.mockImplementation(() => 0);
 
         camera.flyTo({center: [100, 0], zoom: 18, duration: 10});
@@ -1660,7 +1661,7 @@ describe('#flyTo', () => {
 
     test('pans eastward across the prime meridian', async () => {
         const camera = createCamera();
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
 
         camera.setCenter([-10, 0]);
         let crossedPrimeMeridian;
@@ -1692,7 +1693,7 @@ describe('#flyTo', () => {
 
     test('pans westward across the prime meridian', async () => {
         const camera = createCamera();
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
 
         camera.setCenter([10, 0]);
         let crossedPrimeMeridian;
@@ -1724,7 +1725,7 @@ describe('#flyTo', () => {
 
     test('pans eastward across the antimeridian', async () => {
         const camera = createCamera();
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
 
         camera.setCenter([170, 0]);
         let crossedAntimeridian;
@@ -1755,7 +1756,7 @@ describe('#flyTo', () => {
 
     test('pans westward across the antimeridian', async () => {
         const camera = createCamera();
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
 
         camera.setCenter([-170, 0]);
         let crossedAntimeridian;
@@ -1786,7 +1787,7 @@ describe('#flyTo', () => {
 
     test('does not pan eastward across the antimeridian if no world copies', async () => {
         const camera = createCamera({renderWorldCopies: false});
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
 
         camera.setCenter([170, 0]);
         let crossedAntimeridian;
@@ -1818,7 +1819,7 @@ describe('#flyTo', () => {
 
     test('does not pan westward across the antimeridian if no world copies', async () => {
         const camera = createCamera({renderWorldCopies: false});
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
 
         camera.setCenter([-170, 0]);
         let crossedAntimeridian;
@@ -1850,7 +1851,7 @@ describe('#flyTo', () => {
 
     test('jumps back to world 0 when crossing the antimeridian', async () => {
         const camera = createCamera();
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
 
         camera.setCenter([-170, 0]);
 
@@ -1881,7 +1882,7 @@ describe('#flyTo', () => {
 
     test('peaks at the specified zoom level', async () => {
         const camera = createCamera({zoom: 20});
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
 
         const minZoom = 1;
         let zoomed = false;
@@ -1925,7 +1926,7 @@ describe('#flyTo', () => {
 
         const promise = camera.once('moveend');
 
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
         stub.mockImplementation(() => 0);
         camera.flyTo({center: [12, 34], zoom: 30, duration: 10});
 
@@ -1950,7 +1951,7 @@ describe('#flyTo', () => {
 
         const promise = camera.once('moveend');
 
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
         stub.mockImplementation(() => 0);
         camera.flyTo({center: [12, 34], zoom: 1, duration: 10});
 
@@ -1998,7 +1999,7 @@ describe('#flyTo', () => {
 
     test('check elevation events freezeElevation=false', async () => {
         const camera = createCamera();
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
 
         const terrainCallbacks = {prepare: 0, update: 0, finalize: 0} as any;
         camera.terrain = {} as Terrain;
@@ -2022,7 +2023,7 @@ describe('#flyTo', () => {
 
     test('check elevation events freezeElevation=true', async() => {
         const camera = createCamera();
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
 
         const terrainCallbacks = {prepare: 0, update: 0, finalize: 0} as any;
         camera.terrain = {} as Terrain;
@@ -2088,7 +2089,7 @@ describe('#isEasing', () => {
     test('returns false when done panning', async () => {
         const camera = createCamera();
         const promise = camera.once('moveend');
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
         stub.mockImplementation(() => 0);
         camera.panTo([100, 0], {duration: 1});
         setTimeout(() => {
@@ -2110,7 +2111,7 @@ describe('#isEasing', () => {
     test('returns false when done zooming', async () => {
         const camera = createCamera();
         const promise = camera.once('moveend');
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
         stub.mockImplementation(() => 0);
         camera.zoomTo(3.2, {duration: 1});
         setTimeout(() => {
@@ -2131,7 +2132,7 @@ describe('#isEasing', () => {
     test('returns false when done rotating', async () => {
         const camera = createCamera();
         const promise = camera.once('moveend');
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
         stub.mockImplementation(() => 0);
         camera.rotateTo(90, {duration: 1});
         setTimeout(() => {
@@ -2203,10 +2204,10 @@ describe('#stop', () => {
         const eventData = {data: 'ok'};
 
         const promise = camera.once('moveend');
-        const spy = jest.fn();
+        const spy = vi.fn();
         camera.on('moveend', spy);
 
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
         stub.mockImplementation(() => 0);
         camera.panTo([100, 0], {duration: 1}, eventData);
 
@@ -2442,7 +2443,7 @@ describe('queryTerrainElevation', () => {
     });
 
     test('Calls getElevationForLngLatZoom with correct arguments', () => {
-        const getElevationForLngLatZoom = jest.fn();
+        const getElevationForLngLatZoom = vi.fn();
         camera.terrain = {getElevationForLngLatZoom} as any as Terrain;
         camera.transform = new MercatorTransform(0, 22, 0, 60, true);
 
@@ -2481,7 +2482,7 @@ describe('#transformCameraUpdate', () => {
 
     test('invoke transformCameraUpdate callback during easeTo', async () => {
         const camera = createCamera();
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
         stub.mockImplementation(() => 0);
 
         let callbackCount = 0;
@@ -2515,7 +2516,7 @@ describe('#transformCameraUpdate', () => {
 
     test('invoke transformCameraUpdate callback during flyTo', async () => {
         const camera = createCamera();
-        const stub = jest.spyOn(browser, 'now');
+        const stub = vi.spyOn(browser, 'now');
         stub.mockImplementation(() => 0);
 
         let callbackCount = 0;
@@ -2891,9 +2892,9 @@ describe('#easeTo globe projection', () => {
         test('emits zoom events if changing latitude but not zooming', async () => {
             const camera = createCameraGlobe();
 
-            const zoomstart = jest.fn();
-            const zoom = jest.fn();
-            const zoomend = jest.fn();
+            const zoomstart = vi.fn();
+            const zoom = vi.fn();
+            const zoomend = vi.fn();
 
             camera.on('zoomstart', zoomstart);
             camera.on('zoom', zoom);
@@ -2911,7 +2912,7 @@ describe('#easeTo globe projection', () => {
         test('does not emit zoom events if not changing latitude and not zooming', async () => {
             const camera = createCameraGlobe();
 
-            const spy = jest.fn();
+            const spy = vi.fn();
             camera.on('zoomstart', spy);
             camera.on('zoom', spy);
             camera.on('zoomend', spy);
@@ -2925,7 +2926,7 @@ describe('#easeTo globe projection', () => {
 
         test('pans eastward across the antimeridian', async () => {
             const camera = createCameraGlobe();
-            const stub = jest.spyOn(browser, 'now');
+            const stub = vi.spyOn(browser, 'now');
 
             camera.setCenter([170, 0]);
             let crossedAntimeridian;
@@ -2967,7 +2968,7 @@ describe('#easeTo globe projection', () => {
 
         test('pans westward across the antimeridian', async () => {
             const camera = createCameraGlobe();
-            const stub = jest.spyOn(browser, 'now');
+            const stub = vi.spyOn(browser, 'now');
 
             camera.setCenter([-170, 0]);
             let crossedAntimeridian;
@@ -3067,7 +3068,7 @@ describe('#flyTo globe projection', () => {
         test('Zoom out from the same position to the same position with animation', async () => {
             const pos = {lng: 0, lat: 0};
             const camera = createCameraGlobe({zoom: 20, center: pos});
-            const stub = jest.spyOn(browser, 'now');
+            const stub = vi.spyOn(browser, 'now');
 
             const promise = camera.once('zoomend');
 
@@ -3272,7 +3273,7 @@ describe('#flyTo globe projection', () => {
             camera.on('pitchend', (d) => { pitchended = d.data; })
             const promise = camera.once('moveend');
 
-            const stub = jest.spyOn(browser, 'now');
+            const stub = vi.spyOn(browser, 'now');
             stub.mockImplementation(() => 0);
 
             camera.flyTo({center: [100, 0], duration: 10}, eventData);
@@ -3319,7 +3320,7 @@ describe('#flyTo globe projection', () => {
 
             const promise = camera.once('moveend');
 
-            const stub = jest.spyOn(browser, 'now');
+            const stub = vi.spyOn(browser, 'now');
             stub.mockImplementation(() => 0);
 
             camera.flyTo({center: [100, 0], zoom: 18, duration: 10});
@@ -3340,7 +3341,7 @@ describe('#flyTo globe projection', () => {
 
         test('pans eastward across the prime meridian', async () => {
             const camera = createCameraGlobe();
-            const stub = jest.spyOn(browser, 'now');
+            const stub = vi.spyOn(browser, 'now');
 
             camera.setCenter([-10, 0]);
             let crossedPrimeMeridian;
@@ -3372,7 +3373,7 @@ describe('#flyTo globe projection', () => {
 
         test('pans westward across the prime meridian', async () => {
             const camera = createCameraGlobe();
-            const stub = jest.spyOn(browser, 'now');
+            const stub = vi.spyOn(browser, 'now');
 
             camera.setCenter([10, 0]);
             let crossedPrimeMeridian;
@@ -3404,7 +3405,7 @@ describe('#flyTo globe projection', () => {
 
         test('pans eastward across the antimeridian', async () => {
             const camera = createCameraGlobe();
-            const stub = jest.spyOn(browser, 'now');
+            const stub = vi.spyOn(browser, 'now');
 
             camera.setCenter([170, 0]);
             let crossedAntimeridian;
@@ -3436,7 +3437,7 @@ describe('#flyTo globe projection', () => {
 
         test('pans westward across the antimeridian', async () => {
             const camera = createCameraGlobe();
-            const stub = jest.spyOn(browser, 'now');
+            const stub = vi.spyOn(browser, 'now');
 
             camera.setCenter([-170, 0]);
             let crossedAntimeridian;
@@ -3468,7 +3469,7 @@ describe('#flyTo globe projection', () => {
 
         test('pans eastward across the antimeridian even if renderWorldCopies: false', async () => {
             const camera = createCameraGlobe({renderWorldCopies: false});
-            const stub = jest.spyOn(browser, 'now');
+            const stub = vi.spyOn(browser, 'now');
 
             camera.setCenter([170, 0]);
             let crossedAntimeridian;
@@ -3500,7 +3501,7 @@ describe('#flyTo globe projection', () => {
 
         test('pans westward across the antimeridian even if renderWorldCopies: false', async () => {
             const camera = createCameraGlobe({renderWorldCopies: false});
-            const stub = jest.spyOn(browser, 'now');
+            const stub = vi.spyOn(browser, 'now');
 
             camera.setCenter([-170, 0]);
             let crossedAntimeridian;
@@ -3532,7 +3533,7 @@ describe('#flyTo globe projection', () => {
 
         test('jumps back to world 0 when crossing the antimeridian', async () => {
             const camera = createCameraGlobe();
-            const stub = jest.spyOn(browser, 'now');
+            const stub = vi.spyOn(browser, 'now');
 
             camera.setCenter([-170, 0]);
 
@@ -3563,7 +3564,7 @@ describe('#flyTo globe projection', () => {
 
         test('peaks at the specified zoom level', async () => {
             const camera = createCameraGlobe({zoom: 20});
-            const stub = jest.spyOn(browser, 'now');
+            const stub = vi.spyOn(browser, 'now');
 
             const minZoom = 1;
             let zoomed = false;
@@ -3607,7 +3608,7 @@ describe('#flyTo globe projection', () => {
 
             const promise = camera.once('moveend');
 
-            const stub = jest.spyOn(browser, 'now');
+            const stub = vi.spyOn(browser, 'now');
             stub.mockImplementation(() => 0);
             camera.flyTo({center: [12, 34], zoom: 30, duration: 10});
 
@@ -3636,7 +3637,7 @@ describe('#flyTo globe projection', () => {
 
             const promise = camera.once('moveend');
 
-            const stub = jest.spyOn(browser, 'now');
+            const stub = vi.spyOn(browser, 'now');
             stub.mockImplementation(() => 0);
             camera.flyTo({center: target, zoom: 1, duration: 10});
 

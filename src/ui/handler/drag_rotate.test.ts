@@ -1,3 +1,4 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {extend} from '../../util/util';
 import {Map} from '../map';
 import {DOM} from '../../util/dom';
@@ -20,7 +21,7 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(browser, 'now').mockReturnValue(0);
 
         expect(map.dragRotate.isActive()).toBe(false);
 
@@ -43,11 +44,11 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(browser, 'now').mockReturnValue(0);
 
-        const rotatestart = jest.fn();
-        const rotate      = jest.fn();
-        const rotateend   = jest.fn();
+        const rotatestart = vi.fn();
+        const rotate      = vi.fn();
+        const rotateend   = vi.fn();
 
         map.on('rotatestart', rotatestart);
         map.on('rotate',      rotate);
@@ -78,11 +79,11 @@ describe('drag rotate', () => {
         const map = createMap({rollEnabled: true});
 
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(browser, 'now').mockReturnValue(0);
 
-        const rollstart = jest.fn();
-        const roll      = jest.fn();
-        const rollend   = jest.fn();
+        const rollstart = vi.fn();
+        const roll      = vi.fn();
+        const rollend   = vi.fn();
 
         map.on('rollstart', rollstart);
         map.on('roll',      roll);
@@ -113,9 +114,9 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(browser, 'now').mockReturnValue(0);
 
-        const spy = jest.fn();
+        const spy = vi.fn();
         map.on('rotatestart', spy);
         map.on('rotate',      spy);
         map.on('rotateend',   spy);
@@ -139,11 +140,11 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(browser, 'now').mockReturnValue(0);
 
-        const rotatestart = jest.fn();
-        const rotate      = jest.fn();
-        const rotateend   = jest.fn();
+        const rotatestart = vi.fn();
+        const rotate      = vi.fn();
+        const rotateend   = vi.fn();
 
         map.on('rotatestart', rotatestart);
         map.on('rotate',      rotate);
@@ -174,11 +175,11 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(browser, 'now').mockReturnValue(0);
 
-        const pitchstart = jest.fn();
-        const pitch      = jest.fn();
-        const pitchend   = jest.fn();
+        const pitchstart = vi.fn();
+        const pitch      = vi.fn();
+        const pitchend   = vi.fn();
 
         map.on('pitchstart', pitchstart);
         map.on('pitch',      pitch);
@@ -201,11 +202,11 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(browser, 'now').mockReturnValue(0);
 
-        const pitchstart = jest.fn();
-        const pitch      = jest.fn();
-        const pitchend   = jest.fn();
+        const pitchstart = vi.fn();
+        const pitch      = vi.fn();
+        const pitchend   = vi.fn();
 
         map.on('pitchstart', pitchstart);
         map.on('pitch',      pitch);
@@ -227,11 +228,11 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(browser, 'now').mockReturnValue(0);
 
-        const pitchstart = jest.fn();
-        const pitch      = jest.fn();
-        const pitchend   = jest.fn();
+        const pitchstart = vi.fn();
+        const pitch      = vi.fn();
+        const pitchend   = vi.fn();
 
         map.on('pitchstart', pitchstart);
         map.on('pitch',      pitch);
@@ -253,7 +254,7 @@ describe('drag rotate', () => {
     test('DragRotateHandler does not pitch if given pitchWithRotate: false', () => {
         const map = createMap({pitchWithRotate: false});
 
-        const spy = jest.fn();
+        const spy = vi.fn();
 
         map.on('pitchstart',  spy);
         map.on('pitch',       spy);
@@ -279,7 +280,7 @@ describe('drag rotate', () => {
 
         map.dragRotate.disable();
 
-        const spy = jest.fn();
+        const spy = vi.fn();
 
         map.on('rotatestart', spy);
         map.on('rotate',      spy);
@@ -319,11 +320,11 @@ describe('drag rotate', () => {
         const map = createMap({bearingSnap: 0});
 
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(browser, 'now').mockReturnValue(0);
 
-        const movestart = jest.fn();
-        const move      = jest.fn();
-        const moveend   = jest.fn();
+        const movestart = vi.fn();
+        const move      = vi.fn();
+        const moveend   = vi.fn();
 
         map.on('movestart', movestart);
         map.on('move',      move);
@@ -347,12 +348,12 @@ describe('drag rotate', () => {
         const map = createMap({bearingSnap: 0});
 
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(browser, 'now').mockReturnValue(0);
 
-        const rotatestart = jest.fn();
-        const rotate      = jest.fn();
-        const pitch       = jest.fn();
-        const rotateend   = jest.fn();
+        const rotatestart = vi.fn();
+        const rotate      = vi.fn();
+        const pitch       = vi.fn();
+        const rotateend   = vi.fn();
 
         map.on('rotatestart', rotatestart);
         map.on('rotate',    rotate);
@@ -377,25 +378,25 @@ describe('drag rotate', () => {
         const map = createMap({bearingSnap: 0});
 
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(browser, 'now').mockReturnValue(0);
 
-        const rotatestart = jest.fn();
-        const rotate      = jest.fn();
-        const rotateend   = jest.fn();
+        const rotatestart = vi.fn();
+        const rotate      = vi.fn();
+        const rotateend   = vi.fn();
         map.on('rotatestart', rotatestart);
         map.on('rotate',      rotate);
         map.on('rotateend',   rotateend);
 
-        const pitchstart = jest.fn();
-        const pitch      = jest.fn();
-        const pitchend   = jest.fn();
+        const pitchstart = vi.fn();
+        const pitch      = vi.fn();
+        const pitchend   = vi.fn();
         map.on('pitchstart', pitchstart);
         map.on('pitch',      pitch);
         map.on('pitchend',   pitchend);
 
-        const movestart = jest.fn();
-        const move      = jest.fn();
-        const moveend   = jest.fn();
+        const movestart = vi.fn();
+        const move      = vi.fn();
+        const moveend   = vi.fn();
         map.on('movestart', movestart);
         map.on('move',      move);
         map.on('moveend',   moveend);
@@ -425,11 +426,11 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(browser, 'now').mockReturnValue(0);
 
-        const rotatestart = jest.fn();
-        const rotate      = jest.fn();
-        const rotateend   = jest.fn();
+        const rotatestart = vi.fn();
+        const rotate      = vi.fn();
+        const rotateend   = vi.fn();
 
         map.on('rotatestart', rotatestart);
         map.on('rotate',      rotate);
@@ -452,9 +453,9 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(browser, 'now').mockReturnValue(0);
 
-        const mousemove = jest.fn();
+        const mousemove = vi.fn();
         map.on('mousemove', mousemove);
 
         simulate.mousedown(map.getCanvasContainer(), {buttons: 2, button: 2});
@@ -471,11 +472,11 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(browser, 'now').mockReturnValue(0);
 
-        const rotatestart = jest.fn();
-        const rotate      = jest.fn();
-        const rotateend   = jest.fn();
+        const rotatestart = vi.fn();
+        const rotate      = vi.fn();
+        const rotateend   = vi.fn();
 
         map.on('rotatestart', rotatestart);
         map.on('rotate',      rotate);
@@ -498,11 +499,11 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(browser, 'now').mockReturnValue(0);
 
-        const rotatestart = jest.fn();
-        const rotate      = jest.fn();
-        const rotateend   = jest.fn();
+        const rotatestart = vi.fn();
+        const rotate      = vi.fn();
+        const rotateend   = vi.fn();
 
         map.on('rotatestart', rotatestart);
         map.on('rotate',      rotate);
@@ -522,10 +523,10 @@ describe('drag rotate', () => {
 
     test('DragRotateHandler requests a new render frame after each mousemove event', () => {
         const map = createMap();
-        const requestRenderFrame = jest.spyOn(map.handlers, '_requestFrame');
+        const requestRenderFrame = vi.spyOn(map.handlers, '_requestFrame');
 
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(browser, 'now').mockReturnValue(0);
 
         simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2});
         simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 10});
@@ -546,11 +547,11 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(browser, 'now').mockReturnValue(0);
 
-        const rotatestart = jest.fn();
-        const rotate      = jest.fn();
-        const rotateend   = jest.fn();
+        const rotatestart = vi.fn();
+        const rotate      = vi.fn();
+        const rotateend   = vi.fn();
 
         map.on('rotatestart', rotatestart);
         map.on('rotate',      rotate);
@@ -595,9 +596,9 @@ describe('drag rotate', () => {
         const map = createMap();
         map.dragPan.disable();
 
-        const rotatestart = jest.fn();
-        const rotate      = jest.fn();
-        const rotateend   = jest.fn();
+        const rotatestart = vi.fn();
+        const rotate      = vi.fn();
+        const rotateend   = vi.fn();
 
         map.on('rotatestart', rotatestart);
         map.on('rotate',      rotate);
@@ -629,11 +630,11 @@ describe('drag rotate', () => {
         map.dragPan.disable();
 
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(browser, 'now').mockReturnValue(0);
 
-        const rotatestart = jest.fn();
-        const rotate      = jest.fn();
-        const rotateend   = jest.fn();
+        const rotatestart = vi.fn();
+        const rotate      = vi.fn();
+        const rotateend   = vi.fn();
 
         map.on('rotatestart', rotatestart);
         map.on('rotate',      rotate);
@@ -683,11 +684,11 @@ describe('drag rotate', () => {
         map.dragPan.disable();
 
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(browser, 'now').mockReturnValue(0);
 
-        const rotatestart = jest.fn();
-        const rotate      = jest.fn();
-        const rotateend   = jest.fn();
+        const rotatestart = vi.fn();
+        const rotate      = vi.fn();
+        const rotateend   = vi.fn();
 
         map.on('rotatestart', rotatestart);
         map.on('rotate',      rotate);
@@ -737,9 +738,9 @@ describe('drag rotate', () => {
 
         map.on('mousedown', e => e.preventDefault());
 
-        const rotatestart = jest.fn();
-        const rotate      = jest.fn();
-        const rotateend   = jest.fn();
+        const rotatestart = vi.fn();
+        const rotate      = vi.fn();
+        const rotateend   = vi.fn();
 
         map.on('rotatestart', rotatestart);
         map.on('rotate',      rotate);
@@ -765,11 +766,11 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(browser, 'now').mockReturnValue(0);
 
-        const rotatestart = jest.fn();
-        const rotate      = jest.fn();
-        const rotateend   = jest.fn();
+        const rotatestart = vi.fn();
+        const rotate      = vi.fn();
+        const rotateend   = vi.fn();
 
         map.on('rotatestart', rotatestart);
         map.on('rotate',      rotate);
@@ -804,9 +805,9 @@ describe('drag rotate', () => {
     test('DragRotateHandler does not begin rotation on spurious mousemove events', () => {
         const map = createMap();
 
-        const rotatestart = jest.fn();
-        const rotate      = jest.fn();
-        const rotateend   = jest.fn();
+        const rotatestart = vi.fn();
+        const rotate      = vi.fn();
+        const rotateend   = vi.fn();
 
         map.on('rotatestart', rotatestart);
         map.on('rotate',      rotate);
@@ -837,14 +838,14 @@ describe('drag rotate', () => {
         const map = createMap({clickTolerance: 4});
 
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(browser, 'now').mockReturnValue(0);
 
-        const rotatestart = jest.fn();
-        const rotate      = jest.fn();
-        const rotateend   = jest.fn();
-        const pitchstart  = jest.fn();
-        const pitch       = jest.fn();
-        const pitchend    = jest.fn();
+        const rotatestart = vi.fn();
+        const rotate      = vi.fn();
+        const rotateend   = vi.fn();
+        const pitchstart  = vi.fn();
+        const pitch       = vi.fn();
+        const pitchend    = vi.fn();
 
         map.on('rotatestart', rotatestart);
         map.on('rotate',      rotate);

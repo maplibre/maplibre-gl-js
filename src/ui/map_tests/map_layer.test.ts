@@ -1,7 +1,8 @@
+import {describe, beforeEach, afterEach, test, expect} from 'vitest';
 import {createMap, beforeMapTest, createStyle} from '../../util/test/util';
 import {extend} from '../../util/util';
-import {EvaluationParameters} from '../../style/evaluation_parameters';
-import {fakeServer, FakeServer} from 'nise';
+import {type EvaluationParameters} from '../../style/evaluation_parameters';
+import {fakeServer, type FakeServer} from 'nise';
 import {MessageType} from '../../util/actor_messages';
 
 let server: FakeServer;

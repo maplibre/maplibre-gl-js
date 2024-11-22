@@ -1,4 +1,4 @@
-import {StyleLayer} from './style_layer';
+import {type StyleLayer} from './style_layer';
 import {createStyleLayer} from './create_style_layer';
 
 import {featureFilter, groupByLayout} from '@maplibre/maplibre-gl-style-spec';

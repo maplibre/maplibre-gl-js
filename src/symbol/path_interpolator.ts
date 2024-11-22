@@ -1,5 +1,5 @@
 import {clamp} from '../util/util';
-import Point from '@mapbox/point-geometry';
+import type Point from '@mapbox/point-geometry';
 
 export class PathInterpolator {
     points: Array<Point>;

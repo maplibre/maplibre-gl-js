@@ -1,7 +1,8 @@
+import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
 
 import {generateMousePanHandler, generateMousePitchHandler, generateMouseRollHandler, generateMouseRotationHandler} from './mouse';
-import {DragRotateResult} from './drag_handler';
+import {type DragRotateResult} from './drag_handler';
 
 describe('mouse handler tests', () => {
     test('MouseRotateHandler', () => {
