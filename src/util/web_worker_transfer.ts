@@ -42,7 +42,7 @@ type RegisterOptions<T> = {
     shallow?: ReadonlyArray<keyof T>;
 };
 
-const registry: Registry = {};
+export const registry: Registry = {};
 
 /**
  * Register the given class as serializable.
@@ -56,7 +56,7 @@ export function register<T extends any>(
     },
     options: RegisterOptions<T> = {}
 ) {
-    if (registry[name]) throw new Error(`${name} is already registered.`);
+    if (registry[name]) return;
     ((Object.defineProperty as any))(klass, '_classRegistryKey', {
         value: name,
         writeable: false
@@ -97,7 +97,7 @@ function getClassRegistryKey(input: Object|SerializedObject): string {
     return (input as SerializedObject).$name || klass._classRegistryKey;
 }
 
-export function isRegistered(input: unknown): boolean {
+function isRegistered(input: unknown): boolean {
     if (input === null || typeof input !== 'object') {
         return false;
     }

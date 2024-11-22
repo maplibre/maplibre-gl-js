@@ -33,7 +33,7 @@ import {verticalizedCharacterMap} from '../../util/verticalize_punctuation';
 import {type Anchor} from '../../symbol/anchor';
 import {getSizeData, MAX_PACKED_SIZE} from '../../symbol/symbol_size';
 
-import {isRegistered, register} from '../../util/web_worker_transfer';
+import {register, registry} from '../../util/web_worker_transfer';
 import {EvaluationParameters} from '../../style/evaluation_parameters';
 import {Formatted, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import {rtlWorkerPlugin} from '../../source/rtl_text_plugin_worker';
@@ -229,9 +229,7 @@ export class SymbolBuffers {
     }
 }
 
-if (!isRegistered(SymbolBuffers)){
-    register('SymbolBuffers', SymbolBuffers);
-}
+register('SymbolBuffers', SymbolBuffers);
 
 class CollisionBuffers {
     layoutVertexArray: StructArray;
