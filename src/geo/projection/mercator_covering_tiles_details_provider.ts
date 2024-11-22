@@ -1,10 +1,10 @@
 import {OverscaledTileID} from '../../source/tile_id';
 import {Aabb} from '../../util/primitives/aabb';
 import {clamp} from '../../util/util';
-import {MercatorCoordinate} from '../mercator_coordinate';
-import {IReadonlyTransform} from '../transform_interface';
-import {CoveringTilesOptions} from './covering_tiles';
-import {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
+import type {MercatorCoordinate} from '../mercator_coordinate';
+import type {IReadonlyTransform} from '../transform_interface';
+import type {CoveringTilesOptions} from './covering_tiles';
+import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
 
 export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetailsProvider {
 

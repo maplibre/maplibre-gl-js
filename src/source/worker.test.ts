@@ -1,11 +1,11 @@
 import {fakeServer} from 'nise';
 import Worker from './worker';
-import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {WorkerGlobalScopeInterface} from '../util/web_worker';
-import {CanonicalTileID, OverscaledTileID} from './tile_id';
-import {WorkerSource, WorkerTileParameters, WorkerTileResult} from './worker_source';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {WorkerGlobalScopeInterface} from '../util/web_worker';
+import type {CanonicalTileID, OverscaledTileID} from './tile_id';
+import type {WorkerSource, WorkerTileParameters, WorkerTileResult} from './worker_source';
 import {rtlWorkerPlugin} from './rtl_text_plugin_worker';
-import {ActorTarget, IActor} from '../util/actor';
+import type {ActorTarget, IActor} from '../util/actor';
 import {MessageType} from '../util/actor_messages';
 
 class WorkerSourceMock implements WorkerSource {

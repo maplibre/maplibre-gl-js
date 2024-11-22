@@ -1,4 +1,5 @@
-import puppeteer, {Page, Browser} from 'puppeteer';
+import type {Page, Browser} from 'puppeteer';
+import puppeteer from 'puppeteer';
 import st from 'st';
 import http, {type Server} from 'http';
 import type {AddressInfo} from 'net';

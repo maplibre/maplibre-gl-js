@@ -1,16 +1,19 @@
 import {StyleLayer} from '../style_layer';
 
-import {SymbolBucket, SymbolFeature} from '../../data/bucket/symbol_bucket';
+import type {SymbolFeature} from '../../data/bucket/symbol_bucket';
+import {SymbolBucket} from '../../data/bucket/symbol_bucket';
 import {resolveTokens} from '../../util/resolve_tokens';
-import properties, {SymbolLayoutPropsPossiblyEvaluated, SymbolPaintPropsPossiblyEvaluated} from './symbol_style_layer_properties.g';
+import properties from './symbol_style_layer_properties.g';
 
-import {
+import type {
     Transitionable,
     Transitioning,
     Layout,
     PossiblyEvaluated,
-    PossiblyEvaluatedPropertyValue,
     PropertyValue
+} from '../properties';
+import {
+    PossiblyEvaluatedPropertyValue
 } from '../properties';
 
 import {
@@ -25,7 +28,7 @@ import {
     Literal} from '@maplibre/maplibre-gl-style-spec';
 
 import type {BucketParameters} from '../../data/bucket';
-import type {SymbolLayoutProps, SymbolPaintProps} from './symbol_style_layer_properties.g';
+import type {SymbolLayoutProps, SymbolPaintProps,SymbolLayoutPropsPossiblyEvaluated, SymbolPaintPropsPossiblyEvaluated} from './symbol_style_layer_properties.g';
 import type {EvaluationParameters} from '../evaluation_parameters';
 import type {Expression, Feature, SourceExpression, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {CanonicalTileID} from '../../source/tile_id';

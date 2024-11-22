@@ -2,8 +2,8 @@ import {AttributionControl, defaultAttributionControlOptions} from './attributio
 import {createMap as globalCreateMap, beforeMapTest, sleep} from '../../util/test/util';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {fakeServer} from 'nise';
-import {Map} from '../../ui/map';
-import {MapSourceDataEvent} from '../events';
+import type {Map} from '../../ui/map';
+import type {MapSourceDataEvent} from '../events';
 
 function createMap() {
 

@@ -1,6 +1,7 @@
 
 import {renderColorRamp} from './color_ramp';
-import {createPropertyExpression, StylePropertyExpression, StylePropertySpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {StylePropertyExpression, StylePropertySpecification} from '@maplibre/maplibre-gl-style-spec';
+import {createPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 
 const spec = {
     'function': true,

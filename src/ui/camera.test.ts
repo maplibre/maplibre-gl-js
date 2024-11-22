@@ -1,17 +1,20 @@
-import {Camera, CameraOptions, PointLike} from '../ui/camera';
-import {TaskQueue, TaskID} from '../util/task_queue';
+import type {CameraOptions, PointLike} from '../ui/camera';
+import {Camera} from '../ui/camera';
+import type {TaskID} from '../util/task_queue';
+import {TaskQueue} from '../util/task_queue';
 import {browser} from '../util/browser';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
 import {setMatchMedia} from '../util/test/util';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
-import {Terrain} from '../render/terrain';
-import {LngLat, LngLatLike} from '../geo/lng_lat';
+import type {Terrain} from '../render/terrain';
+import type {LngLatLike} from '../geo/lng_lat';
+import {LngLat} from '../geo/lng_lat';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {GlobeTransform} from '../geo/projection/globe_transform';
 import {getZoomAdjustment} from '../geo/projection/globe_utils';
 import {GlobeCameraHelper} from '../geo/projection/globe_camera_helper';
-import {GlobeProjection} from '../geo/projection/globe';
+import type {GlobeProjection} from '../geo/projection/globe';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 
 beforeEach(() => {

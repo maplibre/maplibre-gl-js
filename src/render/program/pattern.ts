@@ -1,4 +1,4 @@
-import {
+import type {
     Uniform1i,
     Uniform1f,
     Uniform2f,

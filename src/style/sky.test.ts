@@ -1,7 +1,8 @@
 import {Sky} from './sky';
-import {latest as styleSpec, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
-import {EvaluationParameters} from './evaluation_parameters';
-import {TransitionParameters} from './properties';
+import type {SkySpecification} from '@maplibre/maplibre-gl-style-spec';
+import {latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
+import type {EvaluationParameters} from './evaluation_parameters';
+import type {TransitionParameters} from './properties';
 
 const spec = styleSpec.sky;
 

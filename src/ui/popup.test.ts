@@ -1,9 +1,10 @@
 import {createMap as globalCreateMap, beforeMapTest} from '../util/test/util';
-import {Popup, Offset} from './popup';
+import type {Offset} from './popup';
+import {Popup} from './popup';
 import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
 import simulate from '../../test/unit/lib/simulate_interaction';
-import {PositionAnchor} from './anchor';
+import type {PositionAnchor} from './anchor';
 
 const containerWidth = 512;
 const containerHeight = 512;

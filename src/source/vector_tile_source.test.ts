@@ -1,16 +1,17 @@
 import {fakeServer, type FakeServer} from 'nise';
-import {Source} from './source';
+import type {Source} from './source';
 import {VectorTileSource} from './vector_tile_source';
-import {Tile} from './tile';
+import type {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {Evented} from '../util/evented';
 import {RequestManager} from '../util/request_manager';
 import fixturesSource from '../../test/unit/assets/source.json' with {type: 'json'};
 import {getMockDispatcher, getWrapDispatcher, sleep, waitForMetadataEvent} from '../util/test/util';
-import {Map} from '../ui/map';
-import {WorkerTileParameters} from './worker_source';
+import type {Map} from '../ui/map';
+import type {WorkerTileParameters} from './worker_source';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
-import {ActorMessage, MessageType} from '../util/actor_messages';
+import type {ActorMessage} from '../util/actor_messages';
+import {MessageType} from '../util/actor_messages';
 
 function createSource(options, transformCallback?, clearTiles = () => {}) {
     const source = new VectorTileSource('id', options, getMockDispatcher(), options.eventedParent);

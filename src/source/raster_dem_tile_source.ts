@@ -1,7 +1,7 @@
 import {ImageRequest} from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
 import {extend, isImageBitmap, readImageUsingVideoFrame} from '../util/util';
-import {Evented} from '../util/evented';
+import type {Evented} from '../util/evented';
 import {browser} from '../util/browser';
 import {offscreenCanvasSupported} from '../util/offscreen_canvas_supported';
 import {OverscaledTileID} from './tile_id';

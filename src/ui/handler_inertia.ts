@@ -3,7 +3,7 @@ import type {Map} from './map';
 import {bezier, clamp, extend} from '../util/util';
 import Point from '@mapbox/point-geometry';
 import type {DragPanOptions} from './handler/shim/drag_pan';
-import {EaseToOptions} from './camera';
+import type {EaseToOptions} from './camera';
 
 const defaultInertiaOptions = {
     linearity: 0.3,

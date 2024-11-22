@@ -1,11 +1,11 @@
-import {OverscaledTileID} from './tile_id';
+import type {OverscaledTileID} from './tile_id';
 import {Tile} from './tile';
 import {EXTENT} from '../data/extent';
 import {mat4} from 'gl-matrix';
 import {Evented} from '../util/evented';
 import type {ITransform} from '../geo/transform_interface';
 import type {SourceCache} from '../source/source_cache';
-import {Terrain} from '../render/terrain';
+import type {Terrain} from '../render/terrain';
 import {browser} from '../util/browser';
 import {coveringTiles} from '../geo/projection/covering_tiles';
 

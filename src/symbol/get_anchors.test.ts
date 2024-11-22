@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
 import {getAnchors, getCenterAnchor} from './get_anchors';
-import {PositionedIcon, Shaping} from './shaping';
+import type {PositionedIcon, Shaping} from './shaping';
 
 const TILE_EXTENT = 4096;
 

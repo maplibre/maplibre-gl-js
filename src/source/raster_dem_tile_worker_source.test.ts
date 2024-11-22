@@ -1,6 +1,6 @@
 import {RasterDEMTileWorkerSource} from './raster_dem_tile_worker_source';
 import {DEMData} from '../data/dem_data';
-import {WorkerDEMTileParameters} from './worker_source';
+import type {WorkerDEMTileParameters} from './worker_source';
 
 describe('loadTile', () => {
     test('loads DEM tile', async () => {

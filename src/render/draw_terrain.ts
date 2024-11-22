@@ -6,7 +6,7 @@ import type {Tile} from '../source/tile';
 import {CullFaceMode} from '../gl/cull_face_mode';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {ColorMode} from '../gl/color_mode';
-import {Terrain} from './terrain';
+import type {Terrain} from './terrain';
 
 /**
  * Redraw the Depth Framebuffer

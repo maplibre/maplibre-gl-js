@@ -1,5 +1,5 @@
 import {Event, ErrorEvent, Evented} from '../util/evented';
-import {StyleLayer} from './style_layer';
+import type {StyleLayer} from './style_layer';
 import {createStyleLayer} from './create_style_layer';
 import {loadSprite} from './load_sprite';
 import {ImageManager} from '../render/image_manager';
@@ -14,11 +14,12 @@ import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
 import {Dispatcher} from '../util/dispatcher';
 import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
-import {Source} from '../source/source';
-import {QueryRenderedFeaturesOptions, QueryRenderedFeaturesOptionsStrict, QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
+import type {Source} from '../source/source';
+import type {QueryRenderedFeaturesOptions, QueryRenderedFeaturesOptionsStrict, QuerySourceFeatureOptions} from '../source/query_features';
+import {queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
 import {SourceCache} from '../source/source_cache';
-import {GeoJSONSource} from '../source/geojson_source';
-import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, DiffCommand} from '@maplibre/maplibre-gl-style-spec';
+import type {GeoJSONSource} from '../source/geojson_source';
+import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles} from '@maplibre/maplibre-gl-style-spec';
 import {getGlobalWorkerPool} from '../util/global_worker_pool';
 import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
@@ -52,7 +53,7 @@ import type {
     DiffOperations,
     ProjectionSpecification,
     SkySpecification
-} from '@maplibre/maplibre-gl-style-spec';
+    , DiffCommand} from '@maplibre/maplibre-gl-style-spec';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
@@ -63,7 +64,7 @@ import {
     type GetImagesParameters,
     type GetImagesResponse
 } from '../util/actor_messages';
-import {Projection} from '../geo/projection/projection';
+import type {Projection} from '../geo/projection/projection';
 import {createProjectionFromName} from '../geo/projection/projection_factory';
 
 const empty = emptyStyle() as StyleSpecification;

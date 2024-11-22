@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import {WritingMode, shapeText, Shaping} from '../../../src/symbol/shaping';
+import type {Shaping} from '../../../src/symbol/shaping';
+import {WritingMode, shapeText} from '../../../src/symbol/shaping';
 import {ResolvedImage, Formatted, FormattedSection} from '@maplibre/maplibre-gl-style-spec';
 import {ImagePosition} from '../../../src/render/image_atlas';
 import type {StyleImage} from '../../../src/style/style_image';

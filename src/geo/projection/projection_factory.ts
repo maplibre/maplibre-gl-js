@@ -1,8 +1,8 @@
-import {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {warnOnce} from '../../util/util';
-import {Projection} from './projection';
-import {ITransform} from '../transform_interface';
-import {ICameraHelper} from './camera_helper';
+import type {Projection} from './projection';
+import type {ITransform} from '../transform_interface';
+import type {ICameraHelper} from './camera_helper';
 import {MercatorProjection} from './mercator';
 import {MercatorTransform} from './mercator_transform';
 import {MercatorCameraHelper} from './mercator_camera_helper';

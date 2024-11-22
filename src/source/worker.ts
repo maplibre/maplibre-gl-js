@@ -1,12 +1,15 @@
-import {Actor, ActorTarget, IActor} from '../util/actor';
+import type {ActorTarget, IActor} from '../util/actor';
+import {Actor} from '../util/actor';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {VectorTileWorkerSource} from './vector_tile_worker_source';
 import {RasterDEMTileWorkerSource} from './raster_dem_tile_worker_source';
-import {rtlWorkerPlugin, RTLTextPlugin} from './rtl_text_plugin_worker';
-import {GeoJSONWorkerSource, LoadGeoJSONParameters} from './geojson_worker_source';
+import type {RTLTextPlugin} from './rtl_text_plugin_worker';
+import {rtlWorkerPlugin} from './rtl_text_plugin_worker';
+import type {LoadGeoJSONParameters} from './geojson_worker_source';
+import {GeoJSONWorkerSource} from './geojson_worker_source';
 import {isWorker} from '../util/util';
 import {addProtocol, removeProtocol} from './protocol_crud';
-import {PluginState} from './rtl_text_plugin_status';
+import type {PluginState} from './rtl_text_plugin_status';
 import type {
     WorkerSource,
     WorkerSourceConstructor,

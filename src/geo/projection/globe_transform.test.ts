@@ -1,4 +1,5 @@
-import {globeConstants, GlobeProjection} from './globe';
+import type {GlobeProjection} from './globe';
+import {globeConstants} from './globe';
 import {EXTENT} from '../../data/extent';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';

@@ -1,4 +1,4 @@
-import {PluginState} from './rtl_text_plugin_status';
+import type {PluginState} from './rtl_text_plugin_status';
 import {rtlWorkerPlugin} from './rtl_text_plugin_worker';
 
 describe('RTLWorkerPlugin', () => {

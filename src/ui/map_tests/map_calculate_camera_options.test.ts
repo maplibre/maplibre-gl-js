@@ -1,8 +1,8 @@
 import {createMap, beforeMapTest} from '../../util/test/util';
 import {LngLat} from '../../geo/lng_lat';
-import {OverscaledTileID} from '../../source/tile_id';
-import {CameraOptions} from '../camera';
-import {Terrain} from '../../render/terrain';
+import type {OverscaledTileID} from '../../source/tile_id';
+import type {CameraOptions} from '../camera';
+import type {Terrain} from '../../render/terrain';
 import {mercatorZfromAltitude} from '../../geo/mercator_coordinate';
 
 beforeEach(() => {
