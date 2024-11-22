@@ -1,7 +1,6 @@
-import type {LineIndexArray, TriangleIndexArray} from '../data/array_types.g';
-import type {Segment} from '../data/segment';
-import {SegmentVector} from '../data/segment';
-import type {StructArray} from '../util/struct_array';
+import {LineIndexArray, TriangleIndexArray} from '../data/array_types.g';
+import {Segment, SegmentVector} from '../data/segment';
+import {StructArray} from '../util/struct_array';
 
 /**
  * This function will take any "mesh" and fill in into vertex buffers, breaking it up into multiple drawcalls as needed

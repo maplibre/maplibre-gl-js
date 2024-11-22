@@ -1,4 +1,4 @@
-import type {ImagePosition} from '../render/image_atlas';
+import {ImagePosition} from '../render/image_atlas';
 import {getIconQuads} from './quads';
 
 describe('getIconQuads', () => {

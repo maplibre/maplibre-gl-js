@@ -1,9 +1,8 @@
-import type {FakeServer} from 'nise';
-import {fakeServer} from 'nise';
+import {fakeServer, FakeServer} from 'nise';
 import {RasterDEMTileSource} from './raster_dem_tile_source';
 import {OverscaledTileID} from './tile_id';
 import {RequestManager} from '../util/request_manager';
-import type {Tile} from './tile';
+import {Tile} from './tile';
 import {waitForMetadataEvent} from '../util/test/util';
 
 function createSource(options, transformCallback?) {

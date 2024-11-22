@@ -1,8 +1,7 @@
-import type {PreparedShader} from '../shaders/shaders';
-import {shaders} from '../shaders/shaders';
-import type {ProgramConfiguration} from '../data/program_configuration';
+import {PreparedShader, shaders} from '../shaders/shaders';
+import {ProgramConfiguration} from '../data/program_configuration';
 import {VertexArrayObject} from './vertex_array_object';
-import type {Context} from '../gl/context';
+import {Context} from '../gl/context';
 
 import type {SegmentVector} from '../data/segment';
 import type {VertexBuffer} from '../gl/vertex_buffer';
@@ -13,11 +12,9 @@ import type {ColorMode} from '../gl/color_mode';
 import type {CullFaceMode} from '../gl/cull_face_mode';
 import type {UniformBindings, UniformValues, UniformLocations} from './uniform_binding';
 import type {BinderUniform} from '../data/program_configuration';
-import type {TerrainPreludeUniformsType} from './program/terrain_program';
-import {terrainPreludeUniforms} from './program/terrain_program';
+import {terrainPreludeUniforms, TerrainPreludeUniformsType} from './program/terrain_program';
 import type {TerrainData} from '../render/terrain';
-import type {ProjectionPreludeUniformsType} from './program/projection_program';
-import {projectionObjectToUniformMap, projectionUniforms} from './program/projection_program';
+import {projectionObjectToUniformMap, ProjectionPreludeUniformsType, projectionUniforms} from './program/projection_program';
 import type {ProjectionData} from '../geo/projection/projection_data';
 
 export type DrawMode = WebGLRenderingContextBase['LINES'] | WebGLRenderingContextBase['TRIANGLES'] | WebGL2RenderingContext['LINE_STRIP'];

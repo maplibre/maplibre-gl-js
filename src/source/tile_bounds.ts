@@ -1,5 +1,4 @@
-import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
-import {LngLatBounds} from '../geo/lng_lat_bounds';
+import {LngLatBounds, LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import {mercatorXfromLng, mercatorYfromLat} from '../geo/mercator_coordinate';
 
 import type {CanonicalTileID} from './tile_id';

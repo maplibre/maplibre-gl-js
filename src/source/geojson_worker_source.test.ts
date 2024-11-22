@@ -1,11 +1,10 @@
-import type {LoadGeoJSONParameters} from './geojson_worker_source';
-import {GeoJSONWorkerSource} from './geojson_worker_source';
+import {GeoJSONWorkerSource, LoadGeoJSONParameters} from './geojson_worker_source';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {OverscaledTileID} from './tile_id';
 import perf from '../util/performance';
-import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {Actor} from '../util/actor';
-import type {WorkerTileParameters} from './worker_source';
+import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {Actor} from '../util/actor';
+import {WorkerTileParameters} from './worker_source';
 import {setPerformance, sleep} from '../util/test/util';
 import {type FakeServer, fakeServer} from 'nise';
 

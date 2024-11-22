@@ -1,10 +1,9 @@
 import simulate from '../../../test/unit/lib/simulate_interaction';
-import type {StyleLayer} from '../../style/style_layer';
+import {StyleLayer} from '../../style/style_layer';
 import {createMap, beforeMapTest, createStyle, sleep} from '../../util/test/util';
-import type {MapGeoJSONFeature} from '../../util/vectortile_to_geojson';
-import type {MapLayerEventType, MapLibreEvent} from '../events';
-import type {MapOptions} from '../map';
-import {Map} from '../map';
+import {MapGeoJSONFeature} from '../../util/vectortile_to_geojson';
+import {MapLayerEventType, MapLibreEvent} from '../events';
+import {Map, MapOptions} from '../map';
 import {Event as EventedEvent, ErrorEvent} from '../../util/evented';
 import {GlobeProjection} from '../../geo/projection/globe';
 

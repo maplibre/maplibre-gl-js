@@ -1,4 +1,4 @@
-import type {OverscaledTileID} from './tile_id';
+import {OverscaledTileID} from './tile_id';
 import type {Tile} from './tile';
 
 /**

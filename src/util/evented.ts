@@ -1,5 +1,4 @@
-import type {Subscription} from './util';
-import {extend} from './util';
+import {extend, Subscription} from './util';
 
 /**
  * A listener method used as a callback to events

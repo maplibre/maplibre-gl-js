@@ -1,13 +1,13 @@
 import {ImageSource} from './image_source';
 import {Evented} from '../util/evented';
-import type {IReadonlyTransform} from '../geo/transform_interface';
+import {IReadonlyTransform} from '../geo/transform_interface';
 import {extend} from '../util/util';
 import {type FakeServer, fakeServer} from 'nise';
-import type {RequestManager} from '../util/request_manager';
+import {RequestManager} from '../util/request_manager';
 import {sleep, stubAjaxGetImage} from '../util/test/util';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
-import type {Texture} from '../render/texture';
+import {Texture} from '../render/texture';
 import type {ImageSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 

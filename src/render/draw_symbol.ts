@@ -3,8 +3,7 @@ import {drawCollisionDebug} from './draw_collision_debug';
 
 import {SegmentVector} from '../data/segment';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
-import type {EvaluatedZoomSize} from '../symbol/symbol_size';
-import {evaluateSizeForFeature, evaluateSizeForZoom} from '../symbol/symbol_size';
+import {EvaluatedZoomSize, evaluateSizeForFeature, evaluateSizeForZoom} from '../symbol/symbol_size';
 import {mat4} from 'gl-matrix';
 import {StencilMode} from '../gl/stencil_mode';
 import {DepthMode} from '../gl/depth_mode';
@@ -14,9 +13,8 @@ import {addDynamicAttributes} from '../data/bucket/symbol_bucket';
 import {getAnchorAlignment, WritingMode} from '../symbol/shaping';
 import ONE_EM from '../symbol/one_em';
 
-import type {
-    SymbolIconUniformsType} from './program/symbol_program';
 import {
+    SymbolIconUniformsType,
     symbolIconUniformValues,
     symbolSDFUniformValues,
     symbolTextAndIconUniformValues
@@ -38,8 +36,7 @@ import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {ColorMode} from '../gl/color_mode';
 import type {Program} from './program';
 import type {TextAnchor} from '../style/style_layer/variable_text_anchor';
-import type {SymbolProjectionContext} from '../symbol/projection';
-import {getGlCoordMatrix, getPerspectiveRatio, getPitchedLabelPlaneMatrix, hideGlyphs, projectWithMatrix, projectTileCoordinatesToClipSpace, projectTileCoordinatesToLabelPlane, updateLineLabels} from '../symbol/projection';
+import {getGlCoordMatrix, getPerspectiveRatio, getPitchedLabelPlaneMatrix, hideGlyphs, projectWithMatrix, projectTileCoordinatesToClipSpace, projectTileCoordinatesToLabelPlane, SymbolProjectionContext, updateLineLabels} from '../symbol/projection';
 import {translatePosition} from '../util/util';
 import type {ProjectionData} from '../geo/projection/projection_data';
 

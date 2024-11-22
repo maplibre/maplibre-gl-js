@@ -1,5 +1,5 @@
 import {CanvasSource} from '../source/canvas_source';
-import type {IReadonlyTransform} from '../geo/transform_interface';
+import {IReadonlyTransform} from '../geo/transform_interface';
 import {Event, Evented} from '../util/evented';
 import {extend} from '../util/util';
 

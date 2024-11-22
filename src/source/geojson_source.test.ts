@@ -1,17 +1,15 @@
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
-import type {GeoJSONSourceOptions} from './geojson_source';
-import {GeoJSONSource} from './geojson_source';
-import type {IReadonlyTransform} from '../geo/transform_interface';
+import {GeoJSONSource, GeoJSONSourceOptions} from './geojson_source';
+import {IReadonlyTransform} from '../geo/transform_interface';
 import {EXTENT} from '../data/extent';
 import {LngLat} from '../geo/lng_lat';
 import {extend} from '../util/util';
-import type {Dispatcher} from '../util/dispatcher';
-import type {RequestManager} from '../util/request_manager';
+import {Dispatcher} from '../util/dispatcher';
+import {RequestManager} from '../util/request_manager';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
-import type {ActorMessage} from '../util/actor_messages';
-import {MessageType} from '../util/actor_messages';
-import type {Actor} from '../util/actor';
+import {ActorMessage, MessageType} from '../util/actor_messages';
+import {Actor} from '../util/actor';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 const wrapDispatcher = (dispatcher) => {

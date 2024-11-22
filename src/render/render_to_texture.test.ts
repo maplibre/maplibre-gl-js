@@ -5,16 +5,16 @@ import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 import {Context} from '../gl/context';
 import {ColorMode} from '../gl/color_mode';
 import {Terrain} from './terrain';
-import type {Style} from '../style/style';
+import {Style} from '../style/style';
 import {Tile} from '../source/tile';
-import type {Map} from '../ui/map';
+import {Map} from '../ui/map';
 import {OverscaledTileID} from '../source/tile_id';
-import type {SourceCache} from '../source/source_cache';
-import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {FillStyleLayer} from '../style/style_layer/fill_style_layer';
-import type {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
-import type {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
-import type {BackgroundStyleLayer} from '../style/style_layer/background_style_layer';
+import {SourceCache} from '../source/source_cache';
+import {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {FillStyleLayer} from '../style/style_layer/fill_style_layer';
+import {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
+import {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
+import {BackgroundStyleLayer} from '../style/style_layer/background_style_layer';
 import {DepthMode} from '../gl/depth_mode';
 
 describe('render to texture', () => {

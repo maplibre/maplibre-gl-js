@@ -1,29 +1,25 @@
-import type {mat2} from 'gl-matrix';
-import {mat4, vec3, vec4} from 'gl-matrix';
+import {mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {MAX_VALID_LATITUDE, TransformHelper} from '../transform_helper';
 import {MercatorTransform} from './mercator_transform';
-import type {LngLatLike} from '../lng_lat';
-import {LngLat, earthRadius} from '../lng_lat';
+import {LngLat, LngLatLike, earthRadius} from '../lng_lat';
 import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, easeCubicInOut, lerp, pointPlaneSignedDistance, warnOnce} from '../../util/util';
-import type {CanonicalTileID} from '../../source/tile_id';
-import {UnwrappedTileID, OverscaledTileID} from '../../source/tile_id';
+import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {browser} from '../../util/browser';
-import type {Terrain} from '../../render/terrain';
-import type {GlobeProjection} from './globe';
-import {globeConstants} from './globe';
+import {Terrain} from '../../render/terrain';
+import {GlobeProjection, globeConstants} from './globe';
 import {MercatorCoordinate} from '../mercator_coordinate';
-import type {PointProjection} from '../../symbol/projection';
+import {PointProjection} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
-import type {IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
-import type {PaddingOptions} from '../edge_insets';
+import {IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
+import {PaddingOptions} from '../edge_insets';
 import {tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 import {angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, sphereSurfacePointToCoordinates} from './globe_utils';
 import {EXTENT} from '../../data/extent';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider';
 import {Frustum} from '../../util/primitives/frustum';
-import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
+import {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
 
 /**
  * Describes the intersection of ray and sphere.

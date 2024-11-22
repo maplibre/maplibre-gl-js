@@ -1,4 +1,4 @@
-import type {SerializedObject} from '../../dist/maplibre-gl';
+import {SerializedObject} from '../../dist/maplibre-gl';
 import {AJAXError} from './ajax';
 import {register, serialize, deserialize} from './web_worker_transfer';
 

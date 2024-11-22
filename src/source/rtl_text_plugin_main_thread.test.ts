@@ -1,10 +1,9 @@
-import type {FakeServer} from 'nise';
-import {fakeServer} from 'nise';
+import {FakeServer, fakeServer} from 'nise';
 import {rtlMainThreadPluginFactory} from './rtl_text_plugin_main_thread';
 import {sleep} from '../util/test/util';
 import {browser} from '../util/browser';
 import {Dispatcher} from '../util/dispatcher';
-import type {PluginState} from './rtl_text_plugin_status';
+import {PluginState} from './rtl_text_plugin_status';
 import {MessageType} from '../util/actor_messages';
 const rtlMainThreadPlugin = rtlMainThreadPluginFactory();
 

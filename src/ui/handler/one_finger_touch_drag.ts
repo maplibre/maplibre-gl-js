@@ -1,7 +1,6 @@
 import Point from '@mapbox/point-geometry';
 
-import type {DragMoveHandler, DragRotateResult, DragPitchResult} from './drag_handler';
-import {DragHandler} from './drag_handler';
+import {DragMoveHandler, DragRotateResult, DragPitchResult, DragHandler} from './drag_handler';
 import {OneFingerTouchMoveStateManager} from './drag_move_state_manager';
 import {getAngleDelta} from '../../util/util';
 

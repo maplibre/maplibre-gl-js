@@ -1,6 +1,5 @@
 
-import type {Page, Browser} from 'puppeteer';
-import puppeteer from 'puppeteer';
+import puppeteer, {Page, Browser} from 'puppeteer';
 
 import {deepEqual} from '../lib/json-diff';
 import st from 'st';
@@ -14,7 +13,7 @@ import type {AddressInfo} from 'node:net';
 import {localizeURLs} from '../lib/localize-urls';
 import {globSync} from 'glob';
 
-import type * as maplibreglModule from '../../../dist/maplibre-gl';
+import * as maplibreglModule from '../../../dist/maplibre-gl';
 let maplibregl: typeof maplibreglModule;
 
 jest.retryTimes(3);

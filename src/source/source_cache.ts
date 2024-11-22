@@ -6,7 +6,7 @@ import {TileCache} from './tile_cache';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {keysDifference} from '../util/util';
 import {EXTENT} from '../data/extent';
-import type {Context} from '../gl/context';
+import {Context} from '../gl/context';
 import Point from '@mapbox/point-geometry';
 import {browser} from '../util/browser';
 import {OverscaledTileID} from './tile_id';

@@ -6,7 +6,7 @@ import type {
     BucketFeature,
     PopulateParameters
 } from '../bucket';
-import type {PossiblyEvaluated} from '../../style/properties';
+import {PossiblyEvaluated} from '../../style/properties';
 
 type PatternStyleLayers = Array<LineStyleLayer> | Array<FillStyleLayer> | Array<FillExtrusionStyleLayer>;
 

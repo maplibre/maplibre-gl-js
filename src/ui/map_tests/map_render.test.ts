@@ -1,6 +1,5 @@
 import {createMap, beforeMapTest, createStyle} from '../../util/test/util';
-import type {FakeServer} from 'nise';
-import {fakeServer} from 'nise';
+import {fakeServer, FakeServer} from 'nise';
 
 let server: FakeServer;
 

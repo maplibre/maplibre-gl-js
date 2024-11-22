@@ -1,5 +1,4 @@
-import type {vec4} from 'gl-matrix';
-import {vec3} from 'gl-matrix';
+import {vec3, vec4} from 'gl-matrix';
 import {type Frustum} from './frustum';
 
 export const enum IntersectionResult {

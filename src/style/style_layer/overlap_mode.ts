@@ -1,6 +1,6 @@
-import type {SymbolLayoutPropsPossiblyEvaluated} from './symbol_style_layer_properties.g';
+import {SymbolLayoutPropsPossiblyEvaluated} from './symbol_style_layer_properties.g';
 import type {SymbolLayoutProps} from './symbol_style_layer_properties.g';
-import type {PossiblyEvaluated} from '../properties';
+import {PossiblyEvaluated} from '../properties';
 
 /**
  * The overlap mode for properties like `icon-overlap`and `text-overlap`

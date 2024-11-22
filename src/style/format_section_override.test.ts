@@ -1,9 +1,8 @@
-import type {FormattedSection, StyleExpression} from '@maplibre/maplibre-gl-style-spec';
-import {EvaluationContext, createExpression, ZoomConstantExpression} from '@maplibre/maplibre-gl-style-spec';
+import {EvaluationContext, FormattedSection, createExpression, StyleExpression, ZoomConstantExpression} from '@maplibre/maplibre-gl-style-spec';
 import properties from './style_layer/symbol_style_layer_properties.g';
 import {PossiblyEvaluatedPropertyValue} from './properties';
 import {FormatSectionOverride} from './format_section_override';
-import type {EvaluationParameters} from './evaluation_parameters';
+import {EvaluationParameters} from './evaluation_parameters';
 
 describe('evaluate', () => {
 

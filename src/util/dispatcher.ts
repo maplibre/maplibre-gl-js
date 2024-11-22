@@ -1,5 +1,4 @@
-import type {MessageHandler} from './actor';
-import {Actor} from './actor';
+import {Actor, MessageHandler} from './actor';
 import {getGlobalWorkerPool} from './global_worker_pool';
 import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax';
 

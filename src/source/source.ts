@@ -5,7 +5,7 @@ import {GeoJSONSource} from '../source/geojson_source';
 import {VideoSource} from '../source/video_source';
 import {ImageSource} from '../source/image_source';
 import {CanvasSource} from '../source/canvas_source';
-import type {Dispatcher} from '../util/dispatcher';
+import {Dispatcher} from '../util/dispatcher';
 
 import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Event, Evented} from '../util/evented';
@@ -13,7 +13,7 @@ import type {Map} from '../ui/map';
 import type {Tile} from './tile';
 import type {OverscaledTileID, CanonicalTileID} from './tile_id';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
-import type {CalculateTileZoomFunction} from '../geo/projection/covering_tiles';
+import {CalculateTileZoomFunction} from '../geo/projection/covering_tiles';
 
 const registeredSources = {} as {[key:string]: SourceClass};
 

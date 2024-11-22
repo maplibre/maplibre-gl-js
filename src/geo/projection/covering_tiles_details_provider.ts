@@ -1,7 +1,7 @@
-import type {Aabb} from '../../util/primitives/aabb';
-import type {MercatorCoordinate} from '../mercator_coordinate';
-import type {IReadonlyTransform} from '../transform_interface';
-import type {CoveringTilesOptions} from './covering_tiles';
+import {Aabb} from '../../util/primitives/aabb';
+import {MercatorCoordinate} from '../mercator_coordinate';
+import {IReadonlyTransform} from '../transform_interface';
+import {CoveringTilesOptions} from './covering_tiles';
 
 export interface CoveringTilesDetailsProvider {
     /**

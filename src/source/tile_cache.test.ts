@@ -1,4 +1,4 @@
-import type {Tile} from './tile';
+import {Tile} from './tile';
 import {TileCache} from './tile_cache';
 import {OverscaledTileID} from './tile_id';
 

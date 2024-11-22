@@ -1,8 +1,7 @@
 import Point from '@mapbox/point-geometry';
 
 import {DOM} from '../../util/dom';
-import type {DragMoveHandler, DragPanResult, DragRotateResult, DragPitchResult, DragRollResult} from './drag_handler';
-import {DragHandler} from './drag_handler';
+import {DragMoveHandler, DragPanResult, DragRotateResult, DragPitchResult, DragHandler, DragRollResult} from './drag_handler';
 import {MouseMoveStateManager} from './drag_move_state_manager';
 import {getAngleDelta} from '../../util/util';
 

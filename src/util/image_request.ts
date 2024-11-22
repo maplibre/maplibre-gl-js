@@ -1,5 +1,4 @@
-import type {RequestParameters, GetResourceResponse} from './ajax';
-import {makeRequest, sameOrigin} from './ajax';
+import {RequestParameters, makeRequest, sameOrigin, GetResourceResponse} from './ajax';
 import {arrayBufferToImageBitmap, arrayBufferToImage, extend, isWorker, isImageBitmap} from './util';
 import {webpSupported} from './webp_supported';
 import {config} from './config';

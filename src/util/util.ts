@@ -3,10 +3,9 @@ import UnitBezier from '@mapbox/unitbezier';
 import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';
 import type {Size} from './image';
 import type {WorkerGlobalScopeInterface} from './web_worker';
-import type {vec3, vec4} from 'gl-matrix';
-import {mat3, mat4, quat, vec2} from 'gl-matrix';
+import {mat3, mat4, quat, vec2, vec3, vec4} from 'gl-matrix';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
-import type {OverscaledTileID} from '../source/tile_id';
+import {OverscaledTileID} from '../source/tile_id';
 
 /**
  * Returns a new 64 bit float vec4 of zeroes.

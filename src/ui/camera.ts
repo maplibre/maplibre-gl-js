@@ -5,7 +5,7 @@ import {LngLat} from '../geo/lng_lat';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {Event, Evented} from '../util/evented';
-import type {Terrain} from '../render/terrain';
+import {Terrain} from '../render/terrain';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 
 import type {ITransform} from '../geo/transform_interface';
@@ -15,7 +15,7 @@ import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
 import type {HandlerManager} from './handler_manager';
 import {scaleZoom} from '../geo/transform_helper';
-import type {ICameraHelper} from '../geo/projection/camera_helper';
+import {ICameraHelper} from '../geo/projection/camera_helper';
 
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.

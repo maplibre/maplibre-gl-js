@@ -7,7 +7,7 @@ import {OverscaledTileID} from '../source/tile_id';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {DEMData} from '../data/dem_data';
 import {Tile} from '../source/tile';
-import type {Painter} from './painter';
+import {Painter} from './painter';
 import {mat4} from 'gl-matrix';
 import {LngLat} from '../geo/lng_lat';
 import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util';

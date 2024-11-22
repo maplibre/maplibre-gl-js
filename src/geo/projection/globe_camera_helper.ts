@@ -1,19 +1,16 @@
 import Point from '@mapbox/point-geometry';
-import type {IReadonlyTransform, ITransform} from '../transform_interface';
-import type {CameraForBoxAndBearingHandlerResult, EaseToHandlerResult, EaseToHandlerOptions, FlyToHandlerResult, FlyToHandlerOptions, ICameraHelper, MapControlsDeltas} from './camera_helper';
-import {cameraBoundsWarning, updateRotation} from './camera_helper';
-import type {GlobeProjection} from './globe';
-import type {LngLatLike} from '../lng_lat';
-import {LngLat} from '../lng_lat';
+import {IReadonlyTransform, ITransform} from '../transform_interface';
+import {cameraBoundsWarning, CameraForBoxAndBearingHandlerResult, EaseToHandlerResult, EaseToHandlerOptions, FlyToHandlerResult, FlyToHandlerOptions, ICameraHelper, MapControlsDeltas, updateRotation} from './camera_helper';
+import {GlobeProjection} from './globe';
+import {LngLat, LngLatLike} from '../lng_lat';
 import {MercatorCameraHelper} from './mercator_camera_helper';
 import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from './globe_utils';
 import {clamp, createVec3f64, differenceOfAnglesDegrees, remapSaturate, rollPitchBearingToQuat, warnOnce} from '../../util/util';
-import type {mat4} from 'gl-matrix';
-import {quat, vec3} from 'gl-matrix';
+import {mat4, quat, vec3} from 'gl-matrix';
 import {MAX_VALID_LATITUDE, normalizeCenter, scaleZoom, zoomScale} from '../transform_helper';
-import type {CameraForBoundsOptions} from '../../ui/camera';
-import type {LngLatBounds} from '../lng_lat_bounds';
-import type {PaddingOptions} from '../edge_insets';
+import {CameraForBoundsOptions} from '../../ui/camera';
+import {LngLatBounds} from '../lng_lat_bounds';
+import {PaddingOptions} from '../edge_insets';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
 /**

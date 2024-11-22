@@ -1,10 +1,10 @@
 import {StencilMode} from '../gl/stencil_mode';
 import {DepthMode} from '../gl/depth_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
-import type {Program} from './program';
+import {Program} from './program';
 import {circleUniformValues} from './program/circle_program';
 import {SegmentVector} from '../data/segment';
-import type {OverscaledTileID} from '../source/tile_id';
+import {OverscaledTileID} from '../source/tile_id';
 
 import type {Painter, RenderOptions} from './painter';
 import type {SourceCache} from '../source/source_cache';

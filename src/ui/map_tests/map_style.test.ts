@@ -1,13 +1,11 @@
-import type {MapOptions} from '../map';
-import {Map} from '../map';
+import {Map, MapOptions} from '../map';
 import {createMap, beforeMapTest, createStyle, createStyleSource} from '../../util/test/util';
 import {Event as EventedEvent} from '../../util/evented';
 import {fixedLngLat, fixedNum} from '../../../test/unit/lib/fixed';
 import {extend} from '../../util/util';
-import type {FakeServer} from 'nise';
-import {fakeServer} from 'nise';
+import {fakeServer, FakeServer} from 'nise';
 import {Style} from '../../style/style';
-import type {GeoJSONSourceSpecification, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {GeoJSONSourceSpecification, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {LngLatBounds} from '../../geo/lng_lat_bounds';
 
 let server: FakeServer;

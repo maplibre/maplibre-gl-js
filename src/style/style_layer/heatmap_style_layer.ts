@@ -1,14 +1,14 @@
 import {StyleLayer} from '../style_layer';
 
 import {HeatmapBucket} from '../../data/bucket/heatmap_bucket';
-import type {RGBAImage} from '../../util/image';
-import properties from './heatmap_style_layer_properties.g';
+import {RGBAImage} from '../../util/image';
+import properties, {HeatmapPaintPropsPossiblyEvaluated} from './heatmap_style_layer_properties.g';
 import {renderColorRamp} from '../../util/color_ramp';
-import type {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
+import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
 
 import type {Texture} from '../../render/texture';
 import type {Framebuffer} from '../../gl/framebuffer';
-import type {HeatmapPaintProps,HeatmapPaintPropsPossiblyEvaluated} from './heatmap_style_layer_properties.g';
+import type {HeatmapPaintProps} from './heatmap_style_layer_properties.g';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export const HEATMAP_FULL_RENDER_FBO_KEY = 'big-fb';

@@ -1,7 +1,5 @@
-import type {ActorTarget} from './actor';
-import {Actor} from './actor';
-import type {WorkerGlobalScopeInterface} from './web_worker';
-import {workerFactory} from './web_worker';
+import {Actor, ActorTarget} from './actor';
+import {WorkerGlobalScopeInterface, workerFactory} from './web_worker';
 import {setGlobalWorker} from '../../test/unit/lib/web_worker_mock';
 import {sleep} from './test/util';
 import {ABORT_ERROR, createAbortError} from './abort_error';

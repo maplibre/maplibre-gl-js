@@ -6,9 +6,9 @@ import Point from '@mapbox/point-geometry';
 import {SegmentVector} from '../segment';
 import {LineBucket} from './line_bucket';
 import {LineStyleLayer} from '../../style/style_layer/line_style_layer';
-import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {EvaluationParameters} from '../../style/evaluation_parameters';
-import type {BucketFeature, BucketParameters} from '../bucket';
+import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {EvaluationParameters} from '../../style/evaluation_parameters';
+import {BucketFeature, BucketParameters} from '../bucket';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 
 const noSubdivision = SubdivisionGranularitySetting.noSubdivision;

@@ -1,5 +1,4 @@
-import type {ExpiryData} from '../util/ajax';
-import {getArrayBuffer} from '../util/ajax';
+import {ExpiryData, getArrayBuffer} from '../util/ajax';
 
 import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';

@@ -1,12 +1,11 @@
-import type {PossiblyEvaluated, Transitioning, TransitionParameters} from './properties';
-import {DataConstantProperty, Properties, Transitionable} from './properties';
+import {DataConstantProperty, PossiblyEvaluated, Properties, Transitionable, Transitioning, TransitionParameters} from './properties';
 import {Evented} from '../util/evented';
 import {EvaluationParameters} from './evaluation_parameters';
 import {emitValidationErrors, validateSky, validateStyle} from './validate_style';
 import {extend} from '../util/util';
-import {latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
-import type {Mesh} from '../render/mesh';
-import type {StylePropertySpecification, SkySpecification,Color} from '@maplibre/maplibre-gl-style-spec';
+import {Color, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
+import {Mesh} from '../render/mesh';
+import type {StylePropertySpecification, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {StyleSetterOptions} from './style';
 
 type SkyProps = {

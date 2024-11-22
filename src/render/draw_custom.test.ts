@@ -1,8 +1,7 @@
 import {OverscaledTileID} from '../source/tile_id';
 import {SourceCache} from '../source/source_cache';
 import {Tile} from '../source/tile';
-import type {RenderOptions} from './painter';
-import {Painter} from './painter';
+import {Painter, RenderOptions} from './painter';
 import type {Map} from '../ui/map';
 import {drawCustom} from './draw_custom';
 import {CustomStyleLayer} from '../style/style_layer/custom_style_layer';

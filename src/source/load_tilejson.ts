@@ -1,5 +1,4 @@
-import type {TileJSON} from '../util/util';
-import {pick, extend} from '../util/util';
+import {pick, extend, TileJSON} from '../util/util';
 import {getJSON} from '../util/ajax';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';

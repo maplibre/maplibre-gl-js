@@ -1,7 +1,6 @@
 import {createSymbolBucket} from '../../test/unit/lib/create_symbol_layer';
 import {Tile} from '../source/tile';
-import type {Feature} from '../source/geojson_wrapper';
-import {GeoJSONWrapper} from '../source/geojson_wrapper';
+import {GeoJSONWrapper, Feature} from '../source/geojson_wrapper';
 import {OverscaledTileID} from '../source/tile_id';
 import fs from 'fs';
 import path from 'path';

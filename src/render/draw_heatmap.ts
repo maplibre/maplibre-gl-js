@@ -4,9 +4,9 @@ import {DepthMode} from '../gl/depth_mode';
 import {StencilMode} from '../gl/stencil_mode';
 import {ColorMode} from '../gl/color_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
-import type {Context} from '../gl/context';
-import type {Framebuffer} from '../gl/framebuffer';
-import type {Tile} from '../source/tile';
+import {Context} from '../gl/context';
+import {Framebuffer} from '../gl/framebuffer';
+import {Tile} from '../source/tile';
 import {
     heatmapUniformValues,
     heatmapTextureUniformValues

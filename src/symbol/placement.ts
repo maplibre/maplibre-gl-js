@@ -5,26 +5,24 @@ import * as symbolSize from './symbol_size';
 import * as projection from './projection';
 import {getAnchorJustification} from './symbol_layout';
 import {getAnchorAlignment, WritingMode} from './shaping';
-import type {mat4} from 'gl-matrix';
+import {mat4} from 'gl-matrix';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
 import Point from '@mapbox/point-geometry';
 import type {IReadonlyTransform, ITransform} from '../geo/transform_interface';
 import type {StyleLayer} from '../style/style_layer';
-import type {PossiblyEvaluated} from '../style/properties';
+import {PossiblyEvaluated} from '../style/properties';
 import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
-import type {OverlapMode} from '../style/style_layer/overlap_mode';
-import {getOverlapMode} from '../style/style_layer/overlap_mode';
+import {getOverlapMode, OverlapMode} from '../style/style_layer/overlap_mode';
 
 import type {Tile} from '../source/tile';
-import type {SymbolBucket, CollisionArrays, SingleCollisionBox} from '../data/bucket/symbol_bucket';
+import {SymbolBucket, CollisionArrays, SingleCollisionBox} from '../data/bucket/symbol_bucket';
 
 import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance, TextAnchorOffset} from '../data/array_types.g';
 import type {FeatureIndex} from '../data/feature_index';
 import type {OverscaledTileID, UnwrappedTileID} from '../source/tile_id';
-import type {Terrain} from '../render/terrain';
+import {Terrain} from '../render/terrain';
 import {translatePosition, warnOnce} from '../util/util';
-import type {TextAnchor} from '../style/style_layer/variable_text_anchor';
-import {TextAnchorEnum} from '../style/style_layer/variable_text_anchor';
+import {TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor';
 
 class OpacityState {
     opacity: number;

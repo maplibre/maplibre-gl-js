@@ -1,8 +1,7 @@
-import type {
-    AJAXError} from './ajax';
 import {
     getArrayBuffer,
     getJSON,
+    AJAXError,
     sameOrigin
 } from './ajax';
 

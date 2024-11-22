@@ -1,4 +1,4 @@
-import type {Handler} from '../handler_manager';
+import {Handler} from '../handler_manager';
 import type {Map} from '../map';
 import {TransformProvider} from './transform-provider';
 

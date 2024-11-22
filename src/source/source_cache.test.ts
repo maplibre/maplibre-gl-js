@@ -1,7 +1,6 @@
 import {SourceCache} from './source_cache';
-import type {Map} from '../ui/map';
-import type {Source} from './source';
-import {addSourceType} from './source';
+import {Map} from '../ui/map';
+import {Source, addSourceType} from './source';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {LngLat} from '../geo/lng_lat';
@@ -9,10 +8,10 @@ import Point from '@mapbox/point-geometry';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {extend} from '../util/util';
 import {browser} from '../util/browser';
-import type {Dispatcher} from '../util/dispatcher';
+import {Dispatcher} from '../util/dispatcher';
 import {TileBounds} from './tile_bounds';
 import {sleep} from '../util/test/util';
-import type {TileCache} from './tile_cache';
+import {TileCache} from './tile_cache';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 class SourceMock extends Evented implements Source {

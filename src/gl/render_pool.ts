@@ -1,6 +1,6 @@
 import {Texture} from '../render/texture';
-import type {Context} from './context';
-import type {Framebuffer} from './framebuffer';
+import {Context} from './context';
+import {Framebuffer} from './framebuffer';
 
 export type PoolObject = {
     id: number;

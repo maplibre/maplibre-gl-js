@@ -1,5 +1,5 @@
 
-import type {Tile} from '../source/tile';
+import {Tile} from '../source/tile';
 import {mat4, vec2} from 'gl-matrix';
 import {OverscaledTileID} from '../source/tile_id';
 import {RGBAImage} from '../util/image';
@@ -7,17 +7,16 @@ import {warnOnce} from '../util/util';
 import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g';
 import pos3dAttributes from '../data/pos3d_attributes';
 import {SegmentVector} from '../data/segment';
-import type {Painter} from './painter';
+import {Painter} from './painter';
 import {Texture} from '../render/texture';
 import type {Framebuffer} from '../gl/framebuffer';
-import type Point from '@mapbox/point-geometry';
+import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {TerrainSourceCache} from '../source/terrain_source_cache';
-import type {SourceCache} from '../source/source_cache';
+import {SourceCache} from '../source/source_cache';
 import {EXTENT} from '../data/extent';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {LngLat} from '../geo/lng_lat';
-import {earthRadius} from '../geo/lng_lat';
+import {LngLat, earthRadius} from '../geo/lng_lat';
 import {Mesh} from './mesh';
 import {isInBoundsForZoomLngLat} from '../util/world_bounds';
 

@@ -9,14 +9,14 @@ import {browser} from '../util/browser';
 import {OverscaledTileID} from '../source/tile_id';
 import {fakeServer, type FakeServer} from 'nise';
 
-import type {EvaluationParameters} from './evaluation_parameters';
-import type {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification, StyleSpecification, SymbolLayerSpecification, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {GeoJSONSource} from '../source/geojson_source';
+import {EvaluationParameters} from './evaluation_parameters';
+import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification, StyleSpecification, SymbolLayerSpecification, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
+import {GeoJSONSource} from '../source/geojson_source';
 import {StubMap, sleep} from '../util/test/util';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
 import {MessageType} from '../util/actor_messages';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
-import type {Tile} from '../source/tile';
+import {Tile} from '../source/tile';
 
 function createStyleJSON(properties?): StyleSpecification {
     return extend({

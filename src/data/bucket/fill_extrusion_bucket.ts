@@ -1,8 +1,7 @@
 import {FillExtrusionLayoutArray, PosArray} from '../array_types.g';
 
 import {members as layoutAttributes, centroidAttributes} from './fill_extrusion_attributes';
-import type {Segment} from '../segment';
-import {SegmentVector} from '../segment';
+import {Segment, SegmentVector} from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
 import {TriangleIndexArray} from '../index_array_type';
 import {EXTENT} from '../extent';

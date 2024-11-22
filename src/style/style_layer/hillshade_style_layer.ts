@@ -1,9 +1,9 @@
 import {StyleLayer} from '../style_layer';
 
-import properties from './hillshade_style_layer_properties.g';
-import type {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
+import properties, {HillshadePaintPropsPossiblyEvaluated} from './hillshade_style_layer_properties.g';
+import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
 
-import type {HillshadePaintProps,HillshadePaintPropsPossiblyEvaluated} from './hillshade_style_layer_properties.g';
+import type {HillshadePaintProps} from './hillshade_style_layer_properties.g';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export const isHillshadeStyleLayer = (layer: StyleLayer): layer is HillshadeStyleLayer => layer.type === 'hillshade';

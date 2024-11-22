@@ -1,10 +1,9 @@
 import {WorkerTile} from '../source/worker_tile';
-import type {Feature} from '../source/geojson_wrapper';
-import {GeoJSONWrapper} from '../source/geojson_wrapper';
+import {GeoJSONWrapper, Feature} from '../source/geojson_wrapper';
 import {OverscaledTileID} from '../source/tile_id';
 import {StyleLayerIndex} from '../style/style_layer_index';
-import type {WorkerTileParameters} from './worker_source';
-import type {VectorTile} from '@mapbox/vector-tile';
+import {WorkerTileParameters} from './worker_source';
+import {VectorTile} from '@mapbox/vector-tile';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 
 function createWorkerTile() {

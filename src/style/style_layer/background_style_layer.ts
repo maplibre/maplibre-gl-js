@@ -1,9 +1,9 @@
 import {StyleLayer} from '../style_layer';
 
-import properties from './background_style_layer_properties.g';
-import type {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
+import properties, {BackgroundPaintPropsPossiblyEvaluated} from './background_style_layer_properties.g';
+import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
 
-import type {BackgroundPaintProps,BackgroundPaintPropsPossiblyEvaluated} from './background_style_layer_properties.g';
+import type {BackgroundPaintProps} from './background_style_layer_properties.g';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export const isBackgroundStyleLayer = (layer: StyleLayer): layer is BackgroundStyleLayer => layer.type === 'background';

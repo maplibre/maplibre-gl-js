@@ -1,19 +1,18 @@
-import type Point from '@mapbox/point-geometry';
+import Point from '@mapbox/point-geometry';
 
 import {StyleLayer} from '../style_layer';
 import {LineBucket} from '../../data/bucket/line_bucket';
 import {polygonIntersectsBufferedMultiLine} from '../../util/intersection_tests';
 import {getMaximumPaintValue, translateDistance, translate, offsetLine} from '../query_utils';
-import properties from './line_style_layer_properties.g';
+import properties, {LineLayoutPropsPossiblyEvaluated, LinePaintPropsPossiblyEvaluated} from './line_style_layer_properties.g';
 import {extend} from '../../util/util';
 import {EvaluationParameters} from '../evaluation_parameters';
-import type {Transitionable, Transitioning, Layout, PossiblyEvaluated} from '../properties';
-import {DataDrivenProperty} from '../properties';
+import {Transitionable, Transitioning, Layout, PossiblyEvaluated, DataDrivenProperty} from '../properties';
 
 import {isZoomExpression, Step} from '@maplibre/maplibre-gl-style-spec';
 import type {FeatureState, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Bucket, BucketParameters} from '../../data/bucket';
-import type {LineLayoutProps, LinePaintProps,LineLayoutPropsPossiblyEvaluated, LinePaintPropsPossiblyEvaluated} from './line_style_layer_properties.g';
+import type {LineLayoutProps, LinePaintProps} from './line_style_layer_properties.g';
 import type {IReadonlyTransform} from '../../geo/transform_interface';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
