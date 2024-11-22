@@ -1,4 +1,4 @@
-import {describe, beforeEach, it, afterEach, expect, vi} from 'vitest';
+import {describe, beforeEach, it, afterEach, expect, vi, type MockInstance} from 'vitest';
 import {type FakeServer, fakeServer} from 'nise';
 import {rtlMainThreadPluginFactory} from './rtl_text_plugin_main_thread';
 import {sleep} from '../util/test/util';
@@ -10,7 +10,7 @@ const rtlMainThreadPlugin = rtlMainThreadPluginFactory();
 
 describe('RTLMainThreadPlugin', () => {
     let server: FakeServer;
-    let broadcastSpy: ReturnType<typeof vi.spyOn>;
+    let broadcastSpy: MockInstance;
     const url = 'http://example.com/plugin';
     const failedToLoadMessage = `RTL Text Plugin failed to import scripts from ${url}`;
     const SyncRTLPluginStateMessageName = MessageType.syncRTLPluginState;
