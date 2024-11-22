@@ -1,3 +1,4 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {fakeServer} from 'nise';
 import Worker from './worker';
 import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -39,7 +40,7 @@ describe('Worker RTLTextPlugin', () => {
     });
 
     test('should call setMethods in plugin', () => {
-        const spy = jest.spyOn(rtlWorkerPlugin, 'setMethods').mockImplementation(() => {});
+        const spy = vi.spyOn(rtlWorkerPlugin, 'setMethods').mockImplementation(() => {});
 
         _self.registerRTLTextPlugin({} as any);
 
@@ -47,7 +48,7 @@ describe('Worker RTLTextPlugin', () => {
     });
 
     test('should call syncState when rtl message is received', async () => {
-        const syncStateSpy = jest.spyOn(rtlWorkerPlugin, 'syncState').mockImplementation((_, __) => Promise.resolve({} as any));
+        const syncStateSpy = vi.spyOn(rtlWorkerPlugin, 'syncState').mockImplementation((_, __) => Promise.resolve({} as any));
 
         await worker.actor.messageHandlers[MessageType.syncRTLPluginState]('', {} as any) as any;
 

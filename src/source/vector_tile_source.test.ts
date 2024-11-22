@@ -1,3 +1,4 @@
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {fakeServer, type FakeServer} from 'nise';
 import {type Source} from './source';
 import {VectorTileSource} from './vector_tile_source';
@@ -77,7 +78,7 @@ describe('VectorTileSource', () => {
 
     test('transforms the request for TileJSON URL', () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
-        const transformSpy = jest.fn().mockImplementation((url) => {
+        const transformSpy = vi.fn().mockImplementation((url) => {
             return {url};
         });
 
@@ -173,7 +174,7 @@ describe('VectorTileSource', () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
 
         const source = createSource({url: '/source.json'});
-        const transformSpy = jest.spyOn(source.map._requestManager, 'transformRequest');
+        const transformSpy = vi.spyOn(source.map._requestManager, 'transformRequest');
         const promise = waitForMetadataEvent(source);
         server.respond();
         await promise;
@@ -206,7 +207,7 @@ describe('VectorTileSource', () => {
         const tile = {
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
             state: 'loading',
-            loadVectorData: jest.fn(),
+            loadVectorData: vi.fn(),
             setExpiryData() {}
         } as any as Tile;
         await source.loadTile(tile);
@@ -228,7 +229,7 @@ describe('VectorTileSource', () => {
         const tile = {
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
             state: 'loading',
-            loadVectorData: jest.fn(),
+            loadVectorData: vi.fn(),
             setExpiryData() {}
         } as any as Tile;
         await expect(source.loadTile(tile)).rejects.toThrow('Error');
@@ -252,7 +253,7 @@ describe('VectorTileSource', () => {
         const tile = {
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
             state: 'loading',
-            loadVectorData: jest.fn(),
+            loadVectorData: vi.fn(),
             setExpiryData() {}
         } as any as Tile;
         await source.loadTile(tile);
@@ -398,7 +399,7 @@ describe('VectorTileSource', () => {
     });
 
     test('setTiles only clears the cache once the TileJSON has reloaded', async () => {
-        const clearTiles = jest.fn();
+        const clearTiles = vi.fn();
         const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']}, undefined, clearTiles);
         source.setTiles(['http://example2.com/{z}/{x}/{y}.pbf']);
         expect(clearTiles.mock.calls).toHaveLength(0);

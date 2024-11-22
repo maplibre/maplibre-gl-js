@@ -1,3 +1,4 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {CanvasSource} from '../source/canvas_source';
 import {type IReadonlyTransform} from '../geo/transform_interface';
 import {Event, Evented} from '../util/evented';
@@ -70,7 +71,7 @@ describe('CanvasSource', () => {
     }));
 
     test('self-validates', () => {
-        const stub = jest.spyOn(console, 'error').mockImplementation(() => {});
+        const stub = vi.spyOn(console, 'error').mockImplementation(() => {});
         createSource({coordinates: []});
         expect(stub).toHaveBeenCalled();
         stub.mockReset();
@@ -197,7 +198,7 @@ describe('CanvasSource', () => {
 
 });
 
-describe('CanvasSource#serialize', () => {
+test('CanvasSource#serialize', () => {
     const source = createSource();
 
     const serialized = source.serialize();

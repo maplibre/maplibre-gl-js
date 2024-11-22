@@ -1,3 +1,4 @@
+import {describe, expect, test} from 'vitest';
 import {DOM} from './dom';
 
 describe('DOM', () => {

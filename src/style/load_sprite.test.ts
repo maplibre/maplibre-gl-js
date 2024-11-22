@@ -1,3 +1,4 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import {RequestManager} from '../util/request_manager';
@@ -44,7 +45,7 @@ describe('loadSprite', () => {
     let server: FakeServer;
 
     beforeEach(() => {
-        jest.spyOn(util, 'arrayBufferToImageBitmap').mockImplementation(async (_data: ArrayBuffer) => {
+        vi.spyOn(util, 'arrayBufferToImageBitmap').mockImplementation(async (_data: ArrayBuffer) => {
             try {
                 const img = await createImageBitmap(new ImageData(1024, 824));
                 return img;
@@ -57,7 +58,7 @@ describe('loadSprite', () => {
     });
 
     test('backwards compatibility: single string is treated as a URL for the default sprite', async () => {
-        const transform = jest.fn().mockImplementation((url, type) => {
+        const transform = vi.fn().mockImplementation((url, type) => {
             return {url, type};
         });
 
@@ -89,7 +90,7 @@ describe('loadSprite', () => {
     });
 
     test('array of objects support', async () => {
-        const transform = jest.fn().mockImplementation((url, type) => {
+        const transform = vi.fn().mockImplementation((url, type) => {
             return {url, type};
         });
 
@@ -132,7 +133,7 @@ describe('loadSprite', () => {
     });
 
     test('server returns error', async () => {
-        const transform = jest.fn().mockImplementation((url, type) => {
+        const transform = vi.fn().mockImplementation((url, type) => {
             return {url, type};
         });
 
@@ -147,7 +148,7 @@ describe('loadSprite', () => {
     });
 
     test('request canceling', async () => {
-        const transform = jest.fn().mockImplementation((url, type) => {
+        const transform = vi.fn().mockImplementation((url, type) => {
             return {url, type};
         });
 
@@ -170,7 +171,7 @@ describe('loadSprite', () => {
     });
 
     test('pixelRatio is respected', async () => {
-        const transform = jest.fn().mockImplementation((url, type) => {
+        const transform = vi.fn().mockImplementation((url, type) => {
             return {url, type};
         });
 

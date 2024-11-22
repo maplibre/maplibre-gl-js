@@ -1,4 +1,4 @@
-
+import {describe, beforeEach, beforeAll, afterEach, afterAll, test, expect} from 'vitest';
 import puppeteer, {type Page, type Browser} from 'puppeteer';
 
 import {deepEqual} from '../lib/json-diff';
@@ -15,8 +15,6 @@ import {globSync} from 'glob';
 
 import type * as maplibreglModule from '../../../dist/maplibre-gl';
 let maplibregl: typeof maplibreglModule;
-
-jest.retryTimes(3);
 
 function performQueryOnFixture(fixture)  {
 
@@ -160,7 +158,7 @@ describe('query tests', () => {
     for (const styleJson of testStyles) {
         const testCaseRoot = path.dirname(styleJson.replace(/\\/g, '/')); // glob is returning paths that dirname can't handle...
         const caseName = path.relative(allTestsRoot, testCaseRoot);
-        test(caseName, async () => {
+        test(caseName, {retry: 3, timeout: 20000}, async () => {
             const port = (server.address() as AddressInfo).port;
             const fixture = await dirToJson(testCaseRoot, port);
 
@@ -194,7 +192,7 @@ describe('query tests', () => {
             }
             expect(isEqual).toBeTruthy();
 
-        }, 20000);
+        });
 
     }
 });

@@ -1,3 +1,4 @@
+import {describe, beforeAll, afterAll, test, expect, vi} from 'vitest';
 import {Actor, type ActorTarget} from './actor';
 import {type WorkerGlobalScopeInterface, workerFactory} from './web_worker';
 import {setGlobalWorker} from '../../test/unit/lib/web_worker_mock';
@@ -98,7 +99,7 @@ describe('Actor', () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
-        const spy = jest.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
         worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, spy);
 
         let received = false;
@@ -164,7 +165,7 @@ describe('Actor', () => {
 
         worker.worker.actor.mapId = '2';
 
-        const spy = jest.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
         worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, spy);
 
         actor.sendAsync({type: MessageType.getClusterExpansionZoom, data: {} as any, targetMapId: '1'});
@@ -178,7 +179,7 @@ describe('Actor', () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
-        const spy = jest.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
         worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, spy);
 
         actor.target.postMessage({type: 'getClusterExpansionZoom', data: {} as any, origin: 'https://example.com'});
@@ -192,7 +193,7 @@ describe('Actor', () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
-        const spy = jest.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
         worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, spy);
 
         actor.target.postMessage({type: MessageType.getClusterExpansionZoom, data: {} as any, origin: 'file://'});
@@ -206,7 +207,7 @@ describe('Actor', () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
-        const spy = jest.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
         worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, spy);
 
         actor.target.postMessage({type: MessageType.getClusterExpansionZoom, data: {} as any, origin: 'resource://android'});
