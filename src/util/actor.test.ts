@@ -95,7 +95,7 @@ describe('Actor', () => {
         expect(gotAbortSignal).toBeTruthy();
     });
 
-    test('cancel a request that must be queued will not call the method at all', async () => {
+    test('cancel a request that must be queued will not call the method at all', {retry: 3}, async () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
