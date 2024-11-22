@@ -77,7 +77,7 @@
     "@types/window-or-global": "^1.0.6",
     "@typescript-eslint/eslint-plugin": "^8.15.0",
     "@typescript-eslint/parser": "^8.15.0",
-    "@vitest/coverage-v8": "^2.0.5",
+    "@vitest/coverage-v8": "^2.2.0-beta.2",
     "address": "^2.0.3",
     "autoprefixer": "^10.4.20",
     "benchmark": "^2.1.4",
@@ -132,7 +132,7 @@
     "typedoc-plugin-markdown": "^4.2.10",
     "typedoc-plugin-missing-exports": "^3.0.2",
     "typescript": "^5.6.3",
-    "vitest": "^2.0.0",
+    "vitest": "^2.2.0-beta.2",
     "vitest-webgl-canvas-mock": "^1.1.0"
   },
   "scripts": {
@@ -162,7 +162,7 @@
     "lint-css": "stylelint **/*.css --fix -f verbose",
     "test": "run-p lint lint-css test-render vitest",
     "test-unit": "vitest run --config vitest.config.unit.ts",
-    "test-unit-ci": "vitest run --config vitest.config.unit.ts --coverage",
+    "test-unit-ci": "vitest run --config vitest.config.unit.ts --coverage --outputFile=report.json --reporter=json",
     "test-integration": "vitest run --config vitest.config.integration.ts",
     "test-integration-ci": "vitest run --config vitest.config.integration.ts --coverage",
     "test-build": "vitest run --config vitest.config.build.ts",
