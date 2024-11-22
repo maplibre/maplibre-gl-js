@@ -13,7 +13,11 @@ vi.mock('./painter');
 vi.mock('./program');
 vi.mock('../source/source_cache');
 vi.mock('../source/tile');
-vi.mock('../data/bucket/symbol_bucket');
+vi.mock('../data/bucket/symbol_bucket', () => {
+    return {
+        SymbolBucket: vi.fn()
+    };
+});
 vi.mock('../symbol/projection');
 
 describe('drawCustom', () => {
