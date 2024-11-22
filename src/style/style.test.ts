@@ -1,4 +1,4 @@
-import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
+import {describe, beforeEach, afterEach, test, expect, vi, MockInstance} from 'vitest';
 import {Style} from './style';
 import {SourceCache} from '../source/source_cache';
 import {StyleLayer} from './style_layer';
@@ -56,7 +56,7 @@ function createStyle(map = getStubMap()) {
 }
 
 let server: FakeServer;
-let mockConsoleError: ReturnType<typeof vi.spyOn>;
+let mockConsoleError: MockInstance;
 
 beforeEach(() => {
     global.fetch = null;

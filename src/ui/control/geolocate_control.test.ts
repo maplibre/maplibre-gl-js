@@ -1,4 +1,4 @@
-import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
+import {describe, beforeEach, afterEach, test, expect, vi, MockInstance} from 'vitest';
 import geolocation from 'mock-geolocation';
 import {LngLatBounds} from '../../geo/lng_lat_bounds';
 import {createMap, beforeMapTest, sleep} from '../../util/test/util';
@@ -31,7 +31,7 @@ describe('GeolocateControl with no options', () => {
     beforeEach(() => {
         beforeMapTest();
         map = createMap(undefined, undefined);
-        (checkGeolocationSupport as any as ReturnType<typeof vi.spyOn>).mockImplementationOnce(() => Promise.resolve(true));
+        (checkGeolocationSupport as unknown as MockInstance).mockImplementationOnce(() => Promise.resolve(true));
     });
 
     afterEach(() => {
@@ -39,7 +39,7 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('is disabled when there is no support', async () => {
-        (checkGeolocationSupport as any as ReturnType<typeof vi.spyOn>).mockReset().mockImplementationOnce(() => Promise.resolve(false));
+        (checkGeolocationSupport as unknown as MockInstance).mockReset().mockImplementationOnce(() => Promise.resolve(false));
         const geolocate = new GeolocateControl(undefined);
         const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         map.addControl(geolocate);
@@ -84,7 +84,7 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('does not throw if removed quickly', () => {
-        (checkGeolocationSupport as any as ReturnType<typeof vi.spyOn>).mockReset()
+        (checkGeolocationSupport as unknown as MockInstance).mockReset()
             .mockImplementationOnce(() => {
                 return sleep(10);
             });
