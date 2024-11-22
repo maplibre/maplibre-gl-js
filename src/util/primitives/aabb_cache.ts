@@ -1,5 +1,5 @@
 import {type CoveringTilesOptions} from '../../geo/projection/covering_tiles';
-import {Aabb} from './aabb';
+import {type Aabb} from './aabb';
 
 type AabbFactory = (tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions) => Aabb;
 

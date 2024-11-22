@@ -1,7 +1,7 @@
 import {FillLayoutArray, LineIndexArray, TriangleIndexArray} from '../data/array_types.g';
 import {SegmentVector} from '../data/segment';
 import {fillLargeMeshArrays} from './fill_large_mesh_arrays';
-import {SimpleMesh, getGridMesh, getGridMeshRandom} from '../../test/unit/lib/mesh_utils';
+import {type SimpleMesh, getGridMesh, getGridMeshRandom} from '../../test/unit/lib/mesh_utils';
 
 describe('fillArrays', () => {
     test('Mesh comparison works', () => {

@@ -6,14 +6,14 @@ import posAttributes from '../data/pos_attributes';
 import {SegmentVector} from '../data/segment';
 import {skyUniformValues} from './program/sky_program';
 import {atmosphereUniformValues} from './program/atmosphere_program';
-import {Sky} from '../style/sky';
-import {Light} from '../style/light';
+import {type Sky} from '../style/sky';
+import {type Light} from '../style/light';
 import {Mesh} from './mesh';
 import {mat4, vec3, vec4} from 'gl-matrix';
-import {IReadonlyTransform} from '../geo/transform_interface';
+import {type IReadonlyTransform} from '../geo/transform_interface';
 import {ColorMode} from '../gl/color_mode';
 import type {Painter} from './painter';
-import {Context} from '../gl/context';
+import {type Context} from '../gl/context';
 import {getGlobeRadiusPixels} from '../geo/projection/globe_utils';
 
 function getMesh(context: Context, sky: Sky): Mesh {

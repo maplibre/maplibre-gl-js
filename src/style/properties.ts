@@ -1,15 +1,15 @@
 import {clone, extend, easeCubicInOut} from '../util/util';
-import {interpolates, Color, StylePropertySpecification, normalizePropertyExpression,
-    Feature,
-    FeatureState,
-    StylePropertyExpression,
-    SourceExpression,
-    CompositeExpression, TransitionSpecification,
-    PropertyValueSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {interpolates, type Color, type StylePropertySpecification, normalizePropertyExpression,
+    type Feature,
+    type FeatureState,
+    type StylePropertyExpression,
+    type SourceExpression,
+    type CompositeExpression, type TransitionSpecification,
+    type PropertyValueSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {register} from '../util/web_worker_transfer';
 import {EvaluationParameters} from './evaluation_parameters';
 
-import {CanonicalTileID} from '../source/tile_id';
+import {type CanonicalTileID} from '../source/tile_id';
 
 type TimePoint = number;
 

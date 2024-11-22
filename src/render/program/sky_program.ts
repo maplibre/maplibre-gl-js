@@ -1,8 +1,8 @@
 import {UniformColor, Uniform1f, Uniform2f} from '../uniform_binding';
 import type {Context} from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
-import {IReadonlyTransform} from '../../geo/transform_interface';
-import {Sky} from '../../style/sky';
+import {type IReadonlyTransform} from '../../geo/transform_interface';
+import {type Sky} from '../../style/sky';
 import {getMercatorHorizon} from '../../geo/projection/mercator_utils';
 
 export type SkyUniformsType = {

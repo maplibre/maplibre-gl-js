@@ -1,9 +1,9 @@
-import Point from '@mapbox/point-geometry';
+import type Point from '@mapbox/point-geometry';
 
 import {DOM} from '../../util/dom';
 import {extend} from '../../util/util';
-import {generateMousePitchHandler, generateMouseRotationHandler, MousePitchHandler, MouseRotateHandler} from '../handler/mouse';
-import {generateOneFingerTouchPitchHandler, generateOneFingerTouchRotationHandler, OneFingerTouchPitchHandler, OneFingerTouchRotateHandler} from '../handler/one_finger_touch_drag';
+import {generateMousePitchHandler, generateMouseRotationHandler, type MousePitchHandler, type MouseRotateHandler} from '../handler/mouse';
+import {generateOneFingerTouchPitchHandler, generateOneFingerTouchRotationHandler, type OneFingerTouchPitchHandler, type OneFingerTouchRotateHandler} from '../handler/one_finger_touch_drag';
 
 import type {Map} from '../map';
 import type {IControl} from './control';

@@ -7,7 +7,7 @@ import {anchorTranslate, applyAnchorClass} from './anchor';
 import type {PositionAnchor} from './anchor';
 import {Event, Evented} from '../util/evented';
 import type {Map} from './map';
-import {Popup, Offset} from './popup';
+import {type Popup, type Offset} from './popup';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {MapMouseEvent, MapTouchEvent} from './events';
 import type {PointLike} from './camera';

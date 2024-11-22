@@ -1,4 +1,4 @@
-import {GetResourceResponse, getJSON} from '../util/ajax';
+import {type GetResourceResponse, getJSON} from '../util/ajax';
 import {ImageRequest} from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
 

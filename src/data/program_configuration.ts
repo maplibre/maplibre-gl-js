@@ -1,5 +1,5 @@
 import {packUint8ToFloat} from '../shaders/encode_attribute';
-import {Color, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
+import {type Color, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 import {register} from '../util/web_worker_transfer';
 import {PossiblyEvaluatedPropertyValue} from '../style/properties';
 import {StructArrayLayout1f4, StructArrayLayout2f8, StructArrayLayout4f16, PatternLayoutArray} from './array_types.g';
@@ -7,7 +7,7 @@ import {clamp} from '../util/util';
 import {patternAttributes} from './bucket/pattern_attributes';
 import {EvaluationParameters} from '../style/evaluation_parameters';
 import {FeaturePositionMap} from './feature_position_map';
-import {Uniform, Uniform1f, UniformColor, Uniform4f} from '../render/uniform_binding';
+import {type Uniform, Uniform1f, UniformColor, Uniform4f} from '../render/uniform_binding';
 
 import type {UniformLocations} from '../render/uniform_binding';
 

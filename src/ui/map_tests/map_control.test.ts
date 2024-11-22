@@ -1,5 +1,5 @@
 import {createMap, beforeMapTest} from '../../util/test/util';
-import {IControl} from '../control/control';
+import {type IControl} from '../control/control';
 
 beforeEach(() => {
     beforeMapTest();

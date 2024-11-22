@@ -2,7 +2,7 @@ import {CollisionFeature} from './collision_feature';
 import {Anchor} from './anchor';
 import Point from '@mapbox/point-geometry';
 import {CollisionBoxArray} from '../data/array_types.g';
-import {SymbolPadding} from '../style/style_layer/symbol_style_layer';
+import {type SymbolPadding} from '../style/style_layer/symbol_style_layer';
 
 describe('CollisionFeature', () => {
 

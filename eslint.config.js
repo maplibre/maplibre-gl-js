@@ -43,7 +43,9 @@ export default [
         rules: {
             'no-dupe-class-members': 'off',
             '@typescript-eslint/no-dupe-class-members': ['error'],
-
+            '@typescript-eslint/consistent-type-imports': ['error',{
+                'fixStyle': 'inline-type-imports'
+            }],
             '@typescript-eslint/no-unused-vars': ['warn', {
                 argsIgnorePattern: '^_',
             }],
@@ -153,5 +155,5 @@ export default [
             },
         },
     },
-    
+
 ];

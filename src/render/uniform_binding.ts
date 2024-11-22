@@ -1,7 +1,7 @@
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 
 import type {Context} from '../gl/context';
-import {mat4, vec2, vec3, vec4} from 'gl-matrix';
+import {type mat4, type vec2, type vec3, type vec4} from 'gl-matrix';
 
 type $ObjMap<T extends {}, F extends (v: any) => any> = {
     [K in keyof T]: F extends (v: T[K]) => infer R ? R : never;

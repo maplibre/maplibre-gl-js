@@ -5,7 +5,7 @@ import replace from '@rollup/plugin-replace';
 import commonjs from '@rollup/plugin-commonjs';
 import terser from '@rollup/plugin-terser';
 import strip from '@rollup/plugin-strip';
-import {Plugin} from 'rollup';
+import {type Plugin} from 'rollup';
 import json from '@rollup/plugin-json';
 
 // Common set of plugins/transformations shared across different rollup
