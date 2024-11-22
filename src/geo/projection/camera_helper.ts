@@ -94,14 +94,6 @@ export interface ICameraHelper {
     handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandlerResult;
 
     handleFlyTo(tr: ITransform, options: FlyToHandlerOptions): FlyToHandlerResult;
-
-    /**
-     * @internal
-     * Sets the value of `rollEnabled`.
-     * @param rollEnabled - If `false`, the map's roll control with "drag to rotate" interaction will be disabled.
-     * @defaultValue false
-     */
-    setRollEnabled(rollEnabled: boolean): void;
 }
 
 /**

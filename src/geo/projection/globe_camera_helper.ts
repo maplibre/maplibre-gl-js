@@ -17,26 +17,12 @@ import {interpolates} from '@maplibre/maplibre-gl-style-spec';
  * @internal
  */
 export class GlobeCameraHelper implements ICameraHelper {
-
     private _globe: GlobeProjection;
     private _mercatorCameraHelper: MercatorCameraHelper;
 
     constructor(globe: GlobeProjection) {
         this._globe = globe;
         this._mercatorCameraHelper = new MercatorCameraHelper();
-        this._rollEnabled = false;
-    }
-    
-    /**
-     * @internal
-     * If `false`, the map's roll control with "drag to rotate" interaction will be disabled.
-     * @defaultValue false
-     */
-    _rollEnabled: boolean;
-
-    setRollEnabled(rollEnabled: boolean): void {
-        this._rollEnabled = rollEnabled;
-        this._mercatorCameraHelper.setRollEnabled(rollEnabled);
     }
 
     get useGlobeControls(): boolean { return this._globe.useGlobeRendering; }
@@ -333,7 +319,7 @@ export class GlobeCameraHelper implements ICameraHelper {
 
         const easeFunc = (k: number) => {
             if (!quat.equals(startRotation, endRotation)) {
-                updateRotation(startRotation, endRotation, startEulerAngles, {roll: endRoll, pitch: endPitch, bearing: endBearing}, tr, k, this._rollEnabled);
+                updateRotation(startRotation, endRotation, startEulerAngles, {roll: endRoll, pitch: endPitch, bearing: endBearing}, tr, k, startEulerAngles.roll != endRoll);
             }
 
             if (options.around) {

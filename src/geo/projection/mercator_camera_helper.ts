@@ -15,22 +15,6 @@ import {quat} from 'gl-matrix';
  * @internal
  */
 export class MercatorCameraHelper implements ICameraHelper {
-    
-    /**
-     * @internal
-     * If `false`, the map's roll control with "drag to rotate" interaction will be disabled.
-     * @defaultValue false
-     */
-    _rollEnabled: boolean;
-
-    constructor() {
-        this._rollEnabled = false;
-    }
-
-    setRollEnabled(rollEnabled: boolean): void {
-        this._rollEnabled = rollEnabled;
-    }
-
     get useGlobeControls(): boolean { return false; }
 
     handlePanInertia(pan: Point, transform: IReadonlyTransform): {
@@ -178,7 +162,7 @@ export class MercatorCameraHelper implements ICameraHelper {
                 tr.setZoom(interpolates.number(startZoom, endZoom, k));
             }
             if (!quat.equals(startRotation, endRotation)) {
-                updateRotation(startRotation, endRotation, startEulerAngles, {roll: endRoll, pitch: endPitch, bearing: endBearing}, tr, k, this._rollEnabled);
+                updateRotation(startRotation, endRotation, startEulerAngles, {roll: endRoll, pitch: endPitch, bearing: endBearing}, tr, k, startEulerAngles.roll != endRoll);
             }
             if (doPadding) {
                 tr.interpolatePadding(startPadding, options.padding, k);
