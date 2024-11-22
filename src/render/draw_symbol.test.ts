@@ -24,8 +24,7 @@ vi.mock('../source/source_cache');
 vi.mock('../source/tile');
 vi.mock('../data/bucket/symbol_bucket', () => {
     return {
-        SymbolBucket: vi.fn(),
-        SymbolBuffers: vi.fn()
+        SymbolBucket: vi.fn()
     };
 });
 
