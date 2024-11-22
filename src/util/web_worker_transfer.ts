@@ -56,7 +56,10 @@ export function register<T extends any>(
     },
     options: RegisterOptions<T> = {}
 ) {
-    if (registry[name]) return;
+    if (registry[name]) {
+        console.warn(`Class ${name} is already registered.`);
+        return;
+    }
     ((Object.defineProperty as any))(klass, '_classRegistryKey', {
         value: name,
         writeable: false
