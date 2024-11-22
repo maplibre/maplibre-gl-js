@@ -382,7 +382,7 @@ export class Painter {
      * values.
      * Returns [StencilMode for tile overscaleZ map, sortedCoords].
      */
-    stencilConfigForOverlap(tileIDs: Array<OverscaledTileID>): [{
+    getStencilConfigForOverlapAndUpdateStencilID(tileIDs: Array<OverscaledTileID>): [{
         [_: number]: Readonly<StencilMode>;
     }, Array<OverscaledTileID>] {
         const gl = this.context.gl;

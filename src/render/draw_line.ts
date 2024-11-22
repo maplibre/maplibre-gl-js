@@ -127,7 +127,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
 
         let stencil: StencilMode;
         if (isRenderingToTexture) {
-            const [stencilModes] = painter.stencilConfigForOverlap(coords);
+            const [stencilModes] = painter.getStencilConfigForOverlapAndUpdateStencilID(coords);
             stencil = stencilModes[coord.overscaledZ];
         } else {
             stencil = painter.stencilModeForClipping(coord);

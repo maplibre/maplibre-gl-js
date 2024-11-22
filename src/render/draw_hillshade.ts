@@ -38,7 +38,7 @@ export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer:
             renderHillshade(painter, sourceCache, layer, coords, stencilBorders, depthMode, colorMode, true, isRenderingToTexture); // draw with borders
         } else {
             // Simple rendering
-            const [stencil, coords] = painter.stencilConfigForOverlap(tileIDs);
+            const [stencil, coords] = painter.getStencilConfigForOverlapAndUpdateStencilID(tileIDs);
             renderHillshade(painter, sourceCache, layer, coords, stencil, depthMode, colorMode, false, isRenderingToTexture);
         }
     }

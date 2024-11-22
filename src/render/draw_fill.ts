@@ -131,7 +131,7 @@ function drawFillTiles(
 
         let stencil: StencilMode;
         if (painter.renderPass === 'translucent' && isRenderingToTexture) {
-            const [stencilModes] = painter.stencilConfigForOverlap(coords);
+            const [stencilModes] = painter.getStencilConfigForOverlapAndUpdateStencilID(coords);
             stencil = stencilModes[coord.overscaledZ];
         } else {
             stencil = painter.stencilModeForClipping(coord);
