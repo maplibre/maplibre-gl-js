@@ -97,7 +97,7 @@ function getClassRegistryKey(input: Object|SerializedObject): string {
     return (input as SerializedObject).$name || klass._classRegistryKey;
 }
 
-function isRegistered(input: unknown): boolean {
+export function isRegistered(input: unknown): boolean {
     if (input === null || typeof input !== 'object') {
         return false;
     }
