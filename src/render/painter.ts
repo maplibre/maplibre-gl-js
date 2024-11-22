@@ -377,9 +377,12 @@ export class Painter {
      * mask area of tile overlapped by children tiles.
      * Stencil ref values continue range used in _tileClippingMaskIDs.
      *
+     * Attention: This function changes this.nextStencilID even if the result of it
+     * is not used, which might cause problems when rendering due to invalid stencil
+     * values.
      * Returns [StencilMode for tile overscaleZ map, sortedCoords].
      */
-    stencilConfigForOverlap(tileIDs: Array<OverscaledTileID>): [{
+    getStencilConfigForOverlapAndUpdateStencilID(tileIDs: Array<OverscaledTileID>): [{
         [_: number]: Readonly<StencilMode>;
     }, Array<OverscaledTileID>] {
         const gl = this.context.gl;

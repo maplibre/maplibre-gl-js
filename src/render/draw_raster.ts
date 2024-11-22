@@ -56,7 +56,7 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
         drawTiles(painter, sourceCache, layer, coords, stencilBorders, true, true, cornerCoords, false, isRenderingToTexture); // draw with borders
     } else {
         // Simple rendering
-        const [stencil, coords] = painter.stencilConfigForOverlap(tileIDs);
+        const [stencil, coords] = painter.getStencilConfigForOverlapAndUpdateStencilID(tileIDs);
         drawTiles(painter, sourceCache, layer, coords, stencil, false, true, cornerCoords, false, isRenderingToTexture);
     }
 }
