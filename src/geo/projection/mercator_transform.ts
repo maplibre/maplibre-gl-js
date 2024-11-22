@@ -1,22 +1,22 @@
-import {LngLat, LngLatLike} from '../lng_lat';
+import {LngLat, type LngLatLike} from '../lng_lat';
 import {altitudeFromMercatorZ, MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate';
 import Point from '@mapbox/point-geometry';
 import {wrap, clamp, createIdentityMat4f64, createMat4f64, degreesToRadians} from '../../util/util';
-import {mat2, mat4, vec3, vec4} from 'gl-matrix';
-import {UnwrappedTileID, OverscaledTileID, CanonicalTileID, calculateTileKey} from '../../source/tile_id';
-import {Terrain} from '../../render/terrain';
+import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
+import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID, calculateTileKey} from '../../source/tile_id';
+import {type Terrain} from '../../render/terrain';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
-import {PointProjection, xyTransformMat4} from '../../symbol/projection';
+import {type PointProjection, xyTransformMat4} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
-import {IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
-import {PaddingOptions} from '../edge_insets';
+import {type IReadonlyTransform, type ITransform, type TransformUpdateResult} from '../transform_interface';
+import {type PaddingOptions} from '../edge_insets';
 import {mercatorCoordinateToLocation, getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle, cameraMercatorCoordinateFromCenterAndRotation} from './mercator_utils';
 import {EXTENT} from '../../data/extent';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import {scaleZoom, TransformHelper, zoomScale} from '../transform_helper';
 import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider';
 import {Frustum} from '../../util/primitives/frustum';
-import {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
+import {type CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
 
 export class MercatorTransform implements ITransform {
     private _helper: TransformHelper;

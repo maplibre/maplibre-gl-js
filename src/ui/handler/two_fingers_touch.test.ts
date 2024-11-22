@@ -1,4 +1,4 @@
-import {Map, MapOptions} from '../map';
+import {Map, type MapOptions} from '../map';
 import {Marker} from '../marker';
 import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';

@@ -9,9 +9,9 @@ import {Mesh} from '../../render/mesh';
 import {SegmentVector} from '../../data/segment';
 import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
 import posAttributes from '../../data/pos_attributes';
-import {Framebuffer} from '../../gl/framebuffer';
+import {type Framebuffer} from '../../gl/framebuffer';
 import {isWebGL2} from '../../gl/webgl2';
-import {ProjectionGPUContext} from './projection';
+import {type ProjectionGPUContext} from './projection';
 
 /**
  * For vector globe the vertex shader projects mercator coordinates to angular coordinates on a sphere.

@@ -1,5 +1,5 @@
 import {createMap, beforeMapTest, createStyle} from '../../util/test/util';
-import {EvaluationParameters} from '../../style/evaluation_parameters';
+import {type EvaluationParameters} from '../../style/evaluation_parameters';
 import {Style} from '../../style/style';
 import {config} from '../../util/config';
 

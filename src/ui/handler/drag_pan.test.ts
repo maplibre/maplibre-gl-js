@@ -1,7 +1,7 @@
 import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {beforeMapTest} from '../../util/test/util';
-import {Map, MapOptions} from '../map';
+import {Map, type MapOptions} from '../map';
 import type {MapGeoJSONFeature} from '../../util/vectortile_to_geojson';
 
 function createMap(clickTolerance?, dragPan?) {

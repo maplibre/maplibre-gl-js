@@ -1,15 +1,15 @@
 import type {Context} from '../../gl/context';
 import type {CanonicalTileID} from '../../source/tile_id';
-import {Mesh} from '../../render/mesh';
+import {type Mesh} from '../../render/mesh';
 import {browser} from '../../util/browser';
 import {easeCubicInOut, lerp} from '../../util/util';
 import {mercatorYfromLat} from '../mercator_coordinate';
 import {SubdivisionGranularityExpression, SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import type {Projection, ProjectionGPUContext, TileMeshUsage} from './projection';
-import {PreparedShader, shaders} from '../../shaders/shaders';
+import {type PreparedShader, shaders} from '../../shaders/shaders';
 import {MercatorProjection} from './mercator';
 import {ProjectionErrorMeasurement} from './globe_projection_error_measurement';
-import {createTileMeshWithBuffers, CreateTileMeshOptions} from '../../util/create_tile_mesh';
+import {createTileMeshWithBuffers, type CreateTileMeshOptions} from '../../util/create_tile_mesh';
 
 export const globeConstants = {
     globeTransitionTimeSeconds: 0.5,

@@ -1,7 +1,7 @@
 import {StyleLayer} from '../style_layer';
 
-import properties, {RasterPaintPropsPossiblyEvaluated} from './raster_style_layer_properties.g';
-import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
+import properties, {type RasterPaintPropsPossiblyEvaluated} from './raster_style_layer_properties.g';
+import {type Transitionable, type Transitioning, type PossiblyEvaluated} from '../properties';
 
 import type {RasterPaintProps} from './raster_style_layer_properties.g';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';

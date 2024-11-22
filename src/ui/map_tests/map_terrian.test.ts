@@ -1,7 +1,7 @@
 import {createMap, beforeMapTest} from '../../util/test/util';
 import {LngLat} from '../../geo/lng_lat';
-import {fakeServer, FakeServer} from 'nise';
-import {Terrain} from '../../render/terrain';
+import {fakeServer, type FakeServer} from 'nise';
+import {type Terrain} from '../../render/terrain';
 import {MercatorTransform} from '../../geo/projection/mercator_transform';
 
 let server: FakeServer;

@@ -1,7 +1,7 @@
 import KDBush from 'kdbush';
 import {EXTENT} from '../data/extent';
 
-import {SymbolInstanceArray} from '../data/array_types.g';
+import {type SymbolInstanceArray} from '../data/array_types.g';
 
 import type {SymbolInstance} from '../data/array_types.g';
 import type {OverscaledTileID} from '../source/tile_id';

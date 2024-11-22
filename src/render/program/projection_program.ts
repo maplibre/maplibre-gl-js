@@ -1,5 +1,5 @@
-import {Uniform1f, Uniform4f, UniformLocations, UniformMatrix4f} from '../uniform_binding';
-import {Context} from '../../gl/context';
+import {Uniform1f, Uniform4f, type UniformLocations, UniformMatrix4f} from '../uniform_binding';
+import {type Context} from '../../gl/context';
 // This next import is needed for the "@link" in the documentation to work properly.
 
 import type {ProjectionData} from '../../geo/projection/projection_data';

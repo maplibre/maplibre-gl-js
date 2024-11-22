@@ -1,6 +1,6 @@
 import {extend} from '../util/util';
 import {Event, Evented} from '../util/evented';
-import {MapMouseEvent} from '../ui/events';
+import {type MapMouseEvent} from '../ui/events';
 import {DOM} from '../util/dom';
 import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';

@@ -1,4 +1,4 @@
-import {mat4, vec3, vec4} from 'gl-matrix';
+import {mat4, vec3, type vec4} from 'gl-matrix';
 import {Aabb, IntersectionResult} from './aabb';
 import {Frustum} from './frustum';
 

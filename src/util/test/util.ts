@@ -1,13 +1,13 @@
 import {Map} from '../../ui/map';
 import {extend} from '../../util/util';
-import {Dispatcher} from '../../util/dispatcher';
-import {IActor} from '../actor';
+import {type Dispatcher} from '../../util/dispatcher';
+import {type IActor} from '../actor';
 import {Evented} from '../evented';
-import {SourceSpecification, StyleSpecification, TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {type SourceSpecification, type StyleSpecification, type TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {MercatorTransform} from '../../geo/projection/mercator_transform';
 import {RequestManager} from '../request_manager';
-import {IReadonlyTransform, ITransform} from '../../geo/transform_interface';
-import {Style} from '../../style/style';
+import {type IReadonlyTransform, type ITransform} from '../../geo/transform_interface';
+import {type Style} from '../../style/style';
 import type {GlobeProjection} from '../../geo/projection/globe';
 
 export class StubMap extends Evented {
