@@ -20,7 +20,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-      - run: npm ci && cd node_modules/canvas && npm install
+      - run: cd node_modules/canvas && npm install
       - run: npm run lint
         if: '!cancelled()'
       - run: npm run lint-css
