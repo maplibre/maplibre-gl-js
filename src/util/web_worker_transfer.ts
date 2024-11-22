@@ -42,7 +42,7 @@ type RegisterOptions<T> = {
     shallow?: ReadonlyArray<keyof T>;
 };
 
-export const registry: Registry = {};
+const registry: Registry = {};
 
 /**
  * Register the given class as serializable.
