@@ -26,12 +26,6 @@ To run specific tests:
 
 To run folders in watch mode, meaning they will run continuously as you make changes to relevant code, (i.e. for test driven development): use `npm run test-watch-roots *folder1* [*folder2*...]` (e.g. `npm run test-watch-roots ./src/ui/control`)
 
-## Debugging Tests in VSCode
-
-You may run tests and view output with the plugin Vitest for VSCode, see:
-https://marketplace.visualstudio.com/items?itemName=vitest.explorer
-
-
 ## Integration Tests
 
 See [`test/integration/README.md`](./integration/README.md).
