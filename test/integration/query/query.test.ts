@@ -1,5 +1,5 @@
 import {describe, beforeEach, beforeAll, afterEach, afterAll, test, expect} from 'vitest';
-import puppeteer, {Page, Browser} from 'puppeteer';
+import puppeteer, {type Page, type Browser} from 'puppeteer';
 
 import {deepEqual} from '../lib/json-diff';
 import st from 'st';
