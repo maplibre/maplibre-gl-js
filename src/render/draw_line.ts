@@ -125,13 +125,9 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
             gradientTexture.bind(layer.stepInterpolant ? gl.NEAREST : gl.LINEAR, gl.CLAMP_TO_EDGE);
         }
 
-        let stencil: StencilMode;
-        if (isRenderingToTexture) {
-            const [stencilModes] = painter.stencilConfigForOverlap(coords);
-            stencil = stencilModes[coord.overscaledZ];
-        } else {
-            stencil = painter.stencilModeForClipping(coord);
-        }
+        //let stencil: StencilMode;
+        const [stencilModes] = painter.stencilConfigForOverlap(coords);
+        const stencil = isRenderingToTexture ? stencilModes[coord.overscaledZ] : painter.stencilModeForClipping(coord);
 
         program.draw(context, gl.TRIANGLES, depthMode,
             stencil, colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,
