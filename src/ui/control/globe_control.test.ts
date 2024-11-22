@@ -1,6 +1,6 @@
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 import {GlobeControl} from './globe_control';
 import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 function createMap() {
     return globalCreateMap({

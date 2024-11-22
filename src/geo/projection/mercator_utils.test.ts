@@ -1,3 +1,4 @@
+import {describe, expect, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
 import {getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, tileCoordinatesToLocation, tileCoordinatesToMercatorCoordinates} from './mercator_utils';
@@ -8,7 +9,6 @@ import {CanonicalTileID, OverscaledTileID} from '../../source/tile_id';
 import {EXTENT} from '../../data/extent';
 import {expectToBeCloseToArray} from '../../util/test/util';
 import type {ProjectionData} from './projection_data';
-import {describe, expect, test} from 'vitest';
 
 describe('mercator utils', () => {
     test('projectToWorldCoordinates basic', () => {

@@ -1,4 +1,4 @@
-import {describe, beforeEach, afterEach, test, expect, vi, MockInstance} from 'vitest';
+import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} from 'vitest';
 import geolocation from 'mock-geolocation';
 import {LngLatBounds} from '../../geo/lng_lat_bounds';
 import {createMap, beforeMapTest, sleep} from '../../util/test/util';

@@ -1,4 +1,4 @@
-import {describe, beforeEach, afterEach, test, expect, vi, MockInstance} from 'vitest';
+import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} from 'vitest';
 import {Style} from './style';
 import {SourceCache} from '../source/source_cache';
 import {StyleLayer} from './style_layer';

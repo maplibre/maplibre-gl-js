@@ -1,5 +1,5 @@
 import {describe, beforeEach, it, afterEach, expect, vi, type MockInstance} from 'vitest';
-import {type FakeServer, fakeServer} from 'nise';
+import {FakeServer, fakeServer} from 'nise';
 import {rtlMainThreadPluginFactory} from './rtl_text_plugin_main_thread';
 import {sleep} from '../util/test/util';
 import {browser} from '../util/browser';

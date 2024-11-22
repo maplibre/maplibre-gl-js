@@ -1,7 +1,7 @@
+import {describe, expect, test} from 'vitest';
 import {FeatureIndex} from './feature_index';
 import {OverscaledTileID} from '../source/tile_id';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
-import {describe, expect, test} from 'vitest';
 
 describe('FeatureIndex', () => {
     describe('getId', () => {

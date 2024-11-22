@@ -1,6 +1,6 @@
 
-import {beforeMapTest, sleep} from '../../util/test/util';
 import {describe, beforeEach, test, expect, vi} from 'vitest';
+import {beforeMapTest, sleep} from '../../util/test/util';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {Map, type MapOptions} from '../map';
 
