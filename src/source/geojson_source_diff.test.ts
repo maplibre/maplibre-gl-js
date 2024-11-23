@@ -1,3 +1,4 @@
+import {describe, beforeEach, test, expect} from 'vitest';
 import {setPerformance} from '../util/test/util';
 import {type GeoJSONFeatureId, isUpdateableGeoJSON, toUpdateable, applySourceDiff} from './geojson_source_diff';
 

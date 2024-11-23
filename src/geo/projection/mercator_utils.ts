@@ -1,9 +1,9 @@
 import {mat4} from 'gl-matrix';
 import {EXTENT} from '../../data/extent';
-import {OverscaledTileID} from '../../source/tile_id';
+import {type OverscaledTileID} from '../../source/tile_id';
 import {clamp, degreesToRadians} from '../../util/util';
-import {MAX_VALID_LATITUDE, UnwrappedTileIDType, zoomScale} from '../transform_helper';
-import {LngLat} from '../lng_lat';
+import {MAX_VALID_LATITUDE, type UnwrappedTileIDType, zoomScale} from '../transform_helper';
+import {type LngLat} from '../lng_lat';
 import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate';
 import Point from '@mapbox/point-geometry';
 import type {ProjectionData} from './projection_data';
@@ -105,7 +105,7 @@ export function getMercatorHorizon(transform: {pitch: number; cameraToCenterDist
         Math.tan(degreesToRadians(maxMercatorHorizonAngle - transform.pitch)));
 }
 
-export function getBasicProjectionData(overscaledTileID: OverscaledTileID, tilePosMatrix?: mat4, ignoreTerrainMatrix?: boolean): ProjectionData {
+export function getBasicProjectionData(overscaledTileID: OverscaledTileID, tilePosMatrix?: mat4, applyTerrainMatrix: boolean = true): ProjectionData {
     let tileOffsetSize: [number, number, number, number];
 
     if (overscaledTileID) {
@@ -121,7 +121,7 @@ export function getBasicProjectionData(overscaledTileID: OverscaledTileID, tileP
     }
 
     let mainMatrix: mat4;
-    if (overscaledTileID && overscaledTileID.terrainRttPosMatrix && !ignoreTerrainMatrix) {
+    if (overscaledTileID && overscaledTileID.terrainRttPosMatrix && applyTerrainMatrix) {
         mainMatrix = overscaledTileID.terrainRttPosMatrix;
     } else if (tilePosMatrix) {
         mainMatrix = tilePosMatrix;

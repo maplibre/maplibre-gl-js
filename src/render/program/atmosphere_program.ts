@@ -1,6 +1,6 @@
 import type {Context} from '../../gl/context';
-import {UniformValues, UniformLocations, Uniform1f, Uniform3f, UniformMatrix4f} from '../uniform_binding';
-import {mat4, vec3} from 'gl-matrix';
+import {type UniformValues, type UniformLocations, Uniform1f, Uniform3f, UniformMatrix4f} from '../uniform_binding';
+import {type mat4, type vec3} from 'gl-matrix';
 
 export type atmosphereUniformsType = {
     'u_sun_pos': Uniform3f;

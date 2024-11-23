@@ -1,3 +1,4 @@
+import {describe, test, expect, vi} from 'vitest';
 import {RenderToTexture} from './render_to_texture';
 import type {Painter} from './painter';
 import type {LineStyleLayer} from '../style/style_layer/line_style_layer';
@@ -5,21 +6,21 @@ import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 import {Context} from '../gl/context';
 import {ColorMode} from '../gl/color_mode';
 import {Terrain} from './terrain';
-import {Style} from '../style/style';
+import {type Style} from '../style/style';
 import {Tile} from '../source/tile';
-import {Map} from '../ui/map';
+import {type Map} from '../ui/map';
 import {OverscaledTileID} from '../source/tile_id';
-import {SourceCache} from '../source/source_cache';
-import {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {FillStyleLayer} from '../style/style_layer/fill_style_layer';
-import {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
-import {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
-import {BackgroundStyleLayer} from '../style/style_layer/background_style_layer';
+import {type SourceCache} from '../source/source_cache';
+import {type TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {type FillStyleLayer} from '../style/style_layer/fill_style_layer';
+import {type RasterStyleLayer} from '../style/style_layer/raster_style_layer';
+import {type HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
+import {type BackgroundStyleLayer} from '../style/style_layer/background_style_layer';
 import {DepthMode} from '../gl/depth_mode';
 
 describe('render to texture', () => {
     const gl = document.createElement('canvas').getContext('webgl');
-    jest.spyOn(gl, 'checkFramebufferStatus').mockReturnValue(gl.FRAMEBUFFER_COMPLETE);
+    vi.spyOn(gl, 'checkFramebufferStatus').mockReturnValue(gl.FRAMEBUFFER_COMPLETE);
     const backgroundLayer = {
         id: 'maine-background',
         type: 'background',
@@ -133,9 +134,10 @@ describe('render to texture', () => {
         style._order = ['maine-fill', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
         layersDrawn = 0;
+        const renderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-fill', 'maine-symbol']);
-        expect(rtt.renderLayer(fillLayer)).toBeTruthy();
-        expect(rtt.renderLayer(symbolLayer)).toBeFalsy();
+        expect(rtt.renderLayer(fillLayer, renderOptions)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayer, renderOptions)).toBeFalsy();
         expect(layersDrawn).toBe(1);
     });
 
@@ -143,14 +145,15 @@ describe('render to texture', () => {
         style._order = ['maine-background', 'maine-fill', 'maine-raster', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
         layersDrawn = 0;
+        const renderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-background', 'maine-fill', 'maine-raster', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol']);
-        expect(rtt.renderLayer(backgroundLayer)).toBeTruthy();
-        expect(rtt.renderLayer(fillLayer)).toBeTruthy();
-        expect(rtt.renderLayer(rasterLayer)).toBeTruthy();
-        expect(rtt.renderLayer(hillshadeLayer)).toBeTruthy();
-        expect(rtt.renderLayer(symbolLayer)).toBeFalsy();
-        expect(rtt.renderLayer(lineLayer)).toBeTruthy();
-        expect(rtt.renderLayer(symbolLayer)).toBeFalsy();
+        expect(rtt.renderLayer(backgroundLayer, renderOptions)).toBeTruthy();
+        expect(rtt.renderLayer(fillLayer, renderOptions)).toBeTruthy();
+        expect(rtt.renderLayer(rasterLayer, renderOptions)).toBeTruthy();
+        expect(rtt.renderLayer(hillshadeLayer, renderOptions)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayer, renderOptions)).toBeFalsy();
+        expect(rtt.renderLayer(lineLayer, renderOptions)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayer, renderOptions)).toBeFalsy();
         expect(layersDrawn).toBe(2);
     });
 
@@ -158,13 +161,14 @@ describe('render to texture', () => {
         style._order = ['maine-background', 'maine-symbol', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
         layersDrawn = 0;
+        const renderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-background', 'maine-symbol', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol']);
-        expect(rtt.renderLayer(backgroundLayer)).toBeTruthy();
-        expect(rtt.renderLayer(symbolLayer)).toBeFalsy();
-        expect(rtt.renderLayer(hillshadeLayer)).toBeTruthy();
-        expect(rtt.renderLayer(symbolLayer)).toBeFalsy();
-        expect(rtt.renderLayer(lineLayer)).toBeTruthy();
-        expect(rtt.renderLayer(symbolLayer)).toBeFalsy();
+        expect(rtt.renderLayer(backgroundLayer, renderOptions)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayer, renderOptions)).toBeFalsy();
+        expect(rtt.renderLayer(hillshadeLayer, renderOptions)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayer, renderOptions)).toBeFalsy();
+        expect(rtt.renderLayer(lineLayer, renderOptions)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayer, renderOptions)).toBeFalsy();
         expect(layersDrawn).toBe(3);
     });
 });

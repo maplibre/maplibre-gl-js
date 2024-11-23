@@ -1,7 +1,7 @@
 import {StyleLayer} from '../style_layer';
 import type {Map} from '../../ui/map';
-import {mat4} from 'gl-matrix';
-import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {type mat4} from 'gl-matrix';
+import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {ProjectionData} from '../../geo/projection/projection_data';
 
 /**
@@ -259,6 +259,8 @@ export function validateCustomStyleLayer(layerObject: CustomLayerInterface) {
 
     return errors;
 }
+
+export const isCustomStyleLayer = (layer: StyleLayer): layer is CustomStyleLayer => layer.type === 'custom';
 
 export class CustomStyleLayer extends StyleLayer {
 

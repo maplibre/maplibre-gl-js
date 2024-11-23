@@ -1,30 +1,30 @@
-import {extend, warnOnce, uniqueId, isImageBitmap, Complete, pick} from '../util/util';
+import {extend, warnOnce, uniqueId, isImageBitmap, type Complete, pick, type Subscription} from '../util/util';
 import {browser} from '../util/browser';
 import {DOM} from '../util/dom';
 import packageJSON from '../../package.json' with {type: 'json'};
-import {GetResourceResponse, getJSON} from '../util/ajax';
+import {type GetResourceResponse, getJSON} from '../util/ajax';
 import {ImageRequest} from '../util/image_request';
 import {RequestManager, ResourceType} from '../util/request_manager';
-import {Style, StyleSwapOptions} from '../style/style';
+import {Style, type StyleSwapOptions} from '../style/style';
 import {EvaluationParameters} from '../style/evaluation_parameters';
 import {Painter} from '../render/painter';
 import {Hash} from './hash';
 import {HandlerManager} from './handler_manager';
-import {Camera, CameraOptions, CameraUpdateTransformFunction, FitBoundsOptions} from './camera';
+import {Camera, type CameraOptions, type CameraUpdateTransformFunction, type FitBoundsOptions} from './camera';
 import {LngLat} from '../geo/lng_lat';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
-import {AttributionControl, AttributionControlOptions, defaultAttributionControlOptions} from './control/attribution_control';
+import {AttributionControl, type AttributionControlOptions, defaultAttributionControlOptions} from './control/attribution_control';
 import {LogoControl} from './control/logo_control';
 import {RGBAImage} from '../util/image';
-import {Event, ErrorEvent, Listener} from '../util/evented';
-import {MapEventType, MapLayerEventType, MapMouseEvent, MapSourceDataEvent, MapStyleDataEvent} from './events';
+import {Event, ErrorEvent, type Listener} from '../util/evented';
+import {type MapEventType, type MapLayerEventType, MapMouseEvent, type MapSourceDataEvent, type MapStyleDataEvent} from './events';
 import {TaskQueue} from '../util/task_queue';
 import {throttle} from '../util/throttle';
 import {webpSupported} from '../util/webp_supported';
 import {PerformanceMarkers, PerformanceUtils} from '../util/performance';
-import {Source} from '../source/source';
-import {StyleLayer} from '../style/style_layer';
+import {type Source} from '../source/source';
+import {type StyleLayer} from '../style/style_layer';
 import {Terrain} from '../render/terrain';
 import {RenderToTexture} from '../render/render_to_texture';
 import {config} from '../util/config';
@@ -61,8 +61,8 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {ITransform} from '../geo/transform_interface';
-import {ICameraHelper} from '../geo/projection/camera_helper';
+import {type ITransform} from '../geo/transform_interface';
+import {type ICameraHelper} from '../geo/projection/camera_helper';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 
 const version = packageJSON.version;
@@ -676,14 +676,14 @@ export class Map extends Camera {
         this._setupContainer();
         this._setupPainter();
 
-        this.on('move', () => this._update(false))
-            .on('moveend', () => this._update(false))
-            .on('zoom', () => this._update(true))
-            .on('terrain', () => {
-                this.painter.terrainFacilitator.dirty = true;
-                this._update(true);
-            })
-            .once('idle', () => { this._idleTriggered = true; });
+        this.on('move', () => this._update(false));
+        this.on('moveend', () => this._update(false));
+        this.on('zoom', () => this._update(true));
+        this.on('terrain', () => {
+            this.painter.terrainFacilitator.dirty = true;
+            this._update(true);
+        });
+        this.once('idle', () => { this._idleTriggered = true; });
 
         if (typeof window !== 'undefined') {
             addEventListener('online', this._onWindowOnline, false);
@@ -1458,7 +1458,7 @@ export class Map extends Camera {
         type: T,
         layer: string,
         listener: (ev: MapLayerEventType[T] & Object) => void,
-    ): Map;
+    ): Subscription;
     /**
      * Overload of the `on` method that allows to listen to events specifying multiple layers.
      * @event
@@ -1470,22 +1470,22 @@ export class Map extends Camera {
         type: T,
         layerIds: string[],
         listener: (ev: MapLayerEventType[T] & Object) => void
-    ): this;
+    ): Subscription;
     /**
      * Overload of the `on` method that allows to listen to events without specifying a layer.
      * @event
      * @param type - The type of the event.
      * @param listener - The listener callback.
      */
-    on<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
+    on<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): Subscription;
     /**
      * Overload of the `on` method that allows to listen to events without specifying a layer.
      * @event
      * @param type - The type of the event.
      * @param listener - The listener callback.
      */
-    on(type: keyof MapEventType | string, listener: Listener): this;
-    on(type: keyof MapEventType | string, layerIdsOrListener: string | string[] | Listener, listener?: Listener): this {
+    on(type: keyof MapEventType | string, listener: Listener): Subscription;
+    on(type: keyof MapEventType | string, layerIdsOrListener: string | string[] | Listener, listener?: Listener): Subscription {
         if (listener === undefined) {
             return super.on(type, layerIdsOrListener as Listener);
         }
@@ -1500,7 +1500,11 @@ export class Map extends Camera {
             this.on(event, delegatedListener.delegates[event]);
         }
 
-        return this;
+        return {
+            unsubscribe: () => {
+                this._removeDelegatedListener(type, layerIds, listener);
+            }
+        };
     }
 
     /**

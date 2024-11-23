@@ -6,14 +6,17 @@ import {StencilMode} from '../gl/stencil_mode';
 import {DepthMode} from '../gl/depth_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
 import {rasterUniformValues} from './program/raster_program';
+import {EXTENT} from '../data/extent';
+import {coveringZoomLevel} from '../geo/projection/covering_tiles';
+import Point from '@mapbox/point-geometry';
 
-import type {Painter} from './painter';
+import type {Painter, RenderOptions} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
 import type {OverscaledTileID} from '../source/tile_id';
-import Point from '@mapbox/point-geometry';
-import {EXTENT} from '../data/extent';
-import {coveringZoomLevel} from '../geo/projection/covering_tiles';
+import type {IReadonlyTransform} from '../geo/transform_interface';
+import type {Tile} from '../source/tile';
+import type {Terrain} from './terrain';
 
 const cornerCoords = [
     new Point(0, 0),
@@ -22,11 +25,12 @@ const cornerCoords = [
     new Point(0, EXTENT),
 ];
 
-export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterStyleLayer, tileIDs: Array<OverscaledTileID>, isRenderingToTexture: boolean = false) {
+export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
     if (layer.paint.get('raster-opacity') === 0) return;
     if (!tileIDs.length) return;
 
+    const {isRenderingToTexture} = renderOptions;
     const source = sourceCache.getSource();
 
     const projection = painter.style.projection;
@@ -52,7 +56,7 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
         drawTiles(painter, sourceCache, layer, coords, stencilBorders, true, true, cornerCoords, false, isRenderingToTexture); // draw with borders
     } else {
         // Simple rendering
-        const [stencil, coords] = painter.stencilConfigForOverlap(tileIDs);
+        const [stencil, coords] = painter.getStencilConfigForOverlapAndUpdateStencilID(tileIDs);
         drawTiles(painter, sourceCache, layer, coords, stencil, false, true, cornerCoords, false, isRenderingToTexture);
     }
 }
@@ -122,7 +126,7 @@ function drawTiles(
         }
 
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
-        const projectionData = transform.getProjectionData({overscaledTileID: coord, aligned: align, ignoreGlobeMatrix: isRenderingToTexture});
+        const projectionData = transform.getProjectionData({overscaledTileID: coord, aligned: align, applyGlobeMatrix: !isRenderingToTexture, applyTerrainMatrix: true});
         const uniformValues = rasterUniformValues(parentTL || [0, 0], parentScaleBy || 1, fade, layer, corners);
 
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, allowPoles, 'raster');
@@ -135,7 +139,7 @@ function drawTiles(
     }
 }
 
-function getFadeValues(tile, parentTile, sourceCache, layer, transform, terrain) {
+function getFadeValues(tile: Tile, parentTile: Tile, sourceCache: SourceCache, layer: RasterStyleLayer, transform: IReadonlyTransform, terrain: Terrain) {
     const fadeDuration = layer.paint.get('raster-fade-duration');
 
     if (!terrain && fadeDuration > 0) {

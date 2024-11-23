@@ -1,9 +1,10 @@
+import {describe, beforeEach, afterEach, test, expect, vi, it} from 'vitest';
 import {RasterTileSource} from './raster_tile_source';
 import {OverscaledTileID} from './tile_id';
 import {RequestManager} from '../util/request_manager';
-import {Dispatcher} from '../util/dispatcher';
+import {type Dispatcher} from '../util/dispatcher';
 import {fakeServer, type FakeServer} from 'nise';
-import {Tile} from './tile';
+import {type Tile} from './tile';
 import {stubAjaxGetImage} from '../util/test/util';
 
 function createSource(options, transformCallback?) {
@@ -39,7 +40,7 @@ describe('RasterTileSource', () => {
             tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, -5]
         }));
-        const transformSpy = jest.fn().mockImplementation((url) => {
+        const transformSpy = vi.fn().mockImplementation((url) => {
             return {url};
         });
 
@@ -113,7 +114,7 @@ describe('RasterTileSource', () => {
             bounds: [-47, -7, -45, -5]
         }));
         const source = createSource({url: '/source.json'});
-        const transformSpy = jest.spyOn(source.map._requestManager, 'transformRequest');
+        const transformSpy = vi.spyOn(source.map._requestManager, 'transformRequest');
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 const tile = {
@@ -145,7 +146,7 @@ describe('RasterTileSource', () => {
         source.map.painter = {context: {}, getTileTexture: () => { return {update: () => {}}; }} as any;
         source.map._refreshExpiredTiles = false;
 
-        const imageConstructorSpy = jest.spyOn(global, 'Image');
+        const imageConstructorSpy = vi.spyOn(global, 'Image');
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 const tile = {

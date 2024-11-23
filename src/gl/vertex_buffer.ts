@@ -89,7 +89,7 @@ export class VertexBuffer {
                 gl.vertexAttribPointer(
                     attribIndex,
                     member.components,
-                    (gl as any)[AttributeType[member.type]],
+                    gl[AttributeType[member.type]],
                     false,
                     this.itemSize,
                     member.offset + (this.itemSize * (vertexOffset || 0))

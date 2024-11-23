@@ -4,7 +4,7 @@ import {register} from '../util/web_worker_transfer';
 import potpack from 'potpack';
 
 import type {StyleImage} from '../style/style_image';
-import {TextFit} from '../style/style_image';
+import {type TextFit} from '../style/style_image';
 import type {ImageManager} from './image_manager';
 import type {Texture} from './texture';
 import type {Rect} from './glyph_atlas';

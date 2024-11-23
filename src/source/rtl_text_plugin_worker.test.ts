@@ -1,4 +1,5 @@
-import {PluginState} from './rtl_text_plugin_status';
+import {beforeEach, describe, expect, test, vi} from 'vitest';
+import {type PluginState} from './rtl_text_plugin_status';
 import {rtlWorkerPlugin} from './rtl_text_plugin_worker';
 
 describe('RTLWorkerPlugin', () => {
@@ -11,9 +12,9 @@ describe('RTLWorkerPlugin', () => {
 
     test('should throw if already parsed', () => {
         const rtlTextPlugin = {
-            applyArabicShaping: jest.fn(),
-            processBidirectionalText: jest.fn(),
-            processStyledBidirectionalText: jest.fn(),
+            applyArabicShaping: vi.fn(),
+            processBidirectionalText: vi.fn(),
+            processStyledBidirectionalText: vi.fn(),
         };
 
         rtlWorkerPlugin.setMethods(rtlTextPlugin);
@@ -31,7 +32,7 @@ describe('RTLWorkerPlugin', () => {
             pluginStatus: 'deferred'
         };
 
-        await rtlWorkerPlugin.syncState(mockMessage, jest.fn());
+        await rtlWorkerPlugin.syncState(mockMessage, vi.fn());
 
         expect(rtlWorkerPlugin.getRTLTextPluginStatus()).toBe('deferred');
     });
@@ -41,16 +42,16 @@ describe('RTLWorkerPlugin', () => {
         rtlWorkerPlugin.pluginURL = originalUrl;
         rtlWorkerPlugin.pluginStatus = 'loaded';
         rtlWorkerPlugin.setMethods({
-            applyArabicShaping: jest.fn(),
-            processBidirectionalText: jest.fn(),
-            processStyledBidirectionalText: jest.fn(),
+            applyArabicShaping: vi.fn(),
+            processBidirectionalText: vi.fn(),
+            processStyledBidirectionalText: vi.fn(),
         });
         const mockMessage: PluginState = {
             pluginURL: 'https://somehost/somescript2',
             pluginStatus: 'loading'
         };
 
-        const workerResult: PluginState = await await rtlWorkerPlugin.syncState(mockMessage, jest.fn());
+        const workerResult: PluginState = await await rtlWorkerPlugin.syncState(mockMessage, vi.fn());
 
         expect(rtlWorkerPlugin.getRTLTextPluginStatus()).toBe('loaded');
         expect(rtlWorkerPlugin.pluginURL).toBe(originalUrl);
@@ -61,11 +62,11 @@ describe('RTLWorkerPlugin', () => {
 
     test('should do a full cycle of rtl loading synchronously', async () => {
         const originalUrl = 'https://somehost/somescript1';
-        const loadScriptsMock = jest.fn().mockImplementation((_) => {
+        const loadScriptsMock = vi.fn().mockImplementation((_) => {
             rtlWorkerPlugin.setMethods({
-                applyArabicShaping: jest.fn(),
-                processBidirectionalText: jest.fn(),
-                processStyledBidirectionalText: jest.fn(),
+                applyArabicShaping: vi.fn(),
+                processBidirectionalText: vi.fn(),
+                processStyledBidirectionalText: vi.fn(),
             });
         });
 
@@ -82,12 +83,12 @@ describe('RTLWorkerPlugin', () => {
 
     test('should do a full cycle of rtl loading asynchronously', async () => {
         const originalUrl = 'https://somehost/somescript1';
-        const loadScriptsMock = jest.fn().mockImplementation((_) => {
+        const loadScriptsMock = vi.fn().mockImplementation((_) => {
             setTimeout(() => {
                 rtlWorkerPlugin.setMethods({
-                    applyArabicShaping: jest.fn(),
-                    processBidirectionalText: jest.fn(),
-                    processStyledBidirectionalText: jest.fn(),
+                    applyArabicShaping: vi.fn(),
+                    processBidirectionalText: vi.fn(),
+                    processStyledBidirectionalText: vi.fn(),
                 });
             }, 10);
         });
@@ -105,7 +106,7 @@ describe('RTLWorkerPlugin', () => {
 
     test('should fail loading on timeout', async () => {
         const originalUrl = 'https://somehost/somescript1';
-        const loadScriptsMock = jest.fn().mockImplementation(() => {});
+        const loadScriptsMock = vi.fn().mockImplementation(() => {});
 
         (rtlWorkerPlugin as any).TIMEOUT = 1;
 

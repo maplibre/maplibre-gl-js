@@ -1,4 +1,4 @@
-import {extend} from './util';
+import {extend, type Subscription} from './util';
 
 /**
  * A listener method used as a callback to events
@@ -70,11 +70,15 @@ export class Evented {
      * The listener function is called with the data object passed to `fire`,
      * extended with `target` and `type` properties.
      */
-    on(type: string, listener: Listener): this {
+    on(type: string, listener: Listener): Subscription {
         this._listeners = this._listeners || {};
         _addEventListener(type, listener, this._listeners);
 
-        return this;
+        return {
+            unsubscribe: () => {
+                this.off(type, listener);
+            }
+        };
     }
 
     /**

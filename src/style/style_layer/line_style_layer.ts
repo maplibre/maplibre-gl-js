@@ -1,13 +1,13 @@
-import Point from '@mapbox/point-geometry';
+import type Point from '@mapbox/point-geometry';
 
 import {StyleLayer} from '../style_layer';
 import {LineBucket} from '../../data/bucket/line_bucket';
 import {polygonIntersectsBufferedMultiLine} from '../../util/intersection_tests';
 import {getMaximumPaintValue, translateDistance, translate, offsetLine} from '../query_utils';
-import properties, {LineLayoutPropsPossiblyEvaluated, LinePaintPropsPossiblyEvaluated} from './line_style_layer_properties.g';
+import properties, {type LineLayoutPropsPossiblyEvaluated, type LinePaintPropsPossiblyEvaluated} from './line_style_layer_properties.g';
 import {extend} from '../../util/util';
 import {EvaluationParameters} from '../evaluation_parameters';
-import {Transitionable, Transitioning, Layout, PossiblyEvaluated, DataDrivenProperty} from '../properties';
+import {type Transitionable, type Transitioning, type Layout, type PossiblyEvaluated, DataDrivenProperty} from '../properties';
 
 import {isZoomExpression, Step} from '@maplibre/maplibre-gl-style-spec';
 import type {FeatureState, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -36,6 +36,8 @@ export class LineFloorwidthProperty extends DataDrivenProperty<number> {
 }
 
 let lineFloorwidthProperty: LineFloorwidthProperty;
+
+export const isLineStyleLayer = (layer: StyleLayer): layer is LineStyleLayer => layer.type === 'line';
 
 export class LineStyleLayer extends StyleLayer {
     _unevaluatedLayout: Layout<LineLayoutProps>;

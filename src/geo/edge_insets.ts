@@ -1,6 +1,6 @@
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import Point from '@mapbox/point-geometry';
-import {clamp} from '../util/util';
+import {clamp, type Complete, type RequireAtLeastOne} from '../util/util';
 
 /**
  * An `EdgeInset` object represents screen space padding applied to the edges of the viewport.
@@ -92,7 +92,7 @@ export class EdgeInsets {
      *
      * @returns state as json
      */
-    toJSON(): PaddingOptions {
+    toJSON(): Complete<PaddingOptions> {
         return {
             top: this.top,
             bottom: this.bottom,
@@ -126,7 +126,7 @@ export class EdgeInsets {
  * @see [Fit to the bounds of a LineString](https://maplibre.org/maplibre-gl-js/docs/examples/zoomto-linestring/)
  * @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/fitbounds/)
  */
-export type PaddingOptions = {
+export type PaddingOptions = RequireAtLeastOne<{
     /**
      * Padding in pixels from the top of the map canvas.
      */
@@ -143,4 +143,4 @@ export type PaddingOptions = {
      * Padding in pixels from the right of the map canvas.
      */
     left: number;
-};
+}>;

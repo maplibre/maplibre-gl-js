@@ -1,4 +1,4 @@
-import {mat4, vec3, vec4} from 'gl-matrix';
+import {type mat4, vec3, vec4} from 'gl-matrix';
 import {Aabb} from './aabb';
 
 export class Frustum {

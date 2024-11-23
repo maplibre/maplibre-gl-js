@@ -1,3 +1,4 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {browser} from '../../util/browser';
 import {Map} from '../map';
 import {DOM} from '../../util/dom';
@@ -23,14 +24,14 @@ beforeEach(() => {
 describe('CoopGesturesHandler', () => {
 
     test('Does not zoom on wheel if no key is down', async () => {
-        const browserNow = jest.spyOn(browser, 'now');
+        const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
         browserNow.mockReturnValue(now);
 
         const map = createMap(true);
         map._renderTaskQueue.run();
 
-        const cooperativegestureprevented = jest.fn();
+        const cooperativegestureprevented = vi.fn();
         map.on('cooperativegestureprevented', cooperativegestureprevented);
 
         const startZoom = map.getZoom();
@@ -62,7 +63,7 @@ describe('CoopGesturesHandler', () => {
     });
 
     test('Zooms on wheel if no key is down after disabling cooperative gestures', () => {
-        const browserNow = jest.spyOn(browser, 'now');
+        const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
         browserNow.mockReturnValue(now);
 
@@ -87,7 +88,7 @@ describe('CoopGesturesHandler', () => {
 
     test('Zooms on wheel if control key is down', () => {
         // NOTE: This should pass regardless of whether cooperativeGestures is enabled or not
-        const browserNow = jest.spyOn(browser, 'now');
+        const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
         browserNow.mockReturnValue(now);
 
@@ -111,7 +112,7 @@ describe('CoopGesturesHandler', () => {
 
     test('Zooms on trackpad pinch when metaKey is the bypass key', () => {
         // NOTE: This should pass regardless of whether cooperativeGestures is enabled or not
-        const browserNow = jest.spyOn(browser, 'now');
+        const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
         browserNow.mockReturnValue(now);
 
@@ -144,13 +145,13 @@ describe('CoopGesturesHandler', () => {
 
     test('Does not show message if scrollZoom is disabled', () => {
         // NOTE: This should pass regardless of whether cooperativeGestures is enabled or not
-        const browserNow = jest.spyOn(browser, 'now');
+        const browserNow = vi.spyOn(browser, 'now');
         const now = 1555555555555;
         browserNow.mockReturnValue(now);
 
         const map = createMap(true);
 
-        const cooperativegestureprevented = jest.fn();
+        const cooperativegestureprevented = vi.fn();
         map.on('cooperativegestureprevented', cooperativegestureprevented);
 
         map.scrollZoom.disable();
@@ -173,10 +174,10 @@ describe('CoopGesturesHandler', () => {
         const startCenter = map.getCenter();
         map._renderTaskQueue.run();
 
-        const dragstart = jest.fn();
-        const drag      = jest.fn();
-        const dragend = jest.fn();
-        const cooperativegestureprevented = jest.fn();
+        const dragstart = vi.fn();
+        const drag      = vi.fn();
+        const dragend = vi.fn();
+        const cooperativegestureprevented = vi.fn();
 
         map.on('dragstart', dragstart);
         map.on('drag',      drag);
@@ -211,7 +212,7 @@ describe('CoopGesturesHandler', () => {
 
     test('Pans on touchmove with a single touch after disabling cooperative gestures', () => {
         const map = createMap(true);
-        const cooperativegestureprevented = jest.fn();
+        const cooperativegestureprevented = vi.fn();
         map.on('cooperativegestureprevented', cooperativegestureprevented);
 
         map.cooperativeGestures.disable();
@@ -241,7 +242,7 @@ describe('CoopGesturesHandler', () => {
     test('Does pan on touchmove with a double touch but does not change pitch', () => {
         const map = createMap(true);
 
-        const cooperativegestureprevented = jest.fn();
+        const cooperativegestureprevented = vi.fn();
         map.on('cooperativegestureprevented', cooperativegestureprevented);
 
         const target = map.getCanvas();
@@ -273,7 +274,7 @@ describe('CoopGesturesHandler', () => {
         // NOTE: This should pass regardless of whether cooperativeGestures is enabled or not
         const map = createMap(true);
 
-        const cooperativegestureprevented = jest.fn();
+        const cooperativegestureprevented = vi.fn();
         map.on('cooperativegestureprevented', cooperativegestureprevented);
 
         const target = map.getCanvas();
@@ -299,7 +300,7 @@ describe('CoopGesturesHandler', () => {
     });
 
     test('Initially disabled cooperative gestures can be later enabled', () => {
-        const browserNow = jest.spyOn(browser, 'now');
+        const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
         browserNow.mockReturnValue(now);
 

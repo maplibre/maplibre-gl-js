@@ -1,6 +1,7 @@
+import {describe, afterEach, test, expect, vi} from 'vitest';
 import {SourceCache} from './source_cache';
-import {Map} from '../ui/map';
-import {Source, addSourceType} from './source';
+import {type Map} from '../ui/map';
+import {type Source, addSourceType} from './source';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {LngLat} from '../geo/lng_lat';
@@ -8,10 +9,10 @@ import Point from '@mapbox/point-geometry';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {extend} from '../util/util';
 import {browser} from '../util/browser';
-import {Dispatcher} from '../util/dispatcher';
+import {type Dispatcher} from '../util/dispatcher';
 import {TileBounds} from './tile_bounds';
 import {sleep} from '../util/test/util';
-import {TileCache} from './tile_cache';
+import {type TileCache} from './tile_cache';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 class SourceMock extends Evented implements Source {
@@ -99,7 +100,7 @@ function createSourceCache(options?, used?) {
 }
 
 afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 });
 
 describe('SourceCache#addTile', () => {
@@ -117,7 +118,8 @@ describe('SourceCache#addTile', () => {
 
     test('adds tile when uncached', () => new Promise<void>(done => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        const sourceCache = createSourceCache({}).on('dataloading', (data) => {
+        const sourceCache = createSourceCache({});
+        sourceCache.on('dataloading', (data) => {
             expect(data.tile.tileID).toEqual(tileID);
             expect(data.tile.uses).toBe(1);
             done();
@@ -135,7 +137,7 @@ describe('SourceCache#addTile', () => {
                 expect(updateFeaturesSpy).toHaveBeenCalledTimes(1);
                 done();
             });
-            updateFeaturesSpy = jest.spyOn(tile, 'setFeatureState');
+            updateFeaturesSpy = vi.spyOn(tile, 'setFeatureState');
             tile.state = 'loaded';
         };
         sourceCache.onAdd(undefined);
@@ -179,7 +181,7 @@ describe('SourceCache#addTile', () => {
         sourceCache.updateCacheSize(tr);
 
         const tile = sourceCache._addTile(tileID);
-        const updateFeaturesSpy = jest.spyOn(tile, 'setFeatureState');
+        const updateFeaturesSpy = vi.spyOn(tile, 'setFeatureState');
 
         sourceCache._removeTile(tileID.key);
         sourceCache._addTile(tileID);
@@ -292,7 +294,7 @@ describe('SourceCache#removeTile', () => {
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'loaded';
         };
-        sourceCache._source.unloadTile = jest.fn();
+        sourceCache._source.unloadTile = vi.fn();
 
         const tr = new MercatorTransform();
         tr.resize(512, 512);
@@ -362,14 +364,14 @@ describe('SourceCache#removeTile', () => {
         };
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         sourceCache._addTile(tileID);
-        const onAbort = jest.fn();
+        const onAbort = vi.fn();
         sourceCache.once('dataabort', onAbort);
         sourceCache._removeTile(tileID.key);
         expect(onAbort).toHaveBeenCalledTimes(0);
     });
 
     test('does not fire data event when the tile has already been aborted', () => {
-        const onData = jest.fn();
+        const onData = vi.fn();
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
             sourceCache.once('dataabort', () => {
@@ -387,21 +389,23 @@ describe('SourceCache#removeTile', () => {
 
 describe('SourceCache / Source lifecycle', () => {
     test('does not fire load or change before source load event', () => new Promise<void>((done) => {
-        const sourceCache = createSourceCache({noLoad: true})
-            .on('data', () => { throw new Error('test failed: data event fired'); });
+        const sourceCache = createSourceCache({noLoad: true});
+        sourceCache.on('data', () => { throw new Error('test failed: data event fired'); });
         sourceCache.onAdd(undefined);
         setTimeout(() => done(), 1);
     }));
 
     test('forward load event', () => new Promise<void>(done => {
-        const sourceCache = createSourceCache({}).on('data', (e) => {
+        const sourceCache = createSourceCache({});
+        sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') done();
         });
         sourceCache.onAdd(undefined);
     }));
 
     test('forward change event', () => new Promise<void>(done => {
-        const sourceCache = createSourceCache().on('data', (e) => {
+        const sourceCache = createSourceCache();
+        sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') done();
         });
         sourceCache.onAdd(undefined);
@@ -409,7 +413,8 @@ describe('SourceCache / Source lifecycle', () => {
     }));
 
     test('forward error event', () => new Promise<void>(done => {
-        const sourceCache = createSourceCache({error: 'Error loading source'}).on('error', (err) => {
+        const sourceCache = createSourceCache({error: 'Error loading source'});
+        sourceCache.on('error', (err) => {
             expect(err.error).toBe('Error loading source');
             done();
         });
@@ -417,13 +422,14 @@ describe('SourceCache / Source lifecycle', () => {
     }));
 
     test('suppress 404 errors', () => {
-        const sourceCache = createSourceCache({status: 404, message: 'Not found'})
-            .on('error', () => { throw new Error('test failed: error event fired'); });
+        const sourceCache = createSourceCache({status: 404, message: 'Not found'});
+        sourceCache.on('error', () => { throw new Error('test failed: error event fired'); });
         sourceCache.onAdd(undefined);
     });
 
     test('loaded() true after source error', () => new Promise<void>(done => {
-        const sourceCache = createSourceCache({error: 'Error loading source'}).on('error', () => {
+        const sourceCache = createSourceCache({error: 'Error loading source'});
+        sourceCache.on('error', () => {
             expect(sourceCache.loaded()).toBeTruthy();
             done();
         });
@@ -442,7 +448,8 @@ describe('SourceCache / Source lifecycle', () => {
             if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
                 sourceCache.update(transform);
             }
-        }).on('error', () => {
+        });
+        sourceCache.on('error', () => {
             expect(sourceCache.loaded()).toBeTruthy();
             done();
         });
@@ -451,7 +458,8 @@ describe('SourceCache / Source lifecycle', () => {
     }));
 
     test('loaded() false after source begins loading following error', () => new Promise<void>(done => {
-        const sourceCache = createSourceCache({error: 'Error loading source'}).on('error', () => {
+        const sourceCache = createSourceCache({error: 'Error loading source'});
+        sourceCache.on('error', () => {
             sourceCache.on('dataloading', () => {
                 expect(sourceCache.loaded()).toBeFalsy();
                 done();
@@ -469,7 +477,8 @@ describe('SourceCache / Source lifecycle', () => {
             loaded() {
                 return false;
             }
-        }).on('error', () => {
+        });
+        sourceCache.on('error', () => {
             expect(sourceCache.loaded()).toBeFalsy();
             done();
         });
@@ -513,7 +522,7 @@ describe('SourceCache / Source lifecycle', () => {
             tile.state = tile.tileID.canonical.z === 1 ? 'errored' : 'loaded';
         };
 
-        const reloadTileSpy = jest.spyOn(sourceCache, '_reloadTile');
+        const reloadTileSpy = vi.spyOn(sourceCache, '_reloadTile');
         sourceCache.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
                 sourceCache.update(transform);
@@ -539,7 +548,7 @@ describe('SourceCache / Source lifecycle', () => {
             tile.state = tile.tileID.canonical.z === 1 ? 'errored' : 'loaded';
         };
 
-        const reloadTileSpy = jest.spyOn(sourceCache, '_reloadTile');
+        const reloadTileSpy = vi.spyOn(sourceCache, '_reloadTile');
         sourceCache.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
                 sourceCache.update(transform);
@@ -807,7 +816,7 @@ describe('SourceCache#update', () => {
 
         const start = Date.now();
         let time = start;
-        jest.spyOn(browser, 'now').mockImplementation(() => time);
+        vi.spyOn(browser, 'now').mockImplementation(() => time);
 
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
@@ -917,7 +926,7 @@ describe('SourceCache#_updateRetainedTiles', () => {
             tile.state = stateCache[tile.tileID.key] || 'errored';
         };
 
-        const getTileSpy = jest.spyOn(sourceCache, 'getTile');
+        const getTileSpy = vi.spyOn(sourceCache, 'getTile');
         const idealTile = new OverscaledTileID(1, 0, 1, 1, 1);
         stateCache[idealTile.key] = 'loaded';
         sourceCache._updateRetainedTiles([idealTile], 1);
@@ -969,8 +978,8 @@ describe('SourceCache#_updateRetainedTiles', () => {
             tile.state = stateCache[tile.tileID.key] || 'errored';
         };
 
-        jest.spyOn(sourceCache, '_addTile');
-        const getTileSpy = jest.spyOn(sourceCache, 'getTile');
+        vi.spyOn(sourceCache, '_addTile');
+        const getTileSpy = vi.spyOn(sourceCache, 'getTile');
 
         const idealTiles = [new OverscaledTileID(1, 0, 1, 1, 1), new OverscaledTileID(1, 0, 1, 0, 1)];
         stateCache[idealTiles[0].key] = 'loaded';
@@ -1005,8 +1014,8 @@ describe('SourceCache#_updateRetainedTiles', () => {
         sourceCache._tiles[new OverscaledTileID(1, 0, 1, 1, 0).key] = new Tile(new OverscaledTileID(1, 0, 1, 1, 0), undefined);
         sourceCache._tiles[new OverscaledTileID(1, 0, 1, 1, 0).key].state = 'loaded';
 
-        const addTileSpy = jest.spyOn(sourceCache, '_addTile');
-        const getTileSpy = jest.spyOn(sourceCache, 'getTile');
+        const addTileSpy = vi.spyOn(sourceCache, '_addTile');
+        const getTileSpy = vi.spyOn(sourceCache, 'getTile');
 
         sourceCache._updateRetainedTiles([idealTile], 2);
         expect(getTileSpy.mock.calls.map((c) => { return c[0]; })).toEqual([
@@ -1036,8 +1045,8 @@ describe('SourceCache#_updateRetainedTiles', () => {
         sourceCache._tiles[parentTile.key] = new Tile(parentTile, undefined);
         sourceCache._tiles[parentTile.key].state = 'loaded';
 
-        const addTileSpy = jest.spyOn(sourceCache, '_addTile');
-        const getTileSpy = jest.spyOn(sourceCache, 'getTile');
+        const addTileSpy = vi.spyOn(sourceCache, '_addTile');
+        const getTileSpy = vi.spyOn(sourceCache, 'getTile');
 
         const retained = sourceCache._updateRetainedTiles([idealTile], 1);
 
@@ -1080,7 +1089,7 @@ describe('SourceCache#_updateRetainedTiles', () => {
             sourceCache._tiles[t.key].state = 'loaded';
         });
 
-        const getTileSpy = jest.spyOn(sourceCache, 'getTile');
+        const getTileSpy = vi.spyOn(sourceCache, 'getTile');
         const retained = sourceCache._updateRetainedTiles([idealTile], 2);
         // parent tile isn't requested because all covering children are loaded
         expect(getTileSpy).not.toHaveBeenCalled();
@@ -1099,7 +1108,7 @@ describe('SourceCache#_updateRetainedTiles', () => {
             sourceCache._tiles[t.key].state = 'loaded';
         });
 
-        const getTileSpy = jest.spyOn(sourceCache, 'getTile');
+        const getTileSpy = vi.spyOn(sourceCache, 'getTile');
         let retained = sourceCache._updateRetainedTiles([idealTile], 1);
         expect(getTileSpy.mock.calls.map((c) => { return c[0]; })).toEqual([
             // parent
@@ -1143,7 +1152,7 @@ describe('SourceCache#_updateRetainedTiles', () => {
             sourceCache._tiles[t.key].state = 'loaded';
         });
 
-        const getTileSpy = jest.spyOn(sourceCache, 'getTile');
+        const getTileSpy = vi.spyOn(sourceCache, 'getTile');
         const retained = sourceCache._updateRetainedTiles([idealTile], 2);
 
         sleep(10);
@@ -1164,7 +1173,7 @@ describe('SourceCache#_updateRetainedTiles', () => {
         };
         const idealTile = new OverscaledTileID(2, 0, 2, 0, 0);
 
-        const getTileSpy = jest.spyOn(sourceCache, 'getTile');
+        const getTileSpy = vi.spyOn(sourceCache, 'getTile');
         const retained = sourceCache._updateRetainedTiles([idealTile], 2);
 
         expect(getTileSpy.mock.calls.map((c) => { return c[0]; })).toEqual([
@@ -1189,7 +1198,7 @@ describe('SourceCache#_updateRetainedTiles', () => {
         };
         const idealTiles = [new OverscaledTileID(8, 0, 8, 0, 0), new OverscaledTileID(8, 0, 8, 1, 0)];
 
-        const getTileSpy = jest.spyOn(sourceCache, 'getTile');
+        const getTileSpy = vi.spyOn(sourceCache, 'getTile');
         sourceCache._updateRetainedTiles(idealTiles, 8);
         expect(getTileSpy.mock.calls.map((c) => { return c[0]; })).toEqual([
             // parent tile ascent
@@ -1978,7 +1987,7 @@ describe('SourceCache sets max cache size correctly', () => {
 describe('SourceCache#onRemove', () => {
     test('clears tiles', () => {
         const sourceCache = createSourceCache();
-        jest.spyOn(sourceCache, 'clearTiles');
+        vi.spyOn(sourceCache, 'clearTiles');
 
         sourceCache.onRemove(undefined);
 
@@ -1986,7 +1995,7 @@ describe('SourceCache#onRemove', () => {
     });
 
     test('calls onRemove on source', () => {
-        const sourceOnRemove = jest.fn();
+        const sourceOnRemove = vi.fn();
         const sourceCache = createSourceCache({
             onRemove: sourceOnRemove
         });

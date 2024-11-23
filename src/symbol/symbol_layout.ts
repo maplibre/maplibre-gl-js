@@ -27,11 +27,11 @@ import type {ImagePosition} from '../render/image_atlas';
 import type {GlyphPosition} from '../render/glyph_atlas';
 import type {PossiblyEvaluatedPropertyValue} from '../style/properties';
 
-import Point from '@mapbox/point-geometry';
+import type Point from '@mapbox/point-geometry';
 import murmur3 from 'murmurhash-js';
-import {getIconPadding, SymbolPadding} from '../style/style_layer/symbol_style_layer';
-import {VariableAnchorOffsetCollection, classifyRings} from '@maplibre/maplibre-gl-style-spec';
-import {getTextVariableAnchorOffset, evaluateVariableOffset, INVALID_TEXT_OFFSET, TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor';
+import {getIconPadding, type SymbolPadding} from '../style/style_layer/symbol_style_layer';
+import {type VariableAnchorOffsetCollection, classifyRings} from '@maplibre/maplibre-gl-style-spec';
+import {getTextVariableAnchorOffset, evaluateVariableOffset, INVALID_TEXT_OFFSET, type TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor';
 import {subdivideVertexLine} from '../render/subdivision';
 import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 

@@ -1,15 +1,15 @@
 import type {Context} from '../../gl/context';
 import type {CanonicalTileID} from '../../source/tile_id';
-import {Mesh} from '../../render/mesh';
+import {type Mesh} from '../../render/mesh';
 import {browser} from '../../util/browser';
 import {easeCubicInOut, lerp} from '../../util/util';
 import {mercatorYfromLat} from '../mercator_coordinate';
 import {SubdivisionGranularityExpression, SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import type {Projection, ProjectionGPUContext, TileMeshUsage} from './projection';
-import {PreparedShader, shaders} from '../../shaders/shaders';
+import {type PreparedShader, shaders} from '../../shaders/shaders';
 import {MercatorProjection} from './mercator';
 import {ProjectionErrorMeasurement} from './globe_projection_error_measurement';
-import {createTileMeshWithBuffers, CreateTileMeshOptions} from '../../util/create_tile_mesh';
+import {createTileMeshWithBuffers, type CreateTileMeshOptions} from '../../util/create_tile_mesh';
 
 export const globeConstants = {
     globeTransitionTimeSeconds: 0.5,
@@ -18,15 +18,17 @@ export const globeConstants = {
 };
 
 const granularitySettingsGlobe: SubdivisionGranularitySetting = new SubdivisionGranularitySetting({
-    fill: new SubdivisionGranularityExpression(128, 1),
-    line: new SubdivisionGranularityExpression(512, 1),
+    fill: new SubdivisionGranularityExpression(128, 2),
+    line: new SubdivisionGranularityExpression(512, 0),
     // Always keep at least some subdivision on raster tiles, etc,
     // otherwise they will be visibly warped at high zooms (before mercator transition).
     // This si not needed on fill, because fill geometry tends to already be
     // highly tessellated and granular at high zooms.
-    // Minimal granularity of 8 seems to be enough to avoid warped raster tiles, while also minimizing triangle count.
     tile: new SubdivisionGranularityExpression(128, 32),
-    stencil: new SubdivisionGranularityExpression(128, 4),
+    // Stencil granularity must never be higher than fill granularity,
+    // otherwise we would get seams in the oceans at zoom levels where
+    // stencil has higher granularity than fill.
+    stencil: new SubdivisionGranularityExpression(128, 1),
     circle: 3
 });
 

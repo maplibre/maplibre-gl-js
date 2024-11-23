@@ -1,25 +1,25 @@
-import {mat2, mat4, vec3, vec4} from 'gl-matrix';
+import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {MAX_VALID_LATITUDE, TransformHelper} from '../transform_helper';
 import {MercatorTransform} from './mercator_transform';
-import {LngLat, LngLatLike, earthRadius} from '../lng_lat';
+import {LngLat, type LngLatLike, earthRadius} from '../lng_lat';
 import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, easeCubicInOut, lerp, pointPlaneSignedDistance, warnOnce} from '../../util/util';
-import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../../source/tile_id';
+import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {browser} from '../../util/browser';
-import {Terrain} from '../../render/terrain';
-import {GlobeProjection, globeConstants} from './globe';
+import {type Terrain} from '../../render/terrain';
+import {type GlobeProjection, globeConstants} from './globe';
 import {MercatorCoordinate} from '../mercator_coordinate';
-import {PointProjection} from '../../symbol/projection';
+import {type PointProjection} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
-import {IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
-import {PaddingOptions} from '../edge_insets';
+import {type IReadonlyTransform, type ITransform, type TransformUpdateResult} from '../transform_interface';
+import {type PaddingOptions} from '../edge_insets';
 import {tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 import {angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, sphereSurfacePointToCoordinates} from './globe_utils';
 import {EXTENT} from '../../data/extent';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider';
 import {Frustum} from '../../util/primitives/frustum';
-import {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
+import {type CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
 
 /**
  * Describes the intersection of ray and sphere.
@@ -454,8 +454,8 @@ export class GlobeTransform implements ITransform {
     }
 
     getProjectionData(params: ProjectionDataParams): ProjectionData {
-        const {overscaledTileID, aligned, ignoreTerrainMatrix, ignoreGlobeMatrix} = params;
-        const data = this._mercatorTransform.getProjectionData({overscaledTileID, aligned, ignoreTerrainMatrix});
+        const {overscaledTileID, aligned, applyTerrainMatrix, applyGlobeMatrix} = params;
+        const data = this._mercatorTransform.getProjectionData({overscaledTileID, aligned, applyTerrainMatrix});
 
         // Set 'projectionMatrix' to actual globe transform
         if (this.isGlobeRendering) {
@@ -463,7 +463,7 @@ export class GlobeTransform implements ITransform {
         }
 
         data.clippingPlane = this._cachedClippingPlane as [number, number, number, number];
-        data.projectionTransition = ignoreGlobeMatrix ? 0 : this._globeness;
+        data.projectionTransition = applyGlobeMatrix ? this._globeness : 0;
 
         return data;
     }
@@ -835,8 +835,8 @@ export class GlobeTransform implements ITransform {
         };
     }
 
-    calculateCenterFromCameraLngLatAlt(ll: LngLat, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
-        return this._mercatorTransform.calculateCenterFromCameraLngLatAlt(ll, alt, bearing, pitch);
+    calculateCenterFromCameraLngLatAlt(lngLat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
+        return this._mercatorTransform.calculateCenterFromCameraLngLatAlt(lngLat, alt, bearing, pitch);
     }
 
     /**
@@ -1184,8 +1184,8 @@ export class GlobeTransform implements ITransform {
         return m;
     }
 
-    getProjectionDataForCustomLayer(): ProjectionData {
-        const projectionData = this.getProjectionData({overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0)});
+    getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): ProjectionData {
+        const projectionData = this.getProjectionData({overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0), applyGlobeMatrix});
         projectionData.tileMercatorCoords = [0, 0, 1, 1];
 
         // Even though we requested projection data for the mercator base tile which covers the entire mercator range,

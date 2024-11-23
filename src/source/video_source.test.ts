@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {VideoSource} from './video_source';
 import {extend} from '../util/util';
 import {getMockDispatcher} from '../util/test/util';
@@ -6,7 +7,7 @@ import type {Coordinates} from './image_source';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {Evented} from '../util/evented';
-import {IReadonlyTransform} from '../geo/transform_interface';
+import {type IReadonlyTransform} from '../geo/transform_interface';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 class StubMap extends Evented {

@@ -1,7 +1,8 @@
+import {describe, expect, test, vi} from 'vitest';
 import {Sky} from './sky';
-import {latest as styleSpec, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
-import {EvaluationParameters} from './evaluation_parameters';
-import {TransitionParameters} from './properties';
+import {latest as styleSpec, type SkySpecification} from '@maplibre/maplibre-gl-style-spec';
+import {type EvaluationParameters} from './evaluation_parameters';
+import {type TransitionParameters} from './properties';
 
 const spec = styleSpec.sky;
 
@@ -60,8 +61,8 @@ describe('Sky#setSky', () => {
 
     test('validates by default', () => {
         const sky = new Sky({});
-        const skySpy = jest.spyOn(sky, '_validate');
-        jest.spyOn(console, 'error').mockImplementation(() => { });
+        const skySpy = vi.spyOn(sky, '_validate');
+        vi.spyOn(console, 'error').mockImplementation(() => { });
         sky.setSky({'atmosphere-blend': -1});
         sky.updateTransitions({transition: false} as any as TransitionParameters);
         sky.recalculate({zoom: 16, zoomHistory: {}, now: 10} as EvaluationParameters);
@@ -73,7 +74,7 @@ describe('Sky#setSky', () => {
     test('respects validation option', () => {
         const sky = new Sky({});
 
-        const skySpy = jest.spyOn(sky, '_validate');
+        const skySpy = vi.spyOn(sky, '_validate');
         sky.setSky({'atmosphere-blend': -1} as any, {validate: false});
         sky.updateTransitions({transition: false} as any as TransitionParameters);
         sky.recalculate({zoom: 16, zoomHistory: {}, now: 10} as EvaluationParameters);

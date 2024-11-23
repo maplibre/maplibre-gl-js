@@ -5,7 +5,7 @@ import {TransformProvider} from './transform-provider';
 
 import type {Map} from '../map';
 import type Point from '@mapbox/point-geometry';
-import {Handler} from '../handler_manager';
+import {type Handler} from '../handler_manager';
 
 /**
  * The `BoxZoomHandler` allows the user to zoom the map to fit within a bounding box.

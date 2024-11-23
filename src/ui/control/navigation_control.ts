@@ -1,9 +1,9 @@
-import Point from '@mapbox/point-geometry';
+import type Point from '@mapbox/point-geometry';
 
 import {DOM} from '../../util/dom';
 import {extend} from '../../util/util';
-import {generateMousePitchHandler, generateMouseRotationHandler, MousePitchHandler, MouseRotateHandler} from '../handler/mouse';
-import {generateOneFingerTouchPitchHandler, generateOneFingerTouchRotationHandler, OneFingerTouchPitchHandler, OneFingerTouchRotateHandler} from '../handler/one_finger_touch_drag';
+import {generateMousePitchHandler, generateMouseRotationHandler, type MousePitchHandler, type MouseRotateHandler} from '../handler/mouse';
+import {generateOneFingerTouchPitchHandler, generateOneFingerTouchRotationHandler, type OneFingerTouchPitchHandler, type OneFingerTouchRotateHandler} from '../handler/one_finger_touch_drag';
 
 import type {Map} from '../map';
 import type {IControl} from './control';
@@ -190,7 +190,7 @@ class MouseRotateWrapper {
         const mapRotateTolerance = map.dragRotate._mouseRotate.getClickTolerance();
         const mapPitchTolerance = map.dragRotate._mousePitch.getClickTolerance();
         this.element = element;
-        this.mouseRotate = generateMouseRotationHandler({clickTolerance: mapRotateTolerance, enable: true});
+        this.mouseRotate = generateMouseRotationHandler({clickTolerance: mapRotateTolerance, enable: true, aroundCenter: false});
         this.touchRotate = generateOneFingerTouchRotationHandler({clickTolerance: mapRotateTolerance, enable: true});
         this.map = map;
         if (pitch) {

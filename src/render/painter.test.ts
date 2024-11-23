@@ -1,3 +1,4 @@
+import {test} from 'vitest';
 import {Painter} from './painter';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {Style} from '../style/style';

@@ -1,4 +1,5 @@
-import {globeConstants, GlobeProjection} from './globe';
+import {describe, expect, test} from 'vitest';
+import {globeConstants, type GlobeProjection} from './globe';
 import {EXTENT} from '../../data/extent';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
@@ -27,7 +28,7 @@ function planeDistance(point: Array<number>, plane: Array<number>) {
 }
 
 function createGlobeTransform(globeProjection: GlobeProjection) {
-    const globeTransform = new GlobeTransform(globeProjection);
+    const globeTransform = new GlobeTransform(globeProjection, true);
     globeTransform.resize(640, 480);
     globeTransform.setFov(45);
     return globeTransform;
@@ -46,14 +47,14 @@ describe('GlobeTransform', () => {
             expectToBeCloseToArray(projectionData.tileMercatorCoords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
         });
 
-        test('Globe transition is not 0 when not ignoring the globe matrix', () => {
+        test('Globe transition is 0 when not applying the globe matrix', () => {
             const projectionData = globeTransform.getProjectionData({overscaledTileID: new OverscaledTileID(1, 0, 1, 1, 0)});
-            expect(projectionData.projectionTransition).not.toBe(0);
+            expect(projectionData.projectionTransition).toBe(0);
         });
 
-        test('Ignoring the globe matrix sets transition to 0', () => {
-            const projectionData = globeTransform.getProjectionData({overscaledTileID: new OverscaledTileID(1, 0, 1, 1, 0), ignoreGlobeMatrix: true});
-            expect(projectionData.projectionTransition).toBe(0);
+        test('Applying the globe matrix sets transition to something different than 0', () => {
+            const projectionData = globeTransform.getProjectionData({overscaledTileID: new OverscaledTileID(1, 0, 1, 1, 0), applyGlobeMatrix: true});
+            expect(projectionData.projectionTransition).not.toBe(0);
         });
     });
 

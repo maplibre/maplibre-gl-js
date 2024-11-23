@@ -1,7 +1,7 @@
 import {DOM} from '../../util/dom';
-import type Point from '@mapbox/point-geometry';
-import {DragMoveStateManager} from './drag_move_state_manager';
-import {Handler} from '../handler_manager';
+import Point from '@mapbox/point-geometry';
+import {type DragMoveStateManager} from './drag_move_state_manager';
+import {type Handler} from '../handler_manager';
 
 interface DragMovementResult {
     bearingDelta?: number;
@@ -28,7 +28,7 @@ export interface DragRollResult extends DragMovementResult {
     rollDelta: number;
 }
 
-type DragMoveFunction<T extends DragMovementResult> = (lastPoint: Point, point: Point) => T;
+type DragMoveFunction<T extends DragMovementResult> = (lastPoint: Point, currnetPoint: Point, center: Point) => T;
 
 export interface DragMoveHandler<T extends DragMovementResult, E extends Event> extends Handler {
     dragStart: (e: E, point: Point) => void;
@@ -140,13 +140,13 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
             return;
         }
 
-        const movePoint = point['length'] ? point[0] : point;
+        const movePoint = Array.isArray(point) ? point[0] : point;
 
         if (!this._moved && movePoint.dist(lastPoint) < this._clickTolerance) return;
         this._moved = true;
         this._lastPoint = movePoint;
 
-        return this._move(lastPoint, movePoint);
+        return this._move(lastPoint, movePoint, new Point(window.innerWidth / 2, window.innerHeight / 2));
     }
 
     dragEnd(e: E) {

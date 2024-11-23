@@ -6,7 +6,7 @@ import {SegmentVector} from '../data/segment';
 import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types.g';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes';
 import posAttributes from '../data/pos_attributes';
-import {ProgramConfiguration} from '../data/program_configuration';
+import {type ProgramConfiguration} from '../data/program_configuration';
 import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index';
 import {shaders} from '../shaders/shaders';
 import {Program} from './program';
@@ -30,7 +30,7 @@ import {drawBackground} from './draw_background';
 import {drawDebug, drawDebugPadding, selectDebugSource} from './draw_debug';
 import {drawCustom} from './draw_custom';
 import {drawDepth, drawCoords} from './draw_terrain';
-import {OverscaledTileID} from '../source/tile_id';
+import {type OverscaledTileID} from '../source/tile_id';
 import {drawSky, drawAtmosphere} from './draw_sky';
 import {Mesh} from './mesh';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator';
@@ -49,6 +49,16 @@ import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {RenderToTexture} from './render_to_texture';
 import type {ProjectionData} from '../geo/projection/projection_data';
 import {coveringTiles} from '../geo/projection/covering_tiles';
+import {isSymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
+import {isCircleStyleLayer} from '../style/style_layer/circle_style_layer';
+import {isHeatmapStyleLayer} from '../style/style_layer/heatmap_style_layer';
+import {isLineStyleLayer} from '../style/style_layer/line_style_layer';
+import {isFillStyleLayer} from '../style/style_layer/fill_style_layer';
+import {isFillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer';
+import {isHillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
+import {isRasterStyleLayer} from '../style/style_layer/raster_style_layer';
+import {isBackgroundStyleLayer} from '../style/style_layer/background_style_layer';
+import {isCustomStyleLayer} from '../style/style_layer/custom_style_layer';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -61,6 +71,11 @@ type PainterOptions = {
     moving: boolean;
     fadeDuration: number;
 };
+
+export type RenderOptions = {
+    isRenderingToTexture: boolean;
+    isRenderingGlobe: boolean;
+}
 
 /**
  * @internal
@@ -298,7 +313,7 @@ export class Painter {
 
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true, 'stencil');
 
-            const projectionData = transform.getProjectionData({overscaledTileID: tileID});
+            const projectionData = transform.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix: true, applyTerrainMatrix: true});
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.
@@ -328,7 +343,7 @@ export class Painter {
             const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, true, true, 'raster');
 
-            const projectionData = transform.getProjectionData({overscaledTileID: tileID});
+            const projectionData = transform.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix: true, applyTerrainMatrix: true});
 
             program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled,
                 ColorMode.disabled, CullFaceMode.backCCW, null,
@@ -362,9 +377,12 @@ export class Painter {
      * mask area of tile overlapped by children tiles.
      * Stencil ref values continue range used in _tileClippingMaskIDs.
      *
+     * Attention: This function changes this.nextStencilID even if the result of it
+     * is not used, which might cause problems when rendering due to invalid stencil
+     * values.
      * Returns [StencilMode for tile overscaleZ map, sortedCoords].
      */
-    stencilConfigForOverlap(tileIDs: Array<OverscaledTileID>): [{
+    getStencilConfigForOverlapAndUpdateStencilID(tileIDs: Array<OverscaledTileID>): [{
         [_: number]: Readonly<StencilMode>;
     }, Array<OverscaledTileID>] {
         const gl = this.context.gl;
@@ -474,6 +492,7 @@ export class Painter {
         const coordsAscending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
+        const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: style.projection.name === 'globe'};
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
@@ -516,7 +535,7 @@ export class Painter {
             const coords = coordsDescending[layer.source];
             if (layer.type !== 'custom' && !coords.length) continue;
 
-            this.renderLayer(this, sourceCaches[layer.source], layer, coords);
+            this.renderLayer(this, sourceCaches[layer.source], layer, coords, renderOptions);
         }
 
         // Execute offscreen GPU tasks of the projection manager
@@ -550,7 +569,7 @@ export class Painter {
                 const coords = coordsAscending[layer.source];
 
                 this._renderTileClippingMasks(layer, coords, false);
-                this.renderLayer(this, sourceCache, layer, coords);
+                this.renderLayer(this, sourceCache, layer, coords, renderOptions);
             }
         }
 
@@ -564,13 +583,13 @@ export class Painter {
             const layer = this.style._layers[layerIds[this.currentLayer]];
             const sourceCache = sourceCaches[layer.source];
 
-            if (this.renderToTexture && this.renderToTexture.renderLayer(layer)) continue;
+            if (this.renderToTexture && this.renderToTexture.renderLayer(layer, renderOptions)) continue;
 
             if (!this.opaquePassEnabledForLayer() && !globeDepthRendered) {
                 globeDepthRendered = true;
                 // Render the globe sphere into the depth buffer - but only if globe is enabled and terrain is disabled.
                 // There should be no need for explicitly writing tile depths when terrain is enabled.
-                if (this.style.projection.name === 'globe' && !this.style.map.terrain) {
+                if (renderOptions.isRenderingGlobe && !this.style.map.terrain) {
                     this._renderTilesDepthBuffer();
                 }
             }
@@ -581,11 +600,11 @@ export class Painter {
             const coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
 
             this._renderTileClippingMasks(layer, coordsAscending[layer.source], false);
-            this.renderLayer(this, sourceCache, layer, coords);
+            this.renderLayer(this, sourceCache, layer, coords, renderOptions);
         }
 
         // Render atmosphere, only for Globe projection
-        if (this.style.projection.name === 'globe') {
+        if (renderOptions.isRenderingGlobe) {
             drawAtmosphere(this, this.style.sky, this.style.light);
         }
 
@@ -633,42 +652,31 @@ export class Painter {
         drawCoords(this, this.style.map.terrain);
     }
 
-    renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, isRenderingToTexture: boolean = false) {
+    renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
         if (layer.isHidden(this.transform.zoom)) return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;
 
-        switch (layer.type) {
-            case 'symbol':
-                drawSymbols(painter, sourceCache, layer as any, coords, this.style.placement.variableOffsets);
-                break;
-            case 'circle':
-                drawCircles(painter, sourceCache, layer as any, coords);
-                break;
-            case 'heatmap':
-                drawHeatmap(painter, sourceCache, layer as any, coords);
-                break;
-            case 'line':
-                drawLine(painter, sourceCache, layer as any, coords);
-                break;
-            case 'fill':
-                drawFill(painter, sourceCache, layer as any, coords);
-                break;
-            case 'fill-extrusion':
-                drawFillExtrusion(painter, sourceCache, layer as any, coords);
-                break;
-            case 'hillshade':
-                drawHillshade(painter, sourceCache, layer as any, coords);
-                break;
-            case 'raster':
-                drawRaster(painter, sourceCache, layer as any, coords, isRenderingToTexture);
-                break;
-            case 'background':
-                drawBackground(painter, sourceCache, layer as any, coords);
-                break;
-            case 'custom':
-                drawCustom(painter, sourceCache, layer as any);
-                break;
+        if (isSymbolStyleLayer(layer)) {
+            drawSymbols(painter, sourceCache, layer, coords, this.style.placement.variableOffsets, renderOptions);
+        } else if (isCircleStyleLayer(layer)) {
+            drawCircles(painter, sourceCache, layer, coords, renderOptions);
+        } else if (isHeatmapStyleLayer(layer)) {
+            drawHeatmap(painter, sourceCache, layer, coords, renderOptions);
+        } else if (isLineStyleLayer(layer)) {
+            drawLine(painter, sourceCache, layer, coords, renderOptions);
+        } else if (isFillStyleLayer(layer)) {
+            drawFill(painter, sourceCache, layer, coords, renderOptions);
+        } else if (isFillExtrusionStyleLayer(layer)) {
+            drawFillExtrusion(painter, sourceCache, layer, coords, renderOptions);
+        } else if (isHillshadeStyleLayer(layer)) {
+            drawHillshade(painter, sourceCache, layer, coords, renderOptions);
+        } else if (isRasterStyleLayer(layer)) {
+            drawRaster(painter, sourceCache, layer, coords, renderOptions);
+        } else if (isBackgroundStyleLayer(layer)) {
+            drawBackground(painter, sourceCache, layer, coords, renderOptions);
+        } else if (isCustomStyleLayer(layer)) {
+            drawCustom(painter, sourceCache, layer, renderOptions);
         }
     }
 

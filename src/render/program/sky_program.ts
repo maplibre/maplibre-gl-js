@@ -1,8 +1,8 @@
 import {UniformColor, Uniform1f, Uniform2f} from '../uniform_binding';
 import type {Context} from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
-import {IReadonlyTransform} from '../../geo/transform_interface';
-import {Sky} from '../../style/sky';
+import {type IReadonlyTransform} from '../../geo/transform_interface';
+import {type Sky} from '../../style/sky';
 import {getMercatorHorizon} from '../../geo/projection/mercator_utils';
 
 export type SkyUniformsType = {
@@ -27,7 +27,7 @@ const skyUniformValues = (sky: Sky, transform: IReadonlyTransform, pixelRatio: n
     const cosRoll = Math.cos(transform.rollInRadians);
     const sinRoll = Math.sin(transform.rollInRadians);
     const mercatorHorizon  = getMercatorHorizon(transform);
-    const projectionData = transform.getProjectionData({overscaledTileID: null});
+    const projectionData = transform.getProjectionData({overscaledTileID: null, applyGlobeMatrix: true, applyTerrainMatrix: true});
     const skyBlend = projectionData.projectionTransition;
     return {
         'u_sky_color': sky.properties.get('sky-color'),

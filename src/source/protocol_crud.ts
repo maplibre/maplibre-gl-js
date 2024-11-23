@@ -1,4 +1,4 @@
-import {AddProtocolAction, config} from '../util/config';
+import {type AddProtocolAction, config} from '../util/config';
 
 export function getProtocol(url: string) {
     return config.REGISTERED_PROTOCOLS[url.substring(0, url.indexOf('://'))];

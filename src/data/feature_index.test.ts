@@ -1,3 +1,4 @@
+import {describe, expect, test} from 'vitest';
 import {FeatureIndex} from './feature_index';
 import {OverscaledTileID} from '../source/tile_id';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
@@ -24,7 +25,7 @@ describe('FeatureIndex', () => {
                 loadGeometry: () => [],
                 toGeoJSON: () => ({})
             } as unknown as VectorTileFeature;
-            
+
             expect(featureIndex.getId(feature, 'sourceLayer')).toBe(123); // cluster_id converted to number
         });
     });

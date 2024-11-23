@@ -8,7 +8,7 @@ import {
     lineGradientUniformValues
 } from './program/line_program';
 
-import type {Painter} from './painter';
+import type {Painter, RenderOptions} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {LineStyleLayer} from '../style/style_layer/line_style_layer';
 import type {LineBucket} from '../data/bucket/line_bucket';
@@ -16,9 +16,12 @@ import type {OverscaledTileID} from '../source/tile_id';
 import {clamp, nextPowerOfTwo} from '../util/util';
 import {renderColorRamp} from '../util/color_ramp';
 import {EXTENT} from '../data/extent';
+import {type StencilMode} from '../gl/stencil_mode';
 
-export function drawLine(painter: Painter, sourceCache: SourceCache, layer: LineStyleLayer, coords: Array<OverscaledTileID>) {
+export function drawLine(painter: Painter, sourceCache: SourceCache, layer: LineStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
+
+    const {isRenderingToTexture} = renderOptions;
 
     const opacity = layer.paint.get('line-opacity');
     const width = layer.paint.get('line-width');
@@ -26,7 +29,6 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
 
     const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
-    const globeWithTerrain = !!painter.style.map.terrain && painter.style.projection.name === 'globe';
     
     const dasharray = layer.paint.get('line-dasharray');
     const patternProperty = layer.paint.get('line-pattern');
@@ -70,7 +72,8 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
 
         const projectionData = transform.getProjectionData({
             overscaledTileID: coord,
-            ignoreGlobeMatrix: globeWithTerrain
+            applyGlobeMatrix: !isRenderingToTexture,
+            applyTerrainMatrix: true
         });
 
         //ZERDA: keep pixelRation constant. otherwise lines would scale when globe is pitched.
@@ -125,8 +128,13 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
             gradientTexture.bind(layer.stepInterpolant ? gl.NEAREST : gl.LINEAR, gl.CLAMP_TO_EDGE);
         }
 
-        const [stencilModes] = painter.stencilConfigForOverlap(coords);
-        const stencil = globeWithTerrain ? stencilModes[coord.overscaledZ] : painter.stencilModeForClipping(coord);
+        let stencil: StencilMode;
+        if (isRenderingToTexture) {
+            const [stencilModes] = painter.getStencilConfigForOverlapAndUpdateStencilID(coords);
+            stencil = stencilModes[coord.overscaledZ];
+        } else {
+            stencil = painter.stencilModeForClipping(coord);
+        }
 
         program.draw(context, gl.TRIANGLES, depthMode,
             stencil, colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,

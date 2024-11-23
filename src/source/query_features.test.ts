@@ -1,9 +1,10 @@
+import {describe, test, expect} from 'vitest';
 import {
     queryRenderedFeatures,
     querySourceFeatures
 } from './query_features';
 import {SourceCache} from './source_cache';
-import Point from '@mapbox/point-geometry';
+import type Point from '@mapbox/point-geometry';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 describe('QueryFeatures#rendered', () => {

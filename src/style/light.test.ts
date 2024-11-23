@@ -1,8 +1,9 @@
+import {describe, test, expect, vi} from 'vitest';
 import {Light} from './light';
-import {Color, latest as styleSpec, LightSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {Color, latest as styleSpec, type LightSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {sphericalToCartesian} from '../util/util';
-import {EvaluationParameters} from './evaluation_parameters';
-import {TransitionParameters} from './properties';
+import {type EvaluationParameters} from './evaluation_parameters';
+import {type TransitionParameters} from './properties';
 
 const spec = styleSpec.light;
 
@@ -61,8 +62,8 @@ describe('Light#setLight', () => {
 
     test('validates by default', () => {
         const light = new Light({});
-        const lightSpy = jest.spyOn(light, '_validate');
-        jest.spyOn(console, 'error').mockImplementation(() => { });
+        const lightSpy = vi.spyOn(light, '_validate');
+        vi.spyOn(console, 'error').mockImplementation(() => { });
         light.setLight({color: 'notacolor'});
         light.updateTransitions({transition: false} as any as TransitionParameters);
         light.recalculate({zoom: 16, zoomHistory: {}, now: 10} as EvaluationParameters);
@@ -74,7 +75,7 @@ describe('Light#setLight', () => {
     test('respects validation option', () => {
         const light = new Light({});
 
-        const lightSpy = jest.spyOn(light, '_validate');
+        const lightSpy = vi.spyOn(light, '_validate');
         light.setLight({color: [999]} as any, {validate: false});
         light.updateTransitions({transition: false} as any as TransitionParameters);
         light.recalculate({zoom: 16, zoomHistory: {}, now: 10} as EvaluationParameters);

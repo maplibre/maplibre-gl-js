@@ -1,13 +1,14 @@
+import {vi, expect} from 'vitest';
 import {Map} from '../../ui/map';
 import {extend} from '../../util/util';
-import {Dispatcher} from '../../util/dispatcher';
-import {IActor} from '../actor';
+import {type Dispatcher} from '../../util/dispatcher';
+import {type IActor} from '../actor';
 import {Evented} from '../evented';
-import {SourceSpecification, StyleSpecification, TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {type SourceSpecification, type StyleSpecification, type TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {MercatorTransform} from '../../geo/projection/mercator_transform';
 import {RequestManager} from '../request_manager';
-import {IReadonlyTransform, ITransform} from '../../geo/transform_interface';
-import {Style} from '../../style/style';
+import {type IReadonlyTransform, type ITransform} from '../../geo/transform_interface';
+import {type Style} from '../../style/style';
 import type {GlobeProjection} from '../../geo/projection/globe';
 
 export class StubMap extends Evented {
@@ -76,33 +77,33 @@ export function equalWithPrecision(test, expected, actual, multiplier, message, 
 }
 
 export function setPerformance() {
-    window.performance.mark = jest.fn();
-    window.performance.clearMeasures = jest.fn();
-    window.performance.clearMarks = jest.fn();
+    window.performance.mark = vi.fn();
+    window.performance.clearMeasures = vi.fn();
+    window.performance.clearMarks = vi.fn();
 }
 
 export function setMatchMedia() {
     // https://jestjs.io/docs/manual-mocks#mocking-methods-which-are-not-implemented-in-jsdom
     Object.defineProperty(window, 'matchMedia', {
         writable: true,
-        value: jest.fn().mockImplementation(query => ({
+        value: vi.fn().mockImplementation(query => ({
             matches: false,
             media: query,
             onchange: null,
-            addListener: jest.fn(), // deprecated
-            removeListener: jest.fn(), // deprecated
-            addEventListener: jest.fn(),
-            removeEventListener: jest.fn(),
-            dispatchEvent: jest.fn(),
+            addListener: vi.fn(), // deprecated
+            removeListener: vi.fn(), // deprecated
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
+            dispatchEvent: vi.fn(),
         })),
     });
 }
 
 function setResizeObserver() {
-    global.ResizeObserver = jest.fn().mockImplementation(() => ({
-        observe: jest.fn(),
-        unobserve: jest.fn(),
-        disconnect: jest.fn(),
+    global.ResizeObserver = vi.fn().mockImplementation(() => ({
+        observe: vi.fn(),
+        unobserve: vi.fn(),
+        disconnect: vi.fn(),
     }));
 }
 
@@ -115,11 +116,11 @@ export function beforeMapTest() {
     (WebGLRenderingContext.prototype as any).createVertexArray = WebGLRenderingContext.prototype.getExtension('OES_vertex_array_object').createVertexArrayOES;
     if (!WebGLRenderingContext.prototype.drawingBufferHeight && !WebGLRenderingContext.prototype.drawingBufferWidth) {
         Object.defineProperty(WebGLRenderingContext.prototype, 'drawingBufferWidth', {
-            get: jest.fn(),
+            get: vi.fn(),
             configurable: true,
         });
         Object.defineProperty(WebGLRenderingContext.prototype, 'drawingBufferHeight', {
-            get: jest.fn(),
+            get: vi.fn(),
             configurable: true,
         });
     }

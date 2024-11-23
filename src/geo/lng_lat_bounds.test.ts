@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {LngLat} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
 

@@ -9,7 +9,7 @@ import {TransformProvider} from './transform-provider';
 import type {Map} from '../map';
 import type Point from '@mapbox/point-geometry';
 import type {AroundCenterOptions} from './two_fingers_touch';
-import {Handler} from '../handler_manager';
+import {type Handler} from '../handler_manager';
 import {scaleZoom, zoomScale} from '../../geo/transform_helper';
 
 // deltaY value for mouse scroll wheel identification

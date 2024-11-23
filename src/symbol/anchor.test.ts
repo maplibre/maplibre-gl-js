@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {Anchor} from './anchor';
 
 describe('Anchor', () => {

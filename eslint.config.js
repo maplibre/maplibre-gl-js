@@ -1,7 +1,7 @@
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
 import stylisticTs from '@stylistic/eslint-plugin-ts'
 import tsdoc from 'eslint-plugin-tsdoc';
-import jest from 'eslint-plugin-jest';
+import vitest from 'eslint-plugin-vitest';
 import globals from 'globals';
 import tsParser from '@typescript-eslint/parser';
 import react from 'eslint-plugin-react';
@@ -18,7 +18,7 @@ export default [
             '@typescript-eslint': typescriptEslint,
             '@stylistic': stylisticTs,
             tsdoc,
-            jest,
+            vitest,
         },
 
         linterOptions: {
@@ -43,7 +43,9 @@ export default [
         rules: {
             'no-dupe-class-members': 'off',
             '@typescript-eslint/no-dupe-class-members': ['error'],
-
+            '@typescript-eslint/consistent-type-imports': ['error',{
+                'fixStyle': 'inline-type-imports'
+            }],
             '@typescript-eslint/no-unused-vars': ['warn', {
                 argsIgnorePattern: '^_',
             }],
@@ -99,23 +101,7 @@ export default [
                 max: 1,
             }],
 
-            'tsdoc/syntax': 'warn',
-            'jest/no-commented-out-tests': 'error',
-            'jest/no-disabled-tests': 'warn',
-            'jest/no-focused-tests': 'error',
-            'jest/prefer-to-contain': 'warn',
-            'jest/prefer-to-have-length': 'warn',
-            'jest/valid-expect': 'error',
-            'jest/prefer-to-be': 'warn',
-            'jest/no-alias-methods': 'warn',
-            'jest/no-interpolation-in-snapshots': 'warn',
-
-            'jest/no-large-snapshots': ['warn', {
-                maxSize: 50,
-                inlineMaxSize: 20,
-            }],
-
-            'jest/no-deprecated-functions': 'warn',
+            'tsdoc/syntax': 'warn'
         },
     },
     {
@@ -153,5 +139,4 @@ export default [
             },
         },
     },
-    
 ];
