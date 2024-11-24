@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 - ⚠️ Change the return type of `on` method to return a `Subscription` to allow for easy unsubscribe ([#5080](https://github.com/maplibre/maplibre-gl-js/pull/5080))
+- ⚠️ Change drag rotate behavior to be less abrupt around the center ([#5104](https://github.com/maplibre/maplibre-gl-js/pull/5104))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
