@@ -3,7 +3,7 @@ import {GlobeTransform} from './globe_transform';
 import {globeConstants, type GlobeProjection} from './globe';
 import {getGlobeProjectionMock} from '../../util/test/util';
 import {LngLat} from '../lng_lat';
-import {coveringTiles, coveringZoomLevel, CoveringZoomOptions} from './covering_tiles';
+import {coveringTiles, coveringZoomLevel, type CoveringZoomOptions} from './covering_tiles';
 import {OverscaledTileID} from '../../source/tile_id';
 import {MercatorTransform} from './mercator_transform';
 

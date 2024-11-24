@@ -9,7 +9,7 @@ import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinat
 import {expectToBeCloseToArray, getGlobeProjectionMock, sleep} from '../../util/test/util';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {tileCoordinatesToLocation} from './mercator_utils';
-import { MercatorTransform } from './mercator_transform';
+import {MercatorTransform} from './mercator_transform';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: Array<number>) {
     const lat = latDegrees / 180.0 * Math.PI;
@@ -645,7 +645,7 @@ describe('GlobeTransform', () => {
         test('change transform and make sure render world copies is kept', () => {
             const globeTransform = createGlobeTransform(globeProjectionMock);
             globeTransform.setRenderWorldCopies(true);
-            let mercator = new MercatorTransform(0, 1, 2, 3, false);
+            const mercator = new MercatorTransform(0, 1, 2, 3, false);
             mercator.apply(globeTransform);
 
             expect(mercator.renderWorldCopies).toBeTruthy();
