@@ -144,7 +144,7 @@ describe('Actor', () => {
 
         delete worker.worker.actor.messageHandlers[MessageType.abortTile];
 
-        await expect(async () => actor.sendAsync({type: MessageType.abortTile, data: { type: 'geojson' } as any})).rejects.toThrow(/Could not find a registered handler for.*/);
+        await expect(async () => actor.sendAsync({type: MessageType.abortTile, data: {type: 'geojson'} as any})).rejects.toThrow(/Could not find a registered handler for.*/);
     });
 
     test('should not process a message with the wrong map id', async () => {
