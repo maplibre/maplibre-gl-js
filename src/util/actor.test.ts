@@ -1,29 +1,11 @@
-import {describe, beforeAll, afterAll, test, expect, vi} from 'vitest';
+import {describe, test, expect, vi} from 'vitest';
 import {Actor, type ActorTarget} from './actor';
 import {type WorkerGlobalScopeInterface, workerFactory} from './web_worker';
-import {setGlobalWorker} from '../../test/unit/lib/web_worker_mock';
 import {sleep} from './test/util';
 import {ABORT_ERROR, createAbortError} from './abort_error';
 import {MessageType} from './actor_messages';
 
-class MockWorker {
-    self: any;
-    actor: Actor;
-    constructor(self) {
-        this.self = self;
-        this.actor = new Actor(self);
-    }
-}
-
 describe('Actor', () => {
-    let originalWorker;
-    beforeAll(() => {
-        originalWorker = global.Worker;
-        setGlobalWorker(MockWorker);
-    });
-    afterAll(() => {
-        global.Worker = originalWorker;
-    });
 
     test('forwards responses to correct handler', async () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
@@ -102,6 +84,12 @@ describe('Actor', () => {
         const spy = vi.fn().mockReturnValue(Promise.resolve({}));
         worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, spy);
 
+        worker.worker.actor.invoker.trigger = async () => {
+            // Allows the cancel to be processed at the right point in time
+            await sleep(200);
+            worker.worker.actor.process();
+        }
+
         let received = false;
         const abortController = new AbortController();
         const p1 = actor.sendAsync({type: MessageType.getClusterExpansionZoom, data: {type: 'geojson', source: '', clusterId: 1729}, mustQueue: true}, abortController)
@@ -110,7 +98,7 @@ describe('Actor', () => {
 
         abortController.abort();
 
-        const p2 = new Promise((resolve) => (setTimeout(resolve, 500)));
+        const p2 = sleep(500);
 
         await Promise.any([p1, p2]);
         expect(received).toBeFalsy();
@@ -154,9 +142,9 @@ describe('Actor', () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
-        worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, () => Promise.resolve(42));
+        delete worker.worker.actor.messageHandlers[MessageType.abortTile];
 
-        await expect(async () => actor.sendAsync({type: MessageType.abortTile, data: {} as any})).rejects.toThrow(/Could not find a registered handler for.*/);
+        await expect(async () => actor.sendAsync({type: MessageType.abortTile, data: { type: 'geojson' } as any})).rejects.toThrow(/Could not find a registered handler for.*/);
     });
 
     test('should not process a message with the wrong map id', async () => {
