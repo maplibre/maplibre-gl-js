@@ -1,7 +1,7 @@
 import Point from '@mapbox/point-geometry';
 import {LngLat, type LngLatLike} from '../lng_lat';
 import {type IReadonlyTransform, type ITransform} from '../transform_interface';
-import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation} from './camera_helper';
+import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation, type UpdateRotationArgs} from './camera_helper';
 import {type CameraForBoundsOptions} from '../../ui/camera';
 import {type PaddingOptions} from '../edge_insets';
 import {type LngLatBounds} from '../lng_lat_bounds';
@@ -162,7 +162,13 @@ export class MercatorCameraHelper implements ICameraHelper {
                 tr.setZoom(interpolates.number(startZoom, endZoom, k));
             }
             if (!quat.equals(startRotation, endRotation)) {
-                updateRotation(startRotation, endRotation, startEulerAngles, {roll: endRoll, pitch: endPitch, bearing: endBearing}, tr, k, startEulerAngles.roll != endRoll);
+                updateRotation({startRotation,
+                    endRotation,
+                    startEulerAngles,
+                    endEulerAngles: {roll: endRoll, pitch: endPitch, bearing: endBearing},
+                    tr,
+                    k,
+                    useSlerp: startEulerAngles.roll != endRoll} as UpdateRotationArgs);
             }
             if (doPadding) {
                 tr.interpolatePadding(startPadding, options.padding, k);

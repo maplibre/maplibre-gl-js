@@ -62,6 +62,16 @@ export type FlyToHandlerResult = {
     pixelPathLength: number;
 }
 
+export type UpdateRotationArgs = {
+    startRotation: quat;
+    endRotation: quat;
+    startEulerAngles: RollPitchBearing;
+    endEulerAngles: RollPitchBearing;
+    tr: ITransform;
+    k: number;
+    useSlerp: boolean;
+}
+
 /**
  * @internal
  */
@@ -107,25 +117,25 @@ export interface ICameraHelper {
  * @param k - the interpolation fraction, between 0 and 1.
  * @param useSlerp - if true, use spherical linear interpolation. If false, use linear interpolation of Euler angles.
  */
-export function updateRotation(startRotation: quat, endRotation: quat, startEulerAngles: RollPitchBearing, endEulerAngles: RollPitchBearing, tr: ITransform, k: number, useSlerp: boolean) {
-    if (useSlerp) {
+export function updateRotation(args: UpdateRotationArgs) {
+    if (args.useSlerp) {
         // At pitch ==0, the Euler angle representation is ambiguous. In this case, set the Euler angles
         // to the representation requested by the caller
-        if (k < 1) {
+        if (args.k < 1) {
             const rotation: quat = new Float64Array(4) as any;
-            quat.slerp(rotation, startRotation, endRotation, k);
+            quat.slerp(rotation, args.startRotation, args.endRotation, args.k);
             const eulerAngles = getRollPitchBearing(rotation);
-            tr.setRoll(eulerAngles.roll);
-            tr.setPitch(eulerAngles.pitch);
-            tr.setBearing(eulerAngles.bearing);
+            args.tr.setRoll(eulerAngles.roll);
+            args.tr.setPitch(eulerAngles.pitch);
+            args.tr.setBearing(eulerAngles.bearing);
         } else {
-            tr.setRoll(endEulerAngles.roll);
-            tr.setPitch(endEulerAngles.pitch);
-            tr.setBearing(endEulerAngles.bearing);
+            args.tr.setRoll(args.endEulerAngles.roll);
+            args.tr.setPitch(args.endEulerAngles.pitch);
+            args.tr.setBearing(args.endEulerAngles.bearing);
         }
     } else {
-        tr.setRoll(interpolates.number(startEulerAngles.roll, endEulerAngles.roll, k));
-        tr.setPitch(interpolates.number(startEulerAngles.pitch, endEulerAngles.pitch, k));
-        tr.setBearing(interpolates.number(startEulerAngles.bearing, endEulerAngles.bearing, k));
+        args.tr.setRoll(interpolates.number(args.startEulerAngles.roll, args.endEulerAngles.roll, args.k));
+        args.tr.setPitch(interpolates.number(args.startEulerAngles.pitch, args.endEulerAngles.pitch, args.k));
+        args.tr.setBearing(interpolates.number(args.startEulerAngles.bearing, args.endEulerAngles.bearing, args.k));
     }
 }

@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
 import {type IReadonlyTransform, type ITransform} from '../transform_interface';
-import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation} from './camera_helper';
+import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation, type UpdateRotationArgs} from './camera_helper';
 import {type GlobeProjection} from './globe';
 import {LngLat, type LngLatLike} from '../lng_lat';
 import {MercatorCameraHelper} from './mercator_camera_helper';
@@ -319,7 +319,13 @@ export class GlobeCameraHelper implements ICameraHelper {
 
         const easeFunc = (k: number) => {
             if (!quat.equals(startRotation, endRotation)) {
-                updateRotation(startRotation, endRotation, startEulerAngles, {roll: endRoll, pitch: endPitch, bearing: endBearing}, tr, k, startEulerAngles.roll != endRoll);
+                updateRotation({startRotation,
+                    endRotation,
+                    startEulerAngles,
+                    endEulerAngles: {roll: endRoll, pitch: endPitch, bearing: endBearing},
+                    tr,
+                    k,
+                    useSlerp: startEulerAngles.roll != endRoll} as UpdateRotationArgs);
             }
 
             if (options.around) {
