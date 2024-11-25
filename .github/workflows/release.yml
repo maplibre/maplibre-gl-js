@@ -26,7 +26,7 @@ jobs:
       - name: Check if version has been updated
         id: check
         uses: EndBug/version-check@v2
-          
+
     outputs:
       publish: ${{ steps.check.outputs.changed }}
 
@@ -56,7 +56,7 @@ jobs:
         uses: martinbeentjes/npm-get-version-action@v1.3.1
 
       - name: Install
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Prepare release
         id: prepare_release
