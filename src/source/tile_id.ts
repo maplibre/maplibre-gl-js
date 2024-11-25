@@ -93,8 +93,9 @@ export class OverscaledTileID {
      * This matrix is used during terrain's render-to-texture stage only.
      * If the render-to-texture stage is active, this matrix will be present
      * and should be used, otherwise this matrix will be null.
+     * The matrix should be float32 in order to avoid slow WebGL calls in Chrome.
      */
-    terrainRttPosMatrix: mat4 | null = null;
+    terrainRttPosMatrix32f: mat4 | null = null;
 
     constructor(overscaledZ: number, wrap: number, z: number, x: number, y: number) {
         if (overscaledZ < z) throw new Error(`overscaledZ should be >= z; overscaledZ = ${overscaledZ}; z = ${z}`);
@@ -223,4 +224,4 @@ function getQuadkey(z, x, y) {
 }
 
 register('CanonicalTileID', CanonicalTileID);
-register('OverscaledTileID', OverscaledTileID, {omit: ['terrainRttPosMatrix']});
+register('OverscaledTileID', OverscaledTileID, {omit: ['terrainRttPosMatrix32f']});
