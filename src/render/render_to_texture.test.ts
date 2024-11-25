@@ -122,7 +122,7 @@ describe('render to texture', () => {
                         'key': '923',
                         'overscaledZ': 3,
                         'wrap': 0,
-                        'terrainRttPosMatrix': null,
+                        'terrainRttPosMatrix32f': null,
                     }
                 ]
             }

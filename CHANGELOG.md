@@ -6,6 +6,7 @@
 
 ### 🐞 Bug fixes
 - Fixes line flickering problem ([#5094](https://github.com/maplibre/maplibre-gl-js/pull/5094))
+- Fix poor performance in Chrome related to passing matrices to WebGL ([#5072](https://github.com/maplibre/maplibre-gl-js/pull/5072))
 - Fix unwanted roll when motion is interrupted ([#5083](https://github.com/maplibre/maplibre-gl-js/pull/5083))
 - _...Add new stuff here..._
 
