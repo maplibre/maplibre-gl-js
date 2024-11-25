@@ -94,7 +94,7 @@
     "eslint-plugin-html": "^8.1.2",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-react": "^7.37.2",
-    "eslint-plugin-tsdoc": "0.3.0",
+    "eslint-plugin-tsdoc": "0.4.0",
     "eslint-plugin-vitest": "^0.5.4",
     "expect": "^29.7.0",
     "glob": "^11.0.0",
