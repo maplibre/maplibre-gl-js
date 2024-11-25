@@ -210,10 +210,8 @@ export class MercatorTransform implements ITransform {
     private _pixelMatrixInverse: mat4;
     private _fogMatrix: mat4;
 
-    private _posMatrixCacheF32: Map<string, mat4> = new Map();
-    private _posMatrixCacheF64: Map<string, mat4> = new Map();
-    private _alignedPosMatrixCacheF32: Map<string, mat4> = new Map();
-    private _alignedPosMatrixCacheF64: Map<string, mat4> = new Map();
+    private _posMatrixCache: Map<string, {f64: mat4; f32: mat4}> = new Map();
+    private _alignedPosMatrixCache: Map<string, {f64: mat4; f32: mat4}> = new Map();
     private _fogMatrixCacheF32: Map<string, mat4> = new Map();
 
     private _nearZ;
@@ -410,19 +408,21 @@ export class MercatorTransform implements ITransform {
      */
     calculatePosMatrix(tileID: UnwrappedTileID | OverscaledTileID, aligned: boolean = false, useFloat32?: boolean): mat4 {
         const posMatrixKey = tileID.key ?? calculateTileKey(tileID.wrap, tileID.canonical.z, tileID.canonical.z, tileID.canonical.x, tileID.canonical.y);
-        const cacheF32 = aligned ? this._alignedPosMatrixCacheF32 : this._posMatrixCacheF32;
-        const cacheF64 = aligned ? this._alignedPosMatrixCacheF64 : this._posMatrixCacheF64;
-        const cacheRequested = useFloat32 ? cacheF32 : cacheF64;
-        if (cacheRequested.has(posMatrixKey)) {
-            return cacheRequested.get(posMatrixKey);
+        const cache = aligned ? this._alignedPosMatrixCache : this._posMatrixCache;
+        if (cache.has(posMatrixKey)) {
+            const matrices = cache.get(posMatrixKey);
+            return useFloat32 ? matrices.f32 : matrices.f64;
         }
 
         const tileMatrix = calculateTileMatrix(tileID, this.worldSize);
         mat4.multiply(tileMatrix, aligned ? this._alignedProjMatrix : this._viewProjMatrix, tileMatrix);
-        cacheF64.set(posMatrixKey, tileMatrix);
-        cacheF32.set(posMatrixKey, new Float32Array(tileMatrix)); // Must be 32 bit floats, otherwise WebGL calls in Chrome get very slow.
+        const matrices = {
+            f64: tileMatrix,
+            f32: new Float32Array(tileMatrix), // Must have a 32 bit float version for WebGL, otherwise WebGL calls in Chrome get very slow.
+        }
+        cache.set(posMatrixKey, matrices);
         // Make sure to return the correct precision
-        return cacheRequested.get(posMatrixKey);
+        return useFloat32 ? matrices.f32 : matrices.f64;
     }
 
     calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {
@@ -718,10 +718,8 @@ export class MercatorTransform implements ITransform {
     }
 
     private _clearMatrixCaches(): void {
-        this._posMatrixCacheF32.clear();
-        this._posMatrixCacheF64.clear();
-        this._alignedPosMatrixCacheF32.clear();
-        this._alignedPosMatrixCacheF64.clear();
+        this._posMatrixCache.clear();
+        this._alignedPosMatrixCache.clear();
         this._fogMatrixCacheF32.clear();
     }
 
