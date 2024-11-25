@@ -1,6 +1,6 @@
 import {DOM} from '../../util/dom';
 import {Event} from '../../util/evented';
-import {Handler} from '../handler_manager';
+import {type Handler} from '../handler_manager';
 
 import type {Map} from '../map';
 

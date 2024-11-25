@@ -1,6 +1,7 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {beforeMapTest, sleep} from '../../util/test/util';
-import {Map, MapOptions} from '../map';
+import {Map, type MapOptions} from '../map';
 
 function createMap() {
     return new Map({container: window.document.createElement('div')} as any as MapOptions);
@@ -27,7 +28,7 @@ describe('dbclick_zoom', () => {
     test('DoubleClickZoomHandler zooms on dblclick event', () => {
         const map = createMap();
 
-        const zoom = jest.fn();
+        const zoom = vi.fn();
         map.on('zoomstart', zoom);
 
         simulate.dblclick(map.getCanvas());
@@ -43,7 +44,7 @@ describe('dbclick_zoom', () => {
 
         map.on('dblclick', e => e.preventDefault());
 
-        const zoom = jest.fn();
+        const zoom = vi.fn();
         map.on('zoomstart', zoom);
 
         simulate.dblclick(map.getCanvas());
@@ -57,7 +58,7 @@ describe('dbclick_zoom', () => {
     test('DoubleClickZoomHandler zooms on double tap if touchstart events are < 300ms apart', async () => {
         const map = createMap();
 
-        const zoom = jest.fn();
+        const zoom = vi.fn();
         map.on('zoomstart', zoom);
 
         await simulateDoubleTap(map, 100);
@@ -69,7 +70,7 @@ describe('dbclick_zoom', () => {
     test('DoubleClickZoomHandler does not zoom on double tap if touchstart events are > 500ms apart', async () => {
         const map = createMap();
 
-        const zoom = jest.fn();
+        const zoom = vi.fn();
         map.on('zoom', zoom);
 
         await simulateDoubleTap(map, 500);
@@ -81,7 +82,7 @@ describe('dbclick_zoom', () => {
     test('DoubleClickZoomHandler does not zoom on double tap if touchstart events are in different locations', async () => {
         const map = createMap();
 
-        const zoom = jest.fn();
+        const zoom = vi.fn();
         map.on('zoom', zoom);
 
         const canvas = map.getCanvas();
@@ -101,7 +102,7 @@ describe('dbclick_zoom', () => {
     test('DoubleClickZoomHandler zooms on the second touchend event of a double tap', () => {
         const map = createMap();
 
-        const zoom = jest.fn();
+        const zoom = vi.fn();
         map.on('zoomstart', zoom);
 
         const canvas = map.getCanvas();
@@ -135,7 +136,7 @@ describe('dbclick_zoom', () => {
     test('DoubleClickZoomHandler does not zoom on double tap if second touchend is >300ms after first touchstart', async () => {
         const map = createMap();
 
-        const zoom = jest.fn();
+        const zoom = vi.fn();
         map.on('zoom', zoom);
 
         const canvas = map.getCanvas();

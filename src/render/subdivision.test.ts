@@ -1,3 +1,4 @@
+import {describe, expect, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {EXTENT} from '../data/extent';
 import {scanlineTriangulateVertexRing, subdividePolygon, subdivideVertexLine} from './subdivision';

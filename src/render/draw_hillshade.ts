@@ -2,7 +2,7 @@ import {Texture} from './texture';
 import {StencilMode} from '../gl/stencil_mode';
 import {DepthMode} from '../gl/depth_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
-import {ColorMode} from '../gl/color_mode';
+import {type ColorMode} from '../gl/color_mode';
 import {
     hillshadeUniformValues,
     hillshadeUniformPrepareValues
@@ -38,7 +38,7 @@ export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer:
             renderHillshade(painter, sourceCache, layer, coords, stencilBorders, depthMode, colorMode, true, isRenderingToTexture); // draw with borders
         } else {
             // Simple rendering
-            const [stencil, coords] = painter.stencilConfigForOverlap(tileIDs);
+            const [stencil, coords] = painter.getStencilConfigForOverlapAndUpdateStencilID(tileIDs);
             renderHillshade(painter, sourceCache, layer, coords, stencil, depthMode, colorMode, false, isRenderingToTexture);
         }
     }

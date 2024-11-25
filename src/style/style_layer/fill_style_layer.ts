@@ -3,8 +3,8 @@ import {StyleLayer} from '../style_layer';
 import {FillBucket} from '../../data/bucket/fill_bucket';
 import {polygonIntersectsMultiPolygon} from '../../util/intersection_tests';
 import {translateDistance, translate} from '../query_utils';
-import properties, {FillLayoutPropsPossiblyEvaluated, FillPaintPropsPossiblyEvaluated} from './fill_style_layer_properties.g';
-import {Transitionable, Transitioning, Layout, PossiblyEvaluated} from '../properties';
+import properties, {type FillLayoutPropsPossiblyEvaluated, type FillPaintPropsPossiblyEvaluated} from './fill_style_layer_properties.g';
+import {type Transitionable, type Transitioning, type Layout, type PossiblyEvaluated} from '../properties';
 
 import type {FeatureState, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {BucketParameters} from '../../data/bucket';

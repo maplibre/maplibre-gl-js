@@ -1,10 +1,10 @@
-import Point from '@mapbox/point-geometry';
-import {IReadonlyTransform, ITransform} from '../transform_interface';
-import {LngLat, LngLatLike} from '../lng_lat';
-import {CameraForBoundsOptions, PointLike} from '../../ui/camera';
-import {PaddingOptions} from '../edge_insets';
-import {LngLatBounds} from '../lng_lat_bounds';
-import {getRollPitchBearing, RollPitchBearing, warnOnce} from '../../util/util';
+import type Point from '@mapbox/point-geometry';
+import {type IReadonlyTransform, type ITransform} from '../transform_interface';
+import {type LngLat, type LngLatLike} from '../lng_lat';
+import {type CameraForBoundsOptions, type PointLike} from '../../ui/camera';
+import {type PaddingOptions} from '../edge_insets';
+import {type LngLatBounds} from '../lng_lat_bounds';
+import {getRollPitchBearing, type RollPitchBearing, warnOnce} from '../../util/util';
 import {quat} from 'gl-matrix';
 
 export type MapControlsDeltas = {

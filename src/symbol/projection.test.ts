@@ -1,4 +1,5 @@
-import {SymbolProjectionContext, ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, projectWithMatrix, transformToOffsetNormal, projectLineVertexToLabelPlane, getPitchedLabelPlaneMatrix, getGlCoordMatrix, getTileSkewVectors} from './projection';
+import {describe, test, expect} from 'vitest';
+import {type SymbolProjectionContext, type ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, projectWithMatrix, transformToOffsetNormal, projectLineVertexToLabelPlane, getPitchedLabelPlaneMatrix, getGlCoordMatrix, getTileSkewVectors} from './projection';
 
 import Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';

@@ -4,7 +4,7 @@ import {extend} from '../../util/util';
 import type {Context} from '../../gl/context';
 import type {Painter} from '../painter';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
-import {mat4} from 'gl-matrix';
+import {type mat4} from 'gl-matrix';
 
 export type SymbolIconUniformsType = {
     'u_is_size_zoom_constant': Uniform1i;

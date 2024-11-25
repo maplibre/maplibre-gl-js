@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Version to change to.
+        description: Version to change to (semver).
         required: true
         type: string
 

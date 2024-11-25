@@ -1,8 +1,8 @@
 
 import {browser} from '../util/browser';
 import {Event, Evented} from '../util/evented';
-import {RTLPluginStatus, RTLPluginLoadedEventName, PluginState} from './rtl_text_plugin_status';
-import {Dispatcher, getGlobalDispatcher} from '../util/dispatcher';
+import {type RTLPluginStatus, RTLPluginLoadedEventName, type PluginState} from './rtl_text_plugin_status';
+import {type Dispatcher, getGlobalDispatcher} from '../util/dispatcher';
 import {MessageType} from '../util/actor_messages';
 
 class RTLMainThreadPlugin extends Evented {

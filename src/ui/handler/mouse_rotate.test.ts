@@ -1,3 +1,4 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {extend} from '../../util/util';
 import {Map} from '../../ui/map';
 import {DOM} from '../../util/dom';
@@ -19,7 +20,7 @@ describe('mouse rotate', () => {
         const mouseRotate = map.handlers._handlersById.mouseRotate;
 
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(browser, 'now').mockReturnValue(0);
         expect(mouseRotate.isActive()).toBe(false);
 
         simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 0, clientY: 0});

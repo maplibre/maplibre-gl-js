@@ -5,7 +5,7 @@ import {LngLat} from '../geo/lng_lat';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {Event, Evented} from '../util/evented';
-import {Terrain} from '../render/terrain';
+import {type Terrain} from '../render/terrain';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 
 import type {ITransform} from '../geo/transform_interface';
@@ -15,7 +15,7 @@ import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
 import type {HandlerManager} from './handler_manager';
 import {scaleZoom} from '../geo/transform_helper';
-import {ICameraHelper} from '../geo/projection/camera_helper';
+import {type ICameraHelper} from '../geo/projection/camera_helper';
 
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
@@ -29,11 +29,6 @@ import {ICameraHelper} from '../geo/projection/camera_helper';
  * ```
  */
 export type PointLike = Point | [number, number];
-
-/**
- * A helper to allow require of at least one property
- */
-export type RequireAtLeastOne<T> = { [K in keyof T]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<keyof T, K>>>; }[keyof T];
 
 /**
  * Options common to {@link Map#jumpTo}, {@link Map#easeTo}, and {@link Map#flyTo}, controlling the desired location,
@@ -111,7 +106,7 @@ export type CameraForBoundsOptions = CameraOptions & {
     /**
      * The amount of padding in pixels to add to the given bounds.
      */
-    padding?: number | RequireAtLeastOne<PaddingOptions>;
+    padding?: number | PaddingOptions;
     /**
      * The center of the given bounds relative to the map's center, measured in pixels.
      * @defaultValue [0, 0]
@@ -164,16 +159,21 @@ export type FlyToOptions = AnimationOptions & CameraOptions & {
     /**
      * The amount of padding in pixels to add to the given bounds.
      */
-    padding?: number | RequireAtLeastOne<PaddingOptions>;
+    padding?: number | PaddingOptions;
 }
 
+/**
+ * The {@link Map#easeTo} options object
+ */
 export type EaseToOptions = AnimationOptions & CameraOptions & {
     delayEndEvents?: number;
-    padding?: number | RequireAtLeastOne<PaddingOptions>;
+    padding?: number | PaddingOptions;
     /**
      * If `zoom` is specified, `around` determines the point around which the zoom is centered.
      */
     around?: LngLatLike;
+    easeId?: string;
+    noMoveStart?: boolean;
 }
 
 /**
@@ -433,7 +433,7 @@ export abstract class Camera extends Evented {
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
      * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
      */
-    panBy(offset: PointLike, options?: AnimationOptions, eventData?: any): this {
+    panBy(offset: PointLike, options?: EaseToOptions, eventData?: any): this {
         offset = Point.convert(offset).mult(-1);
         return this.panTo(this.transform.center, extend({offset}, options), eventData);
     }
@@ -454,7 +454,7 @@ export abstract class Camera extends Evented {
      * ```
      * @see [Update a feature in realtime](https://maplibre.org/maplibre-gl-js/docs/examples/live-update-feature/)
      */
-    panTo(lnglat: LngLatLike, options?: AnimationOptions, eventData?: any): this {
+    panTo(lnglat: LngLatLike, options?: EaseToOptions, eventData?: any): this {
         return this.easeTo(extend({
             center: lnglat
         }, options), eventData);
@@ -508,7 +508,7 @@ export abstract class Camera extends Evented {
      * });
      * ```
      */
-    zoomTo(zoom: number, options?: AnimationOptions | null, eventData?: any): this {
+    zoomTo(zoom: number, options?: EaseToOptions | null, eventData?: any): this {
         return this.easeTo(extend({
             zoom
         }, options), eventData);
@@ -653,7 +653,7 @@ export abstract class Camera extends Evented {
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
      */
-    rotateTo(bearing: number, options?: AnimationOptions, eventData?: any): this {
+    rotateTo(bearing: number, options?: EaseToOptions, eventData?: any): this {
         return this.easeTo(extend({
             bearing
         }, options), eventData);
@@ -1006,7 +1006,7 @@ export abstract class Camera extends Evented {
      * map.jumpTo(cameraOptions);
      * ```
      */
-    calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo: number = 0): CameraOptions {
+    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number = 0): CameraOptions {
         const fromMercator = MercatorCoordinate.fromLngLat(from, altitudeFrom);
         const toMercator = MercatorCoordinate.fromLngLat(to, altitudeTo);
         const dx = toMercator.x - fromMercator.x;
@@ -1053,7 +1053,7 @@ export abstract class Camera extends Evented {
      * map.jumpTo(cameraOptions);
      * ```
      */
-    calculateCameraOptionsFromCameraLngLatAltRotation(cameraLngLat: LngLat, cameraAlt: number, bearing: number, pitch: number, roll?: number): CameraOptions {
+    calculateCameraOptionsFromCameraLngLatAltRotation(cameraLngLat: LngLatLike, cameraAlt: number, bearing: number, pitch: number, roll?: number): CameraOptions {
         const centerInfo = this.transform.calculateCenterFromCameraLngLatAlt(cameraLngLat, cameraAlt, bearing, pitch);
         return {
             center: centerInfo.center,
@@ -1082,10 +1082,7 @@ export abstract class Camera extends Evented {
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
      * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
      */
-    easeTo(options: EaseToOptions & {
-        easeId?: string;
-        noMoveStart?: boolean;
-    }, eventData?: any): this {
+    easeTo(options: EaseToOptions, eventData?: any): this {
         this._stop(false, options.easeId);
 
         options = extend({
@@ -1139,7 +1136,7 @@ export abstract class Camera extends Evented {
         this._rotating = this._rotating || (startBearing !== bearing);
         this._pitching = this._pitching || (pitch !== startPitch);
         this._rolling = this._rolling || (roll !== startRoll);
-        this._padding = !tr.isPaddingEqual(padding as PaddingOptions);
+        this._padding = !tr.isPaddingEqual(padding);
         this._zooming = this._zooming || easeHandler.isZooming;
         this._easeId = options.easeId;
         this._prepareEase(eventData, options.noMoveStart, currently);
@@ -1163,7 +1160,8 @@ export abstract class Camera extends Evented {
         return this;
     }
 
-    _prepareEase(eventData: any, noMoveStart: boolean, currently: any = {}) {
+    _prepareEase(eventData: any, noMoveStart: boolean, 
+        currently: { moving?: boolean; zooming?: boolean; rotating?: boolean; pitching?: boolean; rolling?: boolean} = {}) {
         this._moving = true;
         if (!noMoveStart && !currently.moving) {
             this.fire(new Event('movestart', eventData));

@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {sleep} from './test/util';
 import {throttle} from './throttle';
 

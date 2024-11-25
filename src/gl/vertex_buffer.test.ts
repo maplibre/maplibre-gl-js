@@ -1,7 +1,8 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {VertexBuffer} from './vertex_buffer';
 import {StructArrayLayout3i6} from '../data/array_types.g';
 import {Context} from '../gl/context';
-import {StructArrayMember} from '../util/struct_array';
+import {type StructArrayMember} from '../util/struct_array';
 
 describe('VertexBuffer', () => {
     let gl: WebGLRenderingContext;
@@ -37,7 +38,7 @@ describe('VertexBuffer', () => {
         const context = new Context(gl);
         const array = new TestArray();
         const buffer = new VertexBuffer(context, array, attributes);
-        const spy = jest.spyOn(context.gl, 'enableVertexAttribArray').mockImplementation(() => {});
+        const spy = vi.spyOn(context.gl, 'enableVertexAttribArray').mockImplementation(() => {});
         buffer.enableAttributes(context.gl, {attributes: {map: 5, box: 6}} as any);
         expect(spy.mock.calls).toEqual([[5], [6]]);
     });
@@ -46,7 +47,7 @@ describe('VertexBuffer', () => {
         const context = new Context(gl);
         const array = new TestArray();
         const buffer = new VertexBuffer(context, array, attributes);
-        const spy = jest.spyOn(context.gl, 'vertexAttribPointer').mockImplementation(() => {});
+        const spy = vi.spyOn(context.gl, 'vertexAttribPointer').mockImplementation(() => {});
         buffer.setVertexAttribPointers(context.gl, {attributes: {map: 5, box: 6}} as any, 50);
         expect(spy.mock.calls).toEqual([
             [5, 1, context.gl['SHORT'], false, 6, 300],

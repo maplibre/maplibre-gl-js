@@ -1,3 +1,4 @@
+import {describe, expect, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
 import {getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, tileCoordinatesToLocation, tileCoordinatesToMercatorCoordinates} from './mercator_utils';

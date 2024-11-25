@@ -1,9 +1,10 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {createMap as globalCreateMap, beforeMapTest} from '../util/test/util';
-import {Popup, Offset} from './popup';
+import {Popup, type Offset} from './popup';
 import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
 import simulate from '../../test/unit/lib/simulate_interaction';
-import {PositionAnchor} from './anchor';
+import {type PositionAnchor} from './anchor';
 
 const containerWidth = 512;
 const containerHeight = 512;
@@ -120,39 +121,39 @@ describe('popup', () => {
 
     test('Popup fires close event when removed', () => {
         const map = createMap();
-        const onClose = jest.fn();
+        const onClose = vi.fn();
 
-        new Popup()
+        const popup = new Popup()
             .setText('Test')
-            .setLngLat([0, 0])
-            .on('close', onClose)
-            .addTo(map)
-            .remove();
+            .setLngLat([0, 0]);
+        popup.on('close', onClose);
+        popup.addTo(map);
+        popup.remove();
 
         expect(onClose).toHaveBeenCalled();
     });
 
     test('Popup does not fire close event when removed if it is not on the map', () => {
-        const onClose = jest.fn();
+        const onClose = vi.fn();
 
-        new Popup()
+        const popup = new Popup()
             .setText('Test')
-            .setLngLat([0, 0])
-            .on('close', onClose)
-            .remove();
+            .setLngLat([0, 0]);
+        popup.on('close', onClose);
+        popup.remove();
 
         expect(onClose).not.toHaveBeenCalled();
     });
 
     test('Popup fires open event when added', () => {
         const map = createMap();
-        const onOpen = jest.fn();
+        const onOpen = vi.fn();
 
-        new Popup()
+        const popup = new Popup()
             .setText('Test')
-            .setLngLat([0, 0])
-            .on('open', onOpen)
-            .addTo(map);
+            .setLngLat([0, 0]);
+        popup.on('open', onOpen);
+        popup.addTo(map);
 
         expect(onOpen).toHaveBeenCalled();
     });
@@ -393,7 +394,7 @@ describe('popup', () => {
             Object.defineProperty(popup.getElement(), 'offsetWidth', {value: 100});
             Object.defineProperty(popup.getElement(), 'offsetHeight', {value: 100});
 
-            jest.spyOn(map, 'project').mockReturnValue(point);
+            vi.spyOn(map, 'project').mockReturnValue(point);
             popup.setLngLat([0, 0]);
 
             expect(popup.getElement().classList.contains(`maplibregl-popup-anchor-${anchor}`)).toBeTruthy();
@@ -401,7 +402,7 @@ describe('popup', () => {
 
         test(`Popup translation reflects offset and ${anchor} anchor`, () => {
             const map = createMap();
-            jest.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
+            vi.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
 
             const popup = new Popup({anchor, offset: 10})
                 .setLngLat([0, 0])
@@ -427,7 +428,7 @@ describe('popup', () => {
         Object.defineProperty(popup.getElement(), 'offsetWidth', {value: containerWidth / 2});
         Object.defineProperty(popup.getElement(), 'offsetHeight', {value: containerHeight / 2});
 
-        jest.spyOn(map, 'project').mockReturnValue(point);
+        vi.spyOn(map, 'project').mockReturnValue(point);
         popup.setLngLat([0, 0]);
 
         expect(popup.getElement().classList.contains('maplibregl-popup-anchor-top')).toBeTruthy();
@@ -435,7 +436,7 @@ describe('popup', () => {
 
     test('Popup is offset via a PointLike offset option', () => {
         const map = createMap();
-        jest.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
+        vi.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
 
         const popup = new Popup({anchor: 'top-left', offset: [5, 10]})
             .setLngLat([0, 0])
@@ -447,7 +448,7 @@ describe('popup', () => {
 
     test('Popup is offset via an object offset option', () => {
         const map = createMap();
-        jest.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
+        vi.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
 
         const popup = new Popup({anchor: 'top-left', offset: {'top-left': [5, 10]} as Offset})
             .setLngLat([0, 0])
@@ -459,7 +460,7 @@ describe('popup', () => {
 
     test('Popup is offset via an incomplete object offset option', () => {
         const map = createMap();
-        jest.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
+        vi.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
 
         const popup = new Popup({anchor: 'top-right', offset: {'top-left': [5, 10]} as Offset})
             .setLngLat([0, 0])
@@ -774,7 +775,7 @@ describe('popup', () => {
 
     test('Popup is positioned on rounded whole-number pixel coordinates by default when offset is a decimal', () => {
         const map = createMap();
-        jest.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
+        vi.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
 
         const popup = new Popup({offset: [-0.1, 0.9]})
             .setLngLat([0, 0])
@@ -786,7 +787,7 @@ describe('popup', () => {
 
     test('Popup position is not rounded when subpixel positioning is enabled', () => {
         const map = createMap();
-        jest.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
+        vi.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
 
         const popup = new Popup({offset: [-0.1, 0.9], subpixelPositioning: true})
             .setLngLat([0, 0])
@@ -798,7 +799,7 @@ describe('popup', () => {
 
     test('Popup subpixel positioning can be enabled with Popup#setSubpixelPositioning', () => {
         const map = createMap();
-        jest.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
+        vi.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
 
         const popup = new Popup({offset: [0, 0]})
             .setLngLat([0, 0])
@@ -812,7 +813,7 @@ describe('popup', () => {
     });
     test('Popup subpixel positioning can be disabled with Popup#setSubpixelPositioning', () => {
         const map = createMap();
-        jest.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
+        vi.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
 
         const popup = new Popup({offset: [0, 0], subpixelPositioning: true})
             .setLngLat([0, 0])

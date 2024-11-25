@@ -1,16 +1,28 @@
 ## main
 
 ### ✨ Features and improvements
-- Export `Event` class ([#5016](https://github.com/maplibre/maplibre-gl-js/pull/5016))
-- Support Vertical Perspective projection ([#5023](https://github.com/maplibre/maplibre-gl-js/pull/5023))
+- ⚠️ Change the return type of `on` method to return a `Subscription` to allow for easy unsubscribe ([#5080](https://github.com/maplibre/maplibre-gl-js/pull/5080))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fixes line flickering problem ([#5094](https://github.com/maplibre/maplibre-gl-js/pull/5094))
+- _...Add new stuff here..._
+
+## 5.0.0-pre.7
+
+### ✨ Features and improvements
+
+- ⚠️ Change drag rotate behavior to be around the center of the screen ([#5074](https://github.com/maplibre/maplibre-gl-js/pull/5074))
+- Export `Event` class ([#5016](https://github.com/maplibre/maplibre-gl-js/pull/5016))
+- Support Vertical Perspective projection ([#5023](https://github.com/maplibre/maplibre-gl-js/pull/5023))
+
+### 🐞 Bug fixes
+
 - Fixes scale control for globe on zoom out ([#4897](https://github.com/maplibre/maplibre-gl-js/pull/4897))
 - Fixes cooperative gestures displaying the mobile help text when screen width is smaller than 480px on non-touch devices ([#5053](https://github.com/maplibre/maplibre-gl-js/pull/5053))
 - Fixes incorrect cluster radius scaling in `GeoJSONSource.setClusterOptions()` ([#5055](https://github.com/maplibre/maplibre-gl-js/pull/5055))
 - Improve innerHTML handling in code ([#5057](https://github.com/maplibre/maplibre-gl-js/pull/5057)))
-- _...Add new stuff here..._
+- Fix geometry beyond tile borders being rendered ([#4868](https://github.com/maplibre/maplibre-gl-js/pull/4868))
 
 ## 5.0.0-pre.6
 
@@ -23,7 +35,7 @@
 ### 🐞 Bug fixes
 
 - ⚠️ Fix level of detail at high pitch angle by changing which tiles to load ([#3983](https://github.com/maplibre/maplibre-gl-js/issues/3983))
-- ~~⚠️~~ Fix URL parsing in `normalizeSpriteURL`, sprite URLs must be absolute ([#4962](https://github.com/maplibre/maplibre-gl-js/issues/4962))
+- ~~⚠️ Fix URL parsing in `normalizeSpriteURL`, sprite URLs must be absolute ([#4962](https://github.com/maplibre/maplibre-gl-js/issues/4962))~~
 
 ## 5.0.0-pre.5
 
@@ -55,7 +67,7 @@
 - Fix 3D models in custom layers not being properly occluded by the globe ([#4817](https://github.com/maplibre/maplibre-gl-js/issues/4817))
 - Fix issue where raster tiles were not rendered correctly when using globe and terrain ([#4912](https://github.com/maplibre/maplibre-gl-js/pull/4912))
 
-## v5.0.0-pre.3
+## 5.0.0-pre.3
 
 ### ✨ Features and improvements
 

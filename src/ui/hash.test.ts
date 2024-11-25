@@ -1,3 +1,4 @@
+import {describe, beforeEach,  afterEach,  test, expect} from 'vitest';
 import {Hash} from './hash';
 import {createMap as globalCreateMap, beforeMapTest} from '../util/test/util';
 import type {Map} from './map';
@@ -252,6 +253,7 @@ describe('hash', () => {
             .addTo(map);
 
         expect(window.location.hash).toBeFalsy();
+        window.location.hash = '';
 
         map.setZoom(3);
         map.setCenter([1.0, 2.0]);

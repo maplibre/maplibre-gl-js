@@ -1,7 +1,7 @@
-import Point from '@mapbox/point-geometry';
+import type Point from '@mapbox/point-geometry';
 import {DOM} from '../../util/dom';
 import type {Map} from '../map';
-import {Handler, HandlerResult} from '../handler_manager';
+import {type Handler, type HandlerResult} from '../handler_manager';
 
 /**
  * An options object sent to the enable function of some of the handlers

@@ -1,16 +1,16 @@
-import {LngLat, LngLatLike} from './lng_lat';
-import {LngLatBounds} from './lng_lat_bounds';
-import {MercatorCoordinate} from './mercator_coordinate';
-import Point from '@mapbox/point-geometry';
-import {mat4, mat2, vec3, vec4} from 'gl-matrix';
-import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
+import {type LngLat, type LngLatLike} from './lng_lat';
+import {type LngLatBounds} from './lng_lat_bounds';
+import {type MercatorCoordinate} from './mercator_coordinate';
+import type Point from '@mapbox/point-geometry';
+import {type mat4, type mat2, type vec3, type vec4} from 'gl-matrix';
+import {type UnwrappedTileID, type OverscaledTileID, type CanonicalTileID} from '../source/tile_id';
 import type {PaddingOptions} from './edge_insets';
-import {Terrain} from '../render/terrain';
-import {PointProjection} from '../symbol/projection';
-import {MapProjectionEvent} from '../ui/events';
+import {type Terrain} from '../render/terrain';
+import {type PointProjection} from '../symbol/projection';
+import {type MapProjectionEvent} from '../ui/events';
 import type {ProjectionData, ProjectionDataParams} from './projection/projection_data';
-import {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider';
-import {Frustum} from '../util/primitives/frustum';
+import {type CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider';
+import {type Frustum} from '../util/primitives/frustum';
 
 export type TransformUpdateResult = {
     forcePlacementUpdate?: boolean;
@@ -366,7 +366,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @param bearing - bearing of the camera, in degrees
      * @param pitch - pitch angle of the camera, in degrees
      */
-    calculateCenterFromCameraLngLatAlt(lngLat: LngLat, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number};
+    calculateCenterFromCameraLngLatAlt(lngLat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number};
 
     getRayDirectionFromPixel(p: Point): vec3;
 

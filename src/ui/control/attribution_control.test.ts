@@ -1,9 +1,10 @@
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {AttributionControl, defaultAttributionControlOptions} from './attribution_control';
 import {createMap as globalCreateMap, beforeMapTest, sleep} from '../../util/test/util';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {fakeServer} from 'nise';
-import {Map} from '../../ui/map';
-import {MapSourceDataEvent} from '../events';
+import {type Map} from '../../ui/map';
+import {type MapSourceDataEvent} from '../events';
 
 function createMap() {
 
@@ -146,7 +147,7 @@ describe('AttributionControl', () => {
         const attribution = new AttributionControl();
         map.addControl(attribution);
 
-        const spy = jest.fn();
+        const spy = vi.fn();
         map.on('data', spy);
         await map.once('load');
         map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'World'});
@@ -178,7 +179,7 @@ describe('AttributionControl', () => {
         map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}});
         map.addLayer({id: '1', type: 'fill', source: '1'});
         const container = map.getContainer();
-        const spy = jest.fn();
+        const spy = vi.fn();
         map.on('data', spy);
 
         await sleep(100);
@@ -194,7 +195,7 @@ describe('AttributionControl', () => {
         map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}});
         map.addLayer({id: '1', type: 'fill', source: '1'});
         const container = map.getContainer();
-        const spy = jest.fn();
+        const spy = vi.fn();
         map.on('data', spy);
 
         await sleep(100);
@@ -251,7 +252,7 @@ describe('AttributionControl', () => {
         const attribution = new AttributionControl();
         map.addControl(attribution);
 
-        const spy = jest.fn();
+        const spy = vi.fn();
         map.on('data', spy);
         await map.once('load');
         map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Used'});
@@ -289,7 +290,7 @@ describe('AttributionControl', () => {
         const attribution = new AttributionControl();
         map.addControl(attribution);
 
-        const spy = jest.fn();
+        const spy = vi.fn();
         map.on('data', spy);
         await map.once('load');
         map.addSource('1', {type: 'raster-dem', url: '/source.json'});
@@ -321,7 +322,7 @@ describe('AttributionControl', () => {
         const attribution = new AttributionControl();
         map.addControl(attribution);
 
-        const spy = jest.fn();
+        const spy = vi.fn();
         map.on('data', spy);
         await map.once('load');
         map.addSource('1', {type: 'raster-dem', url: '/source.json'});

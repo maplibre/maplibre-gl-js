@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import fs from 'fs';
 import packageJson from '../../package.json' assert {type: 'json'};
 
@@ -37,7 +38,7 @@ describe('test min build', () => {
         const decreaseQuota = 4096;
 
         // feel free to update this value after you've checked that it has changed on purpose :-)
-        const expectedBytes = 896666;
+        const expectedBytes = 898319;
 
         expect(actualBytes).toBeLessThan(expectedBytes + increaseQuota);
         expect(actualBytes).toBeGreaterThan(expectedBytes - decreaseQuota);

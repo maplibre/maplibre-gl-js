@@ -61,7 +61,7 @@ jobs:
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
-          files: ${{ github.workspace }}/coverage/jest/codecov.json
+          files: ${{ github.workspace }}/coverage/vitest/unit/coverage-final.json
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
           disable_search: true
@@ -92,7 +92,7 @@ jobs:
         if: '!cancelled()'
         uses: codecov/codecov-action@v5
         with:
-          files: ${{ github.workspace }}/coverage/jest/codecov.json
+          files: ${{ github.workspace }}/coverage/vitest/integration/coverage-final.json
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
           disable_search: true

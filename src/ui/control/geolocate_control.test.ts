@@ -1,10 +1,11 @@
+import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} from 'vitest';
 import geolocation from 'mock-geolocation';
 import {LngLatBounds} from '../../geo/lng_lat_bounds';
 import {createMap, beforeMapTest, sleep} from '../../util/test/util';
 import {GeolocateControl} from './geolocate_control';
-jest.mock('../../util/geolocation_support', () => (
+vi.mock('../../util/geolocation_support', () => (
     {
-        checkGeolocationSupport: jest.fn()
+        checkGeolocationSupport: vi.fn()
     }
 ));
 import {checkGeolocationSupport} from '../../util/geolocation_support';
@@ -30,7 +31,7 @@ describe('GeolocateControl with no options', () => {
     beforeEach(() => {
         beforeMapTest();
         map = createMap(undefined, undefined);
-        (checkGeolocationSupport as any as jest.SpyInstance).mockImplementationOnce(() => Promise.resolve(true));
+        (checkGeolocationSupport as unknown as MockInstance).mockImplementationOnce(() => Promise.resolve(true));
     });
 
     afterEach(() => {
@@ -38,9 +39,9 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('is disabled when there is no support', async () => {
-        (checkGeolocationSupport as any as jest.SpyInstance).mockReset().mockImplementationOnce(() => Promise.resolve(false));
+        (checkGeolocationSupport as unknown as MockInstance).mockReset().mockImplementationOnce(() => Promise.resolve(false));
         const geolocate = new GeolocateControl(undefined);
-        const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         map.addControl(geolocate);
         await sleep(0);
         expect(geolocate._geolocateButton.disabled).toBeTruthy();
@@ -83,7 +84,7 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('does not throw if removed quickly', () => {
-        (checkGeolocationSupport as any as jest.SpyInstance).mockReset()
+        (checkGeolocationSupport as unknown as MockInstance).mockReset()
             .mockImplementationOnce(() => {
                 return sleep(10);
             });
@@ -170,7 +171,7 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('trigger before added to map', () => {
-        jest.spyOn(console, 'warn').mockImplementation(() => { });
+        vi.spyOn(console, 'warn').mockImplementation(() => { });
 
         const geolocate = new GeolocateControl(undefined);
 

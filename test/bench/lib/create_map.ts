@@ -23,8 +23,7 @@ const createMap = (options: any): Promise<Map> => {
             style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
         }, options));
 
-        map
-            .on(options.idle ? 'idle' : 'load', () => {
+        map.on(options.idle ? 'idle' : 'load', () => {
                 if (options.stubRender) {
                     // If there's a pending rerender, cancel it.
                     if (map._frameRequest) {
@@ -33,9 +32,9 @@ const createMap = (options: any): Promise<Map> => {
                     }
                 }
                 resolve(map);
-            })
-            .on('error', (e) => reject(e.error))
-            .on('remove', () => container.remove());
+            });
+        map.on('error', (e) => reject(e.error));
+        map.on('remove', () => container.remove());
     });
 };
 

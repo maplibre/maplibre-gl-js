@@ -1,13 +1,14 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {ImageSource} from './image_source';
 import {Evented} from '../util/evented';
-import {IReadonlyTransform} from '../geo/transform_interface';
+import {type IReadonlyTransform} from '../geo/transform_interface';
 import {extend} from '../util/util';
 import {type FakeServer, fakeServer} from 'nise';
-import {RequestManager} from '../util/request_manager';
+import {type RequestManager} from '../util/request_manager';
 import {sleep, stubAjaxGetImage} from '../util/test/util';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
-import {Texture} from '../render/texture';
+import {type Texture} from '../render/texture';
 import type {ImageSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 
@@ -74,7 +75,7 @@ describe('ImageSource', () => {
     test('transforms url request', () => {
         const source = createSource({url: '/image.png'});
         const map = new StubMap() as any;
-        const spy = jest.spyOn(map._requestManager, 'transformRequest');
+        const spy = vi.spyOn(map._requestManager, 'transformRequest');
         source.onAdd(map);
         server.respond();
         expect(spy).toHaveBeenCalledTimes(1);
@@ -85,7 +86,7 @@ describe('ImageSource', () => {
     test('updates url from updateImage', () => {
         const source = createSource({url: '/image.png'});
         const map = new StubMap() as any;
-        const spy = jest.spyOn(map._requestManager, 'transformRequest');
+        const spy = vi.spyOn(map._requestManager, 'transformRequest');
         source.onAdd(map);
         server.respond();
         expect(spy).toHaveBeenCalledTimes(1);
@@ -201,7 +202,7 @@ describe('ImageSource', () => {
         map.on('error', () => {});
         source.onAdd(map);
 
-        const spy = jest.spyOn(server.requests[0] as any, 'abort');
+        const spy = vi.spyOn(server.requests[0] as any, 'abort');
 
         source.updateImage({url: '/image2.png'});
         expect(spy).toHaveBeenCalled();

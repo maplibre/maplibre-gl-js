@@ -1,6 +1,7 @@
+import {describe, test, expect} from 'vitest';
 
 import {renderColorRamp} from './color_ramp';
-import {createPropertyExpression, StylePropertyExpression, StylePropertySpecification} from '@maplibre/maplibre-gl-style-spec';
+import {createPropertyExpression, type StylePropertyExpression, type StylePropertySpecification} from '@maplibre/maplibre-gl-style-spec';
 
 const spec = {
     'function': true,

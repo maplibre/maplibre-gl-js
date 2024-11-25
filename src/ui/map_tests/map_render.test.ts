@@ -1,5 +1,6 @@
+import {beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest, createStyle} from '../../util/test/util';
-import {fakeServer, FakeServer} from 'nise';
+import {fakeServer, type FakeServer} from 'nise';
 
 let server: FakeServer;
 
@@ -60,7 +61,7 @@ test('no render before style loaded', () => new Promise<void>((done) => {
     server.respondWith('/styleUrl', JSON.stringify(createStyle()));
     const map = createMap({style: '/styleUrl'});
 
-    jest.spyOn(map, 'triggerRepaint').mockImplementationOnce(() => {
+    vi.spyOn(map, 'triggerRepaint').mockImplementationOnce(() => {
         if (!map.style._loaded) {
             throw new Error('test failed');
         }

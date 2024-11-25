@@ -2,7 +2,7 @@ import {vec3} from 'gl-matrix';
 import {clamp, lerp, mod, remapSaturate, wrap} from '../../util/util';
 import {LngLat} from '../lng_lat';
 import {MAX_VALID_LATITUDE, scaleZoom} from '../transform_helper';
-import Point from '@mapbox/point-geometry';
+import type Point from '@mapbox/point-geometry';
 import {EXTENT} from '../../data/extent';
 
 export function getGlobeCircumferencePixels(transform: {worldSize: number; center: {lat: number}}): number {

@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {browser} from './browser';
 
 describe('browser', () => {
