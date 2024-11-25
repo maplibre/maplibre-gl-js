@@ -17,7 +17,7 @@ jobs:
           node-version-file: '.nvmrc'
 
       - name: Install
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
       - name: Build benchmarks
         run: |

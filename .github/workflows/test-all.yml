@@ -20,7 +20,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci
       - run: npm run lint
         if: '!cancelled()'
       - run: npm run lint-css
@@ -51,7 +51,7 @@ jobs:
       - name: Start display server
         run: nohup Xvfb &
           echo "DISPLAY=:0" >> $GITHUB_ENV
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci
       - run: npm run test-unit-ci
       - name: Upload test results to Codecov
         if: '!cancelled()'
@@ -80,7 +80,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci
       - run: npm run build-dist
       - uses: actions/upload-artifact@v4
         if: '!cancelled()'
@@ -116,7 +116,7 @@ jobs:
       - name: install CJK fonts for local ideographs render tests
         if: runner.os == 'Linux'
         run: sudo apt install fonts-noto-cjk
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci
       - name: Start display server
         if: runner.os == 'Linux'
         run: nohup Xvfb &
@@ -157,6 +157,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci
       - run: npm run build-dist
       - run: npm run test-build-ci
