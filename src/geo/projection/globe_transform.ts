@@ -2,7 +2,7 @@ import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {MAX_VALID_LATITUDE, TransformHelper} from '../transform_helper';
 import {MercatorTransform} from './mercator_transform';
 import {LngLat, type LngLatLike, earthRadius} from '../lng_lat';
-import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, easeCubicInOut, lerp, pointPlaneSignedDistance, warnOnce} from '../../util/util';
+import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f32, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, easeCubicInOut, lerp, pointPlaneSignedDistance, warnOnce} from '../../util/util';
 import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {browser} from '../../util/browser';
@@ -241,7 +241,7 @@ export class GlobeTransform implements ITransform {
     private _skipNextAnimation: boolean = true;
 
     private _projectionMatrix: mat4 = createIdentityMat4f64();
-    private _globeViewProjMatrix: mat4 = createIdentityMat4f64();
+    private _globeViewProjMatrix32f: mat4 = createIdentityMat4f32(); // Must be 32 bit floats, otherwise WebGL calls in Chrome get very slow.
     private _globeViewProjMatrixNoCorrection: mat4 = createIdentityMat4f64();
     private _globeViewProjMatrixNoCorrectionInverted: mat4 = createIdentityMat4f64();
     private _globeProjMatrixInverted: mat4 = createIdentityMat4f64();
@@ -460,7 +460,7 @@ export class GlobeTransform implements ITransform {
 
         // Set 'projectionMatrix' to actual globe transform
         if (this.isGlobeRendering) {
-            data.mainMatrix = this._globeViewProjMatrix;
+            data.mainMatrix = this._globeViewProjMatrix32f;
         }
 
         data.clippingPlane = this._cachedClippingPlane as [number, number, number, number];
@@ -662,7 +662,7 @@ export class GlobeTransform implements ITransform {
         mat4.rotateX(globeMatrix, globeMatrix, this.center.lat * Math.PI / 180.0 - this._globeLatitudeErrorCorrectionRadians);
         mat4.rotateY(globeMatrix, globeMatrix, -this.center.lng * Math.PI / 180.0);
         mat4.scale(globeMatrix, globeMatrix, scaleVec); // Scale the unit sphere to a sphere with diameter of 1
-        this._globeViewProjMatrix = globeMatrix;
+        this._globeViewProjMatrix32f = new Float32Array(globeMatrix);
 
         this._globeViewProjMatrixNoCorrectionInverted = createMat4f64();
         mat4.invert(this._globeViewProjMatrixNoCorrectionInverted, globeMatrixUncorrected);
@@ -1195,7 +1195,7 @@ export class GlobeTransform implements ITransform {
         // the fallback projection matrix by EXTENT.
         // Note that the regular projection matrices do not need to be modified, since the rescaling happens by setting
         // the `u_projection_tile_mercator_coords` uniform correctly.
-        const fallbackMatrixScaled = createMat4f64();
+        const fallbackMatrixScaled = createMat4f32();
         mat4.scale(fallbackMatrixScaled, projectionData.fallbackMatrix, [EXTENT, EXTENT, 1]);
 
         projectionData.fallbackMatrix = fallbackMatrixScaled;

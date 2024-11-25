@@ -210,9 +210,9 @@ export class MercatorTransform implements ITransform {
     private _pixelMatrixInverse: mat4;
     private _fogMatrix: mat4;
 
-    private _posMatrixCache: {[_: string]: mat4};
-    private _fogMatrixCache: {[_: string]: mat4};
-    private _alignedPosMatrixCache: {[_: string]: mat4};
+    private _posMatrixCache: Map<string, {f64: mat4; f32: mat4}> = new Map();
+    private _alignedPosMatrixCache: Map<string, {f64: mat4; f32: mat4}> = new Map();
+    private _fogMatrixCacheF32: Map<string, mat4> = new Map();
 
     private _nearZ;
     private _farZ;
@@ -224,7 +224,6 @@ export class MercatorTransform implements ITransform {
             calcMatrices: () => { this._calcMatrices(); },
             getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
         }, minZoom, maxZoom, minPitch, maxPitch, renderWorldCopies);
-        this._clearMatrixCaches();
         this._coveringTilesDetailsProvider = new MercatorCoveringTilesDetailsProvider();
     }
 
@@ -405,33 +404,39 @@ export class MercatorTransform implements ITransform {
      * This function is specific to the mercator projection.
      * @param tileID - the tile ID
      * @param aligned - whether to use a pixel-aligned matrix variant, intended for rendering raster tiles
+     * @param useFloat32 - when true, returns a float32 matrix instead of float64. Use float32 for matrices that are passed to shaders, use float64 for everything else.
      */
-    calculatePosMatrix(tileID: UnwrappedTileID | OverscaledTileID, aligned: boolean = false): mat4 {
+    calculatePosMatrix(tileID: UnwrappedTileID | OverscaledTileID, aligned: boolean = false, useFloat32?: boolean): mat4 {
         const posMatrixKey = tileID.key ?? calculateTileKey(tileID.wrap, tileID.canonical.z, tileID.canonical.z, tileID.canonical.x, tileID.canonical.y);
         const cache = aligned ? this._alignedPosMatrixCache : this._posMatrixCache;
-        if (cache[posMatrixKey]) {
-            return cache[posMatrixKey];
+        if (cache.has(posMatrixKey)) {
+            const matrices = cache.get(posMatrixKey);
+            return useFloat32 ? matrices.f32 : matrices.f64;
         }
 
         const tileMatrix = calculateTileMatrix(tileID, this.worldSize);
         mat4.multiply(tileMatrix, aligned ? this._alignedProjMatrix : this._viewProjMatrix, tileMatrix);
-
-        cache[posMatrixKey] = tileMatrix;
-        return cache[posMatrixKey];
+        const matrices = {
+            f64: tileMatrix,
+            f32: new Float32Array(tileMatrix), // Must have a 32 bit float version for WebGL, otherwise WebGL calls in Chrome get very slow.
+        }
+        cache.set(posMatrixKey, matrices);
+        // Make sure to return the correct precision
+        return useFloat32 ? matrices.f32 : matrices.f64;
     }
 
     calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {
         const posMatrixKey = unwrappedTileID.key;
-        const cache = this._fogMatrixCache;
-        if (cache[posMatrixKey]) {
-            return cache[posMatrixKey];
+        const cache = this._fogMatrixCacheF32;
+        if (cache.has(posMatrixKey)) {
+            return cache.get(posMatrixKey);
         }
 
         const fogMatrix = calculateTileMatrix(unwrappedTileID, this.worldSize);
         mat4.multiply(fogMatrix, this._fogMatrix, fogMatrix);
 
-        cache[posMatrixKey] = fogMatrix;
-        return cache[posMatrixKey];
+        cache.set(posMatrixKey, new Float32Array(fogMatrix)); // Must be 32 bit floats, otherwise WebGL calls in Chrome get very slow.
+        return cache.get(posMatrixKey);
     }
 
     /**
@@ -713,9 +718,9 @@ export class MercatorTransform implements ITransform {
     }
 
     private _clearMatrixCaches(): void {
-        this._posMatrixCache = {};
-        this._alignedPosMatrixCache = {};
-        this._fogMatrixCache = {};
+        this._posMatrixCache.clear();
+        this._alignedPosMatrixCache.clear();
+        this._fogMatrixCacheF32.clear();
     }
 
     maxPitchScaleFactor(): number {
@@ -760,7 +765,7 @@ export class MercatorTransform implements ITransform {
 
     getProjectionData(params: ProjectionDataParams): ProjectionData {
         const {overscaledTileID, aligned, applyTerrainMatrix} = params;
-        const matrix = overscaledTileID ? this.calculatePosMatrix(overscaledTileID, aligned) : null;
+        const matrix = overscaledTileID ? this.calculatePosMatrix(overscaledTileID, aligned, true) : null;
         return getBasicProjectionData(overscaledTileID, matrix, applyTerrainMatrix);
     }
 
@@ -849,6 +854,7 @@ export class MercatorTransform implements ITransform {
 
         const scale: vec3 = [EXTENT, EXTENT, this.worldSize / this._helper.pixelsPerMeter];
 
+        // We pass full-precision 64bit float matrices to custom layers to prevent precision loss in case the user wants to do further transformations.
         const fallbackMatrixScaled = createMat4f64();
         mat4.scale(fallbackMatrixScaled, tileMatrix, scale);
 
