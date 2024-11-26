@@ -9,9 +9,11 @@
 ## 5.0.0-pre.8
 
 ### ✨ Features and improvements
+
 - ⚠️ Change the return type of `on` method to return a `Subscription` to allow for easy unsubscribe ([#5080](https://github.com/maplibre/maplibre-gl-js/pull/5080))
 
 ### 🐞 Bug fixes
+
 - Fixes line flickering problem ([#5094](https://github.com/maplibre/maplibre-gl-js/pull/5094))
 - Fix poor performance in Chrome related to passing matrices to WebGL ([#5072](https://github.com/maplibre/maplibre-gl-js/pull/5072))
 
