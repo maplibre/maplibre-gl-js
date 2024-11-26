@@ -253,10 +253,10 @@ export class HandlerManager {
         if (options.interactive && options.touchPitch) {
             map.touchPitch.enable(options.touchPitch);
         }
-
-        const mouseRotate = generateMouseRotationHandler(options);
+        const getCenter = () => map.project(map.getCenter());
+        const mouseRotate = generateMouseRotationHandler(options, getCenter);
         const mousePitch = generateMousePitchHandler(options);
-        const mouseRoll = generateMouseRollHandler(options);
+        const mouseRoll = generateMouseRollHandler(options, getCenter);
         map.dragRotate = new DragRotateHandler(options, mouseRotate, mousePitch, mouseRoll);
         this._add('mouseRotate', mouseRotate, ['mousePitch']);
         this._add('mousePitch', mousePitch, ['mouseRotate', 'mouseRoll']);

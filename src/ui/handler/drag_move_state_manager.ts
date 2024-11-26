@@ -113,3 +113,31 @@ export class OneFingerTouchMoveStateManager implements DragMoveStateManager<Touc
         return this._isOneFingerTouch(e) && this._isSameTouchEvent(e);
     }
 }
+
+export class MouseOrTouchMoveStateManager implements DragMoveStateManager<MouseEvent | TouchEvent> {
+    constructor(
+        private mouseMoveStateManager = new MouseMoveStateManager({checkCorrectEvent: () => true}), 
+        private oneFingerTouchMoveStateManager = new OneFingerTouchMoveStateManager()
+    ) {}
+
+    startMove(e: MouseEvent | TouchEvent) {
+        if (e instanceof MouseEvent) this.mouseMoveStateManager.startMove(e);
+        if (e instanceof TouchEvent) this.oneFingerTouchMoveStateManager.startMove(e);
+    }
+    endMove(e?: MouseEvent | TouchEvent) {
+        if (e instanceof MouseEvent) this.mouseMoveStateManager.endMove(e);
+        if (e instanceof TouchEvent) this.oneFingerTouchMoveStateManager.endMove(e);
+    }
+    isValidStartEvent(e: MouseEvent | TouchEvent) {
+        if (e instanceof MouseEvent) return this.mouseMoveStateManager.isValidStartEvent(e);
+        if (e instanceof TouchEvent) return this.oneFingerTouchMoveStateManager.isValidStartEvent(e);
+    }
+    isValidMoveEvent(e: MouseEvent | TouchEvent) {
+        if (e instanceof MouseEvent) return this.mouseMoveStateManager.isValidMoveEvent(e);
+        if (e instanceof TouchEvent) return this.oneFingerTouchMoveStateManager.isValidMoveEvent(e);
+    }
+    isValidEndEvent(e?: MouseEvent | TouchEvent) {
+        if (e instanceof MouseEvent) return this.mouseMoveStateManager.isValidEndEvent(e);
+        if (e instanceof TouchEvent) return this.oneFingerTouchMoveStateManager.isValidEndEvent(e);
+    }
+}

@@ -58,7 +58,7 @@ export function generateMouseRotationHandler({enable, clickTolerance, aroundCent
     aroundCenter?: boolean;
     minPixelCenterThreshold?: number;
     rotateDegreesPerPixelMoved?: number;
-}): MouseRotateHandler {
+}, getCenter: () => Point): MouseRotateHandler {
     const mouseMoveStateManager = new MouseMoveStateManager({
         checkCorrectEvent: (e: MouseEvent): boolean =>
             (DOM.mouseButton(e) === LEFT_BUTTON && e.ctrlKey) ||
@@ -66,7 +66,8 @@ export function generateMouseRotationHandler({enable, clickTolerance, aroundCent
     });
     return new DragHandler<DragRotateResult, MouseEvent>({
         clickTolerance,
-        move: (lastPoint: Point, currentPoint: Point, center: Point) => {
+        move: (lastPoint: Point, currentPoint: Point) => {
+            const center = getCenter();
             if (aroundCenter && Math.abs(center.y - lastPoint.y) > minPixelCenterThreshold) {
                 // Avoid rotation related to y axis since it is "saved" for pitch
                 return {bearingDelta: getAngleDelta(new Point(lastPoint.x, currentPoint.y), currentPoint, center)};
@@ -111,14 +112,15 @@ export function generateMouseRollHandler({enable, clickTolerance, rollDegreesPer
     clickTolerance: number;
     rollDegreesPerPixelMoved?: number;
     enable?: boolean;
-}): MouseRollHandler {
+}, getCenter: () => Point): MouseRollHandler {
     const mouseMoveStateManager = new MouseMoveStateManager({
         checkCorrectEvent: (e: MouseEvent): boolean =>
             (DOM.mouseButton(e) === RIGHT_BUTTON && e.ctrlKey),
     });
     return new DragHandler<DragRollResult, MouseEvent>({
         clickTolerance,
-        move: (lastPoint: Point, currentPoint: Point, center: Point) => {
+        move: (lastPoint: Point, currentPoint: Point) => {
+            const center = getCenter();
             let rollDelta = (currentPoint.x - lastPoint.x) * rollDegreesPerPixelMoved;
             if (currentPoint.y < center.y) {
                 rollDelta = -rollDelta;
