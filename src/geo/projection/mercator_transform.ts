@@ -677,7 +677,7 @@ export class MercatorTransform implements ITransform {
             cameraPos[2] / cameraPos[3]
         ];
 
-        // create a fog matrix, same es proj-matrix but with near clipping-plane in mapcenter
+        // create a fog matrix, same as proj-matrix but with near clipping-plane in mapcenter
         // needed to calculate a correct z-value for fog calculation, because projMatrix z value is not
         this._fogMatrix = new Float64Array(16) as any;
         mat4.perspective(this._fogMatrix, this.fovInRadians, this.width / this.height, cameraToSeaLevelDistance, this._farZ);
