@@ -26,7 +26,7 @@ jobs:
       - name: Check if version has been updated
         id: check
         uses: EndBug/version-check@v2
-          
+
     outputs:
       publish: ${{ steps.check.outputs.changed }}
 
