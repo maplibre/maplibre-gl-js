@@ -49,7 +49,7 @@ ${htmlContent}
 
 async function generateMarkdownIndexFileOfAllExamplesAndPackImages(indexArray: HtmlDoc[]): Promise<string> {
     let indexMarkdown = '# Overview \n\n';
-    let promises: Promise<any>[] = [];
+    const promises: Promise<any>[] = [];
     for (const indexArrayItem of indexArray) {
         const imagePath = `docs/assets/examples/${indexArrayItem.mdFileName!.replace('.md', '.png')}`;
         const outputPath = imagePath.replace('.png', '.webp');
@@ -57,7 +57,7 @@ async function generateMarkdownIndexFileOfAllExamplesAndPackImages(indexArray: H
         indexMarkdown += `
 ## [${indexArrayItem.title}](./${indexArrayItem.mdFileName})
 
-![${indexArrayItem.description}](${outputPath.replace("docs/", "../")}){ loading=lazy }
+![${indexArrayItem.description}](${outputPath.replace('docs/', '../')}){ loading=lazy }
 
 ${indexArrayItem.description}
 `;
