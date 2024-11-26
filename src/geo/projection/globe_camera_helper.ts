@@ -5,8 +5,8 @@ import {type GlobeProjection} from './globe';
 import {LngLat, type LngLatLike} from '../lng_lat';
 import {MercatorCameraHelper} from './mercator_camera_helper';
 import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from './globe_utils';
-import {clamp, createVec3f64, differenceOfAnglesDegrees, remapSaturate, rollPitchBearingToQuat, warnOnce} from '../../util/util';
-import {type mat4, quat, vec3} from 'gl-matrix';
+import {clamp, createVec3f64, differenceOfAnglesDegrees, remapSaturate, rollPitchBearingEqual, warnOnce} from '../../util/util';
+import {type mat4, vec3} from 'gl-matrix';
 import {MAX_VALID_LATITUDE, normalizeCenter, scaleZoom, zoomScale} from '../transform_helper';
 import {type CameraForBoundsOptions} from '../../ui/camera';
 import {type LngLatBounds} from '../lng_lat_bounds';
@@ -262,12 +262,11 @@ export class GlobeCameraHelper implements ICameraHelper {
 
         const startZoom = tr.zoom;
         const startCenter = tr.center;
-        const startRotation = rollPitchBearingToQuat(tr.roll, tr.pitch, tr.bearing);
         const startEulerAngles = {roll: tr.roll, pitch: tr.pitch, bearing: tr.bearing};
         const endRoll = options.roll === undefined ? tr.roll : options.roll;
         const endPitch = options.pitch === undefined ? tr.pitch : options.pitch;
         const endBearing = options.bearing === undefined ? tr.bearing : options.bearing;
-        const endRotation = rollPitchBearingToQuat(endRoll, endPitch, endBearing);
+        const endEulerAngles = {roll: endRoll, pitch: endPitch, bearing: endBearing};
 
         const optionsZoom = typeof options.zoom !== 'undefined';
 
@@ -318,14 +317,13 @@ export class GlobeCameraHelper implements ICameraHelper {
         isZooming = (endZoomWithShift !== startZoom);
 
         const easeFunc = (k: number) => {
-            if (!quat.equals(startRotation, endRotation)) {
-                updateRotation({startRotation,
-                    endRotation,
+            if (!rollPitchBearingEqual(startEulerAngles, endEulerAngles)) {
+                updateRotation({
                     startEulerAngles,
-                    endEulerAngles: {roll: endRoll, pitch: endPitch, bearing: endBearing},
+                    endEulerAngles,
                     tr,
                     k,
-                    useSlerp: startEulerAngles.roll != endRoll} as UpdateRotationArgs);
+                    useSlerp: startEulerAngles.roll != endEulerAngles.roll} as UpdateRotationArgs);
             }
 
             if (options.around) {

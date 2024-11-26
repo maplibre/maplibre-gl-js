@@ -916,6 +916,10 @@ export type RollPitchBearing = {
     bearing: number;
 };
 
+export function rollPitchBearingEqual(a: RollPitchBearing, b: RollPitchBearing): boolean {
+    return a.roll == b.roll && a.pitch == b.pitch && a.bearing == b.bearing;
+}
+
 /**
  * This method converts a rotation quaternion to roll, pitch, and bearing angles in degrees.
  * @param rotation - The rotation quaternion

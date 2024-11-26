@@ -4,7 +4,7 @@ import {type LngLat, type LngLatLike} from '../lng_lat';
 import {type CameraForBoundsOptions, type PointLike} from '../../ui/camera';
 import {type PaddingOptions} from '../edge_insets';
 import {type LngLatBounds} from '../lng_lat_bounds';
-import {getRollPitchBearing, type RollPitchBearing, warnOnce} from '../../util/util';
+import {getRollPitchBearing, type RollPitchBearing, rollPitchBearingToQuat, warnOnce} from '../../util/util';
 import {quat} from 'gl-matrix';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
@@ -63,8 +63,6 @@ export type FlyToHandlerResult = {
 }
 
 export type UpdateRotationArgs = {
-    startRotation: quat;
-    endRotation: quat;
     startEulerAngles: RollPitchBearing;
     endEulerAngles: RollPitchBearing;
     tr: ITransform;
@@ -122,8 +120,10 @@ export function updateRotation(args: UpdateRotationArgs) {
         // At pitch ==0, the Euler angle representation is ambiguous. In this case, set the Euler angles
         // to the representation requested by the caller
         if (args.k < 1) {
+            const startRotation = rollPitchBearingToQuat(args.startEulerAngles.roll, args.startEulerAngles.pitch, args.startEulerAngles.bearing);
+            const endRotation = rollPitchBearingToQuat(args.endEulerAngles.roll, args.endEulerAngles.pitch, args.endEulerAngles.bearing);
             const rotation: quat = new Float64Array(4) as any;
-            quat.slerp(rotation, args.startRotation, args.endRotation, args.k);
+            quat.slerp(rotation, startRotation, endRotation, args.k);
             const eulerAngles = getRollPitchBearing(rotation);
             args.tr.setRoll(eulerAngles.roll);
             args.tr.setPitch(eulerAngles.pitch);
