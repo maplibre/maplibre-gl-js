@@ -63,10 +63,29 @@ export type FlyToHandlerResult = {
 }
 
 export type UpdateRotationArgs = {
+    /**
+     * The starting Euler angles.
+     */
     startEulerAngles: RollPitchBearing;
+
+    /**
+     * The end Euler angles.
+     */
     endEulerAngles: RollPitchBearing;
+
+    /**
+     * The transform to be updated
+     */
     tr: ITransform;
+
+    /**
+     * The interpolation fraction, between 0 and 1.
+     */
     k: number;
+
+    /**
+     * If true, use spherical linear interpolation. If false, use linear interpolation of Euler angles.
+     */
     useSlerp: boolean;
 }
 
@@ -106,14 +125,7 @@ export interface ICameraHelper {
 
 /**
  * @internal
- * Set a transform's rotation to a value interpolated between startRotation and endRotation
- * @param startRotation - the starting rotation (rotation when k = 0)
- * @param endRotation - the end rotation (rotation when k = 1)
- * @param startEulerAngles - the starting Euler angles.
- * @param endEulerAngles - the end Euler angles. This is needed in case `endRotation` has an ambiguous Euler angle representation.
- * @param tr - the transform to be updated
- * @param k - the interpolation fraction, between 0 and 1.
- * @param useSlerp - if true, use spherical linear interpolation. If false, use linear interpolation of Euler angles.
+ * Set a transform's rotation to a value interpolated between startEulerAngles and endEulerAngles
  */
 export function updateRotation(args: UpdateRotationArgs) {
     if (args.useSlerp) {
