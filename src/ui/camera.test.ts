@@ -1536,6 +1536,58 @@ describe('#flyTo', () => {
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
     });
 
+    test('no roll when motion is interrupted', () => {
+        const stub = vi.spyOn(browser, 'now');
+
+        const camera = createCamera();
+        stub.mockImplementation(() => 0);
+        camera.easeTo({pitch: 10, bearing: 100, duration: 1000});
+        stub.mockImplementation(() => 100);
+        camera.simulateFrame();
+        camera.easeTo({elevation: 1, duration: 0});
+        expect(camera.getRoll()).toBe(0);
+    });
+
+    test('no roll when motion is interrupted: globe', () => {
+        const stub = vi.spyOn(browser, 'now');
+
+        const camera = createCameraGlobe();
+        stub.mockImplementation(() => 0);
+        camera.easeTo({pitch: 10, bearing: 100, duration: 1000});
+        stub.mockImplementation(() => 100);
+        camera.simulateFrame();
+        camera.easeTo({elevation: 1, duration: 0});
+        expect(camera.getRoll()).toBe(0);
+    });
+
+    test('angles when motion is interrupted', () => {
+        const stub = vi.spyOn(browser, 'now');
+
+        const camera = createCamera();
+        stub.mockImplementation(() => 0);
+        camera.easeTo({pitch: 10, bearing: 20, roll: 30, duration: 1000});
+        stub.mockImplementation(() => 500);
+        camera.simulateFrame();
+        camera.easeTo({elevation: 1, duration: 0});
+        expect(camera.getRoll()).toBeCloseTo(25.041890412598942);
+        expect(camera.getPitch()).toBeCloseTo(8.116189398053095);
+        expect(camera.getBearing()).toBeCloseTo(15.041890412599061);
+    });
+
+    test('angles when motion is interrupted: globe', () => {
+        const stub = vi.spyOn(browser, 'now');
+
+        const camera = createCameraGlobe();
+        stub.mockImplementation(() => 0);
+        camera.easeTo({pitch: 10, bearing: 20, roll: 30, duration: 1000});
+        stub.mockImplementation(() => 500);
+        camera.simulateFrame();
+        camera.easeTo({elevation: 1, duration: 0});
+        expect(camera.getRoll()).toBeCloseTo(25.041890412598942);
+        expect(camera.getPitch()).toBeCloseTo(8.116189398053095);
+        expect(camera.getBearing()).toBeCloseTo(15.041890412599061);
+    });
+
     test('can be called from within a moveend event handler', async () => {
         const camera = createCamera();
         const stub = vi.spyOn(browser, 'now');
