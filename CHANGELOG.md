@@ -4,6 +4,8 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+
+- Fix regression in render world copies ([#5101](https://github.com/maplibre/maplibre-gl-js/pull/5101))
 - _...Add new stuff here..._
 
 ## 5.0.0-pre.8

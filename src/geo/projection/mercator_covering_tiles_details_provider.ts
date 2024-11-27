@@ -44,4 +44,8 @@ export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetail
         const maxConstantZoomPitch = clamp(78.5 - zfov / 2, 0.0, 60.0);
         return (!!options.terrain || transform.pitch > maxConstantZoomPitch || transform.padding.top >= 0.1)
     }
+
+    allowWorldCopies(): boolean {
+        return true;
+    }
 }
