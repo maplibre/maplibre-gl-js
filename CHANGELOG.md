@@ -1,10 +1,12 @@
 ## main
 
 ### ✨ Features and improvements
+
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 
+- ⚠️ Change drag rotate behavior to be less abrupt around the center ([#5104](https://github.com/maplibre/maplibre-gl-js/pull/5104))
 - Fix regression in render world copies ([#5101](https://github.com/maplibre/maplibre-gl-js/pull/5101))
 - _...Add new stuff here..._
 
