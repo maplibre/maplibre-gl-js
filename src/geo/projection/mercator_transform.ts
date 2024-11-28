@@ -808,13 +808,11 @@ export class MercatorTransform implements ITransform {
         const scale: vec3 = [EXTENT, EXTENT, this.worldSize / this._helper.pixelsPerMeter];
 
         // We pass full-precision 64bit float matrices to custom layers to prevent precision loss in case the user wants to do further transformations.
-        const fallbackMatrixScaled = createMat4f64();
-        mat4.scale(fallbackMatrixScaled, tileMatrix, scale);
-
+        // Otherwise we get very visible precision-artifacts and twitching for objects that are bulding-scale.
         const projectionMatrixScaled = createMat4f64();
         mat4.scale(projectionMatrixScaled, tileMatrix, scale);
 
-        projectionData.fallbackMatrix = fallbackMatrixScaled;
+        projectionData.fallbackMatrix = projectionMatrixScaled;
         projectionData.mainMatrix = projectionMatrixScaled;
         return projectionData;
     }
