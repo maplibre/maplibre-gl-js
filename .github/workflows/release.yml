@@ -102,8 +102,6 @@ jobs:
           echo "release_notes=${RELEASE_NOTES_PATH}" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
-        id: create_regular_release
-        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
         uses: ncipollo/release-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
