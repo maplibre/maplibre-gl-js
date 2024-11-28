@@ -9,6 +9,7 @@
 - ⚠️ Change drag rotate behavior to be less abrupt around the center ([#5104](https://github.com/maplibre/maplibre-gl-js/pull/5104))
 - Fix regression in render world copies ([#5101](https://github.com/maplibre/maplibre-gl-js/pull/5101))
 - Fix unwanted roll when motion is interrupted ([#5083](https://github.com/maplibre/maplibre-gl-js/pull/5083))
+- Fix `geomtery-type` filter expression resutls ([#5132](https://github.com/maplibre/maplibre-gl-js/pull/5132))
 - _...Add new stuff here..._
 
 ## 5.0.0-pre.8
