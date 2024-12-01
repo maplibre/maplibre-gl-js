@@ -263,6 +263,7 @@ export class GlobeCameraHelper implements ICameraHelper {
 
         const startZoom = tr.zoom;
         const startCenter = tr.center;
+        const startPadding = tr.padding;
         const startEulerAngles = {roll: tr.roll, pitch: tr.pitch, bearing: tr.bearing};
         const endRoll = options.roll === undefined ? tr.roll : options.roll;
         const endPitch = options.pitch === undefined ? tr.pitch : options.pitch;
@@ -289,9 +290,7 @@ export class GlobeCameraHelper implements ICameraHelper {
 
         const clonedTr = tr.clone();
         clonedTr.setCenter(constrainedCenter);
-        if (doPadding) {
-            clonedTr.setPadding(options.padding);
-        }
+
         clonedTr.setZoom(optionsZoom ?
             +options.zoom :
             startZoom + getZoomAdjustment(startCenter.lat, preConstrainCenter.lat));
@@ -325,6 +324,10 @@ export class GlobeCameraHelper implements ICameraHelper {
                     tr,
                     k,
                     useSlerp: startEulerAngles.roll != endEulerAngles.roll} as UpdateRotationArgs);
+            }
+
+            if (doPadding) {
+                tr.interpolatePadding(startPadding, options.padding,k);
             }
 
             if (options.around) {

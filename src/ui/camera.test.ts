@@ -2802,6 +2802,53 @@ describe('#easeTo globe projection', () => {
             expect(camera.getBearing()).toBe(90);
         });
 
+        test('immediately sets padding with duration = 0', () => {
+            const camera = createCameraGlobe();
+            camera.easeTo({center: [100, 0], duration: 0, padding: {left: 100}});
+            expect(camera.getPadding()).toEqual({
+                bottom: 0,
+                left: 100,
+                right: 0,
+                top: 0,
+            });
+
+            expect(camera.getCenter()).toEqual({lng: 100, lat: 0});
+        });
+
+        test('smoothly sets given padding with duration > 0', async () => {
+            const camera = createCameraGlobe();
+            const stub = vi.spyOn(browser, 'now');
+            const promise = camera.once('moveend');
+
+            stub.mockImplementation(() => 0);
+
+            camera.easeTo({center: [100, 0], duration: 100, padding: {left: 100}});
+
+            stub.mockImplementation(() => 50);
+            camera.simulateFrame();
+
+            const padding = camera.getPadding();
+
+            expect(padding.bottom).toBe(0);
+            expect(padding.left).toBeCloseTo(80.2403, 4);
+            expect(padding.right).toBe(0);
+            expect(padding.top).toBe(0);
+
+            stub.mockImplementation(() => 100);
+            camera.simulateFrame();
+
+            await promise;
+
+            expect(camera.getPadding()).toEqual({
+                bottom: 0,
+                left: 100,
+                right: 0,
+                top: 0,
+            });
+
+            expect(camera.getCenter()).toEqual({lng: 100, lat: 0});
+        });
+
         test('zooms and rotates', () => {
             const camera = createCameraGlobe();
             camera.easeTo({zoom: 3.2, bearing: 90, duration: 0});
