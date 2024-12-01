@@ -82,6 +82,8 @@ export interface ITransformGetters {
     get unmodified(): boolean;
 
     get renderWorldCopies(): boolean;
+
+    get cameraToCenterDistance(): number;
 }
 
 /**

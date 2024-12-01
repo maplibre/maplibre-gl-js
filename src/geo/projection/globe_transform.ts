@@ -215,7 +215,10 @@ export class GlobeTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
     }
-
+    get cameraToCenterDistance(): number {
+        // Globe uses the same cameraToCenterDistance as mercator.
+        return this._helper.cameraToCenterDistance;
+    }
     //
     // Implementation of globe transform
     //
@@ -329,11 +332,6 @@ export class GlobeTransform implements ITransform {
         copy[1] = this._cameraPosition[1];
         copy[2] = this._cameraPosition[2];
         return copy;
-    }
-
-    get cameraToCenterDistance(): number {
-        // Globe uses the same cameraToCenterDistance as mercator.
-        return this._mercatorTransform.cameraToCenterDistance;
     }
 
     public get nearZ(): number { return this._nearZ; }

@@ -191,12 +191,14 @@ export class MercatorTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
     }
+    public get cameraToCenterDistance(): number { 
+        return this._helper.cameraToCenterDistance;
+    }
 
     //
     // Implementation of mercator transform
     //
 
-    private _cameraToCenterDistance: number;
     private _cameraPosition: vec3;
 
     private _mercatorMatrix: mat4;
@@ -237,7 +239,6 @@ export class MercatorTransform implements ITransform {
         this._helper.apply(that, constrain);
     }
 
-    public get cameraToCenterDistance(): number { return this._cameraToCenterDistance; }
     public get cameraPosition(): vec3 { return this._cameraPosition; }
     public get projectionMatrix(): mat4 { return this._projectionMatrix; }
     public get modelViewProjectionMatrix(): mat4 { return this._viewProjMatrix; }
@@ -289,7 +290,7 @@ export class MercatorTransform implements ITransform {
 
         // Find the current camera position
         const originalPixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
-        const cameraToCenterDistanceMeters = this._cameraToCenterDistance / originalPixelPerMeter;
+        const cameraToCenterDistanceMeters = this._helper.cameraToCenterDistance / originalPixelPerMeter;
         const origCenterMercator = MercatorCoordinate.fromLngLat(this.center, this.elevation);
         const cameraMercator = cameraMercatorCoordinateFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
 
@@ -589,16 +590,15 @@ export class MercatorTransform implements ITransform {
     _calcMatrices(): void {
         if (!this._helper._height) return;
 
-        const halfFov = this.fovInRadians / 2;
         const offset = this.centerOffset;
         const point = projectToWorldCoordinates(this.worldSize, this.center);
         const x = point.x, y = point.y;
-        this._cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this._helper._height;
+        
         this._helper._pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
 
         // Calculate the camera to sea-level distance in pixel in respect of terrain
         const limitedPitchRadians = degreesToRadians(Math.min(this.pitch, maxMercatorHorizonAngle));
-        const cameraToSeaLevelDistance = Math.max(this._cameraToCenterDistance / 2, this._cameraToCenterDistance + this._helper._elevation * this._helper._pixelPerMeter / Math.cos(limitedPitchRadians));
+        const cameraToSeaLevelDistance = Math.max(this._helper.cameraToCenterDistance / 2, this._helper.cameraToCenterDistance + this._helper._elevation * this._helper._pixelPerMeter / Math.cos(limitedPitchRadians));
         // In case of negative minimum elevation (e.g. the dead see, under the sea maps) use a lower plane for calculation
         const minRenderDistanceBelowCameraInMeters = 100;
         const minElevation = Math.min(this.elevation, this.minElevationForCurrentTile, this.getCameraAltitude() - minRenderDistanceBelowCameraInMeters);
@@ -616,7 +616,7 @@ export class MercatorTransform implements ITransform {
 
         // Find the distance from the center point to the horizon
         const horizon = getMercatorHorizon(this);
-        const horizonAngle = Math.atan(horizon / this._cameraToCenterDistance);
+        const horizonAngle = Math.atan(horizon / this._helper.cameraToCenterDistance);
         const minFovCenterToHorizonRadians = degreesToRadians(90 - maxMercatorHorizonAngle);
         const fovCenterToHorizon = horizonAngle > minFovCenterToHorizonRadians ? 2 * horizonAngle * (0.5 + offset.y / (horizon * 2)) : minFovCenterToHorizonRadians;
         const topHalfSurfaceDistanceHorizon = Math.sin(fovCenterToHorizon) * lowestPlane / Math.sin(clamp(Math.PI - groundAngle - fovCenterToHorizon, 0.01, Math.PI - 0.01));
@@ -648,7 +648,7 @@ export class MercatorTransform implements ITransform {
         this._projectionMatrix = mat4.clone(m);
 
         mat4.scale(m, m, [1, -1, 1]);
-        mat4.translate(m, m, [0, 0, -this._cameraToCenterDistance]);
+        mat4.translate(m, m, [0, 0, -this._helper.cameraToCenterDistance]);
         mat4.rotateZ(m, m, -this.rollInRadians);
         mat4.rotateX(m, m, this.pitchInRadians);
         mat4.rotateZ(m, m, -this.bearingInRadians);
@@ -730,24 +730,23 @@ export class MercatorTransform implements ITransform {
         const coord = this.screenPointToMercatorCoordinate(new Point(0, 0));
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, 0, 1] as vec4;
         const topPoint = vec4.transformMat4(p, p, this._pixelMatrix);
-        return topPoint[3] / this._cameraToCenterDistance;
+        return topPoint[3] / this._helper.cameraToCenterDistance;
     }
 
     getCameraPoint(): Point {
         const pitch = this.pitchInRadians;
-        const offset = Math.tan(pitch) * (this._cameraToCenterDistance || 1);
+        const offset = Math.tan(pitch) * (this._helper.cameraToCenterDistance || 1);
         return this.centerPoint.add(new Point(offset*Math.sin(this.rollInRadians), offset*Math.cos(this.rollInRadians)));
     }
 
     getCameraAltitude(): number {
-        const altitude = Math.cos(this.pitchInRadians) * this._cameraToCenterDistance / this._helper._pixelPerMeter;
+        const altitude = Math.cos(this.pitchInRadians) * this._helper.cameraToCenterDistance / this._helper._pixelPerMeter;
         return altitude + this.elevation;
     }
 
     getCameraLngLat(): LngLat {
-        const cameraToCenterDistancePixels = 0.5 / Math.tan(this.fovInRadians / 2) * this.height;
         const pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
-        const cameraToCenterDistanceMeters = cameraToCenterDistancePixels / pixelPerMeter;
+        const cameraToCenterDistanceMeters = this._helper.cameraToCenterDistance / pixelPerMeter;
         const camMercator = cameraMercatorCoordinateFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
         return camMercator.toLngLat();
     }

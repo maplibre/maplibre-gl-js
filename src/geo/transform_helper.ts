@@ -124,6 +124,7 @@ export class TransformHelper implements ITransformGetters {
     _pixelsToGLUnits: [number, number];
     _pixelsToClipSpaceMatrix: mat4;
     _clipSpaceToPixelsMatrix: mat4;
+    _cameraToCenterDistance: number;
 
     constructor(callbacks: TransformHelperCallbacks, minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
         this._callbacks = callbacks;
@@ -176,6 +177,7 @@ export class TransformHelper implements ITransformGetters {
         this._minPitch = thatI.minPitch;
         this._maxPitch = thatI.maxPitch;
         this._renderWorldCopies = thatI.renderWorldCopies;
+        this._cameraToCenterDistance = thatI.cameraToCenterDistance;
         if (constrain) {
             this._constrain();
         }
@@ -383,6 +385,8 @@ export class TransformHelper implements ITransformGetters {
 
     get unmodified(): boolean { return this._unmodified; }
 
+    get cameraToCenterDistance(): number { return this._cameraToCenterDistance; }
+
     /**
      * Returns if the padding params match
      *
@@ -512,6 +516,8 @@ export class TransformHelper implements ITransformGetters {
             mat4.translate(m, m, [-1, -1, 0]);
             mat4.scale(m, m, [2 / this._width, 2 / this._height, 1]);
             this._pixelsToClipSpaceMatrix = m;
+            const halfFov = this.fovInRadians / 2;
+            this._cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this._height;
         }
         this._callbacks.calcMatrices();
     }
