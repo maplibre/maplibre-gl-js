@@ -1126,7 +1126,6 @@ export class GlobeTransform implements ITransform {
     //
     // Vertical perspective area for refactoring... //
     //
-
     
     private vp_getMatrixForModel(location: LngLatLike, altitude?: number): mat4 {
         const lnglat = LngLat.convert(location);
@@ -1141,7 +1140,7 @@ export class GlobeTransform implements ITransform {
         return m;
     }
 
-    vp_isPointOnMapSurface(p: Point, terrain?: Terrain): boolean {
+    vp_isPointOnMapSurface(p: Point, _terrain?: Terrain): boolean {
         const rayOrigin = this._cameraPosition;
         const rayDirection = this.getRayDirectionFromPixel(p);
 
