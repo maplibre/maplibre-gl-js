@@ -582,17 +582,17 @@ describe('GlobeTransform', () => {
         // projectionMock.useGlobeRendering and globeTransform.isGlobeRendering must have the same value
         expect(projectionMock.useGlobeRendering).toBe(true);
         expect(globeTransform.isGlobeRendering).toBe(projectionMock.useGlobeRendering);
+        globeTransform.setZoom(15);
         globeTransform.newFrameUpdate();
-        expect(projectionMock.useGlobeRendering).toBe(false);
-        expect(globeTransform.isGlobeRendering).toBe(projectionMock.useGlobeRendering);
-
         await sleep(150);
         globeTransform.newFrameUpdate();
         expect(projectionMock.useGlobeRendering).toBe(false);
         expect(globeTransform.isGlobeRendering).toBe(projectionMock.useGlobeRendering);
-        await sleep(10);
+        globeTransform.setZoom(1);
         globeTransform.newFrameUpdate();
-        expect(projectionMock.useGlobeRendering).toBe(true);
+        await sleep(150);
+        globeTransform.newFrameUpdate();
+        expect(globeTransform.isGlobeRendering).toBe(true);
         expect(globeTransform.isGlobeRendering).toBe(projectionMock.useGlobeRendering);
     });
 
