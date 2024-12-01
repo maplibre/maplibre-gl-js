@@ -1,10 +1,10 @@
 import {mat4} from 'gl-matrix';
 import {EXTENT} from '../../data/extent';
-import {clamp, createIdentityMat4f32, degreesToRadians, zoomScale} from '../../util/util';
-import {MAX_VALID_LATITUDE, type UnwrappedTileIDType} from '../transform_helper';
+import {clamp, createIdentityMat4f32, degreesToRadians, MAX_VALID_LATITUDE, zoomScale} from '../../util/util';
 import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate';
 import Point from '@mapbox/point-geometry';
 
+import type {UnwrappedTileIDType} from '../transform_helper';
 import type {OverscaledTileID} from '../../source/tile_id';
 import type {LngLat} from '../lng_lat';
 import type {ProjectionData} from './projection_data';

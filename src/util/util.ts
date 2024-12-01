@@ -1033,3 +1033,8 @@ export const MAX_TILE_ZOOM = 25;
  * In other words, the lower bound supported for tile zoom.
  */
 export const MIN_TILE_ZOOM = 0;
+
+/**
+ * The maximum valid latitude.
+ */
+export const MAX_VALID_LATITUDE = 85.051129;

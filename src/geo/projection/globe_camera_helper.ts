@@ -3,9 +3,9 @@ import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type Ease
 import {LngLat, type LngLatLike} from '../lng_lat';
 import {MercatorCameraHelper} from './mercator_camera_helper';
 import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from './globe_utils';
-import {clamp, createVec3f64, differenceOfAnglesDegrees, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../../util/util';
+import {clamp, createVec3f64, differenceOfAnglesDegrees, MAX_VALID_LATITUDE, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../../util/util';
 import {type mat4, vec3} from 'gl-matrix';
-import {MAX_VALID_LATITUDE, normalizeCenter} from '../transform_helper';
+import {normalizeCenter} from '../transform_helper';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
 import type {IReadonlyTransform, ITransform} from '../transform_interface';

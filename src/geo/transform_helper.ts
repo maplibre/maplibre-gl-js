@@ -1,7 +1,7 @@
 import {LngLat} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale} from '../util/util';
+import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LATITUDE} from '../util/util';
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets';
 import {mercatorZfromAltitude} from './mercator_coordinate';
@@ -9,8 +9,6 @@ import {cameraMercatorCoordinateFromCenterAndRotation} from './projection/mercat
 
 import type {PaddingOptions} from './edge_insets';
 import type {IReadonlyTransform, ITransformGetters} from './transform_interface';
-
-export const MAX_VALID_LATITUDE = 85.051129;
 
 /**
  * If a path crossing the antimeridian would be shorter, extend the final coordinate so that

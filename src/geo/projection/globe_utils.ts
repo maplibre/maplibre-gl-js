@@ -1,7 +1,6 @@
 import {vec3} from 'gl-matrix';
-import {clamp, lerp, mod, remapSaturate, scaleZoom, wrap} from '../../util/util';
+import {clamp, lerp, MAX_VALID_LATITUDE, mod, remapSaturate, scaleZoom, wrap} from '../../util/util';
 import {LngLat} from '../lng_lat';
-import {MAX_VALID_LATITUDE} from '../transform_helper';
 import {EXTENT} from '../../data/extent';
 import type Point from '@mapbox/point-geometry';
 
