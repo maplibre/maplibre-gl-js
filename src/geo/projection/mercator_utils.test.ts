@@ -1,7 +1,7 @@
 import {describe, expect, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
-import {getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, tileCoordinatesToLocation, tileCoordinatesToMercatorCoordinates} from './mercator_utils';
+import {getMercatorHorizon, projectToWorldCoordinates, tileCoordinatesToLocation, tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 import {MercatorTransform} from './mercator_transform';
 import {CanonicalTileID} from '../../source/tile_id';
 import {EXTENT} from '../../data/extent';
@@ -19,10 +19,6 @@ describe('mercator utils', () => {
 
         expect(projectToWorldCoordinates(transform.worldSize, new LngLat(0, -90))).toEqual(projectToWorldCoordinates(transform.worldSize, new LngLat(0, -MAX_VALID_LATITUDE)));
         expect(projectToWorldCoordinates(transform.worldSize, new LngLat(0, 90))).toEqual(projectToWorldCoordinates(transform.worldSize, new LngLat(0, MAX_VALID_LATITUDE)));
-    });
-
-    test('locationCoordinate', () => {
-        expect(locationToMercatorCoordinate(new LngLat(0, 0))).toEqual({x: 0.5, y: 0.5, z: 0});
     });
 
     test('getMercatorHorizon', () => {

@@ -7,7 +7,7 @@ import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID, calculateTileKe
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {type PointProjection, xyTransformMat4} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
-import {getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle, cameraMercatorCoordinateFromCenterAndRotation} from './mercator_utils';
+import {getMercatorHorizon, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle, cameraMercatorCoordinateFromCenterAndRotation} from './mercator_utils';
 import {EXTENT} from '../../data/extent';
 import {TransformHelper} from '../transform_helper';
 import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider';
@@ -293,7 +293,7 @@ export class MercatorTransform implements ITransform {
         const z = mercatorZfromAltitude(this.elevation, this.center.lat);
         const a = this.screenPointToMercatorCoordinateAtZ(point, z);
         const b = this.screenPointToMercatorCoordinateAtZ(this.centerPoint, z);
-        const loc = locationToMercatorCoordinate(lnglat);
+        const loc = MercatorCoordinate.fromLngLat(lnglat);
         const newCenter = new MercatorCoordinate(
             loc.x - (a.x - b.x),
             loc.y - (a.y - b.y));
@@ -305,8 +305,8 @@ export class MercatorTransform implements ITransform {
 
     locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
         return terrain ?
-            this.coordinatePoint(locationToMercatorCoordinate(lnglat), terrain.getElevationForLngLatZoom(lnglat, this._helper._tileZoom), this._pixelMatrix3D) :
-            this.coordinatePoint(locationToMercatorCoordinate(lnglat));
+            this.coordinatePoint(MercatorCoordinate.fromLngLat(lnglat), terrain.getElevationForLngLatZoom(lnglat, this._helper._tileZoom), this._pixelMatrix3D) :
+            this.coordinatePoint(MercatorCoordinate.fromLngLat(lnglat));
     }
 
     screenPointToLocation(p: Point, terrain?: Terrain): LngLat {
@@ -690,7 +690,7 @@ export class MercatorTransform implements ITransform {
     }
 
     lngLatToCameraDepth(lngLat: LngLat, elevation: number) {
-        const coord = locationToMercatorCoordinate(lngLat);
+        const coord = MercatorCoordinate.fromLngLat(lngLat);
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
         vec4.transformMat4(p, p, this._viewProjMatrix);
         return (p[2] / p[3]);
