@@ -748,76 +748,7 @@ export class GlobeTransform implements ITransform {
         if (!this.isGlobeRendering) {
             return this._mercatorTransform.getBounds();
         }
-
-        const xMid = this.width * 0.5;
-        const yMid = this.height * 0.5;
-
-        // LngLat extremes will probably tend to be in screen corners or in middle of screen edges.
-        // These test points should result in a pretty good approximation.
-        const testPoints = [
-            new Point(0, 0),
-            new Point(xMid, 0),
-            new Point(this.width, 0),
-            new Point(this.width, yMid),
-            new Point(this.width, this.height),
-            new Point(xMid, this.height),
-            new Point(0, this.height),
-            new Point(0, yMid),
-        ];
-
-        const projectedPoints = [];
-        for (const p of testPoints) {
-            projectedPoints.push(this.unprojectScreenPoint(p));
-        }
-
-        // We can't construct a simple min/max aabb, since points might lie on either side of the antimeridian.
-        // We will instead compute the furthest points relative to map center.
-        // We also take advantage of the fact that `unprojectScreenPoint` will snap pixels
-        // outside the planet to the closest point on the planet's horizon.
-        let mostEast = 0, mostWest = 0, mostNorth = 0, mostSouth = 0; // We will store these values signed.
-        const center = this.center;
-        for (const p of projectedPoints) {
-            const dLng = differenceOfAnglesDegrees(center.lng, p.lng);
-            const dLat = differenceOfAnglesDegrees(center.lat, p.lat);
-            if (dLng < mostWest) {
-                mostWest = dLng;
-            }
-            if (dLng > mostEast) {
-                mostEast = dLng;
-            }
-            if (dLat < mostSouth) {
-                mostSouth = dLat;
-            }
-            if (dLat > mostNorth) {
-                mostNorth = dLat;
-            }
-        }
-
-        const boundsArray: [number, number, number, number] = [
-            center.lng + mostWest,  // west
-            center.lat + mostSouth, // south
-            center.lng + mostEast,  // east
-            center.lat + mostNorth  // north
-        ];
-
-        // Sometimes the poles might end up not being on the horizon,
-        // thus not being detected as the northernmost/southernmost points.
-        // We fix that here.
-        if (this.isSurfacePointOnScreen([0, 1, 0])) {
-            // North pole is visible
-            // This also means that the entire longitude range must be visible
-            boundsArray[3] = 90;
-            boundsArray[0] = -180;
-            boundsArray[2] = 180;
-        }
-        if (this.isSurfacePointOnScreen([0, -1, 0])) {
-            // South pole is visible
-            boundsArray[1] = -90;
-            boundsArray[0] = -180;
-            boundsArray[2] = 180;
-        }
-
-        return new LngLatBounds(boundsArray);
+        return this.vp_getBounds();
     }
 
     getConstrained(lngLat: LngLat, zoom: number): { center: LngLat; zoom: number } {
@@ -996,13 +927,7 @@ export class GlobeTransform implements ITransform {
         if (!this.isGlobeRendering) {
             return this._mercatorTransform.isPointOnMapSurface(p, terrain);
         }
-
-        const rayOrigin = this._cameraPosition;
-        const rayDirection = this.getRayDirectionFromPixel(p);
-
-        const intersection = this.rayPlanetIntersection(rayOrigin, rayDirection);
-
-        return !!intersection;
+        return this.vp_isPointOnMapSurface(p, terrain);
     }
 
     /**
@@ -1171,16 +1096,7 @@ export class GlobeTransform implements ITransform {
         if (!this.isGlobeRendering) {
             return this._mercatorTransform.getMatrixForModel(location, altitude);
         }
-        const lnglat = LngLat.convert(location);
-        const scale = 1.0 / earthRadius;
-
-        const m = createIdentityMat4f64();
-        mat4.rotateY(m, m, lnglat.lng / 180.0 * Math.PI);
-        mat4.rotateX(m, m, -lnglat.lat / 180.0 * Math.PI);
-        mat4.translate(m, m, [0, 0, 1 + altitude / earthRadius]);
-        mat4.rotateX(m, m, Math.PI * 0.5);
-        mat4.scale(m, m, [scale, scale, scale]);
-        return m;
+        return this.vp_getMatrixForModel(location, altitude);
     }
 
     getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): ProjectionData {
@@ -1206,4 +1122,104 @@ export class GlobeTransform implements ITransform {
         }
         return undefined;
     }
+
+    //
+    // Vertical perspective area for refactoring... //
+    //
+
+    
+    private vp_getMatrixForModel(location: LngLatLike, altitude?: number): mat4 {
+        const lnglat = LngLat.convert(location);
+        const scale = 1.0 / earthRadius;
+
+        const m = createIdentityMat4f64();
+        mat4.rotateY(m, m, lnglat.lng / 180.0 * Math.PI);
+        mat4.rotateX(m, m, -lnglat.lat / 180.0 * Math.PI);
+        mat4.translate(m, m, [0, 0, 1 + altitude / earthRadius]);
+        mat4.rotateX(m, m, Math.PI * 0.5);
+        mat4.scale(m, m, [scale, scale, scale]);
+        return m;
+    }
+
+    vp_isPointOnMapSurface(p: Point, terrain?: Terrain): boolean {
+        const rayOrigin = this._cameraPosition;
+        const rayDirection = this.getRayDirectionFromPixel(p);
+
+        const intersection = this.rayPlanetIntersection(rayOrigin, rayDirection);
+
+        return !!intersection;
+    }
+
+    vp_getBounds(): LngLatBounds {
+        const xMid = this.width * 0.5;
+        const yMid = this.height * 0.5;
+
+        // LngLat extremes will probably tend to be in screen corners or in middle of screen edges.
+        // These test points should result in a pretty good approximation.
+        const testPoints = [
+            new Point(0, 0),
+            new Point(xMid, 0),
+            new Point(this.width, 0),
+            new Point(this.width, yMid),
+            new Point(this.width, this.height),
+            new Point(xMid, this.height),
+            new Point(0, this.height),
+            new Point(0, yMid),
+        ];
+
+        const projectedPoints = [];
+        for (const p of testPoints) {
+            projectedPoints.push(this.unprojectScreenPoint(p));
+        }
+
+        // We can't construct a simple min/max aabb, since points might lie on either side of the antimeridian.
+        // We will instead compute the furthest points relative to map center.
+        // We also take advantage of the fact that `unprojectScreenPoint` will snap pixels
+        // outside the planet to the closest point on the planet's horizon.
+        let mostEast = 0, mostWest = 0, mostNorth = 0, mostSouth = 0; // We will store these values signed.
+        const center = this.center;
+        for (const p of projectedPoints) {
+            const dLng = differenceOfAnglesDegrees(center.lng, p.lng);
+            const dLat = differenceOfAnglesDegrees(center.lat, p.lat);
+            if (dLng < mostWest) {
+                mostWest = dLng;
+            }
+            if (dLng > mostEast) {
+                mostEast = dLng;
+            }
+            if (dLat < mostSouth) {
+                mostSouth = dLat;
+            }
+            if (dLat > mostNorth) {
+                mostNorth = dLat;
+            }
+        }
+
+        const boundsArray: [number, number, number, number] = [
+            center.lng + mostWest,  // west
+            center.lat + mostSouth, // south
+            center.lng + mostEast,  // east
+            center.lat + mostNorth  // north
+        ];
+
+        // Sometimes the poles might end up not being on the horizon,
+        // thus not being detected as the northernmost/southernmost points.
+        // We fix that here.
+        if (this.isSurfacePointOnScreen([0, 1, 0])) {
+            // North pole is visible
+            // This also means that the entire longitude range must be visible
+            boundsArray[3] = 90;
+            boundsArray[0] = -180;
+            boundsArray[2] = 180;
+        }
+        if (this.isSurfacePointOnScreen([0, -1, 0])) {
+            // South pole is visible
+            boundsArray[1] = -90;
+            boundsArray[0] = -180;
+            boundsArray[2] = 180;
+        }
+
+        return new LngLatBounds(boundsArray);
+    }
+
 }
