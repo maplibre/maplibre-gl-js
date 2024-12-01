@@ -1,14 +1,15 @@
 import {type ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {warnOnce} from '../../util/util';
-import {type Projection} from './projection';
-import {type ITransform} from '../transform_interface';
-import {type ICameraHelper} from './camera_helper';
 import {MercatorProjection} from './mercator';
 import {MercatorTransform} from './mercator_transform';
 import {MercatorCameraHelper} from './mercator_camera_helper';
 import {GlobeProjection} from './globe';
 import {GlobeTransform} from './globe_transform';
 import {GlobeCameraHelper} from './globe_camera_helper';
+import {VeritcalPerspectiveTransform} from './vertical_perspective_transform';
+import type {Projection} from './projection';
+import type {ITransform} from '../transform_interface';
+import type {ICameraHelper} from './camera_helper';
 
 export function createProjectionFromName(name: ProjectionSpecification['type']): {
     projection: Projection;
@@ -29,7 +30,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type']):
             const proj = new GlobeProjection();
             return {
                 projection: proj,
-                transform: new GlobeTransform(proj, true),
+                transform: new GlobeTransform(proj),
                 cameraHelper: new GlobeCameraHelper(proj),
             };
         }
@@ -38,7 +39,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type']):
             const proj = new GlobeProjection();
             return {
                 projection: proj,
-                transform: new GlobeTransform(proj, true, false),
+                transform: new VeritcalPerspectiveTransform(),
                 cameraHelper: new GlobeCameraHelper(proj),
             };
         }

@@ -1,16 +1,16 @@
-import {type LngLat, type LngLatLike} from './lng_lat';
-import {type LngLatBounds} from './lng_lat_bounds';
-import {type MercatorCoordinate} from './mercator_coordinate';
+import type {LngLat, LngLatLike} from './lng_lat';
+import type {LngLatBounds} from './lng_lat_bounds';
+import type {MercatorCoordinate} from './mercator_coordinate';
 import type Point from '@mapbox/point-geometry';
-import {type mat4, type mat2, type vec3, type vec4} from 'gl-matrix';
-import {type UnwrappedTileID, type OverscaledTileID, type CanonicalTileID} from '../source/tile_id';
+import type {mat4, mat2, vec3, vec4} from 'gl-matrix';
+import type {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import type {PaddingOptions} from './edge_insets';
-import {type Terrain} from '../render/terrain';
-import {type PointProjection} from '../symbol/projection';
-import {type MapProjectionEvent} from '../ui/events';
+import type {Terrain} from '../render/terrain';
+import type {PointProjection} from '../symbol/projection';
+import type {MapProjectionEvent} from '../ui/events';
 import type {ProjectionData, ProjectionDataParams} from './projection/projection_data';
-import {type CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider';
-import {type Frustum} from '../util/primitives/frustum';
+import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider';
+import type {Frustum} from '../util/primitives/frustum';
 
 export type TransformUpdateResult = {
     forcePlacementUpdate?: boolean;
@@ -82,6 +82,10 @@ export interface ITransformGetters {
     get unmodified(): boolean;
 
     get renderWorldCopies(): boolean;
+    /**
+     * The distance from the camera to the center of the map in pixels space.
+     */
+    get cameraToCenterDistance(): number;
 }
 
 /**

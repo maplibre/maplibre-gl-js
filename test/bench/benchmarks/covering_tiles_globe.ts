@@ -14,7 +14,7 @@ export default class CoveringTilesGlobe extends Benchmark {
 
     bench() {
         const projection = new GlobeProjection();
-        const transform = new GlobeTransform(projection, true);
+        const transform = new GlobeTransform(projection);
         transform.setCenter(new LngLat(0, 0));
         transform.setZoom(4);
         transform.resize(4096, 4096);

@@ -1,14 +1,15 @@
 import Point from '@mapbox/point-geometry';
 import {LngLat, type LngLatLike} from '../lng_lat';
-import {type IReadonlyTransform, type ITransform} from '../transform_interface';
 import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation, type UpdateRotationArgs} from './camera_helper';
-import {type CameraForBoundsOptions} from '../../ui/camera';
-import {type PaddingOptions} from '../edge_insets';
-import {type LngLatBounds} from '../lng_lat_bounds';
-import {normalizeCenter, scaleZoom, zoomScale} from '../transform_helper';
-import {degreesToRadians, rollPitchBearingEqual} from '../../util/util';
+import {normalizeCenter} from '../transform_helper';
+import {degreesToRadians, rollPitchBearingEqual, scaleZoom, zoomScale} from '../../util/util';
 import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
+
+import type {IReadonlyTransform, ITransform} from '../transform_interface';
+import type {CameraForBoundsOptions} from '../../ui/camera';
+import type {PaddingOptions} from '../edge_insets';
+import type {LngLatBounds} from '../lng_lat_bounds';
 
 /**
  * @internal

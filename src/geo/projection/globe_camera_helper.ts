@@ -1,17 +1,18 @@
 import Point from '@mapbox/point-geometry';
-import {type IReadonlyTransform, type ITransform} from '../transform_interface';
 import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation, type UpdateRotationArgs} from './camera_helper';
-import {type GlobeProjection} from './globe';
 import {LngLat, type LngLatLike} from '../lng_lat';
 import {MercatorCameraHelper} from './mercator_camera_helper';
 import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from './globe_utils';
-import {clamp, createVec3f64, differenceOfAnglesDegrees, remapSaturate, rollPitchBearingEqual, warnOnce} from '../../util/util';
+import {clamp, createVec3f64, differenceOfAnglesDegrees, MAX_VALID_LATITUDE, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../../util/util';
 import {type mat4, vec3} from 'gl-matrix';
-import {MAX_VALID_LATITUDE, normalizeCenter, scaleZoom, zoomScale} from '../transform_helper';
-import {type CameraForBoundsOptions} from '../../ui/camera';
-import {type LngLatBounds} from '../lng_lat_bounds';
-import {type PaddingOptions} from '../edge_insets';
+import {normalizeCenter} from '../transform_helper';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
+
+import type {IReadonlyTransform, ITransform} from '../transform_interface';
+import type {GlobeProjection} from './globe';
+import type {CameraForBoundsOptions} from '../../ui/camera';
+import type {LngLatBounds} from '../lng_lat_bounds';
+import type {PaddingOptions} from '../edge_insets';
 
 /**
  * @internal
