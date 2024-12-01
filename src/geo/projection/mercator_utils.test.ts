@@ -5,7 +5,7 @@ import {getMercatorHorizon, projectToWorldCoordinates, tileCoordinatesToLocation
 import {MercatorTransform} from './mercator_transform';
 import {CanonicalTileID} from '../../source/tile_id';
 import {EXTENT} from '../../data/extent';
-import {MAX_VALID_LATITUDE} from '../../util/util';
+import {createIdentityMat4f32, MAX_VALID_LATITUDE} from '../../util/util';
 
 describe('mercator utils', () => {
     test('projectToWorldCoordinates basic', () => {
@@ -47,29 +47,13 @@ describe('mercator utils', () => {
 
         expect(horizon).toBeCloseTo(-75.52102888757743, 10);
     });
-    /* HM TODO: restore these tests?
-    describe('getBasicProjectionData', () => {
-        test('posMatrix is set', () => {
-            const mat = mat4.create();
-            mat[0] = 1234;
-            const projectionData = getBasicProjectionData(new OverscaledTileID(0, 0, 0, 0, 0), mat);
-            expect(projectionData.fallbackMatrix).toEqual(mat);
-        });
-
-        test('mercator tile extents are set', () => {
-            let projectionData: ProjectionData;
-
-            projectionData = getBasicProjectionData(new OverscaledTileID(0, 0, 0, 0, 0));
-            expectToBeCloseToArray(projectionData.tileMercatorCoords, [0, 0, 1 / EXTENT, 1 / EXTENT]);
-
-            projectionData = getBasicProjectionData(new OverscaledTileID(1, 0, 1, 0, 0));
-            expectToBeCloseToArray(projectionData.tileMercatorCoords, [0, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
-
-            projectionData = getBasicProjectionData(new OverscaledTileID(1, 0, 1, 1, 0));
-            expectToBeCloseToArray(projectionData.tileMercatorCoords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
+    describe('getProjectionData', () => {
+        test('return identity matrix when not passing overscaledTileID', () => {
+            const transform = new MercatorTransform(0, 22, 0, 180, true);
+            const projectionData = transform.getProjectionData({overscaledTileID: null});
+            expect(projectionData.fallbackMatrix).toEqual(createIdentityMat4f32());
         });
     });
-    */
 
     describe('tileCoordinatesToMercatorCoordinates', () => {
         const precisionDigits = 10;
