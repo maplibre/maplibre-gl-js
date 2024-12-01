@@ -1,22 +1,23 @@
 import {LngLat, type LngLatLike} from '../lng_lat';
 import {altitudeFromMercatorZ, MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp, createIdentityMat4f64, createMat4f64, degreesToRadians} from '../../util/util';
+import {wrap, clamp, createIdentityMat4f64, createMat4f64, degreesToRadians, zoomScale, scaleZoom} from '../../util/util';
 import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID, calculateTileKey} from '../../source/tile_id';
-import {type Terrain} from '../../render/terrain';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {type PointProjection, xyTransformMat4} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
-import {type IReadonlyTransform, type ITransform, type TransformUpdateResult} from '../transform_interface';
-import {type PaddingOptions} from '../edge_insets';
 import {mercatorCoordinateToLocation, getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle, cameraMercatorCoordinateFromCenterAndRotation} from './mercator_utils';
 import {EXTENT} from '../../data/extent';
-import type {ProjectionData, ProjectionDataParams} from './projection_data';
-import {scaleZoom, TransformHelper, zoomScale} from '../transform_helper';
+import {TransformHelper} from '../transform_helper';
 import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider';
 import {Frustum} from '../../util/primitives/frustum';
-import {type CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
+
+import type {Terrain} from '../../render/terrain';
+import type {IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
+import type {ProjectionData, ProjectionDataParams} from './projection_data';
+import type {PaddingOptions} from '../edge_insets';
+import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
 
 export class MercatorTransform implements ITransform {
     private _helper: TransformHelper;
@@ -734,21 +735,15 @@ export class MercatorTransform implements ITransform {
     }
 
     getCameraPoint(): Point {
-        const pitch = this.pitchInRadians;
-        const offset = Math.tan(pitch) * (this._helper.cameraToCenterDistance || 1);
-        return this.centerPoint.add(new Point(offset*Math.sin(this.rollInRadians), offset*Math.cos(this.rollInRadians)));
+        return this._helper.getCameraPoint();
     }
 
     getCameraAltitude(): number {
-        const altitude = Math.cos(this.pitchInRadians) * this._helper.cameraToCenterDistance / this._helper._pixelPerMeter;
-        return altitude + this.elevation;
+        return this._helper.getCameraAltitude();
     }
 
     getCameraLngLat(): LngLat {
-        const pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
-        const cameraToCenterDistanceMeters = this._helper.cameraToCenterDistance / pixelPerMeter;
-        const camMercator = cameraMercatorCoordinateFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
-        return camMercator.toLngLat();
+        return this._helper.getCameraLngLat();
     }
 
     lngLatToCameraDepth(lngLat: LngLat, elevation: number) {

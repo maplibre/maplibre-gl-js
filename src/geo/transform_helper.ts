@@ -1,11 +1,14 @@
 import {LngLat} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp, degreesToRadians, radiansToDegrees} from '../util/util';
+import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale} from '../util/util';
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets';
+import {mercatorZfromAltitude} from './mercator_coordinate';
+import {cameraMercatorCoordinateFromCenterAndRotation} from './projection/mercator_utils';
+
 import type {PaddingOptions} from './edge_insets';
-import {type IReadonlyTransform, type ITransformGetters} from './transform_interface';
+import type {IReadonlyTransform, ITransformGetters} from './transform_interface';
 
 export const MAX_VALID_LATITUDE = 85.051129;
 
@@ -21,16 +24,6 @@ export function normalizeCenter(tr: IReadonlyTransform, center: LngLat): void {
         delta > 180 ? -360 :
             delta < -180 ? 360 : 0;
 }
-
-/**
- * Computes scaling from zoom level.
- */
-export function zoomScale(zoom: number) { return Math.pow(2, zoom); }
-
-/**
- * Computes zoom level from scaling.
- */
-export function scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
 
 export type UnwrappedTileIDType = {
     /**
@@ -520,5 +513,22 @@ export class TransformHelper implements ITransformGetters {
             this._cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this._height;
         }
         this._callbacks.calcMatrices();
+    }
+
+    getCameraPoint(): Point {
+        const offset = Math.tan(this._pitchInRadians) * (this._cameraToCenterDistance || 1);
+        return this.centerPoint.add(new Point(offset * Math.sin(this.rollInRadians), offset * Math.cos(this.rollInRadians)));
+    }
+
+    getCameraAltitude(): number {
+        const altitude = Math.cos(this._pitchInRadians) * this._cameraToCenterDistance / this._pixelPerMeter;
+        return altitude + this._elevation;
+    }
+
+    getCameraLngLat(): LngLat {
+        const pixelPerMeter = mercatorZfromAltitude(1, this._center.lat) * this.worldSize;
+        const cameraToCenterDistanceMeters = this._cameraToCenterDistance / pixelPerMeter;
+        const camMercator = cameraMercatorCoordinateFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
+        return camMercator.toLngLat();
     }
 }

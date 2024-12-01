@@ -966,6 +966,16 @@ export function rollPitchBearingToQuat(roll: number, pitch: number, bearing: num
 }
 
 /**
+ * Computes scaling from zoom level.
+ */
+export function zoomScale(zoom: number) { return Math.pow(2, zoom); }
+
+/**
+ * Computes zoom level from scaling.
+ */
+export function scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
+
+/**
  * Makes optional keys required and add the the undefined type.
  *
  * ```
