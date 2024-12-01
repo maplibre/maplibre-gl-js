@@ -1,6 +1,6 @@
 import {test, expect, vi} from 'vitest';
 import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';
-import {Canvas} from 'canvas';
+import {Canvas} from 'skia-canvas';
 import {offscreenCanvasSupported} from './offscreen_canvas_supported';
 
 test('normal operation does not mangle canvas', () => {
