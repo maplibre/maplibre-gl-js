@@ -3,12 +3,14 @@ import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
 import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
 import {fixedLngLat, fixedCoord} from '../../../test/unit/lib/fixed';
-import type {Terrain} from '../../render/terrain';
 import {MercatorTransform} from './mercator_transform';
 import {LngLatBounds} from '../lng_lat_bounds';
 import {getMercatorHorizon} from './mercator_utils';
 import {mat4} from 'gl-matrix';
 import {expectToBeCloseToArray} from '../../util/test/util';
+import {createIdentityMat4f32} from '../../util/util';
+
+import type {Terrain} from '../../render/terrain';
 
 describe('transform', () => {
     test('creates a transform', () => {
@@ -594,5 +596,15 @@ describe('transform', () => {
         expect(transform.getCameraAltitude()).toBeCloseTo(camAlt, 10);
         expect(transform.getCameraLngLat().lng).toBeCloseTo(camLngLat.lng, 10);
         expect(transform.getCameraLngLat().lat).toBeCloseTo(camLngLat.lat, 10);
+    });
+
+    describe('getProjectionData', () => {
+        test('fallbackMatrix is identity when overscaledTileID is not set', () => {
+            const transform = new MercatorTransform(0, 22, 0, 180, true);
+            const mat = mat4.create();
+            mat[0] = 1234;
+            const projectionData = transform.getProjectionData({overscaledTileID: null});
+            expect(projectionData.fallbackMatrix).toEqual(createIdentityMat4f32());
+        });
     });
 });

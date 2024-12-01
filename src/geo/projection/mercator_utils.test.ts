@@ -1,15 +1,11 @@
 import {describe, expect, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
-import {getBasicProjectionData, getMercatorHorizon, projectToWorldCoordinates, tileCoordinatesToLocation, tileCoordinatesToMercatorCoordinates} from './mercator_utils';
+import {getMercatorHorizon, projectToWorldCoordinates, tileCoordinatesToLocation, tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 import {MercatorTransform} from './mercator_transform';
-import {mat4} from 'gl-matrix';
-import {CanonicalTileID, OverscaledTileID} from '../../source/tile_id';
+import {CanonicalTileID} from '../../source/tile_id';
 import {EXTENT} from '../../data/extent';
-import {expectToBeCloseToArray} from '../../util/test/util';
 import {MAX_VALID_LATITUDE} from '../../util/util';
-
-import type {ProjectionData} from './projection_data';
 
 describe('mercator utils', () => {
     test('projectToWorldCoordinates basic', () => {
@@ -50,28 +46,6 @@ describe('mercator utils', () => {
         const horizon = getMercatorHorizon(transform);
 
         expect(horizon).toBeCloseTo(-75.52102888757743, 10);
-    });
-
-    describe('getBasicProjectionData', () => {
-        test('posMatrix is set', () => {
-            const mat = mat4.create();
-            mat[0] = 1234;
-            const projectionData = getBasicProjectionData(new OverscaledTileID(0, 0, 0, 0, 0), mat);
-            expect(projectionData.fallbackMatrix).toEqual(mat);
-        });
-
-        test('mercator tile extents are set', () => {
-            let projectionData: ProjectionData;
-
-            projectionData = getBasicProjectionData(new OverscaledTileID(0, 0, 0, 0, 0));
-            expectToBeCloseToArray(projectionData.tileMercatorCoords, [0, 0, 1 / EXTENT, 1 / EXTENT]);
-
-            projectionData = getBasicProjectionData(new OverscaledTileID(1, 0, 1, 0, 0));
-            expectToBeCloseToArray(projectionData.tileMercatorCoords, [0, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
-
-            projectionData = getBasicProjectionData(new OverscaledTileID(1, 0, 1, 1, 0));
-            expectToBeCloseToArray(projectionData.tileMercatorCoords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
-        });
     });
 
     describe('tileCoordinatesToMercatorCoordinates', () => {

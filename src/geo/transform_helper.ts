@@ -6,9 +6,11 @@ import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets';
 import {altitudeFromMercatorZ, MercatorCoordinate, mercatorZfromAltitude} from './mercator_coordinate';
 import {cameraMercatorCoordinateFromCenterAndRotation} from './projection/mercator_utils';
+import {EXTENT} from '../data/extent';
 
 import type {PaddingOptions} from './edge_insets';
 import type {IReadonlyTransform, ITransformGetters} from './transform_interface';
+import type {OverscaledTileID} from '../source/tile_id';
 
 /**
  * If a path crossing the antimeridian would be shorter, extend the final coordinate so that
@@ -576,5 +578,18 @@ export class TransformHelper implements ITransformGetters {
         const center = centerMercator.toLngLat();
         const zoom = scaleZoom(this.height / 2 / Math.tan(this.fovInRadians / 2) / dMercator / this.tileSize);
         return {center, elevation, zoom};
+    }
+
+    getTileMercatorCoordinates(overscaledTileID: OverscaledTileID): [number, number, number, number] {
+        if (!overscaledTileID) {
+            return [0, 0, 1, 1];
+        }
+        const scale = (overscaledTileID.canonical.z >= 0) ? (1 << overscaledTileID.canonical.z) : Math.pow(2.0, overscaledTileID.canonical.z);
+        return [
+            overscaledTileID.canonical.x / scale,
+            overscaledTileID.canonical.y / scale,
+            1.0 / scale / EXTENT,
+            1.0 / scale / EXTENT
+        ];
     }
 }

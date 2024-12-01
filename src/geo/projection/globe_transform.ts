@@ -304,7 +304,8 @@ export class GlobeTransform implements ITransform {
 
     clone(): ITransform {
         const clone = new GlobeTransform(null, this._globeProjectionAllowed);
-        clone._applyGlobeTransform(this);
+        clone._globeness = this._globeness;
+        clone._globeLatitudeErrorCorrectionRadians = this._globeLatitudeErrorCorrectionRadians;
         clone.apply(this);
         return clone;
     }
@@ -312,11 +313,6 @@ export class GlobeTransform implements ITransform {
     public apply(that: IReadonlyTransform): void {
         this._helper.apply(that);
         this._mercatorTransform.apply(this);
-    }
-
-    private _applyGlobeTransform(that: GlobeTransform): void {
-        this._globeness = that._globeness;
-        this._globeLatitudeErrorCorrectionRadians = that._globeLatitudeErrorCorrectionRadians;
     }
 
     public get projectionMatrix(): mat4 { return this.isGlobeRendering ? this._projectionMatrix : this._mercatorTransform.projectionMatrix; }

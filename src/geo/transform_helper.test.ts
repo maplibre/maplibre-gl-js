@@ -2,14 +2,17 @@ import {describe, expect, test} from 'vitest';
 import {LngLat} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
 import {TransformHelper} from './transform_helper';
+import {OverscaledTileID} from '../source/tile_id';
+import {EXTENT} from '../data/extent';
+import {expectToBeCloseToArray} from '../util/test/util';
+
+const emptyCallbacks = {
+    calcMatrices: () => {},
+    getConstrained: (center, zoom) => { return {center, zoom}; },
+};
 
 describe('TransformHelper', () => {
     test('apply', () => {
-        const emptyCallbacks = {
-            calcMatrices: () => {},
-            getConstrained: (center, zoom) => { return {center, zoom}; },
-        };
-
         const original = new TransformHelper(emptyCallbacks);
         original.setBearing(12);
         original.setCenter(new LngLat(3, 4));
@@ -60,5 +63,22 @@ describe('TransformHelper', () => {
         expect(cloned.padding).toEqual(original.padding);
         expect(cloned.unmodified).toEqual(original.unmodified);
         expect(cloned.renderWorldCopies).toEqual(original.renderWorldCopies);
+    });
+
+    describe('getTileMercatorCoordinates', () => {
+
+        test('mercator tile extents are set', () => {
+            const helper = new TransformHelper(emptyCallbacks);
+            helper.getTileMercatorCoordinates
+
+            let coords = helper.getTileMercatorCoordinates(new OverscaledTileID(0, 0, 0, 0, 0));
+            expectToBeCloseToArray(coords, [0, 0, 1 / EXTENT, 1 / EXTENT]);
+
+            coords = helper.getTileMercatorCoordinates(new OverscaledTileID(1, 0, 1, 0, 0));
+            expectToBeCloseToArray(coords, [0, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
+
+            coords = helper.getTileMercatorCoordinates(new OverscaledTileID(1, 0, 1, 1, 0));
+            expectToBeCloseToArray(coords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
+        });
     });
 });

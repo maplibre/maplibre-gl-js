@@ -1,13 +1,13 @@
 import {LngLat, type LngLatLike} from '../lng_lat';
 import {altitudeFromMercatorZ, MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp, createIdentityMat4f64, createMat4f64, degreesToRadians, zoomScale, scaleZoom} from '../../util/util';
+import {wrap, clamp, createIdentityMat4f64, createMat4f64, degreesToRadians, zoomScale, scaleZoom, createIdentityMat4f32} from '../../util/util';
 import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID, calculateTileKey} from '../../source/tile_id';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {type PointProjection, xyTransformMat4} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
-import {getBasicProjectionData, getMercatorHorizon, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle, cameraMercatorCoordinateFromCenterAndRotation} from './mercator_utils';
+import {getMercatorHorizon, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle, cameraMercatorCoordinateFromCenterAndRotation} from './mercator_utils';
 import {EXTENT} from '../../data/extent';
 import {TransformHelper} from '../transform_helper';
 import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider';
@@ -715,8 +715,24 @@ export class MercatorTransform implements ITransform {
 
     getProjectionData(params: ProjectionDataParams): ProjectionData {
         const {overscaledTileID, aligned, applyTerrainMatrix} = params;
-        const matrix = overscaledTileID ? this.calculatePosMatrix(overscaledTileID, aligned, true) : null;
-        return getBasicProjectionData(overscaledTileID, matrix, applyTerrainMatrix);
+        const tilePosMatrix = overscaledTileID ? this.calculatePosMatrix(overscaledTileID, aligned, true) : null;
+        const tileMercatorCoords = this._helper.getTileMercatorCoordinates(overscaledTileID);
+        let mainMatrix: mat4;
+        if (overscaledTileID && overscaledTileID.terrainRttPosMatrix32f && applyTerrainMatrix) {
+            mainMatrix = overscaledTileID.terrainRttPosMatrix32f;
+        } else if (tilePosMatrix) {
+            mainMatrix = tilePosMatrix; // This matrix should be float32
+        } else {
+            mainMatrix = createIdentityMat4f32();
+        }
+
+        return {
+            mainMatrix, // Might be set to a custom matrix by different projections.
+            tileMercatorCoords,
+            clippingPlane: [0, 0, 0, 0],
+            projectionTransition: 0.0, // Range 0..1, where 0 is mercator, 1 is another projection, mostly globe.
+            fallbackMatrix: mainMatrix,
+        };
     }
 
     isLocationOccluded(_: LngLat): boolean {
