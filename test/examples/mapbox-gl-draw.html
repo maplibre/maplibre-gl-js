@@ -31,9 +31,10 @@
         font-size: 13px;
     }
 </style>
-<link
-    rel="stylesheet"
-    href="https://esm.sh/jsr/@birkskyum/maplibre-gl-draw@^2/dist/maplibre-gl-draw.css"
+    <script src="https://www.unpkg.com/@mapbox/mapbox-gl-draw@1.4.3/dist/mapbox-gl-draw.js"></script>
+    <link
+        rel="stylesheet"
+        href="https://www.unpkg.com/@mapbox/mapbox-gl-draw@1.4.3/dist/mapbox-gl-draw.css"
     />
     <div id="map"></div>
     <div class="calculation-box">
@@ -46,10 +47,9 @@
 
     import * as turf from 'https://esm.sh/@turf/turf@7.1.0';
 
-    import {MapLibreDraw} from 'https://esm.sh/jsr/@birkskyum/maplibre-gl-draw@^2';
-    MapLibreDraw.constants.classes.CONTROL_BASE  = 'maplibregl-ctrl';
-    MapLibreDraw.constants.classes.CONTROL_PREFIX = 'maplibregl-ctrl-';
-    MapLibreDraw.constants.classes.CONTROL_GROUP = 'maplibregl-ctrl-group';
+    MapboxDraw.constants.classes.CONTROL_BASE  = 'maplibregl-ctrl';
+    MapboxDraw.constants.classes.CONTROL_PREFIX = 'maplibregl-ctrl-';
+    MapboxDraw.constants.classes.CONTROL_GROUP = 'maplibregl-ctrl-group';
 
     const map = new maplibregl.Map({
         container: 'map', // container id
@@ -59,7 +59,7 @@
         zoom: 12 // starting zoom
     });
 
-    const draw = new MapLibreDraw({
+    const draw = new MapboxDraw({
         displayControlsDefault: false,
         controls: {
             polygon: true,
