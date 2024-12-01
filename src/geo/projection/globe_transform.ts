@@ -449,18 +449,16 @@ export class GlobeTransform implements ITransform {
     }
 
     getProjectionData(params: ProjectionDataParams): ProjectionData {
-        const {overscaledTileID, aligned, applyTerrainMatrix, applyGlobeMatrix} = params;
-        const data = this._mercatorTransform.getProjectionData({overscaledTileID, aligned, applyTerrainMatrix});
+        const {overscaledTileID, applyGlobeMatrix} = params;
+        const mercatorProjectionData = this._mercatorTransform.getProjectionData(params)
 
-        // Set 'projectionMatrix' to actual globe transform
-        if (this.isGlobeRendering) {
-            data.mainMatrix = this._globeViewProjMatrix32f;
-        }
-
-        data.clippingPlane = this._cachedClippingPlane as [number, number, number, number];
-        data.projectionTransition = applyGlobeMatrix ? this._globeness : 0;
-
-        return data;
+        return {
+            mainMatrix: this.isGlobeRendering ? this._globeViewProjMatrix32f : mercatorProjectionData.mainMatrix,
+            tileMercatorCoords: this._helper.getTileMercatorCoordinates(overscaledTileID),
+            clippingPlane: this._cachedClippingPlane as [number, number, number, number],
+            projectionTransition: applyGlobeMatrix ? this._globeness : 0,
+            fallbackMatrix: mercatorProjectionData.mainMatrix
+        };
     }
 
     private _computeClippingPlane(globeRadiusPixels: number): vec4 {
