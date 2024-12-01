@@ -3,16 +3,17 @@ import {TransformHelper} from '../transform_helper';
 import {MercatorTransform} from './mercator_transform';
 import {VeritcalPerspectiveTransform} from './vertical_perspective_transform';
 import {LngLat, type LngLatLike,} from '../lng_lat';
-import {createMat4f64, differenceOfAnglesDegrees, easeCubicInOut, lerp, warnOnce} from '../../util/util';
-import {type UnwrappedTileID, type OverscaledTileID, type CanonicalTileID} from '../../source/tile_id';
-import type Point from '@mapbox/point-geometry';
+import {createMat4f32, createMat4f64, differenceOfAnglesDegrees, easeCubicInOut, lerp, warnOnce} from '../../util/util';
+import {OverscaledTileID, type UnwrappedTileID, type CanonicalTileID} from '../../source/tile_id';
 import {browser} from '../../util/browser';
 import {type GlobeProjection, globeConstants} from './globe';
-import {type MercatorCoordinate} from '../mercator_coordinate';
-import {type LngLatBounds} from '../lng_lat_bounds';
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider';
-import {type Frustum} from '../../util/primitives/frustum';
+import {EXTENT} from '../../data/extent';
 
+import type Point from '@mapbox/point-geometry';
+import type {MercatorCoordinate} from '../mercator_coordinate';
+import type {LngLatBounds} from '../lng_lat_bounds';
+import type {Frustum} from '../../util/primitives/frustum';
 import type {Terrain} from '../../render/terrain';
 import type {PointProjection} from '../../symbol/projection';
 import type {IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
@@ -528,7 +529,20 @@ export class GlobeTransform implements ITransform {
     }
 
     getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): ProjectionData {
-        return !this.isGlobeRendering ? this._mercatorTransform.getProjectionDataForCustomLayer(applyGlobeMatrix) : this._verticalPerspectiveTransform.getProjectionDataForCustomLayer(applyGlobeMatrix);
+        const projectionData = this.getProjectionData({overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0), applyGlobeMatrix});
+        projectionData.tileMercatorCoords = [0, 0, 1, 1];
+
+        // Even though we requested projection data for the mercator base tile which covers the entire mercator range,
+        // the shader projection machinery still expects inputs to be in tile units range [0..EXTENT].
+        // Since custom layers are expected to supply mercator coordinates [0..1], we need to rescale
+        // the fallback projection matrix by EXTENT.
+        // Note that the regular projection matrices do not need to be modified, since the rescaling happens by setting
+        // the `u_projection_tile_mercator_coords` uniform correctly.
+        const fallbackMatrixScaled = createMat4f32();
+        mat4.scale(fallbackMatrixScaled, projectionData.fallbackMatrix, [EXTENT, EXTENT, 1]);
+
+        projectionData.fallbackMatrix = fallbackMatrixScaled;
+        return projectionData;
     }
 
     getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 {
