@@ -43,25 +43,6 @@ export function tileCoordinatesToLocation(inTileX: number, inTileY: number, cano
 }
 
 /**
- * Given a geographical lnglat, return an unrounded
- * coordinate that represents it at low zoom level.
- * @param lnglat - the location
- * @returns The mercator coordinate
- */
-export function locationToMercatorCoordinate(lnglat: LngLat): MercatorCoordinate {
-    return MercatorCoordinate.fromLngLat(lnglat);
-}
-
-/**
- * Given a Coordinate, return its geographical position.
- * @param coord - mercator coordinates
- * @returns lng and lat
- */
-export function mercatorCoordinateToLocation(coord: MercatorCoordinate): LngLat {
-    return coord && coord.toLngLat();
-}
-
-/**
  * Convert from LngLat to world coordinates (Mercator coordinates scaled by world size).
  * @param worldSize - Mercator world size computed from zoom level and tile size.
  * @param lnglat - The location to convert.

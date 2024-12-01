@@ -1,10 +1,10 @@
-import {LngLat} from './lng_lat';
+import {LngLat, type LngLatLike} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LATITUDE} from '../util/util';
+import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LATITUDE, scaleZoom} from '../util/util';
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets';
-import {mercatorZfromAltitude} from './mercator_coordinate';
+import {altitudeFromMercatorZ, MercatorCoordinate, mercatorZfromAltitude} from './mercator_coordinate';
 import {cameraMercatorCoordinateFromCenterAndRotation} from './projection/mercator_utils';
 
 import type {PaddingOptions} from './edge_insets';
@@ -528,5 +528,53 @@ export class TransformHelper implements ITransformGetters {
         const cameraToCenterDistanceMeters = this._cameraToCenterDistance / pixelPerMeter;
         const camMercator = cameraMercatorCoordinateFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
         return camMercator.toLngLat();
+    }
+
+    calculateCenterFromCameraLngLatAlt(lnglat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
+        const cameraBearing = bearing !== undefined ? bearing : this.bearing;
+        const cameraPitch = pitch = pitch !== undefined ? pitch : this.pitch;
+
+        const camMercator = MercatorCoordinate.fromLngLat(lnglat, alt);
+        const dzNormalized = -Math.cos(degreesToRadians(cameraPitch));
+        const dhNormalized = Math.sin(degreesToRadians(cameraPitch));
+        const dxNormalized = dhNormalized * Math.sin(degreesToRadians(cameraBearing));
+        const dyNormalized = -dhNormalized * Math.cos(degreesToRadians(cameraBearing));
+
+        let elevation = this.elevation;
+        const altitudeAGL = alt - elevation;
+        let distanceToCenterMeters;
+        if (dzNormalized * altitudeAGL >= 0.0 || Math.abs(dzNormalized) < 0.1) {
+            distanceToCenterMeters = 10000;
+            elevation = alt + distanceToCenterMeters * dzNormalized;
+        } else {
+            distanceToCenterMeters = -altitudeAGL / dzNormalized;
+        }
+
+        // The mercator transform scale changes with latitude. At high latitudes, there are more "Merc units" per meter
+        // than at the equator. We treat the center point as our fundamental quantity. This means we want to convert
+        // elevation to Mercator Z using the scale factor at the center point (not the camera point). Since the center point is
+        // initially unknown, we compute it using the scale factor at the camera point. This gives us a better estimate of the
+        // center point scale factor, which we use to recompute the center point. We repeat until the error is very small.
+        // This typically takes about 5 iterations.
+        let metersPerMercUnit = altitudeFromMercatorZ(1, camMercator.y);
+        let centerMercator: MercatorCoordinate;
+        let dMercator: number;
+        let iter = 0;
+        const maxIter = 10;
+        do {
+            iter += 1;
+            if (iter > maxIter) {
+                break;
+            }
+            dMercator = distanceToCenterMeters / metersPerMercUnit;
+            const dx = dxNormalized * dMercator;
+            const dy = dyNormalized * dMercator;
+            centerMercator = new MercatorCoordinate(camMercator.x + dx, camMercator.y + dy);
+            metersPerMercUnit = 1 / centerMercator.meterInMercatorCoordinateUnits();
+        } while (Math.abs(distanceToCenterMeters - dMercator * metersPerMercUnit) > 1.0e-12);
+
+        const center = centerMercator.toLngLat();
+        const zoom = scaleZoom(this.height / 2 / Math.tan(this.fovInRadians / 2) / dMercator / this.tileSize);
+        return {center, elevation, zoom};
     }
 }

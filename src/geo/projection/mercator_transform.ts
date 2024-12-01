@@ -7,7 +7,7 @@ import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID, calculateTileKe
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {type PointProjection, xyTransformMat4} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
-import {mercatorCoordinateToLocation, getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle, cameraMercatorCoordinateFromCenterAndRotation} from './mercator_utils';
+import {getBasicProjectionData, getMercatorHorizon, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle, cameraMercatorCoordinateFromCenterAndRotation} from './mercator_utils';
 import {EXTENT} from '../../data/extent';
 import {TransformHelper} from '../transform_helper';
 import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider';
@@ -309,11 +309,11 @@ export class MercatorTransform implements ITransform {
         const z = mercatorZfromAltitude(this.elevation, this.center.lat);
         const a = this.screenPointToMercatorCoordinateAtZ(point, z);
         const b = this.screenPointToMercatorCoordinateAtZ(this.centerPoint, z);
-        const loc = locationToMercatorCoordinate(lnglat);
+        const loc = MercatorCoordinate.fromLngLat(lnglat);
         const newCenter = new MercatorCoordinate(
             loc.x - (a.x - b.x),
             loc.y - (a.y - b.y));
-        this.setCenter(mercatorCoordinateToLocation(newCenter));
+        this.setCenter(newCenter?.toLngLat());
         if (this._helper._renderWorldCopies) {
             this.setCenter(this.center.wrap());
         }
@@ -321,12 +321,12 @@ export class MercatorTransform implements ITransform {
 
     locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
         return terrain ?
-            this.coordinatePoint(locationToMercatorCoordinate(lnglat), terrain.getElevationForLngLatZoom(lnglat, this._helper._tileZoom), this._pixelMatrix3D) :
-            this.coordinatePoint(locationToMercatorCoordinate(lnglat));
+            this.coordinatePoint(MercatorCoordinate.fromLngLat(lnglat), terrain.getElevationForLngLatZoom(lnglat, this._helper._tileZoom), this._pixelMatrix3D) :
+            this.coordinatePoint(MercatorCoordinate.fromLngLat(lnglat));
     }
 
     screenPointToLocation(p: Point, terrain?: Terrain): LngLat {
-        return mercatorCoordinateToLocation(this.screenPointToMercatorCoordinate(p, terrain));
+        return this.screenPointToMercatorCoordinate(p, terrain)?.toLngLat();
     }
 
     screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
@@ -541,51 +541,7 @@ export class MercatorTransform implements ITransform {
     }
 
     calculateCenterFromCameraLngLatAlt(lnglat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
-        const cameraBearing = bearing !== undefined ? bearing : this.bearing;
-        const cameraPitch = pitch = pitch !== undefined ? pitch : this.pitch;
-
-        const camMercator = MercatorCoordinate.fromLngLat(lnglat, alt);
-        const dzNormalized = -Math.cos(degreesToRadians(cameraPitch));
-        const dhNormalized = Math.sin(degreesToRadians(cameraPitch));
-        const dxNormalized = dhNormalized * Math.sin(degreesToRadians(cameraBearing));
-        const dyNormalized = -dhNormalized * Math.cos(degreesToRadians(cameraBearing));
-
-        let elevation = this.elevation;
-        const altitudeAGL = alt - elevation;
-        let distanceToCenterMeters;
-        if (dzNormalized * altitudeAGL >= 0.0 || Math.abs(dzNormalized) < 0.1) {
-            distanceToCenterMeters = 10000;
-            elevation = alt + distanceToCenterMeters * dzNormalized;
-        } else {
-            distanceToCenterMeters = -altitudeAGL / dzNormalized;
-        }
-
-        // The mercator transform scale changes with latitude. At high latitudes, there are more "Merc units" per meter
-        // than at the equator. We treat the center point as our fundamental quantity. This means we want to convert
-        // elevation to Mercator Z using the scale factor at the center point (not the camera point). Since the center point is
-        // initially unknown, we compute it using the scale factor at the camera point. This gives us a better estimate of the
-        // center point scale factor, which we use to recompute the center point. We repeat until the error is very small.
-        // This typically takes about 5 iterations.
-        let metersPerMercUnit = altitudeFromMercatorZ(1, camMercator.y);
-        let centerMercator: MercatorCoordinate;
-        let dMercator: number;
-        let iter = 0;
-        const maxIter = 10;
-        do {
-            iter += 1;
-            if (iter > maxIter) {
-                break;
-            }
-            dMercator = distanceToCenterMeters / metersPerMercUnit;
-            const dx = dxNormalized * dMercator;
-            const dy = dyNormalized * dMercator;
-            centerMercator = new MercatorCoordinate(camMercator.x + dx, camMercator.y + dy);
-            metersPerMercUnit = 1 / centerMercator.meterInMercatorCoordinateUnits();
-        } while (Math.abs(distanceToCenterMeters - dMercator * metersPerMercUnit) > 1.0e-12);
-
-        const center = centerMercator.toLngLat();
-        const zoom = scaleZoom(this.height / 2 / Math.tan(this.fovInRadians / 2) / dMercator / this.tileSize);
-        return {center, elevation, zoom};
+        return this._helper.calculateCenterFromCameraLngLatAlt(lnglat, alt, bearing, pitch);
     }
 
     _calcMatrices(): void {
@@ -747,7 +703,7 @@ export class MercatorTransform implements ITransform {
     }
 
     lngLatToCameraDepth(lngLat: LngLat, elevation: number) {
-        const coord = locationToMercatorCoordinate(lngLat);
+        const coord = MercatorCoordinate.fromLngLat(lngLat);
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
         vec4.transformMat4(p, p, this._viewProjMatrix);
         return (p[2] / p[3]);
