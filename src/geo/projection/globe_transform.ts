@@ -371,12 +371,16 @@ export class GlobeTransform implements ITransform {
     }
 
     getProjectionData(params: ProjectionDataParams): ProjectionData {
-        if (!this.isGlobeRendering) {
-            return this._mercatorTransform.getProjectionData(params);
-        }
-        const projectionData = this._verticalPerspectiveTransform.getProjectionData(params);
-        projectionData.projectionTransition = params.applyGlobeMatrix ? this._globeness : 0;
-        return projectionData;
+        const mercatorProjectionData = this._mercatorTransform.getProjectionData(params);
+        const vertialPerspectiveProjectionData = this._verticalPerspectiveTransform.getProjectionData(params);
+
+        return {
+            mainMatrix: this.isGlobeRendering ? vertialPerspectiveProjectionData.mainMatrix : mercatorProjectionData.mainMatrix,
+            clippingPlane: vertialPerspectiveProjectionData.clippingPlane,
+            tileMercatorCoords: vertialPerspectiveProjectionData.tileMercatorCoords,
+            projectionTransition: params.applyGlobeMatrix ? this._globeness : 0,
+            fallbackMatrix: mercatorProjectionData.fallbackMatrix,
+        };
     }
 
     public isLocationOccluded(location: LngLat): boolean {

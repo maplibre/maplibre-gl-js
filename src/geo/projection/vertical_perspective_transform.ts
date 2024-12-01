@@ -292,13 +292,13 @@ export class VeritcalPerspectiveTransform implements ITransform {
     }
 
     getProjectionData(params: ProjectionDataParams): ProjectionData {
-        const {overscaledTileID} = params;
+        const {overscaledTileID, applyGlobeMatrix} = params;
         const mercatorTileCoordinates = this._helper.getMercatorTileCoordinates(overscaledTileID);
         return {
             mainMatrix: this._globeViewProjMatrix32f,
             tileMercatorCoords: mercatorTileCoordinates,
             clippingPlane: this._cachedClippingPlane as [number, number, number, number],
-            projectionTransition: 1,
+            projectionTransition: applyGlobeMatrix ? 1 : 0,
             fallbackMatrix: this._globeViewProjMatrix32f,
         }
     }
