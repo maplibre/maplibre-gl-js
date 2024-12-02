@@ -227,7 +227,7 @@ export class VerticalPerspectiveTransform implements ITransform {
     private _globeProjMatrixInverted: mat4 = createIdentityMat4f64();
 
     private _cameraPosition: vec3 = createVec3f64();
-
+    private _globeLatitudeErrorCorrectionRadians: number = 0;
     /**
      * Globe projection can smoothly interpolate between globe view and mercator. This variable controls this interpolation.
      * Value 0 is mercator, value 1 is globe, anything between is an interpolation between the two projections.
@@ -253,7 +253,8 @@ export class VerticalPerspectiveTransform implements ITransform {
         return clone;
     }
 
-    public apply(that: IReadonlyTransform): void {
+    public apply(that: IReadonlyTransform, globeLatitudeErrorCorrectionRadians?: number): void {
+        this._globeLatitudeErrorCorrectionRadians = globeLatitudeErrorCorrectionRadians || 0;
         this._helper.apply(that);
     }
 
@@ -477,7 +478,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         mat4.scale(globeMatrixUncorrected, globeMatrixUncorrected, scaleVec); // Scale the unit sphere to a sphere with diameter of 1
         this._globeViewProjMatrixNoCorrection = globeMatrixUncorrected;
 
-        mat4.rotateX(globeMatrix, globeMatrix, this.center.lat * Math.PI / 180.0);
+        mat4.rotateX(globeMatrix, globeMatrix, this.center.lat * Math.PI / 180.0 - this._globeLatitudeErrorCorrectionRadians);
         mat4.rotateY(globeMatrix, globeMatrix, -this.center.lng * Math.PI / 180.0);
         mat4.scale(globeMatrix, globeMatrix, scaleVec); // Scale the unit sphere to a sphere with diameter of 1
         this._globeViewProjMatrix32f = new Float32Array(globeMatrix);
