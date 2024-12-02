@@ -81,7 +81,7 @@ describe('vector tile worker source', () => {
     });
 
     test('VectorTileWorkerSource#loadTile reparses tile if the reloadTile has been called during parsing', async () => {
-        const rawTileData = new Uint8Array([]);
+        const rawTileData = new ArrayBuffer(0);
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
                 vectorTile: {
@@ -161,7 +161,7 @@ describe('vector tile worker source', () => {
     });
 
     test('VectorTileWorkerSource#loadTile reparses tile if reloadTile is called during reparsing', async () => {
-        const rawTileData = new Uint8Array([]);
+        const rawTileData = new ArrayBuffer(0);
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
                 vectorTile: new vt.VectorTile(new Protobuf(rawTileData)),
@@ -290,7 +290,7 @@ describe('vector tile worker source', () => {
     }));
 
     test('VectorTileWorkerSource provides resource timing information', async () => {
-        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf'));
+        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf')).buffer.slice(0) as ArrayBuffer;
 
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
@@ -346,7 +346,7 @@ describe('vector tile worker source', () => {
     });
 
     test('VectorTileWorkerSource provides resource timing information (fallback method)', async () => {
-        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf'));
+        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf')).buffer.slice(0) as ArrayBuffer;
 
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
