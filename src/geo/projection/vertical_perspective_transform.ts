@@ -40,7 +40,7 @@ type RaySphereIntersection = {
     tMax: number;
 } | null;
 
-export class VeritcalPerspectiveTransform implements ITransform {
+export class VerticalPerspectiveTransform implements ITransform {
     private _helper: TransformHelper;
 
     //
@@ -248,7 +248,7 @@ export class VeritcalPerspectiveTransform implements ITransform {
     }
 
     clone(): ITransform {
-        const clone = new VeritcalPerspectiveTransform();
+        const clone = new VerticalPerspectiveTransform();
         clone.apply(this);
         return clone;
     }

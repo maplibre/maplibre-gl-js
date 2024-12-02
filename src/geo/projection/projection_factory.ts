@@ -6,7 +6,7 @@ import {MercatorCameraHelper} from './mercator_camera_helper';
 import {GlobeProjection} from './globe';
 import {GlobeTransform} from './globe_transform';
 import {GlobeCameraHelper} from './globe_camera_helper';
-import {VeritcalPerspectiveTransform} from './vertical_perspective_transform';
+import {VerticalPerspectiveTransform} from './vertical_perspective_transform';
 import type {Projection} from './projection';
 import type {ITransform} from '../transform_interface';
 import type {ICameraHelper} from './camera_helper';
@@ -39,7 +39,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type']):
             const proj = new GlobeProjection();
             return {
                 projection: proj,
-                transform: new VeritcalPerspectiveTransform(),
+                transform: new VerticalPerspectiveTransform(),
                 cameraHelper: new GlobeCameraHelper(proj),
             };
         }
