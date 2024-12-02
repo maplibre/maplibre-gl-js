@@ -374,12 +374,12 @@ export class GlobeTransform implements ITransform {
 
     getProjectionData(params: ProjectionDataParams): ProjectionData {
         const mercatorProjectionData = this._mercatorTransform.getProjectionData(params);
-        const vertialPerspectiveProjectionData = this._verticalPerspectiveTransform.getProjectionData(params);
+        const verticalPerspectiveProjectionData = this._verticalPerspectiveTransform.getProjectionData(params);
 
         return {
-            mainMatrix: this.isGlobeRendering ? vertialPerspectiveProjectionData.mainMatrix : mercatorProjectionData.mainMatrix,
-            clippingPlane: vertialPerspectiveProjectionData.clippingPlane,
-            tileMercatorCoords: vertialPerspectiveProjectionData.tileMercatorCoords,
+            mainMatrix: this.isGlobeRendering ? verticalPerspectiveProjectionData.mainMatrix : mercatorProjectionData.mainMatrix,
+            clippingPlane: verticalPerspectiveProjectionData.clippingPlane,
+            tileMercatorCoords: verticalPerspectiveProjectionData.tileMercatorCoords,
             projectionTransition: params.applyGlobeMatrix ? this._globeness : 0,
             fallbackMatrix: mercatorProjectionData.fallbackMatrix,
         };
