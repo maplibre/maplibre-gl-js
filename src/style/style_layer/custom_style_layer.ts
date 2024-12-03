@@ -2,7 +2,8 @@ import {StyleLayer} from '../style_layer';
 import type {Map} from '../../ui/map';
 import {type mat4} from 'gl-matrix';
 import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {ProjectionData} from '../../geo/projection/projection_data';
+import type {ProjectionData, ProjectionDataParams} from '../../geo/projection/projection_data';
+import type {LngLatLike} from '../../geo/lng_lat';
 
 /**
 * Input arguments exposed by custom render function.
@@ -105,6 +106,21 @@ export type CustomRenderMethodInput = {
      * or more accurately for globe, elevation above the surface of the perfect sphere used to render the planet.
      */
     defaultProjectionData: ProjectionData;
+
+    /**
+     * Returns a transform matrix for rendering a 3D model seamlessly with the map when using {@link defaultProjectionData.mainMatrix}.
+     * Works for any projection.
+     * @param location - The location of the model.
+     * @param altitude - The altitude of the model in meters above sea level. Optional.
+     */
+    getMatrixForModel(location: LngLatLike, altitude?: number): mat4;
+
+    /**
+     * Returns the projection data that would be used for a given tile by MapLibre.
+     * Useful when rendering custom tiles.
+     * @param params - Params object, including the tile ID. Make sure to set `applyGlobeMatrix` to true if you want globe projection to work.
+     */
+    getProjectionData(params: ProjectionDataParams): ProjectionData;
 }
 
 /**
