@@ -2,7 +2,7 @@ import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {TransformHelper} from '../transform_helper';
 import {LngLat, type LngLatLike, earthRadius} from '../lng_lat';
 import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce} from '../../util/util';
-import {UnwrappedTileID, type OverscaledTileID, type CanonicalTileID} from '../../source/tile_id';
+import {OverscaledTileID, UnwrappedTileID, type CanonicalTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {LngLatBounds} from '../lng_lat_bounds';
@@ -985,9 +985,10 @@ export class VerticalPerspectiveTransform implements ITransform {
         return m;
     }
 
-    getProjectionDataForCustomLayer(_applyGlobeMatrix: boolean = true): ProjectionData {
-        // All logic is in globe_transform.ts.
-        return undefined;
+    getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): ProjectionData {
+        const globeData = this.getProjectionData({overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0), applyGlobeMatrix});
+        globeData.tileMercatorCoords = [0, 0, 1, 1];
+        return globeData;
     }
 
     getFastPathSimpleProjectionMatrix(_tileID: OverscaledTileID): mat4 {
