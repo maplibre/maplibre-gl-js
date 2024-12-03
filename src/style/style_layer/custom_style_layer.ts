@@ -108,7 +108,7 @@ export type CustomRenderMethodInput = {
     defaultProjectionData: ProjectionData;
 
     /**
-     * Returns a transform matrix for rendering a 3D model seamlessly with the map when using {@link defaultProjectionData.mainMatrix}.
+     * Returns a transform matrix for rendering a 3D model seamlessly with the map when using `defaultProjectionData.mainMatrix`.
      * Works for any projection.
      * @param location - The location of the model.
      * @param altitude - The altitude of the model in meters above sea level. Optional.
