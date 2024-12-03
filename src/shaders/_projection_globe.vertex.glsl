@@ -110,8 +110,12 @@ vec4 interpolateProjection(vec2 posInTile, vec3 spherePos, float elevation) {
 vec4 interpolateProjectionFor3D(vec2 posInTile, vec3 spherePos, float elevation) {
     vec3 elevatedPos = spherePos * (1.0 + elevation / GLOBE_RADIUS);
     vec4 globePosition = u_projection_matrix * vec4(elevatedPos, 1.0);
-    vec4 fallbackPosition = u_projection_fallback_matrix * vec4(posInTile, elevation, 1.0);
-    return mix(fallbackPosition, globePosition, u_projection_transition);
+    if (u_projection_transition < 0.999) {
+        vec4 fallbackPosition = u_projection_fallback_matrix * vec4(posInTile, elevation, 1.0);
+        return mix(fallbackPosition, globePosition, u_projection_transition);
+    } else {
+        return globePosition;
+    }
 }
 
 // Computes screenspace projection

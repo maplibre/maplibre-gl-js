@@ -508,7 +508,8 @@ export class TransformHelper implements ITransformGetters {
             mat4.translate(m, m, [-1, -1, 0]);
             mat4.scale(m, m, [2 / this._width, 2 / this._height, 1]);
             this._pixelsToClipSpaceMatrix = m;
-            this._cameraToCenterDistance = 0.5 / Math.tan(this._fovInRadians / 2) * this._height;
+            const halfFov = this.fovInRadians / 2;
+            this._cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this._height;
         }
         this._callbacks.calcMatrices();
     }

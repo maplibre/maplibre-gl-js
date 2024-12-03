@@ -3,11 +3,10 @@ import {TransformHelper} from '../transform_helper';
 import {MercatorTransform} from './mercator_transform';
 import {VerticalPerspectiveTransform} from './vertical_perspective_transform';
 import {LngLat, type LngLatLike,} from '../lng_lat';
-import {createMat4f32, createMat4f64, differenceOfAnglesDegrees, easeCubicInOut, lerp, warnOnce} from '../../util/util';
+import {createMat4f64, differenceOfAnglesDegrees, easeCubicInOut, lerp, warnOnce} from '../../util/util';
 import {OverscaledTileID, type UnwrappedTileID, type CanonicalTileID} from '../../source/tile_id';
 import {browser} from '../../util/browser';
 import {globeConstants, type GlobeProjection} from './globe';
-import {EXTENT} from '../../data/extent';
 
 import type Point from '@mapbox/point-geometry';
 import type {MercatorCoordinate} from '../mercator_coordinate';
@@ -15,7 +14,7 @@ import type {LngLatBounds} from '../lng_lat_bounds';
 import type {Frustum} from '../../util/primitives/frustum';
 import type {Terrain} from '../../render/terrain';
 import type {PointProjection} from '../../symbol/projection';
-import type {IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
+import type {IReadonlyTransform, ITransform, NearZFarZ, TransformUpdateResult} from '../transform_interface';
 import type {PaddingOptions} from '../edge_insets';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
@@ -199,6 +198,9 @@ export class GlobeTransform implements ITransform {
     get cameraToCenterDistance(): number {
         return this._helper.cameraToCenterDistance;
     }
+    get nearZFarZOverride(): NearZFarZ | undefined {
+        return this._nearZFarZOverride;
+    }
 
     //
     // Implementation of globe transform
@@ -227,6 +229,8 @@ export class GlobeTransform implements ITransform {
      */
     private _projectionInstance: GlobeProjection;
     private _globeLatitudeErrorCorrectionRadians: number = 0;
+
+    private _nearZFarZOverride: NearZFarZ | undefined = undefined;
 
     /**
      * True when globe render path should be used instead of the old but simpler mercator rendering.
@@ -286,6 +290,11 @@ export class GlobeTransform implements ITransform {
     public get nearZ(): number { return this.currentTransform.nearZ; }
 
     public get farZ(): number { return this.currentTransform.farZ; }
+
+    public setNearZFarZOverride(override: NearZFarZ | undefined): void {
+        this._nearZFarZOverride = override;
+        this._calcMatrices();
+    }
 
     /**
      * Should be called at the beginning of every frame to synchronize the transform with the underlying projection.
@@ -416,11 +425,19 @@ export class GlobeTransform implements ITransform {
         if (!this._helper._width || !this._helper._height) {
             return;
         }
-        if (this._mercatorTransform) {
-            this._mercatorTransform.apply(this, true);
-        }
         if (this._verticalPerspectiveTransform) {
             this._verticalPerspectiveTransform.apply(this, this._globeLatitudeErrorCorrectionRadians);
+        }
+        if (this._mercatorTransform) {
+            // When transitioning between globe and mercator, we need to synchronize the depth values in both transforms.
+            // For this reason we first update vertical perspective and then pass its near and far Z to mercator.
+            // Otherwise, if fully mercator rendering, we just pass the user-provided near/far Z override.
+            const nearZfarZ = this.isGlobeRendering ? {
+                nearZ: this._verticalPerspectiveTransform.nearZ,
+                farZ: this._verticalPerspectiveTransform.farZ,
+            } : this._nearZFarZOverride;
+            this._mercatorTransform.setNearZFarZOverride(nearZfarZ, false);
+            this._mercatorTransform.apply(this, true);
         }
     }
 
@@ -530,20 +547,16 @@ export class GlobeTransform implements ITransform {
     }
 
     getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): ProjectionData {
-        const projectionData = this.getProjectionData({overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0), applyGlobeMatrix});
-        projectionData.tileMercatorCoords = [0, 0, 1, 1];
+        const mercatorData = this._mercatorTransform.getProjectionDataForCustomLayer(applyGlobeMatrix);
 
-        // Even though we requested projection data for the mercator base tile which covers the entire mercator range,
-        // the shader projection machinery still expects inputs to be in tile units range [0..EXTENT].
-        // Since custom layers are expected to supply mercator coordinates [0..1], we need to rescale
-        // the fallback projection matrix by EXTENT.
-        // Note that the regular projection matrices do not need to be modified, since the rescaling happens by setting
-        // the `u_projection_tile_mercator_coords` uniform correctly.
-        const fallbackMatrixScaled = createMat4f32();
-        mat4.scale(fallbackMatrixScaled, projectionData.fallbackMatrix, [EXTENT, EXTENT, 1]);
-
-        projectionData.fallbackMatrix = fallbackMatrixScaled;
-        return projectionData;
+        if (this.isGlobeRendering) {
+            const globeData = this._verticalPerspectiveTransform.getProjectionData({overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0), applyGlobeMatrix});
+            globeData.tileMercatorCoords = [0, 0, 1, 1];
+            globeData.fallbackMatrix = mercatorData.mainMatrix;
+            return globeData;
+        } else {
+            return mercatorData;
+        }
     }
 
     getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 {

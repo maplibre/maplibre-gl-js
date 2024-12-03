@@ -14,7 +14,7 @@ import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_de
 import {Frustum} from '../../util/primitives/frustum';
 
 import type {Terrain} from '../../render/terrain';
-import type {IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
+import type {IReadonlyTransform, ITransform, NearZFarZ, TransformUpdateResult} from '../transform_interface';
 import type {PaddingOptions} from '../edge_insets';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
@@ -192,8 +192,11 @@ export class MercatorTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
     }
-    get cameraToCenterDistance(): number { 
-        return this._helper.cameraToCenterDistance; 
+    get nearZFarZOverride(): NearZFarZ | undefined {
+        return this._nearZFarZOverride;
+    }
+    public get cameraToCenterDistance(): number { 
+        return this._helper.cameraToCenterDistance;
     }
 
     //
@@ -219,6 +222,7 @@ export class MercatorTransform implements ITransform {
 
     private _nearZ;
     private _farZ;
+    private _nearZFarZOverride: NearZFarZ | undefined;
 
     private _coveringTilesDetailsProvider;
 
@@ -248,6 +252,13 @@ export class MercatorTransform implements ITransform {
     public get farZ(): number { return this._farZ; }
 
     public get mercatorMatrix(): mat4 { return this._mercatorMatrix; } // Not part of ITransform interface
+
+    public setNearZFarZOverride(override: NearZFarZ | undefined, triggerCalcMatrices: boolean = true): void {
+        this._nearZFarZOverride = override;
+        if (triggerCalcMatrices) {
+            this._calcMatrices();
+        }
+    }
 
     getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): Array<UnwrappedTileID> {
         const result = [new UnwrappedTileID(0, tileID)];
@@ -564,7 +575,7 @@ export class MercatorTransform implements ITransform {
         // Calculate z distance of the farthest fragment that should be rendered.
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
         const topHalfMinDistance = Math.min(topHalfSurfaceDistance, topHalfSurfaceDistanceHorizon);
-        this._farZ = (Math.cos(Math.PI / 2 - limitedPitchRadians) * topHalfMinDistance + lowestPlane) * 1.01;
+        this._farZ = this._nearZFarZOverride?.farZ ?? (Math.cos(Math.PI / 2 - limitedPitchRadians) * topHalfMinDistance + lowestPlane) * 1.01;
 
         // The larger the value of nearZ is
         // - the more depth precision is available for features (good)
@@ -573,7 +584,7 @@ export class MercatorTransform implements ITransform {
         // Other values work for mapbox-gl-js but deck.gl was encountering precision issues
         // when rendering custom layers. This value was experimentally chosen and
         // seems to solve z-fighting issues in deck.gl while not clipping buildings too close to the camera.
-        this._nearZ = this._helper._height / 50;
+        this._nearZ = this._nearZFarZOverride?.nearZ ?? this._helper._height / 50;
 
         // matrix for conversion from location to clip space(-1 .. 1)
         let m: mat4;
@@ -682,9 +693,8 @@ export class MercatorTransform implements ITransform {
     }
 
     getCameraLngLat(): LngLat {
-        const cameraToCenterDistancePixels = 0.5 / Math.tan(this.fovInRadians / 2) * this.height;
         const pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
-        const cameraToCenterDistanceMeters = cameraToCenterDistancePixels / pixelPerMeter;
+        const cameraToCenterDistanceMeters = this._helper.cameraToCenterDistance / pixelPerMeter;
         const camMercator = cameraMercatorCoordinateFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
         return camMercator.toLngLat();
     }
@@ -808,13 +818,11 @@ export class MercatorTransform implements ITransform {
         const scale: vec3 = [EXTENT, EXTENT, this.worldSize / this._helper.pixelsPerMeter];
 
         // We pass full-precision 64bit float matrices to custom layers to prevent precision loss in case the user wants to do further transformations.
-        const fallbackMatrixScaled = createMat4f64();
-        mat4.scale(fallbackMatrixScaled, tileMatrix, scale);
-
+        // Otherwise we get very visible precision-artifacts and twitching for objects that are bulding-scale.
         const projectionMatrixScaled = createMat4f64();
         mat4.scale(projectionMatrixScaled, tileMatrix, scale);
 
-        projectionData.fallbackMatrix = fallbackMatrixScaled;
+        projectionData.fallbackMatrix = projectionMatrixScaled;
         projectionData.mainMatrix = projectionMatrixScaled;
         return projectionData;
     }
