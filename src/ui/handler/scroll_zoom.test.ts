@@ -45,6 +45,38 @@ describe('ScrollZoomHandler', () => {
         map.remove();
     });
 
+    test('Zooms for single mouse wheel tick with easing for smooth zooming', () => {
+        const browserNow = vi.spyOn(browser, 'now');
+        let now = 1555555555555;
+        browserNow.mockReturnValue(now);
+
+        const map = createMap();
+        map.setZoom(5);
+        map._renderTaskQueue.run();
+
+        // simulate a single 'wheel' event
+        const startZoom = map.getZoom();
+
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        map._renderTaskQueue.run();
+
+        // A single tick zoom with easing completes in approx. 200ms
+        now += 100;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        const midZoom = map.getZoom();
+
+        now += 400;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        const endZoom = map.getZoom();
+
+        expect(midZoom).toBeGreaterThan(startZoom);
+        expect(midZoom).toBeLessThan(endZoom);
+
+        map.remove();
+    });
+
     test('Zooms for multiple fast mouse wheel ticks', () => {
         const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
@@ -66,7 +98,49 @@ describe('ScrollZoomHandler', () => {
             map._renderTaskQueue.run();
         }
 
+        now += 400;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+
         expect(map.getZoom() - startZoom).toBeCloseTo(0.0285 * iterations, 2);
+
+        map.remove();
+    });
+
+    test('Zooms for multiple fast mouse wheel ticks with easing for smooth zooming', () => {
+        const browserNow = vi.spyOn(browser, 'now');
+        let now = 1555555555555;
+        browserNow.mockReturnValue(now);
+
+        const map = createMap();
+        map.setZoom(5);
+        map._renderTaskQueue.run();
+
+        // simulate a multiple fast 'wheel' event
+        const startZoom = map.getZoom();
+        let midZoom = 0;
+
+        const iterations = 10;
+
+        for (let i = 0; i < iterations; i++) {
+            simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+            map._renderTaskQueue.run();
+            now += 0;
+            browserNow.mockReturnValue(now);
+            map._renderTaskQueue.run();
+
+            if (i === iterations - 1) {
+                midZoom = map.getZoom();
+            }
+        }
+
+        now += 400;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        const endZoom = map.getZoom();
+
+        expect(midZoom).toBeGreaterThan(startZoom);
+        expect(midZoom).toBeLessThan(endZoom);
 
         map.remove();
     });
@@ -88,6 +162,41 @@ describe('ScrollZoomHandler', () => {
             done();
         });
     }));
+
+    test('Zooms for single mouse wheel tick with non-magical deltaY with easing for smooth zooming', () => {
+        const browserNow = vi.spyOn(browser, 'now');
+        let now = 1555555555555;
+        browserNow.mockReturnValue(now);
+        vi.useFakeTimers();
+        setPerformance();
+        const map = createMap();
+        map.setZoom(5);
+        map._renderTaskQueue.run();
+
+        const startZoom = map.getZoom();
+
+        // simulate a single 'wheel' event with non-magical deltaY
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -20});
+        vi.advanceTimersByTime(40);
+        now += 40;
+        map._renderTaskQueue.run();
+
+        // A single tick zoom with easing completes in approx. 200ms
+        now += 100;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        const midZoom = map.getZoom();
+
+        now += 400;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        const endZoom = map.getZoom();
+
+        expect(midZoom).toBeGreaterThan(startZoom);
+        expect(midZoom).toBeLessThan(endZoom);
+
+        map.remove();
+    });
 
     test('Zooms for multiple mouse wheel ticks', () => {
         const browserNow = vi.spyOn(browser, 'now');
@@ -128,6 +237,65 @@ describe('ScrollZoomHandler', () => {
         }
 
         expect(map.getZoom() - startZoom).toBeCloseTo(1.944, 3);
+
+        map.remove();
+    });
+
+    test('Zooms for multiple mouse wheel ticks with easing for smooth zooming', () => {
+        const browserNow = vi.spyOn(browser, 'now');
+        let now = 1555555555555;
+        browserNow.mockReturnValue(now);
+
+        const map = createMap();
+        map.setZoom(5);
+        map._renderTaskQueue.run();
+
+        const events = [
+            [2, {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta}],
+            [7, {type: 'wheel', deltaY: -41}],
+            [30, {type: 'wheel', deltaY: -169}],
+            [1, {type: 'wheel', deltaY: -801}],
+            [5, {type: 'wheel', deltaY: -326}],
+            [20, {type: 'wheel', deltaY: -345}],
+            [22, {type: 'wheel', deltaY: -376}],
+        ] as [number, any][];
+
+        const end = now + 500;
+        let lastWheelEvent = now;
+        const zoomLevels = [];
+
+        // simulate the above sequence of wheel events, with render
+        // frames every 1ms
+        while (now  < end) {
+            now += 1;
+            browserNow.mockReturnValue(now);
+            if (events.length && lastWheelEvent + events[0][0] === now) {
+                const [, event] = events.shift();
+                simulate.wheel(map.getCanvas(), event);
+                lastWheelEvent = now;
+            }
+            if (now % 1 === 0) {
+                map._renderTaskQueue.run();
+                if (events.length > 0) {
+                    zoomLevels.push(map.getZoom());
+                }
+            }
+        }
+
+        // Final zoom end value
+        zoomLevels.push(map.getZoom());
+
+        function hasIncreasingZoomLevels(zoomLevelArray) {
+            if (!zoomLevelArray.length) return false;
+            for (let i = 1; i < zoomLevelArray.length; i++) {
+                if (zoomLevelArray[i] <= zoomLevelArray[i-1]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        expect(hasIncreasingZoomLevels(zoomLevels)).toBeTruthy();
 
         map.remove();
     });
