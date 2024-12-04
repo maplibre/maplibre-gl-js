@@ -139,7 +139,7 @@ export function createTileMesh(options: CreateTileMeshOptions, forceIndicesSize?
 
     const use32bitIndices = overflows16bitIndices || forceIndicesSize === '32bit';
 
-    let resultMesh: TileMesh = {
+    const resultMesh: TileMesh = {
         vertices: new ArrayBuffer(vertexCount * 2 * 2), // 16bit
         indices: new ArrayBuffer(indexCount * (use32bitIndices ? 4 : 2)),
         uses32bitIndices: use32bitIndices,
