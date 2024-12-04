@@ -139,11 +139,7 @@ export function createTileMesh(options: CreateTileMeshOptions, forceIndicesSize?
 
     const use32bitIndices = overflows16bitIndices || forceIndicesSize === '32bit';
 
-    const resultMesh: TileMesh = {
-        vertices: new ArrayBuffer(vertexCount * 2 * 2), // 16bit
-        indices: new ArrayBuffer(indexCount * (use32bitIndices ? 4 : 2)),
-        uses32bitIndices: use32bitIndices,
-    };
+    const vertices = new Int16Array(vertexCount * 2);
 
     let vertexId = 0;
 
@@ -164,10 +160,12 @@ export function createTileMesh(options: CreateTileMeshOptions, forceIndicesSize?
                 vy = options.extendToSouthPole ? SOUTH_POLE_Y : EXTENT + EXTENT_STENCIL_BORDER;
             }
 
-            resultMesh.vertices[vertexId++] = vx;
-            resultMesh.vertices[vertexId++] = vy;
+            vertices[vertexId++] = vx;
+            vertices[vertexId++] = vy;
         }
     }
+
+    const indices = use32bitIndices ? new Uint32Array(indexCount) : new Uint16Array(indexCount);
 
     let indexId = 0;
 
@@ -182,15 +180,19 @@ export function createTileMesh(options: CreateTileMeshOptions, forceIndicesSize?
             //  |  / |
             //  | /  |
             // v2----v3
-            resultMesh.indices[indexId++] = v0;
-            resultMesh.indices[indexId++] = v2;
-            resultMesh.indices[indexId++] = v1;
+            indices[indexId++] = v0;
+            indices[indexId++] = v2;
+            indices[indexId++] = v1;
 
-            resultMesh.indices[indexId++] = v1;
-            resultMesh.indices[indexId++] = v2;
-            resultMesh.indices[indexId++] = v3;
+            indices[indexId++] = v1;
+            indices[indexId++] = v2;
+            indices[indexId++] = v3;
         }
     }
 
-    return resultMesh;
+    return {
+        vertices: vertices.buffer.slice(0),
+        indices: indices.buffer.slice(0),
+        uses32bitIndices: use32bitIndices,
+    };
 }
