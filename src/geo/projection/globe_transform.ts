@@ -99,8 +99,8 @@ export class GlobeTransform implements ITransform {
     isPaddingEqual(padding: PaddingOptions): boolean {
         return this._helper.isPaddingEqual(padding);
     }
-    resize(width: number, height: number): void {
-        this._helper.resize(width, height);
+    resize(width: number, height: number, constrainTransform: boolean = true): void {
+        this._helper.resize(width, height, constrainTransform);
     }
     getMaxBounds(): LngLatBounds {
         return this._helper.getMaxBounds();

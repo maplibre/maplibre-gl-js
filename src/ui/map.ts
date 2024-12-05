@@ -720,7 +720,11 @@ export class Map extends Camera {
             }
         }
 
-        this.resize();
+        // When no style is set or it's using the default mercator projection, we can constrain the camera.
+        // When a style is set with other projections though, we can't constrain the camera until the style is loaded
+        // and the correct transform is used. Otherwise, valid points in the desired projection could be rejected
+        const shouldConstrainUsingMercatorTransform = typeof resolvedOptions.style === 'string' || !resolvedOptions.style || !resolvedOptions.style?.projection || resolvedOptions.style?.projection?.type === 'mercator';
+        this.resize(null, shouldConstrainUsingMercatorTransform);
 
         this._localIdeographFontFamily = resolvedOptions.localIdeographFontFamily;
         this._validateStyle = resolvedOptions.validateStyle;
@@ -734,6 +738,8 @@ export class Map extends Camera {
             this.addControl(new LogoControl(), resolvedOptions.logoPosition);
 
         this.on('style.load', () => {
+            // If we didn't constrain the camera before, we do it now
+            if (!shouldConstrainUsingMercatorTransform) this._resizeTransform();
             if (this.transform.unmodified) {
                 const coercedOptions = pick(this.style.stylesheet, ['center', 'zoom', 'bearing', 'pitch', 'roll']) as CameraOptions;
                 this.jumpTo(coercedOptions);
@@ -873,7 +879,7 @@ export class Map extends Camera {
      * if (mapDiv.style.visibility === true) map.resize();
      * ```
      */
-    resize(eventData?: any): Map {
+    resize(eventData?: any, constrainTransform = true): Map {
         const dimensions = this._containerDimensions();
         const width = dimensions[0];
         const height = dimensions[1];
@@ -892,8 +898,8 @@ export class Map extends Camera {
             this.painter.resize(width, height, clampedPixelRatio);
         }
 
-        this.transform.resize(width, height);
-        this._requestedCameraState?.resize(width, height);
+        this.transform.resize(width, height, constrainTransform);
+        this._requestedCameraState?.resize(width, height, constrainTransform);
 
         const fireMoving = !this._moving;
         if (fireMoving) {
@@ -907,6 +913,15 @@ export class Map extends Camera {
         if (fireMoving) this.fire(new Event('moveend', eventData));
 
         return this;
+    }
+
+    _resizeTransform() {
+        const dimensions = this._containerDimensions();
+        const width = dimensions[0];
+        const height = dimensions[1];
+
+        this.transform.resize(width, height, true);
+        this._requestedCameraState?.resize(width, height, true);
     }
 
     /**
