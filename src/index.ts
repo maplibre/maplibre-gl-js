@@ -48,7 +48,7 @@ import {KeyboardHandler} from './ui/handler/keyboard';
 import {TwoFingersTouchPitchHandler, TwoFingersTouchRotateHandler, TwoFingersTouchZoomHandler} from './ui/handler/two_fingers_touch';
 import {MessageType} from './util/actor_messages';
 import {createTileMesh} from './util/create_tile_mesh';
-import {coveringTiles} from "./geo/projection/covering_tiles";
+import {coveringTiles} from './geo/projection/covering_tiles';
 const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';

@@ -120,7 +120,6 @@ describe('maplibre', () => {
         expect(regexp.test(getVersion())).toBeTruthy();
     });
 
-
     test('coveringTiles', () => {
         expect(typeof coveringTiles === 'function').toBeTruthy();
     });
