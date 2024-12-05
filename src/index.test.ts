@@ -1,6 +1,6 @@
 import {describe, beforeEach, afterAll, test, expect} from 'vitest';
 import {config} from './util/config';
-import {addProtocol, getWorkerCount, removeProtocol, getVersion} from './index';
+import {addProtocol, getWorkerCount, removeProtocol, getVersion, coveringTiles} from './index';
 import {getJSON, getArrayBuffer} from './util/ajax';
 import {ImageRequest} from './util/image_request';
 import {isAbortError} from './util/abort_error';
@@ -118,5 +118,10 @@ describe('maplibre', () => {
         // Backslashes are doubled to escape them
         const regexp = new RegExp('^([0-9]+)\\.([0-9]+)\\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?(?:\\+[0-9A-Za-z-]+)?$');
         expect(regexp.test(getVersion())).toBeTruthy();
+    });
+
+
+    test('coveringTiles', () => {
+        expect(typeof coveringTiles === 'function').toBeTruthy();
     });
 });

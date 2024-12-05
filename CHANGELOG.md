@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 
+- Added export to  `coveringTiles()` function (https://github.com/maplibre/maplibre-gl-js/pull/5158)
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
