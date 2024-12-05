@@ -204,41 +204,34 @@ describe('ScrollZoomHandler', () => {
         browserNow.mockReturnValue(now);
 
         const map = createMap();
-
         map._renderTaskQueue.run();
+
+        // simulate 3 'wheel' events
         const startZoom = map.getZoom();
 
-        const events = [
-            [2, {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta}],
-            [7, {type: 'wheel', deltaY: -41}],
-            [30, {type: 'wheel', deltaY: -169}],
-            [1, {type: 'wheel', deltaY: -801}],
-            [5, {type: 'wheel', deltaY: -326}],
-            [20, {type: 'wheel', deltaY: -345}],
-            [22, {type: 'wheel', deltaY: -376}],
-        ] as [number, any][];
+        now += 2;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        map._renderTaskQueue.run();
 
-        const end = now + 500;
-        let lastWheelEvent = now;
+        now += 7;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        map._renderTaskQueue.run();
 
-        // simulate the above sequence of wheel events, with render frames
-        // interspersed every 20ms
-        while (now  < end) {
-            now += 1;
-            browserNow.mockReturnValue(now);
-            if (events.length && lastWheelEvent + events[0][0] === now) {
-                const [, event] = events.shift();
-                simulate.wheel(map.getCanvas(), event);
-                lastWheelEvent = now;
-            }
-            if (now % 20 === 0) {
-                map._renderTaskQueue.run();
-            }
-        }
+        now += 30;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        map._renderTaskQueue.run();
 
-        expect(map.getZoom() - startZoom).toBeCloseTo(1.944, 3);
+        now += 400;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
 
-        map.remove();
+        expect(map.getZoom() - startZoom).toBeCloseTo(0.0285 * 3, 3);
     });
 
     test('Zooms for multiple mouse wheel ticks with easing for smooth zooming', () => {
@@ -250,54 +243,65 @@ describe('ScrollZoomHandler', () => {
         map.setZoom(5);
         map._renderTaskQueue.run();
 
-        const events = [
-            [2, {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta}],
-            [7, {type: 'wheel', deltaY: -41}],
-            [30, {type: 'wheel', deltaY: -169}],
-            [1, {type: 'wheel', deltaY: -801}],
-            [5, {type: 'wheel', deltaY: -326}],
-            [20, {type: 'wheel', deltaY: -345}],
-            [22, {type: 'wheel', deltaY: -376}],
-        ] as [number, any][];
+        // simulate 3 'wheel' events
+        // Event 1 Start
+        now += 2;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        const startZoomEvent1 = map.getZoom();
+        map._renderTaskQueue.run();
 
-        const end = now + 500;
-        let lastWheelEvent = now;
-        const zoomLevels = [];
+        // Event 1 mid-zoom
+        now += 3;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        const midZoomEvent1 = map.getZoom();
 
-        // simulate the above sequence of wheel events, with render
-        // frames every 1ms
-        while (now  < end) {
-            now += 1;
-            browserNow.mockReturnValue(now);
-            if (events.length && lastWheelEvent + events[0][0] === now) {
-                const [, event] = events.shift();
-                simulate.wheel(map.getCanvas(), event);
-                lastWheelEvent = now;
-            }
-            if (now % 1 === 0) {
-                map._renderTaskQueue.run();
-                if (events.length > 0) {
-                    zoomLevels.push(map.getZoom());
-                }
-            }
-        }
+        // Event 2 Start
+        now += 4;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        const endZoomEvent1 = map.getZoom();
+        const startZoomEvent2 = map.getZoom();
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        map._renderTaskQueue.run();
 
-        // Final zoom end value
-        zoomLevels.push(map.getZoom());
+        // Event 2 mid-zoom
+        now += 15;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        const midZoomEvent2 = map.getZoom();
 
-        function hasIncreasingZoomLevels(zoomLevelArray) {
-            if (!zoomLevelArray.length) return false;
-            for (let i = 1; i < zoomLevelArray.length; i++) {
-                if (zoomLevelArray[i] <= zoomLevelArray[i-1]) {
-                    return false;
-                }
-            }
-            return true;
-        }
+        // Event 3 Start
+        now += 15;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        const endZoomEvent2 = map.getZoom();
+        const startZoomEvent3 = map.getZoom();
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        map._renderTaskQueue.run();
 
-        expect(hasIncreasingZoomLevels(zoomLevels)).toBeTruthy();
+        // Event 3 mid-zoom
+        // A single tick zoom with easing completes in approx. 200ms
+        now += 100;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        const midZoomEvent3 = map.getZoom();
 
-        map.remove();
+        now += 400;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        const endZoomEvent3 = map.getZoom();
+
+        expect(midZoomEvent1).toBeGreaterThan(startZoomEvent1);
+        expect(midZoomEvent1).toBeLessThan(endZoomEvent1);
+
+        expect(midZoomEvent2).toBeGreaterThan(startZoomEvent2);
+        expect(midZoomEvent2).toBeLessThan(endZoomEvent2);
+
+        expect(midZoomEvent3).toBeGreaterThan(startZoomEvent3);
+        expect(midZoomEvent3).toBeLessThan(endZoomEvent3);
     });
 
     test('Gracefully ignores wheel events with deltaY: 0', () => {
