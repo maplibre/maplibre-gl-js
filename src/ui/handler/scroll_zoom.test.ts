@@ -232,6 +232,8 @@ describe('ScrollZoomHandler', () => {
         map._renderTaskQueue.run();
 
         expect(map.getZoom() - startZoom).toBeCloseTo(0.0285 * 3, 3);
+
+        map.remove();
     });
 
     test('Zooms for multiple mouse wheel ticks with easing for smooth zooming', () => {
@@ -302,6 +304,8 @@ describe('ScrollZoomHandler', () => {
 
         expect(midZoomEvent3).toBeGreaterThan(startZoomEvent3);
         expect(midZoomEvent3).toBeLessThan(endZoomEvent3);
+
+        map.remove();
     });
 
     test('Gracefully ignores wheel events with deltaY: 0', () => {
