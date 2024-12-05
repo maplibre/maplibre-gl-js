@@ -98,7 +98,7 @@ void main() {
 
     float projectionScaling = 1.0;
 #ifdef GLOBE
-    if(u_pitch_with_map && !u_is_along_line) {
+    if(u_pitch_with_map) {
         float anchor_pos_tile_y = (u_coord_matrix * vec4(projected_pos.xy / projected_pos.w, z, 1.0)).y;
         projectionScaling = mix(projectionScaling, 1.0 / circumferenceRatioAtTileY(anchor_pos_tile_y) * u_pitched_scale, u_projection_transition);
     }
