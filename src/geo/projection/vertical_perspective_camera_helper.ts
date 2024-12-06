@@ -17,7 +17,7 @@ import type {PaddingOptions} from '../edge_insets';
 /**
  * @internal
  */
-export class GlobeCameraHelper implements ICameraHelper {
+export class VerticalPerspectiveCameraHelper implements ICameraHelper {
     private _globe: VerticalPerspectiveProjection;
     private _mercatorCameraHelper: MercatorCameraHelper;
 
@@ -215,13 +215,13 @@ export class GlobeCameraHelper implements ICameraHelper {
         let smallestNeededScale = Number.POSITIVE_INFINITY;
         for (const vec of testVectors) {
             if (xLeft < 0)
-                smallestNeededScale = GlobeCameraHelper.getLesserNonNegativeNonNull(smallestNeededScale, GlobeCameraHelper.solveVectorScale(vec, vecToCenter, matrix, 'x', xLeft));
+                smallestNeededScale = VerticalPerspectiveCameraHelper.getLesserNonNegativeNonNull(smallestNeededScale, VerticalPerspectiveCameraHelper.solveVectorScale(vec, vecToCenter, matrix, 'x', xLeft));
             if (xRight > 0)
-                smallestNeededScale = GlobeCameraHelper.getLesserNonNegativeNonNull(smallestNeededScale, GlobeCameraHelper.solveVectorScale(vec, vecToCenter, matrix, 'x', xRight));
+                smallestNeededScale = VerticalPerspectiveCameraHelper.getLesserNonNegativeNonNull(smallestNeededScale, VerticalPerspectiveCameraHelper.solveVectorScale(vec, vecToCenter, matrix, 'x', xRight));
             if (yTop > 0)
-                smallestNeededScale = GlobeCameraHelper.getLesserNonNegativeNonNull(smallestNeededScale, GlobeCameraHelper.solveVectorScale(vec, vecToCenter, matrix, 'y', yTop));
+                smallestNeededScale = VerticalPerspectiveCameraHelper.getLesserNonNegativeNonNull(smallestNeededScale, VerticalPerspectiveCameraHelper.solveVectorScale(vec, vecToCenter, matrix, 'y', yTop));
             if (yBottom < 0)
-                smallestNeededScale = GlobeCameraHelper.getLesserNonNegativeNonNull(smallestNeededScale, GlobeCameraHelper.solveVectorScale(vec, vecToCenter, matrix, 'y', yBottom));
+                smallestNeededScale = VerticalPerspectiveCameraHelper.getLesserNonNegativeNonNull(smallestNeededScale, VerticalPerspectiveCameraHelper.solveVectorScale(vec, vecToCenter, matrix, 'y', yBottom));
         }
 
         if (!Number.isFinite(smallestNeededScale) || smallestNeededScale === 0) {
