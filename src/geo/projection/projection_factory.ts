@@ -7,6 +7,7 @@ import {GlobeTransform} from './globe_transform';
 import {GlobeCameraHelper} from './globe_camera_helper';
 import {VerticalPerspectiveCameraHelper} from './vertical_perspective_camera_helper';
 import {VerticalPerspectiveTransform} from './vertical_perspective_transform';
+import {VerticalPerspectiveProjection} from './vertical_perspective_projection';
 
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Projection} from './projection';
@@ -39,7 +40,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type']):
         case 'vertical-perspective':
         {
             return {
-                projection: new GlobeProjection(),
+                projection: new VerticalPerspectiveProjection(),
                 transform: new VerticalPerspectiveTransform(),
                 cameraHelper: new VerticalPerspectiveCameraHelper(),
             };
