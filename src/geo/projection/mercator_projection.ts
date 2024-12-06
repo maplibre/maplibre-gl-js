@@ -48,6 +48,10 @@ export class MercatorProjection implements Projection {
         return false;
     }
 
+    get transitionState(): number {
+        return 0;
+    }
+
     public destroy(): void {
         // Do nothing.
     }
@@ -83,5 +87,9 @@ export class MercatorProjection implements Projection {
 
         this._cachedMesh = new Mesh(tileExtentBuffer, quadTriangleIndexBuffer, tileExtentSegments);
         return this._cachedMesh;
+    }
+
+    public recalculate(): void {
+        // Do nothing.
     }
 }

@@ -5,6 +5,7 @@ import type {Mesh} from '../../render/mesh';
 import type {Program} from '../../render/program';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {EvaluationParameters} from '../../style/evaluation_parameters';
 
 /**
  * Custom projections are handled both by a class which implements this `Projection` interface,
@@ -91,6 +92,15 @@ export interface Projection {
 
     /**
      * @internal
+     * A number representing the current transition state of the projection.
+     * The return value should be a number between 0 and 1, 
+     * where 0 means the projection is fully in the initial state, 
+     * and 1 means the projection is fully in the final state.
+     */
+    get transitionState(): number;
+
+    /**
+     * @internal
      * Cleans up any resources the projection created, especially GPU buffers.
      */
     destroy(): void;
@@ -118,4 +128,11 @@ export interface Projection {
      * @param usage - Specify the usage of the tile mesh, as different usages might use different levels of subdivision.
      */
     getMeshFromTileID(context: Context, tileID: CanonicalTileID, hasBorder: boolean, allowPoles: boolean, usage: TileMeshUsage): Mesh;
+
+    /**
+     * @internal
+     * Recalculates the projection state based on the current evaluation parameters.
+     * @param params - Evaluation parameters.
+     */
+    recalculate(params: EvaluationParameters): void;
 }
