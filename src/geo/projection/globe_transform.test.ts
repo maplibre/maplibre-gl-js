@@ -38,7 +38,6 @@ function createGlobeTransform(globeProjection: GlobeProjection) {
 describe('GlobeTransform', () => {
     const globeProjectionMock = getGlobeProjectionMock();
     // Force faster animations so we can use shorter sleeps when testing them
-    globeConstants.globeTransitionTimeSeconds = 0.1;
     globeConstants.errorTransitionTimeSeconds = 0.1;
 
     describe('getProjectionData', () => {
@@ -575,26 +574,6 @@ describe('GlobeTransform', () => {
         test('barely hidden', () => {
             expect(transform.isLocationOccluded(new LngLat(84.50, 0))).toBe(true);
         });
-    });
-
-    test('transform and projection instance are synchronized properly', async () => {
-        const projectionMock = getGlobeProjectionMock();
-        const globeTransform = createGlobeTransform(projectionMock);
-        // projectionMock.useGlobeRendering and globeTransform.isGlobeRendering must have the same value
-        expect(projectionMock.useGlobeRendering).toBe(true);
-        expect(globeTransform.isGlobeRendering).toBe(projectionMock.useGlobeRendering);
-        globeTransform.setZoom(15);
-        globeTransform.newFrameUpdate();
-        await sleep(150);
-        globeTransform.newFrameUpdate();
-        expect(projectionMock.useGlobeRendering).toBe(false);
-        expect(globeTransform.isGlobeRendering).toBe(projectionMock.useGlobeRendering);
-        globeTransform.setZoom(1);
-        globeTransform.newFrameUpdate();
-        await sleep(150);
-        globeTransform.newFrameUpdate();
-        expect(globeTransform.isGlobeRendering).toBe(true);
-        expect(globeTransform.isGlobeRendering).toBe(projectionMock.useGlobeRendering);
     });
 
     describe('render world copies', () => {

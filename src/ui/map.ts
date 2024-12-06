@@ -3168,6 +3168,8 @@ export class Map extends Camera {
     _render(paintStartTimeStamp: number) {
         const fadeDuration = this._idleTriggered ? this._fadeDuration : 0;
 
+        const isGlobeRendering = this.style.projection.transitionState > 0;
+
         // A custom layer may have used the context asynchronously. Mark the state as dirty.
         this.painter.context.setDirty();
         this.painter.setBaseState();
@@ -3204,12 +3206,14 @@ export class Map extends Camera {
             this.style.update(parameters);
         }
 
-        const transformUpdateResult = this.transform.newFrameUpdate();
+        const globeRenderingChaged = this.style.projection.transitionState > 0 !== isGlobeRendering;
+
+        this.transform.setTransitionState(this.style.projection.transitionState);
 
         // If we are in _render for any reason other than an in-progress paint
         // transition, update source caches to check for and load any tiles we
         // need for the current transform
-        if (this.style && (this._sourcesDirty || transformUpdateResult.forceSourceUpdate)) {
+        if (this.style && (this._sourcesDirty || globeRenderingChaged)) {
             this._sourcesDirty = false;
             this.style._updateSources(this.transform);
         }
@@ -3228,11 +3232,12 @@ export class Map extends Camera {
             }
         }
 
-        this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, transformUpdateResult.forcePlacementUpdate);
+        this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChaged);
 
-        if (transformUpdateResult.fireProjectionEvent) {
-            this.fire(new Event('projectiontransition', transformUpdateResult.fireProjectionEvent));
-        }
+        // HM TODO: bring this back
+        //if (transformUpdateResult.fireProjectionEvent) {
+        //    this.fire(new Event('projectiontransition', transformUpdateResult.fireProjectionEvent));
+        //}
 
         // Actually draw
         this.painter.render(this.style, {

@@ -31,9 +31,6 @@ export class GlobeProjection extends Evented implements Projection {
     _mercatorProjection: MercatorProjection;
     _verticalPerspectiveProjection: VerticalPerspectiveProjection;
 
-    // HM TODO: remove this in the future
-    _useGlobeRendering: boolean = false;
-
     constructor(projection?: ProjectionSpecification) {
         super();
         this._transitionable = new Transitionable(properties);
@@ -64,11 +61,7 @@ export class GlobeProjection extends Evented implements Projection {
     }
 
     get useGlobeRendering(): boolean {
-        return this._useGlobeRendering;
-    }
-
-    set useGlobeRendering(value: boolean) {
-        this._useGlobeRendering = value;
+        return this.transitionState > 0;
     }
 
     get errorQueryLatitudeDegrees(): number { return this._verticalPerspectiveProjection.errorQueryLatitudeDegrees; }

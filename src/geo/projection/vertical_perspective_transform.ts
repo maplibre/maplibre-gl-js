@@ -213,7 +213,9 @@ export class VerticalPerspectiveTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
     }
-
+    setTransitionState(_value: number): void {
+        // Do nothing
+    }
     //
     // Implementation of globe transform
     //

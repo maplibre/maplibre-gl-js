@@ -15,8 +15,6 @@ export const VerticalPerspectiveShaderDefine = '#define GLOBE';
 export const VerticalPerspectiveShaderVariantKey = 'globe';
 
 export const globeConstants = {
-    globeTransitionTimeSeconds: 0.5,
-    maxGlobeZoom: 12.0,
     errorTransitionTimeSeconds: 0.5
 };
 

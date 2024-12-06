@@ -15,7 +15,6 @@ describe('coveringTiles', () => {
         beforeEach(() => {
             globeProjectionMock = getGlobeProjectionMock();
             // Force faster animations so we can use shorter sleeps when testing them
-            globeConstants.globeTransitionTimeSeconds = 0.1;
             globeConstants.errorTransitionTimeSeconds = 0.1;
         });
 

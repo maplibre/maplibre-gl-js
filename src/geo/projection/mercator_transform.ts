@@ -195,7 +195,9 @@ export class MercatorTransform implements ITransform {
     get cameraToCenterDistance(): number { 
         return this._helper.cameraToCenterDistance; 
     }
-
+    setTransitionState(_value: number): void {
+        // Do nothing
+    }
     //
     // Implementation of mercator transform
     //

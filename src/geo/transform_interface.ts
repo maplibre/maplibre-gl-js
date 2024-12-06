@@ -201,6 +201,13 @@ interface ITransformMutators {
      * @param coords - Array of tile IDs that will be rendered.
      */
     precacheTiles(coords: Array<OverscaledTileID>): void;
+
+    /**
+     * @internal
+     * Sets the transform's transition state from one projection to another.
+     * @param value - The transition state value.
+     */
+    setTransitionState(value: number): void;
 }
 
 /**
