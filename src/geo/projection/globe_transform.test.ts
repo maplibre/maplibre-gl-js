@@ -1,5 +1,5 @@
 import {describe, expect, test} from 'vitest';
-import {globeConstants, type GlobeProjection} from './globe_projection';
+import {globeConstants, type VerticalPerspectiveProjection} from './vertial_perspective_projection';
 import {EXTENT} from '../../data/extent';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
@@ -27,7 +27,7 @@ function planeDistance(point: Array<number>, plane: Array<number>) {
     return point[0] * plane[0] + point[1] * plane[1] + point[2] * plane[2] + plane[3];
 }
 
-function createGlobeTransform(globeProjection: GlobeProjection) {
+function createGlobeTransform(globeProjection: VerticalPerspectiveProjection) {
     const globeTransform = new GlobeTransform(globeProjection);
     globeTransform.resize(640, 480);
     globeTransform.setFov(45);

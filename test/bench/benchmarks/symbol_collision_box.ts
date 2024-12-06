@@ -8,7 +8,7 @@ import {SingleCollisionBox} from '../../../src/data/bucket/symbol_bucket';
 import {EXTENT} from '../../../src/data/extent';
 import {MercatorTransform} from '../../../src/geo/projection/mercator_transform';
 import {mat4} from 'gl-matrix';
-import {GlobeProjection} from '../../../src/geo/projection/globe_projection';
+import {VerticalPerspectiveProjection} from '../../../src/geo/projection/vertial_perspective_projection';
 import {GlobeTransform} from '../../../src/geo/projection/globe_transform';
 
 type TestSymbol = {
@@ -51,7 +51,7 @@ export default class SymbolCollisionBox extends Benchmark {
 
     private _createTransform() {
         if (this._useGlobeProjection) {
-            const projection = new GlobeProjection();
+            const projection = new VerticalPerspectiveProjection();
             return {
                 transform: new GlobeTransform(projection),
                 calculatePosMatrix: (_tileID: UnwrappedTileID) => { return undefined; },

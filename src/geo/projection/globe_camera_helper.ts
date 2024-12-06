@@ -9,7 +9,7 @@ import {normalizeCenter} from '../transform_helper';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
 import type {IReadonlyTransform, ITransform} from '../transform_interface';
-import type {GlobeProjection} from './globe_projection';
+import type {VerticalPerspectiveProjection} from './vertial_perspective_projection';
 import type {CameraForBoundsOptions} from '../../ui/camera';
 import type {LngLatBounds} from '../lng_lat_bounds';
 import type {PaddingOptions} from '../edge_insets';
@@ -18,10 +18,10 @@ import type {PaddingOptions} from '../edge_insets';
  * @internal
  */
 export class GlobeCameraHelper implements ICameraHelper {
-    private _globe: GlobeProjection;
+    private _globe: VerticalPerspectiveProjection;
     private _mercatorCameraHelper: MercatorCameraHelper;
 
-    constructor(globe: GlobeProjection) {
+    constructor(globe: VerticalPerspectiveProjection) {
         this._globe = globe;
         this._mercatorCameraHelper = new MercatorCameraHelper();
     }

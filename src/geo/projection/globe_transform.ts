@@ -6,7 +6,7 @@ import {LngLat, type LngLatLike,} from '../lng_lat';
 import {createMat4f32, createMat4f64, differenceOfAnglesDegrees, easeCubicInOut, lerp, warnOnce} from '../../util/util';
 import {OverscaledTileID, type UnwrappedTileID, type CanonicalTileID} from '../../source/tile_id';
 import {browser} from '../../util/browser';
-import {globeConstants, type GlobeProjection} from './globe_projection';
+import {globeConstants, type VerticalPerspectiveProjection} from './vertial_perspective_projection';
 import {EXTENT} from '../../data/extent';
 
 import type Point from '@mapbox/point-geometry';
@@ -225,7 +225,7 @@ export class GlobeTransform implements ITransform {
      * Note: projection instance should only be accessed in the {@link newFrameUpdate} function.
      * to ensure the transform's state isn't unintentionally changed.
      */
-    private _projectionInstance: GlobeProjection;
+    private _projectionInstance: VerticalPerspectiveProjection;
     private _globeLatitudeErrorCorrectionRadians: number = 0;
 
     /**
@@ -249,7 +249,7 @@ export class GlobeTransform implements ITransform {
     private _mercatorTransform: MercatorTransform;
     private _verticalPerspectiveTransform: VerticalPerspectiveTransform;
 
-    public constructor(globeProjection: GlobeProjection) {
+    public constructor(globeProjection: VerticalPerspectiveProjection) {
 
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },

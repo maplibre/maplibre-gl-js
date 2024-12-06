@@ -9,7 +9,7 @@ import {MercatorTransform} from '../../geo/projection/mercator_transform';
 import {RequestManager} from '../request_manager';
 import {type IReadonlyTransform, type ITransform} from '../../geo/transform_interface';
 import {type Style} from '../../style/style';
-import type {GlobeProjection} from '../../geo/projection/globe_projection';
+import type {VerticalPerspectiveProjection} from '../../geo/projection/vertial_perspective_projection';
 
 export class StubMap extends Evented {
     style: Style;
@@ -225,7 +225,7 @@ export function expectToBeCloseToArray(actual: Array<number>, expected: Array<nu
     }
 }
 
-export function getGlobeProjectionMock(): GlobeProjection {
+export function getGlobeProjectionMock(): VerticalPerspectiveProjection {
     return {
         get useGlobeControls(): boolean {
             return true;
@@ -233,5 +233,5 @@ export function getGlobeProjectionMock(): GlobeProjection {
         useGlobeRendering: true,
         latitudeErrorCorrectionRadians: 0,
         errorQueryLatitudeDegrees: 0,
-    } as GlobeProjection;
+    } as VerticalPerspectiveProjection;
 }

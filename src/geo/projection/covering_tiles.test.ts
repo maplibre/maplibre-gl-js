@@ -1,6 +1,6 @@
 import {beforeEach, describe, expect, test} from 'vitest';
 import {GlobeTransform} from './globe_transform';
-import {globeConstants, type GlobeProjection} from './globe_projection';
+import {globeConstants, type VerticalPerspectiveProjection} from './vertial_perspective_projection';
 import {getGlobeProjectionMock} from '../../util/test/util';
 import {LngLat} from '../lng_lat';
 import {coveringTiles, coveringZoomLevel, type CoveringZoomOptions} from './covering_tiles';
@@ -9,7 +9,7 @@ import {MercatorTransform} from './mercator_transform';
 
 describe('coveringTiles', () => {
     describe('globe', () => {
-        let globeProjectionMock: GlobeProjection;
+        let globeProjectionMock: VerticalPerspectiveProjection;
 
         beforeEach(() => {
             globeProjectionMock = getGlobeProjectionMock();

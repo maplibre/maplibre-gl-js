@@ -32,7 +32,7 @@ const granularitySettingsGlobe: SubdivisionGranularitySetting = new SubdivisionG
     circle: 3
 });
 
-export class GlobeProjection implements Projection {
+export class VerticalPerspectiveProjection implements Projection {
     private _mercator: MercatorProjection;
 
     private _tileMeshCache: {[_: string]: Mesh} = {};
