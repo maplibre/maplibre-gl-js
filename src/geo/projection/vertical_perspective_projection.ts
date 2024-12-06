@@ -172,4 +172,8 @@ export class VerticalPerspectiveProjection implements Projection {
     recalculate(_params: EvaluationParameters): void {
         // Do nothing.
     }
+
+    hasTransition(): boolean {
+        return false;
+    }
 }

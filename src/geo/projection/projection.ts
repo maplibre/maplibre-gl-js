@@ -135,4 +135,10 @@ export interface Projection {
      * @param params - Evaluation parameters.
      */
     recalculate(params: EvaluationParameters): void;
+
+    /**
+     * @internal
+     * Returns true if the projection is currently transitioning between two states.
+     */
+    hasTransition(): boolean;
 }

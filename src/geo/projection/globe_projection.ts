@@ -83,7 +83,7 @@ export class GlobeProjection extends Evented implements Projection {
         this._transitioning = this._transitionable.transitioned(parameters, this._transitioning);
     }
 
-    hasTransition() {
+    hasTransition(): boolean {
         return this._transitioning.hasTransition();
     }
 

@@ -92,4 +92,8 @@ export class MercatorProjection implements Projection {
     public recalculate(): void {
         // Do nothing.
     }
+
+    public hasTransition(): boolean {
+        return false;
+    }
 }
