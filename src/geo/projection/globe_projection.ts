@@ -61,7 +61,7 @@ export class GlobeProjection extends Evented implements Projection {
         this.properties = this._transitioning.possiblyEvaluate(parameters);
     }
 
-    get name(): ProjectionSpecification['type'] {
+    get name(): 'mercator' | 'vertical-perspective' {
         return this.currentProjection.name;
     }
 
