@@ -31,13 +31,13 @@ export function createProjectionFromName(name: ProjectionSpecification['type']):
         case 'globe':
         {
             const globeProjection = new GlobeProjection({type: [
-                "interpolate",
-                ["linear"],
-                ["zoom"],
+                'interpolate',
+                ['linear'],
+                ['zoom'],
                 10,
-                "vertical-perspective",
+                'vertical-perspective',
                 12,
-                "mercator"
+                'mercator'
             ]});
             return {
                 projection: globeProjection,

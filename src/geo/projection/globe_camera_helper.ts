@@ -1,14 +1,14 @@
-import type Point from '@mapbox/point-geometry';
-import {type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas} from './camera_helper';
-import {type LngLat, type LngLatLike} from '../lng_lat';
 import {MercatorCameraHelper} from './mercator_camera_helper';
+import {VerticalPerspectiveCameraHelper} from './vertical_perspective_camera_helper';
 
+import type Point from '@mapbox/point-geometry';
+import type {CameraForBoxAndBearingHandlerResult, EaseToHandlerResult, EaseToHandlerOptions, FlyToHandlerResult, FlyToHandlerOptions, ICameraHelper, MapControlsDeltas} from './camera_helper';
+import type {LngLat, LngLatLike} from '../lng_lat';
 import type {IReadonlyTransform, ITransform} from '../transform_interface';
+import type {GlobeProjection} from './globe_projection';
 import type {CameraForBoundsOptions} from '../../ui/camera';
 import type {LngLatBounds} from '../lng_lat_bounds';
 import type {PaddingOptions} from '../edge_insets';
-import {type GlobeProjection} from './globe_projection';
-import {VerticalPerspectiveCameraHelper} from './vertical_perspective_camera_helper';
 
 /**
  * @internal

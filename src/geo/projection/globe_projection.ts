@@ -120,7 +120,6 @@ export class GlobeProjection extends Evented implements Projection {
     public updateGPUdependent(context: ProjectionGPUContext): void {
         this._mercatorProjection.updateGPUdependent(context);
         this._verticalPerspectiveProjection.updateGPUdependent(context);
-        
     }
 
     public getMeshFromTileID(context: Context, _tileID: CanonicalTileID, _hasBorder: boolean, _allowPoles: boolean, _usage: TileMeshUsage): Mesh {

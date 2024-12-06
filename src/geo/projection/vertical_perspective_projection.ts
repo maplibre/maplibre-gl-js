@@ -7,7 +7,6 @@ import {mercatorYfromLat} from '../mercator_coordinate';
 import {SubdivisionGranularityExpression, SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import type {Projection, ProjectionGPUContext, TileMeshUsage} from './projection';
 import {type PreparedShader, shaders} from '../../shaders/shaders';
-import {type MercatorProjection} from './mercator_projection';
 import {ProjectionErrorMeasurement} from './globe_projection_error_measurement';
 import {createTileMeshWithBuffers, type CreateTileMeshOptions} from '../../util/create_tile_mesh';
 import {type EvaluationParameters} from '../../style/evaluation_parameters';
@@ -35,15 +34,10 @@ const granularitySettingsGlobe: SubdivisionGranularitySetting = new SubdivisionG
 });
 
 export class VerticalPerspectiveProjection implements Projection {
-    private _mercator: MercatorProjection;
+
+    private _useGlobeRendering: boolean = true;
 
     private _tileMeshCache: {[_: string]: Mesh} = {};
-
-    /**
-     * Stores whether globe rendering should be used.
-     * The value is injected from GlobeTransform.
-     */
-    private _useGlobeRendering: boolean = true;
 
     // GPU atan() error correction
     private _errorMeasurement: ProjectionErrorMeasurement;
@@ -141,7 +135,6 @@ export class VerticalPerspectiveProjection implements Projection {
     }
 
     public updateGPUdependent(renderContext: ProjectionGPUContext): void {
-        this._mercator.updateGPUdependent(renderContext);
         if (!this._errorMeasurement) {
             this._errorMeasurement = new ProjectionErrorMeasurement(renderContext);
         }
