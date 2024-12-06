@@ -5,7 +5,7 @@ import {MercatorTransform} from './mercator_transform';
 import {MercatorCameraHelper} from './mercator_camera_helper';
 import {VerticalPerspectiveProjection} from './vertical_perspective_projection';
 import {GlobeTransform} from './globe_transform';
-import {GlobeCameraHelper} from './globe_camera_helper';
+import {GlobeCameraHelper} from './vertical_perspective_camera_helper';
 import {VerticalPerspectiveTransform} from './vertical_perspective_transform';
 import type {Projection} from './projection';
 import type {ITransform} from '../transform_interface';

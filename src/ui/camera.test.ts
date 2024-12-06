@@ -10,7 +10,7 @@ import {LngLatBounds} from '../geo/lng_lat_bounds';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {GlobeTransform} from '../geo/projection/globe_transform';
 import {getZoomAdjustment} from '../geo/projection/globe_utils';
-import {GlobeCameraHelper} from '../geo/projection/globe_camera_helper';
+import {GlobeCameraHelper} from '../geo/projection/vertical_perspective_camera_helper';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 
 import type {VerticalPerspectiveProjection} from '../geo/projection/vertical_perspective_projection';
