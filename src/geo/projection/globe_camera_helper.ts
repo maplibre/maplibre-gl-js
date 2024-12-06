@@ -9,7 +9,7 @@ import {normalizeCenter} from '../transform_helper';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
 import type {IReadonlyTransform, ITransform} from '../transform_interface';
-import type {GlobeProjection} from './globe';
+import type {GlobeProjection} from './globe_projection';
 import type {CameraForBoundsOptions} from '../../ui/camera';
 import type {LngLatBounds} from '../lng_lat_bounds';
 import type {PaddingOptions} from '../edge_insets';
