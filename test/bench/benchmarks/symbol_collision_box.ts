@@ -51,9 +51,8 @@ export default class SymbolCollisionBox extends Benchmark {
 
     private _createTransform() {
         if (this._useGlobeProjection) {
-            const projection = new VerticalPerspectiveProjection();
             return {
-                transform: new GlobeTransform(projection),
+                transform: new GlobeTransform(),
                 calculatePosMatrix: (_tileID: UnwrappedTileID) => { return undefined; },
             };
         } else {

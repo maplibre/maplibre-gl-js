@@ -16,8 +16,6 @@ export const VerticalPerspectiveShaderDefine = '#define GLOBE';
 export const VerticalPerspectiveShaderVariantKey = 'globe';
 
 export const globeConstants = {
-    globeTransitionTimeSeconds: 0.5,
-    maxGlobeZoom: 12.0,
     errorTransitionTimeSeconds: 0.5
 };
 
@@ -65,6 +63,10 @@ export class VerticalPerspectiveProjection implements Projection {
      */
     get useGlobeRendering(): boolean {
         return this._useGlobeRendering;
+    }
+
+    get transitionState(): number {
+        return 1;
     }
 
     /**

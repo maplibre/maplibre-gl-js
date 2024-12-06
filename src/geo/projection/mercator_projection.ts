@@ -49,6 +49,10 @@ export class MercatorProjection implements Projection {
         return false;
     }
 
+    get transitionState(): number {
+        return 0;
+    }
+
     public destroy(): void {
         // Do nothing.
     }

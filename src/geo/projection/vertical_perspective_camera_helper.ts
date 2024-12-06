@@ -1,7 +1,6 @@
 import Point from '@mapbox/point-geometry';
-import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation, type UpdateRotationArgs} from './camera_helper';
+import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation, type UpdateRotationArgs, cameraForBoxAndBearing} from './camera_helper';
 import {LngLat, type LngLatLike} from '../lng_lat';
-import {MercatorCameraHelper} from './mercator_camera_helper';
 import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from './globe_utils';
 import {clamp, createVec3f64, differenceOfAnglesDegrees, MAX_VALID_LATITUDE, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../../util/util';
 import {type mat4, vec3} from 'gl-matrix';
@@ -9,7 +8,6 @@ import {normalizeCenter} from '../transform_helper';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
 import type {IReadonlyTransform, ITransform} from '../transform_interface';
-import type {VerticalPerspectiveProjection} from './vertical_perspective_projection';
 import type {CameraForBoundsOptions} from '../../ui/camera';
 import type {LngLatBounds} from '../lng_lat_bounds';
 import type {PaddingOptions} from '../edge_insets';
@@ -18,24 +16,13 @@ import type {PaddingOptions} from '../edge_insets';
  * @internal
  */
 export class VerticalPerspectiveCameraHelper implements ICameraHelper {
-    private _globe: VerticalPerspectiveProjection;
-    private _mercatorCameraHelper: MercatorCameraHelper;
 
-    constructor(globe: VerticalPerspectiveProjection) {
-        this._globe = globe;
-        this._mercatorCameraHelper = new MercatorCameraHelper();
-    }
-
-    get useGlobeControls(): boolean { return this._globe.useGlobeRendering; }
+    get useGlobeControls(): boolean { return true; }
 
     handlePanInertia(pan: Point, transform: IReadonlyTransform): {
         easingCenter: LngLat;
         easingOffset: Point;
     } {
-        if (!this.useGlobeControls) {
-            return this._mercatorCameraHelper.handlePanInertia(pan, transform);
-        }
-
         const panCenter = computeGlobePanCenter(pan, transform);
         if (Math.abs(panCenter.lng - transform.center.lng) > 180) {
             // If easeTo target would be over 180° distant, the animation would move
@@ -50,11 +37,6 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
     }
 
     handleMapControlsRollPitchBearingZoom(deltas: MapControlsDeltas, tr: ITransform): void {
-        if (!this.useGlobeControls) {
-            this._mercatorCameraHelper.handleMapControlsRollPitchBearingZoom(deltas, tr);
-            return;
-        }
-
         const zoomPixel = deltas.around;
         const zoomLoc = tr.screenPointToLocation(zoomPixel);
 
@@ -141,12 +123,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         tr.setZoom(oldZoom + getZoomAdjustment(oldCenterLat, tr.center.lat));
     }
 
-    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void {
-        if (!this.useGlobeControls) {
-            this._mercatorCameraHelper.handleMapControlsPan(deltas, tr, preZoomAroundLoc);
-            return;
-        }
-
+    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, _preZoomAroundLoc: LngLat): void {
         if (!deltas.panDelta) {
             return;
         }
@@ -162,12 +139,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
     }
 
     cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
-        const result = this._mercatorCameraHelper.cameraForBoxAndBearing(options, padding, bounds, bearing, tr);
-
-        if (!this.useGlobeControls) {
-            return result;
-        }
-
+        const result = cameraForBoxAndBearing(options, padding, bounds, bearing, tr);
         // If globe is enabled, we use the parameters computed for mercator, and just update the zoom to fit the bounds.
 
         // Get clip space bounds including padding
@@ -238,11 +210,6 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
      * Handles the zoom and center change during camera jumpTo.
      */
     handleJumpToCenterZoom(tr: ITransform, options: { zoom?: number; center?: LngLatLike }): void {
-        if (!this.useGlobeControls) {
-            this._mercatorCameraHelper.handleJumpToCenterZoom(tr, options);
-            return;
-        }
-
         // Special zoom & center handling for globe:
         // Globe constrained center isn't dependent on zoom level
         const startingLat = tr.center.lat;
@@ -257,10 +224,6 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
     }
 
     handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandlerResult {
-        if (!this.useGlobeControls) {
-            return this._mercatorCameraHelper.handleEaseTo(tr, options);
-        }
-
         const startZoom = tr.zoom;
         const startCenter = tr.center;
         const startPadding = tr.padding;
@@ -362,9 +325,6 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
     }
 
     handleFlyTo(tr: ITransform, options: FlyToHandlerOptions): FlyToHandlerResult {
-        if (!this.useGlobeControls) {
-            return this._mercatorCameraHelper.handleFlyTo(tr, options);
-        }
         const optionsZoom = typeof options.zoom !== 'undefined';
 
         const startCenter = tr.center;

@@ -89,6 +89,8 @@ export interface Projection {
      */
     get subdivisionGranularity(): SubdivisionGranularitySetting;
 
+    get transitionState(): number;
+
     /**
      * @internal
      * Cleans up any resources the projection created, especially GPU buffers.

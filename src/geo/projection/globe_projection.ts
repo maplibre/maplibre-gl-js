@@ -41,12 +41,27 @@ export class GlobeProjection extends Evented implements Projection {
         this._verticalPerspectiveProjection = new VerticalPerspectiveProjection();
     }
 
+    public get transitionState(): number {
+        const currentProjectionSpecValue = this.properties.get('type');
+        if (typeof currentProjectionSpecValue === 'string' && currentProjectionSpecValue === 'mercator') {
+            return 0;
+        }
+        if (typeof currentProjectionSpecValue === 'string' && currentProjectionSpecValue === 'vertical-perspective') {
+            return 1;
+        }
+        // HM TODO: check this!
+        if ('transition' in (currentProjectionSpecValue as any)) {
+            return (currentProjectionSpecValue as any).transition;
+        };
+        return 1;
+    }
+
     private get currentProjection(): Projection {
         return this.useGlobeControls ? this._verticalPerspectiveProjection : this._mercatorProjection;
     }
 
     setProjection(projection?: ProjectionSpecification) {
-        this._transitionable.setValue('type', projection.type);
+        this._transitionable.setValue('type', projection?.type || 'mercator');
     }
 
     updateTransitions(parameters: TransitionParameters) {
@@ -90,11 +105,7 @@ export class GlobeProjection extends Evented implements Projection {
     }
 
     get useGlobeControls(): boolean {
-        const currentProjectionSpecValue = this.properties.get('type');
-        if (typeof currentProjectionSpecValue === 'string' && currentProjectionSpecValue === 'mercator') {
-            return false;
-        }
-        return true;
+        return this.transitionState > 0;
     }
 
     public destroy(): void {
@@ -103,7 +114,7 @@ export class GlobeProjection extends Evented implements Projection {
     }
 
     public isRenderingDirty(): boolean {
-        return this.currentProjection.isRenderingDirty();
+        return this.hasTransition() || this.currentProjection.isRenderingDirty();
     }
 
     public updateGPUdependent(context: ProjectionGPUContext): void {

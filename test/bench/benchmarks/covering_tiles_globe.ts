@@ -1,8 +1,7 @@
 import Benchmark from '../lib/benchmark';
-import { GlobeTransform } from '../../../src/geo/projection/globe_transform';
-import { VerticalPerspectiveProjection } from '../../../src/geo/projection/vertical_perspective_projection';
-import { LngLat } from '../styles';
-import { coveringTiles } from '../../../src/geo/projection/covering_tiles';
+import {GlobeTransform} from '../../../src/geo/projection/globe_transform';
+import {LngLat} from '../styles';
+import {coveringTiles} from '../../../src/geo/projection/covering_tiles';
 
 export default class CoveringTilesGlobe extends Benchmark {
     _pitch: number;
@@ -13,8 +12,7 @@ export default class CoveringTilesGlobe extends Benchmark {
     }
 
     bench() {
-        const projection = new VerticalPerspectiveProjection();
-        const transform = new GlobeTransform(projection);
+        const transform = new GlobeTransform();
         transform.setCenter(new LngLat(0, 0));
         transform.setZoom(4);
         transform.resize(4096, 4096);

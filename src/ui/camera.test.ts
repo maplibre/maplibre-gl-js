@@ -13,7 +13,6 @@ import {getZoomAdjustment} from '../geo/projection/globe_utils';
 import {VerticalPerspectiveCameraHelper} from '../geo/projection/vertical_perspective_camera_helper';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 
-import type {VerticalPerspectiveProjection} from '../geo/projection/vertical_perspective_projection';
 import type {Terrain} from '../render/terrain';
 
 beforeEach(() => {
@@ -43,7 +42,7 @@ function attachSimulateFrame(camera) {
 function createCamera(options?): Camera & { simulateFrame: () => void } {
     options = options || {};
 
-    const transform = options.globe ? new GlobeTransform({} as any) : new MercatorTransform();
+    const transform = options.globe ? new GlobeTransform() : new MercatorTransform();
     transform.setMinZoom(0);
     transform.setMaxZoom(20);
     transform.setMinPitch(0);
@@ -53,7 +52,7 @@ function createCamera(options?): Camera & { simulateFrame: () => void } {
 
     const camera = attachSimulateFrame(new CameraMock(transform, new MercatorCameraHelper(), {} as any));
     if (options.globe) {
-        camera.cameraHelper = new VerticalPerspectiveCameraHelper({useGlobeRendering: true} as VerticalPerspectiveProjection);
+        camera.cameraHelper = new VerticalPerspectiveCameraHelper();
     }
     camera.jumpTo(options);
 
