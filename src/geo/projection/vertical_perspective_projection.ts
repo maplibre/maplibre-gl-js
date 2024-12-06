@@ -10,6 +10,10 @@ import {type PreparedShader, shaders} from '../../shaders/shaders';
 import {MercatorProjection} from './mercator_projection';
 import {ProjectionErrorMeasurement} from './globe_projection_error_measurement';
 import {createTileMeshWithBuffers, type CreateTileMeshOptions} from '../../util/create_tile_mesh';
+import {EvaluationParameters} from '../../style/evaluation_parameters';
+
+export const VerticalPerspectiveShaderDefine = '#define GLOBE';
+export const VerticalPerspectiveShaderVariantKey = 'globe';
 
 export const globeConstants = {
     globeTransitionTimeSeconds: 0.5,
@@ -51,8 +55,8 @@ export class VerticalPerspectiveProjection implements Projection {
     private _errorCorrectionPreviousValue: number = 0.0;
     private _errorMeasurementLastChangeTime: number = -1000.0;
 
-    get name(): 'globe' {
-        return 'globe';
+    get name(): 'vertical-perspective' {
+        return 'vertical-perspective';
     }
 
     /**
@@ -72,19 +76,19 @@ export class VerticalPerspectiveProjection implements Projection {
     }
 
     get useSubdivision(): boolean {
-        return this.useGlobeRendering;
+        return true;
     }
 
     get shaderVariantName(): string {
-        return this.useGlobeRendering ? 'globe' : this._mercator.shaderVariantName;
+        return VerticalPerspectiveShaderVariantKey;
     }
 
     get shaderDefine(): string {
-        return this.useGlobeRendering ? '#define GLOBE' : this._mercator.shaderDefine;
+        return VerticalPerspectiveShaderDefine;
     }
 
     get shaderPreludeCode(): PreparedShader {
-        return this.useGlobeRendering ? shaders.projectionGlobe : this._mercator.shaderPreludeCode;
+        return shaders.projectionGlobe;
     }
 
     get vertexShaderPreludeCode(): string {
@@ -96,7 +100,7 @@ export class VerticalPerspectiveProjection implements Projection {
     }
 
     get useGlobeControls(): boolean {
-        return this._useGlobeRendering;
+        return true;
     }
 
     get errorQueryLatitudeDegrees(): number { return this._errorQueryLatitudeDegrees; }
@@ -117,10 +121,6 @@ export class VerticalPerspectiveProjection implements Projection {
      * This stores the correction that should be applied to the projection matrix.
      */
     get latitudeErrorCorrectionRadians(): number { return this._errorCorrectionUsable; }
-
-    constructor() {
-        this._mercator = new MercatorProjection();
-    }
 
     public destroy() {
         if (this._errorMeasurement) {
@@ -189,5 +189,9 @@ export class VerticalPerspectiveProjection implements Projection {
         const mesh = createTileMeshWithBuffers(context, options);
         this._tileMeshCache[key] = mesh;
         return mesh;
+    }
+
+    recalculate(_params: EvaluationParameters): void {
+        // Do nothing.
     }
 }

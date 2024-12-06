@@ -9,7 +9,7 @@ import {normalizeCenter} from '../transform_helper';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
 import type {IReadonlyTransform, ITransform} from '../transform_interface';
-import type {VerticalPerspectiveProjection} from './vertial_perspective_projection';
+import type {VerticalPerspectiveProjection} from './vertical_perspective_projection';
 import type {CameraForBoundsOptions} from '../../ui/camera';
 import type {LngLatBounds} from '../lng_lat_bounds';
 import type {PaddingOptions} from '../edge_insets';

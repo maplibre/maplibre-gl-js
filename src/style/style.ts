@@ -657,6 +657,7 @@ export class Style extends Evented {
 
         this.light.recalculate(parameters);
         this.sky.recalculate(parameters);
+        this.projection.recalculate(parameters);
         this.z = parameters.zoom;
 
         if (changed) {

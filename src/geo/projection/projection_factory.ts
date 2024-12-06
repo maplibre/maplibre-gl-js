@@ -3,7 +3,7 @@ import {warnOnce} from '../../util/util';
 import {MercatorProjection} from './mercator_projection';
 import {MercatorTransform} from './mercator_transform';
 import {MercatorCameraHelper} from './mercator_camera_helper';
-import {VerticalPerspectiveProjection} from './vertial_perspective_projection';
+import {VerticalPerspectiveProjection} from './vertical_perspective_projection';
 import {GlobeTransform} from './globe_transform';
 import {GlobeCameraHelper} from './globe_camera_helper';
 import {VerticalPerspectiveTransform} from './vertical_perspective_transform';

@@ -9,7 +9,7 @@ import {MercatorTransform} from '../../geo/projection/mercator_transform';
 import {RequestManager} from '../request_manager';
 import {type IReadonlyTransform, type ITransform} from '../../geo/transform_interface';
 import {type Style} from '../../style/style';
-import type {VerticalPerspectiveProjection} from '../../geo/projection/vertial_perspective_projection';
+import type {VerticalPerspectiveProjection} from '../../geo/projection/vertical_perspective_projection';
 
 export class StubMap extends Evented {
     style: Style;

@@ -6,7 +6,7 @@ import {type MapGeoJSONFeature} from '../../util/vectortile_to_geojson';
 import {type MapLayerEventType, type MapLibreEvent} from '../events';
 import {Map, type MapOptions} from '../map';
 import {Event as EventedEvent, ErrorEvent} from '../../util/evented';
-import {VerticalPerspectiveProjection} from '../../geo/projection/vertial_perspective_projection';
+import {VerticalPerspectiveProjection} from '../../geo/projection/vertical_perspective_projection';
 
 type IsAny<T> = 0 extends T & 1 ? T : never;
 type NotAny<T> = T extends IsAny<T> ? never : T;

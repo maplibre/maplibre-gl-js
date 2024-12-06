@@ -1,6 +1,6 @@
 import {beforeEach, describe, expect, test} from 'vitest';
 import {GlobeTransform} from './globe_transform';
-import {globeConstants, type VerticalPerspectiveProjection} from './vertial_perspective_projection';
+import {globeConstants, type VerticalPerspectiveProjection} from './vertical_perspective_projection';
 import {getGlobeProjectionMock} from '../../util/test/util';
 import {LngLat} from '../lng_lat';
 import {coveringTiles, coveringZoomLevel, type CoveringZoomOptions} from './covering_tiles';

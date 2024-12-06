@@ -1,10 +1,11 @@
+import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {CanonicalTileID} from '../../source/tile_id';
 import type {PreparedShader} from '../../shaders/shaders';
 import type {Context} from '../../gl/context';
 import type {Mesh} from '../../render/mesh';
 import type {Program} from '../../render/program';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {EvaluationParameters} from '../../style/evaluation_parameters';
 
 /**
  * Custom projections are handled both by a class which implements this `Projection` interface,
@@ -118,4 +119,11 @@ export interface Projection {
      * @param usage - Specify the usage of the tile mesh, as different usages might use different levels of subdivision.
      */
     getMeshFromTileID(context: Context, tileID: CanonicalTileID, hasBorder: boolean, allowPoles: boolean, usage: TileMeshUsage): Mesh;
+
+    /**
+     * @internal
+     * Recalculates the projection state based on the current evaluation parameters.
+     * @param params - Evaluation parameters.
+     */
+    recalculate(params: EvaluationParameters): void;
 }
