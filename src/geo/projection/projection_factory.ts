@@ -1,9 +1,9 @@
 import {type ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {warnOnce} from '../../util/util';
-import {MercatorProjection} from './mercator';
+import {MercatorProjection} from './mercator_projection';
 import {MercatorTransform} from './mercator_transform';
 import {MercatorCameraHelper} from './mercator_camera_helper';
-import {GlobeProjection} from './globe';
+import {GlobeProjection} from './globe_projection';
 import {GlobeTransform} from './globe_transform';
 import {GlobeCameraHelper} from './globe_camera_helper';
 import {VerticalPerspectiveTransform} from './vertical_perspective_transform';
