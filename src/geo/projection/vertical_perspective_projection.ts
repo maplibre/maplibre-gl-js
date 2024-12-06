@@ -7,10 +7,10 @@ import {mercatorYfromLat} from '../mercator_coordinate';
 import {SubdivisionGranularityExpression, SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import type {Projection, ProjectionGPUContext, TileMeshUsage} from './projection';
 import {type PreparedShader, shaders} from '../../shaders/shaders';
-import {MercatorProjection} from './mercator_projection';
+import {type MercatorProjection} from './mercator_projection';
 import {ProjectionErrorMeasurement} from './globe_projection_error_measurement';
 import {createTileMeshWithBuffers, type CreateTileMeshOptions} from '../../util/create_tile_mesh';
-import {EvaluationParameters} from '../../style/evaluation_parameters';
+import {type EvaluationParameters} from '../../style/evaluation_parameters';
 
 export const VerticalPerspectiveShaderDefine = '#define GLOBE';
 export const VerticalPerspectiveShaderVariantKey = 'globe';

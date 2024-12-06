@@ -1,4 +1,3 @@
-import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {CanonicalTileID} from '../../source/tile_id';
 import type {PreparedShader} from '../../shaders/shaders';
 import type {Context} from '../../gl/context';

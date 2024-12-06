@@ -1,15 +1,15 @@
-import { ProjectionDefinition, ProjectionDefinitionSpecification, ProjectionSpecification, StylePropertySpecification, latest as styleSpec } from '@maplibre/maplibre-gl-style-spec';
-import { DataConstantProperty, PossiblyEvaluated, Properties, Transitionable, Transitioning, TransitionParameters } from '../../style/properties';
-import { Evented } from '../../util/evented';
-import { EvaluationParameters } from '../../style/evaluation_parameters';
-import { MercatorProjection } from './mercator_projection';
-import { VerticalPerspectiveProjection } from './vertical_perspective_projection';
-import { Projection, ProjectionGPUContext, TileMeshUsage } from './projection';
-import { PreparedShader } from '../../shaders/shaders';
-import { SubdivisionGranularitySetting } from '../../render/subdivision_granularity_settings';
-import { Context } from '../../gl/context';
-import { CanonicalTileID } from '../../source/tile_id';
-import { Mesh } from '../../render/mesh';
+import {type ProjectionDefinition, type ProjectionDefinitionSpecification, type ProjectionSpecification, type StylePropertySpecification, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
+import {DataConstantProperty, type PossiblyEvaluated, Properties, Transitionable, type Transitioning, type TransitionParameters} from '../../style/properties';
+import {Evented} from '../../util/evented';
+import {EvaluationParameters} from '../../style/evaluation_parameters';
+import {MercatorProjection} from './mercator_projection';
+import {VerticalPerspectiveProjection} from './vertical_perspective_projection';
+import {type Projection, type ProjectionGPUContext, type TileMeshUsage} from './projection';
+import {type PreparedShader} from '../../shaders/shaders';
+import {type SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
+import {type Context} from '../../gl/context';
+import {type CanonicalTileID} from '../../source/tile_id';
+import {type Mesh} from '../../render/mesh';
 
 type ProjectionProps = {
     type: DataConstantProperty<ProjectionDefinition>;
@@ -90,7 +90,7 @@ export class GlobeProjection extends Evented implements Projection {
     }
 
     get useGlobeControls(): boolean {
-        let currentProjectionSpecValue = this.properties.get('type');
+        const currentProjectionSpecValue = this.properties.get('type');
         if (typeof currentProjectionSpecValue === 'string' && currentProjectionSpecValue === 'mercator') {
             return false;
         }

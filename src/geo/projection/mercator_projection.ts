@@ -8,7 +8,7 @@ import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
 import {SegmentVector} from '../../data/segment';
 import posAttributes from '../../data/pos_attributes';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import {EvaluationParameters} from '../../style/evaluation_parameters';
+import {type EvaluationParameters} from '../../style/evaluation_parameters';
 
 export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';
