@@ -30,11 +30,19 @@ export function createProjectionFromName(name: ProjectionSpecification['type']):
         }
         case 'globe':
         {
-            const proj = new GlobeProjection();
+            const globeProjection = new GlobeProjection({type: [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                10,
+                'vertical-perspective',
+                12,
+                'mercator'
+            ]});
             return {
-                projection: proj,
-                transform: new GlobeTransform(proj),
-                cameraHelper: new GlobeCameraHelper(proj),
+                projection: globeProjection,
+                transform: new GlobeTransform(globeProjection),
+                cameraHelper: new GlobeCameraHelper(globeProjection),
             };
         }
         case 'vertical-perspective':
