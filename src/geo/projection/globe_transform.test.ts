@@ -1,5 +1,5 @@
 import {describe, expect, test} from 'vitest';
-import {globeConstants, type GlobeProjection} from './globe';
+import {globeConstants, type GlobeProjection} from './globe_projection';
 import {EXTENT} from '../../data/extent';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';

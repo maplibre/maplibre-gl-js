@@ -6,7 +6,7 @@ import {LngLat, type LngLatLike,} from '../lng_lat';
 import {createMat4f32, createMat4f64, differenceOfAnglesDegrees, easeCubicInOut, lerp, warnOnce} from '../../util/util';
 import {OverscaledTileID, type UnwrappedTileID, type CanonicalTileID} from '../../source/tile_id';
 import {browser} from '../../util/browser';
-import {globeConstants, type GlobeProjection} from './globe';
+import {globeConstants, type GlobeProjection} from './globe_projection';
 import {EXTENT} from '../../data/extent';
 
 import type Point from '@mapbox/point-geometry';
