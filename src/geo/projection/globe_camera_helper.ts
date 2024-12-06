@@ -24,7 +24,7 @@ export class GlobeCameraHelper implements ICameraHelper {
         this._verticalPerspectiveCameraHelper = new VerticalPerspectiveCameraHelper();
     }
 
-    get useGlobeControls(): boolean { return this._globe.useGlobeRendering; }
+    get useGlobeControls(): boolean { return this._globe.useGlobeControls; }
 
     get currentHelper(): ICameraHelper {
         return this.useGlobeControls ? this._verticalPerspectiveCameraHelper : this._mercatorCameraHelper;

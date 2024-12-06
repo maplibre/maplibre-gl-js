@@ -4,7 +4,7 @@ import type {Context} from '../../gl/context';
 import type {Mesh} from '../../render/mesh';
 import type {Program} from '../../render/program';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {EvaluationParameters} from '../../style/evaluation_parameters';
 
 /**
  * Custom projections are handled both by a class which implements this `Projection` interface,
@@ -46,7 +46,7 @@ export interface Projection {
      * @internal
      * A short, descriptive name of this projection, such as 'mercator' or 'globe'.
      */
-    get name(): ProjectionSpecification['type'];
+    get name(): 'mercator' | 'vertical-perspective';
 
     /**
      * @internal
@@ -89,6 +89,8 @@ export interface Projection {
      */
     get subdivisionGranularity(): SubdivisionGranularitySetting;
 
+    get transitionState(): number;
+
     /**
      * @internal
      * Cleans up any resources the projection created, especially GPU buffers.
@@ -118,4 +120,11 @@ export interface Projection {
      * @param usage - Specify the usage of the tile mesh, as different usages might use different levels of subdivision.
      */
     getMeshFromTileID(context: Context, tileID: CanonicalTileID, hasBorder: boolean, allowPoles: boolean, usage: TileMeshUsage): Mesh;
+
+    /**
+     * @internal
+     * Recalculates the projection state based on the current evaluation parameters.
+     * @param params - Evaluation parameters.
+     */
+    recalculate(params: EvaluationParameters): void;
 }

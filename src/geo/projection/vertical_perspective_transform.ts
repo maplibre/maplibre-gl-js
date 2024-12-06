@@ -218,6 +218,11 @@ export class VerticalPerspectiveTransform implements ITransform {
     // Implementation of globe transform
     //
 
+    get useGlobeControls(): boolean { return true; }
+    setGlobeness(_globeness: number): void {
+        // Do nothing
+    }
+
     private _cachedClippingPlane: vec4 = createVec4f64();
     private _cachedFrustum: Frustum;
     private _projectionMatrix: mat4 = createIdentityMat4f64();
@@ -286,10 +291,6 @@ export class VerticalPerspectiveTransform implements ITransform {
      */
     newFrameUpdate(): TransformUpdateResult {
         return {};
-    }
-
-    isRenderingDirty(): boolean {
-        return false;
     }
 
     getProjectionData(params: ProjectionDataParams): ProjectionData {

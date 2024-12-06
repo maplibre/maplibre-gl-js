@@ -15,8 +15,6 @@ export const VerticalPerspectiveShaderDefine = '#define GLOBE';
 export const VerticalPerspectiveShaderVariantKey = 'globe';
 
 export const globeConstants = {
-    globeTransitionTimeSeconds: 0.5,
-    maxGlobeZoom: 12.0,
     errorTransitionTimeSeconds: 0.5
 };
 
@@ -36,6 +34,9 @@ const granularitySettingsGlobe: SubdivisionGranularitySetting = new SubdivisionG
 });
 
 export class VerticalPerspectiveProjection implements Projection {
+
+    private _useGlobeRendering: boolean = true;
+
     private _tileMeshCache: {[_: string]: Mesh} = {};
 
     // GPU atan() error correction
@@ -50,8 +51,24 @@ export class VerticalPerspectiveProjection implements Projection {
         return 'vertical-perspective';
     }
 
+    /**
+     * This property is true when globe rendering and globe shader variants should be in use.
+     * This is false when globe is disabled, or when globe is enabled, but mercator rendering is used due to zoom level (and no transition is happening).
+     */
+    get useGlobeRendering(): boolean {
+        return this._useGlobeRendering;
+    }
+
     get transitionState(): number {
         return 1;
+    }
+
+    /**
+     * @internal
+     * Intended for internal use, only called from GlobeTransform.
+     */
+    set useGlobeRendering(value: boolean) {
+        this._useGlobeRendering = value;
     }
 
     get useSubdivision(): boolean {

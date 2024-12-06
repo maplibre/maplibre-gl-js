@@ -31,9 +31,6 @@ export class GlobeProjection extends Evented implements Projection {
     _mercatorProjection: MercatorProjection;
     _verticalPerspectiveProjection: VerticalPerspectiveProjection;
 
-    // HM TODO: remove this in the future
-    _useGlobeRendering: boolean = false;
-
     constructor(projection?: ProjectionSpecification) {
         super();
         this._transitionable = new Transitionable(properties);
@@ -59,20 +56,8 @@ export class GlobeProjection extends Evented implements Projection {
         return 1;
     }
 
-    get useGlobeRendering(): boolean {
-        return this._useGlobeRendering;
-    }
-
-    set useGlobeRendering(value: boolean) {
-        this._useGlobeRendering = value;
-    }
-
-    get errorQueryLatitudeDegrees(): number { return this._verticalPerspectiveProjection.errorQueryLatitudeDegrees; }
-    set errorQueryLatitudeDegrees(value: number) { this._verticalPerspectiveProjection.errorQueryLatitudeDegrees = value; }
-    get latitudeErrorCorrectionRadians(): number { return this._verticalPerspectiveProjection.latitudeErrorCorrectionRadians; }
-
     private get currentProjection(): Projection {
-        return this.useGlobeRendering ? this._verticalPerspectiveProjection : this._mercatorProjection;
+        return this.useGlobeControls ? this._verticalPerspectiveProjection : this._mercatorProjection;
     }
 
     setProjection(projection?: ProjectionSpecification) {
@@ -91,8 +76,8 @@ export class GlobeProjection extends Evented implements Projection {
         this.properties = this._transitioning.possiblyEvaluate(parameters);
     }
 
-    get name(): ProjectionSpecification['type'] {
-        return 'globe';
+    get name(): 'mercator' | 'vertical-perspective' {
+        return this.currentProjection.name;
     }
 
     get useSubdivision(): boolean {
@@ -129,7 +114,7 @@ export class GlobeProjection extends Evented implements Projection {
     }
 
     public isRenderingDirty(): boolean {
-        return this.currentProjection.isRenderingDirty(); // HM: TODO: should use hasTransition also
+        return this.hasTransition() || this.currentProjection.isRenderingDirty();
     }
 
     public updateGPUdependent(context: ProjectionGPUContext): void {

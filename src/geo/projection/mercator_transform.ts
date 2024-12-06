@@ -200,6 +200,11 @@ export class MercatorTransform implements ITransform {
     // Implementation of mercator transform
     //
 
+    get useGlobeControls(): boolean { return false; }
+    setGlobeness(_globeness: number): void {
+        // Do nothing
+    }
+
     private _cameraPosition: vec3;
 
     private _mercatorMatrix: mat4;
@@ -694,10 +699,6 @@ export class MercatorTransform implements ITransform {
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
         vec4.transformMat4(p, p, this._viewProjMatrix);
         return (p[2] / p[3]);
-    }
-
-    isRenderingDirty(): boolean {
-        return false;
     }
 
     getProjectionData(params: ProjectionDataParams): ProjectionData {

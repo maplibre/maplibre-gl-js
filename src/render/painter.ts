@@ -492,7 +492,7 @@ export class Painter {
         const coordsAscending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
-        const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: style.projection.name === 'globe'};
+        const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: style.projection.name === 'vertical-perspective'};
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];

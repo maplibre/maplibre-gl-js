@@ -57,7 +57,7 @@ describe('GlobeControl', () => {
 
         button.click();
         await new Promise(resolve => setTimeout(resolve, 0));
-        expect(map.style.projection.name).toBe('globe');
+        expect(map.style.projection.name).toBe('vertical-perspective');
 
         button.click();
         await new Promise(resolve => setTimeout(resolve, 0));

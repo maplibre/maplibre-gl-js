@@ -6,7 +6,7 @@ import {type MapGeoJSONFeature} from '../../util/vectortile_to_geojson';
 import {type MapLayerEventType, type MapLibreEvent} from '../events';
 import {Map, type MapOptions} from '../map';
 import {Event as EventedEvent, ErrorEvent} from '../../util/evented';
-import {GlobeProjection} from '../../geo/projection/globe_projection';
+import {VerticalPerspectiveProjection} from '../../geo/projection/vertical_perspective_projection';
 
 type IsAny<T> = 0 extends T & 1 ? T : never;
 type NotAny<T> = T extends IsAny<T> ? never : T;
@@ -1066,12 +1066,12 @@ describe('map events', () => {
                 type: 'mercator',
             });
             expect(spy).toHaveBeenCalledTimes(2);
-            expect(spy).toHaveBeenNthCalledWith(1, 'globe');
+            expect(spy).toHaveBeenNthCalledWith(1, 'vertical-perspective');
             expect(spy).toHaveBeenNthCalledWith(2, 'mercator');
         });
         test('projectiontransition is fired when globe transitions to mercator', async () => {
             const map = createMap();
-            vi.spyOn(GlobeProjection.prototype, 'updateGPUdependent').mockImplementation(() => {});
+            vi.spyOn(VerticalPerspectiveProjection.prototype, 'updateGPUdependent').mockImplementation(() => {});
             await map.once('load');
 
             const spy = vi.fn();
@@ -1093,7 +1093,7 @@ describe('map events', () => {
             });
 
             expect(spy).toHaveBeenCalledTimes(4);
-            expect(spy).toHaveBeenNthCalledWith(1, 'globe');
+            expect(spy).toHaveBeenNthCalledWith(1, 'vertical-perspective');
             expect(spy).toHaveBeenNthCalledWith(2, 'globe-mercator');
             expect(spy).toHaveBeenNthCalledWith(3, 'globe');
             expect(spy).toHaveBeenNthCalledWith(4, 'mercator');

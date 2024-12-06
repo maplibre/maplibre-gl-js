@@ -188,19 +188,19 @@ interface ITransformMutators {
 
     /**
      * @internal
-     * Signals to the transform that a new frame is starting.
-     * The transform might update some of its internal variables and animations based on this.
-     */
-    newFrameUpdate(): TransformUpdateResult;
-
-    /**
-     * @internal
      * Called before rendering to allow the transform implementation
      * to precompute data needed to render the given tiles.
      * Used in mercator transform to precompute tile matrices (posMatrix).
      * @param coords - Array of tile IDs that will be rendered.
      */
     precacheTiles(coords: Array<OverscaledTileID>): void;
+
+    /**
+     * @internal
+     * Sets the transform's globeness to all transitioning from mercator to vertical-perspective projection.
+     * @param globeness - A number between 0 and 1, where 0 is mercator and 1 is vertical-perspective.
+     */
+    setGlobeness(globeness: number): void;
 }
 
 /**
@@ -248,6 +248,8 @@ export interface IReadonlyTransform extends ITransformGetters {
 
     get nearZ(): number;
     get farZ(): number;
+
+    get useGlobeControls(): boolean;
 
     /**
      * Returns if the padding params match
@@ -403,13 +405,6 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @param unwrappedTileID - the tile ID
      */
     calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4;
-
-    /**
-     * @internal
-     * True when an animation handled by the transform is in progress,
-     * requiring MapLibre to keep rendering new frames.
-     */
-    isRenderingDirty(): boolean;
 
     /**
      * @internal
