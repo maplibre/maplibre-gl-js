@@ -34,7 +34,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type']):
                 'interpolate',
                 ['linear'],
                 ['zoom'],
-                10,
+                11,
                 'vertical-perspective',
                 12,
                 'mercator'

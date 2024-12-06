@@ -1,4 +1,4 @@
-import {type ProjectionDefinition, type ProjectionDefinitionSpecification, type ProjectionSpecification, type StylePropertySpecification, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
+import {ProjectionDefinition, type ProjectionDefinitionSpecification, type ProjectionSpecification, type StylePropertySpecification, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
 import {DataConstantProperty, type PossiblyEvaluated, Properties, Transitionable, type Transitioning, type TransitionParameters} from '../../style/properties';
 import {Evented} from '../../util/evented';
 import {EvaluationParameters} from '../../style/evaluation_parameters';
@@ -52,9 +52,13 @@ export class GlobeProjection extends Evented implements Projection {
         if (typeof currentProjectionSpecValue === 'string' && currentProjectionSpecValue === 'vertical-perspective') {
             return 1;
         }
-        // HM TODO: check this!
-        if ('transition' in (currentProjectionSpecValue as any)) {
-            return (currentProjectionSpecValue as any).transition;
+        if (currentProjectionSpecValue instanceof ProjectionDefinition) {
+            if (currentProjectionSpecValue.from === 'vertical-perspective' && currentProjectionSpecValue.to === 'mercator') {
+                return 1 - currentProjectionSpecValue.transition;
+            }
+            if (currentProjectionSpecValue.from === 'mercator' && currentProjectionSpecValue.to === 'vertical-perspective') {
+                return currentProjectionSpecValue.transition;
+            }
         };
         return 1;
     }
