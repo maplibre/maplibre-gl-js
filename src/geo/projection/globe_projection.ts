@@ -88,7 +88,7 @@ export class GlobeProjection extends Evented implements Projection {
     }
 
     hasTransition(): boolean {
-        return this._transitioning.hasTransition();
+        return this._transitioning.hasTransition() || this.currentProjection.hasTransition();
     }
 
     recalculate(parameters: EvaluationParameters) {
@@ -130,10 +130,6 @@ export class GlobeProjection extends Evented implements Projection {
     public destroy(): void {
         this._mercatorProjection.destroy();
         this._verticalPerspectiveProjection.destroy();
-    }
-
-    public isRenderingDirty(): boolean {
-        return this.currentProjection.isRenderingDirty(); // HM: TODO: should use hasTransition also
     }
 
     public updateGPUdependent(context: ProjectionGPUContext): void {

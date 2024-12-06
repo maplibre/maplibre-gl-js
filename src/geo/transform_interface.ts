@@ -406,13 +406,6 @@ export interface IReadonlyTransform extends ITransformGetters {
 
     /**
      * @internal
-     * True when an animation handled by the transform is in progress,
-     * requiring MapLibre to keep rendering new frames.
-     */
-    isRenderingDirty(): boolean;
-
-    /**
-     * @internal
      * Generates a `ProjectionData` instance to be used while rendering the supplied tile.
      * @param params - Parameters for the projection data generation.
      */

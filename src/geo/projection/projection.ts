@@ -107,13 +107,6 @@ export interface Projection {
 
     /**
      * @internal
-     * True when an animation handled by the projection is in progress,
-     * requiring MapLibre to keep rendering new frames.
-     */
-    isRenderingDirty(): boolean;
-
-    /**
-     * @internal
      * Runs any GPU-side tasks this projection required. Called at the beginning of every frame.
      */
     updateGPUdependent(renderContext: ProjectionGPUContext): void;

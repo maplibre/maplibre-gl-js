@@ -288,10 +288,6 @@ export class VerticalPerspectiveTransform implements ITransform {
         return {};
     }
 
-    isRenderingDirty(): boolean {
-        return false;
-    }
-
     getProjectionData(params: ProjectionDataParams): ProjectionData {
         const {overscaledTileID, applyGlobeMatrix} = params;
         const mercatorTileCoordinates = this._helper.getMercatorTileCoordinates(overscaledTileID);

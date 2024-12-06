@@ -696,10 +696,6 @@ export class MercatorTransform implements ITransform {
         return (p[2] / p[3]);
     }
 
-    isRenderingDirty(): boolean {
-        return false;
-    }
-
     getProjectionData(params: ProjectionDataParams): ProjectionData {
         const {overscaledTileID, aligned, applyTerrainMatrix} = params;
         const mercatorTileCoordinates = this._helper.getMercatorTileCoordinates(overscaledTileID);

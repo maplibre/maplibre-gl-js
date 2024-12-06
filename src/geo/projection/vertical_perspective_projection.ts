@@ -107,16 +107,6 @@ export class VerticalPerspectiveProjection implements Projection {
         }
     }
 
-    public isRenderingDirty(): boolean {
-        const now = browser.now();
-        let dirty = false;
-        // Error correction transition
-        dirty = dirty || (now - this._errorMeasurementLastChangeTime) / 1000.0 < (globeConstants.errorTransitionTimeSeconds + 0.2);
-        // Error correction query in flight
-        dirty = dirty || (this._errorMeasurement && this._errorMeasurement.awaitingQuery);
-        return dirty;
-    }
-
     public updateGPUdependent(renderContext: ProjectionGPUContext): void {
         if (!this._errorMeasurement) {
             this._errorMeasurement = new ProjectionErrorMeasurement(renderContext);
@@ -174,6 +164,12 @@ export class VerticalPerspectiveProjection implements Projection {
     }
 
     hasTransition(): boolean {
-        return false;
+        const now = browser.now();
+        let dirty = false;
+        // Error correction transition
+        dirty = dirty || (now - this._errorMeasurementLastChangeTime) / 1000.0 < (globeConstants.errorTransitionTimeSeconds + 0.2);
+        // Error correction query in flight
+        dirty = dirty || (this._errorMeasurement && this._errorMeasurement.awaitingQuery);
+        return dirty;
     }
 }

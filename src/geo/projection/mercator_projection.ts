@@ -56,11 +56,6 @@ export class MercatorProjection implements Projection {
         // Do nothing.
     }
 
-    public isRenderingDirty(): boolean {
-        // Mercator projection does no animations of its own, so rendering is never dirty from its perspective.
-        return false;
-    }
-
     public updateGPUdependent(_: ProjectionGPUContext): void {
         // Do nothing.
     }

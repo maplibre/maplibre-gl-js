@@ -368,11 +368,6 @@ export class GlobeTransform implements ITransform {
         return newGlobeness;
     }
 
-    isRenderingDirty(): boolean {
-        // Globe transition
-        return (this._lastUpdateTimeSeconds - this._lastGlobeChangeTimeSeconds) < globeConstants.globeTransitionTimeSeconds;
-    }
-
     getProjectionData(params: ProjectionDataParams): ProjectionData {
         const mercatorProjectionData = this._mercatorTransform.getProjectionData(params);
         const verticalPerspectiveProjectionData = this._verticalPerspectiveTransform.getProjectionData(params);
