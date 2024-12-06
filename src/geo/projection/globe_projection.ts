@@ -31,6 +31,7 @@ export class GlobeProjection extends Evented implements Projection {
     _mercatorProjection: MercatorProjection;
     _verticalPerspectiveProjection: VerticalPerspectiveProjection;
 
+    // HM TODO: remove this in the future
     _useGlobeRendering: boolean = false;
 
     constructor(projection?: ProjectionSpecification) {
@@ -71,7 +72,7 @@ export class GlobeProjection extends Evented implements Projection {
     get latitudeErrorCorrectionRadians(): number { return this._verticalPerspectiveProjection.latitudeErrorCorrectionRadians; }
 
     private get currentProjection(): Projection {
-        return this.useGlobeControls ? this._verticalPerspectiveProjection : this._mercatorProjection;
+        return this.useGlobeRendering ? this._verticalPerspectiveProjection : this._mercatorProjection;
     }
 
     setProjection(projection?: ProjectionSpecification) {
@@ -128,7 +129,7 @@ export class GlobeProjection extends Evented implements Projection {
     }
 
     public isRenderingDirty(): boolean {
-        return this.hasTransition() || this.currentProjection.isRenderingDirty();
+        return this.currentProjection.isRenderingDirty(); // HM: TODO: should use hasTransition also
     }
 
     public updateGPUdependent(context: ProjectionGPUContext): void {
