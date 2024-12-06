@@ -14,7 +14,7 @@ import type {LngLatBounds} from '../lng_lat_bounds';
 import type {Frustum} from '../../util/primitives/frustum';
 import type {Terrain} from '../../render/terrain';
 import type {PointProjection} from '../../symbol/projection';
-import type {IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
+import type {IReadonlyTransform, ITransform} from '../transform_interface';
 import type {PaddingOptions} from '../edge_insets';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
@@ -204,10 +204,10 @@ export class GlobeTransform implements ITransform {
     //
 
     /**
-     * Note: projection instance should only be accessed in the {@link newFrameUpdate} function.
+     * Note: projection instance should only be accessed in the {@link setTransitionState} function.
      * to ensure the transform's state isn't unintentionally changed.
      */
-    private _projectionInstance: GlobeProjection;
+    private _projectionInstance: GlobeProjection; // HM TODO: remove projection from here
     private _globeLatitudeErrorCorrectionRadians: number = 0;
 
     /**
@@ -276,13 +276,6 @@ export class GlobeTransform implements ITransform {
     public get nearZ(): number { return this.currentTransform.nearZ; }
 
     public get farZ(): number { return this.currentTransform.farZ; }
-
-    /**
-     * Should be called at the beginning of every frame to synchronize the transform with the underlying projection.
-     */
-    newFrameUpdate(): TransformUpdateResult {
-        return {};
-    }
 
     /**
      * This function should never be called on a cloned transform, thus ensuring that

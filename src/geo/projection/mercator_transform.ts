@@ -14,7 +14,7 @@ import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_de
 import {Frustum} from '../../util/primitives/frustum';
 
 import type {Terrain} from '../../render/terrain';
-import type {IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
+import type {IReadonlyTransform, ITransform} from '../transform_interface';
 import type {PaddingOptions} from '../edge_insets';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
@@ -734,10 +734,6 @@ export class MercatorTransform implements ITransform {
 
     getPitchedTextCorrection(_textAnchorX: number, _textAnchorY: number, _tileID: UnwrappedTileID): number {
         return 1.0;
-    }
-
-    newFrameUpdate(): TransformUpdateResult {
-        return {};
     }
 
     transformLightDirection(dir: vec3): vec3 {

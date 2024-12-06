@@ -7,16 +7,9 @@ import type {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source
 import type {PaddingOptions} from './edge_insets';
 import type {Terrain} from '../render/terrain';
 import type {PointProjection} from '../symbol/projection';
-import type {MapProjectionEvent} from '../ui/events';
 import type {ProjectionData, ProjectionDataParams} from './projection/projection_data';
 import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider';
 import type {Frustum} from '../util/primitives/frustum';
-
-export type TransformUpdateResult = {
-    forcePlacementUpdate?: boolean;
-    fireProjectionEvent?: MapProjectionEvent;
-    forceSourceUpdate?: boolean;
-};
 
 export interface ITransformGetters {
     get tileSize(): number;
@@ -185,13 +178,6 @@ interface ITransformMutators {
      * @param bounds - A {@link LngLatBounds} object describing the new geographic boundaries of the map.
      */
     setMaxBounds(bounds?: LngLatBounds | null): void;
-
-    /**
-     * @internal
-     * Signals to the transform that a new frame is starting.
-     * The transform might update some of its internal variables and animations based on this.
-     */
-    newFrameUpdate(): TransformUpdateResult;
 
     /**
      * @internal

@@ -14,7 +14,7 @@ import {Frustum} from '../../util/primitives/frustum';
 
 import type {Terrain} from '../../render/terrain';
 import type {PointProjection} from '../../symbol/projection';
-import type {IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
+import type {IReadonlyTransform, ITransform} from '../transform_interface';
 import type {PaddingOptions} from '../edge_insets';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
@@ -282,13 +282,6 @@ export class VerticalPerspectiveTransform implements ITransform {
 
     public get nearZ(): number { return this._nearZ; }
     public get farZ(): number { return this._farZ; }
-
-    /**
-     * Should be called at the beginning of every frame to synchronize the transform with the underlying projection.
-     */
-    newFrameUpdate(): TransformUpdateResult {
-        return {};
-    }
 
     getProjectionData(params: ProjectionDataParams): ProjectionData {
         const {overscaledTileID, applyGlobeMatrix} = params;
