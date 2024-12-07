@@ -41,7 +41,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type']):
             ]});
             return {
                 projection: globeProjection,
-                transform: new GlobeTransform(globeProjection),
+                transform: new GlobeTransform(),
                 cameraHelper: new GlobeCameraHelper(globeProjection),
             };
         }

@@ -101,6 +101,12 @@ export interface Projection {
 
     /**
      * @internal
+     * Gets the error correction latitude in radians.
+     */
+    get latitudeErrorCorrectionRadians(): number;
+
+    /**
+     * @internal
      * Cleans up any resources the projection created, especially GPU buffers.
      */
     destroy(): void;
@@ -134,4 +140,10 @@ export interface Projection {
      * Returns true if the projection is currently transitioning between two states.
      */
     hasTransition(): boolean;
+
+    /**
+     * @internal
+     * Sets the error query latidude in degrees
+     */
+    setErrorQueryLatitudeDegrees(value: number);
 }

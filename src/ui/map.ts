@@ -3207,8 +3207,8 @@ export class Map extends Camera {
         }
 
         const globeRenderingChaged = this.style.projection.transitionState > 0 !== isGlobeRendering;
-
-        this.transform.setTransitionState(this.style.projection.transitionState);
+        this.style.projection.setErrorQueryLatitudeDegrees(this.transform.center.lat);
+        this.transform.setTransitionState(this.style.projection.transitionState, this.style.projection.latitudeErrorCorrectionRadians);
 
         // If we are in _render for any reason other than an in-progress paint
         // transition, update source caches to check for and load any tiles we
@@ -3234,7 +3234,7 @@ export class Map extends Camera {
 
         this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChaged);
 
-        // HM TODO: bring this back
+        // HM TODO: bring this back?
         //if (transformUpdateResult.fireProjectionEvent) {
         //    this.fire(new Event('projectiontransition', transformUpdateResult.fireProjectionEvent));
         //}

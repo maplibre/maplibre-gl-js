@@ -52,6 +52,10 @@ export class MercatorProjection implements Projection {
         return 0;
     }
 
+    get latitudeErrorCorrectionRadians(): number {
+        return 0;
+    }
+
     public destroy(): void {
         // Do nothing.
     }
@@ -90,5 +94,9 @@ export class MercatorProjection implements Projection {
 
     public hasTransition(): boolean {
         return false;
+    }
+
+    setErrorQueryLatitudeDegrees(_value: number) {
+        // Do nothing.
     }
 }

@@ -80,16 +80,6 @@ export class VerticalPerspectiveProjection implements Projection {
         return true;
     }
 
-    get errorQueryLatitudeDegrees(): number { return this._errorQueryLatitudeDegrees; }
-
-    /**
-     * @internal
-     * Intended for internal use, only called from GlobeTransform.
-     */
-    set errorQueryLatitudeDegrees(value: number) {
-        this._errorQueryLatitudeDegrees = value;
-    }
-
     /**
      * @internal
      * Globe projection periodically measures the error of the GPU's
@@ -169,5 +159,9 @@ export class VerticalPerspectiveProjection implements Projection {
         // Error correction query in flight
         dirty = dirty || (this._errorMeasurement && this._errorMeasurement.awaitingQuery);
         return dirty;
+    }
+
+    setErrorQueryLatitudeDegrees(value: number) {
+        this._errorQueryLatitudeDegrees = value;
     }
 }

@@ -64,28 +64,10 @@ export class GlobeProjection extends Evented implements Projection {
         return this.transitionState > 0;
     }
 
-    get errorQueryLatitudeDegrees(): number { return this._verticalPerspectiveProjection.errorQueryLatitudeDegrees; }
-    set errorQueryLatitudeDegrees(value: number) { this._verticalPerspectiveProjection.errorQueryLatitudeDegrees = value; }
     get latitudeErrorCorrectionRadians(): number { return this._verticalPerspectiveProjection.latitudeErrorCorrectionRadians; }
 
     private get currentProjection(): Projection {
         return this.useGlobeRendering ? this._verticalPerspectiveProjection : this._mercatorProjection;
-    }
-
-    setProjection(projection?: ProjectionSpecification) {
-        this._transitionable.setValue('type', projection?.type || 'mercator');
-    }
-
-    updateTransitions(parameters: TransitionParameters) {
-        this._transitioning = this._transitionable.transitioned(parameters, this._transitioning);
-    }
-
-    hasTransition(): boolean {
-        return this._transitioning.hasTransition() || this.currentProjection.hasTransition();
-    }
-
-    recalculate(parameters: EvaluationParameters) {
-        this.properties = this._transitioning.possiblyEvaluate(parameters);
     }
 
     get name(): ProjectionSpecification['type'] {
@@ -132,5 +114,26 @@ export class GlobeProjection extends Evented implements Projection {
 
     public getMeshFromTileID(context: Context, _tileID: CanonicalTileID, _hasBorder: boolean, _allowPoles: boolean, _usage: TileMeshUsage): Mesh {
         return this.currentProjection.getMeshFromTileID(context, _tileID, _hasBorder, _allowPoles, _usage);
+    }
+
+    setProjection(projection?: ProjectionSpecification) {
+        this._transitionable.setValue('type', projection?.type || 'mercator');
+    }
+
+    updateTransitions(parameters: TransitionParameters) {
+        this._transitioning = this._transitionable.transitioned(parameters, this._transitioning);
+    }
+
+    hasTransition(): boolean {
+        return this._transitioning.hasTransition() || this.currentProjection.hasTransition();
+    }
+
+    recalculate(parameters: EvaluationParameters) {
+        this.properties = this._transitioning.possiblyEvaluate(parameters);
+    }
+
+    setErrorQueryLatitudeDegrees(value: number) { 
+        this._verticalPerspectiveProjection.setErrorQueryLatitudeDegrees(value);
+        this._mercatorProjection.setErrorQueryLatitudeDegrees(value);
     }
 }

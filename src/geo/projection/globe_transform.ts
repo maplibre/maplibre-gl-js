@@ -5,7 +5,6 @@ import {VerticalPerspectiveTransform} from './vertical_perspective_transform';
 import {type LngLat, type LngLatLike,} from '../lng_lat';
 import {createMat4f32, createMat4f64, lerp, warnOnce} from '../../util/util';
 import {OverscaledTileID, type UnwrappedTileID, type CanonicalTileID} from '../../source/tile_id';
-import {type GlobeProjection} from './globe_projection';
 import {EXTENT} from '../../data/extent';
 
 import type Point from '@mapbox/point-geometry';
@@ -203,11 +202,6 @@ export class GlobeTransform implements ITransform {
     // Implementation of globe transform
     //
 
-    /**
-     * Note: projection instance should only be accessed in the {@link setTransitionState} function.
-     * to ensure the transform's state isn't unintentionally changed.
-     */
-    private _projectionInstance: GlobeProjection; // HM TODO: remove projection from here
     private _globeLatitudeErrorCorrectionRadians: number = 0;
 
     /**
@@ -219,9 +213,9 @@ export class GlobeTransform implements ITransform {
         return this._globeness > 0;
     }
 
-    setTransitionState(globeness: number): void {
+    setTransitionState(globeness: number, errorCorrectionValue: number): void {
         this._globeness = globeness;
-        this._updateErrorCorrectionValue();
+        this._globeLatitudeErrorCorrectionRadians = errorCorrectionValue;
         this._calcMatrices();
         this._verticalPerspectiveTransform.getCoveringTilesDetailsProvider().newFrame();
         this._mercatorTransform.getCoveringTilesDetailsProvider().newFrame();
@@ -239,20 +233,19 @@ export class GlobeTransform implements ITransform {
     private _mercatorTransform: MercatorTransform;
     private _verticalPerspectiveTransform: VerticalPerspectiveTransform;
 
-    public constructor(globeProjection: GlobeProjection) {
+    public constructor() {
 
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
             getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
         });
         this._globeness = 1; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.
-        this._projectionInstance = globeProjection;
         this._mercatorTransform = new MercatorTransform();
         this._verticalPerspectiveTransform = new VerticalPerspectiveTransform();
     }
 
     clone(): ITransform {
-        const clone = new GlobeTransform(null);
+        const clone = new GlobeTransform();
         clone._globeness = this._globeness;
         clone._globeLatitudeErrorCorrectionRadians = this._globeLatitudeErrorCorrectionRadians;
         clone.apply(this);
@@ -276,18 +269,6 @@ export class GlobeTransform implements ITransform {
     public get nearZ(): number { return this.currentTransform.nearZ; }
 
     public get farZ(): number { return this.currentTransform.farZ; }
-
-    /**
-     * This function should never be called on a cloned transform, thus ensuring that
-     * the state of a cloned transform is never changed after creation.
-     */
-    private _updateErrorCorrectionValue(): void {
-        if (!this._projectionInstance) {
-            return;
-        }
-        this._projectionInstance.errorQueryLatitudeDegrees = this.center.lat;
-        this._globeLatitudeErrorCorrectionRadians = this._projectionInstance.latitudeErrorCorrectionRadians;
-    }
 
     getProjectionData(params: ProjectionDataParams): ProjectionData {
         const mercatorProjectionData = this._mercatorTransform.getProjectionData(params);
