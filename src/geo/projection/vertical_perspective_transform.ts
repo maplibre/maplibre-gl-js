@@ -549,9 +549,8 @@ export class VerticalPerspectiveTransform implements ITransform {
         return result[2] / result[3];
     }
 
-    precacheTiles(_coords: OverscaledTileID[]): void {
-        // HM TODO: implement this, currently does nothing...
-        //this._mercatorTransform.precacheTiles(coords);
+    populateCache(_coords: OverscaledTileID[]): void {
+        // Do nothing
     }
 
     getBounds(): LngLatBounds {

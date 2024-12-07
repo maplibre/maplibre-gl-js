@@ -315,7 +315,6 @@ export class GlobeTransform implements ITransform {
     }
 
     public getCircleRadiusCorrection(): number {
-        // HM TODO: there was a "double" interpolation here which was removed. Check if it's needed.
         return lerp(this._mercatorTransform.getCircleRadiusCorrection(), this._verticalPerspectiveTransform.getCircleRadiusCorrection(), this._globeness);
     }
 
@@ -387,9 +386,9 @@ export class GlobeTransform implements ITransform {
         return this.currentTransform.lngLatToCameraDepth(lngLat, elevation);
     }
 
-    precacheTiles(coords: OverscaledTileID[]): void {
-        // HM TODO: this uses only mercator code... need to fix
-        this._mercatorTransform.precacheTiles(coords);
+    populateCache(coords: OverscaledTileID[]): void {
+        this._mercatorTransform.populateCache(coords);
+        this._verticalPerspectiveTransform.populateCache(coords);
     }
 
     getBounds(): LngLatBounds {

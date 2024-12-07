@@ -762,7 +762,7 @@ export class MercatorTransform implements ITransform {
         };
     }
 
-    precacheTiles(coords: Array<OverscaledTileID>): void {
+    populateCache(coords: Array<OverscaledTileID>): void {
         for (const coord of coords) {
             // Return value is thrown away, but this function will still
             // place the pos matrix into the transform's internal cache.
