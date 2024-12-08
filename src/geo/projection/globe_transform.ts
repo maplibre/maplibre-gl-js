@@ -234,7 +234,6 @@ export class GlobeTransform implements ITransform {
     private _verticalPerspectiveTransform: VerticalPerspectiveTransform;
 
     public constructor() {
-
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
             getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
@@ -313,12 +312,8 @@ export class GlobeTransform implements ITransform {
         if (!this._helper._width || !this._helper._height) {
             return;
         }
-        if (this._mercatorTransform) {
-            this._mercatorTransform.apply(this, true);
-        }
-        if (this._verticalPerspectiveTransform) {
-            this._verticalPerspectiveTransform.apply(this, this._globeLatitudeErrorCorrectionRadians);
-        }
+        this._mercatorTransform.apply(this, true);
+        this._verticalPerspectiveTransform.apply(this, this._globeLatitudeErrorCorrectionRadians);
     }
 
     calculateFogMatrix(_unwrappedTileID: UnwrappedTileID): mat4 {
