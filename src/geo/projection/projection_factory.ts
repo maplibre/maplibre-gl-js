@@ -19,6 +19,14 @@ export function createProjectionFromName(name: ProjectionSpecification['type']):
     transform: ITransform;
     cameraHelper: ICameraHelper;
 } {
+    if (Array.isArray(name)) {
+        const globeProjection = new GlobeProjection({type: name});
+        return {
+            projection: globeProjection,
+            transform: new GlobeTransform(),
+            cameraHelper: new GlobeCameraHelper(globeProjection),
+        };
+    }
     switch (name) {
         case 'mercator':
         {
