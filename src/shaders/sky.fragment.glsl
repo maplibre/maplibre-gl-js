@@ -12,10 +12,10 @@ void main() {
     float blend = (y - u_horizon.y) * u_horizon_normal.y + (x - u_horizon.x) * u_horizon_normal.x;
     if (blend > 0.0) {
         if (blend < u_sky_horizon_blend) {
-            gl_FragColor = mix(u_sky_color, u_horizon_color, pow(1.0 - blend / u_sky_horizon_blend, 2.0));
+            fragColor = mix(u_sky_color, u_horizon_color, pow(1.0 - blend / u_sky_horizon_blend, 2.0));
         } else {
-            gl_FragColor = u_sky_color;
+            fragColor = u_sky_color;
         }
     }
-    gl_FragColor = mix(gl_FragColor, vec4(vec3(0.0), 0.0), u_sky_blend);
+    fragColor = mix(fragColor, vec4(vec3(0.0), 0.0), u_sky_blend);
 }

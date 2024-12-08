@@ -3056,9 +3056,7 @@ export class Map extends Camera {
             }
         }, {once: true});
 
-        const gl =
-            this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext ||
-            this._canvas.getContext('webgl', attributes) as WebGLRenderingContext;
+        const gl = this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext;
 
         if (!gl) {
             const msg = 'Failed to initialize WebGL';

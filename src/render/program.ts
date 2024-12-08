@@ -72,6 +72,7 @@ export class Program<Us extends UniformBindings> {
         }
 
         const defines = configuration ? configuration.defines() : [];
+        defines.unshift('#version 300 es\n');
         if (showOverdrawInspector) {
             defines.push('#define OVERDRAW_INSPECTOR;');
         }
