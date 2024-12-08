@@ -38,7 +38,7 @@ export interface CoveringTilesDetailsProvider {
     allowWorldCopies: () => boolean;
 
     /**
-     * Prepare for the next frame.
+     * Prepare cache for the next frame.
      */
-    newFrame(): void;
+    recalculateCache(): void;
 }

@@ -44,8 +44,8 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
     /**
      * Prepares the internal AABB cache for the next frame.
      */
-    newFrame() {
-        this._aabbCache.newFrame();
+    recalculateCache() {
+        this._aabbCache.recalculateCache();
     }
 
     /**

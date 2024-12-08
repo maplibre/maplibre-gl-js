@@ -22,7 +22,7 @@
         "maxzoom": 12,
         "tileSize": 256
       },
-      "osm": {
+      "numbers": {
         "type": "raster",
         "tiles": ["local://tiles/number/{z}.png"],
         "maxzoom": 17,
@@ -41,7 +41,7 @@
         {
             "id": "raster",
             "type": "raster",
-            "source": "osm",
+            "source": "numbers",
             "paint": {
                 "raster-opacity": 1.0
             }

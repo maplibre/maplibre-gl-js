@@ -1024,7 +1024,7 @@ export class SourceCache extends Evented {
     getVisibleCoordinates(symbolLayer?: boolean): Array<OverscaledTileID> {
         const coords = this.getRenderableIds(symbolLayer).map((id) => this._tiles[id].tileID);
         if (this.transform) {
-            this.transform.precacheTiles(coords);
+            this.transform.populateCache(coords);
         }
         return coords;
     }

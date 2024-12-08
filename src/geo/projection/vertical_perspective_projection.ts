@@ -15,8 +15,6 @@ export const VerticalPerspectiveShaderDefine = '#define GLOBE';
 export const VerticalPerspectiveShaderVariantKey = 'globe';
 
 export const globeConstants = {
-    globeTransitionTimeSeconds: 0.5,
-    maxGlobeZoom: 12.0,
     errorTransitionTimeSeconds: 0.5
 };
 
@@ -82,16 +80,6 @@ export class VerticalPerspectiveProjection implements Projection {
         return true;
     }
 
-    get errorQueryLatitudeDegrees(): number { return this._errorQueryLatitudeDegrees; }
-
-    /**
-     * @internal
-     * Intended for internal use, only called from GlobeTransform.
-     */
-    set errorQueryLatitudeDegrees(value: number) {
-        this._errorQueryLatitudeDegrees = value;
-    }
-
     /**
      * @internal
      * Globe projection periodically measures the error of the GPU's
@@ -105,16 +93,6 @@ export class VerticalPerspectiveProjection implements Projection {
         if (this._errorMeasurement) {
             this._errorMeasurement.destroy();
         }
-    }
-
-    public isRenderingDirty(): boolean {
-        const now = browser.now();
-        let dirty = false;
-        // Error correction transition
-        dirty = dirty || (now - this._errorMeasurementLastChangeTime) / 1000.0 < (globeConstants.errorTransitionTimeSeconds + 0.2);
-        // Error correction query in flight
-        dirty = dirty || (this._errorMeasurement && this._errorMeasurement.awaitingQuery);
-        return dirty;
     }
 
     public updateGPUdependent(renderContext: ProjectionGPUContext): void {
@@ -171,5 +149,19 @@ export class VerticalPerspectiveProjection implements Projection {
 
     recalculate(_params: EvaluationParameters): void {
         // Do nothing.
+    }
+
+    hasTransition(): boolean {
+        const now = browser.now();
+        let dirty = false;
+        // Error correction transition
+        dirty = dirty || (now - this._errorMeasurementLastChangeTime) / 1000.0 < (globeConstants.errorTransitionTimeSeconds + 0.2);
+        // Error correction query in flight
+        dirty = dirty || (this._errorMeasurement && this._errorMeasurement.awaitingQuery);
+        return dirty;
+    }
+
+    setErrorQueryLatitudeDegrees(value: number) {
+        this._errorQueryLatitudeDegrees = value;
     }
 }

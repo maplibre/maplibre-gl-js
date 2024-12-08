@@ -7,16 +7,9 @@ import type {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source
 import type {PaddingOptions} from './edge_insets';
 import type {Terrain} from '../render/terrain';
 import type {PointProjection} from '../symbol/projection';
-import type {MapProjectionEvent} from '../ui/events';
 import type {ProjectionData, ProjectionDataParams} from './projection/projection_data';
 import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider';
 import type {Frustum} from '../util/primitives/frustum';
-
-export type TransformUpdateResult = {
-    forcePlacementUpdate?: boolean;
-    fireProjectionEvent?: MapProjectionEvent;
-    forceSourceUpdate?: boolean;
-};
 
 export interface ITransformGetters {
     get tileSize(): number;
@@ -188,19 +181,20 @@ interface ITransformMutators {
 
     /**
      * @internal
-     * Signals to the transform that a new frame is starting.
-     * The transform might update some of its internal variables and animations based on this.
-     */
-    newFrameUpdate(): TransformUpdateResult;
-
-    /**
-     * @internal
      * Called before rendering to allow the transform implementation
      * to precompute data needed to render the given tiles.
      * Used in mercator transform to precompute tile matrices (posMatrix).
      * @param coords - Array of tile IDs that will be rendered.
      */
-    precacheTiles(coords: Array<OverscaledTileID>): void;
+    populateCache(coords: Array<OverscaledTileID>): void;
+
+    /**
+     * @internal
+     * Sets the transform's transition state from one projection to another.
+     * @param value - The transition state value.
+     * @param error - The error value.
+     */
+    setTransitionState(value: number, error: number): void;
 }
 
 /**
@@ -403,13 +397,6 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @param unwrappedTileID - the tile ID
      */
     calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4;
-
-    /**
-     * @internal
-     * True when an animation handled by the transform is in progress,
-     * requiring MapLibre to keep rendering new frames.
-     */
-    isRenderingDirty(): boolean;
 
     /**
      * @internal

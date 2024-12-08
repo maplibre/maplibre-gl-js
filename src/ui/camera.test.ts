@@ -43,7 +43,7 @@ function attachSimulateFrame(camera) {
 function createCamera(options?): Camera & { simulateFrame: () => void } {
     options = options || {};
 
-    const transform = options.globe ? new GlobeTransform({} as any) : new MercatorTransform();
+    const transform = options.globe ? new GlobeTransform() : new MercatorTransform();
     transform.setMinZoom(0);
     transform.setMaxZoom(20);
     transform.setMinPitch(0);

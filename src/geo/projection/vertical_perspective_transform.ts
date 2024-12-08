@@ -14,7 +14,7 @@ import {Frustum} from '../../util/primitives/frustum';
 
 import type {Terrain} from '../../render/terrain';
 import type {PointProjection} from '../../symbol/projection';
-import type {IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
+import type {IReadonlyTransform, ITransform} from '../transform_interface';
 import type {PaddingOptions} from '../edge_insets';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
@@ -213,7 +213,9 @@ export class VerticalPerspectiveTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
     }
-
+    setTransitionState(_value: number): void {
+        // Do nothing
+    }
     //
     // Implementation of globe transform
     //
@@ -280,17 +282,6 @@ export class VerticalPerspectiveTransform implements ITransform {
 
     public get nearZ(): number { return this._nearZ; }
     public get farZ(): number { return this._farZ; }
-
-    /**
-     * Should be called at the beginning of every frame to synchronize the transform with the underlying projection.
-     */
-    newFrameUpdate(): TransformUpdateResult {
-        return {};
-    }
-
-    isRenderingDirty(): boolean {
-        return false;
-    }
 
     getProjectionData(params: ProjectionDataParams): ProjectionData {
         const {overscaledTileID, applyGlobeMatrix} = params;
@@ -558,9 +549,8 @@ export class VerticalPerspectiveTransform implements ITransform {
         return result[2] / result[3];
     }
 
-    precacheTiles(_coords: OverscaledTileID[]): void {
-        // HM TODO: implement this, currently does nothing...
-        //this._mercatorTransform.precacheTiles(coords);
+    populateCache(_coords: OverscaledTileID[]): void {
+        // Do nothing
     }
 
     getBounds(): LngLatBounds {

@@ -19,6 +19,14 @@ export function createProjectionFromName(name: ProjectionSpecification['type']):
     transform: ITransform;
     cameraHelper: ICameraHelper;
 } {
+    if (Array.isArray(name)) {
+        const globeProjection = new GlobeProjection({type: name});
+        return {
+            projection: globeProjection,
+            transform: new GlobeTransform(),
+            cameraHelper: new GlobeCameraHelper(globeProjection),
+        };
+    }
     switch (name) {
         case 'mercator':
         {
@@ -30,11 +38,19 @@ export function createProjectionFromName(name: ProjectionSpecification['type']):
         }
         case 'globe':
         {
-            const proj = new GlobeProjection();
+            const globeProjection = new GlobeProjection({type: [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                11,
+                'vertical-perspective',
+                12,
+                'mercator'
+            ]});
             return {
-                projection: proj,
-                transform: new GlobeTransform(proj),
-                cameraHelper: new GlobeCameraHelper(proj),
+                projection: globeProjection,
+                transform: new GlobeTransform(),
+                cameraHelper: new GlobeCameraHelper(globeProjection),
             };
         }
         case 'vertical-perspective':

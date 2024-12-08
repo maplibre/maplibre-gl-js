@@ -18,7 +18,7 @@ export class AabbCache {
      * Any tile accesses in the last frame is kept in the cache, other tiles are deleted.
      * @returns 
      */
-    newFrame() {
+    recalculateCache() {
         if (!this._hadAnyChanges) {
             // If no new boxes were added this frame, no need to conserve memory, do not clear caches.
             return;
