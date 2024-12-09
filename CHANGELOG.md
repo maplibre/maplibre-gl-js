@@ -8,9 +8,6 @@
 
 ## 5.0.0-pre.9
 
-### ✨ Features and improvements
-
-
 ### 🐞 Bug fixes
 
 - Fix smooth mouse wheel zooming ([#5154](https://github.com/maplibre/maplibre-gl-js/pull/5154))
