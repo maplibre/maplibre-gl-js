@@ -1,8 +1,12 @@
 ## main
 
 ### ✨ Features and improvements
-
 - _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 5.0.0-pre.9
 
 ### 🐞 Bug fixes
 
@@ -13,7 +17,6 @@
 - Fix `geometry-type` filter expression results ([#5132](https://github.com/maplibre/maplibre-gl-js/pull/5132))
 - Fix easeTo not applying padding in globe projection ([#5134](https://github.com/maplibre/maplibre-gl-js/pull/5134))
 - Convert WebGL1 shaders to WebGL2 ([#5166](https://github.com/maplibre/maplibre-gl-js/pull/5166))
-- _...Add new stuff here..._
 
 ## 5.0.0-pre.8
 
