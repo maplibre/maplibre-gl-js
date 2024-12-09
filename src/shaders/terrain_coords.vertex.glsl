@@ -1,4 +1,4 @@
-attribute vec3 a_pos3d;
+in vec3 a_pos3d;
 
 uniform float u_ele_delta;
 
