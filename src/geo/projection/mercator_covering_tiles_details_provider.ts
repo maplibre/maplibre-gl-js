@@ -48,4 +48,6 @@ export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetail
     allowWorldCopies(): boolean {
         return true;
     }
+
+    newFrame(): void { }
 }

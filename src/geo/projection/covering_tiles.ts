@@ -1,12 +1,12 @@
 import {OverscaledTileID} from '../../source/tile_id';
 import {vec2, type vec4} from 'gl-matrix';
-import {type IReadonlyTransform} from '../transform_interface';
 import {MercatorCoordinate} from '../mercator_coordinate';
-import {scaleZoom} from '../transform_helper';
-import {clamp, degreesToRadians} from '../../util/util';
-import {type Terrain} from '../../render/terrain';
-import {type Frustum} from '../../util/primitives/frustum';
+import {clamp, degreesToRadians, scaleZoom} from '../../util/util';
 import {type Aabb, IntersectionResult} from '../../util/primitives/aabb';
+
+import type {IReadonlyTransform} from '../transform_interface';
+import type {Terrain} from '../../render/terrain';
+import type {Frustum} from '../../util/primitives/frustum';
 
 type CoveringTilesResult = {
     tileID: OverscaledTileID;

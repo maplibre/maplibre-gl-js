@@ -1,6 +1,6 @@
 import {DOM} from '../../util/dom';
 
-import {defaultEasing, bezier} from '../../util/util';
+import {defaultEasing, bezier, zoomScale, scaleZoom} from '../../util/util';
 import {browser} from '../../util/browser';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {LngLat} from '../../geo/lng_lat';
@@ -9,8 +9,7 @@ import {TransformProvider} from './transform-provider';
 import type {Map} from '../map';
 import type Point from '@mapbox/point-geometry';
 import type {AroundCenterOptions} from './two_fingers_touch';
-import {type Handler} from '../handler_manager';
-import {scaleZoom, zoomScale} from '../../geo/transform_helper';
+import type {Handler} from '../handler_manager';
 
 // deltaY value for mouse scroll wheel identification
 const wheelZoomDelta = 4.000244140625;

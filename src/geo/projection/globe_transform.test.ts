@@ -1,5 +1,5 @@
 import {describe, expect, test} from 'vitest';
-import {globeConstants, type GlobeProjection} from './globe';
+import {type GlobeProjection} from './globe_projection';
 import {EXTENT} from '../../data/extent';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
@@ -10,6 +10,7 @@ import {expectToBeCloseToArray, getGlobeProjectionMock, sleep} from '../../util/
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {tileCoordinatesToLocation} from './mercator_utils';
 import {MercatorTransform} from './mercator_transform';
+import {globeConstants} from './vertical_perspective_projection';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: Array<number>) {
     const lat = latDegrees / 180.0 * Math.PI;
@@ -28,7 +29,7 @@ function planeDistance(point: Array<number>, plane: Array<number>) {
 }
 
 function createGlobeTransform(globeProjection: GlobeProjection) {
-    const globeTransform = new GlobeTransform(globeProjection, true);
+    const globeTransform = new GlobeTransform(globeProjection);
     globeTransform.resize(640, 480);
     globeTransform.setFov(45);
     return globeTransform;
@@ -459,42 +460,6 @@ describe('GlobeTransform', () => {
         expect(unprojectedCoordinates.y).toBeCloseTo(coordsMercator.y, precisionDigits);
     });
 
-    describe('globeViewAllowed', () => {
-        test('starts enabled', async () => {
-            const globeTransform = createGlobeTransform(globeProjectionMock);
-
-            expect(globeTransform.getGlobeViewAllowed()).toBe(true);
-            expect(globeTransform.isGlobeRendering).toBe(true);
-        });
-
-        test('animates to false', async () => {
-            const globeTransform = createGlobeTransform(globeProjectionMock);
-            globeTransform.newFrameUpdate();
-            globeTransform.setGlobeViewAllowed(false);
-
-            await sleep(10);
-            globeTransform.newFrameUpdate();
-            expect(globeTransform.getGlobeViewAllowed()).toBe(false);
-            expect(globeTransform.isGlobeRendering).toBe(true);
-
-            await sleep(150);
-            globeTransform.newFrameUpdate();
-            expect(globeTransform.getGlobeViewAllowed()).toBe(false);
-            expect(globeTransform.isGlobeRendering).toBe(false);
-        });
-
-        test('can skip animation if requested', async () => {
-            const globeTransform = createGlobeTransform(globeProjectionMock);
-            globeTransform.newFrameUpdate();
-            globeTransform.setGlobeViewAllowed(false, false);
-
-            await sleep(10);
-            globeTransform.newFrameUpdate();
-            expect(globeTransform.getGlobeViewAllowed()).toBe(false);
-            expect(globeTransform.isGlobeRendering).toBe(false);
-        });
-    });
-
     describe('getBounds', () => {
         const precisionDigits = 10;
 
@@ -618,19 +583,17 @@ describe('GlobeTransform', () => {
         // projectionMock.useGlobeRendering and globeTransform.isGlobeRendering must have the same value
         expect(projectionMock.useGlobeRendering).toBe(true);
         expect(globeTransform.isGlobeRendering).toBe(projectionMock.useGlobeRendering);
-        globeTransform.setGlobeViewAllowed(false);
+        globeTransform.setZoom(15);
         globeTransform.newFrameUpdate();
-        expect(projectionMock.useGlobeRendering).toBe(false);
-        expect(globeTransform.isGlobeRendering).toBe(projectionMock.useGlobeRendering);
-
         await sleep(150);
-        globeTransform.setGlobeViewAllowed(true);
         globeTransform.newFrameUpdate();
         expect(projectionMock.useGlobeRendering).toBe(false);
         expect(globeTransform.isGlobeRendering).toBe(projectionMock.useGlobeRendering);
-        await sleep(10);
+        globeTransform.setZoom(1);
         globeTransform.newFrameUpdate();
-        expect(projectionMock.useGlobeRendering).toBe(true);
+        await sleep(150);
+        globeTransform.newFrameUpdate();
+        expect(globeTransform.isGlobeRendering).toBe(true);
         expect(globeTransform.isGlobeRendering).toBe(projectionMock.useGlobeRendering);
     });
 

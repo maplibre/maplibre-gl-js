@@ -1,14 +1,18 @@
-import {type ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {warnOnce} from '../../util/util';
-import {type Projection} from './projection';
-import {type ITransform} from '../transform_interface';
-import {type ICameraHelper} from './camera_helper';
-import {MercatorProjection} from './mercator';
+import {MercatorProjection} from './mercator_projection';
 import {MercatorTransform} from './mercator_transform';
 import {MercatorCameraHelper} from './mercator_camera_helper';
-import {GlobeProjection} from './globe';
+import {GlobeProjection} from './globe_projection';
 import {GlobeTransform} from './globe_transform';
 import {GlobeCameraHelper} from './globe_camera_helper';
+import {VerticalPerspectiveCameraHelper} from './vertical_perspective_camera_helper';
+import {VerticalPerspectiveTransform} from './vertical_perspective_transform';
+import {VerticalPerspectiveProjection} from './vertical_perspective_projection';
+
+import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {Projection} from './projection';
+import type {ITransform} from '../transform_interface';
+import type {ICameraHelper} from './camera_helper';
 
 export function createProjectionFromName(name: ProjectionSpecification['type']): {
     projection: Projection;
@@ -29,17 +33,16 @@ export function createProjectionFromName(name: ProjectionSpecification['type']):
             const proj = new GlobeProjection();
             return {
                 projection: proj,
-                transform: new GlobeTransform(proj, true),
+                transform: new GlobeTransform(proj),
                 cameraHelper: new GlobeCameraHelper(proj),
             };
         }
         case 'vertical-perspective':
         {
-            const proj = new GlobeProjection();
             return {
-                projection: proj,
-                transform: new GlobeTransform(proj, true, false),
-                cameraHelper: new GlobeCameraHelper(proj),
+                projection: new VerticalPerspectiveProjection(),
+                transform: new VerticalPerspectiveTransform(),
+                cameraHelper: new VerticalPerspectiveCameraHelper(),
             };
         }
         default:
