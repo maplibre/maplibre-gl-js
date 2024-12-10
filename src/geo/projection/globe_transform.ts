@@ -317,8 +317,7 @@ export class GlobeTransform implements ITransform {
     }
 
     calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {
-        warnOnce('calculateFogMatrix is not supported on globe projection.');
-        return this._mercatorTransform.calculateFogMatrix(unwrappedTileID);
+        return this.currentTransform.calculateFogMatrix(unwrappedTileID);
     }
 
     getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): UnwrappedTileID[] {
