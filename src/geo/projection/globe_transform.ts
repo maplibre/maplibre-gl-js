@@ -316,11 +316,9 @@ export class GlobeTransform implements ITransform {
         this._verticalPerspectiveTransform.apply(this, this._globeLatitudeErrorCorrectionRadians);
     }
 
-    calculateFogMatrix(_unwrappedTileID: UnwrappedTileID): mat4 {
+    calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {
         warnOnce('calculateFogMatrix is not supported on globe projection.');
-        const m = createMat4f64();
-        mat4.identity(m);
-        return m;
+        return this._mercatorTransform.calculateFogMatrix(unwrappedTileID);
     }
 
     getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): UnwrappedTileID[] {
