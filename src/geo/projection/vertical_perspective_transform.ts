@@ -13,7 +13,7 @@ import {Frustum} from '../../util/primitives/frustum';
 
 import type {Terrain} from '../../render/terrain';
 import type {PointProjection} from '../../symbol/projection';
-import type {IReadonlyTransform, ITransform, NearZFarZ, TransformUpdateResult} from '../transform_interface';
+import type {IReadonlyTransform, ITransform, NearZFarZ} from '../transform_interface';
 import type {PaddingOptions} from '../edge_insets';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';

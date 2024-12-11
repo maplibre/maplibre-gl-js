@@ -1,10 +1,10 @@
-import {type mat2, mat4, type vec3, type vec4} from 'gl-matrix';
+import type {mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {TransformHelper} from '../transform_helper';
 import {MercatorTransform} from './mercator_transform';
 import {VerticalPerspectiveTransform} from './vertical_perspective_transform';
 import {type LngLat, type LngLatLike,} from '../lng_lat';
-import {createMat4f64, differenceOfAnglesDegrees, easeCubicInOut, lerp, warnOnce} from '../../util/util';
-import {OverscaledTileID, type UnwrappedTileID, type CanonicalTileID} from '../../source/tile_id';
+import {lerp} from '../../util/util';
+import type {OverscaledTileID, UnwrappedTileID, CanonicalTileID} from '../../source/tile_id';
 
 import type Point from '@mapbox/point-geometry';
 import type {MercatorCoordinate} from '../mercator_coordinate';
@@ -12,7 +12,7 @@ import type {LngLatBounds} from '../lng_lat_bounds';
 import type {Frustum} from '../../util/primitives/frustum';
 import type {Terrain} from '../../render/terrain';
 import type {PointProjection} from '../../symbol/projection';
-import type {IReadonlyTransform, ITransform, NearZFarZ, TransformUpdateResult} from '../transform_interface';
+import type {IReadonlyTransform, ITransform, NearZFarZ} from '../transform_interface';
 import type {PaddingOptions} from '../edge_insets';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
@@ -328,6 +328,7 @@ export class GlobeTransform implements ITransform {
             farZ: this._verticalPerspectiveTransform.farZ,
         } : undefined;
         this._mercatorTransform.apply(this, true, nearZfarZ);
+    }
 
     calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {
         return this.currentTransform.calculateFogMatrix(unwrappedTileID);
@@ -438,8 +439,7 @@ export class GlobeTransform implements ITransform {
             return mercatorData;
         }
 
-        const globeData = this._verticalPerspectiveTransform.getProjectionData({overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0), applyGlobeMatrix});
-        globeData.tileMercatorCoords = [0, 0, 1, 1];
+        const globeData = this._verticalPerspectiveTransform.getProjectionDataForCustomLayer(applyGlobeMatrix);
         globeData.fallbackMatrix = mercatorData.mainMatrix;
         return globeData;
     }
