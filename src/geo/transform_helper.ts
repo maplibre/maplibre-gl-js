@@ -396,7 +396,7 @@ export class TransformHelper implements ITransformGetters {
         this._farZ = farZ;
         this._calcMatrices();
     }
-    clearNearZFarZOverride(): void {
+    clearNearFarZOverride(): void {
         this._autoCalculateNearFarZ = true;
         this._calcMatrices();
     }

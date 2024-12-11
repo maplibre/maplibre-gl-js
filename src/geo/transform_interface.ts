@@ -158,7 +158,7 @@ interface ITransformMutators {
     /**
      * Resets near and far Z plane override. Sets `autoCalculateNearFarZ` to true.
      */
-    clearNearZFarZOverride(): void;
+    clearNearFarZOverride(): void;
 
     /**
      * Sets the transform's width and height and recomputes internal matrices.

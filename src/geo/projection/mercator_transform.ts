@@ -249,8 +249,8 @@ export class MercatorTransform implements ITransform {
     overrideNearFarZ(nearZ: number, farZ: number): void {
         this._helper.overrideNearFarZ(nearZ, farZ);
     }
-    clearNearZFarZOverride(): void {
-        this._helper.clearNearZFarZOverride();
+    clearNearFarZOverride(): void {
+        this._helper.clearNearFarZOverride();
     }
 
     public get mercatorMatrix(): mat4 { return this._mercatorMatrix; } // Not part of ITransform interface

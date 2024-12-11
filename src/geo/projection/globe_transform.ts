@@ -272,8 +272,8 @@ export class GlobeTransform implements ITransform {
     overrideNearFarZ(nearZ: number, farZ: number): void {
         this._helper.overrideNearFarZ(nearZ, farZ);
     }
-    clearNearZFarZOverride(): void {
-        this._helper.clearNearZFarZOverride();
+    clearNearFarZOverride(): void {
+        this._helper.clearNearFarZOverride();
     }
 
     getProjectionData(params: ProjectionDataParams): ProjectionData {
