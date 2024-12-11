@@ -1,11 +1,10 @@
-import {type mat2, mat4, type vec3, type vec4} from 'gl-matrix';
+import type {mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {TransformHelper} from '../transform_helper';
 import {MercatorTransform} from './mercator_transform';
 import {VerticalPerspectiveTransform} from './vertical_perspective_transform';
 import {type LngLat, type LngLatLike,} from '../lng_lat';
-import {createMat4f32, createMat4f64, lerp, warnOnce} from '../../util/util';
-import {OverscaledTileID, type UnwrappedTileID, type CanonicalTileID} from '../../source/tile_id';
-import {EXTENT} from '../../data/extent';
+import {lerp} from '../../util/util';
+import type {OverscaledTileID, UnwrappedTileID, CanonicalTileID} from '../../source/tile_id';
 
 import type Point from '@mapbox/point-geometry';
 import type {MercatorCoordinate} from '../mercator_coordinate';
@@ -265,9 +264,17 @@ export class GlobeTransform implements ITransform {
 
     public get cameraPosition(): vec3 { return this.currentTransform.cameraPosition; }
 
-    public get nearZ(): number { return this.currentTransform.nearZ; }
+    // Intentionally return our helper's Z values instead of currentTransform's - they are synced in _calcMatrices.
+    public get nearZ(): number { return this._helper.nearZ; }
+    public get farZ(): number { return this._helper.farZ; }
+    public get autoCalculateNearFarZ(): boolean { return this._helper.autoCalculateNearFarZ; }
 
-    public get farZ(): number { return this.currentTransform.farZ; }
+    overrideNearFarZ(nearZ: number, farZ: number): void {
+        this._helper.overrideNearFarZ(nearZ, farZ);
+    }
+    clearNearFarZOverride(): void {
+        this._helper.clearNearFarZOverride();
+    }
 
     getProjectionData(params: ProjectionDataParams): ProjectionData {
         const mercatorProjectionData = this._mercatorTransform.getProjectionData(params);
@@ -312,8 +319,22 @@ export class GlobeTransform implements ITransform {
         if (!this._helper._width || !this._helper._height) {
             return;
         }
-        this._mercatorTransform.apply(this, true);
+        // VerticalPerspective reads our near/farZ values and autoCalculateNearFarZ:
+        // - if autoCalculateNearFarZ is true then it computes globe Z values
+        // - if autoCalculateNearFarZ is false then it inherits our Z values
+        // In either case, its Z values are consistent with out settings and we want to copy its Z values to our helper.
         this._verticalPerspectiveTransform.apply(this, this._globeLatitudeErrorCorrectionRadians);
+        this._helper._nearZ = this._verticalPerspectiveTransform.nearZ;
+        this._helper._farZ = this._verticalPerspectiveTransform.farZ;
+
+        // When transitioning between globe and mercator, we need to synchronize the depth values in both transforms.
+        // For this reason we first update vertical perspective and then sync our Z values to its result.
+        // Now if globe rendering, we always want to force mercator transform to adapt our Z values.
+        // If not, it will either compute its own (autoCalculateNearFarZ=false) or adapt our (autoCalculateNearFarZ=true).
+        // In either case we want to (again) sync our Z values, this time with
+        this._mercatorTransform.apply(this, true, this.isGlobeRendering);
+        this._helper._nearZ = this._mercatorTransform.nearZ;
+        this._helper._farZ = this._mercatorTransform.farZ;
     }
 
     calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {
@@ -419,20 +440,15 @@ export class GlobeTransform implements ITransform {
     }
 
     getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): ProjectionData {
-        const projectionData = this.getProjectionData({overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0), applyGlobeMatrix});
-        projectionData.tileMercatorCoords = [0, 0, 1, 1];
+        const mercatorData = this._mercatorTransform.getProjectionDataForCustomLayer(applyGlobeMatrix);
 
-        // Even though we requested projection data for the mercator base tile which covers the entire mercator range,
-        // the shader projection machinery still expects inputs to be in tile units range [0..EXTENT].
-        // Since custom layers are expected to supply mercator coordinates [0..1], we need to rescale
-        // the fallback projection matrix by EXTENT.
-        // Note that the regular projection matrices do not need to be modified, since the rescaling happens by setting
-        // the `u_projection_tile_mercator_coords` uniform correctly.
-        const fallbackMatrixScaled = createMat4f32();
-        mat4.scale(fallbackMatrixScaled, projectionData.fallbackMatrix, [EXTENT, EXTENT, 1]);
+        if (!this.isGlobeRendering) {
+            return mercatorData;
+        }
 
-        projectionData.fallbackMatrix = fallbackMatrixScaled;
-        return projectionData;
+        const globeData = this._verticalPerspectiveTransform.getProjectionDataForCustomLayer(applyGlobeMatrix);
+        globeData.fallbackMatrix = mercatorData.mainMatrix;
+        return globeData;
     }
 
     getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 {

@@ -118,6 +118,10 @@ export class TransformHelper implements ITransformGetters {
     _clipSpaceToPixelsMatrix: mat4;
     _cameraToCenterDistance: number;
 
+    _nearZ: number;
+    _farZ: number;
+    _autoCalculateNearFarZ: boolean;
+
     constructor(callbacks: TransformHelperCallbacks, minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
         this._callbacks = callbacks;
         this._tileSize = 512; // constant
@@ -145,9 +149,10 @@ export class TransformHelper implements ITransformGetters {
         this._unmodified = true;
         this._edgeInsets = new EdgeInsets();
         this._minElevationForCurrentTile = 0;
+        this._autoCalculateNearFarZ = true;
     }
 
-    public apply(thatI: ITransformGetters, constrain?: boolean): void {
+    public apply(thatI: ITransformGetters, constrain?: boolean, forceOverrideZ?: boolean): void {
         this._latRange = thatI.latRange;
         this._lngRange = thatI.lngRange;
         this._width = thatI.width;
@@ -170,6 +175,9 @@ export class TransformHelper implements ITransformGetters {
         this._maxPitch = thatI.maxPitch;
         this._renderWorldCopies = thatI.renderWorldCopies;
         this._cameraToCenterDistance = thatI.cameraToCenterDistance;
+        this._nearZ = thatI.nearZ;
+        this._farZ = thatI.farZ;
+        this._autoCalculateNearFarZ = !forceOverrideZ && thatI.autoCalculateNearFarZ;
         if (constrain) {
             this._constrain();
         }
@@ -379,6 +387,20 @@ export class TransformHelper implements ITransformGetters {
 
     get cameraToCenterDistance(): number { return this._cameraToCenterDistance; }
 
+    get nearZ(): number { return this._nearZ; }
+    get farZ(): number { return this._farZ; }
+    get autoCalculateNearFarZ(): boolean { return this._autoCalculateNearFarZ; }
+    overrideNearFarZ(nearZ: number, farZ: number): void {
+        this._autoCalculateNearFarZ = false;
+        this._nearZ = nearZ;
+        this._farZ = farZ;
+        this._calcMatrices();
+    }
+    clearNearFarZOverride(): void {
+        this._autoCalculateNearFarZ = true;
+        this._calcMatrices();
+    }
+
     /**
      * Returns if the padding params match
      *
@@ -508,7 +530,8 @@ export class TransformHelper implements ITransformGetters {
             mat4.translate(m, m, [-1, -1, 0]);
             mat4.scale(m, m, [2 / this._width, 2 / this._height, 1]);
             this._pixelsToClipSpaceMatrix = m;
-            this._cameraToCenterDistance = 0.5 / Math.tan(this._fovInRadians / 2) * this._height;
+            const halfFov = this.fovInRadians / 2;
+            this._cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this._height;
         }
         this._callbacks.calcMatrices();
     }

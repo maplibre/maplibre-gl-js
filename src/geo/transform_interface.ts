@@ -79,6 +79,10 @@ export interface ITransformGetters {
      * The distance from the camera to the center of the map in pixels space.
      */
     get cameraToCenterDistance(): number;
+
+    get nearZ(): number;
+    get farZ(): number;
+    get autoCalculateNearFarZ(): boolean;
 }
 
 /**
@@ -144,6 +148,17 @@ interface ITransformMutators {
     setElevation(elevation: number): void;
     setMinElevationForCurrentTile(elevation: number): void;
     setPadding(padding: PaddingOptions): void;
+    /**
+     * Sets the overriding values to use for near and far Z instead of what the transform would normally compute.
+     * If set to undefined, the transform will compute its ideal values.
+     * Calling this will set `autoCalculateNearFarZ` to false.
+     */
+    overrideNearFarZ(nearZ: number, farZ: number): void;
+
+    /**
+     * Resets near and far Z plane override. Sets `autoCalculateNearFarZ` to true.
+     */
+    clearNearFarZOverride(): void;
 
     /**
      * Sets the transform's width and height and recomputes internal matrices.
@@ -239,9 +254,6 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Returns the camera's position transformed to be in the same space as 3D features under this transform's projection. Mostly used for globe + fill-extrusion.
      */
     get cameraPosition(): vec3;
-
-    get nearZ(): number;
-    get farZ(): number;
 
     /**
      * Returns if the padding params match
