@@ -91,6 +91,8 @@ export interface ITransformGetters {
      * The distance from the camera to the center of the map in pixels space.
      */
     get cameraToCenterDistance(): number;
+
+    get nearZFarZOverride(): NearZFarZ | undefined;
 }
 
 /**

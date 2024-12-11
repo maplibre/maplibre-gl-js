@@ -110,6 +110,9 @@ export class MercatorTransform implements ITransform {
     getCameraQueryGeometry(queryGeometry: Point[]): Point[] {
         return this._helper.getCameraQueryGeometry(this.getCameraPoint(), queryGeometry);
     }
+    setNearZFarZOverride(override: NearZFarZ | undefined): void {
+        this._helper.setNearZFarZOverride(override);
+    }
 
     get tileSize(): number {
         return this._helper.tileSize;
@@ -192,11 +195,11 @@ export class MercatorTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
     }
-    get nearZFarZOverride(): NearZFarZ | undefined {
-        return this._nearZFarZOverride;
-    }
-    public get cameraToCenterDistance(): number { 
+    get cameraToCenterDistance(): number { 
         return this._helper.cameraToCenterDistance;
+    }
+    get nearZFarZOverride(): NearZFarZ | undefined {
+        return this._helper.nearZFarZOverride;
     }
 
     //
@@ -222,7 +225,6 @@ export class MercatorTransform implements ITransform {
 
     private _nearZ;
     private _farZ;
-    private _nearZFarZOverride: NearZFarZ | undefined;
 
     private _coveringTilesDetailsProvider;
 
@@ -240,8 +242,8 @@ export class MercatorTransform implements ITransform {
         return clone;
     }
 
-    public apply(that: IReadonlyTransform, constrain?: boolean): void {
-        this._helper.apply(that, constrain);
+    public apply(that: IReadonlyTransform, constrain?: boolean, nearZfarZoverride?: NearZFarZ): void {
+        this._helper.apply(that, constrain, nearZfarZoverride);
     }
 
     public get cameraPosition(): vec3 { return this._cameraPosition; }
@@ -252,13 +254,6 @@ export class MercatorTransform implements ITransform {
     public get farZ(): number { return this._farZ; }
 
     public get mercatorMatrix(): mat4 { return this._mercatorMatrix; } // Not part of ITransform interface
-
-    public setNearZFarZOverride(override: NearZFarZ | undefined, triggerCalcMatrices: boolean = true): void {
-        this._nearZFarZOverride = override;
-        if (triggerCalcMatrices) {
-            this._calcMatrices();
-        }
-    }
 
     getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): Array<UnwrappedTileID> {
         const result = [new UnwrappedTileID(0, tileID)];
@@ -575,7 +570,7 @@ export class MercatorTransform implements ITransform {
         // Calculate z distance of the farthest fragment that should be rendered.
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
         const topHalfMinDistance = Math.min(topHalfSurfaceDistance, topHalfSurfaceDistanceHorizon);
-        this._farZ = this._nearZFarZOverride?.farZ ?? (Math.cos(Math.PI / 2 - limitedPitchRadians) * topHalfMinDistance + lowestPlane) * 1.01;
+        this._farZ = this._helper._nearZFarZOverride?.farZ ?? (Math.cos(Math.PI / 2 - limitedPitchRadians) * topHalfMinDistance + lowestPlane) * 1.01;
 
         // The larger the value of nearZ is
         // - the more depth precision is available for features (good)
@@ -584,7 +579,7 @@ export class MercatorTransform implements ITransform {
         // Other values work for mapbox-gl-js but deck.gl was encountering precision issues
         // when rendering custom layers. This value was experimentally chosen and
         // seems to solve z-fighting issues in deck.gl while not clipping buildings too close to the camera.
-        this._nearZ = this._nearZFarZOverride?.nearZ ?? this._helper._height / 50;
+        this._nearZ = this._helper._nearZFarZOverride?.nearZ ?? this._helper._height / 50;
 
         // matrix for conversion from location to clip space(-1 .. 1)
         let m: mat4;

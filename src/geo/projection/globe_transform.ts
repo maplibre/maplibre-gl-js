@@ -114,6 +114,9 @@ export class GlobeTransform implements ITransform {
     getCameraQueryGeometry(queryGeometry: Point[]): Point[] {
         return this._helper.getCameraQueryGeometry(this.getCameraPoint(), queryGeometry);
     }
+    setNearZFarZOverride(override: NearZFarZ | undefined): void {
+        this._helper.setNearZFarZOverride(override);
+    }
 
     get tileSize(): number {
         return this._helper.tileSize;
@@ -200,7 +203,7 @@ export class GlobeTransform implements ITransform {
         return this._helper.cameraToCenterDistance;
     }
     get nearZFarZOverride(): NearZFarZ | undefined {
-        return this._nearZFarZOverride;
+        return this._helper.nearZFarZOverride;
     }
 
     //
@@ -230,8 +233,6 @@ export class GlobeTransform implements ITransform {
      */
     private _projectionInstance: GlobeProjection;
     private _globeLatitudeErrorCorrectionRadians: number = 0;
-
-    private _nearZFarZOverride: NearZFarZ | undefined = undefined;
 
     /**
      * True when globe render path should be used instead of the old but simpler mercator rendering.
@@ -291,11 +292,6 @@ export class GlobeTransform implements ITransform {
     public get nearZ(): number { return this.currentTransform.nearZ; }
 
     public get farZ(): number { return this.currentTransform.farZ; }
-
-    public setNearZFarZOverride(override: NearZFarZ | undefined): void {
-        this._nearZFarZOverride = override;
-        this._calcMatrices();
-    }
 
     /**
      * Should be called at the beginning of every frame to synchronize the transform with the underlying projection.
@@ -435,9 +431,8 @@ export class GlobeTransform implements ITransform {
         const nearZfarZ = this.isGlobeRendering ? {
             nearZ: this._verticalPerspectiveTransform.nearZ,
             farZ: this._verticalPerspectiveTransform.farZ,
-        } : this._nearZFarZOverride;
-        this._mercatorTransform.setNearZFarZOverride(nearZfarZ, false);
-        this._mercatorTransform.apply(this, true);
+        } : undefined;
+        this._mercatorTransform.apply(this, true, nearZfarZ);
     }
 
     calculateFogMatrix(_unwrappedTileID: UnwrappedTileID): mat4 {

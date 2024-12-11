@@ -9,7 +9,7 @@ import {cameraMercatorCoordinateFromCenterAndRotation} from './projection/mercat
 import {EXTENT} from '../data/extent';
 
 import type {PaddingOptions} from './edge_insets';
-import type {IReadonlyTransform, ITransformGetters} from './transform_interface';
+import type {IReadonlyTransform, ITransformGetters, NearZFarZ} from './transform_interface';
 import type {OverscaledTileID} from '../source/tile_id';
 /**
  * If a path crossing the antimeridian would be shorter, extend the final coordinate so that
@@ -117,6 +117,7 @@ export class TransformHelper implements ITransformGetters {
     _pixelsToClipSpaceMatrix: mat4;
     _clipSpaceToPixelsMatrix: mat4;
     _cameraToCenterDistance: number;
+    _nearZFarZOverride: NearZFarZ | undefined;
 
     constructor(callbacks: TransformHelperCallbacks, minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
         this._callbacks = callbacks;
@@ -147,7 +148,7 @@ export class TransformHelper implements ITransformGetters {
         this._minElevationForCurrentTile = 0;
     }
 
-    public apply(thatI: ITransformGetters, constrain?: boolean): void {
+    public apply(thatI: ITransformGetters, constrain?: boolean, nearZfarZOverride?: NearZFarZ): void {
         this._latRange = thatI.latRange;
         this._lngRange = thatI.lngRange;
         this._width = thatI.width;
@@ -170,6 +171,7 @@ export class TransformHelper implements ITransformGetters {
         this._maxPitch = thatI.maxPitch;
         this._renderWorldCopies = thatI.renderWorldCopies;
         this._cameraToCenterDistance = thatI.cameraToCenterDistance;
+        this._nearZFarZOverride = nearZfarZOverride ?? thatI.nearZFarZOverride;
         if (constrain) {
             this._constrain();
         }
@@ -359,6 +361,17 @@ export class TransformHelper implements ITransformGetters {
         this._unmodified = false;
         // Update edge-insets in-place
         this._edgeInsets.interpolate(this._edgeInsets, padding, 1);
+        this._calcMatrices();
+    }
+
+    get nearZFarZOverride(): NearZFarZ | undefined { return this._nearZFarZOverride; }
+
+    /**
+     * Sets the overriding values to use for near and far Z instead of what the transform would normally compute.
+     * If set to undefined, the transform will compute its ideal values.
+     */
+    public setNearZFarZOverride(override: NearZFarZ | undefined): void {
+        this._nearZFarZOverride = override;
         this._calcMatrices();
     }
 
