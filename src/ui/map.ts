@@ -3234,11 +3234,6 @@ export class Map extends Camera {
 
         this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChaged);
 
-        // HM TODO: bring this back?
-        //if (transformUpdateResult.fireProjectionEvent) {
-        //    this.fire(new Event('projectiontransition', transformUpdateResult.fireProjectionEvent));
-        //}
-
         // Actually draw
         this.painter.render(this.style, {
             showTileBoundaries: this.showTileBoundaries,

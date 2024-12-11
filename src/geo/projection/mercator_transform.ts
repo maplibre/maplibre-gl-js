@@ -107,6 +107,12 @@ export class MercatorTransform implements ITransform {
     setMaxBounds(bounds?: LngLatBounds): void {
         this._helper.setMaxBounds(bounds);
     }
+    overrideNearFarZ(nearZ: number, farZ: number): void {
+        this._helper.overrideNearFarZ(nearZ, farZ);
+    }
+    clearNearFarZOverride(): void {
+        this._helper.clearNearFarZOverride();
+    }
     getCameraQueryGeometry(queryGeometry: Point[]): Point[] {
         return this._helper.getCameraQueryGeometry(this.getCameraPoint(), queryGeometry);
     }
@@ -195,6 +201,15 @@ export class MercatorTransform implements ITransform {
     get cameraToCenterDistance(): number { 
         return this._helper.cameraToCenterDistance;
     }
+    public get nearZ(): number { 
+        return this._helper.nearZ; 
+    }
+    public get farZ(): number { 
+        return this._helper.farZ; 
+    }
+    public get autoCalculateNearFarZ(): boolean { 
+        return this._helper.autoCalculateNearFarZ; 
+    }
     setTransitionState(_value: number, _error: number): void {
         // Do nothing
     }
@@ -243,16 +258,6 @@ export class MercatorTransform implements ITransform {
     public get projectionMatrix(): mat4 { return this._projectionMatrix; }
     public get modelViewProjectionMatrix(): mat4 { return this._viewProjMatrix; }
     public get inverseProjectionMatrix(): mat4 { return this._invProjMatrix; }
-    public get nearZ(): number { return this._helper.nearZ; }
-    public get farZ(): number { return this._helper.farZ; }
-    public get autoCalculateNearFarZ(): boolean { return this._helper.autoCalculateNearFarZ; }
-    overrideNearFarZ(nearZ: number, farZ: number): void {
-        this._helper.overrideNearFarZ(nearZ, farZ);
-    }
-    clearNearFarZOverride(): void {
-        this._helper.clearNearFarZOverride();
-    }
-
     public get mercatorMatrix(): mat4 { return this._mercatorMatrix; } // Not part of ITransform interface
 
     getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): Array<UnwrappedTileID> {
@@ -534,6 +539,48 @@ export class MercatorTransform implements ITransform {
         return this._helper.calculateCenterFromCameraLngLatAlt(lnglat, alt, bearing, pitch);
     }
 
+    _calculateNearFarZIfNeeded(cameraToSeaLevelDistance: number, limitedPitchRadians: number, offset: Point): void {
+        if (!this._helper.autoCalculateNearFarZ) {
+            return;
+        }
+        // In case of negative minimum elevation (e.g. the dead see, under the sea maps) use a lower plane for calculation
+        const minRenderDistanceBelowCameraInMeters = 100;
+        const minElevation = Math.min(this.elevation, this.minElevationForCurrentTile, this.getCameraAltitude() - minRenderDistanceBelowCameraInMeters);
+        const cameraToLowestPointDistance = cameraToSeaLevelDistance - minElevation * this._helper._pixelPerMeter / Math.cos(limitedPitchRadians);
+        const lowestPlane = minElevation < 0 ? cameraToLowestPointDistance : cameraToSeaLevelDistance;
+
+        // Find the distance from the center point [width/2 + offset.x, height/2 + offset.y] to the
+        // center top point [width/2 + offset.x, 0] in Z units, using the law of sines.
+        // 1 Z unit is equivalent to 1 horizontal px at the center of the map
+        // (the distance between[width/2, height/2] and [width/2 + 1, height/2])
+        const groundAngle = Math.PI / 2 + this.pitchInRadians;
+        const zfov = degreesToRadians(this.fov) * (Math.abs(Math.cos(degreesToRadians(this.roll))) * this.height + Math.abs(Math.sin(degreesToRadians(this.roll))) * this.width) / this.height;
+        const fovAboveCenter = zfov * (0.5 + offset.y / this.height);
+        const topHalfSurfaceDistance = Math.sin(fovAboveCenter) * lowestPlane / Math.sin(clamp(Math.PI - groundAngle - fovAboveCenter, 0.01, Math.PI - 0.01));
+
+        // Find the distance from the center point to the horizon
+        const horizon = getMercatorHorizon(this);
+        const horizonAngle = Math.atan(horizon / this._helper.cameraToCenterDistance);
+        const minFovCenterToHorizonRadians = degreesToRadians(90 - maxMercatorHorizonAngle);
+        const fovCenterToHorizon = horizonAngle > minFovCenterToHorizonRadians ? 2 * horizonAngle * (0.5 + offset.y / (horizon * 2)) : minFovCenterToHorizonRadians;
+        const topHalfSurfaceDistanceHorizon = Math.sin(fovCenterToHorizon) * lowestPlane / Math.sin(clamp(Math.PI - groundAngle - fovCenterToHorizon, 0.01, Math.PI - 0.01));
+
+        // Calculate z distance of the farthest fragment that should be rendered.
+        // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
+        const topHalfMinDistance = Math.min(topHalfSurfaceDistance, topHalfSurfaceDistanceHorizon);
+
+        this._helper._farZ = (Math.cos(Math.PI / 2 - limitedPitchRadians) * topHalfMinDistance + lowestPlane) * 1.01;
+
+        // The larger the value of nearZ is
+        // - the more depth precision is available for features (good)
+        // - clipping starts appearing sooner when the camera is close to 3d features (bad)
+        //
+        // Other values work for mapbox-gl-js but deck.gl was encountering precision issues
+        // when rendering custom layers. This value was experimentally chosen and
+        // seems to solve z-fighting issues in deck.gl while not clipping buildings too close to the camera.
+        this._helper._nearZ = this._helper._height / 50;
+    }
+
     _calcMatrices(): void {
         if (!this._helper._height) return;
 
@@ -546,44 +593,7 @@ export class MercatorTransform implements ITransform {
         const limitedPitchRadians = degreesToRadians(Math.min(this.pitch, maxMercatorHorizonAngle));
         const cameraToSeaLevelDistance = Math.max(this._helper.cameraToCenterDistance / 2, this._helper.cameraToCenterDistance + this._helper._elevation * this._helper._pixelPerMeter / Math.cos(limitedPitchRadians));
 
-        if (this._helper.autoCalculateNearFarZ) {
-            // In case of negative minimum elevation (e.g. the dead see, under the sea maps) use a lower plane for calculation
-            const minRenderDistanceBelowCameraInMeters = 100;
-            const minElevation = Math.min(this.elevation, this.minElevationForCurrentTile, this.getCameraAltitude() - minRenderDistanceBelowCameraInMeters);
-            const cameraToLowestPointDistance = cameraToSeaLevelDistance - minElevation * this._helper._pixelPerMeter / Math.cos(limitedPitchRadians);
-            const lowestPlane = minElevation < 0 ? cameraToLowestPointDistance : cameraToSeaLevelDistance;
-
-            // Find the distance from the center point [width/2 + offset.x, height/2 + offset.y] to the
-            // center top point [width/2 + offset.x, 0] in Z units, using the law of sines.
-            // 1 Z unit is equivalent to 1 horizontal px at the center of the map
-            // (the distance between[width/2, height/2] and [width/2 + 1, height/2])
-            const groundAngle = Math.PI / 2 + this.pitchInRadians;
-            const zfov = degreesToRadians(this.fov) * (Math.abs(Math.cos(degreesToRadians(this.roll))) * this.height + Math.abs(Math.sin(degreesToRadians(this.roll))) * this.width) / this.height;
-            const fovAboveCenter = zfov * (0.5 + offset.y / this.height);
-            const topHalfSurfaceDistance = Math.sin(fovAboveCenter) * lowestPlane / Math.sin(clamp(Math.PI - groundAngle - fovAboveCenter, 0.01, Math.PI - 0.01));
-
-            // Find the distance from the center point to the horizon
-            const horizon = getMercatorHorizon(this);
-            const horizonAngle = Math.atan(horizon / this._helper.cameraToCenterDistance);
-            const minFovCenterToHorizonRadians = degreesToRadians(90 - maxMercatorHorizonAngle);
-            const fovCenterToHorizon = horizonAngle > minFovCenterToHorizonRadians ? 2 * horizonAngle * (0.5 + offset.y / (horizon * 2)) : minFovCenterToHorizonRadians;
-            const topHalfSurfaceDistanceHorizon = Math.sin(fovCenterToHorizon) * lowestPlane / Math.sin(clamp(Math.PI - groundAngle - fovCenterToHorizon, 0.01, Math.PI - 0.01));
-
-            // Calculate z distance of the farthest fragment that should be rendered.
-            // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
-            const topHalfMinDistance = Math.min(topHalfSurfaceDistance, topHalfSurfaceDistanceHorizon);
-
-            this._helper._farZ = (Math.cos(Math.PI / 2 - limitedPitchRadians) * topHalfMinDistance + lowestPlane) * 1.01;
-
-            // The larger the value of nearZ is
-            // - the more depth precision is available for features (good)
-            // - clipping starts appearing sooner when the camera is close to 3d features (bad)
-            //
-            // Other values work for mapbox-gl-js but deck.gl was encountering precision issues
-            // when rendering custom layers. This value was experimentally chosen and
-            // seems to solve z-fighting issues in deck.gl while not clipping buildings too close to the camera.
-            this._helper._nearZ = this._helper._height / 50;
-        }
+        this._calculateNearFarZIfNeeded(cameraToSeaLevelDistance, limitedPitchRadians, offset);
 
         // matrix for conversion from location to clip space(-1 .. 1)
         let m: mat4;

@@ -108,6 +108,12 @@ export class GlobeTransform implements ITransform {
     setMaxBounds(bounds?: LngLatBounds): void {
         this._helper.setMaxBounds(bounds);
     }
+    overrideNearFarZ(nearZ: number, farZ: number): void {
+        this._helper.overrideNearFarZ(nearZ, farZ);
+    }
+    clearNearFarZOverride(): void {
+        this._helper.clearNearFarZOverride();
+    }
     getCameraQueryGeometry(queryGeometry: Point[]): Point[] {
         return this._helper.getCameraQueryGeometry(this.getCameraPoint(), queryGeometry);
     }
@@ -196,7 +202,15 @@ export class GlobeTransform implements ITransform {
     get cameraToCenterDistance(): number {
         return this._helper.cameraToCenterDistance;
     }
-
+    public get nearZ(): number { 
+        return this._helper.nearZ; 
+    }
+    public get farZ(): number { 
+        return this._helper.farZ; 
+    }
+    public get autoCalculateNearFarZ(): boolean { 
+        return this._helper.autoCalculateNearFarZ; 
+    }
     //
     // Implementation of globe transform
     //
@@ -263,18 +277,6 @@ export class GlobeTransform implements ITransform {
     public get inverseProjectionMatrix(): mat4 { return this.currentTransform.inverseProjectionMatrix; }
 
     public get cameraPosition(): vec3 { return this.currentTransform.cameraPosition; }
-
-    // Intentionally return our helper's Z values instead of currentTransform's - they are synced in _calcMatrices.
-    public get nearZ(): number { return this._helper.nearZ; }
-    public get farZ(): number { return this._helper.farZ; }
-    public get autoCalculateNearFarZ(): boolean { return this._helper.autoCalculateNearFarZ; }
-
-    overrideNearFarZ(nearZ: number, farZ: number): void {
-        this._helper.overrideNearFarZ(nearZ, farZ);
-    }
-    clearNearFarZOverride(): void {
-        this._helper.clearNearFarZOverride();
-    }
 
     getProjectionData(params: ProjectionDataParams): ProjectionData {
         const mercatorProjectionData = this._mercatorTransform.getProjectionData(params);
@@ -361,7 +363,8 @@ export class GlobeTransform implements ITransform {
     }
 
     maxPitchScaleFactor(): number {
-        return this.currentTransform.maxPitchScaleFactor();
+        // Using mercator version of this should be good enough approximation for globe.
+        return this._mercatorTransform.maxPitchScaleFactor();
     }
 
     getCameraPoint(): Point {

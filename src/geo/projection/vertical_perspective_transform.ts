@@ -127,6 +127,12 @@ export class VerticalPerspectiveTransform implements ITransform {
     setMaxBounds(bounds?: LngLatBounds): void {
         this._helper.setMaxBounds(bounds);
     }
+    overrideNearFarZ(nearZ: number, farZ: number): void {
+        this._helper.overrideNearFarZ(nearZ, farZ);
+    }
+    clearNearFarZOverride(): void {
+        this._helper.clearNearFarZOverride();
+    }
     getCameraQueryGeometry(queryGeometry: Point[]): Point[] {
         return this._helper.getCameraQueryGeometry(this.getCameraPoint(), queryGeometry);
     }
@@ -212,6 +218,15 @@ export class VerticalPerspectiveTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
     }
+    public get nearZ(): number { 
+        return this._helper.nearZ; 
+    }
+    public get farZ(): number { 
+        return this._helper.farZ; 
+    }
+    public get autoCalculateNearFarZ(): boolean { 
+        return this._helper.autoCalculateNearFarZ; 
+    }
     setTransitionState(_value: number): void {
         // Do nothing
     }
@@ -274,16 +289,6 @@ export class VerticalPerspectiveTransform implements ITransform {
     get cameraToCenterDistance(): number {
         // Globe uses the same cameraToCenterDistance as mercator.
         return this._helper.cameraToCenterDistance;
-    }
-
-    public get nearZ(): number { return this._helper.nearZ; }
-    public get farZ(): number { return this._helper.farZ; }
-    public get autoCalculateNearFarZ(): boolean { return this._helper.autoCalculateNearFarZ; }
-    overrideNearFarZ(nearZ: number, farZ: number): void {
-        this._helper.overrideNearFarZ(nearZ, farZ);
-    }
-    clearNearFarZOverride(): void {
-        this._helper.clearNearFarZOverride();
     }
 
     getProjectionData(params: ProjectionDataParams): ProjectionData {
@@ -521,13 +526,15 @@ export class VerticalPerspectiveTransform implements ITransform {
         return this._coveringTilesDetailsProvider;
     }
 
-    recalculateZoomAndCenter(_terrain?: Terrain): void {
-        // HM TODO: add the relevant elevation calculations?
+    recalculateZoomAndCenter(terrain?: Terrain): void {
+        if (terrain) {
+            warnOnce('terrain is not fully supported on vertical perspective projection.');
+        }
         this._helper.recalculateZoomAndCenter(0);
     }
 
     maxPitchScaleFactor(): number {
-        // HM TODO: this requires the in _pixelMatrix from transform, which is not accecible.
+        // In mercaltor it uses the pixelMatrix, but this is not available here...
         return 1;
     }
 
