@@ -262,7 +262,7 @@
                     }
                 };
 
-                const projectionData = args.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix: true});
+                const projectionData = map.transform.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix: true});
 
                 gl.uniform4f(
                     locations['u_projection_clipping_plane'],

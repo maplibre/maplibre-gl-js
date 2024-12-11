@@ -27,12 +27,6 @@ export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: Cu
             define: projection.shaderDefine,
         },
         defaultProjectionData: projectionData,
-        getMatrixForModel(location, altitude) {
-            return transform.getMatrixForModel(location, altitude)
-        },
-        getProjectionData(params) {
-            return transform.getProjectionData(params);
-        },
     };
 
     const renderingMode = implementation.renderingMode ? implementation.renderingMode : '2d';
