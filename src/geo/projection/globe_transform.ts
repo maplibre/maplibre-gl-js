@@ -426,20 +426,18 @@ export class GlobeTransform implements ITransform {
         if (!this._helper._width || !this._helper._height) {
             return;
         }
-        if (this._verticalPerspectiveTransform) {
-            this._verticalPerspectiveTransform.apply(this, this._globeLatitudeErrorCorrectionRadians);
-        }
-        if (this._mercatorTransform) {
-            // When transitioning between globe and mercator, we need to synchronize the depth values in both transforms.
-            // For this reason we first update vertical perspective and then pass its near and far Z to mercator.
-            // Otherwise, if fully mercator rendering, we just pass the user-provided near/far Z override.
-            const nearZfarZ = this.isGlobeRendering ? {
-                nearZ: this._verticalPerspectiveTransform.nearZ,
-                farZ: this._verticalPerspectiveTransform.farZ,
-            } : this._nearZFarZOverride;
-            this._mercatorTransform.setNearZFarZOverride(nearZfarZ, false);
-            this._mercatorTransform.apply(this, true);
-        }
+
+        this._verticalPerspectiveTransform.apply(this, this._globeLatitudeErrorCorrectionRadians);
+
+        // When transitioning between globe and mercator, we need to synchronize the depth values in both transforms.
+        // For this reason we first update vertical perspective and then pass its near and far Z to mercator.
+        // Otherwise, if fully mercator rendering, we just pass the user-provided near/far Z override.
+        const nearZfarZ = this.isGlobeRendering ? {
+            nearZ: this._verticalPerspectiveTransform.nearZ,
+            farZ: this._verticalPerspectiveTransform.farZ,
+        } : this._nearZFarZOverride;
+        this._mercatorTransform.setNearZFarZOverride(nearZfarZ, false);
+        this._mercatorTransform.apply(this, true);
     }
 
     calculateFogMatrix(_unwrappedTileID: UnwrappedTileID): mat4 {
@@ -550,14 +548,14 @@ export class GlobeTransform implements ITransform {
     getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): ProjectionData {
         const mercatorData = this._mercatorTransform.getProjectionDataForCustomLayer(applyGlobeMatrix);
 
-        if (this.isGlobeRendering) {
-            const globeData = this._verticalPerspectiveTransform.getProjectionData({overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0), applyGlobeMatrix});
-            globeData.tileMercatorCoords = [0, 0, 1, 1];
-            globeData.fallbackMatrix = mercatorData.mainMatrix;
-            return globeData;
-        } else {
+        if (!this.isGlobeRendering) {
             return mercatorData;
         }
+
+        const globeData = this._verticalPerspectiveTransform.getProjectionData({overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0), applyGlobeMatrix});
+        globeData.tileMercatorCoords = [0, 0, 1, 1];
+        globeData.fallbackMatrix = mercatorData.mainMatrix;
+        return globeData;
     }
 
     getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 {
