@@ -13,7 +13,7 @@ import {Frustum} from '../../util/primitives/frustum';
 
 import type {Terrain} from '../../render/terrain';
 import type {PointProjection} from '../../symbol/projection';
-import type {IReadonlyTransform, ITransform, NearZFarZ} from '../transform_interface';
+import type {IReadonlyTransform, ITransform} from '../transform_interface';
 import type {PaddingOptions} from '../edge_insets';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
@@ -130,9 +130,6 @@ export class VerticalPerspectiveTransform implements ITransform {
     getCameraQueryGeometry(queryGeometry: Point[]): Point[] {
         return this._helper.getCameraQueryGeometry(this.getCameraPoint(), queryGeometry);
     }
-    setNearZFarZOverride(override: NearZFarZ | undefined): void {
-        this._helper.setNearZFarZOverride(override);
-    }
 
     get tileSize(): number {
         return this._helper.tileSize;
@@ -218,9 +215,6 @@ export class VerticalPerspectiveTransform implements ITransform {
     setTransitionState(_value: number): void {
         // Do nothing
     }
-    get nearZFarZOverride(): NearZFarZ | undefined {
-        return this._helper.nearZFarZOverride;
-    }
     //
     // Implementation of globe transform
     //
@@ -239,9 +233,6 @@ export class VerticalPerspectiveTransform implements ITransform {
      * Globe projection can smoothly interpolate between globe view and mercator. This variable controls this interpolation.
      * Value 0 is mercator, value 1 is globe, anything between is an interpolation between the two projections.
      */
-
-    private _nearZ: number;
-    private _farZ: number;
 
     private _coveringTilesDetailsProvider: GlobeCoveringTilesDetailsProvider;
 
@@ -285,8 +276,15 @@ export class VerticalPerspectiveTransform implements ITransform {
         return this._helper.cameraToCenterDistance;
     }
 
-    public get nearZ(): number { return this._nearZ; }
-    public get farZ(): number { return this._farZ; }
+    public get nearZ(): number { return this._helper.nearZ; }
+    public get farZ(): number { return this._helper.farZ; }
+    public get autoCalculateNearFarZ(): boolean { return this._helper.autoCalculateNearFarZ; }
+    overrideNearFarZ(nearZ: number, farZ: number): void {
+        this._helper.overrideNearFarZ(nearZ, farZ);
+    }
+    clearNearZFarZOverride(): void {
+        this._helper.clearNearZFarZOverride();
+    }
 
     getProjectionData(params: ProjectionDataParams): ProjectionData {
         const {overscaledTileID, applyGlobeMatrix} = params;
@@ -444,9 +442,11 @@ export class VerticalPerspectiveTransform implements ITransform {
         // Construct a completely separate matrix for globe view
         const globeMatrix = createMat4f64();
         const globeMatrixUncorrected = createMat4f64();
-        this._nearZ = this._helper._nearZFarZOverride?.nearZ ?? 0.5;
-        this._farZ = this._helper._nearZFarZOverride?.farZ ?? this.cameraToCenterDistance + globeRadiusPixels * 2.0; // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
-        mat4.perspective(globeMatrix, this.fovInRadians, this.width / this.height, this._nearZ, this._farZ);
+        if (this._helper.autoCalculateNearFarZ) {
+            this._helper._nearZ = 0.5;
+            this._helper._farZ = this.cameraToCenterDistance + globeRadiusPixels * 2.0; // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
+        }
+        mat4.perspective(globeMatrix, this.fovInRadians, this.width / this.height, this._helper._nearZ, this._helper._farZ);
 
         // Apply center of perspective offset
         const offset = this.centerOffset;

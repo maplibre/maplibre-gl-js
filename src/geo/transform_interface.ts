@@ -11,11 +11,6 @@ import type {ProjectionData, ProjectionDataParams} from './projection/projection
 import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider';
 import type {Frustum} from '../util/primitives/frustum';
 
-export type NearZFarZ = {
-    nearZ: number;
-    farZ: number;
-};
-
 export interface ITransformGetters {
     get tileSize(): number;
 
@@ -85,7 +80,9 @@ export interface ITransformGetters {
      */
     get cameraToCenterDistance(): number;
 
-    get nearZFarZOverride(): NearZFarZ | undefined;
+    get nearZ(): number;
+    get farZ(): number;
+    get autoCalculateNearFarZ(): boolean;
 }
 
 /**
@@ -154,8 +151,14 @@ interface ITransformMutators {
     /**
      * Sets the overriding values to use for near and far Z instead of what the transform would normally compute.
      * If set to undefined, the transform will compute its ideal values.
+     * Calling this will set `autoCalculateNearFarZ` to false.
      */
-    setNearZFarZOverride(override: NearZFarZ | undefined): void;
+    overrideNearFarZ(nearZ: number, farZ: number): void;
+
+    /**
+     * Resets near and far Z plane override. Sets `autoCalculateNearFarZ` to true.
+     */
+    clearNearZFarZOverride(): void;
 
     /**
      * Sets the transform's width and height and recomputes internal matrices.
@@ -251,15 +254,6 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Returns the camera's position transformed to be in the same space as 3D features under this transform's projection. Mostly used for globe + fill-extrusion.
      */
     get cameraPosition(): vec3;
-
-    get nearZ(): number;
-    get farZ(): number;
-
-    /**
-     * Overriding values to use for near and far Z instead of what the transform would normally compute.
-     * If undefined, the transform will compute its ideal values.
-     */
-    get nearZFarZOverride(): NearZFarZ | undefined; // Note: this is intentionally left out of TransformHelper, since the override should not always be inherited to nested transforms.
 
     /**
      * Returns if the padding params match

@@ -9,7 +9,7 @@ import {cameraMercatorCoordinateFromCenterAndRotation} from './projection/mercat
 import {EXTENT} from '../data/extent';
 
 import type {PaddingOptions} from './edge_insets';
-import type {IReadonlyTransform, ITransformGetters, NearZFarZ} from './transform_interface';
+import type {IReadonlyTransform, ITransformGetters} from './transform_interface';
 import type {OverscaledTileID} from '../source/tile_id';
 /**
  * If a path crossing the antimeridian would be shorter, extend the final coordinate so that
@@ -117,7 +117,10 @@ export class TransformHelper implements ITransformGetters {
     _pixelsToClipSpaceMatrix: mat4;
     _clipSpaceToPixelsMatrix: mat4;
     _cameraToCenterDistance: number;
-    _nearZFarZOverride: NearZFarZ | undefined;
+
+    _nearZ: number;
+    _farZ: number;
+    _autoCalculateNearFarZ: boolean;
 
     constructor(callbacks: TransformHelperCallbacks, minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
         this._callbacks = callbacks;
@@ -146,9 +149,10 @@ export class TransformHelper implements ITransformGetters {
         this._unmodified = true;
         this._edgeInsets = new EdgeInsets();
         this._minElevationForCurrentTile = 0;
+        this._autoCalculateNearFarZ = true;
     }
 
-    public apply(thatI: ITransformGetters, constrain?: boolean, nearZfarZOverride?: NearZFarZ): void {
+    public apply(thatI: ITransformGetters, constrain?: boolean, forceOverrideZ?: boolean): void {
         this._latRange = thatI.latRange;
         this._lngRange = thatI.lngRange;
         this._width = thatI.width;
@@ -171,7 +175,9 @@ export class TransformHelper implements ITransformGetters {
         this._maxPitch = thatI.maxPitch;
         this._renderWorldCopies = thatI.renderWorldCopies;
         this._cameraToCenterDistance = thatI.cameraToCenterDistance;
-        this._nearZFarZOverride = nearZfarZOverride ?? thatI.nearZFarZOverride;
+        this._nearZ = thatI.nearZ;
+        this._farZ = thatI.farZ;
+        this._autoCalculateNearFarZ = !forceOverrideZ && thatI.autoCalculateNearFarZ;
         if (constrain) {
             this._constrain();
         }
@@ -364,17 +370,6 @@ export class TransformHelper implements ITransformGetters {
         this._calcMatrices();
     }
 
-    get nearZFarZOverride(): NearZFarZ | undefined { return this._nearZFarZOverride; }
-
-    /**
-     * Sets the overriding values to use for near and far Z instead of what the transform would normally compute.
-     * If set to undefined, the transform will compute its ideal values.
-     */
-    public setNearZFarZOverride(override: NearZFarZ | undefined): void {
-        this._nearZFarZOverride = override;
-        this._calcMatrices();
-    }
-
     /**
      * The center of the screen in pixels with the top-left corner being (0,0)
      * and +y axis pointing downwards. This accounts for padding.
@@ -391,6 +386,20 @@ export class TransformHelper implements ITransformGetters {
     get unmodified(): boolean { return this._unmodified; }
 
     get cameraToCenterDistance(): number { return this._cameraToCenterDistance; }
+
+    get nearZ(): number { return this._nearZ; }
+    get farZ(): number { return this._farZ; }
+    get autoCalculateNearFarZ(): boolean { return this._autoCalculateNearFarZ; }
+    overrideNearFarZ(nearZ: number, farZ: number): void {
+        this._autoCalculateNearFarZ = false;
+        this._nearZ = nearZ;
+        this._farZ = farZ;
+        this._calcMatrices();
+    }
+    clearNearZFarZOverride(): void {
+        this._autoCalculateNearFarZ = true;
+        this._calcMatrices();
+    }
 
     /**
      * Returns if the padding params match

@@ -12,7 +12,7 @@ import type {LngLatBounds} from '../lng_lat_bounds';
 import type {Frustum} from '../../util/primitives/frustum';
 import type {Terrain} from '../../render/terrain';
 import type {PointProjection} from '../../symbol/projection';
-import type {IReadonlyTransform, ITransform, NearZFarZ} from '../transform_interface';
+import type {IReadonlyTransform, ITransform} from '../transform_interface';
 import type {PaddingOptions} from '../edge_insets';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
@@ -111,9 +111,6 @@ export class GlobeTransform implements ITransform {
     getCameraQueryGeometry(queryGeometry: Point[]): Point[] {
         return this._helper.getCameraQueryGeometry(this.getCameraPoint(), queryGeometry);
     }
-    setNearZFarZOverride(override: NearZFarZ | undefined): void {
-        this._helper.setNearZFarZOverride(override);
-    }
 
     get tileSize(): number {
         return this._helper.tileSize;
@@ -199,9 +196,6 @@ export class GlobeTransform implements ITransform {
     get cameraToCenterDistance(): number {
         return this._helper.cameraToCenterDistance;
     }
-    get nearZFarZOverride(): NearZFarZ | undefined {
-        return this._helper.nearZFarZOverride;
-    }
 
     //
     // Implementation of globe transform
@@ -270,9 +264,17 @@ export class GlobeTransform implements ITransform {
 
     public get cameraPosition(): vec3 { return this.currentTransform.cameraPosition; }
 
-    public get nearZ(): number { return this.currentTransform.nearZ; }
+    // Intentionally return our helper's Z values instead of currentTransform's - they are synced in _calcMatrices.
+    public get nearZ(): number { return this._helper.nearZ; }
+    public get farZ(): number { return this._helper.farZ; }
+    public get autoCalculateNearFarZ(): boolean { return this._helper.autoCalculateNearFarZ; }
 
-    public get farZ(): number { return this.currentTransform.farZ; }
+    overrideNearFarZ(nearZ: number, farZ: number): void {
+        this._helper.overrideNearFarZ(nearZ, farZ);
+    }
+    clearNearZFarZOverride(): void {
+        this._helper.clearNearZFarZOverride();
+    }
 
     getProjectionData(params: ProjectionDataParams): ProjectionData {
         const mercatorProjectionData = this._mercatorTransform.getProjectionData(params);
@@ -317,17 +319,22 @@ export class GlobeTransform implements ITransform {
         if (!this._helper._width || !this._helper._height) {
             return;
         }
-
+        // VerticalPerspective reads our near/farZ values and autoCalculateNearFarZ:
+        // - if autoCalculateNearFarZ is true then it computes globe Z values
+        // - if autoCalculateNearFarZ is false then it inherits our Z values
+        // In either case, its Z values are consistent with out settings and we want to copy its Z values to our helper.
         this._verticalPerspectiveTransform.apply(this, this._globeLatitudeErrorCorrectionRadians);
+        this._helper._nearZ = this._verticalPerspectiveTransform.nearZ;
+        this._helper._farZ = this._verticalPerspectiveTransform.farZ;
 
         // When transitioning between globe and mercator, we need to synchronize the depth values in both transforms.
-        // For this reason we first update vertical perspective and then pass its near and far Z to mercator.
-        // Otherwise, if fully mercator rendering, we just pass the user-provided near/far Z override.
-        const nearZfarZ = this.isGlobeRendering ? {
-            nearZ: this._verticalPerspectiveTransform.nearZ,
-            farZ: this._verticalPerspectiveTransform.farZ,
-        } : undefined;
-        this._mercatorTransform.apply(this, true, nearZfarZ);
+        // For this reason we first update vertical perspective and then sync our Z values to its result.
+        // Now if globe rendering, we always want to force mercator transform to adapt our Z values.
+        // If not, it will either compute its own (autoCalculateNearFarZ=false) or adapt our (autoCalculateNearFarZ=true).
+        // In either case we want to (again) sync our Z values, this time with
+        this._mercatorTransform.apply(this, true, this.isGlobeRendering);
+        this._helper._nearZ = this._mercatorTransform.nearZ;
+        this._helper._farZ = this._mercatorTransform.farZ;
     }
 
     calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {
