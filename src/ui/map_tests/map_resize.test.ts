@@ -1,5 +1,5 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {MercatorProjection} from '../../geo/projection/mercator';
+import {MercatorProjection} from '../../geo/projection/mercator_projection';
 import {createMap, beforeMapTest, sleep} from '../../util/test/util';
 
 beforeEach(() => {

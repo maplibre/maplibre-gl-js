@@ -214,7 +214,6 @@ class MouseRotateWrapper {
     move(e: MouseEvent | TouchEvent, point: Point) {
         const map = this.map;
         const {bearingDelta, pitchDelta} = this._rotatePitchHanlder.dragMove(e, point) || {};
-        console.log(bearingDelta, pitchDelta, point);
         if (bearingDelta) map.setBearing(map.getBearing() + bearingDelta);
         if (pitchDelta) map.setPitch(map.getPitch() + pitchDelta);
     }

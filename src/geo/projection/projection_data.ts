@@ -46,6 +46,10 @@ export type ProjectionData = {
     fallbackMatrix: mat4;
 }
 
+/**
+ * Parameters object for the transform's `getProjectionData` function.
+ * Contains the requested tile ID and more.
+ */
 export type ProjectionDataParams = {
     /**
      * The ID of the current tile

@@ -5,15 +5,16 @@ import {browser} from '../util/browser';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
 import {setMatchMedia} from '../util/test/util';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
-import {type Terrain} from '../render/terrain';
 import {LngLat, type LngLatLike} from '../geo/lng_lat';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {GlobeTransform} from '../geo/projection/globe_transform';
 import {getZoomAdjustment} from '../geo/projection/globe_utils';
 import {GlobeCameraHelper} from '../geo/projection/globe_camera_helper';
-import {type GlobeProjection} from '../geo/projection/globe';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
+
+import type {GlobeProjection} from '../geo/projection/globe_projection';
+import type {Terrain} from '../render/terrain';
 
 beforeEach(() => {
     setMatchMedia();
@@ -42,7 +43,7 @@ function attachSimulateFrame(camera) {
 function createCamera(options?): Camera & { simulateFrame: () => void } {
     options = options || {};
 
-    const transform = options.globe ? new GlobeTransform({} as any, true) : new MercatorTransform();
+    const transform = options.globe ? new GlobeTransform() : new MercatorTransform();
     transform.setMinZoom(0);
     transform.setMaxZoom(20);
     transform.setMinPitch(0);

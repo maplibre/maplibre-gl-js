@@ -9,7 +9,6 @@ import {MercatorTransform} from '../../geo/projection/mercator_transform';
 import {RequestManager} from '../request_manager';
 import {type IReadonlyTransform, type ITransform} from '../../geo/transform_interface';
 import {type Style} from '../../style/style';
-import type {GlobeProjection} from '../../geo/projection/globe';
 
 export class StubMap extends Evented {
     style: Style;
@@ -223,15 +222,4 @@ export function expectToBeCloseToArray(actual: Array<number>, expected: Array<nu
     for (let i = 0; i < expected.length; i++) {
         expect(actual[i]).toBeCloseTo(expected[i], precision);
     }
-}
-
-export function getGlobeProjectionMock(): GlobeProjection {
-    return {
-        get useGlobeControls(): boolean {
-            return true;
-        },
-        useGlobeRendering: true,
-        latitudeErrorCorrectionRadians: 0,
-        errorQueryLatitudeDegrees: 0,
-    } as GlobeProjection;
 }

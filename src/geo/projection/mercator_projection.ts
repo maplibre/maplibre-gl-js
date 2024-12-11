@@ -48,13 +48,16 @@ export class MercatorProjection implements Projection {
         return false;
     }
 
-    public destroy(): void {
-        // Do nothing.
+    get transitionState(): number {
+        return 0;
     }
 
-    public isRenderingDirty(): boolean {
-        // Mercator projection does no animations of its own, so rendering is never dirty from its perspective.
-        return false;
+    get latitudeErrorCorrectionRadians(): number {
+        return 0;
+    }
+
+    public destroy(): void {
+        // Do nothing.
     }
 
     public updateGPUdependent(_: ProjectionGPUContext): void {
@@ -83,5 +86,17 @@ export class MercatorProjection implements Projection {
 
         this._cachedMesh = new Mesh(tileExtentBuffer, quadTriangleIndexBuffer, tileExtentSegments);
         return this._cachedMesh;
+    }
+
+    public recalculate(): void {
+        // Do nothing.
+    }
+
+    public hasTransition(): boolean {
+        return false;
+    }
+
+    setErrorQueryLatitudeDegrees(_value: number) {
+        // Do nothing.
     }
 }

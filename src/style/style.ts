@@ -545,11 +545,15 @@ export class Style extends Evented {
     }
 
     hasTransitions() {
-        if (this.light && this.light.hasTransition()) {
+        if (this.light?.hasTransition()) {
             return true;
         }
 
-        if (this.sky && this.sky.hasTransition()) {
+        if (this.sky?.hasTransition()) {
+            return true;
+        }
+
+        if (this.projection?.hasTransition()) {
             return true;
         }
 
@@ -657,6 +661,7 @@ export class Style extends Evented {
 
         this.light.recalculate(parameters);
         this.sky.recalculate(parameters);
+        this.projection.recalculate(parameters);
         this.z = parameters.zoom;
 
         if (changed) {

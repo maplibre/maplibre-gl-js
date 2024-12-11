@@ -7,7 +7,7 @@ import type {Map} from '../ui/map';
 import {drawCustom} from './draw_custom';
 import {CustomStyleLayer} from '../style/style_layer/custom_style_layer';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {MercatorProjection} from '../geo/projection/mercator';
+import {MercatorProjection} from '../geo/projection/mercator_projection';
 
 vi.mock('./painter');
 vi.mock('./program');

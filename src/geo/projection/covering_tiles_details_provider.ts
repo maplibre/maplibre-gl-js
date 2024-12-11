@@ -36,4 +36,9 @@ export interface CoveringTilesDetailsProvider {
      * Whether to allow world copies to be rendered.
      */
     allowWorldCopies: () => boolean;
+
+    /**
+     * Prepare cache for the next frame.
+     */
+    recalculateCache(): void;
 }
