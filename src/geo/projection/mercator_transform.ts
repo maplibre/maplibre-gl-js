@@ -198,10 +198,12 @@ export class MercatorTransform implements ITransform {
     get cameraToCenterDistance(): number { 
         return this._helper.cameraToCenterDistance;
     }
+    setTransitionState(_value: number, _error: number): void {
+        // Do nothing
+    }
     get nearZFarZOverride(): NearZFarZ | undefined {
         return this._helper.nearZFarZOverride;
     }
-
     //
     // Implementation of mercator transform
     //
@@ -701,10 +703,6 @@ export class MercatorTransform implements ITransform {
         return (p[2] / p[3]);
     }
 
-    isRenderingDirty(): boolean {
-        return false;
-    }
-
     getProjectionData(params: ProjectionDataParams): ProjectionData {
         const {overscaledTileID, aligned, applyTerrainMatrix} = params;
         const mercatorTileCoordinates = this._helper.getMercatorTileCoordinates(overscaledTileID);
@@ -743,10 +741,6 @@ export class MercatorTransform implements ITransform {
         return 1.0;
     }
 
-    newFrameUpdate(): TransformUpdateResult {
-        return {};
-    }
-
     transformLightDirection(dir: vec3): vec3 {
         return vec3.clone(dir);
     }
@@ -773,7 +767,7 @@ export class MercatorTransform implements ITransform {
         };
     }
 
-    precacheTiles(coords: Array<OverscaledTileID>): void {
+    populateCache(coords: Array<OverscaledTileID>): void {
         for (const coord of coords) {
             // Return value is thrown away, but this function will still
             // place the pos matrix into the transform's internal cache.
