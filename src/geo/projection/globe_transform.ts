@@ -2,11 +2,9 @@ import {type mat2, mat4, type vec3, type vec4} from 'gl-matrix';
 import {TransformHelper} from '../transform_helper';
 import {MercatorTransform} from './mercator_transform';
 import {VerticalPerspectiveTransform} from './vertical_perspective_transform';
-import {LngLat, type LngLatLike,} from '../lng_lat';
-import {createMat4f32, createMat4f64, differenceOfAnglesDegrees, easeCubicInOut, lerp, warnOnce} from '../../util/util';
+import {type LngLat, type LngLatLike,} from '../lng_lat';
+import {createMat4f32, createMat4f64, lerp, warnOnce} from '../../util/util';
 import {OverscaledTileID, type UnwrappedTileID, type CanonicalTileID} from '../../source/tile_id';
-import {browser} from '../../util/browser';
-import {type GlobeProjection} from './globe_projection';
 import {EXTENT} from '../../data/extent';
 
 import type Point from '@mapbox/point-geometry';
@@ -15,11 +13,10 @@ import type {LngLatBounds} from '../lng_lat_bounds';
 import type {Frustum} from '../../util/primitives/frustum';
 import type {Terrain} from '../../render/terrain';
 import type {PointProjection} from '../../symbol/projection';
-import type {IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
+import type {IReadonlyTransform, ITransform} from '../transform_interface';
 import type {PaddingOptions} from '../edge_insets';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
-import {globeConstants} from './vertical_perspective_projection';
 
 /**
  * Globe transform is a transform that moves between vertical perspective and mercator projections.
@@ -205,28 +202,6 @@ export class GlobeTransform implements ITransform {
     // Implementation of globe transform
     //
 
-    // Transition handling
-    private _lastGlobeStateEnabled: boolean = true;
-
-    /**
-     * Stores when {@link newFrameUpdate} was last called.
-     * Serves as a unified clock for globe (instead of each function using a slightly different value from `browser.now()`).
-     */
-    private _lastUpdateTimeSeconds = browser.now() / 1000.0;
-    /**
-     * Stores when switch from globe to mercator or back last occurred, for animation purposes.
-     * This switch can be caused either by the map passing the threshold zoom level,
-     * or by {@link setGlobeViewAllowed} being called.
-     */
-    private _lastGlobeChangeTimeSeconds: number = browser.now() / 1000 - 10; // Ten seconds before transform creation
-
-    private _skipNextAnimation: boolean = true;
-
-    /**
-     * Note: projection instance should only be accessed in the {@link newFrameUpdate} function.
-     * to ensure the transform's state isn't unintentionally changed.
-     */
-    private _projectionInstance: GlobeProjection;
     private _globeLatitudeErrorCorrectionRadians: number = 0;
 
     /**
@@ -238,7 +213,15 @@ export class GlobeTransform implements ITransform {
         return this._globeness > 0;
     }
 
-    get currentTransform(): ITransform {
+    setTransitionState(globeness: number, errorCorrectionValue: number): void {
+        this._globeness = globeness;
+        this._globeLatitudeErrorCorrectionRadians = errorCorrectionValue;
+        this._calcMatrices();
+        this._verticalPerspectiveTransform.getCoveringTilesDetailsProvider().recalculateCache();
+        this._mercatorTransform.getCoveringTilesDetailsProvider().recalculateCache();
+    }
+
+    private get currentTransform(): ITransform {
         return this.isGlobeRendering ? this._verticalPerspectiveTransform : this._mercatorTransform;
     }
 
@@ -250,20 +233,18 @@ export class GlobeTransform implements ITransform {
     private _mercatorTransform: MercatorTransform;
     private _verticalPerspectiveTransform: VerticalPerspectiveTransform;
 
-    public constructor(globeProjection: GlobeProjection) {
-
+    public constructor() {
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
             getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
         });
         this._globeness = 1; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.
-        this._projectionInstance = globeProjection;
         this._mercatorTransform = new MercatorTransform();
         this._verticalPerspectiveTransform = new VerticalPerspectiveTransform();
     }
 
     clone(): ITransform {
-        const clone = new GlobeTransform(null);
+        const clone = new GlobeTransform();
         clone._globeness = this._globeness;
         clone._globeLatitudeErrorCorrectionRadians = this._globeLatitudeErrorCorrectionRadians;
         clone.apply(this);
@@ -287,91 +268,6 @@ export class GlobeTransform implements ITransform {
     public get nearZ(): number { return this.currentTransform.nearZ; }
 
     public get farZ(): number { return this.currentTransform.farZ; }
-
-    /**
-     * Should be called at the beginning of every frame to synchronize the transform with the underlying projection.
-     */
-    newFrameUpdate(): TransformUpdateResult {
-        this._lastUpdateTimeSeconds = browser.now() / 1000.0;
-        const oldGlobeRendering = this.isGlobeRendering;
-
-        this._globeness = this._computeGlobenessAnimation();
-        // Everything below this comment must happen AFTER globeness update
-        this._updateErrorCorrectionValue();
-        this._calcMatrices();
-        this._verticalPerspectiveTransform.getCoveringTilesDetailsProvider().newFrame();
-        this._mercatorTransform.getCoveringTilesDetailsProvider().newFrame();
-
-        if (oldGlobeRendering === this.isGlobeRendering) {
-            return {
-                forcePlacementUpdate: false,
-            };
-        } else {
-            return {
-                forcePlacementUpdate: true,
-                fireProjectionEvent: {
-                    type: 'projectiontransition',
-                    newProjection: this.isGlobeRendering ? 'globe' : 'globe-mercator',
-                },
-                forceSourceUpdate: true,
-            };
-        }
-    }
-
-    /**
-     * This function should never be called on a cloned transform, thus ensuring that
-     * the state of a cloned transform is never changed after creation.
-     */
-    private _updateErrorCorrectionValue(): void {
-        if (!this._projectionInstance) {
-            return;
-        }
-        this._projectionInstance.useGlobeRendering = this.isGlobeRendering;
-        this._projectionInstance.errorQueryLatitudeDegrees = this.center.lat;
-        this._globeLatitudeErrorCorrectionRadians = this._projectionInstance.latitudeErrorCorrectionRadians;
-    }
-
-    /**
-     * Compute new globeness, if needed.
-     */
-    private _computeGlobenessAnimation(): number {
-        // Update globe transition animation
-        const globeState = this.zoom < globeConstants.maxGlobeZoom;
-        const currentTimeSeconds = this._lastUpdateTimeSeconds;
-        if (globeState !== this._lastGlobeStateEnabled) {
-            this._lastGlobeChangeTimeSeconds = currentTimeSeconds;
-            this._lastGlobeStateEnabled = globeState;
-        }
-
-        const oldGlobeness = this._globeness;
-
-        // Transition parameter, where 0 is the start and 1 is end.
-        const globeTransition = Math.min(Math.max((currentTimeSeconds - this._lastGlobeChangeTimeSeconds) / globeConstants.globeTransitionTimeSeconds, 0.0), 1.0);
-        let newGlobeness = globeState ? globeTransition : (1.0 - globeTransition);
-
-        if (this._skipNextAnimation) {
-            newGlobeness = globeState ? 1.0 : 0.0;
-            this._lastGlobeChangeTimeSeconds = currentTimeSeconds - globeConstants.globeTransitionTimeSeconds * 2.0;
-            this._skipNextAnimation = false;
-        }
-
-        newGlobeness = easeCubicInOut(newGlobeness); // Smooth animation
-
-        if (oldGlobeness !== newGlobeness) {
-            this.setCenter(new LngLat(
-                this._mercatorTransform.center.lng + differenceOfAnglesDegrees(this._mercatorTransform.center.lng, this.center.lng) * newGlobeness,
-                lerp(this._mercatorTransform.center.lat, this.center.lat, newGlobeness)
-            ));
-            this.setZoom(lerp(this._mercatorTransform.zoom, this.zoom, newGlobeness));
-        }
-
-        return newGlobeness;
-    }
-
-    isRenderingDirty(): boolean {
-        // Globe transition
-        return (this._lastUpdateTimeSeconds - this._lastGlobeChangeTimeSeconds) < globeConstants.globeTransitionTimeSeconds;
-    }
 
     getProjectionData(params: ProjectionDataParams): ProjectionData {
         const mercatorProjectionData = this._mercatorTransform.getProjectionData(params);
@@ -399,7 +295,6 @@ export class GlobeTransform implements ITransform {
     }
 
     public getCircleRadiusCorrection(): number {
-        // HM TODO: there was a "double" interpolation here which was removed. Check if it's needed.
         return lerp(this._mercatorTransform.getCircleRadiusCorrection(), this._verticalPerspectiveTransform.getCircleRadiusCorrection(), this._globeness);
     }
 
@@ -417,19 +312,12 @@ export class GlobeTransform implements ITransform {
         if (!this._helper._width || !this._helper._height) {
             return;
         }
-        if (this._mercatorTransform) {
-            this._mercatorTransform.apply(this, true);
-        }
-        if (this._verticalPerspectiveTransform) {
-            this._verticalPerspectiveTransform.apply(this, this._globeLatitudeErrorCorrectionRadians);
-        }
+        this._mercatorTransform.apply(this, true);
+        this._verticalPerspectiveTransform.apply(this, this._globeLatitudeErrorCorrectionRadians);
     }
 
-    calculateFogMatrix(_unwrappedTileID: UnwrappedTileID): mat4 {
-        warnOnce('calculateFogMatrix is not supported on globe projection.');
-        const m = createMat4f64();
-        mat4.identity(m);
-        return m;
+    calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {
+        return this.currentTransform.calculateFogMatrix(unwrappedTileID);
     }
 
     getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): UnwrappedTileID[] {
@@ -471,9 +359,9 @@ export class GlobeTransform implements ITransform {
         return this.currentTransform.lngLatToCameraDepth(lngLat, elevation);
     }
 
-    precacheTiles(coords: OverscaledTileID[]): void {
-        // HM TODO: this uses only mercator code... need to fix
-        this._mercatorTransform.precacheTiles(coords);
+    populateCache(coords: OverscaledTileID[]): void {
+        this._mercatorTransform.populateCache(coords);
+        this._verticalPerspectiveTransform.populateCache(coords);
     }
 
     getBounds(): LngLatBounds {

@@ -1,4 +1,4 @@
-import {type ProjectionDefinition, type ProjectionDefinitionSpecification, type ProjectionSpecification, type StylePropertySpecification, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
+import {ProjectionDefinition, type ProjectionDefinitionSpecification, type ProjectionSpecification, type StylePropertySpecification, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
 import {DataConstantProperty, type PossiblyEvaluated, Properties, Transitionable, type Transitioning, type TransitionParameters} from '../../style/properties';
 import {Evented} from '../../util/evented';
 import {EvaluationParameters} from '../../style/evaluation_parameters';
@@ -31,9 +31,6 @@ export class GlobeProjection extends Evented implements Projection {
     _mercatorProjection: MercatorProjection;
     _verticalPerspectiveProjection: VerticalPerspectiveProjection;
 
-    // HM TODO: remove this in the future
-    _useGlobeRendering: boolean = false;
-
     constructor(projection?: ProjectionSpecification) {
         super();
         this._transitionable = new Transitionable(properties);
@@ -52,43 +49,25 @@ export class GlobeProjection extends Evented implements Projection {
         if (typeof currentProjectionSpecValue === 'string' && currentProjectionSpecValue === 'vertical-perspective') {
             return 1;
         }
-        // HM TODO: check this!
-        if ('transition' in (currentProjectionSpecValue as any)) {
-            return (currentProjectionSpecValue as any).transition;
+        if (currentProjectionSpecValue instanceof ProjectionDefinition) {
+            if (currentProjectionSpecValue.from === 'vertical-perspective' && currentProjectionSpecValue.to === 'mercator') {
+                return 1 - currentProjectionSpecValue.transition;
+            }
+            if (currentProjectionSpecValue.from === 'mercator' && currentProjectionSpecValue.to === 'vertical-perspective') {
+                return currentProjectionSpecValue.transition;
+            }
         };
         return 1;
     }
 
     get useGlobeRendering(): boolean {
-        return this._useGlobeRendering;
+        return this.transitionState > 0;
     }
 
-    set useGlobeRendering(value: boolean) {
-        this._useGlobeRendering = value;
-    }
-
-    get errorQueryLatitudeDegrees(): number { return this._verticalPerspectiveProjection.errorQueryLatitudeDegrees; }
-    set errorQueryLatitudeDegrees(value: number) { this._verticalPerspectiveProjection.errorQueryLatitudeDegrees = value; }
     get latitudeErrorCorrectionRadians(): number { return this._verticalPerspectiveProjection.latitudeErrorCorrectionRadians; }
 
     private get currentProjection(): Projection {
         return this.useGlobeRendering ? this._verticalPerspectiveProjection : this._mercatorProjection;
-    }
-
-    setProjection(projection?: ProjectionSpecification) {
-        this._transitionable.setValue('type', projection?.type || 'mercator');
-    }
-
-    updateTransitions(parameters: TransitionParameters) {
-        this._transitioning = this._transitionable.transitioned(parameters, this._transitioning);
-    }
-
-    hasTransition() {
-        return this._transitioning.hasTransition();
-    }
-
-    recalculate(parameters: EvaluationParameters) {
-        this.properties = this._transitioning.possiblyEvaluate(parameters);
     }
 
     get name(): ProjectionSpecification['type'] {
@@ -128,10 +107,6 @@ export class GlobeProjection extends Evented implements Projection {
         this._verticalPerspectiveProjection.destroy();
     }
 
-    public isRenderingDirty(): boolean {
-        return this.currentProjection.isRenderingDirty(); // HM: TODO: should use hasTransition also
-    }
-
     public updateGPUdependent(context: ProjectionGPUContext): void {
         this._mercatorProjection.updateGPUdependent(context);
         this._verticalPerspectiveProjection.updateGPUdependent(context);
@@ -139,5 +114,26 @@ export class GlobeProjection extends Evented implements Projection {
 
     public getMeshFromTileID(context: Context, _tileID: CanonicalTileID, _hasBorder: boolean, _allowPoles: boolean, _usage: TileMeshUsage): Mesh {
         return this.currentProjection.getMeshFromTileID(context, _tileID, _hasBorder, _allowPoles, _usage);
+    }
+
+    setProjection(projection?: ProjectionSpecification) {
+        this._transitionable.setValue('type', projection?.type || 'mercator');
+    }
+
+    updateTransitions(parameters: TransitionParameters) {
+        this._transitioning = this._transitionable.transitioned(parameters, this._transitioning);
+    }
+
+    hasTransition(): boolean {
+        return this._transitioning.hasTransition() || this.currentProjection.hasTransition();
+    }
+
+    recalculate(parameters: EvaluationParameters) {
+        this.properties = this._transitioning.possiblyEvaluate(parameters);
+    }
+
+    setErrorQueryLatitudeDegrees(value: number) { 
+        this._verticalPerspectiveProjection.setErrorQueryLatitudeDegrees(value);
+        this._mercatorProjection.setErrorQueryLatitudeDegrees(value);
     }
 }

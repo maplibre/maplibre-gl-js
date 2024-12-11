@@ -14,7 +14,7 @@ import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_de
 import {Frustum} from '../../util/primitives/frustum';
 
 import type {Terrain} from '../../render/terrain';
-import type {IReadonlyTransform, ITransform, TransformUpdateResult} from '../transform_interface';
+import type {IReadonlyTransform, ITransform} from '../transform_interface';
 import type {PaddingOptions} from '../edge_insets';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
@@ -195,7 +195,9 @@ export class MercatorTransform implements ITransform {
     get cameraToCenterDistance(): number { 
         return this._helper.cameraToCenterDistance; 
     }
-
+    setTransitionState(_value: number, _error: number): void {
+        // Do nothing
+    }
     //
     // Implementation of mercator transform
     //
@@ -696,10 +698,6 @@ export class MercatorTransform implements ITransform {
         return (p[2] / p[3]);
     }
 
-    isRenderingDirty(): boolean {
-        return false;
-    }
-
     getProjectionData(params: ProjectionDataParams): ProjectionData {
         const {overscaledTileID, aligned, applyTerrainMatrix} = params;
         const mercatorTileCoordinates = this._helper.getMercatorTileCoordinates(overscaledTileID);
@@ -738,10 +736,6 @@ export class MercatorTransform implements ITransform {
         return 1.0;
     }
 
-    newFrameUpdate(): TransformUpdateResult {
-        return {};
-    }
-
     transformLightDirection(dir: vec3): vec3 {
         return vec3.clone(dir);
     }
@@ -768,7 +762,7 @@ export class MercatorTransform implements ITransform {
         };
     }
 
-    precacheTiles(coords: Array<OverscaledTileID>): void {
+    populateCache(coords: Array<OverscaledTileID>): void {
         for (const coord of coords) {
             // Return value is thrown away, but this function will still
             // place the pos matrix into the transform's internal cache.
