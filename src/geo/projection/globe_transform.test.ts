@@ -1,5 +1,5 @@
 import {describe, expect, test} from 'vitest';
-import {globeConstants, type GlobeProjection} from './globe';
+import {type GlobeProjection} from './globe_projection';
 import {EXTENT} from '../../data/extent';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
@@ -10,6 +10,7 @@ import {expectToBeCloseToArray, getGlobeProjectionMock, sleep} from '../../util/
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {tileCoordinatesToLocation} from './mercator_utils';
 import {MercatorTransform} from './mercator_transform';
+import {globeConstants} from './vertical_perspective_projection';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: Array<number>) {
     const lat = latDegrees / 180.0 * Math.PI;

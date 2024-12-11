@@ -6,7 +6,7 @@ import {LngLat, type LngLatLike,} from '../lng_lat';
 import {createMat4f64, differenceOfAnglesDegrees, easeCubicInOut, lerp, warnOnce} from '../../util/util';
 import {OverscaledTileID, type UnwrappedTileID, type CanonicalTileID} from '../../source/tile_id';
 import {browser} from '../../util/browser';
-import {globeConstants, type GlobeProjection} from './globe';
+import {type GlobeProjection} from './globe_projection';
 
 import type Point from '@mapbox/point-geometry';
 import type {MercatorCoordinate} from '../mercator_coordinate';
@@ -18,6 +18,7 @@ import type {IReadonlyTransform, ITransform, NearZFarZ, TransformUpdateResult} f
 import type {PaddingOptions} from '../edge_insets';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
+import {globeConstants} from './vertical_perspective_projection';
 
 /**
  * Globe transform is a transform that moves between vertical perspective and mercator projections.

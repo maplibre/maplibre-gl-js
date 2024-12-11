@@ -13,7 +13,7 @@ import {getZoomAdjustment} from '../geo/projection/globe_utils';
 import {GlobeCameraHelper} from '../geo/projection/globe_camera_helper';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 
-import type {GlobeProjection} from '../geo/projection/globe';
+import type {GlobeProjection} from '../geo/projection/globe_projection';
 import type {Terrain} from '../render/terrain';
 
 beforeEach(() => {
