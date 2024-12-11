@@ -10,7 +10,7 @@ out vec2 v_pos0;
 out vec2 v_pos1;
 
 void main() {
-    // Attribute a_pos always forms a (sometimes subdivided) quad in 0..EXTENT, but actual corner coords may be different.
+    // in a_pos always forms a (sometimes subdivided) quad in 0..EXTENT, but actual corner coords may be different.
     // Interpolate the actual desired coordinates to get the final position.
     vec2 fractionalPos = a_pos / 8192.0;
     vec2 position = mix(mix(u_coords_top.xy, u_coords_top.zw, fractionalPos.x), mix(u_coords_bottom.xy, u_coords_bottom.zw, fractionalPos.x), fractionalPos.y);

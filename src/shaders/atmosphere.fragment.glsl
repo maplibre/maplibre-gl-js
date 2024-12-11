@@ -164,5 +164,5 @@ void main() {
 
     vec4 no_effect_color = vec4(0, 0, 0, 0);
 
-    gl_FragColor = mix(color, no_effect_color, 1.0 - u_atmosphere_blend);
+    fragColor = mix(color, no_effect_color, 1.0 - u_atmosphere_blend);
 }
