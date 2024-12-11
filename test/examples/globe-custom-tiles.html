@@ -222,7 +222,7 @@
             const mesh = {
                 vbo,
                 ibo,
-                indexCount: meshBuffers.indices.length,
+                indexCount: meshBuffers.indices.byteLength / 2,
             };
             this.meshMap.set(key, mesh);
             return mesh;
