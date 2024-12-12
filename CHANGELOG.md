@@ -1,9 +1,12 @@
 ## main
 
 ### ✨ Features and improvements
+- Add support for projection type expression as part of a refactoring of the transfrom and projection classes ([#5139](https://github.com/maplibre/maplibre-gl-js/pull/5139))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix globe custom layers being supplied incorrect matrices after projection transition to mercator ([#5150](https://github.com/maplibre/maplibre-gl-js/pull/5150))
+- Fix custom 3D models disappearing during projection transition ([#5150](https://github.com/maplibre/maplibre-gl-js/pull/5150))
 - _...Add new stuff here..._
 
 ## 5.0.0-pre.9

@@ -7,13 +7,14 @@ import {mercatorYfromLat} from '../mercator_coordinate';
 import {SubdivisionGranularityExpression, SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import type {Projection, ProjectionGPUContext, TileMeshUsage} from './projection';
 import {type PreparedShader, shaders} from '../../shaders/shaders';
-import {MercatorProjection} from './mercator';
 import {ProjectionErrorMeasurement} from './globe_projection_error_measurement';
 import {createTileMeshWithBuffers, type CreateTileMeshOptions} from '../../util/create_tile_mesh';
+import {type EvaluationParameters} from '../../style/evaluation_parameters';
+
+export const VerticalPerspectiveShaderDefine = '#define GLOBE';
+export const VerticalPerspectiveShaderVariantKey = 'globe';
 
 export const globeConstants = {
-    globeTransitionTimeSeconds: 0.5,
-    maxGlobeZoom: 12.0,
     errorTransitionTimeSeconds: 0.5
 };
 
@@ -32,16 +33,8 @@ const granularitySettingsGlobe: SubdivisionGranularitySetting = new SubdivisionG
     circle: 3
 });
 
-export class GlobeProjection implements Projection {
-    private _mercator: MercatorProjection;
-
+export class VerticalPerspectiveProjection implements Projection {
     private _tileMeshCache: {[_: string]: Mesh} = {};
-
-    /**
-     * Stores whether globe rendering should be used.
-     * The value is injected from GlobeTransform.
-     */
-    private _useGlobeRendering: boolean = true;
 
     // GPU atan() error correction
     private _errorMeasurement: ProjectionErrorMeasurement;
@@ -51,40 +44,28 @@ export class GlobeProjection implements Projection {
     private _errorCorrectionPreviousValue: number = 0.0;
     private _errorMeasurementLastChangeTime: number = -1000.0;
 
-    get name(): 'globe' {
-        return 'globe';
+    get name(): 'vertical-perspective' {
+        return 'vertical-perspective';
     }
 
-    /**
-     * This property is true when globe rendering and globe shader variants should be in use.
-     * This is false when globe is disabled, or when globe is enabled, but mercator rendering is used due to zoom level (and no transition is happening).
-     */
-    get useGlobeRendering(): boolean {
-        return this._useGlobeRendering;
-    }
-
-    /**
-     * @internal
-     * Intended for internal use, only called from GlobeTransform.
-     */
-    set useGlobeRendering(value: boolean) {
-        this._useGlobeRendering = value;
+    get transitionState(): number {
+        return 1;
     }
 
     get useSubdivision(): boolean {
-        return this.useGlobeRendering;
+        return true;
     }
 
     get shaderVariantName(): string {
-        return this.useGlobeRendering ? 'globe' : this._mercator.shaderVariantName;
+        return VerticalPerspectiveShaderVariantKey;
     }
 
     get shaderDefine(): string {
-        return this.useGlobeRendering ? '#define GLOBE' : this._mercator.shaderDefine;
+        return VerticalPerspectiveShaderDefine;
     }
 
     get shaderPreludeCode(): PreparedShader {
-        return this.useGlobeRendering ? shaders.projectionGlobe : this._mercator.shaderPreludeCode;
+        return shaders.projectionGlobe;
     }
 
     get vertexShaderPreludeCode(): string {
@@ -96,17 +77,7 @@ export class GlobeProjection implements Projection {
     }
 
     get useGlobeControls(): boolean {
-        return this._useGlobeRendering;
-    }
-
-    get errorQueryLatitudeDegrees(): number { return this._errorQueryLatitudeDegrees; }
-
-    /**
-     * @internal
-     * Intended for internal use, only called from GlobeTransform.
-     */
-    set errorQueryLatitudeDegrees(value: number) {
-        this._errorQueryLatitudeDegrees = value;
+        return true;
     }
 
     /**
@@ -118,28 +89,13 @@ export class GlobeProjection implements Projection {
      */
     get latitudeErrorCorrectionRadians(): number { return this._errorCorrectionUsable; }
 
-    constructor() {
-        this._mercator = new MercatorProjection();
-    }
-
     public destroy() {
         if (this._errorMeasurement) {
             this._errorMeasurement.destroy();
         }
     }
 
-    public isRenderingDirty(): boolean {
-        const now = browser.now();
-        let dirty = false;
-        // Error correction transition
-        dirty = dirty || (now - this._errorMeasurementLastChangeTime) / 1000.0 < (globeConstants.errorTransitionTimeSeconds + 0.2);
-        // Error correction query in flight
-        dirty = dirty || (this._errorMeasurement && this._errorMeasurement.awaitingQuery);
-        return dirty;
-    }
-
     public updateGPUdependent(renderContext: ProjectionGPUContext): void {
-        this._mercator.updateGPUdependent(renderContext);
         if (!this._errorMeasurement) {
             this._errorMeasurement = new ProjectionErrorMeasurement(renderContext);
         }
@@ -189,5 +145,23 @@ export class GlobeProjection implements Projection {
         const mesh = createTileMeshWithBuffers(context, options);
         this._tileMeshCache[key] = mesh;
         return mesh;
+    }
+
+    recalculate(_params: EvaluationParameters): void {
+        // Do nothing.
+    }
+
+    hasTransition(): boolean {
+        const now = browser.now();
+        let dirty = false;
+        // Error correction transition
+        dirty = dirty || (now - this._errorMeasurementLastChangeTime) / 1000.0 < (globeConstants.errorTransitionTimeSeconds + 0.2);
+        // Error correction query in flight
+        dirty = dirty || (this._errorMeasurement && this._errorMeasurement.awaitingQuery);
+        return dirty;
+    }
+
+    setErrorQueryLatitudeDegrees(value: number) {
+        this._errorQueryLatitudeDegrees = value;
     }
 }

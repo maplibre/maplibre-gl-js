@@ -33,7 +33,7 @@ import {drawDepth, drawCoords} from './draw_terrain';
 import {type OverscaledTileID} from '../source/tile_id';
 import {drawSky, drawAtmosphere} from './draw_sky';
 import {Mesh} from './mesh';
-import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator';
+import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection';
 
 import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {Style} from '../style/style';
@@ -492,7 +492,7 @@ export class Painter {
         const coordsAscending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
-        const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: style.projection.name === 'globe'};
+        const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: style.projection.transitionState > 0};
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
