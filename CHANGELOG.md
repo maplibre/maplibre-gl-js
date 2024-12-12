@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Add support for projection type expression as part of a refactoring of the transfrom and projection classes ([#5139](https://github.com/maplibre/maplibre-gl-js/pull/5139))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
