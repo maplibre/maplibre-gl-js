@@ -114,13 +114,10 @@ export type MapOptions = {
     logoPosition?: ControlPosition;
     /**
      * Set of WebGLContextAttributes that are applied to the WebGL context of the map.
-     * Setting antialias to `true`, the gl context will be created with MSAA antialiasing, which can be useful for antialiasing custom layers. It's disabled by default as a performance optimization.
-     * Setting powerPreference to `high-performance`, the map's canvas will use a dedicated GPU if available. If set to `default`, the browser will decide which GPU to use.
-     * Setting preserveDrawingBuffer to `true`, the map's canvas can be exported to a PNG using `map.getCanvas().toDataURL()`. It's disabled by default as a performance optimization.
-     * Setting failIfMajorPerformanceCaveat to `true`, the map creation will fail if the performance of MapLibre GL JS would be dramatically worse than expected (i.e. a software renderer would be used).
+     * See https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext for more details.
      * @defaultValue antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: false, failIfMajorPerformanceCaveat: false, desynchronized: false
      */
-    contextAttributes?: WebGLContextAttributes;
+    canvasContextAttributes?: WebGLContextAttributes;
     /**
      * If `false`, the map won't attempt to re-request tiles once they expire per their HTTP `cacheControl`/`expires` headers.
      * @defaultValue true
@@ -386,7 +383,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     maplibreLogo: false,
     refreshExpiredTiles: true,
 
-    contextAttributes: {
+    canvasContextAttributes: {
         antialias: false,
         preserveDrawingBuffer: false,
         powerPreference: 'high-performance',
@@ -497,7 +494,7 @@ export class Map extends Camera {
     _fullyLoaded: boolean;
     _trackResize: boolean;
     _resizeObserver: ResizeObserver;
-    _contextAttributes: WebGLContextAttributes;
+    _canvasContextAttributes: WebGLContextAttributes;
     _refreshExpiredTiles: boolean;
     _hash: Hash;
     _delegatedListeners: Record<string, DelegatedListener[]>;
@@ -590,9 +587,9 @@ export class Map extends Camera {
     constructor(options: MapOptions) {
         PerformanceUtils.mark(PerformanceMarkers.create);
 
-        const resolvedOptions = {...defaultOptions, ...options, contextAttributes: {
-            ...defaultOptions.contextAttributes,
-            ...options.contextAttributes
+        const resolvedOptions = {...defaultOptions, ...options, canvasContextAttributes: {
+            ...defaultOptions.canvasContextAttributes,
+            ...options.canvasContextAttributes
         }} as CompleteMapOptions;
 
         if (resolvedOptions.minZoom != null && resolvedOptions.maxZoom != null && resolvedOptions.minZoom > resolvedOptions.maxZoom) {
@@ -637,7 +634,7 @@ export class Map extends Camera {
         this._interactive = resolvedOptions.interactive;
         this._maxTileCacheSize = resolvedOptions.maxTileCacheSize;
         this._maxTileCacheZoomLevels = resolvedOptions.maxTileCacheZoomLevels;
-        this._contextAttributes = {...resolvedOptions.contextAttributes};
+        this._canvasContextAttributes = {...resolvedOptions.canvasContextAttributes};
         this._trackResize = resolvedOptions.trackResize === true;
         this._bearingSnap = resolvedOptions.bearingSnap;
         this._centerClampedToGround = resolvedOptions.centerClampedToGround;
@@ -3039,7 +3036,7 @@ export class Map extends Camera {
         // Maplibre WebGL context requires alpha, depth and stencil buffers. It also forces premultipliedAlpha: true.
         // We use the values provided in the map constructor for the rest of context attributes
         const attributes = {
-            ...this._contextAttributes,
+            ...this._canvasContextAttributes,
             alpha: true,
             depth: true,
             stencil: true,
