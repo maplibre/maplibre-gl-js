@@ -87,7 +87,7 @@ function performQueryOnFixture(fixture)  {
             interactive: false,
             attributionControl: false,
             pixelRatio: options.pixelRatio,
-            contextAttributes: {preserveDrawingBuffer: true},
+            contextAttributes: {preserveDrawingBuffer: true, powerPreference: 'default'},
             fadeDuration: options.fadeDuration || 0,
             localIdeographFontFamily: options.localIdeographFontFamily || false,
             crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions
