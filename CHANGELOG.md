@@ -8,6 +8,7 @@
 - Fix globe custom layers being supplied incorrect matrices after projection transition to mercator ([#5150](https://github.com/maplibre/maplibre-gl-js/pull/5150))
 - Fix custom 3D models disappearing during projection transition ([#5150](https://github.com/maplibre/maplibre-gl-js/pull/5150))
 - _...Add new stuff here..._
+- Fix cacheControl for Tile to not ignore values of 0
 
 ## 5.0.0-pre.9
 
