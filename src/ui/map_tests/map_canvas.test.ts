@@ -58,3 +58,46 @@ describe('Max Canvas Size option', () => {
         expect(map.getCanvas().height).toBe(3072);
     });
 });
+
+describe('WebGLContextAttributes options', () => {
+    test('Optional values can be set correctly', () => {
+        const container = window.document.createElement('div');
+        const contextAttributes = {
+            antialias: true,
+            preserveDrawingBuffer: true,
+            powerPreference: 'default',
+            failIfMajorPerformanceCaveat: true,
+            desynchronized: true,
+        }
+        Object.defineProperty(container, 'clientWidth', {value: 2048});
+        Object.defineProperty(container, 'clientHeight', {value: 2048});
+        const map = createMap({container, contextAttributes});
+        const gl = map.painter.context.gl;
+        const mapContextAttributes = gl.getContextAttributes();
+        expect(mapContextAttributes.antialias).toBe(contextAttributes.antialias);
+        expect(mapContextAttributes.preserveDrawingBuffer).toBe(contextAttributes.preserveDrawingBuffer);
+        expect(mapContextAttributes.powerPreference).toBe(contextAttributes.powerPreference);
+        expect(mapContextAttributes.failIfMajorPerformanceCaveat).toBe(contextAttributes.failIfMajorPerformanceCaveat);
+        expect(mapContextAttributes.desynchronized).toBe(contextAttributes.desynchronized);
+    });
+
+    test('Required values cannot be set', () => {
+        const container = window.document.createElement('div');
+        const contextAttributes = {
+            alpha: false,
+            depth: false,
+            stencil: false,
+            premultipliedAlpha: false,
+        }
+        Object.defineProperty(container, 'clientWidth', {value: 2048});
+        Object.defineProperty(container, 'clientHeight', {value: 2048});
+        const map = createMap({container, contextAttributes});
+        const mapContextAttributes = map.painter.context.gl.getContextAttributes();
+        console.log(mapContextAttributes);
+        expect(mapContextAttributes.alpha).toBe(true);
+        expect(mapContextAttributes.depth).toBe(true);
+        expect(mapContextAttributes.stencil).toBe(true);
+        expect(mapContextAttributes.premultipliedAlpha).toBe(true);
+    });
+
+});
