@@ -54,6 +54,7 @@ export class Program<Us extends UniformBindings> {
         projectionDefine: string) {
 
         const gl = context.gl;
+        const isWebGL2 = gl instanceof WebGL2RenderingContext;
         this.program = gl.createProgram();
 
         const staticAttrInfo = getTokenizedAttributesAndUniforms(source.staticAttributes);
@@ -72,6 +73,9 @@ export class Program<Us extends UniformBindings> {
         }
 
         const defines = configuration ? configuration.defines() : [];
+        if (isWebGL2) {
+            defines.unshift('#version 300 es');
+        }
         if (showOverdrawInspector) {
             defines.push('#define OVERDRAW_INSPECTOR;');
         }
@@ -82,8 +86,23 @@ export class Program<Us extends UniformBindings> {
             defines.push(projectionDefine);
         }
 
-        const fragmentSource = defines.concat(shaders.prelude.fragmentSource, projectionPrelude.fragmentSource, source.fragmentSource).join('\n');
-        const vertexSource = defines.concat(shaders.prelude.vertexSource, projectionPrelude.vertexSource, source.vertexSource).join('\n');
+        let fragmentSource = defines.concat(shaders.prelude.fragmentSource, projectionPrelude.fragmentSource, source.fragmentSource).join('\n');
+        let vertexSource = defines.concat(shaders.prelude.vertexSource, projectionPrelude.vertexSource, source.vertexSource).join('\n');
+
+        if (!isWebGL2) {
+            // WebGL1 Compatibility
+            // Convert WebGL2 shader sources to WebGL1
+            fragmentSource = fragmentSource
+                .replace(/\bin\s/g, 'varying ')
+                .replace('out highp vec4 fragColor;', '')
+                .replace(/fragColor/g, 'gl_FragColor')
+                .replace(/texture\(/g, 'texture2D(');
+            vertexSource = vertexSource
+                .replace(/\bin\s/g, 'attribute ')
+                .replace(/\bout\s/g, 'varying ')
+                .replace(/texture\(/g, 'texture2D(');
+            // ~WebGL1 Compatibility
+        }
 
         const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
         if (gl.isContextLost()) {
