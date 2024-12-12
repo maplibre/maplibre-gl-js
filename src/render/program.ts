@@ -2,6 +2,7 @@ import {type PreparedShader, shaders} from '../shaders/shaders';
 import {type ProgramConfiguration} from '../data/program_configuration';
 import {VertexArrayObject} from './vertex_array_object';
 import {type Context} from '../gl/context';
+import {isWebGL2} from '../gl/webgl2';
 
 import type {SegmentVector} from '../data/segment';
 import type {VertexBuffer} from '../gl/vertex_buffer';
@@ -54,7 +55,6 @@ export class Program<Us extends UniformBindings> {
         projectionDefine: string) {
 
         const gl = context.gl;
-        const isWebGL2 = gl instanceof WebGL2RenderingContext;
         this.program = gl.createProgram();
 
         const staticAttrInfo = getTokenizedAttributesAndUniforms(source.staticAttributes);
@@ -73,7 +73,7 @@ export class Program<Us extends UniformBindings> {
         }
 
         const defines = configuration ? configuration.defines() : [];
-        if (isWebGL2) {
+        if (isWebGL2(gl)) {
             defines.unshift('#version 300 es');
         }
         if (showOverdrawInspector) {
@@ -89,7 +89,7 @@ export class Program<Us extends UniformBindings> {
         let fragmentSource = defines.concat(shaders.prelude.fragmentSource, projectionPrelude.fragmentSource, source.fragmentSource).join('\n');
         let vertexSource = defines.concat(shaders.prelude.vertexSource, projectionPrelude.vertexSource, source.vertexSource).join('\n');
 
-        if (!isWebGL2) {
+        if (!isWebGL2(gl)) {
             // WebGL1 Compatibility
             // Convert WebGL2 shader sources to WebGL1
             fragmentSource = fragmentSource
