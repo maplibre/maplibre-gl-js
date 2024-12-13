@@ -732,7 +732,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 attributionControl: false,
                 maxPitch: options.maxPitch,
                 pixelRatio: options.pixelRatio,
-                preserveDrawingBuffer: true,
+                canvasContextAttributes: {preserveDrawingBuffer: true, powerPreference: 'default'},
                 fadeDuration: options.fadeDuration || 0,
                 localIdeographFontFamily: options.localIdeographFontFamily || false as any,
                 crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions,
