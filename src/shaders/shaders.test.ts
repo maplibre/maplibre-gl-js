@@ -6,7 +6,7 @@ import fs from 'fs';
 describe('Shaders', () => {
     test('`transpileToWebGL1()` should throw for unexpected type', () => {
         //@ts-expect-error
-        expect(transpileToWebGL1('invalid', '')).toThrowError();
+        expect(() => transpileToWebGL1('invalid', '')).toThrow();
     });
 
     test('webgl2 to webgl1 transpiled shader should be identical', () => {
