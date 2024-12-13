@@ -62,7 +62,7 @@ describe('Max Canvas Size option', () => {
 describe('WebGLContextAttributes options', () => {
     test('Optional values can be set correctly', () => {
         const container = window.document.createElement('div');
-        const contextAttributes = {
+        const canvasContextAttributes = {
             antialias: true,
             preserveDrawingBuffer: true,
             powerPreference: 'default',
@@ -71,19 +71,19 @@ describe('WebGLContextAttributes options', () => {
         }
         Object.defineProperty(container, 'clientWidth', {value: 2048});
         Object.defineProperty(container, 'clientHeight', {value: 2048});
-        const map = createMap({container, contextAttributes});
+        const map = createMap({container, canvasContextAttributes});
         const gl = map.painter.context.gl;
         const mapContextAttributes = gl.getContextAttributes();
-        expect(mapContextAttributes.antialias).toBe(contextAttributes.antialias);
-        expect(mapContextAttributes.preserveDrawingBuffer).toBe(contextAttributes.preserveDrawingBuffer);
-        expect(mapContextAttributes.powerPreference).toBe(contextAttributes.powerPreference);
-        expect(mapContextAttributes.failIfMajorPerformanceCaveat).toBe(contextAttributes.failIfMajorPerformanceCaveat);
-        expect(mapContextAttributes.desynchronized).toBe(contextAttributes.desynchronized);
+        expect(mapContextAttributes.antialias).toBe(canvasContextAttributes.antialias);
+        expect(mapContextAttributes.preserveDrawingBuffer).toBe(canvasContextAttributes.preserveDrawingBuffer);
+        expect(mapContextAttributes.powerPreference).toBe(canvasContextAttributes.powerPreference);
+        expect(mapContextAttributes.failIfMajorPerformanceCaveat).toBe(canvasContextAttributes.failIfMajorPerformanceCaveat);
+        expect(mapContextAttributes.desynchronized).toBe(canvasContextAttributes.desynchronized);
     });
 
     test('Required values cannot be set', () => {
         const container = window.document.createElement('div');
-        const contextAttributes = {
+        const canvasContextAttributes = {
             alpha: false,
             depth: false,
             stencil: false,
@@ -91,7 +91,7 @@ describe('WebGLContextAttributes options', () => {
         }
         Object.defineProperty(container, 'clientWidth', {value: 2048});
         Object.defineProperty(container, 'clientHeight', {value: 2048});
-        const map = createMap({container, contextAttributes});
+        const map = createMap({container, canvasContextAttributes});
         const mapContextAttributes = map.painter.context.gl.getContextAttributes();
         console.log(mapContextAttributes);
         expect(mapContextAttributes.alpha).toBe(true);
