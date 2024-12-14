@@ -122,7 +122,7 @@ export class MouseOrTouchMoveStateManager implements DragMoveStateManager<MouseE
 
     _onMouseEventOrTouchEvent(e: MouseEvent | TouchEvent, onMouseEvent: (MouseEvent) => any, onTouchEvent: (TouchEvent) => any) {
         if (e instanceof MouseEvent) return onMouseEvent(e as MouseEvent);
-        if ('TouchEvent' in window && e instanceof TouchEvent) return onTouchEvent(e as TouchEvent);
+        if (window.TouchEvent && e instanceof TouchEvent) return onTouchEvent(e as TouchEvent);
     }
 
     startMove(e: MouseEvent | TouchEvent) {
