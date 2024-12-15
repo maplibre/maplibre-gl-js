@@ -1,4 +1,4 @@
-import {type PreparedShader, shaders, transpileToWebGL1} from '../shaders/shaders';
+import {type PreparedShader, shaders, transpileVertexShaderToWebGL1, transpileFragmentShaderToWebGL1} from '../shaders/shaders';
 import {type ProgramConfiguration} from '../data/program_configuration';
 import {VertexArrayObject} from './vertex_array_object';
 import {type Context} from '../gl/context';
@@ -90,8 +90,8 @@ export class Program<Us extends UniformBindings> {
         let vertexSource = defines.concat(shaders.prelude.vertexSource, projectionPrelude.vertexSource, source.vertexSource).join('\n');
 
         if (!isWebGL2(gl)) {
-            fragmentSource = transpileToWebGL1('fragment', fragmentSource);
-            vertexSource = transpileToWebGL1('vertex', vertexSource);
+            fragmentSource = transpileFragmentShaderToWebGL1(fragmentSource);
+            vertexSource = transpileVertexShaderToWebGL1(vertexSource);
         }
 
         const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);

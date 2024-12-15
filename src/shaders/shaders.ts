@@ -214,20 +214,19 @@ uniform ${precision} ${type} u_${name};
     return {fragmentSource, vertexSource, staticAttributes: vertexAttributes, staticUniforms: shaderUniforms};
 }
 
-/** Transpile WebGL2 shader source to WebGL1 */
-export function transpileToWebGL1(type: 'fragment' | 'vertex', src: string): string {
-    if (type === 'fragment') {
-        return src
-            .replace(/\bin\s/g, 'varying ')
-            .replace('out highp vec4 fragColor;', '')
-            .replace(/fragColor/g, 'gl_FragColor')
-            .replace(/texture\(/g, 'texture2D(');
-    }
-    if (type === 'vertex') {
-        return src
-            .replace(/\bin\s/g, 'attribute ')
-            .replace(/\bout\s/g, 'varying ')
-            .replace(/texture\(/g, 'texture2D(');
-    }
-    throw new Error(`Unexpected shader type: ${type}`);
+/** Transpile WebGL2 vertex shader source to WebGL1 */
+export function transpileVertexShaderToWebGL1(source: string): string {
+    return source
+        .replace(/\bin\s/g, 'attribute ')
+        .replace(/\bout\s/g, 'varying ')
+        .replace(/texture\(/g, 'texture2D(');
+}
+
+/** Transpile WebGL2 fragment shader source to WebGL1 */
+export function transpileFragmentShaderToWebGL1(source: string): string {
+    return source
+        .replace(/\bin\s/g, 'varying ')
+        .replace('out highp vec4 fragColor;', '')
+        .replace(/fragColor/g, 'gl_FragColor')
+        .replace(/texture\(/g, 'texture2D(');
 }
