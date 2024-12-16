@@ -38,7 +38,7 @@
         style: 'https://demotiles.maplibre.org/style.json',
         zoom: 3,
         center: [7.5, 58],
-        antialias: true,
+        canvasContextAttributes: {antialias: true}
     });
 
     map.on('style.load', () => {
