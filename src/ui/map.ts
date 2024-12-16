@@ -720,10 +720,10 @@ export class Map extends Camera {
             }
         }
 
-        // When no style is set or it's using the default mercator projection, we can constrain the camera.
+        // When no style is set or it's using something other than the globe projection, we can constrain the camera.
         // When a style is set with other projections though, we can't constrain the camera until the style is loaded
         // and the correct transform is used. Otherwise, valid points in the desired projection could be rejected
-        const shouldConstrainUsingMercatorTransform = typeof resolvedOptions.style === 'string' || !resolvedOptions.style || !resolvedOptions.style?.projection || resolvedOptions.style?.projection?.type === 'mercator';
+        const shouldConstrainUsingMercatorTransform = typeof resolvedOptions.style === 'string' || !(resolvedOptions.style?.projection?.type === 'globe');
         this.resize(null, shouldConstrainUsingMercatorTransform);
 
         this._localIdeographFontFamily = resolvedOptions.localIdeographFontFamily;
