@@ -1,12 +1,41 @@
 ## main
 
 ### ✨ Features and improvements
-- ⚠️ Change the return type of `on` method to return a `Subscription` to allow for easy unsubscribe ([#5080](https://github.com/maplibre/maplibre-gl-js/pull/5080))
+
+- Add support for projection type expression as part of a refactoring of the transfrom and projection classes ([#5139](https://github.com/maplibre/maplibre-gl-js/pull/5139))
+- ⚠️ Support setting WebGL context options on map creation ([#5196](https://github.com/maplibre/maplibre-gl-js/pull/5196)). Previously supported WebGL context options like `antialias`, `preserveDrawingBuffer` and `failIfMajorPerformanceCaveat` must now be defined inside the `canvasContextAttributes` object on `MapOptions`.
+- Dual-Stack WebGL Runtime with WebGL2 to WebGL1 Fallback ([#5198](https://github.com/maplibre/maplibre-gl-js/pull/5198))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fixes line flickering problem ([#5094](https://github.com/maplibre/maplibre-gl-js/pull/5094))
+
+- Fix globe custom layers being supplied incorrect matrices after projection transition to mercator ([#5150](https://github.com/maplibre/maplibre-gl-js/pull/5150))
+- Fix custom 3D models disappearing during projection transition ([#5150](https://github.com/maplibre/maplibre-gl-js/pull/5150))
+- Fix regression in NavigationControl compass on Firefox and Safari browsers ([#5205](https://github.com/maplibre/maplibre-gl-js/pull/5205))
 - _...Add new stuff here..._
+
+## 5.0.0-pre.9
+
+### 🐞 Bug fixes
+
+- Fix smooth mouse wheel zooming ([#5154](https://github.com/maplibre/maplibre-gl-js/pull/5154))
+- ⚠️ Change drag rotate behavior to be less abrupt around the center ([#5104](https://github.com/maplibre/maplibre-gl-js/pull/5104))
+- Fix regression in render world copies ([#5101](https://github.com/maplibre/maplibre-gl-js/pull/5101))
+- Fix unwanted roll when motion is interrupted ([#5083](https://github.com/maplibre/maplibre-gl-js/pull/5083))
+- Fix `geometry-type` filter expression results ([#5132](https://github.com/maplibre/maplibre-gl-js/pull/5132))
+- Fix easeTo not applying padding in globe projection ([#5134](https://github.com/maplibre/maplibre-gl-js/pull/5134))
+- Convert WebGL1 shaders to WebGL2 ([#5166](https://github.com/maplibre/maplibre-gl-js/pull/5166))
+
+## 5.0.0-pre.8
+
+### ✨ Features and improvements
+
+- ⚠️ Change the return type of `on` method to return a `Subscription` to allow for easy unsubscribe ([#5080](https://github.com/maplibre/maplibre-gl-js/pull/5080))
+
+### 🐞 Bug fixes
+
+- Fixes line flickering problem ([#5094](https://github.com/maplibre/maplibre-gl-js/pull/5094))
+- Fix poor performance in Chrome related to passing matrices to WebGL ([#5072](https://github.com/maplibre/maplibre-gl-js/pull/5072))
 
 ## 5.0.0-pre.7
 

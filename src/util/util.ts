@@ -20,10 +20,22 @@ export function createVec3f64(): vec3 { return new Float64Array(3) as any; }
  */
 export function createMat4f64(): mat4 { return new Float64Array(16) as any; }
 /**
+ * Returns a new 32 bit float mat4 of zeroes.
+ */
+export function createMat4f32(): mat4 { return new Float32Array(16) as any; }
+/**
  * Returns a new 64 bit float mat4 set to identity.
  */
 export function createIdentityMat4f64(): mat4 {
     const m = new Float64Array(16) as any;
+    mat4.identity(m);
+    return m;
+}
+/**
+ * Returns a new 32 bit float mat4 set to identity.
+ */
+export function createIdentityMat4f32(): mat4 {
+    const m = new Float32Array(16) as any;
     mat4.identity(m);
     return m;
 }
@@ -393,6 +405,16 @@ export function nextPowerOfTwo(value: number): number {
     if (value <= 1) return 1;
     return Math.pow(2, Math.ceil(Math.log(value) / Math.LN2));
 }
+
+/**
+ * Computes scaling from zoom level.
+ */
+export function zoomScale(zoom: number) { return Math.pow(2, zoom); }
+
+/**
+ * Computes zoom level from scaling.
+ */
+export function scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
 
 /**
  * Create an object by mapping all the values of an existing object while
@@ -904,6 +926,10 @@ export type RollPitchBearing = {
     bearing: number;
 };
 
+export function rollPitchBearingEqual(a: RollPitchBearing, b: RollPitchBearing): boolean {
+    return a.roll == b.roll && a.pitch == b.pitch && a.bearing == b.bearing;
+}
+
 /**
  * This method converts a rotation quaternion to roll, pitch, and bearing angles in degrees.
  * @param rotation - The rotation quaternion
@@ -1007,3 +1033,5 @@ export const MAX_TILE_ZOOM = 25;
  * In other words, the lower bound supported for tile zoom.
  */
 export const MIN_TILE_ZOOM = 0;
+
+export const MAX_VALID_LATITUDE = 85.051129;

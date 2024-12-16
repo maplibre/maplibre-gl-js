@@ -1,12 +1,12 @@
 import {OverscaledTileID} from '../../source/tile_id';
 import {vec2, type vec4} from 'gl-matrix';
-import {type IReadonlyTransform} from '../transform_interface';
 import {MercatorCoordinate} from '../mercator_coordinate';
-import {scaleZoom} from '../transform_helper';
-import {clamp, degreesToRadians} from '../../util/util';
-import {type Terrain} from '../../render/terrain';
-import {type Frustum} from '../../util/primitives/frustum';
+import {clamp, degreesToRadians, scaleZoom} from '../../util/util';
 import {type Aabb, IntersectionResult} from '../../util/primitives/aabb';
+
+import type {IReadonlyTransform} from '../transform_interface';
+import type {Terrain} from '../../render/terrain';
+import type {Frustum} from '../../util/primitives/frustum';
 
 type CoveringTilesResult = {
     tileID: OverscaledTileID;
@@ -187,7 +187,7 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     const stack: Array<CoveringTilesStackEntry> = [];
     const result: Array<CoveringTilesResult> = [];
 
-    if (transform.renderWorldCopies) {
+    if (transform.renderWorldCopies && detailsProvider.allowWorldCopies()) {
         // Render copy of the globe thrice on both sides
         for (let i = 1; i <= 3; i++) {
             stack.push(newRootTile(-i));

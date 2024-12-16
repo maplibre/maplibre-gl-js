@@ -1,6 +1,6 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate, radiansToDegrees, degreesToRadians, rollPitchBearingToQuat, getRollPitchBearing, getAngleDelta} from './util';
+import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate, radiansToDegrees, degreesToRadians, rollPitchBearingToQuat, getRollPitchBearing, getAngleDelta, scaleZoom, zoomScale} from './util';
 import {Canvas} from 'canvas';
 
 describe('util', () => {
@@ -517,5 +517,13 @@ describe('util getAngleDelta', () => {
         const center = new Point(0, 0);
 
         expect(getAngleDelta(lastPoint, currentPoint, center)).toBe(-90);
+    });
+});
+describe('util scaleZoom and zoomScale relation', () => {
+    test('convert and back', () => {
+        expect(scaleZoom(0)).toBe(-Infinity);
+        expect(scaleZoom(10)).toBe(3.3219280948873626);
+        expect(zoomScale(3.3219280948873626)).toBeCloseTo(10, 10);
+        expect(scaleZoom(zoomScale(5))).toBe(5);
     });
 });

@@ -9,7 +9,7 @@ describe('aabb cache', () => {
             y: 0,
             z: 1,
         }, null, null, null);
-        detailsProvider.newFrame();
+        detailsProvider.recalculateCache();
         const aabb1b = detailsProvider.getTileAABB({
             x: 0,
             y: 0,
@@ -36,7 +36,7 @@ describe('aabb cache', () => {
             y: 1,
             z: 1,
         }, null, null, null);
-        detailsProvider.newFrame();
+        detailsProvider.recalculateCache();
         // Get 2+3+4
         const box2b = detailsProvider.getTileAABB({
             x: 1,
@@ -53,7 +53,7 @@ describe('aabb cache', () => {
             y: 1,
             z: 1,
         }, null, null, null);
-        detailsProvider.newFrame();
+        detailsProvider.recalculateCache();
         // Get 1+3+4
         const box1c = detailsProvider.getTileAABB({
             x: 0,
@@ -102,7 +102,7 @@ describe('aabb cache', () => {
             y: 1,
             z: 1,
         }, null, null, null);
-        detailsProvider.newFrame();
+        detailsProvider.recalculateCache();
         // Get 2+3
         const box2b = detailsProvider.getTileAABB({
             x: 1,
@@ -114,7 +114,7 @@ describe('aabb cache', () => {
             y: 1,
             z: 1,
         }, null, null, null);
-        detailsProvider.newFrame();
+        detailsProvider.recalculateCache();
         // Get 1+3
         const box1c = detailsProvider.getTileAABB({
             x: 0,

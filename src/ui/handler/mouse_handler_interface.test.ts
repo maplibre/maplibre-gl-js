@@ -6,7 +6,7 @@ import {type DragRotateResult} from './drag_handler';
 
 describe('mouse handler tests', () => {
     test('MouseRotateHandler', () => {
-        const mouseRotate = generateMouseRotationHandler({clickTolerance: 2});
+        const mouseRotate = generateMouseRotationHandler({clickTolerance: 2}, () => new Point(10, 10));
 
         expect(mouseRotate.isActive()).toBe(false);
         expect(mouseRotate.isEnabled()).toBe(false);
@@ -21,7 +21,7 @@ describe('mouse handler tests', () => {
         expect(mouseRotate.isActive()).toBe(false);
 
         const overToleranceMove = new MouseEvent('mousemove', {buttons: 2, clientX: 10, clientY: 10});
-        expect((mouseRotate.dragMove(overToleranceMove, new Point(10, 10)) as DragRotateResult).bearingDelta).toBeCloseTo(-0.53988378, 7);
+        expect((mouseRotate.dragMove(overToleranceMove, new Point(10, 10)) as DragRotateResult).bearingDelta).toBeCloseTo(8);
         expect(mouseRotate.isActive()).toBe(true);
 
         mouseRotate.dragEnd(new MouseEvent('mouseup', {buttons: 0, button: 2}));
@@ -112,7 +112,7 @@ describe('mouse handler tests', () => {
     });
 
     test('MouseRollHandler', () => {
-        const mouseRoll = generateMouseRollHandler({clickTolerance: 2});
+        const mouseRoll = generateMouseRollHandler({clickTolerance: 2}, () => new Point(11, 11));
 
         expect(mouseRoll.isActive()).toBe(false);
         expect(mouseRoll.isEnabled()).toBe(false);

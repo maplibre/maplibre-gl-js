@@ -15,7 +15,7 @@ import {type IReadonlyTransform} from '../geo/transform_interface';
 import type {EvaluationParameters} from '../style/evaluation_parameters';
 import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type Style} from '../style/style';
-import {MercatorProjection} from '../geo/projection/mercator';
+import {MercatorProjection} from '../geo/projection/mercator_projection';
 import type {ProjectionData} from '../geo/projection/projection_data';
 
 vi.mock('./painter');
@@ -90,7 +90,7 @@ describe('drawSymbol', () => {
         layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
-        tileId.terrainRttPosMatrix = mat4.create();
+        tileId.terrainRttPosMatrix32f = mat4.create();
         const programMock = new Program(null, null, null, null, null, null, null, null);
         (painterMock.useProgram as Mock).mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);
@@ -153,7 +153,7 @@ describe('drawSymbol', () => {
         layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
-        tileId.terrainRttPosMatrix = mat4.create();
+        tileId.terrainRttPosMatrix32f = mat4.create();
         const programMock = new Program(null, null, null, null, null, null, null, null);
         (painterMock.useProgram as Mock).mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);
@@ -220,7 +220,7 @@ describe('drawSymbol', () => {
         layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
-        tileId.terrainRttPosMatrix = mat4.create();
+        tileId.terrainRttPosMatrix32f = mat4.create();
         const programMock = new Program(null, null, null, null, null, null, null, null);
         (painterMock.useProgram as Mock).mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);

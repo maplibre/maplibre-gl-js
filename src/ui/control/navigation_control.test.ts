@@ -84,7 +84,7 @@ describe('NavigationControl', () => {
         const navRect = navButton.getClientRects();
 
         const buttonX = (navRect.x ?? 0) + (navRect.width ?? 0) / 2;
-        const buttonY = (navRect.y ?? 0) + (navRect.height ?? 0) / 2;
+        const buttonY = (navRect.y ?? 0) + (navRect.height ?? 0) / 2 - 1;
 
         simulate.mousedown(navButton, {buttons: 1, button: 0, clientX: buttonX, clientY: buttonY});
         simulate.mousemove(window, {buttons: 1, button: 0, clientX: buttonX - 50, clientY: buttonY});
@@ -168,7 +168,7 @@ describe('NavigationControl', () => {
         const navRect = navButton.getClientRects();
 
         const buttonX = (navRect.x ?? 0) + (navRect.width ?? 0) / 2;
-        const buttonY = (navRect.y ?? 0) + (navRect.height ?? 0) / 2;
+        const buttonY = (navRect.y ?? 0) + (navRect.height ?? 0) / 2 - 1;
 
         simulate.touchstart(navButton, {touches: [{clientX: buttonX, clientY: buttonY}], targetTouches: [{clientX: buttonX, clientY: buttonY}]});
         simulate.touchmove(window, {touches: [{clientX: buttonX - 50, clientY: buttonY}], targetTouches: [{clientX: buttonX - 50, clientY: buttonY}]});
