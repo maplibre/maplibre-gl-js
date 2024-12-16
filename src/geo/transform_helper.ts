@@ -425,7 +425,7 @@ export class TransformHelper implements ITransformGetters {
         this._calcMatrices();
     }
 
-    resize(width: number, height: number, constrain: boolean): void {
+    resize(width: number, height: number, constrain: boolean = true): void {
         this._width = width;
         this._height = height;
         if (constrain) this._constrain();
