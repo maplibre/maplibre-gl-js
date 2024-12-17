@@ -109,7 +109,7 @@ export class Terrain {
      * GL Objects for the terrain-mesh
      * The mesh is a regular mesh, which has the advantage that it can be reused for all tiles.
      */
-    _meshDict: { [key: string]: Mesh } = {};
+    _meshCache: { [key: string]: Mesh } = {};
     /**
      * coords index contains a list of tileID.keys. This index is used to identify
      * the tile via the alpha-cannel in the coords-texture.
@@ -381,8 +381,8 @@ export class Terrain {
         const northPole = tileId.canonical.y === 0;
         const southPole = tileId.canonical.y === (1 << tileId.canonical.z) - 1;
         const key = `m_${northPole ? 'n' : ''}_${southPole ? 's' : ''}`;
-        if (this._meshDict[key]) {
-            return this._meshDict[key];
+        if (this._meshCache[key]) {
+            return this._meshCache[key];
         }
         const context = this.painter.context;
 
@@ -438,7 +438,7 @@ export class Terrain {
             context.createIndexBuffer(indexArray),
             SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
         );
-        this._meshDict[key] = mesh;
+        this._meshCache[key] = mesh;
         return mesh;
     }
 
