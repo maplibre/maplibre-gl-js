@@ -92,6 +92,9 @@ describe('render to texture', () => {
             'maine-hillshade': hillshadeLayer,
             'maine-line': lineLayer,
             'maine-symbol': symbolLayer
+        },
+        projection: {
+            transitionState: 0,
         }
     } as any as Style;
     painter.style = style;

@@ -238,6 +238,11 @@ describe('Terrain', () => {
             },
             width: 1,
             height: 1,
+            style: {
+                projection: {
+                    transitionState: 0,
+                }
+            }
         } as any as Painter;
         const sourceCache = {
             _source: {maxzoom: 12, tileSize: 512},
