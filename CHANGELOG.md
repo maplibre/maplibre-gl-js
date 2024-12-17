@@ -5,6 +5,7 @@
 
 ### 🐞 Bug fixes
 
+- Fix holes at the poles when terrain is used with globe ([TODO](TODO))
 - _...Add new stuff here..._
 
 ## 5.0.0-pre.10
