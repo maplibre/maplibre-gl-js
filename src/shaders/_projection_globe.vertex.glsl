@@ -43,10 +43,13 @@ float projectLineThickness(float tileY) {
     }
 }
 
-// get position inside the tile in range 0..8192 and project it onto the surface of a unit sphere
-vec3 projectToSphere(vec2 posInTile, vec2 rawPos) {
+// Get position inside the tile in range 0..8192 and project it onto the surface of a unit sphere.
+// Additionally project special Y values to the poles.
+// - translatedPos: tile-space vertex position, optionally with user-specified translation already applied
+// - rawPos: the original tile-space vertex position *without translation* - needed because we would not be able to detect pole vertices from coordinates modified by translation.
+vec3 projectToSphere(vec2 translatedPos, vec2 rawPos) {
     // Compute position in range 0..1 of the base tile of web mercator
-    vec2 mercator_pos = u_projection_tile_mercator_coords.xy + u_projection_tile_mercator_coords.zw * posInTile;
+    vec2 mercator_pos = u_projection_tile_mercator_coords.xy + u_projection_tile_mercator_coords.zw * translatedPos;
 
     // Now compute angular coordinates on the surface of a perfect sphere
     vec2 spherical;
@@ -129,7 +132,7 @@ vec4 projectTile(vec2 posInTile) {
     return interpolateProjection(posInTile, projectToSphere(posInTile), 0.0);
 }
 
-// A variant that supports special pole and planet center vertices.
+// A variant that supports special pole vertices.
 vec4 projectTile(vec2 posInTile, vec2 rawPos) {
     return interpolateProjection(posInTile, projectToSphere(posInTile, rawPos), 0.0);
 }
@@ -142,7 +145,8 @@ vec4 projectTileWithElevation(vec2 posInTile, float elevation) {
 }
 
 // Projects the tile coordinates+elevation while **preserving Z** value from multiplication with the projection matrix.
+// Applies pole vertices.
 vec4 projectTileFor3D(vec2 posInTile, float elevation) {
-    vec3 spherePos = projectToSphere(posInTile);
+    vec3 spherePos = projectToSphere(posInTile, posInTile);
     return interpolateProjectionFor3D(posInTile, spherePos, elevation);
 }
