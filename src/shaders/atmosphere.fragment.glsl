@@ -132,8 +132,7 @@ vec4 atmosphere(vec3 r, vec3 r0, vec3 pSun, float iSun, float rPlanet, float rAt
     }
 
     // Calculate opacity
-    //float opacity = exp(-(length(kRlh) * iOdRlh + kMie * iOdMie));
-    float opacity = exp(-(length(kRlh) * length(totalRlh) + kMie * length(totalMie)));
+    float opacity = exp(-(length(kRlh) * length(totalRlh) + kMie * length(totalMie))); // We need to approximate attenuation with a single "grayscale" value instead of a color.
 
     // Calculate the final color.
     vec3 color = iSun * (pRlh * kRlh * totalRlh + pMie * kMie * totalMie);
