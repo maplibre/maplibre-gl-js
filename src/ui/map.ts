@@ -68,7 +68,7 @@ import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 const version = packageJSON.version;
 
 type WebGLSupportedVersions = 'webgl2' | 'webgl' | undefined
-type WebGLContextAttributesWithType = WebGLContextAttributes & {contextType: WebGLSupportedVersions};
+type WebGLContextAttributesWithType = WebGLContextAttributes & {contextType?: WebGLSupportedVersions};
 
 /**
  * The {@link Map} options object.
@@ -3061,10 +3061,7 @@ export class Map extends Camera {
         if (this._canvasContextAttributes.contextType) {
             gl = this._canvas.getContext(this._canvasContextAttributes.contextType, attributes) as WebGL2RenderingContext | WebGLRenderingContext;
         } else {
-            gl = this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext;
-            if (!gl) {
-                gl = this._canvas.getContext('webgl', attributes) as WebGLRenderingContext;
-            }
+            gl = this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext || this._canvas.getContext('webgl', attributes) as WebGLRenderingContext;
         }
 
         if (!gl) {
