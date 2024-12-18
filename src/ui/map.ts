@@ -720,7 +720,11 @@ export class Map extends Camera {
             }
         }
 
-        this.resize();
+        // When no style is set or it's using something other than the globe projection, we can constrain the camera.
+        // When a style is set with other projections though, we can't constrain the camera until the style is loaded
+        // and the correct transform is used. Otherwise, valid points in the desired projection could be rejected
+        const shouldConstrainUsingMercatorTransform = typeof resolvedOptions.style === 'string' || !(resolvedOptions.style?.projection?.type === 'globe');
+        this.resize(null, shouldConstrainUsingMercatorTransform);
 
         this._localIdeographFontFamily = resolvedOptions.localIdeographFontFamily;
         this._validateStyle = resolvedOptions.validateStyle;
@@ -734,6 +738,8 @@ export class Map extends Camera {
             this.addControl(new LogoControl(), resolvedOptions.logoPosition);
 
         this.on('style.load', () => {
+            // If we didn't constrain the camera before, we do it now
+            if (!shouldConstrainUsingMercatorTransform) this._resizeTransform();
             if (this.transform.unmodified) {
                 const coercedOptions = pick(this.style.stylesheet, ['center', 'zoom', 'bearing', 'pitch', 'roll']) as CameraOptions;
                 this.jumpTo(coercedOptions);
@@ -873,10 +879,8 @@ export class Map extends Camera {
      * if (mapDiv.style.visibility === true) map.resize();
      * ```
      */
-    resize(eventData?: any): Map {
-        const dimensions = this._containerDimensions();
-        const width = dimensions[0];
-        const height = dimensions[1];
+    resize(eventData?: any, constrainTransform = true): Map {
+        const [width, height] = this._containerDimensions();
 
         const clampedPixelRatio = this._getClampedPixelRatio(width, height);
         this._resizeCanvas(width, height, clampedPixelRatio);
@@ -892,8 +896,7 @@ export class Map extends Camera {
             this.painter.resize(width, height, clampedPixelRatio);
         }
 
-        this.transform.resize(width, height);
-        this._requestedCameraState?.resize(width, height);
+        this._resizeTransform(constrainTransform);
 
         const fireMoving = !this._moving;
         if (fireMoving) {
@@ -907,6 +910,13 @@ export class Map extends Camera {
         if (fireMoving) this.fire(new Event('moveend', eventData));
 
         return this;
+    }
+
+    _resizeTransform(constrainTransform = true) {
+        const [width, height] = this._containerDimensions();
+
+        this.transform.resize(width, height, constrainTransform);
+        this._requestedCameraState?.resize(width, height, constrainTransform);
     }
 
     /**
