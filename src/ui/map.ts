@@ -67,6 +67,9 @@ import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 
 const version = packageJSON.version;
 
+type WebGLSupportedVersions = 'webgl2' | 'webgl' | undefined
+type WebGLContextAttributesWithType = WebGLContextAttributes & {contextType?: WebGLSupportedVersions};
+
 /**
  * The {@link Map} options object.
  */
@@ -115,9 +118,10 @@ export type MapOptions = {
     /**
      * Set of WebGLContextAttributes that are applied to the WebGL context of the map.
      * See https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext for more details.
-     * @defaultValue antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: false, failIfMajorPerformanceCaveat: false, desynchronized: false
+     * `contextType` can be set to `webgl2` or `webgl` to force a WebGL version. Not setting it, Maplibre will do it's best to get a suitable context.
+     * @defaultValue antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: false, failIfMajorPerformanceCaveat: false, desynchronized: false, contextType: 'webgl2withfallback'
      */
-    canvasContextAttributes?: WebGLContextAttributes;
+    canvasContextAttributes?: WebGLContextAttributesWithType;
     /**
      * If `false`, the map won't attempt to re-request tiles once they expire per their HTTP `cacheControl`/`expires` headers.
      * @defaultValue true
@@ -388,7 +392,8 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
         preserveDrawingBuffer: false,
         powerPreference: 'high-performance',
         failIfMajorPerformanceCaveat: false,
-        desynchronized: false
+        desynchronized: false,
+        contextType: undefined
     },
 
     scrollZoom: true,
@@ -494,7 +499,7 @@ export class Map extends Camera {
     _fullyLoaded: boolean;
     _trackResize: boolean;
     _resizeObserver: ResizeObserver;
-    _canvasContextAttributes: WebGLContextAttributes;
+    _canvasContextAttributes: WebGLContextAttributesWithType;
     _refreshExpiredTiles: boolean;
     _hash: Hash;
     _delegatedListeners: Record<string, DelegatedListener[]>;
@@ -3062,9 +3067,12 @@ export class Map extends Camera {
             }
         }, {once: true});
 
-        const gl =
-            this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext ||
-            this._canvas.getContext('webgl', attributes) as WebGLRenderingContext;
+        let gl: WebGL2RenderingContext | WebGLRenderingContext | null = null;
+        if (this._canvasContextAttributes.contextType) {
+            gl = this._canvas.getContext(this._canvasContextAttributes.contextType, attributes) as WebGL2RenderingContext | WebGLRenderingContext;
+        } else {
+            gl = this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext || this._canvas.getContext('webgl', attributes) as WebGLRenderingContext;
+        }
 
         if (!gl) {
             const msg = 'Failed to initialize WebGL';

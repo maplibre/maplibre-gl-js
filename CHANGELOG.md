@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Allows setting the desired WebGL version to use ([#5236](https://github.com/maplibre/maplibre-gl-js/pull/5236)). You can now use `contextType` inside `canvasContextAttributes` to choose which WebGL version to use
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
