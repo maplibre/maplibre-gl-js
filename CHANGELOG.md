@@ -7,6 +7,7 @@
 
 - Fix holes at the poles when terrain is used with globe ([#5232](https://github.com/maplibre/maplibre-gl-js/pull/5232))
 - Fix geometry artifacts when globe terrain is zoomed out too much ([#5232](https://github.com/maplibre/maplibre-gl-js/pull/5232))
+- Fix atmosphere improperly blending into the background ([#5235](https://github.com/maplibre/maplibre-gl-js/pull/5235))
 - _...Add new stuff here..._
 
 ## 5.0.0-pre.10
