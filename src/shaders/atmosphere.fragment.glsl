@@ -165,5 +165,5 @@ void main() {
     color.rgb = 1.0 - exp(-1.0 * color.rgb);
     // Apply gamma for correctness
     color = pow(color, vec4(1.0 / 2.2)); // Gamma-correct the alpha channel as well (blending itself will not be gamma correct, so doing this helps visuals a bit).
-    fragColor = vec4(color.rgb, 1.0 - color.a);
+    fragColor = vec4(color.rgb, 1.0 - color.a) * u_atmosphere_blend;
 }
