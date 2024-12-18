@@ -163,7 +163,7 @@ interface ITransformMutators {
     /**
      * Sets the transform's width and height and recomputes internal matrices.
      */
-    resize(width: number, height: number): void;
+    resize(width: number, height: number, constrainTransform: boolean): void;
     /**
      * Helper method to update edge-insets in place
      *
