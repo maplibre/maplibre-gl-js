@@ -115,6 +115,21 @@ describe('hash', () => {
         window.location.hash = '#map=10/3.00/-1.00&foo=bar';
 
         expect(hash._onHashChange()).toBeFalsy();
+
+        // Zoom out of bounds, default maxZoom 22
+        window.location.hash = '#24/3.00/-1.00';
+
+        expect(hash._onHashChange()).toBeFalsy();
+
+        // Latitude out of bounds [-90, 90]
+        window.location.hash = '#10/100.00/-1.00';
+
+        expect(hash._onHashChange()).toBeFalsy();
+
+        // Pitch out of bounds, default maxPitch 60
+        window.location.hash = '#10/3.00/-1.00/30/90';
+
+        expect(hash._onHashChange()).toBeFalsy();
     });
 
     test('#_onHashChange empty', () => {
