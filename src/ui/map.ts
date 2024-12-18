@@ -67,7 +67,8 @@ import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 
 const version = packageJSON.version;
 
-type WebGLSupportedVersions = 'webgl2' | 'webgl' | 'webgl2withfallback'
+type WebGLSupportedVersions = 'webgl2' | 'webgl' | undefined
+type WebGLContextAttributesWithType = WebGLContextAttributes & {contextType: WebGLSupportedVersions};
 
 /**
  * The {@link Map} options object.
@@ -117,10 +118,10 @@ export type MapOptions = {
     /**
      * Set of WebGLContextAttributes that are applied to the WebGL context of the map.
      * See https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext for more details.
-     * `contextType` can be set to `webgl2` or `webgl` to force a WebGL version. `webgl2withfallback` can be used to use of WebGL 2.0 if available with a fallback to WebGL 1.0 in case it's not.
+     * `contextType` can be set to `webgl2` or `webgl` to force a WebGL version. Not setting it, Maplibre will do it's best to get a suitable context.
      * @defaultValue antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: false, failIfMajorPerformanceCaveat: false, desynchronized: false, contextType: 'webgl2withfallback'
      */
-    canvasContextAttributes?: WebGLContextAttributes & {contextType?: WebGLSupportedVersions};
+    canvasContextAttributes?: WebGLContextAttributesWithType;
     /**
      * If `false`, the map won't attempt to re-request tiles once they expire per their HTTP `cacheControl`/`expires` headers.
      * @defaultValue true
@@ -392,7 +393,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
         powerPreference: 'high-performance',
         failIfMajorPerformanceCaveat: false,
         desynchronized: false,
-        contextType: 'webgl2withfallback'
+        contextType: undefined
     },
 
     scrollZoom: true,
@@ -498,7 +499,7 @@ export class Map extends Camera {
     _fullyLoaded: boolean;
     _trackResize: boolean;
     _resizeObserver: ResizeObserver;
-    _canvasContextAttributes: WebGLContextAttributes & {contextType: WebGLSupportedVersions};
+    _canvasContextAttributes: WebGLContextAttributesWithType;
     _refreshExpiredTiles: boolean;
     _hash: Hash;
     _delegatedListeners: Record<string, DelegatedListener[]>;
@@ -638,7 +639,7 @@ export class Map extends Camera {
         this._interactive = resolvedOptions.interactive;
         this._maxTileCacheSize = resolvedOptions.maxTileCacheSize;
         this._maxTileCacheZoomLevels = resolvedOptions.maxTileCacheZoomLevels;
-        this._canvasContextAttributes = {...resolvedOptions.canvasContextAttributes} as WebGLContextAttributes & {contextType: WebGLSupportedVersions};
+        this._canvasContextAttributes = {...resolvedOptions.canvasContextAttributes};
         this._trackResize = resolvedOptions.trackResize === true;
         this._bearingSnap = resolvedOptions.bearingSnap;
         this._centerClampedToGround = resolvedOptions.centerClampedToGround;
@@ -3056,12 +3057,14 @@ export class Map extends Camera {
             }
         }, {once: true});
 
-        let gl;
-        if (this._canvasContextAttributes.contextType === 'webgl2' || this._canvasContextAttributes.contextType === 'webgl2withfallback') {
+        let gl: WebGL2RenderingContext | WebGLRenderingContext | null = null;
+        if (this._canvasContextAttributes.contextType) {
+            gl = this._canvas.getContext(this._canvasContextAttributes.contextType, attributes) as WebGL2RenderingContext | WebGLRenderingContext;
+        } else {
             gl = this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext;
-        }
-        if (this._canvasContextAttributes.contextType === 'webgl' || (!gl && this._canvasContextAttributes.contextType === 'webgl2withfallback')) {
-            gl = this._canvas.getContext('webgl', attributes) as WebGLRenderingContext;
+            if (!gl) {
+                gl = this._canvas.getContext('webgl', attributes) as WebGLRenderingContext;
+            }
         }
 
         if (!gl) {
