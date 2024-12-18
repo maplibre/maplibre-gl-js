@@ -10,6 +10,7 @@ import type {PointProjection} from '../symbol/projection';
 import type {ProjectionData, ProjectionDataParams} from './projection/projection_data';
 import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider';
 import type {Frustum} from '../util/primitives/frustum';
+import type {CoveringTilesOptions} from './projection/covering_tiles';
 
 export interface ITransformGetters {
     get tileSize(): number;
@@ -480,6 +481,11 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Returns a tile-specific projection matrix. Used for symbol placement fast-path for mercator transform.
      */
     getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 | undefined;
+
+    /**
+     * Returns a list of tiles that optimally covers the screen.
+     */
+    coveringTiles(options: CoveringTilesOptions): OverscaledTileID[];
 }
 
 /**

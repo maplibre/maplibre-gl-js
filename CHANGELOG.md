@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Add the method `.coveringTiles()` to the transform objects ([#5239](https://github.com/maplibre/maplibre-gl-js/pull/5239))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
