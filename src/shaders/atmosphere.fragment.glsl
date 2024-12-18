@@ -42,7 +42,9 @@ vec4 atmosphere(vec3 r, vec3 r0, vec3 pSun, float iSun, float rPlanet, float rAt
 
     // Calculate the step size of the primary ray.
     vec2 p = rsi(r0, r, rAtmos);
-    if (p.x > p.y) return vec4(0,0,0,0);
+    if (p.x > p.y) {
+        return vec4(0.0, 0.0, 0.0, 1.0);
+    }
 
     if (p.x < 0.0) {
         p.x = 0.0;
@@ -131,7 +133,7 @@ vec4 atmosphere(vec3 r, vec3 r0, vec3 pSun, float iSun, float rPlanet, float rAt
 
     // Calculate opacity
     //float opacity = exp(-(length(kRlh) * iOdRlh + kMie * iOdMie));
-    float opacity = min(0.75, exp(-(length(kRlh) * length(totalRlh) + kMie * length(totalMie))));
+    float opacity = exp(-(length(kRlh) * length(totalRlh) + kMie * length(totalMie)));
 
     // Calculate the final color.
     vec3 color = iSun * (pRlh * kRlh * totalRlh + pMie * kMie * totalMie);
@@ -160,9 +162,8 @@ void main() {
     );
 
     // Apply exposure.
-    color.xyz = 1.0 - exp(-1.0 * color.xyz);
-
-    vec4 no_effect_color = vec4(0, 0, 0, 0);
-
-    fragColor = mix(color, no_effect_color, 1.0 - u_atmosphere_blend);
+    color.rgb = 1.0 - exp(-1.0 * color.rgb);
+    // Apply gamma for correctness (helps visuals even though blending will not be gamma correct anyway)
+    color = pow(color, vec4(1.0 / 2.2)); // Gamma-correct the alpha channel as well - helps make the blending better.
+    fragColor = vec4(color.rgb, 1.0 - color.a);
 }
