@@ -898,8 +898,7 @@ export class Map extends Camera {
             this.painter.resize(width, height, clampedPixelRatio);
         }
 
-        this.transform.resize(width, height, constrainTransform);
-        this._requestedCameraState?.resize(width, height, constrainTransform);
+        this._resizeTransform(constrainTransform);
 
         const fireMoving = !this._moving;
         if (fireMoving) {
@@ -915,13 +914,13 @@ export class Map extends Camera {
         return this;
     }
 
-    _resizeTransform() {
+    _resizeTransform(constrainTransform = true) {
         const dimensions = this._containerDimensions();
         const width = dimensions[0];
         const height = dimensions[1];
 
-        this.transform.resize(width, height, true);
-        this._requestedCameraState?.resize(width, height, true);
+        this.transform.resize(width, height, constrainTransform);
+        this._requestedCameraState?.resize(width, height, constrainTransform);
     }
 
     /**
