@@ -1,4 +1,4 @@
-import {beforeEach, test, expect, vi, onTestFinished, onTestFailed} from 'vitest';
+import {beforeEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
 
 beforeEach(() => {
@@ -59,46 +59,46 @@ test('WebGL error while creating map', () => {
 });
 
 test('Check Map is being created with desired WebGL version', ({onTestFinished}) => {
-  const original = HTMLCanvasElement.prototype.getContext;
-  HTMLCanvasElement.prototype.getContext = function (type: string) {
-      const errorEvent = new Event('webglcontextcreationerror');
-      (errorEvent as any).statusMessage = `${type} is not supported`;
-      (this as HTMLCanvasElement).dispatchEvent(errorEvent);
-      return null;
-  };
+    const original = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (type: string) {
+        const errorEvent = new Event('webglcontextcreationerror');
+        (errorEvent as any).statusMessage = `${type} is not supported`;
+        (this as HTMLCanvasElement).dispatchEvent(errorEvent);
+        return null;
+    };
 
-  onTestFinished(() => {HTMLCanvasElement.prototype.getContext = original});
+    onTestFinished(() => {HTMLCanvasElement.prototype.getContext = original});
 
-  try {
-      createMap({canvasContextAttributes:{contextType: 'webgl2'}});
-  } catch (e) {
-      const errorMessageObject = JSON.parse(e.message);
-      expect(errorMessageObject.statusMessage).toBe('webgl2 is not supported');
-  }
+    try {
+        createMap({canvasContextAttributes: {contextType: 'webgl2'}});
+    } catch (e) {
+        const errorMessageObject = JSON.parse(e.message);
+        expect(errorMessageObject.statusMessage).toBe('webgl2 is not supported');
+    }
   
-  try {
-      createMap({canvasContextAttributes:{contextType: 'webgl'}});
-  } catch (e) {
-      const errorMessageObject = JSON.parse(e.message);
-      expect(errorMessageObject.statusMessage).toBe('webgl is not supported');
-  }
+    try {
+        createMap({canvasContextAttributes: {contextType: 'webgl'}});
+    } catch (e) {
+        const errorMessageObject = JSON.parse(e.message);
+        expect(errorMessageObject.statusMessage).toBe('webgl is not supported');
+    }
 
 });
 
 test('Check Map falls back to WebGL if WebGL 2 is not supported', ({onTestFinished}) => {
-  const original = HTMLCanvasElement.prototype.getContext;
-  const mockGetContext = vi.fn().mockImplementation((type: string) => {
-    if (type === 'webgl2') {return null;}
-    return original.apply(this, [type]);
-});
-  HTMLCanvasElement.prototype.getContext = mockGetContext
+    const original = HTMLCanvasElement.prototype.getContext;
+    const mockGetContext = vi.fn().mockImplementation((type: string) => {
+        if (type === 'webgl2') {return null;}
+        return original.apply(this, [type]);
+    });
+    HTMLCanvasElement.prototype.getContext = mockGetContext
 
-  onTestFinished(() => {HTMLCanvasElement.prototype.getContext = original});
+    onTestFinished(() => {HTMLCanvasElement.prototype.getContext = original});
   
-  createMap();
-  expect(mockGetContext).toHaveBeenCalledTimes(2);
-  expect(mockGetContext.mock.calls[0][0]).toBe('webgl2');
-  expect(mockGetContext.mock.calls[1][0]).toBe('webgl');
+    createMap();
+    expect(mockGetContext).toHaveBeenCalledTimes(2);
+    expect(mockGetContext.mock.calls[0][0]).toBe('webgl2');
+    expect(mockGetContext.mock.calls[1][0]).toBe('webgl');
   
 });
 

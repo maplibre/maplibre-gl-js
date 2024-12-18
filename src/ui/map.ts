@@ -117,7 +117,7 @@ export type MapOptions = {
     /**
      * Set of WebGLContextAttributes that are applied to the WebGL context of the map.
      * See https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext for more details.
-     * `contextType` can be set to `webgl2` or `webgl1` to force a WebGL version. `webgl2withfallback` can be used to use of WebGL 2.0 if available with a fallback to WebGL 1.0 in case it's not.
+     * `contextType` can be set to `webgl2` or `webgl` to force a WebGL version. `webgl2withfallback` can be used to use of WebGL 2.0 if available with a fallback to WebGL 1.0 in case it's not.
      * @defaultValue antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: false, failIfMajorPerformanceCaveat: false, desynchronized: false, contextType: 'webgl2withfallback'
      */
     canvasContextAttributes?: WebGLContextAttributes & {contextType?: WebGLSupportedVersions};
