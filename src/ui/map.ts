@@ -880,9 +880,7 @@ export class Map extends Camera {
      * ```
      */
     resize(eventData?: any, constrainTransform = true): Map {
-        const dimensions = this._containerDimensions();
-        const width = dimensions[0];
-        const height = dimensions[1];
+        const [width, height] = this._containerDimensions();
 
         const clampedPixelRatio = this._getClampedPixelRatio(width, height);
         this._resizeCanvas(width, height, clampedPixelRatio);
@@ -915,9 +913,7 @@ export class Map extends Camera {
     }
 
     _resizeTransform(constrainTransform = true) {
-        const dimensions = this._containerDimensions();
-        const width = dimensions[0];
-        const height = dimensions[1];
+        const [width, height] = this._containerDimensions();
 
         this.transform.resize(width, height, constrainTransform);
         this._requestedCameraState?.resize(width, height, constrainTransform);
