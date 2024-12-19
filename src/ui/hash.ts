@@ -153,22 +153,23 @@ export class Hash {
     _updateHash: () => ReturnType<typeof setTimeout> = throttle(this._updateHashUnthrottled, 30 * 1000 / 100);
 
     _isValidHash(loc: number[]) {
-        if (loc.length >= 3 && !loc.some(isNaN)) {
-            try {
-                const zoom = +loc[0];
-                const center = new LngLat(+loc[2], +loc[1]);
-                const bearing = +(loc[3] || 0);
-                const pitch = +(loc[4] || 0);
-
-                return zoom >= this._map.getMinZoom() && zoom <= this._map.getMaxZoom() &&
-                    !!center &&
-                    bearing >= 0 && bearing <= 180 &&
-                    pitch >= this._map.getMinPitch() && pitch <= this._map.getMaxPitch();
-            } catch {
-                return false;
-            }
+        if (loc.length < 3 || loc.some(isNaN)) {
+            return false;
         }
 
-        return false;
+        // LngLat() throws error if latitude is out of range, and it's valid if it succeeds.
+        try {
+            new LngLat(+loc[2], +loc[1]);
+        } catch {
+            return false;
+        }
+
+        const zoom = +loc[0];
+        const bearing = +(loc[3] || 0);
+        const pitch = +(loc[4] || 0);
+
+        return zoom >= this._map.getMinZoom() && zoom <= this._map.getMaxZoom() &&
+            bearing >= 0 && bearing <= 180 &&
+            pitch >= this._map.getMinPitch() && pitch <= this._map.getMaxPitch();
     };
 }
