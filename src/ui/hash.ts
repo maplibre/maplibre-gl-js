@@ -1,4 +1,5 @@
 import {throttle} from '../util/throttle';
+import {LngLat} from '../geo/lng_lat';
 
 import type {Map} from './map';
 
@@ -102,14 +103,14 @@ export class Hash {
     };
 
     _onHashChange = () => {
-        const loc = this._getCurrentHash();
-        if (loc.length >= 3 && !loc.some(v => isNaN(v))) {
-            const bearing = this._map.dragRotate.isEnabled() && this._map.touchZoomRotate.isEnabled() ? +(loc[3] || 0) : this._map.getBearing();
+        if (this._hasValidHash()) {
+            const hash = this._getCurrentHash();
+            const bearing = this._map.dragRotate.isEnabled() && this._map.touchZoomRotate.isEnabled() ? +(hash[3] || 0) : this._map.getBearing();
             this._map.jumpTo({
-                center: [+loc[2], +loc[1]],
-                zoom: +loc[0],
+                center: [+hash[2], +hash[1]],
+                zoom: +hash[0],
                 bearing,
-                pitch: +(loc[4] || 0)
+                pitch: +(hash[4] || 0)
             });
             return true;
         }
@@ -150,4 +151,27 @@ export class Hash {
      * Mobile Safari doesn't allow updating the hash more than 100 times per 30 seconds.
      */
     _updateHash: () => ReturnType<typeof setTimeout> = throttle(this._updateHashUnthrottled, 30 * 1000 / 100);
+
+    _hasValidHash() {
+        const hash = this._getCurrentHash();
+
+        if (hash.length < 3 || hash.some(isNaN)) {
+            return false;
+        }
+
+        // LngLat() throws error if latitude is out of range, and it's valid if it succeeds.
+        try {
+            new LngLat(+hash[2], +hash[1]);
+        } catch {
+            return false;
+        }
+
+        const zoom = +hash[0];
+        const bearing = +(hash[3] || 0);
+        const pitch = +(hash[4] || 0);
+
+        return zoom >= this._map.getMinZoom() && zoom <= this._map.getMaxZoom() &&
+            bearing >= 0 && bearing <= 180 &&
+            pitch >= this._map.getMinPitch() && pitch <= this._map.getMaxPitch();
+    };
 }
