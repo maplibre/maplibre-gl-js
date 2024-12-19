@@ -325,42 +325,53 @@ describe('hash', () => {
         expect(window.location.hash).toBe('#baz&foo=bar');
     });
 
-    test('#_hasValidHash valid', () => {
-        const hash = createHash()
-            .addTo(map);
+    describe('#_isValidHash', () => {
+        let hash: Hash
 
-        window.location.hash = '#10/3.00/-1.00';
+        beforeEach(() => {
+            hash = createHash()
+                .addTo(map);
+        })
 
-        expect(hash._hasValidHash()).toBeTruthy();
+        test('validate correct hash', () => {
+            window.location.hash = '#10/3.00/-1.00';
 
-        window.location.hash = '#5/1.00/0.50/30/60';
+            expect(hash._isValidHash(hash._getCurrentHash())).toBeTruthy();
 
-        expect(hash._hasValidHash()).toBeTruthy();
-    });
+            window.location.hash = '#5/1.00/0.50/30/60';
 
-    test('#_hasValidHash invalid', () => {
-        const hash = createHash()
-            .addTo(map);
+            expect(hash._isValidHash(hash._getCurrentHash())).toBeTruthy();
+        });
 
-        window.location.hash = '#4/wrongly/formed/hash';
+        test('invalidate hash with string values', () => {
+            window.location.hash = '#4/wrongly/formed/hash';
 
-        expect(hash._hasValidHash()).toBeFalsy();
+            expect(hash._isValidHash(hash._getCurrentHash())).toBeFalsy();
+        });
 
-        window.location.hash = '#map=10/3.00/-1.00&foo=bar';
+        test('invalidate hash that is named, but should not be', () => {
+            window.location.hash = '#map=10/3.00/-1.00&foo=bar';
 
-        expect(hash._hasValidHash()).toBeFalsy();
+            expect(hash._isValidHash(hash._getCurrentHash())).toBeFalsy();
+        });
 
-        window.location.hash = '#24/3.00/-1.00';
+        test('invalidate hash, zoom greater than maxZoom', () => {
+            window.location.hash = '#24/3.00/-1.00';
 
-        expect(hash._hasValidHash()).toBeFalsy();
+            expect(hash._isValidHash(hash._getCurrentHash())).toBeFalsy();
+        });
 
-        window.location.hash = '#10/100.00/-1.00';
+        test('invalidate hash, latitude out of range', () => {
+            window.location.hash = '#10/100.00/-1.00';
 
-        expect(hash._hasValidHash()).toBeFalsy();
+            expect(hash._isValidHash(hash._getCurrentHash())).toBeFalsy();
+        });
 
-        window.location.hash = '#10/3.00/-1.00/30/90';
+        test('invalidate hash, pitch greater than maxPitch', () => {
+            window.location.hash = '#10/3.00/-1.00/30/90';
 
-        expect(hash._hasValidHash()).toBeFalsy();
+            expect(hash._isValidHash(hash._getCurrentHash())).toBeFalsy();
+        });
     });
 
     test('initialize http://localhost/#', () => {
