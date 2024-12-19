@@ -103,8 +103,8 @@ export class Hash {
     };
 
     _onHashChange = () => {
-        const hash = this._getCurrentHash();
-        if (this._isValidHash(hash)) {
+        if (this._isValidHash()) {
+            const hash = this._getCurrentHash();
             const bearing = this._map.dragRotate.isEnabled() && this._map.touchZoomRotate.isEnabled() ? +(hash[3] || 0) : this._map.getBearing();
             this._map.jumpTo({
                 center: [+hash[2], +hash[1]],
@@ -152,7 +152,9 @@ export class Hash {
      */
     _updateHash: () => ReturnType<typeof setTimeout> = throttle(this._updateHashUnthrottled, 30 * 1000 / 100);
 
-    _isValidHash(hash: number[]) {
+    _isValidHash() {
+        const hash = this._getCurrentHash();
+
         if (hash.length < 3 || hash.some(isNaN)) {
             return false;
         }
