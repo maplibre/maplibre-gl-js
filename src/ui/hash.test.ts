@@ -325,42 +325,42 @@ describe('hash', () => {
         expect(window.location.hash).toBe('#baz&foo=bar');
     });
 
-    test('#_isValidHash valid', () => {
+    test('#_hasValidHash valid', () => {
         const hash = createHash()
             .addTo(map);
 
         window.location.hash = '#10/3.00/-1.00';
 
-        expect(hash._isValidHash()).toBeTruthy();
+        expect(hash._hasValidHash()).toBeTruthy();
 
         window.location.hash = '#5/1.00/0.50/30/60';
 
-        expect(hash._isValidHash()).toBeTruthy();
+        expect(hash._hasValidHash()).toBeTruthy();
     });
 
-    test('#_isValidHash invalid', () => {
+    test('#_hasValidHash invalid', () => {
         const hash = createHash()
             .addTo(map);
 
         window.location.hash = '#4/wrongly/formed/hash';
 
-        expect(hash._isValidHash()).toBeFalsy();
+        expect(hash._hasValidHash()).toBeFalsy();
 
         window.location.hash = '#map=10/3.00/-1.00&foo=bar';
 
-        expect(hash._isValidHash()).toBeFalsy();
+        expect(hash._hasValidHash()).toBeFalsy();
 
         window.location.hash = '#24/3.00/-1.00';
 
-        expect(hash._isValidHash()).toBeFalsy();
+        expect(hash._hasValidHash()).toBeFalsy();
 
         window.location.hash = '#10/100.00/-1.00';
 
-        expect(hash._isValidHash()).toBeFalsy();
+        expect(hash._hasValidHash()).toBeFalsy();
 
         window.location.hash = '#10/3.00/-1.00/30/90';
 
-        expect(hash._isValidHash()).toBeFalsy();
+        expect(hash._hasValidHash()).toBeFalsy();
     });
 
     test('initialize http://localhost/#', () => {

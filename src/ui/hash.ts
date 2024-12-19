@@ -103,7 +103,7 @@ export class Hash {
     };
 
     _onHashChange = () => {
-        if (this._isValidHash()) {
+        if (this._hasValidHash()) {
             const hash = this._getCurrentHash();
             const bearing = this._map.dragRotate.isEnabled() && this._map.touchZoomRotate.isEnabled() ? +(hash[3] || 0) : this._map.getBearing();
             this._map.jumpTo({
@@ -152,7 +152,7 @@ export class Hash {
      */
     _updateHash: () => ReturnType<typeof setTimeout> = throttle(this._updateHashUnthrottled, 30 * 1000 / 100);
 
-    _isValidHash() {
+    _hasValidHash() {
         const hash = this._getCurrentHash();
 
         if (hash.length < 3 || hash.some(isNaN)) {
