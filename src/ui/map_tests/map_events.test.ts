@@ -981,6 +981,13 @@ describe('map events', () => {
         map.terrain = {
             pointCoordinate: () => null,
             getElevationForLngLatZoom: () => 1000,
+            getMinTileElevationForLngLatZoom: () => 0,
+            getFramebuffer: () => ({}),
+            getCoordsTexture: () => ({}),
+            sourceCache: {
+              update: () => {},
+              getRenderableTiles: () => [],
+            }
         } as any;
         let actualZoom: number;
         map.on('moveend', () => {
