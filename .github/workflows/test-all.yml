@@ -72,7 +72,7 @@ jobs:
     name: Integration tests
     strategy:
       matrix:
-        os: [ubuntu-22.04, windows-latest]
+        os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
     steps:

@@ -982,8 +982,13 @@ async function executeRenderTests() {
         options.openBrowser = checkParameter(options, '--open-browser');
     }
 
-    const browser = await puppeteer.launch({headless: !options.openBrowser, args: ['--enable-webgl', '--no-sandbox',
-        '--disable-web-security']});
+    const browser = await puppeteer.launch({
+        headless: !options.openBrowser, 
+        args: [
+            '--enable-webgl', 
+            '--no-sandbox',
+            '--disable-web-security'
+        ]});
 
     const mimeTypes = {
         '.html': 'text/html',
@@ -998,7 +1003,7 @@ async function executeRenderTests() {
         '.geojson': 'application/json',
     };
     const server = http.createServer((req, res) => {
-        const filePath = `test/integration/assets${decodeURI(req.url.replace(/\?.*$/, '')).replace("../", "")}`;
+        const filePath = `test/integration/assets${decodeURI(req.url.replace(/\?.*$/, '')).replaceAll('../', '')}`;
 
         fs.readFile(filePath, (err, data) => {
             if (err) {
