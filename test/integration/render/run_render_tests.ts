@@ -998,7 +998,7 @@ async function executeRenderTests() {
         '.geojson': 'application/json',
     };
     const server = http.createServer((req, res) => {
-        const filePath = 'test/integration/assets' + decodeURI(req.url);
+        const filePath = `test/integration/assets${decodeURI(req.url.replace(/\?.*$/, ''))}`;
 
         fs.readFile(filePath, (err, data) => {
             if (err) {
@@ -1009,7 +1009,7 @@ async function executeRenderTests() {
             const extname = path.extname(filePath);
             let mimeType = mimeTypes[extname];
             if (!mimeType) {
-                console.error('Unknown mime type for file: ' + filePath);
+                console.error(`Unknown mime type for file: ${filePath}`);
                 mimeType = 'application/json';
             }
             if (data.length === 0) {
