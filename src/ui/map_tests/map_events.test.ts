@@ -1,7 +1,7 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {type StyleLayer} from '../../style/style_layer';
-import {createMap, beforeMapTest, createStyle, sleep} from '../../util/test/util';
+import {createMap, beforeMapTest, createStyle, sleep, createTerrain} from '../../util/test/util';
 import {type MapGeoJSONFeature} from '../../util/vectortile_to_geojson';
 import {type MapLayerEventType, type MapLibreEvent} from '../events';
 import {Map, type MapOptions} from '../map';
@@ -978,17 +978,7 @@ describe('map events', () => {
 
     test('getZoom on moveend is the same as after the map end moving, with terrain on', () => {
         const map = createMap({interactive: true, clickTolerance: 4});
-        map.terrain = {
-            pointCoordinate: () => null,
-            getElevationForLngLatZoom: () => 1000,
-            getMinTileElevationForLngLatZoom: () => 0,
-            getFramebuffer: () => ({}),
-            getCoordsTexture: () => ({}),
-            sourceCache: {
-              update: () => {},
-              getRenderableTiles: () => [],
-            }
-        } as any;
+        map.terrain = createTerrain() as any;
         let actualZoom: number;
         map.on('moveend', () => {
             // this can't use a promise due to race condition

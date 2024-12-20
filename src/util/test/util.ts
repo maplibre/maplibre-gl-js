@@ -223,3 +223,18 @@ export function expectToBeCloseToArray(actual: Array<number>, expected: Array<nu
         expect(actual[i]).toBeCloseTo(expected[i], precision);
     }
 }
+
+export function createTerrain() {
+    return {
+        pointCoordinate: () => null,
+        getElevationForLngLatZoom: () => 1000,
+        getMinTileElevationForLngLatZoom: () => 0,
+        getFramebuffer: () => ({}),
+        getCoordsTexture: () => ({}),
+        sourceCache: {
+          update: () => {},
+          getRenderableTiles: () => [],
+          anyTilesAfterTime: () => false
+        }
+    }
+}
