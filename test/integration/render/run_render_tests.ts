@@ -985,12 +985,41 @@ async function executeRenderTests() {
     const browser = await puppeteer.launch({headless: !options.openBrowser, args: ['--enable-webgl', '--no-sandbox',
         '--disable-web-security']});
 
-    const server = http.createServer(
-        st({
-            path: 'test/integration/assets',
-            cors: true,
-        })
-    );
+    const mimeTypes = {
+        '.html': 'text/html',
+        '.css': 'text/css',
+        '.js': 'text/javascript',
+        '.json': 'application/json',
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.mvt': 'application/vnd.mapbox-vector-tile',
+        '.webm': 'video/webm',
+        '.pbf': 'application/x-protobuf',
+        '.geojson': 'application/json',
+    };
+    const server = http.createServer((req, res) => {
+        const filePath = 'test/integration/assets' + decodeURI(req.url);
+
+        fs.readFile(filePath, (err, data) => {
+            if (err) {
+                res.writeHead(404);
+                res.end('File not found');
+                return;
+            }
+            const extname = path.extname(filePath);
+            let mimeType = mimeTypes[extname];
+            if (!mimeType) {
+                console.error('Unknown mime type for file: ' + filePath);
+                mimeType = 'application/json';
+            }
+            if (data.length === 0) {
+                res.writeHead(204);
+            } else {
+                res.writeHead(200, {'Content-Type': mimeType});
+            }
+            res.end(data);
+        });
+    });
 
     const mvtServer = http.createServer(
         st({
