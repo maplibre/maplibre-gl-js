@@ -998,7 +998,7 @@ async function executeRenderTests() {
         '.geojson': 'application/json',
     };
     const server = http.createServer((req, res) => {
-        const filePath = `test/integration/assets${decodeURI(req.url.replace(/\?.*$/, ''))}`;
+        const filePath = `test/integration/assets${decodeURI(req.url.replace(/\?.*$/, '')).replace("../", "")}`;
 
         fs.readFile(filePath, (err, data) => {
             if (err) {
