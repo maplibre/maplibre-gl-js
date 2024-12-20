@@ -238,3 +238,17 @@ export function createTerrain() {
         }
     }
 }
+
+export function createFramebuffer() {
+    return {
+        colorAttachment: {
+            get: () => null,
+            set: () => {}
+        },
+        depthAttachment: {
+            get: () => null,
+            set: () => {}
+        },
+        destroy: () => {}
+    };
+}
