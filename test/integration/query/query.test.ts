@@ -131,7 +131,13 @@ describe('query tests', () => {
                 cors: true,
             })
         );
-        browser = await puppeteer.launch({headless: true});
+        browser = await puppeteer.launch({
+            headless: true,
+            args: [
+                '--enable-webgl', 
+                '--no-sandbox',
+            ],
+        });
         await new Promise<void>((resolve) => server.listen(resolve));
     }, 60000);
 
