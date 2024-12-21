@@ -1004,7 +1004,7 @@ async function executeRenderTests() {
     };
     const server = http.createServer((req, res) => {
         const rootDir = path.resolve('test/integration/assets');
-        let filePath = path.resolve('test/integration/assets' + decodeURI(req.url.replace(/\?.*$/, '')));
+        const filePath = path.resolve(`test/integration/assets${decodeURI(req.url.replace(/\?.*$/, ''))}`);
 
         if (!filePath.startsWith(rootDir)) {
             res.writeHead(403);
