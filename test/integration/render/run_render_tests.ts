@@ -1003,7 +1003,14 @@ async function executeRenderTests() {
         '.geojson': 'application/json',
     };
     const server = http.createServer((req, res) => {
-        const filePath = `test/integration/assets${decodeURI(req.url.replace(/\?.*$/, '')).replaceAll('../', '')}`;
+        const rootDir = path.resolve('test/integration/assets');
+        let filePath = path.resolve(rootDir, decodeURI(req.url.replace(/\?.*$/, '')));
+
+        if (!filePath.startsWith(rootDir)) {
+            res.writeHead(403);
+            res.end('Forbidden');
+            return;
+        }
 
         fs.readFile(filePath, (err, data) => {
             if (err) {
