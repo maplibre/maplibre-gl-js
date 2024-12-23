@@ -4,28 +4,20 @@ import {LngLat} from '../../geo/lng_lat';
 import {fakeServer, type FakeServer} from 'nise';
 import {type Terrain} from '../../render/terrain';
 import {MercatorTransform} from '../../geo/projection/mercator_transform';
-import { Framebuffer } from '../../gl/framebuffer';
 import { Map } from '../map';
-import { Context } from '../../gl/context';
 
 let server: FakeServer;
 let map: Map;
-let originalCreateFrameBuffer: typeof Context.prototype.createFramebuffer;
 
 beforeEach(() => {
     beforeMapTest();
     global.fetch = null;
     server = fakeServer.create();
-
     map = createMap();
-    // Mock Framebuffer creation
-    originalCreateFrameBuffer = map.painter.context.createFramebuffer;
-    map.painter.context.createFramebuffer = () => createFramebuffer() as Framebuffer;
 });
 
 afterEach(() => {
     server.restore();
-    map.painter.context.createFramebuffer = originalCreateFrameBuffer;
 });
 
 describe('#setTerrain', () => {
@@ -37,8 +29,6 @@ describe('#setTerrain', () => {
             tiles: ['http://example.com/{z}/{x}/{y}.pngraw'],
             bounds: [-47, -7, -45, -5]
         }));
-
-        
 
         map.on('load', () => {
             map.addSource('terrainrgb', {type: 'raster-dem', url: '/source.json'});

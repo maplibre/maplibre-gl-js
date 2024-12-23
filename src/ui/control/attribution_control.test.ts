@@ -320,10 +320,6 @@ describe('AttributionControl', () => {
             bounds: [-47, -7, -45, -5]
         }));
 
-        // Mock Framebuffer creation
-        const originalCreateFrameBuffer = map.painter.context.createFramebuffer;
-        map.painter.context.createFramebuffer = () => createFramebuffer() as Framebuffer;
-
         const attribution = new AttributionControl();
         map.addControl(attribution);
 
@@ -343,7 +339,6 @@ describe('AttributionControl', () => {
         })).toHaveLength(0);
 
         expect(attribution._innerContainer.innerHTML).toBe(`Terrain | ${defaultAttributionControlOptions.customAttribution}`);
-        map.painter.context.createFramebuffer = originalCreateFrameBuffer;
     });
 
     /* test('toggles attributions for sources whose visibility changes when zooming', async () => {
