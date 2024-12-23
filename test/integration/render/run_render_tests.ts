@@ -301,7 +301,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 }`;
 
                 const fragmentSource = `#version 300 es
-                
+
                 out highp vec4 fragColor;
                 void main() {
                     fragColor = vec4(1.0, 0.0, 0.0, 1.0);
@@ -452,7 +452,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 // Inject MapLibre projection code
                 ${shaderDescription.vertexShaderPrelude}
                 ${shaderDescription.define}
-                
+
                 in vec3 a_pos;
 
                 void main() {
@@ -983,55 +983,19 @@ async function executeRenderTests() {
     }
 
     const browser = await puppeteer.launch({
-        headless: !options.openBrowser, 
+        headless: !options.openBrowser,
         args: [
-            '--enable-webgl', 
+            '--enable-webgl',
             '--no-sandbox',
             '--disable-web-security'
         ]});
 
-    const mimeTypes = {
-        '.html': 'text/html',
-        '.css': 'text/css',
-        '.js': 'text/javascript',
-        '.json': 'application/json',
-        '.png': 'image/png',
-        '.jpg': 'image/jpeg',
-        '.mvt': 'application/vnd.mapbox-vector-tile',
-        '.webm': 'video/webm',
-        '.pbf': 'application/x-protobuf',
-        '.geojson': 'application/json',
-    };
-    const server = http.createServer((req, res) => {
-        const rootDir = path.resolve('test/integration/assets');
-        const filePath = path.resolve(`test/integration/assets${decodeURI(req.url.replace(/\?.*$/, ''))}`);
-
-        if (!filePath.startsWith(rootDir)) {
-            res.writeHead(403);
-            res.end('Forbidden');
-            return;
-        }
-
-        fs.readFile(filePath, (err, data) => {
-            if (err) {
-                res.writeHead(404);
-                res.end('File not found');
-                return;
-            }
-            const extname = path.extname(filePath);
-            let mimeType = mimeTypes[extname];
-            if (!mimeType) {
-                console.error(`Unknown mime type for file: ${filePath}`);
-                mimeType = 'application/json';
-            }
-            if (data.length === 0) {
-                res.writeHead(204);
-            } else {
-                res.writeHead(200, {'Content-Type': mimeType});
-            }
-            res.end(data);
-        });
-    });
+    const server = http.createServer(
+        st({
+            path: 'test/integration/assets',
+            cors: true,
+        })
+    );
 
     const mvtServer = http.createServer(
         st({
