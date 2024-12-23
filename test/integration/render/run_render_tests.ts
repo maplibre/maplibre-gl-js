@@ -983,9 +983,9 @@ async function executeRenderTests() {
     }
 
     const browser = await puppeteer.launch({
-        headless: !options.openBrowser, 
+        headless: !options.openBrowser,
         args: [
-            '--enable-webgl', 
+            '--enable-webgl',
             '--no-sandbox',
             '--disable-web-security'
         ]
