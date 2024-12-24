@@ -3387,7 +3387,7 @@ export class Map extends Camera {
                 if (!isAbortError(error) && !isFramebufferNotCompleteError(error)) {
                     throw error;
                 }
-            }); // ignore abort error
+            });
         }
     }
 

@@ -992,7 +992,7 @@ describe('map events', () => {
 
     test('getZoom on moveend is the same as after the map end moving, with terrain on', () => {
         const map = createMap({interactive: true, clickTolerance: 4});
-        map.terrain = createTerrain() as any;
+        map.terrain = createTerrain();
         let actualZoom: number;
         map.on('moveend', () => {
             // this can't use a promise due to race condition
