@@ -124,11 +124,7 @@ export class Evented {
         const type = event.type;
 
         if (this.listens(type)) {
-            try {
-                (event as any).target = this;
-            } catch (_) { // eslint-disable-line @typescript-eslint/no-unused-vars
-                // On some type of events, setting target raises a TypeError
-            }
+            (event as any).target = this;
 
             // make sure adding or removing listeners inside other listeners won't cause an infinite loop
             const listeners = this._listeners && this._listeners[type] ? this._listeners[type].slice() : [];
