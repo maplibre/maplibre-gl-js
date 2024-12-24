@@ -9,6 +9,7 @@ import {MercatorTransform} from '../../geo/projection/mercator_transform';
 import {RequestManager} from '../request_manager';
 import {type IReadonlyTransform, type ITransform} from '../../geo/transform_interface';
 import {type Style} from '../../style/style';
+import {type Terrain} from '../../render/terrain';
 
 export class StubMap extends Evented {
     style: Style;
@@ -222,4 +223,34 @@ export function expectToBeCloseToArray(actual: Array<number>, expected: Array<nu
     for (let i = 0; i < expected.length; i++) {
         expect(actual[i]).toBeCloseTo(expected[i], precision);
     }
+}
+
+export function createTerrain(): Terrain {
+    return {
+        pointCoordinate: () => null,
+        getElevationForLngLatZoom: () => 1000,
+        getMinTileElevationForLngLatZoom: () => 0,
+        getFramebuffer: () => ({}),
+        getCoordsTexture: () => ({}),
+        depthAtPoint: () => .9,
+        sourceCache: {
+            update: () => {},
+            getRenderableTiles: () => [],
+            anyTilesAfterTime: () => false
+        }
+    } as any as Terrain;
+}
+
+export function createFramebuffer() {
+    return {
+        colorAttachment: {
+            get: () => null,
+            set: () => {}
+        },
+        depthAttachment: {
+            get: () => null,
+            set: () => {}
+        },
+        destroy: () => {}
+    };
 }

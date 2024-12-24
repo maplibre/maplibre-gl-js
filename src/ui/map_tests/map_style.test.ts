@@ -42,9 +42,9 @@ describe('#setStyle', () => {
             map.on('data', recordEvent);
             map.on('dataloading', recordEvent);
 
-            map.style.fire(new Event('error'));
-            map.style.fire(new Event('data'));
-            map.style.fire(new Event('dataloading'));
+            map.style.fire(new EventedEvent('error'));
+            map.style.fire(new EventedEvent('data'));
+            map.style.fire(new EventedEvent('dataloading'));
 
             expect(events).toEqual([
                 'error',

@@ -1,12 +1,13 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {type StyleLayer} from '../../style/style_layer';
-import {createMap, beforeMapTest, createStyle, sleep} from '../../util/test/util';
+import {createMap, beforeMapTest, createStyle, sleep, createTerrain} from '../../util/test/util';
 import {type MapGeoJSONFeature} from '../../util/vectortile_to_geojson';
 import {type MapLayerEventType, type MapLibreEvent} from '../events';
 import {Map, type MapOptions} from '../map';
 import {Event as EventedEvent, ErrorEvent} from '../../util/evented';
 import {GlobeProjection} from '../../geo/projection/globe_projection';
+import {type StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 type IsAny<T> = 0 extends T & 1 ? T : never;
 type NotAny<T> = T extends IsAny<T> ? never : T;
@@ -959,6 +960,19 @@ describe('map events', () => {
         expect(failSpy).not.toHaveBeenCalled();
     });
 
+    test('errors inside load event are not suppressed', async () => {
+        const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
+
+        const loadHandler = vi.fn(() => {
+            throw new Error('Error in load handler');
+        });
+
+        map.on('load', loadHandler);
+        await sleep(1);
+
+        expect(loadHandler).toThrowError();
+    });
+
     test('no idle event during move', async () => {
         const style = createStyle();
         const map = createMap({style, fadeDuration: 0});
@@ -978,10 +992,7 @@ describe('map events', () => {
 
     test('getZoom on moveend is the same as after the map end moving, with terrain on', () => {
         const map = createMap({interactive: true, clickTolerance: 4});
-        map.terrain = {
-            pointCoordinate: () => null,
-            getElevationForLngLatZoom: () => 1000,
-        } as any;
+        map.terrain = createTerrain();
         let actualZoom: number;
         map.on('moveend', () => {
             // this can't use a promise due to race condition
@@ -1048,6 +1059,37 @@ describe('map events', () => {
             subscription.unsubscribe();
             map.fire(new ErrorEvent(error));
             expect(spy).not.toHaveBeenCalled();
+        });
+
+        test('throws error when request fails', async () => {
+            const style: StyleSpecification = {
+                ...createStyle(),
+                sources: {
+                    'source': {
+                        type: 'vector',
+                        url: 'maplibre://nonexistent'
+                    }
+                },
+                layers: [
+                    {
+                        id: 'layer',
+                        source: 'source',
+                        type: 'fill',
+                        'source-layer': 'test'
+                    }
+                ]
+            };
+            const map = createMap();
+            map.setStyle(style);
+
+            const errorHandler = vi.fn();
+            map.on('error', errorHandler);
+
+            map.triggerRepaint();
+            await sleep(100);
+
+            expect(errorHandler).toHaveBeenCalledTimes(1);
+          
         });
     });
 

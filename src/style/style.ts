@@ -203,7 +203,7 @@ export class Style extends Evented {
     glyphManager: GlyphManager;
     lineAtlas: LineAtlas;
     light: Light;
-    projection: Projection;
+    projection: Projection | undefined;
     sky: Sky;
 
     _frameRequest: AbortController;
