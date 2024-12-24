@@ -124,7 +124,11 @@ export class Evented {
         const type = event.type;
 
         if (this.listens(type)) {
-            (event as any).target = this;
+            try {
+              (event as any).target = this;
+            } catch (e) {
+              // On some type of events, setting target raises a TypeError
+            }
 
             // make sure adding or removing listeners inside other listeners won't cause an infinite loop
             const listeners = this._listeners && this._listeners[type] ? this._listeners[type].slice() : [];
