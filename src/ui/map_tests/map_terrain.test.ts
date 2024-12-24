@@ -1,10 +1,10 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {createMap, beforeMapTest, createFramebuffer} from '../../util/test/util';
+import {createMap, beforeMapTest} from '../../util/test/util';
 import {LngLat} from '../../geo/lng_lat';
 import {fakeServer, type FakeServer} from 'nise';
 import {type Terrain} from '../../render/terrain';
 import {MercatorTransform} from '../../geo/projection/mercator_transform';
-import { Map } from '../map';
+import {type Map} from '../map';
 
 let server: FakeServer;
 let map: Map;

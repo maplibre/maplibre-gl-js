@@ -65,7 +65,7 @@ import {type ITransform} from '../geo/transform_interface';
 import {type ICameraHelper} from '../geo/projection/camera_helper';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 import {isAbortError} from '../util/abort_error';
-import { isFramebufferNotCompleteError } from '../util/framebuffer_error';
+import {isFramebufferNotCompleteError} from '../util/framebuffer_error';
 
 const version = packageJSON.version;
 

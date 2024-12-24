@@ -7,7 +7,7 @@ import {type MapLayerEventType, type MapLibreEvent} from '../events';
 import {Map, type MapOptions} from '../map';
 import {Event as EventedEvent, ErrorEvent} from '../../util/evented';
 import {GlobeProjection} from '../../geo/projection/globe_projection';
-import { StyleSpecification } from '@maplibre/maplibre-gl-style-spec';
+import {type StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 type IsAny<T> = 0 extends T & 1 ? T : never;
 type NotAny<T> = T extends IsAny<T> ? never : T;
@@ -964,10 +964,10 @@ describe('map events', () => {
         const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
 
         const loadHandler = vi.fn(() => {
-          throw new Error('Error in load handler');
+            throw new Error('Error in load handler');
         });
 
-        map.on("load", loadHandler);
+        map.on('load', loadHandler);
         await sleep(1);
 
         expect(loadHandler).toThrowError();
@@ -1075,7 +1075,7 @@ describe('map events', () => {
                         id: 'layer',
                         source: 'source',
                         type: 'fill',
-                        'source-layer': "test"
+                        'source-layer': 'test'
                     }
                 ]
             };
@@ -1083,14 +1083,14 @@ describe('map events', () => {
             map.setStyle(style);
 
             const errorHandler = vi.fn();
-            map.on("error", errorHandler);
+            map.on('error', errorHandler);
 
             map.triggerRepaint();
             await sleep(100);
 
             expect(errorHandler).toHaveBeenCalledTimes(1);
           
-      });
+        });
     });
 
     describe('projectiontransition event', () => {

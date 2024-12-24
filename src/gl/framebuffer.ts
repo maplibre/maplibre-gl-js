@@ -1,7 +1,7 @@
 import {ColorAttachment, DepthAttachment, DepthStencilAttachment} from './value';
 
 import type {Context} from './context';
-import { createFramebufferNotCompleteError } from '../util/framebuffer_error';
+import {createFramebufferNotCompleteError} from '../util/framebuffer_error';
 
 /**
  * @internal

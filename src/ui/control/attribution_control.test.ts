@@ -1,11 +1,10 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {AttributionControl, defaultAttributionControlOptions} from './attribution_control';
-import {createMap as globalCreateMap, beforeMapTest, sleep, createFramebuffer} from '../../util/test/util';
+import {createMap as globalCreateMap, beforeMapTest, sleep} from '../../util/test/util';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {fakeServer} from 'nise';
 import {type Map} from '../../ui/map';
 import {type MapSourceDataEvent} from '../events';
-import { Framebuffer } from '../../gl/framebuffer';
 
 function createMap() {
 

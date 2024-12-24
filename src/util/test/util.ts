@@ -233,9 +233,9 @@ export function createTerrain() {
         getCoordsTexture: () => ({}),
         depthAtPoint: () => .9,
         sourceCache: {
-          update: () => {},
-          getRenderableTiles: () => [],
-          anyTilesAfterTime: () => false
+            update: () => {},
+            getRenderableTiles: () => [],
+            anyTilesAfterTime: () => false
         }
     }
 }

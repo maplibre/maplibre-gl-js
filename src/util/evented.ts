@@ -125,9 +125,9 @@ export class Evented {
 
         if (this.listens(type)) {
             try {
-              (event as any).target = this;
-            } catch (e) {
-              // On some type of events, setting target raises a TypeError
+                (event as any).target = this;
+            } catch (_) { // eslint-disable-line @typescript-eslint/no-unused-vars
+                // On some type of events, setting target raises a TypeError
             }
 
             // make sure adding or removing listeners inside other listeners won't cause an infinite loop
