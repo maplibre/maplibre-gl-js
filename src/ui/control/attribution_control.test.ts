@@ -340,7 +340,7 @@ describe('AttributionControl', () => {
         expect(attribution._innerContainer.innerHTML).toBe(`Terrain | ${defaultAttributionControlOptions.customAttribution}`);
     });
 
-    /* test('toggles attributions for sources whose visibility changes when zooming', async () => {
+    test('toggles attributions for sources whose visibility changes when zooming', async () => {
         const attribution = new AttributionControl({});
         map.addControl(attribution);
 
@@ -357,7 +357,7 @@ describe('AttributionControl', () => {
         await sleep(100);
         expect(map.getZoom()).toBe(13);
         expect(attribution._innerContainer.innerHTML).toBe('Used');
-    }); */
+    });
 
 });
 
