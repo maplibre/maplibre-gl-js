@@ -7,6 +7,7 @@ import {type MapLayerEventType, type MapLibreEvent} from '../events';
 import {Map, type MapOptions} from '../map';
 import {Event as EventedEvent, ErrorEvent} from '../../util/evented';
 import {GlobeProjection} from '../../geo/projection/globe_projection';
+import { StyleSpecification } from '@maplibre/maplibre-gl-style-spec';
 
 type IsAny<T> = 0 extends T & 1 ? T : never;
 type NotAny<T> = T extends IsAny<T> ? never : T;
@@ -959,6 +960,19 @@ describe('map events', () => {
         expect(failSpy).not.toHaveBeenCalled();
     });
 
+    test('errors inside load event are not suppressed', async () => {
+        const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
+
+        const loadHandler = vi.fn(() => {
+          throw new Error('Error in load handler');
+        });
+
+        map.on("load", loadHandler);
+        await sleep(1);
+
+        expect(loadHandler).toThrowError();
+    });
+
     test('no idle event during move', async () => {
         const style = createStyle();
         const map = createMap({style, fadeDuration: 0});
@@ -1046,6 +1060,37 @@ describe('map events', () => {
             map.fire(new ErrorEvent(error));
             expect(spy).not.toHaveBeenCalled();
         });
+
+        test('throws error when request fails', async () => {
+            const style: StyleSpecification = {
+                ...createStyle(),
+                sources: {
+                    'source': {
+                        type: 'vector',
+                        url: 'maplibre://nonexistent'
+                    }
+                },
+                layers: [
+                    {
+                        id: 'layer',
+                        source: 'source',
+                        type: 'fill',
+                        'source-layer': "test"
+                    }
+                ]
+            };
+            const map = createMap();
+            map.setStyle(style);
+
+            const errorHandler = vi.fn();
+            map.on("error", errorHandler);
+
+            map.triggerRepaint();
+            await sleep(100);
+
+            expect(errorHandler).toHaveBeenCalledTimes(1);
+          
+      });
     });
 
     describe('projectiontransition event', () => {
