@@ -231,6 +231,7 @@ export function createTerrain() {
         getMinTileElevationForLngLatZoom: () => 0,
         getFramebuffer: () => ({}),
         getCoordsTexture: () => ({}),
+        depthAtPoint: () => .9,
         sourceCache: {
           update: () => {},
           getRenderableTiles: () => [],

@@ -950,7 +950,7 @@ describe('marker', () => {
         expect(marker.getElement().style.opacity).toMatch('');
 
         // Add terrain, not blocking marker
-        map.terrain = createTerrain() as any as Terrain;
+        map.terrain = {...createTerrain(), depthAtPoint: () => .95} as any as Terrain;
         map.fire('terrain');
         await sleep(100);
 
@@ -979,7 +979,7 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
 
-        map.terrain = createTerrain() as any as Terrain;
+        map.terrain = {...createTerrain(), depthAtPoint: () => .95} as any as Terrain;
         await sleep(100);
         map.fire('terrain');
 
@@ -994,7 +994,7 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
 
-        map.terrain = createTerrain() as any as Terrain;
+        map.terrain = {...createTerrain(), depthAtPoint: (p) => p.y === 256 ? .95 : .92} as any as Terrain;
         await sleep(100);
         map.fire('terrain');
 
