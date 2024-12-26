@@ -13,6 +13,7 @@
 - Fix parsing wrong hash location ([#5131](https://github.com/maplibre/maplibre-gl-js/pull/5131))
 - Fix swallowing of errors ([#4532](https://github.com/maplibre/maplibre-gl-js/issues/4532))
 - Fix erroring requests not reported on `error` handler ([#4613](https://github.com/maplibre/maplibre-gl-js/issues/4613))
+- Fix children not retained when using globe ([#5271](https://github.com/maplibre/maplibre-gl-js/pull/5271))
 - _...Add new stuff here..._
 
 ## 5.0.0-pre.10
