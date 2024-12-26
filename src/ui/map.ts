@@ -3222,14 +3222,14 @@ export class Map extends Camera {
             this.style.update(parameters);
         }
 
-        const globeRenderingChaged = this.style.projection?.transitionState > 0 !== isGlobeRendering;
+        const globeRenderingChanged = this.style.projection?.transitionState > 0 !== isGlobeRendering;
         this.style.projection?.setErrorQueryLatitudeDegrees(this.transform.center.lat);
         this.transform.setTransitionState(this.style.projection?.transitionState, this.style.projection?.latitudeErrorCorrectionRadians);
 
         // If we are in _render for any reason other than an in-progress paint
         // transition, update source caches to check for and load any tiles we
         // need for the current transform
-        if (this.style && (this._sourcesDirty || globeRenderingChaged)) {
+        if (this.style && (this._sourcesDirty || globeRenderingChanged)) {
             this._sourcesDirty = false;
             this.style._updateSources(this.transform);
         }
@@ -3248,7 +3248,7 @@ export class Map extends Camera {
             }
         }
 
-        this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChaged);
+        this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
 
         // Actually draw
         this.painter.render(this.style, {
