@@ -1,8 +1,15 @@
 ## main
 
 ### ✨ Features and improvements
-- Allows setting the desired WebGL version to use ([#5236](https://github.com/maplibre/maplibre-gl-js/pull/5236)). You can now use `contextType` inside `canvasContextAttributes` to choose which WebGL version to use
 - _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 5.0.0
+
+### ✨ Features and improvements
+- Allows setting the desired WebGL version to use ([#5236](https://github.com/maplibre/maplibre-gl-js/pull/5236)). You can now use `contextType` inside `canvasContextAttributes` to choose which WebGL version to use
 
 ### 🐞 Bug fixes
 
@@ -13,7 +20,6 @@
 - Fix parsing wrong hash location ([#5131](https://github.com/maplibre/maplibre-gl-js/pull/5131))
 - Fix swallowing of errors ([#4532](https://github.com/maplibre/maplibre-gl-js/issues/4532))
 - Fix erroring requests not reported on `error` handler ([#4613](https://github.com/maplibre/maplibre-gl-js/issues/4613))
-- _...Add new stuff here..._
 
 ## 5.0.0-pre.10
 
