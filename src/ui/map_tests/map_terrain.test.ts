@@ -4,13 +4,16 @@ import {LngLat} from '../../geo/lng_lat';
 import {fakeServer, type FakeServer} from 'nise';
 import {type Terrain} from '../../render/terrain';
 import {MercatorTransform} from '../../geo/projection/mercator_transform';
+import {type Map} from '../map';
 
 let server: FakeServer;
+let map: Map;
 
 beforeEach(() => {
     beforeMapTest();
     global.fetch = null;
     server = fakeServer.create();
+    map = createMap();
 });
 
 afterEach(() => {
@@ -26,8 +29,6 @@ describe('#setTerrain', () => {
             tiles: ['http://example.com/{z}/{x}/{y}.pngraw'],
             bounds: [-47, -7, -45, -5]
         }));
-
-        const map = createMap();
 
         map.on('load', () => {
             map.addSource('terrainrgb', {type: 'raster-dem', url: '/source.json'});
@@ -53,7 +54,6 @@ describe('#getTerrain', () => {
 
 describe('getCameraTargetElevation', () => {
     test('Elevation is zero without terrain, and matches any given terrain', () => {
-        const map = createMap();
         expect(map.getCameraTargetElevation()).toBe(0);
 
         const terrainStub = {} as Terrain;
@@ -73,8 +73,6 @@ describe('getCameraTargetElevation', () => {
 
 describe('Keep camera outside terrain', () => {
     test('Try to move camera into terrain', () => {
-        const map = createMap();
-
         let terrainElevation = 10;
         const terrainStub = {} as Terrain;
         terrainStub.getElevationForLngLatZoom = vi.fn(

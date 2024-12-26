@@ -11,6 +11,8 @@
 - Fix center being incorrectly constrained when using globe ([#5186](https://github.com/maplibre/maplibre-gl-js/pull/5186))
 - Fix atmosphere improperly blending into the background ([#5235](https://github.com/maplibre/maplibre-gl-js/pull/5235))
 - Fix parsing wrong hash location ([#5131](https://github.com/maplibre/maplibre-gl-js/pull/5131))
+- Fix swallowing of errors ([#4532](https://github.com/maplibre/maplibre-gl-js/issues/4532))
+- Fix erroring requests not reported on `error` handler ([#4613](https://github.com/maplibre/maplibre-gl-js/issues/4613))
 - _...Add new stuff here..._
 
 ## 5.0.0-pre.10
