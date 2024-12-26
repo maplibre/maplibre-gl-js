@@ -14,6 +14,7 @@ import {TileBounds} from './tile_bounds';
 import {sleep} from '../util/test/util';
 import {type TileCache} from './tile_cache';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {GlobeTransform} from '../geo/projection/globe_transform';
 
 class SourceMock extends Evented implements Source {
     id: string;
@@ -848,6 +849,43 @@ describe('SourceCache#update', () => {
             }
         });
 
+        sourceCache.onAdd(undefined);
+    }));
+
+    test('retains children tiles for pending parents', () => new Promise<void>(done => {
+        const transform = new GlobeTransform();
+        transform.resize(511, 511);
+        transform.setZoom(1);
+        transform.setCenter(new LngLat(360, 0));
+
+        const sourceCache = createSourceCache();
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = (tile.tileID.key === new OverscaledTileID(0, 1, 0, 0, 0).key) ? 'loading' : 'loaded';
+        };
+
+        sourceCache.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                sourceCache.update(transform);
+                expect(sourceCache.getIds()).toEqual([
+                    new OverscaledTileID(1, 1, 1, 1, 1).key,
+                    new OverscaledTileID(1, 1, 1, 0, 1).key,
+                    new OverscaledTileID(1, 1, 1, 1, 0).key,
+                    new OverscaledTileID(1, 1, 1, 0, 0).key
+                ]);
+
+                transform.setZoom(0);
+                sourceCache.update(transform);
+
+                expect(sourceCache.getIds()).toEqual([
+                    new OverscaledTileID(0, 1, 0, 0, 0).key,
+                    new OverscaledTileID(1, 1, 1, 1, 1).key,
+                    new OverscaledTileID(1, 1, 1, 0, 1).key,
+                    new OverscaledTileID(1, 1, 1, 1, 0).key,
+                    new OverscaledTileID(1, 1, 1, 0, 0).key
+                ]);
+                done();
+            }
+        });
         sourceCache.onAdd(undefined);
     }));
 
