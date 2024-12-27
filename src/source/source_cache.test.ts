@@ -852,7 +852,7 @@ describe('SourceCache#update', () => {
         sourceCache.onAdd(undefined);
     }));
 
-    test('retains children tiles for pending parents', () => new Promise<void>(done => {
+    test('retains children tiles for pending parents', () => {
         const transform = new GlobeTransform();
         transform.resize(511, 511);
         transform.setZoom(1);
@@ -883,11 +883,10 @@ describe('SourceCache#update', () => {
                     new OverscaledTileID(1, 1, 1, 1, 0).key,
                     new OverscaledTileID(1, 1, 1, 0, 0).key
                 ]);
-                done();
             }
         });
         sourceCache.onAdd(undefined);
-    }));
+    });
 
     test('retains overscaled loaded children', () => new Promise<void>(done => {
         const transform = new MercatorTransform();
