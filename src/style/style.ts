@@ -184,7 +184,7 @@ export type StyleSwapOptions = {
      * that allows to modify a style after it is fetched but before it is committed to the map state. Refer to {@link TransformStyleFunction}.
      */
     transformStyle?: TransformStyleFunction;
-}
+};
 
 /**
  * Specifies a layer to be added to a {@link Style}. In addition to a standard {@link LayerSpecification}

@@ -90,7 +90,7 @@ test('Check Map falls back to WebGL if WebGL 2 is not supported', () => {
         if (type === 'webgl2') {return null;}
         return originalGetContext.apply(this, [type]);
     });
-    HTMLCanvasElement.prototype.getContext = mockGetContext
+    HTMLCanvasElement.prototype.getContext = mockGetContext;
   
     try {
         createMap();

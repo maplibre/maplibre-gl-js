@@ -35,7 +35,7 @@ export type TerrainData = {
     texture: WebGLTexture;
     depthTexture: WebGLTexture;
     tile: Tile;
-}
+};
 
 /**
  * @internal

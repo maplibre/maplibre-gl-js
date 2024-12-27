@@ -29,12 +29,12 @@ type MessageData = {
     mustQueue?: boolean;
     error?: Serialized | null;
     sourceMapId: string | number | null;
-}
+};
 
 type ResolveReject = {
     resolve: (value?: RequestResponseMessageMap[MessageType][1]) => void;
     reject: (reason?: Error) => void;
-}
+};
 
 /**
  * This interface allowing to substitute only the sendAsync method of the Actor class.
@@ -43,7 +43,7 @@ export interface IActor {
     sendAsync<T extends MessageType>(message: ActorMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]>;
 }
 
-export type MessageHandler<T extends MessageType> = (mapId: string | number, params: RequestResponseMessageMap[T][0], abortController?: AbortController) => Promise<RequestResponseMessageMap[T][1]>
+export type MessageHandler<T extends MessageType> = (mapId: string | number, params: RequestResponseMessageMap[T][0], abortController?: AbortController) => Promise<RequestResponseMessageMap[T][1]>;
 
 /**
  * An implementation of the [Actor design pattern](https://en.wikipedia.org/wiki/Actor_model)

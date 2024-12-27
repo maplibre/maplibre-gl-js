@@ -44,7 +44,7 @@ export type ProjectionData = {
      * Uniform name: `u_projection_fallback_matrix`.
      */
     fallbackMatrix: mat4;
-}
+};
 
 /**
  * Parameters object for the transform's `getProjectionData` function.
@@ -67,4 +67,4 @@ export type ProjectionDataParams = {
      * Set to true if the globe matrix should be applied (i.e. when rendering globe)
      */
     applyGlobeMatrix?: boolean;
-}
+};

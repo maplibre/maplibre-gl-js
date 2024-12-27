@@ -9,7 +9,7 @@ type DashEntry = {
     y: number;
     height: number;
     width: number;
-}
+};
 
 /**
  * @internal

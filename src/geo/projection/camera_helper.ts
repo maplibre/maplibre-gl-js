@@ -16,7 +16,7 @@ export type MapControlsDeltas = {
     pitchDelta: number;
     rollDelta: number;
     around: Point;
-}
+};
 
 export type CameraForBoxAndBearingHandlerResult = {
     center: LngLat;
@@ -35,13 +35,13 @@ export type EaseToHandlerOptions = {
     center?: LngLatLike;
     zoom?: number;
     offset?: PointLike;
-}
+};
 
 export type EaseToHandlerResult = {
     easeFunc: (k: number) => void;
     elevationCenter: LngLat;
     isZooming: boolean;
-}
+};
 
 export type FlyToHandlerOptions = {
     bearing: number;
@@ -53,7 +53,7 @@ export type FlyToHandlerOptions = {
     locationAtOffset: LngLat;
     zoom?: number;
     minZoom?: number;
-}
+};
 
 export type FlyToHandlerResult = {
     easeFunc: (k: number, scale: number, centerFactor: number, pointAtOffset: Point) => void;
@@ -61,7 +61,7 @@ export type FlyToHandlerResult = {
     scaleOfMinZoom?: number;
     targetCenter: LngLat;
     pixelPathLength: number;
-}
+};
 
 export type UpdateRotationArgs = {
     /**
@@ -88,7 +88,7 @@ export type UpdateRotationArgs = {
      * If true, use spherical linear interpolation. If false, use linear interpolation of Euler angles.
      */
     useSlerp: boolean;
-}
+};
 
 /**
  * @internal

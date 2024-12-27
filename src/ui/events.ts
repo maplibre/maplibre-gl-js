@@ -434,7 +434,7 @@ export type MapLibreEvent<TOrig = unknown> = {
     type: keyof MapEventType | keyof MapLayerEventType;
     target: Map;
     originalEvent: TOrig;
-}
+};
 
 /**
  * The style data event
@@ -443,7 +443,7 @@ export type MapLibreEvent<TOrig = unknown> = {
  */
 export type MapStyleDataEvent = MapLibreEvent & {
     dataType: 'style';
-}
+};
 
 /**
  * The source data event interface
@@ -468,7 +468,7 @@ export type MapSourceDataEvent = MapLibreEvent & {
      * the event is related to loading of a tile.
      */
     tile: any;
-}
+};
 /**
  * `MapMouseEvent` is the event type for mouse-related map events.
  *
@@ -753,7 +753,7 @@ export type MapProjectionEvent = {
      * Additionally includes 'globe-mercator' to describe globe that has internally switched to mercator.
      */
     newProjection: ProjectionSpecification['type'] | 'globe-mercator';
-}
+};
 
 /**
  * An event related to the web gl context
@@ -775,4 +775,4 @@ export type MapContextEvent = {
 export type MapStyleImageMissingEvent = MapLibreEvent & {
     type: 'styleimagemissing';
     id: string;
-}
+};

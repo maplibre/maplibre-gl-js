@@ -31,7 +31,7 @@ type TileResult = {
     queryGeometry: Array<Point>;
     cameraQueryGeometry: Array<Point>;
     scale: number;
-}
+};
 
 /**
  * @internal

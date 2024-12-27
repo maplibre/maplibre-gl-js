@@ -56,7 +56,7 @@ type TestData = {
     actual: string;
     diff: string;
     expected: string;
-}
+};
 
 type RenderOptions = {
     tests: any[];
@@ -65,13 +65,13 @@ type RenderOptions = {
     seed: string;
     debug: boolean;
     openBrowser: boolean;
-}
+};
 
 type StyleWithTestData = StyleSpecification & {
     metadata : {
         test: TestData;
     };
-}
+};
 
 type TestStats = {
     total: number;

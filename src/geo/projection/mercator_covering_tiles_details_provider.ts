@@ -42,7 +42,7 @@ export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetail
     allowVariableZoom(transform: IReadonlyTransform, options: CoveringTilesOptions): boolean {
         const zfov = transform.fov * (Math.abs(Math.cos(transform.rollInRadians)) * transform.height + Math.abs(Math.sin(transform.rollInRadians)) * transform.width) / transform.height;
         const maxConstantZoomPitch = clamp(78.5 - zfov / 2, 0.0, 60.0);
-        return (!!options.terrain || transform.pitch > maxConstantZoomPitch || transform.padding.top >= 0.1)
+        return (!!options.terrain || transform.pitch > maxConstantZoomPitch || transform.padding.top >= 0.1);
     }
 
     allowWorldCopies(): boolean {

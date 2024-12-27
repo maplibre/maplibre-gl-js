@@ -86,7 +86,7 @@ export type CenterZoomBearing = {
      * is "up". For example, `bearing: 90` orients the map so that east is up.
      */
     bearing?: number;
-}
+};
 
 /**
  * The options object related to the {@link Map#jumpTo} method
@@ -96,7 +96,7 @@ export type JumpToOptions = CameraOptions & {
      * Dimensions in pixels applied on each side of the viewport for shifting the vanishing point.
      */
     padding?: PaddingOptions;
-}
+};
 
 /**
  * A options object for the {@link Map#cameraForBounds} method
@@ -115,7 +115,7 @@ export type CameraForBoundsOptions = CameraOptions & {
      * The maximum zoom level to allow when the camera would transition to the specified bounds.
      */
     maxZoom?: number;
-}
+};
 
 /**
  * The {@link Map#flyTo} options object
@@ -159,7 +159,7 @@ export type FlyToOptions = AnimationOptions & CameraOptions & {
      * The amount of padding in pixels to add to the given bounds.
      */
     padding?: number | PaddingOptions;
-}
+};
 
 /**
  * The {@link Map#easeTo} options object
@@ -173,7 +173,7 @@ export type EaseToOptions = AnimationOptions & CameraOptions & {
     around?: LngLatLike;
     easeId?: string;
     noMoveStart?: boolean;
-}
+};
 
 /**
  * Options for {@link Map#fitBounds} method
@@ -194,7 +194,7 @@ export type FitBoundsOptions = FlyToOptions & {
      * The maximum zoom level to allow when the map view transitions to the specified bounds.
      */
     maxZoom?: number;
-}
+};
 
 /**
  * Options common to map movement methods that involve animation, such as {@link Map#panBy} and
