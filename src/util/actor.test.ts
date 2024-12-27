@@ -88,7 +88,7 @@ describe('Actor', () => {
             // Allows the cancel to be processed at the right point in time
             await sleep(200);
             worker.worker.actor.process();
-        }
+        };
 
         let received = false;
         const abortController = new AbortController();

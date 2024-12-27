@@ -69,7 +69,7 @@ import {isFramebufferNotCompleteError} from '../util/framebuffer_error';
 
 const version = packageJSON.version;
 
-type WebGLSupportedVersions = 'webgl2' | 'webgl' | undefined
+type WebGLSupportedVersions = 'webgl2' | 'webgl' | undefined;
 type WebGLContextAttributesWithType = WebGLContextAttributes & {contextType?: WebGLSupportedVersions};
 
 /**
@@ -358,7 +358,7 @@ export type MapOptions = {
 
 export type AddImageOptions = {
 
-}
+};
 
 // This type is used inside map since all properties are assigned a default value.
 export type CompleteMapOptions = Complete<MapOptions>;
@@ -367,7 +367,7 @@ type DelegatedListener = {
     layers: string[];
     listener: Listener;
     delegates: {[E in keyof MapEventType]?: Delegate<MapEventType[E]>};
-}
+};
 
 type Delegate<E extends Event = Event> = (e: E) => void;
 

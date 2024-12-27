@@ -399,7 +399,7 @@ function requiresOrientationChange(writingMode, firstPoint, lastPoint, aspectRat
 
 type GlyphLinePlacementResult = OrientationChangeType & {
     notEnoughRoom?: boolean;
-}
+};
 
 type GlyphLinePlacementArgs = {
     projectionContext: SymbolProjectionContext;
@@ -412,7 +412,7 @@ type GlyphLinePlacementArgs = {
     dynamicLayoutVertexArray: StructArray;
     aspectRatio: number;
     rotateToLine: boolean;
-}
+};
 
 /*
 * Place first and last glyph along the line projected to label plane, and if they fit

@@ -270,9 +270,9 @@ export class GlobeTransform implements ITransform {
         this._verticalPerspectiveTransform.apply(this, this._globeLatitudeErrorCorrectionRadians);
     }
 
-    public get projectionMatrix(): mat4 { return this.currentTransform.projectionMatrix }
+    public get projectionMatrix(): mat4 { return this.currentTransform.projectionMatrix; }
 
-    public get modelViewProjectionMatrix(): mat4 { return this.currentTransform.modelViewProjectionMatrix }
+    public get modelViewProjectionMatrix(): mat4 { return this.currentTransform.modelViewProjectionMatrix; }
 
     public get inverseProjectionMatrix(): mat4 { return this.currentTransform.inverseProjectionMatrix; }
 

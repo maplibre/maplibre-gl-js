@@ -36,7 +36,7 @@ export type UpdateImageOptions = {
      * The image coordinates
      */
     coordinates?: Coordinates;
-}
+};
 
 /**
  * A data source containing an image.

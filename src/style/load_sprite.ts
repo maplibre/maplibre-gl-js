@@ -13,7 +13,7 @@ export type LoadSpriteResult = {
     [spriteName: string]: {
         [id: string]: StyleImage;
     };
-}
+};
 
 export function normalizeSpriteURL(url: string, format: string, extension: string): string {
     try {
@@ -22,7 +22,7 @@ export function normalizeSpriteURL(url: string, format: string, extension: strin
         return parsed.toString();
     }
     catch {
-        throw new Error(`Invalid sprite URL "${url}", must be absolute. Modify style specification directly or use TransformStyleFunction to correct the issue dynamically`)
+        throw new Error(`Invalid sprite URL "${url}", must be absolute. Modify style specification directly or use TransformStyleFunction to correct the issue dynamically`);
     }
 }
 

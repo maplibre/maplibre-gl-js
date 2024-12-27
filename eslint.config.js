@@ -1,5 +1,5 @@
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
-import stylisticTs from '@stylistic/eslint-plugin-ts'
+import stylisticTs from '@stylistic/eslint-plugin-ts';
 import tsdoc from 'eslint-plugin-tsdoc';
 import vitest from 'eslint-plugin-vitest';
 import globals from 'globals';
@@ -96,6 +96,7 @@ export default [
             'no-useless-escape': 'off',
             indent: 'off',
             '@stylistic/indent': ['error'],
+            '@stylistic/semi': ['error'],
 
             'no-multiple-empty-lines': ['error', {
                 max: 1,

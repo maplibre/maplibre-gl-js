@@ -74,6 +74,8 @@
 - Improve symbol collision performance for both mercator and globe projections ([#4778](https://github.com/maplibre/maplibre-gl-js/pull/4778))
 - Fix bad line scaling near the poles under globe projection ([#4778](https://github.com/maplibre/maplibre-gl-js/pull/4778))
 - Fix globe loading many tiles at an unnecessarily high zoom level when the camera is pitched ([#4778](https://github.com/maplibre/maplibre-gl-js/pull/4778))
+- Fix children not retained when using globe ([#5271](https://github.com/maplibre/maplibre-gl-js/pull/5271))
+- Fix symbol size increasing when looking from poles ([#5275](https://github.com/maplibre/maplibre-gl-js/pull/5275))
 
 ## 5.0.0-pre.10
 

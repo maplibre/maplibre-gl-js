@@ -27,7 +27,7 @@ type FetchingState = {
     rawTileData: ArrayBuffer;
     cacheControl: ExpiryData;
     resourceTiming: any;
-}
+};
 
 export type AbortVectorData = () => void;
 export type LoadVectorData = (params: WorkerTileParameters, abortController: AbortController) => Promise<LoadVectorTileResult | null>;

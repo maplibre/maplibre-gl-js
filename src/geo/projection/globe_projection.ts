@@ -13,11 +13,11 @@ import {type Mesh} from '../../render/mesh';
 
 type ProjectionProps = {
     type: DataConstantProperty<ProjectionDefinition>;
-}
+};
 
 type ProjectionPossiblyEvaluated = {
     type: ProjectionDefinitionSpecification;
-}
+};
 
 const properties: Properties<ProjectionProps> = new Properties({
     'type': new DataConstantProperty(styleSpec.projection.type as StylePropertySpecification)
