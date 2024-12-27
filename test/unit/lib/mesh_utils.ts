@@ -13,7 +13,7 @@ export type SimpleMesh = {
     vertices: Array<number>;
     indicesTriangles: Array<number>;
     indicesLines: Array<number>;
-}
+};
 
 /**
  * Generates a simple grid mesh that has `size` by `size` quads.

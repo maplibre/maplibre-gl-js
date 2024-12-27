@@ -416,7 +416,7 @@ export class MercatorTransform implements ITransform {
         const matrices = {
             f64: tileMatrix,
             f32: new Float32Array(tileMatrix), // Must have a 32 bit float version for WebGL, otherwise WebGL calls in Chrome get very slow.
-        }
+        };
         cache.set(posMatrixKey, matrices);
         // Make sure to return the correct precision
         return useFloat32 ? matrices.f32 : matrices.f64;

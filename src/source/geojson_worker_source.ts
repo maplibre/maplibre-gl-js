@@ -31,7 +31,7 @@ export type GeoJSONWorkerOptions = {
     filter?: Array<unknown>;
     promoteId?: string;
     collectResourceTiming?: boolean;
-}
+};
 
 /**
  * Parameters needed to load a geojson to the worker

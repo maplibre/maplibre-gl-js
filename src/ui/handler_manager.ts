@@ -114,7 +114,7 @@ export type HandlerResult = {
 export type EventInProgress = {
     handlerName: string;
     originalEvent: Event;
-}
+};
 
 export type EventsInProgress = {
     zoom?: EventInProgress;
@@ -122,7 +122,7 @@ export type EventsInProgress = {
     pitch?: EventInProgress;
     rotate?: EventInProgress;
     drag?: EventInProgress;
-}
+};
 
 function hasChange(result: HandlerResult) {
     return (result.panDelta && result.panDelta.mag()) || result.zoomDelta || result.bearingDelta || result.pitchDelta || result.rollDelta;

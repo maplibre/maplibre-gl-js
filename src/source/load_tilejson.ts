@@ -16,7 +16,7 @@ export type LoadTileJsonResponse = {
     tileSize: number;
     encoding: RasterDEMSourceSpecification['encoding'];
     vectorLayerIds?: Array<string>;
-}
+};
 
 export async function loadTileJson(
     options: RasterSourceSpecification | RasterDEMSourceSpecification | VectorSourceSpecification,

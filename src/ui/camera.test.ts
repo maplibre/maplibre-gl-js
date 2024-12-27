@@ -343,7 +343,7 @@ describe('#jumpTo', () => {
         let started, rotated, ended;
         const eventData = {data: 'ok'};
 
-        camera.on('rotatestart', (d) => { started = d.data; })
+        camera.on('rotatestart', (d) => { started = d.data; });
         camera.on('rotate', (d) => { rotated = d.data; });
         camera.on('rotateend', (d) => { ended = d.data; });
 
@@ -357,7 +357,7 @@ describe('#jumpTo', () => {
         let started, pitched, ended;
         const eventData = {data: 'ok'};
 
-        camera.on('pitchstart', (d) => { started = d.data; })
+        camera.on('pitchstart', (d) => { started = d.data; });
         camera.on('pitch', (d) => { pitched = d.data; });
         camera.on('pitchend', (d) => { ended = d.data; });
 
@@ -371,7 +371,7 @@ describe('#jumpTo', () => {
         let started, rolled, ended;
         const eventData = {data: 'ok'};
 
-        camera.on('rollstart', (d) => { started = d.data; })
+        camera.on('rollstart', (d) => { started = d.data; });
         camera.on('roll', (d) => { rolled = d.data; });
         camera.on('rollend', (d) => { ended = d.data; });
 
@@ -1485,16 +1485,16 @@ describe('#flyTo', () => {
         const eventData = {data: 'ok'};
 
         camera.on('movestart', (d) => { movestarted = d.data; });
-        camera.on('move', (d) => { moved = d.data; })
-        camera.on('zoomstart', (d) => { zoomstarted = d.data; })
-        camera.on('zoom', (d) => { zoomed = d.data; })
-        camera.on('zoomend', (d) => { zoomended = d.data; })
-        camera.on('rotatestart', (d) => { rotatestarted = d.data; })
-        camera.on('rotate', (d) => { rotated = d.data; })
-        camera.on('rotateend', (d) => { rotateended = d.data; })
-        camera.on('pitchstart', (d) => { pitchstarted = d.data; })
-        camera.on('pitch', (d) => { pitched = d.data; })
-        camera.on('pitchend', (d) => { pitchended = d.data; })
+        camera.on('move', (d) => { moved = d.data; });
+        camera.on('zoomstart', (d) => { zoomstarted = d.data; });
+        camera.on('zoom', (d) => { zoomed = d.data; });
+        camera.on('zoomend', (d) => { zoomended = d.data; });
+        camera.on('rotatestart', (d) => { rotatestarted = d.data; });
+        camera.on('rotate', (d) => { rotated = d.data; });
+        camera.on('rotateend', (d) => { rotateended = d.data; });
+        camera.on('pitchstart', (d) => { pitchstarted = d.data; });
+        camera.on('pitch', (d) => { pitched = d.data; });
+        camera.on('pitchend', (d) => { pitchended = d.data; });
         const promise = camera.once('moveend');
 
         const stub = vi.spyOn(browser, 'now');
@@ -2463,7 +2463,7 @@ describe('#transformCameraUpdate', () => {
         camera.on('move', () => {
             eventCount++;
             expect(eventCount).toBe(callbackCount);
-        })
+        });
         const promise = camera.once('moveend');
 
         camera.jumpTo({center: [100, 0]});
@@ -3292,17 +3292,17 @@ describe('#flyTo globe projection', () => {
                 pitchstarted, pitched, pitchended;
             const eventData = {data: 'ok'};
 
-            camera.on('movestart', (d) => { movestarted = d.data; })
-            camera.on('move', (d) => { moved = d.data; })
-            camera.on('zoomstart', (d) => { zoomstarted = d.data; })
-            camera.on('zoom', (d) => { zoomed = d.data; })
-            camera.on('zoomend', (d) => { zoomended = d.data; })
-            camera.on('rotatestart', (d) => { rotatestarted = d.data; })
-            camera.on('rotate', (d) => { rotated = d.data; })
-            camera.on('rotateend', (d) => { rotateended = d.data; })
-            camera.on('pitchstart', (d) => { pitchstarted = d.data; })
-            camera.on('pitch', (d) => { pitched = d.data; })
-            camera.on('pitchend', (d) => { pitchended = d.data; })
+            camera.on('movestart', (d) => { movestarted = d.data; });
+            camera.on('move', (d) => { moved = d.data; });
+            camera.on('zoomstart', (d) => { zoomstarted = d.data; });
+            camera.on('zoom', (d) => { zoomed = d.data; });
+            camera.on('zoomend', (d) => { zoomended = d.data; });
+            camera.on('rotatestart', (d) => { rotatestarted = d.data; });
+            camera.on('rotate', (d) => { rotated = d.data; });
+            camera.on('rotateend', (d) => { rotateended = d.data; });
+            camera.on('pitchstart', (d) => { pitchstarted = d.data; });
+            camera.on('pitch', (d) => { pitched = d.data; });
+            camera.on('pitchend', (d) => { pitchended = d.data; });
             const promise = camera.once('moveend');
 
             const stub = vi.spyOn(browser, 'now');
@@ -3689,7 +3689,7 @@ describe('#flyTo globe projection', () => {
             let startTime: number;
             const camera = createCameraGlobe({center: [37.63454, 55.75868], zoom: 18});
 
-            camera.on('movestart', () => { startTime = new Date().getTime(); })
+            camera.on('movestart', () => { startTime = new Date().getTime(); });
             const promise = camera.once('moveend');
 
             camera.flyTo({center: [-122.3998631, 37.7884307], maxDuration: 100});

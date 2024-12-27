@@ -75,7 +75,7 @@ type PainterOptions = {
 export type RenderOptions = {
     isRenderingToTexture: boolean;
     isRenderingGlobe: boolean;
-}
+};
 
 /**
  * @internal

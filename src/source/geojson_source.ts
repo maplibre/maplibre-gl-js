@@ -23,7 +23,7 @@ export type GeoJSONSourceOptions = GeoJSONSourceSpecification & {
     workerOptions?: GeoJSONWorkerOptions;
     collectResourceTiming?: boolean;
     data: GeoJSON.GeoJSON | string;
-}
+};
 
 export type GeoJSONSourceInternalOptions = {
     data?: GeoJSON.GeoJSON | string | undefined;
@@ -32,7 +32,7 @@ export type GeoJSONSourceInternalOptions = {
     clusterRadius?: number;
     clusterMinPoints?: number;
     generateId?: boolean;
-}
+};
 
 /**
  * The cluster options to set
@@ -50,7 +50,7 @@ export type SetClusterOptions = {
      * The cluster's radius
      */
     clusterRadius?: number;
-}
+};
 
 /**
  * A source containing GeoJSON.

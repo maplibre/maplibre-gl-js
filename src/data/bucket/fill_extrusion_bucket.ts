@@ -56,7 +56,7 @@ type CentroidAccumulator = {
     x: number;
     y: number;
     sampleCount: number;
-}
+};
 
 export class FillExtrusionBucket implements Bucket {
     index: number;

@@ -12,7 +12,7 @@ type MapOptions = {
     locale?: Partial<typeof defaultLocale>;
     width?: number;
     renderWorldCopies?: boolean;
-}
+};
 
 function createMap(options: MapOptions = {}) {
     const container = window.document.createElement('div');
@@ -980,7 +980,7 @@ describe('marker', () => {
             .addTo(map);
 
         map.terrain = createTerrain();
-        map.terrain.depthAtPoint = () => .95
+        map.terrain.depthAtPoint = () => .95;
         await sleep(100);
         map.fire('terrain');
 

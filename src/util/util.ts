@@ -998,7 +998,7 @@ export function rollPitchBearingToQuat(roll: number, pitch: number, bearing: num
 
 export type Complete<T> = {
     [P in keyof Required<T>]: Pick<T, P> extends Required<Pick<T, P>> ? T[P] : (T[P] | undefined);
-}
+};
 
 /**
  * A helper to allow require of at least one property

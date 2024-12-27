@@ -68,7 +68,7 @@ describe('WebGLContextAttributes options', () => {
             powerPreference: 'default',
             failIfMajorPerformanceCaveat: true,
             desynchronized: true,
-        }
+        };
         Object.defineProperty(container, 'clientWidth', {value: 2048});
         Object.defineProperty(container, 'clientHeight', {value: 2048});
         const map = createMap({container, canvasContextAttributes});
@@ -88,7 +88,7 @@ describe('WebGLContextAttributes options', () => {
             depth: false,
             stencil: false,
             premultipliedAlpha: false,
-        }
+        };
         Object.defineProperty(container, 'clientWidth', {value: 2048});
         Object.defineProperty(container, 'clientHeight', {value: 2048});
         const map = createMap({container, canvasContextAttributes});
