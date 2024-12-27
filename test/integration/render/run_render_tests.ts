@@ -650,8 +650,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                             await img.decode();
                             return img;
                         };
-                        const useRawData =  operation.length === 5 && operation[4];
-                        const image = await getImage(!useRawData ? `http://localhost:2900/${operation[2]}` : operation[2]);
+                        const image = await getImage(`http://localhost:2900/${operation[2]}`);
 
                         map.addImage(operation[1], image, operation[3] || {});
                         break;
