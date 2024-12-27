@@ -45,6 +45,8 @@
 - Fix parsing wrong hash location ([#5131](https://github.com/maplibre/maplibre-gl-js/pull/5131))
 - Fix swallowing of errors ([#4532](https://github.com/maplibre/maplibre-gl-js/issues/4532))
 - Fix erroring requests not reported on `error` handler ([#4613](https://github.com/maplibre/maplibre-gl-js/issues/4613))
+- Fix children not retained when using globe ([#5271](https://github.com/maplibre/maplibre-gl-js/pull/5271))
+- Fix symbol size increasing when looking from poles ([#5275](https://github.com/maplibre/maplibre-gl-js/pull/5275))
 - Fix globe custom layers being supplied incorrect matrices after projection transition to mercator ([#5150](https://github.com/maplibre/maplibre-gl-js/pull/5150))
 - Fix custom 3D models disappearing during projection transition ([#5150](https://github.com/maplibre/maplibre-gl-js/pull/5150))
 - Fix regression in NavigationControl compass on Firefox and Safari browsers ([#5205](https://github.com/maplibre/maplibre-gl-js/pull/5205))
@@ -74,8 +76,6 @@
 - Improve symbol collision performance for both mercator and globe projections ([#4778](https://github.com/maplibre/maplibre-gl-js/pull/4778))
 - Fix bad line scaling near the poles under globe projection ([#4778](https://github.com/maplibre/maplibre-gl-js/pull/4778))
 - Fix globe loading many tiles at an unnecessarily high zoom level when the camera is pitched ([#4778](https://github.com/maplibre/maplibre-gl-js/pull/4778))
-- Fix children not retained when using globe ([#5271](https://github.com/maplibre/maplibre-gl-js/pull/5271))
-- Fix symbol size increasing when looking from poles ([#5275](https://github.com/maplibre/maplibre-gl-js/pull/5275))
 
 ## 5.0.0-pre.10
 
