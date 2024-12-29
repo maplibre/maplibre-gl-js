@@ -60,9 +60,9 @@ export class CircleStyleLayer extends StyleLayer {
         const size  = radius + stroke;
 
         // For pitch-alignment: map, compare feature geometry to query geometry in the plane of the tile
-        // // Otherwise, compare geometry in the plane of the viewport
-        // // A circle with fixed scaling relative to the viewport gets larger in tile space as it moves into the distance
-        // // A circle with fixed scaling relative to the map gets smaller in viewport space as it moves into the distance
+        // Otherwise, compare geometry in the plane of the viewport
+        // A circle with fixed scaling relative to the viewport gets larger in tile space as it moves into the distance
+        // A circle with fixed scaling relative to the map gets smaller in viewport space as it moves into the distance
         const alignWithMap = this.paint.get('circle-pitch-alignment') === 'map';
         const transformedPolygon = alignWithMap ? translatedPolygon : projectQueryGeometry(translatedPolygon, pixelPosMatrix);
         const transformedSize = alignWithMap ? size * pixelsToTileUnits : size;

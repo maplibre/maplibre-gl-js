@@ -62,11 +62,8 @@ function getPixelPosMatrix(transform, tileID) {
     const t = mat4.create();
     mat4.translate(t, t, [1, 1, 0]);
     mat4.scale(t, t, [transform.width * 0.5, transform.height * 0.5, 1]);
-    if (transform.calculatePosMatrix) { // Globe: TODO: remove this hack once queryRendererFeatures supports globe properly
-        return mat4.multiply(t, t, transform.calculatePosMatrix(tileID.toUnwrapped()));
-    } else {
-        return t;
-    }
+    const projectionData = transform.getProjectionData({overscaledTileID: tileID.toUnwrapped()});
+    return mat4.multiply(t, t, projectionData.mainMatrix);
 }
 
 function queryIncludes3DLayer(layers: Set<string> | undefined, styleLayers: {[_: string]: StyleLayer}, sourceID: string) {

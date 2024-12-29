@@ -59,7 +59,7 @@ export class FillExtrusionStyleLayer extends StyleLayer {
         const height = this.paint.get('fill-extrusion-height').evaluate(feature, featureState);
         const base = this.paint.get('fill-extrusion-base').evaluate(feature, featureState);
 
-        const projectedQueryGeometry = projectQueryGeometry(translatedPolygon, pixelPosMatrix, transform, 0);
+        const projectedQueryGeometry = projectQueryGeometry(translatedPolygon, pixelPosMatrix, 0);
 
         const projected = projectExtrusion(geometry, base, height, pixelPosMatrix);
         const projectedBase = projected[0];
@@ -215,7 +215,7 @@ function projectExtrusion(geometry: Array<Array<Point>>, zBase: number, zTop: nu
     return [projectedBase, projectedTop];
 }
 
-function projectQueryGeometry(queryGeometry: Array<Point>, pixelPosMatrix: mat4, transform: IReadonlyTransform, z: number) {
+function projectQueryGeometry(queryGeometry: Array<Point>, pixelPosMatrix: mat4, z: number) {
     const projectedQueryGeometry = [];
     for (const p of queryGeometry) {
         const v = [p.x, p.y, z, 1] as vec4;
