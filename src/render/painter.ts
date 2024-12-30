@@ -75,7 +75,7 @@ type PainterOptions = {
 export type RenderOptions = {
     isRenderingToTexture: boolean;
     isRenderingGlobe: boolean;
-}
+};
 
 /**
  * @internal
@@ -492,7 +492,7 @@ export class Painter {
         const coordsAscending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
-        const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: style.projection.transitionState > 0};
+        const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: style.projection?.transitionState > 0};
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
@@ -539,7 +539,7 @@ export class Painter {
         }
 
         // Execute offscreen GPU tasks of the projection manager
-        this.style.projection.updateGPUdependent({
+        this.style.projection?.updateGPUdependent({
             context: this.context,
             useProgram: (name: string) => this.useProgram(name)
         });

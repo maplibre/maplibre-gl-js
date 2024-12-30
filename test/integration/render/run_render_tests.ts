@@ -56,7 +56,7 @@ type TestData = {
     actual: string;
     diff: string;
     expected: string;
-}
+};
 
 type RenderOptions = {
     tests: any[];
@@ -65,13 +65,13 @@ type RenderOptions = {
     seed: string;
     debug: boolean;
     openBrowser: boolean;
-}
+};
 
 type StyleWithTestData = StyleSpecification & {
     metadata : {
         test: TestData;
     };
-}
+};
 
 type TestStats = {
     total: number;
@@ -990,12 +990,22 @@ async function executeRenderTests() {
             '--disable-web-security'
         ]});
 
-    const server = http.createServer(
-        st({
-            path: 'test/integration/assets',
-            cors: true,
-        })
-    );
+    const mount = st({
+        path: 'test/integration/assets',
+        cors: true,
+        passthrough: true,
+    });
+    const server = http.createServer((req, res) => {
+        mount(req, res, () => {
+            if (req.url.includes('/sparse204/1-')) {
+                res.writeHead(204);
+                res.end('');
+            } else {
+                res.writeHead(404);
+                res.end('');
+            }
+        });
+    });
 
     const mvtServer = http.createServer(
         st({

@@ -185,7 +185,7 @@ export type StyleSwapOptions = {
      * that allows to modify a style after it is fetched but before it is committed to the map state. Refer to {@link TransformStyleFunction}.
      */
     transformStyle?: TransformStyleFunction;
-}
+};
 
 /**
  * Specifies a layer to be added to a {@link Style}. In addition to a standard {@link LayerSpecification}
@@ -204,7 +204,7 @@ export class Style extends Evented {
     glyphManager: GlyphManager;
     lineAtlas: LineAtlas;
     light: Light;
-    projection: Projection;
+    projection: Projection | undefined;
     sky: Sky;
 
     _frameRequest: AbortController;

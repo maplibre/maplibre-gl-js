@@ -62,7 +62,7 @@ export type DragMoveHandlerOptions<T, E extends Event> = {
      * If true, handler will be enabled during construction
      */
     enable?: boolean;
-}
+};
 
 /**
  * A generic class to create handlers for drag events, from both mouse and touch events.

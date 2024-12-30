@@ -40,7 +40,7 @@ export type QueryRenderedFeaturesOptions = {
 
 export type QueryRenderedFeaturesOptionsStrict = Omit<QueryRenderedFeaturesOptions, 'layers'> & {
     layers: Set<string> | null;
-}
+};
 
 /**
  * The options object related to the {@link Map#querySourceFeatures} method
@@ -60,7 +60,7 @@ export type QuerySourceFeatureOptions = {
      * @defaultValue true
      */
     validate?: boolean;
-}
+};
 
 export type QueryRenderedFeaturesResults = {
     [key: string]: QueryRenderedFeaturesResultsItem[];

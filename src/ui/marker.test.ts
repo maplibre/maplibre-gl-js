@@ -1,19 +1,18 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {createMap as globalCreateMap, beforeMapTest, sleep} from '../util/test/util';
+import {createMap as globalCreateMap, beforeMapTest, sleep, createTerrain} from '../util/test/util';
 import {Marker} from './marker';
 import {Popup} from './popup';
 import {LngLat} from '../geo/lng_lat';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import Point from '@mapbox/point-geometry';
 import simulate from '../../test/unit/lib/simulate_interaction';
-import type {Terrain} from '../render/terrain';
 import type {defaultLocale} from './default_locale';
 
 type MapOptions = {
     locale?: Partial<typeof defaultLocale>;
     width?: number;
     renderWorldCopies?: boolean;
-}
+};
 
 function createMap(options: MapOptions = {}) {
     const container = window.document.createElement('div');
@@ -862,10 +861,7 @@ describe('marker', () => {
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map);
-        map.terrain = {
-            getElevationForLngLatZoom: () => 0,
-            depthAtPoint: () => .9
-        } as any as Terrain;
+        map.terrain = createTerrain();
         map.transform.lngLatToCameraDepth = () => .95;
 
         marker.setOffset([10, 10]);
@@ -953,10 +949,8 @@ describe('marker', () => {
         expect(marker.getElement().style.opacity).toMatch('');
 
         // Add terrain, not blocking marker
-        map.terrain = {
-            getElevationForLngLatZoom: () => 0,
-            depthAtPoint: () => .95 // Mocking distance to terrain
-        } as any as Terrain;
+        map.terrain = createTerrain();
+        map.terrain.depthAtPoint = () => .95;
         map.fire('terrain');
         await sleep(100);
 
@@ -985,10 +979,8 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
 
-        map.terrain = {
-            getElevationForLngLatZoom: () => 0,
-            depthAtPoint: () => .95
-        } as any as Terrain;
+        map.terrain = createTerrain();
+        map.terrain.depthAtPoint = () => .95;
         await sleep(100);
         map.fire('terrain');
 
@@ -1003,10 +995,8 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
 
-        map.terrain = {
-            getElevationForLngLatZoom: () => 0,
-            depthAtPoint: (p) => p.y === 256 ? .95 : .92 // return "far" given the marker's center coord; return "near" otherwise
-        } as any as Terrain;
+        map.terrain = createTerrain();
+        map.terrain.depthAtPoint = (p) => p.y === 256 ? .95 : .92;
         await sleep(100);
         map.fire('terrain');
 
@@ -1021,10 +1011,7 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
 
-        map.terrain = {
-            getElevationForLngLatZoom: () => 0,
-            depthAtPoint: () => .92
-        } as any as Terrain;
+        map.terrain = createTerrain();
         await sleep(100);
         map.fire('terrain');
 
@@ -1039,10 +1026,7 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
 
-        map.terrain = {
-            getElevationForLngLatZoom: () => 0,
-            depthAtPoint: () => .92
-        } as any as Terrain;
+        map.terrain = createTerrain();
         map.fire('terrain');
 
         marker.setOpacity(undefined, '0.35');
@@ -1065,10 +1049,7 @@ describe('marker', () => {
 
         map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
 
-        map.terrain = {
-            getElevationForLngLatZoom: () => 0,
-            depthAtPoint: () => .92
-        } as any as Terrain;
+        map.terrain = createTerrain();
         map.fire('terrain');
 
         await sleep(100);
@@ -1086,10 +1067,7 @@ describe('marker', () => {
 
         map.transform.lngLatToCameraDepth = () => .95;
 
-        map.terrain = {
-            getElevationForLngLatZoom: () => 0,
-            depthAtPoint: () => .92
-        } as any as Terrain;
+        map.terrain = createTerrain();
         map.fire('terrain');
 
         await sleep(100);

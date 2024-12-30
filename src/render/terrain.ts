@@ -35,7 +35,7 @@ export type TerrainData = {
     texture: WebGLTexture;
     depthTexture: WebGLTexture;
     tile: Tile;
-}
+};
 
 /**
  * @internal
@@ -378,7 +378,7 @@ export class Terrain {
      * @returns the created regular mesh
      */
     getTerrainMesh(tileId: OverscaledTileID): Mesh {
-        const globeEnabled = this.painter.style.projection.transitionState > 0;
+        const globeEnabled = this.painter.style.projection?.transitionState > 0;
         const northPole = globeEnabled && tileId.canonical.y === 0;
         const southPole = globeEnabled && tileId.canonical.y === (1 << tileId.canonical.z) - 1;
         const key = `m_${northPole ? 'n' : ''}_${southPole ? 's' : ''}`;

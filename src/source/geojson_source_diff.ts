@@ -23,7 +23,7 @@ export type GeoJSONSourceDiff = {
      * An array of update objects
      */
     update?: Array<GeoJSONFeatureDiff>;
-}
+};
 
 /**
  * A geojson feature diff object
@@ -49,7 +49,7 @@ export type GeoJSONFeatureDiff = {
      * The properties to add or update along side their values
      */
     addOrUpdateProperties?: Array<{key: string; value: any}>;
-}
+};
 
 export type UpdateableGeoJSON = GeoJSON.Feature | GeoJSON.FeatureCollection | undefined;
 

@@ -31,7 +31,7 @@ type QueryResult<T> = {
  */
 export type GridKey = {
     overlapMode?: OverlapMode;
-}
+};
 
 function overlapAllowed(overlapA: OverlapMode, overlapB: OverlapMode): boolean {
     let allowed = true;

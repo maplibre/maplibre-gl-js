@@ -326,12 +326,12 @@ describe('hash', () => {
     });
 
     describe('#_isValidHash', () => {
-        let hash: Hash
+        let hash: Hash;
 
         beforeEach(() => {
             hash = createHash()
                 .addTo(map);
-        })
+        });
 
         test('validate correct hash', () => {
             window.location.hash = '#10/3.00/-1.00';

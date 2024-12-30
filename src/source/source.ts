@@ -128,7 +128,7 @@ export interface Source {
  */
 export type SourceClass = {
     new (id: string, specification: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented): Source;
-}
+};
 
 /**
  * Creates a tiled data source instance given an options object.

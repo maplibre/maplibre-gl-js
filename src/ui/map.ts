@@ -64,10 +64,12 @@ import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {type ITransform} from '../geo/transform_interface';
 import {type ICameraHelper} from '../geo/projection/camera_helper';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
+import {isAbortError} from '../util/abort_error';
+import {isFramebufferNotCompleteError} from '../util/framebuffer_error';
 
 const version = packageJSON.version;
 
-type WebGLSupportedVersions = 'webgl2' | 'webgl' | undefined
+type WebGLSupportedVersions = 'webgl2' | 'webgl' | undefined;
 type WebGLContextAttributesWithType = WebGLContextAttributes & {contextType?: WebGLSupportedVersions};
 
 /**
@@ -356,7 +358,7 @@ export type MapOptions = {
 
 export type AddImageOptions = {
 
-}
+};
 
 // This type is used inside map since all properties are assigned a default value.
 export type CompleteMapOptions = Complete<MapOptions>;
@@ -365,7 +367,7 @@ type DelegatedListener = {
     layers: string[];
     listener: Listener;
     delegates: {[E in keyof MapEventType]?: Delegate<MapEventType[E]>};
-}
+};
 
 type Delegate<E extends Event = Event> = (e: E) => void;
 
@@ -3182,7 +3184,7 @@ export class Map extends Camera {
     _render(paintStartTimeStamp: number) {
         const fadeDuration = this._idleTriggered ? this._fadeDuration : 0;
 
-        const isGlobeRendering = this.style.projection.transitionState > 0;
+        const isGlobeRendering = this.style.projection?.transitionState > 0;
 
         // A custom layer may have used the context asynchronously. Mark the state as dirty.
         this.painter.context.setDirty();
@@ -3220,14 +3222,14 @@ export class Map extends Camera {
             this.style.update(parameters);
         }
 
-        const globeRenderingChaged = this.style.projection.transitionState > 0 !== isGlobeRendering;
-        this.style.projection.setErrorQueryLatitudeDegrees(this.transform.center.lat);
-        this.transform.setTransitionState(this.style.projection.transitionState, this.style.projection.latitudeErrorCorrectionRadians);
+        const globeRenderingChanged = this.style.projection?.transitionState > 0 !== isGlobeRendering;
+        this.style.projection?.setErrorQueryLatitudeDegrees(this.transform.center.lat);
+        this.transform.setTransitionState(this.style.projection?.transitionState, this.style.projection?.latitudeErrorCorrectionRadians);
 
         // If we are in _render for any reason other than an in-progress paint
         // transition, update source caches to check for and load any tiles we
         // need for the current transform
-        if (this.style && (this._sourcesDirty || globeRenderingChaged)) {
+        if (this.style && (this._sourcesDirty || globeRenderingChanged)) {
             this._sourcesDirty = false;
             this.style._updateSources(this.transform);
         }
@@ -3246,7 +3248,7 @@ export class Map extends Camera {
             }
         }
 
-        this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChaged);
+        this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
 
         // Actually draw
         this.painter.render(this.style, {
@@ -3381,7 +3383,11 @@ export class Map extends Camera {
                 PerformanceUtils.frame(paintStartTimeStamp);
                 this._frameRequest = null;
                 this._render(paintStartTimeStamp);
-            }).catch(() => {}); // ignore abort error
+            }).catch((error: Error) => {
+                if (!isAbortError(error) && !isFramebufferNotCompleteError(error)) {
+                    throw error;
+                }
+            });
         }
     }
 
