@@ -71,11 +71,11 @@ export type QueryRenderedFeaturesResultsItem = QueryResultsItem & { feature: Map
 /*
  * Returns a matrix that can be used to convert from tile coordinates to viewport pixel coordinates.
  */
-function getPixelPosMatrix(transform: IReadonlyTransform, tileID) {
+function getPixelPosMatrix(transform: IReadonlyTransform, tileID: OverscaledTileID) {
     const t = mat4.create();
     mat4.translate(t, t, [1, 1, 0]);
     mat4.scale(t, t, [transform.width * 0.5, transform.height * 0.5, 1]);
-    const projectionData = transform.getProjectionData({overscaledTileID: tileID.toUnwrapped()});
+    const projectionData = transform.getProjectionData({overscaledTileID: tileID});
     return mat4.multiply(t, t, projectionData.mainMatrix);
 }
 
