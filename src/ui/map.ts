@@ -57,7 +57,7 @@ import type {
     SkySpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
-import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
+import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
@@ -1724,7 +1724,7 @@ export class Map extends Camera {
         if (!this.style) {
             return [];
         }
-        let queryGeometry;
+        let queryGeometry: Point[];
         const isGeometry = geometryOrOptions instanceof Point || Array.isArray(geometryOrOptions);
         const geometry = isGeometry ? geometryOrOptions : [[0, 0], [this.transform.width, this.transform.height]];
         options = options || (isGeometry ? {} : geometryOrOptions) || {};
@@ -1770,7 +1770,7 @@ export class Map extends Camera {
      * ```
      *
      */
-    querySourceFeatures(sourceId: string, parameters?: QuerySourceFeatureOptions | null): MapGeoJSONFeature[] {
+    querySourceFeatures(sourceId: string, parameters?: QuerySourceFeatureOptions | null): GeoJSONFeature[] {
         return this.style.querySourceFeatures(sourceId, parameters);
     }
 

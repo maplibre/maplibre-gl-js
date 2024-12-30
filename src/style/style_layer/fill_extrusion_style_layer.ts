@@ -1,4 +1,4 @@
-import {StyleLayer} from '../style_layer';
+import {type QueryIntersectsFeatureParams, StyleLayer} from '../style_layer';
 
 import {FillExtrusionBucket} from '../../data/bucket/fill_extrusion_bucket';
 import {polygonIntersectsPolygon, polygonIntersectsMultiPolygon} from '../../util/intersection_tests';
@@ -7,11 +7,9 @@ import properties, {type FillExtrusionPaintPropsPossiblyEvaluated} from './fill_
 import {type Transitionable, type Transitioning, type PossiblyEvaluated} from '../properties';
 import {type mat4, vec4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
-import type {FeatureState, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {BucketParameters} from '../../data/bucket';
 import type {FillExtrusionPaintProps} from './fill_extrusion_style_layer_properties.g';
-import type {IReadonlyTransform} from '../../geo/transform_interface';
-import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 export class Point3D extends Point {
     z: number;
@@ -40,15 +38,14 @@ export class FillExtrusionStyleLayer extends StyleLayer {
         return true;
     }
 
-    queryIntersectsFeature(
-        queryGeometry: Array<Point>,
-        feature: VectorTileFeature,
-        featureState: FeatureState,
-        geometry: Array<Array<Point>>,
-        zoom: number,
-        transform: IReadonlyTransform,
-        pixelsToTileUnits: number,
-        pixelPosMatrix: mat4
+    queryIntersectsFeature({
+        queryGeometry,
+        feature,
+        featureState,
+        geometry,
+        transform,
+        pixelsToTileUnits,
+        pixelPosMatrix}: QueryIntersectsFeatureParams
     ): boolean | number {
 
         const translatedPolygon = translate(queryGeometry,
