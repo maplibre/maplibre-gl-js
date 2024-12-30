@@ -32,7 +32,7 @@
 - Add support for camera roll angle ([#4717](https://github.com/maplibre/maplibre-gl-js/issues/4717))
 - Improve performance of `queryRenderedFeatures` by using JavaScript `Set`s to assess layer membership internally ([#4777](https://github.com/maplibre/maplibre-gl-js/pull/4777))
 - Support globe mode ([#3963](https://github.com/maplibre/maplibre-gl-js/issues/3963))
-- Merge atmosphere an sky implementation ([#3888](https://github.com/maplibre/maplibre-gl-js/issues/3888))
+- Merge atmosphere and sky implementation ([#3888](https://github.com/maplibre/maplibre-gl-js/issues/3888))
 - Add option to display a realistic atmosphere when using a Globe projection ([#3888](https://github.com/maplibre/maplibre-gl-js/issues/3888))
 
 ### 🐞 Bug fixes
