@@ -13,7 +13,7 @@ import type {OverscaledTileID} from './tile_id';
 type RenderedFeatureLayer = {
     wrappedTileID: string;
     queryResults: QueryResults;
-}
+};
 
 /**
  * Options to pass to query the map for the rendered features
@@ -64,7 +64,7 @@ export type QuerySourceFeatureOptions = {
 
 export type QueryRenderedFeaturesResults = {
     [key: string]: QueryRenderedFeaturesResultsItem[];
-}
+};
 
 export type QueryRenderedFeaturesResultsItem = QueryResultsItem & { feature: MapGeoJSONFeature };
 

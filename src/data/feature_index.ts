@@ -41,13 +41,13 @@ type QueryParameters = {
 
 export type QueryResults = {
     [_: string]: QueryResultsItem[];
-}
+};
 
 export type QueryResultsItem = {
     featureIndex: number;
     feature: GeoJSONFeature;
     intersectionZ?: boolean | number;
-}
+};
 
 /**
  * An in memory index class to allow fast interaction with features
