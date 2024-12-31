@@ -10,6 +10,7 @@
 
 ### ✨ Features and improvements
 
+- ⚠️ `StyleLayer`'s `queryIntersectsFeature` method parameters were moved to `QueryIntersectsFeatureParams`. ([#5276](https://github.com/maplibre/maplibre-gl-js/pull/5276)) Wrap the method parameters with `{}` to solve this
 - ⚠️ Support setting WebGL context options on map creation ([#5196](https://github.com/maplibre/maplibre-gl-js/pull/5196)). Previously supported WebGL context options like `antialias`, `preserveDrawingBuffer` and `failIfMajorPerformanceCaveat` must now be defined inside the `canvasContextAttributes` object on `MapOptions`.
 - ⚠️ Change the return type of `on` method to return a `Subscription` to allow for easy unsubscribe ([#5080](https://github.com/maplibre/maplibre-gl-js/pull/5080)). `map.on('x').on('y')` => `map.on('x'); map.on('y');`.
 - ⚠️ Change drag rotate behavior to be around the center of the screen ([#5074](https://github.com/maplibre/maplibre-gl-js/pull/5074))

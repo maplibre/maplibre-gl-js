@@ -1,18 +1,14 @@
-import {StyleLayer} from '../style_layer';
-
+import {type QueryIntersectsFeatureParams, StyleLayer} from '../style_layer';
 import {FillBucket} from '../../data/bucket/fill_bucket';
 import {polygonIntersectsMultiPolygon} from '../../util/intersection_tests';
 import {translateDistance, translate} from '../query_utils';
 import properties, {type FillLayoutPropsPossiblyEvaluated, type FillPaintPropsPossiblyEvaluated} from './fill_style_layer_properties.g';
-import {type Transitionable, type Transitioning, type Layout, type PossiblyEvaluated} from '../properties';
 
-import type {FeatureState, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {Transitionable, Transitioning, Layout, PossiblyEvaluated} from '../properties';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {BucketParameters} from '../../data/bucket';
-import type Point from '@mapbox/point-geometry';
 import type {FillLayoutProps, FillPaintProps} from './fill_style_layer_properties.g';
 import type {EvaluationParameters} from '../evaluation_parameters';
-import type {IReadonlyTransform} from '../../geo/transform_interface';
-import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 export const isFillStyleLayer = (layer: StyleLayer): layer is FillStyleLayer => layer.type === 'fill';
 
@@ -45,14 +41,11 @@ export class FillStyleLayer extends StyleLayer {
         return translateDistance(this.paint.get('fill-translate'));
     }
 
-    queryIntersectsFeature(
-        queryGeometry: Array<Point>,
-        feature: VectorTileFeature,
-        featureState: FeatureState,
-        geometry: Array<Array<Point>>,
-        zoom: number,
-        transform: IReadonlyTransform,
-        pixelsToTileUnits: number
+    queryIntersectsFeature({
+        queryGeometry,
+        geometry,
+        transform,
+        pixelsToTileUnits}: QueryIntersectsFeatureParams
     ): boolean {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('fill-translate'),
