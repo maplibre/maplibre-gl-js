@@ -5,8 +5,8 @@
     <meta property="og:description" content="Filter a layer based on user input using setFilter()." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -147,7 +147,6 @@
                 felt = document.getElementById('range-felt');
                 operator = operatorFelt.value;
 
-                // eslint-disable-next-line no-unused-expressions
                 e.target.checked ? data.felt = Number(felt.value) : delete data['felt'];
 
                 break;
@@ -158,18 +157,15 @@
                 mag = document.getElementById('range-mag');
                 operator = operatorMag.value;
 
-                // eslint-disable-next-line no-unused-expressions
                 e.target.checked ? data.mag = Number(mag.value) : delete data['mag'];
 
                 break;
 
             /// example: `map.setFilter("earthquakes", ["any", [">", "tsunami", 0]])`
             case 'tsunami':
-                // eslint-disable-next-line @typescript-eslint/quotes
-                tsunami = document.querySelector("input[type='radio'][name=tsunami]:checked");
+                tsunami = document.querySelector('input[type="radio"][name=tsunami]:checked');
                 operator = '==';
 
-                // eslint-disable-next-line no-unused-expressions
                 e.target.checked ? data.tsunami = Number(tsunami.value) : delete data['tsunami'];
 
                 break;
