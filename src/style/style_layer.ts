@@ -28,6 +28,44 @@ import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 const TRANSITION_SUFFIX = '-transition';
 
+export type QueryIntersectsFeatureParams = {
+    /**
+     * The geometry to check intersection with.
+     * This geometry is in tile coordinates.
+     */
+    queryGeometry: Array<Point>;
+    /**
+     * The feature to allow expression evaluation.
+     */
+    feature: VectorTileFeature;
+    /**
+     * The feature state to allow expression evaluation.
+     */
+    featureState: FeatureState;
+    /**
+     * The geometry of the feature.
+     * This geometry is in tile coordinates.
+     */
+    geometry: Array<Array<Point>>;
+    /**
+     * The current zoom level.
+     */
+    zoom: number;
+    /**
+     * The transform to convert from tile coordinates to pixels.
+     */
+    transform: IReadonlyTransform;
+    /**
+     * The number of pixels per tile unit.
+     */
+    pixelsToTileUnits: number;
+    /**
+     * The matrix to convert from tile coordinates to pixel coordinates.
+     * The pixel coordinates are relative to the center of the screen.
+     */
+    pixelPosMatrix: mat4;
+};
+
 /**
  * A base class for style layers
  */
@@ -56,16 +94,7 @@ export abstract class StyleLayer extends Evented {
     readonly onRemove: ((map: Map) => void);
 
     queryRadius?(bucket: Bucket): number;
-    queryIntersectsFeature?(
-        queryGeometry: Array<Point>,
-        feature: VectorTileFeature,
-        featureState: FeatureState,
-        geometry: Array<Array<Point>>,
-        zoom: number,
-        transform: IReadonlyTransform,
-        pixelsToTileUnits: number,
-        pixelPosMatrix: mat4
-    ): boolean | number;
+    queryIntersectsFeature?(params: QueryIntersectsFeatureParams): boolean | number;
 
     constructor(layer: LayerSpecification | CustomLayerInterface, properties: Readonly<{
         layout?: Properties<any>;

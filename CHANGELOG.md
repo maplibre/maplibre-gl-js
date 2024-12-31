@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 - Allows setting the desired WebGL version to use ([#5236](https://github.com/maplibre/maplibre-gl-js/pull/5236)). You can now use `contextType` inside `canvasContextAttributes` to choose which WebGL version to use
+- ⚠️ `StyleLayer`'s `queryIntersectsFeature` method parameters were moved to `QueryIntersectsFeatureParams`. To overcome it simply wrap the method parameters with `{}` ([#5276](https://github.com/maplibre/maplibre-gl-js/pull/5276))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

@@ -22,11 +22,21 @@ export function translateDistance(translate: [number, number]) {
     return Math.sqrt(translate[0] * translate[0] + translate[1] * translate[1]);
 }
 
+/**
+ * @internal
+ * Translates a geometry by a certain pixels in tile coordinates
+ * @param queryGeometry - The geometry to translate in tile coordinates
+ * @param translate - The translation in pixels
+ * @param translateAnchor - The anchor of the translation
+ * @param bearing - The bearing of the map
+ * @param pixelsToTileUnits - The scale factor from pixels to tile units
+ * @returns the translated geometry in tile coordinates
+ */
 export function translate(queryGeometry: Array<Point>,
     translate: [number, number],
     translateAnchor: 'viewport' | 'map',
     bearing: number,
-    pixelsToTileUnits: number) {
+    pixelsToTileUnits: number): Point[] {
     if (!translate[0] && !translate[1]) {
         return queryGeometry;
     }
@@ -36,7 +46,7 @@ export function translate(queryGeometry: Array<Point>,
         pt._rotate(-bearing);
     }
 
-    const translated = [];
+    const translated: Point[] = [];
     for (let i = 0; i < queryGeometry.length; i++) {
         const point = queryGeometry[i];
         translated.push(point.sub(pt));
