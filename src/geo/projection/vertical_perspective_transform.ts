@@ -17,6 +17,7 @@ import type {IReadonlyTransform, ITransform} from '../transform_interface';
 import type {PaddingOptions} from '../edge_insets';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
+import {coveringTiles, type CoveringTilesOptions} from './covering_tiles';
 
 /**
  * Describes the intersection of ray and sphere.
@@ -987,5 +988,9 @@ export class VerticalPerspectiveTransform implements ITransform {
 
     getFastPathSimpleProjectionMatrix(_tileID: OverscaledTileID): mat4 {
         return undefined;
+    }
+
+    coveringTiles(options: CoveringTilesOptions): OverscaledTileID[] {
+        return coveringTiles(this, options);
     }
 }

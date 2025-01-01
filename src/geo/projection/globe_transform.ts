@@ -2,7 +2,7 @@ import type {mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {TransformHelper} from '../transform_helper';
 import {MercatorTransform} from './mercator_transform';
 import {VerticalPerspectiveTransform} from './vertical_perspective_transform';
-import {type LngLat, type LngLatLike,} from '../lng_lat';
+import type {LngLat, LngLatLike} from '../lng_lat';
 import {lerp} from '../../util/util';
 import type {OverscaledTileID, UnwrappedTileID, CanonicalTileID} from '../../source/tile_id';
 
@@ -16,6 +16,7 @@ import type {IReadonlyTransform, ITransform} from '../transform_interface';
 import type {PaddingOptions} from '../edge_insets';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
+import {coveringTiles, type CoveringTilesOptions} from './covering_tiles';
 
 /**
  * Globe transform is a transform that moves between vertical perspective and mercator projections.
@@ -456,5 +457,9 @@ export class GlobeTransform implements ITransform {
 
     getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 {
         return this.currentTransform.getFastPathSimpleProjectionMatrix(tileID);
+    }
+
+    coveringTiles(options: CoveringTilesOptions): OverscaledTileID[] {
+        return coveringTiles(this, options);
     }
 }

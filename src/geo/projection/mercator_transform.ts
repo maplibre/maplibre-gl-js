@@ -18,6 +18,7 @@ import type {IReadonlyTransform, ITransform} from '../transform_interface';
 import type {PaddingOptions} from '../edge_insets';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
+import {coveringTiles, type CoveringTilesOptions} from './covering_tiles';
 
 export class MercatorTransform implements ITransform {
     private _helper: TransformHelper;
@@ -830,5 +831,9 @@ export class MercatorTransform implements ITransform {
 
     getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 {
         return this.calculatePosMatrix(tileID);
+    }
+
+    coveringTiles(options: CoveringTilesOptions): OverscaledTileID[] {
+        return coveringTiles(this, options);
     }
 }
