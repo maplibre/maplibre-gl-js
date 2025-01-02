@@ -133,9 +133,10 @@ export function planetScaleAtLatitude(latitudeDegrees: number): number {
  * @returns A value to add to zoom level used for old latitude to keep same planet radius at new latitude.
  */
 export function getZoomAdjustment(oldLat: number, newLat: number): number {
-    const oldCircumference = planetScaleAtLatitude(oldLat);
-    const newCircumference = planetScaleAtLatitude(newLat);
-    return scaleZoom(newCircumference / oldCircumference);
+    //const oldCircumference = planetScaleAtLatitude(oldLat);
+    //const newCircumference = planetScaleAtLatitude(newLat);
+    return 0;
+    //return scaleZoom(newCircumference / oldCircumference);
 }
 
 export function getDegreesPerPixel(worldSize: number, lat: number): number {
