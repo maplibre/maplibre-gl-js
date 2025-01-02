@@ -98,8 +98,8 @@ export class MercatorTransform implements ITransform {
     isPaddingEqual(padding: PaddingOptions): boolean {
         return this._helper.isPaddingEqual(padding);
     }
-    resize(width: number, height: number): void {
-        this._helper.resize(width, height);
+    resize(width: number, height: number, constrain: boolean = true): void {
+        this._helper.resize(width, height, constrain);
     }
     getMaxBounds(): LngLatBounds {
         return this._helper.getMaxBounds();
@@ -416,7 +416,7 @@ export class MercatorTransform implements ITransform {
         const matrices = {
             f64: tileMatrix,
             f32: new Float32Array(tileMatrix), // Must have a 32 bit float version for WebGL, otherwise WebGL calls in Chrome get very slow.
-        }
+        };
         cache.set(posMatrixKey, matrices);
         // Make sure to return the correct precision
         return useFloat32 ? matrices.f32 : matrices.f64;

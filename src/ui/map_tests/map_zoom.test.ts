@@ -1,5 +1,5 @@
 import {beforeEach, test, expect} from 'vitest';
-import {createMap, beforeMapTest} from '../../util/test/util';
+import {createMap, beforeMapTest, createTerrain} from '../../util/test/util';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 
 beforeEach(() => {
@@ -85,10 +85,7 @@ test('recalculate zoom is done on the camera update transform', () => {
         clickTolerance: 4,
         transformCameraUpdate: ({zoom}) => ({zoom: zoom + 0.1})
     });
-    map.terrain = {
-        pointCoordinate: () => null,
-        getElevationForLngLatZoom: () => 1000
-    } as any;
+    map.terrain = createTerrain();
     const canvas = map.getCanvas();
     simulate.dragWithMove(canvas, {x: 100, y: 100}, {x: 100, y: 150});
     map._renderTaskQueue.run();

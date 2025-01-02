@@ -31,7 +31,7 @@ type TileResult = {
     queryGeometry: Array<Point>;
     cameraQueryGeometry: Array<Point>;
     scale: number;
-}
+};
 
 /**
  * @internal
@@ -394,7 +394,7 @@ export class SourceCache extends Evented {
             while (tileID.overscaledZ > zoom) {
                 tileID = tileID.scaledTo(tileID.overscaledZ - 1);
 
-                if (idealTiles[tileID.key]) {
+                if (idealTiles[tileID.key] || (idealTiles[tileID.canonical.key])) {
                     // found a parent that needed a loaded child; retain that child
                     retain[topmostLoadedID.key] = topmostLoadedID;
                     break;
@@ -960,7 +960,7 @@ export class SourceCache extends Evented {
      * @param pointQueryGeometry - coordinates of the corners of bounding rectangle
      * @returns result items have `{tile, minX, maxX, minY, maxY}`, where min/max bounding values are the given bounds transformed in into the coordinate space of this tile.
      */
-    tilesIn(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean) {
+    tilesIn(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean): TileResult[] {
         const tileResults: TileResult[] = [];
 
         const transform = this.transform;

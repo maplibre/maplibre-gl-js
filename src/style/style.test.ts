@@ -18,6 +18,7 @@ import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
 import {MessageType} from '../util/actor_messages';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {type Tile} from '../source/tile';
+import type Point from '@mapbox/point-geometry';
 
 function createStyleJSON(properties?): StyleSpecification {
     return extend({
@@ -2310,17 +2311,17 @@ describe('Style#queryRenderedFeatures', () => {
     });
 
     test('returns feature type', () => {
-        const results = style.queryRenderedFeatures([{x: 0, y: 0}], {}, transform);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {}, transform);
         expect(results[0].geometry.type).toBe('Line');
     });
 
     test('filters by `layers` option', () => {
-        const results = style.queryRenderedFeatures([{x: 0, y: 0}], {layers: ['land']}, transform);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: ['land']}, transform);
         expect(results).toHaveLength(2);
     });
 
     test('filters by `layers` option as a Set', () => {
-        const results = style.queryRenderedFeatures([{x: 0, y: 0}], {layers: new Set(['land'])}, transform);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: new Set(['land'])}, transform);
         expect(results).toHaveLength(2);
     });
 
@@ -2332,37 +2333,37 @@ describe('Style#queryRenderedFeatures', () => {
             }
             return style;
         });
-        style.queryRenderedFeatures([{x: 0, y: 0}], {layers: 'string' as any}, transform);
+        style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: 'string' as any}, transform);
         expect(errors).toBe(1);
     });
 
     test('includes layout properties', () => {
-        const results = style.queryRenderedFeatures([{x: 0, y: 0}], {}, transform);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {}, transform);
         const layout = results[0].layer.layout;
         expect(layout['line-cap']).toBe('round');
     });
 
     test('includes paint properties', () => {
-        const results = style.queryRenderedFeatures([{x: 0, y: 0}], {}, transform);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {}, transform);
         expect(results[2].layer.paint['line-color']).toBe('red');
     });
 
     test('includes metadata', () => {
-        const results = style.queryRenderedFeatures([{x: 0, y: 0}], {}, transform);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {}, transform);
 
         const layer = results[1].layer;
-        expect(layer.metadata.something).toBe('else');
+        expect((layer.metadata as any).something).toBe('else');
 
     });
 
     test('include multiple layers', () => {
-        const results = style.queryRenderedFeatures([{x: 0, y: 0}], {layers: new Set(['land', 'landref'])}, transform);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: new Set(['land', 'landref'])}, transform);
         expect(results).toHaveLength(3);
     });
 
     test('does not query sources not implicated by `layers` parameter', () => {
         style.sourceCaches.mapLibre.map.queryRenderedFeatures = vi.fn();
-        style.queryRenderedFeatures([{x: 0, y: 0}], {layers: ['land--other']}, transform);
+        style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: ['land--other']}, transform);
         expect(style.sourceCaches.mapLibre.map.queryRenderedFeatures).not.toHaveBeenCalled();
     });
 
@@ -2372,7 +2373,7 @@ describe('Style#queryRenderedFeatures', () => {
             if (event['error'] && event['error'].message.includes('does not exist in the map\'s style and cannot be queried for features.')) errors++;
             return style;
         });
-        const results = style.queryRenderedFeatures([{x: 0, y: 0}], {layers: ['merp']}, transform);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: ['merp']}, transform);
         expect(errors).toBe(1);
         expect(results).toHaveLength(0);
     });
@@ -2460,7 +2461,7 @@ describe('Style#query*Features', () => {
     });
 
     test('queryRenderedFeatures emits an error on incorrect filter', () => {
-        expect(style.queryRenderedFeatures([{x: 0, y: 0}], {filter: 7 as any}, transform)).toEqual([]);
+        expect(style.queryRenderedFeatures([{x: 0, y: 0} as Point], {filter: 7 as any}, transform)).toEqual([]);
         expect(onError.mock.calls[0][0].error.message).toMatch(/queryRenderedFeatures\.filter/);
     });
 
@@ -2472,7 +2473,7 @@ describe('Style#query*Features', () => {
             }
             return style;
         });
-        style.queryRenderedFeatures([{x: 0, y: 0}], {filter: 'invalidFilter' as any, validate: false}, transform);
+        style.queryRenderedFeatures([{x: 0, y: 0} as Point], {filter: 'invalidFilter' as any, validate: false}, transform);
         expect(errors).toBe(0);
     });
 

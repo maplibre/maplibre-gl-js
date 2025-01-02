@@ -404,7 +404,7 @@ function requiresOrientationChange(writingMode, firstPoint, lastPoint, aspectRat
 
 type GlyphLinePlacementResult = OrientationChangeType & {
     notEnoughRoom?: boolean;
-}
+};
 
 type GlyphLinePlacementArgs = {
     projectionContext: SymbolProjectionContext;

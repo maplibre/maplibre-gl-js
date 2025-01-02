@@ -9,7 +9,7 @@ type HtmlDoc = {
     title: string;
     description: string;
     mdFileName: string;
-}
+};
 
 function generateAPIIntroMarkdown(lines: string[]): string {
     let intro = `# Intro

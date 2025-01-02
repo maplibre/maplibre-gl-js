@@ -57,15 +57,20 @@ import type {
     SkySpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
-import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
+import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {type ITransform} from '../geo/transform_interface';
 import {type ICameraHelper} from '../geo/projection/camera_helper';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
+import {isAbortError} from '../util/abort_error';
+import {isFramebufferNotCompleteError} from '../util/framebuffer_error';
 
 const version = packageJSON.version;
+
+type WebGLSupportedVersions = 'webgl2' | 'webgl' | undefined;
+type WebGLContextAttributesWithType = WebGLContextAttributes & {contextType?: WebGLSupportedVersions};
 
 /**
  * The {@link Map} options object.
@@ -115,9 +120,10 @@ export type MapOptions = {
     /**
      * Set of WebGLContextAttributes that are applied to the WebGL context of the map.
      * See https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext for more details.
-     * @defaultValue antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: false, failIfMajorPerformanceCaveat: false, desynchronized: false
+     * `contextType` can be set to `webgl2` or `webgl` to force a WebGL version. Not setting it, Maplibre will do it's best to get a suitable context.
+     * @defaultValue antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: false, failIfMajorPerformanceCaveat: false, desynchronized: false, contextType: 'webgl2withfallback'
      */
-    canvasContextAttributes?: WebGLContextAttributes;
+    canvasContextAttributes?: WebGLContextAttributesWithType;
     /**
      * If `false`, the map won't attempt to re-request tiles once they expire per their HTTP `cacheControl`/`expires` headers.
      * @defaultValue true
@@ -352,7 +358,7 @@ export type MapOptions = {
 
 export type AddImageOptions = {
 
-}
+};
 
 // This type is used inside map since all properties are assigned a default value.
 export type CompleteMapOptions = Complete<MapOptions>;
@@ -361,7 +367,7 @@ type DelegatedListener = {
     layers: string[];
     listener: Listener;
     delegates: {[E in keyof MapEventType]?: Delegate<MapEventType[E]>};
-}
+};
 
 type Delegate<E extends Event = Event> = (e: E) => void;
 
@@ -388,7 +394,8 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
         preserveDrawingBuffer: false,
         powerPreference: 'high-performance',
         failIfMajorPerformanceCaveat: false,
-        desynchronized: false
+        desynchronized: false,
+        contextType: undefined
     },
 
     scrollZoom: true,
@@ -494,7 +501,7 @@ export class Map extends Camera {
     _fullyLoaded: boolean;
     _trackResize: boolean;
     _resizeObserver: ResizeObserver;
-    _canvasContextAttributes: WebGLContextAttributes;
+    _canvasContextAttributes: WebGLContextAttributesWithType;
     _refreshExpiredTiles: boolean;
     _hash: Hash;
     _delegatedListeners: Record<string, DelegatedListener[]>;
@@ -720,7 +727,11 @@ export class Map extends Camera {
             }
         }
 
-        this.resize();
+        // When no style is set or it's using something other than the globe projection, we can constrain the camera.
+        // When a style is set with other projections though, we can't constrain the camera until the style is loaded
+        // and the correct transform is used. Otherwise, valid points in the desired projection could be rejected
+        const shouldConstrainUsingMercatorTransform = typeof resolvedOptions.style === 'string' || !(resolvedOptions.style?.projection?.type === 'globe');
+        this.resize(null, shouldConstrainUsingMercatorTransform);
 
         this._localIdeographFontFamily = resolvedOptions.localIdeographFontFamily;
         this._validateStyle = resolvedOptions.validateStyle;
@@ -734,6 +745,8 @@ export class Map extends Camera {
             this.addControl(new LogoControl(), resolvedOptions.logoPosition);
 
         this.on('style.load', () => {
+            // If we didn't constrain the camera before, we do it now
+            if (!shouldConstrainUsingMercatorTransform) this._resizeTransform();
             if (this.transform.unmodified) {
                 const coercedOptions = pick(this.style.stylesheet, ['center', 'zoom', 'bearing', 'pitch', 'roll']) as CameraOptions;
                 this.jumpTo(coercedOptions);
@@ -873,10 +886,8 @@ export class Map extends Camera {
      * if (mapDiv.style.visibility === true) map.resize();
      * ```
      */
-    resize(eventData?: any): Map {
-        const dimensions = this._containerDimensions();
-        const width = dimensions[0];
-        const height = dimensions[1];
+    resize(eventData?: any, constrainTransform = true): Map {
+        const [width, height] = this._containerDimensions();
 
         const clampedPixelRatio = this._getClampedPixelRatio(width, height);
         this._resizeCanvas(width, height, clampedPixelRatio);
@@ -892,8 +903,7 @@ export class Map extends Camera {
             this.painter.resize(width, height, clampedPixelRatio);
         }
 
-        this.transform.resize(width, height);
-        this._requestedCameraState?.resize(width, height);
+        this._resizeTransform(constrainTransform);
 
         const fireMoving = !this._moving;
         if (fireMoving) {
@@ -907,6 +917,13 @@ export class Map extends Camera {
         if (fireMoving) this.fire(new Event('moveend', eventData));
 
         return this;
+    }
+
+    _resizeTransform(constrainTransform = true) {
+        const [width, height] = this._containerDimensions();
+
+        this.transform.resize(width, height, constrainTransform);
+        this._requestedCameraState?.resize(width, height, constrainTransform);
     }
 
     /**
@@ -1709,7 +1726,7 @@ export class Map extends Camera {
         if (!this.style) {
             return [];
         }
-        let queryGeometry;
+        let queryGeometry: Point[];
         const isGeometry = geometryOrOptions instanceof Point || Array.isArray(geometryOrOptions);
         const geometry = isGeometry ? geometryOrOptions : [[0, 0], [this.transform.width, this.transform.height]];
         options = options || (isGeometry ? {} : geometryOrOptions) || {};
@@ -1755,7 +1772,7 @@ export class Map extends Camera {
      * ```
      *
      */
-    querySourceFeatures(sourceId: string, parameters?: QuerySourceFeatureOptions | null): MapGeoJSONFeature[] {
+    querySourceFeatures(sourceId: string, parameters?: QuerySourceFeatureOptions | null): GeoJSONFeature[] {
         return this.style.querySourceFeatures(sourceId, parameters);
     }
 
@@ -3052,9 +3069,12 @@ export class Map extends Camera {
             }
         }, {once: true});
 
-        const gl =
-            this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext ||
-            this._canvas.getContext('webgl', attributes) as WebGLRenderingContext;
+        let gl: WebGL2RenderingContext | WebGLRenderingContext | null = null;
+        if (this._canvasContextAttributes.contextType) {
+            gl = this._canvas.getContext(this._canvasContextAttributes.contextType, attributes) as WebGL2RenderingContext | WebGLRenderingContext;
+        } else {
+            gl = this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext || this._canvas.getContext('webgl', attributes) as WebGLRenderingContext;
+        }
 
         if (!gl) {
             const msg = 'Failed to initialize WebGL';
@@ -3164,7 +3184,7 @@ export class Map extends Camera {
     _render(paintStartTimeStamp: number) {
         const fadeDuration = this._idleTriggered ? this._fadeDuration : 0;
 
-        const isGlobeRendering = this.style.projection.transitionState > 0;
+        const isGlobeRendering = this.style.projection?.transitionState > 0;
 
         // A custom layer may have used the context asynchronously. Mark the state as dirty.
         this.painter.context.setDirty();
@@ -3202,14 +3222,14 @@ export class Map extends Camera {
             this.style.update(parameters);
         }
 
-        const globeRenderingChaged = this.style.projection.transitionState > 0 !== isGlobeRendering;
-        this.style.projection.setErrorQueryLatitudeDegrees(this.transform.center.lat);
-        this.transform.setTransitionState(this.style.projection.transitionState, this.style.projection.latitudeErrorCorrectionRadians);
+        const globeRenderingChanged = this.style.projection?.transitionState > 0 !== isGlobeRendering;
+        this.style.projection?.setErrorQueryLatitudeDegrees(this.transform.center.lat);
+        this.transform.setTransitionState(this.style.projection?.transitionState, this.style.projection?.latitudeErrorCorrectionRadians);
 
         // If we are in _render for any reason other than an in-progress paint
         // transition, update source caches to check for and load any tiles we
         // need for the current transform
-        if (this.style && (this._sourcesDirty || globeRenderingChaged)) {
+        if (this.style && (this._sourcesDirty || globeRenderingChanged)) {
             this._sourcesDirty = false;
             this.style._updateSources(this.transform);
         }
@@ -3228,7 +3248,7 @@ export class Map extends Camera {
             }
         }
 
-        this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChaged);
+        this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
 
         // Actually draw
         this.painter.render(this.style, {
@@ -3363,7 +3383,11 @@ export class Map extends Camera {
                 PerformanceUtils.frame(paintStartTimeStamp);
                 this._frameRequest = null;
                 this._render(paintStartTimeStamp);
-            }).catch(() => {}); // ignore abort error
+            }).catch((error: Error) => {
+                if (!isAbortError(error) && !isFramebufferNotCompleteError(error)) {
+                    throw error;
+                }
+            });
         }
     }
 

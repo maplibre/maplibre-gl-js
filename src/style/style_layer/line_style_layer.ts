@@ -1,6 +1,4 @@
-import type Point from '@mapbox/point-geometry';
-
-import {StyleLayer} from '../style_layer';
+import {type QueryIntersectsFeatureParams, StyleLayer} from '../style_layer';
 import {LineBucket} from '../../data/bucket/line_bucket';
 import {polygonIntersectsBufferedMultiLine} from '../../util/intersection_tests';
 import {getMaximumPaintValue, translateDistance, translate, offsetLine} from '../query_utils';
@@ -10,11 +8,9 @@ import {EvaluationParameters} from '../evaluation_parameters';
 import {type Transitionable, type Transitioning, type Layout, type PossiblyEvaluated, DataDrivenProperty} from '../properties';
 
 import {isZoomExpression, Step} from '@maplibre/maplibre-gl-style-spec';
-import type {FeatureState, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Bucket, BucketParameters} from '../../data/bucket';
 import type {LineLayoutProps, LinePaintProps} from './line_style_layer_properties.g';
-import type {IReadonlyTransform} from '../../geo/transform_interface';
-import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 export class LineFloorwidthProperty extends DataDrivenProperty<number> {
     useIntegerZoom: true;
@@ -95,14 +91,13 @@ export class LineStyleLayer extends StyleLayer {
         return width / 2 + Math.abs(offset) + translateDistance(this.paint.get('line-translate'));
     }
 
-    queryIntersectsFeature(
-        queryGeometry: Array<Point>,
-        feature: VectorTileFeature,
-        featureState: FeatureState,
-        geometry: Array<Array<Point>>,
-        zoom: number,
-        transform: IReadonlyTransform,
-        pixelsToTileUnits: number
+    queryIntersectsFeature({
+        queryGeometry,
+        feature,
+        featureState,
+        geometry,
+        transform,
+        pixelsToTileUnits}: QueryIntersectsFeatureParams
     ): boolean {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('line-translate'),

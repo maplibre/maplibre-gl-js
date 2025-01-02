@@ -1,12 +1,19 @@
+import {mat4} from 'gl-matrix';
+import type Point from '@mapbox/point-geometry';
 import type {SourceCache} from './source_cache';
 import type {StyleLayer} from '../style/style_layer';
 import type {CollisionIndex} from '../symbol/collision_index';
 import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {RetainedQueryData} from '../symbol/placement';
 import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
-import type Point from '@mapbox/point-geometry';
-import {mat4} from 'gl-matrix';
+import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson';
+import type {QueryResults, QueryResultsItem} from '../data/feature_index';
+import type {OverscaledTileID} from './tile_id';
+
+type RenderedFeatureLayer = {
+    wrappedTileID: string;
+    queryResults: QueryResults;
+};
 
 /**
  * Options to pass to query the map for the rendered features
@@ -33,7 +40,7 @@ export type QueryRenderedFeaturesOptions = {
 
 export type QueryRenderedFeaturesOptionsStrict = Omit<QueryRenderedFeaturesOptions, 'layers'> & {
     layers: Set<string> | null;
-}
+};
 
 /**
  * The options object related to the {@link Map#querySourceFeatures} method
@@ -53,12 +60,18 @@ export type QuerySourceFeatureOptions = {
      * @defaultValue true
      */
     validate?: boolean;
-}
+};
+
+export type QueryRenderedFeaturesResults = {
+    [key: string]: QueryRenderedFeaturesResultsItem[];
+};
+
+export type QueryRenderedFeaturesResultsItem = QueryResultsItem & { feature: MapGeoJSONFeature };
 
 /*
  * Returns a matrix that can be used to convert from tile coordinates to viewport pixel coordinates.
  */
-function getPixelPosMatrix(transform, tileID) {
+function getPixelPosMatrix(transform, tileID: OverscaledTileID) {
     const t = mat4.create();
     mat4.translate(t, t, [1, 1, 0]);
     mat4.scale(t, t, [transform.width * 0.5, transform.height * 0.5, 1]);
@@ -95,14 +108,14 @@ export function queryRenderedFeatures(
     queryGeometry: Array<Point>,
     params: QueryRenderedFeaturesOptionsStrict | undefined,
     transform: IReadonlyTransform
-): { [key: string]: Array<{featureIndex: number; feature: MapGeoJSONFeature}> } {
+): QueryRenderedFeaturesResults {
 
     const has3DLayer = queryIncludes3DLayer(params?.layers ?? null, styleLayers, sourceCache.id);
     const maxPitchScaleFactor = transform.maxPitchScaleFactor();
     const tilesIn = sourceCache.tilesIn(queryGeometry, maxPitchScaleFactor, has3DLayer);
 
     tilesIn.sort(sortTilesIn);
-    const renderedFeatureLayers = [];
+    const renderedFeatureLayers: RenderedFeatureLayer[] = [];
     for (const tileIn of tilesIn) {
         renderedFeatureLayers.push({
             wrappedTileID: tileIn.tileID.wrapped().key,
@@ -122,19 +135,7 @@ export function queryRenderedFeatures(
 
     const result = mergeRenderedFeatureLayers(renderedFeatureLayers);
 
-    // Merge state from SourceCache into the results
-    for (const layerID in result) {
-        result[layerID].forEach((featureWrapper) => {
-            const feature = featureWrapper.feature as MapGeoJSONFeature;
-            const state = sourceCache.getFeatureState(feature.layer['source-layer'], feature.id);
-            feature.source = feature.layer.source;
-            if (feature.layer['source-layer']) {
-                feature.sourceLayer = feature.layer['source-layer'];
-            }
-            feature.state = state;
-        });
-    }
-    return result;
+    return convertFeaturesToMapFeatures(result, sourceCache);
 }
 
 export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
@@ -145,8 +146,8 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
     collisionIndex: CollisionIndex,
     retainedQueryData: {
         [_: number]: RetainedQueryData;
-    }) {
-    const result = {};
+    }): QueryRenderedFeaturesResults {
+    const result: QueryResults = {};
     const renderedSymbols = collisionIndex.queryRenderedSymbols(queryGeometry);
     const bucketQueryData: RetainedQueryData[] = [];
     for (const bucketInstanceId of Object.keys(renderedSymbols).map(Number)) {
@@ -192,29 +193,15 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
         }
     }
 
-    // Merge state from SourceCache into the results
-    for (const layerName in result) {
-        result[layerName].forEach((featureWrapper) => {
-            const feature = featureWrapper.feature;
-            const layer = styleLayers[layerName];
-            const sourceCache = sourceCaches[layer.source];
-            const state = sourceCache.getFeatureState(feature.layer['source-layer'], feature.id);
-            feature.source = feature.layer.source;
-            if (feature.layer['source-layer']) {
-                feature.sourceLayer = feature.layer['source-layer'];
-            }
-            feature.state = state;
-        });
-    }
-    return result;
+    return convertFeaturesToMapFeaturesMultiple(result, styleLayers, sourceCaches);
 }
 
-export function querySourceFeatures(sourceCache: SourceCache, params: QuerySourceFeatureOptions | undefined) {
+export function querySourceFeatures(sourceCache: SourceCache, params: QuerySourceFeatureOptions | undefined): GeoJSONFeature[] {
     const tiles = sourceCache.getRenderableIds().map((id) => {
         return sourceCache.getTileByID(id);
     });
 
-    const result = [];
+    const result: GeoJSONFeature[] = [];
 
     const dataTiles = {};
     for (let i = 0; i < tiles.length; i++) {
@@ -229,16 +216,16 @@ export function querySourceFeatures(sourceCache: SourceCache, params: QuerySourc
     return result;
 }
 
-function sortTilesIn(a, b) {
+function sortTilesIn(a: {tileID: OverscaledTileID}, b: {tileID: OverscaledTileID}) {
     const idA = a.tileID;
     const idB = b.tileID;
     return (idA.overscaledZ - idB.overscaledZ) || (idA.canonical.y - idB.canonical.y) || (idA.wrap - idB.wrap) || (idA.canonical.x - idB.canonical.x);
 }
 
-function mergeRenderedFeatureLayers(tiles) {
+function mergeRenderedFeatureLayers(tiles: RenderedFeatureLayer[]): QueryResults {
     // Merge results from all tiles, but if two tiles share the same
     // wrapped ID, don't duplicate features between the two tiles
-    const result = {};
+    const result: QueryResults = {};
     const wrappedIDLayerMap = {};
     for (const tile of tiles) {
         const queryResults = tile.queryResults;
@@ -257,4 +244,36 @@ function mergeRenderedFeatureLayers(tiles) {
         }
     }
     return result;
+}
+
+function convertFeaturesToMapFeatures(result: QueryResults, sourceCache: SourceCache): QueryRenderedFeaturesResults {
+    // Merge state from SourceCache into the results
+    for (const layerID in result) {
+        for (const featureWrapper of result[layerID]) {
+            convertFeatureToMapFeature(featureWrapper, sourceCache);
+        };
+    }
+    return result as QueryRenderedFeaturesResults;
+}
+
+function convertFeaturesToMapFeaturesMultiple(result: QueryResults, styleLayers: {[_: string]: StyleLayer}, sourceCaches: {[_: string]: SourceCache}): QueryRenderedFeaturesResults {
+    // Merge state from SourceCache into the results
+    for (const layerName in result) {
+        for (const featureWrapper of result[layerName]) {
+            const layer = styleLayers[layerName];
+            const sourceCache = sourceCaches[layer.source];
+            convertFeatureToMapFeature(featureWrapper, sourceCache);
+        };
+    }
+    return result as QueryRenderedFeaturesResults;
+}
+
+function convertFeatureToMapFeature(featureWrapper: QueryResultsItem, sourceCache: SourceCache) {
+    const feature = featureWrapper.feature as MapGeoJSONFeature;
+    const state = sourceCache.getFeatureState(feature.layer['source-layer'], feature.id);
+    feature.source = feature.layer.source;
+    if (feature.layer['source-layer']) {
+        feature.sourceLayer = feature.layer['source-layer'];
+    }
+    feature.state = state;
 }

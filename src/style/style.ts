@@ -15,7 +15,7 @@ import {browser} from '../util/browser';
 import {Dispatcher} from '../util/dispatcher';
 import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
 import {type Source} from '../source/source';
-import {type QueryRenderedFeaturesOptions, type QueryRenderedFeaturesOptionsStrict, type QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
+import {type QueryRenderedFeaturesOptions, type QueryRenderedFeaturesOptionsStrict, type QueryRenderedFeaturesResults, type QueryRenderedFeaturesResultsItem, type QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
 import {SourceCache} from '../source/source_cache';
 import {type GeoJSONSource} from '../source/geojson_source';
 import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, type DiffCommand} from '@maplibre/maplibre-gl-style-spec';
@@ -27,6 +27,7 @@ import {ZoomHistory} from './zoom_history';
 import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index';
 import {validateCustomStyleLayer} from './style_layer/custom_style_layer';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
+import type Point from '@mapbox/point-geometry';
 
 // We're skipping validation errors with the `source.canvas` identifier in order
 // to continue to allow canvas sources to be added at runtime/updated in
@@ -184,7 +185,7 @@ export type StyleSwapOptions = {
      * that allows to modify a style after it is fetched but before it is committed to the map state. Refer to {@link TransformStyleFunction}.
      */
     transformStyle?: TransformStyleFunction;
-}
+};
 
 /**
  * Specifies a layer to be added to a {@link Style}. In addition to a standard {@link LayerSpecification}
@@ -203,7 +204,7 @@ export class Style extends Evented {
     glyphManager: GlyphManager;
     lineAtlas: LineAtlas;
     light: Light;
-    projection: Projection;
+    projection: Projection | undefined;
     sky: Sky;
 
     _frameRequest: AbortController;
@@ -1353,7 +1354,7 @@ export class Style extends Evented {
         this._changed = true;
     }
 
-    _flattenAndSortRenderedFeatures(sourceResults: Array<{ [key: string]: Array<{featureIndex: number; feature: MapGeoJSONFeature}> }>) {
+    _flattenAndSortRenderedFeatures(sourceResults: QueryRenderedFeaturesResults[]): MapGeoJSONFeature[] {
         // Feature order is complicated.
         // The order between features in two 2D layers is always determined by layer order.
         // The order between features in two 3D layers is always determined by depth.
@@ -1374,7 +1375,7 @@ export class Style extends Evented {
         const isLayer3D = layerId => this._layers[layerId].type === 'fill-extrusion';
 
         const layerIndex = {};
-        const features3D = [];
+        const features3D: QueryRenderedFeaturesResultsItem[] = [];
         for (let l = this._order.length - 1; l >= 0; l--) {
             const layerId = this._order[l];
             if (isLayer3D(layerId)) {
@@ -1391,10 +1392,10 @@ export class Style extends Evented {
         }
 
         features3D.sort((a, b) => {
-            return b.intersectionZ - a.intersectionZ;
+            return (b.intersectionZ as number) - (a.intersectionZ as number);
         });
 
-        const features = [];
+        const features: MapGeoJSONFeature[] = [];
         for (let l = this._order.length - 1; l >= 0; l--) {
             const layerId = this._order[l];
 
@@ -1421,7 +1422,7 @@ export class Style extends Evented {
         return features;
     }
 
-    queryRenderedFeatures(queryGeometry: any, params: QueryRenderedFeaturesOptions, transform: IReadonlyTransform) {
+    queryRenderedFeatures(queryGeometry: Point[], params: QueryRenderedFeaturesOptions, transform: IReadonlyTransform): MapGeoJSONFeature[] {
         if (params && params.filter) {
             this._validate(validateStyle.filter, 'queryRenderedFeatures.filter', params.filter, null, params);
         }
@@ -1444,7 +1445,7 @@ export class Style extends Evented {
             }
         }
 
-        const sourceResults = [];
+        const sourceResults: QueryRenderedFeaturesResults[] = [];
 
         params.availableImages = this._availableImages;
 

@@ -105,7 +105,7 @@ export type CustomRenderMethodInput = {
      * or more accurately for globe, elevation above the surface of the perfect sphere used to render the planet.
      */
     defaultProjectionData: ProjectionData;
-}
+};
 
 /**
  * @param gl - The map's gl context.

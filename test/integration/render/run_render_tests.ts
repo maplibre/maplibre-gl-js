@@ -56,7 +56,7 @@ type TestData = {
     actual: string;
     diff: string;
     expected: string;
-}
+};
 
 type RenderOptions = {
     tests: any[];
@@ -65,13 +65,13 @@ type RenderOptions = {
     seed: string;
     debug: boolean;
     openBrowser: boolean;
-}
+};
 
 type StyleWithTestData = StyleSpecification & {
     metadata : {
         test: TestData;
     };
-}
+};
 
 type TestStats = {
     total: number;
@@ -301,7 +301,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 }`;
 
                 const fragmentSource = `#version 300 es
-                
+
                 out highp vec4 fragColor;
                 void main() {
                     fragColor = vec4(1.0, 0.0, 0.0, 1.0);
@@ -452,7 +452,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 // Inject MapLibre projection code
                 ${shaderDescription.vertexShaderPrelude}
                 ${shaderDescription.define}
-                
+
                 in vec3 a_pos;
 
                 void main() {
@@ -982,15 +982,30 @@ async function executeRenderTests() {
         options.openBrowser = checkParameter(options, '--open-browser');
     }
 
-    const browser = await puppeteer.launch({headless: !options.openBrowser, args: ['--enable-webgl', '--no-sandbox',
-        '--disable-web-security']});
+    const browser = await puppeteer.launch({
+        headless: !options.openBrowser,
+        args: [
+            '--enable-webgl',
+            '--no-sandbox',
+            '--disable-web-security'
+        ]});
 
-    const server = http.createServer(
-        st({
-            path: 'test/integration/assets',
-            cors: true,
-        })
-    );
+    const mount = st({
+        path: 'test/integration/assets',
+        cors: true,
+        passthrough: true,
+    });
+    const server = http.createServer((req, res) => {
+        mount(req, res, () => {
+            if (req.url.includes('/sparse204/1-')) {
+                res.writeHead(204);
+                res.end('');
+            } else {
+                res.writeHead(404);
+                res.end('');
+            }
+        });
+    });
 
     const mvtServer = http.createServer(
         st({

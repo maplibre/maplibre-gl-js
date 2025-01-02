@@ -11,7 +11,7 @@ export type AroundCenterOptions = {
      * If "center" is passed, map will zoom around the center of map
      */
     around: 'center';
-}
+};
 
 /**
  * The `TwoFingersTouchHandler`s allows the user to zoom, pitch and rotate the map using two fingers

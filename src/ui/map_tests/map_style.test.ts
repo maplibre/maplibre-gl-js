@@ -42,9 +42,9 @@ describe('#setStyle', () => {
             map.on('data', recordEvent);
             map.on('dataloading', recordEvent);
 
-            map.style.fire(new Event('error'));
-            map.style.fire(new Event('data'));
-            map.style.fire(new Event('dataloading'));
+            map.style.fire(new EventedEvent('error'));
+            map.style.fire(new EventedEvent('data'));
+            map.style.fire(new EventedEvent('dataloading'));
 
             expect(events).toEqual([
                 'error',
@@ -116,7 +116,7 @@ describe('#setStyle', () => {
     test('style transform overrides unmodified map transform', () => new Promise<void>(done => {
         const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
         map.transform.setMaxBounds(new LngLatBounds([-120, -60], [140, 80]));
-        map.transform.resize(600, 400);
+        map.transform.resize(600, 400, true);
         expect(map.transform.zoom).toBe(0.6983039737971013);
         expect(map.transform.unmodified).toBeTruthy();
         map.setStyle(createStyle());

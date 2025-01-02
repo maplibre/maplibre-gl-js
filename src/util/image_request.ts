@@ -14,11 +14,11 @@ export type ImageRequestQueueItem  = {
     abortController: AbortController;
     onError: (error: Error) => void;
     onSuccess: (response: GetResourceResponse<HTMLImageElement | ImageBitmap | null>) => void;
-}
+};
 
 type ImageQueueThrottleCallbackDictionary = {
     [Key: number]: ImageQueueThrottleControlCallback;
-}
+};
 
 type HTMLImageElementWithPriority = HTMLImageElement &
 {

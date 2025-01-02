@@ -145,6 +145,11 @@ float ele(vec2 pos) {
 // calculate the elevation with linear interpolation for  a coordinate
 float get_elevation(vec2 pos) {
     #ifdef TERRAIN3D
+        #ifdef GLOBE
+            if ((pos.y < -32767.5) || (pos.y > 32766.5)) {
+                return 0.0;
+            }
+        #endif
         vec2 coord = (u_terrain_matrix * vec4(pos, 0.0, 1.0)).xy * u_terrain_dim + 1.0;
         vec2 f = fract(coord);
         vec2 c = (floor(coord) + 0.5) / (u_terrain_dim + 2.0); // get the pixel center
