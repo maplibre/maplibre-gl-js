@@ -131,15 +131,15 @@ vec4 atmosphere(vec3 r, vec3 r0, vec3 pSun, float iSun, float rPlanet, float rAt
         iTime += iStepSize;
     }
 
-    
     // Calculate opacity
     //float opacity = exp(-(length(kRlh) * iOdRlh + kMie * iOdMie));
-    float opacity = min(0.75, exp(-(length(kRlh) * length(totalRlh) + kMie * length(totalMie))));
-    opacity = max(0.0,opacity-0.7);
-    opacity = min(0.75,opacity*1.35);
+    float opacity = exp(-(length(kRlh) * length(totalRlh) + kMie * length(totalMie)));
+    //float opacity = min(0.75, exp(-(length(kRlh) * length(totalRlh) + kMie * length(totalMie))));
+    //opacity = max(0.0,opacity-0.7);
+    opacity = min(0.5,opacity*2.0);
 
     // Calculate the final color.
-    vec3 color = iSun * (pRlh * kRlh * totalRlh + pMie * kMie * totalMie);
+    vec3 color = iSun * (pRlh * kRlh * totalRlh + pMie * kMie * totalMie) * 0.6;
 
     return vec4(color, opacity);
 }
