@@ -4,7 +4,8 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- _...Add new stuff here..._
+
+- Skip control button css hover effects on touch devices (https://github.com/maplibre/maplibre-gl-js/pull/5285)
 
 ## 5.0.0
 
