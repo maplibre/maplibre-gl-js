@@ -17,7 +17,7 @@
 - ⚠️ Change drag rotate behavior to be around the center of the screen ([#5074](https://github.com/maplibre/maplibre-gl-js/pull/5074))
 - ⚠️ Return actual altitude from queryTerrainElevation + Pass non-translated matrices to custom layer on mercator map ([#3854](https://github.com/maplibre/maplibre-gl-js/pull/3854))
 - ⚠️ Changed `geometry-type` to identify "Multi-" features ([#4877](https://github.com/maplibre/maplibre-gl-js/pull/4877)). Use `$type` for non "Multi-" support or use `in` expression to get the previous behavior.
-When migrating styles to MapLibre GL JS v5.0.0, replace expressions that use `["geometry-type"]` with `"$type"`. Example:
+Example:
 ```diff
 - "filter": ["==", ["geometry-type"], "Polygon"]
 + "filter": ["==", "$type", "Polygon"]
