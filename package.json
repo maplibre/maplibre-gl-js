@@ -57,7 +57,7 @@
     "@stylistic/eslint-plugin-ts": "^2.12.1",
     "@types/benchmark": "^2.1.5",
     "@types/d3": "^7.4.3",
-    "@types/diff": "^6.0.0",
+    "@types/diff": "^7.0.0",
     "@types/earcut": "^2.1.4",
     "@types/eslint": "^9.6.1",
     "@types/gl": "^6.0.5",
