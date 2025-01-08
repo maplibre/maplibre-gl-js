@@ -13,7 +13,7 @@
 
 - ⚠️ Changed `geometry-type` to identify "Multi-" features ([#4877](https://github.com/maplibre/maplibre-gl-js/pull/4877)). Use `$type` which has no "Multi-" support or use `in` expression to get the previous behavior.  
   Example:  
-  This change means that a filter like `["==", ["geometry-type"], "Polygon"]` would not display `MultiPolygon` features any more.
+  ⚠️ This change means that a filter like `["==", ["geometry-type"], "Polygon"]` would not display `MultiPolygon` features any more.
   To fix this, you can
   ```diff
   - "filter": ["==", ["geometry-type"], "Polygon"]
