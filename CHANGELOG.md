@@ -12,13 +12,7 @@
 
 ### ✨ Features and improvements
 
-- ~~⚠️ Changed `geometry-type` to identify "Multi-" features ([#4877](https://github.com/maplibre/maplibre-gl-js/pull/4877)). Use `$type` which has no "Multi-" support or use `in` expression to get the previous behavior.~~  
-  ~~Example:~~
-  ~~⚠️ This change means that a filter like `["==", ["geometry-type"], "Polygon"]` would not display `MultiPolygon` features any more. To fix this, you can~~
-  ~~```diff~~
-  ~~- "filter": ["==", ["geometry-type"], "Polygon"]~~
-  ~~+ "filter": ["==", "$type", "Polygon"]~~
-  ~~```~~
+- ~~⚠️ Changed `geometry-type` to identify "Multi-" features ([#4877](https://github.com/maplibre/maplibre-gl-js/pull/4877)). Use `$type` which has no "Multi-" support or use `in` expression to get the previous behavior.~~
 - ⚠️ `StyleLayer`'s `queryIntersectsFeature` method parameters were moved to `QueryIntersectsFeatureParams`. ([#5276](https://github.com/maplibre/maplibre-gl-js/pull/5276)) Wrap the method parameters with `{}` to solve this
 - ⚠️ Support setting WebGL context options on map creation ([#5196](https://github.com/maplibre/maplibre-gl-js/pull/5196)). Previously supported WebGL context options like `antialias`, `preserveDrawingBuffer` and `failIfMajorPerformanceCaveat` must now be defined inside the `canvasContextAttributes` object on `MapOptions`.
 - ⚠️ Change the return type of `on` method to return a `Subscription` to allow for easy unsubscribe ([#5080](https://github.com/maplibre/maplibre-gl-js/pull/5080)). `map.on('x').on('y')` => `map.on('x'); map.on('y');`.
