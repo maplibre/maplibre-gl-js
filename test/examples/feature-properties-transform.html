@@ -15,6 +15,16 @@
 <body>
     <div id="map"></div>
     <script>
+        function readAsDataURL(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(reader.error);
+                reader.onabort = () => reject(new Error("Read aborted"));
+                reader.readAsDataURL(blob);
+            });
+        }
+
         const transform = `
             const featurePropertiesTransform = ({
                 source,
@@ -22,8 +32,9 @@
                 tileID,
                 geometryType,
                 featureID,
-                properties}) => {
-                if (properties === null) return;
+                properties
+            }) => {
+                if (!properties) return;
 
                 if ('NAME' in properties) {
                     properties['NAME'] = properties['NAME'].split('').reverse().join('');
@@ -33,15 +44,29 @@
         `;
         const decodedString = decodeURIComponent(transform);
         const blob = new Blob([decodedString], {type: 'application/javascript'});
-        const workerUrl = URL.createObjectURL(blob);
-        maplibregl.importScriptInWorkers(workerUrl);
+        readAsDataURL(blob).then((workerUrl) => {
+            maplibregl.importScriptInWorkers(workerUrl);
 
-        const map = new maplibregl.Map({
-            container: 'map',
-            style: 'https://demotiles.maplibre.org/style.json',
-            center: [8, 47],
-            zoom: 5,
-            hash: 'map'
+            const map = new maplibregl.Map({
+                container: 'map',
+                style: 'https://demotiles.maplibre.org/style.json',
+                center: [8, 47],
+                zoom: 5,
+                hash: 'map'
+            });
+
+            // When a click event occurs on a feature in the countries layer, open a popup at the
+            // location of the click, with the transformed NAME from its properties.
+            map.on('click', 'countries-fill', (e) => {
+                const name = e.features[0].properties.NAME;
+
+                if (name) {
+                    new maplibregl.Popup()
+                        .setLngLat(e.lngLat)
+                        .setHTML(name)
+                        .addTo(map);
+                }
+            });
         });
     </script>
 </body>
