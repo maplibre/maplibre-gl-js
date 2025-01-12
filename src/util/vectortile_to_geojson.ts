@@ -20,7 +20,7 @@ export type MapGeoJSONFeature = GeoJSONFeature & {
     source: string;
     sourceLayer?: string;
     state: { [key: string]: any };
-}
+};
 
 /**
  * A geojson feature

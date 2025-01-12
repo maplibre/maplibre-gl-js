@@ -23,7 +23,7 @@
       pitch: 45,
       bearing: -17.6,
       container: 'map',
-      antialias: true
+      canvasContextAttributes: {antialias: true}
   });
   
   // The 'building' layer in the streets vector source contains building-height
@@ -52,6 +52,7 @@
               'source-layer': 'building',
               'type': 'fill-extrusion',
               'minzoom': 15,
+              'filter': ['!=', ['get', 'hide_3d'], true],
               'paint': {
                   'fill-extrusion-color': [
                       'interpolate',

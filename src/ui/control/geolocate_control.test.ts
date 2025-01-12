@@ -1,10 +1,11 @@
+import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} from 'vitest';
 import geolocation from 'mock-geolocation';
 import {LngLatBounds} from '../../geo/lng_lat_bounds';
 import {createMap, beforeMapTest, sleep} from '../../util/test/util';
 import {GeolocateControl} from './geolocate_control';
-jest.mock('../../util/geolocation_support', () => (
+vi.mock('../../util/geolocation_support', () => (
     {
-        checkGeolocationSupport: jest.fn()
+        checkGeolocationSupport: vi.fn()
     }
 ));
 import {checkGeolocationSupport} from '../../util/geolocation_support';
@@ -30,24 +31,24 @@ describe('GeolocateControl with no options', () => {
     beforeEach(() => {
         beforeMapTest();
         map = createMap(undefined, undefined);
-        (checkGeolocationSupport as any as jest.SpyInstance).mockImplementationOnce(() => Promise.resolve(true));
+        (checkGeolocationSupport as unknown as MockInstance).mockImplementationOnce(() => Promise.resolve(true));
     });
 
     afterEach(() => {
         map.remove();
     });
 
-    test('is disabled when there\'s no support', async () => {
-        (checkGeolocationSupport as any as jest.SpyInstance).mockReset().mockImplementationOnce(() => Promise.resolve(false));
+    test('is disabled when there is no support', async () => {
+        (checkGeolocationSupport as unknown as MockInstance).mockReset().mockImplementationOnce(() => Promise.resolve(false));
         const geolocate = new GeolocateControl(undefined);
-        const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         map.addControl(geolocate);
         await sleep(0);
         expect(geolocate._geolocateButton.disabled).toBeTruthy();
         spy.mockRestore();
     });
 
-    test('is enabled when there no support', async () => {
+    test('is enabled when there is support', async () => {
         const geolocate = new GeolocateControl(undefined);
         map.addControl(geolocate);
         await sleep(0);
@@ -83,13 +84,9 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('does not throw if removed quickly', () => {
-        (checkGeolocationSupport as any as jest.SpyInstance).mockReset()
+        (checkGeolocationSupport as unknown as MockInstance).mockReset()
             .mockImplementationOnce(() => {
-                return new Promise(resolve => {
-                    setTimeout(() => {
-                        resolve(true);
-                    }, 10);
-                });
+                return sleep(10);
             });
 
         const geolocate = new GeolocateControl(undefined);
@@ -174,7 +171,7 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('trigger before added to map', () => {
-        jest.spyOn(console, 'warn').mockImplementation(() => { });
+        vi.spyOn(console, 'warn').mockImplementation(() => { });
 
         const geolocate = new GeolocateControl(undefined);
 
@@ -582,5 +579,42 @@ describe('GeolocateControl with no options', () => {
         map.zoomTo(10, {duration: 0});
         await zoomendPromise;
         expect(geolocate._circleElement.style.width).toBeTruthy();
+    });
+
+    test('shown even if trackUserLocation = false', async () => {
+        const geolocate = new GeolocateControl({
+            trackUserLocation: false,
+            showUserLocation: true,
+            showAccuracyCircle: true,
+        });
+        map.addControl(geolocate);
+        await sleep(0);
+        const click = new window.Event('click');
+
+        const geolocatePromise = geolocate.once('geolocate');
+        geolocate._geolocateButton.dispatchEvent(click);
+        geolocation.send({latitude: 10, longitude: 20, accuracy: 700});
+        await geolocatePromise;
+        map.jumpTo({
+            center: [10, 20]
+        });
+        const zoomendPromise = map.once('zoomend');
+        map.zoomTo(10, {duration: 0});
+        await zoomendPromise;
+        expect(geolocate._circleElement.style.width).toBeTruthy();
+    });
+
+    test('Geolocate control should appear only once', async () => {
+        const geolocateControl = new GeolocateControl({});
+
+        map.addControl(geolocateControl);
+        // adding and removing to verify there is no race condition, and it is just added once
+        map.removeControl(geolocateControl);
+        map.addControl(geolocateControl);
+
+        await map.once('idle');
+
+        const geolocateUIelem = await geolocateControl._container.getElementsByClassName('maplibregl-ctrl-geolocate');
+        expect(geolocateUIelem).toHaveLength(1);
     });
 });

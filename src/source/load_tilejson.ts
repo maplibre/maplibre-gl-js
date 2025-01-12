@@ -1,4 +1,4 @@
-import {pick, extend, TileJSON} from '../util/util';
+import {pick, extend, type TileJSON} from '../util/util';
 import {getJSON} from '../util/ajax';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
@@ -16,7 +16,7 @@ export type LoadTileJsonResponse = {
     tileSize: number;
     encoding: RasterDEMSourceSpecification['encoding'];
     vectorLayerIds?: Array<string>;
-}
+};
 
 export async function loadTileJson(
     options: RasterSourceSpecification | RasterDEMSourceSpecification | VectorSourceSpecification,

@@ -8,7 +8,7 @@ import {ColorMode} from '../gl/color_mode';
 import type {Painter} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {OverscaledTileID} from '../source/tile_id';
-import {Style} from '../style/style';
+import {type Style} from '../style/style';
 
 const topColor = new Color(1, 0, 0, 1);
 const btmColor = new Color(0, 1, 0, 1);
@@ -69,7 +69,6 @@ function drawDebugTile(painter: Painter, sourceCache: SourceCache, coord: Oversc
     const context = painter.context;
     const gl = context.gl;
 
-    const posMatrix = coord.posMatrix;
     const program = painter.useProgram('debug');
 
     const depthMode = DepthMode.disabled;
@@ -92,11 +91,13 @@ function drawDebugTile(painter: Painter, sourceCache: SourceCache, coord: Oversc
     const tileLabel = `${tileIdText} ${tileSizeKb}kB`;
     drawTextToOverlay(painter, tileLabel);
 
+    const projectionData = painter.transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: true, applyTerrainMatrix: true});
+
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, ColorMode.alphaBlended, CullFaceMode.disabled,
-        debugUniformValues(posMatrix, Color.transparent, scaleRatio), null, id,
+        debugUniformValues(Color.transparent, scaleRatio), null, projectionData, id,
         painter.debugBuffer, painter.quadTriangleIndexBuffer, painter.debugSegments);
     program.draw(context, gl.LINE_STRIP, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-        debugUniformValues(posMatrix, Color.red), terrainData, id,
+        debugUniformValues(Color.red), terrainData, projectionData, id,
         painter.debugBuffer, painter.tileBorderIndexBuffer, painter.debugSegments);
 }
 

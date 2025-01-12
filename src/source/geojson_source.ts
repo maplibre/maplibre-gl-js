@@ -1,6 +1,6 @@
 import {Event, ErrorEvent, Evented} from '../util/evented';
 
-import {extend} from '../util/util';
+import {extend, warnOnce} from '../util/util';
 import {EXTENT} from '../data/extent';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
@@ -13,6 +13,7 @@ import type {Actor} from '../util/actor';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {GeoJSONSourceDiff} from './geojson_source_diff';
 import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
+import {type WorkerTileParameters} from './worker_source';
 import {MessageType} from '../util/actor_messages';
 
 /**
@@ -22,7 +23,7 @@ export type GeoJSONSourceOptions = GeoJSONSourceSpecification & {
     workerOptions?: GeoJSONWorkerOptions;
     collectResourceTiming?: boolean;
     data: GeoJSON.GeoJSON | string;
-}
+};
 
 export type GeoJSONSourceInternalOptions = {
     data?: GeoJSON.GeoJSON | string | undefined;
@@ -31,7 +32,7 @@ export type GeoJSONSourceInternalOptions = {
     clusterRadius?: number;
     clusterMinPoints?: number;
     generateId?: boolean;
-}
+};
 
 /**
  * The cluster options to set
@@ -49,7 +50,7 @@ export type SetClusterOptions = {
      * The cluster's radius
      */
     clusterRadius?: number;
-}
+};
 
 /**
  * A source containing GeoJSON.
@@ -156,7 +157,9 @@ export class GeoJSONSource extends Evented implements Source {
         if (options.attribution) this.attribution = options.attribution;
         this.promoteId = options.promoteId;
 
-        const scale = EXTENT / this.tileSize;
+        if (options.clusterMaxZoom !== undefined && this.maxzoom <= options.clusterMaxZoom) {
+            warnOnce(`The maxzoom value "${this.maxzoom}" is expected to be greater than the clusterMaxZoom value "${options.clusterMaxZoom}".`);
+        }
 
         // sent to the worker, along with `url: ...` or `data: literal geojson`,
         // so that it can load/parse/index the geojson data
@@ -166,8 +169,8 @@ export class GeoJSONSource extends Evented implements Source {
             source: this.id,
             cluster: options.cluster || false,
             geojsonVtOptions: {
-                buffer: (options.buffer !== undefined ? options.buffer : 128) * scale,
-                tolerance: (options.tolerance !== undefined ? options.tolerance : 0.375) * scale,
+                buffer: this._pixelsToTileUnits(options.buffer !== undefined ? options.buffer : 128),
+                tolerance: this._pixelsToTileUnits(options.tolerance !== undefined ? options.tolerance : 0.375),
                 extent: EXTENT,
                 maxZoom: this.maxzoom,
                 lineMetrics: options.lineMetrics || false,
@@ -177,7 +180,7 @@ export class GeoJSONSource extends Evented implements Source {
                 maxZoom: options.clusterMaxZoom !== undefined ? options.clusterMaxZoom : this.maxzoom - 1,
                 minPoints: Math.max(2, options.clusterMinPoints || 2),
                 extent: EXTENT,
-                radius: (options.clusterRadius || 50) * scale,
+                radius: this._pixelsToTileUnits(options.clusterRadius || 50),
                 log: false,
                 generateId: options.generateId || false
             },
@@ -189,6 +192,10 @@ export class GeoJSONSource extends Evented implements Source {
         if (typeof this.promoteId === 'string') {
             this.workerOptions.promoteId = this.promoteId;
         }
+    }
+
+    private _pixelsToTileUnits(pixelValue: number): number {
+        return pixelValue * (EXTENT / this.tileSize);
     }
 
     async load() {
@@ -254,7 +261,7 @@ export class GeoJSONSource extends Evented implements Source {
     setClusterOptions(options: SetClusterOptions): this {
         this.workerOptions.cluster = options.cluster;
         if (options) {
-            if (options.clusterRadius !== undefined) this.workerOptions.superclusterOptions.radius = options.clusterRadius;
+            if (options.clusterRadius !== undefined) this.workerOptions.superclusterOptions.radius = this._pixelsToTileUnits(options.clusterRadius);
             if (options.clusterMaxZoom !== undefined) this.workerOptions.superclusterOptions.maxZoom = options.clusterMaxZoom;
         }
         this._updateWorkerData();
@@ -373,7 +380,7 @@ export class GeoJSONSource extends Evented implements Source {
     async loadTile(tile: Tile): Promise<void> {
         const message = !tile.actor ?  MessageType.loadTile :  MessageType.reloadTile;
         tile.actor = this.actor;
-        const params = {
+        const params: WorkerTileParameters = {
             type: this.type,
             uid: tile.uid,
             tileID: tile.tileID,
@@ -383,7 +390,8 @@ export class GeoJSONSource extends Evented implements Source {
             source: this.id,
             pixelRatio: this.map.getPixelRatio(),
             showCollisionBoxes: this.map.showCollisionBoxes,
-            promoteId: this.promoteId
+            promoteId: this.promoteId,
+            subdivisionGranularity: this.map.style.projection.subdivisionGranularity
         };
 
         tile.abortController = new AbortController();

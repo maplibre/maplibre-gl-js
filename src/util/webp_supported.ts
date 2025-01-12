@@ -53,7 +53,7 @@ function testWebpTextureUpload(gl: WebGLRenderingContext|WebGL2RenderingContext)
         if (gl.isContextLost()) return;
 
         webpSupported.supported = true;
-    } catch (e) {
+    } catch {
         // Catch "Unspecified Error." in Edge 18.
     }
 

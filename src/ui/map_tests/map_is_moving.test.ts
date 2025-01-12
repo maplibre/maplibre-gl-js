@@ -1,3 +1,4 @@
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {browser} from '../../util/browser';
 import {Map} from '../map';
 import {DOM} from '../../util/dom';
@@ -27,7 +28,7 @@ describe('Map#isMoving', () => {
         expect(map.isMoving()).toBe(false);
     });
 
-    test('returns true during a camera zoom animation', done => {
+    test('returns true during a camera zoom animation', () => new Promise<void>(done => {
         map.on('zoomstart', () => {
             expect(map.isMoving()).toBe(true);
         });
@@ -38,9 +39,9 @@ describe('Map#isMoving', () => {
         });
 
         map.zoomTo(5, {duration: 0});
-    });
+    }));
 
-    test('returns true when drag panning', done => {
+    test('returns true when drag panning', () => new Promise<void>(done => {
         map.on('movestart', () => {
             expect(map.isMoving()).toBe(true);
         });
@@ -64,11 +65,11 @@ describe('Map#isMoving', () => {
 
         simulate.mouseup(map.getCanvas());
         map._renderTaskQueue.run();
-    });
+    }));
 
-    test('returns true when drag rotating', done => {
+    test('returns true when drag rotating', () => new Promise<void>(done => {
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockImplementation(() => { return 0; });
+        vi.spyOn(browser, 'now').mockImplementation(() => { return 0; });
 
         map.on('movestart', () => {
             expect(map.isMoving()).toBe(true);
@@ -95,9 +96,9 @@ describe('Map#isMoving', () => {
 
         simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2});
         map._renderTaskQueue.run();
-    });
+    }));
 
-    test('returns true when scroll zooming', done => {
+    test('returns true when scroll zooming', () => new Promise<void>(done => {
         map.on('zoomstart', () => {
             expect(map.isMoving()).toBe(true);
         });
@@ -108,7 +109,7 @@ describe('Map#isMoving', () => {
         });
 
         let now = 0;
-        jest.spyOn(browser, 'now').mockImplementation(() => { return now; });
+        vi.spyOn(browser, 'now').mockImplementation(() => { return now; });
 
         simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
         map._renderTaskQueue.run();
@@ -117,9 +118,9 @@ describe('Map#isMoving', () => {
         setTimeout(() => {
             map._renderTaskQueue.run();
         }, 400);
-    });
+    }));
 
-    test('returns true when drag panning and scroll zooming interleave', done => {
+    test('returns true when drag panning and scroll zooming interleave', () => new Promise<void>(done => {
         map.on('dragstart', () => {
             expect(map.isMoving()).toBe(true);
         });
@@ -151,7 +152,7 @@ describe('Map#isMoving', () => {
         map._renderTaskQueue.run();
 
         let now = 0;
-        jest.spyOn(browser, 'now').mockImplementation(() => { return now; });
+        vi.spyOn(browser, 'now').mockImplementation(() => { return now; });
 
         simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
         map._renderTaskQueue.run();
@@ -160,5 +161,5 @@ describe('Map#isMoving', () => {
         setTimeout(() => {
             map._renderTaskQueue.run();
         }, 400);
-    });
+    }));
 });

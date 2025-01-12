@@ -1,0 +1,108 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 512,
+      "width": 512
+    }
+  },
+  "center": [11.52517, 47.34487],
+  "zoom": 13,
+  "pitch": 60,
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": ["local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"],
+      "maxzoom": 12,
+      "tileSize": 256
+    },
+    "osm": {
+      "type": "raster",
+      "tiles": ["local://tiles/number/{z}.png"],
+      "maxzoom": 17,
+      "tileSize": 256
+    },
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [11.52517,47.35487],
+                  [11.50517,47.35487],
+                  [11.51917,47.34487],
+                  [11.51517,47.35487],
+                  [11.52517,47.35487]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [11.53517,47.36487],
+                  [11.51517,47.36487],
+                  [11.52517,47.35487],
+                  [11.53517,47.36487]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [11.50517,47.34487],
+                  [11.49517,47.35487],
+                  [11.50517,47.36487],
+                  [11.51517,47.35487],
+                  [11.50517,47.34487]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "raster",
+      "type": "raster",
+      "source": "osm",
+      "paint": {
+        "raster-opacity": 1.0
+      }
+    },
+    {
+      "id": "heatmap-translucent",
+      "type": "heatmap",
+      "source": "geojson",
+      "paint": {
+        "heatmap-opacity": 0.7,
+        "heatmap-radius": 120
+      }
+    }
+  ],
+  "terrain": {
+    "source": "terrain",
+    "exaggeration": 2
+  }
+}

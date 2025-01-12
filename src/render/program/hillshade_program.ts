@@ -20,7 +20,6 @@ import type {DEMData} from '../../data/dem_data';
 import type {OverscaledTileID} from '../../source/tile_id';
 
 export type HillshadeUniformsType = {
-    'u_matrix': UniformMatrix4f;
     'u_image': Uniform1i;
     'u_latrange': Uniform2f;
     'u_light': Uniform2f;
@@ -38,7 +37,6 @@ export type HillshadePrepareUniformsType = {
 };
 
 const hillshadeUniforms = (context: Context, locations: UniformLocations): HillshadeUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
     'u_image': new Uniform1i(context, locations.u_image),
     'u_latrange': new Uniform2f(context, locations.u_latrange),
     'u_light': new Uniform2f(context, locations.u_light),
@@ -59,7 +57,6 @@ const hillshadeUniformValues = (
     painter: Painter,
     tile: Tile,
     layer: HillshadeStyleLayer,
-    coord: OverscaledTileID
 ): UniformValues<HillshadeUniformsType> => {
     const shadow = layer.paint.get('hillshade-shadow-color');
     const highlight = layer.paint.get('hillshade-highlight-color');
@@ -68,11 +65,9 @@ const hillshadeUniformValues = (
     let azimuthal = layer.paint.get('hillshade-illumination-direction') * (Math.PI / 180);
     // modify azimuthal angle by map rotation if light is anchored at the viewport
     if (layer.paint.get('hillshade-illumination-anchor') === 'viewport') {
-        azimuthal -= painter.transform.angle;
+        azimuthal += painter.transform.bearingInRadians;
     }
-    const align = !painter.options.moving;
     return {
-        'u_matrix': coord ? coord.posMatrix : painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped(), align),
         'u_image': 0,
         'u_latrange': getTileLatRange(painter, tile.tileID),
         'u_light': [layer.paint.get('hillshade-exaggeration'), azimuthal],

@@ -13,11 +13,12 @@ import type {Tile} from '../../source/tile';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {Painter} from '../painter';
 import type {HeatmapStyleLayer} from '../../style/style_layer/heatmap_style_layer';
+import {EXTENT} from '../../data/extent';
 
 export type HeatmapUniformsType = {
     'u_extrude_scale': Uniform1f;
     'u_intensity': Uniform1f;
-    'u_matrix': UniformMatrix4f;
+    'u_globe_extrude_scale': Uniform1f;
 };
 
 export type HeatmapTextureUniformsType = {
@@ -31,7 +32,7 @@ export type HeatmapTextureUniformsType = {
 const heatmapUniforms = (context: Context, locations: UniformLocations): HeatmapUniformsType => ({
     'u_extrude_scale': new Uniform1f(context, locations.u_extrude_scale),
     'u_intensity': new Uniform1f(context, locations.u_intensity),
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix)
+    'u_globe_extrude_scale': new Uniform1f(context, locations.u_globe_extrude_scale)
 });
 
 const heatmapTextureUniforms = (context: Context, locations: UniformLocations): HeatmapTextureUniformsType => ({
@@ -42,11 +43,16 @@ const heatmapTextureUniforms = (context: Context, locations: UniformLocations): 
     'u_opacity': new Uniform1f(context, locations.u_opacity)
 });
 
-const heatmapUniformValues = (matrix: mat4, tile: Tile, zoom: number, intensity: number): UniformValues<HeatmapUniformsType> => ({
-    'u_matrix': matrix,
-    'u_extrude_scale': pixelsToTileUnits(tile, 1, zoom),
-    'u_intensity': intensity
-});
+const heatmapUniformValues = (tile: Tile, zoom: number, intensity: number, radiusCorrectionFactor: number): UniformValues<HeatmapUniformsType> => {
+    const pixelRatio = pixelsToTileUnits(tile, 1, zoom);
+    // See comment in circle_program.ts
+    const globeExtrudeScale = pixelRatio / (EXTENT * Math.pow(2, tile.tileID.overscaledZ)) * 2.0 * Math.PI * radiusCorrectionFactor;
+    return {
+        'u_extrude_scale': pixelsToTileUnits(tile, 1, zoom),
+        'u_intensity': intensity,
+        'u_globe_extrude_scale': globeExtrudeScale
+    };
+};
 
 const heatmapTextureUniformValues = (
     painter: Painter,

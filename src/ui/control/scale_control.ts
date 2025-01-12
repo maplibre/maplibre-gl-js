@@ -94,16 +94,21 @@ export class ScaleControl implements IControl {
     };
 }
 
-function updateScale(map, container, options) {
+function updateScale(map: Map, container: HTMLElement, options: ScaleControlOptions) {
     // A horizontal scale is imagined to be present at center of the map
     // container with maximum length (Default) as 100px.
     // Using spherical law of cosines approximation, the real distance is
     // found between the two coordinates.
-    const maxWidth = options && options.maxWidth || 100;
-
+    // Minimum maxWidth is calculated for the scale box.
+    const optWidth = options && options.maxWidth || 100;
     const y = map._container.clientHeight / 2;
-    const left = map.unproject([0, y]);
-    const right = map.unproject([maxWidth, y]);
+    const x = map._container.clientWidth / 2;
+    const left = map.unproject([x - optWidth / 2, y]);
+    const right = map.unproject([x + optWidth / 2, y]);
+
+    const globeWidth = Math.round(map.project(right).x - map.project(left).x);
+    const maxWidth = Math.min(optWidth, globeWidth, map._container.clientWidth);
+
     const maxMeters = left.distanceTo(right);
     // The real distance corresponding to 100px scale length is rounded off to
     // near pretty number and the scale length for the same is found out.
@@ -126,7 +131,7 @@ function updateScale(map, container, options) {
     }
 }
 
-function setScale(container, maxWidth, maxDistance, unit) {
+function setScale(container: HTMLElement, maxWidth: number, maxDistance: number, unit: string) {
     const distance = getRoundNum(maxDistance);
     const ratio = distance / maxDistance;
     container.style.width = `${maxWidth * ratio}px`;

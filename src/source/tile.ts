@@ -1,7 +1,6 @@
 import {uniqueId, parseCacheControl} from '../util/util';
 import {deserialize as deserializeBucket} from '../data/bucket';
 import '../data/feature_index';
-import type {FeatureIndex} from '../data/feature_index';
 import {GeoJSONFeature} from '../util/vectortile_to_geojson';
 import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
 import {SymbolBucket} from '../data/bucket/symbol_bucket';
@@ -10,7 +9,7 @@ import {Texture} from '../render/texture';
 import {browser} from '../util/browser';
 import {toEvaluationFeature} from '../data/evaluation_feature';
 import {EvaluationParameters} from '../style/evaluation_parameters';
-import {SourceFeatureState} from '../source/source_state';
+import {type SourceFeatureState} from '../source/source_state';
 import {rtlMainThreadPluginFactory} from './rtl_text_plugin_main_thread';
 
 const CLOCK_SKEW_RETRY_TIMEOUT = 30000;
@@ -26,14 +25,15 @@ import type {ImageManager} from '../render/image_manager';
 import type {Context} from '../gl/context';
 import type {OverscaledTileID} from './tile_id';
 import type {Framebuffer} from '../gl/framebuffer';
-import type {Transform} from '../geo/transform';
+import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {LayerFeatureStates} from './source_state';
 import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type Point from '@mapbox/point-geometry';
-import {mat4} from 'gl-matrix';
+import type {mat4} from 'gl-matrix';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
-import {ExpiryData} from '../util/ajax';
-
+import type {ExpiryData} from '../util/ajax';
+import type {QueryRenderedFeaturesOptionsStrict} from './query_features';
+import type {FeatureIndex, QueryResults} from '../data/feature_index';
 /**
  * The tile's state, can be:
  *
@@ -178,7 +178,7 @@ export class Tile {
             }
         }
         this.collisionBoxArray = data.collisionBoxArray;
-        this.buckets = deserializeBucket(data.buckets, painter.style);
+        this.buckets = deserializeBucket(data.buckets, painter?.style);
 
         this.hasSymbolBuckets = false;
         for (const id in this.buckets) {
@@ -285,15 +285,11 @@ export class Tile {
         queryGeometry: Array<Point>,
         cameraQueryGeometry: Array<Point>,
         scale: number,
-        params: {
-            filter: FilterSpecification;
-            layers: Array<string>;
-            availableImages: Array<string>;
-        },
-        transform: Transform,
+        params: Pick<QueryRenderedFeaturesOptionsStrict, 'filter' | 'layers' | 'availableImages'> | undefined,
+        transform: IReadonlyTransform,
         maxPitchScaleFactor: number,
         pixelPosMatrix: mat4
-    ): {[_: string]: Array<{featureIndex: number; feature: GeoJSONFeature}>} {
+    ): QueryResults {
         if (!this.latestFeatureIndex || !this.latestFeatureIndex.rawTileData)
             return {};
 

@@ -1,9 +1,10 @@
+import {describe, beforeEach, afterEach, test, expect, vi, it} from 'vitest';
 import {RasterTileSource} from './raster_tile_source';
 import {OverscaledTileID} from './tile_id';
 import {RequestManager} from '../util/request_manager';
-import {Dispatcher} from '../util/dispatcher';
+import {type Dispatcher} from '../util/dispatcher';
 import {fakeServer, type FakeServer} from 'nise';
-import {Tile} from './tile';
+import {type Tile} from './tile';
 import {stubAjaxGetImage} from '../util/test/util';
 
 function createSource(options, transformCallback?) {
@@ -39,7 +40,7 @@ describe('RasterTileSource', () => {
             tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, -5]
         }));
-        const transformSpy = jest.fn().mockImplementation((url) => {
+        const transformSpy = vi.fn().mockImplementation((url) => {
             return {url};
         });
 
@@ -50,7 +51,7 @@ describe('RasterTileSource', () => {
         expect(transformSpy.mock.calls[0][1]).toBe('Source');
     });
 
-    test('respects TileJSON.bounds', done => {
+    test('respects TileJSON.bounds', () => new Promise<void>(done => {
         const source = createSource({
             minzoom: 0,
             maxzoom: 22,
@@ -65,9 +66,9 @@ describe('RasterTileSource', () => {
                 done();
             }
         });
-    });
+    }));
 
-    test('does not error on invalid bounds', done => {
+    test('does not error on invalid bounds', () => new Promise<void>(done => {
         const source = createSource({
             minzoom: 0,
             maxzoom: 22,
@@ -82,9 +83,9 @@ describe('RasterTileSource', () => {
                 done();
             }
         });
-    });
+    }));
 
-    test('respects TileJSON.bounds when loaded from TileJSON', done => {
+    test('respects TileJSON.bounds when loaded from TileJSON', () => new Promise<void>(done => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
@@ -102,9 +103,9 @@ describe('RasterTileSource', () => {
             }
         });
         server.respond();
-    });
+    }));
 
-    test('transforms tile urls before requesting', done => {
+    test('transforms tile urls before requesting', () => new Promise<void>(done => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
@@ -113,7 +114,7 @@ describe('RasterTileSource', () => {
             bounds: [-47, -7, -45, -5]
         }));
         const source = createSource({url: '/source.json'});
-        const transformSpy = jest.spyOn(source.map._requestManager, 'transformRequest');
+        const transformSpy = vi.spyOn(source.map._requestManager, 'transformRequest');
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 const tile = {
@@ -130,9 +131,9 @@ describe('RasterTileSource', () => {
             }
         });
         server.respond();
-    });
+    }));
 
-    test('HttpImageElement used to get image when refreshExpiredTiles is false', done => {
+    test('HttpImageElement used to get image when refreshExpiredTiles is false', () => new Promise<void>(done => {
         stubAjaxGetImage(undefined);
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
@@ -145,7 +146,7 @@ describe('RasterTileSource', () => {
         source.map.painter = {context: {}, getTileTexture: () => { return {update: () => {}}; }} as any;
         source.map._refreshExpiredTiles = false;
 
-        const imageConstructorSpy = jest.spyOn(global, 'Image');
+        const imageConstructorSpy = vi.spyOn(global, 'Image');
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 const tile = {
@@ -160,7 +161,7 @@ describe('RasterTileSource', () => {
             }
         });
         server.respond();
-    });
+    }));
 
     test('supports updating tiles', () => {
         const source = createSource({url: '/source.json'});

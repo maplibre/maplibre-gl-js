@@ -1,19 +1,21 @@
-import {beforeMapTest} from '../../util/test/util';
+
+import {describe, beforeEach, test, expect, vi} from 'vitest';
+import {beforeMapTest, sleep} from '../../util/test/util';
 import simulate from '../../../test/unit/lib/simulate_interaction';
-import {Map, MapOptions} from '../map';
+import {Map, type MapOptions} from '../map';
 
 function createMap() {
     return new Map({container: window.document.createElement('div')} as any as MapOptions);
 }
 
 function setupEvents(map: Map) {
-    const zoomstart = jest.fn();
+    const zoomstart = vi.fn();
     map.on('zoomstart', zoomstart);
 
-    const zoom = jest.fn();
+    const zoom = vi.fn();
     map.on('zoom', zoom);
 
-    const zoomend = jest.fn();
+    const zoomend = vi.fn();
     map.on('zoomend', zoomend);
 
     return {
@@ -62,7 +64,7 @@ describe('tap_drag_zoom', () => {
 
     });
 
-    test('TapDragZoomHandler does not fire zoom on tap and drag if touchstart events are > 500ms apart', done => {
+    test('TapDragZoomHandler does not fire zoom on tap and drag if touchstart events are > 500ms apart', async () => {
         const map = createMap();
         const target = map.getCanvas();
 
@@ -74,18 +76,18 @@ describe('tap_drag_zoom', () => {
 
         simulate.touchstart(target, pointTouchOptions);
         simulate.touchend(target);
-        setTimeout(() => {
-            simulate.touchstart(target, pointTouchOptions);
-            simulate.touchmove(target, {
-                touches: [{target, clientX: 100, clientY: 110}]
-            });
-            map._renderTaskQueue.run();
 
-            expect(zoomstart).not.toHaveBeenCalled();
-            expect(zoom).not.toHaveBeenCalled();
-            expect(zoomend).not.toHaveBeenCalled();
-            done();
-        }, 510);
+        await sleep(510);
+
+        simulate.touchstart(target, pointTouchOptions);
+        simulate.touchmove(target, {
+            touches: [{target, clientX: 100, clientY: 110}]
+        });
+        map._renderTaskQueue.run();
+
+        expect(zoomstart).not.toHaveBeenCalled();
+        expect(zoom).not.toHaveBeenCalled();
+        expect(zoomend).not.toHaveBeenCalled();
     });
 
     test('TapDragZoomHandler does not zoom on double-tap and drag if touchstart events are in different locations (>30px apart)', () => {

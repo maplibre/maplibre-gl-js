@@ -22,6 +22,9 @@ import MapIdle from '../benchmarks/map_idle';
 
 import {getGlobalWorkerPool} from '../../../src/util/global_worker_pool';
 import SymbolCollisionBox from '../benchmarks/symbol_collision_box';
+import Subdivide from '../benchmarks/subdivide';
+import LoadMatchingFeature from '../benchmarks/feature_index';
+import CoveringTilesGlobe from '../benchmarks/covering_tiles_globe';
 
 const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as GeoJSON.Feature<GeoJSON.Point>[]).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
 
@@ -68,13 +71,18 @@ register('LayerSymbolWithIcons', new LayerSymbolWithIcons());
 register('LayerTextWithVariableAnchor', new LayerTextWithVariableAnchor());
 register('LayerSymbolWithSortKey', new LayerSymbolWithSortKey());
 register('Load', new Load());
+register('LoadMatchingFeature', new LoadMatchingFeature());
 register('SymbolLayout', new SymbolLayout(style, styleLocations.map(location => location.tileID[0])));
 register('FilterCreate', new FilterCreate());
 register('FilterEvaluate', new FilterEvaluate());
 register('HillshadeLoad', new HillshadeLoad());
 register('CustomLayer', new CustomLayer());
 register('MapIdle', new MapIdle());
-register('SymbolCollisionBox', new SymbolCollisionBox());
+register('SymbolCollisionBox', new SymbolCollisionBox(false));
+register('SymbolCollisionBoxGlobe', new SymbolCollisionBox(true));
+register('Subdivide', new Subdivide());
+register('CoveringTilesGlobe', new CoveringTilesGlobe(0));
+register('CoveringTilesGlobePitched', new CoveringTilesGlobe(60));
 
 Promise.resolve().then(() => {
     // Ensure the global worker pool is never drained. Browsers have resource limits

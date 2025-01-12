@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Add a 3D model with shadow using three.js</title>
+    <meta property="og:description"
+        content="Use a custom style layer with three.js to add a 3D model with shadow to the map." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body,
+        #map {
+            height: 100%;
+        }
+    </style>
+    <script type="importmap">
+        {
+            "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div id="map"></div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        const map = new maplibregl.Map({
+            container: 'map',
+            style:
+                'https://api.maptiler.com/maps/basic/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+            zoom: 18,
+            center: [148.9819, -35.3981],
+            pitch: 60,
+            canvasContextAttributes: {antialias: true}
+        });
+
+        const modelOrigin = [148.9819, -35.39847];
+        const modelAltitude = 0;
+        const modelRotate = [Math.PI / 2, 0, 0];
+
+        const modelAsMercatorCoordinate = maplibregl.MercatorCoordinate.fromLngLat(
+            modelOrigin,
+            modelAltitude
+        );
+
+        const modelTransform = {
+            translateX: modelAsMercatorCoordinate.x,
+            translateY: modelAsMercatorCoordinate.y,
+            translateZ: modelAsMercatorCoordinate.z,
+            rotateX: modelRotate[0],
+            rotateY: modelRotate[1],
+            rotateZ: modelRotate[2],
+            scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits()
+        };
+
+        const customLayer = {
+            id: '3d-model',
+            type: 'custom',
+            renderingMode: '3d',
+            onAdd(map, gl) {
+                this.camera = new THREE.Camera();
+                this.scene = new THREE.Scene();
+
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+                directionalLight.position.set(100, 100, 100);
+                directionalLight.castShadow = true;
+                this.scene.add(directionalLight);
+
+                directionalLight.shadow.camera.near = 0.1;
+                directionalLight.shadow.camera.far = 2000;
+                directionalLight.shadow.camera.left = -500;
+                directionalLight.shadow.camera.right = 500;
+                directionalLight.shadow.camera.top = 500;
+                directionalLight.shadow.camera.bottom = -500;
+
+                directionalLight.shadow.mapSize.width = 4096;
+                directionalLight.shadow.mapSize.height = 4096;
+
+                const groundGeometry = new THREE.PlaneGeometry(1000, 1000);
+                const groundMaterial = new THREE.ShadowMaterial({ opacity: 0.5 });
+                const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+                ground.rotation.x = -Math.PI / 2;
+                ground.position.y = modelAsMercatorCoordinate.z;
+                ground.receiveShadow = true;
+                this.scene.add(ground);
+
+                const loader = new GLTFLoader();
+                loader.load(
+                    'https://maplibre.org/maplibre-gl-js/docs/assets/34M_17/34M_17.gltf',
+                    (gltf) => {
+                        gltf.scene.traverse(function (node) {
+                            if (node.isMesh || node.isLight) {
+                                node.castShadow = true;
+                                node.receiveShadow = true;
+                            }
+                        });
+                        this.scene.add(gltf.scene);
+                    }
+                );
+                this.map = map;
+
+                this.renderer = new THREE.WebGLRenderer({
+                    canvas: map.getCanvas(),
+                    context: gl,
+                    antialias: true
+                });
+                this.renderer.shadowMap.enabled = true;
+                this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+                this.renderer.autoClear = false;
+            },
+            render(gl, args) {
+                const rotationX = new THREE.Matrix4().makeRotationAxis(
+                    new THREE.Vector3(1, 0, 0),
+                    modelTransform.rotateX
+                );
+                const rotationY = new THREE.Matrix4().makeRotationAxis(
+                    new THREE.Vector3(0, 1, 0),
+                    modelTransform.rotateY
+                );
+                const rotationZ = new THREE.Matrix4().makeRotationAxis(
+                    new THREE.Vector3(0, 0, 1),
+                    modelTransform.rotateZ
+                );
+
+                const m = new THREE.Matrix4().fromArray(args.defaultProjectionData.mainMatrix);
+                const l = new THREE.Matrix4()
+                    .makeTranslation(
+                        modelTransform.translateX,
+                        modelTransform.translateY,
+                        modelTransform.translateZ
+                    )
+                    .scale(
+                        new THREE.Vector3(
+                            modelTransform.scale,
+                            -modelTransform.scale,
+                            modelTransform.scale
+                        )
+                    )
+                    .multiply(rotationX)
+                    .multiply(rotationY)
+                    .multiply(rotationZ);
+
+                this.camera.projectionMatrix = m.multiply(l);
+                this.renderer.resetState();
+                this.renderer.render(this.scene, this.camera);
+                this.map.triggerRepaint();
+            }
+        };
+
+        map.on('style.load', () => {
+            map.addLayer(customLayer);
+        });
+    </script>
+</body>
+
+</html>

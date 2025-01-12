@@ -1,5 +1,6 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap} from './util';
+import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate, radiansToDegrees, degreesToRadians, rollPitchBearingToQuat, getRollPitchBearing, getAngleDelta, scaleZoom, zoomScale} from './util';
 import {Canvas} from 'canvas';
 
 describe('util', () => {
@@ -14,7 +15,7 @@ describe('util', () => {
     expect(pick({a: 1, b: 2, c: 3}, ['a', 'c', 'd'] as any)).toEqual({a: 1, c: 3});
     expect(typeof uniqueId() === 'number').toBeTruthy();
 
-    test('isPowerOfTwo', done => {
+    test('isPowerOfTwo', () => {
         expect(isPowerOfTwo(1)).toBe(true);
         expect(isPowerOfTwo(2)).toBe(true);
         expect(isPowerOfTwo(256)).toBe(true);
@@ -22,10 +23,9 @@ describe('util', () => {
         expect(isPowerOfTwo(0)).toBe(false);
         expect(isPowerOfTwo(-42)).toBe(false);
         expect(isPowerOfTwo(42)).toBe(false);
-        done();
     });
 
-    test('nextPowerOfTwo', done => {
+    test('nextPowerOfTwo', () => {
         expect(nextPowerOfTwo(1)).toBe(1);
         expect(nextPowerOfTwo(2)).toBe(2);
         expect(nextPowerOfTwo(256)).toBe(256);
@@ -33,10 +33,9 @@ describe('util', () => {
         expect(nextPowerOfTwo(0)).toBe(1);
         expect(nextPowerOfTwo(-42)).toBe(1);
         expect(nextPowerOfTwo(42)).toBe(64);
-        done();
     });
 
-    test('nextPowerOfTwo', done => {
+    test('nextPowerOfTwo', () => {
         expect(isPowerOfTwo(nextPowerOfTwo(1))).toBe(true);
         expect(isPowerOfTwo(nextPowerOfTwo(2))).toBe(true);
         expect(isPowerOfTwo(nextPowerOfTwo(256))).toBe(true);
@@ -44,32 +43,28 @@ describe('util', () => {
         expect(isPowerOfTwo(nextPowerOfTwo(0))).toBe(true);
         expect(isPowerOfTwo(nextPowerOfTwo(-42))).toBe(true);
         expect(isPowerOfTwo(nextPowerOfTwo(42))).toBe(true);
-        done();
     });
 
-    test('clamp', done => {
+    test('clamp', () => {
         expect(clamp(0, 0, 1)).toBe(0);
         expect(clamp(1, 0, 1)).toBe(1);
         expect(clamp(200, 0, 180)).toBe(180);
         expect(clamp(-200, 0, 180)).toBe(0);
-        done();
     });
 
-    test('wrap', done => {
+    test('wrap', () => {
         expect(wrap(0, 0, 1)).toBe(1);
         expect(wrap(1, 0, 1)).toBe(1);
         expect(wrap(200, 0, 180)).toBe(20);
         expect(wrap(-200, 0, 180)).toBe(160);
-        done();
     });
 
-    test('bezier', done => {
+    test('bezier', () => {
         const curve = bezier(0, 0, 0.25, 1);
         expect(curve instanceof Function).toBeTruthy();
         expect(curve(0)).toBe(0);
         expect(curve(1)).toBe(1);
         expect(curve(0.5)).toBe(0.8230854638965502);
-        done();
     });
 
     test('mapObject', () => {
@@ -84,7 +79,7 @@ describe('util', () => {
         }, that)).toEqual({map: 'BOX'});
     });
 
-    test('filterObject', done => {
+    test('filterObject', () => {
         expect.assertions(6);
         expect(filterObject({}, () => { expect(false).toBeTruthy(); })).toEqual({});
         const that = {};
@@ -98,10 +93,9 @@ describe('util', () => {
         expect(filterObject({map: 'box', box: 'map'}, (value) => {
             return value === 'box';
         })).toEqual({map: 'box'});
-        done();
     });
 
-    test('deepEqual', done => {
+    test('deepEqual', () => {
         const a = {
             foo: 'bar',
             bar: {
@@ -118,86 +112,136 @@ describe('util', () => {
         expect(deepEqual(a, null)).toBeFalsy();
         expect(deepEqual(null, c)).toBeFalsy();
         expect(deepEqual(null, null)).toBeTruthy();
+    });
 
-        done();
+    test('mod', () => {
+        expect(mod(2, 3)).toBe(2);
+        expect(mod(4, 3)).toBe(1);
+        expect(mod(-1, 3)).toBe(2);
+        expect(mod(-1, 3)).toBe(2);
+    });
+
+    test('degreesToRadians', () => {
+        expect(degreesToRadians(1.0)).toBe(Math.PI / 180.0);
+    });
+
+    test('radiansToDegrees', () => {
+        expect(radiansToDegrees(1.0)).toBe(180.0 / Math.PI);
+    });
+
+    test('distanceOfAnglesRadians', () => {
+        const digits = 10;
+        expect(distanceOfAnglesRadians(0, 1)).toBeCloseTo(1, digits);
+        expect(distanceOfAnglesRadians(0.1, 2 * Math.PI - 0.1)).toBeCloseTo(0.2, digits);
+        expect(distanceOfAnglesRadians(0.5, -0.5)).toBeCloseTo(1, digits);
+        expect(distanceOfAnglesRadians(-0.5, 0.5)).toBeCloseTo(1, digits);
+    });
+
+    test('distanceOfAnglesDegrees', () => {
+        const digits = 10;
+        expect(distanceOfAnglesDegrees(0, 1)).toBeCloseTo(1, digits);
+        expect(distanceOfAnglesDegrees(10, 350)).toBeCloseTo(20, digits);
+        expect(distanceOfAnglesDegrees(0.5, -0.5)).toBeCloseTo(1, digits);
+        expect(distanceOfAnglesDegrees(-0.5, 0.5)).toBeCloseTo(1, digits);
+    });
+
+    test('differenceOfAnglesRadians', () => {
+        const digits = 10;
+        expect(differenceOfAnglesRadians(0, 1)).toBeCloseTo(1, digits);
+        expect(differenceOfAnglesRadians(0, -1)).toBeCloseTo(-1, digits);
+        expect(differenceOfAnglesRadians(0.1, 2 * Math.PI - 0.1)).toBeCloseTo(-0.2, digits);
+    });
+
+    test('differenceOfAnglesDegrees', () => {
+        const digits = 10;
+        expect(differenceOfAnglesDegrees(0, 1)).toBeCloseTo(1, digits);
+        expect(differenceOfAnglesDegrees(0, -1)).toBeCloseTo(-1, digits);
+        expect(differenceOfAnglesDegrees(10, 350)).toBeCloseTo(-20, digits);
+    });
+
+    test('solveQuadratic', () => {
+        expect(solveQuadratic(0, 0, 0)).toBeNull();
+        expect(solveQuadratic(1, 0, 1)).toBeNull();
+        expect(solveQuadratic(1, 0, -1)).toEqual({t0: 1, t1: 1});
+        expect(solveQuadratic(1, -8, 12)).toEqual({t0: 2, t1: 6});
+    });
+
+    test('remapSaturate', () => {
+        expect(remapSaturate(0, 0, 1, 2, 3)).toBe(2);
+        expect(remapSaturate(1, 0, 2, 2, 3)).toBe(2.5);
+        expect(remapSaturate(999, 0, 2, 2, 3)).toBe(3);
+        expect(remapSaturate(1, 1, 0, 2, 3)).toBe(2);
+        expect(remapSaturate(1, 0, 1, 3, 2)).toBe(2);
+        expect(remapSaturate(1, 1, 0, 3, 2)).toBe(3);
     });
 });
 
 describe('util clone', () => {
-    test('array', done => {
+    test('array', () => {
         const input = [false, 1, 'two'];
         const output = clone(input);
         expect(input).not.toBe(output);
         expect(input).toEqual(output);
-        done();
     });
 
-    test('object', done => {
+    test('object', () => {
         const input = {a: false, b: 1, c: 'two'};
         const output = clone(input);
         expect(input).not.toBe(output);
         expect(input).toEqual(output);
-        done();
     });
 
-    test('deep object', done => {
+    test('deep object', () => {
         const input = {object: {a: false, b: 1, c: 'two'}};
         const output = clone(input);
         expect(input.object).not.toBe(output.object);
         expect(input.object).toEqual(output.object);
-        done();
     });
 
-    test('deep array', done => {
+    test('deep array', () => {
         const input = {array: [false, 1, 'two']};
         const output = clone(input);
         expect(input.array).not.toBe(output.array);
         expect(input.array).toEqual(output.array);
-        done();
     });
 });
 
 describe('util arraysIntersect', () => {
-    test('intersection', done => {
+    test('intersection', () => {
         const a = ['1', '2', '3'];
         const b = ['5', '4', '3'];
 
         expect(arraysIntersect(a, b)).toBe(true);
-        done();
     });
 
-    test('no intersection', done => {
+    test('no intersection', () => {
         const a = ['1', '2', '3'];
         const b = ['4', '5', '6'];
 
         expect(arraysIntersect(a, b)).toBe(false);
-        done();
     });
-
 });
 
 describe('util isCounterClockwise', () => {
-    test('counter clockwise', done => {
+    test('counter clockwise', () => {
         const a = new Point(0, 0);
         const b = new Point(1, 0);
         const c = new Point(1, 1);
 
         expect(isCounterClockwise(a, b, c)).toBe(true);
-        done();
     });
 
-    test('clockwise', done => {
+    test('clockwise', () => {
         const a = new Point(0, 0);
         const b = new Point(1, 0);
         const c = new Point(1, 1);
 
         expect(isCounterClockwise(c, b, a)).toBe(false);
-        done();
     });
 });
 
 describe('util parseCacheControl', () => {
-    test('max-age', done => {
+    test('max-age', () => {
         expect(parseCacheControl('max-age=123456789')).toEqual({
             'max-age': 123456789
         });
@@ -207,10 +251,7 @@ describe('util parseCacheControl', () => {
         });
 
         expect(parseCacheControl('max-age=null')).toEqual({});
-
-        done();
     });
-
 });
 
 describe('util findLineIntersection', () => {
@@ -271,13 +312,13 @@ describe('util readImageUsingVideoFrame', () => {
         get format() {
             return format;
         },
-        copyTo: jest.fn(buf => {
+        copyTo: vi.fn(buf => {
             buf.set(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]).subarray(0, buf.length));
             return Promise.resolve();
         }),
-        close: jest.fn(),
+        close: vi.fn(),
     };
-    (window as any).VideoFrame = jest.fn(() => frame);
+    (window as any).VideoFrame = vi.fn(() => frame);
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = 2;
 
@@ -320,7 +361,7 @@ describe('util readImageUsingVideoFrame', () => {
 
     describe('layout/rect', () => {
         beforeEach(() => {
-            (window as any).VideoFrame = jest.fn(() => frame);
+            (window as any).VideoFrame = vi.fn(() => frame);
             canvas.width = canvas.height = 3;
         });
 
@@ -431,5 +472,58 @@ describe('util readImageDataUsingOffscreenCanvas', () => {
             10, 0, 0, 255, 0, 20, 0, 255,
             0, 0, 30, 255, 40, 40, 40, 255,
         ]);
+    });
+});
+
+describe('util rotations', () => {
+    test('rollPitchBearingToQuat', () => {
+        const roll = 10;
+        const pitch = 20;
+        const bearing = 30;
+
+        const rotation = rollPitchBearingToQuat(roll, pitch, bearing);
+        const angles = getRollPitchBearing(rotation);
+
+        expect(angles.roll).toBeCloseTo(roll, 6);
+        expect(angles.pitch).toBeCloseTo(pitch, 6);
+        expect(angles.bearing).toBeCloseTo(bearing, 6);
+    });
+
+    test('rollPitchBearingToQuat sinuglarity', () => {
+        const roll = 10;
+        const pitch = 0;
+        const bearing = 30;
+
+        const rotation = rollPitchBearingToQuat(roll, pitch, bearing);
+        const angles = getRollPitchBearing(rotation);
+
+        expect(angles.pitch).toBeCloseTo(0, 5);
+        expect(wrap(angles.bearing + angles.roll, -180, 180)).toBeCloseTo(wrap(bearing + roll, -180, 180), 6);
+    });
+});
+
+describe('util getAngleDelta', () => {
+    test('positive direction', () => {
+        const lastPoint = new Point(0, 1);
+        const currentPoint = new Point(1, 0);
+        const center = new Point(0, 0);
+
+        expect(getAngleDelta(lastPoint, currentPoint, center)).toBe(90);
+    });
+
+    test('positive direction', () => {
+        const lastPoint = new Point(1, 0);
+        const currentPoint = new Point(0, 1);
+        const center = new Point(0, 0);
+
+        expect(getAngleDelta(lastPoint, currentPoint, center)).toBe(-90);
+    });
+});
+describe('util scaleZoom and zoomScale relation', () => {
+    test('convert and back', () => {
+        expect(scaleZoom(0)).toBe(-Infinity);
+        expect(scaleZoom(10)).toBe(3.3219280948873626);
+        expect(zoomScale(3.3219280948873626)).toBeCloseTo(10, 10);
+        expect(scaleZoom(zoomScale(5))).toBe(5);
     });
 });

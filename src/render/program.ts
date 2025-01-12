@@ -1,7 +1,8 @@
-import {shaders} from '../shaders/shaders';
-import {ProgramConfiguration} from '../data/program_configuration';
+import {type PreparedShader, shaders, transpileVertexShaderToWebGL1, transpileFragmentShaderToWebGL1} from '../shaders/shaders';
+import {type ProgramConfiguration} from '../data/program_configuration';
 import {VertexArrayObject} from './vertex_array_object';
-import {Context} from '../gl/context';
+import {type Context} from '../gl/context';
+import {isWebGL2} from '../gl/webgl2';
 
 import type {SegmentVector} from '../data/segment';
 import type {VertexBuffer} from '../gl/vertex_buffer';
@@ -12,9 +13,10 @@ import type {ColorMode} from '../gl/color_mode';
 import type {CullFaceMode} from '../gl/cull_face_mode';
 import type {UniformBindings, UniformValues, UniformLocations} from './uniform_binding';
 import type {BinderUniform} from '../data/program_configuration';
-import {terrainPreludeUniforms, TerrainPreludeUniformsType} from './program/terrain_program';
+import {terrainPreludeUniforms, type TerrainPreludeUniformsType} from './program/terrain_program';
 import type {TerrainData} from '../render/terrain';
-import {Terrain} from '../render/terrain';
+import {projectionObjectToUniformMap, type ProjectionPreludeUniformsType, projectionUniforms} from './program/projection_program';
+import type {ProjectionData} from '../geo/projection/projection_data';
 
 export type DrawMode = WebGLRenderingContextBase['LINES'] | WebGLRenderingContextBase['TRIANGLES'] | WebGL2RenderingContext['LINE_STRIP'];
 
@@ -39,20 +41,18 @@ export class Program<Us extends UniformBindings> {
     numAttributes: number;
     fixedUniforms: Us;
     terrainUniforms: TerrainPreludeUniformsType;
+    projectionUniforms: ProjectionPreludeUniformsType;
     binderUniforms: Array<BinderUniform>;
     failedToCreate: boolean;
 
     constructor(context: Context,
-        source: {
-            fragmentSource: string;
-            vertexSource: string;
-            staticAttributes: Array<string>;
-            staticUniforms: Array<string>;
-        },
+        source: PreparedShader,
         configuration: ProgramConfiguration,
         fixedUniforms: (b: Context, a: UniformLocations) => Us,
         showOverdrawInspector: boolean,
-        terrain: Terrain) {
+        hasTerrain: boolean,
+        projectionPrelude: PreparedShader,
+        projectionDefine: string) {
 
         const gl = context.gl;
         this.program = gl.createProgram();
@@ -62,25 +62,37 @@ export class Program<Us extends UniformBindings> {
         const allAttrInfo = staticAttrInfo.concat(dynamicAttrInfo);
 
         const preludeUniformsInfo = shaders.prelude.staticUniforms ? getTokenizedAttributesAndUniforms(shaders.prelude.staticUniforms) : [];
+        const projectionPreludeUniformsInfo = projectionPrelude.staticUniforms ? getTokenizedAttributesAndUniforms(projectionPrelude.staticUniforms) : [];
         const staticUniformsInfo = source.staticUniforms ? getTokenizedAttributesAndUniforms(source.staticUniforms) : [];
         const dynamicUniformsInfo = configuration ? configuration.getBinderUniforms() : [];
         // remove duplicate uniforms
-        const uniformList = preludeUniformsInfo.concat(staticUniformsInfo).concat(dynamicUniformsInfo);
+        const uniformList = preludeUniformsInfo.concat(projectionPreludeUniformsInfo).concat(staticUniformsInfo).concat(dynamicUniformsInfo);
         const allUniformsInfo = [];
         for (const uniform of uniformList) {
             if (allUniformsInfo.indexOf(uniform) < 0) allUniformsInfo.push(uniform);
         }
 
         const defines = configuration ? configuration.defines() : [];
+        if (isWebGL2(gl)) {
+            defines.unshift('#version 300 es');
+        }
         if (showOverdrawInspector) {
             defines.push('#define OVERDRAW_INSPECTOR;');
         }
-        if (terrain) {
+        if (hasTerrain) {
             defines.push('#define TERRAIN3D;');
         }
+        if (projectionDefine) {
+            defines.push(projectionDefine);
+        }
 
-        const fragmentSource = defines.concat(shaders.prelude.fragmentSource, source.fragmentSource).join('\n');
-        const vertexSource = defines.concat(shaders.prelude.vertexSource, source.vertexSource).join('\n');
+        let fragmentSource = defines.concat(shaders.prelude.fragmentSource, projectionPrelude.fragmentSource, source.fragmentSource).join('\n');
+        let vertexSource = defines.concat(shaders.prelude.vertexSource, projectionPrelude.vertexSource, source.vertexSource).join('\n');
+
+        if (!isWebGL2(gl)) {
+            fragmentSource = transpileFragmentShaderToWebGL1(fragmentSource);
+            vertexSource = transpileVertexShaderToWebGL1(vertexSource);
+        }
 
         const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
         if (gl.isContextLost()) {
@@ -143,6 +155,7 @@ export class Program<Us extends UniformBindings> {
 
         this.fixedUniforms = fixedUniforms(context, uniformLocations);
         this.terrainUniforms = terrainPreludeUniforms(context, uniformLocations);
+        this.projectionUniforms = projectionUniforms(context, uniformLocations);
         this.binderUniforms = configuration ? configuration.getUniforms(context, uniformLocations) : [];
     }
 
@@ -154,6 +167,7 @@ export class Program<Us extends UniformBindings> {
         cullFaceMode: Readonly<CullFaceMode>,
         uniformValues: UniformValues<Us>,
         terrain: TerrainData,
+        projectionData: ProjectionData,
         layerID: string,
         layoutVertexBuffer: VertexBuffer,
         indexBuffer: IndexBuffer,
@@ -186,8 +200,17 @@ export class Program<Us extends UniformBindings> {
             }
         }
 
-        for (const name in this.fixedUniforms) {
-            this.fixedUniforms[name].set(uniformValues[name]);
+        if (projectionData) {
+            for (const fieldName in projectionData) {
+                const uniformName = projectionObjectToUniformMap[fieldName];
+                this.projectionUniforms[uniformName].set(projectionData[fieldName]);
+            }
+        }
+
+        if (uniformValues) {
+            for (const name in this.fixedUniforms) {
+                this.fixedUniforms[name].set(uniformValues[name]);
+            }
         }
 
         if (configuration) {

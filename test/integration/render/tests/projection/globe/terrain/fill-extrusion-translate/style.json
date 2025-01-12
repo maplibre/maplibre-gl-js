@@ -1,0 +1,151 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {}
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [
+    10.0,
+    -15.0
+  ],
+  "pitch": 45,
+  "bearing": 45,
+  "zoom": 1.5,
+  "projection": {
+    "type": "globe"
+  },
+  "terrain": {
+    "source": "terrain",
+    "exaggeration": 2
+  },
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/{z}-{x}-{y}.terrain.png"
+      ],
+      "maxzoom": 15,
+      "tileSize": 256
+    },
+    "fill": {
+      "type": "geojson",
+      "data": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -180,
+              -90
+            ],
+            [
+              -180,
+              90
+            ],
+            [
+              180,
+              90
+            ],
+            [
+              180,
+              -90
+            ],
+            [
+              -180,
+              -90
+            ]
+          ]
+        ]
+      }
+    },
+    "test": {
+      "type": "geojson",
+      "data": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -10,
+              -10
+            ],
+            [
+              -10,
+              10
+            ],
+            [
+              10,
+              10
+            ],
+            [
+              10,
+              -10
+            ],
+            [
+              -10,
+              -10
+            ]
+          ]
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "fill",
+      "type": "fill",
+      "source": "fill",
+      "paint": {
+        "fill-antialias": false,
+        "fill-color": "grey"
+      }
+    },
+    {
+      "id": "fill-test-base",
+      "type": "fill-extrusion",
+      "source": "test",
+      "paint": {
+        "fill-extrusion-color": "#ff0000",
+        "fill-extrusion-opacity": 1,
+        "fill-extrusion-height": 450000
+      }
+    },
+    {
+      "id": "fill-test-translate-map",
+      "type": "fill-extrusion",
+      "source": "test",
+      "paint": {
+        "fill-extrusion-color": "#00ff00",
+        "fill-extrusion-translate": [
+          10,
+          50
+        ],
+        "fill-extrusion-translate-anchor": "map",
+        "fill-extrusion-opacity": 1,
+        "fill-extrusion-height": 600000
+      }
+    },
+    {
+      "id": "fill-test-translate-viewport",
+      "type": "fill-extrusion",
+      "source": "test",
+      "paint": {
+        "fill-extrusion-color": "#0000ff",
+        "fill-extrusion-translate": [
+          10,
+          50
+        ],
+        "fill-extrusion-translate-anchor": "viewport",
+        "fill-extrusion-opacity": 1,
+        "fill-extrusion-height": 750000
+      }
+    }
+  ]
+}

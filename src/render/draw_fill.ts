@@ -1,7 +1,7 @@
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {DepthMode} from '../gl/depth_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
-import {ColorMode} from '../gl/color_mode';
+import {type ColorMode} from '../gl/color_mode';
 import {
     fillUniformValues,
     fillPatternUniformValues,
@@ -9,14 +9,16 @@ import {
     fillOutlinePatternUniformValues
 } from './program/fill_program';
 
-import type {Painter} from './painter';
+import type {Painter, RenderOptions} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import type {FillBucket} from '../data/bucket/fill_bucket';
 import type {OverscaledTileID} from '../source/tile_id';
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
+import {translatePosition} from '../util/util';
+import {type StencilMode} from '../gl/stencil_mode';
 
-export function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>) {
+export function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     const color = layer.paint.get('fill-color');
     const opacity = layer.paint.get('fill-opacity');
 
@@ -24,8 +26,8 @@ export function drawFill(painter: Painter, sourceCache: SourceCache, layer: Fill
         return;
     }
 
+    const {isRenderingToTexture} = renderOptions;
     const colorMode = painter.colorModeForRenderPass();
-
     const pattern = layer.paint.get('fill-pattern');
     const pass = painter.opaquePassEnabledForLayer() &&
         (!pattern.constantOr(1 as any) &&
@@ -34,9 +36,9 @@ export function drawFill(painter: Painter, sourceCache: SourceCache, layer: Fill
 
     // Draw fill
     if (painter.renderPass === pass) {
-        const depthMode = painter.depthModeForSublayer(
+        const depthMode = painter.getDepthModeForSublayer(
             1, painter.renderPass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
-        drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, false);
+        drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, false, isRenderingToTexture);
     }
 
     // Draw stroke
@@ -50,9 +52,9 @@ export function drawFill(painter: Painter, sourceCache: SourceCache, layer: Fill
         // or stroke color is translucent. If we wouldn't clip to outside
         // the current shape, some pixels from the outline stroke overlapped
         // the (non-antialiased) fill.
-        const depthMode = painter.depthModeForSublayer(
+        const depthMode = painter.getDepthModeForSublayer(
             layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
-        drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, true);
+        drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, true, isRenderingToTexture);
     }
 }
 
@@ -63,13 +65,19 @@ function drawFillTiles(
     coords: Array<OverscaledTileID>,
     depthMode: Readonly<DepthMode>,
     colorMode: Readonly<ColorMode>,
-    isOutline: boolean) {
+    isOutline: boolean,
+    isRenderingToTexture: boolean) {
     const gl = painter.context.gl;
     const fillPropertyName = 'fill-pattern';
     const patternProperty = layer.paint.get(fillPropertyName);
     const image = patternProperty && patternProperty.constantOr(1 as any);
     const crossfade = layer.getCrossfadeParameters();
     let drawMode, programName, uniformValues, indexBuffer, segments;
+
+    const transform = painter.transform;
+
+    const propertyFillTranslate = layer.paint.get('fill-translate');
+    const propertyFillTranslateAnchor = layer.paint.get('fill-translate-anchor');
 
     if (!isOutline) {
         programName = image ? 'fillPattern' : 'fill';
@@ -100,28 +108,37 @@ function drawFillTiles(
 
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        const terrainCoord = terrainData ? coord : null;
-        const posMatrix = terrainCoord ? terrainCoord.posMatrix : coord.posMatrix;
-        const tileMatrix = painter.translatePosMatrix(posMatrix, tile,
-            layer.paint.get('fill-translate'), layer.paint.get('fill-translate-anchor'));
+        const projectionData = transform.getProjectionData({
+            overscaledTileID: coord,
+            applyGlobeMatrix: !isRenderingToTexture,
+            applyTerrainMatrix: true
+        });
+
+        const translateForUniforms = translatePosition(transform, tile, propertyFillTranslate, propertyFillTranslateAnchor);
 
         if (!isOutline) {
             indexBuffer = bucket.indexBuffer;
             segments = bucket.segments;
-            uniformValues = image ?
-                fillPatternUniformValues(tileMatrix, painter, crossfade, tile) :
-                fillUniformValues(tileMatrix);
+            uniformValues = image ? fillPatternUniformValues(painter, crossfade, tile, translateForUniforms) : fillUniformValues(translateForUniforms);
         } else {
             indexBuffer = bucket.indexBuffer2;
             segments = bucket.segments2;
             const drawingBufferSize = [gl.drawingBufferWidth, gl.drawingBufferHeight] as [number, number];
             uniformValues = (programName === 'fillOutlinePattern' && image) ?
-                fillOutlinePatternUniformValues(tileMatrix, painter, crossfade, tile, drawingBufferSize) :
-                fillOutlineUniformValues(tileMatrix, drawingBufferSize);
+                fillOutlinePatternUniformValues(painter, crossfade, tile, drawingBufferSize, translateForUniforms) :
+                fillOutlineUniformValues(drawingBufferSize, translateForUniforms);
+        }
+
+        let stencil: StencilMode;
+        if (painter.renderPass === 'translucent' && isRenderingToTexture) {
+            const [stencilModes] = painter.getStencilConfigForOverlapAndUpdateStencilID(coords);
+            stencil = stencilModes[coord.overscaledZ];
+        } else {
+            stencil = painter.stencilModeForClipping(coord);
         }
 
         program.draw(painter.context, drawMode, depthMode,
-            painter.stencilModeForClipping(coord), colorMode, CullFaceMode.disabled, uniformValues, terrainData,
+            stencil, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData,
             layer.id, bucket.layoutVertexBuffer, indexBuffer, segments,
             layer.paint, painter.transform.zoom, programConfiguration);
     }

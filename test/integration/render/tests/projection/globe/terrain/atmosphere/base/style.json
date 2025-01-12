@@ -1,0 +1,55 @@
+{
+    "version": 8,
+    "metadata": {
+      "test": {
+        "description": "Tests that atmosphere is well display with blend to 1.0."
+      }
+    },
+    "projection": { "type": "globe" },
+    "sky": {
+      "atmosphere-blend": 1.0
+    },
+    "center": [
+      0.0,
+      0.0
+    ],
+    "zoom": 1,
+    "terrain": {
+    "source": "terrain",
+    "exaggeration": 2
+  },
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": ["local://tiles/{z}-{x}-{y}.terrain.png"],
+      "maxzoom": 15,
+      "tileSize": 256
+    },
+      "source": {
+        "type": "raster",
+        "tiles": [
+          "local://tiles/{z}-{x}-{y}.satellite.png"
+        ],
+        "minzoom": 1,
+        "maxzoom": 1,
+        "tileSize": 256
+      }
+    },
+    "layers": [
+      {
+        "id": "background",
+        "type": "background",
+        "paint": {
+          "background-color": "white"
+        }
+      },
+      {
+        "id": "raster",
+        "type": "raster",
+        "source": "source",
+        "paint": {
+          "raster-fade-duration": 0
+        }
+      }
+    ]
+  }

@@ -3,6 +3,231 @@ import UnitBezier from '@mapbox/unitbezier';
 import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';
 import type {Size} from './image';
 import type {WorkerGlobalScopeInterface} from './web_worker';
+import {mat3, mat4, quat, vec2, type vec3, type vec4} from 'gl-matrix';
+import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
+import {type OverscaledTileID} from '../source/tile_id';
+
+/**
+ * Returns a new 64 bit float vec4 of zeroes.
+ */
+export function createVec4f64(): vec4 { return new Float64Array(4) as any; }
+/**
+ * Returns a new 64 bit float vec3 of zeroes.
+ */
+export function createVec3f64(): vec3 { return new Float64Array(3) as any; }
+/**
+ * Returns a new 64 bit float mat4 of zeroes.
+ */
+export function createMat4f64(): mat4 { return new Float64Array(16) as any; }
+/**
+ * Returns a new 32 bit float mat4 of zeroes.
+ */
+export function createMat4f32(): mat4 { return new Float32Array(16) as any; }
+/**
+ * Returns a new 64 bit float mat4 set to identity.
+ */
+export function createIdentityMat4f64(): mat4 {
+    const m = new Float64Array(16) as any;
+    mat4.identity(m);
+    return m;
+}
+/**
+ * Returns a new 32 bit float mat4 set to identity.
+ */
+export function createIdentityMat4f32(): mat4 {
+    const m = new Float32Array(16) as any;
+    mat4.identity(m);
+    return m;
+}
+
+/**
+ * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.
+ * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
+ */
+export function translatePosition(
+    transform: { bearingInRadians: number; zoom: number },
+    tile: { tileID: OverscaledTileID; tileSize: number },
+    translate: [number, number],
+    translateAnchor: 'map' | 'viewport',
+    inViewportPixelUnitsUnits: boolean = false
+): [number, number] {
+    if (!translate[0] && !translate[1]) return [0, 0];
+
+    const angle = inViewportPixelUnitsUnits ?
+        (translateAnchor === 'map' ? -transform.bearingInRadians : 0) :
+        (translateAnchor === 'viewport' ? transform.bearingInRadians : 0);
+
+    if (angle) {
+        const sinA = Math.sin(angle);
+        const cosA = Math.cos(angle);
+        translate = [
+            translate[0] * cosA - translate[1] * sinA,
+            translate[0] * sinA + translate[1] * cosA
+        ];
+    }
+
+    return [
+        inViewportPixelUnitsUnits ? translate[0] : pixelsToTileUnits(tile, translate[0], transform.zoom),
+        inViewportPixelUnitsUnits ? translate[1] : pixelsToTileUnits(tile, translate[1], transform.zoom)];
+}
+
+/**
+ * Returns the signed distance between a point and a plane.
+ * @param plane - The plane equation, in the form where the first three components are the normal and the fourth component is the plane's distance from origin along normal.
+ * @param point - The point whose distance from plane is returned.
+ * @returns Signed distance of the point from the plane. Positive distances are in the half space where the plane normal points to, negative otherwise.
+ */
+export function pointPlaneSignedDistance(
+    plane: vec4 | [number, number, number, number],
+    point: vec3 | [number, number, number]
+): number {
+    return plane[0] * point[0] + plane[1] * point[1] + plane[2] * point[2] + plane[3];
+}
+
+/**
+ * Solves a quadratic equation in the form ax^2 + bx + c = 0 and returns its roots in no particular order.
+ * Returns null if the equation has no roots or if it has infinitely many roots.
+ */
+export function solveQuadratic(a: number, b: number, c: number): {
+    t0: number;
+    t1: number;
+} {
+    const d = b * b - 4 * a * c;
+    if (d < 0 || (a === 0 && b === 0)) {
+        return null;
+    }
+
+    // Uses a more precise solution from the book Ray Tracing Gems, chapter 7.
+    // https://www.realtimerendering.com/raytracinggems/rtg/index.html
+    const q = -0.5 * (b + Math.sign(b) * Math.sqrt(d));
+    if (Math.abs(q) > 1e-12) {
+        return {
+            t0: c / q,
+            t1: q / a
+        };
+    } else {
+        // Use the schoolbook way if q is too small
+        return {
+            t0: (-b + Math.sqrt(d)) * 0.5 / a,
+            t1: (-b + Math.sqrt(d)) * 0.5 / a
+        };
+    }
+}
+
+/**
+ * Returns the angle in radians between two 2D vectors.
+ * The angle is signed and describes how much the first vector would need to be be rotated clockwise
+ * (assuming X is right and Y is down) so that it points in the same direction as the second vector.
+ * @param vec1x - The X component of the first vector.
+ * @param vec1y - The Y component of the first vector.
+ * @param vec2x - The X component of the second vector.
+ * @param vec2y - The Y component of the second vector.
+ * @returns The signed angle between the two vectors, in range -PI..PI.
+ */
+export function angleToRotateBetweenVectors2D(vec1x: number, vec1y: number, vec2x: number, vec2y: number): number {
+    // Normalize both vectors
+    const length1 = Math.sqrt(vec1x * vec1x + vec1y * vec1y);
+    const length2 = Math.sqrt(vec2x * vec2x + vec2y * vec2y);
+    vec1x /= length1;
+    vec1y /= length1;
+    vec2x /= length2;
+    vec2y /= length2;
+    const dot = vec1x * vec2x + vec1y * vec2y;
+    const angle = Math.acos(dot);
+    // dot second vector with vector to the right of first (-vec1y, vec1x)
+    const isVec2RightOfVec1 = (-vec1y * vec2x + vec1x * vec2y) > 0;
+    if (isVec2RightOfVec1) {
+        return angle;
+    } else {
+        return -angle;
+    }
+}
+
+/**
+ * For two angles in degrees, returns how many degrees to add to the first angle in order to obtain the second angle.
+ * The returned difference value is always the shorted of the two - its absolute value is never greater than 180°.
+ */
+export function differenceOfAnglesDegrees(degreesA: number, degreesB: number): number {
+    const a = mod(degreesA, 360);
+    const b = mod(degreesB, 360);
+    const diff1 = b - a;
+    const diff2 = (b > a) ? (diff1 - 360) : (diff1 + 360);
+    if (Math.abs(diff1) < Math.abs(diff2)) {
+        return diff1;
+    } else {
+        return diff2;
+    }
+}
+
+/**
+ * For two angles in radians, returns how many radians to add to the first angle in order to obtain the second angle.
+ * The returned difference value is always the shorted of the two - its absolute value is never greater than PI.
+ */
+export function differenceOfAnglesRadians(degreesA: number, degreesB: number): number {
+    const a = mod(degreesA, Math.PI * 2);
+    const b = mod(degreesB, Math.PI * 2);
+    const diff1 = b - a;
+    const diff2 = (b > a) ? (diff1 - Math.PI * 2) : (diff1 + Math.PI * 2);
+    if (Math.abs(diff1) < Math.abs(diff2)) {
+        return diff1;
+    } else {
+        return diff2;
+    }
+}
+
+/**
+ * When given two angles in degrees, returns the angular distance between them - the shorter one of the two possible arcs.
+ */
+export function distanceOfAnglesDegrees(degreesA: number, degreesB: number): number {
+    const a = mod(degreesA, 360);
+    const b = mod(degreesB, 360);
+    return Math.min(
+        Math.abs(a - b),
+        Math.abs(a - b + 360),
+        Math.abs(a - b - 360)
+    );
+}
+
+/**
+ * When given two angles in radians, returns the angular distance between them - the shorter one of the two possible arcs.
+ */
+export function distanceOfAnglesRadians(radiansA: number, radiansB: number): number {
+    const a = mod(radiansA, Math.PI * 2);
+    const b = mod(radiansB, Math.PI * 2);
+    return Math.min(
+        Math.abs(a - b),
+        Math.abs(a - b + Math.PI * 2),
+        Math.abs(a - b - Math.PI * 2)
+    );
+}
+
+/**
+ * Modulo function, as opposed to javascript's `%`, which is a remainder.
+ * This functions will return positive values, even if the first operand is negative.
+ */
+export function mod(n, m) {
+    return ((n % m) + m) % m;
+}
+
+/**
+ * Takes a value in *old range*, linearly maps that range to *new range*, and returns the value in that new range.
+ * Additionally, if the value is outside *old range*, it is clamped inside it.
+ * Also works if one of the ranges is flipped (its `min` being larger than `max`).
+ */
+export function remapSaturate(value: number, oldRangeMin: number, oldRangeMax: number, newRangeMin: number, newRangeMax: number): number {
+    const inOldRange = clamp((value - oldRangeMin) / (oldRangeMax - oldRangeMin), 0.0, 1.0);
+    return lerp(newRangeMin, newRangeMax, inOldRange);
+}
+
+/**
+ * Linearly interpolate between two values, similar to `mix` function from GLSL. No clamping is done.
+ * @param a - The first value to interpolate. This value is returned when mix=0.
+ * @param b - The second value to interpolate. This value is returned when mix=1.
+ * @param mix - The interpolation factor. Range 0..1 interpolates between `a` and `b`, but values outside this range are also accepted.
+ */
+export function lerp(a: number, b: number, mix: number): number {
+    return a * (1.0 - mix) + b * mix;
+}
 
 /**
  * For a given collection of 2D points, returns their axis-aligned bounding box,
@@ -180,6 +405,16 @@ export function nextPowerOfTwo(value: number): number {
     if (value <= 1) return 1;
     return Math.pow(2, Math.ceil(Math.log(value) / Math.LN2));
 }
+
+/**
+ * Computes scaling from zoom level.
+ */
+export function zoomScale(zoom: number) { return Math.pow(2, zoom); }
+
+/**
+ * Computes zoom level from scaling.
+ */
+export function scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
 
 /**
  * Create an object by mapping all the values of an existing object while
@@ -404,7 +639,7 @@ export function storageAvailable(type: string): boolean {
         storage.setItem('_mapbox_test_', 1);
         storage.removeItem('_mapbox_test_');
         return true;
-    } catch (e) {
+    } catch {
         return false;
     }
 }
@@ -625,14 +860,20 @@ export async function getImageData(
     if (isOffscreenCanvasDistorted()) {
         try {
             return await readImageUsingVideoFrame(image, x, y, width, height);
-        } catch (e) {
+        } catch {
             // fall back to OffscreenCanvas
         }
     }
     return readImageDataUsingOffscreenCanvas(image, x, y, width, height);
 }
 
+/**
+ * Allows to unsubscribe from events without the need to store the method reference.
+ */
 export interface Subscription {
+    /**
+     * Unsubscribes from the event.
+     */
     unsubscribe(): void;
 }
 
@@ -670,6 +911,71 @@ export function degreesToRadians(degrees: number): number {
 }
 
 /**
+ * This method converts radians to degrees.
+ * The return value is the degrees value.
+ * @param degrees - The number of radians
+ * @returns degrees
+ */
+export function radiansToDegrees(degrees: number): number {
+    return degrees / Math.PI * 180;
+}
+
+export type RollPitchBearing = {
+    roll: number;
+    pitch: number;
+    bearing: number;
+};
+
+export function rollPitchBearingEqual(a: RollPitchBearing, b: RollPitchBearing): boolean {
+    return a.roll == b.roll && a.pitch == b.pitch && a.bearing == b.bearing;
+}
+
+/**
+ * This method converts a rotation quaternion to roll, pitch, and bearing angles in degrees.
+ * @param rotation - The rotation quaternion
+ * @returns roll, pitch, and bearing angles in degrees
+ */
+export function getRollPitchBearing(rotation: quat): RollPitchBearing {
+    const m: mat3 = new Float64Array(9) as any;
+    mat3.fromQuat(m, rotation);
+
+    const xAngle = radiansToDegrees(-Math.asin(clamp(m[2], -1, 1)));
+    let roll: number;
+    let bearing: number;
+    if (Math.hypot(m[5], m[8]) < 1.0e-3) {
+        roll = 0.0;
+        bearing = -radiansToDegrees(Math.atan2(m[3], m[4]));
+    } else {
+        roll = radiansToDegrees((m[5] === 0.0 && m[8] === 0.0) ? 0.0 :  Math.atan2(m[5], m[8]));
+        bearing = radiansToDegrees((m[1] === 0.0 && m[0] === 0.0) ? 0.0 : Math.atan2(m[1], m[0]));
+    }
+
+    return {roll, pitch: xAngle + 90.0, bearing};
+}
+
+export function getAngleDelta(lastPoint: Point, currentPoint: Point, center: Point): number {
+    const pointVect = vec2.fromValues(currentPoint.x - center.x, currentPoint.y - center.y);
+    const lastPointVec = vec2.fromValues(lastPoint.x - center.x, lastPoint.y - center.y);
+
+    const crossProduct = pointVect[0] * lastPointVec[1] - pointVect[1] * lastPointVec[0];
+    const angleRadians = Math.atan2(crossProduct, vec2.dot(pointVect, lastPointVec));
+    return radiansToDegrees(angleRadians);
+}
+
+/**
+ * This method converts roll, pitch, and bearing angles in degrees to a rotation quaternion.
+ * @param roll - Roll angle in degrees
+ * @param pitch - Pitch angle in degrees
+ * @param bearing - Bearing angle in degrees
+ * @returns The rotation quaternion
+ */
+export function rollPitchBearingToQuat(roll: number, pitch: number, bearing: number): quat {
+    const rotation: quat = new Float64Array(4) as any;
+    quat.fromEuler(rotation, roll, pitch - 90.0, bearing);
+    return rotation;
+}
+
+/**
  * Makes optional keys required and add the the undefined type.
  *
  * ```
@@ -692,7 +998,12 @@ export function degreesToRadians(degrees: number): number {
 
 export type Complete<T> = {
     [P in keyof Required<T>]: Pick<T, P> extends Required<Pick<T, P>> ? T[P] : (T[P] | undefined);
-}
+};
+
+/**
+ * A helper to allow require of at least one property
+ */
+export type RequireAtLeastOne<T> = { [K in keyof T]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<keyof T, K>>>; }[keyof T];
 
 export type TileJSON = {
     tilejson: '2.2.0' | '2.1.0' | '2.0.1' | '2.0.0' | '1.0.0';
@@ -710,3 +1021,17 @@ export type TileJSON = {
     center?: [number, number, number];
     vector_layers: [{id: string}]; // this is partial but enough for what we need
 };
+
+/**
+ * The maximum world tile zoom (Z).
+ * In other words, the upper bound supported for tile zoom.
+ */
+export const MAX_TILE_ZOOM = 25;
+
+/**
+ * The minimum world tile zoom (Z).
+ * In other words, the lower bound supported for tile zoom.
+ */
+export const MIN_TILE_ZOOM = 0;
+
+export const MAX_VALID_LATITUDE = 85.051129;

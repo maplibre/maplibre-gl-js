@@ -1,4 +1,4 @@
-import Point from '@mapbox/point-geometry';
+import type Point from '@mapbox/point-geometry';
 import {loadGeometry} from './load_geometry';
 import {toEvaluationFeature} from './evaluation_feature';
 import {EXTENT} from './extent';
@@ -9,34 +9,44 @@ import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
 import {GeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
-import {arraysIntersect, mapObject, extend} from '../util/util';
-import {OverscaledTileID} from '../source/tile_id';
+import {mapObject, extend} from '../util/util';
+import {type OverscaledTileID} from '../source/tile_id';
 import {register} from '../util/web_worker_transfer';
 import {EvaluationParameters} from '../style/evaluation_parameters';
-import {SourceFeatureState} from '../source/source_state';
+import {type SourceFeatureState} from '../source/source_state';
 import {polygonIntersectsBox} from '../util/intersection_tests';
 import {PossiblyEvaluated} from '../style/properties';
 import {FeatureIndexArray} from './array_types.g';
-import {mat4} from 'gl-matrix';
+import {type mat4} from 'gl-matrix';
 
 import type {StyleLayer} from '../style/style_layer';
 import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {Transform} from '../geo/transform';
+import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
 
 type QueryParameters = {
     scale: number;
     pixelPosMatrix: mat4;
-    transform: Transform;
+    transform: IReadonlyTransform;
     tileSize: number;
     queryGeometry: Array<Point>;
     cameraQueryGeometry: Array<Point>;
     queryPadding: number;
     params: {
-        filter: FilterSpecification;
-        layers: Array<string>;
-        availableImages: Array<string>;
+        filter?: FilterSpecification;
+        layers?: Set<string> | null;
+        availableImages?: Array<string>;
     };
+};
+
+export type QueryResults = {
+    [_: string]: QueryResultsItem[];
+};
+
+export type QueryResultsItem = {
+    featureIndex: number;
+    feature: GeoJSONFeature;
+    intersectionZ?: boolean | number;
 };
 
 /**
@@ -110,12 +120,12 @@ export class FeatureIndex {
         styleLayers: {[_: string]: StyleLayer},
         serializedLayers: {[_: string]: any},
         sourceFeatureState: SourceFeatureState
-    ): {[_: string]: Array<{featureIndex: number; feature: GeoJSONFeature}>} {
+    ): QueryResults {
         this.loadVTLayers();
 
-        const params = args.params || {} as { filter: any; layers: string[]; availableImages: string[] },
-            pixelsToTileUnits = EXTENT / args.tileSize / args.scale,
-            filter = featureFilter(params.filter);
+        const params = args.params;
+        const pixelsToTileUnits = EXTENT / args.tileSize / args.scale;
+        const filter = featureFilter(params.filter);
 
         const queryGeometry = args.queryGeometry;
         const queryPadding = args.queryPadding * pixelsToTileUnits;
@@ -136,7 +146,7 @@ export class FeatureIndex {
 
         matching.sort(topDownFeatureComparator);
 
-        const result = {};
+        const result: QueryResults = {};
         let previousIndex;
         for (let k = 0; k < matching.length; k++) {
             const index = matching[k];
@@ -163,7 +173,16 @@ export class FeatureIndex {
                         featureGeometry = loadGeometry(feature);
                     }
 
-                    return styleLayer.queryIntersectsFeature(queryGeometry, feature, featureState, featureGeometry, this.z, args.transform, pixelsToTileUnits, args.pixelPosMatrix);
+                    return styleLayer.queryIntersectsFeature({
+                        queryGeometry, 
+                        feature, 
+                        featureState, 
+                        geometry: featureGeometry, 
+                        zoom: this.z, 
+                        transform: args.transform, 
+                        pixelsToTileUnits, 
+                        pixelPosMatrix: args.pixelPosMatrix
+                    });
                 }
             );
         }
@@ -172,18 +191,12 @@ export class FeatureIndex {
     }
 
     loadMatchingFeature(
-        result: {
-            [_: string]: Array<{
-                featureIndex: number;
-                feature: GeoJSONFeature;
-                intersectionZ?: boolean | number;
-            }>;
-        },
+        result: QueryResults,
         bucketIndex: number,
         sourceLayerIndex: number,
         featureIndex: number,
         filter: FeatureFilter,
-        filterLayerIDs: Array<string>,
+        filterLayerIDs: Set<string> | undefined,
         availableImages: Array<string>,
         styleLayers: {[_: string]: StyleLayer},
         serializedLayers: {[_: string]: any},
@@ -196,7 +209,7 @@ export class FeatureIndex {
         ) => boolean | number) {
 
         const layerIDs = this.bucketLayerIDs[bucketIndex];
-        if (filterLayerIDs && !arraysIntersect(filterLayerIDs, layerIDs))
+        if (filterLayerIDs && !layerIDs.some(id => filterLayerIDs.has(id)))
             return;
 
         const sourceLayerName = this.sourceLayerCoder.decode(sourceLayerIndex);
@@ -217,7 +230,7 @@ export class FeatureIndex {
         for (let l = 0; l < layerIDs.length; l++) {
             const layerID = layerIDs[l];
 
-            if (filterLayerIDs && filterLayerIDs.indexOf(layerID) < 0) {
+            if (filterLayerIDs && !filterLayerIDs.has(layerID)) {
                 continue;
             }
 
@@ -259,10 +272,10 @@ export class FeatureIndex {
         bucketIndex: number,
         sourceLayerIndex: number,
         filterSpec: FilterSpecification,
-        filterLayerIDs: Array<string>,
+        filterLayerIDs: Set<string> | null,
         availableImages: Array<string>,
-        styleLayers: {[_: string]: StyleLayer}) {
-        const result = {};
+        styleLayers: {[_: string]: StyleLayer}): QueryResults {
+        const result: QueryResults = {};
         this.loadVTLayers();
 
         const filter = featureFilter(filterSpec);
@@ -300,6 +313,11 @@ export class FeatureIndex {
             const propName = typeof this.promoteId === 'string' ? this.promoteId : this.promoteId[sourceLayerId];
             id = feature.properties[propName] as string | number;
             if (typeof id === 'boolean') id = Number(id);
+
+            // When cluster is true, the id is the cluster_id even though promoteId is set
+            if (id === undefined && feature.properties?.cluster && this.promoteId) {
+                id = Number(feature.properties.cluster_id);
+            }
         }
         return id;
     }

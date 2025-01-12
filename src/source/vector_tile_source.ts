@@ -11,13 +11,13 @@ import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from './tile';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {WorkerTileResult} from './worker_source';
+import type {WorkerTileParameters, WorkerTileResult} from './worker_source';
 import {MessageType} from '../util/actor_messages';
 
 export type VectorTileSourceOptions = VectorSourceSpecification & {
     collectResourceTiming?: boolean;
     tileSize?: number;
-}
+};
 
 /**
  * A source containing vector tiles in [Mapbox Vector Tile format](https://docs.mapbox.com/vector-tiles/reference/).
@@ -190,7 +190,7 @@ export class VectorTileSource extends Evented implements Source {
 
     async loadTile(tile: Tile): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
-        const params = {
+        const params: WorkerTileParameters = {
             request: this.map._requestManager.transformRequest(url, ResourceType.Tile),
             uid: tile.uid,
             tileID: tile.tileID,
@@ -200,7 +200,8 @@ export class VectorTileSource extends Evented implements Source {
             source: this.id,
             pixelRatio: this.map.getPixelRatio(),
             showCollisionBoxes: this.map.showCollisionBoxes,
-            promoteId: this.promoteId
+            promoteId: this.promoteId,
+            subdivisionGranularity: this.map.style.projection.subdivisionGranularity
         };
         params.request.collectResourceTiming = this._collectResourceTiming;
         let messageType: MessageType.loadTile | MessageType.reloadTile = MessageType.reloadTile;

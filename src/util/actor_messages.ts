@@ -36,7 +36,7 @@ export type GeoJSONWorkerSourceLoadDataResult = {
 export type RemoveSourceParams = {
     source: string;
     type: string;
-}
+};
 
 /**
  * Parameters needed to update the layers
@@ -44,27 +44,27 @@ export type RemoveSourceParams = {
 export type UpdateLayersParamaeters = {
     layers: Array<LayerSpecification>;
     removedIds: Array<string>;
-}
+};
 
 /**
  * Parameters needed to get the images
  */
-export type GetImagesParamerters = {
+export type GetImagesParameters = {
     icons: Array<string>;
     source: string;
     tileID: OverscaledTileID;
     type: string;
-}
+};
 
 /**
  * Parameters needed to get the glyphs
  */
-export type GetGlyphsParamerters = {
+export type GetGlyphsParameters = {
     type: string;
     stacks: {[_: string]: Array<number>};
     source: string;
     tileID: OverscaledTileID;
-}
+};
 
 /**
  * A response object returned when requesting glyphs
@@ -73,12 +73,12 @@ export type GetGlyphsResponse = {
     [stack: string]: {
         [id: number]: StyleGlyph;
     };
-}
+};
 
 /**
  * A response object returned when requesting images
  */
-export type GetImagesResponse = {[_: string]: StyleImage}
+export type GetImagesResponse = {[_: string]: StyleImage};
 
 /**
  * All the possible message types that can be sent to and from the worker
@@ -121,8 +121,8 @@ export type RequestResponseMessageMap = {
     [MessageType.getData]: [LoadGeoJSONParameters, GeoJSON.GeoJSON];
     [MessageType.loadTile]: [WorkerTileParameters, WorkerTileResult];
     [MessageType.reloadTile]: [WorkerTileParameters, WorkerTileResult];
-    [MessageType.getGlyphs]: [GetGlyphsParamerters, GetGlyphsResponse];
-    [MessageType.getImages]: [GetImagesParamerters, GetImagesResponse];
+    [MessageType.getGlyphs]: [GetGlyphsParameters, GetGlyphsResponse];
+    [MessageType.getImages]: [GetImagesParameters, GetImagesResponse];
     [MessageType.setImages]: [string[], void];
     [MessageType.setLayers]: [Array<LayerSpecification>, void];
     [MessageType.updateLayers]: [UpdateLayersParamaeters, void];
@@ -135,7 +135,7 @@ export type RequestResponseMessageMap = {
     [MessageType.abortTile]: [TileParameters, void];
     [MessageType.removeDEMTile]: [TileParameters, void];
     [MessageType.getResource]: [RequestParameters, GetResourceResponse<any>];
-}
+};
 
 /**
  * The message to be sent by the actor

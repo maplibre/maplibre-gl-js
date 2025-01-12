@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Display a globe with a vector map</title>
+    <meta property="og:description" content="Display a globe with a vector map." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        zoom: 0,
+        center: [137.9150899566626, 36.25956997955441],
+    });
+
+    map.on('style.load', () => {
+        map.setProjection({
+            type: 'globe', // Set projection to globe
+        });
+    });
+</script>
+</body>
+</html>

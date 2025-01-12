@@ -1,18 +1,20 @@
+import {describe, afterEach, test, expect, vi} from 'vitest';
 import {SourceCache} from './source_cache';
-import {Map} from '../ui/map';
-import {Source, addSourceType} from './source';
+import {type Map} from '../ui/map';
+import {type Source, addSourceType} from './source';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
-import {Transform} from '../geo/transform';
 import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {extend} from '../util/util';
 import {browser} from '../util/browser';
-import {Dispatcher} from '../util/dispatcher';
+import {type Dispatcher} from '../util/dispatcher';
 import {TileBounds} from './tile_bounds';
 import {sleep} from '../util/test/util';
-import {TileCache} from './tile_cache';
+import {type TileCache} from './tile_cache';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {GlobeTransform} from '../geo/projection/globe_transform';
 
 class SourceMock extends Evented implements Source {
     id: string;
@@ -41,7 +43,7 @@ class SourceMock extends Evented implements Source {
                 expires: this.sourceOptions.expires
             });
         }
-        return new Promise(resolve => setTimeout(resolve, 0));
+        return sleep(0);
     }
     loaded() {
         return true;
@@ -99,11 +101,11 @@ function createSourceCache(options?, used?) {
 }
 
 afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 });
 
 describe('SourceCache#addTile', () => {
-    test('loads tile when uncached', done => {
+    test('loads tile when uncached', () => new Promise<void>(done => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
@@ -113,20 +115,21 @@ describe('SourceCache#addTile', () => {
         };
         sourceCache.onAdd(undefined);
         sourceCache._addTile(tileID);
-    });
+    }));
 
-    test('adds tile when uncached', done => {
+    test('adds tile when uncached', () => new Promise<void>(done => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        const sourceCache = createSourceCache({}).on('dataloading', (data) => {
+        const sourceCache = createSourceCache({});
+        sourceCache.on('dataloading', (data) => {
             expect(data.tile.tileID).toEqual(tileID);
             expect(data.tile.uses).toBe(1);
             done();
         });
         sourceCache.onAdd(undefined);
         sourceCache._addTile(tileID);
-    });
+    }));
 
-    test('updates feature state on added uncached tile', done => {
+    test('updates feature state on added uncached tile', () => new Promise<void>(done => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         let updateFeaturesSpy;
         const sourceCache = createSourceCache({});
@@ -135,12 +138,12 @@ describe('SourceCache#addTile', () => {
                 expect(updateFeaturesSpy).toHaveBeenCalledTimes(1);
                 done();
             });
-            updateFeaturesSpy = jest.spyOn(tile, 'setFeatureState');
+            updateFeaturesSpy = vi.spyOn(tile, 'setFeatureState');
             tile.state = 'loaded';
         };
         sourceCache.onAdd(undefined);
         sourceCache._addTile(tileID);
-    });
+    }));
 
     test('uses cached tile', () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
@@ -154,9 +157,8 @@ describe('SourceCache#addTile', () => {
         };
         sourceCache.on('dataloading', () => { add++; });
 
-        const tr = new Transform();
-        tr.width = 512;
-        tr.height = 512;
+        const tr = new MercatorTransform();
+        tr.resize(512, 512);
         sourceCache.updateCacheSize(tr);
         sourceCache._addTile(tileID);
         sourceCache._removeTile(tileID.key);
@@ -175,13 +177,12 @@ describe('SourceCache#addTile', () => {
             tile.state = 'loaded';
         };
 
-        const tr = new Transform();
-        tr.width = 512;
-        tr.height = 512;
+        const tr = new MercatorTransform();
+        tr.resize(512, 512);
         sourceCache.updateCacheSize(tr);
 
         const tile = sourceCache._addTile(tileID);
-        const updateFeaturesSpy = jest.spyOn(tile, 'setFeatureState');
+        const updateFeaturesSpy = vi.spyOn(tile, 'setFeatureState');
 
         sourceCache._removeTile(tileID.key);
         sourceCache._addTile(tileID);
@@ -205,9 +206,8 @@ describe('SourceCache#addTile', () => {
             sourceCache._setTileReloadTimer(tileID.key, tile);
         };
 
-        const tr = new Transform();
-        tr.width = 512;
-        tr.height = 512;
+        const tr = new MercatorTransform();
+        tr.resize(512, 512);
         sourceCache.updateCacheSize(tr);
 
         const id = tileID.key;
@@ -278,7 +278,7 @@ describe('SourceCache#addTile', () => {
 });
 
 describe('SourceCache#removeTile', () => {
-    test('removes tile', done => {
+    test('removes tile', () => new Promise<void>(done => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const sourceCache = createSourceCache({});
         sourceCache._addTile(tileID);
@@ -287,7 +287,7 @@ describe('SourceCache#removeTile', () => {
             expect(sourceCache._tiles[tileID.key]).toBeFalsy();
             done();
         });
-    });
+    }));
 
     test('caches (does not unload) loaded tile', () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
@@ -295,11 +295,10 @@ describe('SourceCache#removeTile', () => {
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'loaded';
         };
-        sourceCache._source.unloadTile = jest.fn();
+        sourceCache._source.unloadTile = vi.fn();
 
-        const tr = new Transform();
-        tr.width = 512;
-        tr.height = 512;
+        const tr = new MercatorTransform();
+        tr.resize(512, 512);
         sourceCache.updateCacheSize(tr);
 
         sourceCache._addTile(tileID);
@@ -366,14 +365,14 @@ describe('SourceCache#removeTile', () => {
         };
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         sourceCache._addTile(tileID);
-        const onAbort = jest.fn();
+        const onAbort = vi.fn();
         sourceCache.once('dataabort', onAbort);
         sourceCache._removeTile(tileID.key);
         expect(onAbort).toHaveBeenCalledTimes(0);
     });
 
     test('does not fire data event when the tile has already been aborted', () => {
-        const onData = jest.fn();
+        const onData = vi.fn();
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
             sourceCache.once('dataabort', () => {
@@ -390,55 +389,58 @@ describe('SourceCache#removeTile', () => {
 });
 
 describe('SourceCache / Source lifecycle', () => {
-    test('does not fire load or change before source load event', done => {
-        const sourceCache = createSourceCache({noLoad: true})
-            .on('data', () => done('test failed: data event fired'));
+    test('does not fire load or change before source load event', () => new Promise<void>((done) => {
+        const sourceCache = createSourceCache({noLoad: true});
+        sourceCache.on('data', () => { throw new Error('test failed: data event fired'); });
         sourceCache.onAdd(undefined);
         setTimeout(() => done(), 1);
-    });
+    }));
 
-    test('forward load event', done => {
-        const sourceCache = createSourceCache({}).on('data', (e) => {
+    test('forward load event', () => new Promise<void>(done => {
+        const sourceCache = createSourceCache({});
+        sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') done();
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('forward change event', done => {
-        const sourceCache = createSourceCache().on('data', (e) => {
+    test('forward change event', () => new Promise<void>(done => {
+        const sourceCache = createSourceCache();
+        sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') done();
         });
         sourceCache.onAdd(undefined);
         sourceCache.getSource().fire(new Event('data'));
-    });
+    }));
 
-    test('forward error event', done => {
-        const sourceCache = createSourceCache({error: 'Error loading source'}).on('error', (err) => {
+    test('forward error event', () => new Promise<void>(done => {
+        const sourceCache = createSourceCache({error: 'Error loading source'});
+        sourceCache.on('error', (err) => {
             expect(err.error).toBe('Error loading source');
             done();
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('suppress 404 errors', done => {
-        const sourceCache = createSourceCache({status: 404, message: 'Not found'})
-            .on('error', () => done('test failed: error event fired'));
+    test('suppress 404 errors', () => {
+        const sourceCache = createSourceCache({status: 404, message: 'Not found'});
+        sourceCache.on('error', () => { throw new Error('test failed: error event fired'); });
         sourceCache.onAdd(undefined);
-        done();
     });
 
-    test('loaded() true after source error', done => {
-        const sourceCache = createSourceCache({error: 'Error loading source'}).on('error', () => {
+    test('loaded() true after source error', () => new Promise<void>(done => {
+        const sourceCache = createSourceCache({error: 'Error loading source'});
+        sourceCache.on('error', () => {
             expect(sourceCache.loaded()).toBeTruthy();
             done();
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('loaded() true after tile error', done => {
-        const transform = new Transform();
+    test('loaded() true after tile error', () => new Promise<void>(done => {
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
-        transform.zoom = 0;
+        transform.setZoom(0);
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async () => {
             throw new Error('Error loading tile');
@@ -447,16 +449,18 @@ describe('SourceCache / Source lifecycle', () => {
             if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
                 sourceCache.update(transform);
             }
-        }).on('error', () => {
+        });
+        sourceCache.on('error', () => {
             expect(sourceCache.loaded()).toBeTruthy();
             done();
         });
 
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('loaded() false after source begins loading following error', done => {
-        const sourceCache = createSourceCache({error: 'Error loading source'}).on('error', () => {
+    test('loaded() false after source begins loading following error', () => new Promise<void>(done => {
+        const sourceCache = createSourceCache({error: 'Error loading source'});
+        sourceCache.on('error', () => {
             sourceCache.on('dataloading', () => {
                 expect(sourceCache.loaded()).toBeFalsy();
                 done();
@@ -465,27 +469,28 @@ describe('SourceCache / Source lifecycle', () => {
         });
 
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('loaded() false when error occurs while source is not loaded', done => {
+    test('loaded() false when error occurs while source is not loaded', () => new Promise<void>(done => {
         const sourceCache = createSourceCache({
             error: 'Error loading source',
 
             loaded() {
                 return false;
             }
-        }).on('error', () => {
+        });
+        sourceCache.on('error', () => {
             expect(sourceCache.loaded()).toBeFalsy();
             done();
         });
 
         sourceCache.onAdd(undefined);
-    });
+    }));
 
     test('reloads tiles after a data event where source is updated', () => {
-        const transform = new Transform();
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
-        transform.zoom = 0;
+        transform.setZoom(0);
 
         const expected = [new OverscaledTileID(0, 0, 0, 0, 0).key, new OverscaledTileID(0, 0, 0, 0, 0).key];
         expect.assertions(expected.length);
@@ -507,9 +512,9 @@ describe('SourceCache / Source lifecycle', () => {
     });
 
     test('does not reload errored tiles', () => {
-        const transform = new Transform();
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
-        transform.zoom = 1;
+        transform.setZoom(1);
 
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
@@ -518,7 +523,7 @@ describe('SourceCache / Source lifecycle', () => {
             tile.state = tile.tileID.canonical.z === 1 ? 'errored' : 'loaded';
         };
 
-        const reloadTileSpy = jest.spyOn(sourceCache, '_reloadTile');
+        const reloadTileSpy = vi.spyOn(sourceCache, '_reloadTile');
         sourceCache.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
                 sourceCache.update(transform);
@@ -532,13 +537,40 @@ describe('SourceCache / Source lifecycle', () => {
 
     });
 
+    test('does reload errored tiles, if event is source data change', () => {
+        const transform = new MercatorTransform();
+        transform.resize(511, 511);
+        transform.setZoom(1);
+
+        const sourceCache = createSourceCache();
+        sourceCache._source.loadTile = async (tile) => {
+            // this transform will try to load the four tiles at z1 and a single z0 tile
+            // we only expect _reloadTile to be called with the 'loaded' z0 tile
+            tile.state = tile.tileID.canonical.z === 1 ? 'errored' : 'loaded';
+        };
+
+        const reloadTileSpy = vi.spyOn(sourceCache, '_reloadTile');
+        sourceCache.on('data', (e) => {
+            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
+                sourceCache.update(transform);
+                sourceCache.getSource().fire(new Event('data', {dataType: 'source', sourceDataType: 'content', sourceDataChanged: true}));
+            }
+        });
+        sourceCache.onAdd(undefined);
+        // We expect the source cache to have five tiles, and for all of them
+        // to be reloaded
+        expect(Object.keys(sourceCache._tiles)).toHaveLength(5);
+        expect(reloadTileSpy).toHaveBeenCalledTimes(5);
+
+    });
+
 });
 
 describe('SourceCache#update', () => {
-    test('loads no tiles if used is false', done => {
-        const transform = new Transform();
+    test('loads no tiles if used is false', () => new Promise<void>(done => {
+        const transform = new MercatorTransform();
         transform.resize(512, 512);
-        transform.zoom = 0;
+        transform.setZoom(0);
 
         const sourceCache = createSourceCache({}, false);
         sourceCache.on('data', (e) => {
@@ -549,12 +581,12 @@ describe('SourceCache#update', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('loads covering tiles', done => {
-        const transform = new Transform();
+    test('loads covering tiles', () => new Promise<void>(done => {
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
-        transform.zoom = 0;
+        transform.setZoom(0);
 
         const sourceCache = createSourceCache({});
         sourceCache.on('data', (e) => {
@@ -565,12 +597,12 @@ describe('SourceCache#update', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('respects Source#hasTile method if it is present', done => {
-        const transform = new Transform();
+    test('respects Source#hasTile method if it is present', () => new Promise<void>(done => {
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
-        transform.zoom = 1;
+        transform.setZoom(1);
 
         const sourceCache = createSourceCache({
             hasTile: (coord) => (coord.canonical.x !== 0)
@@ -586,12 +618,12 @@ describe('SourceCache#update', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('removes unused tiles', done => {
-        const transform = new Transform();
+    test('removes unused tiles', () => new Promise<void>(done => {
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
-        transform.zoom = 0;
+        transform.setZoom(0);
 
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
@@ -603,7 +635,7 @@ describe('SourceCache#update', () => {
                 sourceCache.update(transform);
                 expect(sourceCache.getIds()).toEqual([new OverscaledTileID(0, 0, 0, 0, 0).key]);
 
-                transform.zoom = 1;
+                transform.setZoom(1);
                 sourceCache.update(transform);
 
                 expect(sourceCache.getIds()).toEqual([
@@ -617,13 +649,13 @@ describe('SourceCache#update', () => {
         });
 
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('retains parent tiles for pending children', done => {
-        const transform = new Transform();
+    test('retains parent tiles for pending children', () => new Promise<void>(done => {
+        const transform = new MercatorTransform();
         (transform as any)._test = 'retains';
         transform.resize(511, 511);
-        transform.zoom = 0;
+        transform.setZoom(0);
 
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
@@ -635,7 +667,7 @@ describe('SourceCache#update', () => {
                 sourceCache.update(transform);
                 expect(sourceCache.getIds()).toEqual([new OverscaledTileID(0, 0, 0, 0, 0).key]);
 
-                transform.zoom = 1;
+                transform.setZoom(1);
                 sourceCache.update(transform);
 
                 expect(sourceCache.getIds()).toEqual([
@@ -649,13 +681,13 @@ describe('SourceCache#update', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('retains parent tiles for pending children (wrapped)', done => {
-        const transform = new Transform();
+    test('retains parent tiles for pending children (wrapped)', () => new Promise<void>(done => {
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
-        transform.zoom = 0;
-        transform.center = new LngLat(360, 0);
+        transform.setZoom(0);
+        transform.setCenter(new LngLat(360, 0));
 
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
@@ -667,7 +699,7 @@ describe('SourceCache#update', () => {
                 sourceCache.update(transform);
                 expect(sourceCache.getIds()).toEqual([new OverscaledTileID(0, 1, 0, 0, 0).key]);
 
-                transform.zoom = 1;
+                transform.setZoom(1);
                 sourceCache.update(transform);
 
                 expect(sourceCache.getIds()).toEqual([
@@ -681,12 +713,12 @@ describe('SourceCache#update', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('retains covered child tiles while parent tile is fading in', done => {
-        const transform = new Transform();
+    test('retains covered child tiles while parent tile is fading in', () => new Promise<void>(done => {
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
-        transform.zoom = 2;
+        transform.setZoom(2);
 
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
@@ -707,7 +739,7 @@ describe('SourceCache#update', () => {
                     new OverscaledTileID(2, 0, 2, 1, 1).key
                 ]);
 
-                transform.zoom = 0;
+                transform.setZoom(0);
                 sourceCache.update(transform);
 
                 expect(sourceCache.getRenderableIds()).toHaveLength(5);
@@ -715,12 +747,12 @@ describe('SourceCache#update', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('retains a parent tile for fading even if a tile is partially covered by children', done => {
-        const transform = new Transform();
+    test('retains a parent tile for fading even if a tile is partially covered by children', () => new Promise<void>(done => {
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
-        transform.zoom = 0;
+        transform.setZoom(0);
 
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
@@ -735,10 +767,10 @@ describe('SourceCache#update', () => {
             if (e.sourceDataType === 'metadata') {
                 sourceCache.update(transform);
 
-                transform.zoom = 2;
+                transform.setZoom(2);
                 sourceCache.update(transform);
 
-                transform.zoom = 1;
+                transform.setZoom(1);
                 sourceCache.update(transform);
 
                 expect(sourceCache._coveredTiles[(new OverscaledTileID(0, 0, 0, 0, 0).key)]).toBe(true);
@@ -746,12 +778,12 @@ describe('SourceCache#update', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('retain children for fading fadeEndTime is 0 (added but registerFadeDuration() is not called yet)', done => {
-        const transform = new Transform();
+    test('retain children for fading fadeEndTime is 0 (added but registerFadeDuration() is not called yet)', () => new Promise<void>(done => {
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
-        transform.zoom = 1;
+        transform.setZoom(1);
 
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
@@ -766,7 +798,7 @@ describe('SourceCache#update', () => {
             if (e.sourceDataType === 'metadata') {
                 sourceCache.update(transform);
 
-                transform.zoom = 0;
+                transform.setZoom(0);
                 sourceCache.update(transform);
 
                 expect(sourceCache.getRenderableIds()).toHaveLength(5);
@@ -774,18 +806,18 @@ describe('SourceCache#update', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('retains children when tile.fadeEndTime is in the future', done => {
-        const transform = new Transform();
+    test('retains children when tile.fadeEndTime is in the future', () => new Promise<void>(done => {
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
-        transform.zoom = 1;
+        transform.setZoom(1);
 
         const fadeTime = 100;
 
         const start = Date.now();
         let time = start;
-        jest.spyOn(browser, 'now').mockImplementation(() => time);
+        vi.spyOn(browser, 'now').mockImplementation(() => time);
 
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
@@ -801,7 +833,7 @@ describe('SourceCache#update', () => {
                 // load children
                 sourceCache.update(transform);
 
-                transform.zoom = 0;
+                transform.setZoom(0);
                 sourceCache.update(transform);
 
                 expect(sourceCache.getRenderableIds()).toHaveLength(5);
@@ -818,15 +850,51 @@ describe('SourceCache#update', () => {
         });
 
         sourceCache.onAdd(undefined);
+    }));
+
+    test('retains children tiles for pending parents', () => {
+        const transform = new GlobeTransform();
+        transform.resize(511, 511);
+        transform.setZoom(1);
+        transform.setCenter(new LngLat(360, 0));
+
+        const sourceCache = createSourceCache();
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = (tile.tileID.key === new OverscaledTileID(0, 1, 0, 0, 0).key) ? 'loading' : 'loaded';
+        };
+
+        sourceCache.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                sourceCache.update(transform);
+                expect(sourceCache.getIds()).toEqual([
+                    new OverscaledTileID(1, 1, 1, 1, 1).key,
+                    new OverscaledTileID(1, 1, 1, 0, 1).key,
+                    new OverscaledTileID(1, 1, 1, 1, 0).key,
+                    new OverscaledTileID(1, 1, 1, 0, 0).key
+                ]);
+
+                transform.setZoom(0);
+                sourceCache.update(transform);
+
+                expect(sourceCache.getIds()).toEqual([
+                    new OverscaledTileID(0, 1, 0, 0, 0).key,
+                    new OverscaledTileID(1, 1, 1, 1, 1).key,
+                    new OverscaledTileID(1, 1, 1, 0, 1).key,
+                    new OverscaledTileID(1, 1, 1, 1, 0).key,
+                    new OverscaledTileID(1, 1, 1, 0, 0).key
+                ]);
+            }
+        });
+        sourceCache.onAdd(undefined);
     });
 
-    test('retains overscaled loaded children', done => {
-        const transform = new Transform();
+    test('retains overscaled loaded children', () => new Promise<void>(done => {
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
-        transform.zoom = 16;
+        transform.setZoom(16);
 
         // use slightly offset center so that sort order is better defined
-        transform.center = new LngLat(-0.001, 0.001);
+        transform.setCenter(new LngLat(-0.001, 0.001));
 
         const sourceCache = createSourceCache({reparseOverscaled: true});
         sourceCache._source.loadTile = async (tile) => {
@@ -843,7 +911,7 @@ describe('SourceCache#update', () => {
                     new OverscaledTileID(16, 0, 14, 8191, 8191).key
                 ]);
 
-                transform.zoom = 15;
+                transform.setZoom(15);
                 sourceCache.update(transform);
 
                 expect(sourceCache.getRenderableIds()).toEqual([
@@ -856,24 +924,24 @@ describe('SourceCache#update', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('reassigns tiles for large jumps in longitude', done => {
+    test('reassigns tiles for large jumps in longitude', () => new Promise<void>(done => {
 
-        const transform = new Transform();
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
-        transform.zoom = 0;
+        transform.setZoom(0);
 
         const sourceCache = createSourceCache({});
         sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
-                transform.center = new LngLat(360, 0);
+                transform.setCenter(new LngLat(360, 0));
                 const tileID = new OverscaledTileID(0, 1, 0, 0, 0);
                 sourceCache.update(transform);
                 expect(sourceCache.getIds()).toEqual([tileID.key]);
                 const tile = sourceCache.getTile(tileID);
 
-                transform.center = new LngLat(0, 0);
+                transform.setCenter(new LngLat(0, 0));
                 const wrappedTileID = new OverscaledTileID(0, 0, 0, 0, 0);
                 sourceCache.update(transform);
                 expect(sourceCache.getIds()).toEqual([wrappedTileID.key]);
@@ -882,7 +950,7 @@ describe('SourceCache#update', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
 });
 
@@ -895,7 +963,7 @@ describe('SourceCache#_updateRetainedTiles', () => {
             tile.state = stateCache[tile.tileID.key] || 'errored';
         };
 
-        const getTileSpy = jest.spyOn(sourceCache, 'getTile');
+        const getTileSpy = vi.spyOn(sourceCache, 'getTile');
         const idealTile = new OverscaledTileID(1, 0, 1, 1, 1);
         stateCache[idealTile.key] = 'loaded';
         sourceCache._updateRetainedTiles([idealTile], 1);
@@ -947,8 +1015,8 @@ describe('SourceCache#_updateRetainedTiles', () => {
             tile.state = stateCache[tile.tileID.key] || 'errored';
         };
 
-        jest.spyOn(sourceCache, '_addTile');
-        const getTileSpy = jest.spyOn(sourceCache, 'getTile');
+        vi.spyOn(sourceCache, '_addTile');
+        const getTileSpy = vi.spyOn(sourceCache, 'getTile');
 
         const idealTiles = [new OverscaledTileID(1, 0, 1, 1, 1), new OverscaledTileID(1, 0, 1, 0, 1)];
         stateCache[idealTiles[0].key] = 'loaded';
@@ -983,8 +1051,8 @@ describe('SourceCache#_updateRetainedTiles', () => {
         sourceCache._tiles[new OverscaledTileID(1, 0, 1, 1, 0).key] = new Tile(new OverscaledTileID(1, 0, 1, 1, 0), undefined);
         sourceCache._tiles[new OverscaledTileID(1, 0, 1, 1, 0).key].state = 'loaded';
 
-        const addTileSpy = jest.spyOn(sourceCache, '_addTile');
-        const getTileSpy = jest.spyOn(sourceCache, 'getTile');
+        const addTileSpy = vi.spyOn(sourceCache, '_addTile');
+        const getTileSpy = vi.spyOn(sourceCache, 'getTile');
 
         sourceCache._updateRetainedTiles([idealTile], 2);
         expect(getTileSpy.mock.calls.map((c) => { return c[0]; })).toEqual([
@@ -1014,8 +1082,8 @@ describe('SourceCache#_updateRetainedTiles', () => {
         sourceCache._tiles[parentTile.key] = new Tile(parentTile, undefined);
         sourceCache._tiles[parentTile.key].state = 'loaded';
 
-        const addTileSpy = jest.spyOn(sourceCache, '_addTile');
-        const getTileSpy = jest.spyOn(sourceCache, 'getTile');
+        const addTileSpy = vi.spyOn(sourceCache, '_addTile');
+        const getTileSpy = vi.spyOn(sourceCache, 'getTile');
 
         const retained = sourceCache._updateRetainedTiles([idealTile], 1);
 
@@ -1058,7 +1126,7 @@ describe('SourceCache#_updateRetainedTiles', () => {
             sourceCache._tiles[t.key].state = 'loaded';
         });
 
-        const getTileSpy = jest.spyOn(sourceCache, 'getTile');
+        const getTileSpy = vi.spyOn(sourceCache, 'getTile');
         const retained = sourceCache._updateRetainedTiles([idealTile], 2);
         // parent tile isn't requested because all covering children are loaded
         expect(getTileSpy).not.toHaveBeenCalled();
@@ -1077,7 +1145,7 @@ describe('SourceCache#_updateRetainedTiles', () => {
             sourceCache._tiles[t.key].state = 'loaded';
         });
 
-        const getTileSpy = jest.spyOn(sourceCache, 'getTile');
+        const getTileSpy = vi.spyOn(sourceCache, 'getTile');
         let retained = sourceCache._updateRetainedTiles([idealTile], 1);
         expect(getTileSpy.mock.calls.map((c) => { return c[0]; })).toEqual([
             // parent
@@ -1121,7 +1189,7 @@ describe('SourceCache#_updateRetainedTiles', () => {
             sourceCache._tiles[t.key].state = 'loaded';
         });
 
-        const getTileSpy = jest.spyOn(sourceCache, 'getTile');
+        const getTileSpy = vi.spyOn(sourceCache, 'getTile');
         const retained = sourceCache._updateRetainedTiles([idealTile], 2);
 
         sleep(10);
@@ -1142,7 +1210,7 @@ describe('SourceCache#_updateRetainedTiles', () => {
         };
         const idealTile = new OverscaledTileID(2, 0, 2, 0, 0);
 
-        const getTileSpy = jest.spyOn(sourceCache, 'getTile');
+        const getTileSpy = vi.spyOn(sourceCache, 'getTile');
         const retained = sourceCache._updateRetainedTiles([idealTile], 2);
 
         expect(getTileSpy.mock.calls.map((c) => { return c[0]; })).toEqual([
@@ -1167,7 +1235,7 @@ describe('SourceCache#_updateRetainedTiles', () => {
         };
         const idealTiles = [new OverscaledTileID(8, 0, 8, 0, 0), new OverscaledTileID(8, 0, 8, 1, 0)];
 
-        const getTileSpy = jest.spyOn(sourceCache, 'getTile');
+        const getTileSpy = vi.spyOn(sourceCache, 'getTile');
         sourceCache._updateRetainedTiles(idealTiles, 8);
         expect(getTileSpy.mock.calls.map((c) => { return c[0]; })).toEqual([
             // parent tile ascent
@@ -1372,10 +1440,8 @@ describe('SourceCache#clearTiles', () => {
 
 describe('SourceCache#tilesIn', () => {
     test('graceful response before source loaded', () => {
-        const tr = new Transform();
-        tr.width = 512;
-        tr.height = 512;
-        tr._calcMatrices();
+        const tr = new MercatorTransform();
+        tr.resize(512, 512);
         const sourceCache = createSourceCache({noLoad: true});
         sourceCache.transform = tr;
         sourceCache.onAdd(undefined);
@@ -1392,11 +1458,11 @@ describe('SourceCache#tilesIn', () => {
         });
     }
 
-    test('regular tiles', done => {
-        const transform = new Transform();
+    test('regular tiles', () => new Promise<void>(done => {
+        const transform = new MercatorTransform();
         transform.resize(512, 512);
-        transform.zoom = 1;
-        transform.center = new LngLat(0, 1);
+        transform.setZoom(1);
+        transform.setCenter(new LngLat(0, 1));
 
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
@@ -1414,7 +1480,6 @@ describe('SourceCache#tilesIn', () => {
                     new OverscaledTileID(1, 0, 1, 0, 0).key
                 ]);
 
-                transform._calcMatrices();
                 const tiles = sourceCache.tilesIn([
                     new Point(0, 0),
                     new Point(512, 256)
@@ -1437,7 +1502,7 @@ describe('SourceCache#tilesIn', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
     test('reparsed overscaled tiles', () => {
         const sourceCache = createSourceCache({
@@ -1452,10 +1517,10 @@ describe('SourceCache#tilesIn', () => {
 
         sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
-                const transform = new Transform();
+                const transform = new MercatorTransform();
                 transform.resize(1024, 1024);
-                transform.zoom = 2.0;
-                transform.center = new LngLat(0, 1);
+                transform.setZoom(2);
+                transform.setCenter(new LngLat(0, 1));
                 sourceCache.update(transform);
 
                 expect(sourceCache.getIds()).toEqual([
@@ -1488,7 +1553,7 @@ describe('SourceCache#tilesIn', () => {
         sourceCache.onAdd(undefined);
     });
 
-    test('overscaled tiles', done => {
+    test('overscaled tiles', () => new Promise<void>(done => {
         const sourceCache = createSourceCache({
             reparseOverscaled: false,
             minzoom: 1,
@@ -1501,20 +1566,20 @@ describe('SourceCache#tilesIn', () => {
 
         sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
-                const transform = new Transform();
+                const transform = new MercatorTransform();
                 transform.resize(512, 512);
-                transform.zoom = 2.0;
+                transform.setZoom(2.0);
                 sourceCache.update(transform);
 
                 done();
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 });
 
 describe('source cache loaded', () => {
-    test('SourceCache#loaded (no errors)', done => {
+    test('SourceCache#loaded (no errors)', () => new Promise<void>(done => {
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'loaded';
@@ -1522,7 +1587,7 @@ describe('source cache loaded', () => {
 
         sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
-                const tr = new Transform();
+                const tr = new MercatorTransform();
                 tr.resize(512, 512);
                 sourceCache.update(tr);
 
@@ -1534,9 +1599,9 @@ describe('source cache loaded', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('SourceCache#loaded (with errors)', done => {
+    test('SourceCache#loaded (with errors)', () => new Promise<void>(done => {
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'errored';
@@ -1545,7 +1610,7 @@ describe('source cache loaded', () => {
 
         sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
-                const tr = new Transform();
+                const tr = new MercatorTransform();
                 tr.resize(512, 512);
                 sourceCache.update(tr);
 
@@ -1557,9 +1622,9 @@ describe('source cache loaded', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('SourceCache#loaded (unused)', done => {
+    test('SourceCache#loaded (unused)', () => new Promise<void>(done => {
         const sourceCache = createSourceCache(undefined, false);
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'errored';
@@ -1573,9 +1638,9 @@ describe('source cache loaded', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('SourceCache#loaded (unusedForTerrain)', done => {
+    test('SourceCache#loaded (unusedForTerrain)', () => new Promise<void>(done => {
         const sourceCache = createSourceCache(undefined, false);
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'errored';
@@ -1590,9 +1655,9 @@ describe('source cache loaded', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('SourceCache#loaded (not loaded when no update)', done => {
+    test('SourceCache#loaded (not loaded when no update)', () => new Promise<void>(done => {
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'errored';
@@ -1606,9 +1671,9 @@ describe('source cache loaded', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('SourceCache#loaded (on last tile load)', done => {
+    test('SourceCache#loaded (on last tile load)', () => new Promise<void>(done => {
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'loading';
@@ -1623,8 +1688,8 @@ describe('source cache loaded', () => {
             return !this.tileBounds || this.tileBounds.contains(tileID.canonical);
         };
 
-        const tr = new Transform();
-        tr.zoom = 10;
+        const tr = new MercatorTransform();
+        tr.setZoom(10);
         tr.resize(512, 512);
         const expectedTilesLoaded = 4;
         let loaded = 0;
@@ -1643,9 +1708,9 @@ describe('source cache loaded', () => {
 
         sourceCache.onAdd(undefined);
         sourceCache.update(tr);
-    });
+    }));
 
-    test('SourceCache#loaded (tiles outside bounds, idle)', done => {
+    test('SourceCache#loaded (tiles outside bounds, idle)', () => new Promise<void>(done => {
         const japan = new TileBounds([122.74, 19.33, 149.0, 45.67]);
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
@@ -1681,15 +1746,15 @@ describe('source cache loaded', () => {
         });
 
         sourceCache.onAdd(undefined);
-        const tr = new Transform();
-        tr.zoom = 10;
+        const tr = new MercatorTransform();
+        tr.setZoom(10);
         tr.resize(512, 512);
         sourceCache.update(tr);
-    });
+    }));
 });
 
 describe('source cache get ids', () => {
-    test('SourceCache#getIds (ascending order by zoom level)', done => {
+    test('SourceCache#getIds (ascending order by zoom level)', () => {
         const ids = [
             new OverscaledTileID(0, 0, 0, 0, 0),
             new OverscaledTileID(3, 0, 3, 0, 0),
@@ -1698,7 +1763,7 @@ describe('source cache get ids', () => {
         ];
 
         const sourceCache = createSourceCache({});
-        sourceCache.transform = new Transform();
+        sourceCache.transform = new MercatorTransform();
         for (let i = 0; i < ids.length; i++) {
             sourceCache._tiles[ids[i].key] = {tileID: ids[i]} as any as Tile;
         }
@@ -1708,7 +1773,6 @@ describe('source cache get ids', () => {
             new OverscaledTileID(2, 0, 2, 0, 0).key,
             new OverscaledTileID(3, 0, 3, 0, 0).key
         ]);
-        done();
     });
 });
 
@@ -1717,9 +1781,8 @@ describe('SourceCache#findLoadedParent', () => {
     test('adds from previously used tiles (sourceCache._tiles)', () => {
         const sourceCache = createSourceCache({});
         sourceCache.onAdd(undefined);
-        const tr = new Transform();
-        tr.width = 512;
-        tr.height = 512;
+        const tr = new MercatorTransform();
+        tr.resize(512, 512);
         sourceCache.updateCacheSize(tr);
 
         const tile = {
@@ -1736,9 +1799,8 @@ describe('SourceCache#findLoadedParent', () => {
     test('retains parents', () => {
         const sourceCache = createSourceCache({});
         sourceCache.onAdd(undefined);
-        const tr = new Transform();
-        tr.width = 512;
-        tr.height = 512;
+        const tr = new MercatorTransform();
+        tr.resize(512, 512);
         sourceCache.updateCacheSize(tr);
 
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
@@ -1753,9 +1815,8 @@ describe('SourceCache#findLoadedParent', () => {
     test('Search cache for loaded parent tiles', () => {
         const sourceCache = createSourceCache({});
         sourceCache.onAdd(undefined);
-        const tr = new Transform();
-        tr.width = 512;
-        tr.height = 512;
+        const tr = new MercatorTransform();
+        tr.resize(512, 512);
         sourceCache.updateCacheSize(tr);
 
         const mockTile = id => {
@@ -1820,9 +1881,8 @@ describe('SourceCache#findLoadedSibling', () => {
     test('adds from previously used tiles (sourceCache._tiles)', () => {
         const sourceCache = createSourceCache({});
         sourceCache.onAdd(undefined);
-        const tr = new Transform();
-        tr.width = 512;
-        tr.height = 512;
+        const tr = new MercatorTransform();
+        tr.resize(512, 512);
         sourceCache.updateCacheSize(tr);
 
         const tile = {
@@ -1839,9 +1899,8 @@ describe('SourceCache#findLoadedSibling', () => {
     test('retains siblings', () => {
         const sourceCache = createSourceCache({});
         sourceCache.onAdd(undefined);
-        const tr = new Transform();
-        tr.width = 512;
-        tr.height = 512;
+        const tr = new MercatorTransform();
+        tr.resize(512, 512);
         sourceCache.updateCacheSize(tr);
 
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
@@ -1855,9 +1914,8 @@ describe('SourceCache#findLoadedSibling', () => {
     test('Search cache for loaded sibling tiles', () => {
         const sourceCache = createSourceCache({});
         sourceCache.onAdd(undefined);
-        const tr = new Transform();
-        tr.width = 512;
-        tr.height = 512;
+        const tr = new MercatorTransform();
+        tr.resize(512, 512);
         sourceCache.updateCacheSize(tr);
 
         const mockTile = id => {
@@ -1917,7 +1975,7 @@ describe('SourceCache#reload', () => {
 });
 
 describe('SourceCache reloads expiring tiles', () => {
-    test('calls reloadTile when tile expires', done => {
+    test('calls reloadTile when tile expires', () => new Promise<void>(done => {
         const coord = new OverscaledTileID(1, 0, 1, 0, 1);
 
         const expiryDate = new Date();
@@ -1930,7 +1988,7 @@ describe('SourceCache reloads expiring tiles', () => {
         };
 
         sourceCache._addTile(coord);
-    });
+    }));
 
 });
 
@@ -1940,9 +1998,8 @@ describe('SourceCache sets max cache size correctly', () => {
             tileSize: 256
         });
 
-        const tr = new Transform();
-        tr.width = 512;
-        tr.height = 512;
+        const tr = new MercatorTransform();
+        tr.resize(512, 512);
         sourceCache.updateCacheSize(tr);
 
         // Expect max size to be ((512 / tileSize + 1) ^ 2) * 5 => 3 * 3 * 5
@@ -1954,9 +2011,8 @@ describe('SourceCache sets max cache size correctly', () => {
             tileSize: 512
         });
 
-        const tr = new Transform();
-        tr.width = 512;
-        tr.height = 512;
+        const tr = new MercatorTransform();
+        tr.resize(512, 512);
         sourceCache.updateCacheSize(tr);
 
         // Expect max size to be ((512 / tileSize + 1) ^ 2) * 5 => 2 * 2 * 5
@@ -1968,7 +2024,7 @@ describe('SourceCache sets max cache size correctly', () => {
 describe('SourceCache#onRemove', () => {
     test('clears tiles', () => {
         const sourceCache = createSourceCache();
-        jest.spyOn(sourceCache, 'clearTiles');
+        vi.spyOn(sourceCache, 'clearTiles');
 
         sourceCache.onRemove(undefined);
 
@@ -1976,7 +2032,7 @@ describe('SourceCache#onRemove', () => {
     });
 
     test('calls onRemove on source', () => {
-        const sourceOnRemove = jest.fn();
+        const sourceOnRemove = vi.fn();
         const sourceCache = createSourceCache({
             onRemove: sourceOnRemove
         });
@@ -1988,10 +2044,10 @@ describe('SourceCache#onRemove', () => {
 });
 
 describe('SourceCache#usedForTerrain', () => {
-    test('loads covering tiles with usedForTerrain with source zoom 0-14', done => {
-        const transform = new Transform();
+    test('loads covering tiles with usedForTerrain with source zoom 0-14', () => new Promise<void>(done => {
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
-        transform.zoom = 10;
+        transform.setZoom(10);
 
         const sourceCache = createSourceCache({});
         sourceCache.usedForTerrain = true;
@@ -2007,12 +2063,12 @@ describe('SourceCache#usedForTerrain', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('loads covering tiles with usedForTerrain with source zoom 8-14', done => {
-        const transform = new Transform();
+    test('loads covering tiles with usedForTerrain with source zoom 8-14', () => new Promise<void>(done => {
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
-        transform.zoom = 10;
+        transform.setZoom(10);
 
         const sourceCache = createSourceCache({minzoom: 8, maxzoom: 14});
         sourceCache.usedForTerrain = true;
@@ -2027,12 +2083,12 @@ describe('SourceCache#usedForTerrain', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('loads covering tiles with usedForTerrain with source zoom 0-4', done => {
-        const transform = new Transform();
+    test('loads covering tiles with usedForTerrain with source zoom 0-4', () => new Promise<void>(done => {
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
-        transform.zoom = 10;
+        transform.setZoom(10);
 
         const sourceCache = createSourceCache({minzoom: 0, maxzoom: 4});
         sourceCache.usedForTerrain = true;
@@ -2047,12 +2103,12 @@ describe('SourceCache#usedForTerrain', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 
-    test('loads covering tiles with usedForTerrain with source zoom 4-4', done => {
-        const transform = new Transform();
+    test('loads covering tiles with usedForTerrain with source zoom 4-4', () => new Promise<void>(done => {
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
-        transform.zoom = 10;
+        transform.setZoom(10);
 
         const sourceCache = createSourceCache({minzoom: 4, maxzoom: 4});
         sourceCache.usedForTerrain = true;
@@ -2067,5 +2123,5 @@ describe('SourceCache#usedForTerrain', () => {
             }
         });
         sourceCache.onAdd(undefined);
-    });
+    }));
 });

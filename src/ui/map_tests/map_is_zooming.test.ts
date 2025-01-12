@@ -1,3 +1,4 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {browser} from '../../util/browser';
 import {Map} from '../map';
 import {DOM} from '../../util/dom';
@@ -14,14 +15,13 @@ beforeEach(() => {
 
 describe('Map#isZooming', () => {
 
-    test('returns false by default', done => {
+    test('returns false by default', () => {
         const map = createMap();
         expect(map.isZooming()).toBe(false);
         map.remove();
-        done();
     });
 
-    test('returns true during a camera zoom animation', done => {
+    test('returns true during a camera zoom animation', () => new Promise<void>(done => {
         const map = createMap();
 
         map.on('zoomstart', () => {
@@ -35,9 +35,9 @@ describe('Map#isZooming', () => {
         });
 
         map.zoomTo(5, {duration: 0});
-    });
+    }));
 
-    test('returns true when scroll zooming', done => {
+    test('returns true when scroll zooming', () => new Promise<void>(done => {
         const map = createMap();
 
         map.on('zoomstart', () => {
@@ -51,7 +51,7 @@ describe('Map#isZooming', () => {
         });
 
         let now = 0;
-        jest.spyOn(browser, 'now').mockImplementation(() => { return now; });
+        vi.spyOn(browser, 'now').mockImplementation(() => { return now; });
 
         simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
         map._renderTaskQueue.run();
@@ -60,9 +60,9 @@ describe('Map#isZooming', () => {
         setTimeout(() => {
             map._renderTaskQueue.run();
         }, 400);
-    });
+    }));
 
-    test('returns true when double-click zooming', done => {
+    test('returns true when double-click zooming', () => new Promise<void>(done => {
         const map = createMap();
 
         map.on('zoomstart', () => {
@@ -76,12 +76,12 @@ describe('Map#isZooming', () => {
         });
 
         let now = 0;
-        jest.spyOn(browser, 'now').mockImplementation(() => { return now; });
+        vi.spyOn(browser, 'now').mockImplementation(() => { return now; });
 
         simulate.dblclick(map.getCanvas());
         map._renderTaskQueue.run();
 
         now += 500;
         map._renderTaskQueue.run();
-    });
+    }));
 });

@@ -51,7 +51,14 @@ export type LngLatLike = LngLat | {
  * @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
  */
 export class LngLat {
+    /**
+     * Longitude, measured in degrees.
+     */
     lng: number;
+
+    /**
+     * Latitude, measured in degrees.
+     */
     lat: number;
 
     /**

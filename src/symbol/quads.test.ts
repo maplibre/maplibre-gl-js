@@ -1,4 +1,5 @@
-import {ImagePosition} from '../render/image_atlas';
+import {describe, test, expect} from 'vitest';
+import {type ImagePosition} from '../render/image_atlas';
 import {getIconQuads} from './quads';
 
 describe('getIconQuads', () => {

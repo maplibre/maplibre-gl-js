@@ -327,4 +327,30 @@ export class LngLatBounds {
         return new LngLatBounds(new LngLat(center.lng - lngAccuracy, center.lat - latAccuracy),
             new LngLat(center.lng + lngAccuracy, center.lat + latAccuracy));
     }
+
+    /**
+     * Adjusts the given bounds to handle the case where the bounds cross the 180th meridian (antimeridian).
+     *
+     * @returns The adjusted LngLatBounds
+     * @example
+     * ```ts
+     * let bounds = new LngLatBounds([175.813127, -20.157768], [-178. 340903, -15.449124]);
+     * let adjustedBounds = bounds.adjustAntiMeridian();
+     * // adjustedBounds will be: [[175.813127, -20.157768], [181.659097, -15.449124]]
+     * ```
+     */
+    adjustAntiMeridian(): LngLatBounds {
+        const sw = new LngLat(this._sw.lng, this._sw.lat);
+        const ne = new LngLat(this._ne.lng, this._ne.lat);
+
+        if (sw.lng > ne.lng) {
+            return new LngLatBounds(
+                sw,
+                new LngLat(ne.lng + 360, ne.lat)
+            );
+        }
+
+        return new LngLatBounds(sw, ne);
+    }
+
 }

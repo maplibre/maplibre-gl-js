@@ -1,3 +1,5 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
+import {MercatorProjection} from '../../geo/projection/mercator_projection';
 import {createMap, beforeMapTest, sleep} from '../../util/test/util';
 
 beforeEach(() => {
@@ -35,8 +37,8 @@ describe('#resize', () => {
     });
 
     test('listen to window resize event', () => {
-        const spy = jest.fn();
-        global.ResizeObserver = jest.fn().mockImplementation(() => ({
+        const spy = vi.fn();
+        global.ResizeObserver = vi.fn().mockImplementation(() => ({
             observe: spy
         }));
 
@@ -47,15 +49,15 @@ describe('#resize', () => {
 
     test('do not resize if trackResize is false', () => {
         let observerCallback: Function = null;
-        global.ResizeObserver = jest.fn().mockImplementation((c) => ({
+        global.ResizeObserver = vi.fn().mockImplementation((c) => ({
             observe: () => { observerCallback = c; }
         }));
 
         const map = createMap({trackResize: false});
 
-        const spyA = jest.spyOn(map, 'stop');
-        const spyB = jest.spyOn(map, '_update');
-        const spyC = jest.spyOn(map, 'resize');
+        const spyA = vi.spyOn(map, 'stop');
+        const spyB = vi.spyOn(map, '_update');
+        const spyC = vi.spyOn(map, 'resize');
 
         observerCallback();
 
@@ -66,27 +68,32 @@ describe('#resize', () => {
 
     test('do resize if trackResize is true (default)', async () => {
         let observerCallback: Function = null;
-        global.ResizeObserver = jest.fn().mockImplementation((c) => ({
+        global.ResizeObserver = vi.fn().mockImplementation((c) => ({
             observe: () => { observerCallback = c; }
         }));
 
         const map = createMap();
 
-        const updateSpy = jest.spyOn(map, '_update');
-        const resizeSpy = jest.spyOn(map, 'resize');
+        map.style.projection = new MercatorProjection();
+        const resizeSpy = vi.spyOn(map, 'resize');
+        const redrawSpy = vi.spyOn(map, 'redraw');
+        const renderSpy = vi.spyOn(map, '_render');
 
         // The initial "observe" event fired by ResizeObserver should be captured/muted
         // in the map constructor
 
         observerCallback();
-        expect(updateSpy).not.toHaveBeenCalled();
         expect(resizeSpy).not.toHaveBeenCalled();
+        expect(redrawSpy).not.toHaveBeenCalled();
+        expect(renderSpy).not.toHaveBeenCalled();
 
-        // The next "observe" event should fire a resize / _update
+        // The next "observe" event should fire a resize and redraw
+        // Resizing canvas clears it immediately. This is why synchronous "redraw" is necessary
 
         observerCallback();
-        expect(updateSpy).toHaveBeenCalled();
         expect(resizeSpy).toHaveBeenCalledTimes(1);
+        expect(redrawSpy).toHaveBeenCalledTimes(1);
+        expect(renderSpy).toHaveBeenCalledTimes(1);
 
         // Additional "observe" events should be throttled
         observerCallback();
@@ -94,8 +101,10 @@ describe('#resize', () => {
         observerCallback();
         observerCallback();
         expect(resizeSpy).toHaveBeenCalledTimes(1);
+        expect(redrawSpy).toHaveBeenCalledTimes(1);
         await sleep(100);
         expect(resizeSpy).toHaveBeenCalledTimes(2);
+        expect(redrawSpy).toHaveBeenCalledTimes(2);
     });
 
     test('width and height correctly rounded', () => {

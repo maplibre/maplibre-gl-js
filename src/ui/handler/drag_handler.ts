@@ -1,11 +1,12 @@
 import {DOM} from '../../util/dom';
 import type Point from '@mapbox/point-geometry';
-import {DragMoveStateManager} from './drag_move_state_manager';
-import {Handler} from '../handler_manager';
+import {type DragMoveStateManager} from './drag_move_state_manager';
+import {type Handler} from '../handler_manager';
 
 interface DragMovementResult {
     bearingDelta?: number;
     pitchDelta?: number;
+    rollDelta?: number;
     around?: Point;
     panDelta?: Point;
 }
@@ -23,13 +24,16 @@ export interface DragPitchResult extends DragMovementResult {
     pitchDelta: number;
 }
 
-type DragMoveFunction<T extends DragMovementResult> = (lastPoint: Point, point: Point) => T;
+export interface DragRollResult extends DragMovementResult {
+    rollDelta: number;
+}
+
+type DragMoveFunction<T extends DragMovementResult> = (lastPoint: Point, currnetPoint: Point) => T;
 
 export interface DragMoveHandler<T extends DragMovementResult, E extends Event> extends Handler {
     dragStart: (e: E, point: Point) => void;
     dragMove: (e: E, point: Point) => T | void;
     dragEnd: (e: E) => void;
-    getClickTolerance: () => number;
 }
 
 export type DragMoveHandlerOptions<T, E extends Event> = {
@@ -58,7 +62,7 @@ export type DragMoveHandlerOptions<T, E extends Event> = {
      * If true, handler will be enabled during construction
      */
     enable?: boolean;
-}
+};
 
 /**
  * A generic class to create handlers for drag events, from both mouse and touch events.
@@ -103,7 +107,7 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
 
     _move(...params: Parameters<DragMoveFunction<T>>) {
         const move = this._moveFunction(...params);
-        if (move.bearingDelta || move.pitchDelta || move.around || move.panDelta) {
+        if (move.bearingDelta || move.pitchDelta || move.rollDelta || move.around || move.panDelta) {
             this._active = true;
             return move;
         }
@@ -117,7 +121,7 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
         if (!this._moveStateManager.isValidStartEvent(e)) return;
         this._moveStateManager.startMove(e);
 
-        this._lastPoint = point['length'] ? point[0] : point;
+        this._lastPoint = Array.isArray(point) ? point[0] : point;
 
         if (this._activateOnStart && this._lastPoint) this._active = true;
     }
@@ -135,7 +139,7 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
             return;
         }
 
-        const movePoint = point['length'] ? point[0] : point;
+        const movePoint = Array.isArray(point) ? point[0] : point;
 
         if (!this._moved && movePoint.dist(lastPoint) < this._clickTolerance) return;
         this._moved = true;

@@ -1,11 +1,13 @@
-import {Map, MapOptions} from '../map';
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
+import {Map, type MapOptions} from '../map';
 import {createMap, beforeMapTest, createStyle, createStyleSource} from '../../util/test/util';
 import {Event as EventedEvent} from '../../util/evented';
 import {fixedLngLat, fixedNum} from '../../../test/unit/lib/fixed';
 import {extend} from '../../util/util';
-import {fakeServer, FakeServer} from 'nise';
+import {fakeServer, type FakeServer} from 'nise';
 import {Style} from '../../style/style';
-import {GeoJSONSourceSpecification, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {type GeoJSONSourceSpecification, type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {LngLatBounds} from '../../geo/lng_lat_bounds';
 
 let server: FakeServer;
 
@@ -40,9 +42,9 @@ describe('#setStyle', () => {
             map.on('data', recordEvent);
             map.on('dataloading', recordEvent);
 
-            map.style.fire(new Event('error'));
-            map.style.fire(new Event('data'));
-            map.style.fire(new Event('dataloading'));
+            map.style.fire(new EventedEvent('error'));
+            map.style.fire(new EventedEvent('data'));
+            map.style.fire(new EventedEvent('dataloading'));
 
             expect(events).toEqual([
                 'error',
@@ -102,7 +104,7 @@ describe('#setStyle', () => {
             {id: 'background', type: 'background' as const, paint: {'background-color': 'blue'}},
         ]};
         const map = createMap({style: redStyle});
-        const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         map.setStyle(blueStyle);
         await map.once('style.load');
         map.setStyle(redStyle);
@@ -111,12 +113,11 @@ describe('#setStyle', () => {
         spy.mockRestore();
     });
 
-    test('style transform overrides unmodified map transform', done => {
+    test('style transform overrides unmodified map transform', () => new Promise<void>(done => {
         const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
-        map.transform.lngRange = [-120, 140];
-        map.transform.latRange = [-60, 80];
-        map.transform.resize(600, 400);
-        expect(map.transform.zoom).toBe(0.6983039737971014);
+        map.transform.setMaxBounds(new LngLatBounds([-120, -60], [140, 80]));
+        map.transform.resize(600, 400, true);
+        expect(map.transform.zoom).toBe(0.6983039737971013);
         expect(map.transform.unmodified).toBeTruthy();
         map.setStyle(createStyle());
         map.on('style.load', () => {
@@ -126,9 +127,9 @@ describe('#setStyle', () => {
             expect(fixedNum(map.transform.pitch)).toBe(50);
             done();
         });
-    });
+    }));
 
-    test('style transform does not override map transform modified via options', done => {
+    test('style transform does not override map transform modified via options', () => new Promise<void>(done => {
         const map = new Map({container: window.document.createElement('div'), zoom: 10, center: [-77.0186, 38.8888]} as any as MapOptions);
         expect(map.transform.unmodified).toBeFalsy();
         map.setStyle(createStyle());
@@ -139,9 +140,9 @@ describe('#setStyle', () => {
             expect(fixedNum(map.transform.pitch)).toBe(0);
             done();
         });
-    });
+    }));
 
-    test('style transform does not override map transform modified via setters', done => {
+    test('style transform does not override map transform modified via setters', () => new Promise<void>(done => {
         const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
         expect(map.transform.unmodified).toBeTruthy();
         map.setZoom(10);
@@ -155,21 +156,21 @@ describe('#setStyle', () => {
             expect(fixedNum(map.transform.pitch)).toBe(0);
             done();
         });
-    });
+    }));
 
     test('passing null removes style', () => {
         const map = createMap();
         const style = map.style;
         expect(style).toBeTruthy();
-        jest.spyOn(style, '_remove');
+        vi.spyOn(style, '_remove');
         map.setStyle(null);
         expect(style._remove).toHaveBeenCalledTimes(1);
     });
 
     test('passing null releases the worker', () => {
         const map = createMap();
-        const spyWorkerPoolAcquire = jest.spyOn(map.style.dispatcher.workerPool, 'acquire');
-        const spyWorkerPoolRelease = jest.spyOn(map.style.dispatcher.workerPool, 'release');
+        const spyWorkerPoolAcquire = vi.spyOn(map.style.dispatcher.workerPool, 'acquire');
+        const spyWorkerPoolRelease = vi.spyOn(map.style.dispatcher.workerPool, 'release');
 
         map.setStyle({version: 8, sources: {}, layers: []}, {diff: false});
         expect(spyWorkerPoolAcquire).toHaveBeenCalledTimes(1);
@@ -185,7 +186,7 @@ describe('#setStyle', () => {
         spyWorkerPoolRelease.mockClear();
     });
 
-    test('transformStyle should copy the source and the layer into next style', done => {
+    test('transformStyle should copy the source and the layer into next style', () => new Promise<void>(done => {
         const style = extend(createStyle(), {
             sources: {
                 maplibre: {
@@ -231,9 +232,9 @@ describe('#setStyle', () => {
             expect(loadedStyle.layers).toHaveLength(1);
             done();
         });
-    });
+    }));
 
-    test('delayed setStyle with transformStyle should copy the source and the layer into next style with diffing', done => {
+    test('delayed setStyle with transformStyle should copy the source and the layer into next style with diffing', () => new Promise<void>(done => {
         const style = extend(createStyle(), {
             sources: {
                 maplibre: {
@@ -279,9 +280,9 @@ describe('#setStyle', () => {
             expect(loadedStyle.layers).toHaveLength(1);
             done();
         }, 100);
-    });
+    }));
 
-    test('transformStyle should get called when passed to setStyle after the map is initialised without a style', done => {
+    test('transformStyle should get called when passed to setStyle after the map is initialised without a style', () => new Promise<void>(done => {
         const map = createMap({deleteStyle: true});
         map.setStyle(createStyle(), {
             diff: true,
@@ -314,9 +315,9 @@ describe('#setStyle', () => {
             expect(loadedStyle.layers[0].id).toBe('layerId0');
             done();
         });
-    });
+    }));
 
-    test('map load should be fired when transformStyle is used on setStyle after the map is initialised without a style', done => {
+    test('map load should be fired when transformStyle is used on setStyle after the map is initialised without a style', () => new Promise<void>(done => {
         const map = createMap({deleteStyle: true});
         map.setStyle({version: 8, sources: {}, layers: []}, {
             diff: true,
@@ -327,11 +328,11 @@ describe('#setStyle', () => {
             }
         });
         map.on('load', () => done());
-    });
+    }));
 
     test('Override default style validation', () => {
         let validationOption = true;
-        jest.spyOn(Style.prototype, 'loadJSON').mockImplementationOnce((styleJson, options) => {
+        vi.spyOn(Style.prototype, 'loadJSON').mockImplementationOnce((styleJson, options) => {
             validationOption = options.validate;
         });
         const map = createMap({style: null});
@@ -342,14 +343,13 @@ describe('#setStyle', () => {
 });
 
 describe('#getStyle', () => {
-    test('returns undefined if the style has not loaded yet', done => {
+    test('returns undefined if the style has not loaded yet', () => {
         const style = createStyle();
         const map = createMap({style});
         expect(map.getStyle()).toBeUndefined();
-        done();
     });
 
-    test('returns the style', done => {
+    test('returns the style', () => new Promise<void>(done => {
         const style = createStyle();
         const map = createMap({style});
 
@@ -357,9 +357,33 @@ describe('#getStyle', () => {
             expect(map.getStyle()).toEqual(style);
             done();
         });
+    }));
+
+    test('returns the previous style even if modified', async () => {
+        const style = {
+            version: 8 as const,
+            sources: {},
+            layers: [
+                {
+                    id: 'background',
+                    type: 'background' as const,
+                    paint: {'background-color': 'blue'}
+                },
+            ]
+        };
+
+        const map = createMap({style});
+
+        await map.once('load');
+        const newStyle = map.getStyle();
+        newStyle.layers[0].paint = {'background-color': 'red'};
+
+        // map.getStyle() should still equal the original style since
+        // we have not yet called map.setStyle(...).
+        expect(map.getStyle()).toEqual(style);
     });
 
-    test('returns the style with added sources', done => {
+    test('returns the style with added sources', () => new Promise<void>(done => {
         const style = createStyle();
         const map = createMap({style});
 
@@ -370,9 +394,9 @@ describe('#getStyle', () => {
             }));
             done();
         });
-    });
+    }));
 
-    test('fires an error on checking if non-existant source is loaded', done => {
+    test('fires an error on checking if non-existant source is loaded', () => new Promise<void>(done => {
         const style = createStyle();
         const map = createMap({style});
 
@@ -383,9 +407,9 @@ describe('#getStyle', () => {
             });
             map.isSourceLoaded('geojson');
         });
-    });
+    }));
 
-    test('returns the style with added layers', done => {
+    test('returns the style with added layers', () => new Promise<void>(done => {
         const style = createStyle();
         const map = createMap({style});
         const layer = {
@@ -400,7 +424,7 @@ describe('#getStyle', () => {
             }));
             done();
         });
-    });
+    }));
 
     test('a layer can be added even if a map is created without a style', () => {
         const map = createMap({deleteStyle: true});
@@ -430,7 +454,7 @@ describe('#getStyle', () => {
         });
     });
 
-    test('returns the style with added source and layer', done => {
+    test('returns the style with added source and layer', () => new Promise<void>(done => {
         const style = createStyle();
         const map = createMap({style});
         const source = createStyleSource();
@@ -449,15 +473,15 @@ describe('#getStyle', () => {
             }));
             done();
         });
-    });
+    }));
 
     test('creates a new Style if diff fails', () => {
         const style = createStyle();
         const map = createMap({style});
-        jest.spyOn(map.style, 'setState').mockImplementation(() => {
+        vi.spyOn(map.style, 'setState').mockImplementation(() => {
             throw new Error('Dummy error');
         });
-        jest.spyOn(console, 'warn').mockImplementation(() => {});
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
 
         const previousStyle = map.style;
         map.setStyle(style);
@@ -467,7 +491,7 @@ describe('#getStyle', () => {
     test('creates a new Style if diff option is false', () => {
         const style = createStyle();
         const map = createMap({style});
-        const spy = jest.spyOn(map.style, 'setState');
+        const spy = vi.spyOn(map.style, 'setState');
 
         const previousStyle = map.style;
         map.setStyle(style, {diff: false});
@@ -478,7 +502,7 @@ describe('#getStyle', () => {
     describe('#setSky', () => {
         test('calls style setSky when set', () => {
             const map = createMap();
-            const spy = jest.fn();
+            const spy = vi.fn();
             map.style.setSky = spy;
             map.setSky({'horizon-fog-blend': 0.5});
 
@@ -496,7 +520,7 @@ describe('#getStyle', () => {
     describe('#setLight', () => {
         test('calls style setLight when set', () => {
             const map = createMap();
-            const spy = jest.fn();
+            const spy = vi.fn();
             map.style.setLight = spy;
             map.setLight({anchor: 'viewport'});
 
@@ -507,7 +531,7 @@ describe('#getStyle', () => {
     describe('#getLight', () => {
         test('calls style getLight when invoked', () => {
             const map = createMap();
-            const spy = jest.fn();
+            const spy = vi.fn();
             map.style.getLight = spy;
             map.getLight();
 

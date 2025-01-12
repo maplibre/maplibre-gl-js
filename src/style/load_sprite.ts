@@ -1,4 +1,4 @@
-import {GetResourceResponse, getJSON} from '../util/ajax';
+import {type GetResourceResponse, getJSON} from '../util/ajax';
 import {ImageRequest} from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
 
@@ -13,12 +13,17 @@ export type LoadSpriteResult = {
     [spriteName: string]: {
         [id: string]: StyleImage;
     };
-}
+};
 
 export function normalizeSpriteURL(url: string, format: string, extension: string): string {
-    const split = url.split('?');
-    split[0] += `${format}${extension}`;
-    return split.join('?');
+    try {
+        const parsed = new URL(url);
+        parsed.pathname += `${format}${extension}`;
+        return parsed.toString();
+    }
+    catch {
+        throw new Error(`Invalid sprite URL "${url}", must be absolute. Modify style specification directly or use TransformStyleFunction to correct the issue dynamically`);
+    }
 }
 
 export async function loadSprite(

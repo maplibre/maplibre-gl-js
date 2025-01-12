@@ -1,0 +1,122 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [
+    10.0,
+    -15.0
+  ],
+  "pitch": 15,
+  "bearing": 45,
+  "zoom": 1,
+  "projection": { "type": "globe" },
+  "sources": {
+    "fill": {
+      "type": "geojson",
+      "data": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -180,
+              -90
+            ],
+            [
+              -180,
+              90
+            ],
+            [
+              180,
+              90
+            ],
+            [
+              180,
+              -90
+            ],
+            [
+              -180,
+              -90
+            ]
+          ]
+        ]
+      }
+    },
+    "line": {
+      "type": "geojson",
+      "lineMetrics": true,
+      "data": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -30,
+            0
+          ],
+          [
+            30,
+            0
+          ]
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "fill",
+      "type": "fill",
+      "source": "fill",
+      "paint": {
+        "fill-antialias": false,
+        "fill-color": "grey"
+      }
+    },
+    {
+      "id": "line",
+      "type": "line",
+      "source": "line",
+      "paint": {
+        "line-width": 10,
+        "line-color": "#ff0000"
+      }
+    },
+    {
+      "id": "line-translate-map",
+      "type": "line",
+      "source": "line",
+      "paint": {
+        "line-width": 10,
+        "line-color": "#00ff00",
+        "line-translate": [
+          10,
+          50
+        ],
+        "line-translate-anchor": "map"
+      }
+    },
+    {
+      "id": "line-translate-viewport",
+      "type": "line",
+      "source": "line",
+      "paint": {
+        "line-width": 10,
+        "line-color": "#0000ff",
+        "line-translate": [
+          10,
+          50
+        ],
+        "line-translate-anchor": "viewport"
+      }
+    }
+  ]
+}

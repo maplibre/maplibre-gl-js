@@ -6,7 +6,7 @@ import {register} from '../util/web_worker_transfer';
 /**
  * The possible DEM encoding types
  */
-export type DEMEncoding = 'mapbox' | 'terrarium' | 'custom'
+export type DEMEncoding = 'mapbox' | 'terrarium' | 'custom';
 
 /**
  * DEMData is a data structure for decoding, backfilling, and storing elevation data for processing in the hillshade shaders

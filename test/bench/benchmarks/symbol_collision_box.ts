@@ -1,24 +1,27 @@
 import Point from '@mapbox/point-geometry';
-import {Projection, createProjection} from '../../../src/geo/projection/projection';
-import {Transform} from '../../../src/geo/transform';
+import {ITransform} from '../../../src/geo/transform_interface';
 import {CollisionIndex} from '../../../src/symbol/collision_index';
 import Benchmark from '../lib/benchmark';
-import {mat4} from 'gl-matrix';
 import {OverlapMode} from '../../../src/style/style_layer/overlap_mode';
-import {CanonicalTileID, UnwrappedTileID} from '../../../src/source/tile_id';
+import {OverscaledTileID, UnwrappedTileID} from '../../../src/source/tile_id';
 import {SingleCollisionBox} from '../../../src/data/bucket/symbol_bucket';
 import {EXTENT} from '../../../src/data/extent';
+import {MercatorTransform} from '../../../src/geo/projection/mercator_transform';
+import {mat4} from 'gl-matrix';
+import {GlobeProjection} from '../../../src/geo/projection/globe_projection';
+import {GlobeTransform} from '../../../src/geo/projection/globe_transform';
 
 type TestSymbol = {
     collisionBox: SingleCollisionBox;
     overlapMode: OverlapMode;
     textPixelRatio: number;
-    posMatrix: mat4;
+    tileID: OverscaledTileID;
     unwrappedTileID: UnwrappedTileID;
     pitchWithMap: boolean;
     rotateWithMap: boolean;
     translation: [number, number];
     shift?: Point;
+    simpleProjectionMatrix?: mat4;
 }
 
 // For this benchmark we need a deterministic random number generator. This function provides one.
@@ -37,16 +40,36 @@ function splitmix32(a) {
 }
 
 export default class SymbolCollisionBox extends Benchmark {
-    private _transform: Transform;
-    private _projection: Projection;
+    private _transform: ITransform;
     private _symbols: Array<TestSymbol>;
+    private _useGlobeProjection: boolean = false;
+
+    constructor(useGlobeProjection: boolean) {
+        super();
+        this._useGlobeProjection = useGlobeProjection;
+    }
+
+    private _createTransform() {
+        if (this._useGlobeProjection) {
+            return {
+                transform: new GlobeTransform(),
+                calculatePosMatrix: (_tileID: UnwrappedTileID) => { return undefined; },
+            };
+        } else {
+            const tr = new MercatorTransform(0, 22, 0, 60, true);
+            return {
+                transform: tr,
+                calculatePosMatrix: (tileID: UnwrappedTileID) => { return tr.calculatePosMatrix(tileID, false); },
+            };
+        }
+    }
 
     async setup(): Promise<void> {
-        this._transform = new Transform(0, 22, 0, 60, true);
-        this._transform.resize(1024, 1024);
-        this._projection = createProjection();
-        const unwrappedTileID = new UnwrappedTileID(0, new CanonicalTileID(0, 0, 0));
-        const posMatrix = this._transform.calculatePosMatrix(unwrappedTileID);
+        const {transform, calculatePosMatrix} = this._createTransform();
+        this._transform = transform;
+        transform.resize(1024, 1024);
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        const unwrappedTileID = tileID.toUnwrapped();
 
         const rng = splitmix32(0xdeadbeef);
         const rndRange = (min, max) => {
@@ -68,7 +91,7 @@ export default class SymbolCollisionBox extends Benchmark {
                 },
                 overlapMode: 'never',
                 textPixelRatio: 1,
-                posMatrix,
+                tileID,
                 unwrappedTileID,
                 pitchWithMap: rng() > 0.5,
                 rotateWithMap: rng() > 0.5,
@@ -76,13 +99,14 @@ export default class SymbolCollisionBox extends Benchmark {
                     rndRange(-20, 20),
                     rndRange(-20, 20)
                 ],
-                shift: rng() > 0.5 ? new Point(rndRange(-20, 20), rndRange(-20, 20)) : undefined
+                shift: rng() > 0.5 ? new Point(rndRange(-20, 20), rndRange(-20, 20)) : undefined,
+                simpleProjectionMatrix: calculatePosMatrix(unwrappedTileID),
             });
         }
     }
 
     async bench() {
-        const ci = new CollisionIndex(this._transform, this._projection);
+        const ci = new CollisionIndex(this._transform);
         ci.grid.hitTest = (_x1, _y1, _x2, _y2, _overlapMode, _predicate?) => {
             return true;
         };
@@ -92,14 +116,15 @@ export default class SymbolCollisionBox extends Benchmark {
                 s.collisionBox,
                 s.overlapMode,
                 s.textPixelRatio,
-                s.posMatrix,
+                s.tileID,
                 s.unwrappedTileID,
                 s.pitchWithMap,
                 s.rotateWithMap,
                 s.translation,
                 null,
                 null,
-                s.shift
+                s.shift,
+                s.simpleProjectionMatrix,
             );
         }
     }

@@ -1,3 +1,4 @@
+import {describe, beforeEach, test, expect} from 'vitest';
 import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util';
 
 function createMap(logoPosition, maplibreLogo) {
@@ -28,7 +29,7 @@ describe('LogoControl', () => {
         )).toHaveLength(0);
     });
 
-    test('is not displayed when the maplibreLogo property is false', done => {
+    test('is not displayed when the maplibreLogo property is false', () => new Promise<void>(done => {
         const map = createMap(undefined, false);
         map.on('load', () => {
             expect(map.getContainer().querySelectorAll(
@@ -36,9 +37,9 @@ describe('LogoControl', () => {
             )).toHaveLength(0);
             done();
         });
-    });
+    }));
 
-    test('appears in bottom-left when maplibreLogo is true and logoPosition is undefined', done => {
+    test('appears in bottom-left when maplibreLogo is true and logoPosition is undefined', () => new Promise<void>(done => {
         const map = createMap(undefined, true);
         map.on('load', () => {
             expect(map.getContainer().querySelectorAll(
@@ -46,9 +47,9 @@ describe('LogoControl', () => {
             )).toHaveLength(1);
             done();
         });
-    });
+    }));
 
-    test('appears in the position specified by the position option', done => {
+    test('appears in the position specified by the position option', () => new Promise<void>(done => {
         const map = createMap('top-left', true);
         map.on('load', () => {
             expect(map.getContainer().querySelectorAll(
@@ -56,7 +57,7 @@ describe('LogoControl', () => {
             )).toHaveLength(1);
             done();
         });
-    });
+    }));
 
     test('appears in compact mode if container is less then 640 pixel wide', () => {
         const map = createMap(undefined, true);
@@ -75,7 +76,7 @@ describe('LogoControl', () => {
         ).toHaveLength(1);
     });
 
-    test('has `rel` noopener and nofollow', done => {
+    test('has `rel` noopener and nofollow', () => new Promise<void>(done => {
         const map = createMap(undefined, true);
 
         map.on('load', () => {
@@ -84,5 +85,5 @@ describe('LogoControl', () => {
             expect(logo).toHaveProperty('rel', 'noopener nofollow');
             done();
         });
-    });
+    }));
 });

@@ -1,3 +1,4 @@
+import {describe, beforeEach, test, expect} from 'vitest';
 import {createMap, beforeMapTest, createStyleSource} from '../../util/test/util';
 
 beforeEach(() => {
@@ -6,7 +7,7 @@ beforeEach(() => {
 });
 
 describe('#setFeatureState', () => {
-    test('sets state', done => {
+    test('sets state', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -22,8 +23,8 @@ describe('#setFeatureState', () => {
             expect(fState.hover).toBe(true);
             done();
         });
-    });
-    test('works with string ids', done => {
+    }));
+    test('works with string ids', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -39,8 +40,8 @@ describe('#setFeatureState', () => {
             expect(fState.hover).toBe(true);
             done();
         });
-    });
-    test('parses feature id as an int', done => {
+    }));
+    test('parses feature id as an int', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -56,8 +57,8 @@ describe('#setFeatureState', () => {
             expect(fState.hover).toBe(true);
             done();
         });
-    });
-    test('throw before loaded', done => {
+    }));
+    test('throw before loaded', () => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -70,10 +71,8 @@ describe('#setFeatureState', () => {
         expect(() => {
             map.setFeatureState({source: 'geojson', id: 12345}, {'hover': true});
         }).toThrow(Error);
-
-        done();
     });
-    test('fires an error if source not found', done => {
+    test('fires an error if source not found', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -90,8 +89,8 @@ describe('#setFeatureState', () => {
             });
             map.setFeatureState({source: 'vector', id: 12345}, {'hover': true});
         });
-    });
-    test('fires an error if sourceLayer not provided for a vector source', done => {
+    }));
+    test('fires an error if sourceLayer not provided for a vector source', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -111,8 +110,8 @@ describe('#setFeatureState', () => {
             });
             (map as any).setFeatureState({source: 'vector', sourceLayer: 0, id: 12345}, {'hover': true});
         });
-    });
-    test('fires an error if id not provided', done => {
+    }));
+    test('fires an error if id not provided', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -132,12 +131,12 @@ describe('#setFeatureState', () => {
             });
             (map as any).setFeatureState({source: 'vector', sourceLayer: '1'}, {'hover': true});
         });
-    });
+    }));
 });
 
 describe('#removeFeatureState', () => {
 
-    test('accepts "0" id', done => {
+    test('accepts "0" id', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -155,8 +154,8 @@ describe('#removeFeatureState', () => {
             expect(fState.click).toBe(true);
             done();
         });
-    });
-    test('accepts string id', done => {
+    }));
+    test('accepts string id', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -174,8 +173,8 @@ describe('#removeFeatureState', () => {
             expect(fState.click).toBe(true);
             done();
         });
-    });
-    test('remove specific state property', done => {
+    }));
+    test('remove specific state property', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -192,8 +191,8 @@ describe('#removeFeatureState', () => {
             expect(fState.hover).toBeUndefined();
             done();
         });
-    });
-    test('remove all state properties of one feature', done => {
+    }));
+    test('remove all state properties of one feature', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -213,8 +212,8 @@ describe('#removeFeatureState', () => {
 
             done();
         });
-    });
-    test('remove properties for zero-based feature IDs.', done => {
+    }));
+    test('remove properties for zero-based feature IDs.', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -234,8 +233,8 @@ describe('#removeFeatureState', () => {
 
             done();
         });
-    });
-    test('other properties persist when removing specific property', done => {
+    }));
+    test('other properties persist when removing specific property', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -254,8 +253,8 @@ describe('#removeFeatureState', () => {
 
             done();
         });
-    });
-    test('remove all state properties of all features in source', done => {
+    }));
+    test('remove all state properties of all features in source', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -281,8 +280,8 @@ describe('#removeFeatureState', () => {
 
             done();
         });
-    });
-    test('specific state deletion should not interfere with broader state deletion', done => {
+    }));
+    test('specific state deletion should not interfere with broader state deletion', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -318,8 +317,8 @@ describe('#removeFeatureState', () => {
 
             done();
         });
-    });
-    test('add/remove and remove/add state', done => {
+    }));
+    test('add/remove and remove/add state', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -345,8 +344,8 @@ describe('#removeFeatureState', () => {
 
             done();
         });
-    });
-    test('throw before loaded', done => {
+    }));
+    test('throw before loaded', () => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -359,10 +358,8 @@ describe('#removeFeatureState', () => {
         expect(() => {
             (map as any).removeFeatureState({source: 'geojson', id: 12345}, {'hover': true});
         }).toThrow(Error);
-
-        done();
     });
-    test('fires an error if source not found', done => {
+    test('fires an error if source not found', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -379,8 +376,8 @@ describe('#removeFeatureState', () => {
             });
             (map as any).removeFeatureState({source: 'vector', id: 12345}, {'hover': true});
         });
-    });
-    test('fires an error if sourceLayer not provided for a vector source', done => {
+    }));
+    test('fires an error if sourceLayer not provided for a vector source', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -400,8 +397,8 @@ describe('#removeFeatureState', () => {
             });
             (map as any).removeFeatureState({source: 'vector', sourceLayer: 0, id: 12345}, {'hover': true});
         });
-    });
-    test('fires an error if state property is provided without a feature id', done => {
+    }));
+    test('fires an error if state property is provided without a feature id', () => new Promise<void>(done => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -421,5 +418,5 @@ describe('#removeFeatureState', () => {
             });
             (map as any).removeFeatureState({source: 'vector', sourceLayer: '1'}, {'hover': true});
         });
-    });
+    }));
 });

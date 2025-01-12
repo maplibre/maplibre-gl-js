@@ -1,4 +1,4 @@
-import {interpolates, Color, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
+import {interpolates, type Color, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
 
 import {sphericalToCartesian} from '../util/util';
 import {Evented} from '../util/evented';
@@ -11,7 +11,7 @@ import {
 import type {StylePropertySpecification, LightSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from './evaluation_parameters';
 import type {StyleSetterOptions} from '../style/style';
-import {Properties, Transitionable, Transitioning, PossiblyEvaluated, DataConstantProperty} from './properties';
+import {Properties, Transitionable, type Transitioning, type PossiblyEvaluated, DataConstantProperty} from './properties';
 
 import type {
     Property,

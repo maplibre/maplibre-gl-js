@@ -7,7 +7,7 @@ import {anchorTranslate, applyAnchorClass} from './anchor';
 import type {PositionAnchor} from './anchor';
 import {Event, Evented} from '../util/evented';
 import type {Map} from './map';
-import {Popup, Offset} from './popup';
+import {type Popup, type Offset} from './popup';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {MapMouseEvent, MapTouchEvent} from './events';
 import type {PointLike} from './camera';
@@ -84,6 +84,12 @@ type MarkerOptions = {
      * @defaultValue 0.2
      */
     opacityWhenCovered?: string;
+    /**
+      * If `true`, rounding is disabled for placement of the marker, allowing for
+      * subpixel positioning and smoother movement when the marker is translated.
+      * @defaultValue false
+      */
+    subpixelPositioning?: boolean;
 };
 
 /**
@@ -143,6 +149,7 @@ export class Marker extends Evented {
     _opacity: string;
     _opacityWhenCovered: string;
     _opacityTimeout: ReturnType<typeof setTimeout>;
+    _subpixelPositioning: boolean;
 
     /**
      * @param options - the options
@@ -155,6 +162,7 @@ export class Marker extends Evented {
         this._scale = options && options.scale || 1;
         this._draggable = options && options.draggable || false;
         this._clickTolerance = options && options.clickTolerance || 0;
+        this._subpixelPositioning = options && options.subpixelPositioning || false;
         this._isDragging = false;
         this._state = 'inactive';
         this._rotation = options && options.rotation || 0;
@@ -314,6 +322,7 @@ export class Marker extends Evented {
         map.on('move', this._update);
         map.on('moveend', this._update);
         map.on('terrain', this._update);
+        map.on('projectiontransition', this._update);
 
         this.setDraggable(this._draggable);
         this._update();
@@ -344,6 +353,7 @@ export class Marker extends Evented {
             this._map.off('move', this._update);
             this._map.off('moveend', this._update);
             this._map.off('terrain', this._update);
+            this._map.off('projectiontransition', this._update);
             this._map.off('mousedown', this._addDragHandler);
             this._map.off('touchstart', this._addDragHandler);
             this._map.off('mouseup', this._onUp);
@@ -459,6 +469,22 @@ export class Marker extends Evented {
         return this;
     }
 
+    /**
+      * Set the option to allow subpixel positioning of the marker by passing a boolean
+      *
+      * @param value - when set to `true`, subpixel positioning is enabled for the marker.
+      *
+      * @example
+      * ```ts
+      * let marker = new Marker()
+      * marker.setSubpixelPositioning(true);
+      * ```
+      */
+    setSubpixelPositioning(value: boolean) {
+        this._subpixelPositioning = value;
+        return this;
+    }
+
     _onKeyPress = (e: KeyboardEvent) => {
         const code = e.code;
         const legacyCode = e.charCode || e.keyCode;
@@ -526,7 +552,9 @@ export class Marker extends Evented {
     _updateOpacity(force: boolean = false) {
         const terrain = this._map?.terrain;
         if (!terrain) {
-            if (this._element.style.opacity !== this._opacity) { this._element.style.opacity = this._opacity; }
+            const occluded = this._map.transform.isLocationOccluded(this._lngLat);
+            const targetOpacity = occluded ? this._opacityWhenCovered : this._opacity;
+            if (this._element.style.opacity !== targetOpacity) { this._element.style.opacity = targetOpacity; }
             return;
         }
         if (force) {
@@ -552,7 +580,7 @@ export class Marker extends Evented {
             return;
         }
         // If the base is obscured, use the offset to check if the marker's center is obscured.
-        const metersToCenter = -this._offset.y / map.transform._pixelPerMeter;
+        const metersToCenter = -this._offset.y / map.transform.pixelsPerMeter;
         const elevationToCenter = Math.sin(map.getPitch() * Math.PI / 180) * metersToCenter;
         const terrainDistanceCenter = map.terrain.depthAtPoint(new Point(this._pos.x, this._pos.y - this._offset.y));
         const markerDistanceCenter = map.transform.lngLatToCameraDepth(this._lngLat, elevation + elevationToCenter);
@@ -580,7 +608,7 @@ export class Marker extends Evented {
         this._flatPos = this._pos = this._map.project(this._lngLat)._add(this._offset);
         if (this._map.terrain) {
             // flat position is saved because smartWrap needs non-elevated points
-            this._flatPos = this._map.transform.locationPoint(this._lngLat)._add(this._offset);
+            this._flatPos = this._map.transform.locationToScreenPoint(this._lngLat)._add(this._offset);
         }
 
         let rotation = '';
@@ -600,7 +628,7 @@ export class Marker extends Evented {
         // because rounding the coordinates at every `move` event causes stuttered zooming
         // we only round them when _update is called with `moveend` or when its called with
         // no arguments (when the Marker is initialized or Marker#setLngLat is invoked).
-        if (!e || e.type === 'moveend') {
+        if (!this._subpixelPositioning && (!e || e.type === 'moveend')) {
             this._pos = this._pos.round();
         }
 

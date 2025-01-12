@@ -1,14 +1,15 @@
 import type {Map} from '../map';
 import type {PointLike} from '../camera';
-import type {Transform} from '../../geo/transform';
+import type {IReadonlyTransform} from '../../geo/transform_interface';
 import Point from '@mapbox/point-geometry';
-import {LngLat} from '../../geo/lng_lat';
+import {type LngLat} from '../../geo/lng_lat';
 
 /**
  * @internal
  * Shared utilities for the Handler classes to access the correct camera state.
- * If Camera.transformCameraUpdate is specified, the "desired state" of camera may differ from the state used for rendering.
- * The handlers need the "desired state" to track accumulated changes.
+ * If Camera.transformCameraUpdate is specified or terrain is enabled, the
+ * "desired state" of camera may differ from the state used for rendering. The
+ * handlers need the "desired state" to track accumulated changes.
  */
 export class TransformProvider {
     _map: Map;
@@ -17,7 +18,7 @@ export class TransformProvider {
         this._map = map;
     }
 
-    get transform(): Transform {
+    get transform(): IReadonlyTransform {
         return this._map._requestedCameraState || this._map.transform;
     }
 
@@ -38,6 +39,6 @@ export class TransformProvider {
     }
 
     unproject(point: PointLike): LngLat {
-        return this.transform.pointLocation(Point.convert(point), this._map.terrain);
+        return this.transform.screenPointToLocation(Point.convert(point), this._map.terrain);
     }
 }

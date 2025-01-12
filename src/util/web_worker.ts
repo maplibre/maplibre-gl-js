@@ -1,4 +1,4 @@
-import {AddProtocolAction, config} from './config';
+import {type AddProtocolAction, config} from './config';
 import {FeaturePropertiesTransform} from '../source/feature_properties_transform';
 import type {default as MaplibreWorker} from '../source/worker';
 import type {WorkerSourceConstructor} from '../source/worker_source';

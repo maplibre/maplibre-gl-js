@@ -1,3 +1,4 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import {RequestManager} from '../util/request_manager';
@@ -28,8 +29,14 @@ describe('normalizeSpriteURL', () => {
 
     test('test relative URL', () => {
         expect(
-            normalizeSpriteURL('/bar?fresh=true', '@2x', '.png')
-        ).toBe('/bar@2x.png?fresh=true');
+            () => normalizeSpriteURL('/bar?fresh=true', '@2x', '.png')
+        ).toThrow(/Invalid/i);
+    });
+
+    test('No Path', () => {
+        expect(
+            normalizeSpriteURL('http://www.foo.com?fresh=true', '@2x', '.json')
+        ).toBe('http://www.foo.com/@2x.json?fresh=true');
     });
 });
 
@@ -38,7 +45,7 @@ describe('loadSprite', () => {
     let server: FakeServer;
 
     beforeEach(() => {
-        jest.spyOn(util, 'arrayBufferToImageBitmap').mockImplementation(async (_data: ArrayBuffer) => {
+        vi.spyOn(util, 'arrayBufferToImageBitmap').mockImplementation(async (_data: ArrayBuffer) => {
             try {
                 const img = await createImageBitmap(new ImageData(1024, 824));
                 return img;
@@ -51,7 +58,7 @@ describe('loadSprite', () => {
     });
 
     test('backwards compatibility: single string is treated as a URL for the default sprite', async () => {
-        const transform = jest.fn().mockImplementation((url, type) => {
+        const transform = vi.fn().mockImplementation((url, type) => {
             return {url, type};
         });
 
@@ -82,40 +89,8 @@ describe('loadSprite', () => {
         expect(server.requests[1].url).toBe('http://localhost:9966/test/unit/assets/sprite1.png');
     });
 
-    test('transform of relative URL', async () => {
-        const transform = jest.fn().mockImplementation((url, type) => {
-            return {url: `http://localhost:9966${url}`, type};
-        });
-
-        const manager = new RequestManager(transform);
-
-        server.respondWith('GET', 'http://localhost:9966/test/unit/assets/sprite1.json', fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.json')).toString());
-        server.respondWith('GET', 'http://localhost:9966/test/unit/assets/sprite1.png', bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.png'))));
-
-        const promise = loadSprite('/test/unit/assets/sprite1', manager, 1, new AbortController());
-
-        server.respond();
-
-        const result = await promise;
-
-        expect(transform).toHaveBeenCalledTimes(2);
-        expect(transform).toHaveBeenNthCalledWith(1, '/test/unit/assets/sprite1.json', 'SpriteJSON');
-        expect(transform).toHaveBeenNthCalledWith(2, '/test/unit/assets/sprite1.png', 'SpriteImage');
-
-        expect(Object.keys(result)).toHaveLength(1);
-        expect(Object.keys(result)[0]).toBe('default');
-
-        Object.values(result['default']).forEach(styleImage => {
-            expect(styleImage.spriteData).toBeTruthy();
-            expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
-        });
-
-        expect(server.requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1.json');
-        expect(server.requests[1].url).toBe('http://localhost:9966/test/unit/assets/sprite1.png');
-    });
-
     test('array of objects support', async () => {
-        const transform = jest.fn().mockImplementation((url, type) => {
+        const transform = vi.fn().mockImplementation((url, type) => {
             return {url, type};
         });
 
@@ -158,7 +133,7 @@ describe('loadSprite', () => {
     });
 
     test('server returns error', async () => {
-        const transform = jest.fn().mockImplementation((url, type) => {
+        const transform = vi.fn().mockImplementation((url, type) => {
             return {url, type};
         });
 
@@ -173,7 +148,7 @@ describe('loadSprite', () => {
     });
 
     test('request canceling', async () => {
-        const transform = jest.fn().mockImplementation((url, type) => {
+        const transform = vi.fn().mockImplementation((url, type) => {
             return {url, type};
         });
 
@@ -196,7 +171,7 @@ describe('loadSprite', () => {
     });
 
     test('pixelRatio is respected', async () => {
-        const transform = jest.fn().mockImplementation((url, type) => {
+        const transform = vi.fn().mockImplementation((url, type) => {
             return {url, type};
         });
 

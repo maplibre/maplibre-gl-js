@@ -1,3 +1,4 @@
+import {beforeEach, test, expect} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
 
 beforeEach(() => {
@@ -79,8 +80,8 @@ test('throw on maxPitch smaller than minPitch at init with falsey maxPitch', () 
 
 test('throw on maxPitch greater than valid maxPitch at init', () => {
     expect(() => {
-        createMap({maxPitch: 90});
-    }).toThrow(new Error('maxPitch must be less than or equal to 85'));
+        createMap({maxPitch: 190});
+    }).toThrow(new Error('maxPitch must be less than or equal to 180'));
 });
 
 test('throw on minPitch less than valid minPitch at init', () => {

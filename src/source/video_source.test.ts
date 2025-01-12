@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {VideoSource} from './video_source';
 import {extend} from '../util/util';
 import {getMockDispatcher} from '../util/test/util';
@@ -6,18 +7,17 @@ import type {Coordinates} from './image_source';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {Evented} from '../util/evented';
-import {Transform} from '../geo/transform';
-import {VertexBuffer} from '../gl/vertex_buffer';
-import {SegmentVector} from '../data/segment';
+import {type IReadonlyTransform} from '../geo/transform_interface';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 class StubMap extends Evented {
-    transform: Transform;
+    transform: IReadonlyTransform;
     style: any;
     painter: any;
 
     constructor() {
         super();
-        this.transform = new Transform();
+        this.transform = new MercatorTransform();
         this.style = {};
         this.painter = {
             context: {
@@ -87,7 +87,7 @@ describe('VideoSource', () => {
         expect(source.getVideo()).toBe(el);
     });
 
-    test('fires idle event on prepare call when there is at least one not loaded tile', done => {
+    test('fires idle event on prepare call when there is at least one not loaded tile', () => new Promise<void>(done => {
         const source = createSource({
             type: 'video',
             urls: [],
@@ -113,12 +113,10 @@ describe('VideoSource', () => {
 
         source.tiles[String(tile.tileID.wrap)] = tile;
         // assign dummies directly so we don't need to stub the gl things
-        source.boundsBuffer = {} as VertexBuffer;
-        source.boundsSegments = {} as SegmentVector;
         source.texture = {
             update: () => {},
             bind: () => {}
         } as any;
         source.prepare();
-    });
+    }));
 });
