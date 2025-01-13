@@ -34,11 +34,13 @@
                 featureID,
                 properties
             }) => {
-                if (!properties) return;
-
-                if ('NAME' in properties) {
-                    properties['NAME'] = properties['NAME'].split('').reverse().join('');
+                if (properties && properties['NAME']) {
+                    return {
+                        ...properties,
+                        NAME: properties['NAME'].split('').reverse().join('')
+                    };
                 }
+                return null;
             };
             self.setFeaturePropertiesTransform(featurePropertiesTransform);
         `;

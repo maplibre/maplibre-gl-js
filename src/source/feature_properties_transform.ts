@@ -1,9 +1,11 @@
+import {type VectorTileFeature} from '@mapbox/vector-tile';
+
 /**
  * Options to pass to the feature properties tranform function
  */
 export type FeaturePropertiesTransformOptions = {
     /**
-     * The name of the vector tile source.
+     * The ID of the vector tile source
      */
     source: string;
 
@@ -29,13 +31,12 @@ export type FeaturePropertiesTransformOptions = {
     featureID: number;
 
     /**
-     * The properties of the feature. Edit the content of this dictionarry
-     * to transform vector tile feature properties.
+     * The oroginal properties of the feature
      */
-    properties: { [_: string]: string | number | boolean };
+    properties: VectorTileFeature['properties'];
 };
 
 /**
  * A function that transforms the properties of a vector tile feature.
  */
-export type FeaturePropertiesTransform = (options: FeaturePropertiesTransformOptions) => Promise<void>
+export type FeaturePropertiesTransform = (options: FeaturePropertiesTransformOptions) => Promise<VectorTileFeature['properties'] | null>;

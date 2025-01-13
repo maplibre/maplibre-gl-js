@@ -12,6 +12,7 @@ import {GlyphAtlas} from '../render/glyph_atlas';
 import {EvaluationParameters} from '../style/evaluation_parameters';
 import {OverscaledTileID} from './tile_id';
 import {VectorTileFeature} from '@mapbox/vector-tile';
+import vtpbf from 'vt-pbf';
 
 import type {Bucket} from '../data/bucket';
 import type {IActor} from '../util/actor';
@@ -23,7 +24,7 @@ import type {
 } from '../source/worker_source';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTile} from '@mapbox/vector-tile';
-import type {FeaturePropertiesTransformOptions} from './feature_properties_transform';
+import type {FeaturePropertiesTransform} from './feature_properties_transform';
 import {MessageType, type GetGlyphsResponse, type GetImagesResponse} from '../util/actor_messages';
 import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 
@@ -67,8 +68,7 @@ export class WorkerTile {
      * No-Op method to allow overriding it using `self.setFeaturePropertiesTransform` in the worker context.
      * @param options - Options to pass to the feature properties tranform function
      */
-    static async featurePropertiesTransform(_options: FeaturePropertiesTransformOptions): Promise<void> {
-    }
+    static featurePropertiesTransform: FeaturePropertiesTransform = async (_options) => Promise.resolve(null);
 
     async parse(data: VectorTile, layerIndex: StyleLayerIndex, availableImages: Array<string>, actor: IActor, subdivisionGranularity: SubdivisionGranularitySetting): Promise<WorkerTileResult> {
         this.status = 'parsing';
@@ -79,6 +79,8 @@ export class WorkerTile {
 
         const featureIndex = new FeatureIndex(this.tileID, this.promoteId);
         featureIndex.bucketLayerIDs = [];
+
+        const transformedFeatures: { [sourceLayer: string]: Map<number, VectorTileFeature> } = {};
 
         const buckets: {[_: string]: Bucket} = {};
 
@@ -107,14 +109,21 @@ export class WorkerTile {
             const features = [];
             for (let index = 0; index < sourceLayer.length; index++) {
                 const feature = sourceLayer.feature(index);
-                await WorkerTile.featurePropertiesTransform({
+                const transformedProperties = await WorkerTile.featurePropertiesTransform({
                     source: this.source,
                     sourceLayer: sourceLayerId,
                     tileID: this.tileID.toString(),
                     geometryType: VectorTileFeature.types[feature.type],
                     featureID: feature.id,
-                    properties: feature.properties
+                    properties: {...feature.properties ?? {}}
                 });
+                if (transformedProperties) {
+                    feature.properties = transformedProperties;
+                    if (!transformedFeatures[sourceLayerId]) {
+                        transformedFeatures[sourceLayerId] = new Map();
+                    }
+                    transformedFeatures[sourceLayerId].set(index, feature);
+                }
                 const id = featureIndex.getId(feature, sourceLayerId);
                 features.push({feature, id, index, sourceLayerIndex});
             }
@@ -205,12 +214,30 @@ export class WorkerTile {
         }
 
         this.status = 'done';
+
+        // If any features were transformed, re-encode to rawTileData to override the original
+        let transformedRawData: ArrayBuffer = null;
+        if (Object.keys(transformedFeatures).length) {
+            const transformedTile: VectorTile = {
+                get layers() {
+                    return Object.entries(data.layers).reduce((acc, [sourceLayerId, layer]) => ({
+                        ...acc,
+                        [sourceLayerId]: {
+                            ...layer, feature:
+                            (index) => transformedFeatures[sourceLayerId]?.get(index) ?? layer.feature(index)
+                        }
+                    }), {});
+                }
+            };
+            transformedRawData = vtpbf(transformedTile).buffer;
+        }
         return {
             buckets: Object.values(buckets).filter(b => !b.isEmpty()),
             featureIndex,
             collisionBoxArray: this.collisionBoxArray,
             glyphAtlasImage: glyphAtlas.image,
             imageAtlas,
+            rawTileData: transformedRawData,
             // Only used for benchmarking:
             glyphMap: this.returnDependencies ? glyphMap : null,
             iconMap: this.returnDependencies ? iconMap : null,
