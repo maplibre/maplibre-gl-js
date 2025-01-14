@@ -1,4 +1,4 @@
-import {describe, test, expect, vi} from 'vitest';
+import {describe, test, expect, vi, beforeEach} from 'vitest';
 import {WorkerTile} from '../source/worker_tile';
 import {GeoJSONWrapper, type Feature} from '../source/geojson_wrapper';
 import {OverscaledTileID} from '../source/tile_id';
@@ -6,6 +6,7 @@ import {StyleLayerIndex} from '../style/style_layer_index';
 import {type WorkerTileParameters} from './worker_source';
 import {type VectorTile} from '@mapbox/vector-tile';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
+import {type Feature as GeoJSONFeature} from 'geojson';
 
 function createWorkerTile() {
     return new WorkerTile({
@@ -28,6 +29,10 @@ function createWrapper() {
 }
 
 describe('worker tile', () => {
+    beforeEach(() => {
+        WorkerTile.featurePropertiesTransform = null;
+    });
+
     test('WorkerTile#parse', async () => {
         const layerIndex = new StyleLayerIndex([{
             id: 'test',
@@ -224,5 +229,66 @@ describe('worker tile', () => {
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'icons'})}), expect.any(Object));
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'patterns'})}), expect.any(Object));
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}})}), expect.any(Object));
+    });
+
+    test('WorkerTile#parse would call featurePropertiesTransform', async () => {
+        WorkerTile.featurePropertiesTransform = ({properties}) => Promise.resolve({
+            ...properties,
+            nameReversed: (properties.name as string).split('').reverse().join('')
+        });
+        const spy = vi.spyOn(WorkerTile, 'featurePropertiesTransform');
+        const tile = createWorkerTile();
+        const layerIndex = new StyleLayerIndex([{
+            id: '1',
+            type: 'circle',
+            source: 'source',
+            'source-layer': 'test',
+            paint: {}
+        }]);
+
+        const geojson: GeoJSONFeature = {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+                type: 'Point',
+                coordinates: [0, 0]
+            }
+        };
+        const properties = {name: 'test'};
+        const data = {
+            layers: {
+                test: {
+                    version: 2,
+                    name: 'test',
+                    extent: 8192,
+                    length: 1,
+                    feature: (featureIndex: number) => ({
+                        extent: 8192,
+                        type: 1,
+                        id: featureIndex,
+                        properties,
+                        loadGeometry () {
+                            return [[{x: 0, y: 0}]];
+                        },
+                        toGeoJSON () {
+                            return geojson;
+                        }
+                    })
+                }
+            }
+        } as any as VectorTile;
+
+        const result = await tile.parse(data, layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
+        expect(result).toBeDefined();
+        expect(result.rawTileData).toBeInstanceOf(ArrayBuffer);
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy).toHaveBeenCalledWith({
+            source: 'source',
+            sourceLayer: 'test',
+            tileID: tile.tileID.toString(),
+            geometry: geojson.geometry,
+            featureID: 0,
+            properties
+        });
     });
 });
