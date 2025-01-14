@@ -4,7 +4,7 @@ import st from 'st';
 import http, {type Server} from 'http';
 import type {AddressInfo} from 'net';
 import type {default as MapLibreGL, Map} from '../../../dist/maplibre-gl';
-import {blobToDataURL, sleep} from '../../../src/util/test/util';
+import {sleep} from '../../../src/util/test/util';
 
 const testWidth = 800;
 const testHeight = 600;
@@ -422,7 +422,7 @@ describe('Browser tests', () => {
             `;
             const decodedString = decodeURIComponent(transform);
             const blob = new Blob([decodedString], {type: 'application/javascript'});
-            const workerUrl = await blobToDataURL(blob);
+            const workerUrl = URL.createObjectURL(blob);
             maplibregl.importScriptInWorkers(workerUrl);
             await map.once('idle');
             map.style.sourceCaches['land'].reload();
