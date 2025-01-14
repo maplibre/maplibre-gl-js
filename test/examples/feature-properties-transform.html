@@ -27,7 +27,7 @@
 
         // Create a transform function that:
         // 1. reverses the "NAME" property for any feature from the "maplibre" source
-        // 2. changes the "color" property to lime green for any Point feature from the "geojson-point" source
+        // 2. changes the "color" property to blue for any Point feature from the "geojson-point" source
         const transform = `
             const featurePropertiesTransform = ({
                 source,
@@ -41,7 +41,7 @@
                     const reversed = properties['NAME'].split('').reverse().join('');
                     return {...properties, NAME: reversed};
                 } else if (source === 'geojson-point' && geometry.type === 'Point') {
-                    return {color: '#af0'};
+                    return {color: 'blue'};
                 }
                 return null;
             };
@@ -63,7 +63,7 @@
             });
 
             map.on('load', () => {
-                // Add a GeoJSON point with a "color" property that has pink as its value
+                // Add a GeoJSON point with a "color" property that has red as its value
                 map.addSource('geojson-point', {
                     'type': 'geojson',
                     'data': {
@@ -76,7 +76,7 @@
                                     'coordinates': [8, 47]
                                 },
                                 'properties': {
-                                    'color': '#f08'
+                                    'color': 'red'
                                 }
                             }
                         ]
