@@ -4,7 +4,7 @@ import st from 'st';
 import http, {type Server} from 'http';
 import type {AddressInfo} from 'net';
 import type {default as MapLibreGL, Map} from '../../../dist/maplibre-gl';
-import {sleep} from '../../../src/util/test/util';
+import {blobToDataURL, sleep} from '../../../src/util/test/util';
 
 const testWidth = 800;
 const testHeight = 600;
@@ -408,52 +408,26 @@ describe('Browser tests', () => {
 
     }, 2000);
 
-    test('Set Feature Properties Transform should update feature properties', async () => {
+    test('Function passed to setFeaturePropertiesTransform should update feature properties', async () => {
 
         const name = await page.evaluate(async () => {
             const transform = `
-                const featurePropertiesTransform = ({_,__,___,____,_____,properties}) => {
-                    if (properties === null) return;
-                    if ('NAME' in properties) {
-                        properties['NAME_REVERSE'] = properties['NAME'].split('').reverse().join('');
+                const featurePropertiesTransform = ({properties}) => {
+                    if (properties && properties['NAME']) {
+                        const reversed = properties['NAME'].split('').reverse().join('');
+                        return {...properties, NAME_REVERSE: reversed};
                     }
                 };
                 self.setFeaturePropertiesTransform(featurePropertiesTransform);
             `;
             const decodedString = decodeURIComponent(transform);
             const blob = new Blob([decodedString], {type: 'application/javascript'});
-            const workerUrl = URL.createObjectURL(blob);
+            const workerUrl = await blobToDataURL(blob);
             maplibregl.importScriptInWorkers(workerUrl);
             await map.once('idle');
             map.style.sourceCaches['land'].reload();
             const features = map.queryRenderedFeatures({layers: ['land']});
             return features[0].properties.NAME_REVERSE;
-        });
-
-        expect(name).toBe('eman');
-
-    }, 20000);
-
-    test('Set Feature Properties Transform should update feature properties in existing property', async () => {
-
-        const name = await page.evaluate(async () => {
-            const transform = `
-                const featurePropertiesTransform = ({_,__,___,____,_____,properties}) => {
-                    if (properties === null) return;
-                    if ('NAME' in properties) {
-                        properties['NAME'] = properties['NAME'].split('').reverse().join('');
-                    }
-                };
-                self.setFeaturePropertiesTransform(featurePropertiesTransform);
-            `;
-            const decodedString = decodeURIComponent(transform);
-            const blob = new Blob([decodedString], {type: 'application/javascript'});
-            const workerUrl = URL.createObjectURL(blob);
-            maplibregl.importScriptInWorkers(workerUrl);
-            await map.once('idle');
-            map.style.sourceCaches['land'].reload();
-            const features = map.queryRenderedFeatures({layers: ['land']});
-            return features[0].properties.NAME;
         });
 
         expect(name).toBe('eman');
