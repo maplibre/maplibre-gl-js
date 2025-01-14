@@ -25,6 +25,9 @@
             });
         }
 
+        // Create a transform function that:
+        // 1. reverses the "NAME" property for any feature from the "maplibre" source
+        // 2. changes the "color" property to lime green for any Point feature from the "geojson-point" source
         const transform = `
             const featurePropertiesTransform = ({
                 source,
@@ -46,11 +49,12 @@
         `;
         const decodedString = decodeURIComponent(transform);
         const blob = new Blob([decodedString], {type: 'application/javascript'});
-        let map;
+
+        // Read the transform function as a data URL and load it into the workers
         readAsDataURL(blob).then((workerUrl) => {
             maplibregl.importScriptInWorkers(workerUrl);
 
-            map = new maplibregl.Map({
+            const map = new maplibregl.Map({
                 container: 'map',
                 style: 'https://demotiles.maplibre.org/style.json',
                 center: [8, 47],
@@ -59,6 +63,7 @@
             });
 
             map.on('load', () => {
+                // Add a GeoJSON point with a "color" property that has pink as its value
                 map.addSource('geojson-point', {
                     'type': 'geojson',
                     'data': {
@@ -77,6 +82,8 @@
                         ]
                     }
                 });
+
+                // Add a circle layer that points to the GeoJSON source and colors a circle based on the feature's "color" property
                 map.addLayer({
                     'id': 'geojson-point-circle',
                     'type': 'circle',
