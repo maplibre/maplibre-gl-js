@@ -133,7 +133,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             try {
                 const result = await parsePromise;
                 // Transferring a copy of rawTileData because the worker needs to retain its copy.
-                return extend({rawTileData: result.rawTileData ?? rawTileData.slice(0)}, result, cacheControl, resourceTiming);
+                return extend({rawTileData: rawTileData.slice(0)}, result, cacheControl, resourceTiming);
             } finally {
                 delete this.fetching[tileUid];
             }
@@ -162,7 +162,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             if (this.fetching[uid]) {
                 const {rawTileData, cacheControl, resourceTiming} = this.fetching[uid];
                 delete this.fetching[uid];
-                parseResult = extend({rawTileData: result.rawTileData ?? rawTileData.slice(0)}, result, cacheControl, resourceTiming);
+                parseResult = extend({rawTileData: rawTileData.slice(0)}, result, cacheControl, resourceTiming);
             } else {
                 parseResult = result;
             }

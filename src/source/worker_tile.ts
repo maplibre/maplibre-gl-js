@@ -239,11 +239,12 @@ export class WorkerTile {
             collisionBoxArray: this.collisionBoxArray,
             glyphAtlasImage: glyphAtlas.image,
             imageAtlas,
-            rawTileData: transformedRawData,
             // Only used for benchmarking:
             glyphMap: this.returnDependencies ? glyphMap : null,
             iconMap: this.returnDependencies ? iconMap : null,
-            glyphPositions: this.returnDependencies ? glyphAtlas.positions : null
+            glyphPositions: this.returnDependencies ? glyphAtlas.positions : null,
+            // Only include if features were transformed
+            ...(transformedRawData ? {rawTileData: transformedRawData} : {})
         };
     }
 }
