@@ -1,4 +1,5 @@
 import {type VectorTileFeature} from '@mapbox/vector-tile';
+import {type Geometry} from 'geojson';
 
 /**
  * Options to pass to the feature properties tranform function
@@ -11,7 +12,6 @@ export type FeaturePropertiesTransformOptions = {
 
     /**
      * The name of the vector tile layer
-     * TODO: what is the sourceLayer in case of a GeoJSON source?
      */
     sourceLayer: string;
 
@@ -21,9 +21,9 @@ export type FeaturePropertiesTransformOptions = {
     tileID: string;
 
     /**
-     * The geometry type: "Unknown", "Point", "LineString", or "Polygon"
+     * The feature's geometry
      */
-    geometryType: string;
+    geometry: Geometry;
 
     /**
      * The id of the feature in the vector tile
@@ -31,7 +31,7 @@ export type FeaturePropertiesTransformOptions = {
     featureID: number;
 
     /**
-     * The oroginal properties of the feature
+     * The original properties of the feature
      */
     properties: VectorTileFeature['properties'];
 };

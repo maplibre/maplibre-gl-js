@@ -11,7 +11,7 @@ import {ImageAtlas} from '../render/image_atlas';
 import {GlyphAtlas} from '../render/glyph_atlas';
 import {EvaluationParameters} from '../style/evaluation_parameters';
 import {OverscaledTileID} from './tile_id';
-import {VectorTileFeature} from '@mapbox/vector-tile';
+import {type VectorTileFeature} from '@mapbox/vector-tile';
 import vtpbf from 'vt-pbf';
 
 import type {Bucket} from '../data/bucket';
@@ -108,22 +108,25 @@ export class WorkerTile {
             const features = [];
             for (let index = 0; index < sourceLayer.length; index++) {
                 const feature = sourceLayer.feature(index);
-                const transformedProperties = await WorkerTile.featurePropertiesTransform?.({
-                    source: this.source,
-                    sourceLayer: sourceLayerId,
-                    tileID: this.tileID.toString(),
-                    geometryType: VectorTileFeature.types[feature.type],
-                    featureID: feature.id,
-                    properties: {...feature.properties ?? {}}
-                });
-                if (transformedProperties) {
-                    feature.properties = transformedProperties;
-                    if (!transformedFeatures[sourceLayerId]) {
-                        transformedFeatures[sourceLayerId] = new Map();
-                    }
-                    transformedFeatures[sourceLayerId].set(index, feature);
-                }
                 const id = featureIndex.getId(feature, sourceLayerId);
+                if (WorkerTile.featurePropertiesTransform) {
+                    const {geometry} = feature.toGeoJSON(this.tileID.canonical.x, this.tileID.canonical.y, this.tileID.canonical.z);
+                    const transformedProperties = await WorkerTile.featurePropertiesTransform({
+                        source: this.source,
+                        sourceLayer: sourceLayerId,
+                        tileID: this.tileID.toString(),
+                        geometry,
+                        featureID: feature.id,
+                        properties: {...feature.properties ?? {}}
+                    });
+                    if (transformedProperties) {
+                        feature.properties = transformedProperties;
+                        if (!transformedFeatures[sourceLayerId]) {
+                            transformedFeatures[sourceLayerId] = new Map();
+                        }
+                        transformedFeatures[sourceLayerId].set(index, feature);
+                    }
+                }
                 features.push({feature, id, index, sourceLayerIndex});
             }
 
