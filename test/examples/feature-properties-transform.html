@@ -30,15 +30,15 @@
                 source,
                 sourceLayer,
                 tileID,
-                geometryType,
+                geometry,
                 featureID,
                 properties
             }) => {
-                if (properties && properties['NAME']) {
-                    return {
-                        ...properties,
-                        NAME: properties['NAME'].split('').reverse().join('')
-                    };
+                if (source === 'maplibre' && properties && properties['NAME']) {
+                    const reversed = properties['NAME'].split('').reverse().join('');
+                    return {...properties, NAME: reversed};
+                } else if (source === 'geojson-point' && geometry.type === 'Point') {
+                    return {color: '#af0'};
                 }
                 return null;
             };
@@ -46,15 +46,47 @@
         `;
         const decodedString = decodeURIComponent(transform);
         const blob = new Blob([decodedString], {type: 'application/javascript'});
+        let map;
         readAsDataURL(blob).then((workerUrl) => {
             maplibregl.importScriptInWorkers(workerUrl);
 
-            const map = new maplibregl.Map({
+            map = new maplibregl.Map({
                 container: 'map',
                 style: 'https://demotiles.maplibre.org/style.json',
                 center: [8, 47],
                 zoom: 5,
                 hash: 'map'
+            });
+
+            map.on('load', () => {
+                map.addSource('geojson-point', {
+                    'type': 'geojson',
+                    'data': {
+                        'type': 'FeatureCollection',
+                        'features': [
+                            {
+                                'type': 'Feature',
+                                'geometry': {
+                                    'type': 'Point',
+                                    'coordinates': [8, 47]
+                                },
+                                'properties': {
+                                    'color': '#f08'
+                                }
+                            }
+                        ]
+                    }
+                });
+                map.addLayer({
+                    'id': 'geojson-point-circle',
+                    'type': 'circle',
+                    'source': 'geojson-point',
+                    'layout': {},
+                    'paint': {
+                        'circle-color': ['get', 'color'],
+                        'circle-radius': 50
+                    }
+                });
             });
 
             // When a click event occurs on a feature in the countries layer, open a popup at the
