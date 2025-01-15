@@ -106,7 +106,7 @@ export function cameraBoundsWarning() {
 export interface ICameraHelper {
     get useGlobeControls(): boolean;
 
-    handlePanInertia(pan: Point, transform: IReadonlyTransform): {
+    handlePanInertia(around: Point, pan: Point, tr: ITransform): {
         easingCenter: LngLat;
         easingOffset: Point;
     };
