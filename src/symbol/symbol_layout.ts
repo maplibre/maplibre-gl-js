@@ -35,7 +35,7 @@ import {getTextVariableAnchorOffset, evaluateVariableOffset, INVALID_TEXT_OFFSET
 import {subdivideVertexLine} from '../render/subdivision';
 import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 
-import {Color} from '@maplibre/maplibre-gl-style-spec';
+//import {Color} from '@maplibre/maplibre-gl-style-spec';
 
 // The symbol layout process needs `text-size` evaluated at up to five different zoom levels, and
 // `icon-size` at up to three:
@@ -123,6 +123,7 @@ export function performSymbolLayout(args: {
     const keepUpright = layout.get('text-keep-upright');
     const textSize = layout.get('text-size');
 
+    /*
     const splitChars = new Map([
         ['\uE001', new Color(0.941, 0.973, 1, 1)], // AliceBlue
         ['\uE002', new Color(0.98, 0.922, 0.843, 1)], // AntiqueWhite
@@ -277,9 +278,11 @@ export function performSymbolLayout(args: {
         }
         return splitPoints;
     }
+    */
 
     // eslint-disable-next-line prefer-const
     for (let feature of args.bucket.features) {
+        /*
         if (feature.text && feature.text.sections) {
             const updatedSections = [];
     
@@ -322,6 +325,7 @@ export function performSymbolLayout(args: {
         } else {
             //console.error("Sections property is missing or not accessible.");
         }
+        */
     
         const fontstack = layout.get('text-font').evaluate(feature, {}, args.canonical).join(',');
         const layoutTextSizeThisZoom = textSize.evaluate(feature, {}, args.canonical);
