@@ -547,7 +547,8 @@ export class SymbolBucket implements Bucket {
         if (layout.get('symbol-placement') === 'line') {
             // Merge adjacent lines with the same text to improve labelling.
             // It's better to place labels on one long line than on many short segments.
-            this.features = mergeLines(this.features);
+            //TODO: bug (wrong merging of branching lines)
+            //this.features = mergeLines(this.features);
         }
 
         if (this.sortFeaturesByKey) {

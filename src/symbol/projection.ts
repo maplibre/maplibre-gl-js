@@ -418,7 +418,7 @@ type GlyphLinePlacementArgs = {
     aspectRatio: number;
     rotateToLine: boolean;
     unwrappedTileID: UnwrappedTileID;
-}
+};
 
 /*
 * Place first and last glyph along the line projected to label plane, and if they fit
@@ -470,8 +470,12 @@ function placeGlyphsAlongLine(args: GlyphLinePlacementArgs): GlyphLinePlacementR
             }
         }
         placedGlyphs = [firstAndLastGlyph.first];
+        //let rotateToLine2 = true;
         for (let glyphIndex = symbol.glyphStartIndex + 1; glyphIndex < glyphEndIndex - 1; glyphIndex++) {
             // Since first and last glyph fit on the line, we're sure that the rest of the glyphs can be placed
+            //if (glyphIndex > glyphEndIndex - 20) {
+            //    rotateToLine2 = false;
+            //}
             placedGlyphs.push(placeGlyphAlongLine(fontScale * glyphOffsetArray.getoffsetX(glyphIndex), lineOffsetX, lineOffsetY, flip, symbol.segment,
                 lineStartIndex, lineEndIndex, projectionContext, rotateToLine, unwrappedTileID));
         }
