@@ -40,7 +40,6 @@ export type InertiaOptions = {
     easing: (t: number) => number;
     deceleration: number;
     maxSpeed: number;
-    buttons?: number[]; // buttons that can be used to trigger pan
 };
 
 export class HandlerInertia {
