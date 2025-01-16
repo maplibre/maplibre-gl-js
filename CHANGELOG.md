@@ -1,21 +1,33 @@
 ## main
 
 ### ✨ Features and improvements
+
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+
 - _...Add new stuff here..._
+
+## 5.0.1
+
+### ✨ Features and improvements
+
+- ⚠️ Revert changes made in `geometry-type` ([#5285](https://github.com/maplibre/maplibre-gl-js/pull/5331)). This change was causing issues in a [large number of styles](https://github.com/maplibre/maplibre-style-spec/issues/965) and thus reverted.
+
+### 🐞 Bug fixes
+
+- Skip control button css hover effects on touch devices ([#5285](https://github.com/maplibre/maplibre-gl-js/pull/5285))
 
 ## 5.0.0
 
 ### ✨ Features and improvements
 
+- ~~⚠️ Changed `geometry-type` to identify "Multi-" features ([#4877](https://github.com/maplibre/maplibre-gl-js/pull/4877)). Use `$type` which has no "Multi-" support or use `in` expression to get the previous behavior.~~
 - ⚠️ `StyleLayer`'s `queryIntersectsFeature` method parameters were moved to `QueryIntersectsFeatureParams`. ([#5276](https://github.com/maplibre/maplibre-gl-js/pull/5276)) Wrap the method parameters with `{}` to solve this
 - ⚠️ Support setting WebGL context options on map creation ([#5196](https://github.com/maplibre/maplibre-gl-js/pull/5196)). Previously supported WebGL context options like `antialias`, `preserveDrawingBuffer` and `failIfMajorPerformanceCaveat` must now be defined inside the `canvasContextAttributes` object on `MapOptions`.
 - ⚠️ Change the return type of `on` method to return a `Subscription` to allow for easy unsubscribe ([#5080](https://github.com/maplibre/maplibre-gl-js/pull/5080)). `map.on('x').on('y')` => `map.on('x'); map.on('y');`.
 - ⚠️ Change drag rotate behavior to be around the center of the screen ([#5074](https://github.com/maplibre/maplibre-gl-js/pull/5074))
 - ⚠️ Return actual altitude from queryTerrainElevation + Pass non-translated matrices to custom layer on mercator map ([#3854](https://github.com/maplibre/maplibre-gl-js/pull/3854))
-- ⚠️ Changed `geometry-type` to identify "Multi-" features ([#4877](https://github.com/maplibre/maplibre-gl-js/pull/4877)). Use `$type` for non "Multi-" support or use `in` expression to get the previous behavior.
 - ⚠️ Remove unminified prod build ([#4906](https://github.com/maplibre/maplibre-gl-js/pull/4906)). You'll need to use a different build.
 - Allows setting the desired WebGL version to use ([#5236](https://github.com/maplibre/maplibre-gl-js/pull/5236)). You can now use `contextType` inside `canvasContextAttributes` to choose which WebGL version to use
 - Dual-Stack WebGL Runtime with WebGL2 to WebGL1 Fallback ([#5198](https://github.com/maplibre/maplibre-gl-js/pull/5198))
