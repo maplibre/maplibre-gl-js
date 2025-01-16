@@ -57,6 +57,7 @@ import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
+import {namedColors} from '@maplibre/maplibre-gl-style-spec/src/expression/types/parse_css_color';
 
 export type SingleCollisionBox = {
     x1: number;
@@ -461,7 +462,7 @@ export class SymbolBucket implements Bucket {
         const availableImages = options.availableImages;
         const globalProperties = new EvaluationParameters(this.zoom);
 
-        const splitChars = new Map([
+        /*const splitChars = new Map([
             ['\uE001', new Color(0.941, 0.973, 1, 1)], // AliceBlue
             ['\uE002', new Color(0.98, 0.922, 0.843, 1)], // AntiqueWhite
             ['\uE003', new Color(0, 1, 1, 1)], // Aqua
@@ -603,7 +604,23 @@ export class SymbolBucket implements Bucket {
             ['\uE08B', new Color(0.961, 0.961, 0.961, 1)], // WhiteSmoke
             ['\uE08C', new Color(1, 1, 0.0, 1)], // Yellow
             ['\uE08D', new Color(0.604, 0.804, 0.196, 1)], // YellowGreen
-        ]);
+        ]); */
+        
+        function generateSplitChars(namedColors: Record<string, [number, number, number]>): Map<string, Color> {
+            const splitChars = new Map<string, Color>();
+            let charCode = 0xE001; // Start of the Unicode Private Use Area
+        
+            for (const colorName in namedColors) {
+                const rgb = namedColors[colorName];
+                const color = new Color(rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1);
+                splitChars.set(String.fromCodePoint(charCode), color);
+                charCode++;
+            }
+        
+            return splitChars;
+        }
+        
+        const splitChars = generateSplitChars(namedColors);
     
         // Optimization 2: Pre-calculate split points to avoid repeated indexOf calls
         function getSplitPoints(text, splitChars) {
