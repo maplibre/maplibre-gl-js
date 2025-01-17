@@ -17,7 +17,7 @@
     <script type="module">
         import Protobuf from 'https://unpkg.com/pbf@4.0.1/index.js';
         import {VectorTile} from 'https://esm.run/@mapbox/vector-tile@2.0.3/index.js';
-        import vtpbf from 'https://esm.run/vt-pbf@3.1.3/index.js';
+        import tileToProtobuf from 'https://esm.run/vt-pbf@3.1.3/index.js';
 
         const protocol = 'reverse';
         maplibregl.addProtocol(protocol, (request) => {
@@ -43,7 +43,7 @@
                         }
                     }), {})
                 }))
-                .then((tile) => vtpbf(tile).buffer)
+                .then((tile) => tileToProtobuf(tile).buffer)
                 .then((data) => ({ data }));
         });
 
