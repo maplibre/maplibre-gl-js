@@ -35,6 +35,9 @@
                                 if (feature.properties && typeof feature.properties['NAME'] === 'string') {
                                     feature.properties['NAME'] = feature.properties['NAME'].split('').reverse().join('');
                                 }
+                                if (feature.properties && typeof feature.properties['ABBREV'] === 'string') {
+                                    feature.properties['ABBREV'] = feature.properties['ABBREV'].split('').reverse().join('');
+                                }
                                 return feature;
                             }
                         }
