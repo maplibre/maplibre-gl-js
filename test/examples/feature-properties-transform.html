@@ -59,6 +59,7 @@
             if (url.startsWith('https://demotiles.maplibre.org/tiles/') && resourceType === 'Tile') {
                 return { url: protocol + '://' + url };
             }
+            return undefined;
         });
     </script>
 </body>
