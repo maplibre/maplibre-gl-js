@@ -82,7 +82,7 @@ class SectionOptions {
     // Image options
     imageName: string | null;
     // Common options
-    verticalAlign: 'bottom' | 'top' | 'center';
+    verticalAlign: VerticalAlign;
 
     constructor() {
         this.scale = 1.0;
@@ -91,7 +91,7 @@ class SectionOptions {
         this.verticalAlign = 'bottom';
     }
 
-    static forText(scale: number | null, fontStack: string, verticalAlign: 'bottom' | 'top' | 'center' | null) {
+    static forText(scale: number | null, fontStack: string, verticalAlign: VerticalAlign | null) {
         const textOptions = new SectionOptions();
         textOptions.scale = scale || 1;
         textOptions.fontStack = fontStack;
@@ -99,7 +99,7 @@ class SectionOptions {
         return textOptions;
     }
 
-    static forImage(imageName: string, verticalAlign: 'bottom' | 'top' | 'center' | null) {
+    static forImage(imageName: string, verticalAlign: VerticalAlign | null) {
         const imageOptions = new SectionOptions();
         imageOptions.imageName = imageName;
         imageOptions.verticalAlign = verticalAlign || 'bottom';
