@@ -82,27 +82,27 @@ class SectionOptions {
     // Image options
     imageName: string | null;
     // Common options
-    verticalAlign: 'baseline' | 'top' | 'center';
+    verticalAlign: 'bottom' | 'top' | 'center';
 
     constructor() {
         this.scale = 1.0;
         this.fontStack = '';
         this.imageName = null;
-        this.verticalAlign = 'baseline';
+        this.verticalAlign = 'bottom';
     }
 
-    static forText(scale: number | null, fontStack: string, verticalAlign: 'baseline' | 'top' | 'center' | null) {
+    static forText(scale: number | null, fontStack: string, verticalAlign: 'bottom' | 'top' | 'center' | null) {
         const textOptions = new SectionOptions();
         textOptions.scale = scale || 1;
         textOptions.fontStack = fontStack;
-        textOptions.verticalAlign = verticalAlign || 'baseline';
+        textOptions.verticalAlign = verticalAlign || 'bottom';
         return textOptions;
     }
 
-    static forImage(imageName: string, verticalAlign: 'baseline' | 'top' | 'center' | null) {
+    static forImage(imageName: string, verticalAlign: 'bottom' | 'top' | 'center' | null) {
         const imageOptions = new SectionOptions();
         imageOptions.imageName = imageName;
-        imageOptions.verticalAlign = verticalAlign || 'baseline';
+        imageOptions.verticalAlign = verticalAlign || 'bottom';
         return imageOptions;
     }
 
