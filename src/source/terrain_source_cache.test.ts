@@ -1,12 +1,13 @@
+import {describe, beforeAll, afterAll, test, expect} from 'vitest';
 import {TerrainSourceCache} from './terrain_source_cache';
 import {Style} from '../style/style';
 import {RequestManager} from '../util/request_manager';
-import {Dispatcher} from '../util/dispatcher';
+import {type Dispatcher} from '../util/dispatcher';
 import {fakeServer, type FakeServer} from 'nise';
 import {RasterDEMTileSource} from './raster_dem_tile_source';
 import {OverscaledTileID} from './tile_id';
 import {Tile} from './tile';
-import {DEMData} from '../data/dem_data';
+import {type DEMData} from '../data/dem_data';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {StubMap} from '../util/test/util';
 
@@ -64,7 +65,7 @@ describe('TerrainSourceCache', () => {
 
     test('#constructor', () => {
         expect(tsc.sourceCache.usedForTerrain).toBeTruthy();
-        expect(tsc.sourceCache.tileSize).toBe(tsc.tileSize * 2 ** tsc.deltaZoom);
+        expect(tsc.sourceCache.tileSize).toBe(tsc.sourceCache._source.tileSize * 2 ** tsc.deltaZoom);
     });
 
     test('#getSourceTile', () => {

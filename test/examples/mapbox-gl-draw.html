@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Show drawn polygon area</title>
-    <meta property="og:description" content="Use mapbox-gl-draw to draw a polygon and Turf.js to calculate its area in square meters." />
+    <title>Draw polygon with maplibre-gl-draw</title>
+    <meta property="og:description" content="Use jsr:@birkskyum/maplibre-gl-draw to draw a polygon and Turf.js to calculate its area in square meters." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
@@ -31,20 +31,22 @@
         font-size: 13px;
     }
 </style>
+    <script src="https://www.unpkg.com/@mapbox/mapbox-gl-draw@1.4.3/dist/mapbox-gl-draw.js"></script>
+    <link
+        rel="stylesheet"
+        href="https://www.unpkg.com/@mapbox/mapbox-gl-draw@1.4.3/dist/mapbox-gl-draw.css"
+    />
+    <div id="map"></div>
+    <div class="calculation-box">
+        <p>Draw a polygon using the draw tools.</p>
+        <div id="calculated-area"></div>
+    </div>
 
-<script src="https://www.unpkg.com/turf@3.0.14/turf.min.js"></script>
-<script src="https://www.unpkg.com/@mapbox/mapbox-gl-draw@1.4.3/dist/mapbox-gl-draw.js"></script>
-<link
-    rel="stylesheet"
-    href="https://www.unpkg.com/@mapbox/mapbox-gl-draw@1.4.3/dist/mapbox-gl-draw.css"
-/>
-<div id="map"></div>
-<div class="calculation-box">
-    <p>Draw a polygon using the draw tools.</p>
-    <div id="calculated-area"></div>
-</div>
+    <script type="module">
 
-<script>
+
+    import * as turf from 'https://esm.sh/@turf/turf@7.1.0';
+
     MapboxDraw.constants.classes.CONTROL_BASE  = 'maplibregl-ctrl';
     MapboxDraw.constants.classes.CONTROL_PREFIX = 'maplibregl-ctrl-';
     MapboxDraw.constants.classes.CONTROL_GROUP = 'maplibregl-ctrl-group';

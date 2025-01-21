@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import {createRoot} from 'react-dom/client';
 
 import {BenchmarksTable} from './components/BenchmarkTable';
 import {summaryStatistics, regression, Summary} from './lib/statistics';
@@ -7,11 +7,8 @@ import type {BenchmarkRowProps} from './components/BenchmarkRow';
 
 function updateUI(benchmarks: BenchmarkRowProps[], finished?: boolean) {
     finished = !!finished;
-
-    ReactDOM.render(
-        <BenchmarksTable benchmarks={benchmarks} finished={finished}/>,
-        document.getElementById('benchmarks')
-    );
+    const root = createRoot(document.getElementById('benchmarks'));
+    root.render(<BenchmarksTable benchmarks={benchmarks} finished={finished}/>);
 }
 
 export async function run(benchmarks: BenchmarkRowProps[]) {

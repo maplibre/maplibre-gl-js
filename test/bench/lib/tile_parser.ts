@@ -47,9 +47,8 @@ function createStyle(styleJSON: StyleSpecification): Promise<Style> {
         const style = new Style(mapStub);
         mapStub.style = style;
         style.loadJSON(styleJSON);
-        style
-            .on('style.load', () => resolve(style))
-            .on('error', reject);
+        style.on('style.load', () => resolve(style));
+        style.on('error', reject);
     });
 }
 

@@ -1,0 +1,36 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+          "height": 512,
+          "width": 512
+        }
+    },
+    "center": [35.372566, 31.556437],
+    "zoom": 16.25,
+    "pitch": 60,
+    "bearing": 81.6,
+    "sources": {
+        "repeat": {
+            "type": "raster",
+            "tiles": ["local://tiles/number/{z}.png"],
+            "minzoom": 0,
+            "maxzoom": 22,
+            "tileSize": 256
+        },
+        "terrain": {
+          "type": "raster-dem",
+          "tiles": ["local://tiles/terrain/{z}-{x}-{y}.terrain.png"],
+          "minzoom": 7,
+          "maxzoom": 12,
+          "tileSize": 256
+        }
+    },
+    "layers": [
+        {"id": "osm", "type": "raster", "source": "repeat"}
+    ],
+    "terrain": {
+        "source": "terrain",
+        "exaggeration": 1.0
+    }
+}

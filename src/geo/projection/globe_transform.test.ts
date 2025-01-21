@@ -1,13 +1,15 @@
-import {GlobeProjection} from './globe';
+import {describe, expect, test} from 'vitest';
 import {EXTENT} from '../../data/extent';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
 import {GlobeTransform} from './globe_transform';
 import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../source/tile_id';
 import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
-import {expectToBeCloseToArray, getGlobeProjectionMock, sleep} from '../../util/test/util';
+import {expectToBeCloseToArray} from '../../util/test/util';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {tileCoordinatesToLocation} from './mercator_utils';
+import {MercatorTransform} from './mercator_transform';
+import {globeConstants} from './vertical_perspective_projection';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: Array<number>) {
     const lat = latDegrees / 180.0 * Math.PI;
@@ -25,29 +27,40 @@ function planeDistance(point: Array<number>, plane: Array<number>) {
     return point[0] * plane[0] + point[1] * plane[1] + point[2] * plane[2] + plane[3];
 }
 
-function createGlobeTransform(globeProjection: GlobeProjection) {
-    const globeTransform = new GlobeTransform(globeProjection);
+function createGlobeTransform() {
+    const globeTransform = new GlobeTransform();
     globeTransform.resize(640, 480);
     globeTransform.setFov(45);
     return globeTransform;
 }
 
 describe('GlobeTransform', () => {
-    const globeProjectionMock = getGlobeProjectionMock();
+    // Force faster animations so we can use shorter sleeps when testing them
+    globeConstants.errorTransitionTimeSeconds = 0.1;
 
     describe('getProjectionData', () => {
-        const globeTransform = createGlobeTransform(globeProjectionMock);
+        const globeTransform = createGlobeTransform();
         test('mercator tile extents are set', () => {
-            const projectionData = globeTransform.getProjectionData(new OverscaledTileID(1, 0, 1, 1, 0));
+            const projectionData = globeTransform.getProjectionData({overscaledTileID: new OverscaledTileID(1, 0, 1, 1, 0)});
             expectToBeCloseToArray(projectionData.tileMercatorCoords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
+        });
+
+        test('Globe transition is 0 when not applying the globe matrix', () => {
+            const projectionData = globeTransform.getProjectionData({overscaledTileID: new OverscaledTileID(1, 0, 1, 1, 0)});
+            expect(projectionData.projectionTransition).toBe(0);
+        });
+
+        test('Applying the globe matrix sets transition to something different than 0', () => {
+            const projectionData = globeTransform.getProjectionData({overscaledTileID: new OverscaledTileID(1, 0, 1, 1, 0), applyGlobeMatrix: true});
+            expect(projectionData.projectionTransition).not.toBe(0);
         });
     });
 
     describe('clipping plane', () => {
-        const globeTransform = createGlobeTransform(globeProjectionMock);
+        const globeTransform = createGlobeTransform();
 
         describe('general plane properties', () => {
-            const projectionData = globeTransform.getProjectionData(new OverscaledTileID(0, 0, 0, 0, 0));
+            const projectionData = globeTransform.getProjectionData({overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0)});
 
             test('plane vector length', () => {
                 const len = Math.sqrt(
@@ -115,7 +128,7 @@ describe('GlobeTransform', () => {
         test('camera position', () => {
             const precisionDigits = 10;
 
-            const globeTransform = createGlobeTransform(globeProjectionMock);
+            const globeTransform = createGlobeTransform();
             expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [0, 0, 8.110445867263898], precisionDigits);
 
             globeTransform.resize(512, 512);
@@ -125,6 +138,16 @@ describe('GlobeTransform', () => {
 
             globeTransform.setPitch(35);
             globeTransform.setBearing(70);
+            expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [-0.7098603286961542, 2.002400604307631, 0.6154310261827212], precisionDigits);
+
+            globeTransform.setPitch(35);
+            globeTransform.setBearing(70);
+            globeTransform.setRoll(40);
+            expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [-0.7098603286961542, 2.002400604307631, 0.6154310261827212], precisionDigits);
+
+            globeTransform.setPitch(35);
+            globeTransform.setBearing(70);
+            globeTransform.setRoll(180);
             expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [-0.7098603286961542, 2.002400604307631, 0.6154310261827212], precisionDigits);
 
             globeTransform.setCenter(new LngLat(-10, 42));
@@ -149,7 +172,7 @@ describe('GlobeTransform', () => {
 
         describe('project location to coordinates', () => {
             const precisionDigits = 10;
-            const globeTransform = createGlobeTransform(globeProjectionMock);
+            const globeTransform = createGlobeTransform();
 
             test('basic test', () => {
                 globeTransform.setCenter(new LngLat(0, 0));
@@ -183,7 +206,7 @@ describe('GlobeTransform', () => {
         describe('unproject', () => {
             test('unproject screen center', () => {
                 const precisionDigits = 10;
-                const globeTransform = createGlobeTransform(globeProjectionMock);
+                const globeTransform = createGlobeTransform();
                 let unprojected = globeTransform.screenPointToLocation(screenCenter);
                 expect(unprojected.lng).toBeCloseTo(globeTransform.center.lng, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(globeTransform.center.lat, precisionDigits);
@@ -201,7 +224,7 @@ describe('GlobeTransform', () => {
 
             test('unproject point to the side', () => {
                 const precisionDigits = 10;
-                const globeTransform = createGlobeTransform(globeProjectionMock);
+                const globeTransform = createGlobeTransform();
                 let coords: LngLat;
                 let projected: Point;
                 let unprojected: LngLat;
@@ -231,7 +254,7 @@ describe('GlobeTransform', () => {
                 // This particular case turned out to be problematic, hence this test.
 
                 const precisionDigits = 10;
-                const globeTransform = createGlobeTransform(globeProjectionMock);
+                const globeTransform = createGlobeTransform();
                 // Transform settings from the render test projection/globe/fill-planet-pole
                 // See the expected result for how the globe should look with this transform.
                 globeTransform.resize(512, 512);
@@ -262,7 +285,7 @@ describe('GlobeTransform', () => {
 
             test('unproject outside of sphere', () => {
                 const precisionDigits = 10;
-                const globeTransform = createGlobeTransform(globeProjectionMock);
+                const globeTransform = createGlobeTransform();
                 // Try unprojection a point somewhere above the western horizon
                 globeTransform.setPitch(60);
                 globeTransform.setBearing(-90);
@@ -274,7 +297,7 @@ describe('GlobeTransform', () => {
 
         describe('setLocationAtPoint', () => {
             const precisionDigits = 10;
-            const globeTransform = createGlobeTransform(globeProjectionMock);
+            const globeTransform = createGlobeTransform();
             globeTransform.setZoom(1);
             let coords: LngLat;
             let point: Point;
@@ -373,7 +396,7 @@ describe('GlobeTransform', () => {
     });
 
     describe('isPointOnMapSurface', () => {
-        const globeTransform = new GlobeTransform(globeProjectionMock);
+        const globeTransform = new GlobeTransform();
         globeTransform.resize(640, 480);
         globeTransform.setZoom(1);
 
@@ -413,7 +436,7 @@ describe('GlobeTransform', () => {
 
     test('pointCoordinate', () => {
         const precisionDigits = 10;
-        const globeTransform = createGlobeTransform(globeProjectionMock);
+        const globeTransform = createGlobeTransform();
         let coords: LngLat;
         let coordsMercator: MercatorCoordinate;
         let projected: Point;
@@ -434,46 +457,10 @@ describe('GlobeTransform', () => {
         expect(unprojectedCoordinates.y).toBeCloseTo(coordsMercator.y, precisionDigits);
     });
 
-    describe('globeViewAllowed', () => {
-        test('starts enabled', async () => {
-            const globeTransform = createGlobeTransform(globeProjectionMock);
-
-            expect(globeTransform.getGlobeViewAllowed()).toBe(true);
-            expect(globeTransform.useGlobeControls).toBe(true);
-        });
-
-        test('animates to false', async () => {
-            const globeTransform = createGlobeTransform(globeProjectionMock);
-            globeTransform.newFrameUpdate();
-            globeTransform.setGlobeViewAllowed(false);
-
-            await sleep(20);
-            globeTransform.newFrameUpdate();
-            expect(globeTransform.getGlobeViewAllowed()).toBe(false);
-            expect(globeTransform.useGlobeControls).toBe(true);
-
-            await sleep(1000);
-            globeTransform.newFrameUpdate();
-            expect(globeTransform.getGlobeViewAllowed()).toBe(false);
-            expect(globeTransform.useGlobeControls).toBe(false);
-        });
-
-        test('can skip animation if requested', async () => {
-            const globeTransform = createGlobeTransform(globeProjectionMock);
-            globeTransform.newFrameUpdate();
-            globeTransform.setGlobeViewAllowed(false, false);
-
-            await sleep(20);
-            globeTransform.newFrameUpdate();
-            expect(globeTransform.getGlobeViewAllowed()).toBe(false);
-            expect(globeTransform.useGlobeControls).toBe(false);
-        });
-    });
-
     describe('getBounds', () => {
         const precisionDigits = 10;
 
-        const globeTransform = new GlobeTransform(globeProjectionMock);
+        const globeTransform = new GlobeTransform();
         globeTransform.resize(640, 480);
 
         test('basic', () => {
@@ -519,7 +506,7 @@ describe('GlobeTransform', () => {
 
     describe('projectTileCoordinates', () => {
         const precisionDigits = 10;
-        const transform = new GlobeTransform(globeProjectionMock);
+        const transform = new GlobeTransform();
         transform.resize(512, 512);
         transform.setCenter(new LngLat(10.0, 50.0));
         transform.setZoom(-1);
@@ -557,7 +544,7 @@ describe('GlobeTransform', () => {
     });
 
     describe('isLocationOccluded', () => {
-        const transform = new GlobeTransform(globeProjectionMock);
+        const transform = new GlobeTransform();
         transform.resize(512, 512);
         transform.setCenter(new LngLat(0.0, 0.0));
         transform.setZoom(-1);
@@ -587,148 +574,21 @@ describe('GlobeTransform', () => {
         });
     });
 
-    describe('coveringTiles', () => {
-        test('zoomed out', () => {
-            const transform = new GlobeTransform(globeProjectionMock);
-            transform.resize(128, 128);
-            transform.setCenter(new LngLat(0.0, 0.0));
-            transform.setZoom(-1);
-
-            const tiles = transform.coveringTiles({
-                tileSize: 512,
-            });
-
-            expect(tiles).toEqual([
-                new OverscaledTileID(0, 0, 0, 0, 0)
-            ]);
+    describe('render world copies', () => {
+        test('change projection and make sure render world copies is kept', () => {
+            const globeTransform = createGlobeTransform();
+            globeTransform.setRenderWorldCopies(true);
+            
+            expect(globeTransform.renderWorldCopies).toBeTruthy();
         });
 
-        test('zoomed in', () => {
-            const transform = new GlobeTransform(globeProjectionMock);
-            transform.resize(128, 128);
-            transform.setCenter(new LngLat(0.0, 0.0));
-            transform.setZoom(3);
+        test('change transform and make sure render world copies is kept', () => {
+            const globeTransform = createGlobeTransform();
+            globeTransform.setRenderWorldCopies(true);
+            const mercator = new MercatorTransform(0, 1, 2, 3, false);
+            mercator.apply(globeTransform);
 
-            const tiles = transform.coveringTiles({
-                tileSize: 512,
-            });
-
-            expect(tiles).toEqual([
-                new OverscaledTileID(3, 0, 3, 3, 3),
-                new OverscaledTileID(3, 0, 3, 3, 4),
-                new OverscaledTileID(3, 0, 3, 4, 3),
-                new OverscaledTileID(3, 0, 3, 4, 4),
-            ]);
-        });
-
-        test('zoomed in 512x512', () => {
-            const transform = new GlobeTransform(globeProjectionMock);
-            transform.resize(512, 512);
-            transform.setCenter(new LngLat(0.0, 0.0));
-            transform.setZoom(3);
-
-            const tiles = transform.coveringTiles({
-                tileSize: 512,
-            });
-
-            expect(tiles).toEqual([
-                new OverscaledTileID(3, 0, 3, 2, 2),
-                new OverscaledTileID(3, 0, 3, 2, 3),
-                new OverscaledTileID(3, 0, 3, 3, 3),
-                new OverscaledTileID(3, 0, 3, 2, 4),
-                new OverscaledTileID(3, 0, 3, 3, 4),
-                new OverscaledTileID(3, 0, 3, 4, 3),
-                new OverscaledTileID(3, 0, 3, 2, 5),
-                new OverscaledTileID(3, 0, 3, 5, 2),
-                new OverscaledTileID(3, 0, 3, 4, 4),
-                new OverscaledTileID(3, 0, 3, 5, 3),
-                new OverscaledTileID(3, 0, 3, 5, 4),
-                new OverscaledTileID(3, 0, 3, 5, 5),
-            ]);
-        });
-
-        test('pitched', () => {
-            const transform = new GlobeTransform(globeProjectionMock);
-            transform.resize(128, 128);
-            transform.setCenter(new LngLat(0.0, 0.0));
-            transform.setZoom(8);
-            transform.setMaxPitch(80);
-            transform.setPitch(80);
-
-            const tiles = transform.coveringTiles({
-                tileSize: 512,
-            });
-
-            expect(tiles).toEqual([
-                new OverscaledTileID(8, 0, 8, 127, 126),
-                new OverscaledTileID(8, 0, 8, 127, 127),
-                new OverscaledTileID(8, 0, 8, 128, 126),
-                new OverscaledTileID(8, 0, 8, 127, 128),
-                new OverscaledTileID(8, 0, 8, 128, 127),
-                new OverscaledTileID(8, 0, 8, 128, 128),
-            ]);
-        });
-
-        test('pitched+rotated', () => {
-            const transform = new GlobeTransform(globeProjectionMock);
-            transform.resize(128, 128);
-            transform.setCenter(new LngLat(0.0, 0.0));
-            transform.setZoom(8);
-            transform.setMaxPitch(80);
-            transform.setPitch(80);
-            transform.setBearing(45);
-
-            const tiles = transform.coveringTiles({
-                tileSize: 512,
-            });
-
-            expect(tiles).toEqual([
-                new OverscaledTileID(8, 0, 8, 128, 125),
-                new OverscaledTileID(8, 0, 8, 127, 127),
-                new OverscaledTileID(8, 0, 8, 128, 126),
-                new OverscaledTileID(8, 0, 8, 127, 128),
-                new OverscaledTileID(8, 0, 8, 128, 127),
-                new OverscaledTileID(8, 0, 8, 129, 126),
-                new OverscaledTileID(8, 0, 8, 128, 128),
-                new OverscaledTileID(8, 0, 8, 129, 127),
-                new OverscaledTileID(8, 0, 8, 130, 127),
-            ]);
-        });
-
-        test('antimeridian1', () => {
-            const transform = new GlobeTransform(globeProjectionMock);
-            transform.resize(128, 128);
-            transform.setCenter(new LngLat(179.99, 0.0));
-            transform.setZoom(5);
-
-            const tiles = transform.coveringTiles({
-                tileSize: 512,
-            });
-
-            expect(tiles).toEqual([
-                new OverscaledTileID(5, 1, 5, 0, 15),
-                new OverscaledTileID(5, 1, 5, 0, 16),
-                new OverscaledTileID(5, 0, 5, 31, 15),
-                new OverscaledTileID(5, 0, 5, 31, 16),
-            ]);
-        });
-
-        test('antimeridian2', () => {
-            const transform = new GlobeTransform(globeProjectionMock);
-            transform.resize(128, 128);
-            transform.setCenter(new LngLat(-179.99, 0.0));
-            transform.setZoom(5);
-
-            const tiles = transform.coveringTiles({
-                tileSize: 512,
-            });
-
-            expect(tiles).toEqual([
-                new OverscaledTileID(5, 0, 5, 0, 15),
-                new OverscaledTileID(5, 0, 5, 0, 16),
-                new OverscaledTileID(5, -1, 5, 31, 15),
-                new OverscaledTileID(5, -1, 5, 31, 16),
-            ]);
+            expect(mercator.renderWorldCopies).toBeTruthy();
         });
     });
 });

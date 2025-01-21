@@ -1,17 +1,17 @@
-import {StyleLayer} from '../style_layer';
+import {StyleLayer, type QueryIntersectsFeatureParams} from '../style_layer';
 
 import {CircleBucket} from '../../data/bucket/circle_bucket';
 import {polygonIntersectsBufferedPoint} from '../../util/intersection_tests';
 import {getMaximumPaintValue, translateDistance, translate} from '../query_utils';
-import properties, {CircleLayoutPropsPossiblyEvaluated, CirclePaintPropsPossiblyEvaluated} from './circle_style_layer_properties.g';
-import {Transitionable, Transitioning, Layout, PossiblyEvaluated} from '../properties';
-import {mat4, vec4} from 'gl-matrix';
+import properties, {type CircleLayoutPropsPossiblyEvaluated, type CirclePaintPropsPossiblyEvaluated} from './circle_style_layer_properties.g';
+import {type Transitionable, type Transitioning, type Layout, type PossiblyEvaluated} from '../properties';
+import {type mat4, vec4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
-import type {FeatureState, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {IReadonlyTransform} from '../../geo/transform_interface';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Bucket, BucketParameters} from '../../data/bucket';
 import type {CircleLayoutProps, CirclePaintProps} from './circle_style_layer_properties.g';
-import type {VectorTileFeature} from '@mapbox/vector-tile';
+
+export const isCircleStyleLayer = (layer: StyleLayer): layer is CircleStyleLayer => layer.type === 'circle';
 
 /**
  * A style layer that defines a circle
@@ -39,28 +39,27 @@ export class CircleStyleLayer extends StyleLayer {
             translateDistance(this.paint.get('circle-translate'));
     }
 
-    queryIntersectsFeature(
-        queryGeometry: Array<Point>,
-        feature: VectorTileFeature,
-        featureState: FeatureState,
-        geometry: Array<Array<Point>>,
-        zoom: number,
-        transform: IReadonlyTransform,
-        pixelsToTileUnits: number,
-        pixelPosMatrix: mat4
+    queryIntersectsFeature({
+        queryGeometry,
+        feature,
+        featureState,
+        geometry,
+        transform,
+        pixelsToTileUnits,
+        pixelPosMatrix}: QueryIntersectsFeatureParams
     ): boolean {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('circle-translate'),
             this.paint.get('circle-translate-anchor'),
-            transform.angle, pixelsToTileUnits);
+            -transform.bearingInRadians, pixelsToTileUnits);
         const radius = this.paint.get('circle-radius').evaluate(feature, featureState);
         const stroke = this.paint.get('circle-stroke-width').evaluate(feature, featureState);
         const size  = radius + stroke;
 
         // For pitch-alignment: map, compare feature geometry to query geometry in the plane of the tile
-        // // Otherwise, compare geometry in the plane of the viewport
-        // // A circle with fixed scaling relative to the viewport gets larger in tile space as it moves into the distance
-        // // A circle with fixed scaling relative to the map gets smaller in viewport space as it moves into the distance
+        // Otherwise, compare geometry in the plane of the viewport
+        // A circle with fixed scaling relative to the viewport gets larger in tile space as it moves into the distance
+        // A circle with fixed scaling relative to the map gets smaller in viewport space as it moves into the distance
         const alignWithMap = this.paint.get('circle-pitch-alignment') === 'map';
         const transformedPolygon = alignWithMap ? translatedPolygon : projectQueryGeometry(translatedPolygon, pixelPosMatrix);
         const transformedSize = alignWithMap ? size * pixelsToTileUnits : size;

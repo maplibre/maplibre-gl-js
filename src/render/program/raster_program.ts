@@ -3,7 +3,7 @@ import {Uniform1i, Uniform1f, Uniform2f, Uniform3f, Uniform4f} from '../uniform_
 import type {Context} from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {RasterStyleLayer} from '../../style/style_layer/raster_style_layer';
-import Point from '@mapbox/point-geometry';
+import type Point from '@mapbox/point-geometry';
 
 export type RasterUniformsType = {
     'u_tl_parent': Uniform2f;

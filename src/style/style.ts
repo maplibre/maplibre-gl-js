@@ -1,5 +1,5 @@
 import {Event, ErrorEvent, Evented} from '../util/evented';
-import {StyleLayer} from './style_layer';
+import {type StyleLayer} from './style_layer';
 import {createStyleLayer} from './create_style_layer';
 import {loadSprite} from './load_sprite';
 import {ImageManager} from '../render/image_manager';
@@ -14,11 +14,11 @@ import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
 import {Dispatcher} from '../util/dispatcher';
 import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
-import {Source} from '../source/source';
-import {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
+import {type Source} from '../source/source';
+import {type QueryRenderedFeaturesOptions, type QueryRenderedFeaturesOptionsStrict, type QueryRenderedFeaturesResults, type QueryRenderedFeaturesResultsItem, type QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
 import {SourceCache} from '../source/source_cache';
-import {GeoJSONSource} from '../source/geojson_source';
-import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, DiffCommand} from '@maplibre/maplibre-gl-style-spec';
+import {type GeoJSONSource} from '../source/geojson_source';
+import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, type DiffCommand} from '@maplibre/maplibre-gl-style-spec';
 import {getGlobalWorkerPool} from '../util/global_worker_pool';
 import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
@@ -27,6 +27,7 @@ import {ZoomHistory} from './zoom_history';
 import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index';
 import {validateCustomStyleLayer} from './style_layer/custom_style_layer';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
+import type Point from '@mapbox/point-geometry';
 
 // We're skipping validation errors with the `source.canvas` identifier in order
 // to continue to allow canvas sources to be added at runtime/updated in
@@ -63,7 +64,7 @@ import {
     type GetImagesParameters,
     type GetImagesResponse
 } from '../util/actor_messages';
-import {Projection} from '../geo/projection/projection';
+import {type Projection} from '../geo/projection/projection';
 import {createProjectionFromName} from '../geo/projection/projection_factory';
 
 const empty = emptyStyle() as StyleSpecification;
@@ -121,6 +122,7 @@ export type StyleSetterOptions = {
  * - when previous style carries certain 'state' that needs to be carried over to a new style gracefully;
  * - when a desired style is a certain combination of previous and incoming style;
  * - when an incoming style requires modification based on external state.
+ * - when an incoming style uses relative paths, which need to be converted to absolute.
  *
  * @param previous - The current style.
  * @param next - The next style.
@@ -131,8 +133,18 @@ export type StyleSetterOptions = {
  * map.setStyle('https://demotiles.maplibre.org/style.json', {
  *   transformStyle: (previousStyle, nextStyle) => ({
  *       ...nextStyle,
+ *       // make relative sprite path like "../sprite" absolute
+ *       sprite: new URL(nextStyle.sprite, "https://demotiles.maplibre.org/styles/osm-bright-gl-style/sprites/").href,
+ *       // make relative glyphs path like "../fonts/{fontstack}/{range}.pbf" absolute
+ *       glyphs: new URL(nextStyle.glyphs, "https://demotiles.maplibre.org/font/").href,
  *       sources: {
- *           ...nextStyle.sources,
+ *           // make relative vector url like "../../" absolute
+ *           ...nextStyle.sources.map(source => {
+ *              if (source.url) {
+     *              source.url = new URL(source.url, "https://api.maptiler.com/tiles/osm-bright-gl-style/");
+ *              }
+ *              return source;
+ *           }),
  *           // copy a source from previous style
  *           'osm': previousStyle.sources.osm
  *       },
@@ -173,7 +185,7 @@ export type StyleSwapOptions = {
      * that allows to modify a style after it is fetched but before it is committed to the map state. Refer to {@link TransformStyleFunction}.
      */
     transformStyle?: TransformStyleFunction;
-}
+};
 
 /**
  * Specifies a layer to be added to a {@link Style}. In addition to a standard {@link LayerSpecification}
@@ -192,7 +204,7 @@ export class Style extends Evented {
     glyphManager: GlyphManager;
     lineAtlas: LineAtlas;
     light: Light;
-    projection: Projection;
+    projection: Projection | undefined;
     sky: Sky;
 
     _frameRequest: AbortController;
@@ -534,11 +546,15 @@ export class Style extends Evented {
     }
 
     hasTransitions() {
-        if (this.light && this.light.hasTransition()) {
+        if (this.light?.hasTransition()) {
             return true;
         }
 
-        if (this.sky && this.sky.hasTransition()) {
+        if (this.sky?.hasTransition()) {
+            return true;
+        }
+
+        if (this.projection?.hasTransition()) {
             return true;
         }
 
@@ -646,6 +662,7 @@ export class Style extends Evented {
 
         this.light.recalculate(parameters);
         this.sky.recalculate(parameters);
+        this.projection.recalculate(parameters);
         this.z = parameters.zoom;
 
         if (changed) {
@@ -747,6 +764,7 @@ export class Style extends Evented {
                 case 'setZoom':
                 case 'setBearing':
                 case 'setPitch':
+                case 'setRoll':
                     continue;
                 case 'addLayer':
                     operations.push(() => this.addLayer.apply(this, op.args));
@@ -1336,7 +1354,7 @@ export class Style extends Evented {
         this._changed = true;
     }
 
-    _flattenAndSortRenderedFeatures(sourceResults: Array<{ [key: string]: Array<{featureIndex: number; feature: MapGeoJSONFeature}> }>) {
+    _flattenAndSortRenderedFeatures(sourceResults: QueryRenderedFeaturesResults[]): MapGeoJSONFeature[] {
         // Feature order is complicated.
         // The order between features in two 2D layers is always determined by layer order.
         // The order between features in two 3D layers is always determined by depth.
@@ -1357,7 +1375,7 @@ export class Style extends Evented {
         const isLayer3D = layerId => this._layers[layerId].type === 'fill-extrusion';
 
         const layerIndex = {};
-        const features3D = [];
+        const features3D: QueryRenderedFeaturesResultsItem[] = [];
         for (let l = this._order.length - 1; l >= 0; l--) {
             const layerId = this._order[l];
             if (isLayer3D(layerId)) {
@@ -1374,10 +1392,10 @@ export class Style extends Evented {
         }
 
         features3D.sort((a, b) => {
-            return b.intersectionZ - a.intersectionZ;
+            return (b.intersectionZ as number) - (a.intersectionZ as number);
         });
 
-        const features = [];
+        const features: MapGeoJSONFeature[] = [];
         for (let l = this._order.length - 1; l >= 0; l--) {
             const layerId = this._order[l];
 
@@ -1404,15 +1422,16 @@ export class Style extends Evented {
         return features;
     }
 
-    queryRenderedFeatures(queryGeometry: any, params: QueryRenderedFeaturesOptions, transform: IReadonlyTransform) {
+    queryRenderedFeatures(queryGeometry: Point[], params: QueryRenderedFeaturesOptions, transform: IReadonlyTransform): MapGeoJSONFeature[] {
         if (params && params.filter) {
             this._validate(validateStyle.filter, 'queryRenderedFeatures.filter', params.filter, null, params);
         }
 
         const includedSources = {};
         if (params && params.layers) {
-            if (!Array.isArray(params.layers)) {
-                this.fire(new ErrorEvent(new Error('parameters.layers must be an Array.')));
+            const isArrayOrSet = Array.isArray(params.layers) || params.layers instanceof Set;
+            if (!isArrayOrSet) {
+                this.fire(new ErrorEvent(new Error('parameters.layers must be an Array or a Set of strings')));
                 return [];
             }
             for (const layerId of params.layers) {
@@ -1426,12 +1445,18 @@ export class Style extends Evented {
             }
         }
 
-        const sourceResults = [];
+        const sourceResults: QueryRenderedFeaturesResults[] = [];
 
         params.availableImages = this._availableImages;
 
         // LayerSpecification is serialized StyleLayer, and this casting is safe.
         const serializedLayers = this._serializedAllLayers() as {[_: string]: StyleLayer};
+
+        const layersAsSet = params.layers instanceof Set ? params.layers : Array.isArray(params.layers) ? new Set(params.layers) : null;
+        const paramsStrict: QueryRenderedFeaturesOptionsStrict = {
+            ...params,
+            layers: layersAsSet,
+        };
 
         for (const id in this.sourceCaches) {
             if (params.layers && !includedSources[id]) continue;
@@ -1441,7 +1466,7 @@ export class Style extends Evented {
                     this._layers,
                     serializedLayers,
                     queryGeometry,
-                    params,
+                    paramsStrict,
                     transform)
             );
         }
@@ -1455,7 +1480,7 @@ export class Style extends Evented {
                     serializedLayers,
                     this.sourceCaches,
                     queryGeometry,
-                    params,
+                    paramsStrict,
                     this.placement.collisionIndex,
                     this.placement.retainedQueryData)
             );
@@ -1505,7 +1530,7 @@ export class Style extends Evented {
     }
 
     getProjection(): ProjectionSpecification {
-        return this.stylesheet.projection;
+        return this.stylesheet?.projection;
     }
 
     setProjection(projection: ProjectionSpecification) {

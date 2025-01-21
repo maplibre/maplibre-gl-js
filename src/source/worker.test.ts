@@ -1,12 +1,12 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {fakeServer} from 'nise';
 import Worker from './worker';
-import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {WorkerGlobalScopeInterface} from '../util/web_worker';
-import {CanonicalTileID, OverscaledTileID} from './tile_id';
-import {WorkerSource, WorkerTileParameters, WorkerTileResult} from './worker_source';
+import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {type WorkerGlobalScopeInterface} from '../util/web_worker';
+import {type CanonicalTileID, type OverscaledTileID} from './tile_id';
+import {type WorkerSource, type WorkerTileParameters, type WorkerTileResult} from './worker_source';
 import {rtlWorkerPlugin} from './rtl_text_plugin_worker';
-import {ActorTarget, IActor} from '../util/actor';
-import {PluginState} from './rtl_text_plugin_status';
+import {type ActorTarget, type IActor} from '../util/actor';
 import {MessageType} from '../util/actor_messages';
 
 class WorkerSourceMock implements WorkerSource {
@@ -37,108 +37,22 @@ describe('Worker RTLTextPlugin', () => {
         } as any;
         worker = new Worker(_self);
         global.fetch = null;
-        rtlWorkerPlugin.setMethods({
-            applyArabicShaping: null,
-            processBidirectionalText: null,
-            processStyledBidirectionalText: null
-        });
-        jest.spyOn(rtlWorkerPlugin, 'isParsed').mockImplementation(() => {
-            return false;
-        });
     });
 
-    test('should not throw and set values in plugin', () => {
-        const rtlTextPlugin = {
-            applyArabicShaping: 'test',
-            processBidirectionalText: 'test',
-            processStyledBidirectionalText: 'test',
-        };
+    test('should call setMethods in plugin', () => {
+        const spy = vi.spyOn(rtlWorkerPlugin, 'setMethods').mockImplementation(() => {});
 
-        _self.registerRTLTextPlugin(rtlTextPlugin);
-        expect(rtlWorkerPlugin.applyArabicShaping).toBe('test');
-        expect(rtlWorkerPlugin.processBidirectionalText).toBe('test');
-        expect(rtlWorkerPlugin.processStyledBidirectionalText).toBe('test');
+        _self.registerRTLTextPlugin({} as any);
+
+        expect(spy).toHaveBeenCalled();
     });
 
-    test('should throw if already parsed', () => {
-        jest.spyOn(rtlWorkerPlugin, 'isParsed').mockImplementation(() => {
-            return true;
-        });
+    test('should call syncState when rtl message is received', async () => {
+        const syncStateSpy = vi.spyOn(rtlWorkerPlugin, 'syncState').mockImplementation((_, __) => Promise.resolve({} as any));
 
-        const rtlTextPlugin = {
-            applyArabicShaping: jest.fn(),
-            processBidirectionalText: jest.fn(),
-            processStyledBidirectionalText: jest.fn(),
-        };
+        await worker.actor.messageHandlers[MessageType.syncRTLPluginState]('', {} as any) as any;
 
-        expect(() => {
-            _self.registerRTLTextPlugin(rtlTextPlugin);
-        }).toThrow('RTL text plugin already registered.');
-    });
-
-    test('should move RTL plugin from unavailable to deferred', async () => {
-        rtlWorkerPlugin.setState({
-            pluginURL: '',
-            pluginStatus: 'unavailable'
-        }
-        );
-        const mockMessage: PluginState = {
-            pluginURL: 'https://somehost/somescript',
-            pluginStatus: 'deferred'
-        };
-
-        await worker.actor.messageHandlers[MessageType.syncRTLPluginState]('', mockMessage);
-        expect(rtlWorkerPlugin.getRTLTextPluginStatus()).toBe('deferred');
-    });
-
-    test('should download RTL plugin when "loading" message is received', async () => {
-        rtlWorkerPlugin.setState({
-            pluginURL: '',
-            pluginStatus: 'deferred'
-        });
-
-        const mockURL = 'https://somehost/somescript';
-        const mockMessage: PluginState = {
-            pluginURL: mockURL,
-            pluginStatus: 'loading'
-        };
-
-        const importSpy = jest.spyOn(worker.self, 'importScripts').mockImplementation(() => {
-            // after importing isParse() to return true
-            jest.spyOn(rtlWorkerPlugin, 'isParsed').mockImplementation(() => {
-                return true;
-            });
-        });
-
-        const syncResult: PluginState = await worker.actor.messageHandlers[MessageType.syncRTLPluginState]('', mockMessage) as any;
-        expect(rtlWorkerPlugin.getRTLTextPluginStatus()).toBe('loaded');
-        expect(importSpy).toHaveBeenCalledWith(mockURL);
-
-        expect(syncResult.pluginURL).toBe(mockURL);
-        expect(syncResult.pluginStatus).toBe('loaded');
-    });
-
-    test('should not change RTL plugin status if already parsed', async () => {
-        const originalUrl = 'https://somehost/somescript1';
-        rtlWorkerPlugin.setState({
-            pluginURL: originalUrl,
-            pluginStatus: 'loaded'
-        });
-
-        jest.spyOn(rtlWorkerPlugin, 'isParsed').mockImplementation(() => {
-            return true;
-        });
-        const mockMessage: PluginState = {
-            pluginURL: 'https://somehost/somescript2',
-            pluginStatus: 'loading'
-        };
-
-        const workerResult: PluginState = await worker.actor.messageHandlers[MessageType.syncRTLPluginState]('', mockMessage) as any;
-        expect(rtlWorkerPlugin.getRTLTextPluginStatus()).toBe('loaded');
-        expect(rtlWorkerPlugin.getPluginURL()).toBe(originalUrl);
-
-        expect(workerResult.pluginStatus).toBe('loaded');
-        expect(workerResult.pluginURL).toBe(originalUrl);
+        expect(syncStateSpy).toHaveBeenCalled();
     });
 });
 

@@ -1,4 +1,4 @@
-import {ExpiryData, getArrayBuffer} from '../util/ajax';
+import {type ExpiryData, getArrayBuffer} from '../util/ajax';
 
 import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
@@ -27,7 +27,7 @@ type FetchingState = {
     rawTileData: ArrayBuffer;
     cacheControl: ExpiryData;
     resourceTiming: any;
-}
+};
 
 export type AbortVectorData = () => void;
 export type LoadVectorData = (params: WorkerTileParameters, abortController: AbortController) => Promise<LoadVectorTileResult | null>;

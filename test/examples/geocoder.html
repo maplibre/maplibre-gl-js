@@ -21,7 +21,6 @@
 />
 <div id="map"></div>
 <script>
-    /* eslint-disable camelcase */
     const map = new maplibregl.Map({
         container: 'map',
         // Use a minimalist raster style
@@ -59,7 +58,7 @@
         zoom: 15.99,
         pitch: 40,
         bearing: 20,
-        antialias: true
+        canvasContextAttributes: {antialias: true}
     });
 
     const geocoderApi = {

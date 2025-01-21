@@ -3,9 +3,9 @@ import UnitBezier from '@mapbox/unitbezier';
 import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';
 import type {Size} from './image';
 import type {WorkerGlobalScopeInterface} from './web_worker';
-import {mat4, vec3, vec4} from 'gl-matrix';
+import {mat3, mat4, quat, vec2, type vec3, type vec4} from 'gl-matrix';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
-import {OverscaledTileID} from '../source/tile_id';
+import {type OverscaledTileID} from '../source/tile_id';
 
 /**
  * Returns a new 64 bit float vec4 of zeroes.
@@ -20,10 +20,22 @@ export function createVec3f64(): vec3 { return new Float64Array(3) as any; }
  */
 export function createMat4f64(): mat4 { return new Float64Array(16) as any; }
 /**
+ * Returns a new 32 bit float mat4 of zeroes.
+ */
+export function createMat4f32(): mat4 { return new Float32Array(16) as any; }
+/**
  * Returns a new 64 bit float mat4 set to identity.
  */
 export function createIdentityMat4f64(): mat4 {
     const m = new Float64Array(16) as any;
+    mat4.identity(m);
+    return m;
+}
+/**
+ * Returns a new 32 bit float mat4 set to identity.
+ */
+export function createIdentityMat4f32(): mat4 {
+    const m = new Float32Array(16) as any;
     mat4.identity(m);
     return m;
 }
@@ -33,7 +45,7 @@ export function createIdentityMat4f64(): mat4 {
  * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
  */
 export function translatePosition(
-    transform: { angle: number; zoom: number },
+    transform: { bearingInRadians: number; zoom: number },
     tile: { tileID: OverscaledTileID; tileSize: number },
     translate: [number, number],
     translateAnchor: 'map' | 'viewport',
@@ -42,8 +54,8 @@ export function translatePosition(
     if (!translate[0] && !translate[1]) return [0, 0];
 
     const angle = inViewportPixelUnitsUnits ?
-        (translateAnchor === 'map' ? transform.angle : 0) :
-        (translateAnchor === 'viewport' ? -transform.angle : 0);
+        (translateAnchor === 'map' ? -transform.bearingInRadians : 0) :
+        (translateAnchor === 'viewport' ? transform.bearingInRadians : 0);
 
     if (angle) {
         const sinA = Math.sin(angle);
@@ -395,6 +407,16 @@ export function nextPowerOfTwo(value: number): number {
 }
 
 /**
+ * Computes scaling from zoom level.
+ */
+export function zoomScale(zoom: number) { return Math.pow(2, zoom); }
+
+/**
+ * Computes zoom level from scaling.
+ */
+export function scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
+
+/**
  * Create an object by mapping all the values of an existing object while
  * preserving their keys.
  */
@@ -617,7 +639,7 @@ export function storageAvailable(type: string): boolean {
         storage.setItem('_mapbox_test_', 1);
         storage.removeItem('_mapbox_test_');
         return true;
-    } catch (e) {
+    } catch {
         return false;
     }
 }
@@ -838,14 +860,20 @@ export async function getImageData(
     if (isOffscreenCanvasDistorted()) {
         try {
             return await readImageUsingVideoFrame(image, x, y, width, height);
-        } catch (e) {
+        } catch {
             // fall back to OffscreenCanvas
         }
     }
     return readImageDataUsingOffscreenCanvas(image, x, y, width, height);
 }
 
+/**
+ * Allows to unsubscribe from events without the need to store the method reference.
+ */
 export interface Subscription {
+    /**
+     * Unsubscribes from the event.
+     */
     unsubscribe(): void;
 }
 
@@ -883,6 +911,71 @@ export function degreesToRadians(degrees: number): number {
 }
 
 /**
+ * This method converts radians to degrees.
+ * The return value is the degrees value.
+ * @param degrees - The number of radians
+ * @returns degrees
+ */
+export function radiansToDegrees(degrees: number): number {
+    return degrees / Math.PI * 180;
+}
+
+export type RollPitchBearing = {
+    roll: number;
+    pitch: number;
+    bearing: number;
+};
+
+export function rollPitchBearingEqual(a: RollPitchBearing, b: RollPitchBearing): boolean {
+    return a.roll == b.roll && a.pitch == b.pitch && a.bearing == b.bearing;
+}
+
+/**
+ * This method converts a rotation quaternion to roll, pitch, and bearing angles in degrees.
+ * @param rotation - The rotation quaternion
+ * @returns roll, pitch, and bearing angles in degrees
+ */
+export function getRollPitchBearing(rotation: quat): RollPitchBearing {
+    const m: mat3 = new Float64Array(9) as any;
+    mat3.fromQuat(m, rotation);
+
+    const xAngle = radiansToDegrees(-Math.asin(clamp(m[2], -1, 1)));
+    let roll: number;
+    let bearing: number;
+    if (Math.hypot(m[5], m[8]) < 1.0e-3) {
+        roll = 0.0;
+        bearing = -radiansToDegrees(Math.atan2(m[3], m[4]));
+    } else {
+        roll = radiansToDegrees((m[5] === 0.0 && m[8] === 0.0) ? 0.0 :  Math.atan2(m[5], m[8]));
+        bearing = radiansToDegrees((m[1] === 0.0 && m[0] === 0.0) ? 0.0 : Math.atan2(m[1], m[0]));
+    }
+
+    return {roll, pitch: xAngle + 90.0, bearing};
+}
+
+export function getAngleDelta(lastPoint: Point, currentPoint: Point, center: Point): number {
+    const pointVect = vec2.fromValues(currentPoint.x - center.x, currentPoint.y - center.y);
+    const lastPointVec = vec2.fromValues(lastPoint.x - center.x, lastPoint.y - center.y);
+
+    const crossProduct = pointVect[0] * lastPointVec[1] - pointVect[1] * lastPointVec[0];
+    const angleRadians = Math.atan2(crossProduct, vec2.dot(pointVect, lastPointVec));
+    return radiansToDegrees(angleRadians);
+}
+
+/**
+ * This method converts roll, pitch, and bearing angles in degrees to a rotation quaternion.
+ * @param roll - Roll angle in degrees
+ * @param pitch - Pitch angle in degrees
+ * @param bearing - Bearing angle in degrees
+ * @returns The rotation quaternion
+ */
+export function rollPitchBearingToQuat(roll: number, pitch: number, bearing: number): quat {
+    const rotation: quat = new Float64Array(4) as any;
+    quat.fromEuler(rotation, roll, pitch - 90.0, bearing);
+    return rotation;
+}
+
+/**
  * Makes optional keys required and add the the undefined type.
  *
  * ```
@@ -905,7 +998,12 @@ export function degreesToRadians(degrees: number): number {
 
 export type Complete<T> = {
     [P in keyof Required<T>]: Pick<T, P> extends Required<Pick<T, P>> ? T[P] : (T[P] | undefined);
-}
+};
+
+/**
+ * A helper to allow require of at least one property
+ */
+export type RequireAtLeastOne<T> = { [K in keyof T]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<keyof T, K>>>; }[keyof T];
 
 export type TileJSON = {
     tilejson: '2.2.0' | '2.1.0' | '2.0.1' | '2.0.0' | '1.0.0';
@@ -935,3 +1033,5 @@ export const MAX_TILE_ZOOM = 25;
  * In other words, the lower bound supported for tile zoom.
  */
 export const MIN_TILE_ZOOM = 0;
+
+export const MAX_VALID_LATITUDE = 85.051129;

@@ -1,6 +1,7 @@
+import {describe, beforeEach, test, expect} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
 import {fixedLngLat, fixedNum} from '../../../test/unit/lib/fixed';
-import {LngLatBoundsLike} from '../../geo/lng_lat_bounds';
+import {type LngLatBoundsLike} from '../../geo/lng_lat_bounds';
 
 beforeEach(() => {
     beforeMapTest();
@@ -39,8 +40,8 @@ describe('#getBounds', () => {
 
     test('getBounds', () => {
         const map = createMap({zoom: 0});
-        expect(parseFloat(map.getBounds().getCenter().lng.toFixed(10))).toBe(-0);
-        expect(parseFloat(map.getBounds().getCenter().lat.toFixed(10))).toBe(0);
+        expect(parseFloat(map.getBounds().getCenter().lng.toFixed(10))).toBeCloseTo(0, 10);
+        expect(parseFloat(map.getBounds().getCenter().lat.toFixed(10))).toBeCloseTo(0, 10);
 
         expect(toFixed(map.getBounds().toArray())).toEqual(toFixed([
             [-70.31249999999976, -57.326521225216965],

@@ -1,14 +1,18 @@
+import {describe, expect, test} from 'vitest';
 import {LngLat} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
-import {scaleZoom, TransformHelper, zoomScale} from './transform_helper';
+import {TransformHelper} from './transform_helper';
+import {OverscaledTileID} from '../source/tile_id';
+import {expectToBeCloseToArray} from '../util/test/util';
+import {EXTENT} from '../data/extent';
+
+const emptyCallbacks = {
+    calcMatrices: () => {},
+    getConstrained: (center, zoom) => { return {center, zoom}; },
+};
 
 describe('TransformHelper', () => {
     test('apply', () => {
-        const emptyCallbacks = {
-            calcMatrices: () => {},
-            getConstrained: (center, zoom) => { return {center, zoom}; },
-        };
-
         const original = new TransformHelper(emptyCallbacks);
         original.setBearing(12);
         original.setCenter(new LngLat(3, 4));
@@ -27,6 +31,7 @@ describe('TransformHelper', () => {
             left: 3,
         });
         original.setPitch(3);
+        original.setRoll(7);
         original.setRenderWorldCopies(false);
         original.setZoom(2.3);
 
@@ -40,7 +45,7 @@ describe('TransformHelper', () => {
         expect(cloned.worldSize).toEqual(original.worldSize);
         expect(cloned.width).toEqual(original.width);
         expect(cloned.height).toEqual(original.height);
-        expect(cloned.angle).toEqual(original.angle);
+        expect(cloned.bearingInRadians).toEqual(original.bearingInRadians);
         expect(cloned.lngRange).toEqual(original.lngRange);
         expect(cloned.latRange).toEqual(original.latRange);
         expect(cloned.minZoom).toEqual(original.minZoom);
@@ -50,6 +55,7 @@ describe('TransformHelper', () => {
         expect(cloned.minPitch).toEqual(original.minPitch);
         expect(cloned.maxPitch).toEqual(original.maxPitch);
         expect(cloned.pitch).toEqual(original.pitch);
+        expect(cloned.roll).toEqual(original.roll);
         expect(cloned.bearing).toEqual(original.bearing);
         expect(cloned.fov).toEqual(original.fov);
         expect(cloned.elevation).toEqual(original.elevation);
@@ -59,10 +65,18 @@ describe('TransformHelper', () => {
         expect(cloned.renderWorldCopies).toEqual(original.renderWorldCopies);
     });
 
-    test('scaleZoom+zoomScale', () => {
-        expect(scaleZoom(0)).toBe(-Infinity);
-        expect(scaleZoom(10)).toBe(3.3219280948873626);
-        expect(zoomScale(3.3219280948873626)).toBeCloseTo(10, 10);
-        expect(scaleZoom(zoomScale(5))).toBe(5);
+    describe('getMercatorTilesCoordinates', () => {
+        test('mercator tile extents are set', () => {
+            const helper = new TransformHelper(emptyCallbacks);
+
+            let tileMercatorCoords = helper.getMercatorTileCoordinates(new OverscaledTileID(0, 0, 0, 0, 0));
+            expectToBeCloseToArray(tileMercatorCoords, [0, 0, 1 / EXTENT, 1 / EXTENT]);
+
+            tileMercatorCoords = helper.getMercatorTileCoordinates(new OverscaledTileID(1, 0, 1, 0, 0));
+            expectToBeCloseToArray(tileMercatorCoords, [0, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
+
+            tileMercatorCoords = helper.getMercatorTileCoordinates(new OverscaledTileID(1, 0, 1, 1, 0));
+            expectToBeCloseToArray(tileMercatorCoords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
+        });
     });
 });

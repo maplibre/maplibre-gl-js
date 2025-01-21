@@ -1,14 +1,16 @@
+import {describe, test, expect, vi} from 'vitest';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
-import {GeoJSONSource, GeoJSONSourceOptions} from './geojson_source';
-import {IReadonlyTransform} from '../geo/transform_interface';
+import {GeoJSONSource, type GeoJSONSourceOptions} from './geojson_source';
+import {type IReadonlyTransform} from '../geo/transform_interface';
+import {EXTENT} from '../data/extent';
 import {LngLat} from '../geo/lng_lat';
 import {extend} from '../util/util';
-import {Dispatcher} from '../util/dispatcher';
-import {RequestManager} from '../util/request_manager';
+import {type Dispatcher} from '../util/dispatcher';
+import {type RequestManager} from '../util/request_manager';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
-import {ActorMessage, MessageType} from '../util/actor_messages';
-import {Actor} from '../util/actor';
+import {type ActorMessage, MessageType} from '../util/actor_messages';
+import {type Actor} from '../util/actor';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 const wrapDispatcher = (dispatcher) => {
@@ -64,7 +66,7 @@ describe('GeoJSONSource#constructor', () => {
         }
     } as any;
     test('warn if maxzoom <= clusterMaxZoom', () => {
-        const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
         const source = new GeoJSONSource('id', {data: hawkHill, maxzoom: 4, clusterMaxZoom: 4} as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.map = mapStub;
@@ -231,7 +233,7 @@ describe('GeoJSONSource#update', () => {
             sendAsync(message: ActorMessage<any>) {
                 expect(message.type).toBe(MessageType.loadData);
                 expect(message.data.geojsonVtOptions).toEqual({
-                    extent: 8192,
+                    extent: EXTENT,
                     maxZoom: 10,
                     tolerance: 4,
                     buffer: 256,
@@ -259,8 +261,8 @@ describe('GeoJSONSource#update', () => {
                 expect(message.data.superclusterOptions).toEqual({
                     maxZoom: 12,
                     minPoints: 3,
-                    extent: 8192,
-                    radius: 1600,
+                    extent: EXTENT,
+                    radius: 100 * EXTENT / source.tileSize,
                     log: false,
                     generateId: true
                 });
@@ -269,14 +271,15 @@ describe('GeoJSONSource#update', () => {
             }
         });
 
-        new GeoJSONSource('id', {
+        const source = new GeoJSONSource('id', {
             data: {},
             cluster: true,
             clusterMaxZoom: 12,
             clusterRadius: 100,
             clusterMinPoints: 3,
             generateId: true
-        } as GeoJSONSourceOptions, mockDispatcher, undefined).load();
+        } as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.load();
     }));
 
     test('modifying cluster properties after adding a source', () => new Promise<void>(done => {
@@ -285,31 +288,34 @@ describe('GeoJSONSource#update', () => {
             sendAsync(message) {
                 expect(message.type).toBe(MessageType.loadData);
                 expect(message.data.cluster).toBe(true);
-                expect(message.data.superclusterOptions.radius).toBe(80);
+                expect(message.data.superclusterOptions.radius).toBe(80 * EXTENT / source.tileSize);
                 expect(message.data.superclusterOptions.maxZoom).toBe(16);
                 done();
                 return Promise.resolve({});
             }
         });
-        new GeoJSONSource('id', {
-            data: {},
+        const source = new GeoJSONSource('id', {
+            type: 'geojson',
+            data: {} as GeoJSON.GeoJSON,
             cluster: false,
             clusterMaxZoom: 8,
             clusterRadius: 100,
             clusterMinPoints: 3,
             generateId: true
-        } as GeoJSONSourceOptions, mockDispatcher, undefined).setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
+        }, mockDispatcher, undefined);
+        source.setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
     }));
 
     test('forwards Supercluster options with worker request, ignore max zoom of source', () => new Promise<void>(done => {
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
                 expect(message.type).toBe(MessageType.loadData);
                 expect(message.data.superclusterOptions).toEqual({
                     maxZoom: 12,
                     minPoints: 3,
-                    extent: 8192,
-                    radius: 1600,
+                    extent: EXTENT,
+                    radius: 100 * EXTENT / source.tileSize,
                     log: false,
                     generateId: true
                 });
@@ -318,7 +324,7 @@ describe('GeoJSONSource#update', () => {
             }
         });
 
-        new GeoJSONSource('id', {
+        const source = new GeoJSONSource('id', {
             data: {},
             maxzoom: 10,
             cluster: true,
@@ -326,7 +332,8 @@ describe('GeoJSONSource#update', () => {
             clusterRadius: 100,
             clusterMinPoints: 3,
             generateId: true
-        } as GeoJSONSourceOptions, mockDispatcher, undefined).load();
+        } as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.load();
     }));
 
     test('transforms url before making request', () => {
@@ -335,7 +342,7 @@ describe('GeoJSONSource#update', () => {
                 transformRequest: (url) => { return {url}; }
             }
         } as any;
-        const transformSpy = jest.spyOn(mapStub._requestManager, 'transformRequest');
+        const transformSpy = vi.spyOn(mapStub._requestManager, 'transformRequest');
         const source = new GeoJSONSource('id', {data: 'https://example.com/data.geojson'} as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.onAdd(mapStub);
         expect(transformSpy).toHaveBeenCalledTimes(1);
@@ -382,7 +389,7 @@ describe('GeoJSONSource#update', () => {
     test('fires "error"', () => new Promise<void>(done => {
         const mockDispatcher = wrapDispatcher({
             sendAsync(_message) {
-                return Promise.reject('error'); // eslint-disable-line prefer-promise-reject-errors
+                return Promise.reject('error');
             }
         });
 
@@ -423,7 +430,7 @@ describe('GeoJSONSource#update', () => {
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 source.setData({} as GeoJSON.GeoJSON);
-                source.loadTile(new Tile(new OverscaledTileID(0, 0, 0, 0, 0), 512));
+                source.loadTile(new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize));
             }
         });
 

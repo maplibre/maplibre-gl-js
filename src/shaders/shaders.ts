@@ -1,4 +1,3 @@
-
 // Disable Flow annotations here because Flow doesn't support importing GLSL files
 
 import preludeFrag from './_prelude.fragment.glsl.g';
@@ -21,6 +20,7 @@ import collisionCircleFrag from './collision_circle.fragment.glsl.g';
 import collisionCircleVert from './collision_circle.vertex.glsl.g';
 import debugFrag from './debug.fragment.glsl.g';
 import debugVert from './debug.vertex.glsl.g';
+import depthVert from './depth.vertex.glsl.g';
 import fillFrag from './fill.fragment.glsl.g';
 import fillVert from './fill.vertex.glsl.g';
 import fillOutlineFrag from './fill_outline.fragment.glsl.g';
@@ -76,51 +76,51 @@ export type PreparedShader = {
 };
 
 export const shaders = {
-    prelude: compile(preludeFrag, preludeVert),
-    projectionMercator: compile('', projectionMercatorVert),
-    projectionGlobe: compile('', projectionGlobeVert),
-    background: compile(backgroundFrag, backgroundVert),
-    backgroundPattern: compile(backgroundPatternFrag, backgroundPatternVert),
-    circle: compile(circleFrag, circleVert),
-    clippingMask: compile(clippingMaskFrag, clippingMaskVert),
-    heatmap: compile(heatmapFrag, heatmapVert),
-    heatmapTexture: compile(heatmapTextureFrag, heatmapTextureVert),
-    collisionBox: compile(collisionBoxFrag, collisionBoxVert),
-    collisionCircle: compile(collisionCircleFrag, collisionCircleVert),
-    debug: compile(debugFrag, debugVert),
-    fill: compile(fillFrag, fillVert),
-    fillOutline: compile(fillOutlineFrag, fillOutlineVert),
-    fillOutlinePattern: compile(fillOutlinePatternFrag, fillOutlinePatternVert),
-    fillPattern: compile(fillPatternFrag, fillPatternVert),
-    fillExtrusion: compile(fillExtrusionFrag, fillExtrusionVert),
-    fillExtrusionPattern: compile(fillExtrusionPatternFrag, fillExtrusionPatternVert),
-    hillshadePrepare: compile(hillshadePrepareFrag, hillshadePrepareVert),
-    hillshade: compile(hillshadeFrag, hillshadeVert),
-    line: compile(lineFrag, lineVert),
-    lineGradient: compile(lineGradientFrag, lineGradientVert),
-    linePattern: compile(linePatternFrag, linePatternVert),
-    lineSDF: compile(lineSDFFrag, lineSDFVert),
-    raster: compile(rasterFrag, rasterVert),
-    symbolIcon: compile(symbolIconFrag, symbolIconVert),
-    symbolSDF: compile(symbolSDFFrag, symbolSDFVert),
-    symbolTextAndIcon: compile(symbolTextAndIconFrag, symbolTextAndIconVert),
-    terrain: compile(terrainFrag, terrainVert),
-    terrainDepth: compile(terrainDepthFrag, terrainVertDepth),
-    terrainCoords: compile(terrainCoordsFrag, terrainVertCoords),
-    projectionErrorMeasurement: compile(projectionErrorMeasurementFrag, projectionErrorMeasurementVert),
-    atmosphere: compile(atmosphereFrag, atmosphereVert),
-    sky: compile(skyFrag, skyVert)
+    prelude: prepare(preludeFrag, preludeVert),
+    projectionMercator: prepare('', projectionMercatorVert),
+    projectionGlobe: prepare('', projectionGlobeVert),
+    background: prepare(backgroundFrag, backgroundVert),
+    backgroundPattern: prepare(backgroundPatternFrag, backgroundPatternVert),
+    circle: prepare(circleFrag, circleVert),
+    clippingMask: prepare(clippingMaskFrag, clippingMaskVert),
+    heatmap: prepare(heatmapFrag, heatmapVert),
+    heatmapTexture: prepare(heatmapTextureFrag, heatmapTextureVert),
+    collisionBox: prepare(collisionBoxFrag, collisionBoxVert),
+    collisionCircle: prepare(collisionCircleFrag, collisionCircleVert),
+    debug: prepare(debugFrag, debugVert),
+    depth: prepare(clippingMaskFrag, depthVert),
+    fill: prepare(fillFrag, fillVert),
+    fillOutline: prepare(fillOutlineFrag, fillOutlineVert),
+    fillOutlinePattern: prepare(fillOutlinePatternFrag, fillOutlinePatternVert),
+    fillPattern: prepare(fillPatternFrag, fillPatternVert),
+    fillExtrusion: prepare(fillExtrusionFrag, fillExtrusionVert),
+    fillExtrusionPattern: prepare(fillExtrusionPatternFrag, fillExtrusionPatternVert),
+    hillshadePrepare: prepare(hillshadePrepareFrag, hillshadePrepareVert),
+    hillshade: prepare(hillshadeFrag, hillshadeVert),
+    line: prepare(lineFrag, lineVert),
+    lineGradient: prepare(lineGradientFrag, lineGradientVert),
+    linePattern: prepare(linePatternFrag, linePatternVert),
+    lineSDF: prepare(lineSDFFrag, lineSDFVert),
+    raster: prepare(rasterFrag, rasterVert),
+    symbolIcon: prepare(symbolIconFrag, symbolIconVert),
+    symbolSDF: prepare(symbolSDFFrag, symbolSDFVert),
+    symbolTextAndIcon: prepare(symbolTextAndIconFrag, symbolTextAndIconVert),
+    terrain: prepare(terrainFrag, terrainVert),
+    terrainDepth: prepare(terrainDepthFrag, terrainVertDepth),
+    terrainCoords: prepare(terrainCoordsFrag, terrainVertCoords),
+    projectionErrorMeasurement: prepare(projectionErrorMeasurementFrag, projectionErrorMeasurementVert),
+    atmosphere: prepare(atmosphereFrag, atmosphereVert),
+    sky: prepare(skyFrag, skyVert),
 };
 
-// Expand #pragmas to #ifdefs.
-
-function compile(fragmentSource: string, vertexSource: string): PreparedShader {
+/** Expand #pragmas to #ifdefs, extract attributes and uniforms */
+function prepare(fragmentSource: string, vertexSource: string): PreparedShader {
     const re = /#pragma mapbox: ([\w]+) ([\w]+) ([\w]+) ([\w]+)/g;
 
-    const staticAttributes = vertexSource.match(/attribute ([\w]+) ([\w]+)/g);
+    const vertexAttributes = vertexSource.match(/in ([\w]+) ([\w]+)/g);
     const fragmentUniforms = fragmentSource.match(/uniform ([\w]+) ([\w]+)([\s]*)([\w]*)/g);
     const vertexUniforms = vertexSource.match(/uniform ([\w]+) ([\w]+)([\s]*)([\w]*)/g);
-    const staticUniforms = vertexUniforms ? vertexUniforms.concat(fragmentUniforms) : fragmentUniforms;
+    const shaderUniforms = vertexUniforms ? vertexUniforms.concat(fragmentUniforms) : fragmentUniforms;
 
     const fragmentPragmas = {};
 
@@ -129,7 +129,7 @@ function compile(fragmentSource: string, vertexSource: string): PreparedShader {
         if (operation === 'define') {
             return `
 #ifndef HAS_UNIFORM_u_${name}
-varying ${precision} ${type} ${name};
+in ${precision} ${type} ${name};
 #else
 uniform ${precision} ${type} u_${name};
 #endif
@@ -152,8 +152,8 @@ uniform ${precision} ${type} u_${name};
                 return `
 #ifndef HAS_UNIFORM_u_${name}
 uniform lowp float u_${name}_t;
-attribute ${precision} ${attrType} a_${name};
-varying ${precision} ${type} ${name};
+in ${precision} ${attrType} a_${name};
+out ${precision} ${type} ${name};
 #else
 uniform ${precision} ${type} u_${name};
 #endif
@@ -183,7 +183,7 @@ uniform ${precision} ${type} u_${name};
                 return `
 #ifndef HAS_UNIFORM_u_${name}
 uniform lowp float u_${name}_t;
-attribute ${precision} ${attrType} a_${name};
+in ${precision} ${attrType} a_${name};
 #else
 uniform ${precision} ${type} u_${name};
 #endif
@@ -211,5 +211,22 @@ uniform ${precision} ${type} u_${name};
         }
     });
 
-    return {fragmentSource, vertexSource, staticAttributes, staticUniforms};
+    return {fragmentSource, vertexSource, staticAttributes: vertexAttributes, staticUniforms: shaderUniforms};
+}
+
+/** Transpile WebGL2 vertex shader source to WebGL1 */
+export function transpileVertexShaderToWebGL1(source: string): string {
+    return source
+        .replace(/\bin\s/g, 'attribute ')
+        .replace(/\bout\s/g, 'varying ')
+        .replace(/texture\(/g, 'texture2D(');
+}
+
+/** Transpile WebGL2 fragment shader source to WebGL1 */
+export function transpileFragmentShaderToWebGL1(source: string): string {
+    return source
+        .replace(/\bin\s/g, 'varying ')
+        .replace('out highp vec4 fragColor;', '')
+        .replace(/fragColor/g, 'gl_FragColor')
+        .replace(/texture\(/g, 'texture2D(');
 }

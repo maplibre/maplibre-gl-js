@@ -3,7 +3,7 @@ import type {Map} from './map';
 import {bezier, clamp, extend} from '../util/util';
 import Point from '@mapbox/point-geometry';
 import type {DragPanOptions} from './handler/shim/drag_pan';
-import {EaseToOptions} from './camera';
+import {type EaseToOptions} from './camera';
 
 const defaultInertiaOptions = {
     linearity: 0.3,
@@ -28,6 +28,11 @@ const defaultBearingInertiaOptions = extend({
 const defaultPitchInertiaOptions = extend({
     deceleration: 1000,
     maxSpeed: 90
+}, defaultInertiaOptions);
+
+const defaultRollInertiaOptions = extend({
+    deceleration: 1000,
+    maxSpeed: 360
 }, defaultInertiaOptions);
 
 export type InertiaOptions = {
@@ -77,6 +82,7 @@ export class HandlerInertia {
             zoom: 0,
             bearing: 0,
             pitch: 0,
+            roll: 0,
             pan: new Point(0, 0),
             pinchAround: undefined,
             around: undefined
@@ -86,6 +92,7 @@ export class HandlerInertia {
             deltas.zoom += settings.zoomDelta || 0;
             deltas.bearing += settings.bearingDelta || 0;
             deltas.pitch += settings.pitchDelta || 0;
+            deltas.roll += settings.rollDelta || 0;
             if (settings.panDelta) deltas.pan._add(settings.panDelta);
             if (settings.around) deltas.around = settings.around;
             if (settings.pinchAround) deltas.pinchAround = settings.pinchAround;
@@ -120,6 +127,12 @@ export class HandlerInertia {
         if (deltas.pitch) {
             const result = calculateEasing(deltas.pitch, duration, defaultPitchInertiaOptions);
             easeOptions.pitch = this._map.transform.pitch + result.amount;
+            extendDuration(easeOptions, result);
+        }
+
+        if (deltas.roll) {
+            const result = calculateEasing(deltas.roll, duration, defaultRollInertiaOptions);
+            easeOptions.roll = this._map.transform.roll + clamp(result.amount, -179, 179);
             extendDuration(easeOptions, result);
         }
 

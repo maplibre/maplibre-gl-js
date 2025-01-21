@@ -1,0 +1,67 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "height": 256,
+            "width": 256,
+            "maxPitch": 120,
+            "operations": [
+                ["idle"]
+            ]
+        }
+    },
+    "timeout": 60000,
+    "center": [11.52517, 47.34487],
+    "zoom": 13,
+    "pitch": 80,
+    "maxPitch": 180,
+    "sources": {
+      "terrain": {
+        "type": "raster-dem",
+        "tiles": ["local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"],
+        "maxzoom": 12,
+        "tileSize": 256
+      },
+      "numbers": {
+        "type": "raster",
+        "tiles": ["local://tiles/number/{z}.png"],
+        "maxzoom": 17,
+        "minzoom": 9,
+        "tileSize": 256
+      }
+    },
+    "layers": [
+        {
+            "id": "background",
+            "type": "background",
+            "paint": {
+                "background-color": "blue"
+            }
+        },
+        {
+            "id": "raster",
+            "type": "raster",
+            "source": "numbers",
+            "paint": {
+                "raster-opacity": 1.0
+            }
+        }
+    ],
+    "terrain": {
+        "source": "terrain",
+        "exaggeration": 2
+    },
+    "sky": {
+        "sky-color": "green",
+        "sky-horizon-blend": 0.5,
+        "horizon-color": "red",
+        "horizon-fog-blend": 0.5,
+        "fog-color": "blue",
+        "fog-ground-blend": 0.5,
+        "atmosphere-blend": 0
+    },
+    "projection": {
+        "type": "globe"
+    }
+}
+

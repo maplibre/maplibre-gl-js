@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Set center point above ground</title>
+  <meta property="og:description" content="Set the center point above ground level." />
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+  <script src='../../dist/maplibre-gl-dev.js'></script>
+  <style>
+      body { margin: 0; padding: 0; }
+      html, body, #map { height: 100%; }
+  </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+  const MAPTILER_KEY = 'get_your_own_OpIi9ZULNHzrESv6T2vL';
+  const map = new maplibregl.Map({
+      style: {
+        version: 8,
+        sources: {
+            openmaptiles: {
+                url: `https://api.maptiler.com/tiles/v3/tiles.json?key=${MAPTILER_KEY}`,
+                type: 'vector',
+            }
+        },
+        layers: [
+            {
+              'id': '3d-buildings',
+              'source': 'openmaptiles',
+              'source-layer': 'building',
+              'type': 'fill-extrusion',
+              'minzoom': 13,
+              'filter': ['!=', ['get', 'hide_3d'], true],
+              'paint': {
+                  'fill-extrusion-color': [
+                      'interpolate',
+                      ['linear'],
+                      ['get', 'render_height'], 0, 'lightgray', 200, 'royalblue', 400, 'lightblue'
+                  ],
+                  'fill-extrusion-height': [
+                      'interpolate',
+                      ['linear'],
+                      ['zoom'],
+                      13,
+                      0,
+                      14,
+                      ['get', 'render_height']
+                  ],
+                  'fill-extrusion-base': ['case',
+                      ['>=', ['get', 'zoom'], 16],
+                      ['get', 'render_min_height'], 0
+                  ]
+              }
+          }
+        ]
+      },
+      center: [-74.01318, 40.713],
+      minZoom: 13,
+      zoom: 15.5,
+      pitch: 85,
+      bearing: -17.6,
+      container: 'map',
+      canvasContextAttributes: {antialias: true},
+      centerClampedToGround: false,
+      elevation: 541,
+      maxPitch: 105
+  });
+</script>
+</body>
+</html>

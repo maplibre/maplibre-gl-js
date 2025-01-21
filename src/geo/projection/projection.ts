@@ -4,7 +4,8 @@ import type {Context} from '../../gl/context';
 import type {Mesh} from '../../render/mesh';
 import type {Program} from '../../render/program';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {EvaluationParameters} from '../../style/evaluation_parameters';
 
 /**
  * Custom projections are handled both by a class which implements this `Projection` interface,
@@ -91,16 +92,24 @@ export interface Projection {
 
     /**
      * @internal
-     * Cleans up any resources the projection created, especially GPU buffers.
+     * A number representing the current transition state of the projection.
+     * The return value should be a number between 0 and 1, 
+     * where 0 means the projection is fully in the initial state, 
+     * and 1 means the projection is fully in the final state.
      */
-    destroy(): void;
+    get transitionState(): number;
 
     /**
      * @internal
-     * True when an animation handled by the projection is in progress,
-     * requiring MapLibre to keep rendering new frames.
+     * Gets the error correction latitude in radians.
      */
-    isRenderingDirty(): boolean;
+    get latitudeErrorCorrectionRadians(): number;
+
+    /**
+     * @internal
+     * Cleans up any resources the projection created, especially GPU buffers.
+     */
+    destroy(): void;
 
     /**
      * @internal
@@ -118,4 +127,23 @@ export interface Projection {
      * @param usage - Specify the usage of the tile mesh, as different usages might use different levels of subdivision.
      */
     getMeshFromTileID(context: Context, tileID: CanonicalTileID, hasBorder: boolean, allowPoles: boolean, usage: TileMeshUsage): Mesh;
+
+    /**
+     * @internal
+     * Recalculates the projection state based on the current evaluation parameters.
+     * @param params - Evaluation parameters.
+     */
+    recalculate(params: EvaluationParameters): void;
+
+    /**
+     * @internal
+     * Returns true if the projection is currently transitioning between two states.
+     */
+    hasTransition(): boolean;
+
+    /**
+     * @internal
+     * Sets the error query latidude in degrees
+     */
+    setErrorQueryLatitudeDegrees(value: number);
 }

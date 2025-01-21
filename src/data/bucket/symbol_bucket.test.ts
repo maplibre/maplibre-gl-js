@@ -1,3 +1,4 @@
+import {describe, test, expect, vi} from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import Protobuf from 'pbf';
@@ -6,17 +7,17 @@ import {SymbolBucket} from './symbol_bucket';
 import {CollisionBoxArray} from '../../data/array_types.g';
 import {performSymbolLayout} from '../../symbol/symbol_layout';
 import {Placement} from '../../symbol/placement';
-import {CanonicalTileID, OverscaledTileID} from '../../source/tile_id';
+import {type CanonicalTileID, OverscaledTileID} from '../../source/tile_id';
 import {Tile} from '../../source/tile';
 import {CrossTileSymbolIndex} from '../../symbol/cross_tile_symbol_index';
 import {FeatureIndex} from '../../data/feature_index';
 import {createSymbolBucket, createSymbolIconBucket} from '../../../test/unit/lib/create_symbol_layer';
 import {RGBAImage} from '../../util/image';
 import {ImagePosition} from '../../render/image_atlas';
-import {IndexedFeature, PopulateParameters} from '../bucket';
-import {StyleImage} from '../../style/style_image';
+import {type IndexedFeature, type PopulateParameters} from '../bucket';
+import {type StyleImage} from '../../style/style_image';
 import glyphs from '../../../test/unit/assets/fontstack-glyphs.json' with {type: 'json'};
-import {StyleGlyph} from '../../style/style_glyph';
+import {type StyleGlyph} from '../../style/style_glyph';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import {MercatorTransform} from '../../geo/projection/mercator_transform';
 
@@ -111,7 +112,7 @@ describe('SymbolBucket', () => {
     });
 
     test('SymbolBucket integer overflow', () => {
-        const spy = jest.spyOn(console, 'warn').mockImplementation(() => { });
+        const spy = vi.spyOn(console, 'warn').mockImplementation(() => { });
         SymbolBucket.MAX_GLYPHS = 5;
 
         const bucket = bucketSetup() as any as SymbolBucket;
@@ -131,7 +132,7 @@ describe('SymbolBucket', () => {
     });
 
     test('SymbolBucket image undefined sdf', () => {
-        const spy = jest.spyOn(console, 'warn').mockImplementation(() => { });
+        const spy = vi.spyOn(console, 'warn').mockImplementation(() => { });
         spy.mockReset();
 
         const imageMap = {
@@ -173,7 +174,7 @@ describe('SymbolBucket', () => {
     });
 
     test('SymbolBucket image mismatched sdf', () => {
-        const spy = jest.spyOn(console, 'warn').mockImplementation(() => { });
+        const spy = vi.spyOn(console, 'warn').mockImplementation(() => { });
         spy.mockReset();
 
         const imageMap = {

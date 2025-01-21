@@ -1,13 +1,11 @@
+import {describe, expect, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
-import {getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, tileCoordinatesToLocation, tileCoordinatesToMercatorCoordinates} from './mercator_utils';
+import {getMercatorHorizon, projectToWorldCoordinates, tileCoordinatesToLocation, tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 import {MercatorTransform} from './mercator_transform';
-import {MAX_VALID_LATITUDE} from '../transform_helper';
-import {mat4} from 'gl-matrix';
-import {CanonicalTileID, OverscaledTileID} from '../../source/tile_id';
+import {CanonicalTileID} from '../../source/tile_id';
 import {EXTENT} from '../../data/extent';
-import {expectToBeCloseToArray} from '../../util/test/util';
-import type {ProjectionData} from './projection_data';
+import {createIdentityMat4f32, MAX_VALID_LATITUDE} from '../../util/util';
 
 describe('mercator utils', () => {
     test('projectToWorldCoordinates basic', () => {
@@ -23,10 +21,6 @@ describe('mercator utils', () => {
         expect(projectToWorldCoordinates(transform.worldSize, new LngLat(0, 90))).toEqual(projectToWorldCoordinates(transform.worldSize, new LngLat(0, MAX_VALID_LATITUDE)));
     });
 
-    test('locationCoordinate', () => {
-        expect(locationToMercatorCoordinate(new LngLat(0, 0))).toEqual({x: 0.5, y: 0.5, z: 0});
-    });
-
     test('getMercatorHorizon', () => {
         const transform = new MercatorTransform(0, 22, 0, 85, true);
         transform.resize(500, 500);
@@ -36,25 +30,28 @@ describe('mercator utils', () => {
         expect(horizon).toBeCloseTo(170.8176101748407, 10);
     });
 
-    describe('getBasicProjectionData', () => {
-        test('posMatrix is set', () => {
-            const mat = mat4.create();
-            mat[0] = 1234;
-            const projectionData = getBasicProjectionData(new OverscaledTileID(0, 0, 0, 0, 0), mat);
-            expect(projectionData.fallbackMatrix).toEqual(mat);
-        });
+    test('getMercatorHorizon90', () => {
+        const transform = new MercatorTransform(0, 22, 0, 180, true);
+        transform.resize(500, 500);
+        transform.setPitch(90);
+        const horizon = getMercatorHorizon(transform);
 
-        test('mercator tile extents are set', () => {
-            let projectionData: ProjectionData;
+        expect(horizon).toBeCloseTo(-9.818037813626313, 10);
+    });
 
-            projectionData = getBasicProjectionData(new OverscaledTileID(0, 0, 0, 0, 0));
-            expectToBeCloseToArray(projectionData.tileMercatorCoords, [0, 0, 1 / EXTENT, 1 / EXTENT]);
+    test('getMercatorHorizon95', () => {
+        const transform = new MercatorTransform(0, 22, 0, 180, true);
+        transform.resize(500, 500);
+        transform.setPitch(95);
+        const horizon = getMercatorHorizon(transform);
 
-            projectionData = getBasicProjectionData(new OverscaledTileID(1, 0, 1, 0, 0));
-            expectToBeCloseToArray(projectionData.tileMercatorCoords, [0, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
-
-            projectionData = getBasicProjectionData(new OverscaledTileID(1, 0, 1, 1, 0));
-            expectToBeCloseToArray(projectionData.tileMercatorCoords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
+        expect(horizon).toBeCloseTo(-75.52102888757743, 10);
+    });
+    describe('getProjectionData', () => {
+        test('return identity matrix when not passing overscaledTileID', () => {
+            const transform = new MercatorTransform(0, 22, 0, 180, true);
+            const projectionData = transform.getProjectionData({overscaledTileID: null});
+            expect(projectionData.fallbackMatrix).toEqual(createIdentityMat4f32());
         });
     });
 

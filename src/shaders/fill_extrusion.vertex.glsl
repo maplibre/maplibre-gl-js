@@ -16,10 +16,6 @@ in vec4 a_normal_ed;
 
 out vec4 v_color;
 
-#ifdef GLOBE
-    out vec3 v_sphere_pos;
-#endif
-
 #pragma mapbox: define highp float base
 #pragma mapbox: define highp float height
 
@@ -53,9 +49,7 @@ void main() {
     vec2 posInTile = a_pos + u_fill_translate;
 
     #ifdef GLOBE
-        vec3 spherePos = projectToSphere(posInTile);
-        vec3 elevatedPos = spherePos * (1.0 + elevation / GLOBE_RADIUS);
-        v_sphere_pos = elevatedPos;
+        vec3 spherePos = projectToSphere(posInTile, a_pos);
         gl_Position = interpolateProjectionFor3D(posInTile, spherePos, elevation);
     #else
         gl_Position = u_projection_matrix * vec4(posInTile, elevation, 1.0);

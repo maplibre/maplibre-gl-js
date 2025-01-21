@@ -1,0 +1,286 @@
+{
+    "version": 8,
+    "center": [-100, 45],
+    "zoom": 4,
+    "name": "OpenStreetMap",
+    "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+    "sources": {
+      "geojson": {
+        "type": "geojson",
+        "data": {
+          "type": "FeatureCollection",
+          "features": [
+            {
+              "type": "Feature",
+              "properties": {},
+              "geometry": {
+                "coordinates": [
+                  -100,
+                  40
+                ],
+                "type": "Point"
+              }
+            },
+            {
+              "type": "Feature",
+              "properties": {},
+              "geometry": {
+                "coordinates": [
+                  [
+                    -100,
+                    41
+                  ],
+                  [
+                    -99,
+                    41
+                  ]
+                ],
+                "type": "MultiPoint"
+              }
+            },
+            {
+              "type": "Feature",
+              "properties": {},
+              "geometry": {
+                "coordinates": [
+                  [
+                    -100,
+                    42
+                  ],
+                  [
+                    -100,
+                    43
+                  ]
+                ],
+                "type": "LineString"
+              }
+            },
+            {
+              "type": "Feature",
+              "properties": {},
+              "geometry": {
+                "coordinates": [
+                  [
+                    [
+                      -100,
+                      44
+                    ],
+                    [
+                      -100,
+                      45
+                    ]
+                  ],
+                  [
+                    [
+                      -99,
+                      44
+                    ],
+                    [
+                      -99,
+                      45
+                    ]
+                  ]
+                ],
+                "type": "MultiLineString"
+              }
+            },
+            {
+              "type": "Feature",
+              "properties": {},
+              "geometry": {
+                "coordinates": [
+                  [
+                    [
+                      -100,
+                      46
+                    ],
+                    [
+                      -100,
+                      47
+                    ],
+                    [
+                      -99,
+                      47
+                    ],
+                    [
+                      -99,
+                      46
+                    ],
+                    [
+                      -100,
+                      46
+                    ]
+                  ]
+                ],
+                "type": "Polygon"
+              }
+            },
+            {
+              "type": "Feature",
+              "properties": {},
+              "geometry": {
+                "coordinates": [
+                  [
+                    [
+                      [
+                        -100,
+                        48
+                      ],
+                      [
+                        -100,
+                        49
+                      ],
+                      [
+                        -99,
+                        49
+                      ],
+                      [
+                        -99,
+                        48
+                      ],
+                      [
+                        -100,
+                        48
+                      ]
+                    ]
+                  ],
+                  [
+                    [
+                      [
+                        -100,
+                        50
+                      ],
+                      [
+                        -100,
+                        51
+                      ],
+                      [
+                        -99,
+                        51
+                      ],
+                      [
+                        -99,
+                        50
+                      ],
+                      [
+                        -100,
+                        50
+                      ]
+                    ]
+                  ]
+                ],
+                "type": "MultiPolygon"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "layers": [
+      {
+        "id": "all",
+        "type": "symbol",
+        "source": "geojson",
+        "layout": {
+          "text-field": [
+            "geometry-type"
+          ]
+        }
+      },
+      {
+        "id": "all-lines",
+        "type": "line",
+        "source": "geojson"
+      },
+      {
+        "id": "circle1",
+        "type": "circle",
+        "source": "geojson",
+        "filter": [
+          "==",
+          [
+            "geometry-type"
+          ],
+          "Point"
+        ],
+        "paint": {
+          "circle-color": "black"
+        }
+      },
+      {
+        "id": "circle2",
+        "type": "circle",
+        "source": "geojson",
+        "filter": [
+          "==",
+          [
+            "geometry-type"
+          ],
+          "MultiPoint"
+        ],
+        "paint": {
+          "circle-color": "red"
+        }
+      },
+      {
+        "id": "circle3",
+        "type": "circle",
+        "source": "geojson",
+        "filter": [
+          "==",
+          [
+            "geometry-type"
+          ],
+          "LineString"
+        ],
+        "paint": {
+          "circle-color": "green"
+        }
+      },
+      {
+        "id": "circle4",
+        "type": "circle",
+        "source": "geojson",
+        "filter": [
+          "==",
+          [
+            "geometry-type"
+          ],
+          "MultiLineString"
+        ],
+        "paint": {
+          "circle-color": "blue"
+        }
+      },
+      {
+        "id": "circle5",
+        "type": "circle",
+        "source": "geojson",
+        "filter": [
+          "==",
+          [
+            "geometry-type"
+          ],
+          "Polygon"
+        ],
+        "paint": {
+          "circle-color": "yellow"
+        }
+      },
+      {
+        "id": "circle6",
+        "type": "circle",
+        "source": "geojson",
+        "filter": [
+          "==",
+          [
+            "geometry-type"
+          ],
+          "MultiPolygon"
+        ],
+        "paint": {
+          "circle-color": "orange"
+        }
+      }
+    ]
+  }

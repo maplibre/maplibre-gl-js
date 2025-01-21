@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {clipLine} from './clip_line';
 

@@ -1,7 +1,7 @@
 import {StyleLayer} from '../style_layer';
 import type {Map} from '../../ui/map';
-import {mat4} from 'gl-matrix';
-import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {type mat4} from 'gl-matrix';
+import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {ProjectionData} from '../../geo/projection/projection_data';
 
 /**
@@ -86,7 +86,7 @@ export type CustomRenderMethodInput = {
      * For more details of this object's internals, see its doc comments in `src/geo/projection/projection_data.ts`.
      *
      * These uniforms are set so that `projectTile` in shader accepts a vec2 in range 0..1 in web mercator coordinates.
-     * Use `map.transform.getProjectionData(tileID)` to get uniforms for a given tile and pass vec2 in tile-local range 0..EXTENT instead.
+     * Use `map.transform.getProjectionData({overscaledTileID: tileID})` to get uniforms for a given tile and pass vec2 in tile-local range 0..EXTENT instead.
      *
      * For projection 3D features, use `projectTileFor3D` in the shader.
      *
@@ -105,7 +105,7 @@ export type CustomRenderMethodInput = {
      * or more accurately for globe, elevation above the surface of the perfect sphere used to render the planet.
      */
     defaultProjectionData: ProjectionData;
-}
+};
 
 /**
  * @param gl - The map's gl context.
@@ -259,6 +259,8 @@ export function validateCustomStyleLayer(layerObject: CustomLayerInterface) {
 
     return errors;
 }
+
+export const isCustomStyleLayer = (layer: StyleLayer): layer is CustomStyleLayer => layer.type === 'custom';
 
 export class CustomStyleLayer extends StyleLayer {
 

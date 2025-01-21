@@ -1,3 +1,4 @@
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util';
 import {NavigationControl} from './navigation_control';
@@ -59,7 +60,7 @@ describe('NavigationControl', () => {
             showZoom: true,
             showCompass: true
         }));
-        const spyReset = jest.spyOn(map, 'resetNorthPitch');
+        const spyReset = vi.spyOn(map, 'resetNorthPitch');
         const navButton = map.getContainer().querySelector('.maplibregl-ctrl-compass');
 
         simulate.click(navButton);
@@ -76,14 +77,14 @@ describe('NavigationControl', () => {
         });
         map.addControl(navControl);
 
-        const spySetPitch = jest.spyOn(map, 'setPitch');
-        const spySetBearing = jest.spyOn(map, 'setBearing');
+        const spySetPitch = vi.spyOn(map, 'setPitch');
+        const spySetBearing = vi.spyOn(map, 'setBearing');
 
         const navButton = map.getContainer().querySelector('.maplibregl-ctrl-compass');
         const navRect = navButton.getClientRects();
 
         const buttonX = (navRect.x ?? 0) + (navRect.width ?? 0) / 2;
-        const buttonY = (navRect.y ?? 0) + (navRect.height ?? 0) / 2;
+        const buttonY = (navRect.y ?? 0) + (navRect.height ?? 0) / 2 - 1;
 
         simulate.mousedown(navButton, {buttons: 1, button: 0, clientX: buttonX, clientY: buttonY});
         simulate.mousemove(window, {buttons: 1, button: 0, clientX: buttonX - 50, clientY: buttonY});
@@ -104,8 +105,8 @@ describe('NavigationControl', () => {
         });
         map.addControl(navControl);
 
-        const spySetPitch = jest.spyOn(map, 'setPitch');
-        const spySetBearing = jest.spyOn(map, 'setBearing');
+        const spySetPitch = vi.spyOn(map, 'setPitch');
+        const spySetBearing = vi.spyOn(map, 'setBearing');
 
         const navButton = map.getContainer().querySelector('.maplibregl-ctrl-compass');
         const navRect = navButton.getClientRects();
@@ -132,8 +133,8 @@ describe('NavigationControl', () => {
         });
         map.addControl(navControl);
 
-        const spySetPitch = jest.spyOn(map, 'setPitch');
-        const spySetBearing = jest.spyOn(map, 'setBearing');
+        const spySetPitch = vi.spyOn(map, 'setPitch');
+        const spySetBearing = vi.spyOn(map, 'setBearing');
 
         const navButton = map.getContainer().querySelector('.maplibregl-ctrl-compass');
         const navRect = navButton.getClientRects();
@@ -160,14 +161,14 @@ describe('NavigationControl', () => {
         });
         map.addControl(navControl);
 
-        const spySetPitch = jest.spyOn(map, 'setPitch');
-        const spySetBearing = jest.spyOn(map, 'setBearing');
+        const spySetPitch = vi.spyOn(map, 'setPitch');
+        const spySetBearing = vi.spyOn(map, 'setBearing');
 
         const navButton = map.getContainer().querySelector('.maplibregl-ctrl-compass');
         const navRect = navButton.getClientRects();
 
         const buttonX = (navRect.x ?? 0) + (navRect.width ?? 0) / 2;
-        const buttonY = (navRect.y ?? 0) + (navRect.height ?? 0) / 2;
+        const buttonY = (navRect.y ?? 0) + (navRect.height ?? 0) / 2 - 1;
 
         simulate.touchstart(navButton, {touches: [{clientX: buttonX, clientY: buttonY}], targetTouches: [{clientX: buttonX, clientY: buttonY}]});
         simulate.touchmove(window, {touches: [{clientX: buttonX - 50, clientY: buttonY}], targetTouches: [{clientX: buttonX - 50, clientY: buttonY}]});
@@ -188,8 +189,8 @@ describe('NavigationControl', () => {
         });
         map.addControl(navControl);
 
-        const spySetPitch = jest.spyOn(map, 'setPitch');
-        const spySetBearing = jest.spyOn(map, 'setBearing');
+        const spySetPitch = vi.spyOn(map, 'setPitch');
+        const spySetBearing = vi.spyOn(map, 'setBearing');
 
         const navButton = map.getContainer().querySelector('.maplibregl-ctrl-compass');
         const navRect = navButton.getClientRects();
@@ -216,8 +217,8 @@ describe('NavigationControl', () => {
         });
         map.addControl(navControl);
 
-        const spySetPitch = jest.spyOn(map, 'setPitch');
-        const spySetBearing = jest.spyOn(map, 'setBearing');
+        const spySetPitch = vi.spyOn(map, 'setPitch');
+        const spySetBearing = vi.spyOn(map, 'setBearing');
 
         const navButton = map.getContainer().querySelector('.maplibregl-ctrl-compass');
         const navRect = navButton.getClientRects();

@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>Adding 3D models with three.js on terrain</title>
+    <title>Adding 3D models using three.js on terrain</title>
     <meta property="og:description" content="Use a custom style layer with three.js to add 3D models to a map with 3d terrain." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,13 +20,22 @@
             height: 100%;
         }
     </style>
+    <script type="importmap">
+        {
+            "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+            }
+        }
+    </script>
 </head>
-
 <body>
-    <script src="https://unpkg.com/three@0.147.0/build/three.min.js"></script>
-    <script src="https://unpkg.com/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
-    <div id="map"></div>
-    <script>
+<div id="map"></div>
+
+<script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
         /**
          * Objective:
          * Given two known world-locations `model1Location` and `model2Location`,
@@ -36,15 +45,13 @@
 
         async function main() {
 
-            const THREE = window.THREE;
-
             const map = new maplibregl.Map({
                 container: 'map',
                 center: [11.5257, 47.668],
                 zoom: 16.27,
                 pitch: 60,
                 bearing: -28.5,
-                antialias: true,
+                canvasContextAttributes: {antialias: true},
                 style: {
                     version: 8,
                     layers: [
@@ -100,7 +107,7 @@
             }
 
             async function loadModel() {
-                const loader = new THREE.GLTFLoader();
+                const loader = new GLTFLoader();
                 const gltf = await loader.loadAsync('https://maplibre.org/maplibre-gl-js/docs/assets/34M_17/34M_17.gltf');
                 const model = gltf.scene;
                 return model;
@@ -140,7 +147,7 @@
                     const axesHelper = new THREE.AxesHelper(60);
                     this.scene.add(axesHelper);
 
-                    // Getting model elevations (in meters) relative to scene origin from maplibre's terrain.
+                    // Getting model elevations in meters above sea level
                     const sceneElevation = map.queryTerrainElevation(sceneOrigin) || 0;
                     const model1Elevation = map.queryTerrainElevation(model1Location) || 0;
                     const model2Elevation = map.queryTerrainElevation(model2Location) || 0;
@@ -171,12 +178,6 @@
                 },
 
                 render(gl, args) {
-
-                    // `queryTerrainElevation` gives us the elevation of a point on the terrain
-                    // **relative to the elevation of `center`**,
-                    // where `center` is the point on the terrain that the middle of the camera points at.
-                    // If we didn't account for that offset, and the scene lay on a point on the terrain that is
-                    // below `center`, then the scene would appear to float in the air.
                     const offsetFromCenterElevation = map.queryTerrainElevation(sceneOrigin) || 0;
                     const sceneOriginMercator = maplibregl.MercatorCoordinate.fromLngLat(sceneOrigin, offsetFromCenterElevation);
 

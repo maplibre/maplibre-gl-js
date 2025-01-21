@@ -1,8 +1,8 @@
 import {
-    Uniform1i,
-    Uniform1f,
-    Uniform2f,
-    Uniform3f
+    type Uniform1i,
+    type Uniform1f,
+    type Uniform2f,
+    type Uniform3f
 } from '../uniform_binding';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 

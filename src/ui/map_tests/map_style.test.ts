@@ -1,11 +1,12 @@
-import {Map, MapOptions} from '../map';
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
+import {Map, type MapOptions} from '../map';
 import {createMap, beforeMapTest, createStyle, createStyleSource} from '../../util/test/util';
 import {Event as EventedEvent} from '../../util/evented';
 import {fixedLngLat, fixedNum} from '../../../test/unit/lib/fixed';
 import {extend} from '../../util/util';
-import {fakeServer, FakeServer} from 'nise';
+import {fakeServer, type FakeServer} from 'nise';
 import {Style} from '../../style/style';
-import {GeoJSONSourceSpecification, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {type GeoJSONSourceSpecification, type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {LngLatBounds} from '../../geo/lng_lat_bounds';
 
 let server: FakeServer;
@@ -41,9 +42,9 @@ describe('#setStyle', () => {
             map.on('data', recordEvent);
             map.on('dataloading', recordEvent);
 
-            map.style.fire(new Event('error'));
-            map.style.fire(new Event('data'));
-            map.style.fire(new Event('dataloading'));
+            map.style.fire(new EventedEvent('error'));
+            map.style.fire(new EventedEvent('data'));
+            map.style.fire(new EventedEvent('dataloading'));
 
             expect(events).toEqual([
                 'error',
@@ -103,7 +104,7 @@ describe('#setStyle', () => {
             {id: 'background', type: 'background' as const, paint: {'background-color': 'blue'}},
         ]};
         const map = createMap({style: redStyle});
-        const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         map.setStyle(blueStyle);
         await map.once('style.load');
         map.setStyle(redStyle);
@@ -115,7 +116,7 @@ describe('#setStyle', () => {
     test('style transform overrides unmodified map transform', () => new Promise<void>(done => {
         const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
         map.transform.setMaxBounds(new LngLatBounds([-120, -60], [140, 80]));
-        map.transform.resize(600, 400);
+        map.transform.resize(600, 400, true);
         expect(map.transform.zoom).toBe(0.6983039737971013);
         expect(map.transform.unmodified).toBeTruthy();
         map.setStyle(createStyle());
@@ -161,15 +162,15 @@ describe('#setStyle', () => {
         const map = createMap();
         const style = map.style;
         expect(style).toBeTruthy();
-        jest.spyOn(style, '_remove');
+        vi.spyOn(style, '_remove');
         map.setStyle(null);
         expect(style._remove).toHaveBeenCalledTimes(1);
     });
 
     test('passing null releases the worker', () => {
         const map = createMap();
-        const spyWorkerPoolAcquire = jest.spyOn(map.style.dispatcher.workerPool, 'acquire');
-        const spyWorkerPoolRelease = jest.spyOn(map.style.dispatcher.workerPool, 'release');
+        const spyWorkerPoolAcquire = vi.spyOn(map.style.dispatcher.workerPool, 'acquire');
+        const spyWorkerPoolRelease = vi.spyOn(map.style.dispatcher.workerPool, 'release');
 
         map.setStyle({version: 8, sources: {}, layers: []}, {diff: false});
         expect(spyWorkerPoolAcquire).toHaveBeenCalledTimes(1);
@@ -331,7 +332,7 @@ describe('#setStyle', () => {
 
     test('Override default style validation', () => {
         let validationOption = true;
-        jest.spyOn(Style.prototype, 'loadJSON').mockImplementationOnce((styleJson, options) => {
+        vi.spyOn(Style.prototype, 'loadJSON').mockImplementationOnce((styleJson, options) => {
             validationOption = options.validate;
         });
         const map = createMap({style: null});
@@ -477,10 +478,10 @@ describe('#getStyle', () => {
     test('creates a new Style if diff fails', () => {
         const style = createStyle();
         const map = createMap({style});
-        jest.spyOn(map.style, 'setState').mockImplementation(() => {
+        vi.spyOn(map.style, 'setState').mockImplementation(() => {
             throw new Error('Dummy error');
         });
-        jest.spyOn(console, 'warn').mockImplementation(() => {});
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
 
         const previousStyle = map.style;
         map.setStyle(style);
@@ -490,7 +491,7 @@ describe('#getStyle', () => {
     test('creates a new Style if diff option is false', () => {
         const style = createStyle();
         const map = createMap({style});
-        const spy = jest.spyOn(map.style, 'setState');
+        const spy = vi.spyOn(map.style, 'setState');
 
         const previousStyle = map.style;
         map.setStyle(style, {diff: false});
@@ -501,7 +502,7 @@ describe('#getStyle', () => {
     describe('#setSky', () => {
         test('calls style setSky when set', () => {
             const map = createMap();
-            const spy = jest.fn();
+            const spy = vi.fn();
             map.style.setSky = spy;
             map.setSky({'horizon-fog-blend': 0.5});
 
@@ -519,7 +520,7 @@ describe('#getStyle', () => {
     describe('#setLight', () => {
         test('calls style setLight when set', () => {
             const map = createMap();
-            const spy = jest.fn();
+            const spy = vi.fn();
             map.style.setLight = spy;
             map.setLight({anchor: 'viewport'});
 
@@ -530,7 +531,7 @@ describe('#getStyle', () => {
     describe('#getLight', () => {
         test('calls style getLight when invoked', () => {
             const map = createMap();
-            const spy = jest.fn();
+            const spy = vi.fn();
             map.style.getLight = spy;
             map.getLight();
 

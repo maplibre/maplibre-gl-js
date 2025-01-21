@@ -147,7 +147,6 @@
                 felt = document.getElementById('range-felt');
                 operator = operatorFelt.value;
 
-                // eslint-disable-next-line no-unused-expressions
                 e.target.checked ? data.felt = Number(felt.value) : delete data['felt'];
 
                 break;
@@ -158,18 +157,15 @@
                 mag = document.getElementById('range-mag');
                 operator = operatorMag.value;
 
-                // eslint-disable-next-line no-unused-expressions
                 e.target.checked ? data.mag = Number(mag.value) : delete data['mag'];
 
                 break;
 
             /// example: `map.setFilter("earthquakes", ["any", [">", "tsunami", 0]])`
             case 'tsunami':
-                // eslint-disable-next-line @typescript-eslint/quotes
-                tsunami = document.querySelector("input[type='radio'][name=tsunami]:checked");
+                tsunami = document.querySelector('input[type="radio"][name=tsunami]:checked');
                 operator = '==';
 
-                // eslint-disable-next-line no-unused-expressions
                 e.target.checked ? data.tsunami = Number(tsunami.value) : delete data['tsunami'];
 
                 break;

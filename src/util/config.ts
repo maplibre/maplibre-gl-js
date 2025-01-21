@@ -5,7 +5,7 @@ import type {RequestParameters, GetResourceResponse} from './ajax';
  * Use the abort controller for aborting requests.
  * Return a promise with the relevant resource response.
  */
-export type AddProtocolAction = (requestParameters: RequestParameters, abortController: AbortController) => Promise<GetResourceResponse<any>>
+export type AddProtocolAction = (requestParameters: RequestParameters, abortController: AbortController) => Promise<GetResourceResponse<any>>;
 
 /**
  * This is a global config object used to store the configuration

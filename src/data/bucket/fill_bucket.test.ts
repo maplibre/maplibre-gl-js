@@ -1,4 +1,4 @@
-
+import {test, expect} from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import Protobuf from 'pbf';
@@ -7,10 +7,10 @@ import Point from '@mapbox/point-geometry';
 import {SegmentVector} from '../segment';
 import {FillBucket} from './fill_bucket';
 import {FillStyleLayer} from '../../style/style_layer/fill_style_layer';
-import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {EvaluationParameters} from '../../style/evaluation_parameters';
-import {ZoomHistory} from '../../style/zoom_history';
-import {BucketFeature, BucketParameters} from '../bucket';
+import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {type EvaluationParameters} from '../../style/evaluation_parameters';
+import {type ZoomHistory} from '../../style/zoom_history';
+import {type BucketFeature, type BucketParameters} from '../bucket';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import {CanonicalTileID} from '../../source/tile_id';
 

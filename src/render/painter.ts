@@ -6,7 +6,7 @@ import {SegmentVector} from '../data/segment';
 import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types.g';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes';
 import posAttributes from '../data/pos_attributes';
-import {ProgramConfiguration} from '../data/program_configuration';
+import {type ProgramConfiguration} from '../data/program_configuration';
 import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index';
 import {shaders} from '../shaders/shaders';
 import {Program} from './program';
@@ -30,10 +30,10 @@ import {drawBackground} from './draw_background';
 import {drawDebug, drawDebugPadding, selectDebugSource} from './draw_debug';
 import {drawCustom} from './draw_custom';
 import {drawDepth, drawCoords} from './draw_terrain';
-import {OverscaledTileID} from '../source/tile_id';
+import {type OverscaledTileID} from '../source/tile_id';
 import {drawSky, drawAtmosphere} from './draw_sky';
 import {Mesh} from './mesh';
-import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator';
+import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection';
 
 import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {Style} from '../style/style';
@@ -48,6 +48,17 @@ import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {RenderToTexture} from './render_to_texture';
 import type {ProjectionData} from '../geo/projection/projection_data';
+import {coveringTiles} from '../geo/projection/covering_tiles';
+import {isSymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
+import {isCircleStyleLayer} from '../style/style_layer/circle_style_layer';
+import {isHeatmapStyleLayer} from '../style/style_layer/heatmap_style_layer';
+import {isLineStyleLayer} from '../style/style_layer/line_style_layer';
+import {isFillStyleLayer} from '../style/style_layer/fill_style_layer';
+import {isFillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer';
+import {isHillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
+import {isRasterStyleLayer} from '../style/style_layer/raster_style_layer';
+import {isBackgroundStyleLayer} from '../style/style_layer/background_style_layer';
+import {isCustomStyleLayer} from '../style/style_layer/custom_style_layer';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -59,6 +70,11 @@ type PainterOptions = {
     zooming: boolean;
     moving: boolean;
     fadeDuration: number;
+};
+
+export type RenderOptions = {
+    isRenderingToTexture: boolean;
+    isRenderingGlobe: boolean;
 };
 
 /**
@@ -297,12 +313,40 @@ export class Painter {
 
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true, 'stencil');
 
-            const projectionData = transform.getProjectionData(tileID);
+            const projectionData = transform.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix: true, applyTerrainMatrix: true});
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.
                 new StencilMode({func: gl.ALWAYS, mask: 0}, stencilRef, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE),
                 ColorMode.disabled, renderToTexture ? CullFaceMode.disabled : CullFaceMode.backCCW, null,
+                terrainData, projectionData, '$clipping', mesh.vertexBuffer,
+                mesh.indexBuffer, mesh.segments);
+        }
+    }
+
+    /**
+     * Fills the depth buffer with the geometry of all supplied tiles.
+     * Does not change the color buffer or the stencil buffer.
+     */
+    _renderTilesDepthBuffer() {
+        const context = this.context;
+        const gl = context.gl;
+        const projection = this.style.projection;
+        const transform = this.transform;
+
+        const program = this.useProgram('depth');
+        const depthMode = this.getDepthModeFor3D();
+        const tileIDs = coveringTiles(transform, {tileSize: transform.tileSize});
+
+        // tiles are usually supplied in ascending order of z, then y, then x
+        for (const tileID of tileIDs) {
+            const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
+            const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, true, true, 'raster');
+
+            const projectionData = transform.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix: true, applyTerrainMatrix: true});
+
+            program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled,
+                ColorMode.disabled, CullFaceMode.backCCW, null,
                 terrainData, projectionData, '$clipping', mesh.vertexBuffer,
                 mesh.indexBuffer, mesh.segments);
         }
@@ -333,9 +377,12 @@ export class Painter {
      * mask area of tile overlapped by children tiles.
      * Stencil ref values continue range used in _tileClippingMaskIDs.
      *
+     * Attention: This function changes this.nextStencilID even if the result of it
+     * is not used, which might cause problems when rendering due to invalid stencil
+     * values.
      * Returns [StencilMode for tile overscaleZ map, sortedCoords].
      */
-    stencilConfigForOverlap(tileIDs: Array<OverscaledTileID>): [{
+    getStencilConfigForOverlapAndUpdateStencilID(tileIDs: Array<OverscaledTileID>): [{
         [_: number]: Readonly<StencilMode>;
     }, Array<OverscaledTileID>] {
         const gl = this.context.gl;
@@ -406,10 +453,14 @@ export class Painter {
         }
     }
 
-    depthModeForSublayer(n: number, mask: DepthMaskType, func?: DepthFuncType | null): Readonly<DepthMode> {
+    getDepthModeForSublayer(n: number, mask: DepthMaskType, func?: DepthFuncType | null): Readonly<DepthMode> {
         if (!this.opaquePassEnabledForLayer()) return DepthMode.disabled;
         const depth = 1 - ((1 + this.currentLayer) * this.numSublayers + n) * this.depthEpsilon;
         return new DepthMode(func || this.context.gl.LEQUAL, mask, [depth, depth]);
+    }
+
+    getDepthModeFor3D(): Readonly<DepthMode> {
+        return new DepthMode(this.context.gl.LEQUAL, DepthMode.ReadWrite, this.depthRangeFor3D);
     }
 
     /*
@@ -441,6 +492,7 @@ export class Painter {
         const coordsAscending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
+        const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: style.projection?.transitionState > 0};
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
@@ -483,11 +535,11 @@ export class Painter {
             const coords = coordsDescending[layer.source];
             if (layer.type !== 'custom' && !coords.length) continue;
 
-            this.renderLayer(this, sourceCaches[layer.source], layer, coords);
+            this.renderLayer(this, sourceCaches[layer.source], layer, coords, renderOptions);
         }
 
         // Execute offscreen GPU tasks of the projection manager
-        this.style.projection.updateGPUdependent({
+        this.style.projection?.updateGPUdependent({
             context: this.context,
             useProgram: (name: string) => this.useProgram(name)
         });
@@ -517,7 +569,7 @@ export class Painter {
                 const coords = coordsAscending[layer.source];
 
                 this._renderTileClippingMasks(layer, coords, false);
-                this.renderLayer(this, sourceCache, layer, coords);
+                this.renderLayer(this, sourceCache, layer, coords, renderOptions);
             }
         }
 
@@ -525,11 +577,22 @@ export class Painter {
         // Draw all other layers bottom-to-top.
         this.renderPass = 'translucent';
 
+        let globeDepthRendered = false;
+
         for (this.currentLayer = 0; this.currentLayer < layerIds.length; this.currentLayer++) {
             const layer = this.style._layers[layerIds[this.currentLayer]];
             const sourceCache = sourceCaches[layer.source];
 
-            if (this.renderToTexture && this.renderToTexture.renderLayer(layer)) continue;
+            if (this.renderToTexture && this.renderToTexture.renderLayer(layer, renderOptions)) continue;
+
+            if (!this.opaquePassEnabledForLayer() && !globeDepthRendered) {
+                globeDepthRendered = true;
+                // Render the globe sphere into the depth buffer - but only if globe is enabled and terrain is disabled.
+                // There should be no need for explicitly writing tile depths when terrain is enabled.
+                if (renderOptions.isRenderingGlobe && !this.style.map.terrain) {
+                    this._renderTilesDepthBuffer();
+                }
+            }
 
             // For symbol layers in the translucent pass, we add extra tiles to the renderable set
             // for cross-tile symbol fading. Symbol layers don't use tile clipping, so no need to render
@@ -537,11 +600,11 @@ export class Painter {
             const coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
 
             this._renderTileClippingMasks(layer, coordsAscending[layer.source], false);
-            this.renderLayer(this, sourceCache, layer, coords);
+            this.renderLayer(this, sourceCache, layer, coords, renderOptions);
         }
 
         // Render atmosphere, only for Globe projection
-        if (this.style.projection.name === 'globe') {
+        if (renderOptions.isRenderingGlobe) {
             drawAtmosphere(this, this.style.sky, this.style.light);
         }
 
@@ -589,42 +652,31 @@ export class Painter {
         drawCoords(this, this.style.map.terrain);
     }
 
-    renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>) {
+    renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
         if (layer.isHidden(this.transform.zoom)) return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;
 
-        switch (layer.type) {
-            case 'symbol':
-                drawSymbols(painter, sourceCache, layer as any, coords, this.style.placement.variableOffsets);
-                break;
-            case 'circle':
-                drawCircles(painter, sourceCache, layer as any, coords);
-                break;
-            case 'heatmap':
-                drawHeatmap(painter, sourceCache, layer as any, coords);
-                break;
-            case 'line':
-                drawLine(painter, sourceCache, layer as any, coords);
-                break;
-            case 'fill':
-                drawFill(painter, sourceCache, layer as any, coords);
-                break;
-            case 'fill-extrusion':
-                drawFillExtrusion(painter, sourceCache, layer as any, coords);
-                break;
-            case 'hillshade':
-                drawHillshade(painter, sourceCache, layer as any, coords);
-                break;
-            case 'raster':
-                drawRaster(painter, sourceCache, layer as any, coords);
-                break;
-            case 'background':
-                drawBackground(painter, sourceCache, layer as any, coords);
-                break;
-            case 'custom':
-                drawCustom(painter, sourceCache, layer as any);
-                break;
+        if (isSymbolStyleLayer(layer)) {
+            drawSymbols(painter, sourceCache, layer, coords, this.style.placement.variableOffsets, renderOptions);
+        } else if (isCircleStyleLayer(layer)) {
+            drawCircles(painter, sourceCache, layer, coords, renderOptions);
+        } else if (isHeatmapStyleLayer(layer)) {
+            drawHeatmap(painter, sourceCache, layer, coords, renderOptions);
+        } else if (isLineStyleLayer(layer)) {
+            drawLine(painter, sourceCache, layer, coords, renderOptions);
+        } else if (isFillStyleLayer(layer)) {
+            drawFill(painter, sourceCache, layer, coords, renderOptions);
+        } else if (isFillExtrusionStyleLayer(layer)) {
+            drawFillExtrusion(painter, sourceCache, layer, coords, renderOptions);
+        } else if (isHillshadeStyleLayer(layer)) {
+            drawHillshade(painter, sourceCache, layer, coords, renderOptions);
+        } else if (isRasterStyleLayer(layer)) {
+            drawRaster(painter, sourceCache, layer, coords, renderOptions);
+        } else if (isBackgroundStyleLayer(layer)) {
+            drawBackground(painter, sourceCache, layer, coords, renderOptions);
+        } else if (isCustomStyleLayer(layer)) {
+            drawCustom(painter, sourceCache, layer, renderOptions);
         }
     }
 

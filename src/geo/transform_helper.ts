@@ -1,14 +1,16 @@
-import {LngLat} from './lng_lat';
+import {LngLat, type LngLatLike} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp} from '../util/util';
+import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LATITUDE, scaleZoom} from '../util/util';
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets';
+import {altitudeFromMercatorZ, MercatorCoordinate, mercatorZfromAltitude} from './mercator_coordinate';
+import {cameraMercatorCoordinateFromCenterAndRotation} from './projection/mercator_utils';
+import {EXTENT} from '../data/extent';
+
 import type {PaddingOptions} from './edge_insets';
-import {CoveringZoomOptions, IReadonlyTransform, ITransformGetters} from './transform_interface';
-
-export const MAX_VALID_LATITUDE = 85.051129;
-
+import type {IReadonlyTransform, ITransformGetters} from './transform_interface';
+import type {OverscaledTileID} from '../source/tile_id';
 /**
  * If a path crossing the antimeridian would be shorter, extend the final coordinate so that
  * interpolating between the two endpoints will cross it.
@@ -21,16 +23,6 @@ export function normalizeCenter(tr: IReadonlyTransform, center: LngLat): void {
         delta > 180 ? -360 :
             delta < -180 ? 360 : 0;
 }
-
-/**
- * Computes scaling from zoom level.
- */
-export function zoomScale(zoom: number) { return Math.pow(2, zoom); }
-
-/**
- * Computes zoom level from scaling.
- */
-export function scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
 
 export type UnwrappedTileIDType = {
     /**
@@ -93,16 +85,19 @@ export class TransformHelper implements ITransformGetters {
     /**
      * Vertical field of view in radians.
      */
-    _fov: number;
+    _fovInRadians: number;
     /**
      * This transform's bearing in radians.
-     * Note that the sign of this variable is *opposite* to the sign of {@link bearing}
      */
-    _angle: number;
+    _bearingInRadians: number;
     /**
      * Pitch in radians.
      */
-    _pitch: number;
+    _pitchInRadians: number;
+    /**
+     * Roll in radians.
+     */
+    _rollInRadians: number;
     _zoom: number;
     _renderWorldCopies: boolean;
     _minZoom: number;
@@ -121,6 +116,11 @@ export class TransformHelper implements ITransformGetters {
     _pixelsToGLUnits: [number, number];
     _pixelsToClipSpaceMatrix: mat4;
     _clipSpaceToPixelsMatrix: mat4;
+    _cameraToCenterDistance: number;
+
+    _nearZ: number;
+    _farZ: number;
+    _autoCalculateNearFarZ: boolean;
 
     constructor(callbacks: TransformHelperCallbacks, minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
         this._callbacks = callbacks;
@@ -142,15 +142,17 @@ export class TransformHelper implements ITransformGetters {
         this._zoom = 0;
         this._tileZoom = getTileZoom(this._zoom);
         this._scale = zoomScale(this._zoom);
-        this._angle = 0;
-        this._fov = 0.6435011087932844;
-        this._pitch = 0;
+        this._bearingInRadians = 0;
+        this._fovInRadians = 0.6435011087932844;
+        this._pitchInRadians = 0;
+        this._rollInRadians = 0;
         this._unmodified = true;
         this._edgeInsets = new EdgeInsets();
         this._minElevationForCurrentTile = 0;
+        this._autoCalculateNearFarZ = true;
     }
 
-    public apply(thatI: ITransformGetters, constrain?: boolean): void {
+    public apply(thatI: ITransformGetters, constrain?: boolean, forceOverrideZ?: boolean): void {
         this._latRange = thatI.latRange;
         this._lngRange = thatI.lngRange;
         this._width = thatI.width;
@@ -161,9 +163,10 @@ export class TransformHelper implements ITransformGetters {
         this._zoom = thatI.zoom;
         this._tileZoom = getTileZoom(this._zoom);
         this._scale = zoomScale(this._zoom);
-        this._angle = -thatI.bearing * Math.PI / 180;
-        this._fov = thatI.fov * Math.PI / 180;
-        this._pitch = thatI.pitch * Math.PI / 180;
+        this._bearingInRadians = thatI.bearingInRadians;
+        this._fovInRadians = thatI.fovInRadians;
+        this._pitchInRadians = thatI.pitchInRadians;
+        this._rollInRadians = thatI.rollInRadians;
         this._unmodified = thatI.unmodified;
         this._edgeInsets = new EdgeInsets(thatI.padding.top, thatI.padding.bottom, thatI.padding.left, thatI.padding.right);
         this._minZoom = thatI.minZoom;
@@ -171,6 +174,10 @@ export class TransformHelper implements ITransformGetters {
         this._minPitch = thatI.minPitch;
         this._maxPitch = thatI.maxPitch;
         this._renderWorldCopies = thatI.renderWorldCopies;
+        this._cameraToCenterDistance = thatI.cameraToCenterDistance;
+        this._nearZ = thatI.nearZ;
+        this._farZ = thatI.farZ;
+        this._autoCalculateNearFarZ = !forceOverrideZ && thatI.autoCalculateNearFarZ;
         if (constrain) {
             this._constrain();
         }
@@ -202,7 +209,7 @@ export class TransformHelper implements ITransformGetters {
     /**
      * Gets the transform's bearing in radians.
      */
-    get angle(): number { return this._angle; }
+    get bearingInRadians(): number { return this._bearingInRadians; }
 
     get lngRange(): [number, number] { return this._lngRange; }
     get latRange(): [number, number] { return this._latRange; }
@@ -264,41 +271,61 @@ export class TransformHelper implements ITransformGetters {
     }
 
     get bearing(): number {
-        return -this._angle / Math.PI * 180;
+        return this._bearingInRadians / Math.PI * 180;
     }
     setBearing(bearing: number) {
-        const b = -wrap(bearing, -180, 180) * Math.PI / 180;
-        if (this._angle === b) return;
+        const b = wrap(bearing, -180, 180) * Math.PI / 180;
+        if (this._bearingInRadians === b) return;
         this._unmodified = false;
-        this._angle = b;
+        this._bearingInRadians = b;
         this._calcMatrices();
 
         // 2x2 matrix for rotating points
         this._rotationMatrix = mat2.create();
-        mat2.rotate(this._rotationMatrix, this._rotationMatrix, this._angle);
+        mat2.rotate(this._rotationMatrix, this._rotationMatrix, -this._bearingInRadians);
     }
 
     get rotationMatrix(): mat2 { return this._rotationMatrix; }
 
+    get pitchInRadians(): number {
+        return this._pitchInRadians;
+    }
     get pitch(): number {
-        return this._pitch / Math.PI * 180;
+        return this._pitchInRadians / Math.PI * 180;
     }
     setPitch(pitch: number) {
         const p = clamp(pitch, this.minPitch, this.maxPitch) / 180 * Math.PI;
-        if (this._pitch === p) return;
+        if (this._pitchInRadians === p) return;
         this._unmodified = false;
-        this._pitch = p;
+        this._pitchInRadians = p;
         this._calcMatrices();
     }
 
+    get rollInRadians(): number {
+        return this._rollInRadians;
+    }
+    get roll(): number {
+        return this._rollInRadians / Math.PI * 180;
+    }
+    setRoll(roll: number) {
+        const r = roll / 180 * Math.PI;
+        if (this._rollInRadians === r) return;
+        this._unmodified = false;
+        this._rollInRadians = r;
+        this._calcMatrices();
+    }
+
+    get fovInRadians(): number {
+        return this._fovInRadians;
+    }
     get fov(): number {
-        return this._fov / Math.PI * 180;
+        return radiansToDegrees(this._fovInRadians);
     }
     setFov(fov: number) {
-        fov = Math.max(0.01, Math.min(60, fov));
-        if (this._fov === fov) return;
+        fov = clamp(fov, 0.1, 150);
+        if (this.fov === fov) return;
         this._unmodified = false;
-        this._fov = fov / 180 * Math.PI;
+        this._fovInRadians = degreesToRadians(fov);
         this._calcMatrices();
     }
 
@@ -358,6 +385,22 @@ export class TransformHelper implements ITransformGetters {
 
     get unmodified(): boolean { return this._unmodified; }
 
+    get cameraToCenterDistance(): number { return this._cameraToCenterDistance; }
+
+    get nearZ(): number { return this._nearZ; }
+    get farZ(): number { return this._farZ; }
+    get autoCalculateNearFarZ(): boolean { return this._autoCalculateNearFarZ; }
+    overrideNearFarZ(nearZ: number, farZ: number): void {
+        this._autoCalculateNearFarZ = false;
+        this._nearZ = nearZ;
+        this._farZ = farZ;
+        this._calcMatrices();
+    }
+    clearNearFarZOverride(): void {
+        this._autoCalculateNearFarZ = true;
+        this._calcMatrices();
+    }
+
     /**
      * Returns if the padding params match
      *
@@ -382,23 +425,10 @@ export class TransformHelper implements ITransformGetters {
         this._calcMatrices();
     }
 
-    /**
-     * Return what zoom level of a tile source would most closely cover the tiles displayed by this transform.
-     * @param options - The options, most importantly the source's tile size.
-     * @returns An integer zoom level at which all tiles will be visible.
-     */
-    coveringZoomLevel(options: CoveringZoomOptions): number {
-        const z = (options.roundZoom ? Math.round : Math.floor)(
-            this.zoom + scaleZoom(this._tileSize / options.tileSize)
-        );
-        // At negative zoom levels load tiles from z0 because negative tile zoom levels don't exist.
-        return Math.max(0, z);
-    }
-
-    resize(width: number, height: number) {
+    resize(width: number, height: number, constrain: boolean = true): void {
         this._width = width;
         this._height = height;
-        this._constrain();
+        if (constrain) this._constrain();
         this._calcMatrices();
     }
 
@@ -500,7 +530,107 @@ export class TransformHelper implements ITransformGetters {
             mat4.translate(m, m, [-1, -1, 0]);
             mat4.scale(m, m, [2 / this._width, 2 / this._height, 1]);
             this._pixelsToClipSpaceMatrix = m;
+            const halfFov = this.fovInRadians / 2;
+            this._cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this._height;
         }
         this._callbacks.calcMatrices();
+    }
+
+    calculateCenterFromCameraLngLatAlt(lnglat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
+        const cameraBearing = bearing !== undefined ? bearing : this.bearing;
+        const cameraPitch = pitch = pitch !== undefined ? pitch : this.pitch;
+
+        const camMercator = MercatorCoordinate.fromLngLat(lnglat, alt);
+        const dzNormalized = -Math.cos(degreesToRadians(cameraPitch));
+        const dhNormalized = Math.sin(degreesToRadians(cameraPitch));
+        const dxNormalized = dhNormalized * Math.sin(degreesToRadians(cameraBearing));
+        const dyNormalized = -dhNormalized * Math.cos(degreesToRadians(cameraBearing));
+
+        let elevation = this.elevation;
+        const altitudeAGL = alt - elevation;
+        let distanceToCenterMeters;
+        if (dzNormalized * altitudeAGL >= 0.0 || Math.abs(dzNormalized) < 0.1) {
+            distanceToCenterMeters = 10000;
+            elevation = alt + distanceToCenterMeters * dzNormalized;
+        } else {
+            distanceToCenterMeters = -altitudeAGL / dzNormalized;
+        }
+
+        // The mercator transform scale changes with latitude. At high latitudes, there are more "Merc units" per meter
+        // than at the equator. We treat the center point as our fundamental quantity. This means we want to convert
+        // elevation to Mercator Z using the scale factor at the center point (not the camera point). Since the center point is
+        // initially unknown, we compute it using the scale factor at the camera point. This gives us a better estimate of the
+        // center point scale factor, which we use to recompute the center point. We repeat until the error is very small.
+        // This typically takes about 5 iterations.
+        let metersPerMercUnit = altitudeFromMercatorZ(1, camMercator.y);
+        let centerMercator: MercatorCoordinate;
+        let dMercator: number;
+        let iter = 0;
+        const maxIter = 10;
+        do {
+            iter += 1;
+            if (iter > maxIter) {
+                break;
+            }
+            dMercator = distanceToCenterMeters / metersPerMercUnit;
+            const dx = dxNormalized * dMercator;
+            const dy = dyNormalized * dMercator;
+            centerMercator = new MercatorCoordinate(camMercator.x + dx, camMercator.y + dy);
+            metersPerMercUnit = 1 / centerMercator.meterInMercatorCoordinateUnits();
+        } while (Math.abs(distanceToCenterMeters - dMercator * metersPerMercUnit) > 1.0e-12);
+
+        const center = centerMercator.toLngLat();
+        const zoom = scaleZoom(this.height / 2 / Math.tan(this.fovInRadians / 2) / dMercator / this.tileSize);
+        return {center, elevation, zoom};
+    }
+
+    recalculateZoomAndCenter(elevation: number): void {
+        if (this.elevation - elevation === 0) return;
+
+        // Find the current camera position
+        const originalPixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
+        const cameraToCenterDistanceMeters = this.cameraToCenterDistance / originalPixelPerMeter;
+        const origCenterMercator = MercatorCoordinate.fromLngLat(this.center, this.elevation);
+        const cameraMercator = cameraMercatorCoordinateFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
+
+        // update elevation to the new terrain intercept elevation and recalculate the center point
+        this._elevation = elevation;
+        const centerInfo = this.calculateCenterFromCameraLngLatAlt(cameraMercator.toLngLat(), altitudeFromMercatorZ(cameraMercator.z, origCenterMercator.y), this.bearing, this.pitch);
+
+        // update matrices
+        this._elevation = centerInfo.elevation;
+        this._center = centerInfo.center;
+        this.setZoom(centerInfo.zoom);
+    }
+
+    getCameraPoint(): Point {
+        const pitch = this.pitchInRadians;
+        const offset = Math.tan(pitch) * (this.cameraToCenterDistance || 1);
+        return this.centerPoint.add(new Point(offset * Math.sin(this.rollInRadians), offset * Math.cos(this.rollInRadians)));
+    }
+
+    getCameraAltitude(): number {
+        const altitude = Math.cos(this.pitchInRadians) * this._cameraToCenterDistance / this._pixelPerMeter;
+        return altitude + this.elevation;
+    }
+
+    getCameraLngLat(): LngLat {
+        const pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
+        const cameraToCenterDistanceMeters = this.cameraToCenterDistance / pixelPerMeter;
+        const camMercator = cameraMercatorCoordinateFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
+        return camMercator.toLngLat();
+    }
+
+    getMercatorTileCoordinates(overscaledTileID: OverscaledTileID): [number, number, number, number] {
+        if (!overscaledTileID) {
+            return [0, 0, 1, 1];
+        }
+        const scale = (overscaledTileID.canonical.z >= 0) ? (1 << overscaledTileID.canonical.z) : Math.pow(2.0, overscaledTileID.canonical.z);
+        return [
+            overscaledTileID.canonical.x / scale,
+            overscaledTileID.canonical.y / scale,
+            1.0 / scale / EXTENT,
+            1.0 / scale / EXTENT
+        ];
     }
 }

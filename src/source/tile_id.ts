@@ -3,8 +3,8 @@ import {EXTENT} from '../data/extent';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {register} from '../util/web_worker_transfer';
-import {mat4} from 'gl-matrix';
-import {ICanonicalTileID, IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
+import {type mat4} from 'gl-matrix';
+import {type ICanonicalTileID, type IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
 import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util';
 import {isInBoundsForTileZoomXY} from '../util/world_bounds';
 
@@ -93,8 +93,9 @@ export class OverscaledTileID {
      * This matrix is used during terrain's render-to-texture stage only.
      * If the render-to-texture stage is active, this matrix will be present
      * and should be used, otherwise this matrix will be null.
+     * The matrix should be float32 in order to avoid slow WebGL calls in Chrome.
      */
-    terrainRttPosMatrix: mat4 | null = null;
+    terrainRttPosMatrix32f: mat4 | null = null;
 
     constructor(overscaledZ: number, wrap: number, z: number, x: number, y: number) {
         if (overscaledZ < z) throw new Error(`overscaledZ should be >= z; overscaledZ = ${overscaledZ}; z = ${z}`);
@@ -223,4 +224,4 @@ function getQuadkey(z, x, y) {
 }
 
 register('CanonicalTileID', CanonicalTileID);
-register('OverscaledTileID', OverscaledTileID, {omit: ['terrainRttPosMatrix']});
+register('OverscaledTileID', OverscaledTileID, {omit: ['terrainRttPosMatrix32f']});

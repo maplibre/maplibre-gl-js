@@ -3,20 +3,25 @@ import {ITransform} from '../../../src/geo/transform_interface';
 import {CollisionIndex} from '../../../src/symbol/collision_index';
 import Benchmark from '../lib/benchmark';
 import {OverlapMode} from '../../../src/style/style_layer/overlap_mode';
-import {CanonicalTileID, UnwrappedTileID} from '../../../src/source/tile_id';
+import {OverscaledTileID, UnwrappedTileID} from '../../../src/source/tile_id';
 import {SingleCollisionBox} from '../../../src/data/bucket/symbol_bucket';
 import {EXTENT} from '../../../src/data/extent';
 import {MercatorTransform} from '../../../src/geo/projection/mercator_transform';
+import {mat4} from 'gl-matrix';
+import {GlobeProjection} from '../../../src/geo/projection/globe_projection';
+import {GlobeTransform} from '../../../src/geo/projection/globe_transform';
 
 type TestSymbol = {
     collisionBox: SingleCollisionBox;
     overlapMode: OverlapMode;
     textPixelRatio: number;
+    tileID: OverscaledTileID;
     unwrappedTileID: UnwrappedTileID;
     pitchWithMap: boolean;
     rotateWithMap: boolean;
     translation: [number, number];
     shift?: Point;
+    simpleProjectionMatrix?: mat4;
 }
 
 // For this benchmark we need a deterministic random number generator. This function provides one.
@@ -37,11 +42,34 @@ function splitmix32(a) {
 export default class SymbolCollisionBox extends Benchmark {
     private _transform: ITransform;
     private _symbols: Array<TestSymbol>;
+    private _useGlobeProjection: boolean = false;
+
+    constructor(useGlobeProjection: boolean) {
+        super();
+        this._useGlobeProjection = useGlobeProjection;
+    }
+
+    private _createTransform() {
+        if (this._useGlobeProjection) {
+            return {
+                transform: new GlobeTransform(),
+                calculatePosMatrix: (_tileID: UnwrappedTileID) => { return undefined; },
+            };
+        } else {
+            const tr = new MercatorTransform(0, 22, 0, 60, true);
+            return {
+                transform: tr,
+                calculatePosMatrix: (tileID: UnwrappedTileID) => { return tr.calculatePosMatrix(tileID, false); },
+            };
+        }
+    }
 
     async setup(): Promise<void> {
-        this._transform = new MercatorTransform(0, 22, 0, 60, true);
-        this._transform.resize(1024, 1024);
-        const unwrappedTileID = new UnwrappedTileID(0, new CanonicalTileID(0, 0, 0));
+        const {transform, calculatePosMatrix} = this._createTransform();
+        this._transform = transform;
+        transform.resize(1024, 1024);
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        const unwrappedTileID = tileID.toUnwrapped();
 
         const rng = splitmix32(0xdeadbeef);
         const rndRange = (min, max) => {
@@ -63,6 +91,7 @@ export default class SymbolCollisionBox extends Benchmark {
                 },
                 overlapMode: 'never',
                 textPixelRatio: 1,
+                tileID,
                 unwrappedTileID,
                 pitchWithMap: rng() > 0.5,
                 rotateWithMap: rng() > 0.5,
@@ -70,7 +99,8 @@ export default class SymbolCollisionBox extends Benchmark {
                     rndRange(-20, 20),
                     rndRange(-20, 20)
                 ],
-                shift: rng() > 0.5 ? new Point(rndRange(-20, 20), rndRange(-20, 20)) : undefined
+                shift: rng() > 0.5 ? new Point(rndRange(-20, 20), rndRange(-20, 20)) : undefined,
+                simpleProjectionMatrix: calculatePosMatrix(unwrappedTileID),
             });
         }
     }
@@ -86,13 +116,15 @@ export default class SymbolCollisionBox extends Benchmark {
                 s.collisionBox,
                 s.overlapMode,
                 s.textPixelRatio,
+                s.tileID,
                 s.unwrappedTileID,
                 s.pitchWithMap,
                 s.rotateWithMap,
                 s.translation,
                 null,
                 null,
-                s.shift
+                s.shift,
+                s.simpleProjectionMatrix,
             );
         }
     }

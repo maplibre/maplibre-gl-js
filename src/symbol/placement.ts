@@ -5,24 +5,24 @@ import * as symbolSize from './symbol_size';
 import * as projection from './projection';
 import {getAnchorJustification} from './symbol_layout';
 import {getAnchorAlignment, WritingMode} from './shaping';
-import {mat4} from 'gl-matrix';
+import {type mat4} from 'gl-matrix';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
 import Point from '@mapbox/point-geometry';
 import type {IReadonlyTransform, ITransform} from '../geo/transform_interface';
 import type {StyleLayer} from '../style/style_layer';
-import {PossiblyEvaluated} from '../style/properties';
+import {type PossiblyEvaluated} from '../style/properties';
 import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
-import {getOverlapMode, OverlapMode} from '../style/style_layer/overlap_mode';
+import {getOverlapMode, type OverlapMode} from '../style/style_layer/overlap_mode';
 
 import type {Tile} from '../source/tile';
-import {SymbolBucket, CollisionArrays, SingleCollisionBox} from '../data/bucket/symbol_bucket';
+import {type SymbolBucket, type CollisionArrays, type SingleCollisionBox} from '../data/bucket/symbol_bucket';
 
 import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance, TextAnchorOffset} from '../data/array_types.g';
 import type {FeatureIndex} from '../data/feature_index';
 import type {OverscaledTileID, UnwrappedTileID} from '../source/tile_id';
-import {Terrain} from '../render/terrain';
+import {type Terrain} from '../render/terrain';
 import {translatePosition, warnOnce} from '../util/util';
-import {TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor';
+import {type TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor';
 
 class OpacityState {
     opacity: number;
@@ -323,6 +323,7 @@ export class Placement {
         rotateWithMap: boolean,
         pitchWithMap: boolean,
         textPixelRatio: number,
+        tileID: OverscaledTileID,
         unwrappedTileID,
         collisionGroup: CollisionGroup,
         textOverlapMode: OverlapMode,
@@ -332,7 +333,8 @@ export class Placement {
         translationText: [number, number],
         translationIcon: [number, number],
         iconBox?: SingleCollisionBox | null,
-        getElevation?: (x: number, y: number) => number
+        getElevation?: (x: number, y: number) => number,
+        simpleProjectionMatrix?: mat4,
     ): {
             shift: Point;
             placedGlyphBoxes: PlacedBox;
@@ -346,13 +348,15 @@ export class Placement {
             textBox,
             textOverlapMode,
             textPixelRatio,
+            tileID,
             unwrappedTileID,
             pitchWithMap,
             rotateWithMap,
             translationText,
             collisionGroup.predicate,
             getElevation,
-            shift
+            shift,
+            simpleProjectionMatrix,
         );
 
         if (iconBox) {
@@ -360,13 +364,15 @@ export class Placement {
                 iconBox,
                 textOverlapMode,
                 textPixelRatio,
+                tileID,
                 unwrappedTileID,
                 pitchWithMap,
                 rotateWithMap,
                 translationIcon,
                 collisionGroup.predicate,
                 getElevation,
-                shift
+                shift,
+                simpleProjectionMatrix,
             );
             if (!placedIconBoxes.placeable) return;
         }
@@ -453,6 +459,7 @@ export class Placement {
 
         const tileID = this.retainedQueryData[bucket.bucketInstanceId].tileID;
         const getElevation = this._getTerrainElevationFunc(tileID);
+        const simpleProjectionMatrix = this.transform.getFastPathSimpleProjectionMatrix(tileID);
 
         const placeSymbol = (symbolInstance: SymbolInstance, collisionArrays: CollisionArrays, symbolIndex: number) => {
             if (seenCrossTileIDs[symbolInstance.crossTileID]) return;
@@ -468,7 +475,7 @@ export class Placement {
             let offscreen = true;
             let shift = null;
 
-            let placed: PlacedBox = {box: null, placeable: false, offscreen: null};
+            let placed: PlacedBox = {box: null, placeable: false, offscreen: null, occluded: false};
             let placedVerticalText = {box: null, placeable: false, offscreen: null};
 
             let placedGlyphBoxes: PlacedBox = null;
@@ -529,12 +536,15 @@ export class Placement {
                             collisionTextBox,
                             textOverlapMode,
                             textPixelRatio,
+                            tileID,
                             unwrappedTileID,
                             pitchWithMap,
                             rotateWithMap,
                             translationText,
                             collisionGroup.predicate,
-                            getElevation
+                            getElevation,
+                            undefined,
+                            simpleProjectionMatrix,
                         );
                         if (placedFeature && placedFeature.placeable) {
                             this.markUsedOrientation(bucket, orientation, symbolInstance);
@@ -586,7 +596,7 @@ export class Placement {
 
                                 const result = this.attemptAnchorPlacement(
                                     textAnchorOffset, collisionTextBox, width, height,
-                                    textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, unwrappedTileID,
+                                    textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, tileID, unwrappedTileID,
                                     collisionGroup, overlapMode, symbolInstance, bucket, orientation, translationText, translationIcon, variableIconBox, getElevation);
 
                                 if (result) {
@@ -613,18 +623,21 @@ export class Placement {
                                 textBox,
                                 'always', // Skips expensive collision check with already placed boxes
                                 textPixelRatio,
+                                tileID,
                                 unwrappedTileID,
                                 pitchWithMap,
                                 rotateWithMap,
                                 translationText,
                                 collisionGroup.predicate,
                                 getElevation,
-                                new Point(0, 0)
+                                undefined,
+                                simpleProjectionMatrix,
                             );
                             placedBox = {
                                 box: placedFakeGlyphBox.box,
                                 offscreen: false,
-                                placeable: false
+                                placeable: false,
+                                occluded: false,
                             };
                         }
 
@@ -668,7 +681,6 @@ export class Placement {
 
             placedGlyphBoxes = placed;
             placeText = placedGlyphBoxes && placedGlyphBoxes.placeable;
-
             offscreen = placedGlyphBoxes && placedGlyphBoxes.offscreen;
 
             if (symbolInstance.useRuntimeCollisionCircles) {
@@ -717,6 +729,7 @@ export class Placement {
                         iconBox,
                         iconOverlapMode,
                         textPixelRatio,
+                        tileID,
                         unwrappedTileID,
                         pitchWithMap,
                         rotateWithMap,
@@ -724,6 +737,7 @@ export class Placement {
                         collisionGroup.predicate,
                         getElevation,
                         (hasIconTextFit && shift) ? shift : undefined,
+                        simpleProjectionMatrix,
                     );
                 };
 
@@ -801,13 +815,16 @@ export class Placement {
             if (symbolInstance.crossTileID === 0) throw new Error('symbolInstance.crossTileID can\'t be 0');
             if (bucket.bucketInstanceId === 0) throw new Error('bucket.bucketInstanceId can\'t be 0');
 
-            this.placements[symbolInstance.crossTileID] = new JointPlacement(placeText || alwaysShowText, placeIcon || alwaysShowIcon, offscreen || bucket.justReloaded);
+            // Do not show text or icons that are occluded by the globe, even if overlap mode is 'always'!
+            const textVisible: boolean = (placeText || alwaysShowText) && !(placedGlyphBoxes?.occluded);
+            const iconVisible = (placeIcon || alwaysShowIcon) && !(placedIconBoxes?.occluded);
+            this.placements[symbolInstance.crossTileID] = new JointPlacement(textVisible, iconVisible, offscreen || bucket.justReloaded);
             seenCrossTileIDs[symbolInstance.crossTileID] = true;
         };
 
         if (zOrderByViewportY) {
             if (bucketPart.symbolInstanceStart !== 0) throw new Error('bucket.bucketInstanceId should be 0');
-            const symbolIndexes = bucket.getSortedSymbolIndexes(this.transform.angle);
+            const symbolIndexes = bucket.getSortedSymbolIndexes(-this.transform.bearingInRadians);
             for (let i = symbolIndexes.length - 1; i >= 0; --i) {
                 const symbolIndex = symbolIndexes[i];
                 placeSymbol(bucket.symbolInstances.get(symbolIndex), bucket.collisionArrays[symbolIndex], symbolIndex);
@@ -1163,7 +1180,7 @@ export class Placement {
                                     variableOffset.textOffset,
                                     variableOffset.textBoxScale);
                                 if (rotateWithMap) {
-                                    shift._rotate(pitchWithMap ? this.transform.angle : -this.transform.angle);
+                                    shift._rotate(pitchWithMap ? -this.transform.bearingInRadians : this.transform.bearingInRadians);
                                 }
                             } else {
                                 // No offset -> this symbol hasn't been placed since coming on-screen
@@ -1202,7 +1219,7 @@ export class Placement {
             }
         }
 
-        bucket.sortFeatures(this.transform.angle);
+        bucket.sortFeatures(-this.transform.bearingInRadians);
         if (this.retainedQueryData[bucket.bucketInstanceId]) {
             this.retainedQueryData[bucket.bucketInstanceId].featureSortOrder = bucket.featureSortOrder;
         }

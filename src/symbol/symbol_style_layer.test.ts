@@ -1,8 +1,9 @@
+import {describe, test, expect} from 'vitest';
 import {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 import {FormatSectionOverride} from '../style/format_section_override';
-import properties, {SymbolPaintPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
-import {ZoomHistory} from '../style/zoom_history';
-import {EvaluationParameters} from '../style/evaluation_parameters';
+import properties, {type SymbolPaintPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
+import {type ZoomHistory} from '../style/zoom_history';
+import {type EvaluationParameters} from '../style/evaluation_parameters';
 
 function createSymbolLayer(layerProperties) {
     const layer = new SymbolStyleLayer(layerProperties);

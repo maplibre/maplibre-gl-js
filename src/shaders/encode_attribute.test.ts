@@ -1,3 +1,4 @@
+import {test, expect} from 'vitest';
 import {packUint8ToFloat} from './encode_attribute';
 
 test('packUint8ToFloat', () => {

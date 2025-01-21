@@ -6,13 +6,17 @@ import {StencilMode} from '../gl/stencil_mode';
 import {DepthMode} from '../gl/depth_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
 import {rasterUniformValues} from './program/raster_program';
+import {EXTENT} from '../data/extent';
+import {coveringZoomLevel} from '../geo/projection/covering_tiles';
+import Point from '@mapbox/point-geometry';
 
-import type {Painter} from './painter';
+import type {Painter, RenderOptions} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
 import type {OverscaledTileID} from '../source/tile_id';
-import Point from '@mapbox/point-geometry';
-import {EXTENT} from '../data/extent';
+import type {IReadonlyTransform} from '../geo/transform_interface';
+import type {Tile} from '../source/tile';
+import type {Terrain} from './terrain';
 
 const cornerCoords = [
     new Point(0, 0),
@@ -21,11 +25,12 @@ const cornerCoords = [
     new Point(0, EXTENT),
 ];
 
-export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterStyleLayer, tileIDs: Array<OverscaledTileID>) {
+export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
     if (layer.paint.get('raster-opacity') === 0) return;
     if (!tileIDs.length) return;
 
+    const {isRenderingToTexture} = renderOptions;
     const source = sourceCache.getSource();
 
     const projection = painter.style.projection;
@@ -43,16 +48,16 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
     // Stencil mask and two-pass is not used for ImageSource sources regardless of projection.
     if (source instanceof ImageSource) {
         // Image source - no stencil is used
-        drawTiles(painter, sourceCache, layer, tileIDs, null, false, false, source.tileCoords, source.flippedWindingOrder);
+        drawTiles(painter, sourceCache, layer, tileIDs, null, false, false, source.tileCoords, source.flippedWindingOrder, isRenderingToTexture);
     } else if (useSubdivision) {
         // Two-pass rendering
         const [stencilBorderless, stencilBorders, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
-        drawTiles(painter, sourceCache, layer, coords, stencilBorderless, false, true, cornerCoords); // draw without borders
-        drawTiles(painter, sourceCache, layer, coords, stencilBorders, true, true, cornerCoords); // draw with borders
+        drawTiles(painter, sourceCache, layer, coords, stencilBorderless, false, true, cornerCoords, false, isRenderingToTexture); // draw without borders
+        drawTiles(painter, sourceCache, layer, coords, stencilBorders, true, true, cornerCoords, false, isRenderingToTexture); // draw with borders
     } else {
         // Simple rendering
-        const [stencil, coords] = painter.stencilConfigForOverlap(tileIDs);
-        drawTiles(painter, sourceCache, layer, coords, stencil, false, true, cornerCoords);
+        const [stencil, coords] = painter.getStencilConfigForOverlapAndUpdateStencilID(tileIDs);
+        drawTiles(painter, sourceCache, layer, coords, stencil, false, true, cornerCoords, false, isRenderingToTexture);
     }
 }
 
@@ -65,7 +70,8 @@ function drawTiles(
     useBorder: boolean,
     allowPoles: boolean,
     corners: Array<Point>,
-    flipCullfaceMode: boolean = false) {
+    flipCullfaceMode: boolean = false,
+    isRenderingToTexture: boolean = false) {
     const minTileZ = coords[coords.length - 1].overscaledZ;
 
     const context = painter.context;
@@ -82,7 +88,7 @@ function drawTiles(
     for (const coord of coords) {
         // Set the lower zoom level to sublayer 0, and higher zoom levels to higher sublayers
         // Use gl.LESS to prevent double drawing in areas where tiles overlap.
-        const depthMode = painter.depthModeForSublayer(coord.overscaledZ - minTileZ,
+        const depthMode = painter.getDepthModeForSublayer(coord.overscaledZ - minTileZ,
             layer.paint.get('raster-opacity') === 1 ? DepthMode.ReadWrite : DepthMode.ReadOnly, gl.LESS);
 
         const tile = sourceCache.getTile(coord);
@@ -120,7 +126,7 @@ function drawTiles(
         }
 
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
-        const projectionData = transform.getProjectionData(coord, align);
+        const projectionData = transform.getProjectionData({overscaledTileID: coord, aligned: align, applyGlobeMatrix: !isRenderingToTexture, applyTerrainMatrix: true});
         const uniformValues = rasterUniformValues(parentTL || [0, 0], parentScaleBy || 1, fade, layer, corners);
 
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, allowPoles, 'raster');
@@ -133,7 +139,7 @@ function drawTiles(
     }
 }
 
-function getFadeValues(tile, parentTile, sourceCache, layer, transform, terrain) {
+function getFadeValues(tile: Tile, parentTile: Tile, sourceCache: SourceCache, layer: RasterStyleLayer, transform: IReadonlyTransform, terrain: Terrain) {
     const fadeDuration = layer.paint.get('raster-fade-duration');
 
     if (!terrain && fadeDuration > 0) {
@@ -142,7 +148,7 @@ function getFadeValues(tile, parentTile, sourceCache, layer, transform, terrain)
         const sinceParent = parentTile ? (now - parentTile.timeAdded) / fadeDuration : -1;
 
         const source = sourceCache.getSource();
-        const idealZ = transform.coveringZoomLevel({
+        const idealZ = coveringZoomLevel(transform, {
             tileSize: source.tileSize,
             roundZoom: source.roundZoom
         });
