@@ -219,7 +219,7 @@
         ]
       }
     },
-    "line-baseline": {
+    "line-bottom": {
       "type": "geojson",
       "data": {
         "type": "FeatureCollection",
@@ -349,9 +349,9 @@
       }
     },
     {
-      "id": "line-baseline",
+      "id": "line-bottom",
       "type": "line",
-      "source": "line-baseline",
+      "source": "line-bottom",
       "layout": {},
       "paint": {
         "line-color": "#000000",
@@ -419,22 +419,22 @@
       }
     },
     {
-      "id": "line-label-baseline",
+      "id": "line-label-bottom",
       "type": "symbol",
-      "source": "line-baseline",
+      "source": "line-bottom",
       "layout": {
         "text-field": [
           "format",
           ["image", "government_icon"], 
-          { "vertical-align": "baseline" },
+          { "vertical-align": "bottom" },
           " ",
           {},
           "Ag",
-          { "font-scale": 1.2, "vertical-align": "baseline" },
+          { "font-scale": 1.2, "vertical-align": "bottom" },
           " ",
           {},
           "Baseline",
-          { "font-scale": 0.8, "vertical-align": "baseline" }
+          { "font-scale": 0.8, "vertical-align": "bottom" }
         ],
         "text-size": 48,
         "symbol-placement": "line-center",

@@ -87,22 +87,22 @@
       }
     },
     {
-      "id": "point-label-baseline",
+      "id": "point-label-bottom",
       "type": "symbol",
       "source": "point",
       "layout": {
       "text-field": [
         "format",
         ["image", "government_icon"], 
-        { "vertical-align": "baseline" },
+        { "vertical-align": "bottom" },
         " ",
         {},
         "ÓÑt yg",
-        { "font-scale": 1.2, "vertical-align": "baseline" },
+        { "font-scale": 1.2, "vertical-align": "bottom" },
         " ",
         {},
         "BASELINE",
-        { "font-scale": 0.8, "vertical-align": "baseline" }
+        { "font-scale": 0.8, "vertical-align": "bottom" }
       ],
         "text-size": 48,
         "text-offset": [0, 2],
