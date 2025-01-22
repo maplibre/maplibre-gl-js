@@ -76,7 +76,7 @@
     "@typescript-eslint/parser": "^8.20.0",
     "address": "^2.0.3",
     "benchmark": "^2.1.4",
-    "canvas": "^3.0.1",
+    "canvas": "^3.1.0",
     "cssnano": "^7.0.6",
     "d3": "^7.9.0",
     "d3-queue": "^3.0.7",
