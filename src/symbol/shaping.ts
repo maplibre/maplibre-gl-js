@@ -831,7 +831,7 @@ function justifyLine(positionedGlyphs: Array<PositionedGlyph>,
     start: number,
     end: number,
     justify: 1 | 0 | 0.5) {
-    if (!justify)
+    if (justify === 0)
         return;
 
     const lastPositionedGlyph = positionedGlyphs[end];
