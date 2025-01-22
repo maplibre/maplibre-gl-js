@@ -606,18 +606,26 @@ function getAnchorAlignment(anchor: SymbolAnchor) {
     return {horizontalAlign, verticalAlign};
 }
 
-function calculateLineContentSize(
+function getMaxGlyphOrImageHeightInLine(
     imagePositions: {[_: string]: ImagePosition},
     line: TaggedString,
     layoutTextSizeFactor: number
-) {
+): number {
     const maxGlyphSize = line.getMaxScale() * ONE_EM;
-    const {maxImageWidth, maxImageHeight} = line.getMaxImageSize(imagePositions);
+    const {maxImageHeight} = line.getMaxImageSize(imagePositions);
 
-    const lineContentHeight = Math.max(maxGlyphSize, maxImageHeight * layoutTextSizeFactor);
-    const lineContentWidth = Math.max(maxGlyphSize, maxImageWidth * layoutTextSizeFactor);
+    return Math.max(maxGlyphSize, maxImageHeight * layoutTextSizeFactor);
+}
 
-    return {lineContentWidth, lineContentHeight};
+function getMaxGlyphOrImageWidthInLine(
+    imagePositions: {[_: string]: ImagePosition},
+    line: TaggedString,
+    layoutTextSizeFactor: number
+): number {
+    const maxGlyphSize = line.getMaxScale() * ONE_EM;
+    const {maxImageWidth} = line.getMaxImageSize(imagePositions);
+
+    return Math.max(maxGlyphSize, maxImageWidth * layoutTextSizeFactor);
 }
 
 function getVerticalAlignFactor(
@@ -703,9 +711,6 @@ function shapeLines(shaping: Shaping,
             continue;
         }
 
-        const {lineContentWidth, lineContentHeight} =
-            calculateLineContentSize(imagePositions, line, layoutTextSizeFactor);
-
         for (let i = 0; i < line.length(); i++) {
             const section = line.getSection(i);
             const sectionIndex = line.getSectionIndex(i);
@@ -735,8 +740,10 @@ function shapeLines(shaping: Shaping,
                 metrics = rectAndMetrics.metrics;
 
                 if (vertical) {
+                    const lineContentWidth = getMaxGlyphOrImageWidthInLine(imagePositions, line, layoutTextSizeFactor);
                     baselineOffset = lineContentWidth - section.scale * ONE_EM;
                 } else {
+                    const lineContentHeight = getMaxGlyphOrImageHeightInLine(imagePositions, line, layoutTextSizeFactor);
                     const verticalAlignFactor = getVerticalAlignFactor(section.verticalAlign);
                     baselineOffset = (lineContentHeight - section.scale * ONE_EM) * verticalAlignFactor;
                 }
@@ -749,7 +756,7 @@ function shapeLines(shaping: Shaping,
                 const size = imagePosition.displaySize;
                 // If needed, allow to set scale factor for an image using
                 // alias "image-scale" that could be alias for "font-scale"
-                // when FormattedSection is an image section.A
+                // when FormattedSection is an image section.
                 section.scale = section.scale * layoutTextSizeFactor;
 
                 metrics = {width: size[0],
@@ -759,8 +766,10 @@ function shapeLines(shaping: Shaping,
                     advance: vertical ? size[1] : size[0]};
 
                 if (vertical) {
+                    const lineContentWidth = getMaxGlyphOrImageWidthInLine(imagePositions, line, layoutTextSizeFactor);
                     baselineOffset = lineContentWidth - size[1] * section.scale;
                 } else {
+                    const lineContentHeight = getMaxGlyphOrImageHeightInLine(imagePositions, line, layoutTextSizeFactor);
                     const verticalAlignFactor = getVerticalAlignFactor(section.verticalAlign);
                     baselineOffset = (lineContentHeight - size[1] * section.scale) * verticalAlignFactor;
                 }
