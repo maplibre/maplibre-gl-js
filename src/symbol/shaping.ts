@@ -749,7 +749,7 @@ function shapeLines(shaping: Shaping,
                 const size = imagePosition.displaySize;
                 // If needed, allow to set scale factor for an image using
                 // alias "image-scale" that could be alias for "font-scale"
-                // when FormattedSection is an image section.A
+                // when FormattedSection is an image section.
                 section.scale = section.scale * layoutTextSizeFactor;
 
                 metrics = {width: size[0],
