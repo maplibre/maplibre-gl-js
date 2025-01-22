@@ -639,22 +639,19 @@ function getRectAndMetrics(
             [_: number]: StyleGlyph;
         };
     },
-    section: SectionOptions, codePoint: number
-) {
-    let rect: Rect = null;
-    let metrics: GlyphMetrics = null;
-
+    section: SectionOptions,
+    codePoint: number
+): GlyphPosition | null {
     if (glyphPosition && glyphPosition.rect) {
-        rect = glyphPosition.rect;
-        metrics = glyphPosition.metrics;
-    } else {
-        const glyphs = glyphMap[section.fontStack];
-        const glyph = glyphs && glyphs[codePoint];
-        if (!glyph) return null;
-        metrics = glyph.metrics;
+        return glyphPosition;
     }
 
-    return {rect, metrics};
+    const glyphs = glyphMap[section.fontStack];
+    const glyph = glyphs && glyphs[codePoint];
+    if (!glyph) return null;
+
+    const metrics = glyph.metrics;
+    return {rect: null, metrics};
 }
 
 function shapeLines(shaping: Shaping,
