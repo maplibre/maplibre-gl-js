@@ -623,12 +623,13 @@ function calculateLineContentSize(
 function getVerticalAlignFactor(
     verticalAlign: VerticalAlign
 ) {
-    if (verticalAlign === 'top') {
-        return 0;
-    } else if (verticalAlign === 'center') {
-        return 0.5;
-    } else {
-        return 1;
+    switch (verticalAlign) {
+        case 'top':
+            return 0;
+        case 'center':
+            return 0.5;
+        default:
+            return 1;
     }
 }
 
