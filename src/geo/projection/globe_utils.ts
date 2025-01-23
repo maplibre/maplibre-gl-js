@@ -86,19 +86,7 @@ export function getGlobeRadiusPixels(worldSize: number, latitudeDegrees: number)
     // should be the same for both globe and flat view.
     // For this reason we scale the globe up when map center is nearer to the poles.
     //return worldSize / (2.0 * Math.PI) / Math.cos(latitudeDegrees * Math.PI / 180);
-    const urlParams = new URLSearchParams(window.location.search);
-    const zoom = parseFloat(urlParams.get('zoom'));
-    let factor;
-    if (zoom <= 4) {
-        factor = 0;
-    } else if (zoom > 4 && zoom <= 8) {
-        factor = (zoom - 4) / 4; // linear increase from 0 to 1 between zoom 8 and 12
-    } else {
-        factor = 1;
-    }
-    //console.log(factor);
-    //factor = 1;
-    return worldSize / (2.0 * Math.PI) / Math.cos(factor * Math.PI / 180);
+    return worldSize / (2.0 * Math.PI) / Math.cos(Math.PI / 180);
 }
 
 /**
