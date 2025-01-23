@@ -15,6 +15,7 @@ import type {
     VideoSourceSpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type Point from '@mapbox/point-geometry';
+import {MAX_TILE_ZOOM} from '../util/util';
 
 /**
  * Four geographical coordinates,
@@ -36,6 +37,13 @@ export type UpdateImageOptions = {
      * The image coordinates
      */
     coordinates?: Coordinates;
+};
+
+type CanonicalTileRange = {
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
 };
 
 /**
@@ -101,6 +109,7 @@ export class ImageSource extends Evented implements Source {
     flippedWindingOrder: boolean = false;
     _loaded: boolean;
     _request: AbortController;
+    _overlappingTiles: {[zoom: string]: CanonicalTileRange};
 
     /** @internal */
     constructor(id: string, options: ImageSourceSpecification | VideoSourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
@@ -213,6 +222,10 @@ export class ImageSource extends Evented implements Source {
         // render data
         this.tileID = getCoordinatesCenterTileID(cornerCoords);
 
+        // Compute tiles overlapping with the image. We need to know for which
+        // terrain tiles we have to render the image.
+        this._overlappingTiles = getOverlappingTileRanges(cornerCoords);
+
         // Constrain min/max zoom to our tile's zoom level in order to force
         // SourceCache to request this tile (no matter what the map's zoom
         // level)
@@ -312,6 +325,47 @@ export function getCoordinatesCenterTileID(coords: Array<MercatorCoordinate>) {
         zoom,
         Math.floor((minX + maxX) / 2 * tilesAtZoom),
         Math.floor((minY + maxY) / 2 * tilesAtZoom));
+}
+
+/**
+ * Given a list of coordinates, determine overlapping tile ranges for all zoom levels.
+ *
+ * @returns Overlapping tile ranges for all zoom levels.
+ * @internal
+ */
+export function getOverlappingTileRanges(
+    coords: Array<MercatorCoordinate>
+): {[zoom: string]: CanonicalTileRange} {
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    for (const coord of coords) {
+        minX = Math.min(minX, coord.x);
+        minY = Math.min(minY, coord.y);
+        maxX = Math.max(maxX, coord.x);
+        maxY = Math.max(maxY, coord.y);
+    }
+
+    const ranges = {};
+
+    for (let z = 0; z <= MAX_TILE_ZOOM; z++) {
+        const tilesAtZoom = Math.pow(2, z);
+        const tileMinX = Math.floor(minX * tilesAtZoom);
+        const tileMinY = Math.floor(minY * tilesAtZoom);
+        const tileMaxX = Math.floor(maxX * tilesAtZoom);
+        const tileMaxY = Math.floor(maxY * tilesAtZoom);
+
+        ranges[z] = {
+            minX: tileMinX,
+            minY: tileMinY,
+            maxX: tileMaxX,
+            maxY: tileMaxY
+        };
+    }
+
+    return ranges;
 }
 
 function hasWrongWindingOrder(coords: Array<Point>) {

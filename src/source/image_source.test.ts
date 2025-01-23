@@ -1,8 +1,8 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {ImageSource} from './image_source';
+import {getOverlappingTileRanges, ImageSource} from './image_source';
 import {Evented} from '../util/evented';
 import {type IReadonlyTransform} from '../geo/transform_interface';
-import {extend} from '../util/util';
+import {extend, MAX_TILE_ZOOM} from '../util/util';
 import {type FakeServer, fakeServer} from 'nise';
 import {type RequestManager} from '../util/request_manager';
 import {sleep, stubAjaxGetImage} from '../util/test/util';
@@ -11,6 +11,8 @@ import {OverscaledTileID} from './tile_id';
 import {type Texture} from '../render/texture';
 import type {ImageSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {MercatorCoordinate} from '../geo/mercator_coordinate';
+import {type CanonicalTileRange} from '../../dist/maplibre-gl';
 
 function createSource(options) {
     options = extend({
@@ -229,5 +231,40 @@ describe('ImageSource', () => {
         await sleep(0);
 
         expect(missingImagesource.loaded()).toBe(true);
+    });
+});
+
+describe('getOverlappingTileRanges', () => {
+    test('generates tile ranges for all zoom levels', () => {
+        const coords = [
+            new MercatorCoordinate(0, 0, 0),
+            new MercatorCoordinate(1, 0, 0),
+            new MercatorCoordinate(1, 1, 0),
+            new MercatorCoordinate(0, 1, 0)
+        ];
+
+        const ranges = getOverlappingTileRanges(coords);
+
+        const getMaxRange = (z: number) =>
+            ({minX: 0, minY: 0, maxX: Math.pow(2, z), maxY: Math.pow(2, z)});
+        const expected: Record<number, CanonicalTileRange> = {};
+        for (let z = 0; z <= MAX_TILE_ZOOM; z++) {
+            expected[z] = getMaxRange(z);
+        }
+
+        expect(ranges).toEqual(expected);
+    });
+
+    test('calculates tile ranges properly', () => {
+        const coords = [
+            new MercatorCoordinate(0.5316551388888888, 0.3504978440046251, 0),
+            new MercatorCoordinate(0.5318495833333333, 0.3504978440046251, 0),
+            new MercatorCoordinate(0.5318495833333333, 0.3507025527508841, 0),
+            new MercatorCoordinate(0.5316551388888888, 0.3507025527508841, 0)
+        ];
+
+        const ranges = getOverlappingTileRanges(coords);
+
+        expect(ranges[12]).toEqual({minX: 2177, minY: 1435, maxX: 2178, maxY: 1436});
     });
 });
