@@ -609,7 +609,7 @@ function getAnchorAlignment(anchor: SymbolAnchor) {
 type LineShapingSize = {
     verticalLineContentWidth: number;
     horizontalLineContentHeight: number;
-}
+};
 
 function calculateLineContentSize(
     imagePositions: {[_: string]: ImagePosition},
@@ -848,7 +848,7 @@ function shapeTextSection(
         rect: rectAndMetrics.rect,
         metrics: rectAndMetrics.metrics,
         baselineOffset
-    }
+    };
 }
 
 function shapeImageSection(
@@ -881,7 +881,7 @@ function shapeImageSection(
     // Pushes current line down if an image size is over 1 EM at max line scale.
     const imageOffset = (vertical ? size[0] : size[1]) * section.scale - ONE_EM * lineMaxScale;
     
-    return { rect, metrics, baselineOffset, imageOffset };
+    return {rect, metrics, baselineOffset, imageOffset};
 }
 
 // justify right = 1, left = 0, center = 0.5
