@@ -265,8 +265,7 @@ export class CollisionIndex {
             }
 
             // Tolerate a slightly longer distance than one diameter between two adjacent circles
-            const circleDist = radius * 1.7;
-            // TODO: For clickable labels the distance should be shorter to avoid unclickable gaps
+            const circleDist = radius * 2.5;
 
             // The path might need to be converted into screen space if a pitched map is used as the label space
             if (pitchWithMap) {
