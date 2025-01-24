@@ -727,7 +727,6 @@ function shapeLines(shaping: Shaping,
             let baselineOffset = 0.0;
             let metrics: GlyphMetrics | null = null;
             let rect = null;
-            let imageName = null;
             let verticalAdvance = ONE_EM;
             const vertical = isLineVertical(writingMode, allowVerticalPlacement, codePoint);
 
@@ -751,7 +750,6 @@ function shapeLines(shaping: Shaping,
             } else {
                 const imagePosition = imagePositions[section.imageName];
                 if (!imagePosition) continue;
-                imageName = section.imageName;
                 shaping.iconsInText = shaping.iconsInText || true;
                 rect = imagePosition.paddedRect;
                 const size = imagePosition.displaySize;
@@ -785,7 +783,7 @@ function shapeLines(shaping: Shaping,
 
             positionedGlyphs.push({
                 glyph: codePoint,
-                imageName,
+                imageName: section.imageName,
                 x,
                 y: y + baselineOffset + SHAPING_DEFAULT_OFFSET,
                 vertical,
