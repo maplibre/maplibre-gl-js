@@ -614,10 +614,10 @@ function calculateLineContentSize(
     const maxGlyphSize = line.getMaxScale() * ONE_EM;
     const {maxImageWidth, maxImageHeight} = line.getMaxImageSize(imagePositions);
 
-    const lineContentHeight = Math.max(maxGlyphSize, maxImageHeight * layoutTextSizeFactor);
-    const lineContentWidth = Math.max(maxGlyphSize, maxImageWidth * layoutTextSizeFactor);
+    const horizontalLineContentHeight = Math.max(maxGlyphSize, maxImageHeight * layoutTextSizeFactor);
+    const verticalLineContentWidth = Math.max(maxGlyphSize, maxImageWidth * layoutTextSizeFactor);
 
-    return {lineContentWidth, lineContentHeight};
+    return {verticalLineContentWidth, horizontalLineContentHeight};
 }
 
 function getVerticalAlignFactor(
@@ -703,7 +703,7 @@ function shapeLines(shaping: Shaping,
             continue;
         }
 
-        const {lineContentWidth, lineContentHeight} =
+        const {verticalLineContentWidth, horizontalLineContentHeight} =
             calculateLineContentSize(imagePositions, line, layoutTextSizeFactor);
 
         for (let i = 0; i < line.length(); i++) {
@@ -735,10 +735,10 @@ function shapeLines(shaping: Shaping,
                 metrics = rectAndMetrics.metrics;
 
                 if (vertical) {
-                    baselineOffset = lineContentWidth - section.scale * ONE_EM;
+                    baselineOffset = verticalLineContentWidth - section.scale * ONE_EM;
                 } else {
                     const verticalAlignFactor = getVerticalAlignFactor(section.verticalAlign);
-                    baselineOffset = (lineContentHeight - section.scale * ONE_EM) * verticalAlignFactor;
+                    baselineOffset = (horizontalLineContentHeight - section.scale * ONE_EM) * verticalAlignFactor;
                 }
             } else {
                 const imagePosition = imagePositions[section.imageName];
@@ -759,10 +759,10 @@ function shapeLines(shaping: Shaping,
                     advance: vertical ? size[1] : size[0]};
 
                 if (vertical) {
-                    baselineOffset = lineContentWidth - size[1] * section.scale;
+                    baselineOffset = verticalLineContentWidth - size[1] * section.scale;
                 } else {
                     const verticalAlignFactor = getVerticalAlignFactor(section.verticalAlign);
-                    baselineOffset = (lineContentHeight - size[1] * section.scale) * verticalAlignFactor;
+                    baselineOffset = (horizontalLineContentHeight - size[1] * section.scale) * verticalAlignFactor;
                 }
 
                 verticalAdvance = metrics.advance;
