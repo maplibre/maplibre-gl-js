@@ -655,6 +655,19 @@ function getRectAndMetrics(
     return {rect: null, metrics};
 }
 
+function isLineVertical(
+    writingMode: WritingMode.horizontal | WritingMode.vertical,
+    allowVerticalPlacement: boolean,
+    codePoint: number
+): boolean {
+    return !(writingMode === WritingMode.horizontal ||
+        // Don't verticalize glyphs that have no upright orientation if vertical placement is disabled.
+        (!allowVerticalPlacement && !charHasUprightVerticalOrientation(codePoint)) ||
+        // If vertical placement is enabled, don't verticalize glyphs that
+        // are from complex text layout script, or whitespaces.
+        (allowVerticalPlacement && (whitespace[codePoint] || charInComplexShapingScript(codePoint))));
+}
+
 function shapeLines(shaping: Shaping,
     glyphMap: {
         [_: string]: {
@@ -716,12 +729,7 @@ function shapeLines(shaping: Shaping,
             let rect = null;
             let imageName = null;
             let verticalAdvance = ONE_EM;
-            const vertical = !(writingMode === WritingMode.horizontal ||
-                // Don't verticalize glyphs that have no upright orientation if vertical placement is disabled.
-                (!allowVerticalPlacement && !charHasUprightVerticalOrientation(codePoint)) ||
-                // If vertical placement is enabled, don't verticalize glyphs that
-                // are from complex text layout script, or whitespaces.
-                (allowVerticalPlacement && (whitespace[codePoint] || charInComplexShapingScript(codePoint))));
+            const vertical = isLineVertical(writingMode, allowVerticalPlacement, codePoint);
 
             if (!section.imageName) {
                 const positions = glyphPositions[section.fontStack];
