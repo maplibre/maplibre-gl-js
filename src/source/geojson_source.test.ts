@@ -12,6 +12,7 @@ import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_s
 import {type ActorMessage, MessageType} from '../util/actor_messages';
 import {type Actor} from '../util/actor';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {LngLatBounds} from '../geo/lng_lat_bounds';
 
 const wrapDispatcher = (dispatcher) => {
     return {
@@ -504,5 +505,25 @@ describe('GeoJSONSource#serialize', () => {
             data: {},
             cluster: true
         });
+    });
+});
+
+describe('GeoJSONSource#getBounds', () => {
+    function createSource(opts?) {
+        opts = opts || {};
+        opts = extend(opts, {data: hawkHill});
+        return new GeoJSONSource('id', opts, wrapDispatcher({
+            sendAsync(_message) {
+                return new Promise((resolve) => {
+                    setTimeout(() => resolve({}), 0);
+                });
+            }
+        }), undefined);
+    }
+
+    test('returns bounds', () => {
+        const source = createSource();
+        const bounds = new LngLatBounds([-122.493782, 37.82880237, -122.4833965, 37.83381888]);
+        expect(source.getBounds()).toBe(bounds);
     });
 });

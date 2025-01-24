@@ -15,6 +15,7 @@ import type {GeoJSONSourceDiff} from './geojson_source_diff';
 import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
 import {type WorkerTileParameters} from './worker_source';
 import {MessageType} from '../util/actor_messages';
+import {LngLatBounds} from '../geo/lng_lat_bounds';
 
 /**
  * Options object for GeoJSONSource.
@@ -247,6 +248,24 @@ export class GeoJSONSource extends Evented implements Source {
     async getData(): Promise<GeoJSON.GeoJSON> {
         const options: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
         return this.actor.sendAsync({type: MessageType.getData, data: options});
+    }
+
+    /**
+     * Allows to get the source's actual boundaries.
+     *
+     * @returns a promise which resolves to the source's actual boundaries
+     */
+
+    async getBounds(): Promise<LngLatBounds> {
+        const bounds = new LngLatBounds();
+        const data = await this.getData();
+        const coordinates = data.features
+            .map(f => f.geometry.coordinates.flat(Infinity))
+            .reduce((acc, cur) => [...acc, ...cur],[]);
+        for(let i = 0; i < coordinates.length - 1; i += 2){
+            bounds.extend([coordinates[i], coordinates[i+1]]);
+        }
+        return new Promise((resolve, reject) => resolve(bounds));
     }
 
     /**
