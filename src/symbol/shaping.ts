@@ -606,11 +606,16 @@ function getAnchorAlignment(anchor: SymbolAnchor) {
     return {horizontalAlign, verticalAlign};
 }
 
+type LineShapingSize = {
+    verticalLineContentWidth: number;
+    horizontalLineContentHeight: number;
+}
+
 function calculateLineContentSize(
     imagePositions: {[_: string]: ImagePosition},
     line: TaggedString,
     layoutTextSizeFactor: number
-) {
+): LineShapingSize {
     const maxGlyphSize = line.getMaxScale() * ONE_EM;
     const {maxImageWidth, maxImageHeight} = line.getMaxImageSize(imagePositions);
 
@@ -716,8 +721,7 @@ function shapeLines(shaping: Shaping,
             continue;
         }
 
-        const {verticalLineContentWidth, horizontalLineContentHeight} =
-            calculateLineContentSize(imagePositions, line, layoutTextSizeFactor);
+        const lineShapingSize = calculateLineContentSize(imagePositions, line, layoutTextSizeFactor);
 
         for (let i = 0; i < line.length(); i++) {
             const section = line.getSection(i);
@@ -730,50 +734,26 @@ function shapeLines(shaping: Shaping,
             const vertical = isLineVertical(writingMode, allowVerticalPlacement, codePoint);
 
             if (!section.imageName) {
-                const positions = glyphPositions[section.fontStack];
-                const glyphPosition = positions && positions[codePoint];
+                const sectionAttributes = shapeTextSection(section, codePoint, vertical, lineShapingSize, glyphMap, glyphPositions);
+                if (!sectionAttributes) continue;
 
-                const rectAndMetrics = getRectAndMetrics(glyphPosition, glyphMap, section, codePoint);
-
-                if (rectAndMetrics === null) continue;
-
-                rect = rectAndMetrics.rect;
-                metrics = rectAndMetrics.metrics;
-
-                if (vertical) {
-                    baselineOffset = verticalLineContentWidth - section.scale * ONE_EM;
-                } else {
-                    const verticalAlignFactor = getVerticalAlignFactor(section.verticalAlign);
-                    baselineOffset = (horizontalLineContentHeight - section.scale * ONE_EM) * verticalAlignFactor;
-                }
+                rect = sectionAttributes.rect;
+                metrics = sectionAttributes.metrics;
+                baselineOffset = sectionAttributes.baselineOffset;
             } else {
-                const imagePosition = imagePositions[section.imageName];
-                if (!imagePosition) continue;
                 shaping.iconsInText = true;
-                rect = imagePosition.paddedRect;
-                const size = imagePosition.displaySize;
                 // If needed, allow to set scale factor for an image using
                 // alias "image-scale" that could be alias for "font-scale"
                 // when FormattedSection is an image section.
                 section.scale = section.scale * layoutTextSizeFactor;
 
-                metrics = {width: size[0],
-                    height: size[1],
-                    left: IMAGE_PADDING,
-                    top: -GLYPH_PBF_BORDER,
-                    advance: vertical ? size[1] : size[0]};
+                const sectionAttributes = shapeImageSection(section, vertical, lineMaxScale, lineShapingSize, imagePositions);
+                if (!sectionAttributes) continue;
 
-                if (vertical) {
-                    baselineOffset = verticalLineContentWidth - size[1] * section.scale;
-                } else {
-                    const verticalAlignFactor = getVerticalAlignFactor(section.verticalAlign);
-                    baselineOffset = (horizontalLineContentHeight - size[1] * section.scale) * verticalAlignFactor;
-                }
-
-                // Difference between height of an image and one EM at max line scale.
-                // Pushes current line down if an image size is over 1 EM at max line scale.
-                const offset = (vertical ? size[0] : size[1]) * section.scale - ONE_EM * lineMaxScale;
-                imageOffset = Math.max(imageOffset, offset);
+                rect = sectionAttributes.rect;
+                metrics = sectionAttributes.metrics;
+                baselineOffset = sectionAttributes.baselineOffset;
+                imageOffset = Math.max(imageOffset, sectionAttributes.imageOffset);
             }
 
             positionedGlyphs.push({
@@ -824,6 +804,84 @@ function shapeLines(shaping: Shaping,
     shaping.bottom = shaping.top + y;
     shaping.left += -horizontalAlign * maxLineLength;
     shaping.right = shaping.left + maxLineLength;
+}
+
+type ShapingSectionAttributes = {
+    rect: Rect | null;
+    metrics: GlyphMetrics;
+    baselineOffset: number;
+    imageOffset?: number;
+};
+
+function shapeTextSection(
+    section: SectionOptions,
+    codePoint: number,
+    vertical: boolean,
+    lineShapingSize: LineShapingSize,
+    glyphMap: {
+        [_: string]: {
+            [_: number]: StyleGlyph;
+        };
+    },
+    glyphPositions: {
+        [_: string]: {
+            [_: number]: GlyphPosition;
+        };
+    },
+): ShapingSectionAttributes | null {
+    const positions = glyphPositions[section.fontStack];
+    const glyphPosition = positions && positions[codePoint];
+
+    const rectAndMetrics = getRectAndMetrics(glyphPosition, glyphMap, section, codePoint);
+
+    if (rectAndMetrics === null) return null;
+
+    let baselineOffset: number;
+    if (vertical) {
+        baselineOffset = lineShapingSize.verticalLineContentWidth - section.scale * ONE_EM;
+    } else {
+        const verticalAlignFactor = getVerticalAlignFactor(section.verticalAlign);
+        baselineOffset = (lineShapingSize.horizontalLineContentHeight - section.scale * ONE_EM) * verticalAlignFactor;
+    }
+
+    return {
+        rect: rectAndMetrics.rect,
+        metrics: rectAndMetrics.metrics,
+        baselineOffset
+    }
+}
+
+function shapeImageSection(
+    section: SectionOptions,
+    vertical: boolean,
+    lineMaxScale: number,
+    lineShapingSize: LineShapingSize,
+    imagePositions: {[_: string]: ImagePosition},
+): ShapingSectionAttributes | null {
+    const imagePosition = imagePositions[section.imageName];
+    if (!imagePosition) return null;
+    const rect = imagePosition.paddedRect;
+    const size = imagePosition.displaySize;
+
+    const metrics = {width: size[0],
+        height: size[1],
+        left: IMAGE_PADDING,
+        top: -GLYPH_PBF_BORDER,
+        advance: vertical ? size[1] : size[0]};
+
+    let baselineOffset: number;
+    if (vertical) {
+        baselineOffset = lineShapingSize.verticalLineContentWidth - size[1] * section.scale;
+    } else {
+        const verticalAlignFactor = getVerticalAlignFactor(section.verticalAlign);
+        baselineOffset = (lineShapingSize.horizontalLineContentHeight - size[1] * section.scale) * verticalAlignFactor;
+    }
+
+    // Difference between height of an image and one EM at max line scale.
+    // Pushes current line down if an image size is over 1 EM at max line scale.
+    const imageOffset = (vertical ? size[0] : size[1]) * section.scale - ONE_EM * lineMaxScale;
+    
+    return { rect, metrics, baselineOffset, imageOffset };
 }
 
 // justify right = 1, left = 0, center = 0.5
