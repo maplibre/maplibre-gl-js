@@ -123,51 +123,7 @@ export function performSymbolLayout(args: {
 
     // eslint-disable-next-line prefer-const
     for (let feature of args.bucket.features) {
-        /*
-        if (feature.text && feature.text.sections) {
-            const updatedSections = [];
-    
-            for (const originalSection of feature.text.sections) {
-                const text = originalSection.text;
-                const splitPoints = getSplitPoints(text, splitChars);
-    
-                if (splitPoints.length > 0) {
-                    let lastSplitIndex = 0;
-    
-                    for (let i = 0; i < splitPoints.length; i++) {
-                        const splitPoint = splitPoints[i];
-                        //const char = text[splitPoint];
-    
-                        updatedSections.push({
-                            ...originalSection,
-                            text: text.substring(lastSplitIndex, splitPoint + 1),
-                            textColor: i === 0 ? originalSection.textColor : splitChars.get(text[splitPoints[i - 1]])
-                        });
-    
-                        lastSplitIndex = splitPoint + 1;
-                    }
-    
-                    // Add the last section
-                    if (lastSplitIndex < text.length) {
-                        updatedSections.push({
-                            ...originalSection,
-                            text: text.substring(lastSplitIndex),
-                            textColor: splitChars.get(text[splitPoints[splitPoints.length - 1]])
-                        });
-                    }
-                } else {
-                    // No split points found, keep the original section
-                    updatedSections.push(originalSection);
-                }
-            }
-    
-            // Replace all original sections with the updated sections
-            feature.text.sections = updatedSections;
-        } else {
-            //console.error("Sections property is missing or not accessible.");
-        }
-        */
-    
+        
         const fontstack = layout.get('text-font').evaluate(feature, {}, args.canonical).join(',');
         const layoutTextSizeThisZoom = textSize.evaluate(feature, {}, args.canonical);
         const layoutTextSize = sizes.layoutTextSize.evaluate(feature, {}, args.canonical);

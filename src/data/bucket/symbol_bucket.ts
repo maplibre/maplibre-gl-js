@@ -478,7 +478,6 @@ export class SymbolBucket implements Bucket {
         
         const splitChars = generateSplitChars(namedColors);
     
-        // Optimization 2: Pre-calculate split points to avoid repeated indexOf calls
         function getSplitPoints(text, splitChars) {
             const splitPoints = [];
             for (let i = 0; i < text.length; i++) {
