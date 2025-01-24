@@ -727,7 +727,6 @@ function shapeLines(shaping: Shaping,
             let baselineOffset = 0.0;
             let metrics: GlyphMetrics | null = null;
             let rect = null;
-            let verticalAdvance = ONE_EM;
             const vertical = isLineVertical(writingMode, allowVerticalPlacement, codePoint);
 
             if (!section.imageName) {
@@ -750,7 +749,7 @@ function shapeLines(shaping: Shaping,
             } else {
                 const imagePosition = imagePositions[section.imageName];
                 if (!imagePosition) continue;
-                shaping.iconsInText = shaping.iconsInText || true;
+                shaping.iconsInText = true;
                 rect = imagePosition.paddedRect;
                 const size = imagePosition.displaySize;
                 // If needed, allow to set scale factor for an image using
@@ -771,14 +770,10 @@ function shapeLines(shaping: Shaping,
                     baselineOffset = (horizontalLineContentHeight - size[1] * section.scale) * verticalAlignFactor;
                 }
 
-                verticalAdvance = metrics.advance;
-
                 // Difference between height of an image and one EM at max line scale.
                 // Pushes current line down if an image size is over 1 EM at max line scale.
                 const offset = (vertical ? size[0] : size[1]) * section.scale - ONE_EM * lineMaxScale;
-                if (offset > 0 && offset > imageOffset) {
-                    imageOffset = offset;
-                }
+                imageOffset = Math.max(imageOffset, offset);
             }
 
             positionedGlyphs.push({
@@ -798,6 +793,7 @@ function shapeLines(shaping: Shaping,
                 x += metrics.advance * section.scale + spacing;
             } else {
                 shaping.verticalizable = true;
+                const verticalAdvance = section.imageName ? metrics.advance : ONE_EM;
                 x += verticalAdvance * section.scale + spacing;
             }
         }
