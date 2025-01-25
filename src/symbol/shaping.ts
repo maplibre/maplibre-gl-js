@@ -1,7 +1,8 @@
 import {
     charHasUprightVerticalOrientation,
     charAllowsIdeographicBreaking,
-    charInComplexShapingScript
+    charInComplexShapingScript,
+    shouldTreatAsUpright
 } from '../util/script_detection';
 import {verticalizePunctuation} from '../util/verticalize_punctuation';
 import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker';
@@ -644,7 +645,7 @@ function shapeLines(shaping: Shaping,
             let verticalAdvance = ONE_EM;
             const vertical = !(writingMode === WritingMode.horizontal ||
                 // Don't verticalize glyphs that have no upright orientation if vertical placement is disabled.
-                (!allowVerticalPlacement && !charHasUprightVerticalOrientation(codePoint)) ||
+                (!allowVerticalPlacement && (!charHasUprightVerticalOrientation(codePoint) && !shouldTreatAsUpright(line.toString(), i))) ||    
                 // If vertical placement is enabled, don't verticalize glyphs that
                 // are from complex text layout script, or whitespaces.
                 (allowVerticalPlacement && (whitespace[codePoint] || charInComplexShapingScript(codePoint))));

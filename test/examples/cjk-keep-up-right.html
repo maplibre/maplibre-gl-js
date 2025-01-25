@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>MapLibre GL JS CJK Keep Upright Example</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script src='../../dist/maplibre-gl-dev.js'></script>
+<script>
+    const languages = [
+        { id: 'korean', text: '반포대로21길' },
+        { id: 'japanese', text: '銀座通り21号' },
+        { id: 'chinese', text: '南京路21号' },
+        { id: 'english', text: 'Street 123' },
+    ];
+
+    const config = {
+        startX: 127.0246,
+        xSpacing: 0.005,
+        baseY: {
+            line: 37.5000,
+            center: 37.4960,
+            curve: 37.4920
+        },
+        radius: 0.002
+    };
+
+    const centers = languages.map((lang, index) => ({
+        ...lang,
+        x: config.startX + (config.xSpacing * index)
+    }));
+
+    const mapCenter = [
+        (centers[0].x + centers[centers.length - 1].x) / 2,
+        (config.baseY.line + config.baseY.curve) / 2
+    ];
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: mapCenter,
+        zoom: 15,
+        hash: true,
+        localIdeographFontFamily: "'Noto Sans', 'Noto Sans CJK SC', 'Noto Sans Thai', 'Noto Sans Devanagari', sans-serif"
+    });
+
+    map.on('load', () => {
+        function createRadialFeatures(centerX, baseY, text) {
+            const angles = Array.from({length: 8}, (_, i) => (i * Math.PI / 4));
+            return angles.map(angle => ({
+                'type': 'Feature',
+                'geometry': {
+                    'type': 'LineString',
+                    'coordinates': [
+                        [centerX, baseY],
+                        [
+                            centerX + config.radius * Math.cos(angle),
+                            baseY + config.radius * Math.sin(angle)
+                        ]
+                    ]
+                },
+                'properties': { 'name': text }
+            }));
+        }
+
+        function smoothAmplitude(t) {
+            return Math.sin(t * Math.PI) * 0.8;
+        }
+
+        function createSCurve(centerX, text) {
+            const points = [];
+            const segments = 32;
+
+            for (let i = 0; i <= segments; i++) {
+                const t = i / segments;
+                const x = centerX + config.radius * (2 * t - 1);
+                const amplitude = smoothAmplitude(t);
+                const y = config.baseY.curve + config.radius * amplitude * Math.sin(t * Math.PI * 4);
+                points.push([x, y]);
+            }
+            return {
+                'type': 'Feature',
+                'geometry': {
+                    'type': 'LineString',
+                    'coordinates': points
+                },
+                'properties': { 'name': text }
+            };
+        }
+
+        function createLabelLayer(id, source, placement) {
+            const layout = {
+                'text-field': ['get', 'name'],
+                'symbol-placement': placement,
+                'text-size': 12,
+                'text-keep-upright': true,
+                'text-allow-overlap': true,
+                'text-ignore-placement': true,
+                'text-anchor': 'center',
+                'symbol-spacing': 5,
+            };
+            
+            return {
+                'id': `test-labels-${id}`,
+                'type': 'symbol',
+                'source': source,
+                'layout': layout,
+                'paint': {
+                    'text-color': '#000000',
+                    'text-halo-color': '#ffffff',
+                    'text-halo-width': 2
+                }
+            };
+        }
+
+        const features = {
+            line: centers.flatMap(c => createRadialFeatures(c.x, config.baseY.line, c.text)),
+            center: centers.flatMap(c => createRadialFeatures(c.x, config.baseY.center, c.text)),
+            curve: centers.map(c => createSCurve(c.x, c.text))
+        };
+
+        Object.entries(features).forEach(([type, typeFeatures]) => {
+            const sourceId = `test-labels-${type}`;
+            
+            map.addSource(sourceId, {
+                'type': 'geojson',
+                'data': {
+                    'type': 'FeatureCollection',
+                    'features': typeFeatures
+                }
+            });
+
+            map.addLayer({
+                'id': `test-lines-${type}`,
+                'type': 'line',
+                'source': sourceId,
+                'paint': {
+                    'line-color': '#888',
+                    'line-width': 2
+                }
+            });
+
+            map.addLayer(createLabelLayer(
+                type,
+                sourceId,
+                type === 'center' ? 'line-center' : 'line'
+            ));
+        });
+    });
+</script>
+</body>
+</html> 

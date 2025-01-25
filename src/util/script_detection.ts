@@ -372,3 +372,28 @@ export function isStringInSupportedScript(chars: string, canRenderRTL: boolean) 
     }
     return true;
 }
+
+/**
+ * Returns true if the character at given index should be treated as upright in vertical text
+ * This helps handle numbers between CJK characters consistently
+ */
+export function shouldTreatAsUpright(text: string, index: number): boolean {
+    const char = text.charCodeAt(index);
+    
+    // If it's a CJK character
+    if (charHasUprightVerticalOrientation(char)) {
+        return true;
+    }
+    
+    // If the character is a number
+    if (char >= 0x30 && char <= 0x39) {
+        // Check if there are any CJK characters in the entire text
+        for (let i = 0; i < text.length; i++) {
+            if (i !== index && charHasUprightVerticalOrientation(text.charCodeAt(i))) {
+                return true;  // If CJK characters exist, treat numbers as upright too
+            }
+        }
+    }
+    
+    return false;
+}
