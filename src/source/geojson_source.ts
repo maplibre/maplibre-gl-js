@@ -257,10 +257,10 @@ export class GeoJSONSource extends Evented implements Source {
      * @returns a promise which resolves to the source's actual boundaries
      */
 
-    async getBounds(): Promise<LngLatBounds> {
+    getBounds(): LngLatBounds {
         type justGeometry = Point | MultiPoint | LineString | MultiLineString | Polygon | MultiPolygon;
         const bounds = new LngLatBounds();
-        const data = await this.getData();
+        const data = this._data as GeoJSON.GeoJSON;
         let coordinates: any[];
         switch(data.type){
             case 'Feature':
@@ -285,7 +285,8 @@ export class GeoJSONSource extends Evented implements Source {
             default:
                 coordinates = data.coordinates;
         }
-        const flat: number[] = coordinates.flat(Infinity).reduce((acc, cur) => [...acc, ...cur],[]);
+        if(!!!coordinates) return bounds;
+        const flat: number[] = coordinates.flat(Infinity);
         for(let i = 0; i < flat.length - 1; i += 2){
             bounds.extend([flat[i], flat[i+1]]);
         }

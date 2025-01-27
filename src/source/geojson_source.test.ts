@@ -509,10 +509,10 @@ describe('GeoJSONSource#serialize', () => {
 });
 
 describe('GeoJSONSource#getBounds', () => {
-    test('returns bounds', async () => {
+    test('returns bounds', () => {
         const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, mockDispatcher, undefined);
-        const testbounds = new LngLatBounds([-122.493782, 37.82880237, -122.4833965, 37.83381888]);
-        const bounds = await source.getBounds();
-        expect(bounds).toBe(testbounds);
+        const testbounds = new LngLatBounds([-122.49378204345702, 37.82880236636284, -122.48339653015138, 37.83381888486939]);
+        const bounds = source.getBounds();
+        expect(bounds).toEqual(testbounds);
     });
 });
