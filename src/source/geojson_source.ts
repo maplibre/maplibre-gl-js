@@ -258,7 +258,7 @@ export class GeoJSONSource extends Evented implements Source {
 
     async getBounds(): Promise<LngLatBounds> {
         const bounds = new LngLatBounds();
-        const data = await this.getData();
+        const data: GeoJSON.GeoJSON = await this.getData();
         const coordinates = data.features
             .map(f => f.geometry.coordinates.flat(Infinity))
             .reduce((acc, cur) => [...acc, ...cur],[]);
