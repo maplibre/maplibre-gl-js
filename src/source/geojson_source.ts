@@ -256,7 +256,7 @@ export class GeoJSONSource extends Evented implements Source {
      * @returns a promise which resolves to the source's actual boundaries
      */
 
-    async getBounds(): LngLatBounds {
+    async getBounds(): Promise<LngLatBounds> {
         const bounds = new LngLatBounds();
         const data = await this.getData();
         const coordinates = data.features
