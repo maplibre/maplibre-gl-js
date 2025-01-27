@@ -509,20 +509,8 @@ describe('GeoJSONSource#serialize', () => {
 });
 
 describe('GeoJSONSource#getBounds', () => {
-    function createSource(opts?) {
-        opts = opts || {};
-        opts = extend(opts, {data: hawkHill});
-        return new GeoJSONSource('id', opts, wrapDispatcher({
-            sendAsync(_message) {
-                return new Promise((resolve) => {
-                    setTimeout(() => resolve({}), 0);
-                });
-            }
-        }), undefined);
-    }
-
     test('returns bounds', () => {
-        const source = createSource();
+        const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, mockDispatcher, undefined);
         const bounds = new LngLatBounds([-122.493782, 37.82880237, -122.4833965, 37.83381888]);
         expect(source.getBounds()).toBe(bounds);
     });
