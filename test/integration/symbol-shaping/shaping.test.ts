@@ -2,7 +2,7 @@ import {describe, test, expect} from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import {WritingMode, shapeText, type Shaping} from '../../../src/symbol/shaping';
-import {ResolvedImage, Formatted, FormattedSection, VerticalAlign} from '@maplibre/maplibre-gl-style-spec';
+import {ResolvedImage, Formatted, FormattedSection, type VerticalAlign} from '@maplibre/maplibre-gl-style-spec';
 import {ImagePosition} from '../../../src/render/image_atlas';
 import type {StyleImage} from '../../../src/style/style_image';
 import type {StyleGlyph} from '../../../src/style/style_glyph';
