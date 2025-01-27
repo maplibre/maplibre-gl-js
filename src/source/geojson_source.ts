@@ -16,6 +16,7 @@ import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker
 import {type WorkerTileParameters} from './worker_source';
 import {MessageType} from '../util/actor_messages';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
+import type {Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon} from 'geojson';
 
 /**
  * Options object for GeoJSONSource.
@@ -257,13 +258,36 @@ export class GeoJSONSource extends Evented implements Source {
      */
 
     async getBounds(): Promise<LngLatBounds> {
+        type justGeometry = Point | MultiPoint | LineString | MultiLineString | Polygon | MultiPolygon;
         const bounds = new LngLatBounds();
         const data = await this.getData();
-        const features = (!!data['features']) ? data.features : [data];
-        const coordinates = features.map(f => f.geometry.coordinates.flat(Infinity))
-                                    .reduce((acc, cur) => [...acc, ...cur],[]);
-        for(let i = 0; i < coordinates.length - 1; i += 2){
-            bounds.extend([coordinates[i], coordinates[i+1]]);
+        let coordinates: any[];
+        switch(data.type){
+            case 'Feature':
+                if (data.geometry.type === 'GeometryCollection') {
+                    coordinates = data.geometry.geometries.map((g: justGeometry) => g.coordinates);
+                }else{ 
+                    coordinates = data.geometry.coordinates;
+                }
+                break;
+            case 'FeatureCollection':
+                coordinates = data.features.map(f => {
+                    if (f.geometry.type === 'GeometryCollection') {
+                        return f.geometry.geometries.map((g: justGeometry) => g.coordinates);
+                    }else{ 
+                        return f.geometry.coordinates;
+                    }
+                });
+                break;
+            case 'GeometryCollection':
+                coordinates = data.geometries.map((g: justGeometry) => g.coordinates);
+                break;
+            default:
+                coordinates = data.coordinates;
+        }
+        const flat: number[] = coordinates.flat(Infinity).reduce((acc, cur) => [...acc, ...cur],[]);
+        for(let i = 0; i < flat.length - 1; i += 2){
+            bounds.extend([flat[i], flat[i+1]]);
         }
         return bounds;
     }
