@@ -16,7 +16,7 @@ export const browser = {
      */
     now,
 
-    frame(abortController: AbortController, fn: (paintStartTimestamp: number) => void, reject): void {
+    frame(abortController: AbortController, fn: (paintStartTimestamp: number) => void, reject: (error: Error) => void): void {
         const frame = requestAnimationFrame(fn);
         abortController.signal.addEventListener('abort', () => {
             cancelAnimationFrame(frame);
