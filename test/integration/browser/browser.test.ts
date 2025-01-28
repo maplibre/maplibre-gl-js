@@ -6,7 +6,7 @@ import type {AddressInfo} from 'net';
 import type {default as MapLibreGL, Map} from '../../../dist/maplibre-gl';
 import {sleep} from '../../../src/util/test/util';
 
-import type {LngLatBounds} from '../../../src/geo/lng_lat_bounds'
+import type {LngLatBounds} from '../../../src/geo/lng_lat_bounds';
 
 /* const hawkHill = {
     'type': 'FeatureCollection',
