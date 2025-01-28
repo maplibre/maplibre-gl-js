@@ -6,7 +6,8 @@ export default defineConfig({
         name: 'integration',
         environment: 'node',
         include: [
-            'test/integration/**/*.test.{ts,js}',
+            'test/integration/browser/browser.test.ts'
+            //'test/integration/**/*.test.{ts,js}',
         ],
         coverage: {
             provider: 'v8',

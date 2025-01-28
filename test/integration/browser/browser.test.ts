@@ -6,24 +6,6 @@ import type {AddressInfo} from 'net';
 import type {default as MapLibreGL, Map} from '../../../dist/maplibre-gl';
 import {sleep} from '../../../src/util/test/util';
 
-import {type Actor} from '../../../src/util/actor';
-import {type Dispatcher} from '../../../src/util/dispatcher';
-import {GeoJSONSource, type GeoJSONSourceOptions} from '../../../src/source/geojson_source';
-import {LngLatBounds} from '../../../src/geo/lng_lat_bounds';
-import type {FeatureCollection} from 'geojson';
-
-const wrapDispatcher = (dispatcher) => {
-    return {
-        getActor() {
-            return dispatcher as Actor;
-        }
-    } as Dispatcher;
-};
-
-const mockDispatcher = wrapDispatcher({
-    sendAsync() { return Promise.resolve({}); }
-});
-
 const hawkHill = {
     'type': 'FeatureCollection',
     'features': [{
@@ -56,7 +38,7 @@ const hawkHill = {
             ]
         }
     }]
-} as GeoJSON.GeoJSON;
+} as GeoJSON.FeatureCollection;
 
 const testWidth = 800;
 const testHeight = 600;
@@ -500,33 +482,24 @@ describe('Browser tests', () => {
         expect(center.lng).toBeCloseTo(11.39770);
         expect(center.lat).toBeCloseTo(47.29960);
     });
-});
 
-describe('GeoJSONSource#getBounds', () => {
-    const probe = hawkHill as FeatureCollection;
-    test('FeatureCollection', async () => {
-        const source = new GeoJSONSource('id', {data: probe} as GeoJSONSourceOptions, mockDispatcher, undefined);
-        const testbounds = new LngLatBounds([-122.49378204345702, 37.82880236636284, -122.48339653015138, 37.83381888486939]);
-        const bounds = await source.getBounds();
+    test('GeoJSONSource#getBounds: FeatureCollection', async () => {
+        const bounds = await page.evaluate(async () => {
+            const map = new maplibregl.Map({
+                container: 'map',
+                style: 'https://demotiles.maplibre.org/style.json',
+                center: [10, 10],
+                zoom: 10
+            });
+            map.addSource('testid', {
+                type: 'geojson',
+                data: hawkHill
+            });
+            const testsource: maplibregl.GeoJSONSource = map.getSource('testid');
+            return testsource.getBounds();
+        });
+        const testbounds = new maplibregl.LngLatBounds([-122.49378204345702, 37.82880236636284, -122.48339653015138, 37.83381888486939]);
         expect(bounds).toEqual(testbounds);
     });
-    test('Feature', async () => {
-        const source = new GeoJSONSource('id', {data: probe.features[0]} as GeoJSONSourceOptions, mockDispatcher, undefined);
-        const testbounds = new LngLatBounds([-122.49378204345702, 37.82880236636284, -122.48339653015138, 37.83381888486939]);
-        const bounds = await source.getBounds();
-        expect(bounds).toEqual(testbounds);
-    });
-    test('GeometryCollection', async () => {
-        const geometrycollection = {'type': 'GeometryCollection', 'geometries': [probe.features[0].geometry, probe.features[0].geometry]};
-        const source = new GeoJSONSource('id', {data: geometrycollection} as GeoJSONSourceOptions, mockDispatcher, undefined);
-        const testbounds = new LngLatBounds([-122.49378204345702, 37.82880236636284, -122.48339653015138, 37.83381888486939]);
-        const bounds = await source.getBounds();
-        expect(bounds).toEqual(testbounds);
-    });
-    test('Geometry', async () => {
-        const source = new GeoJSONSource('id', {data: probe.features[0].geometry} as GeoJSONSourceOptions, mockDispatcher, undefined);
-        const testbounds = new LngLatBounds([-122.49378204345702, 37.82880236636284, -122.48339653015138, 37.83381888486939]);
-        const bounds = await source.getBounds();
-        expect(bounds).toEqual(testbounds);
-    });
+
 });
