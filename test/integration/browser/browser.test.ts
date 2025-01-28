@@ -459,7 +459,7 @@ describe('Browser tests', () => {
                 center: [10, 10],
                 zoom: 10
             });
-            await map.once('load');
+            await map.on('load');
             map.addSource('testid', {
                 type: 'geojson',
                 data: {
@@ -512,7 +512,7 @@ describe('Browser tests', () => {
                 center: [10, 10],
                 zoom: 10
             });
-            await map.once('load');
+            await map.on('load');
             map.addSource('testid', {
                 type: 'geojson',
                 data: {
@@ -562,7 +562,7 @@ describe('Browser tests', () => {
                 center: [10, 10],
                 zoom: 10
             });
-            await map.once('load');
+            await map.on('load');
             map.addSource('testid', {
                 type: 'geojson',
                 data: {
@@ -608,7 +608,7 @@ describe('Browser tests', () => {
                 center: [10, 10],
                 zoom: 10
             });
-            await map.once('load');
+            await map.on('load');
             map.addSource('testid', {
                 type: 'geojson',
                 data: {
