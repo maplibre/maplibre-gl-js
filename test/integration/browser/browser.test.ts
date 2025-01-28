@@ -6,6 +6,58 @@ import type {AddressInfo} from 'net';
 import type {default as MapLibreGL, Map} from '../../../dist/maplibre-gl';
 import {sleep} from '../../../src/util/test/util';
 
+import {type Actor} from '../../../src/util/actor';
+import {type Dispatcher} from '../../../src/util/dispatcher';
+import {GeoJSONSource, type GeoJSONSourceOptions} from '../../../src/source/geojson_source';
+import {LngLatBounds} from '../../../src/geo/lng_lat_bounds';
+import type {FeatureCollection} from 'geojson';
+
+const wrapDispatcher = (dispatcher) => {
+    return {
+        getActor() {
+            return dispatcher as Actor;
+        }
+    } as Dispatcher;
+};
+
+const mockDispatcher = wrapDispatcher({
+    sendAsync() { return Promise.resolve({}); }
+});
+
+const hawkHill = {
+    'type': 'FeatureCollection',
+    'features': [{
+        'type': 'Feature',
+        'properties': {},
+        'geometry': {
+            'type': 'LineString',
+            'coordinates': [
+                [-122.48369693756104, 37.83381888486939],
+                [-122.48348236083984, 37.83317489144141],
+                [-122.48339653015138, 37.83270036637107],
+                [-122.48356819152832, 37.832056363179625],
+                [-122.48404026031496, 37.83114119107971],
+                [-122.48404026031496, 37.83049717427869],
+                [-122.48348236083984, 37.829920943955045],
+                [-122.48356819152832, 37.82954808664175],
+                [-122.48507022857666, 37.82944639795659],
+                [-122.48610019683838, 37.82880236636284],
+                [-122.48695850372314, 37.82931081282506],
+                [-122.48700141906738, 37.83080223556934],
+                [-122.48751640319824, 37.83168351665737],
+                [-122.48803138732912, 37.832158048267786],
+                [-122.48888969421387, 37.83297152392784],
+                [-122.48987674713133, 37.83263257682617],
+                [-122.49043464660643, 37.832937629287755],
+                [-122.49125003814696, 37.832429207817725],
+                [-122.49163627624512, 37.832564787218985],
+                [-122.49223709106445, 37.83337825839438],
+                [-122.49378204345702, 37.83368330777276]
+            ]
+        }
+    }]
+} as GeoJSON.GeoJSON;
+
 const testWidth = 800;
 const testHeight = 600;
 const deviceScaleFactor = 2;
@@ -447,5 +499,34 @@ describe('Browser tests', () => {
         });
         expect(center.lng).toBeCloseTo(11.39770);
         expect(center.lat).toBeCloseTo(47.29960);
+    });
+});
+
+describe('GeoJSONSource#getBounds', () => {
+    const probe = hawkHill as FeatureCollection;
+    test('FeatureCollection', async () => {
+        const source = new GeoJSONSource('id', {data: probe} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        const testbounds = new LngLatBounds([-122.49378204345702, 37.82880236636284, -122.48339653015138, 37.83381888486939]);
+        const bounds = await source.getBounds();
+        expect(bounds).toEqual(testbounds);
+    });
+    test('Feature', async () => {
+        const source = new GeoJSONSource('id', {data: probe.features[0]} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        const testbounds = new LngLatBounds([-122.49378204345702, 37.82880236636284, -122.48339653015138, 37.83381888486939]);
+        const bounds = await source.getBounds();
+        expect(bounds).toEqual(testbounds);
+    });
+    test('GeometryCollection', async () => {
+        const geometrycollection = {'type': 'GeometryCollection', 'geometries': [probe.features[0].geometry, probe.features[0].geometry]};
+        const source = new GeoJSONSource('id', {data: geometrycollection} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        const testbounds = new LngLatBounds([-122.49378204345702, 37.82880236636284, -122.48339653015138, 37.83381888486939]);
+        const bounds = await source.getBounds();
+        expect(bounds).toEqual(testbounds);
+    });
+    test('Geometry', async () => {
+        const source = new GeoJSONSource('id', {data: probe.features[0].geometry} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        const testbounds = new LngLatBounds([-122.49378204345702, 37.82880236636284, -122.48339653015138, 37.83381888486939]);
+        const bounds = await source.getBounds();
+        expect(bounds).toEqual(testbounds);
     });
 });

@@ -12,8 +12,8 @@ import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_s
 import {type ActorMessage, MessageType} from '../util/actor_messages';
 import {type Actor} from '../util/actor';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {LngLatBounds} from '../geo/lng_lat_bounds';
-import type {FeatureCollection} from 'geojson';
+/* import {LngLatBounds} from '../geo/lng_lat_bounds';
+import type {FeatureCollection} from 'geojson'; */
 
 const wrapDispatcher = (dispatcher) => {
     return {
@@ -508,7 +508,7 @@ describe('GeoJSONSource#serialize', () => {
         });
     });
 });
-
+/*
 describe('GeoJSONSource#getBounds', () => {
     const probe = hawkHill as FeatureCollection;
     test('FeatureCollection', async () => {
@@ -537,3 +537,4 @@ describe('GeoJSONSource#getBounds', () => {
         expect(bounds).toEqual(testbounds);
     });
 });
+ */
