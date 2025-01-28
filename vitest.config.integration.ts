@@ -6,7 +6,6 @@ export default defineConfig({
         name: 'integration',
         environment: 'node',
         include: [
-            //'test/integration/browser/browser.test.ts'
             'test/integration/**/*.test.{ts,js}',
         ],
         coverage: {

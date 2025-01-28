@@ -508,33 +508,3 @@ describe('GeoJSONSource#serialize', () => {
         });
     });
 });
-/*
-describe('GeoJSONSource#getBounds', () => {
-    const probe = hawkHill as FeatureCollection;
-    test('FeatureCollection', async () => {
-        const source = new GeoJSONSource('id', {data: probe} as GeoJSONSourceOptions, mockDispatcher, undefined);
-        const testbounds = new LngLatBounds([-122.49378204345702, 37.82880236636284, -122.48339653015138, 37.83381888486939]);
-        const bounds = await source.getBounds();
-        expect(bounds).toEqual(testbounds);
-    });
-    test('Feature', async () => {
-        const source = new GeoJSONSource('id', {data: probe.features[0]} as GeoJSONSourceOptions, mockDispatcher, undefined);
-        const testbounds = new LngLatBounds([-122.49378204345702, 37.82880236636284, -122.48339653015138, 37.83381888486939]);
-        const bounds = await source.getBounds();
-        expect(bounds).toEqual(testbounds);
-    });
-    test('GeometryCollection', async () => {
-        const geometrycollection = {'type': 'GeometryCollection', 'geometries': [probe.features[0].geometry, probe.features[0].geometry]};
-        const source = new GeoJSONSource('id', {data: geometrycollection} as GeoJSONSourceOptions, mockDispatcher, undefined);
-        const testbounds = new LngLatBounds([-122.49378204345702, 37.82880236636284, -122.48339653015138, 37.83381888486939]);
-        const bounds = await source.getBounds();
-        expect(bounds).toEqual(testbounds);
-    });
-    test('Geometry', async () => {
-        const source = new GeoJSONSource('id', {data: probe.features[0].geometry} as GeoJSONSourceOptions, mockDispatcher, undefined);
-        const testbounds = new LngLatBounds([-122.49378204345702, 37.82880236636284, -122.48339653015138, 37.83381888486939]);
-        const bounds = await source.getBounds();
-        expect(bounds).toEqual(testbounds);
-    });
-});
- */
