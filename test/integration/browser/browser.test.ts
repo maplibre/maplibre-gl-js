@@ -6,6 +6,8 @@ import type {AddressInfo} from 'net';
 import type {default as MapLibreGL, Map} from '../../../dist/maplibre-gl';
 import {sleep} from '../../../src/util/test/util';
 
+import type {LngLatBounds} from '../../../src/geo/lng_lat_bounds'
+
 /* const hawkHill = {
     'type': 'FeatureCollection',
     'features': [{
@@ -484,7 +486,9 @@ describe('Browser tests', () => {
     });
 
     test('GeoJSONSource#getBounds: FeatureCollection', async () => {
+        let testbounds: LngLatBounds;
         const bounds = await page.evaluate(async () => {
+            testbounds = new maplibregl.LngLatBounds([-122.49378204345702, 37.82880236636284, -122.48339653015138, 37.83381888486939]);
             const map = new maplibregl.Map({
                 container: 'map',
                 style: 'https://demotiles.maplibre.org/style.json',
@@ -532,7 +536,6 @@ describe('Browser tests', () => {
                 return testsource.getBounds();
             });
         });
-        const testbounds = new maplibregl.LngLatBounds([-122.49378204345702, 37.82880236636284, -122.48339653015138, 37.83381888486939]);
         expect(bounds).toEqual(testbounds);
     });
 
