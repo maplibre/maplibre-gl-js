@@ -199,7 +199,10 @@ class TaggedString {
         return this.sectionIndex.reduce((max, index) => Math.max(max, this.sections[index].scale), 0);
     }
 
-    getMaxImageSize(imagePositions: {[_: string]: ImagePosition}) {
+    getMaxImageSize(imagePositions: {[_: string]: ImagePosition}): {
+        maxImageWidth: number;
+        maxImageHeight: number;
+    } {
         let maxImageWidth = 0;
         let maxImageHeight = 0;
         for (let i = 0; i < this.length(); i++) {
