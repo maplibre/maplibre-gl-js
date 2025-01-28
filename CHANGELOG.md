@@ -6,8 +6,17 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-
 - _...Add new stuff here..._
+
+## 5.1.0
+
+### ✨ Features and improvements
+
+- Add support for `vertical-align` in `format` expression ([specification](https://maplibre.org/maplibre-style-spec/expressions/#format))([#5043](https://github.com/maplibre/maplibre-gl-js/pull/5043)).
+
+### 🐞 Bug fixes
+
+- Render frame synchronized again in requestAnimationFrame callback ([#4535](https://github.com/maplibre/maplibre-gl-js/pull/4535))
 
 ## 5.0.1
 
