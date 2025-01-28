@@ -452,7 +452,7 @@ describe('Browser tests', () => {
     test('GeoJSONSource#getBounds: FeatureCollection', async () => {
         let testbounds: LngLatBounds;
         const bounds = await page.evaluate(async () => {
-            testbounds = new maplibregl.LngLatBounds([-122.493782,37.828802,-122.483396,37.833818]);
+            testbounds = new maplibregl.LngLatBounds([-122.493782, 37.828802, -122.483396, 37.833818]);
             const map = new maplibregl.Map({
                 container: 'map',
                 style: 'https://demotiles.maplibre.org/style.json',
@@ -505,7 +505,7 @@ describe('Browser tests', () => {
     test('GeoJSONSource#getBounds: Feature', async () => {
         let testbounds: LngLatBounds;
         const bounds = await page.evaluate(async () => {
-            testbounds = new maplibregl.LngLatBounds([-122.493782,37.828802,-122.483396,37.833818]);
+            testbounds = new maplibregl.LngLatBounds([-122.493782, 37.828802, -122.483396, 37.833818]);
             const map = new maplibregl.Map({
                 container: 'map',
                 style: 'https://demotiles.maplibre.org/style.json',
@@ -555,7 +555,7 @@ describe('Browser tests', () => {
     test('GeoJSONSource#getBounds: Geometry', async () => {
         let testbounds: LngLatBounds;
         const bounds = await page.evaluate(async () => {
-            testbounds = new maplibregl.LngLatBounds([-122.493782,37.828802,-122.483396,37.833818]);
+            testbounds = new maplibregl.LngLatBounds([-122.493782, 37.828802, -122.483396, 37.833818]);
             const map = new maplibregl.Map({
                 container: 'map',
                 style: 'https://demotiles.maplibre.org/style.json',
@@ -601,7 +601,7 @@ describe('Browser tests', () => {
     test('GeoJSONSource#getBounds: GeometryCollection', async () => {
         let testbounds: LngLatBounds;
         const bounds = await page.evaluate(async () => {
-            testbounds = new maplibregl.LngLatBounds([-122.493782,37.828802,-122.483396,37.833818]);
+            testbounds = new maplibregl.LngLatBounds([-122.493782, 37.828802, -122.483396, 37.833818]);
             const map = new maplibregl.Map({
                 container: 'map',
                 style: 'https://demotiles.maplibre.org/style.json',
