@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
