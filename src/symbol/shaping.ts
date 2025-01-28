@@ -58,6 +58,18 @@ export type Shaping = {
     verticalizable: boolean;
 };
 
+type ShapingSectionAttributes = {
+    rect: Rect | null;
+    metrics: GlyphMetrics;
+    baselineOffset: number;
+    imageOffset?: number;
+};
+
+type LineShapingSize = {
+    verticalLineContentWidth: number;
+    horizontalLineContentHeight: number;
+};
+
 function isEmpty(positionedLines: Array<PositionedLine>) {
     for (const line of positionedLines) {
         if (line.positionedGlyphs.length !== 0) {
@@ -606,11 +618,6 @@ function getAnchorAlignment(anchor: SymbolAnchor) {
     return {horizontalAlign, verticalAlign};
 }
 
-type LineShapingSize = {
-    verticalLineContentWidth: number;
-    horizontalLineContentHeight: number;
-};
-
 function calculateLineContentSize(
     imagePositions: {[_: string]: ImagePosition},
     line: TaggedString,
@@ -805,13 +812,6 @@ function shapeLines(shaping: Shaping,
     shaping.left += -horizontalAlign * maxLineLength;
     shaping.right = shaping.left + maxLineLength;
 }
-
-type ShapingSectionAttributes = {
-    rect: Rect | null;
-    metrics: GlyphMetrics;
-    baselineOffset: number;
-    imageOffset?: number;
-};
 
 function shapeTextSection(
     section: SectionOptions,
