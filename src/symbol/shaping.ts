@@ -734,19 +734,13 @@ function shapeLines(shaping: Shaping,
             const section = line.getSection(i);
             const sectionIndex = line.getSectionIndex(i);
             const codePoint = line.getCharCode(i);
-
-            let baselineOffset = 0.0;
-            let metrics: GlyphMetrics | null = null;
-            let rect = null;
             const vertical = isLineVertical(writingMode, allowVerticalPlacement, codePoint);
 
-            if (!section.imageName) {
-                const sectionAttributes = shapeTextSection(section, codePoint, vertical, lineShapingSize, glyphMap, glyphPositions);
-                if (!sectionAttributes) continue;
+            let sectionAttributes: ShapingSectionAttributes;
 
-                rect = sectionAttributes.rect;
-                metrics = sectionAttributes.metrics;
-                baselineOffset = sectionAttributes.baselineOffset;
+            if (!section.imageName) {
+                sectionAttributes = shapeTextSection(section, codePoint, vertical, lineShapingSize, glyphMap, glyphPositions);
+                if (!sectionAttributes) continue;
             } else {
                 shaping.iconsInText = true;
                 // If needed, allow to set scale factor for an image using
@@ -754,15 +748,12 @@ function shapeLines(shaping: Shaping,
                 // when FormattedSection is an image section.
                 section.scale = section.scale * layoutTextSizeFactor;
 
-                const sectionAttributes = shapeImageSection(section, vertical, lineMaxScale, lineShapingSize, imagePositions);
+                sectionAttributes = shapeImageSection(section, vertical, lineMaxScale, lineShapingSize, imagePositions);
                 if (!sectionAttributes) continue;
-
-                rect = sectionAttributes.rect;
-                metrics = sectionAttributes.metrics;
-                baselineOffset = sectionAttributes.baselineOffset;
                 imageOffset = Math.max(imageOffset, sectionAttributes.imageOffset);
             }
 
+            const {rect, metrics, baselineOffset} = sectionAttributes;
             positionedGlyphs.push({
                 glyph: codePoint,
                 imageName: section.imageName,
