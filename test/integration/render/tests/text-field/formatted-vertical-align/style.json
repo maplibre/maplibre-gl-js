@@ -101,7 +101,7 @@
         { "font-scale": 1.2, "vertical-align": "bottom" },
         " ",
         {},
-        "BASELINE",
+        "BOTTOM",
         { "font-scale": 0.8, "vertical-align": "bottom" }
       ],
         "text-size": 48,
