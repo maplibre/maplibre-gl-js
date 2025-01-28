@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 
+- Add support for `vertical-align` in `format` expression ([specification](https://maplibre.org/maplibre-style-spec/expressions/#format))([#5043](https://github.com/maplibre/maplibre-gl-js/pull/5043)).
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
