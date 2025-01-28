@@ -7,6 +7,7 @@
 ### 🐞 Bug fixes
 
 - _...Add new stuff here..._
+- Render frame synchronized again in requestAnimationFrame callback ([#4535](https://github.com/maplibre/maplibre-gl-js/pull/4535))
 
 ## 5.0.1
 
