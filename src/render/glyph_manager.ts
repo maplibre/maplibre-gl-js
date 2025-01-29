@@ -121,14 +121,18 @@ export class GlyphManager {
 
     _doesCharSupportLocalGlyph(id: number): boolean {
         return !!this.localIdeographFontFamily &&
+        (/\p{Ideo}|\p{sc=Hang}|\p{sc=Hira}|\p{sc=Kana}/u.test(String.fromCodePoint(id)) ||
+        (
+            // fallback: RegExp can't cover all cases. refer #5420
             unicodeBlockLookup['CJK Unified Ideographs'](id) ||
             unicodeBlockLookup['Hangul Syllables'](id) ||
             unicodeBlockLookup['Hiragana'](id) ||
             unicodeBlockLookup['Katakana'](id) || // includes "ー"
-            // symbols
-            unicodeBlockLookup['CJK Unified Ideographs Extension G'](id) || // 𠀀
-            unicodeBlockLookup['CJK Symbols and Punctuation'](id) || // 、。〃〄々〆〇〈〉《》「
-            unicodeBlockLookup['Halfwidth and Fullwidth Forms'](id); // ！？＂＃＄％＆
+            // memo: these symbols are not all. others could be added if needed.
+            unicodeBlockLookup['CJK Symbols and Punctuation'](id) || // 、。〃〄々〆〇〈〉《》「...
+            unicodeBlockLookup['Halfwidth and Fullwidth Forms'](id) // ！？＂＃＄％＆...
+        )
+        );
          
     }
 
