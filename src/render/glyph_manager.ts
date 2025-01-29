@@ -120,6 +120,12 @@ export class GlyphManager {
     }
 
     _doesCharSupportLocalGlyph(id: number): boolean {
+        // The CJK Unified Ideographs blocks and Hangul Syllables blocks are
+        // spread across many glyph PBFs and are typically accessed very
+        // randomly. Preferring local rendering for these blocks reduces
+        // wasteful bandwidth consumption. For visual consistency within CJKV
+        // text, also include any other CJKV or siniform ideograph or hangul,
+        // hiragana, or katakana character.
         return !!this.localIdeographFontFamily &&
         (/\p{Ideo}|\p{sc=Hang}|\p{sc=Hira}|\p{sc=Kana}/u.test(String.fromCodePoint(id)) ||
         (
