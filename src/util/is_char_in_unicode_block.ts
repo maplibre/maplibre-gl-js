@@ -166,7 +166,7 @@ export const unicodeBlockLookup: UnicodeBlockLookup = {
     'CJK Compatibility Forms': (char) => char >= 0xFE30 && char <= 0xFE4F,
     'Small Form Variants': (char) => char >= 0xFE50 && char <= 0xFE6F,
     // 'Arabic Presentation Forms-B': (char) => char >= 0xFE70 && char <= 0xFEFF,
-    'Halfwidth and Fullwidth Forms': (char) => char >= 0xFF00 && char <= 0xFFEF,
+    'Halfwidth and Fullwidth Forms': (char) => char >= 0xFF00 && char <= 0xFFEF
     // 'Specials': (char) => char >= 0xFFF0 && char <= 0xFFFF,
     // 'Linear B Syllabary': (char) => char >= 0x10000 && char <= 0x1007F,
     // 'Linear B Ideograms': (char) => char >= 0x10080 && char <= 0x100FF,
@@ -335,7 +335,7 @@ export const unicodeBlockLookup: UnicodeBlockLookup = {
     // 'CJK Unified Ideographs Extension E': (char) => char >= 0x2B820 && char <= 0x2CEAF,
     // 'CJK Unified Ideographs Extension F': (char) => char >= 0x2CEB0 && char <= 0x2EBEF,
     // 'CJK Unified Ideographs Extension I': (char) => char >= 0x2EBF0 && char <= 0x2EE5F,
-    'CJK Unified Ideographs Extension G': (char) => char >= 0x30000 && char <= 0x3134F,
+    // 'CJK Unified Ideographs Extension G': (char) => char >= 0x30000 && char <= 0x3134F,
     // 'CJK Unified Ideographs Extension H': (char) => char >= 0x31350 && char <= 0x323AF,
     // 'CJK Compatibility Ideographs Supplement': (char) => char >= 0x2F800 && char <= 0x2FA1F,
     // 'Tags': (char) => char >= 0xE0000 && char <= 0xE007F,
