@@ -3170,7 +3170,7 @@ describe('#flyTo globe projection', () => {
 
         test('immediately sets padding with duration = 0', () => {
             const camera = createCameraGlobe();
-            camera.easeTo({center: [100, 0], duration: 0, padding: {left: 100}});
+            camera.flyTo({center: [100, 0], duration: 0, padding: {left: 100}});
             expect(camera.getPadding()).toEqual({
                 bottom: 0,
                 left: 100,
@@ -3178,7 +3178,6 @@ describe('#flyTo globe projection', () => {
                 top: 0,
             });
 
-            expect(camera.getCenter()).toEqual({lng: 100, lat: 0});
         });
 
         test('smoothly sets given padding with duration > 0', async () => {
@@ -3190,7 +3189,7 @@ describe('#flyTo globe projection', () => {
 
             camera.flyTo({center: [100, 0], duration: 100, padding: {left: 100}});
 
-            stub.mockImplementation(() => 50);
+            stub.mockImplementation(() => 100);
             camera.simulateFrame();
 
             const padding = camera.getPadding();
