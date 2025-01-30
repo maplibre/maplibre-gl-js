@@ -54,7 +54,7 @@
     "@rollup/plugin-strip": "^3.0.4",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^12.1.2",
-    "@stylistic/eslint-plugin-ts": "^3.0.0",
+    "@stylistic/eslint-plugin-ts": "^3.0.1",
     "@types/benchmark": "^2.1.5",
     "@types/d3": "^7.4.3",
     "@types/diff": "^7.0.0",
