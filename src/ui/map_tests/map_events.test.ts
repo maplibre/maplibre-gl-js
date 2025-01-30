@@ -990,8 +990,9 @@ describe('map events', () => {
         await sourcePromise;
     });
 
-    test('getZoom on moveend is the same as after the map end moving, with terrain on', () => {
+    test('getZoom on moveend is the same as after the map end moving, with terrain on', async () => {
         const map = createMap({interactive: true, clickTolerance: 4});
+        await map.once('style.load');
         map.terrain = createTerrain();
         let actualZoom: number;
         map.on('moveend', () => {
