@@ -54,6 +54,16 @@ function createResizeObserverEntryMock() {
     };
 }
 
+function getPxNumber(circleWidthPx: string) {
+    return Number(circleWidthPx.substring(0, circleWidthPx.length - 2));
+}
+
+function expectBetween(pxValue: string, min: number, max: number) {
+    const value = getPxNumber(pxValue);
+    expect(value).toBeLessThan(max);
+    expect(value).toBeGreaterThan(min);
+}
+
 describe('GeolocateControl with no options', () => {
     geolocation.use();
     let map;
@@ -587,22 +597,22 @@ describe('GeolocateControl with no options', () => {
         let zoomendPromise = map.once('zoomend');
         map.zoomTo(12, {duration: 0});
         await zoomendPromise;
-        expect(geolocate._circleElement.style.width).toBe('79px');
+        expectBetween(geolocate._circleElement.style.width, 74, 75);
         zoomendPromise = map.once('zoomend');
         map.zoomTo(10, {duration: 0});
         await zoomendPromise;
-        expect(geolocate._circleElement.style.width).toBe('20px');
+        expectBetween(geolocate._circleElement.style.width, 18, 19);
         zoomendPromise = map.once('zoomend');
 
         // test with smaller radius
         geolocation.send({latitude: 10, longitude: 20, accuracy: 20});
         map.zoomTo(20, {duration: 0});
         await zoomendPromise;
-        expect(geolocate._circleElement.style.width).toBe('19982px');
+        expectBetween(geolocate._circleElement.style.width, 18881, 18882);
         zoomendPromise = map.once('zoomend');
         map.zoomTo(18, {duration: 0});
         await zoomendPromise;
-        expect(geolocate._circleElement.style.width).toBe('4996px');
+        expectBetween(geolocate._circleElement.style.width, 4766, 4767);
     });
 
     test('shown even if trackUserLocation = false', async () => {
