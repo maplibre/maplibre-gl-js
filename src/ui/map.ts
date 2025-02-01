@@ -3379,15 +3379,21 @@ export class Map extends Camera {
     triggerRepaint() {
         if (this.style && !this._frameRequest) {
             this._frameRequest = new AbortController();
-            browser.frameAsync(this._frameRequest).then((paintStartTimeStamp: number) => {
-                PerformanceUtils.frame(paintStartTimeStamp);
-                this._frameRequest = null;
-                this._render(paintStartTimeStamp);
-            }).catch((error: Error) => {
-                if (!isAbortError(error) && !isFramebufferNotCompleteError(error)) {
-                    throw error;
-                }
-            });
+            browser.frame(
+                this._frameRequest,
+                (paintStartTimeStamp) => {
+                    PerformanceUtils.frame(paintStartTimeStamp);
+                    this._frameRequest = null;
+                    try {
+                        this._render(paintStartTimeStamp);
+                    } catch(error) {
+                        if (!isAbortError(error) && !isFramebufferNotCompleteError(error)) {
+                            throw error;
+                        }
+                    }
+                },
+                () => {}
+            );
         }
     }
 

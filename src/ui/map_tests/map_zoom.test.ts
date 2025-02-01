@@ -79,12 +79,13 @@ test('throw on maxZoom smaller than minZoom at init with falsey maxZoom', () => 
     }).toThrow(new Error('maxZoom must be greater than or equal to minZoom'));
 });
 
-test('recalculate zoom is done on the camera update transform', () => {
+test('recalculate zoom is done on the camera update transform', async () => {
     const map = createMap({
         interactive: true,
         clickTolerance: 4,
         transformCameraUpdate: ({zoom}) => ({zoom: zoom + 0.1})
     });
+    await map.once('style.load');
     map.terrain = createTerrain();
     const canvas = map.getCanvas();
     simulate.dragWithMove(canvas, {x: 100, y: 100}, {x: 100, y: 150});
