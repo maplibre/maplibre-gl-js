@@ -2,7 +2,7 @@
 
 ### ✨ Features and improvements
 
-- _...Add new stuff here..._
+- Avoid setting marker opacity twice.
 
 ### 🐞 Bug fixes
 
