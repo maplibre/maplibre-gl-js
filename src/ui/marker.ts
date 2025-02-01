@@ -169,7 +169,9 @@ export class Marker extends Evented {
         this._rotationAlignment = options && options.rotationAlignment || 'auto';
         this._pitchAlignment = options && options.pitchAlignment && options.pitchAlignment !== 'auto' ?  options.pitchAlignment : this._rotationAlignment;
         this.setOpacity(); // set default opacity
-        this.setOpacity(options?.opacity, options?.opacityWhenCovered);
+        if (options?.opacity !== undefined || options?.opacityWhenCovered !== undefined) {
+            this.setOpacity(options?.opacity, options?.opacityWhenCovered);
+        }
 
         if (!options || !options.element) {
             this._defaultMarker = true;
@@ -860,12 +862,13 @@ export class Marker extends Evented {
         if (opacity === undefined && opacityWhenCovered === undefined) {
             this._opacity = '1';
             this._opacityWhenCovered = '0.2';
-        }
-        if (opacity !== undefined) {
-            this._opacity = opacity;
-        }
-        if (opacityWhenCovered !== undefined) {
-            this._opacityWhenCovered = opacityWhenCovered;
+        } else {
+            if (opacity !== undefined) {
+                this._opacity = opacity;
+            }
+            if (opacityWhenCovered !== undefined) {
+                this._opacityWhenCovered = opacityWhenCovered;
+            }
         }
         if (this._map) {
             this._updateOpacity(true);
