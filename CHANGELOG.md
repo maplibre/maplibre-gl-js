@@ -2,7 +2,7 @@
 
 ### ✨ Features and improvements
 
-- Avoid setting marker opacity twice.
+- Avoid setting marker opacity twice. ([#5441](https://github.com/maplibre/maplibre-gl-js/pull/5441))
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
