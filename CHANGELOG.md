@@ -7,6 +7,7 @@
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
+- Fix how padding is applied when using flyTo() with Globe ([#5406](https://github.com/maplibre/maplibre-gl-js/pull/5406))
 
 ## 5.1.0
 
