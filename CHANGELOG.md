@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 
+- Fix rendering Japanese symbols which are accidentally ignored. ([#5421](https://github.com/maplibre/maplibre-gl-js/pull/5421)
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
