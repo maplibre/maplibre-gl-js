@@ -380,9 +380,13 @@ export class HandlerManager {
         const eventTouches = (e as TouchEvent).touches;
 
         const mapTouches = eventTouches ? this._getMapTouches(eventTouches) : undefined;
-        const points = mapTouches ?
-            DOM.touchPos(this._map.getCanvas(), mapTouches) :
-            DOM.mousePos(this._map.getCanvas(), ((e as MouseEvent)));
+
+        let points: Point | Point[] = new Point(0, 0);
+        if (mapTouches) {
+            points = DOM.touchPos(this._map.getCanvas(), mapTouches);
+        } else if (e instanceof MouseEvent) {
+            points = DOM.mousePos(this._map.getCanvas(), (e));
+        }
 
         for (const {handlerName, handler, allowed} of this._handlers) {
             if (!handler.isEnabled()) continue;
