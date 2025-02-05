@@ -1,4 +1,4 @@
-<p align="center">
+<p align="center" >
   <img src="https://maplibre.org/img/maplibre-logo-big.svg" alt="MapLibre Logo">
 </p>
 
