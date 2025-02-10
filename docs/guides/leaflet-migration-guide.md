@@ -4,7 +4,7 @@ This part of the docs is dedicated to the migration from `leaflet` to `maplibre-
 
 This guide might not be accurate depending on the current version of `leaflet`.
 
-The main differences in term of functionality is the ability to support map rotation, vector tiles and globe. For large datasets MapLinre is faster due to its usage of webgl technology.
+The main differences in term of functionality is the ability to support map rotation, vector tiles and globe. For large datasets MapLibre is faster due to its usage of webgl technology.
 
 ## Setting Up MapLibre
 
