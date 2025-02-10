@@ -29,7 +29,10 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 ### MapLibre
 
 ```js
-const map = new maplibregl.Map({
+import 'maplibre-gl/dist/maplibre-gl.css';
+import {Map} from 'maplibre-gl';
+
+const map = new Map({
   container: 'map',
   style: 'https://demotiles.maplibre.org/style.json',
   center: [0, 0],
