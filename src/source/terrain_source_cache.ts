@@ -145,29 +145,57 @@ export class TerrainSourceCache extends Evented {
      * @param tileID - the tile to look for
      * @returns the tiles that were found
      */
-    getTerrainCoords(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
+    getTerrainCoords(
+        tileID: OverscaledTileID,
+        renderOnAllTerrainTiles = false
+    ): Record<string, OverscaledTileID> {
         const coords = {};
         for (const key of this._renderableTilesKeys) {
-            const _tileID = this._tiles[key].tileID;
+            const terrainTileID = this._tiles[key].tileID;
             const coord = tileID.clone();
             const mat = createMat4f64();
-            if (_tileID.canonical.equals(tileID.canonical)) {
+            if (terrainTileID.canonical.equals(tileID.canonical)) {
                 mat4.ortho(mat, 0, EXTENT, EXTENT, 0, 0, 1);
-            } else if (_tileID.canonical.isChildOf(tileID.canonical)) {
-                const dz = _tileID.canonical.z - tileID.canonical.z;
-                const dx = _tileID.canonical.x - (_tileID.canonical.x >> dz << dz);
-                const dy = _tileID.canonical.y - (_tileID.canonical.y >> dz << dz);
+            } else if (terrainTileID.canonical.isChildOf(tileID.canonical)) {
+                const dz = terrainTileID.canonical.z - tileID.canonical.z;
+                const dx = terrainTileID.canonical.x - (terrainTileID.canonical.x >> dz << dz);
+                const dy = terrainTileID.canonical.y - (terrainTileID.canonical.y >> dz << dz);
                 const size = EXTENT >> dz;
                 mat4.ortho(mat, 0, size, size, 0, 0, 1); // Note: we are using `size` instead of `EXTENT` here
                 mat4.translate(mat, mat, [-dx * size, -dy * size, 0]);
-            } else if (tileID.canonical.isChildOf(_tileID.canonical)) {
-                const dz = tileID.canonical.z - _tileID.canonical.z;
+            } else if (tileID.canonical.isChildOf(terrainTileID.canonical)) {
+                const dz = tileID.canonical.z - terrainTileID.canonical.z;
                 const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
                 const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
                 const size = EXTENT >> dz;
                 mat4.ortho(mat, 0, EXTENT, EXTENT, 0, 0, 1);
                 mat4.translate(mat, mat, [dx * size, dy * size, 0]);
                 mat4.scale(mat, mat, [1 / (2 ** dz), 1 / (2 ** dz), 0]);
+            } else if (renderOnAllTerrainTiles && terrainTileID.canonical.z === tileID.canonical.z) {
+                mat4.ortho(mat, 0, EXTENT, EXTENT, 0, 0, 1);
+
+                const dx = tileID.canonical.x - terrainTileID.canonical.x;
+                const dy = tileID.canonical.y - terrainTileID.canonical.y;
+                const size = Math.pow(2, 25 - terrainTileID.canonical.z);
+                mat4.translate(mat, mat, [dx * size, dy * size, 0]);
+            } else if (renderOnAllTerrainTiles && terrainTileID.canonical.z > tileID.canonical.z) {
+                console.log('skipping, although it should be rendered');
+                continue;
+            } else if (renderOnAllTerrainTiles && tileID.canonical.z > terrainTileID.canonical.z) {
+                const dz = tileID.canonical.z - terrainTileID.canonical.z;
+                const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
+                const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
+                const size = EXTENT >> dz;
+                mat4.ortho(mat, 0, EXTENT, EXTENT, 0, 0, 1);
+                mat4.translate(mat, mat, [dx * size, dy * size, 0]);
+                mat4.scale(mat, mat, [1 / (2 ** dz), 1 / (2 ** dz), 0]);
+
+                const parentX = tileID.canonical.x >> dz;
+                const parentY = tileID.canonical.y >> dz;
+                const dx2 = parentX - terrainTileID.canonical.x;
+                const dy2 = parentY - terrainTileID.canonical.y;
+                const size2 = Math.pow(2, 25 - terrainTileID.canonical.z);
+                mat4.translate(mat, mat, [dx2 * size2, dy2 * size2, 0]);
             } else {
                 continue;
             }

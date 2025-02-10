@@ -8,7 +8,6 @@ import {type Terrain} from './terrain';
 import {RenderPool} from '../gl/render_pool';
 import {type Texture} from './texture';
 import type {StyleLayer} from '../style/style_layer';
-import {mat4} from 'gl-matrix';
 
 /**
  * lookup table which layers should rendered to texture
@@ -86,38 +85,15 @@ export class RenderToTexture {
 
         this._coordsAscending = {};
         for (const id in style.sourceCaches) {
+            const source = style.sourceCaches[id].getSource();
+            const forceRenderOnAllTerrainTiles = source.type === 'image';
             this._coordsAscending[id] = {};
             const tileIDs = style.sourceCaches[id].getVisibleCoordinates();
             for (const tileID of tileIDs) {
-                const keys = this.terrain.sourceCache.getTerrainCoords(tileID);
+                const keys = this.terrain.sourceCache.getTerrainCoords(tileID, forceRenderOnAllTerrainTiles);
                 for (const key in keys) {
                     if (!this._coordsAscending[id][key]) this._coordsAscending[id][key] = [];
                     this._coordsAscending[id][key].push(keys[key]);
-                }
-            }
-        }
-
-        const imageSourceIds = Object.keys(style.sourceCaches).filter(sourceId => style.sourceCaches[sourceId].getSource().type === 'image');
-        for (const imageSourceId of imageSourceIds) {
-            const imageTerrainTileId = Object.keys(this._coordsAscending[imageSourceId])[0];
-            const imageTerrainTile = this._renderableTiles.find(t => t.tileID.key === imageTerrainTileId)?.tileID;
-            const imageTiles = this._coordsAscending[imageSourceId][imageTerrainTileId];
-
-            if (imageTiles) {
-                for (const renderableTile of this._renderableTiles) {
-                    const renderableTileID = renderableTile.tileID;
-
-                    const dx = imageTerrainTile.canonical.x - renderableTileID.canonical.x;
-                    const dy = imageTerrainTile.canonical.y - renderableTileID.canonical.y;
-                    const size = Math.pow(2, 25 - imageTerrainTile.canonical.z);
-
-                    this._coordsAscending[imageSourceId][renderableTileID.key] = imageTiles.map(t => {
-                        const newTile = t.clone();
-                        const newMatrix = new Float32Array(t.terrainRttPosMatrix32f);
-                        mat4.translate(newMatrix, newMatrix, [dx * size, dy * size, 0]);
-                        newTile.terrainRttPosMatrix32f = newMatrix;
-                        return newTile;
-                    });
                 }
             }
         }
