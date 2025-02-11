@@ -179,9 +179,20 @@ export class TerrainSourceCache extends Evented {
                 const size = Math.pow(2, 25 - terrainTileID.canonical.z);
                 mat4.translate(mat, mat, [dx * size, dy * size, 0]);
             } else if (renderOnAllTerrainTiles && terrainTileID.canonical.z > tileID.canonical.z) {
-                console.log('skipping, although it should be rendered');
-                continue;
-            } else if (renderOnAllTerrainTiles && tileID.canonical.z > terrainTileID.canonical.z) {
+                const dz = terrainTileID.canonical.z - tileID.canonical.z;
+                const dx = terrainTileID.canonical.x - (terrainTileID.canonical.x >> dz << dz);
+                const dy = terrainTileID.canonical.y - (terrainTileID.canonical.y >> dz << dz);
+                const size = EXTENT >> dz;
+                mat4.ortho(mat, 0, size, size, 0, 0, 1); // Note: we are using `size` instead of `EXTENT` here
+                mat4.translate(mat, mat, [-dx * size, -dy * size, 0]);
+
+                const childX = terrainTileID.canonical.x >> dz;
+                const childY = terrainTileID.canonical.y >> dz;
+                const dx2 = tileID.canonical.x - childX;
+                const dy2 = tileID.canonical.y - childY;
+                const size2 = Math.pow(2, 25 - tileID.canonical.z);
+                mat4.translate(mat, mat, [dx2 * size2, dy2 * size2, 0]);
+            } else if (renderOnAllTerrainTiles && terrainTileID.canonical.z < tileID.canonical.z) {
                 const dz = tileID.canonical.z - terrainTileID.canonical.z;
                 const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
                 const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
