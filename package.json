@@ -98,7 +98,7 @@
     "eslint-plugin-vitest": "^0.5.4",
     "expect": "^29.7.0",
     "glob": "^11.0.1",
-    "globals": "^15.14.0",
+    "globals": "^15.15.0",
     "is-builtin-module": "^4.0.0",
     "jsdom": "^26.0.0",
     "junit-report-builder": "^5.1.1",
