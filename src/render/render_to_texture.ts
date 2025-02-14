@@ -90,7 +90,9 @@ export class RenderToTexture {
             this._coordsAscending[id] = {};
             const tileIDs = style.sourceCaches[id].getVisibleCoordinates();
             for (const tileID of tileIDs) {
-                const keys = this.terrain.sourceCache.getTerrainCoords(tileID, forceRenderOnAllTerrainTiles);
+                const keys = forceRenderOnAllTerrainTiles ?
+                    this.terrain.sourceCache.getAllTerrainCoords(tileID) :
+                    this.terrain.sourceCache.getTerrainCoords(tileID);
                 for (const key in keys) {
                     if (!this._coordsAscending[id][key]) this._coordsAscending[id][key] = [];
                     this._coordsAscending[id][key].push(keys[key]);

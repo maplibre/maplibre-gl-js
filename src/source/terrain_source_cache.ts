@@ -145,10 +145,7 @@ export class TerrainSourceCache extends Evented {
      * @param tileID - the tile to look for
      * @returns the tiles that were found
      */
-    getTerrainCoords(
-        tileID: OverscaledTileID,
-        renderOnAllTerrainTiles = false
-    ): Record<string, OverscaledTileID> {
+    getTerrainCoords(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
         const coords = {};
         for (const key of this._renderableTilesKeys) {
             const terrainTileID = this._tiles[key].tileID;
@@ -171,14 +168,36 @@ export class TerrainSourceCache extends Evented {
                 mat4.ortho(mat, 0, EXTENT, EXTENT, 0, 0, 1);
                 mat4.translate(mat, mat, [dx * size, dy * size, 0]);
                 mat4.scale(mat, mat, [1 / (2 ** dz), 1 / (2 ** dz), 0]);
-            } else if (renderOnAllTerrainTiles && terrainTileID.canonical.z === tileID.canonical.z) {
+            } else {
+                continue;
+            }
+            coord.terrainRttPosMatrix32f = new Float32Array(mat);
+            coords[key] = coord;
+        }
+        return coords;
+    }
+
+    /**
+     * Get all renderable terrain-tiles
+     * @param tileID - the tile to look for
+     * @returns the tiles that were found
+     */
+    getAllTerrainCoords(
+        tileID: OverscaledTileID
+    ): Record<string, OverscaledTileID> {
+        const coords = {};
+        for (const key of this._renderableTilesKeys) {
+            const terrainTileID = this._tiles[key].tileID;
+            const coord = tileID.clone();
+            const mat = createMat4f64();
+            if (terrainTileID.canonical.z === tileID.canonical.z) {
                 mat4.ortho(mat, 0, EXTENT, EXTENT, 0, 0, 1);
 
                 const dx = tileID.canonical.x - terrainTileID.canonical.x;
                 const dy = tileID.canonical.y - terrainTileID.canonical.y;
                 const size = Math.pow(2, 25 - terrainTileID.canonical.z);
                 mat4.translate(mat, mat, [dx * size, dy * size, 0]);
-            } else if (renderOnAllTerrainTiles && terrainTileID.canonical.z > tileID.canonical.z) {
+            } else if (terrainTileID.canonical.z > tileID.canonical.z) {
                 const dz = terrainTileID.canonical.z - tileID.canonical.z;
                 const dx = terrainTileID.canonical.x - (terrainTileID.canonical.x >> dz << dz);
                 const dy = terrainTileID.canonical.y - (terrainTileID.canonical.y >> dz << dz);
@@ -192,7 +211,7 @@ export class TerrainSourceCache extends Evented {
                 const dy2 = tileID.canonical.y - childY;
                 const size2 = Math.pow(2, 25 - tileID.canonical.z);
                 mat4.translate(mat, mat, [dx2 * size2, dy2 * size2, 0]);
-            } else if (renderOnAllTerrainTiles && terrainTileID.canonical.z < tileID.canonical.z) {
+            } else { // terrainTileID.canonical.z < tileID.canonical.z
                 const dz = tileID.canonical.z - terrainTileID.canonical.z;
                 const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
                 const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
@@ -207,8 +226,6 @@ export class TerrainSourceCache extends Evented {
                 const dy2 = parentY - terrainTileID.canonical.y;
                 const size2 = Math.pow(2, 25 - terrainTileID.canonical.z);
                 mat4.translate(mat, mat, [dx2 * size2, dy2 * size2, 0]);
-            } else {
-                continue;
             }
             coord.terrainRttPosMatrix32f = new Float32Array(mat);
             coords[key] = coord;
