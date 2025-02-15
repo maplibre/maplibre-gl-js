@@ -191,10 +191,12 @@ export class TerrainSourceCache extends Evented {
             const coord = tileID.clone();
             const mat = createMat4f64();
             if (terrainTileID.canonical.z === tileID.canonical.z) {
+                mat4.ortho(mat, 0, EXTENT, EXTENT, 0, 0, 1);
+
                 const dx = tileID.canonical.x - terrainTileID.canonical.x;
                 const dy = tileID.canonical.y - terrainTileID.canonical.y;
                 const size = Math.pow(2, 25 - terrainTileID.canonical.z);
-                mat4.ortho(mat, dx * size, dx * size + EXTENT, dy * size + EXTENT, dy * size, 0, 1);
+                mat4.translate(mat, mat, [dx * size, dy * size, 0]);
             } else if (terrainTileID.canonical.z > tileID.canonical.z) {
                 const dz = terrainTileID.canonical.z - tileID.canonical.z;
                 const dx = terrainTileID.canonical.x - (terrainTileID.canonical.x >> dz << dz);
