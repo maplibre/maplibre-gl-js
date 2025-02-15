@@ -191,12 +191,10 @@ export class TerrainSourceCache extends Evented {
             const coord = tileID.clone();
             const mat = createMat4f64();
             if (terrainTileID.canonical.z === tileID.canonical.z) {
-                mat4.ortho(mat, 0, EXTENT, EXTENT, 0, 0, 1);
-
                 const dx = tileID.canonical.x - terrainTileID.canonical.x;
                 const dy = tileID.canonical.y - terrainTileID.canonical.y;
-                const size = Math.pow(2, 25 - terrainTileID.canonical.z);
-                mat4.translate(mat, mat, [dx * size, dy * size, 0]);
+                mat4.ortho(mat, 0, EXTENT, EXTENT, 0, 0, 1);
+                mat4.translate(mat, mat, [dx * EXTENT, dy * EXTENT, 0]);
             } else if (terrainTileID.canonical.z > tileID.canonical.z) {
                 const dz = terrainTileID.canonical.z - tileID.canonical.z;
                 const dx = terrainTileID.canonical.x - (terrainTileID.canonical.x >> dz << dz);
@@ -205,12 +203,11 @@ export class TerrainSourceCache extends Evented {
                 mat4.ortho(mat, 0, size, size, 0, 0, 1); // Note: we are using `size` instead of `EXTENT` here
                 mat4.translate(mat, mat, [-dx * size, -dy * size, 0]);
 
-                const childX = terrainTileID.canonical.x >> dz;
-                const childY = terrainTileID.canonical.y >> dz;
-                const dx2 = tileID.canonical.x - childX;
-                const dy2 = tileID.canonical.y - childY;
-                const size2 = Math.pow(2, 25 - tileID.canonical.z);
-                mat4.translate(mat, mat, [dx2 * size2, dy2 * size2, 0]);
+                const parentX = terrainTileID.canonical.x >> dz;
+                const parentY = terrainTileID.canonical.y >> dz;
+                const dx2 = tileID.canonical.x - parentX;
+                const dy2 = tileID.canonical.y - parentY;
+                mat4.translate(mat, mat, [dx2 * EXTENT, dy2 * EXTENT, 0]);
             } else { // terrainTileID.canonical.z < tileID.canonical.z
                 const dz = tileID.canonical.z - terrainTileID.canonical.z;
                 const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
@@ -224,7 +221,7 @@ export class TerrainSourceCache extends Evented {
                 const parentY = tileID.canonical.y >> dz;
                 const dx2 = parentX - terrainTileID.canonical.x;
                 const dy2 = parentY - terrainTileID.canonical.y;
-                const size2 = Math.pow(2, 25 - terrainTileID.canonical.z);
+                const size2 = EXTENT << dz;
                 mat4.translate(mat, mat, [dx2 * size2, dy2 * size2, 0]);
             }
             coord.terrainRttPosMatrix32f = new Float32Array(mat);
