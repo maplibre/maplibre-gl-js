@@ -209,17 +209,16 @@ export class TerrainSourceCache extends Evented {
                 mat4.translate(mat, mat, [-dx * size + dx2 * EXTENT, -dy * size + dy2 * EXTENT, 0]);
             } else { // terrainTileID.canonical.z < tileID.canonical.z
                 const dz = tileID.canonical.z - terrainTileID.canonical.z;
+                // this translation is needed to project tileID to terrainTileID zoom level
                 const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
                 const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
-                const size = EXTENT >> dz;
-                mat4.ortho(mat, 0, EXTENT, EXTENT, 0, 0, 1);
-                mat4.translate(mat, mat, [dx * size, dy * size, 0]);
-                mat4.scale(mat, mat, [1 / (1 << dz), 1 / (1 << dz), 0]);
-
+                // this translation is needed if terrainTileID is not a parent of tileID
                 const dx2 = (tileID.canonical.x >> dz) - terrainTileID.canonical.x;
                 const dy2 = (tileID.canonical.y >> dz) - terrainTileID.canonical.y;
-                const size2 = EXTENT << dz;
-                mat4.translate(mat, mat, [dx2 * size2, dy2 * size2, 0]);
+
+                const size = EXTENT << dz;
+                mat4.ortho(mat, 0, size, size, 0, 0, 1);
+                mat4.translate(mat, mat, [dx * EXTENT + dx2 * size, dy * EXTENT + dy2 * size, 0]);
             }
             coord.terrainRttPosMatrix32f = new Float32Array(mat);
             coords[key] = coord;
