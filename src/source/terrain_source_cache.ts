@@ -203,10 +203,8 @@ export class TerrainSourceCache extends Evented {
                 mat4.ortho(mat, 0, size, size, 0, 0, 1); // Note: we are using `size` instead of `EXTENT` here
                 mat4.translate(mat, mat, [-dx * size, -dy * size, 0]);
 
-                const parentX = terrainTileID.canonical.x >> dz;
-                const parentY = terrainTileID.canonical.y >> dz;
-                const dx2 = tileID.canonical.x - parentX;
-                const dy2 = tileID.canonical.y - parentY;
+                const dx2 = tileID.canonical.x - (terrainTileID.canonical.x >> dz);
+                const dy2 = tileID.canonical.y - (terrainTileID.canonical.y >> dz);
                 mat4.translate(mat, mat, [dx2 * EXTENT, dy2 * EXTENT, 0]);
             } else { // terrainTileID.canonical.z < tileID.canonical.z
                 const dz = tileID.canonical.z - terrainTileID.canonical.z;
@@ -215,12 +213,10 @@ export class TerrainSourceCache extends Evented {
                 const size = EXTENT >> dz;
                 mat4.ortho(mat, 0, EXTENT, EXTENT, 0, 0, 1);
                 mat4.translate(mat, mat, [dx * size, dy * size, 0]);
-                mat4.scale(mat, mat, [1 / (2 ** dz), 1 / (2 ** dz), 0]);
+                mat4.scale(mat, mat, [1 / (1 << dz), 1 / (1 << dz), 0]);
 
-                const parentX = tileID.canonical.x >> dz;
-                const parentY = tileID.canonical.y >> dz;
-                const dx2 = parentX - terrainTileID.canonical.x;
-                const dy2 = parentY - terrainTileID.canonical.y;
+                const dx2 = (tileID.canonical.x >> dz) - terrainTileID.canonical.x;
+                const dy2 = (tileID.canonical.y >> dz) - terrainTileID.canonical.y;
                 const size2 = EXTENT << dz;
                 mat4.translate(mat, mat, [dx2 * size2, dy2 * size2, 0]);
             }
