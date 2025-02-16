@@ -197,15 +197,16 @@ export class TerrainSourceCache extends Evented {
                 mat4.translate(mat, mat, [dx * EXTENT, dy * EXTENT, 0]);
             } else if (terrainTileID.canonical.z > tileID.canonical.z) {
                 const dz = terrainTileID.canonical.z - tileID.canonical.z;
+                // this translation is needed to project tileID to terrainTileID zoom level
                 const dx = terrainTileID.canonical.x - (terrainTileID.canonical.x >> dz << dz);
                 const dy = terrainTileID.canonical.y - (terrainTileID.canonical.y >> dz << dz);
-                const size = EXTENT >> dz;
-                mat4.ortho(mat, 0, size, size, 0, 0, 1); // Note: we are using `size` instead of `EXTENT` here
-                mat4.translate(mat, mat, [-dx * size, -dy * size, 0]);
-
+                // this translation is needed if terrainTileID is not a parent of tileID
                 const dx2 = tileID.canonical.x - (terrainTileID.canonical.x >> dz);
                 const dy2 = tileID.canonical.y - (terrainTileID.canonical.y >> dz);
-                mat4.translate(mat, mat, [dx2 * EXTENT, dy2 * EXTENT, 0]);
+
+                const size = EXTENT >> dz;
+                mat4.ortho(mat, 0, size, size, 0, 0, 1);
+                mat4.translate(mat, mat, [-dx * size + dx2 * EXTENT, -dy * size + dy2 * EXTENT, 0]);
             } else { // terrainTileID.canonical.z < tileID.canonical.z
                 const dz = tileID.canonical.z - terrainTileID.canonical.z;
                 const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
