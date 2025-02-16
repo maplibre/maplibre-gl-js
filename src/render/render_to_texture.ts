@@ -85,8 +85,7 @@ export class RenderToTexture {
 
         this._coordsAscending = {};
         for (const id in style.sourceCaches) {
-            const source = style.sourceCaches[id].getSource();
-            const forceRenderOnAllTerrainTiles = source.type === 'image';
+            const forceRenderOnAllTerrainTiles = style.sourceCaches[id].type === 'image';
             this._coordsAscending[id] = {};
             const tileIDs = style.sourceCaches[id].getVisibleCoordinates();
             for (const tileID of tileIDs) {

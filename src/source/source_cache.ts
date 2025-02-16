@@ -120,6 +120,10 @@ export class SourceCache extends Evented {
         this._updated = false;
     }
 
+    get type(): string {
+        return this._source.type;
+    }
+
     onAdd(map: Map) {
         this.map = map;
         this._maxTileCacheSize = map ? map._maxTileCacheSize : null;
@@ -291,7 +295,7 @@ export class SourceCache extends Evented {
         tile.timeAdded = browser.now();
         if (previousState === 'expired') tile.refreshedUponExpiration = true;
         this._setTileReloadTimer(id, tile);
-        if (this.getSource().type === 'raster-dem' && tile.dem) this._backfillDEM(tile);
+        if (this.type === 'raster-dem' && tile.dem) this._backfillDEM(tile);
         this._state.initializeTileState(tile, this.map ? this.map.painter : null);
 
         if (!tile.aborted) {
@@ -669,7 +673,7 @@ export class SourceCache extends Evented {
         // parent or child tiles that are *already* loaded.
         const retain = this._updateRetainedTiles(idealTileIDs, zoom);
 
-        if (isRasterType(this._source.type)) {
+        if (isRasterType(this.type)) {
             this._updateCoveredAndRetainedTiles(retain, minCoveringZoom, maxCoveringZoom, zoom, idealTileIDs, terrain);
         }
 
@@ -1034,7 +1038,7 @@ export class SourceCache extends Evented {
             return true;
         }
 
-        if (isRasterType(this._source.type)) {
+        if (isRasterType(this.type)) {
             const now = browser.now();
             for (const id in this._tiles) {
                 const tile = this._tiles[id];
