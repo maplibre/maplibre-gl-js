@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Draw polygon with maplibre-gl-draw</title>
-    <meta property="og:description" content="Use jsr:@birkskyum/maplibre-gl-draw to draw a polygon and Turf.js to calculate its area in square meters." />
+    <title>Draw polygon with mapbox-gl-draw</title>
+    <meta property="og:description" content="Use mapbox-gl-draw to draw a polygon and Turf.js to calculate its area in square meters." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
@@ -31,10 +31,10 @@
         font-size: 13px;
     }
 </style>
-    <script src="https://www.unpkg.com/@mapbox/mapbox-gl-draw@1.4.3/dist/mapbox-gl-draw.js"></script>
+    <script src="https://www.unpkg.com/@mapbox/mapbox-gl-draw@1.5.0/dist/mapbox-gl-draw.js"></script>
     <link
         rel="stylesheet"
-        href="https://www.unpkg.com/@mapbox/mapbox-gl-draw@1.4.3/dist/mapbox-gl-draw.css"
+        href="https://www.unpkg.com/@mapbox/mapbox-gl-draw@1.5.0/dist/mapbox-gl-draw.css"
     />
     <div id="map"></div>
     <div class="calculation-box">
@@ -47,9 +47,11 @@
 
     import * as turf from 'https://esm.sh/@turf/turf@7.1.0';
 
+    MapboxDraw.constants.classes.CANVAS  = 'maplibregl-canvas';
     MapboxDraw.constants.classes.CONTROL_BASE  = 'maplibregl-ctrl';
     MapboxDraw.constants.classes.CONTROL_PREFIX = 'maplibregl-ctrl-';
     MapboxDraw.constants.classes.CONTROL_GROUP = 'maplibregl-ctrl-group';
+    MapboxDraw.constants.classes.ATTRIBUTION = 'maplibregl-ctrl-attrib';
 
     const map = new maplibregl.Map({
         container: 'map', // container id

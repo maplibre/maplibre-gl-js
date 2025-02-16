@@ -16,13 +16,17 @@ export const browser = {
      */
     now,
 
+    frame(abortController: AbortController, fn: (paintStartTimestamp: number) => void, reject: (error: Error) => void): void {
+        const frame = requestAnimationFrame(fn);
+        abortController.signal.addEventListener('abort', () => {
+            cancelAnimationFrame(frame);
+            reject(createAbortError());
+        });
+    },
+
     frameAsync(abortController: AbortController): Promise<number> {
         return new Promise((resolve, reject) => {
-            const frame = requestAnimationFrame(resolve);
-            abortController.signal.addEventListener('abort', () => {
-                cancelAnimationFrame(frame);
-                reject(createAbortError());
-            });
+            this.frame(abortController, resolve, reject);
         });
     },
 
