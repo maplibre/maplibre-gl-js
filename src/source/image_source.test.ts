@@ -7,7 +7,7 @@ import {type FakeServer, fakeServer} from 'nise';
 import {type RequestManager} from '../util/request_manager';
 import {sleep, stubAjaxGetImage} from '../util/test/util';
 import {Tile} from './tile';
-import {OverscaledTileID} from './tile_id';
+import {CanonicalTileID, OverscaledTileID} from './tile_id';
 import {type Texture} from '../render/texture';
 import type {ImageSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
@@ -231,6 +231,22 @@ describe('ImageSource', () => {
         await sleep(0);
 
         expect(missingImagesource.loaded()).toBe(true);
+    });
+
+    describe('isOverlappingTileID', () => {
+        test('returns true for a tile that overlaps the source', () => {
+            const source = createSource({url: '/image.png'});
+            source.setCoordinates([[-180,85.05112877980659], [0,85.05112877980659], [0,0], [-180,0]]);
+            const tileID = new CanonicalTileID(2, 1, 2);
+            expect(source.isOverlappingTileID(tileID)).toBe(true);
+        });
+
+        test('returns false for a tile that does not overlap the source', () => {
+            const source = createSource({url: '/image.png'});
+            source.setCoordinates([[-180,85.05112877980659], [0,85.05112877980659], [0,0], [-180,0]]);
+            const tileID = new CanonicalTileID(2, 3, 3);
+            expect(source.isOverlappingTileID(tileID)).toBe(false);
+        });
     });
 });
 

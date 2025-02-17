@@ -294,6 +294,14 @@ export class ImageSource extends Evented implements Source {
     hasTransition() {
         return false;
     }
+
+    isOverlappingTileID(tileID: CanonicalTileID) {
+        return this._overlappingTiles[tileID.z] &&
+            tileID.x >= this._overlappingTiles[tileID.z].minX &&
+            tileID.x <= this._overlappingTiles[tileID.z].maxX &&
+            tileID.y >= this._overlappingTiles[tileID.z].minY &&
+            tileID.y <= this._overlappingTiles[tileID.z].maxY;
+    }
 }
 
 /**
