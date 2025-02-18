@@ -71,7 +71,7 @@
     "@types/pixelmatch": "^5.2.6",
     "@types/pngjs": "^6.0.5",
     "@types/react": "^19.0.10",
-    "@types/react-dom": "^19.0.3",
+    "@types/react-dom": "^19.0.4",
     "@types/request": "^2.48.12",
     "@types/shuffle-seed": "^1.1.3",
     "@types/window-or-global": "^1.0.6",
