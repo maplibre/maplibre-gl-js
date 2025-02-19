@@ -129,7 +129,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         tr.setZoom(oldZoom + getZoomAdjustment(oldCenterLat, tr.center.lat));
     }
 
-    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, _preZoomAroundLoc: LngLat): void {
+    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, _preZoomAroundLoc: LngLat, fixedBearing): void {
         if (!deltas.panDelta) {
             return;
         }
@@ -137,7 +137,8 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         if (!tr.isPointOnMapSurface(deltas.around)) {
             return;
         }
-        tr.setLocationAtPoint(_preZoomAroundLoc, deltas.around, false);
+        console.log(fixedBearing);
+        tr.setLocationAtPoint(_preZoomAroundLoc, deltas.around, fixedBearing);
     }
 
     cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {

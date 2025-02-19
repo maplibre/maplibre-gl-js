@@ -735,14 +735,14 @@ export class VerticalPerspectiveTransform implements ITransform {
      * Note: automatically adjusts zoom to keep planet size consistent
      * (same size before and after a {@link setLocationAtPoint} call).
      */
-    setLocationAtPoint(lngLat: LngLat, point: Point, keepBearingFixed = true): void {
+    setLocationAtPoint(lngLat: LngLat, point: Point, fixedBearing = true): void {
         // This returns some fake coordinates for pixels that do not lie on the planet.
         // Whatever uses this `setLocationAtPoint` function will need to account for that.
         const pointLngLat = this.unprojectScreenPoint(point);
         const vecToPixelCurrent = angularCoordinatesToSurfaceVector(pointLngLat);
         const vecToTarget = angularCoordinatesToSurfaceVector(lngLat);
 
-        if (keepBearingFixed) {
+        if (fixedBearing) {
             const zero = createVec3f64();
             vec3.zero(zero);
 

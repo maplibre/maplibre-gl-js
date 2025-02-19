@@ -41,8 +41,8 @@ export class GlobeCameraHelper implements ICameraHelper {
         return this.currentHelper.handleMapControlsRollPitchBearingZoom(deltas, tr);
     }
 
-    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void {
-        this.currentHelper.handleMapControlsPan(deltas, tr, preZoomAroundLoc);
+    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat, fixedBearing: boolean): void {
+        this.currentHelper.handleMapControlsPan(deltas, tr, preZoomAroundLoc, fixedBearing);
     }
 
     cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
