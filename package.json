@@ -111,7 +111,7 @@
     "pdf-merger-js": "^5.1.2",
     "pixelmatch": "^6.0.0",
     "pngjs": "^7.0.0",
-    "postcss": "^8.5.2",
+    "postcss": "^8.5.3",
     "postcss-cli": "^11.0.0",
     "postcss-inline-svg": "^6.0.0",
     "pretty-bytes": "^6.1.1",
