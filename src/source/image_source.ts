@@ -1,4 +1,4 @@
-import {CanonicalTileID} from './tile_id';
+import {CanonicalTileID, type CanonicalTileRange} from './tile_id';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {ImageRequest} from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
@@ -37,13 +37,6 @@ export type UpdateImageOptions = {
      * The image coordinates
      */
     coordinates?: Coordinates;
-};
-
-type CanonicalTileRange = {
-    minX: number;
-    minY: number;
-    maxX: number;
-    maxY: number;
 };
 
 /**
@@ -109,7 +102,7 @@ export class ImageSource extends Evented implements Source {
     flippedWindingOrder: boolean = false;
     _loaded: boolean;
     _request: AbortController;
-    _overlappingTiles: {[zoom: string]: CanonicalTileRange};
+    _terrainTileRanges: {[zoom: string]: CanonicalTileRange};
 
     /** @internal */
     constructor(id: string, options: ImageSourceSpecification | VideoSourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
@@ -224,7 +217,7 @@ export class ImageSource extends Evented implements Source {
 
         // Compute tiles overlapping with the image. We need to know for which
         // terrain tiles we have to render the image.
-        this._overlappingTiles = getOverlappingTileRanges(cornerCoords);
+        this._terrainTileRanges = getOverlappingTileRanges(cornerCoords);
 
         // Constrain min/max zoom to our tile's zoom level in order to force
         // SourceCache to request this tile (no matter what the map's zoom
@@ -276,6 +269,7 @@ export class ImageSource extends Evented implements Source {
         // If the world wraps, we may have multiple "wrapped" copies of the
         // single tile.
         if (this.tileID && this.tileID.equals(tile.tileID.canonical)) {
+            tile.tileID.terrainTileRanges = this._terrainTileRanges;
             this.tiles[String(tile.tileID.wrap)] = tile;
             tile.buckets = {};
         } else {
@@ -293,14 +287,6 @@ export class ImageSource extends Evented implements Source {
 
     hasTransition() {
         return false;
-    }
-
-    isOverlappingTileID(tileID: CanonicalTileID) {
-        return this._overlappingTiles[tileID.z] &&
-            tileID.x >= this._overlappingTiles[tileID.z].minX &&
-            tileID.x <= this._overlappingTiles[tileID.z].maxX &&
-            tileID.y >= this._overlappingTiles[tileID.z].minY &&
-            tileID.y <= this._overlappingTiles[tileID.z].maxY;
     }
 }
 

@@ -8,6 +8,13 @@ import {type ICanonicalTileID, type IMercatorCoordinate} from '@maplibre/maplibr
 import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util';
 import {isInBoundsForTileZoomXY} from '../util/world_bounds';
 
+export type CanonicalTileRange = {
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
+};
+
 /**
  * A canonical way to define a tile ID
  */
@@ -96,6 +103,7 @@ export class OverscaledTileID {
      * The matrix should be float32 in order to avoid slow WebGL calls in Chrome.
      */
     terrainRttPosMatrix32f: mat4 | null = null;
+    terrainTileRanges: {[zoom: string]: CanonicalTileRange};
 
     constructor(overscaledZ: number, wrap: number, z: number, x: number, y: number) {
         if (overscaledZ < z) throw new Error(`overscaledZ should be >= z; overscaledZ = ${overscaledZ}; z = ${z}`);
@@ -204,6 +212,14 @@ export class OverscaledTileID {
 
     getTilePoint(coord: MercatorCoordinate) {
         return this.canonical.getTilePoint(new MercatorCoordinate(coord.x - this.wrap, coord.y));
+    }
+
+    isOverlappingTerrainTile(tileID: OverscaledTileID): boolean {
+        return this.terrainTileRanges[tileID.canonical.z] &&
+            tileID.canonical.x >= this.terrainTileRanges[tileID.canonical.z].minX &&
+            tileID.canonical.x <= this.terrainTileRanges[tileID.canonical.z].maxX &&
+            tileID.canonical.y >= this.terrainTileRanges[tileID.canonical.z].minY &&
+            tileID.canonical.y <= this.terrainTileRanges[tileID.canonical.z].maxY;
     }
 }
 

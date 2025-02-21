@@ -146,6 +146,8 @@ export class TerrainSourceCache extends Evented {
      * @returns the tiles that were found
      */
     getTerrainCoords(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
+        if (tileID.terrainTileRanges) return this.getAllTerrainCoords(tileID);
+
         const coords = {};
         for (const key of this._renderableTilesKeys) {
             const terrainTileID = this._tiles[key].tileID;
@@ -188,6 +190,10 @@ export class TerrainSourceCache extends Evented {
         const coords = {};
         for (const key of this._renderableTilesKeys) {
             const terrainTileID = this._tiles[key].tileID;
+            if (!tileID.isOverlappingTerrainTile(terrainTileID)) {
+                continue;
+            }
+
             const coord = tileID.clone();
             const mat = createMat4f64();
             if (terrainTileID.canonical.z === tileID.canonical.z) {
