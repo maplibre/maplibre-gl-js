@@ -219,6 +219,22 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(10, 0, 10, 511, 512),
                 new OverscaledTileID(10, 0, 10, 512, 512)]);
     
+            transform.resize(2048, 128);
+            transform.setZoom(9);
+            transform.setPadding({top: 16});
+            expect(coveringTiles(transform, options)).toEqual([
+                new OverscaledTileID(9, 0, 9, 255, 255),
+                new OverscaledTileID(9, 0, 9, 256, 255),
+                new OverscaledTileID(9, 0, 9, 255, 256),
+                new OverscaledTileID(9, 0, 9, 256, 256),
+                new OverscaledTileID(9, 0, 9, 254, 255),
+                new OverscaledTileID(9, 0, 9, 254, 256),
+                new OverscaledTileID(9, 0, 9, 257, 255),
+                new OverscaledTileID(9, 0, 9, 257, 256),
+                new OverscaledTileID(9, 0, 9, 253, 255),
+                new OverscaledTileID(9, 0, 9, 253, 256)]);
+    
+            transform.setPadding({top: 0});
             transform.setZoom(5.1);
             transform.setPitch(60.0);
             transform.setBearing(32.0);
