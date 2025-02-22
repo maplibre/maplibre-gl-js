@@ -232,6 +232,14 @@ describe('ImageSource', () => {
 
         expect(missingImagesource.loaded()).toBe(true);
     });
+
+    test('set terrainTileRanges on loadTile', () => {
+        const source = createSource({url: '/image.png'});
+        source.setCoordinates([[0, 0], [45, 0], [45, 45], [0, 45]]);
+        const tile = new Tile(new OverscaledTileID(2, 0, 2, 2, 1), 512);
+        source.loadTile(tile);
+        expect(tile.tileID.terrainTileRanges).toBeDefined();
+    });
 });
 
 describe('getOverlappingTileRanges', () => {

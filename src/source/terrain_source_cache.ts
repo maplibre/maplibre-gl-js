@@ -146,9 +146,24 @@ export class TerrainSourceCache extends Evented {
      * @returns the tiles that were found
      */
     getTerrainCoords(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
-        if (tileID.terrainTileRanges) return this.getAllTerrainCoords(tileID);
+        if (tileID.terrainTileRanges) {
+            return this._getTerrainCoordsForOversizedTile(tileID);
+        } else {
+            return this._getTerrainCoordsForRegularTile(tileID);
+        }
+    }
 
-        const coords = {};
+    /**
+     * Searches for the corresponding current renderable terrain-tiles.
+     * Includes terrain tiles that are either:
+     * - the same as the tileID
+     * - a parent of the tileID
+     * - a child of the tileID
+     * @param tileID - the tile to look for
+     * @returns the tiles that were found
+     */
+    private _getTerrainCoordsForRegularTile(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
+        const coords: Record<string, OverscaledTileID> = {};
         for (const key of this._renderableTilesKeys) {
             const terrainTileID = this._tiles[key].tileID;
             const coord = tileID.clone();
@@ -180,14 +195,13 @@ export class TerrainSourceCache extends Evented {
     }
 
     /**
-     * Get all renderable terrain-tiles
+     * Searches for the corresponding current renderable terrain-tiles.
+     * Includes terrain tiles that are within terrain tile ranges of the tileID.
      * @param tileID - the tile to look for
      * @returns the tiles that were found
      */
-    getAllTerrainCoords(
-        tileID: OverscaledTileID
-    ): Record<string, OverscaledTileID> {
-        const coords = {};
+    private _getTerrainCoordsForOversizedTile(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
+        const coords: Record<string, OverscaledTileID> = {};
         for (const key of this._renderableTilesKeys) {
             const terrainTileID = this._tiles[key].tileID;
             if (!tileID.isOverlappingTerrainTile(terrainTileID)) {

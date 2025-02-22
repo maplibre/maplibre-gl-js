@@ -103,6 +103,10 @@ export class OverscaledTileID {
      * The matrix should be float32 in order to avoid slow WebGL calls in Chrome.
      */
     terrainRttPosMatrix32f: mat4 | null = null;
+    /**
+     * This object is used to store the range of terrain tiles that overlap with this tile.
+     * It is relevant for image tiles, as the image exceeds single tile boundaries.
+     */
     terrainTileRanges: {[zoom: string]: CanonicalTileRange};
 
     constructor(overscaledZ: number, wrap: number, z: number, x: number, y: number) {
