@@ -10,6 +10,7 @@ vi.mock('../../util/geolocation_support', () => (
 ));
 import {checkGeolocationSupport} from '../../util/geolocation_support';
 import type {LngLat} from '../../geo/lng_lat';
+import {distance} from '@turf/distance';
 
 /**
  * Convert the coordinates of a LngLat object to a fixed number of digits
@@ -494,7 +495,6 @@ describe('GeolocateControl with no options', () => {
         expect(geolocate._watchState).toBe('BACKGROUND');
     });
 
-    /*
     test('accuracy circle not shown if showAccuracyCircle = false', async () => {
         const geolocate = new GeolocateControl({
             trackUserLocation: true,
@@ -515,11 +515,9 @@ describe('GeolocateControl with no options', () => {
         const zoomendPromise = map.once('zoomend');
         map.zoomTo(10, {duration: 0});
         await zoomendPromise;
-        expect(!geolocate._circleElement.style.width).toBeTruthy();
+        expect(geolocate._accuracyCirclePolygon).toBeFalsy();
     });
-    */
 
-    /*
     test('accuracy circle radius matches reported accuracy', async () => {
         const geolocate = new GeolocateControl({
             trackUserLocation: true,
@@ -533,7 +531,7 @@ describe('GeolocateControl with no options', () => {
         geolocate._geolocateButton.dispatchEvent(click);
         geolocation.send({latitude: 10, longitude: 20, accuracy: 700});
         await geolocatePromise;
-        expect(geolocate._accuracyCircleMarker._map).toBeTruthy();
+        expect(geolocate._userLocationDotMarker._map).toBeTruthy();
         expect(geolocate._accuracy).toBe(700);
         map.jumpTo({
             center: [10, 20]
@@ -543,26 +541,24 @@ describe('GeolocateControl with no options', () => {
         let zoomendPromise = map.once('zoomend');
         map.zoomTo(12, {duration: 0});
         await zoomendPromise;
-        expect(geolocate._circleElement.style.width).toBe('79px');
+        expect(geolocate._accuracyCirclePolygon.geometry.coordinates[0].length).toBe(65);
         zoomendPromise = map.once('zoomend');
         map.zoomTo(10, {duration: 0});
         await zoomendPromise;
-        expect(geolocate._circleElement.style.width).toBe('20px');
+        expect(distance(geolocate._accuracyCirclePolygon.geometry.coordinates[0][0], geolocate._accuracyCirclePolygon.geometry.coordinates[0][32])).toBeCloseTo(1.4, 10);
         zoomendPromise = map.once('zoomend');
 
         // test with smaller radius
         geolocation.send({latitude: 10, longitude: 20, accuracy: 20});
         map.zoomTo(20, {duration: 0});
         await zoomendPromise;
-        expect(geolocate._circleElement.style.width).toBe('19982px');
+        expect(distance(geolocate._accuracyCirclePolygon.geometry.coordinates[0][0], geolocate._accuracyCirclePolygon.geometry.coordinates[0][32])).toBeCloseTo(1.4, 10);
         zoomendPromise = map.once('zoomend');
         map.zoomTo(18, {duration: 0});
         await zoomendPromise;
-        expect(geolocate._circleElement.style.width).toBe('4996px');
+        expect(distance(geolocate._accuracyCirclePolygon.geometry.coordinates[0][0], geolocate._accuracyCirclePolygon.geometry.coordinates[0][32])).toBeCloseTo(1.4, 10);
     });
-    */
 
-    /*
     test('shown even if trackUserLocation = false', async () => {
         const geolocate = new GeolocateControl({
             trackUserLocation: false,
@@ -583,34 +579,8 @@ describe('GeolocateControl with no options', () => {
         const zoomendPromise = map.once('zoomend');
         map.zoomTo(10, {duration: 0});
         await zoomendPromise;
-        expect(geolocate._circleElement.style.width).toBeTruthy();
+        expect(geolocate._accuracyCirclePolygon.geometry.coordinates[0][0]).toBeTruthy();
     });
-    */
-
-    /*
-    test('shown even if trackUserLocation = false', async () => {
-        const geolocate = new GeolocateControl({
-            trackUserLocation: false,
-            showUserLocation: true,
-            showAccuracyCircle: true,
-        });
-        map.addControl(geolocate);
-        await sleep(0);
-        const click = new window.Event('click');
-
-        const geolocatePromise = geolocate.once('geolocate');
-        geolocate._geolocateButton.dispatchEvent(click);
-        geolocation.send({latitude: 10, longitude: 20, accuracy: 700});
-        await geolocatePromise;
-        map.jumpTo({
-            center: [10, 20]
-        });
-        const zoomendPromise = map.once('zoomend');
-        map.zoomTo(10, {duration: 0});
-        await zoomendPromise;
-        expect(geolocate._circleElement.style.width).toBeTruthy();
-    });
-    */
 
     test('Geolocate control should appear only once', async () => {
         const geolocateControl = new GeolocateControl({});

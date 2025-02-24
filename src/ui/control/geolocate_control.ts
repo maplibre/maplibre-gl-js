@@ -10,7 +10,7 @@ import type {FitBoundsOptions} from '../camera';
 import type {IControl} from './control';
 import {LngLatBounds} from '../../geo/lng_lat_bounds';
 
-import * as turf from '@turf/circle';
+import {circle} from '@turf/circle';
 import {type GeoJSONSource} from '../../source/geojson_source';
 
 /**
@@ -456,8 +456,12 @@ export class GeolocateControl extends Evented implements IControl {
             this._accuracy = position.coords.accuracy;
             if (this.options.showUserLocation && this.options.showAccuracyCircle) {
 
-                this._accuracyCirclePolygon = turf.circle([position.coords.longitude, position.coords.latitude],  position.coords.accuracy, {steps: 64,
-                    units: 'meters'});
+                this._accuracyCirclePolygon = circle(
+                    [position.coords.longitude, position.coords.latitude],
+                    position.coords.accuracy,
+                    {
+                        steps: 64, units: 'meters'
+                    });
 
                 if (this._map.getSource('accuracy-circle')) {
                     const geoJSONSource = this._map.getSource('accuracy-circle') as GeoJSONSource;
