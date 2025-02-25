@@ -588,6 +588,11 @@ describe('GeolocateControl with no options', () => {
         map.addControl(geolocateControl);
         // adding and removing to verify there is no race condition, and it is just added once
         map.removeControl(geolocateControl);
+        await map.once('loaded', async () => {
+            const accuracyElementsOnPage = geolocateControl._container
+                .getElementsByClassName('accuracy-circle').length;
+            expect(accuracyElementsOnPage).toBe(0);
+        });
         map.addControl(geolocateControl);
 
         await map.once('idle');
