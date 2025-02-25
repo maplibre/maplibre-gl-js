@@ -15,6 +15,7 @@
 - Avoid setting marker opacity twice. ([#5441](https://github.com/maplibre/maplibre-gl-js/pull/5441))
 
 ### 🐞 Bug fixes
+- Fix location accuracy circle radius when moving view ([#5543](https://github.com/maplibre/maplibre-gl-js/pull/5543))
 - Fix how padding is applied when using flyTo() with Globe ([#5406](https://github.com/maplibre/maplibre-gl-js/pull/5406))
 - Fix URL hash validation to support bearing range -180 to 180 ([#5461](https://github.com/maplibre/maplibre-gl-js/issues/5461))
 - Fix variable zoom tile calculation when padding is set ([#5486](https://github.com/maplibre/maplibre-gl-js/issues/5486))
