@@ -6,7 +6,7 @@
 
 ### 🐞 Bug fixes
 
-- _...Add new stuff here..._
+- Fix AbortController signal listener memory leak in frameAsync and sendAsync.
 
 ## 5.1.1
 
