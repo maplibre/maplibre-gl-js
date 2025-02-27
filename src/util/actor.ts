@@ -45,6 +45,8 @@ export interface IActor {
 
 export type MessageHandler<T extends MessageType> = (mapId: string | number, params: RequestResponseMessageMap[T][0], abortController?: AbortController) => Promise<RequestResponseMessageMap[T][1]>;
 
+const addEventDefaultOptions: AddEventListenerOptions = {once: true};
+
 /**
  * An implementation of the [Actor design pattern](https://en.wikipedia.org/wiki/Actor_model)
  * that maintains the relationship between asynchronous tasks and the objects
@@ -99,24 +101,40 @@ export class Actor implements IActor {
             // message from multiple other actors which could run in different execution context. A
             // linearly increasing ID could produce collisions.
             const id = Math.round((Math.random() * 1e18)).toString(36).substring(0, 10);
-            this.resolveRejects[id] = {
-                resolve,
-                reject
+
+            const handleAbort = () => {
+                abortController.signal.removeEventListener('abort', handleAbort, addEventDefaultOptions);
+                delete this.resolveRejects[id];
+                const cancelMessage: MessageData = {
+                    id,
+                    type: '<cancel>',
+                    origin: location.origin,
+                    targetMapId: message.targetMapId,
+                    sourceMapId: this.mapId
+                };
+                this.target.postMessage(cancelMessage);
+                // In case of abort the current behavior is to keep the promise pending.
             };
+
             if (abortController) {
-                abortController.signal.addEventListener('abort', () => {
-                    delete this.resolveRejects[id];
-                    const cancelMessage: MessageData = {
-                        id,
-                        type: '<cancel>',
-                        origin: location.origin,
-                        targetMapId: message.targetMapId,
-                        sourceMapId: this.mapId
-                    };
-                    this.target.postMessage(cancelMessage);
-                    // In case of abort the current behavior is to keep the promise pending.
-                }, {once: true});
+                abortController.signal.addEventListener('abort',handleAbort , addEventDefaultOptions);
             }
+
+            this.resolveRejects[id] = {
+                resolve: (value) => {
+                    if(abortController){
+                        abortController.signal.removeEventListener('abort', handleAbort, addEventDefaultOptions);
+                    }
+                    resolve(value);
+                },
+                reject: (reason)=> {
+                    if(abortController) {
+                        abortController.signal.removeEventListener('abort', handleAbort, addEventDefaultOptions);
+                    }
+                    reject(reason);
+                }
+            };
+
             const buffers: Array<Transferable> = [];
             const messageToPost: MessageData = {
                 ...message,
