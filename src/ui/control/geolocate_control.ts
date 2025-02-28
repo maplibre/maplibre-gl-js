@@ -12,6 +12,7 @@ import {LngLatBounds} from '../../geo/lng_lat_bounds';
 
 import {circle} from '@turf/circle';
 import {type GeoJSONSource} from '../../source/geojson_source';
+import {type Polygon, type Feature} from 'geojson';
 
 /**
  * The {@link GeolocateControl} options object
@@ -267,7 +268,7 @@ export class GeolocateControl extends Evented implements IControl {
     _watchState: 'OFF' | 'ACTIVE_LOCK' | 'WAITING_ACTIVE' | 'ACTIVE_ERROR' | 'BACKGROUND' | 'BACKGROUND_ERROR';
     _lastKnownPosition: any;
     _userLocationDotMarker: Marker;
-    _accuracyCirclePolygon: any;
+    _accuracyCirclePolygon: Feature<Polygon>;
     _accuracy: number;
     _setup: boolean; // set to true once the control has been setup
 
