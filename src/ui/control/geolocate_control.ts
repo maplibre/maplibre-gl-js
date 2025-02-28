@@ -10,9 +10,9 @@ import type {FitBoundsOptions} from '../camera';
 import type {IControl} from './control';
 import {LngLatBounds} from '../../geo/lng_lat_bounds';
 
-import {circle} from '@turf/circle';
 import {type GeoJSONSource} from '../../source/geojson_source';
 import {type Polygon, type Feature} from 'geojson';
+import {circle} from "../../util/circle";
 
 /**
  * The {@link GeolocateControl} options object
