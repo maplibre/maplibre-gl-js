@@ -7,7 +7,8 @@
 
 ### 🐞 Bug fixes
 
-- Fix AbortController signal listener memory leak in frameAsync and sendAsync.
+- Fix AbortController signal listener memory leak in frameAsync and sendAsync. ([#5561](https://github.com/maplibre/maplibre-gl-js/pull/5561))
+- Remove closeButton event listener on popup.remove(). ([#5564](https://github.com/maplibre/maplibre-gl-js/pull/5564))
 
 ## 5.1.1
 
