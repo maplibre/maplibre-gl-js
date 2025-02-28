@@ -5,21 +5,30 @@ describe('browser', () => {
     describe('frame',() => {
         let originalRAF: typeof window.requestAnimationFrame;
         let originalCAF: typeof window.cancelAnimationFrame;
+        let rafCallbacks: Array<{id: number; callback: FrameRequestCallback}> = [];
+        let rafIdCounter = 0;
+
+        /** Mimic scheduling RAFs for later */
+        function flushAllRAFs() {
+            const pending = [...rafCallbacks];
+            rafCallbacks = [];
+            pending.forEach(({callback}) => callback(performance.now()));
+        }
 
         beforeEach(() => {
             originalRAF = window.requestAnimationFrame;
             originalCAF = window.cancelAnimationFrame;
-
-            vi.spyOn(window, 'requestAnimationFrame').mockImplementation(
-                (cb: FrameRequestCallback) => {
-                    const id = 123;
-                    // Call cb immediately
-                    cb(performance.now());
-                    return id;
-                }
-            );
-
-            vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {});
+            rafCallbacks = [];
+            rafIdCounter = 0;
+            vi.spyOn(window, 'requestAnimationFrame').mockImplementation(cb => {
+                rafIdCounter++;
+                const id = rafIdCounter;
+                rafCallbacks.push({id, callback: cb});
+                return id;
+            });
+            vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(id => {
+                rafCallbacks = rafCallbacks.filter(entry => entry.id !== id);
+            });
         });
 
         afterEach(() => {
@@ -40,6 +49,8 @@ describe('browser', () => {
 
             expect(window.requestAnimationFrame).toHaveBeenCalledTimes(1);
 
+            flushAllRAFs();
+
             expect(fn).toHaveBeenCalledTimes(1);
             const callArg = fn.mock.calls[0][0];
             expect(typeof callArg).toBe('number');
@@ -48,8 +59,8 @@ describe('browser', () => {
             expect(reject).not.toHaveBeenCalled();
 
             // cleanup leftover listeners
-            expect(addListenerSpy).toHaveBeenCalledWith('abort', expect.any(Function));
-            expect(removeListenerSpy).toHaveBeenCalledWith('abort', expect.any(Function));
+            expect(addListenerSpy).toHaveBeenCalledWith('abort', expect.any(Function), false);
+            expect(removeListenerSpy).toHaveBeenCalledWith('abort', expect.any(Function), false);
         });
 
         test('when AbortController is aborted before frame fires, calls cancelAnimationFrame and reject', () => {
@@ -87,8 +98,8 @@ describe('browser', () => {
             expect(fn).not.toHaveBeenCalled();
 
             // cleanup leftover listeners
-            expect(addListenerSpy).toHaveBeenCalledWith('abort', expect.any(Function));
-            expect(removeListenerSpy).toHaveBeenCalledWith('abort', expect.any(Function));
+            expect(addListenerSpy).toHaveBeenCalledWith('abort', expect.any(Function), false);
+            expect(removeListenerSpy).toHaveBeenCalledWith('abort', expect.any(Function), false);
         });
 
         test('when AbortController is aborted after frame fires, fn is invoked anyway', () => {
@@ -100,6 +111,8 @@ describe('browser', () => {
             const reject = vi.fn();
 
             browser.frame(abortController, fn, reject);
+
+            flushAllRAFs();
 
             // The callback should have already been called
             expect(fn).toHaveBeenCalledTimes(1);
@@ -114,8 +127,8 @@ describe('browser', () => {
             expect(reject).not.toHaveBeenCalled();
 
             // cleanup leftover listeners
-            expect(addListenerSpy).toHaveBeenCalledWith('abort', expect.any(Function));
-            expect(removeListenerSpy).toHaveBeenCalledWith('abort', expect.any(Function));
+            expect(addListenerSpy).toHaveBeenCalledWith('abort', expect.any(Function), false);
+            expect(removeListenerSpy).toHaveBeenCalledWith('abort', expect.any(Function), false);
         });
     });
 

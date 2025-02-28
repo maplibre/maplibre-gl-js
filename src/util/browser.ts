@@ -1,4 +1,5 @@
 import {createAbortError} from './abort_error';
+import {subscribe} from "./util";
 
 const now = typeof performance !== 'undefined' && performance && performance.now ?
     performance.now.bind(performance) :
@@ -17,33 +18,18 @@ export const browser = {
     now,
 
     frame(abortController: AbortController, fn: (paintStartTimestamp: number) => void, reject: (error: Error) => void): void {
-        let isRAFCalled = false;
-        let isAbortCalled = false;
-
-        const handleAbort = () => {
-            isAbortCalled = true;
-
-            if(isRAFCalled){
-                return;
-            }
-
-            abortController.signal.removeEventListener('abort', handleAbort);
-            cancelAnimationFrame(frame);
-            reject(createAbortError());
-        };
-
-        const frame = requestAnimationFrame((paintStartTimestamp)=>{
-            isRAFCalled = true;
-
-            if(isAbortCalled){
-                return;
-            }
-
-            abortController.signal.removeEventListener('abort', handleAbort);
+        const frameId = requestAnimationFrame((paintStartTimestamp)=>{
+            unsubscribe();
             fn(paintStartTimestamp);
         });
 
-        abortController.signal.addEventListener('abort', handleAbort);
+        const handleAbort = () => {
+            unsubscribe();
+            cancelAnimationFrame(frameId);
+            reject(createAbortError());
+        };
+
+        const {unsubscribe} = subscribe(abortController.signal, 'abort', handleAbort, false);
     },
 
     frameAsync(abortController: AbortController): Promise<number> {

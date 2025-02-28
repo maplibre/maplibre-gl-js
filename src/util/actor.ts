@@ -103,7 +103,7 @@ export class Actor implements IActor {
             const id = Math.round((Math.random() * 1e18)).toString(36).substring(0, 10);
 
             const handleAbort = () => {
-                abortController.signal.removeEventListener('abort', handleAbort, addEventDefaultOptions);
+                subscription && subscription.unsubscribe();
                 delete this.resolveRejects[id];
                 const cancelMessage: MessageData = {
                     id,
@@ -116,21 +116,15 @@ export class Actor implements IActor {
                 // In case of abort the current behavior is to keep the promise pending.
             };
 
-            if (abortController) {
-                abortController.signal.addEventListener('abort',handleAbort , addEventDefaultOptions);
-            }
+            const subscription =  abortController ? subscribe(abortController.signal, 'abort', handleAbort, addEventDefaultOptions) : null;
 
             this.resolveRejects[id] = {
                 resolve: (value) => {
-                    if(abortController){
-                        abortController.signal.removeEventListener('abort', handleAbort, addEventDefaultOptions);
-                    }
+                    subscription && subscription.unsubscribe();
                     resolve(value);
                 },
                 reject: (reason)=> {
-                    if(abortController) {
-                        abortController.signal.removeEventListener('abort', handleAbort, addEventDefaultOptions);
-                    }
+                    subscription && subscription.unsubscribe();
                     reject(reason);
                 }
             };
