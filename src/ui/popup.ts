@@ -252,6 +252,11 @@ export class Popup extends Evented {
             delete this._container;
         }
 
+        if (this._tip){
+            DOM.remove(this._tip);
+            delete this._tip;
+        }
+
         if (this._map) {
             this._map.off('move', this._update);
             this._map.off('move', this._onClose);

@@ -498,6 +498,21 @@ describe('popup', () => {
         expect(map.getContainer().querySelectorAll('.maplibregl-popup')).toHaveLength(1);
     });
 
+    test('Popup remove() clears _tip reference', () => {
+        const map = createMap();
+
+        const popup = new Popup()
+            .setText('Test')
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        expect(popup._tip).toBeDefined();
+
+        popup.remove();
+
+        expect(popup._tip).toBeUndefined();
+    });
+
     test('Popup#addTo is idempotent (#1811)', () => {
         const map = createMap();
 
