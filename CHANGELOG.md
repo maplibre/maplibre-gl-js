@@ -1,13 +1,5 @@
 ## main
 
-### 🐞 Bug fixes
-
-- _...Add new stuff here..._
-
-### ✨ Features and improvements
-
-- _...Add new stuff here..._
-
 ### ✨ Features and improvements
 
 - Allow opacity to be set when location becomes invisible in the globe projection. ([#5532](https://github.com/maplibre/maplibre-gl-js/pull/5532))
