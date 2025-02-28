@@ -17,19 +17,35 @@ export const browser = {
     now,
 
     frame(abortController: AbortController, fn: (paintStartTimestamp: number) => void, reject: (error: Error) => void): void {
+        let isRAFCalled = false;
+        let isAbortCalled = false;
+
         const handleAbort = () => {
+            isAbortCalled = true;
+
+            if(isRAFCalled){
+                return;
+            }
+
             abortController.signal.removeEventListener('abort', handleAbort);
             cancelAnimationFrame(frame);
             reject(createAbortError());
         };
 
         const frame = requestAnimationFrame((paintStartTimestamp)=>{
+            isRAFCalled = true;
+
+            if(isAbortCalled){
+                return;
+            }
+
             abortController.signal.removeEventListener('abort', handleAbort);
             fn(paintStartTimestamp);
         });
 
         abortController.signal.addEventListener('abort', handleAbort);
     },
+
     frameAsync(abortController: AbortController): Promise<number> {
         return new Promise((resolve, reject) => {
             this.frame(abortController, resolve, reject);
