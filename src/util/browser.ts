@@ -23,13 +23,11 @@ export const browser = {
             fn(paintStartTimestamp);
         });
 
-        const handleAbort = () => {
+        const {unsubscribe} = subscribe(abortController.signal, 'abort', () => {
             unsubscribe();
             cancelAnimationFrame(frameId);
             reject(createAbortError());
-        };
-
-        const {unsubscribe} = subscribe(abortController.signal, 'abort', handleAbort, false);
+        }, false);
     },
 
     frameAsync(abortController: AbortController): Promise<number> {

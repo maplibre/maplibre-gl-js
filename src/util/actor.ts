@@ -102,8 +102,8 @@ export class Actor implements IActor {
             // linearly increasing ID could produce collisions.
             const id = Math.round((Math.random() * 1e18)).toString(36).substring(0, 10);
 
-            const handleAbort = () => {
-                subscription && subscription.unsubscribe();
+            const subscription =  abortController ? subscribe(abortController.signal, 'abort', () => {
+                subscription?.unsubscribe();
                 delete this.resolveRejects[id];
                 const cancelMessage: MessageData = {
                     id,
@@ -114,17 +114,15 @@ export class Actor implements IActor {
                 };
                 this.target.postMessage(cancelMessage);
                 // In case of abort the current behavior is to keep the promise pending.
-            };
-
-            const subscription =  abortController ? subscribe(abortController.signal, 'abort', handleAbort, addEventDefaultOptions) : null;
+            }, addEventDefaultOptions) : null;
 
             this.resolveRejects[id] = {
                 resolve: (value) => {
-                    subscription && subscription.unsubscribe();
+                    subscription?.unsubscribe();
                     resolve(value);
                 },
                 reject: (reason)=> {
-                    subscription && subscription.unsubscribe();
+                    subscription?.unsubscribe();
                     reject(reason);
                 }
             };
