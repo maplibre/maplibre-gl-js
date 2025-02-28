@@ -7,7 +7,7 @@
 
 ### 🐞 Bug fixes
 
-- _...Add new stuff here..._
+- Remove closeButton event listener on popup.remove().
 
 ## 5.1.1
 

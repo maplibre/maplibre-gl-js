@@ -273,6 +273,10 @@ export class Popup extends Evented {
             delete this._container;
         }
 
+        if(this._closeButton){
+            this._closeButton.removeEventListener('click', this._onClose);
+        }
+
         if (this._map) {
             this._map.off('move', this._update);
             this._map.off('move', this._onClose);
