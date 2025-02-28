@@ -91,7 +91,7 @@ export type PopupOptions = {
     subpixelPositioning?: boolean;
     /**
      * Optional opacity when the location is behind the globe.
-     * If not supplied default to 1. Note the number is converted to a string.
+     * Note that if a number is provided, it will be converted to a string.
      * @defaultValue undefined
      */
     locationOccludedOpacity?: number | string;
