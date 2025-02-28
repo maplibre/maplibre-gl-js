@@ -6,6 +6,79 @@ import {ABORT_ERROR, createAbortError} from './abort_error';
 import {MessageType} from './actor_messages';
 
 describe('Actor', () => {
+    test('removes "abort" event listener from signal on reject', async () => {
+        const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
+
+        worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, () => {
+            return Promise.reject(new Error('some error'));
+        });
+
+        const actor = new Actor(worker, 'test-map-id');
+
+        const abortController = new AbortController();
+        const addSpy = vi.spyOn(abortController.signal, 'addEventListener');
+        const removeSpy = vi.spyOn(abortController.signal, 'removeEventListener');
+
+        await expect(
+            actor.sendAsync({
+                type: MessageType.getClusterExpansionZoom,
+                data: {type: 'geojson', source: '', clusterId: 1729}
+            }, abortController)
+        ).rejects.toThrow('some error');
+
+        expect(addSpy).toHaveBeenCalledTimes(1);
+        expect(removeSpy).toHaveBeenCalledTimes(1);
+        expect(removeSpy).toHaveBeenCalledWith('abort', expect.any(Function), expect.anything());
+    });
+
+    test('removes "abort" event listener from signal on abort', async () => {
+        const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
+
+        worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, () => {
+            return new Promise(() => {});
+        });
+
+        const actor = new Actor(worker, 'test-map-id');
+
+        const abortController = new AbortController();
+        const addSpy = vi.spyOn(abortController.signal, 'addEventListener');
+        const removeSpy = vi.spyOn(abortController.signal, 'removeEventListener');
+
+        actor.sendAsync({
+            type: MessageType.getClusterExpansionZoom,
+            data: {type: 'geojson', source: '', clusterId: 1729}
+        }, abortController);
+
+        expect(addSpy).toHaveBeenCalledTimes(1);
+
+        abortController.abort();
+
+        await sleep(0);
+
+        expect(removeSpy).toHaveBeenCalledTimes(1);
+        expect(removeSpy).toHaveBeenCalledWith('abort', expect.any(Function), expect.anything());
+    });
+
+    test('removes "abort" event listener from signal after request completes', async () => {
+        const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
+        worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, () => Promise.resolve(0));
+
+        const actor = new Actor(worker, 'test-map-id');
+
+        const abortController = new AbortController();
+        const addSpy = vi.spyOn(abortController.signal, 'addEventListener');
+        const removeSpy = vi.spyOn(abortController.signal, 'removeEventListener');
+
+        const result = await actor.sendAsync({
+            type: MessageType.getClusterExpansionZoom,
+            data: {type: 'geojson', source: '', clusterId: 1729}
+        }, abortController);
+
+        expect(result).toBe(0);
+
+        expect(addSpy).toHaveBeenCalledTimes(1);
+        expect(removeSpy).toHaveBeenCalledTimes(1);
+    });
 
     test('forwards responses to correct handler', async () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
