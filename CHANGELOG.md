@@ -3,11 +3,10 @@
 ### ✨ Features and improvements
 
 - Allow opacity to be set when location becomes invisible in the globe projection. ([#5532](https://github.com/maplibre/maplibre-gl-js/pull/5532))
+- _...Add new stuff here..._
 
-### ✨ Features and improvements
+### 🐞 Bug fixes
 
-- Avoid setting marker opacity twice. ([#5441](https://github.com/maplibre/maplibre-gl-js/pull/5441))
-- Fix rendering Japanese symbols which are accidentally ignored. ([#5421](https://github.com/maplibre/maplibre-gl-js/pull/5421)
 - _...Add new stuff here..._
 
 ## 5.1.1
