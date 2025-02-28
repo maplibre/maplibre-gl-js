@@ -1,6 +1,6 @@
 import {extend} from '../util/util';
 import {Event, Evented} from '../util/evented';
-import {type MapMouseEvent} from '../ui/events';
+import {type MapMouseEvent} from './events';
 import {DOM} from '../util/dom';
 import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
@@ -243,7 +243,7 @@ export class Popup extends Evented {
         if (this._map.transform.isLocationOccluded(this.getLngLat())) {
             this._container.style.opacity = `${this.options.locationOccludedOpacity}`;
         } else {
-            this._container.style.opacity = '';
+            this._container.style.opacity = undefined;
         }
     };
 

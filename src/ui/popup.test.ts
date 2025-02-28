@@ -833,12 +833,11 @@ describe('popup', () => {
             .setText('Test')
             .addTo(map);
 
-        await map.once('load', () => {
-            map.setProjection({
-                type: 'globe'
-            });
-            map.setCenter([180, 0]);
-            expect(popup.getElement().style.opacity).toBe('0.2');
+        await map.once('load');
+        map.setProjection({
+            type: 'globe'
         });
+        map.setCenter([180, 0]);
+        expect(popup.getElement().style.opacity).toBe('0.2');
     });
 });
