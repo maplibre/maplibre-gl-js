@@ -106,4 +106,21 @@ describe('OverscaledTileID', () => {
         ).toBeFalsy();
     });
 
+    test('.isOverlappingTerrainTile', () => {
+        const tile = new OverscaledTileID(2, 0, 2, 0, 0);
+        tile.terrainTileRanges = {
+            10: {
+                minX: 5,
+                maxX: 10,
+                minY: 5,
+                maxY: 10
+            }
+        };
+        const overlappingTerrainTile = new OverscaledTileID(10, 0, 10, 7, 7);
+        expect(tile.isOverlappingTerrainTile(overlappingTerrainTile)).toBeTruthy();
+        const nonOverlappingTerrainTIle = new OverscaledTileID(10, 0, 10, 11, 11);
+        expect(tile.isOverlappingTerrainTile(nonOverlappingTerrainTIle)).toBeFalsy();
+        const terrainTileFromDifferentZ = new OverscaledTileID(9, 0, 9, 7, 7);
+        expect(tile.isOverlappingTerrainTile(terrainTileFromDifferentZ)).toBeFalsy();
+    });
 });
