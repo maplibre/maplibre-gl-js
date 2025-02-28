@@ -6,7 +6,7 @@
 
 ### 🐞 Bug fixes
 
-- _...Add new stuff here..._
+- Remove _tip DOM node on popup.remove().
 
 ## 5.1.1
 
