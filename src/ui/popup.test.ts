@@ -825,4 +825,19 @@ describe('popup', () => {
 
         expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(0px,1px)');
     });
+    test('Popup changes opacity when location behind globe', async () => {
+        const map = createMap();
+
+        const popup = new Popup({locationOccludedOpacity: 0.2})
+            .setLngLat([0, 0])
+            .setText('Test')
+            .addTo(map);
+
+        await map.once('load');
+        map.setProjection({
+            type: 'globe'
+        });
+        map.setCenter([180, 0]);
+        expect(popup.getElement().style.opacity).toBe('0.2');
+    });
 });
