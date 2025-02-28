@@ -1,5 +1,5 @@
 import {createAbortError} from './abort_error';
-import {subscribe} from "./util";
+import {subscribe} from './util';
 
 const now = typeof performance !== 'undefined' && performance && performance.now ?
     performance.now.bind(performance) :
