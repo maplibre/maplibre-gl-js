@@ -6,7 +6,7 @@
 
 ### 🐞 Bug fixes
 
-- Remove _tip DOM node on popup.remove().
+- Remove closeButton event listener on popup.remove().
 
 ## 5.1.1
 
