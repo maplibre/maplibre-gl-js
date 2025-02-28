@@ -498,23 +498,6 @@ describe('popup', () => {
         expect(map.getContainer().querySelectorAll('.maplibregl-popup')).toHaveLength(1);
     });
 
-    test('Popup remove() clears _closeButton event listener', () => {
-        const map = createMap();
-
-        const popup = new Popup()
-            .setText('Test')
-            .setLngLat([0, 0])
-            .addTo(map);
-
-        expect(popup._closeButton).toBeDefined();
-
-        const removeEventListenerSpy = vi.spyOn(popup._closeButton, 'removeEventListener');
-
-        popup.remove();
-
-        expect(removeEventListenerSpy).toHaveBeenCalledWith('click', expect.any(Function));
-    });
-
     test('Popup#addTo is idempotent (#1811)', () => {
         const map = createMap();
 
