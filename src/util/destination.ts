@@ -5,9 +5,8 @@ import {
     lengthToRadians,
     point,
     radiansToDegrees,
-    type Units,
-} from '@turf/helpers';
-import {getCoord} from '@turf/invariant';
+} from './turf-helpers';
+import {getCoord} from './invariant';
 
 /**
  * Takes a {@link Point} and calculates the location of a destination point given a distance in
@@ -40,7 +39,7 @@ function destination<P extends GeoJsonProperties = GeoJsonProperties>(
     distance: number,
     bearing: number,
     options: {
-        units?: Units;
+        units?: 'meters';
         properties?: P;
     } = {}
 ): Feature<Point, P> {
@@ -69,4 +68,3 @@ function destination<P extends GeoJsonProperties = GeoJsonProperties>(
 }
 
 export {destination};
-export default destination;

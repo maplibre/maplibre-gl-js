@@ -1,5 +1,5 @@
 import {type Feature, type GeoJsonProperties, type Point, type Polygon} from 'geojson';
-import {polygon, type Units} from './turf-helpers';
+import {polygon} from './turf-helpers';
 import {destination} from './destination';
 
 /**
@@ -27,7 +27,7 @@ export function circle<P extends GeoJsonProperties = GeoJsonProperties>(
     radius: number,
     options: {
         steps?: number;
-        units?: Units;
+        units?: 'meters';
         properties?: P;
     } = {}
 ): Feature<Polygon, P> {

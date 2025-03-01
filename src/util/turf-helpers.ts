@@ -13,6 +13,9 @@ import {
  * @module helpers
  */
 
+// TurfJS Combined Types
+export type Coord = Feature<Point> | Point | Position;
+
 type Id = string | number;
 
 /**
@@ -30,19 +33,31 @@ type Id = string | number;
 export type Units =
     | 'meters'
     | 'metres'
-    | 'millimeters'
-    | 'millimetres'
-    | 'centimeters'
-    | 'centimetres'
     | 'kilometers'
     | 'kilometres'
-    | 'miles'
-    | 'nauticalmiles'
-    | 'inches'
-    | 'yards'
-    | 'feet'
-    | 'radians'
     | 'degrees';
+
+/**
+ * The Earth radius in kilometers. Used by Turf modules that model the Earth as a sphere. The {@link https://en.wikipedia.org/wiki/Earth_radius#Arithmetic_mean_radius mean radius} was selected because it is {@link https://rosettacode.org/wiki/Haversine_formula#:~:text=This%20value%20is%20recommended recommended } by the Haversine formula (used by turf/distance) to reduce error.
+ *
+ * @constant
+ */
+export const earthRadius = 6371008.8;
+
+/**
+ * Unit of measurement factors based on earthRadius.
+ *
+ * Keys are the name of the unit, values are the number of that unit in a single radian
+ *
+ * @constant
+ */
+export const factors: Record<Units, number> = {
+    degrees: 360 / (2 * Math.PI),
+    kilometers: earthRadius / 1000,
+    kilometres: earthRadius / 1000,
+    meters: earthRadius,
+    metres: earthRadius,
+};
 
 /**
  * Wraps a GeoJSON {@link Geometry} in a GeoJSON {@link Feature}.
@@ -189,6 +204,27 @@ export function round(num: number, precision = 0): number {
     }
     const multiplier = Math.pow(10, precision || 0);
     return Math.round(num * multiplier) / multiplier;
+}
+
+/**
+ * Convert a distance measurement (assuming a spherical Earth) from a real-world unit into radians
+ * Valid units: miles, nauticalmiles, inches, yards, meters, metres, kilometers, centimeters, feet
+ *
+ * @function
+ * @param {number} distance in real units
+ * @param {Units} [units="kilometers"] can be degrees, radians, miles, inches, yards, metres,
+ * meters, kilometres, kilometers.
+ * @returns {number} radians
+ */
+export function lengthToRadians(
+    distance: number,
+    units: Units = 'kilometers'
+): number {
+    const factor = factors[units];
+    if (!factor) {
+        throw new Error(`${units} units is invalid`);
+    }
+    return distance / factor;
 }
 
 /**
