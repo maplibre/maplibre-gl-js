@@ -1,4 +1,5 @@
 import {createAbortError} from './abort_error';
+import {subscribe} from './util';
 
 const now = typeof performance !== 'undefined' && performance && performance.now ?
     performance.now.bind(performance) :
@@ -17,11 +18,16 @@ export const browser = {
     now,
 
     frame(abortController: AbortController, fn: (paintStartTimestamp: number) => void, reject: (error: Error) => void): void {
-        const frame = requestAnimationFrame(fn);
-        abortController.signal.addEventListener('abort', () => {
-            cancelAnimationFrame(frame);
-            reject(createAbortError());
+        const frameId = requestAnimationFrame((paintStartTimestamp)=>{
+            unsubscribe();
+            fn(paintStartTimestamp);
         });
+
+        const {unsubscribe} = subscribe(abortController.signal, 'abort', () => {
+            unsubscribe();
+            cancelAnimationFrame(frameId);
+            reject(createAbortError());
+        }, false);
     },
 
     frameAsync(abortController: AbortController): Promise<number> {
