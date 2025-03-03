@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
     
     
       
@@ -1724,6 +1724,15 @@
   
     <nav class="md-nav" aria-label="Methods">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_updateopacity" class="md-nav__link">
+    <span class="md-ellipsis">
+      _updateOpacity()
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#addclassname" class="md-nav__link">
@@ -9041,6 +9050,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#_updateopacity" class="md-nav__link">
+    <span class="md-ellipsis">
+      _updateOpacity()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#addclassname" class="md-nav__link">
     <span class="md-ellipsis">
       addClassName()
@@ -9263,7 +9281,7 @@
 
 
 <h1 id="popup">Popup</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b52cb12b19b1064741bf821683c93e823d50294b/src/ui/popup.ts#L161">src/ui/popup.ts:161</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/popup.ts#L168">src/ui/popup.ts:168</a></p>
 <p>A popup component.</p>
 <h2 id="examples">Examples</h2>
 <p>Create a popup
@@ -9318,7 +9336,7 @@
 <blockquote>
 <p><strong>new Popup</strong>(<code>options</code>?: <a href="../../type-aliases/PopupOptions/"><code>PopupOptions</code></a>): <a href="./"><code>Popup</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b52cb12b19b1064741bf821683c93e823d50294b/src/ui/popup.ts#L176">src/ui/popup.ts:176</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/popup.ts#L183">src/ui/popup.ts:183</a></p>
 <h4 id="parameters">Parameters</h4>
 <table>
 <thead>
@@ -9341,11 +9359,20 @@
 <h4 id="overrides">Overrides</h4>
 <p><code>Evented.constructor</code></p>
 <h2 id="methods">Methods</h2>
+<h3 id="_updateopacity">_updateOpacity()</h3>
+<blockquote>
+<p><strong>_updateOpacity</strong>(): <code>void</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/popup.ts#L239">src/ui/popup.ts:239</a></p>
+<p>Add opacity to popup if in globe projection and location is behind view</p>
+<h4 id="returns_1">Returns</h4>
+<p><code>void</code></p>
+<hr />
 <h3 id="addclassname">addClassName()</h3>
 <blockquote>
 <p><strong>addClassName</strong>(<code>className</code>: <code>string</code>): <a href="./"><code>Popup</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b52cb12b19b1064741bf821683c93e823d50294b/src/ui/popup.ts#L479">src/ui/popup.ts:479</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/popup.ts#L504">src/ui/popup.ts:504</a></p>
 <p>Adds a CSS class to the popup container element.</p>
 <h4 id="parameters_1">Parameters</h4>
 <table>
@@ -9364,7 +9391,7 @@
 </tr>
 </tbody>
 </table>
-<h4 id="returns_1">Returns</h4>
+<h4 id="returns_2">Returns</h4>
 <p><a href="./"><code>Popup</code></a></p>
 <h4 id="example">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">let</span><span class="w"> </span><span class="nx">popup</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Popup</span><span class="p">()</span>
@@ -9375,7 +9402,7 @@
 <blockquote>
 <p><strong>addTo</strong>(<code>map</code>: <a href="../Map/"><code>Map</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b52cb12b19b1064741bf821683c93e823d50294b/src/ui/popup.ts#L197">src/ui/popup.ts:197</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/popup.ts#L204">src/ui/popup.ts:204</a></p>
 <p>Adds the popup to a map.</p>
 <h4 id="parameters_2">Parameters</h4>
 <table>
@@ -9394,7 +9421,7 @@
 </tr>
 </tbody>
 </table>
-<h4 id="returns_2">Returns</h4>
+<h4 id="returns_3">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_1">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="ow">new</span><span class="w"> </span><span class="nx">Popup</span><span class="p">()</span>
@@ -9414,9 +9441,9 @@
 <blockquote>
 <p><strong>getElement</strong>(): <code>HTMLElement</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b52cb12b19b1064741bf821683c93e823d50294b/src/ui/popup.ts#L354">src/ui/popup.ts:354</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/popup.ts#L379">src/ui/popup.ts:379</a></p>
 <p>Returns the <code>Popup</code>'s HTML element.</p>
-<h4 id="returns_3">Returns</h4>
+<h4 id="returns_4">Returns</h4>
 <p><code>HTMLElement</code></p>
 <p>element</p>
 <h4 id="example_2">Example</h4>
@@ -9433,12 +9460,12 @@
 <blockquote>
 <p><strong>getLngLat</strong>(): <a href="../LngLat/"><code>LngLat</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b52cb12b19b1064741bf821683c93e823d50294b/src/ui/popup.ts#L280">src/ui/popup.ts:280</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/popup.ts#L305">src/ui/popup.ts:305</a></p>
 <p>Returns the geographical location of the popup's anchor.</p>
 <p>The longitude of the result may differ by a multiple of 360 degrees from the longitude previously
 set by <code>setLngLat</code> because <code>Popup</code> wraps the anchor longitude across copies of the world to keep
 the popup on screen.</p>
-<h4 id="returns_4">Returns</h4>
+<h4 id="returns_5">Returns</h4>
 <p><a href="../LngLat/"><code>LngLat</code></a></p>
 <p>The geographical location of the popup's anchor.</p>
 <hr />
@@ -9446,9 +9473,9 @@ the popup on screen.</p>
 <blockquote>
 <p><strong>getMaxWidth</strong>(): <code>string</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b52cb12b19b1064741bf821683c93e823d50294b/src/ui/popup.ts#L417">src/ui/popup.ts:417</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/popup.ts#L442">src/ui/popup.ts:442</a></p>
 <p>Returns the popup's maximum width.</p>
-<h4 id="returns_5">Returns</h4>
+<h4 id="returns_6">Returns</h4>
 <p><code>string</code></p>
 <p>The maximum width of the popup.</p>
 <hr />
@@ -9456,8 +9483,8 @@ the popup on screen.</p>
 <blockquote>
 <p><strong>isOpen</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b52cb12b19b1064741bf821683c93e823d50294b/src/ui/popup.ts#L232">src/ui/popup.ts:232</a></p>
-<h4 id="returns_6">Returns</h4>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/popup.ts#L253">src/ui/popup.ts:253</a></p>
+<h4 id="returns_7">Returns</h4>
 <p><code>boolean</code></p>
 <p><code>true</code> if the popup is open, <code>false</code> if it is closed.</p>
 <hr />
@@ -9465,7 +9492,7 @@ the popup on screen.</p>
 <blockquote>
 <p><strong>listens</strong>(<code>type</code>: <code>string</code>): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b52cb12b19b1064741bf821683c93e823d50294b/src/util/evented.ts#L165">src/util/evented.ts:165</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/util/evented.ts#L165">src/util/evented.ts:165</a></p>
 <p>Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.</p>
 <h4 id="parameters_3">Parameters</h4>
 <table>
@@ -9484,7 +9511,7 @@ the popup on screen.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_7">Returns</h4>
+<h4 id="returns_8">Returns</h4>
 <p><code>boolean</code></p>
 <p><code>true</code> if there is at least one registered listener for specified event type, <code>false</code> otherwise</p>
 <h4 id="inherited-from">Inherited from</h4>
@@ -9494,7 +9521,7 @@ the popup on screen.</p>
 <blockquote>
 <p><strong>off</strong>(<code>type</code>: <code>string</code>, <code>listener</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <a href="./"><code>Popup</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b52cb12b19b1064741bf821683c93e823d50294b/src/util/evented.ts#L90">src/util/evented.ts:90</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/util/evented.ts#L90">src/util/evented.ts:90</a></p>
 <p>Removes a previously registered event listener.</p>
 <h4 id="parameters_4">Parameters</h4>
 <table>
@@ -9518,7 +9545,7 @@ the popup on screen.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_8">Returns</h4>
+<h4 id="returns_9">Returns</h4>
 <p><a href="./"><code>Popup</code></a></p>
 <h4 id="inherited-from_1">Inherited from</h4>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#off"><code>off</code></a></p>
@@ -9527,7 +9554,7 @@ the popup on screen.</p>
 <blockquote>
 <p><strong>on</strong>(<code>type</code>: <code>string</code>, <code>listener</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <a href="../../interfaces/Subscription/"><code>Subscription</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b52cb12b19b1064741bf821683c93e823d50294b/src/util/evented.ts#L73">src/util/evented.ts:73</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/util/evented.ts#L73">src/util/evented.ts:73</a></p>
 <p>Adds a listener to a specified event type.</p>
 <h4 id="parameters_5">Parameters</h4>
 <table>
@@ -9551,7 +9578,7 @@ the popup on screen.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_9">Returns</h4>
+<h4 id="returns_10">Returns</h4>
 <p><a href="../../interfaces/Subscription/"><code>Subscription</code></a></p>
 <h4 id="inherited-from_2">Inherited from</h4>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#on"><code>on</code></a></p>
@@ -9560,7 +9587,7 @@ the popup on screen.</p>
 <blockquote>
 <p><strong>once</strong>(<code>type</code>: <code>string</code>, <code>listener</code>?: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <code>Promise</code>&lt;<code>any</code>&gt; | <a href="./"><code>Popup</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b52cb12b19b1064741bf821683c93e823d50294b/src/util/evented.ts#L106">src/util/evented.ts:106</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/util/evented.ts#L106">src/util/evented.ts:106</a></p>
 <p>Adds a listener that will be called only once to a specified event type.</p>
 <p>The listener will be called first time the event fires after the listener is registered.</p>
 <h4 id="parameters_6">Parameters</h4>
@@ -9585,7 +9612,7 @@ the popup on screen.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_10">Returns</h4>
+<h4 id="returns_11">Returns</h4>
 <p><code>Promise</code>&lt;<code>any</code>&gt; | <a href="./"><code>Popup</code></a></p>
 <p><code>this</code> or a promise if a listener is not provided</p>
 <h4 id="inherited-from_3">Inherited from</h4>
@@ -9595,9 +9622,9 @@ the popup on screen.</p>
 <blockquote>
 <p><strong>remove</strong>(): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b52cb12b19b1064741bf821683c93e823d50294b/src/ui/popup.ts#L245">src/ui/popup.ts:245</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/popup.ts#L266">src/ui/popup.ts:266</a></p>
 <p>Removes the popup from the map it has been added to.</p>
-<h4 id="returns_11">Returns</h4>
+<h4 id="returns_12">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_3">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kd">let</span><span class="w"> </span><span class="nx">popup</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Popup</span><span class="p">().</span><span class="nx">addTo</span><span class="p">(</span><span class="nx">map</span><span class="p">);</span>
@@ -9608,7 +9635,7 @@ the popup on screen.</p>
 <blockquote>
 <p><strong>removeClassName</strong>(<code>className</code>: <code>string</code>): <a href="./"><code>Popup</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b52cb12b19b1064741bf821683c93e823d50294b/src/ui/popup.ts#L497">src/ui/popup.ts:497</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/popup.ts#L522">src/ui/popup.ts:522</a></p>
 <p>Removes a CSS class from the popup container element.</p>
 <h4 id="parameters_7">Parameters</h4>
 <table>
@@ -9627,7 +9654,7 @@ the popup on screen.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_12">Returns</h4>
+<h4 id="returns_13">Returns</h4>
 <p><a href="./"><code>Popup</code></a></p>
 <h4 id="example_4">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kd">let</span><span class="w"> </span><span class="nx">popup</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Popup</span><span class="p">()</span>
@@ -9638,7 +9665,7 @@ the popup on screen.</p>
 <blockquote>
 <p><strong>setDOMContent</strong>(<code>htmlNode</code>: <code>Node</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b52cb12b19b1064741bf821683c93e823d50294b/src/ui/popup.ts#L448">src/ui/popup.ts:448</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/popup.ts#L473">src/ui/popup.ts:473</a></p>
 <p>Sets the popup's content to the element provided as a DOM node.</p>
 <h4 id="parameters_8">Parameters</h4>
 <table>
@@ -9657,7 +9684,7 @@ the popup on screen.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_13">Returns</h4>
+<h4 id="returns_14">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_5">Example</h4>
 <p>Create an element with the popup content
@@ -9673,7 +9700,7 @@ the popup on screen.</p>
 <blockquote>
 <p><strong>setEventedParent</strong>(<code>parent</code>?: <a href="../Evented/"><code>Evented</code></a>, <code>data</code>?: <code>any</code>): <a href="./"><code>Popup</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b52cb12b19b1064741bf821683c93e823d50294b/src/util/evented.ts#L176">src/util/evented.ts:176</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/util/evented.ts#L176">src/util/evented.ts:176</a></p>
 <p>Bubble all events fired by this instance of Evented to this parent instance of Evented.</p>
 <h4 id="parameters_9">Parameters</h4>
 <table>
@@ -9694,7 +9721,7 @@ the popup on screen.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_14">Returns</h4>
+<h4 id="returns_15">Returns</h4>
 <p><a href="./"><code>Popup</code></a></p>
 <h4 id="inherited-from_4">Inherited from</h4>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#seteventedparent"><code>setEventedParent</code></a></p>
@@ -9703,7 +9730,7 @@ the popup on screen.</p>
 <blockquote>
 <p><strong>setHTML</strong>(<code>html</code>: <code>string</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b52cb12b19b1064741bf821683c93e823d50294b/src/ui/popup.ts#L398">src/ui/popup.ts:398</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/popup.ts#L423">src/ui/popup.ts:423</a></p>
 <p>Sets the popup's content to the HTML provided as a string.</p>
 <p>This method does not perform HTML filtering or sanitization, and must be
 used only with trusted content. Consider <a href="./#settext">Popup#setText</a> if
@@ -9725,7 +9752,7 @@ the content is an untrusted text string.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_15">Returns</h4>
+<h4 id="returns_16">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_6">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kd">let</span><span class="w"> </span><span class="nx">popup</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Popup</span><span class="p">()</span>
@@ -9745,7 +9772,7 @@ the content is an untrusted text string.</p>
 <blockquote>
 <p><strong>setLngLat</strong>(<code>lnglat</code>: <a href="../../type-aliases/LngLatLike/"><code>LngLatLike</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b52cb12b19b1064741bf821683c93e823d50294b/src/ui/popup.ts#L289">src/ui/popup.ts:289</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/popup.ts#L314">src/ui/popup.ts:314</a></p>
 <p>Sets the geographical location of the popup's anchor, and moves the popup to it. Replaces trackPointer() behavior.</p>
 <h4 id="parameters_11">Parameters</h4>
 <table>
@@ -9764,14 +9791,14 @@ the content is an untrusted text string.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_16">Returns</h4>
+<h4 id="returns_17">Returns</h4>
 <p><code>this</code></p>
 <hr />
 <h3 id="setmaxwidth">setMaxWidth()</h3>
 <blockquote>
 <p><strong>setMaxWidth</strong>(<code>maxWidth</code>: <code>string</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b52cb12b19b1064741bf821683c93e823d50294b/src/ui/popup.ts#L427">src/ui/popup.ts:427</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/popup.ts#L452">src/ui/popup.ts:452</a></p>
 <p>Sets the popup's maximum width. This is setting the CSS property <code>max-width</code>.
 Available values can be found here: https://developer.mozilla.org/en-US/docs/Web/CSS/max-width</p>
 <h4 id="parameters_12">Parameters</h4>
@@ -9791,14 +9818,14 @@ Available values can be found here: https://developer.mozilla.org/en-US/docs/Web
 </tr>
 </tbody>
 </table>
-<h4 id="returns_17">Returns</h4>
+<h4 id="returns_18">Returns</h4>
 <p><code>this</code></p>
 <hr />
 <h3 id="setoffset">setOffset()</h3>
 <blockquote>
 <p><strong>setOffset</strong>(<code>offset</code>?: <a href="../../type-aliases/Offset/"><code>Offset</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b52cb12b19b1064741bf821683c93e823d50294b/src/ui/popup.ts#L509">src/ui/popup.ts:509</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/popup.ts#L534">src/ui/popup.ts:534</a></p>
 <p>Sets the popup's offset.</p>
 <h4 id="parameters_13">Parameters</h4>
 <table>
@@ -9817,14 +9844,14 @@ Available values can be found here: https://developer.mozilla.org/en-US/docs/Web
 </tr>
 </tbody>
 </table>
-<h4 id="returns_18">Returns</h4>
+<h4 id="returns_19">Returns</h4>
 <p><code>this</code></p>
 <hr />
 <h3 id="setsubpixelpositioning">setSubpixelPositioning()</h3>
 <blockquote>
 <p><strong>setSubpixelPositioning</strong>(<code>value</code>: <code>boolean</code>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b52cb12b19b1064741bf821683c93e823d50294b/src/ui/popup.ts#L545">src/ui/popup.ts:545</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/popup.ts#L570">src/ui/popup.ts:570</a></p>
 <p>Set the option to allow subpixel positioning of the popup by passing a boolean</p>
 <h4 id="parameters_14">Parameters</h4>
 <table>
@@ -9843,7 +9870,7 @@ Available values can be found here: https://developer.mozilla.org/en-US/docs/Web
 </tr>
 </tbody>
 </table>
-<h4 id="returns_19">Returns</h4>
+<h4 id="returns_20">Returns</h4>
 <p><code>void</code></p>
 <h4 id="example_7">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kd">let</span><span class="w"> </span><span class="nx">popup</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Popup</span><span class="p">()</span>
@@ -9854,7 +9881,7 @@ Available values can be found here: https://developer.mozilla.org/en-US/docs/Web
 <blockquote>
 <p><strong>setText</strong>(<code>text</code>: <code>string</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b52cb12b19b1064741bf821683c93e823d50294b/src/ui/popup.ts#L374">src/ui/popup.ts:374</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/popup.ts#L399">src/ui/popup.ts:399</a></p>
 <p>Sets the popup's content to a string of text.</p>
 <p>This function creates a <a href="https://developer.mozilla.org/en-US/docs/Web/API/Text">Text</a> node in the DOM,
 so it cannot insert raw HTML. Use this method for security against XSS
@@ -9876,7 +9903,7 @@ if the popup content is user-provided.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_20">Returns</h4>
+<h4 id="returns_21">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_8">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kd">let</span><span class="w"> </span><span class="nx">popup</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Popup</span><span class="p">()</span>
@@ -9889,7 +9916,7 @@ if the popup content is user-provided.</p>
 <blockquote>
 <p><strong>toggleClassName</strong>(<code>className</code>: <code>string</code>): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b52cb12b19b1064741bf821683c93e823d50294b/src/ui/popup.ts#L528">src/ui/popup.ts:528</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/popup.ts#L553">src/ui/popup.ts:553</a></p>
 <p>Add or remove the given CSS class on the popup container, depending on whether the container currently has that class.</p>
 <h4 id="parameters_16">Parameters</h4>
 <table>
@@ -9908,7 +9935,7 @@ if the popup content is user-provided.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_21">Returns</h4>
+<h4 id="returns_22">Returns</h4>
 <p><code>boolean</code></p>
 <p>if the class was removed return false, if class was added, then return true, undefined if there is no container</p>
 <h4 id="example_9">Example</h4>
@@ -9920,10 +9947,10 @@ if the popup content is user-provided.</p>
 <blockquote>
 <p><strong>trackPointer</strong>(): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b52cb12b19b1064741bf821683c93e823d50294b/src/ui/popup.ts#L321">src/ui/popup.ts:321</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/popup.ts#L346">src/ui/popup.ts:346</a></p>
 <p>Tracks the popup anchor to the cursor position on screens with a pointer device (it will be hidden on touchscreens). Replaces the <code>setLngLat</code> behavior.
 For most use cases, set <code>closeOnClick</code> and <code>closeButton</code> to <code>false</code>.</p>
-<h4 id="returns_22">Returns</h4>
+<h4 id="returns_23">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_10">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kd">let</span><span class="w"> </span><span class="nx">popup</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Popup</span><span class="p">({</span><span class="w"> </span><span class="nx">closeOnClick</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">,</span><span class="w"> </span><span class="nx">closeButton</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="w"> </span><span class="p">})</span>
@@ -10050,7 +10077,7 @@ For most use cases, set <code>closeOnClick</code> and <code>closeButton</code> t
     <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky", "toc.follow", "search.suggest", "navigation.instant", "navigation.sections", "navigation.top"], "search": "../../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.f1b6f286.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.c8b220af.min.js"></script>
       
     
   </body>
