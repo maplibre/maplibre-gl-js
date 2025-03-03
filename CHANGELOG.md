@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-
+- Added `getBounds` to GeoJSON source to allow getting the boundaries of the data in it ([#5575](https://github.com/maplibre/maplibre-gl-js/pull/5575))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

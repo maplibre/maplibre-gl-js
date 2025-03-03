@@ -530,7 +530,7 @@ describe('GeoJSONSource#getBounds', () => {
                             ]
                         }
                     }]
-                })
+                });
             }
         }), undefined);
         source.map = mapStub;
