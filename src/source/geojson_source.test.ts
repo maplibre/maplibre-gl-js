@@ -466,6 +466,21 @@ describe('GeoJSONSource#getBounds', () => {
         }
     } as any;
 
+    test('get bounds from empty geometry', async () => {
+        const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync(message) {
+                expect(message.type).toBe(MessageType.getData);
+                return Promise.resolve({
+                    type: 'LineString',
+                    coordinates: []
+                });
+            }
+        }), undefined);
+        source.map = mapStub;
+        const bounds = await source.getBounds();
+        expect(bounds.isEmpty()).toBeTruthy();
+    });
+
     test('get bounds from geomerty collection', async () => {
         const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
             sendAsync(message) {

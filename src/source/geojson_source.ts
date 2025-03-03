@@ -259,6 +259,7 @@ export class GeoJSONSource extends Evented implements Source {
 
     /**
      * Allows getting the source's boundaries.
+     * If there's a problem with the source's data, it will return an empty {@link LngLatBounds}.
      * @returns a promise which resolves to the source's boundaries
      */
     async getBounds(): Promise<LngLatBounds> {
