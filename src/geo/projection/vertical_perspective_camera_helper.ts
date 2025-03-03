@@ -329,6 +329,8 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
 
         const startCenter = tr.center;
         const startZoom = tr.zoom;
+        const startPadding = tr.padding;
+
         const doPadding = !tr.isPaddingEqual(options.padding);
 
         // Obtain target center and zoom
@@ -341,9 +343,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         // Compute target center that respects offset by creating a temporary transform and calling its `setLocationAtPoint`.
         const clonedTr = tr.clone();
         clonedTr.setCenter(constrainedCenter);
-        if (doPadding) {
-            clonedTr.setPadding(options.padding as PaddingOptions);
-        }
+
         clonedTr.setZoom(targetZoom);
         clonedTr.setBearing(options.bearing);
         const clampedPoint = new Point(
@@ -379,6 +379,10 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
 
         const easeFunc = (k: number, scale: number, centerFactor: number, _pointAtOffset: Point) => {
             const interpolatedCenter = interpolateLngLatForGlobe(startCenter, deltaLng, deltaLat, centerFactor);
+
+            if (doPadding) {
+                tr.interpolatePadding(startPadding, options.padding,k);
+            }
 
             const newCenter = k === 1 ? targetCenter : interpolatedCenter;
             tr.setCenter(newCenter.wrap());

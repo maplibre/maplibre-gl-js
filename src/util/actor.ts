@@ -45,6 +45,8 @@ export interface IActor {
 
 export type MessageHandler<T extends MessageType> = (mapId: string | number, params: RequestResponseMessageMap[T][0], abortController?: AbortController) => Promise<RequestResponseMessageMap[T][1]>;
 
+const addEventDefaultOptions: AddEventListenerOptions = {once: true};
+
 /**
  * An implementation of the [Actor design pattern](https://en.wikipedia.org/wiki/Actor_model)
  * that maintains the relationship between asynchronous tasks and the objects
@@ -99,24 +101,32 @@ export class Actor implements IActor {
             // message from multiple other actors which could run in different execution context. A
             // linearly increasing ID could produce collisions.
             const id = Math.round((Math.random() * 1e18)).toString(36).substring(0, 10);
+
+            const subscription =  abortController ? subscribe(abortController.signal, 'abort', () => {
+                subscription?.unsubscribe();
+                delete this.resolveRejects[id];
+                const cancelMessage: MessageData = {
+                    id,
+                    type: '<cancel>',
+                    origin: location.origin,
+                    targetMapId: message.targetMapId,
+                    sourceMapId: this.mapId
+                };
+                this.target.postMessage(cancelMessage);
+                // In case of abort the current behavior is to keep the promise pending.
+            }, addEventDefaultOptions) : null;
+
             this.resolveRejects[id] = {
-                resolve,
-                reject
+                resolve: (value) => {
+                    subscription?.unsubscribe();
+                    resolve(value);
+                },
+                reject: (reason)=> {
+                    subscription?.unsubscribe();
+                    reject(reason);
+                }
             };
-            if (abortController) {
-                abortController.signal.addEventListener('abort', () => {
-                    delete this.resolveRejects[id];
-                    const cancelMessage: MessageData = {
-                        id,
-                        type: '<cancel>',
-                        origin: location.origin,
-                        targetMapId: message.targetMapId,
-                        sourceMapId: this.mapId
-                    };
-                    this.target.postMessage(cancelMessage);
-                    // In case of abort the current behavior is to keep the promise pending.
-                }, {once: true});
-            }
+
             const buffers: Array<Transferable> = [];
             const messageToPost: MessageData = {
                 ...message,
