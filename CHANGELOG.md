@@ -2,15 +2,23 @@
 
 ### ✨ Features and improvements
 
-- Allow opacity to be set when location becomes invisible in the globe projection. ([#5532](https://github.com/maplibre/maplibre-gl-js/pull/5532))
 - _...Add new stuff here..._
+
+### 🐞 Bug fixes
+
+- _...Add new stuff here..._
+
+## 5.2.0
+
+### ✨ Features and improvements
+
+- Allow opacity to be set when location becomes invisible in the globe projection. ([#5532](https://github.com/maplibre/maplibre-gl-js/pull/5532))
 
 ### 🐞 Bug fixes
 
 - Fix AbortController signal listener memory leak in frameAsync and sendAsync. ([#5561](https://github.com/maplibre/maplibre-gl-js/pull/5561))
 - Remove closeButton event listener on popup.remove(). ([#5564](https://github.com/maplibre/maplibre-gl-js/pull/5564))
 - Add missing `GeoJSONFeature` type to library export as it is exposed by `querySourceFeatures` ([#5567](https://github.com/maplibre/maplibre-gl-js/pull/5567))
-- _...Add new stuff here..._
 
 ## 5.1.1
 
