@@ -32,6 +32,11 @@
             trackUserLocation: true
         })
     );
+    map.once('load', () => {
+        map.setProjection({
+            type: 'globe'
+        })
+    })
 </script>
 </body>
 </html>
