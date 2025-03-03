@@ -457,7 +457,89 @@ describe('GeoJSONSource#getData', () => {
         // empty object instead of returning the result of an actual computation.
         await expect(source.getData()).resolves.toStrictEqual({});
     });
+});
 
+describe('GeoJSONSource#getBounds', () => {
+    const mapStub = {
+        _requestManager: {
+            transformRequest: (url) => { return {url}; }
+        }
+    } as any;
+
+    test('get bounds from geomerty collection', async () => {
+        const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync(message) {
+                expect(message.type).toBe(MessageType.getData);
+                return Promise.resolve({
+                    type: 'GeometryCollection',
+                    geometries: [{
+                        type: 'LineString',
+                        coordinates: [
+                            [1.1, 1.2],
+                            [1.3, 1.4]
+                        ]
+                    }]
+                });
+            }
+        }), undefined);
+        source.map = mapStub;
+        const bounds = await source.getBounds();
+        expect(bounds.getNorthEast().lat).toBe(1.4);
+        expect(bounds.getNorthEast().lng).toBe(1.3);
+        expect(bounds.getSouthWest().lat).toBe(1.2);
+        expect(bounds.getSouthWest().lng).toBe(1.1);
+    });
+
+    test('get bounds from feature', async () => {
+        const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync(message) {
+                expect(message.type).toBe(MessageType.getData);
+                return Promise.resolve({
+                    type: 'Feature',
+                    geometry: {
+                        type: 'LineString',
+                        coordinates: [
+                            [1.1, 1.2],
+                            [1.3, 1.4]
+                        ]
+                    }
+                });
+            }
+        }), undefined);
+        source.map = mapStub;
+        const bounds = await source.getBounds();
+        expect(bounds.getNorthEast().lat).toBe(1.4);
+        expect(bounds.getNorthEast().lng).toBe(1.3);
+        expect(bounds.getSouthWest().lat).toBe(1.2);
+        expect(bounds.getSouthWest().lng).toBe(1.1);
+    });
+
+    test('get bounds from feature collection', async () => {
+        const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync(message) {
+                expect(message.type).toBe(MessageType.getData);
+                return Promise.resolve({
+                    type: 'FeatureCollection',
+                    features: [{
+                        type: 'Feature',
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: [
+                                [1.1, 1.2],
+                                [1.3, 1.4]
+                            ]
+                        }
+                    }]
+                })
+            }
+        }), undefined);
+        source.map = mapStub;
+        const bounds = await source.getBounds();
+        expect(bounds.getNorthEast().lat).toBe(1.4);
+        expect(bounds.getNorthEast().lng).toBe(1.3);
+        expect(bounds.getSouthWest().lat).toBe(1.2);
+        expect(bounds.getSouthWest().lng).toBe(1.1);
+    });
 });
 
 describe('GeoJSONSource#serialize', () => {
