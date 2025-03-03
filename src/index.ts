@@ -48,6 +48,7 @@ import {KeyboardHandler} from './ui/handler/keyboard';
 import {TwoFingersTouchPitchHandler, TwoFingersTouchRotateHandler, TwoFingersTouchZoomHandler} from './ui/handler/two_fingers_touch';
 import {MessageType} from './util/actor_messages';
 import {createTileMesh} from './util/create_tile_mesh';
+import type {GeoJSONFeature} from './util/vectortile_to_geojson';
 const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
@@ -237,6 +238,7 @@ export {
     type MapDataEvent,
     type MapContextEvent,
     type ErrorEvent,
+    type GeoJSONFeature,
     setRTLTextPlugin,
     getRTLTextPluginStatus,
     prewarm,
