@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 
+- Add a check for MouseEvent, to avoid errors when bot were crawling on website using Event instance instead of MouseEvent instance for types like mouseover, mouseout etc.. ([#5466](https://github.com/maplibre/maplibre-gl-js/pull/5466)).
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
