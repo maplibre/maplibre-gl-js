@@ -54,6 +54,8 @@ export type SetClusterOptions = {
     clusterRadius?: number;
 };
 
+export type JustGeometry = Point | MultiPoint | LineString | MultiLineString | Polygon | MultiPolygon;
+
 /**
  * A source containing GeoJSON.
  * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/#sources-geojson) for detailed documentation of options.)
@@ -258,7 +260,6 @@ export class GeoJSONSource extends Evented implements Source {
      */
 
     async getBounds(): Promise<LngLatBounds> {
-        type justGeometry = Point | MultiPoint | LineString | MultiLineString | Polygon | MultiPolygon;
         const bounds: LngLatBounds = new LngLatBounds();
         const data: GeoJSON.GeoJSON = await this.getData();
         let coordinates: number[];
@@ -266,7 +267,7 @@ export class GeoJSONSource extends Evented implements Source {
         switch(data.type){
             case 'Feature':
                 if (data.geometry.type === 'GeometryCollection') {
-                    coordinates = data.geometry.geometries.map((g: justGeometry) => g.coordinates).flat(Infinity) as number[];
+                    coordinates = data.geometry.geometries.map((g: JustGeometry) => g.coordinates).flat(Infinity) as number[];
                 }else{
                     coordinates = data.geometry.coordinates.flat(Infinity) as number[];
                 }
@@ -274,14 +275,14 @@ export class GeoJSONSource extends Evented implements Source {
             case 'FeatureCollection':
                 coordinates = data.features.map(f => {
                     if (f.geometry.type === 'GeometryCollection') {
-                        return f.geometry.geometries.map((g: justGeometry) => g.coordinates);
+                        return f.geometry.geometries.map((g: JustGeometry) => g.coordinates);
                     }else{
                         return f.geometry.coordinates;
                     }
                 }).flat(Infinity) as number[];
                 break;
             case 'GeometryCollection':
-                coordinates = data.geometries.map((g: justGeometry) => g.coordinates).flat(Infinity) as number[];
+                coordinates = data.geometries.map((g: JustGeometry) => g.coordinates).flat(Infinity) as number[];
                 break;
             default:
                 coordinates = data.coordinates.flat(Infinity) as number[];
