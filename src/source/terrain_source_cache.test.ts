@@ -1,4 +1,4 @@
-import {describe, beforeAll, afterAll, test, expect} from 'vitest';
+import {describe, beforeAll, beforeEach, afterAll, test, expect, vi, MockInstance} from 'vitest';
 import {TerrainSourceCache} from './terrain_source_cache';
 import {Style} from '../style/style';
 import {RequestManager} from '../util/request_manager';
@@ -80,4 +80,33 @@ describe('TerrainSourceCache', () => {
         expect(tsc.getSourceTile(tileID.children(12)[0].children(12)[0], true)).toBeTruthy();
     });
 
+    describe('#getTerrainCoords', () => {
+        let getCoordsRegularTileSpy: MockInstance;
+        let getCoordsOversizedTileSpy: MockInstance;
+
+        beforeAll(() => {
+            getCoordsRegularTileSpy = vi.spyOn(tsc, '_getTerrainCoordsForRegularTile');
+            getCoordsOversizedTileSpy = vi.spyOn(tsc, '_getTerrainCoordsForOversizedTile');
+        });
+
+        beforeEach(() => {
+            getCoordsRegularTileSpy.mockClear();
+            getCoordsOversizedTileSpy.mockClear();
+        });
+
+        test('should call _getTerrainCoordsForRegularTile for tile without custom range', () => {
+            const tile = new OverscaledTileID(5, 0, 5, 17, 11);
+            tsc.getTerrainCoords(tile);
+            expect(getCoordsRegularTileSpy).toHaveBeenCalled();
+            expect(getCoordsOversizedTileSpy).not.toHaveBeenCalled();
+        });
+
+        test('should call _getTerrainCoordsForOversizedTile for tile with custom range', () => {
+            const tile = new OverscaledTileID(5, 0, 5, 17, 11);
+            tile.terrainTileRanges = {1: {minX: 0, maxX: 1, minY: 0, maxY: 1}};
+            tsc.getTerrainCoords(tile);
+            expect(getCoordsRegularTileSpy).not.toHaveBeenCalled();
+            expect(getCoordsOversizedTileSpy).toHaveBeenCalled();
+        });
+    });
 });

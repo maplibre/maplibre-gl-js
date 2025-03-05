@@ -162,7 +162,7 @@ export class TerrainSourceCache extends Evented {
      * @param tileID - the tile to look for
      * @returns the tiles that were found
      */
-    private _getTerrainCoordsForRegularTile(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
+    _getTerrainCoordsForRegularTile(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
         const coords: Record<string, OverscaledTileID> = {};
         for (const key of this._renderableTilesKeys) {
             const terrainTileID = this._tiles[key].tileID;
@@ -200,7 +200,7 @@ export class TerrainSourceCache extends Evented {
      * @param tileID - the tile to look for
      * @returns the tiles that were found
      */
-    private _getTerrainCoordsForOversizedTile(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
+    _getTerrainCoordsForOversizedTile(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
         const coords: Record<string, OverscaledTileID> = {};
         for (const key of this._renderableTilesKeys) {
             const terrainTileID = this._tiles[key].tileID;
