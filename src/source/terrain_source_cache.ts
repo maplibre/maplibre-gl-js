@@ -147,10 +147,103 @@ export class TerrainSourceCache extends Evented {
      */
     getTerrainCoords(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
         if (tileID.terrainTileRanges) {
-            return getTerrainCoordsForOversizedTile(tileID, this._tiles, this._renderableTilesKeys);
+            return this._getTerrainCoordsForOversizedTile(tileID);
         } else {
-            return getTerrainCoordsForRegularTile(tileID, this._tiles, this._renderableTilesKeys);
+            return this._getTerrainCoordsForRegularTile(tileID);
         }
+    }
+
+    /**
+     * Searches for the corresponding current renderable terrain-tiles.
+     * Includes terrain tiles that are either:
+     * - the same as the tileID
+     * - a parent of the tileID
+     * - a child of the tileID
+     * @param tileID - the tile to look for
+     * @returns the tiles that were found
+     */
+    private _getTerrainCoordsForRegularTile(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
+        const coords: Record<string, OverscaledTileID> = {};
+        for (const key of this._renderableTilesKeys) {
+            const terrainTileID = this._tiles[key].tileID;
+            const coord = tileID.clone();
+            const mat = createMat4f64();
+            if (terrainTileID.canonical.equals(tileID.canonical)) {
+                mat4.ortho(mat, 0, EXTENT, EXTENT, 0, 0, 1);
+            } else if (terrainTileID.canonical.isChildOf(tileID.canonical)) {
+                const dz = terrainTileID.canonical.z - tileID.canonical.z;
+                const dx = terrainTileID.canonical.x - (terrainTileID.canonical.x >> dz << dz);
+                const dy = terrainTileID.canonical.y - (terrainTileID.canonical.y >> dz << dz);
+                const size = EXTENT >> dz;
+                mat4.ortho(mat, 0, size, size, 0, 0, 1); // Note: we are using `size` instead of `EXTENT` here
+                mat4.translate(mat, mat, [-dx * size, -dy * size, 0]);
+            } else if (tileID.canonical.isChildOf(terrainTileID.canonical)) {
+                const dz = tileID.canonical.z - terrainTileID.canonical.z;
+                const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
+                const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
+                const size = EXTENT >> dz;
+                mat4.ortho(mat, 0, EXTENT, EXTENT, 0, 0, 1);
+                mat4.translate(mat, mat, [dx * size, dy * size, 0]);
+                mat4.scale(mat, mat, [1 / (2 ** dz), 1 / (2 ** dz), 0]);
+            } else {
+                continue;
+            }
+            coord.terrainRttPosMatrix32f = new Float32Array(mat);
+            coords[key] = coord;
+        }
+        return coords;
+    }
+
+    /**
+     * Searches for the corresponding current renderable terrain-tiles.
+     * Includes terrain tiles that are within terrain tile ranges of the tileID.
+     * @param tileID - the tile to look for
+     * @returns the tiles that were found
+     */
+    private _getTerrainCoordsForOversizedTile(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
+        const coords: Record<string, OverscaledTileID> = {};
+        for (const key of this._renderableTilesKeys) {
+            const terrainTileID = this._tiles[key].tileID;
+            if (!tileID.isOverlappingTerrainTile(terrainTileID)) {
+                continue;
+            }
+
+            const coord = tileID.clone();
+            const mat = createMat4f64();
+            if (terrainTileID.canonical.z === tileID.canonical.z) {
+                const dx = tileID.canonical.x - terrainTileID.canonical.x;
+                const dy = tileID.canonical.y - terrainTileID.canonical.y;
+                mat4.ortho(mat, 0, EXTENT, EXTENT, 0, 0, 1);
+                mat4.translate(mat, mat, [dx * EXTENT, dy * EXTENT, 0]);
+            } else if (terrainTileID.canonical.z > tileID.canonical.z) {
+                const dz = terrainTileID.canonical.z - tileID.canonical.z;
+                // this translation is needed to project tileID to terrainTileID zoom level
+                const dx = terrainTileID.canonical.x - (terrainTileID.canonical.x >> dz << dz);
+                const dy = terrainTileID.canonical.y - (terrainTileID.canonical.y >> dz << dz);
+                // this translation is needed if terrainTileID is not a parent of tileID
+                const dx2 = tileID.canonical.x - (terrainTileID.canonical.x >> dz);
+                const dy2 = tileID.canonical.y - (terrainTileID.canonical.y >> dz);
+
+                const size = EXTENT >> dz;
+                mat4.ortho(mat, 0, size, size, 0, 0, 1);
+                mat4.translate(mat, mat, [-dx * size + dx2 * EXTENT, -dy * size + dy2 * EXTENT, 0]);
+            } else { // terrainTileID.canonical.z < tileID.canonical.z
+                const dz = tileID.canonical.z - terrainTileID.canonical.z;
+                // this translation is needed to project tileID to terrainTileID zoom level
+                const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
+                const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
+                // this translation is needed if terrainTileID is not a parent of tileID
+                const dx2 = (tileID.canonical.x >> dz) - terrainTileID.canonical.x;
+                const dy2 = (tileID.canonical.y >> dz) - terrainTileID.canonical.y;
+
+                const size = EXTENT << dz;
+                mat4.ortho(mat, 0, size, size, 0, 0, 1);
+                mat4.translate(mat, mat, [dx * EXTENT + dx2 * size, dy * EXTENT + dy2 * size, 0]);
+            }
+            coord.terrainRttPosMatrix32f = new Float32Array(mat);
+            coords[key] = coord;
+        }
+        return coords;
     }
 
     /**
@@ -183,106 +276,4 @@ export class TerrainSourceCache extends Evented {
     anyTilesAfterTime(time = Date.now()): boolean {
         return this._lastTilesetChange >= time;
     }
-}
-
-/**
- * Searches for the corresponding current renderable terrain-tiles.
- * Includes terrain tiles that are either:
- * - the same as the tileID
- * - a parent of the tileID
- * - a child of the tileID
- * @param tileID - the tile to look for
- * @param terrainTiles - the terrain coords
- * @returns the tiles that were found
- */
-export function getTerrainCoordsForRegularTile(
-    tileID: OverscaledTileID,
-    terrainTiles: Record<string, Tile>,
-    renderableTilesKeys: string[]
-): Record<string, OverscaledTileID> {
-    const coords: Record<string, OverscaledTileID> = {};
-    for (const key of renderableTilesKeys) {
-        const terrainTileID = terrainTiles[key].tileID;
-        const coord = tileID.clone();
-        const mat = createMat4f64();
-        if (terrainTileID.canonical.equals(tileID.canonical)) {
-            mat4.ortho(mat, 0, EXTENT, EXTENT, 0, 0, 1);
-        } else if (terrainTileID.canonical.isChildOf(tileID.canonical)) {
-            const dz = terrainTileID.canonical.z - tileID.canonical.z;
-            const dx = terrainTileID.canonical.x - (terrainTileID.canonical.x >> dz << dz);
-            const dy = terrainTileID.canonical.y - (terrainTileID.canonical.y >> dz << dz);
-            const size = EXTENT >> dz;
-            mat4.ortho(mat, 0, size, size, 0, 0, 1); // Note: we are using `size` instead of `EXTENT` here
-            mat4.translate(mat, mat, [-dx * size, -dy * size, 0]);
-        } else if (tileID.canonical.isChildOf(terrainTileID.canonical)) {
-            const dz = tileID.canonical.z - terrainTileID.canonical.z;
-            const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
-            const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
-            const size = EXTENT >> dz;
-            mat4.ortho(mat, 0, EXTENT, EXTENT, 0, 0, 1);
-            mat4.translate(mat, mat, [dx * size, dy * size, 0]);
-            mat4.scale(mat, mat, [1 / (2 ** dz), 1 / (2 ** dz), 0]);
-        } else {
-            continue;
-        }
-        coord.terrainRttPosMatrix32f = new Float32Array(mat);
-        coords[key] = coord;
-    }
-    return coords;
-}
-
-/**
- * Searches for the corresponding current renderable terrain-tiles.
- * Includes terrain tiles that are within terrain tile ranges of the tileID.
- * @param tileID - the tile to look for
- * @returns the tiles that were found
- */
-export function getTerrainCoordsForOversizedTile(
-    tileID: OverscaledTileID,
-    terrainTiles: Record<string, Tile>,
-    renderableTilesKeys: string[]
-): Record<string, OverscaledTileID> {
-    const coords: Record<string, OverscaledTileID> = {};
-    for (const key of renderableTilesKeys) {
-        const terrainTileID = terrainTiles[key].tileID;
-        if (!tileID.isOverlappingTerrainTile(terrainTileID)) {
-            continue;
-        }
-
-        const coord = tileID.clone();
-        const mat = createMat4f64();
-        if (terrainTileID.canonical.z === tileID.canonical.z) {
-            const dx = tileID.canonical.x - terrainTileID.canonical.x;
-            const dy = tileID.canonical.y - terrainTileID.canonical.y;
-            mat4.ortho(mat, 0, EXTENT, EXTENT, 0, 0, 1);
-            mat4.translate(mat, mat, [dx * EXTENT, dy * EXTENT, 0]);
-        } else if (terrainTileID.canonical.z > tileID.canonical.z) {
-            const dz = terrainTileID.canonical.z - tileID.canonical.z;
-            // this translation is needed to project tileID to terrainTileID zoom level
-            const dx = terrainTileID.canonical.x - (terrainTileID.canonical.x >> dz << dz);
-            const dy = terrainTileID.canonical.y - (terrainTileID.canonical.y >> dz << dz);
-            // this translation is needed if terrainTileID is not a parent of tileID
-            const dx2 = tileID.canonical.x - (terrainTileID.canonical.x >> dz);
-            const dy2 = tileID.canonical.y - (terrainTileID.canonical.y >> dz);
-
-            const size = EXTENT >> dz;
-            mat4.ortho(mat, 0, size, size, 0, 0, 1);
-            mat4.translate(mat, mat, [-dx * size + dx2 * EXTENT, -dy * size + dy2 * EXTENT, 0]);
-        } else { // terrainTileID.canonical.z < tileID.canonical.z
-            const dz = tileID.canonical.z - terrainTileID.canonical.z;
-            // this translation is needed to project tileID to terrainTileID zoom level
-            const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
-            const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
-            // this translation is needed if terrainTileID is not a parent of tileID
-            const dx2 = (tileID.canonical.x >> dz) - terrainTileID.canonical.x;
-            const dy2 = (tileID.canonical.y >> dz) - terrainTileID.canonical.y;
-
-            const size = EXTENT << dz;
-            mat4.ortho(mat, 0, size, size, 0, 0, 1);
-            mat4.translate(mat, mat, [dx * EXTENT + dx2 * size, dy * EXTENT + dy2 * size, 0]);
-        }
-        coord.terrainRttPosMatrix32f = new Float32Array(mat);
-        coords[key] = coord;
-    }
-    return coords;
 }
