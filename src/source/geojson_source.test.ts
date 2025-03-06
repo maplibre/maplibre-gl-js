@@ -541,7 +541,16 @@ describe('GeoJSONSource#getBounds', () => {
                             type: 'LineString',
                             coordinates: [
                                 [1.1, 1.2],
-                                [1.3, 1.4]
+                                [1.3, 1.8]
+                            ]
+                        }
+                    }, {
+                        type: 'Feature',
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: [
+                                [1.5, 1.6],
+                                [1.7, 1.4]
                             ]
                         }
                     }]
@@ -550,8 +559,8 @@ describe('GeoJSONSource#getBounds', () => {
         }), undefined);
         source.map = mapStub;
         const bounds = await source.getBounds();
-        expect(bounds.getNorthEast().lat).toBe(1.4);
-        expect(bounds.getNorthEast().lng).toBe(1.3);
+        expect(bounds.getNorthEast().lat).toBe(1.8);
+        expect(bounds.getNorthEast().lng).toBe(1.7);
         expect(bounds.getSouthWest().lat).toBe(1.2);
         expect(bounds.getSouthWest().lng).toBe(1.1);
     });
