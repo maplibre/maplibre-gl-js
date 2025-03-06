@@ -1,4 +1,4 @@
-import {describe, beforeAll, beforeEach, afterAll, test, expect, vi, MockInstance} from 'vitest';
+import {describe, beforeAll, beforeEach, afterAll, test, expect, vi, type MockInstance} from 'vitest';
 import {TerrainSourceCache} from './terrain_source_cache';
 import {Style} from '../style/style';
 import {RequestManager} from '../util/request_manager';
@@ -107,6 +107,114 @@ describe('TerrainSourceCache', () => {
             tsc.getTerrainCoords(tile);
             expect(getCoordsRegularTileSpy).not.toHaveBeenCalled();
             expect(getCoordsOversizedTileSpy).toHaveBeenCalled();
+        });
+    });
+
+    describe('#_getTerrainCoordsForRegularTile', () => {
+        test('includes only overlapping tiles', () => {
+            const testTile = new OverscaledTileID(2, 0, 2, 1, 1);
+            const terrainChildTile = new OverscaledTileID(3, 0, 3, 3, 2);
+            const terrainParentTile = new OverscaledTileID(1, 0, 1, 0, 0);
+            const terrainSameTile = new OverscaledTileID(2, 0, 2, 1, 1);
+            const terrainNonOverlappingTile = new OverscaledTileID(3, 0, 3, 0, 0);
+
+            tsc._tiles = {
+                [terrainChildTile.key]: new Tile(terrainChildTile, 256),
+                [terrainParentTile.key]: new Tile(terrainParentTile, 256),
+                [terrainSameTile.key]: new Tile(terrainSameTile, 256),
+                [terrainNonOverlappingTile.key]: new Tile(terrainNonOverlappingTile, 256),
+            };
+            tsc._renderableTilesKeys = [
+                terrainChildTile.key,
+                terrainParentTile.key,
+                terrainSameTile.key,
+                terrainNonOverlappingTile.key
+            ];
+
+            const result = tsc._getTerrainCoordsForRegularTile(testTile);
+            expect(result[terrainChildTile.key]).toBeTruthy();
+            expect(result[terrainParentTile.key]).toBeTruthy();
+            expect(result[terrainSameTile.key]).toBeTruthy();
+            expect(result[terrainNonOverlappingTile.key]).toBeFalsy();
+        });
+
+        test('includes only renderable tiles', () => {
+            const testTile = new OverscaledTileID(2, 0, 2, 1, 1);
+            const terrainRenderableTile = new OverscaledTileID(3, 0, 3, 3, 2);
+            const terrainNonRenderableTile = new OverscaledTileID(3, 0, 3, 2, 2);
+
+            tsc._tiles = {
+                [terrainRenderableTile.key]: new Tile(terrainRenderableTile, 256),
+                [terrainNonRenderableTile.key]: new Tile(terrainNonRenderableTile, 256)
+            };
+            tsc._renderableTilesKeys = [terrainRenderableTile.key];
+
+            const result = tsc._getTerrainCoordsForRegularTile(testTile);
+            expect(result[terrainRenderableTile.key]).toBeTruthy();
+            expect(result[terrainNonRenderableTile.key]).toBeFalsy();
+        });
+
+        test('prepares correct matrix for child tile', () => {
+
+        });
+
+        test('prepares correct matrix for parent tile', () => {
+
+        });
+
+        test('prepares correct matrix for same tile', () => {
+
+        });
+    });
+
+    describe('#_getTerrainCoordsForOversizedTile', () => {
+        test('includes only overlapping tiles', () => {
+            const testTileOverlapping = new OverscaledTileID(2, 0, 2, 1, 1);
+            vi.spyOn(testTileOverlapping, 'isOverlappingTerrainTile').mockReturnValue(true);
+            const testTileNotOverlapping = new OverscaledTileID(2, 0, 2, 1, 1);
+            vi.spyOn(testTileNotOverlapping, 'isOverlappingTerrainTile').mockReturnValue(false);
+
+            const terrainTileRenderable = new OverscaledTileID(3, 0, 3, 3, 2);
+            tsc._tiles = {
+                [terrainTileRenderable.key]: new Tile(terrainTileRenderable, 256)
+            };
+            tsc._renderableTilesKeys = [terrainTileRenderable.key];
+
+            const resultOverlapping = tsc._getTerrainCoordsForOversizedTile(testTileOverlapping);
+            expect(resultOverlapping[terrainTileRenderable.key]).toBeTruthy();
+
+            const resultNotOverlapping = tsc._getTerrainCoordsForOversizedTile(testTileNotOverlapping);
+            expect(resultNotOverlapping[terrainTileRenderable.key]).toBeFalsy();
+        });
+
+        test('includes only renderable tiles', () => {
+            const testTile = new OverscaledTileID(2, 0, 2, 1, 1);
+            vi.spyOn(testTile, 'isOverlappingTerrainTile').mockReturnValue(true);
+
+            const terrainRenderableTile = new OverscaledTileID(3, 0, 3, 3, 2);
+            const terrainNonRenderableTile = new OverscaledTileID(3, 0, 3, 2, 2);
+
+            tsc._tiles = {
+                [terrainRenderableTile.key]: new Tile(terrainRenderableTile, 256),
+                [terrainNonRenderableTile.key]: new Tile(terrainNonRenderableTile, 256)
+            };
+            tsc._renderableTilesKeys = [terrainRenderableTile.key];
+
+            const result = tsc._getTerrainCoordsForOversizedTile(testTile);
+            expect(result[terrainRenderableTile.key]).toBeTruthy();
+            expect(result[terrainNonRenderableTile.key]).toBeFalsy();
+        });
+
+        test('prepares correct matrix for tile with smaller ZL', () => {
+
+        });
+
+        test('prepares correct matrix for tile with bigger ZL', () => {
+
+        });
+
+        test('prepares correct matrix for tile with same ZL', () => {
+
         });
     });
 });
