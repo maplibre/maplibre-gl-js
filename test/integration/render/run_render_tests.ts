@@ -156,11 +156,6 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
         throw new Error(`No expected*.png files found as ${dir}; did you mean to run tests with UPDATE=true?`);
     }
 
-    if (process.env.UPDATE) {
-        fs.writeFileSync(expectedPath, PNG.sync.write(actualImg));
-        return;
-    }
-
     // if we have multiple expected images, we'll compare against each one and pick the one with
     // the least amount of difference; this is useful for covering features that render differently
     // depending on platform, i.e. heatmaps use half-float textures for improved rendering where supported
@@ -194,6 +189,11 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
 
     testData.difference = minDiff;
     testData.ok = minDiff <= testData.allowed;
+
+    if (!testData.ok && process.env.UPDATE) {
+        console.log(`Updating ${expectedPath}`);
+        fs.writeFileSync(expectedPath, PNG.sync.write(actualImg));
+    }
 
     testData.expected = minExpectedBuf.toString('base64');
     testData.diff = diffBuf.toString('base64');
