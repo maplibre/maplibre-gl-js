@@ -153,18 +153,6 @@ describe('TerrainSourceCache', () => {
             expect(result[terrainRenderableTile.key]).toBeTruthy();
             expect(result[terrainNonRenderableTile.key]).toBeFalsy();
         });
-
-        test('prepares correct matrix for child tile', () => {
-
-        });
-
-        test('prepares correct matrix for parent tile', () => {
-
-        });
-
-        test('prepares correct matrix for same tile', () => {
-
-        });
     });
 
     describe('#_getTerrainCoordsForOversizedTile', () => {
@@ -203,18 +191,6 @@ describe('TerrainSourceCache', () => {
             const result = tsc._getTerrainCoordsForOversizedTile(testTile);
             expect(result[terrainRenderableTile.key]).toBeTruthy();
             expect(result[terrainNonRenderableTile.key]).toBeFalsy();
-        });
-
-        test('prepares correct matrix for tile with smaller ZL', () => {
-
-        });
-
-        test('prepares correct matrix for tile with bigger ZL', () => {
-
-        });
-
-        test('prepares correct matrix for tile with same ZL', () => {
-
         });
     });
 });
