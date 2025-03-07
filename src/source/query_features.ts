@@ -75,10 +75,11 @@ function getPixelPosMatrix(transform, tileID: OverscaledTileID) {
     const t = mat4.create();
     mat4.translate(t, t, [1, 1, 0]);
     mat4.scale(t, t, [transform.width * 0.5, transform.height * 0.5, 1]);
-    if (transform.calculatePosMatrix) { // Globe: TODO: remove this hack once queryRendererFeatures supports globe properly
+    if ('calculatePosMatrix' in transform) { // Globe: TODO: remove this hack once queryRendererFeatures supports globe properly
         return mat4.multiply(t, t, transform.calculatePosMatrix(tileID.toUnwrapped()));
     } else {
-        return t;
+        const scale = pixelsToTileUnits({tileID, tileSize: transform.tileSize}, 1, transform.zoom);
+        return mat4.scale(t, t, [1 / scale, 1 / scale, 1]);
     }
 }
 
