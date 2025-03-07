@@ -1,15 +1,15 @@
 import {StyleLayer, type QueryIntersectsFeatureParams} from '../style_layer';
 
-import {CircleBucket} from '../../data/bucket/circle_bucket';
-import {polygonIntersectsBufferedPoint} from '../../util/intersection_tests';
-import {getMaximumPaintValue, translateDistance, translate} from '../query_utils';
-import properties, {type CircleLayoutPropsPossiblyEvaluated, type CirclePaintPropsPossiblyEvaluated} from './circle_style_layer_properties.g';
-import {type Transitionable, type Transitioning, type Layout, type PossiblyEvaluated} from '../properties';
-import {type mat4, vec4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {vec4, type mat4} from 'gl-matrix';
 import type {Bucket, BucketParameters} from '../../data/bucket';
+import {CircleBucket} from '../../data/bucket/circle_bucket';
+import {polygonIntersectsBufferedPoint} from '../../util/intersection_tests';
+import {type Layout, type PossiblyEvaluated, type Transitionable, type Transitioning} from '../properties';
+import {getMaximumPaintValue, translate, translateDistance} from '../query_utils';
 import type {CircleLayoutProps, CirclePaintProps} from './circle_style_layer_properties.g';
+import properties, {type CircleLayoutPropsPossiblyEvaluated, type CirclePaintPropsPossiblyEvaluated} from './circle_style_layer_properties.g';
 
 export const isCircleStyleLayer = (layer: StyleLayer): layer is CircleStyleLayer => layer.type === 'circle';
 
@@ -40,13 +40,13 @@ export class CircleStyleLayer extends StyleLayer {
     }
 
     queryIntersectsFeature({
-        queryGeometry, // TILE COORDINATES
+        queryGeometry, // TILE COORDS
         feature,
         featureState,
-        geometry, // TILE COORDINATES
-        transform, // PIXELS TO TILE COORDIANTES (nomially, actually does more stuff)
-        pixelsToTileUnits, // PIXELS TO TILE UNITS
-        pixelPosMatrix // TILE COORDS TO PIXELS
+        geometry, // TILE COORDS
+        transform, // PIXEL COORDS TO TILE COORDS
+        pixelsToTileUnits, // PIXELS TO TILE COORDS
+        pixelPosMatrix // TILE COORDS TO PIXEL COORDS
     }: QueryIntersectsFeatureParams
     ): boolean {
         const translatedPolygon = translate(queryGeometry,
