@@ -7,12 +7,11 @@ import {type FakeServer, fakeServer} from 'nise';
 import {type RequestManager} from '../util/request_manager';
 import {sleep, stubAjaxGetImage} from '../util/test/util';
 import {Tile} from './tile';
-import {CanonicalTileID, OverscaledTileID} from './tile_id';
+import {type CanonicalTileRange, OverscaledTileID} from './tile_id';
 import {type Texture} from '../render/texture';
 import type {ImageSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
-import {type CanonicalTileRange} from '../../dist/maplibre-gl';
 
 function createSource(options) {
     options = extend({
@@ -252,12 +251,9 @@ describe('getOverlappingTileRanges', () => {
         ];
 
         const ranges = getOverlappingTileRanges(coords);
-
-        const getMaxRange = (z: number) =>
-            ({minX: 0, minY: 0, maxX: Math.pow(2, z), maxY: Math.pow(2, z)});
         const expected: Record<number, CanonicalTileRange> = {};
         for (let z = 0; z <= MAX_TILE_ZOOM; z++) {
-            expected[z] = getMaxRange(z);
+            expected[z] = {minX: 0, minY: 0, maxX: Math.pow(2, z), maxY: Math.pow(2, z)};
         }
 
         expect(ranges).toEqual(expected);
