@@ -1,0 +1,27 @@
+[
+    {
+        "geometry": {
+            "coordinates": [0, 0],
+            "type": "Point"
+        },
+        "layer": {
+            "id": "circle",
+            "layout": {},
+            "paint": {
+                "circle-color": {
+                    "a": 1,
+                    "b": 0,
+                    "g": 0,
+                    "r": 1
+                },
+                "circle-radius": 10
+            },
+            "source": "circle",
+            "type": "circle"
+        },
+        "properties": {},
+        "source": "circle",
+        "state": {},
+        "type": "Feature"
+    }
+]
