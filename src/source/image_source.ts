@@ -1,4 +1,4 @@
-import {CanonicalTileID} from './tile_id';
+import {CanonicalTileID, type CanonicalTileRange} from './tile_id';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {ImageRequest} from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
@@ -15,6 +15,7 @@ import type {
     VideoSourceSpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type Point from '@mapbox/point-geometry';
+import {MAX_TILE_ZOOM} from '../util/util';
 
 /**
  * Four geographical coordinates,
@@ -101,6 +102,7 @@ export class ImageSource extends Evented implements Source {
     flippedWindingOrder: boolean = false;
     _loaded: boolean;
     _request: AbortController;
+    _terrainTileRanges: {[zoom: string]: CanonicalTileRange};
 
     /** @internal */
     constructor(id: string, options: ImageSourceSpecification | VideoSourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
@@ -213,6 +215,10 @@ export class ImageSource extends Evented implements Source {
         // render data
         this.tileID = getCoordinatesCenterTileID(cornerCoords);
 
+        // Compute tiles overlapping with the image. We need to know for which
+        // terrain tiles we have to render the image.
+        this._terrainTileRanges = getOverlappingTileRanges(cornerCoords);
+
         // Constrain min/max zoom to our tile's zoom level in order to force
         // SourceCache to request this tile (no matter what the map's zoom
         // level)
@@ -263,6 +269,7 @@ export class ImageSource extends Evented implements Source {
         // If the world wraps, we may have multiple "wrapped" copies of the
         // single tile.
         if (this.tileID && this.tileID.equals(tile.tileID.canonical)) {
+            tile.tileID.terrainTileRanges = this._terrainTileRanges;
             this.tiles[String(tile.tileID.wrap)] = tile;
             tile.buckets = {};
         } else {
@@ -312,6 +319,47 @@ export function getCoordinatesCenterTileID(coords: Array<MercatorCoordinate>) {
         zoom,
         Math.floor((minX + maxX) / 2 * tilesAtZoom),
         Math.floor((minY + maxY) / 2 * tilesAtZoom));
+}
+
+/**
+ * Given a list of coordinates, determine overlapping tile ranges for all zoom levels.
+ *
+ * @returns Overlapping tile ranges for all zoom levels.
+ * @internal
+ */
+export function getOverlappingTileRanges(
+    coords: Array<MercatorCoordinate>
+): {[zoom: string]: CanonicalTileRange} {
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    for (const coord of coords) {
+        minX = Math.min(minX, coord.x);
+        minY = Math.min(minY, coord.y);
+        maxX = Math.max(maxX, coord.x);
+        maxY = Math.max(maxY, coord.y);
+    }
+
+    const ranges = {};
+
+    for (let z = 0; z <= MAX_TILE_ZOOM; z++) {
+        const tilesAtZoom = Math.pow(2, z);
+        const tileMinX = Math.floor(minX * tilesAtZoom);
+        const tileMinY = Math.floor(minY * tilesAtZoom);
+        const tileMaxX = Math.floor(maxX * tilesAtZoom);
+        const tileMaxY = Math.floor(maxY * tilesAtZoom);
+
+        ranges[z] = {
+            minX: tileMinX,
+            minY: tileMinY,
+            maxX: tileMaxX,
+            maxY: tileMaxY
+        };
+    }
+
+    return ranges;
 }
 
 function hasWrongWindingOrder(coords: Array<Point>) {
