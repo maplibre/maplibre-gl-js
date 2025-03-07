@@ -8,7 +8,7 @@
     },
     "center": [0, 0],
     "projection": { "type": "globe" },
-    "zoom": 14,
+    "zoom": 0,
     "sources": {
         "mapbox": {
             "type": "vector",
