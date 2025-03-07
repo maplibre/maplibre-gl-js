@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Display a globe with a vector map</title>
+        <meta
+            property="og:description"
+            content="Display a globe with a vector map."
+        />
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="../../dist/maplibre-gl.css" />
+        <script src="../../dist/maplibre-gl-dev.js"></script>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            html,
+            body,
+            #map {
+                height: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <script>
+            const map = new maplibregl.Map({
+                container: "map",
+                style: "https://demotiles.maplibre.org/style.json",
+                center: [-150, 50],
+                zoom: 2,
+                pitch: 0,
+                bearing: 0,
+            });
+
+            map.on("load", () => {
+                map.setProjection({ type: "globe" });
+
+                map.addSource("point", {
+                    type: "geojson",
+                    data: {
+                        type: "Feature",
+                        geometry: {
+                            type: "Point",
+                            coordinates: [0, 0],
+                        },
+                        properties: {},
+                    },
+                });
+
+                map.addLayer({
+                    id: "circle-layer",
+                    type: "circle",
+                    source: "point",
+                    paint: {
+                        "circle-color": "#FF0000",
+                        "circle-opacity": 1,
+                        "circle-stroke-color": "#ffffff",
+                        "circle-stroke-width": [
+                            "interpolate",
+                            ["linear"],
+                            ["zoom"],
+                            8,
+                            1,
+                            15,
+                            2,
+                        ],
+                        "circle-radius": [
+                            "interpolate",
+                            ["linear"],
+                            ["zoom"],
+                            8,
+                            5,
+                            15,
+                            10,
+                        ],
+                    },
+                });
+
+                map.on("mouseenter", "circle-layer", () => {
+                    map.getCanvas().style.cursor = "pointer";
+                });
+
+                map.on("mouseleave", "circle-layer", () => {
+                    map.getCanvas().style.cursor = "";
+                });
+            });
+        </script>
+    </body>
+</html>
