@@ -1,17 +1,17 @@
-import puppeteer, {type Browser, type Page} from 'puppeteer';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
+import {describe, beforeEach, beforeAll, afterEach, afterAll, test, expect} from 'vitest';
+import puppeteer, {type Page, type Browser} from 'puppeteer';
 
-import type {Server} from 'node:http';
-import http from 'node:http';
-import st from 'st';
 import {deepEqual} from '../lib/json-diff';
+import st from 'st';
+import http from 'node:http';
+import type {Server} from 'node:http';
 
+import path from 'node:path/posix';
 import fs from 'node:fs';
 import type {AddressInfo} from 'node:net';
-import path from 'node:path/posix';
 
-import {globSync} from 'glob';
 import {localizeURLs} from '../lib/localize-urls';
+import {globSync} from 'glob';
 
 import type * as maplibreglModule from '../../../dist/maplibre-gl';
 let maplibregl: typeof maplibreglModule;
@@ -134,7 +134,7 @@ describe('query tests', () => {
         browser = await puppeteer.launch({
             headless: true,
             args: [
-                '--enable-webgl',
+                '--enable-webgl', 
                 '--no-sandbox',
             ],
         });
@@ -196,10 +196,8 @@ describe('query tests', () => {
                 console.log('updating', expectedPath);
                 fs.writeFileSync(expectedPath, JSON.stringify(actual, null, 2));
             }
-            if (!isEqual) {
-                expect(actual).toEqual(fixture.expected);
-                expect(false, 'Query test failed');
-            }
+            expect(isEqual).toBeTruthy();
+
         });
 
     }
