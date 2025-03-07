@@ -7,6 +7,7 @@
 
 ### 🐞 Bug fixes
 
+- Fix intersection detection between MultiPolygons and Points ([#5590](https://github.com/maplibre/maplibre-gl-js/pull/5590))
 - _...Add new stuff here..._
 
 ## 5.2.0
