@@ -40,13 +40,13 @@ export class CircleStyleLayer extends StyleLayer {
     }
 
     queryIntersectsFeature({
-        queryGeometry, // TILE COORDS
+        queryGeometry,
         feature,
         featureState,
-        geometry, // TILE COORDS
-        transform, // PIXEL COORDS TO TILE COORDS
-        pixelsToTileUnits, // PIXELS TO TILE COORDS
-        pixelPosMatrix // TILE COORDS TO PIXEL COORDS
+        geometry,
+        transform,
+        pixelsToTileUnits,
+        pixelPosMatrix
     }: QueryIntersectsFeatureParams
     ): boolean {
         const translatedPolygon = translate(queryGeometry,

@@ -7,6 +7,7 @@
 
 ### 🐞 Bug fixes
 
+- Fix circle layer hitbox in Globe projection mode ([#5599](https://github.com/maplibre/maplibre-gl-js/pull/5599))
 - _...Add new stuff here..._
 
 ## 5.2.0
