@@ -8,6 +8,7 @@
 ### 🐞 Bug fixes
 
 - _...Add new stuff here..._
+- Fix cacheControl for Tile to not ignore values of 0
 
 ## 5.2.0
 
