@@ -39,6 +39,8 @@ class StubMap extends Evented {
     _getMapId() {
         return 1;
     }
+
+    migrateProjection() {}
 }
 
 function createStyle(styleJSON: StyleSpecification): Promise<Style> {
