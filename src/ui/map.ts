@@ -2087,8 +2087,7 @@ export class Map extends Camera {
                         }
                     }
 
-                    const source = this.style.getSource(e.sourceId);
-                    if (source?.type === 'image') {
+                    if (e.source?.type === 'image') {
                         this.terrain.sourceCache.freeRtt();
                     } else {
                         this.terrain.sourceCache.freeRtt(e.tile.tileID);
