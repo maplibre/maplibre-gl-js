@@ -1,0 +1,41 @@
+{
+    "version": 8,
+    "metadata": {
+        "skipLayerDelete": true,
+        "test": {
+            "queryGeometry": [265, 256]
+        }
+    },
+    "center": [0, 0],
+    "projection": { "type": "globe" },
+    "zoom": 0,
+    "sources": {
+        "mapbox": {
+            "type": "vector",
+            "maxzoom": 14,
+            "tiles": ["local://tiles/{z}-{x}-{y}.mvt"]
+        },
+        "circle": {
+            "type": "geojson",
+            "data": {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [0, 0]
+                },
+                "properties": {}
+            }
+        }
+    },
+    "layers": [
+        {
+            "id": "circle",
+            "type": "circle",
+            "source": "circle",
+            "paint": {
+                "circle-color": "#FF0000",
+                "circle-radius": 10
+            }
+        }
+    ]
+}
