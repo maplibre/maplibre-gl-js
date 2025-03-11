@@ -312,6 +312,7 @@ export class SymbolBucket implements Bucket {
 
     collisionBoxArray: CollisionBoxArray;
     zoom: number;
+    globalState: Record<string, any>;
     overscaling: number;
     layers: Array<SymbolStyleLayer>;
     layerIds: Array<string>;
@@ -363,6 +364,7 @@ export class SymbolBucket implements Bucket {
     constructor(options: BucketParameters<SymbolStyleLayer>) {
         this.collisionBoxArray = options.collisionBoxArray;
         this.zoom = options.zoom;
+        this.globalState = options.globalState;
         this.overscaling = options.overscaling;
         this.layers = options.layers;
         this.layerIds = this.layers.map(layer => layer.id);

@@ -99,6 +99,7 @@ export class LineBucket implements Bucket {
 
     index: number;
     zoom: number;
+    globalState: Record<string, any>;
     overscaling: number;
     layers: Array<LineStyleLayer>;
     layerIds: Array<string>;
@@ -123,6 +124,7 @@ export class LineBucket implements Bucket {
 
     constructor(options: BucketParameters<LineStyleLayer>) {
         this.zoom = options.zoom;
+        this.globalState = options.globalState;
         this.overscaling = options.overscaling;
         this.layers = options.layers;
         this.layerIds = this.layers.map(layer => layer.id);

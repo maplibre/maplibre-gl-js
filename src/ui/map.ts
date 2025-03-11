@@ -493,6 +493,7 @@ export class Map extends Camera {
     _clickTolerance: number;
     _overridePixelRatio: number | null | undefined;
     _maxCanvasSize: [number, number];
+    _globalState: Record<string, any>;
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
 
     /**
@@ -631,6 +632,8 @@ export class Map extends Camera {
 
         this._requestManager = new RequestManager(resolvedOptions.transformRequest);
 
+        this._globalState = {};
+
         if (typeof resolvedOptions.container === 'string') {
             this._container = document.getElementById(resolvedOptions.container);
             if (!this._container) {
@@ -734,6 +737,22 @@ export class Map extends Camera {
      */
     _getMapId() {
         return this._mapId;
+    }
+
+    /**
+     * Sets global map state. State values can be retrieved with `global-state` expression.
+     * @param globalState - An object representing the global state. If `null`, the global state will be reset.
+     */
+    setGlobalState(globalState: Record<string, any> | null) {
+        this._globalState = globalState === null ? {} : globalState;
+
+        if (this._loaded) {
+            for (const sourceCache of Object.values(this.style.sourceCaches)) {
+                sourceCache.reload();
+            }
+        }
+
+        return this._update(true);
     }
 
     /**
@@ -3154,7 +3173,8 @@ export class Map extends Camera {
                 now,
                 fadeDuration,
                 zoomHistory: this.style.zoomHistory,
-                transition: this.style.getTransition()
+                transition: this.style.getTransition(),
+                globalState: this._globalState
             });
 
             const factor = parameters.crossFadingFactor();
