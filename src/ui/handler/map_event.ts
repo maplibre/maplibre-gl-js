@@ -1,5 +1,5 @@
 import {MapMouseEvent, MapTouchEvent, MapWheelEvent} from '../events';
-import {Handler} from '../handler_manager';
+import {type Handler} from '../handler_manager';
 import type {Map} from '../map';
 import type Point from '@mapbox/point-geometry';
 

@@ -1,0 +1,90 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "collisionDebug": true,
+      "height": 256,
+      "width": 256
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "zoom": 0,
+  "center": [
+    0,
+    45
+  ],
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "projection": {
+    "type": "globe"
+  },
+  "terrain": {
+    "source": "terrain",
+    "exaggeration": 2
+  },
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": ["local://tiles/{z}-{x}-{y}.terrain.png"],
+      "maxzoom": 15,
+      "tileSize": 256
+    },
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              -45,
+              0
+            ],
+            [
+              45,
+              0
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "grey"
+      }
+    },
+    {
+      "id": "line",
+      "type": "line",
+      "source": "geojson",
+      "layout": {
+        "line-join": "round",
+        "line-cap": "round"
+      },
+      "paint": {
+        "line-color": "green",
+        "line-width": 1
+      }
+    },
+    {
+      "id": "text",
+      "type": "symbol",
+      "source": "geojson",
+      "layout": {
+        "symbol-placement": "line",
+        "text-field": "AAAAAAAAAAA",
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ],
+        "text-rotation-alignment": "map",
+        "text-pitch-alignment": "map"
+      }
+    }
+  ]
+}

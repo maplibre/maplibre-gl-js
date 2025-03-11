@@ -14,7 +14,7 @@ import type {
     ImageSourceSpecification,
     VideoSourceSpecification
 } from '@maplibre/maplibre-gl-style-spec';
-import Point from '@mapbox/point-geometry';
+import type Point from '@mapbox/point-geometry';
 
 /**
  * Four geographical coordinates,
@@ -36,7 +36,7 @@ export type UpdateImageOptions = {
      * The image coordinates
      */
     coordinates?: Coordinates;
-}
+};
 
 /**
  * A data source containing an image.

@@ -1,10 +1,11 @@
+import {describe, test, expect, vi} from 'vitest';
 import {Event, Evented} from './evented';
 
 describe('Evented', () => {
 
     test('calls listeners added with "on"', () => {
         const evented = new Evented();
-        const listener = jest.fn();
+        const listener = vi.fn();
         evented.on('a', listener);
         evented.fire(new Event('a'));
         evented.fire(new Event('a'));
@@ -13,13 +14,22 @@ describe('Evented', () => {
 
     test('calls listeners added with "once" once', () => {
         const evented = new Evented();
-        const listener = jest.fn();
+        const listener = vi.fn();
         evented.once('a', listener);
         evented.fire(new Event('a'));
         evented.fire(new Event('a'));
         expect(listener).toHaveBeenCalledTimes(1);
         expect(evented.listens('a')).toBeFalsy();
+    });
 
+    test('calls listeners added with "on" and allows to unsubscribe', () => {
+        const evented = new Evented();
+        const listener = vi.fn();
+        const subscription = evented.on('a', listener);
+        evented.fire(new Event('a'));
+        subscription.unsubscribe();
+        evented.fire(new Event('a'));
+        expect(listener).toHaveBeenCalledTimes(1);
     });
 
     test('returns a promise when no listener is provided to "once" method', async () => {
@@ -61,7 +71,7 @@ describe('Evented', () => {
 
     test('removes listeners with "off"', () => {
         const evented = new Evented();
-        const listener = jest.fn();
+        const listener = vi.fn();
         evented.on('a', listener);
         evented.off('a', listener);
         evented.fire(new Event('a'));
@@ -70,7 +80,7 @@ describe('Evented', () => {
 
     test('removes one-time listeners with "off"', () => {
         const evented = new Evented();
-        const listener = jest.fn();
+        const listener = vi.fn();
         evented.once('a', listener);
         evented.off('a', listener);
         evented.fire(new Event('a'));
@@ -79,7 +89,7 @@ describe('Evented', () => {
 
     test('once listener is removed prior to call', () => {
         const evented = new Evented();
-        const listener = jest.fn();
+        const listener = vi.fn();
         evented.once('a', () => {
             listener();
             evented.fire(new Event('a'));
@@ -115,7 +125,7 @@ describe('Evented', () => {
 
     test('has backward compatibility for fire(string, object) API', () => {
         const evented = new Evented();
-        const listener = jest.fn(x => x);
+        const listener = vi.fn(x => x);
         evented.on('a', listener);
         evented.fire('a' as any as Event, {foo: 'bar'});
         expect(listener).toHaveBeenCalledTimes(1);
@@ -126,8 +136,8 @@ describe('Evented', () => {
     test('on is idempotent', () => {
         const evented = new Evented();
         const order = [];
-        const listenerA = jest.fn(() => order.push('A'));
-        const listenerB = jest.fn(() => order.push('B'));
+        const listenerA = vi.fn(() => order.push('A'));
+        const listenerB = vi.fn(() => order.push('B'));
         evented.on('a', listenerA);
         evented.on('a', listenerB);
         evented.on('a', listenerA);
@@ -141,7 +151,7 @@ describe('Evented', () => {
 describe('evented parents', () => {
 
     test('adds parents with "setEventedParent"', () => {
-        const listener = jest.fn();
+        const listener = vi.fn();
         const eventedSource = new Evented();
         const eventedSink = new Evented();
         eventedSource.setEventedParent(eventedSink);
@@ -197,7 +207,7 @@ describe('evented parents', () => {
     });
 
     test('removes parents with "setEventedParent(null)"', () => {
-        const listener = jest.fn();
+        const listener = vi.fn();
         const eventedSource = new Evented();
         const eventedSink = new Evented();
         eventedSink.on('a', listener);

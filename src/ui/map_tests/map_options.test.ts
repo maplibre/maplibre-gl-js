@@ -1,5 +1,6 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest, createStyle} from '../../util/test/util';
-import {EvaluationParameters} from '../../style/evaluation_parameters';
+import {type EvaluationParameters} from '../../style/evaluation_parameters';
 import {Style} from '../../style/style';
 import {config} from '../../util/config';
 
@@ -27,7 +28,7 @@ describe('#mapOptions', () => {
 
     test('Style validation is enabled by default', () => {
         let validationOption = false;
-        jest.spyOn(Style.prototype, 'loadJSON').mockImplementationOnce((styleJson, options) => {
+        vi.spyOn(Style.prototype, 'loadJSON').mockImplementationOnce((styleJson, options) => {
             validationOption = options.validate;
         });
         createMap();
@@ -36,7 +37,7 @@ describe('#mapOptions', () => {
 
     test('Style validation disabled using mapOptions', () => {
         let validationOption = true;
-        jest.spyOn(Style.prototype, 'loadJSON').mockImplementationOnce((styleJson, options) => {
+        vi.spyOn(Style.prototype, 'loadJSON').mockImplementationOnce((styleJson, options) => {
             validationOption = options.validate;
         });
         createMap({validateStyle: false});
@@ -47,7 +48,7 @@ describe('#mapOptions', () => {
     test('fadeDuration is set after first idle event', async () => {
         let idleTriggered = false;
         const fadeDuration = 100;
-        const spy = jest.spyOn(Style.prototype, 'update').mockImplementation((parameters: EvaluationParameters) => {
+        const spy = vi.spyOn(Style.prototype, 'update').mockImplementation((parameters: EvaluationParameters) => {
             if (!idleTriggered) {
                 expect(parameters.fadeDuration).toBe(0);
             } else {

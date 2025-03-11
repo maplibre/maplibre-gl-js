@@ -1,5 +1,5 @@
-
-import puppeteer, {Page, Browser} from 'puppeteer';
+import {describe, beforeEach, beforeAll, afterEach, afterAll, test, expect} from 'vitest';
+import puppeteer, {type Page, type Browser} from 'puppeteer';
 
 import {deepEqual} from '../lib/json-diff';
 import st from 'st';
@@ -13,10 +13,8 @@ import type {AddressInfo} from 'node:net';
 import {localizeURLs} from '../lib/localize-urls';
 import {globSync} from 'glob';
 
-import * as maplibreglModule from '../../../dist/maplibre-gl';
+import type * as maplibreglModule from '../../../dist/maplibre-gl';
 let maplibregl: typeof maplibreglModule;
-
-jest.retryTimes(3);
 
 function performQueryOnFixture(fixture)  {
 
@@ -89,7 +87,7 @@ function performQueryOnFixture(fixture)  {
             interactive: false,
             attributionControl: false,
             pixelRatio: options.pixelRatio,
-            preserveDrawingBuffer: true,
+            canvasContextAttributes: {preserveDrawingBuffer: true, powerPreference: 'default'},
             fadeDuration: options.fadeDuration || 0,
             localIdeographFontFamily: options.localIdeographFontFamily || false,
             crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions
@@ -133,7 +131,13 @@ describe('query tests', () => {
                 cors: true,
             })
         );
-        browser = await puppeteer.launch({headless: true});
+        browser = await puppeteer.launch({
+            headless: true,
+            args: [
+                '--enable-webgl', 
+                '--no-sandbox',
+            ],
+        });
         await new Promise<void>((resolve) => server.listen(resolve));
     }, 60000);
 
@@ -160,8 +164,7 @@ describe('query tests', () => {
     for (const styleJson of testStyles) {
         const testCaseRoot = path.dirname(styleJson.replace(/\\/g, '/')); // glob is returning paths that dirname can't handle...
         const caseName = path.relative(allTestsRoot, testCaseRoot);
-        // eslint-disable-next-line no-loop-func
-        test(caseName, async () => {
+        test(caseName, {retry: 3, timeout: 20000}, async () => {
             const port = (server.address() as AddressInfo).port;
             const fixture = await dirToJson(testCaseRoot, port);
 
@@ -195,7 +198,7 @@ describe('query tests', () => {
             }
             expect(isEqual).toBeTruthy();
 
-        }, 20000);
+        });
 
     }
 });
@@ -246,14 +249,15 @@ function processStyle(testName:string, style: unknown, port:number) {
 
     clone.metadata = clone.metadata || {};
 
-    clone.metadata.test = Object.assign({
+    clone.metadata.test = {
         testName,
         width: 512,
         height: 512,
         pixelRatio: 1,
         recycleMap: false,
-        allowed: 0.00015
-    }, clone.metadata.test);
+        allowed: 0.00015,
+        ...clone.metadata.test
+    };
 
     return clone;
 }

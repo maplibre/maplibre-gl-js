@@ -193,6 +193,38 @@
         "zoom": 8,
         "tags": ["place_label:settlement", "road", "hillshade"]
       }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [8.404, 49.702],
+              [8.885, 48.3139],
+              [12.006, 49.484],
+              [9.639, 50.982],
+              [8.404, 49.702]
+            ]
+          ],
+          [
+            [
+              [10.955, 50.670],
+              [10.207, 49.660],
+              [10.893, 48.2862],
+              [12.594, 48.705],
+              [12.755, 50.353],
+              [10.955, 50.670]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "place_name": "Query, Germany z8",
+        "zoom": 8,
+        "tags": ["query"]
+      }
     }
   ]
 }

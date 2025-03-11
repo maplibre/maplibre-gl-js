@@ -1,5 +1,6 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate} from './util';
+import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate, radiansToDegrees, degreesToRadians, rollPitchBearingToQuat, getRollPitchBearing, getAngleDelta, scaleZoom, zoomScale} from './util';
 import {Canvas} from 'canvas';
 
 describe('util', () => {
@@ -118,6 +119,14 @@ describe('util', () => {
         expect(mod(4, 3)).toBe(1);
         expect(mod(-1, 3)).toBe(2);
         expect(mod(-1, 3)).toBe(2);
+    });
+
+    test('degreesToRadians', () => {
+        expect(degreesToRadians(1.0)).toBe(Math.PI / 180.0);
+    });
+
+    test('radiansToDegrees', () => {
+        expect(radiansToDegrees(1.0)).toBe(180.0 / Math.PI);
     });
 
     test('distanceOfAnglesRadians', () => {
@@ -303,13 +312,13 @@ describe('util readImageUsingVideoFrame', () => {
         get format() {
             return format;
         },
-        copyTo: jest.fn(buf => {
+        copyTo: vi.fn(buf => {
             buf.set(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]).subarray(0, buf.length));
             return Promise.resolve();
         }),
-        close: jest.fn(),
+        close: vi.fn(),
     };
-    (window as any).VideoFrame = jest.fn(() => frame);
+    (window as any).VideoFrame = vi.fn(() => frame);
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = 2;
 
@@ -352,7 +361,7 @@ describe('util readImageUsingVideoFrame', () => {
 
     describe('layout/rect', () => {
         beforeEach(() => {
-            (window as any).VideoFrame = jest.fn(() => frame);
+            (window as any).VideoFrame = vi.fn(() => frame);
             canvas.width = canvas.height = 3;
         });
 
@@ -463,5 +472,58 @@ describe('util readImageDataUsingOffscreenCanvas', () => {
             10, 0, 0, 255, 0, 20, 0, 255,
             0, 0, 30, 255, 40, 40, 40, 255,
         ]);
+    });
+});
+
+describe('util rotations', () => {
+    test('rollPitchBearingToQuat', () => {
+        const roll = 10;
+        const pitch = 20;
+        const bearing = 30;
+
+        const rotation = rollPitchBearingToQuat(roll, pitch, bearing);
+        const angles = getRollPitchBearing(rotation);
+
+        expect(angles.roll).toBeCloseTo(roll, 6);
+        expect(angles.pitch).toBeCloseTo(pitch, 6);
+        expect(angles.bearing).toBeCloseTo(bearing, 6);
+    });
+
+    test('rollPitchBearingToQuat sinuglarity', () => {
+        const roll = 10;
+        const pitch = 0;
+        const bearing = 30;
+
+        const rotation = rollPitchBearingToQuat(roll, pitch, bearing);
+        const angles = getRollPitchBearing(rotation);
+
+        expect(angles.pitch).toBeCloseTo(0, 5);
+        expect(wrap(angles.bearing + angles.roll, -180, 180)).toBeCloseTo(wrap(bearing + roll, -180, 180), 6);
+    });
+});
+
+describe('util getAngleDelta', () => {
+    test('positive direction', () => {
+        const lastPoint = new Point(0, 1);
+        const currentPoint = new Point(1, 0);
+        const center = new Point(0, 0);
+
+        expect(getAngleDelta(lastPoint, currentPoint, center)).toBe(90);
+    });
+
+    test('positive direction', () => {
+        const lastPoint = new Point(1, 0);
+        const currentPoint = new Point(0, 1);
+        const center = new Point(0, 0);
+
+        expect(getAngleDelta(lastPoint, currentPoint, center)).toBe(-90);
+    });
+});
+describe('util scaleZoom and zoomScale relation', () => {
+    test('convert and back', () => {
+        expect(scaleZoom(0)).toBe(-Infinity);
+        expect(scaleZoom(10)).toBe(3.3219280948873626);
+        expect(zoomScale(3.3219280948873626)).toBeCloseTo(10, 10);
+        expect(scaleZoom(zoomScale(5))).toBe(5);
     });
 });

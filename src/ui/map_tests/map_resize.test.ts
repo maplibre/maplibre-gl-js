@@ -1,4 +1,5 @@
-import {MercatorProjection} from '../../geo/projection/mercator';
+import {describe, beforeEach, test, expect, vi} from 'vitest';
+import {MercatorProjection} from '../../geo/projection/mercator_projection';
 import {createMap, beforeMapTest, sleep} from '../../util/test/util';
 
 beforeEach(() => {
@@ -36,8 +37,8 @@ describe('#resize', () => {
     });
 
     test('listen to window resize event', () => {
-        const spy = jest.fn();
-        global.ResizeObserver = jest.fn().mockImplementation(() => ({
+        const spy = vi.fn();
+        global.ResizeObserver = vi.fn().mockImplementation(() => ({
             observe: spy
         }));
 
@@ -48,15 +49,15 @@ describe('#resize', () => {
 
     test('do not resize if trackResize is false', () => {
         let observerCallback: Function = null;
-        global.ResizeObserver = jest.fn().mockImplementation((c) => ({
+        global.ResizeObserver = vi.fn().mockImplementation((c) => ({
             observe: () => { observerCallback = c; }
         }));
 
         const map = createMap({trackResize: false});
 
-        const spyA = jest.spyOn(map, 'stop');
-        const spyB = jest.spyOn(map, '_update');
-        const spyC = jest.spyOn(map, 'resize');
+        const spyA = vi.spyOn(map, 'stop');
+        const spyB = vi.spyOn(map, '_update');
+        const spyC = vi.spyOn(map, 'resize');
 
         observerCallback();
 
@@ -67,15 +68,16 @@ describe('#resize', () => {
 
     test('do resize if trackResize is true (default)', async () => {
         let observerCallback: Function = null;
-        global.ResizeObserver = jest.fn().mockImplementation((c) => ({
+        global.ResizeObserver = vi.fn().mockImplementation((c) => ({
             observe: () => { observerCallback = c; }
         }));
 
         const map = createMap();
+
         map.style.projection = new MercatorProjection();
-        const resizeSpy = jest.spyOn(map, 'resize');
-        const redrawSpy = jest.spyOn(map, 'redraw');
-        const renderSpy = jest.spyOn(map, '_render');
+        const resizeSpy = vi.spyOn(map, 'resize');
+        const redrawSpy = vi.spyOn(map, 'redraw');
+        const renderSpy = vi.spyOn(map, '_render');
 
         // The initial "observe" event fired by ResizeObserver should be captured/muted
         // in the map constructor

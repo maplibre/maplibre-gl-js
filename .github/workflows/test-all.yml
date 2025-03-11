@@ -36,10 +36,8 @@ jobs:
           rm -rf docs/API/_media
           docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build --strict
       - name: Check spelling
-        uses: streetsidesoftware/cspell-action@v6
-        with:
-          files: "**/*.{html,md}"
-          incremental_files_only: false
+        # This need to run after the docs are built
+        run: npm run spellcheck
 
   unit-tests:
     name: Unit tests and Coverage
@@ -61,9 +59,9 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
-          files: ${{ github.workspace }}/coverage/jest/codecov.json
+          files: ${{ github.workspace }}/coverage/vitest/unit/coverage-final.json
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
           disable_search: true
@@ -92,9 +90,9 @@ jobs:
       - run: npm run test-integration-ci
       - name: Upload coverage reports to Codecov
         if: '!cancelled()'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
-          files: ${{ github.workspace }}/coverage/jest/codecov.json
+          files: ${{ github.workspace }}/coverage/vitest/integration/coverage-final.json
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
           disable_search: true
@@ -130,7 +128,7 @@ jobs:
           CURRENT_SPLIT_INDEX: ${{ matrix.split }}
       - name: Upload coverage reports to Codecov
         if: '!cancelled()'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           files: ${{ github.workspace }}/coverage/render/codecov.json
           verbose: true

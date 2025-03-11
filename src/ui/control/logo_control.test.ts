@@ -1,3 +1,4 @@
+import {describe, beforeEach, test, expect} from 'vitest';
 import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util';
 
 function createMap(logoPosition, maplibreLogo) {

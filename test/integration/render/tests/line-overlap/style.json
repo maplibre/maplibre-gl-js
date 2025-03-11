@@ -1,0 +1,69 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 604,
+      "width": 2500
+    }
+  },
+  "sources": {
+    "labels": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "name": "labels",
+        "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+        "features": [
+          { "type": "Feature", "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 10.4548, 30.23721 ], [ 12.10124, 29.17623 ], [ 13.06919, 28.59383 ], [ 13.90801, 28.14773 ], [ 15.0633, 27.62122 ], [ 16.73336, 26.94366 ], [ 19.25273, 25.9962 ], [ 24.38536, 24.24042 ] ] ] } },
+          { "type": "Feature", "geometry": { "type": "MultiLineString", "coordinates": [ [ [ -2.53029, 24.08627 ], [ -0.92903, 25.43133 ], [ 1.69781, 27.71044 ], [ 2.50976, 28.48152 ], [ 3.12575, 29.15906 ], [ 3.91076, 30.19778 ], [ 4.83945, 31.62538 ], [ 5.99138, 33.53524 ], [ 7.09863, 35.58912 ] ] ] } },
+          { "type": "Feature", "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 9.46878, 36.95101 ], [ 9.12957, 35.162 ], [ 9.0269, 34.31319 ], [ 9.02233, 33.87585 ], [ 9.08728, 33.48338 ], [ 9.21149, 33.11513 ], [ 9.85827, 31.74493 ] ] ] } },
+          { "type": "Feature", "geometry": { "type": "MultiLineString", "coordinates": [ [ [ -8.3277, 37.45789 ], [ -8.26268, 38.29508 ], [ -8.17222, 38.95447 ], [ -7.58916, 41.68053 ] ] ] } },
+          { "type": "Feature", "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 14.23254, 36.17485 ], [ 14.65497, 35.89509 ] ] ] } }
+        ]
+        }
+      }
+  },
+  "layers": [
+      {
+        "id": "lines-red",
+        "type": "line",
+        "source": "labels",
+        "layout": {
+          "visibility": "visible"
+        },
+        "paint": {
+          "line-color": "rgba(255, 0, 0, 1.0)",
+          "line-width": 20
+        }
+      },
+      {
+        "id": "lines-green",
+        "type": "line",
+        "source": "labels",
+        "layout": {
+          "visibility": "visible"
+        },
+        "paint": {
+          "line-color": "rgba(0, 255, 0, 1.0)",
+          "line-width": 12
+        }
+      },
+      {
+        "id": "lines-blue",
+        "type": "line",
+        "source": "labels",
+        "layout": {
+          "visibility": "visible"
+        },
+        "paint": {
+          "line-color": "rgba(0, 0, 255, 1.0)",
+          "line-width": 4
+        }
+      }
+  ],
+  "zoom": 7.061048686059204,
+  "center": [10.836805338905833, 31.325456717805366],
+  "pitch": 60,
+  "bearing": -117.25161852328324,
+  "roll": 0.7795022736613696
+}

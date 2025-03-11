@@ -1,5 +1,6 @@
+import {beforeEach, test, expect} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
-import {StyleImageInterface} from '../../style/style_image';
+import {type StyleImageInterface} from '../../style/style_image';
 
 beforeEach(() => {
     beforeMapTest();

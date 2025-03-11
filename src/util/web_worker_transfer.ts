@@ -191,7 +191,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
 
     if (!klass.serialize) {
         for (const key in input) {
-            if (!input.hasOwnProperty(key)) continue; // eslint-disable-line no-prototype-builtins
+            if (!input.hasOwnProperty(key)) continue;
             if (registry[classRegistryKey].omit.indexOf(key) >= 0) continue;
             const property = input[key];
             properties[key] = registry[classRegistryKey].shallow.indexOf(key) >= 0 ?

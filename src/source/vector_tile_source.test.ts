@@ -1,16 +1,17 @@
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {fakeServer, type FakeServer} from 'nise';
-import {Source} from './source';
+import {type Source} from './source';
 import {VectorTileSource} from './vector_tile_source';
-import {Tile} from './tile';
+import {type Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {Evented} from '../util/evented';
 import {RequestManager} from '../util/request_manager';
 import fixturesSource from '../../test/unit/assets/source.json' with {type: 'json'};
 import {getMockDispatcher, getWrapDispatcher, sleep, waitForMetadataEvent} from '../util/test/util';
-import {Map} from '../ui/map';
-import {WorkerTileParameters} from './worker_source';
+import {type Map} from '../ui/map';
+import {type WorkerTileParameters} from './worker_source';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
-import {ActorMessage, MessageType} from '../util/actor_messages';
+import {type ActorMessage, MessageType} from '../util/actor_messages';
 
 function createSource(options, transformCallback?, clearTiles = () => {}) {
     const source = new VectorTileSource('id', options, getMockDispatcher(), options.eventedParent);
@@ -77,7 +78,7 @@ describe('VectorTileSource', () => {
 
     test('transforms the request for TileJSON URL', () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
-        const transformSpy = jest.fn().mockImplementation((url) => {
+        const transformSpy = vi.fn().mockImplementation((url) => {
             return {url};
         });
 
@@ -173,7 +174,7 @@ describe('VectorTileSource', () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
 
         const source = createSource({url: '/source.json'});
-        const transformSpy = jest.spyOn(source.map._requestManager, 'transformRequest');
+        const transformSpy = vi.spyOn(source.map._requestManager, 'transformRequest');
         const promise = waitForMetadataEvent(source);
         server.respond();
         await promise;
@@ -206,7 +207,7 @@ describe('VectorTileSource', () => {
         const tile = {
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
             state: 'loading',
-            loadVectorData: jest.fn(),
+            loadVectorData: vi.fn(),
             setExpiryData() {}
         } as any as Tile;
         await source.loadTile(tile);
@@ -228,7 +229,7 @@ describe('VectorTileSource', () => {
         const tile = {
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
             state: 'loading',
-            loadVectorData: jest.fn(),
+            loadVectorData: vi.fn(),
             setExpiryData() {}
         } as any as Tile;
         await expect(source.loadTile(tile)).rejects.toThrow('Error');
@@ -252,7 +253,7 @@ describe('VectorTileSource', () => {
         const tile = {
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
             state: 'loading',
-            loadVectorData: jest.fn(),
+            loadVectorData: vi.fn(),
             setExpiryData() {}
         } as any as Tile;
         await source.loadTile(tile);
@@ -398,7 +399,7 @@ describe('VectorTileSource', () => {
     });
 
     test('setTiles only clears the cache once the TileJSON has reloaded', async () => {
-        const clearTiles = jest.fn();
+        const clearTiles = vi.fn();
         const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']}, undefined, clearTiles);
         source.setTiles(['http://example2.com/{z}/{x}/{y}.pbf']);
         expect(clearTiles.mock.calls).toHaveLength(0);

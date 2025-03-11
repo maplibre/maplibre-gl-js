@@ -16,7 +16,7 @@ import type {
 
 import type {LoadVectorTileResult} from './vector_tile_worker_source';
 import type {RequestParameters} from '../util/ajax';
-import {isUpdateableGeoJSON, type GeoJSONSourceDiff, applySourceDiff, toUpdateable, GeoJSONFeatureId} from './geojson_source_diff';
+import {isUpdateableGeoJSON, type GeoJSONSourceDiff, applySourceDiff, toUpdateable, type GeoJSONFeatureId} from './geojson_source_diff';
 import type {ClusterIDAndSource, GeoJSONWorkerSourceLoadDataResult, RemoveSourceParams} from '../util/actor_messages';
 
 /**
@@ -31,7 +31,7 @@ export type GeoJSONWorkerOptions = {
     filter?: Array<unknown>;
     promoteId?: string;
     collectResourceTiming?: boolean;
-}
+};
 
 /**
  * Parameters needed to load a geojson to the worker
@@ -226,7 +226,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
                 const parsed = JSON.parse(params.data);
                 this._dataUpdateable = isUpdateableGeoJSON(parsed, promoteId) ? toUpdateable(parsed, promoteId) : undefined;
                 return parsed;
-            } catch (e) {
+            } catch {
                 throw new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`);
             }
         }

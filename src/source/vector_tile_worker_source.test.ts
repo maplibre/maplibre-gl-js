@@ -1,12 +1,13 @@
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
-import {LoadVectorData, VectorTileWorkerSource} from '../source/vector_tile_worker_source';
+import {type LoadVectorData, VectorTileWorkerSource} from '../source/vector_tile_worker_source';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {fakeServer, type FakeServer} from 'nise';
-import {IActor} from '../util/actor';
-import {TileParameters, WorkerTileParameters, WorkerTileResult} from './worker_source';
+import {type IActor} from '../util/actor';
+import {type TileParameters, type WorkerTileParameters, type WorkerTileResult} from './worker_source';
 import {WorkerTile} from './worker_tile';
 import {setPerformance, sleep} from '../util/test/util';
 import {ABORT_ERROR} from '../util/abort_error';
@@ -24,7 +25,7 @@ describe('vector tile worker source', () => {
 
     afterEach(() => {
         server.restore();
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
     test('VectorTileWorkerSource#abortTile aborts pending request', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
@@ -64,7 +65,7 @@ describe('vector tile worker source', () => {
 
     test('VectorTileWorkerSource#reloadTile reloads a previously-loaded tile', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
-        const parse = jest.fn().mockReturnValue(Promise.resolve({} as WorkerTileResult));
+        const parse = vi.fn().mockReturnValue(Promise.resolve({} as WorkerTileResult));
 
         source.loaded = {
             '0': {
@@ -80,7 +81,7 @@ describe('vector tile worker source', () => {
     });
 
     test('VectorTileWorkerSource#loadTile reparses tile if the reloadTile has been called during parsing', async () => {
-        const rawTileData = new Uint8Array([]);
+        const rawTileData = new ArrayBuffer(0);
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
                 vectorTile: {
@@ -160,7 +161,7 @@ describe('vector tile worker source', () => {
     });
 
     test('VectorTileWorkerSource#loadTile reparses tile if reloadTile is called during reparsing', async () => {
-        const rawTileData = new Uint8Array([]);
+        const rawTileData = new ArrayBuffer(0);
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
                 vectorTile: new vt.VectorTile(new Protobuf(rawTileData)),
@@ -178,7 +179,7 @@ describe('vector tile worker source', () => {
         const source = new VectorTileWorkerSource(actor, layerIndex, []);
         source.loadVectorTile = loadVectorData;
 
-        const parseWorkerTileMock = jest
+        const parseWorkerTileMock = vi
             .spyOn(WorkerTile.prototype, 'parse')
             .mockImplementation(function(_data, _layerIndex, _availableImages, _actor) {
                 this.status = 'parsing';
@@ -209,7 +210,7 @@ describe('vector tile worker source', () => {
 
     test('VectorTileWorkerSource#reloadTile does not reparse tiles with no vectorTile data but does call callback', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
-        const parse = jest.fn();
+        const parse = vi.fn();
 
         source.loaded = {
             '0': {
@@ -225,7 +226,7 @@ describe('vector tile worker source', () => {
     test('VectorTileWorkerSource#loadTile returns null for an empty tile', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
         source.loadVectorTile = (_params, _abortController) => Promise.resolve(null);
-        const parse = jest.fn();
+        const parse = vi.fn();
 
         server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/pbf'}, 'something...');
@@ -246,7 +247,7 @@ describe('vector tile worker source', () => {
 
     test('VectorTileWorkerSource#returns a good error message when failing to parse a tile', () => new Promise<void>(done => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
-        const parse = jest.fn();
+        const parse = vi.fn();
 
         server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/pbf'}, 'something...');
@@ -269,7 +270,7 @@ describe('vector tile worker source', () => {
 
     test('VectorTileWorkerSource#returns a good error message when failing to parse a gzipped tile', () => new Promise<void>(done => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
-        const parse = jest.fn();
+        const parse = vi.fn();
 
         server.respondWith(new Uint8Array([0x1f, 0x8b]).buffer);
 
@@ -289,7 +290,7 @@ describe('vector tile worker source', () => {
     }));
 
     test('VectorTileWorkerSource provides resource timing information', async () => {
-        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf'));
+        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf')).buffer.slice(0) as ArrayBuffer;
 
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
@@ -331,7 +332,7 @@ describe('vector tile worker source', () => {
         const source = new VectorTileWorkerSource(actor, layerIndex, []);
         source.loadVectorTile = loadVectorData;
 
-        window.performance.getEntriesByName = jest.fn().mockReturnValue([exampleResourceTiming]);
+        window.performance.getEntriesByName = vi.fn().mockReturnValue([exampleResourceTiming]);
 
         const res = await source.loadTile({
             source: 'source',
@@ -345,7 +346,7 @@ describe('vector tile worker source', () => {
     });
 
     test('VectorTileWorkerSource provides resource timing information (fallback method)', async () => {
-        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf'));
+        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf')).buffer.slice(0) as ArrayBuffer;
 
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
@@ -369,12 +370,12 @@ describe('vector tile worker source', () => {
         const sampleMarks = [100, 350];
         const marks = {};
         const measures = {};
-        window.performance.getEntriesByName = jest.fn().mockImplementation(name => (measures[name] || []));
-        window.performance.mark = jest.fn().mockImplementation(name => {
+        window.performance.getEntriesByName = vi.fn().mockImplementation(name => (measures[name] || []));
+        window.performance.mark = vi.fn().mockImplementation(name => {
             marks[name] = sampleMarks.shift();
             return null;
         });
-        window.performance.measure = jest.fn().mockImplementation((name, start, end) => {
+        window.performance.measure = vi.fn().mockImplementation((name, start, end) => {
             measures[name] = measures[name] || [];
             measures[name].push({
                 duration: marks[end] - marks[start],

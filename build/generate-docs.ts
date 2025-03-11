@@ -3,12 +3,13 @@ import path from 'path';
 import typedocConfig from '../typedoc.json' with {type: 'json'};
 import packageJson from '../package.json' with {type: 'json'};
 import {get} from 'https';
+import sharp from 'sharp';
 
 type HtmlDoc = {
     title: string;
     description: string;
     mdFileName: string;
-}
+};
 
 function generateAPIIntroMarkdown(lines: string[]): string {
     let intro = `# Intro
@@ -46,17 +47,22 @@ ${htmlContent}
 `;
 }
 
-function generateMarkdownIndexFileOfAllExamples(indexArray: HtmlDoc[]): string {
+async function generateMarkdownIndexFileOfAllExamplesAndPackImages(indexArray: HtmlDoc[]): Promise<string> {
     let indexMarkdown = '# Overview \n\n';
+    const promises: Promise<any>[] = [];
     for (const indexArrayItem of indexArray) {
+        const imagePath = `docs/assets/examples/${indexArrayItem.mdFileName!.replace('.md', '.png')}`;
+        const outputPath = imagePath.replace('.png', '.webp');
+        promises.push(sharp(imagePath).webp({quality: 90, lossless: false}).toFile(outputPath));
         indexMarkdown += `
 ## [${indexArrayItem.title}](./${indexArrayItem.mdFileName})
 
-![${indexArrayItem.description}](../assets/examples/${indexArrayItem.mdFileName!.replace('.md', '.png')}){ loading=lazy }
+![${indexArrayItem.description}](${outputPath.replace('docs/', '../')}){ loading=lazy }
 
 ${indexArrayItem.description}
 `;
     }
+    await Promise.all(promises);
     return indexMarkdown;
 }
 
@@ -78,7 +84,7 @@ function generateReadme() {
  * This takes the examples folder with all the html files and generates a markdown file for each of them.
  * It also create an index file with all the examples and their images.
  */
-function generateExamplesFolder() {
+async function generateExamplesFolder() {
     const examplesDocsFolder = path.join('docs', 'examples');
     if (fs.existsSync(examplesDocsFolder)) {
         fs.rmSync(examplesDocsFolder, {recursive: true, force: true});
@@ -107,7 +113,7 @@ function generateExamplesFolder() {
         fs.writeFileSync(path.join(examplesDocsFolder, mdFileName), exampleMarkdown);
     }
 
-    const indexMarkdown = generateMarkdownIndexFileOfAllExamples(indexArray);
+    const indexMarkdown = await generateMarkdownIndexFileOfAllExamplesAndPackImages(indexArray);
     fs.writeFileSync(path.join(examplesDocsFolder, 'index.md'), indexMarkdown);
 }
 
@@ -184,7 +190,7 @@ if (!fs.existsSync(typedocConfig.out)) {
 }
 fs.rmSync(path.join(typedocConfig.out, 'README.md'));
 generateReadme();
-generateExamplesFolder();
+await generateExamplesFolder();
 await generatePluginsPage();
 updateMapLibreVersionForUNPKG();
 console.log('Docs generation completed, to see it in action run\n npm run start-docs');

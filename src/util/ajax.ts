@@ -69,7 +69,7 @@ export type RequestParameters = {
  */
 export type GetResourceResponse<T> = ExpiryData & {
     data: T;
-}
+};
 
 /**
  * The response callback used in various places
@@ -155,7 +155,16 @@ async function makeFetchRequest(requestParameters: RequestParameters, abortContr
         request.headers.set('Accept', 'application/json');
     }
 
-    const response = await fetch(request);
+    let response: Response;
+    try {
+        response = await fetch(request);
+    } catch (e) {
+        // When the error is due to CORS policy, DNS issue or malformed URL, the fetch call does not resolve but throws a generic TypeError instead.
+        // It is preferable to throw an AJAXError so that the Map event "error" can catch it and still have
+        // access to the faulty url. In such case, we provide the arbitrary HTTP error code of `0`.
+        throw new AJAXError(0, e.message, requestParameters.url, new Blob());
+    }
+
     if (!response.ok) {
         const body = await response.blob();
         throw new AJAXError(response.status, response.statusText, requestParameters.url, body);

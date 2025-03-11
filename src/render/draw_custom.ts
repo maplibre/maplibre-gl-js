@@ -1,18 +1,19 @@
 import {DepthMode} from '../gl/depth_mode';
 import {StencilMode} from '../gl/stencil_mode';
 
-import type {Painter} from './painter';
+import type {Painter, RenderOptions} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {CustomRenderMethodInput, CustomStyleLayer} from '../style/style_layer/custom_style_layer';
 
-export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: CustomStyleLayer) {
+export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: CustomStyleLayer, renderOptions: RenderOptions) {
 
+    const {isRenderingGlobe} = renderOptions;
     const context = painter.context;
     const implementation = layer.implementation;
     const projection = painter.style.projection;
     const transform = painter.transform;
 
-    const projectionData = transform.getProjectionDataForCustomLayer();
+    const projectionData = transform.getProjectionDataForCustomLayer(isRenderingGlobe);
 
     const customLayerArgs: CustomRenderMethodInput = {
         farZ: transform.farZ,
@@ -28,8 +29,9 @@ export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: Cu
         defaultProjectionData: projectionData,
     };
 
-    if (painter.renderPass === 'offscreen') {
+    const renderingMode = implementation.renderingMode ? implementation.renderingMode : '2d';
 
+    if (painter.renderPass === 'offscreen') {
         const prerender = implementation.prerender;
         if (prerender) {
             painter.setCustomLayerDefaults();
@@ -40,7 +42,6 @@ export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: Cu
             context.setDirty();
             painter.setBaseState();
         }
-
     } else if (painter.renderPass === 'translucent') {
 
         painter.setCustomLayerDefaults();
@@ -48,9 +49,9 @@ export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: Cu
         context.setColorMode(painter.colorModeForRenderPass());
         context.setStencilMode(StencilMode.disabled);
 
-        const depthMode = implementation.renderingMode === '3d' ?
-            new DepthMode(painter.context.gl.LEQUAL, DepthMode.ReadWrite, painter.depthRangeFor3D) :
-            painter.depthModeForSublayer(0, DepthMode.ReadOnly);
+        const depthMode = renderingMode === '3d' ?
+            painter.getDepthModeFor3D() :
+            painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
 
         context.setDepthMode(depthMode);
 

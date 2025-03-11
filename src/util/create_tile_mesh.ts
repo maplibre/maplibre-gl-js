@@ -1,4 +1,4 @@
-import {Context} from '../gl/context';
+import {type Context} from '../gl/context';
 import {Mesh} from '../render/mesh';
 import {PosArray, TriangleIndexArray} from '../data/array_types.g';
 import {SegmentVector} from '../data/segment';
@@ -6,6 +6,10 @@ import {NORTH_POLE_Y, SOUTH_POLE_Y} from '../render/subdivision';
 import {EXTENT} from '../data/extent';
 import posAttributes from '../data/pos_attributes';
 
+/**
+ * The size of border region for stencil masks, in internal tile coordinates.
+ * Used for globe rendering.
+ */
 const EXTENT_STENCIL_BORDER = EXTENT / 128;
 
 /**
@@ -40,20 +44,20 @@ export type CreateTileMeshOptions = {
 /**
  * Stores the prepared vertex and index buffer bytes for a mesh.
  */
-export type TileMesh<T extends Uint16Array | Uint32Array> = {
+export type TileMesh = {
     /**
      * The vertex data. Each vertex is two 16 bit signed integers, one for X, one for Y.
      */
-    vertices: Int16Array;
+    vertices: ArrayBuffer;
     /**
      * The index data. Each triangle is defined by three indices. The indices may either be 16 bit or 32 bit unsigned integers,
      * depending on the mesh creation arguments and on whether the mesh can fit into 16 bit indices.
      */
-    indices: T;
+    indices: ArrayBuffer;
     /**
      * A helper boolean indicating whether the indices are 32 bit.
      */
-    uses32bitIndices: T extends Uint32Array ? true : false;
+    uses32bitIndices: boolean;
 };
 
 /**
@@ -76,11 +80,11 @@ export function createTileMeshWithBuffers(context: Context, options: CreateTileM
     const tileMesh = createTileMesh(options, '16bit');
     const vertices = PosArray.deserialize({
         arrayBuffer: tileMesh.vertices,
-        length: tileMesh.vertices.length / 2, // Two values per vertex
+        length: tileMesh.vertices.byteLength / 2 / 2, // Two values per vertex, 16 bit
     });
     const indices = TriangleIndexArray.deserialize({
         arrayBuffer: tileMesh.indices,
-        length: tileMesh.indices.length / 3, // Three values per triangle
+        length: tileMesh.indices.byteLength / 2 / 3, // Three values per triangle, 16 bit
     });
     const mesh = new Mesh(
         context.createVertexBuffer(vertices, posAttributes.members),
@@ -110,7 +114,7 @@ export function createTileMeshWithBuffers(context: Context, options: CreateTileM
  * @param forceIndicesSize - Specifies what indices type to use. The values '32bit' and '16bit' force their respective indices size. If undefined, the mesh may use either size, and will pick 16 bit indices if possible. If '16bit' is specified and the mesh exceeds 65536 vertices, an exception is thrown.
  * @returns Typed arrays of the mesh vertices and indices.
  */
-export function createTileMesh<T extends IndicesType>(options: CreateTileMeshOptions, forceIndicesSize?: T): T extends '32bit' ? TileMesh<Uint32Array> : (T extends '16bit' ? TileMesh<Uint16Array> : TileMesh<Uint16Array | Uint32Array>) {
+export function createTileMesh(options: CreateTileMeshOptions, forceIndicesSize?: IndicesType): TileMesh {
     // We only want to generate the north/south border if the tile
     // does NOT border the north/south edge of the mercator range.
     const granularity = options.granularity !== undefined ? Math.max(options.granularity, 1) : 1;
@@ -135,27 +139,7 @@ export function createTileMesh<T extends IndicesType>(options: CreateTileMeshOpt
 
     const use32bitIndices = overflows16bitIndices || forceIndicesSize === '32bit';
 
-    const vertexArray = new Int16Array(vertexCount * 2);
-
-    let resultMesh;
-
-    if (use32bitIndices) {
-        const mesh: TileMesh<Uint32Array> = {
-            vertices: vertexArray,
-            indices: new Uint32Array(indexCount),
-            uses32bitIndices: true,
-        };
-        resultMesh = mesh;
-    } else {
-        const mesh: TileMesh<Uint16Array> = {
-            vertices: vertexArray,
-            indices: new Uint16Array(indexCount),
-            uses32bitIndices: false,
-        };
-        resultMesh = mesh;
-    }
-
-    const indexArray = resultMesh.indices;
+    const vertices = new Int16Array(vertexCount * 2);
 
     let vertexId = 0;
 
@@ -176,10 +160,12 @@ export function createTileMesh<T extends IndicesType>(options: CreateTileMeshOpt
                 vy = options.extendToSouthPole ? SOUTH_POLE_Y : EXTENT + EXTENT_STENCIL_BORDER;
             }
 
-            vertexArray[vertexId++] = vx;
-            vertexArray[vertexId++] = vy;
+            vertices[vertexId++] = vx;
+            vertices[vertexId++] = vy;
         }
     }
+
+    const indices = use32bitIndices ? new Uint32Array(indexCount) : new Uint16Array(indexCount);
 
     let indexId = 0;
 
@@ -194,15 +180,19 @@ export function createTileMesh<T extends IndicesType>(options: CreateTileMeshOpt
             //  |  / |
             //  | /  |
             // v2----v3
-            indexArray[indexId++] = v0;
-            indexArray[indexId++] = v2;
-            indexArray[indexId++] = v1;
+            indices[indexId++] = v0;
+            indices[indexId++] = v2;
+            indices[indexId++] = v1;
 
-            indexArray[indexId++] = v1;
-            indexArray[indexId++] = v2;
-            indexArray[indexId++] = v3;
+            indices[indexId++] = v1;
+            indices[indexId++] = v2;
+            indices[indexId++] = v3;
         }
     }
 
-    return resultMesh;
+    return {
+        vertices: vertices.buffer.slice(0),
+        indices: indices.buffer.slice(0),
+        uses32bitIndices: use32bitIndices,
+    };
 }

@@ -1,10 +1,10 @@
 import {StyleLayer} from '../style_layer';
 
 import {HeatmapBucket} from '../../data/bucket/heatmap_bucket';
-import {RGBAImage} from '../../util/image';
-import properties, {HeatmapPaintPropsPossiblyEvaluated} from './heatmap_style_layer_properties.g';
+import {type RGBAImage} from '../../util/image';
+import properties, {type HeatmapPaintPropsPossiblyEvaluated} from './heatmap_style_layer_properties.g';
 import {renderColorRamp} from '../../util/color_ramp';
-import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
+import {type Transitionable, type Transitioning, type PossiblyEvaluated} from '../properties';
 
 import type {Texture} from '../../render/texture';
 import type {Framebuffer} from '../../gl/framebuffer';
@@ -12,6 +12,8 @@ import type {HeatmapPaintProps} from './heatmap_style_layer_properties.g';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export const HEATMAP_FULL_RENDER_FBO_KEY = 'big-fb';
+
+export const isHeatmapStyleLayer = (layer: StyleLayer): layer is HeatmapStyleLayer => layer.type === 'heatmap';
 
 /**
  * A style layer that defines a heatmap

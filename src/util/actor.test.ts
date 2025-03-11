@@ -1,27 +1,83 @@
-import {Actor, ActorTarget} from './actor';
-import {WorkerGlobalScopeInterface, workerFactory} from './web_worker';
-import {setGlobalWorker} from '../../test/unit/lib/web_worker_mock';
+import {describe, test, expect, vi} from 'vitest';
+import {Actor, type ActorTarget} from './actor';
+import {type WorkerGlobalScopeInterface, workerFactory} from './web_worker';
 import {sleep} from './test/util';
 import {ABORT_ERROR, createAbortError} from './abort_error';
 import {MessageType} from './actor_messages';
 
-class MockWorker {
-    self: any;
-    actor: Actor;
-    constructor(self) {
-        this.self = self;
-        this.actor = new Actor(self);
-    }
-}
-
 describe('Actor', () => {
-    let originalWorker;
-    beforeAll(() => {
-        originalWorker = global.Worker;
-        setGlobalWorker(MockWorker);
+    test('removes "abort" event listener from signal on reject', async () => {
+        const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
+
+        worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, () => {
+            return Promise.reject(new Error('some error'));
+        });
+
+        const actor = new Actor(worker, 'test-map-id');
+
+        const abortController = new AbortController();
+        const addSpy = vi.spyOn(abortController.signal, 'addEventListener');
+        const removeSpy = vi.spyOn(abortController.signal, 'removeEventListener');
+
+        await expect(
+            actor.sendAsync({
+                type: MessageType.getClusterExpansionZoom,
+                data: {type: 'geojson', source: '', clusterId: 1729}
+            }, abortController)
+        ).rejects.toThrow('some error');
+
+        expect(addSpy).toHaveBeenCalledTimes(1);
+        expect(removeSpy).toHaveBeenCalledTimes(1);
+        expect(removeSpy).toHaveBeenCalledWith('abort', expect.any(Function), expect.anything());
     });
-    afterAll(() => {
-        global.Worker = originalWorker;
+
+    test('removes "abort" event listener from signal on abort', async () => {
+        const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
+
+        worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, () => {
+            return new Promise(() => {});
+        });
+
+        const actor = new Actor(worker, 'test-map-id');
+
+        const abortController = new AbortController();
+        const addSpy = vi.spyOn(abortController.signal, 'addEventListener');
+        const removeSpy = vi.spyOn(abortController.signal, 'removeEventListener');
+
+        actor.sendAsync({
+            type: MessageType.getClusterExpansionZoom,
+            data: {type: 'geojson', source: '', clusterId: 1729}
+        }, abortController);
+
+        expect(addSpy).toHaveBeenCalledTimes(1);
+
+        abortController.abort();
+
+        await sleep(0);
+
+        expect(removeSpy).toHaveBeenCalledTimes(1);
+        expect(removeSpy).toHaveBeenCalledWith('abort', expect.any(Function), expect.anything());
+    });
+
+    test('removes "abort" event listener from signal after request completes', async () => {
+        const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
+        worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, () => Promise.resolve(0));
+
+        const actor = new Actor(worker, 'test-map-id');
+
+        const abortController = new AbortController();
+        const addSpy = vi.spyOn(abortController.signal, 'addEventListener');
+        const removeSpy = vi.spyOn(abortController.signal, 'removeEventListener');
+
+        const result = await actor.sendAsync({
+            type: MessageType.getClusterExpansionZoom,
+            data: {type: 'geojson', source: '', clusterId: 1729}
+        }, abortController);
+
+        expect(result).toBe(0);
+
+        expect(addSpy).toHaveBeenCalledTimes(1);
+        expect(removeSpy).toHaveBeenCalledTimes(1);
     });
 
     test('forwards responses to correct handler', async () => {
@@ -98,8 +154,14 @@ describe('Actor', () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
-        const spy = jest.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
         worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, spy);
+
+        worker.worker.actor.invoker.trigger = async () => {
+            // Allows the cancel to be processed at the right point in time
+            await sleep(200);
+            worker.worker.actor.process();
+        };
 
         let received = false;
         const abortController = new AbortController();
@@ -109,7 +171,7 @@ describe('Actor', () => {
 
         abortController.abort();
 
-        const p2 = new Promise((resolve) => (setTimeout(resolve, 500)));
+        const p2 = sleep(500);
 
         await Promise.any([p1, p2]);
         expect(received).toBeFalsy();
@@ -153,9 +215,9 @@ describe('Actor', () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
-        worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, () => Promise.resolve(42));
+        delete worker.worker.actor.messageHandlers[MessageType.abortTile];
 
-        await expect(async () => actor.sendAsync({type: MessageType.abortTile, data: {} as any})).rejects.toThrow(/Could not find a registered handler for.*/);
+        await expect(async () => actor.sendAsync({type: MessageType.abortTile, data: {type: 'geojson'} as any})).rejects.toThrow(/Could not find a registered handler for.*/);
     });
 
     test('should not process a message with the wrong map id', async () => {
@@ -164,7 +226,7 @@ describe('Actor', () => {
 
         worker.worker.actor.mapId = '2';
 
-        const spy = jest.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
         worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, spy);
 
         actor.sendAsync({type: MessageType.getClusterExpansionZoom, data: {} as any, targetMapId: '1'});
@@ -178,7 +240,7 @@ describe('Actor', () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
-        const spy = jest.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
         worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, spy);
 
         actor.target.postMessage({type: 'getClusterExpansionZoom', data: {} as any, origin: 'https://example.com'});
@@ -192,7 +254,7 @@ describe('Actor', () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
-        const spy = jest.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
         worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, spy);
 
         actor.target.postMessage({type: MessageType.getClusterExpansionZoom, data: {} as any, origin: 'file://'});
@@ -206,7 +268,7 @@ describe('Actor', () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
-        const spy = jest.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
         worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, spy);
 
         actor.target.postMessage({type: MessageType.getClusterExpansionZoom, data: {} as any, origin: 'resource://android'});

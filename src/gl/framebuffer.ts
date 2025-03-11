@@ -1,6 +1,7 @@
 import {ColorAttachment, DepthAttachment, DepthStencilAttachment} from './value';
 
 import type {Context} from './context';
+import {createFramebufferNotCompleteError} from '../util/framebuffer_error';
 
 /**
  * @internal
@@ -28,7 +29,7 @@ export class Framebuffer {
             throw new Error('Stencil cannot be set without depth');
         }
         if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
-            throw new Error('Framebuffer is not complete');
+            throw createFramebufferNotCompleteError();
         }
     }
 

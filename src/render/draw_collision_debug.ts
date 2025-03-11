@@ -10,8 +10,8 @@ import {collisionUniformValues, collisionCircleUniformValues} from './program/co
 import {QuadTriangleArray, CollisionCircleLayoutArray} from '../data/array_types.g';
 import {collisionCircleLayout} from '../data/bucket/symbol_attributes';
 import {SegmentVector} from '../data/segment';
-import {VertexBuffer} from '../gl/vertex_buffer';
-import {IndexBuffer} from '../gl/index_buffer';
+import {type VertexBuffer} from '../gl/vertex_buffer';
+import {type IndexBuffer} from '../gl/index_buffer';
 
 type TileBatch = {
     circleArray: Array<number>;
@@ -62,7 +62,7 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
             CullFaceMode.disabled,
             collisionUniformValues(painter.transform),
             painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord),
-            transform.getProjectionData(coord),
+            transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: true, applyTerrainMatrix: true}),
             layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer,
             buffers.segments, null, painter.transform.zoom, null, null,
             buffers.collisionVertexBuffer);

@@ -1,7 +1,8 @@
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {
     getArrayBuffer,
     getJSON,
-    AJAXError,
+    type AJAXError,
     sameOrigin
 } from './ajax';
 
@@ -89,7 +90,7 @@ describe('ajax', () => {
     });
 
     test('sameOrigin method', () => {
-        jest.spyOn(window, 'location', 'get').mockReturnValue({
+        vi.spyOn(window, 'location', 'get').mockReturnValue({
             protocol: 'https:',
             host: 'somewhere.com'
         } as any);
@@ -122,7 +123,7 @@ describe('ajax', () => {
         expect(sameOrigin('file:///c:/temp/foo.html')).toBe(false);
 
         // file url
-        jest.spyOn(window, 'location', 'get').mockReturnValue({
+        vi.spyOn(window, 'location', 'get').mockReturnValue({
             protocol: 'file:',
             host: ''
         } as any);

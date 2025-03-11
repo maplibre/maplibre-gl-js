@@ -1,3 +1,4 @@
+import {describe, test, expect, vi} from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import Protobuf from 'pbf';
@@ -6,9 +7,9 @@ import Point from '@mapbox/point-geometry';
 import {SegmentVector} from '../segment';
 import {LineBucket} from './line_bucket';
 import {LineStyleLayer} from '../../style/style_layer/line_style_layer';
-import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {EvaluationParameters} from '../../style/evaluation_parameters';
-import {BucketFeature, BucketParameters} from '../bucket';
+import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {type EvaluationParameters} from '../../style/evaluation_parameters';
+import {type BucketFeature, type BucketParameters} from '../bucket';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 
 const noSubdivision = SubdivisionGranularitySetting.noSubdivision;
@@ -104,7 +105,7 @@ describe('LineBucket', () => {
     });
 
     test('LineBucket segmentation', () => {
-        jest.spyOn(console, 'warn').mockImplementation(() => { });
+        vi.spyOn(console, 'warn').mockImplementation(() => { });
 
         // Stub MAX_VERTEX_ARRAY_LENGTH so we can test features
         // breaking across array groups without tests taking a _long_ time.

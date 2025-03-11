@@ -20,11 +20,17 @@
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
         center: [-74.5, 40], // starting position
-        zoom: 9 // starting zoom
+        zoom: 9, // starting zoom
+        rollEnabled: true // Enable mouse control of camera roll angle with `Ctrl` + right-click and drag
     });
 
     // Add zoom and rotation controls to the map.
-    map.addControl(new maplibregl.NavigationControl());
+    map.addControl(new maplibregl.NavigationControl({
+        visualizePitch: true,
+        visualizeRoll: true,
+        showZoom: true,
+        showCompass: true
+    }));
 </script>
 </body>
 </html>

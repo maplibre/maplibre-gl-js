@@ -1,5 +1,5 @@
 
-import {Tile} from '../source/tile';
+import {type Tile} from '../source/tile';
 import {mat4, vec2} from 'gl-matrix';
 import {OverscaledTileID} from '../source/tile_id';
 import {RGBAImage} from '../util/image';
@@ -7,18 +7,19 @@ import {warnOnce} from '../util/util';
 import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g';
 import pos3dAttributes from '../data/pos3d_attributes';
 import {SegmentVector} from '../data/segment';
-import {Painter} from './painter';
+import {type Painter} from './painter';
 import {Texture} from '../render/texture';
 import type {Framebuffer} from '../gl/framebuffer';
-import Point from '@mapbox/point-geometry';
+import type Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {TerrainSourceCache} from '../source/terrain_source_cache';
-import {SourceCache} from '../source/source_cache';
+import {type SourceCache} from '../source/source_cache';
 import {EXTENT} from '../data/extent';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {LngLat, earthRadius} from '../geo/lng_lat';
+import {type LngLat, earthRadius} from '../geo/lng_lat';
 import {Mesh} from './mesh';
 import {isInBoundsForZoomLngLat} from '../util/world_bounds';
+import {NORTH_POLE_Y, SOUTH_POLE_Y} from './subdivision';
 
 /**
  * @internal
@@ -34,7 +35,7 @@ export type TerrainData = {
     texture: WebGLTexture;
     depthTexture: WebGLTexture;
     tile: Tile;
-}
+};
 
 /**
  * @internal
@@ -108,7 +109,7 @@ export class Terrain {
      * GL Objects for the terrain-mesh
      * The mesh is a regular mesh, which has the advantage that it can be reused for all tiles.
      */
-    _mesh: Mesh;
+    _meshCache: { [key: string]: Mesh } = {};
     /**
      * coords index contains a list of tileID.keys. This index is used to identify
      * the tile via the alpha-cannel in the coords-texture.
@@ -376,46 +377,70 @@ export class Terrain {
      * create a regular mesh which will be used by all terrain-tiles
      * @returns the created regular mesh
      */
-    getTerrainMesh(): Mesh {
-        if (this._mesh) return this._mesh;
+    getTerrainMesh(tileId: OverscaledTileID): Mesh {
+        const globeEnabled = this.painter.style.projection?.transitionState > 0;
+        const northPole = globeEnabled && tileId.canonical.y === 0;
+        const southPole = globeEnabled && tileId.canonical.y === (1 << tileId.canonical.z) - 1;
+        const key = `m_${northPole ? 'n' : ''}_${southPole ? 's' : ''}`;
+        if (this._meshCache[key]) {
+            return this._meshCache[key];
+        }
         const context = this.painter.context;
+
         const vertexArray = new Pos3dArray();
         const indexArray = new TriangleIndexArray();
         const meshSize = this.meshSize;
         const delta = EXTENT / meshSize;
         const meshSize2 = meshSize * meshSize;
-        for (let y = 0; y <= meshSize; y++) for (let x = 0; x <= meshSize; x++)
+        for (let y = 0; y <= meshSize; y++) for (let x = 0; x <= meshSize; x++) {
             vertexArray.emplaceBack(x * delta, y * delta, 0);
+        }
         for (let y = 0; y < meshSize2; y += meshSize + 1) for (let x = 0; x < meshSize; x++) {
             indexArray.emplaceBack(x + y, meshSize + x + y + 1, meshSize + x + y + 2);
             indexArray.emplaceBack(x + y, meshSize + x + y + 2, x + y + 1);
         }
         // add an extra frame around the mesh to avoid stitching on tile boundaries with different zoomlevels
-        // first code-block is for top-bottom frame and second for left-right frame
-        const offsetTop = vertexArray.length, offsetBottom = offsetTop + (meshSize + 1) * 2;
-        for (const y of [0, 1]) for (let x = 0; x <= meshSize; x++) for (const z of [0, 1])
-            vertexArray.emplaceBack(x * delta, y * EXTENT, z);
-        for (let x = 0; x < meshSize * 2; x += 2) {
-            indexArray.emplaceBack(offsetBottom + x, offsetBottom + x + 1, offsetBottom + x + 3);
-            indexArray.emplaceBack(offsetBottom + x, offsetBottom + x + 3, offsetBottom + x + 2);
-            indexArray.emplaceBack(offsetTop + x, offsetTop + x + 3, offsetTop + x + 1);
-            indexArray.emplaceBack(offsetTop + x, offsetTop + x + 2, offsetTop + x + 3);
+        // top-bottom frame + pole vertices, if needed
+        const offsetTop = vertexArray.length;
+        const offsetTopEdge = 0;
+        const offsetBottom = offsetTop + (meshSize + 1);
+        const offsetBottomEdge = (meshSize + 1) * meshSize;
+        const northY = northPole ? NORTH_POLE_Y : 0;
+        const northZ = northPole ? 0 : 1;
+        const southY = southPole ? SOUTH_POLE_Y : EXTENT;
+        const southZ = southPole ? 0 : 1;
+        for (let x = 0; x <= meshSize; x++) {
+            vertexArray.emplaceBack(x * delta, northY, northZ);
         }
-        const offsetLeft = vertexArray.length, offsetRight = offsetLeft + (meshSize + 1) * 2;
-        for (const x of [0, 1]) for (let y = 0; y <= meshSize; y++) for (const z of [0, 1])
+        for (let x = 0; x <= meshSize; x++) {
+            vertexArray.emplaceBack(x * delta, southY, southZ);
+        }
+        for (let x = 0; x < meshSize; x++) {
+            indexArray.emplaceBack(offsetBottomEdge + x, offsetBottom + x, offsetBottom + x + 1);
+            indexArray.emplaceBack(offsetBottomEdge + x, offsetBottom + x + 1, offsetBottomEdge + x + 1);
+            indexArray.emplaceBack(offsetTopEdge + x, offsetTop + x + 1, offsetTop + x);
+            indexArray.emplaceBack(offsetTopEdge + x, offsetTopEdge + x + 1, offsetTop + x + 1);
+        }
+        // left-right frame
+        const offsetLeft = vertexArray.length;
+        const offsetRight = offsetLeft + (meshSize + 1) * 2;
+        for (const x of [0, 1]) for (let y = 0; y <= meshSize; y++) for (const z of [0, 1]) {
             vertexArray.emplaceBack(x * EXTENT, y * delta, z);
+        }
         for (let y = 0; y < meshSize * 2; y += 2) {
             indexArray.emplaceBack(offsetLeft + y, offsetLeft + y + 1, offsetLeft + y + 3);
             indexArray.emplaceBack(offsetLeft + y, offsetLeft + y + 3, offsetLeft + y + 2);
             indexArray.emplaceBack(offsetRight + y, offsetRight + y + 3, offsetRight + y + 1);
             indexArray.emplaceBack(offsetRight + y, offsetRight + y + 2, offsetRight + y + 3);
         }
-        this._mesh = new Mesh(
+
+        const mesh = new Mesh(
             context.createVertexBuffer(vertexArray, pos3dAttributes.members),
             context.createIndexBuffer(indexArray),
             SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
         );
-        return this._mesh;
+        this._meshCache[key] = mesh;
+        return mesh;
     }
 
     /**
@@ -426,7 +451,7 @@ export class Terrain {
      */
     getMeshFrameDelta(zoom: number): number {
         // divide by 5 is evaluated by trial & error to get a frame in the right height
-        return 2 * Math.PI * earthRadius / Math.pow(2, zoom) / 5;
+        return 2 * Math.PI * earthRadius / Math.pow(2, Math.max(zoom, 0)) / 5;
     }
 
     getMinTileElevationForLngLatZoom(lnglat: LngLat, zoom: number) {

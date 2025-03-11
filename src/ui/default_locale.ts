@@ -17,6 +17,8 @@ export const defaultLocale = {
     'ScaleControl.Kilometers': 'km',
     'ScaleControl.Miles': 'mi',
     'ScaleControl.NauticalMiles': 'nm',
+    'GlobeControl.Enable': 'Enable globe',
+    'GlobeControl.Disable': 'Disable globe',
     'TerrainControl.Enable': 'Enable terrain',
     'TerrainControl.Disable': 'Disable terrain',
     'CooperativeGesturesHandler.WindowsHelpText': 'Use Ctrl + scroll to zoom the map',

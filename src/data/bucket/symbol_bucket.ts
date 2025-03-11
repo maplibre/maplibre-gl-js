@@ -30,7 +30,7 @@ import {toEvaluationFeature} from '../evaluation_feature';
 import mvt from '@mapbox/vector-tile';
 const vectorTileFeatureTypes = mvt.VectorTileFeature.types;
 import {verticalizedCharacterMap} from '../../util/verticalize_punctuation';
-import {Anchor} from '../../symbol/anchor';
+import {type Anchor} from '../../symbol/anchor';
 import {getSizeData, MAX_PACKED_SIZE} from '../../symbol/symbol_size';
 
 import {register} from '../../util/web_worker_transfer';

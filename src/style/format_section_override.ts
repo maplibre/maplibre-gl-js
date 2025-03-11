@@ -1,6 +1,6 @@
 import type {Expression, EvaluationContext, Type, ZoomConstantExpression} from '@maplibre/maplibre-gl-style-spec';
 import {NullType} from '@maplibre/maplibre-gl-style-spec';
-import {PossiblyEvaluatedPropertyValue} from './properties';
+import {type PossiblyEvaluatedPropertyValue} from './properties';
 import {register} from '../util/web_worker_transfer';
 
 // This is an internal expression class. It is only used in GL JS and

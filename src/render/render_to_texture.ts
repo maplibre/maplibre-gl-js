@@ -1,12 +1,12 @@
-import {Painter} from './painter';
-import {Tile} from '../source/tile';
+import {type Painter, type RenderOptions} from './painter';
+import {type Tile} from '../source/tile';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {OverscaledTileID} from '../source/tile_id';
+import {type OverscaledTileID} from '../source/tile_id';
 import {drawTerrain} from './draw_terrain';
-import {Style} from '../style/style';
-import {Terrain} from './terrain';
+import {type Style} from '../style/style';
+import {type Terrain} from './terrain';
 import {RenderPool} from '../gl/render_pool';
-import {Texture} from './texture';
+import {type Texture} from './texture';
 import type {StyleLayer} from '../style/style_layer';
 
 /**
@@ -29,15 +29,15 @@ export class RenderToTexture {
     terrain: Terrain;
     pool: RenderPool;
     /**
-     * coordsDescendingInv contains a list of all tiles which should be rendered for one render-to-texture tile
+     * coordsAscending contains a list of all tiles which should be rendered for one render-to-texture tile
      * e.g. render 4 raster-tiles with size 256px to the 512px render-to-texture tile
      */
-    _coordsDescendingInv: {[_: string]: {[_:string]: Array<OverscaledTileID>}};
+    _coordsAscending: {[_: string]: {[_:string]: Array<OverscaledTileID>}};
     /**
      * create a string representation of all to tiles rendered to render-to-texture tiles
      * this string representation is used to check if tile should be re-rendered.
      */
-    _coordsDescendingInvStr: {[_: string]: {[_:string]: string}};
+    _coordsAscendingStr: {[_: string]: {[_:string]: string}};
     /**
      * store for render-stacks
      * a render stack is a set of layers which should be rendered into one texture
@@ -83,36 +83,36 @@ export class RenderToTexture {
         this._renderableTiles = this.terrain.sourceCache.getRenderableTiles();
         this._renderableLayerIds = style._order.filter(id => !style._layers[id].isHidden(zoom));
 
-        this._coordsDescendingInv = {};
+        this._coordsAscending = {};
         for (const id in style.sourceCaches) {
-            this._coordsDescendingInv[id] = {};
+            this._coordsAscending[id] = {};
             const tileIDs = style.sourceCaches[id].getVisibleCoordinates();
             for (const tileID of tileIDs) {
                 const keys = this.terrain.sourceCache.getTerrainCoords(tileID);
                 for (const key in keys) {
-                    if (!this._coordsDescendingInv[id][key]) this._coordsDescendingInv[id][key] = [];
-                    this._coordsDescendingInv[id][key].push(keys[key]);
+                    if (!this._coordsAscending[id][key]) this._coordsAscending[id][key] = [];
+                    this._coordsAscending[id][key].push(keys[key]);
                 }
             }
         }
 
-        this._coordsDescendingInvStr = {};
+        this._coordsAscendingStr = {};
         for (const id of style._order) {
             const layer = style._layers[id], source = layer.source;
             if (LAYERS[layer.type]) {
-                if (!this._coordsDescendingInvStr[source]) {
-                    this._coordsDescendingInvStr[source] = {};
-                    for (const key in this._coordsDescendingInv[source])
-                        this._coordsDescendingInvStr[source][key] = this._coordsDescendingInv[source][key].map(c => c.key).sort().join();
+                if (!this._coordsAscendingStr[source]) {
+                    this._coordsAscendingStr[source] = {};
+                    for (const key in this._coordsAscending[source])
+                        this._coordsAscendingStr[source][key] = this._coordsAscending[source][key].map(c => c.key).sort().join();
                 }
             }
         }
 
         // check tiles to render
         for (const tile of this._renderableTiles) {
-            for (const source in this._coordsDescendingInvStr) {
+            for (const source in this._coordsAscendingStr) {
                 // rerender if there are more coords to render than in the last rendering
-                const coords = this._coordsDescendingInvStr[source][tile.tileID.key];
+                const coords = this._coordsAscendingStr[source][tile.tileID.key];
                 if (coords && coords !== tile.rttCoords[source]) tile.rtt = [];
             }
         }
@@ -126,11 +126,13 @@ export class RenderToTexture {
      * and 'live'-layers (f.e. symbols) it is necessary to create more stacks. For example
      * a symbol-layer is in between of fill-layers.
      * @param layer - the layer to render
+     * @param renderOptions - flags describing how to render the layer
      * @returns if true layer is rendered to texture, otherwise false
      */
-    renderLayer(layer: StyleLayer): boolean {
+    renderLayer(layer: StyleLayer, renderOptions: RenderOptions): boolean {
         if (layer.isHidden(this.painter.transform.zoom)) return false;
 
+        const options: RenderOptions = {...renderOptions, isRenderingToTexture: true};
         const type = layer.type;
         const painter = this.painter;
         const isLastLayer = this._renderableLayerIds[this._renderableLayerIds.length - 1] === layer.id;
@@ -153,7 +155,7 @@ export class RenderToTexture {
             for (const tile of this._renderableTiles) {
                 // if render pool is full draw current tiles to screen and free pool
                 if (this.pool.isFull()) {
-                    drawTerrain(this.painter, this.terrain, this._rttTiles);
+                    drawTerrain(this.painter, this.terrain, this._rttTiles, options);
                     this._rttTiles = [];
                     this.pool.freeAllObjects();
                 }
@@ -177,14 +179,14 @@ export class RenderToTexture {
                 painter.currentStencilSource = undefined;
                 for (let l = 0; l < layers.length; l++) {
                     const layer = painter.style._layers[layers[l]];
-                    const coords = layer.source ? this._coordsDescendingInv[layer.source][tile.tileID.key] : [tile.tileID];
+                    const coords = layer.source ? this._coordsAscending[layer.source][tile.tileID.key] : [tile.tileID];
                     painter.context.viewport.set([0, 0, obj.fbo.width, obj.fbo.height]);
                     painter._renderTileClippingMasks(layer, coords, true);
-                    painter.renderLayer(painter, painter.style.sourceCaches[layer.source], layer, coords);
-                    if (layer.source) tile.rttCoords[layer.source] = this._coordsDescendingInvStr[layer.source][tile.tileID.key];
+                    painter.renderLayer(painter, painter.style.sourceCaches[layer.source], layer, coords, options);
+                    if (layer.source) tile.rttCoords[layer.source] = this._coordsAscendingStr[layer.source][tile.tileID.key];
                 }
             }
-            drawTerrain(this.painter, this.terrain, this._rttTiles);
+            drawTerrain(this.painter, this.terrain, this._rttTiles, options);
             this._rttTiles = [];
             this.pool.freeAllObjects();
 

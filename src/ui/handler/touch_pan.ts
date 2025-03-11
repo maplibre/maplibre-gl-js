@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
 import {indexTouches} from './handler_util';
-import {Handler} from '../handler_manager';
+import {type Handler} from '../handler_manager';
 import type {Map} from '../map';
 
 /**

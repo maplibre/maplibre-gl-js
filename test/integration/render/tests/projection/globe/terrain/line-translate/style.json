@@ -1,0 +1,87 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [
+    10.0,
+    -15.0
+  ],
+  "pitch": 15,
+  "bearing": 45,
+  "zoom": 1,
+  "projection": { "type": "globe" },
+  "terrain": {
+    "source": "terrain",
+    "exaggeration": 2
+  },
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": ["local://tiles/{z}-{x}-{y}.terrain.png"],
+      "maxzoom": 15,
+      "tileSize": 256
+    },
+    "line": {
+      "type": "geojson",
+      "lineMetrics": true,
+      "data": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -30,
+            0
+          ],
+          [
+            30,
+            0
+          ]
+        ]
+      }
+    }
+  },
+  "layers": [
+    
+    {
+      "id": "line",
+      "type": "line",
+      "source": "line",
+      "paint": {
+        "line-width": 10,
+        "line-color": "#ff0000"
+      }
+    },
+    {
+      "id": "line-translate-map",
+      "type": "line",
+      "source": "line",
+      "paint": {
+        "line-width": 10,
+        "line-color": "#00ff00",
+        "line-translate": [
+          10,
+          50
+        ],
+        "line-translate-anchor": "map"
+      }
+    },
+    {
+      "id": "line-translate-viewport",
+      "type": "line",
+      "source": "line",
+      "paint": {
+        "line-width": 10,
+        "line-color": "#0000ff",
+        "line-translate": [
+          10,
+          50
+        ],
+        "line-translate-anchor": "viewport"
+      }
+    }
+  ]
+}

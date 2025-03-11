@@ -1,9 +1,11 @@
-import {SymbolProjectionContext, ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, projectWithMatrix, transformToOffsetNormal, projectLineVertexToLabelPlane} from './projection';
+import {describe, test, expect} from 'vitest';
+import {type SymbolProjectionContext, type ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, projectWithMatrix, transformToOffsetNormal, projectLineVertexToLabelPlane, getPitchedLabelPlaneMatrix, getGlCoordMatrix, getTileSkewVectors} from './projection';
 
 import Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
 import {SymbolLineVertexArray} from '../data/array_types.g';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {expectToBeCloseToArray} from '../util/test/util';
 
 describe('Projection', () => {
     test('matrix float precision', () => {
@@ -169,6 +171,151 @@ describe('Find offset line intersections', () => {
         );
         expect(intersectionPoint.x).toBeCloseTo(0);
         expect(intersectionPoint.y).toBeCloseTo(1);
+    });
+
+    test('getPitchedLabelPlaneMatrix: bearing and roll', () => {
+        const transform = new MercatorTransform();
+        transform.setBearing(0);
+        transform.setPitch(45);
+        transform.setRoll(45);
+
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform, 2).values()],
+            [0.4330127239227295, -0.4330127239227295, 0, 0, 0.3061862289905548, 0.3061862289905548, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform, 2).values()],
+            [0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
+    });
+
+    test('getPitchedLabelPlaneMatrix: bearing and pitch', () => {
+        const transform = new MercatorTransform();
+        transform.setBearing(45);
+        transform.setPitch(45);
+        transform.setRoll(0);
+
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform, 2).values()],
+            [0.3535533845424652, -0.3535533845424652, 0, 0, 0.3535533845424652, 0.3535533845424652, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform, 2).values()],
+            [0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
+    });
+
+    test('getPitchedLabelPlaneMatrix: bearing, pitch, and roll', () => {
+        const transform = new MercatorTransform();
+        transform.setBearing(45);
+        transform.setPitch(45);
+        transform.setRoll(45);
+
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform, 2).values()],
+            [0.08967986702919006,  -0.5226925611495972, 0, 0, 0.5226925611495972, -0.08967986702919006, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform, 2).values()],
+            [0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
+    });
+
+    test('getGlCoordMatrix: bearing, pitch, and roll', () => {
+        const transform = new MercatorTransform();
+        transform.resize(128, 128);
+        transform.setBearing(45);
+        transform.setPitch(45);
+        transform.setRoll(45);
+
+        expectToBeCloseToArray([...getGlCoordMatrix(false, false, transform, 2).values()],
+            [...transform.pixelsToClipSpaceMatrix.values()], 9);
+        expectToBeCloseToArray([...getGlCoordMatrix(false, true, transform, 2).values()],
+            [...transform.pixelsToClipSpaceMatrix.values()], 9);
+        expectToBeCloseToArray([...getGlCoordMatrix(true, false, transform, 2).values()],
+            [-0.33820396661758423, 1.9711971282958984, 0, 0, -1.9711971282958984, 0.33820396661758423, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
+        expectToBeCloseToArray([...getGlCoordMatrix(true, true, transform, 2).values()],
+            [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
+    });
+
+    test('getTileSkewVectors: bearing', () => {
+        const transform = new MercatorTransform();
+        transform.setBearing(45);
+        transform.setPitch(0);
+        transform.setRoll(0);
+
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+            [0.7071067690849304, 0.7071067690849304]);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+            [-0.7071067690849304, 0.7071067690849304], 9);
+    });
+
+    test('getTileSkewVectors: roll', () => {
+        const transform = new MercatorTransform();
+        transform.setBearing(0);
+        transform.setPitch(0);
+        transform.setRoll(45);
+
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+            [0.7071067690849304, 0.7071067690849304]);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+            [-0.7071067690849304, 0.7071067690849304], 9);
+    });
+
+    test('getTileSkewVectors: pitch', () => {
+        const transform = new MercatorTransform();
+        transform.setBearing(0);
+        transform.setPitch(45);
+        transform.setRoll(0);
+
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+            [1.0, 0.0]);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+            [0.0, 1.0], 9);
+    });
+
+    test('getTileSkewVectors: roll pitch bearing', () => {
+        const transform = new MercatorTransform();
+        transform.setBearing(45);
+        transform.setPitch(45);
+        transform.setRoll(45);
+
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+            [-0.16910198330879211, 0.9855985641479492]);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+            [-0.9855985641479492, 0.16910198330879211], 9);
+    });
+
+    test('getTileSkewVectors: pitch 90 degrees', () => {
+        const transform = new MercatorTransform();
+        transform.setMaxPitch(180);
+        transform.setBearing(0);
+        transform.setPitch(89);
+        transform.setRoll(0);
+
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+            [1, 0]);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+            [0, 1], 9);
+
+        transform.setPitch(90);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+            [0, 0]);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+            [0, 1], 9);
+
+        transform.setBearing(90);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+            [0, 0]);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+            [-1, 0], 9);
+    });
+
+    test('getTileSkewVectors: pitch 90 degrees with roll and bearing', () => {
+        const transform = new MercatorTransform();
+        transform.setMaxPitch(180);
+        transform.setBearing(45);
+        transform.setPitch(89);
+        transform.setRoll(45);
+
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+            [-0.6946603059768677, 0.7193379402160645]);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+            [-0.7193379402160645, 0.6946603059768677], 9);
+
+        transform.setPitch(90);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+            [-0.7071067690849304, 0.7071067690849304]);
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+            [-0.7071067690849304, 0.7071067690849304], 9);
     });
 
 });

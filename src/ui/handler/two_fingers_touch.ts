@@ -1,7 +1,7 @@
-import Point from '@mapbox/point-geometry';
+import type Point from '@mapbox/point-geometry';
 import {DOM} from '../../util/dom';
 import type {Map} from '../map';
-import {Handler, HandlerResult} from '../handler_manager';
+import {type Handler, type HandlerResult} from '../handler_manager';
 
 /**
  * An options object sent to the enable function of some of the handlers
@@ -11,7 +11,7 @@ export type AroundCenterOptions = {
      * If "center" is passed, map will zoom around the center of map
      */
     around: 'center';
-}
+};
 
 /**
  * The `TwoFingersTouchHandler`s allows the user to zoom, pitch and rotate the map using two fingers

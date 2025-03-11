@@ -25,7 +25,7 @@ import type {
 import type {LineStyleLayer} from '../../style/style_layer/line_style_layer';
 import type Point from '@mapbox/point-geometry';
 import type {Segment} from '../segment';
-import {RGBAImage} from '../../util/image';
+import {type RGBAImage} from '../../util/image';
 import type {Context} from '../../gl/context';
 import type {Texture} from '../../render/texture';
 import type {IndexBuffer} from '../../gl/index_buffer';
