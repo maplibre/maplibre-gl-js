@@ -253,7 +253,7 @@ describe('getOverlappingTileRanges', () => {
         const ranges = getOverlappingTileRanges(coords);
         const expected: Record<number, CanonicalTileRange> = {};
         for (let z = 0; z <= MAX_TILE_ZOOM; z++) {
-            expected[z] = {minX: 0, minY: 0, maxX: Math.pow(2, z), maxY: Math.pow(2, z)};
+            expected[z] = {minTileX: 0, minTileY: 0, maxTileX: Math.pow(2, z), maxTileY: Math.pow(2, z)};
         }
 
         expect(ranges).toEqual(expected);
@@ -269,6 +269,6 @@ describe('getOverlappingTileRanges', () => {
 
         const ranges = getOverlappingTileRanges(coords);
 
-        expect(ranges[12]).toEqual({minX: 2177, minY: 1435, maxX: 2178, maxY: 1436});
+        expect(ranges[12]).toEqual({minTileX: 2177, minTileY: 1435, maxTileX: 2178, maxTileY: 1436});
     });
 });

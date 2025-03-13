@@ -110,10 +110,10 @@ describe('OverscaledTileID', () => {
         const tile = new OverscaledTileID(2, 0, 2, 0, 0);
         tile.terrainTileRanges = {
             10: {
-                minX: 5,
-                maxX: 10,
-                minY: 5,
-                maxY: 10
+                minTileX: 5,
+                maxTileX: 10,
+                minTileY: 5,
+                maxTileY: 10
             }
         };
         const overlappingTerrainTile = new OverscaledTileID(10, 0, 10, 7, 7);

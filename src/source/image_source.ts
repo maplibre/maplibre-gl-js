@@ -342,20 +342,20 @@ export function getOverlappingTileRanges(
         maxY = Math.max(maxY, coord.y);
     }
 
-    const ranges = {};
+    const ranges: {[zoom: string]: CanonicalTileRange} = {};
 
     for (let z = 0; z <= MAX_TILE_ZOOM; z++) {
         const tilesAtZoom = Math.pow(2, z);
-        const tileMinX = Math.floor(minX * tilesAtZoom);
-        const tileMinY = Math.floor(minY * tilesAtZoom);
-        const tileMaxX = Math.floor(maxX * tilesAtZoom);
-        const tileMaxY = Math.floor(maxY * tilesAtZoom);
+        const minTileX = Math.floor(minX * tilesAtZoom);
+        const minTileY = Math.floor(minY * tilesAtZoom);
+        const maxTileX = Math.floor(maxX * tilesAtZoom);
+        const maxTileY = Math.floor(maxY * tilesAtZoom);
 
         ranges[z] = {
-            minX: tileMinX,
-            minY: tileMinY,
-            maxX: tileMaxX,
-            maxY: tileMaxY
+            minTileX,
+            minTileY,
+            maxTileX,
+            maxTileY
         };
     }
 

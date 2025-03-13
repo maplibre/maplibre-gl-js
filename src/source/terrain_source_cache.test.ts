@@ -103,7 +103,7 @@ describe('TerrainSourceCache', () => {
 
         test('should call _getTerrainCoordsForOversizedTile for tile with custom range', () => {
             const tile = new OverscaledTileID(5, 0, 5, 17, 11);
-            tile.terrainTileRanges = {1: {minX: 0, maxX: 1, minY: 0, maxY: 1}};
+            tile.terrainTileRanges = {1: {minTileX: 0, maxTileX: 1, minTileY: 0, maxTileY: 1}};
             tsc.getTerrainCoords(tile);
             expect(getCoordsRegularTileSpy).not.toHaveBeenCalled();
             expect(getCoordsOversizedTileSpy).toHaveBeenCalled();

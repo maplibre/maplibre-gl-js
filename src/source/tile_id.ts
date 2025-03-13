@@ -9,10 +9,10 @@ import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util';
 import {isInBoundsForTileZoomXY} from '../util/world_bounds';
 
 export type CanonicalTileRange = {
-    minX: number;
-    minY: number;
-    maxX: number;
-    maxY: number;
+    minTileX: number;
+    minTileY: number;
+    maxTileX: number;
+    maxTileY: number;
 };
 
 /**
@@ -220,10 +220,10 @@ export class OverscaledTileID {
 
     isOverlappingTerrainTile(tileID: OverscaledTileID): boolean {
         return this.terrainTileRanges[tileID.canonical.z] &&
-            tileID.canonical.x >= this.terrainTileRanges[tileID.canonical.z].minX &&
-            tileID.canonical.x <= this.terrainTileRanges[tileID.canonical.z].maxX &&
-            tileID.canonical.y >= this.terrainTileRanges[tileID.canonical.z].minY &&
-            tileID.canonical.y <= this.terrainTileRanges[tileID.canonical.z].maxY;
+            tileID.canonical.x >= this.terrainTileRanges[tileID.canonical.z].minTileX &&
+            tileID.canonical.x <= this.terrainTileRanges[tileID.canonical.z].maxTileX &&
+            tileID.canonical.y >= this.terrainTileRanges[tileID.canonical.z].minTileY &&
+            tileID.canonical.y <= this.terrainTileRanges[tileID.canonical.z].maxTileY;
     }
 }
 
