@@ -418,6 +418,23 @@ describe('Style#loadJSON', () => {
         expect(style.map.setTerrain).toHaveBeenCalled();
     });
 
+    test.only('sets state if defined', async () => {
+        const map = getStubMap();
+        const style = new Style(map);
+        map.setGlobalState = vi.fn();
+        style.loadJSON(createStyleJSON({
+            state: {
+                foo: 'bar'
+            }
+        }));
+
+        await style.once('style.load');
+
+        expect(style.map.setGlobalState).toHaveBeenCalledWith({
+            foo: 'bar'
+        });
+    });
+
     test('applies transformStyle function', async () => {
         const previousStyle = createStyleJSON({
             sources: {
