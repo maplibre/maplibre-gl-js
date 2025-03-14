@@ -11,7 +11,7 @@ export const GLOBAL_DISPATCHER_ID = 'global-dispatcher';
 /**
  * A type used to store the tile's expiration date and cache control definition
  */
-export type ExpiryData = {cacheControl?: string | null; expires?: Date | string | null};
+export type ExpiryData = {cacheControl?: string | null; expires?: Date | string | null; lastModified?: Date | string | null};
 
 /**
  * A `RequestParameters` object to be returned from Map.options.transformRequest callbacks.
@@ -181,7 +181,9 @@ async function makeFetchRequest(requestParameters: RequestParameters, abortContr
     if (abortController.signal.aborted) {
         throw createAbortError();
     }
-    return {data: result, cacheControl: response.headers.get('Cache-Control'), expires: response.headers.get('Expires')};
+    return {data: result, cacheControl: response.headers.get('Cache-Control'), expires: response.headers.get('Expires'),
+        lastModified: response.headers.get('Last-Modified')
+    };
 }
 
 function makeXMLHttpRequest(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {

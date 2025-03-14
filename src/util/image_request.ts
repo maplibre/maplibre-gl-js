@@ -174,7 +174,7 @@ export namespace ImageRequest {
                 onSuccess(response as GetResourceResponse<HTMLImageElement | ImageBitmap | null>);
             } else if (response.data) {
                 const img = await arrayBufferToCanvasImageSource(response.data);
-                onSuccess({data: img, cacheControl: response.cacheControl, expires: response.expires});
+                onSuccess({data: img, cacheControl: response.cacheControl, expires: response.expires, lastModified: response.lastModified});
             }
         } catch (err) {
             delete itemInQueue.abortController;
