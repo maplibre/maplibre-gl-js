@@ -165,7 +165,7 @@ async function makeFetchRequest(requestParameters: RequestParameters, abortContr
         throw new AJAXError(0, e.message, requestParameters.url, new Blob());
     }
 
-    if (!response.ok) {
+    if (!response.ok && response.status != 304) {
         const body = await response.blob();
         throw new AJAXError(response.status, response.statusText, requestParameters.url, body);
     }
