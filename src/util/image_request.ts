@@ -172,7 +172,7 @@ export namespace ImageRequest {
                 // User using addProtocol can directly return HTMLImageElement/ImageBitmap type
                 // If HtmlImageElement is used to get image then response type will be HTMLImageElement
                 onSuccess(response as GetResourceResponse<HTMLImageElement | ImageBitmap | null>);
-            } else if (response.data) {
+            } else if (response.data && response.data.byteLength > 0) {
                 const img = await arrayBufferToCanvasImageSource(response.data);
                 onSuccess({data: img, cacheControl: response.cacheControl, expires: response.expires, lastModified: response.lastModified});
             }
