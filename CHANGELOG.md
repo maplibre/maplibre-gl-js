@@ -8,6 +8,7 @@
 ### 🐞 Bug fixes
 
 - Fix intersection detection between MultiPolygons and Points ([#5590](https://github.com/maplibre/maplibre-gl-js/pull/5590))
+- Fix [#5616](https://github.com/maplibre/maplibre-gl-js/issues/5616) `_updateRetainedTiles` checking for children when children len is 1 overscaled tile "child"
 - _...Add new stuff here..._
 
 ## 5.2.0
