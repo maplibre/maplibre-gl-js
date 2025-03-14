@@ -24,7 +24,6 @@ import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTile} from '@mapbox/vector-tile';
 import {MessageType, type GetGlyphsResponse, type GetImagesResponse} from '../util/actor_messages';
 import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
-
 export class WorkerTile {
     tileID: OverscaledTileID;
     uid: string | number;
@@ -37,6 +36,7 @@ export class WorkerTile {
     showCollisionBoxes: boolean;
     collectResourceTiming: boolean;
     returnDependencies: boolean;
+    globalState: Record<string, any>;
 
     status: 'parsing' | 'done';
     data: VectorTile;
@@ -59,6 +59,7 @@ export class WorkerTile {
         this.returnDependencies = !!params.returnDependencies;
         this.promoteId = params.promoteId;
         this.inFlightDependencies = [];
+        this.globalState = params.globalState;
     }
 
     async parse(data: VectorTile, layerIndex: StyleLayerIndex, availableImages: Array<string>, actor: IActor, subdivisionGranularity: SubdivisionGranularitySetting): Promise<WorkerTileResult> {
@@ -122,7 +123,8 @@ export class WorkerTile {
                     overscaling: this.overscaling,
                     collisionBoxArray: this.collisionBoxArray,
                     sourceLayerIndex,
-                    sourceID: this.source
+                    sourceID: this.source,
+                    globalState: this.globalState
                 });
 
                 bucket.populate(features, options, this.tileID.canonical);
