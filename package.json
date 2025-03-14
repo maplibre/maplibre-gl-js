@@ -104,7 +104,7 @@
     "junit-report-builder": "^5.1.1",
     "minimist": "^1.2.8",
     "mock-geolocation": "^1.0.11",
-    "monocart-coverage-reports": "^2.12.2",
+    "monocart-coverage-reports": "^2.12.3",
     "nise": "^6.1.1",
     "npm-font-open-sans": "^1.1.0",
     "npm-run-all": "^4.1.5",
