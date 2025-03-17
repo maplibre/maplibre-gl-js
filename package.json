@@ -137,6 +137,9 @@
     "vitest": "3.0.7",
     "vitest-webgl-canvas-mock": "^1.1.0"
   },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.9.5"
+  },
   "scripts": {
     "generate-dist-package": "node --no-warnings --loader ts-node/esm build/generate-dist-package.js",
     "generate-shaders": "node --no-warnings --loader ts-node/esm build/generate-shaders.ts",
@@ -174,6 +177,7 @@
     "codegen": "run-p --print-label generate-dist-package generate-style-code generate-struct-arrays generate-shaders && npm run generate-typings",
     "benchmark": "node --no-warnings --loader ts-node/esm test/bench/run-benchmarks.ts",
     "gl-stats": "node --no-warnings --loader ts-node/esm test/bench/gl-stats.ts",
+    "preinstall": "",
     "prepare": "npm run codegen && npm run build-dist",
     "typecheck": "tsc --noEmit && tsc --project tsconfig.dist.json",
     "tsnode": "node --experimental-loader=ts-node/esm --no-warnings"
