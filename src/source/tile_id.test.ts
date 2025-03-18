@@ -105,22 +105,4 @@ describe('OverscaledTileID', () => {
             new OverscaledTileID(2, 0, 2, 0, 0).isChildOf(new OverscaledTileID(0, 1, 0, 0, 0))
         ).toBeFalsy();
     });
-
-    test('.isOverlappingTerrainTile', () => {
-        const tile = new OverscaledTileID(2, 0, 2, 0, 0);
-        tile.terrainTileRanges = {
-            10: {
-                minTileX: 5,
-                maxTileX: 10,
-                minTileY: 5,
-                maxTileY: 10
-            }
-        };
-        const overlappingTerrainTile = new OverscaledTileID(10, 0, 10, 7, 7);
-        expect(tile.isOverlappingTerrainTile(overlappingTerrainTile)).toBeTruthy();
-        const nonOverlappingTerrainTIle = new OverscaledTileID(10, 0, 10, 11, 11);
-        expect(tile.isOverlappingTerrainTile(nonOverlappingTerrainTIle)).toBeFalsy();
-        const terrainTileFromDifferentZ = new OverscaledTileID(9, 0, 9, 7, 7);
-        expect(tile.isOverlappingTerrainTile(terrainTileFromDifferentZ)).toBeFalsy();
-    });
 });

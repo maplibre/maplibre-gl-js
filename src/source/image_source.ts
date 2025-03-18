@@ -1,4 +1,4 @@
-import {CanonicalTileID, type CanonicalTileRange} from './tile_id';
+import {CanonicalTileID} from './tile_id';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {ImageRequest} from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
@@ -37,6 +37,13 @@ export type UpdateImageOptions = {
      * The image coordinates
      */
     coordinates?: Coordinates;
+};
+
+export type CanonicalTileRange = {
+    minTileX: number;
+    minTileY: number;
+    maxTileX: number;
+    maxTileY: number;
 };
 
 /**
@@ -89,6 +96,11 @@ export class ImageSource extends Evented implements Source {
     maxzoom: number;
     tileSize: number;
     url: string;
+    /**
+     * This object is used to store the range of terrain tiles that overlap with this tile.
+     * It is relevant for image tiles, as the image exceeds single tile boundaries.
+     */
+    terrainTileRanges: {[zoom: string]: CanonicalTileRange};
 
     coordinates: Coordinates;
     tiles: {[_: string]: Tile};
@@ -102,7 +114,6 @@ export class ImageSource extends Evented implements Source {
     flippedWindingOrder: boolean = false;
     _loaded: boolean;
     _request: AbortController;
-    _terrainTileRanges: {[zoom: string]: CanonicalTileRange};
 
     /** @internal */
     constructor(id: string, options: ImageSourceSpecification | VideoSourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
@@ -217,7 +228,7 @@ export class ImageSource extends Evented implements Source {
 
         // Compute tiles overlapping with the image. We need to know for which
         // terrain tiles we have to render the image.
-        this._terrainTileRanges = getOverlappingTileRanges(cornerCoords);
+        this.terrainTileRanges = getOverlappingTileRanges(cornerCoords);
 
         // Constrain min/max zoom to our tile's zoom level in order to force
         // SourceCache to request this tile (no matter what the map's zoom
@@ -269,7 +280,6 @@ export class ImageSource extends Evented implements Source {
         // If the world wraps, we may have multiple "wrapped" copies of the
         // single tile.
         if (this.tileID && this.tileID.equals(tile.tileID.canonical)) {
-            tile.tileID.terrainTileRanges = this._terrainTileRanges;
             this.tiles[String(tile.tileID.wrap)] = tile;
             tile.buckets = {};
         } else {
@@ -327,7 +337,7 @@ export function getCoordinatesCenterTileID(coords: Array<MercatorCoordinate>) {
  * @returns Overlapping tile ranges for all zoom levels.
  * @internal
  */
-export function getOverlappingTileRanges(
+function getOverlappingTileRanges(
     coords: Array<MercatorCoordinate>
 ): {[zoom: string]: CanonicalTileRange} {
     let minX = Infinity;

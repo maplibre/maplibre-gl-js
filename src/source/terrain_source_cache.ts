@@ -9,6 +9,7 @@ import {type Terrain} from '../render/terrain';
 import {browser} from '../util/browser';
 import {coveringTiles} from '../geo/projection/covering_tiles';
 import {createMat4f64} from '../util/util';
+import {type CanonicalTileRange} from './image_source';
 
 /**
  * @internal
@@ -145,9 +146,12 @@ export class TerrainSourceCache extends Evented {
      * @param tileID - the tile to look for
      * @returns the tiles that were found
      */
-    getTerrainCoords(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
-        if (tileID.terrainTileRanges) {
-            return this._getTerrainCoordsForOversizedTile(tileID);
+    getTerrainCoords(
+        tileID: OverscaledTileID,
+        terrainTileRanges?: {[zoom: string]: CanonicalTileRange}
+    ): Record<string, OverscaledTileID> {
+        if (terrainTileRanges) {
+            return this._getTerrainCoordsForOversizedTile(tileID, terrainTileRanges);
         } else {
             return this._getTerrainCoordsForRegularTile(tileID);
         }
@@ -196,15 +200,18 @@ export class TerrainSourceCache extends Evented {
 
     /**
      * Searches for the corresponding current renderable terrain-tiles.
-     * Includes terrain tiles that are within terrain tile ranges of the tileID.
+     * Includes terrain tiles that are within terrain tile ranges.
      * @param tileID - the tile to look for
      * @returns the tiles that were found
      */
-    _getTerrainCoordsForOversizedTile(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
+    _getTerrainCoordsForOversizedTile(
+        tileID: OverscaledTileID,
+        terrainTileRanges: {[zoom: string]: CanonicalTileRange}
+    ): Record<string, OverscaledTileID> {
         const coords: Record<string, OverscaledTileID> = {};
         for (const key of this._renderableTilesKeys) {
             const terrainTileID = this._tiles[key].tileID;
-            if (!tileID.isOverlappingTerrainTile(terrainTileID)) {
+            if (!this._isWithinTileRanges(terrainTileID, terrainTileRanges)) {
                 continue;
             }
 
@@ -275,5 +282,22 @@ export class TerrainSourceCache extends Evented {
      */
     anyTilesAfterTime(time = Date.now()): boolean {
         return this._lastTilesetChange >= time;
+    }
+
+    /**
+     * Checks whether a tile is within the canonical tile ranges.
+     * @param tileID - Tile to check
+     * @param canonicalTileRanges - Canonical tile ranges
+     * @returns
+     */
+    private _isWithinTileRanges(
+        tileID: OverscaledTileID,
+        canonicalTileRanges: {[zoom: string]: CanonicalTileRange}
+    ): boolean {
+        return canonicalTileRanges[tileID.canonical.z] &&
+            tileID.canonical.x >= canonicalTileRanges[tileID.canonical.z].minTileX &&
+            tileID.canonical.x <= canonicalTileRanges[tileID.canonical.z].maxTileX &&
+            tileID.canonical.y >= canonicalTileRanges[tileID.canonical.z].minTileY &&
+            tileID.canonical.y <= canonicalTileRanges[tileID.canonical.z].maxTileY;
     }
 }

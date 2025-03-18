@@ -1,5 +1,5 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {getOverlappingTileRanges, ImageSource} from './image_source';
+import {ImageSource} from './image_source';
 import {Evented} from '../util/evented';
 import {type IReadonlyTransform} from '../geo/transform_interface';
 import {extend, MAX_TILE_ZOOM} from '../util/util';
@@ -7,11 +7,10 @@ import {type FakeServer, fakeServer} from 'nise';
 import {type RequestManager} from '../util/request_manager';
 import {sleep, stubAjaxGetImage} from '../util/test/util';
 import {Tile} from './tile';
-import {type CanonicalTileRange, OverscaledTileID} from './tile_id';
+import {OverscaledTileID} from './tile_id';
 import {type Texture} from '../render/texture';
 import type {ImageSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {MercatorCoordinate} from '../geo/mercator_coordinate';
 
 function createSource(options) {
     options = extend({
@@ -232,43 +231,29 @@ describe('ImageSource', () => {
         expect(missingImagesource.loaded()).toBe(true);
     });
 
-    test('set terrainTileRanges on loadTile', () => {
-        const source = createSource({url: '/image.png'});
-        source.setCoordinates([[0, 0], [45, 0], [45, 45], [0, 45]]);
-        const tile = new Tile(new OverscaledTileID(2, 0, 2, 2, 1), 512);
-        source.loadTile(tile);
-        expect(tile.tileID.terrainTileRanges).toBeDefined();
-    });
-});
+    describe('terrainTileRanges', () => {
+        test('sets tile ranges for all zoom levels', () => {
+            const source = createSource({url: '/image.png'});
+            const map = new StubMap() as any;
+            source.onAdd(map);
+            server.respond();
+            source.setCoordinates([[-10, 10], [10, 10], [10, -10], [-10, -10]]);
 
-describe('getOverlappingTileRanges', () => {
-    test('generates tile ranges for all zoom levels', () => {
-        const coords = [
-            new MercatorCoordinate(0, 0, 0),
-            new MercatorCoordinate(1, 0, 0),
-            new MercatorCoordinate(1, 1, 0),
-            new MercatorCoordinate(0, 1, 0)
-        ];
+            for (let z = 0; z <= MAX_TILE_ZOOM; z++) {
+                expect(source.terrainTileRanges[z]).toBeDefined();
+            }
+        });
 
-        const ranges = getOverlappingTileRanges(coords);
-        const expected: Record<number, CanonicalTileRange> = {};
-        for (let z = 0; z <= MAX_TILE_ZOOM; z++) {
-            expected[z] = {minTileX: 0, minTileY: 0, maxTileX: Math.pow(2, z), maxTileY: Math.pow(2, z)};
-        }
-
-        expect(ranges).toEqual(expected);
-    });
-
-    test('calculates tile ranges properly', () => {
-        const coords = [
-            new MercatorCoordinate(0.5316551388888888, 0.3504978440046251, 0),
-            new MercatorCoordinate(0.5318495833333333, 0.3504978440046251, 0),
-            new MercatorCoordinate(0.5318495833333333, 0.3507025527508841, 0),
-            new MercatorCoordinate(0.5316551388888888, 0.3507025527508841, 0)
-        ];
-
-        const ranges = getOverlappingTileRanges(coords);
-
-        expect(ranges[12]).toEqual({minTileX: 2177, minTileY: 1435, maxTileX: 2178, maxTileY: 1436});
+        test('calculates tile ranges properly', () => {
+            const source = createSource({url: '/image.png'});
+            const map = new StubMap() as any;
+            source.onAdd(map);
+            server.respond();
+            source.setCoordinates([[11.39585,47.30074],[11.46585,47.30074],[11.46585,47.25074],[11.39585,47.25074]]);
+            expect(source.terrainTileRanges[9]).toEqual({minTileX: 272, minTileY: 179, maxTileX: 272, maxTileY: 179});
+            expect(source.terrainTileRanges[10]).toEqual({minTileX: 544, minTileY: 358, maxTileX: 544, maxTileY: 359});
+            expect(source.terrainTileRanges[11]).toEqual({minTileX: 1088, minTileY: 717, maxTileX: 1089, maxTileY: 718});
+            expect(source.terrainTileRanges[12]).toEqual({minTileX: 2177, minTileY: 1435, maxTileX: 2178, maxTileY: 1436});
+        });
     });
 });
