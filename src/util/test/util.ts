@@ -38,6 +38,8 @@ export class StubMap extends Evented {
         newTransform.apply(this.transform);
         this.transform = newTransform;
     }
+
+    setGlobalState() {}
 }
 
 export function createMap(options?, callback?) {

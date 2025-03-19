@@ -418,7 +418,7 @@ describe('Style#loadJSON', () => {
         expect(style.map.setTerrain).toHaveBeenCalled();
     });
 
-    test.only('sets state if defined', async () => {
+    test('sets state if defined', async () => {
         const map = getStubMap();
         const style = new Style(map);
         map.setGlobalState = vi.fn();
