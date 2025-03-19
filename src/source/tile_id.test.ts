@@ -105,4 +105,5 @@ describe('OverscaledTileID', () => {
             new OverscaledTileID(2, 0, 2, 0, 0).isChildOf(new OverscaledTileID(0, 1, 0, 0, 0))
         ).toBeFalsy();
     });
+
 });

@@ -151,7 +151,7 @@ export class TerrainSourceCache extends Evented {
         terrainTileRanges?: {[zoom: string]: CanonicalTileRange}
     ): Record<string, OverscaledTileID> {
         if (terrainTileRanges) {
-            return this._getTerrainCoordsForOversizedTile(tileID, terrainTileRanges);
+            return this._getTerrainCoordsForTileRanges(tileID, terrainTileRanges);
         } else {
             return this._getTerrainCoordsForRegularTile(tileID);
         }
@@ -204,7 +204,7 @@ export class TerrainSourceCache extends Evented {
      * @param tileID - the tile to look for
      * @returns the tiles that were found
      */
-    _getTerrainCoordsForOversizedTile(
+    _getTerrainCoordsForTileRanges(
         tileID: OverscaledTileID,
         terrainTileRanges: {[zoom: string]: CanonicalTileRange}
     ): Record<string, OverscaledTileID> {
