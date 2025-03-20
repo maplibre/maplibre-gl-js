@@ -47,6 +47,7 @@ import type {KeyboardHandler} from './handler/keyboard';
 import type {DoubleClickZoomHandler} from './handler/shim/dblclick_zoom';
 import type {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch';
 import type {TaskID} from '../util/task_queue';
+import {createExpression} from '@maplibre/maplibre-gl-style-spec';
 import type {
     FilterSpecification,
     StyleSpecification,
@@ -777,12 +778,49 @@ export class Map extends Camera {
         return this._mapId;
     }
 
+    _validateGlobalStateProperty(key: string, currentValue: any, newValue: any) {
+        const compiledNewValue = createExpression(newValue);
+
+        if (compiledNewValue.result === 'error') {
+            return new ErrorEvent(new Error(`State property "${key}" cannot be parsed: ${compiledNewValue.value[0].message}`));
+        }
+
+        if (currentValue) {
+            const compiledCurrentValue = createExpression(currentValue);
+            
+            // This checked during style validation, this is for a case when style validation is disabled
+            if (compiledCurrentValue.result === 'error') {
+                return new ErrorEvent(new Error(`State property "${key}" cannot be parsed: ${compiledCurrentValue.value[0].message}`));
+            }
+
+            const currentValueType = compiledCurrentValue.value.expression.type.kind;
+            const newValueType = compiledNewValue.value.expression.type.kind;
+
+            if (newValueType === 'value') {
+                // If the new value type is "value", we can't compare it to the current value type
+                return;
+            }
+
+            if (currentValueType !== newValueType) {
+                return new ErrorEvent(new Error(`State property "${key}" type "${newValueType}" does not match expected type "${currentValueType}".`));
+            }
+        }
+    }
+
     /**
      * Sets global map state. State values can be retrieved with `global-state` expression.
      * @param globalState - An object representing the global state. If `null`, the global state will be reset.
      */
     setGlobalState(globalState: Record<string, any> | null) {
-        this._globalState = globalState === null ? {} : globalState;
+        for (const key in globalState) {
+            const error = this._validateGlobalStateProperty(key, this._globalState[key], globalState[key]);
+            if (error) {
+                this.fire(error);
+                return;
+            }
+        }
+
+        this._globalState = globalState ?? {};
 
         if (this._loaded) {
             for (const sourceCache of Object.values(this.style.sourceCaches)) {
