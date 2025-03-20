@@ -14,7 +14,7 @@ afterEach(() => {
     server.restore();
 });
 
-describe('#setGlobalState', () => {
+describe('#setGlobalStateProperty', () => {
     test('calls map._udpate', () => { 
         const map = createMap({
             style: {
@@ -34,9 +34,7 @@ describe('#setGlobalState', () => {
         });
 
         map.on('style.load', () => {
-            map.setGlobalState({
-                backgroundColor: 'blue'
-            });
+            map.setGlobalStateProperty('backgroundColor', 'blue');
             expect(map._update).toHaveBeenCalledWith(true);
         });
     });
@@ -65,9 +63,7 @@ describe('#setGlobalState', () => {
 
                 done();
             });
-            map.setGlobalState({
-                backgroundColor: 1
-            });
+            map.setGlobalStateProperty('backgroundColor', 1);
             expect(map._update).toHaveBeenCalledWith(true);
         });
     }));
@@ -95,9 +91,7 @@ describe('#setGlobalState', () => {
                 expect(error.message).toMatch(/State property "backgroundColor" cannot be parsed: Unknown expression "does-not-exist". If you wanted a literal array, use \["literal", \[...]]/);
                 done();
             });
-            map.setGlobalState({
-                backgroundColor: ['does-not-exist', 'backgroundColor']
-            });
+            map.setGlobalStateProperty('backgroundColor', ['does-not-exist']);
         });
     }));
 });

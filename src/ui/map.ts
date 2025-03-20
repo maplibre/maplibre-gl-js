@@ -808,19 +808,18 @@ export class Map extends Camera {
     }
 
     /**
-     * Sets global map state. State values can be retrieved with `global-state` expression.
-     * @param globalState - An object representing the global state. If `null`, the global state will be reset.
+     * Sets global state property State property values can be retrieved with `global-state` expression.
+     * @param propertyName - The name of the state property to set.
+     * @param value - The value of the state property to set.
      */
-    setGlobalState(globalState: Record<string, any> | null) {
-        for (const key in globalState) {
-            const error = this._validateGlobalStateProperty(key, this._globalState[key], globalState[key]);
-            if (error) {
-                this.fire(error);
-                return;
-            }
+    setGlobalStateProperty(propertyName: string, value: any) {
+        const error = this._validateGlobalStateProperty(propertyName, this._globalState[propertyName], value);
+        if (error) {
+            this.fire(error);
+            return;
         }
 
-        this._globalState = globalState ?? {};
+        this._globalState[propertyName] = value;
 
         if (this._loaded) {
             for (const sourceCache of Object.values(this.style.sourceCaches)) {
@@ -829,6 +828,17 @@ export class Map extends Camera {
         }
 
         return this._update(true);
+    }
+
+    _setGlobalState(globalState: Record<string, any>) {
+        for (const propertyName in globalState) {
+            const error = this._validateGlobalStateProperty(propertyName, this._globalState[propertyName], globalState[propertyName]);
+            if (error) {
+                this.fire(error);
+                return;
+            }
+        }
+        this._globalState = globalState;
     }
 
     /**
