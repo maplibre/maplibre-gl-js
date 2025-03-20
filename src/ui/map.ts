@@ -813,6 +813,11 @@ export class Map extends Camera {
      * @param value - The value of the state property to set.
      */
     setGlobalStateProperty(propertyName: string, value: any) {
+        if (value === null) {
+            this._globalState[propertyName] = this.style.stylesheet.state[propertyName];
+            return;
+        }
+
         const error = this._validateGlobalStateProperty(propertyName, this._globalState[propertyName], value);
         if (error) {
             this.fire(error);
@@ -828,6 +833,10 @@ export class Map extends Camera {
         }
 
         return this._update(true);
+    }
+
+    getGlobalState() {
+        return this._globalState;
     }
 
     _setGlobalState(globalState: Record<string, any>) {
