@@ -747,7 +747,8 @@ export class SourceCache extends Evented {
                 // check if all 4 immediate children are loaded (i.e. the missing ideal tile is covered)
                 const children = tileID.children(this._source.maxzoom);
 
-                if (retain[children[0].key] &&
+                if (children.length === 4 &&
+                    retain[children[0].key] &&
                     retain[children[1].key] &&
                     retain[children[2].key] &&
                     retain[children[3].key]) continue; // tile is covered by children
