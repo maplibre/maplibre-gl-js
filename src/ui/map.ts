@@ -778,37 +778,48 @@ export class Map extends Camera {
         return this._mapId;
     }
 
+    /**
+     * Validates a global state property by checking if the new value can be parsed and matches the type of the current value.
+     * If the new value cannot be parsed or its type does not match the current value's type, an error event is fired.
+     * 
+     * @param key - The name of the state property to validate.
+     * @param currentValue - The current value of the state property.
+     * @param newValue - The new value to validate against the current value.
+     * @returns An ErrorEvent if validation fails, otherwise undefined.
+     */
     _validateGlobalStateProperty(key: string, currentValue: any, newValue: any) {
-        const compiledNewValue = createExpression(newValue);
+        const parsedNewValue = createExpression(newValue);
 
-        if (compiledNewValue.result === 'error') {
-            return new ErrorEvent(new Error(`State property "${key}" cannot be parsed: ${compiledNewValue.value[0].message}`));
+        if (parsedNewValue.result === 'error') {
+            return new ErrorEvent(new Error(`State property "${key}" cannot be parsed: ${parsedNewValue.value[0].message}`));
         }
 
         if (currentValue) {
-            const compiledCurrentValue = createExpression(currentValue);
-            
-            // This checked during style validation, this is for a case when style validation is disabled
-            if (compiledCurrentValue.result === 'error') {
-                return new ErrorEvent(new Error(`State property "${key}" cannot be parsed: ${compiledCurrentValue.value[0].message}`));
+            const parsedCurrentValue = createExpression(currentValue);
+            // Current value should be already validated, this is for a case when style validation is disabled.
+            if (!parsedCurrentValue || parsedCurrentValue.result === 'error') {
+                return new ErrorEvent(new Error(`State property "${key}" cannot be parsed: ${parsedCurrentValue.value[0].message}`));
             }
 
-            const currentValueType = compiledCurrentValue.value.expression.type.kind;
-            const newValueType = compiledNewValue.value.expression.type.kind;
-
+            const newValueType = parsedNewValue.value.expression.type.kind;
             if (newValueType === 'value') {
-                // If the new value type is "value", we can't compare it to the current value type
+                // If the new value type is "value", we can't compare it to the current value type.
+                //  "value" represents a type which type cannot be determined at parse time.
                 return;
             }
 
+            const currentValueType = parsedCurrentValue.value.expression.type.kind;
             if (currentValueType !== newValueType) {
                 return new ErrorEvent(new Error(`State property "${key}" type "${newValueType}" does not match expected type "${currentValueType}".`));
             }
         }
     }
-
+ 
     /**
-     * Sets global state property State property values can be retrieved with `global-state` expression.
+     * Sets a global state property that can be retrieved with the `global-state` expression.
+     * If the value is null, it resets the property to its default value defined in the `state` style property.
+     * If the value is invalid, an error event is fired.
+     * 
      * @param propertyName - The name of the state property to set.
      * @param value - The value of the state property to set.
      */
@@ -835,10 +846,21 @@ export class Map extends Camera {
         return this._update(true);
     }
 
-    getGlobalState() {
+    /**
+     * Returns the global map state
+     *
+     * @returns The map state object.
+    */
+    getGlobalState(): Record<string, any> {
         return this._globalState;
     }
 
+    /**
+     * Sets the global state with the provided key-value pairs.
+     * Validates each property before setting it.
+     * 
+     * @param globalState - An object containing key-value pairs to set in the global state.
+     */
     _setGlobalState(globalState: Record<string, any>) {
         for (const propertyName in globalState) {
             const error = this._validateGlobalStateProperty(propertyName, this._globalState[propertyName], globalState[propertyName]);
