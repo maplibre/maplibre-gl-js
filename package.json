@@ -129,7 +129,7 @@
     "tslib": "^2.8.1",
     "typedoc": "^0.28.1",
     "typedoc-plugin-markdown": "^4.5.2",
-    "typedoc-plugin-missing-exports": "^3.1.0",
+    "typedoc-plugin-missing-exports": "^4.0.0",
     "typescript": "^5.8.2"
   },
   "overrides": {
