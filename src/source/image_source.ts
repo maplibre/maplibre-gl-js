@@ -228,7 +228,7 @@ export class ImageSource extends Evented implements Source {
 
         // Compute tiles overlapping with the image. We need to know for which
         // terrain tiles we have to render the image.
-        this.terrainTileRanges = getOverlappingTileRanges(cornerCoords);
+        this.terrainTileRanges = this._getOverlappingTileRanges(cornerCoords);
 
         // Constrain min/max zoom to our tile's zoom level in order to force
         // SourceCache to request this tile (no matter what the map's zoom
@@ -298,6 +298,47 @@ export class ImageSource extends Evented implements Source {
     hasTransition() {
         return false;
     }
+
+    /**
+     * Given a list of coordinates, determine overlapping tile ranges for all zoom levels.
+     *
+     * @returns Overlapping tile ranges for all zoom levels.
+     * @internal
+     */
+    private _getOverlappingTileRanges(
+        coords: Array<MercatorCoordinate>
+    ): {[zoom: string]: CanonicalTileRange} {
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+
+        for (const coord of coords) {
+            minX = Math.min(minX, coord.x);
+            minY = Math.min(minY, coord.y);
+            maxX = Math.max(maxX, coord.x);
+            maxY = Math.max(maxY, coord.y);
+        }
+
+        const ranges: {[zoom: string]: CanonicalTileRange} = {};
+
+        for (let z = 0; z <= MAX_TILE_ZOOM; z++) {
+            const tilesAtZoom = Math.pow(2, z);
+            const minTileX = Math.floor(minX * tilesAtZoom);
+            const minTileY = Math.floor(minY * tilesAtZoom);
+            const maxTileX = Math.floor(maxX * tilesAtZoom);
+            const maxTileY = Math.floor(maxY * tilesAtZoom);
+
+            ranges[z] = {
+                minTileX,
+                minTileY,
+                maxTileX,
+                maxTileY
+            };
+        }
+
+        return ranges;
+    }
 }
 
 /**
@@ -329,47 +370,6 @@ export function getCoordinatesCenterTileID(coords: Array<MercatorCoordinate>) {
         zoom,
         Math.floor((minX + maxX) / 2 * tilesAtZoom),
         Math.floor((minY + maxY) / 2 * tilesAtZoom));
-}
-
-/**
- * Given a list of coordinates, determine overlapping tile ranges for all zoom levels.
- *
- * @returns Overlapping tile ranges for all zoom levels.
- * @internal
- */
-function getOverlappingTileRanges(
-    coords: Array<MercatorCoordinate>
-): {[zoom: string]: CanonicalTileRange} {
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-
-    for (const coord of coords) {
-        minX = Math.min(minX, coord.x);
-        minY = Math.min(minY, coord.y);
-        maxX = Math.max(maxX, coord.x);
-        maxY = Math.max(maxY, coord.y);
-    }
-
-    const ranges: {[zoom: string]: CanonicalTileRange} = {};
-
-    for (let z = 0; z <= MAX_TILE_ZOOM; z++) {
-        const tilesAtZoom = Math.pow(2, z);
-        const minTileX = Math.floor(minX * tilesAtZoom);
-        const minTileY = Math.floor(minY * tilesAtZoom);
-        const maxTileX = Math.floor(maxX * tilesAtZoom);
-        const maxTileY = Math.floor(maxY * tilesAtZoom);
-
-        ranges[z] = {
-            minTileX,
-            minTileY,
-            maxTileX,
-            maxTileY
-        };
-    }
-
-    return ranges;
 }
 
 function hasWrongWindingOrder(coords: Array<Point>) {
