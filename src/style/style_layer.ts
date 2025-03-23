@@ -67,7 +67,6 @@ export type QueryIntersectsFeatureParams = {
     pixelPosMatrix: mat4;
     /**
      * The unwrapped tile ID for the tile being queried.
-     * Required for projectTileCoordinates.
      */
     unwrappedTileID: UnwrappedTileID;
 };

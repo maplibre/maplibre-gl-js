@@ -1,16 +1,14 @@
 import {StyleLayer, type QueryIntersectsFeatureParams} from '../style_layer';
 
+import {CircleBucket} from '../../data/bucket/circle_bucket';
+import {polygonIntersectsBufferedPoint} from '../../util/intersection_tests';
+import {getMaximumPaintValue, translateDistance, translate} from '../query_utils';
+import properties, {type CircleLayoutPropsPossiblyEvaluated, type CirclePaintPropsPossiblyEvaluated} from './circle_style_layer_properties.g';
+import {type Transitionable, type Transitioning, type Layout, type PossiblyEvaluated} from '../properties';
 import Point from '@mapbox/point-geometry';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Bucket, BucketParameters} from '../../data/bucket';
-import {CircleBucket} from '../../data/bucket/circle_bucket';
-import type {IReadonlyTransform} from '../../geo/transform_interface';
-import type {UnwrappedTileID} from '../../source/tile_id';
-import {polygonIntersectsBufferedPoint} from '../../util/intersection_tests';
-import {type Layout, type PossiblyEvaluated, type Transitionable, type Transitioning} from '../properties';
-import {getMaximumPaintValue, translate, translateDistance} from '../query_utils';
 import type {CircleLayoutProps, CirclePaintProps} from './circle_style_layer_properties.g';
-import properties, {type CircleLayoutPropsPossiblyEvaluated, type CirclePaintPropsPossiblyEvaluated} from './circle_style_layer_properties.g';
 
 export const isCircleStyleLayer = (layer: StyleLayer): layer is CircleStyleLayer => layer.type === 'circle';
 
