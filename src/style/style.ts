@@ -1464,7 +1464,7 @@ export class Style extends Evented {
                     queryGeometry,
                     paramsStrict,
                     transform,
-                    this.map.terrain
+                    this.map.terrain.getElevation.bind(this.map.terrain)
                 )
             );
         }

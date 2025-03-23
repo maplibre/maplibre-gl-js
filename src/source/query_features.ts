@@ -9,6 +9,7 @@ import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {QueryResults, QueryResultsItem} from '../data/feature_index';
 import type {OverscaledTileID} from './tile_id';
+import {Terrain} from '../render/terrain';
 
 type RenderedFeatureLayer = {
     wrappedTileID: string;
@@ -108,7 +109,7 @@ export function queryRenderedFeatures(
     queryGeometry: Array<Point>,
     params: QueryRenderedFeaturesOptionsStrict | undefined,
     transform: IReadonlyTransform,
-    terrain: Terrain
+    getElevation: (id: OverscaledTileID, x: number, y: number) => number
 ): QueryRenderedFeaturesResults {
 
     const has3DLayer = queryIncludes3DLayer(params?.layers ?? null, styleLayers, sourceCache.id);
@@ -131,7 +132,7 @@ export function queryRenderedFeatures(
                 transform,
                 maxPitchScaleFactor,
                 getPixelPosMatrix(sourceCache.transform, tileIn.tileID),
-                terrain.getElevation.bind(terrain, tileIn.tileID.toUnwrapped()),
+                getElevation.bind(undefined, tileIn.tileID.toUnwrapped()),
             )
         });
     }
