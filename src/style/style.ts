@@ -1,33 +1,33 @@
-import type Point from '@mapbox/point-geometry';
-import {derefLayers as deref, diff as diffStyles, emptyStyle, latest as styleSpec, type DiffCommand} from '@maplibre/maplibre-gl-style-spec';
-import {GlyphManager} from '../render/glyph_manager';
+import {Event, ErrorEvent, Evented} from '../util/evented';
+import {type StyleLayer} from './style_layer';
+import {createStyleLayer} from './create_style_layer';
+import {loadSprite} from './load_sprite';
 import {ImageManager} from '../render/image_manager';
+import {GlyphManager} from '../render/glyph_manager';
+import {Light} from './light';
+import {Sky} from './sky';
 import {LineAtlas} from '../render/line_atlas';
-import {type GeoJSONSource} from '../source/geojson_source';
-import {queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures, type QueryRenderedFeaturesOptions, type QueryRenderedFeaturesOptionsStrict, type QueryRenderedFeaturesResults, type QueryRenderedFeaturesResultsItem, type QuerySourceFeatureOptions} from '../source/query_features';
-import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread';
-import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
-import {type Source} from '../source/source';
-import {SourceCache} from '../source/source_cache';
-import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index';
+import {clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
+import {coerceSpriteToArray} from '../util/style';
 import {getJSON, getReferrer} from '../util/ajax';
+import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
 import {Dispatcher} from '../util/dispatcher';
-import {ErrorEvent, Event, Evented} from '../util/evented';
+import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
+import {type Source} from '../source/source';
+import {type QueryRenderedFeaturesOptions, type QueryRenderedFeaturesOptionsStrict, type QueryRenderedFeaturesResults, type QueryRenderedFeaturesResultsItem, type QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
+import {SourceCache} from '../source/source_cache';
+import {type GeoJSONSource} from '../source/geojson_source';
+import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, type DiffCommand} from '@maplibre/maplibre-gl-style-spec';
 import {getGlobalWorkerPool} from '../util/global_worker_pool';
-import {ResourceType} from '../util/request_manager';
-import {coerceSpriteToArray} from '../util/style';
-import {clone, deepEqual, extend, filterObject, mapObject} from '../util/util';
-import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
-import {createStyleLayer} from './create_style_layer';
-import {Light} from './light';
-import {loadSprite} from './load_sprite';
+import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread';
+import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
 import {PauseablePlacement} from './pauseable_placement';
-import {Sky} from './sky';
-import {type StyleLayer} from './style_layer';
-import {validateCustomStyleLayer} from './style_layer/custom_style_layer';
-import {emitValidationErrors as _emitValidationErrors, validateStyle} from './validate_style';
 import {ZoomHistory} from './zoom_history';
+import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index';
+import {validateCustomStyleLayer} from './style_layer/custom_style_layer';
+import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
+import type Point from '@mapbox/point-geometry';
 
 // We're skipping validation errors with the `source.canvas` identifier in order
 // to continue to allow canvas sources to be added at runtime/updated in
@@ -38,21 +38,25 @@ const emitValidationErrors = (evented: Evented, errors?: ReadonlyArray<{
 }> | null) =>
     _emitValidationErrors(evented, errors && errors.filter(error => error.identifier !== 'source.canvas'));
 
+import type {Map} from '../ui/map';
+import type {IReadonlyTransform, ITransform} from '../geo/transform_interface';
+import type {StyleImage} from './style_image';
+import type {EvaluationParameters} from './evaluation_parameters';
+import type {Placement} from '../symbol/placement';
 import type {
-    DiffOperations,
-    FilterSpecification,
     LayerSpecification,
+    FilterSpecification,
+    StyleSpecification,
     LightSpecification,
-    ProjectionSpecification,
-    SkySpecification,
     SourceSpecification,
     SpriteSpecification,
-    StyleSpecification
+    DiffOperations,
+    ProjectionSpecification,
+    SkySpecification
 } from '@maplibre/maplibre-gl-style-spec';
-import type {IReadonlyTransform, ITransform} from '../geo/transform_interface';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
-import type {Placement} from '../symbol/placement';
-import type {Map} from '../ui/map';
+import type {CustomLayerInterface} from './style_layer/custom_style_layer';
+import type {Validator} from './validate_style';
 import {
     MessageType,
     type GetGlyphsParameters,
@@ -1464,8 +1468,7 @@ export class Style extends Evented {
                     queryGeometry,
                     paramsStrict,
                     transform,
-                    this.map.terrain.getElevation.bind(this.map.terrain)
-                )
+                    this.map.terrain.getElevation.bind(this.map.terrain))
             );
         }
 
