@@ -25,6 +25,7 @@ import type {Map} from '../ui/map';
 import type {StyleSetterOptions} from './style';
 import {type mat4} from 'gl-matrix';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
+import type {UnwrappedTileID} from '../source/tile_id';
 
 const TRANSITION_SUFFIX = '-transition';
 
@@ -64,6 +65,11 @@ export type QueryIntersectsFeatureParams = {
      * The pixel coordinates are relative to the center of the screen.
      */
     pixelPosMatrix: mat4;
+    /**
+     * The unwrapped tile ID for the tile being queried.
+     * Required for projectTileCoordinates.
+     */
+    unwrappedTileID: UnwrappedTileID;
 };
 
 /**

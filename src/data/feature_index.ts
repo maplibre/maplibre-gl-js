@@ -174,14 +174,15 @@ export class FeatureIndex {
                     }
 
                     return styleLayer.queryIntersectsFeature({
-                        queryGeometry, 
-                        feature, 
-                        featureState, 
-                        geometry: featureGeometry, 
-                        zoom: this.z, 
-                        transform: args.transform, 
-                        pixelsToTileUnits, 
-                        pixelPosMatrix: args.pixelPosMatrix
+                        queryGeometry,
+                        feature,
+                        featureState,
+                        geometry: featureGeometry,
+                        zoom: this.z,
+                        transform: args.transform,
+                        pixelsToTileUnits,
+                        pixelPosMatrix: args.pixelPosMatrix,
+                        unwrappedTileID: this.tileID.toUnwrapped()
                     });
                 }
             );
