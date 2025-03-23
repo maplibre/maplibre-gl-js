@@ -64,8 +64,10 @@ import {
     type GetImagesParameters,
     type GetImagesResponse
 } from '../util/actor_messages';
-import {type Projection} from '../geo/projection/projection';
-import {createProjectionFromName} from '../geo/projection/projection_factory';
+import type {EvaluationParameters} from './evaluation_parameters';
+import type {StyleImage} from './style_image';
+import type {CustomLayerInterface} from './style_layer/custom_style_layer';
+import type {Validator} from './validate_style';
 
 const empty = emptyStyle() as StyleSpecification;
 /**
@@ -1467,7 +1469,9 @@ export class Style extends Evented {
                     serializedLayers,
                     queryGeometry,
                     paramsStrict,
-                    transform)
+                    transform,
+                    this.map.terrain.getElevation.bind(this.map.terrain, id)
+                )
             );
         }
 

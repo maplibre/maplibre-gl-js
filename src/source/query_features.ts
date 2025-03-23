@@ -107,7 +107,8 @@ export function queryRenderedFeatures(
     serializedLayers: {[_: string]: any},
     queryGeometry: Array<Point>,
     params: QueryRenderedFeaturesOptionsStrict | undefined,
-    transform: IReadonlyTransform
+    transform: IReadonlyTransform,
+    terrain: Terrain
 ): QueryRenderedFeaturesResults {
 
     const has3DLayer = queryIncludes3DLayer(params?.layers ?? null, styleLayers, sourceCache.id);
@@ -129,7 +130,9 @@ export function queryRenderedFeatures(
                 params,
                 transform,
                 maxPitchScaleFactor,
-                getPixelPosMatrix(sourceCache.transform, tileIn.tileID))
+                getPixelPosMatrix(sourceCache.transform, tileIn.tileID),
+                terrain.getElevation.bind(terrain, tileIn.tileID.toUnwrapped()),
+            )
         });
     }
 
