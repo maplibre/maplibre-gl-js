@@ -9,7 +9,6 @@ import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {QueryResults, QueryResultsItem} from '../data/feature_index';
 import type {OverscaledTileID} from './tile_id';
-import {pixelsToTileUnits} from './pixels_to_tile_units';
 
 type RenderedFeatureLayer = {
     wrappedTileID: string;
@@ -76,11 +75,10 @@ function getPixelPosMatrix(transform, tileID: OverscaledTileID) {
     const t = mat4.create();
     mat4.translate(t, t, [1, 1, 0]);
     mat4.scale(t, t, [transform.width * 0.5, transform.height * 0.5, 1]);
-    if ('calculatePosMatrix' in transform) { // Globe: TODO: remove this hack once queryRendererFeatures supports globe properly
+    if (transform.calculatePosMatrix) { // Globe: TODO: remove this hack once queryRendererFeatures supports globe properly
         return mat4.multiply(t, t, transform.calculatePosMatrix(tileID.toUnwrapped()));
     } else {
-        const scale = pixelsToTileUnits({tileID, tileSize: transform.tileSize}, 1, transform.zoom);
-        return mat4.scale(t, t, [1 / scale, 1 / scale, 1]);
+        return t;
     }
 }
 
