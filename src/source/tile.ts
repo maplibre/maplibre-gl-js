@@ -303,7 +303,7 @@ export class Tile {
             transform,
             params,
             queryPadding: this.queryPadding * maxPitchScaleFactor,
-            getElevation: (x, y) => painter.style.map.terrain ? painter.style.map.terrain.getElevation(this.tileID, x, y) : 0
+            getElevation
         }, layers, serializedLayers, sourceFeatureState);
     }
 
