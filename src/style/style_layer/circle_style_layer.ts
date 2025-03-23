@@ -9,8 +9,8 @@ import Point from '@mapbox/point-geometry';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Bucket, BucketParameters} from '../../data/bucket';
 import type {CircleLayoutProps, CirclePaintProps} from './circle_style_layer_properties.g';
-import {IReadonlyTransform} from '../../geo/transform_interface';
-import {UnwrappedTileID} from '../../source/tile_id';
+import type {IReadonlyTransform} from '../../geo/transform_interface';
+import type {UnwrappedTileID} from '../../source/tile_id';
 
 export const isCircleStyleLayer = (layer: StyleLayer): layer is CircleStyleLayer => layer.type === 'circle';
 
@@ -47,7 +47,8 @@ export class CircleStyleLayer extends StyleLayer {
         geometry,
         transform,
         pixelsToTileUnits,
-        unwrappedTileID}: QueryIntersectsFeatureParams
+        unwrappedTileID,
+        getElevation}: QueryIntersectsFeatureParams
     ): boolean {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('circle-translate'),
@@ -62,22 +63,21 @@ export class CircleStyleLayer extends StyleLayer {
         // A circle with fixed scaling relative to the viewport gets larger in tile space as it moves into the distance
         // A circle with fixed scaling relative to the map gets smaller in viewport space as it moves into the distance
         const alignWithMap = this.paint.get('circle-pitch-alignment') === 'map';
-        const transformedPolygon = alignWithMap ? translatedPolygon : projectQueryGeometry(translatedPolygon, transform, unwrappedTileID);
+        const transformedPolygon = alignWithMap ? translatedPolygon : projectQueryGeometry(translatedPolygon, transform, unwrappedTileID, getElevation);
         const transformedSize = alignWithMap ? size * pixelsToTileUnits : size;
 
         for (const ring of geometry) {
             for (const point of ring) {
 
-                const transformedPoint = alignWithMap ? point : projectPoint(point, transform, unwrappedTileID);
+                const transformedPoint = alignWithMap ? point : projectPoint(point, transform, unwrappedTileID, getElevation);
 
                 let adjustedSize = transformedSize;
-                const projected = transform.projectTileCoordinates(point.x, point.y, unwrappedTileID, () => 0);
-                const distance = projected.signedDistanceFromCamera;
+                const w = transform.projectTileCoordinates(point.x, point.y, unwrappedTileID, getElevation).signedDistanceFromCamera;
 
                 if (this.paint.get('circle-pitch-scale') === 'viewport' && this.paint.get('circle-pitch-alignment') === 'map') {
-                    adjustedSize *= distance / transform.cameraToCenterDistance;
+                    adjustedSize *= w / transform.cameraToCenterDistance;
                 } else if (this.paint.get('circle-pitch-scale') === 'map' && this.paint.get('circle-pitch-alignment') === 'viewport') {
-                    adjustedSize *= transform.cameraToCenterDistance / distance;
+                    adjustedSize *= transform.cameraToCenterDistance / w;
                 }
 
                 if (polygonIntersectsBufferedPoint(transformedPolygon, transformedPoint, adjustedSize)) return true;
@@ -88,16 +88,16 @@ export class CircleStyleLayer extends StyleLayer {
     }
 }
 
-function projectPoint(point: Point, transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID): Point {
-    const projection = transform.projectTileCoordinates(point.x, point.y, unwrappedTileID, () => 0);
+function projectPoint(point: Point, transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): Point {
+    const projection = transform.projectTileCoordinates(point.x, point.y, unwrappedTileID, getElevation);
     return new Point(
         (projection.point.x * 0.5 + 0.5) * transform.width,
         (-projection.point.y * 0.5 + 0.5) * transform.height
     );
 }
 
-function projectQueryGeometry(queryGeometry: Array<Point>, transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID) {
+function projectQueryGeometry(queryGeometry: Array<Point>, transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation) {
     return queryGeometry.map((p) => {
-        return projectPoint(p, transform, unwrappedTileID);
+        return projectPoint(p, transform, unwrappedTileID, getElevation);
     });
 }
