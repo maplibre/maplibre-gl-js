@@ -301,7 +301,8 @@ export class Tile {
             pixelPosMatrix,
             transform,
             params,
-            queryPadding: this.queryPadding * maxPitchScaleFactor
+            queryPadding: this.queryPadding * maxPitchScaleFactor,
+            getElevation: () => 0
         }, layers, serializedLayers, sourceFeatureState);
     }
 

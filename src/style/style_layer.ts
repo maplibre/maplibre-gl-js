@@ -25,7 +25,7 @@ import type {Map} from '../ui/map';
 import type {StyleSetterOptions} from './style';
 import {type mat4} from 'gl-matrix';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
-import type {UnwrappedTileID} from '../source/tile_id';
+import type {OverscaledTileID, UnwrappedTileID} from '../source/tile_id';
 
 const TRANSITION_SUFFIX = '-transition';
 
@@ -69,6 +69,10 @@ export type QueryIntersectsFeatureParams = {
      * The unwrapped tile ID for the tile being queried.
      */
     unwrappedTileID: UnwrappedTileID;
+    /**
+     * A function to get the elevation of a point in tile coordinates.
+     */
+    getElevation: (x: number, y: number) => number;
 };
 
 /**

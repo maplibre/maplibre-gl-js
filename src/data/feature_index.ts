@@ -23,6 +23,7 @@ import type {StyleLayer} from '../style/style_layer';
 import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
+import type {Terrain} from '../render/terrain';
 
 type QueryParameters = {
     scale: number;
@@ -32,6 +33,7 @@ type QueryParameters = {
     queryGeometry: Array<Point>;
     cameraQueryGeometry: Array<Point>;
     queryPadding: number;
+    getElevation: (x: number, y: number) => number;
     params: {
         filter?: FilterSpecification;
         layers?: Set<string> | null;
@@ -182,7 +184,8 @@ export class FeatureIndex {
                         transform: args.transform,
                         pixelsToTileUnits,
                         pixelPosMatrix: args.pixelPosMatrix,
-                        unwrappedTileID: this.tileID.toUnwrapped()
+                        unwrappedTileID: this.tileID.toUnwrapped(),
+                        getElevation: args.getElevation
                     });
                 }
             );
