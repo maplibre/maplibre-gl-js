@@ -2086,7 +2086,12 @@ export class Map extends Camera {
                             this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
                         }
                     }
-                    this.terrain.sourceCache.freeRtt(e.tile.tileID);
+
+                    if (e.source?.type === 'image') {
+                        this.terrain.sourceCache.freeRtt();
+                    } else {
+                        this.terrain.sourceCache.freeRtt(e.tile.tileID);
+                    }
                 }
             };
             this.style.on('data', this._terrainDataCallback);

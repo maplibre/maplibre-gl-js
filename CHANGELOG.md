@@ -7,6 +7,8 @@
 
 ### 🐞 Bug fixes
 
+- Fix intersection detection between MultiPolygons and Points ([#5590](https://github.com/maplibre/maplibre-gl-js/pull/5590))
+- Fix issue with image rendered partially on terrain tiles ([#1559](https://github.com/maplibre/maplibre-gl-js/issues/1559)).
 - Fix circle layer hitbox in Globe projection mode ([#5599](https://github.com/maplibre/maplibre-gl-js/pull/5599))
 - _...Add new stuff here..._
 
