@@ -88,7 +88,7 @@ export class CircleStyleLayer extends StyleLayer {
     }
 }
 
-function projectPoint(tilePoint: Point, transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): Point {
+function projectPoint(tilePoint: Point, transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: undefined | ((x: number, y: number) => number)): Point {
     // Convert `tilePoint` from tile coordinates to clip coordinates.
     const clipPoint = transform.projectTileCoordinates(tilePoint.x, tilePoint.y, unwrappedTileID, getElevation).point;
     // Convert `clipPoint` from clip coordinates into pixel/screen coordinates.
@@ -99,7 +99,7 @@ function projectPoint(tilePoint: Point, transform: IReadonlyTransform, unwrapped
     return pixelPoint;
 }
 
-function projectQueryGeometry(queryGeometry: Array<Point>, transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation) {
+function projectQueryGeometry(queryGeometry: Array<Point>, transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: undefined | ((x: number, y: number) => number)) {
     return queryGeometry.map((p) => {
         return projectPoint(p, transform, unwrappedTileID, getElevation);
     });

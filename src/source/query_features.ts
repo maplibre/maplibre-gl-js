@@ -108,7 +108,7 @@ export function queryRenderedFeatures(
     queryGeometry: Array<Point>,
     params: QueryRenderedFeaturesOptionsStrict | undefined,
     transform: IReadonlyTransform,
-    getElevation: (id: OverscaledTileID, x: number, y: number) => number
+    getElevation: undefined | ((id: OverscaledTileID, x: number, y: number) => number)
 ): QueryRenderedFeaturesResults {
 
     const has3DLayer = queryIncludes3DLayer(params?.layers ?? null, styleLayers, sourceCache.id);
@@ -131,7 +131,7 @@ export function queryRenderedFeatures(
                 transform,
                 maxPitchScaleFactor,
                 getPixelPosMatrix(sourceCache.transform, tileIn.tileID),
-                (x: number, y: number) => getElevation(tileIn.tileID, x, y),
+                getElevation ? (x: number, y: number) => getElevation(tileIn.tileID, x, y) : undefined,
             )
         });
     }

@@ -289,7 +289,7 @@ export class Tile {
         transform: IReadonlyTransform,
         maxPitchScaleFactor: number,
         pixelPosMatrix: mat4,
-        getElevation: (x: number, y: number) => number
+        getElevation: undefined | ((x: number, y: number) => number)
     ): QueryResults {
         if (!this.latestFeatureIndex || !this.latestFeatureIndex.rawTileData)
             return {};

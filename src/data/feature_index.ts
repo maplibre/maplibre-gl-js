@@ -32,7 +32,7 @@ type QueryParameters = {
     queryGeometry: Array<Point>;
     cameraQueryGeometry: Array<Point>;
     queryPadding: number;
-    getElevation: (x: number, y: number) => number;
+    getElevation: undefined | ((x: number, y: number) => number);
     params: {
         filter?: FilterSpecification;
         layers?: Set<string> | null;

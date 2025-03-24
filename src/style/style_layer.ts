@@ -72,7 +72,7 @@ export type QueryIntersectsFeatureParams = {
     /**
      * A function to get the elevation of a point in tile coordinates.
      */
-    getElevation: (x: number, y: number) => number;
+    getElevation: undefined | ((x: number, y: number) => number);
 };
 
 /**
