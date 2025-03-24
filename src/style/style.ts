@@ -66,7 +66,7 @@ import {
 } from '../util/actor_messages';
 import {type Projection} from '../geo/projection/projection';
 import {createProjectionFromName} from '../geo/projection/projection_factory';
-import {OverscaledTileID, UnwrappedTileID} from '../source/tile_id';
+import type {OverscaledTileID} from '../source/tile_id';
 
 const empty = emptyStyle() as StyleSpecification;
 /**
