@@ -8,7 +8,7 @@ import type {RetainedQueryData} from '../symbol/placement';
 import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {QueryResults, QueryResultsItem} from '../data/feature_index';
-import type {OverscaledTileID, UnwrappedTileID} from './tile_id';
+import type {OverscaledTileID} from './tile_id';
 
 type RenderedFeatureLayer = {
     wrappedTileID: string;

@@ -89,14 +89,14 @@ export class CircleStyleLayer extends StyleLayer {
 }
 
 function projectPoint(tilePoint: Point, transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): Point {
-    // Convert `point` from tile space to clip space.
+    // Convert `tilePoint` from tile coordinates to clip coordinates.
     const clipPoint = transform.projectTileCoordinates(tilePoint.x, tilePoint.y, unwrappedTileID, getElevation).point;
-    // Convert from clip space into screen space.
-    const screenPoint = new Point(
+    // Convert `clipPoint` from clip coordinates into pixel/screen coordinates.
+    const pixelPoint = new Point(
         (clipPoint.x * 0.5 + 0.5) * transform.width,
         (-clipPoint.y * 0.5 + 0.5) * transform.height
     );
-    return screenPoint;
+    return pixelPoint;
 }
 
 function projectQueryGeometry(queryGeometry: Array<Point>, transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation) {
