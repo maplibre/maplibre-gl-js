@@ -88,13 +88,15 @@ export class CircleStyleLayer extends StyleLayer {
     }
 }
 
-function projectPoint(point: Point, transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): Point {
-    const projection = transform.projectTileCoordinates(point.x, point.y, unwrappedTileID, getElevation);
-    // Convert `projection` from clip space into screen space.
-    return new Point(
-        (projection.point.x * 0.5 + 0.5) * transform.width,
-        (-projection.point.y * 0.5 + 0.5) * transform.height
+function projectPoint(tilePoint: Point, transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): Point {
+    // Convert `point` from tile space to clip space.
+    const clipPoint = transform.projectTileCoordinates(tilePoint.x, tilePoint.y, unwrappedTileID, getElevation).point;
+    // Convert from clip space into screen space.
+    const screenPoint = new Point(
+        (clipPoint.x * 0.5 + 0.5) * transform.width,
+        (-clipPoint.y * 0.5 + 0.5) * transform.height
     );
+    return screenPoint;
 }
 
 function projectQueryGeometry(queryGeometry: Array<Point>, transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation) {

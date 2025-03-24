@@ -66,6 +66,7 @@ import {
 } from '../util/actor_messages';
 import {type Projection} from '../geo/projection/projection';
 import {createProjectionFromName} from '../geo/projection/projection_factory';
+import {OverscaledTileID, UnwrappedTileID} from '../source/tile_id';
 
 const empty = emptyStyle() as StyleSpecification;
 /**
@@ -1468,7 +1469,9 @@ export class Style extends Evented {
                     queryGeometry,
                     paramsStrict,
                     transform,
-                    this.map.terrain ? this.map.terrain.getElevation.bind(this.map.terrain) : () => 0)
+                    this.map.terrain ?
+                        (id: OverscaledTileID, x: number, y: number) => this.map.terrain.getElevation(id, x, y) :
+                        () => 0)
             );
         }
 
