@@ -9,7 +9,6 @@ import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {QueryResults, QueryResultsItem} from '../data/feature_index';
 import type {OverscaledTileID} from './tile_id';
-import {Terrain} from '../render/terrain';
 
 type RenderedFeatureLayer = {
     wrappedTileID: string;
