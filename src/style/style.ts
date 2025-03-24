@@ -1470,8 +1470,9 @@ export class Style extends Evented {
                     paramsStrict,
                     transform,
                     this.map.terrain ?
-                        (id: OverscaledTileID, x: number, y: number) => this.map.terrain.getElevation(id, x, y) :
-                        () => 0)
+                        (id: OverscaledTileID, x: number, y: number) =>
+                            this.map.terrain.getElevation(id, x, y) :
+                        undefined)
             );
         }
 
