@@ -359,6 +359,31 @@ describe('AttributionControl', () => {
         expect(attribution._innerContainer.innerHTML).toBe('Used');
     });
 
+    test('sanitizes html content in attributions', async () => {
+        const attributionControl = new AttributionControl({
+            customAttribution: 'MapLibre<script>alert("xss")</script>'
+        });
+        map.addControl(attributionControl);
+        await map.once('load');
+
+        expect(attributionControl._innerContainer.innerHTML).toBe('MapLibre');
+    });
+
+    test('only recreates attributions if sanitized attribution content changes', async () => {
+        const attributionControl = new AttributionControl({
+            customAttribution: 'MapLibre<script>alert("xss")</script>'
+        });
+        map.addControl(attributionControl);
+        await map.once('load');
+
+        // this will be overwritten if the attribution control re-renders for any reason
+        attributionControl._innerContainer.innerHTML = 'unchanged';
+        map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}});
+
+        await sleep(100);
+
+        expect(attributionControl._innerContainer.innerHTML).toBe('unchanged');
+    });
 });
 
 describe('AttributionControl test regarding the HTML elements details and summary', () => {
