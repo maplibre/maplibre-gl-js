@@ -257,12 +257,14 @@ export class GeolocateControl extends Evented implements IControl {
      *    Showing the user location as a dot AND tracking the camera to be fixed to their location. If their location changes the map moves to follow.
      * ACTIVE_ERROR
      *    There was en error from the Geolocation API while trying to show and track the user location.
+     * WAITING_BACKGROUND
+     *    Wating for Geolocation API response with user location, will switch to background state.
      * BACKGROUND
      *    Showing the user location as a dot but the camera doesn't follow their location as it changes.
      * BACKGROUND_ERROR
      *    There was an error from the Geolocation API while trying to show (but not track) the user location.
      */
-    _watchState: 'OFF' | 'ACTIVE_LOCK' | 'WAITING_ACTIVE' | 'ACTIVE_ERROR' | 'BACKGROUND' | 'BACKGROUND_ERROR';
+    _watchState: 'OFF' | 'ACTIVE_LOCK' | 'WAITING_ACTIVE' | 'ACTIVE_ERROR' | 'WAITING_BACKGROUND' | 'BACKGROUND' | 'BACKGROUND_ERROR';
     _lastKnownPosition: any;
     _userLocationDotMarker: Marker;
     _accuracyCircleMarker: Marker;
@@ -341,6 +343,11 @@ export class GeolocateControl extends Evented implements IControl {
                 this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-waiting');
                 // turn marker grey
                 break;
+            case 'WAITING_BACKGROUND':
+                this._watchState = 'BACKGROUND_ERROR';
+                this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-background');
+                this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background-error');
+                break;
             case 'BACKGROUND':
                 this._watchState = 'BACKGROUND_ERROR';
                 this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-background');
@@ -391,6 +398,7 @@ export class GeolocateControl extends Evented implements IControl {
                     this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-active-error');
                     this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-active');
                     break;
+                case 'WAITING_BACKGROUND':
                 case 'BACKGROUND':
                 case 'BACKGROUND_ERROR':
                     this._watchState = 'BACKGROUND';
@@ -598,8 +606,10 @@ export class GeolocateControl extends Evented implements IControl {
     };
 
     /**
-     * Programmatically request and move the map to the user's location.
+     * Programmatically request and move the map to the user's location (unless
+     * `toBackground` is true).
      *
+     * @param toBackground - Switch to background state after location is found.
      * @returns `false` if called before control was added to a map, otherwise returns `true`.
      * @example
      * ```ts
@@ -617,7 +627,7 @@ export class GeolocateControl extends Evented implements IControl {
      * });
      * ```
      */
-    trigger(): boolean {
+    trigger(toBackground?: boolean): boolean {
         if (!this._setup) {
             warnOnce('Geolocate control triggered before added to a map');
             return false;
@@ -627,11 +637,12 @@ export class GeolocateControl extends Evented implements IControl {
             switch (this._watchState) {
                 case 'OFF':
                 // turn on the Geolocate Control
-                    this._watchState = 'WAITING_ACTIVE';
+                    this._watchState = toBackground ? 'WAITING_BACKGROUND' : 'WAITING_ACTIVE';
 
                     this.fire(new Event('trackuserlocationstart'));
                     break;
                 case 'WAITING_ACTIVE':
+                case 'WAITING_BACKGROUND':
                 case 'ACTIVE_LOCK':
                 case 'ACTIVE_ERROR':
                 case 'BACKGROUND_ERROR':
@@ -662,6 +673,10 @@ export class GeolocateControl extends Evented implements IControl {
 
             // incoming state setup
             switch (this._watchState) {
+                case 'WAITING_BACKGROUND':
+                    this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-waiting');
+                    this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background');
+                    break;
                 case 'WAITING_ACTIVE':
                     this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-waiting');
                     this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-active');
