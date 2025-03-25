@@ -1,4 +1,4 @@
-import {describe, beforeEach, beforeAll, afterEach, afterAll, test, expect} from 'vitest';
+import {describe, beforeAll, afterAll, test, expect} from 'vitest';
 import puppeteer, {type Page, type Browser} from 'puppeteer';
 
 import {deepEqual} from '../lib/json-diff';
@@ -14,115 +14,89 @@ import {localizeURLs} from '../lib/localize-urls';
 import {globSync} from 'glob';
 
 import type * as maplibreglModule from '../../../dist/maplibre-gl';
+import {CoverageReport} from 'monocart-coverage-reports';
 let maplibregl: typeof maplibreglModule;
 
-function performQueryOnFixture(fixture)  {
+async function performQueryOnFixture(fixture)  {
 
-    return new Promise((resolve, _reject) => {
-
-        function handleOperation(map, operations, opIndex, done) {
-            const operation = operations[opIndex];
-            const opName = operation[0];
-            //Delegate to special handler if one is available
-            if (opName in operationHandlers) {
-                operationHandlers[opName](map, operation.slice(1), () => {
-                    done(opIndex);
-                });
-            } else {
-                map[opName](...operation.slice(1));
-                done(opIndex);
-            }
-        }
-
-        const operationHandlers = {
-            wait(map, params, done) {
-                const wait = () => {
-                    if (map.loaded()) {
-                        done();
-                    } else {
-                        map.once('render', wait);
-                    }
-                };
-                wait();
-            },
-            idle(map, params, done) {
-                const idle = () => {
-                    if (!map.isMoving()) {
-                        done();
-                    } else {
-                        map.once('render', idle);
-                    }
-                };
-                idle();
-            }
-        };
-
-        function applyOperations(map, operations, done) {
-            // No operations specified, end immediately and invoke done.
-            if (!operations || operations.length === 0) {
-                done();
-                return;
-            }
-
-            // Start recursive chain
-            const scheduleNextOperation = (lastOpIndex) => {
-                if (lastOpIndex === operations.length - 1) {
-                    // Stop recursive chain when at the end of the operations
-                    done();
-                    return;
+    async function handleOperation(map: maplibregl.Map, operation) {
+        const opName = operation[0];
+        
+        switch (opName) {
+            case 'wait':
+                while (!map.loaded()) {
+                    await map.once('render');
                 }
+                break;
+            case 'idle':
+                while(map.isMoving()) {
+                    await map.once('render');
+                }
+                break;
+            default:
+                map[opName](...operation.slice(1));
+                break;
+        }
+    }
 
-                handleOperation(map, operations, ++lastOpIndex, scheduleNextOperation);
-            };
-            scheduleNextOperation(-1);
+    async function applyOperations(map, operations) {
+        // No operations specified, end immediately and invoke done.
+        if (!operations || operations.length === 0) {
+            return;
         }
 
-        const style = fixture.style;
-        const options = style.metadata.test;
-        const skipLayerDelete = style.metadata.skipLayerDelete;
+        for (const operation of operations) {
+            await handleOperation(map, operation);
+        }
+    }
 
-        const map =  new maplibregl.Map({
-            container: 'map',
-            style,
-            interactive: false,
-            attributionControl: false,
-            pixelRatio: options.pixelRatio,
-            canvasContextAttributes: {preserveDrawingBuffer: true, powerPreference: 'default'},
-            fadeDuration: options.fadeDuration || 0,
-            localIdeographFontFamily: options.localIdeographFontFamily || false,
-            crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions
-        });
+    const style = fixture.style;
+    const options = style.metadata.test;
+    const skipLayerDelete = style.metadata.skipLayerDelete;
 
-        map.repaint = true;
-        map.once('load', () => {
-            console.log('load', map);
-            // Run the operations on the map
-            applyOperations(map, options.operations, () => {
-                console.log('operation', map.queryRenderedFeatures);
+    document.getElementById('map').style.width = `${options.width}px`;
+    document.getElementById('map').style.height = `${options.height}px`;
 
-                // Perform query operation and compare results from expected values
-                const results = options.queryGeometry ?
-                    map.queryRenderedFeatures(options.queryGeometry, options.queryOptions || {}) :
-                    [];
-                console.log('results', results);
-
-                const actual = results.map((feature) => {
-                    const featureJson = JSON.parse(JSON.stringify(feature.toJSON()));
-                    if (!skipLayerDelete) delete featureJson.layer;
-                    return featureJson;
-                });
-
-                resolve(actual);
-
-            });
-        });
-
+    const map =  new maplibregl.Map({
+        container: 'map',
+        style,
+        interactive: false,
+        attributionControl: false,
+        pixelRatio: options.pixelRatio,
+        canvasContextAttributes: {preserveDrawingBuffer: true, powerPreference: 'default'},
+        fadeDuration: options.fadeDuration || 0,
+        localIdeographFontFamily: options.localIdeographFontFamily || false,
+        crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions
     });
+
+    map.repaint = true;
+    await map.once('load');
+    console.log('load', map);
+    // Run the operations on the map
+    await applyOperations(map, options.operations);
+    console.log('operation', map.queryRenderedFeatures);
+
+    // Perform query operation and compare results from expected values
+    const results = options.queryGeometry ?
+        map.queryRenderedFeatures(options.queryGeometry, options.queryOptions || {}) :
+        [];
+    console.log('results', results);
+
+    const actual = results.map((feature) => {
+        const featureJson = JSON.parse(JSON.stringify(feature.toJSON()));
+        if (!skipLayerDelete) delete featureJson.layer;
+        return featureJson;
+    });
+
+    map.remove();
+
+    return actual;
 }
 
 describe('query tests', () => {
     let browser: Browser;
     let server: Server;
+    let page: Page;
 
     beforeAll(async () => {
         server = http.createServer(
@@ -139,21 +113,49 @@ describe('query tests', () => {
             ],
         });
         await new Promise<void>((resolve) => server.listen(resolve));
+        page = await browser.newPage();
+        await page.coverage.startJSCoverage({includeRawScriptCoverage: true});
+        await page.setViewport({width: 512, height: 512, deviceScaleFactor: 2});
+        await page.setContent(`
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset='utf-8'>
+                
+            </head>
+            <body id='map'></body>
+            </html>`);
+        await page.addScriptTag({path: 'dist/maplibre-gl-dev.js'});
+        await page.addStyleTag({path: 'dist/maplibre-gl.css'});
     }, 60000);
 
     afterAll(async () => {
+        const coverage = await page.coverage.stopJSCoverage();
+        await page.close();
         await browser.close();
         await new Promise(resolve => server.close(resolve));
-    });
-
-    let page: Page;
-
-    beforeEach(async () => {
-        page = await browser.newPage();
-        await page.setViewport({width: 512, height: 512, deviceScaleFactor: 2});
-    });
-    afterEach(async() => {
-        await page.close();
+        const rawV8CoverageData = coverage.map((it) => {
+            // Convert to raw v8 coverage format
+            const entry: any =  {
+                source: it.text,
+                ...it.rawScriptCoverage
+            };
+            if (entry.url.endsWith('maplibre-gl-dev.js')) {
+                entry.sourceMap = JSON.parse(fs.readFileSync('dist/maplibre-gl-dev.js.map').toString('utf-8'));
+            }
+            return entry;
+        });
+        
+        const coverageReport = new CoverageReport({
+            name: 'MapLibre Coverage Report',
+            outputDir: './coverage/query',
+            reports: [['v8'], ['codecov']]
+        });
+        coverageReport.cleanCache();
+        
+        await coverageReport.add(rawV8CoverageData);
+        
+        await coverageReport.generate();
     });
 
     const allTestsRoot = path.join('test', 'integration', 'query', 'tests');
@@ -167,26 +169,6 @@ describe('query tests', () => {
         test(caseName, {retry: 3, timeout: 20000}, async () => {
             const port = (server.address() as AddressInfo).port;
             const fixture = await dirToJson(testCaseRoot, port);
-
-            const style = fixture.style;
-            const options = style.metadata.test;
-            await page.setContent(`
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Query Test Page</title>
-    <meta charset='utf-8'>
-    <link rel="icon" href="about:blank">
-    <style>#map {
-        box-sizing:content-box;
-        width:${options.width}px;
-        height:${options.height}px;
-    }</style>
-</head>
-<body id='map'></body>
-</html>`);
-            await page.addScriptTag({path: 'dist/maplibre-gl.js'});
-            await page.addStyleTag({path: 'dist/maplibre-gl.css'});
             const actual = await page.evaluate(performQueryOnFixture, fixture);
 
             const isEqual = deepEqual(actual, fixture.expected);
@@ -197,7 +179,6 @@ describe('query tests', () => {
                 fs.writeFileSync(expectedPath, JSON.stringify(actual, null, 2));
             }
             expect(isEqual).toBeTruthy();
-
         });
 
     }
