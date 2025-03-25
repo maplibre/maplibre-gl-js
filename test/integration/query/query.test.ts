@@ -120,14 +120,8 @@ describe('query tests', () => {
             <!DOCTYPE html>
             <html lang="en">
             <head>
-                <title>Query Test Page</title>
                 <meta charset='utf-8'>
-                <link rel="icon" href="about:blank">
-                <style>#map {
-                    box-sizing:content-box;
-                    width:512px;
-                    height:512px;
-                }</style>
+                
             </head>
             <body id='map'></body>
             </html>`);
