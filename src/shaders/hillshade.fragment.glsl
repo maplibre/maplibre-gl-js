@@ -12,13 +12,26 @@ uniform vec4 u_accent;
 void main() {
     vec4 pixel = texture(u_image, v_pos);
 
-    vec2 deriv = ((pixel.rg * 2.0) - 1.0);
-
     // We divide the slope by a scale factor based on the cosin of the pixel's approximate latitude
     // to account for mercator projection distortion. see #4807 for details
     float scaleFactor = cos(radians((u_latrange[0] - u_latrange[1]) * (1.0 - v_pos.y) + u_latrange[1]));
+
+    vec2 deriv = ((pixel.rg * 2.0) - 1.0)/scaleFactor;
+
+    float azimuth = u_light.y + PI;
+    float alt = 25.0*PI/180.0;
+    float cos_az = cos(azimuth);
+    float sin_az = sin(azimuth);
+    float cos_alt = cos(alt);
+    float sin_alt = sin(alt);
+
+    float cang = (sin_alt - (deriv.y*cos_az*cos_alt - deriv.x*sin_az*cos_alt)) / sqrt(1.0 + dot(deriv, deriv));
+    float shade = clamp(cang, 0.0, 1.0);
+    fragColor = mix(u_shadow, u_highlight, shade)*abs(2.0*shade - 1.0);
+    
+#if 0
     // We also multiply the slope by an arbitrary z-factor of 1.25
-    float slope = atan(1.25 * length(deriv) / scaleFactor);
+    float slope = atan(1.25 * length(deriv));
     float aspect = deriv.x != 0.0 ? atan(deriv.y, -deriv.x) : PI / 2.0 * (deriv.y > 0.0 ? 1.0 : -1.0);
 
     float intensity = u_light.x;
@@ -45,6 +58,7 @@ void main() {
     float shade = abs(mod((aspect + azimuth) / PI + 0.5, 2.0) - 1.0);
     vec4 shade_color = mix(u_shadow, u_highlight, shade) * sin(scaledSlope) * clamp(intensity * 2.0, 0.0, 1.0);
     fragColor = accent_color * (1.0 - shade_color.a) + shade_color;
+#endif
 
 #ifdef OVERDRAW_INSPECTOR
     fragColor = vec4(1.0);
