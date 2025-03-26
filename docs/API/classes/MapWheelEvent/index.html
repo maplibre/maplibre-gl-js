@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.8608ea7d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.4af4bdda.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -1589,9 +1589,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#new-mapwheelevent" class="md-nav__link">
+  <a href="#constructor" class="md-nav__link">
     <span class="md-ellipsis">
-      new MapWheelEvent()
+      Constructor
     </span>
   </a>
   
@@ -8864,9 +8864,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#new-mapwheelevent" class="md-nav__link">
+  <a href="#constructor" class="md-nav__link">
     <span class="md-ellipsis">
-      new MapWheelEvent()
+      Constructor
     </span>
   </a>
   
@@ -8963,7 +8963,7 @@
 
 
 <h1 id="mapwheelevent">MapWheelEvent</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/events.ts#L631">src/ui/events.ts:631</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L632">src/ui/events.ts:632</a></p>
 <p><code>MapWheelEvent</code> is the event type for the <code>wheel</code> map event.</p>
 <h2 id="extends">Extends</h2>
 <ul>
@@ -8975,16 +8975,16 @@
 <blockquote>
 <p><strong>get</strong> <strong>defaultPrevented</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/events.ts#L659">src/ui/events.ts:659</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L660">src/ui/events.ts:660</a></p>
 <p><code>true</code> if <code>preventDefault</code> has been called.</p>
 <h5 id="returns">Returns</h5>
 <p><code>boolean</code></p>
 <h2 id="constructors">Constructors</h2>
-<h3 id="new-mapwheelevent">new MapWheelEvent()</h3>
+<h3 id="constructor">Constructor</h3>
 <blockquote>
-<p><strong>new MapWheelEvent</strong>(<code>type</code>: <code>string</code>, <code>map</code>: <a href="../Map/"><code>Map</code></a>, <code>originalEvent</code>: <code>WheelEvent</code>): <a href="./"><code>MapWheelEvent</code></a></p>
+<p><strong>new MapWheelEvent</strong>(<code>type</code>: <code>string</code>, <code>map</code>: <a href="../Map/"><code>Map</code></a>, <code>originalEvent</code>: <code>WheelEvent</code>): <code>MapWheelEvent</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/events.ts#L666">src/ui/events.ts:666</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L667">src/ui/events.ts:667</a></p>
 <h4 id="parameters">Parameters</h4>
 <table>
 <thead>
@@ -9009,7 +9009,7 @@
 </tbody>
 </table>
 <h4 id="returns_1">Returns</h4>
-<p><a href="./"><code>MapWheelEvent</code></a></p>
+<p><code>MapWheelEvent</code></p>
 <h4 id="overrides">Overrides</h4>
 <p><code>Event.constructor</code></p>
 <h2 id="methods">Methods</h2>
@@ -9017,7 +9017,7 @@
 <blockquote>
 <p><strong>preventDefault</strong>(): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/events.ts#L652">src/ui/events.ts:652</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L653">src/ui/events.ts:653</a></p>
 <p>Prevents subsequent default processing of the event by the map.</p>
 <p>Calling this method will prevent the behavior of <a href="../ScrollZoomHandler/">ScrollZoomHandler</a>.</p>
 <h4 id="returns_2">Returns</h4>
@@ -9027,21 +9027,21 @@
 <blockquote>
 <p><strong>originalEvent</strong>: <code>WheelEvent</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/events.ts#L645">src/ui/events.ts:645</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L646">src/ui/events.ts:646</a></p>
 <p>The DOM event which caused the map event.</p>
 <hr />
 <h3 id="target">target</h3>
 <blockquote>
 <p><strong>target</strong>: <a href="../Map/"><code>Map</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/events.ts#L640">src/ui/events.ts:640</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L641">src/ui/events.ts:641</a></p>
 <p>The <code>Map</code> object that fired the event.</p>
 <hr />
 <h3 id="type">type</h3>
 <blockquote>
 <p><strong>type</strong>: <code>"wheel"</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/events.ts#L635">src/ui/events.ts:635</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L636">src/ui/events.ts:636</a></p>
 <p>The event type.</p>
 <h4 id="overrides_1">Overrides</h4>
 <p><code>Event.type</code></p>

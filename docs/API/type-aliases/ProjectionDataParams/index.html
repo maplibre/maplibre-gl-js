@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.8608ea7d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.4af4bdda.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -5120,13 +5120,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#type-declaration" class="md-nav__link">
+  <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
-      Type declaration
+      Properties
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Type declaration">
+    <nav class="md-nav" aria-label="Properties">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -8749,13 +8749,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#type-declaration" class="md-nav__link">
+  <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
-      Type declaration
+      Properties
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Type declaration">
+    <nav class="md-nav" aria-label="Properties">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -8820,31 +8820,38 @@
 
 <h1 id="projectiondataparams">ProjectionDataParams</h1>
 <blockquote>
-<p><strong>ProjectionDataParams</strong>: <code>object</code></p>
+<p><strong>ProjectionDataParams</strong> = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/geo/projection/projection_data.ts#L53">src/geo/projection/projection_data.ts:53</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/geo/projection/projection_data.ts#L53">src/geo/projection/projection_data.ts:53</a></p>
 <p>Parameters object for the transform's <code>getProjectionData</code> function.
 Contains the requested tile ID and more.</p>
-<h2 id="type-declaration">Type declaration</h2>
+<h2 id="properties">Properties</h2>
 <h3 id="aligned">aligned?</h3>
 <blockquote>
 <p><code>optional</code> <strong>aligned</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/geo/projection/projection_data.ts#L61">src/geo/projection/projection_data.ts:61</a></p>
 <p>Set to true if a pixel-aligned matrix should be used, if possible (mostly used for raster tiles under mercator projection)</p>
+<hr />
 <h3 id="applyglobematrix">applyGlobeMatrix?</h3>
 <blockquote>
 <p><code>optional</code> <strong>applyGlobeMatrix</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/geo/projection/projection_data.ts#L69">src/geo/projection/projection_data.ts:69</a></p>
 <p>Set to true if the globe matrix should be applied (i.e. when rendering globe)</p>
+<hr />
 <h3 id="applyterrainmatrix">applyTerrainMatrix?</h3>
 <blockquote>
 <p><code>optional</code> <strong>applyTerrainMatrix</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/geo/projection/projection_data.ts#L65">src/geo/projection/projection_data.ts:65</a></p>
 <p>Set to true if the terrain matrix should be applied (i.e. when rendering terrain)</p>
+<hr />
 <h3 id="overscaledtileid">overscaledTileID</h3>
 <blockquote>
 <p><strong>overscaledTileID</strong>: <a href="../../classes/OverscaledTileID/"><code>OverscaledTileID</code></a> | <code>null</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/geo/projection/projection_data.ts#L57">src/geo/projection/projection_data.ts:57</a></p>
 <p>The ID of the current tile</p>
 
 

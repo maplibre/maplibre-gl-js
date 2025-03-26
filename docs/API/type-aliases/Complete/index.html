@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.8608ea7d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.4af4bdda.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -8736,9 +8736,9 @@
 
 <h1 id="completet">Complete&lt;T&gt;</h1>
 <blockquote>
-<p><strong>Complete</strong>&lt;<code>T</code>&gt;: { [P in keyof Required&lt;T&gt;]: Pick&lt;T, P&gt; extends Required&lt;Pick&lt;T, P&gt;&gt; ? T[P] : T[P] | undefined }</p>
+<p><strong>Complete</strong>&lt;<code>T</code>&gt; = { [P in keyof Required&lt;T&gt;]: Pick&lt;T, P&gt; extends Required&lt;Pick&lt;T, P&gt;&gt; ? T[P] : T[P] | undefined }</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/util/util.ts#L999">src/util/util.ts:999</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/util/util.ts#L1000">src/util/util.ts:1000</a></p>
 <p>Makes optional keys required and add the the undefined type.</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>interface Test {
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a> foo: number;

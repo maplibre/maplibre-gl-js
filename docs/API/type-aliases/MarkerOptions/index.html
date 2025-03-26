@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.8608ea7d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.4af4bdda.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -4834,13 +4834,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#type-declaration" class="md-nav__link">
+  <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
-      Type declaration
+      Properties
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Type declaration">
+    <nav class="md-nav" aria-label="Properties">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -8839,13 +8839,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#type-declaration" class="md-nav__link">
+  <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
-      Type declaration
+      Properties
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Type declaration">
+    <nav class="md-nav" aria-label="Properties">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -9000,111 +9000,138 @@
 
 <h1 id="markeroptions">MarkerOptions</h1>
 <blockquote>
-<p><strong>MarkerOptions</strong>: <code>object</code></p>
+<p><strong>MarkerOptions</strong> = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/marker.ts#L23">src/ui/marker.ts:23</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/marker.ts#L23">src/ui/marker.ts:23</a></p>
 <p>The <a href="../../classes/Marker/">Marker</a> options object</p>
-<h2 id="type-declaration">Type declaration</h2>
+<h2 id="properties">Properties</h2>
 <h3 id="anchor">anchor?</h3>
 <blockquote>
 <p><code>optional</code> <strong>anchor</strong>: <a href="../PositionAnchor/"><code>PositionAnchor</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/marker.ts#L41">src/ui/marker.ts:41</a></p>
 <p>A string indicating the part of the Marker that should be positioned closest to the coordinate set via <a href="../../classes/Marker/#setlnglat">Marker#setLngLat</a>.
 Options are <code>'center'</code>, <code>'top'</code>, <code>'bottom'</code>, <code>'left'</code>, <code>'right'</code>, <code>'top-left'</code>, <code>'top-right'</code>, <code>'bottom-left'</code>, and <code>'bottom-right'</code>.</p>
 <h4 id="default-value">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="s1">&#39;center&#39;</span>
 </span></code></pre></div>
+<hr />
 <h3 id="classname">className?</h3>
 <blockquote>
 <p><code>optional</code> <strong>className</strong>: <code>string</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/marker.ts#L31">src/ui/marker.ts:31</a></p>
 <p>Space-separated CSS class names to add to marker element.</p>
+<hr />
 <h3 id="clicktolerance">clickTolerance?</h3>
 <blockquote>
 <p><code>optional</code> <strong>clickTolerance</strong>: <code>number</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/marker.ts#L61">src/ui/marker.ts:61</a></p>
 <p>The max number of pixels a user can shift the mouse pointer during a click on the marker for it to be considered a valid click (as opposed to a marker drag). The default is to inherit map's clickTolerance.</p>
 <h4 id="default-value_1">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="mf">0</span>
 </span></code></pre></div>
+<hr />
 <h3 id="color">color?</h3>
 <blockquote>
 <p><code>optional</code> <strong>color</strong>: <code>string</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/marker.ts#L46">src/ui/marker.ts:46</a></p>
 <p>The color to use for the default marker if options.element is not provided. The default is light blue.</p>
 <h4 id="default-value_2">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="s1">&#39;#3FB1CE&#39;</span>
 </span></code></pre></div>
+<hr />
 <h3 id="draggable">draggable?</h3>
 <blockquote>
 <p><code>optional</code> <strong>draggable</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/marker.ts#L56">src/ui/marker.ts:56</a></p>
 <p>A boolean indicating whether or not a marker is able to be dragged to a new position on the map.</p>
 <h4 id="default-value_3">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kc">false</span>
 </span></code></pre></div>
+<hr />
 <h3 id="element">element?</h3>
 <blockquote>
 <p><code>optional</code> <strong>element</strong>: <code>HTMLElement</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/marker.ts#L27">src/ui/marker.ts:27</a></p>
 <p>DOM element to use as a marker. The default is a light blue, droplet-shaped SVG marker.</p>
+<hr />
 <h3 id="offset">offset?</h3>
 <blockquote>
 <p><code>optional</code> <strong>offset</strong>: <a href="../PointLike/"><code>PointLike</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/marker.ts#L35">src/ui/marker.ts:35</a></p>
 <p>The offset in pixels as a <a href="../PointLike/">PointLike</a> object to apply relative to the element's center. Negatives indicate left and up.</p>
+<hr />
 <h3 id="opacity">opacity?</h3>
 <blockquote>
 <p><code>optional</code> <strong>opacity</strong>: <code>string</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/marker.ts#L81">src/ui/marker.ts:81</a></p>
 <p>Marker's opacity when it's in clear view (not behind 3d terrain)</p>
 <h4 id="default-value_4">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="mf">1</span>
 </span></code></pre></div>
+<hr />
 <h3 id="opacitywhencovered">opacityWhenCovered?</h3>
 <blockquote>
 <p><code>optional</code> <strong>opacityWhenCovered</strong>: <code>string</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/marker.ts#L86">src/ui/marker.ts:86</a></p>
 <p>Marker's opacity when it's behind 3d terrain</p>
 <h4 id="default-value_5">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="mf">0.2</span>
 </span></code></pre></div>
+<hr />
 <h3 id="pitchalignment">pitchAlignment?</h3>
 <blockquote>
 <p><code>optional</code> <strong>pitchAlignment</strong>: <a href="../Alignment/"><code>Alignment</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/marker.ts#L76">src/ui/marker.ts:76</a></p>
 <p><code>map</code> aligns the <code>Marker</code> to the plane of the map. <code>viewport</code> aligns the <code>Marker</code> to the plane of the viewport. <code>auto</code> automatically matches the value of <code>rotationAlignment</code>.</p>
 <h4 id="default-value_6">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="s1">&#39;auto&#39;</span>
 </span></code></pre></div>
+<hr />
 <h3 id="rotation">rotation?</h3>
 <blockquote>
 <p><code>optional</code> <strong>rotation</strong>: <code>number</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/marker.ts#L66">src/ui/marker.ts:66</a></p>
 <p>The rotation angle of the marker in degrees, relative to its respective <code>rotationAlignment</code> setting. A positive value will rotate the marker clockwise.</p>
 <h4 id="default-value_7">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="mf">0</span>
 </span></code></pre></div>
+<hr />
 <h3 id="rotationalignment">rotationAlignment?</h3>
 <blockquote>
 <p><code>optional</code> <strong>rotationAlignment</strong>: <a href="../Alignment/"><code>Alignment</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/marker.ts#L71">src/ui/marker.ts:71</a></p>
 <p><code>map</code> aligns the <code>Marker</code>'s rotation relative to the map, maintaining a bearing as the map rotates. <code>viewport</code> aligns the <code>Marker</code>'s rotation relative to the viewport, agnostic to map rotations. <code>auto</code> is equivalent to <code>viewport</code>.</p>
 <h4 id="default-value_8">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="s1">&#39;auto&#39;</span>
 </span></code></pre></div>
+<hr />
 <h3 id="scale">scale?</h3>
 <blockquote>
 <p><code>optional</code> <strong>scale</strong>: <code>number</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/marker.ts#L51">src/ui/marker.ts:51</a></p>
 <p>The scale to use for the default marker if options.element is not provided. The default scale corresponds to a height of <code>41px</code> and a width of <code>27px</code>.</p>
 <h4 id="default-value_9">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="mf">1</span>
 </span></code></pre></div>
+<hr />
 <h3 id="subpixelpositioning">subpixelPositioning?</h3>
 <blockquote>
 <p><code>optional</code> <strong>subpixelPositioning</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/marker.ts#L92">src/ui/marker.ts:92</a></p>
 <p>If <code>true</code>, rounding is disabled for placement of the marker, allowing for
 subpixel positioning and smoother movement when the marker is translated.</p>
 <h4 id="default-value_10">Default Value</h4>

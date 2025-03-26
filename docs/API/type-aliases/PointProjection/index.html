@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.8608ea7d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.4af4bdda.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -5010,13 +5010,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#type-declaration" class="md-nav__link">
+  <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
-      Type declaration
+      Properties
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Type declaration">
+    <nav class="md-nav" aria-label="Properties">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -8740,13 +8740,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#type-declaration" class="md-nav__link">
+  <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
-      Type declaration
+      Properties
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Type declaration">
+    <nav class="md-nav" aria-label="Properties">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -8802,26 +8802,31 @@
 
 <h1 id="pointprojection">PointProjection</h1>
 <blockquote>
-<p><strong>PointProjection</strong>: <code>object</code></p>
+<p><strong>PointProjection</strong> = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/symbol/projection.ts#L23">src/symbol/projection.ts:23</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/symbol/projection.ts#L23">src/symbol/projection.ts:23</a></p>
 <p>The result of projecting a point to the screen, with some additional information about the projection.</p>
-<h2 id="type-declaration">Type declaration</h2>
+<h2 id="properties">Properties</h2>
 <h3 id="isoccluded">isOccluded</h3>
 <blockquote>
 <p><strong>isOccluded</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/symbol/projection.ts#L36">src/symbol/projection.ts:36</a></p>
 <p>For complex projections (such as globe), true if the point is occluded by the projection, such as by being on the backfacing side of the globe.
 If the point is simply beyond the edge of the screen, this should NOT be set to false.</p>
+<hr />
 <h3 id="point">point</h3>
 <blockquote>
 <p><strong>point</strong>: <code>Point</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/symbol/projection.ts#L27">src/symbol/projection.ts:27</a></p>
 <p>The projected point.</p>
+<hr />
 <h3 id="signeddistancefromcamera">signedDistanceFromCamera</h3>
 <blockquote>
 <p><strong>signedDistanceFromCamera</strong>: <code>number</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/symbol/projection.ts#L31">src/symbol/projection.ts:31</a></p>
 <p>The original W component of the projection.</p>
 
 

@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.8608ea7d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.4af4bdda.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -8801,7 +8801,7 @@
 
 
 <h1 id="projection">Projection</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/geo/projection/projection.ts#L45">src/geo/projection/projection.ts:45</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/geo/projection/projection.ts#L45">src/geo/projection/projection.ts:45</a></p>
 <p>An interface the implementations of which are used internally by MapLibre to handle different projections.</p>
 <h2 id="accessors">Accessors</h2>
 <h3 id="shaderdefine">shaderDefine</h3>
@@ -8809,7 +8809,7 @@
 <blockquote>
 <p><strong>get</strong> <strong>shaderDefine</strong>(): <code>string</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/geo/projection/projection.ts#L72">src/geo/projection/projection.ts:72</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/geo/projection/projection.ts#L72">src/geo/projection/projection.ts:72</a></p>
 <p>A <code>#define</code> macro that is injected into every MapLibre shader that uses this projection.</p>
 <h5 id="example">Example</h5>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="sb">`const define = projection.shaderDefine; // &#39;#define GLOBE&#39;`</span>
@@ -8822,7 +8822,7 @@
 <blockquote>
 <p><strong>get</strong> <strong>shaderVariantName</strong>(): <code>string</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/geo/projection/projection.ts#L65">src/geo/projection/projection.ts:65</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/geo/projection/projection.ts#L65">src/geo/projection/projection.ts:65</a></p>
 <p>Name of the shader projection variant that should be used for this projection.
 Note that this value may change dynamically, for example when globe projection internally transitions to mercator.
 Then globe projection might start reporting the mercator shader variant name to make MapLibre use faster mercator shaders.</p>
@@ -8834,7 +8834,7 @@ Then globe projection might start reporting the mercator shader variant name to 
 <blockquote>
 <p><strong>get</strong> <strong>vertexShaderPreludeCode</strong>(): <code>string</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/geo/projection/projection.ts#L83">src/geo/projection/projection.ts:83</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/geo/projection/projection.ts#L83">src/geo/projection/projection.ts:83</a></p>
 <p>Vertex shader code that is injected into every MapLibre vertex shader that uses this projection.</p>
 <h5 id="returns_2">Returns</h5>
 <p><code>string</code></p>

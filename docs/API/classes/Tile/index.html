@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.8608ea7d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.4af4bdda.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -1974,9 +1974,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#new-tile" class="md-nav__link">
+  <a href="#constructor" class="md-nav__link">
     <span class="md-ellipsis">
-      new Tile()
+      Constructor
     </span>
   </a>
   
@@ -8765,9 +8765,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#new-tile" class="md-nav__link">
+  <a href="#constructor" class="md-nav__link">
     <span class="md-ellipsis">
-      new Tile()
+      Constructor
     </span>
   </a>
   
@@ -8831,15 +8831,15 @@
 
 
 <h1 id="tile">Tile</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/source/tile.ts#L53">src/source/tile.ts:53</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/source/tile.ts#L53">src/source/tile.ts:53</a></p>
 <p>A tile object is the combination of a Coordinate, which defines
 its place, as well as a unique ID and data tracking for its content</p>
 <h2 id="constructors">Constructors</h2>
-<h3 id="new-tile">new Tile()</h3>
+<h3 id="constructor">Constructor</h3>
 <blockquote>
-<p><strong>new Tile</strong>(<code>tileID</code>: <a href="../OverscaledTileID/"><code>OverscaledTileID</code></a>, <code>size</code>: <code>number</code>): <a href="./"><code>Tile</code></a></p>
+<p><strong>new Tile</strong>(<code>tileID</code>: <a href="../OverscaledTileID/"><code>OverscaledTileID</code></a>, <code>size</code>: <code>number</code>): <code>Tile</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/source/tile.ts#L103">src/source/tile.ts:103</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/source/tile.ts#L103">src/source/tile.ts:103</a></p>
 <h4 id="parameters">Parameters</h4>
 <table>
 <thead>
@@ -8863,13 +8863,13 @@ its place, as well as a unique ID and data tracking for its content</p>
 </tbody>
 </table>
 <h4 id="returns">Returns</h4>
-<p><a href="./"><code>Tile</code></a></p>
+<p><code>Tile</code></p>
 <h2 id="methods">Methods</h2>
 <h3 id="loadvectordata">loadVectorData()</h3>
 <blockquote>
 <p><strong>loadVectorData</strong>(<code>data</code>: <a href="../../type-aliases/WorkerTileResult/"><code>WorkerTileResult</code></a>, <code>painter</code>: <code>any</code>, <code>justReloaded</code>?: <code>boolean</code>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/source/tile.ts#L154">src/source/tile.ts:154</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/source/tile.ts#L154">src/source/tile.ts:154</a></p>
 <p>Given a data object with a 'buffers' property, load it into
 this tile's elementGroups and buffers properties and set loaded
 to true. If the data is null, like in the case of an empty
@@ -8908,7 +8908,7 @@ GeoJSON tile, no-op but still set loaded to true.</p>
 <blockquote>
 <p><strong>unloadVectorData</strong>(): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/source/tile.ts#L227">src/source/tile.ts:227</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/source/tile.ts#L227">src/source/tile.ts:227</a></p>
 <p>Release any data or WebGL resources referenced by this tile.</p>
 <h4 id="returns_2">Returns</h4>
 <p><code>void</code></p>

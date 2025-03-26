@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.8608ea7d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.4af4bdda.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -4526,13 +4526,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#type-declaration" class="md-nav__link">
+  <a href="#example" class="md-nav__link">
     <span class="md-ellipsis">
-      Type declaration
+      Example
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Type declaration">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      Properties
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Properties">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -4905,15 +4914,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tiledataloading" class="md-nav__link">
-    <span class="md-ellipsis">
-      tiledataloading
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#touchcancel" class="md-nav__link">
     <span class="md-ellipsis">
       touchcancel
@@ -5005,15 +5005,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    <span class="md-ellipsis">
-      Example
-    </span>
-  </a>
   
 </li>
       
@@ -9190,13 +9181,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#type-declaration" class="md-nav__link">
+  <a href="#example" class="md-nav__link">
     <span class="md-ellipsis">
-      Type declaration
+      Example
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Type declaration">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      Properties
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Properties">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -9569,15 +9569,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tiledataloading" class="md-nav__link">
-    <span class="md-ellipsis">
-      tiledataloading
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#touchcancel" class="md-nav__link">
     <span class="md-ellipsis">
       touchcancel
@@ -9672,15 +9663,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    <span class="md-ellipsis">
-      Example
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -9702,110 +9684,147 @@
 
 <h1 id="mapeventtype">MapEventType</h1>
 <blockquote>
-<p><strong>MapEventType</strong>: <code>object</code></p>
+<p><strong>MapEventType</strong> = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/events.ts#L149">src/ui/events.ts:149</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L149">src/ui/events.ts:149</a></p>
 <p><code>MapEventType</code> - a mapping between the event name and the event value.
 These events are used with the <a href="../../classes/Map/#on">Map#on</a> method.
 When using a <code>layerId</code> with <a href="../../classes/Map/#on">Map#on</a> method, please refer to <a href="../MapLayerEventType/">MapLayerEventType</a>.
 The following example can be used for all the events.</p>
-<h2 id="type-declaration">Type declaration</h2>
+<h2 id="example">Example</h2>
+<div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1">// Initialize the map</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">let</span><span class="w"> </span><span class="nx">map</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Map</span><span class="p">({</span><span class="w"> </span><span class="c1">// map options });</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1">// Set an event listener</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="nx">map</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;the-event-name&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;An event has occurred!&#39;</span><span class="p">);</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">});</span>
+</span></code></pre></div>
+<h2 id="properties">Properties</h2>
 <h3 id="boxzoomcancel">boxzoomcancel</h3>
 <blockquote>
 <p><strong>boxzoomcancel</strong>: <a href="../MapLibreZoomEvent/"><code>MapLibreZoomEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L251">src/ui/events.ts:251</a></p>
 <p>Fired when the user cancels a "box zoom" interaction, or when the bounding box does not meet the minimum size threshold.
 See <a href="../../classes/BoxZoomHandler/">BoxZoomHandler</a>.</p>
+<hr />
 <h3 id="boxzoomend">boxzoomend</h3>
 <blockquote>
 <p><strong>boxzoomend</strong>: <a href="../MapLibreZoomEvent/"><code>MapLibreZoomEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L259">src/ui/events.ts:259</a></p>
 <p>Fired when a "box zoom" interaction ends.  See <a href="../../classes/BoxZoomHandler/">BoxZoomHandler</a>.</p>
+<hr />
 <h3 id="boxzoomstart">boxzoomstart</h3>
 <blockquote>
 <p><strong>boxzoomstart</strong>: <a href="../MapLibreZoomEvent/"><code>MapLibreZoomEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L255">src/ui/events.ts:255</a></p>
 <p>Fired when a "box zoom" interaction starts. See <a href="../../classes/BoxZoomHandler/">BoxZoomHandler</a>.</p>
+<hr />
 <h3 id="click">click</h3>
 <blockquote>
 <p><strong>click</strong>: <a href="../../classes/MapMouseEvent/"><code>MapMouseEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L285">src/ui/events.ts:285</a></p>
 <p>Fired when a pointing device (usually a mouse) is pressed and released at the same point on the map.</p>
 <h4 id="see">See</h4>
 <ul>
 <li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/measure/">Measure distances</a></li>
 <li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/center-on-symbol/">Center the map on a clicked symbol</a></li>
 </ul>
+<hr />
 <h3 id="contextmenu">contextmenu</h3>
 <blockquote>
 <p><strong>contextmenu</strong>: <a href="../../classes/MapMouseEvent/"><code>MapMouseEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L289">src/ui/events.ts:289</a></p>
 <p>Fired when the right button of the mouse is clicked or the context menu key is pressed within the map.</p>
+<hr />
 <h3 id="cooperativegestureprevented">cooperativegestureprevented</h3>
 <blockquote>
 <p><strong>cooperativegestureprevented</strong>: <a href="../MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>WheelEvent</code> | <code>TouchEvent</code>&gt; &amp; <code>object</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L419">src/ui/events.ts:419</a></p>
 <p>Fired whenever the cooperativeGestures option prevents a gesture from being handled by the map.
 This is useful for showing your own UI when this happens.</p>
-<h4 id="type-declaration_1">Type declaration</h4>
+<h4 id="type-declaration">Type declaration</h4>
 <h5 id="gesturetype">gestureType</h5>
 <blockquote>
 <p><strong>gestureType</strong>: <code>"wheel_zoom"</code> | <code>"touch_pan"</code></p>
 </blockquote>
+<hr />
 <h3 id="data">data</h3>
 <blockquote>
 <p><strong>data</strong>: <a href="../MapDataEvent/"><code>MapDataEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L210">src/ui/events.ts:210</a></p>
 <p>Fired when any map data loads or changes. See <a href="../MapDataEvent/">MapDataEvent</a> for more information.</p>
 <h4 id="see_1">See</h4>
 <p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/cluster-html/">Display HTML clusters with custom properties</a></p>
+<hr />
 <h3 id="dataabort">dataabort</h3>
 <blockquote>
 <p><strong>dataabort</strong>: <a href="../MapDataEvent/"><code>MapDataEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L242">src/ui/events.ts:242</a></p>
 <p>Fired when a request for one of the map's sources' tiles or data is aborted.</p>
+<hr />
 <h3 id="dataloading">dataloading</h3>
 <blockquote>
 <p><strong>dataloading</strong>: <a href="../MapDataEvent/"><code>MapDataEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L205">src/ui/events.ts:205</a></p>
 <p>Fired when any map data (style, source, tile, etc) begins loading or
 changing asynchronously. All <code>dataloading</code> events are followed by a <code>data</code>,
 <code>dataabort</code> or <code>error</code> event.</p>
+<hr />
 <h3 id="dblclick">dblclick</h3>
 <blockquote>
 <p><strong>dblclick</strong>: <a href="../../classes/MapMouseEvent/"><code>MapMouseEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L295">src/ui/events.ts:295</a></p>
 <p>Fired when a pointing device (usually a mouse) is pressed and released twice at the same point on the map in rapid succession.</p>
 <p><strong>Note:</strong> Under normal conditions, this event will be preceded by two <code>click</code> events.</p>
+<hr />
 <h3 id="drag">drag</h3>
 <blockquote>
 <p><strong>drag</strong>: <a href="../MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code> | <code>undefined</code>&gt;</p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L385">src/ui/events.ts:385</a></p>
 <p>Fired repeatedly during a "drag to pan" interaction. See <a href="../../classes/DragPanHandler/">DragPanHandler</a>.</p>
+<hr />
 <h3 id="dragend">dragend</h3>
 <blockquote>
 <p><strong>dragend</strong>: <a href="../MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code> | <code>undefined</code>&gt;</p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L390">src/ui/events.ts:390</a></p>
 <p>Fired when a "drag to pan" interaction ends. See <a href="../../classes/DragPanHandler/">DragPanHandler</a>.</p>
 <h4 id="see_2">See</h4>
 <p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-marker/">Create a draggable marker</a></p>
+<hr />
 <h3 id="dragstart">dragstart</h3>
 <blockquote>
 <p><strong>dragstart</strong>: <a href="../MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code> | <code>undefined</code>&gt;</p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L381">src/ui/events.ts:381</a></p>
 <p>Fired when a "drag to pan" interaction starts. See <a href="../../classes/DragPanHandler/">DragPanHandler</a>.</p>
+<hr />
 <h3 id="error">error</h3>
 <blockquote>
 <p><strong>error</strong>: <code>ErrorEvent</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L156">src/ui/events.ts:156</a></p>
 <p>Fired when an error occurs. This is GL JS's primary error reporting
 mechanism. We use an event instead of <code>throw</code> to better accommodate
 asynchronous operations. If no listeners are bound to the <code>error</code> event, the
 error will be printed to the console.</p>
+<hr />
 <h3 id="idle">idle</h3>
 <blockquote>
 <p><strong>idle</strong>: <a href="../MapLibreEvent/"><code>MapLibreEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L174">src/ui/events.ts:174</a></p>
 <p>Fired after the last frame rendered before the map enters an
 "idle" state:</p>
 <ul>
@@ -9813,10 +9832,12 @@ error will be printed to the console.</p>
 <li>All currently requested tiles have loaded</li>
 <li>All fade/transition animations have completed</li>
 </ul>
+<hr />
 <h3 id="load">load</h3>
 <blockquote>
 <p><strong>load</strong>: <a href="../MapLibreEvent/"><code>MapLibreEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L165">src/ui/events.ts:165</a></p>
 <p>Fired immediately after all necessary resources have been downloaded
 and the first visually complete rendering of the map has occurred.</p>
 <h4 id="see_3">See</h4>
@@ -9825,17 +9846,21 @@ and the first visually complete rendering of the map has occurred.</p>
 <li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/live-geojson/">Add live realtime data</a></li>
 <li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/animate-point-along-line/">Animate a point</a></li>
 </ul>
+<hr />
 <h3 id="mousedown">mousedown</h3>
 <blockquote>
 <p><strong>mousedown</strong>: <a href="../../classes/MapMouseEvent/"><code>MapMouseEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L316">src/ui/events.ts:316</a></p>
 <p>Fired when a pointing device (usually a mouse) is pressed within the map.</p>
 <h4 id="see_4">See</h4>
 <p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/">Create a draggable point</a></p>
+<hr />
 <h3 id="mousemove">mousemove</h3>
 <blockquote>
 <p><strong>mousemove</strong>: <a href="../../classes/MapMouseEvent/"><code>MapMouseEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L304">src/ui/events.ts:304</a></p>
 <p>Fired when a pointing device (usually a mouse) is moved while the cursor is inside the map.
 As you move the cursor across the map, the event will fire every time the cursor changes position within the map.</p>
 <h4 id="see_5">See</h4>
@@ -9844,15 +9869,19 @@ As you move the cursor across the map, the event will fire every time the cursor
 <li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/hover-styles/">Highlight features under the mouse pointer</a></li>
 <li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-hover/">Display a popup on over</a></li>
 </ul>
+<hr />
 <h3 id="mouseout">mouseout</h3>
 <blockquote>
 <p><strong>mouseout</strong>: <a href="../../classes/MapMouseEvent/"><code>MapMouseEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L320">src/ui/events.ts:320</a></p>
 <p>Fired when a point device (usually a mouse) leaves the map's canvas.</p>
+<hr />
 <h3 id="mouseover">mouseover</h3>
 <blockquote>
 <p><strong>mouseover</strong>: <a href="../../classes/MapMouseEvent/"><code>MapMouseEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L330">src/ui/events.ts:330</a></p>
 <p>Fired when a pointing device (usually a mouse) is moved within the map.
 As you move the cursor across a web page containing a map,
 the event will fire each time it enters the map or any child elements.</p>
@@ -9862,68 +9891,88 @@ the event will fire each time it enters the map or any child elements.</p>
 <li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/hover-styles/">Highlight features under the mouse pointer</a></li>
 <li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-hover/">Display a popup on hover</a></li>
 </ul>
+<hr />
 <h3 id="mouseup">mouseup</h3>
 <blockquote>
 <p><strong>mouseup</strong>: <a href="../../classes/MapMouseEvent/"><code>MapMouseEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L310">src/ui/events.ts:310</a></p>
 <p>Fired when a pointing device (usually a mouse) is released within the map.</p>
 <h4 id="see_7">See</h4>
 <p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/">Create a draggable point</a></p>
+<hr />
 <h3 id="move">move</h3>
 <blockquote>
 <p><strong>move</strong>: <a href="../MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code> | <code>WheelEvent</code> | <code>undefined</code>&gt;</p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L343">src/ui/events.ts:343</a></p>
 <p>Fired repeatedly during an animated transition from one view to
 another, as the result of either user interaction or methods such as <a href="../../classes/Map/#flyto">Map#flyTo</a>.</p>
 <h4 id="see_8">See</h4>
 <p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/cluster-html/">Display HTML clusters with custom properties</a></p>
+<hr />
 <h3 id="moveend">moveend</h3>
 <blockquote>
 <p><strong>moveend</strong>: <a href="../MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code> | <code>WheelEvent</code> | <code>undefined</code>&gt;</p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L350">src/ui/events.ts:350</a></p>
 <p>Fired just after the map completes a transition from one
 view to another, as the result of either user interaction or methods such as <a href="../../classes/Map/#jumpto">Map#jumpTo</a>.</p>
 <h4 id="see_9">See</h4>
 <p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/cluster-html/">Display HTML clusters with custom properties</a></p>
+<hr />
 <h3 id="movestart">movestart</h3>
 <blockquote>
 <p><strong>movestart</strong>: <a href="../MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code> | <code>WheelEvent</code> | <code>undefined</code>&gt;</p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L336">src/ui/events.ts:336</a></p>
 <p>Fired just before the map begins a transition from one
 view to another, as the result of either user interaction or methods such as <a href="../../classes/Map/#jumpto">Map#jumpTo</a>.</p>
+<hr />
 <h3 id="pitch">pitch</h3>
 <blockquote>
 <p><strong>pitch</strong>: <a href="../MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code> | <code>undefined</code>&gt;</p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L401">src/ui/events.ts:401</a></p>
 <p>Fired repeatedly during the map's pitch (tilt) animation between
 one state and another as the result of either user interaction
 or methods such as <a href="../../classes/Map/#flyto">Map#flyTo</a>.</p>
+<hr />
 <h3 id="pitchend">pitchend</h3>
 <blockquote>
 <p><strong>pitchend</strong>: <a href="../MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code> | <code>undefined</code>&gt;</p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L406">src/ui/events.ts:406</a></p>
 <p>Fired immediately after the map's pitch (tilt) finishes changing as
 the result of either user interaction or methods such as <a href="../../classes/Map/#flyto">Map#flyTo</a>.</p>
+<hr />
 <h3 id="pitchstart">pitchstart</h3>
 <blockquote>
 <p><strong>pitchstart</strong>: <a href="../MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code> | <code>undefined</code>&gt;</p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L395">src/ui/events.ts:395</a></p>
 <p>Fired whenever the map's pitch (tilt) begins a change as
 the result of either user interaction or methods such as <a href="../../classes/Map/#flyto">Map#flyTo</a> .</p>
+<hr />
 <h3 id="projectiontransition">projectiontransition</h3>
 <blockquote>
 <p><strong>projectiontransition</strong>: <a href="../MapProjectionEvent/"><code>MapProjectionEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L425">src/ui/events.ts:425</a></p>
 <p>Fired when map's projection is modified in other ways than by map being moved.</p>
+<hr />
 <h3 id="remove">remove</h3>
 <blockquote>
 <p><strong>remove</strong>: <a href="../MapLibreEvent/"><code>MapLibreEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L178">src/ui/events.ts:178</a></p>
 <p>Fired immediately after the map has been removed with <a href="../../classes/Map/#remove">Map#remove</a>.</p>
+<hr />
 <h3 id="render">render</h3>
 <blockquote>
 <p><strong>render</strong>: <a href="../MapLibreEvent/"><code>MapLibreEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L187">src/ui/events.ts:187</a></p>
 <p>Fired whenever the map is drawn to the screen, as the result of</p>
 <ul>
 <li>a change to the map's position, zoom, pitch, or bearing</li>
@@ -9931,140 +9980,170 @@ the result of either user interaction or methods such as <a href="../../classes/
 <li>a change to a GeoJSON source</li>
 <li>the loading of a vector tile, GeoJSON file, glyph, or sprite</li>
 </ul>
+<hr />
 <h3 id="resize">resize</h3>
 <blockquote>
 <p><strong>resize</strong>: <a href="../MapLibreEvent/"><code>MapLibreEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L191">src/ui/events.ts:191</a></p>
 <p>Fired immediately after the map has been resized.</p>
+<hr />
 <h3 id="rotate">rotate</h3>
 <blockquote>
 <p><strong>rotate</strong>: <a href="../MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code> | <code>undefined</code>&gt;</p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L373">src/ui/events.ts:373</a></p>
 <p>Fired repeatedly during a "drag to rotate" interaction. See <a href="../../classes/DragRotateHandler/">DragRotateHandler</a>.</p>
+<hr />
 <h3 id="rotateend">rotateend</h3>
 <blockquote>
 <p><strong>rotateend</strong>: <a href="../MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code> | <code>undefined</code>&gt;</p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L377">src/ui/events.ts:377</a></p>
 <p>Fired when a "drag to rotate" interaction ends. See <a href="../../classes/DragRotateHandler/">DragRotateHandler</a>.</p>
+<hr />
 <h3 id="rotatestart">rotatestart</h3>
 <blockquote>
 <p><strong>rotatestart</strong>: <a href="../MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code> | <code>undefined</code>&gt;</p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L369">src/ui/events.ts:369</a></p>
 <p>Fired when a "drag to rotate" interaction starts. See <a href="../../classes/DragRotateHandler/">DragRotateHandler</a>.</p>
+<hr />
 <h3 id="sourcedata">sourcedata</h3>
 <blockquote>
 <p><strong>sourcedata</strong>: <a href="../MapSourceDataEvent/"><code>MapSourceDataEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L227">src/ui/events.ts:227</a></p>
 <p>Fired when one of the map's sources loads or changes, including if a tile belonging
 to a source loads or changes.</p>
+<hr />
 <h3 id="sourcedataabort">sourcedataabort</h3>
 <blockquote>
 <p><strong>sourcedataabort</strong>: <a href="../MapSourceDataEvent/"><code>MapSourceDataEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L246">src/ui/events.ts:246</a></p>
 <p>Fired when a request for one of the map's sources' data is aborted.</p>
+<hr />
 <h3 id="sourcedataloading">sourcedataloading</h3>
 <blockquote>
 <p><strong>sourcedataloading</strong>: <a href="../MapSourceDataEvent/"><code>MapSourceDataEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L216">src/ui/events.ts:216</a></p>
 <p>Fired when one of the map's sources begins loading or changing asynchronously.
 All <code>sourcedataloading</code> events are followed by a <code>sourcedata</code>, <code>sourcedataabort</code> or <code>error</code> event.</p>
+<hr />
 <h3 id="styledata">styledata</h3>
 <blockquote>
 <p><strong>styledata</strong>: <a href="../MapStyleDataEvent/"><code>MapStyleDataEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L231">src/ui/events.ts:231</a></p>
 <p>Fired when the map's style loads or changes.</p>
+<hr />
 <h3 id="styledataloading">styledataloading</h3>
 <blockquote>
 <p><strong>styledataloading</strong>: <a href="../MapStyleDataEvent/"><code>MapStyleDataEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L222">src/ui/events.ts:222</a></p>
 <p>Fired when the map's style begins loading or changing asynchronously.
 All <code>styledataloading</code> events are followed by a <code>styledata</code>
 or <code>error</code> event.</p>
+<hr />
 <h3 id="styleimagemissing">styleimagemissing</h3>
 <blockquote>
 <p><strong>styleimagemissing</strong>: <a href="../MapStyleImageMissingEvent/"><code>MapStyleImageMissingEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L238">src/ui/events.ts:238</a></p>
 <p>Fired when an icon or pattern needed by the style is missing. The missing image can
 be added with <a href="../../classes/Map/#addimage">Map#addImage</a> within this event listener callback to prevent the image from
 being skipped. This event can be used to dynamically generate icons and patterns.</p>
 <h4 id="see_10">See</h4>
 <p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/add-image-missing-generated/">Generate and add a missing icon to the map</a></p>
+<hr />
 <h3 id="terrain">terrain</h3>
 <blockquote>
 <p><strong>terrain</strong>: <a href="../MapTerrainEvent/"><code>MapTerrainEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L414">src/ui/events.ts:414</a></p>
 <p>Fired when terrain is changed</p>
-<h3 id="tiledataloading">tiledataloading</h3>
-<blockquote>
-<p><strong>tiledataloading</strong>: <a href="../MapDataEvent/"><code>MapDataEvent</code></a></p>
-</blockquote>
+<hr />
 <h3 id="touchcancel">touchcancel</h3>
 <blockquote>
 <p><strong>touchcancel</strong>: <a href="../../classes/MapTouchEvent/"><code>MapTouchEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L263">src/ui/events.ts:263</a></p>
 <p>Fired when a <a href="https://developer.mozilla.org/en-US/docs/Web/Events/touchcancel"><code>touchcancel</code></a> event occurs within the map.</p>
+<hr />
 <h3 id="touchend">touchend</h3>
 <blockquote>
 <p><strong>touchend</strong>: <a href="../../classes/MapTouchEvent/"><code>MapTouchEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L273">src/ui/events.ts:273</a></p>
 <p>Fired when a <a href="https://developer.mozilla.org/en-US/docs/Web/Events/touchend"><code>touchend</code></a> event occurs within the map.</p>
 <h4 id="see_11">See</h4>
 <p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/">Create a draggable point</a></p>
+<hr />
 <h3 id="touchmove">touchmove</h3>
 <blockquote>
 <p><strong>touchmove</strong>: <a href="../../classes/MapTouchEvent/"><code>MapTouchEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L268">src/ui/events.ts:268</a></p>
 <p>Fired when a <a href="https://developer.mozilla.org/en-US/docs/Web/Events/touchmove"><code>touchmove</code></a> event occurs within the map.</p>
 <h4 id="see_12">See</h4>
 <p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/">Create a draggable point</a></p>
+<hr />
 <h3 id="touchstart">touchstart</h3>
 <blockquote>
 <p><strong>touchstart</strong>: <a href="../../classes/MapTouchEvent/"><code>MapTouchEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L278">src/ui/events.ts:278</a></p>
 <p>Fired when a <a href="https://developer.mozilla.org/en-US/docs/Web/Events/touchstart"><code>touchstart</code></a> event occurs within the map.</p>
 <h4 id="see_13">See</h4>
 <p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/">Create a draggable point</a></p>
+<hr />
 <h3 id="webglcontextlost">webglcontextlost</h3>
 <blockquote>
 <p><strong>webglcontextlost</strong>: <a href="../MapContextEvent/"><code>MapContextEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L195">src/ui/events.ts:195</a></p>
 <p>Fired when the WebGL context is lost.</p>
+<hr />
 <h3 id="webglcontextrestored">webglcontextrestored</h3>
 <blockquote>
 <p><strong>webglcontextrestored</strong>: <a href="../MapContextEvent/"><code>MapContextEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L199">src/ui/events.ts:199</a></p>
 <p>Fired when the WebGL context is restored.</p>
+<hr />
 <h3 id="wheel">wheel</h3>
 <blockquote>
 <p><strong>wheel</strong>: <a href="../../classes/MapWheelEvent/"><code>MapWheelEvent</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L410">src/ui/events.ts:410</a></p>
 <p>Fired when a <a href="https://developer.mozilla.org/en-US/docs/Web/Events/wheel"><code>wheel</code></a> event occurs within the map.</p>
+<hr />
 <h3 id="zoom">zoom</h3>
 <blockquote>
 <p><strong>zoom</strong>: <a href="../MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code> | <code>WheelEvent</code> | <code>undefined</code>&gt;</p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L360">src/ui/events.ts:360</a></p>
 <p>Fired repeatedly during an animated transition from one zoom level to another,
 as the result of either user interaction or methods such as <a href="../../classes/Map/#flyto">Map#flyTo</a>.</p>
+<hr />
 <h3 id="zoomend">zoomend</h3>
 <blockquote>
 <p><strong>zoomend</strong>: <a href="../MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code> | <code>WheelEvent</code> | <code>undefined</code>&gt;</p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L365">src/ui/events.ts:365</a></p>
 <p>Fired just after the map completes a transition from one zoom level to another,
 as the result of either user interaction or methods such as <a href="../../classes/Map/#flyto">Map#flyTo</a>.</p>
+<hr />
 <h3 id="zoomstart">zoomstart</h3>
 <blockquote>
 <p><strong>zoomstart</strong>: <a href="../MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code> | <code>WheelEvent</code> | <code>undefined</code>&gt;</p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L355">src/ui/events.ts:355</a></p>
 <p>Fired just before the map begins a transition from one zoom level to another,
 as the result of either user interaction or methods such as <a href="../../classes/Map/#flyto">Map#flyTo</a>.</p>
-<h2 id="example">Example</h2>
-<div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1">// Initialize the map</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">let</span><span class="w"> </span><span class="nx">map</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Map</span><span class="p">({</span><span class="w"> </span><span class="c1">// map options });</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1">// Set an event listener</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="nx">map</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;the-event-name&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;An event has occurred!&#39;</span><span class="p">);</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">});</span>
-</span></code></pre></div>
 
 
 

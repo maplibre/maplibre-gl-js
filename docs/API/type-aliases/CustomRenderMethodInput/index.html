@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.8608ea7d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.4af4bdda.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -3624,13 +3624,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#type-declaration" class="md-nav__link">
+  <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
-      Type declaration
+      Properties
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Type declaration">
+    <nav class="md-nav" aria-label="Properties">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -8776,13 +8776,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#type-declaration" class="md-nav__link">
+  <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
-      Type declaration
+      Properties
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Type declaration">
+    <nav class="md-nav" aria-label="Properties">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -8874,15 +8874,16 @@
 
 <h1 id="customrendermethodinput">CustomRenderMethodInput</h1>
 <blockquote>
-<p><strong>CustomRenderMethodInput</strong>: <code>object</code></p>
+<p><strong>CustomRenderMethodInput</strong> = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/style/style_layer/custom_style_layer.ts#L10">src/style/style_layer/custom_style_layer.ts:10</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/style/style_layer/custom_style_layer.ts#L10">src/style/style_layer/custom_style_layer.ts:10</a></p>
 <p>Input arguments exposed by custom render function.</p>
-<h2 id="type-declaration">Type declaration</h2>
+<h2 id="properties">Properties</h2>
 <h3 id="defaultprojectiondata">defaultProjectionData</h3>
 <blockquote>
 <p><strong>defaultProjectionData</strong>: <a href="../ProjectionData/"><code>ProjectionData</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/style/style_layer/custom_style_layer.ts#L107">src/style/style_layer/custom_style_layer.ts:107</a></p>
 <p>Uniforms that should be passed to the vertex shader, if MapLibre's projection code is used.
 For more details of this object's internals, see its doc comments in <code>src/geo/projection/projection_data.ts</code>.</p>
 <p>These uniforms are set so that <code>projectTile</code> in shader accepts a vec2 in range 0..1 in web mercator coordinates.
@@ -8899,46 +8900,58 @@ can be used to project a <code>LngLat</code> to a mercator coordinate.</p>
 <p>Under globe projection, when these uniforms are used, the <code>elevation</code> parameter
 passed to <code>projectTileFor3D</code> in the shader is elevation in meters above "sea level",
 or more accurately for globe, elevation above the surface of the perfect sphere used to render the planet.</p>
+<hr />
 <h3 id="farz">farZ</h3>
 <blockquote>
 <p><strong>farZ</strong>: <code>number</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/style/style_layer/custom_style_layer.ts#L16">src/style/style_layer/custom_style_layer.ts:16</a></p>
 <p>This value represents the distance from the camera to the far clipping plane.
 It is used in the calculation of the projection matrix to determine which objects are visible.
 farZ should be larger than nearZ.</p>
+<hr />
 <h3 id="fov">fov</h3>
 <blockquote>
 <p><strong>fov</strong>: <code>number</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/style/style_layer/custom_style_layer.ts#L26">src/style/style_layer/custom_style_layer.ts:26</a></p>
 <p>Vertical field of view in radians.</p>
+<hr />
 <h3 id="modelviewprojectionmatrix">modelViewProjectionMatrix</h3>
 <blockquote>
 <p><strong>modelViewProjectionMatrix</strong>: <code>mat4</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/style/style_layer/custom_style_layer.ts#L32">src/style/style_layer/custom_style_layer.ts:32</a></p>
 <p>model view projection matrix
 represents the matrix converting from world space to clip space
 https://learnopengl.com/Getting-started/Coordinate-Systems
 *</p>
+<hr />
 <h3 id="nearz">nearZ</h3>
 <blockquote>
 <p><strong>nearZ</strong>: <code>number</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/style/style_layer/custom_style_layer.ts#L22">src/style/style_layer/custom_style_layer.ts:22</a></p>
 <p>This value represents the distance from the camera to the near clipping plane.
 It is used in the calculation of the projection matrix to determine which objects are visible.
 nearZ should be smaller than farZ.</p>
+<hr />
 <h3 id="projectionmatrix">projectionMatrix</h3>
 <blockquote>
 <p><strong>projectionMatrix</strong>: <code>mat4</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/style/style_layer/custom_style_layer.ts#L38">src/style/style_layer/custom_style_layer.ts:38</a></p>
 <p>projection matrix
 represents the matrix converting from view space to clip space
 https://learnopengl.com/Getting-started/Coordinate-Systems</p>
+<hr />
 <h3 id="shaderdata">shaderData</h3>
 <blockquote>
 <p><strong>shaderData</strong>: <code>object</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/style/style_layer/custom_style_layer.ts#L42">src/style/style_layer/custom_style_layer.ts:42</a></p>
 <p>Data required for picking and compiling a custom shader for the current projection.</p>
-<h4 id="shaderdatadefine">shaderData.define</h4>
+<h4 id="define">define</h4>
 <blockquote>
 <p><strong>define</strong>: <code>string</code></p>
 </blockquote>
@@ -8956,7 +8969,7 @@ Depends on current projection.</p>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    #endif
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>}`;
 </span></code></pre></div>
-<h4 id="shaderdatavariantname">shaderData.variantName</h4>
+<h4 id="variantname">variantName</h4>
 <blockquote>
 <p><strong>variantName</strong>: <code>string</code></p>
 </blockquote>
@@ -8964,7 +8977,7 @@ Depends on current projection.</p>
 Depends on current projection.
 Whenever the other shader properties change, this string changes as well,
 and can be used as a key with which to cache compiled shaders.</p>
-<h4 id="shaderdatavertexshaderprelude">shaderData.vertexShaderPrelude</h4>
+<h4 id="vertexshaderprelude">vertexShaderPrelude</h4>
 <blockquote>
 <p><strong>vertexShaderPrelude</strong>: <code>string</code></p>
 </blockquote>

@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.8608ea7d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.4af4bdda.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -4680,13 +4680,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#type-declaration" class="md-nav__link">
+  <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
-      Type declaration
+      Properties
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Type declaration">
+    <nav class="md-nav" aria-label="Properties">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -9172,13 +9172,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#type-declaration" class="md-nav__link">
+  <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
-      Type declaration
+      Properties
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Type declaration">
+    <nav class="md-nav" aria-label="Properties">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -9666,174 +9666,215 @@
 
 <h1 id="mapoptions">MapOptions</h1>
 <blockquote>
-<p><strong>MapOptions</strong>: <code>object</code></p>
+<p><strong>MapOptions</strong> = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/map.ts#L78">src/ui/map.ts:78</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L78">src/ui/map.ts:78</a></p>
 <p>The <a href="../../classes/Map/">Map</a> options object.</p>
-<h2 id="type-declaration">Type declaration</h2>
+<h2 id="properties">Properties</h2>
 <h3 id="attributioncontrol">attributionControl?</h3>
 <blockquote>
 <p><code>optional</code> <strong>attributionControl</strong>: <code>false</code> | <a href="../AttributionControlOptions/"><code>AttributionControlOptions</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L110">src/ui/map.ts:110</a></p>
 <p>If set, an <a href="../../classes/AttributionControl/">AttributionControl</a> will be added to the map with the provided options.
 To disable the attribution control, pass <code>false</code>.
 Note: showing the logo of MapLibre is not required for using MapLibre.</p>
 <h4 id="default-value">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nx">compact</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span><span class="w"> </span><span class="nx">customAttribution</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;MapLibre ...&quot;</span><span class="p">.</span>
 </span></code></pre></div>
+<hr />
 <h3 id="bearing">bearing?</h3>
 <blockquote>
 <p><code>optional</code> <strong>bearing</strong>: <code>number</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L225">src/ui/map.ts:225</a></p>
 <p>The initial bearing (rotation) of the map, measured in degrees counter-clockwise from north. If <code>bearing</code> is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to <code>0</code>.</p>
 <h4 id="default-value_1">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="mf">0</span>
 </span></code></pre></div>
+<hr />
 <h3 id="bearingsnap">bearingSnap?</h3>
 <blockquote>
 <p><code>optional</code> <strong>bearingSnap</strong>: <code>number</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L103">src/ui/map.ts:103</a></p>
 <p>The threshold, measured in degrees, that determines when the map's
 bearing will snap to north. For example, with a <code>bearingSnap</code> of 7, if the user rotates
 the map within 7 degrees of north, the map will automatically snap to exact north.</p>
 <h4 id="default-value_2">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="mf">7</span>
 </span></code></pre></div>
+<hr />
 <h3 id="bounds">bounds?</h3>
 <blockquote>
 <p><code>optional</code> <strong>bounds</strong>: <a href="../LngLatBoundsLike/"><code>LngLatBoundsLike</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L296">src/ui/map.ts:296</a></p>
 <p>The initial bounds of the map. If <code>bounds</code> is specified, it overrides <code>center</code> and <code>zoom</code> constructor options.</p>
+<hr />
 <h3 id="boxzoom">boxZoom?</h3>
 <blockquote>
 <p><code>optional</code> <strong>boxZoom</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L165">src/ui/map.ts:165</a></p>
 <p>If <code>true</code>, the "box zoom" interaction is enabled (see <a href="../../classes/BoxZoomHandler/">BoxZoomHandler</a>).</p>
 <h4 id="default-value_3">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kc">true</span>
 </span></code></pre></div>
+<hr />
 <h3 id="cancelpendingtilerequestswhilezooming">cancelPendingTileRequestsWhileZooming?</h3>
 <blockquote>
 <p><code>optional</code> <strong>cancelPendingTileRequestsWhileZooming</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L349">src/ui/map.ts:349</a></p>
 <p>Determines whether to cancel, or retain, tiles from the current viewport which are still loading but which belong to a farther (smaller) zoom level than the current one.
 * If <code>true</code>, when zooming in, tiles which didn't manage to load for previous zoom levels will become canceled. This might save some computing resources for slower devices, but the map details might appear more abruptly at the end of the zoom.
 * If <code>false</code>, when zooming in, the previous zoom level(s) tiles will progressively appear, giving a smoother map details experience. However, more tiles will be rendered in a short period of time.</p>
 <h4 id="default-value_4">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kc">true</span>
 </span></code></pre></div>
+<hr />
 <h3 id="canvascontextattributes">canvasContextAttributes?</h3>
 <blockquote>
 <p><code>optional</code> <strong>canvasContextAttributes</strong>: <code>WebGLContextAttributesWithType</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L126">src/ui/map.ts:126</a></p>
 <p>Set of WebGLContextAttributes that are applied to the WebGL context of the map.
 See https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext for more details.
 <code>contextType</code> can be set to <code>webgl2</code> or <code>webgl</code> to force a WebGL version. Not setting it, Maplibre will do it's best to get a suitable context.</p>
 <h4 id="default-value_5">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nx">antialias</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">,</span><span class="w"> </span><span class="nx">powerPreference</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;high-performance&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">preserveDrawingBuffer</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">,</span><span class="w"> </span><span class="nx">failIfMajorPerformanceCaveat</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">,</span><span class="w"> </span><span class="nx">desynchronized</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">,</span><span class="w"> </span><span class="nx">contextType</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;webgl2withfallback&#39;</span>
 </span></code></pre></div>
+<hr />
 <h3 id="center">center?</h3>
 <blockquote>
 <p><code>optional</code> <strong>center</strong>: <a href="../LngLatLike/"><code>LngLatLike</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L210">src/ui/map.ts:210</a></p>
 <p>The initial geographical centerpoint of the map. If <code>center</code> is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to <code>[0, 0]</code> Note: MapLibre GL JS uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.</p>
 <h4 id="default-value_6">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">[</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">]</span>
 </span></code></pre></div>
+<hr />
 <h3 id="centerclampedtoground">centerClampedToGround?</h3>
 <blockquote>
 <p><code>optional</code> <strong>centerClampedToGround</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L356">src/ui/map.ts:356</a></p>
 <p>If true, the elevation of the center point will automatically be set to the terrain elevation
 (or zero if terrain is not enabled). If false, the elevation of the center point will default
 to sea level and will not automatically update. Defaults to true. Needs to be set to false to
 keep the camera above ground when pitch &gt; 90 degrees.</p>
+<hr />
 <h3 id="clicktolerance">clickTolerance?</h3>
 <blockquote>
 <p><code>optional</code> <strong>clickTolerance</strong>: <code>number</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L292">src/ui/map.ts:292</a></p>
 <p>The max number of pixels a user can shift the mouse pointer during a click for it to be considered a valid click (as opposed to a mouse drag).</p>
 <h4 id="default-value_7">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="mf">3</span>
 </span></code></pre></div>
+<hr />
 <h3 id="collectresourcetiming">collectResourceTiming?</h3>
 <blockquote>
 <p><code>optional</code> <strong>collectResourceTiming</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L287">src/ui/map.ts:287</a></p>
 <p>If <code>true</code>, Resource Timing API information will be collected for requests made by GeoJSON and Vector Tile web workers (this information is normally inaccessible from the main Javascript thread). Information will be returned in a <code>resourceTiming</code> property of relevant <code>data</code> events.</p>
 <h4 id="default-value_8">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kc">false</span>
 </span></code></pre></div>
+<hr />
 <h3 id="container">container</h3>
 <blockquote>
 <p><strong>container</strong>: <code>HTMLElement</code> | <code>string</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L96">src/ui/map.ts:96</a></p>
 <p>The HTML element in which MapLibre GL JS will render the map, or the element's string <code>id</code>. The specified element must have no children.</p>
+<hr />
 <h3 id="cooperativegestures">cooperativeGestures?</h3>
 <blockquote>
 <p><code>optional</code> <strong>cooperativeGestures</strong>: <a href="../GestureOptions/"><code>GestureOptions</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L200">src/ui/map.ts:200</a></p>
 <p>If <code>true</code> or set to an options object, the map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture. Cooperative gestures are disabled when a map enters fullscreen using <a href="../../classes/FullscreenControl/">FullscreenControl</a>.</p>
 <h4 id="default-value_9">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kc">false</span>
 </span></code></pre></div>
+<hr />
 <h3 id="crosssourcecollisions">crossSourceCollisions?</h3>
 <blockquote>
 <p><code>optional</code> <strong>crossSourceCollisions</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L282">src/ui/map.ts:282</a></p>
 <p>If <code>true</code>, symbols from multiple sources can collide with each other during collision detection. If <code>false</code>, collision detection is run separately for the symbols in each source.</p>
 <h4 id="default-value_10">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kc">true</span>
 </span></code></pre></div>
+<hr />
 <h3 id="doubleclickzoom">doubleClickZoom?</h3>
 <blockquote>
 <p><code>optional</code> <strong>doubleClickZoom</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L185">src/ui/map.ts:185</a></p>
 <p>If <code>true</code>, the "double click to zoom" interaction is enabled (see <a href="../../classes/DoubleClickZoomHandler/">DoubleClickZoomHandler</a>).</p>
 <h4 id="default-value_11">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kc">true</span>
 </span></code></pre></div>
+<hr />
 <h3 id="dragpan">dragPan?</h3>
 <blockquote>
 <p><code>optional</code> <strong>dragPan</strong>: <code>boolean</code> | <a href="../DragPanOptions/"><code>DragPanOptions</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L175">src/ui/map.ts:175</a></p>
 <p>If <code>true</code>, the "drag to pan" interaction is enabled. An <code>Object</code> value is passed as options to <a href="../../classes/DragPanHandler/#enable">DragPanHandler#enable</a>.</p>
 <h4 id="default-value_12">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kc">true</span>
 </span></code></pre></div>
+<hr />
 <h3 id="dragrotate">dragRotate?</h3>
 <blockquote>
 <p><code>optional</code> <strong>dragRotate</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L170">src/ui/map.ts:170</a></p>
 <p>If <code>true</code>, the "drag to rotate" interaction is enabled (see <a href="../../classes/DragRotateHandler/">DragRotateHandler</a>).</p>
 <h4 id="default-value_13">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kc">true</span>
 </span></code></pre></div>
+<hr />
 <h3 id="elevation">elevation?</h3>
 <blockquote>
 <p><code>optional</code> <strong>elevation</strong>: <code>number</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L215">src/ui/map.ts:215</a></p>
 <p>The elevation of the initial geographical centerpoint of the map, in meters above sea level. If <code>elevation</code> is not specified in the constructor options, it will default to <code>0</code>.</p>
 <h4 id="default-value_14">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="mf">0</span>
 </span></code></pre></div>
+<hr />
 <h3 id="fadeduration">fadeDuration?</h3>
 <blockquote>
 <p><code>optional</code> <strong>fadeDuration</strong>: <code>number</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L277">src/ui/map.ts:277</a></p>
 <p>Controls the duration of the fade-in/fade-out animation for label collisions after initial map load, in milliseconds. This setting affects all symbol layers. This setting does not affect the duration of runtime styling transitions or raster tile cross-fading.</p>
 <h4 id="default-value_15">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="mf">300</span>
 </span></code></pre></div>
+<hr />
 <h3 id="fitboundsoptions">fitBoundsOptions?</h3>
 <blockquote>
 <p><code>optional</code> <strong>fitBoundsOptions</strong>: <a href="../FitBoundsOptions/"><code>FitBoundsOptions</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L300">src/ui/map.ts:300</a></p>
 <p>A <a href="../FitBoundsOptions/">FitBoundsOptions</a> options object to use <em>only</em> when fitting the initial <code>bounds</code> provided above.</p>
+<hr />
 <h3 id="hash">hash?</h3>
 <blockquote>
 <p><code>optional</code> <strong>hash</strong>: <code>boolean</code> | <code>string</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L87">src/ui/map.ts:87</a></p>
 <p>If <code>true</code>, the map's position (zoom, center latitude, center longitude, bearing, and pitch) will be synced with the hash fragment of the page's URL.
 For example, <code>http://path/to/my/page.html#2.59/39.26/53.07/-24.1/60</code>.
 An additional string may optionally be provided to indicate a parameter-styled hash,
@@ -9842,34 +9883,42 @@ is a custom parameter and bar is an arbitrary hash distinct from the map hash.</
 <h4 id="default-value_16">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="kc">false</span>
 </span></code></pre></div>
+<hr />
 <h3 id="interactive">interactive?</h3>
 <blockquote>
 <p><code>optional</code> <strong>interactive</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L92">src/ui/map.ts:92</a></p>
 <p>If <code>false</code>, no mouse, touch, or keyboard listeners will be attached to the map, so it will not respond to interaction.</p>
 <h4 id="default-value_17">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="kc">true</span>
 </span></code></pre></div>
+<hr />
 <h3 id="keyboard">keyboard?</h3>
 <blockquote>
 <p><code>optional</code> <strong>keyboard</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L180">src/ui/map.ts:180</a></p>
 <p>If <code>true</code>, keyboard shortcuts are enabled (see <a href="../../classes/KeyboardHandler/">KeyboardHandler</a>).</p>
 <h4 id="default-value_18">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="kc">true</span>
 </span></code></pre></div>
+<hr />
 <h3 id="locale">locale?</h3>
 <blockquote>
 <p><code>optional</code> <strong>locale</strong>: <code>any</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L272">src/ui/map.ts:272</a></p>
 <p>A patch to apply to the default localization table for UI strings, e.g. control tooltips. The <code>locale</code> object maps namespaced UI string IDs to translated strings in the target language; see <code>src/ui/default_locale.js</code> for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).</p>
 <h4 id="default-value_19">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="kc">null</span>
 </span></code></pre></div>
+<hr />
 <h3 id="localideographfontfamily">localIdeographFontFamily?</h3>
 <blockquote>
 <p><code>optional</code> <strong>localIdeographFontFamily</strong>: <code>string</code> | <code>false</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L309">src/ui/map.ts:309</a></p>
 <p>Defines a CSS
 font-family for locally overriding generation of Chinese, Japanese, and Korean characters.
 For these characters, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
@@ -9878,115 +9927,145 @@ The purpose of this option is to avoid bandwidth-intensive glyph server requests
 <h4 id="default-value_20">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="s1">&#39;sans-serif&#39;</span>
 </span></code></pre></div>
+<hr />
 <h3 id="logoposition">logoPosition?</h3>
 <blockquote>
 <p><code>optional</code> <strong>logoPosition</strong>: <a href="../ControlPosition/"><code>ControlPosition</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L119">src/ui/map.ts:119</a></p>
 <p>A string representing the position of the MapLibre wordmark on the map. Valid options are <code>top-left</code>,<code>top-right</code>, <code>bottom-left</code>, or <code>bottom-right</code>.</p>
 <h4 id="default-value_21">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="s1">&#39;bottom-left&#39;</span>
 </span></code></pre></div>
+<hr />
 <h3 id="maplibrelogo">maplibreLogo?</h3>
 <blockquote>
 <p><code>optional</code> <strong>maplibreLogo</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L114">src/ui/map.ts:114</a></p>
 <p>If <code>true</code>, the MapLibre logo will be shown.</p>
+<hr />
 <h3 id="maxbounds">maxBounds?</h3>
 <blockquote>
 <p><code>optional</code> <strong>maxBounds</strong>: <a href="../LngLatBoundsLike/"><code>LngLatBoundsLike</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L135">src/ui/map.ts:135</a></p>
 <p>If set, the map will be constrained to the given bounds.</p>
+<hr />
 <h3 id="maxcanvassize">maxCanvasSize?</h3>
 <blockquote>
 <p><code>optional</code> <strong>maxCanvasSize</strong>: [<code>number</code>, <code>number</code>]</p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L342">src/ui/map.ts:342</a></p>
 <p>The canvas' <code>width</code> and <code>height</code> max size. The values are passed as an array where the first element is max width and the second element is max height.
 You shouldn't set this above WebGl <code>MAX_TEXTURE_SIZE</code>.</p>
 <h4 id="default-value_22">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="p">[</span><span class="mf">4096</span><span class="p">,</span><span class="w"> </span><span class="mf">4096</span><span class="p">].</span>
 </span></code></pre></div>
+<hr />
 <h3 id="maxpitch">maxPitch?</h3>
 <blockquote>
 <p><code>optional</code> <strong>maxPitch</strong>: <code>number</code> | <code>null</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L160">src/ui/map.ts:160</a></p>
 <p>The maximum pitch of the map (0-180).</p>
 <h4 id="default-value_23">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="mf">60</span>
 </span></code></pre></div>
+<hr />
 <h3 id="maxtilecachesize">maxTileCacheSize?</h3>
 <blockquote>
 <p><code>optional</code> <strong>maxTileCacheSize</strong>: <code>number</code> | <code>null</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L250">src/ui/map.ts:250</a></p>
 <p>The maximum number of tiles stored in the tile cache for a given source. If omitted, the cache will be dynamically sized based on the current viewport which can be set using <code>maxTileCacheZoomLevels</code> constructor options.</p>
 <h4 id="default-value_24">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="kc">null</span>
 </span></code></pre></div>
+<hr />
 <h3 id="maxtilecachezoomlevels">maxTileCacheZoomLevels?</h3>
 <blockquote>
 <p><code>optional</code> <strong>maxTileCacheZoomLevels</strong>: <code>number</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L255">src/ui/map.ts:255</a></p>
 <p>The maximum number of zoom levels for which to store tiles for a given source. Tile cache dynamic size is calculated by multiplying <code>maxTileCacheZoomLevels</code> with the approximate number of tiles in the viewport for a given source.</p>
 <h4 id="default-value_25">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="mf">5</span>
 </span></code></pre></div>
+<hr />
 <h3 id="maxzoom">maxZoom?</h3>
 <blockquote>
 <p><code>optional</code> <strong>maxZoom</strong>: <code>number</code> | <code>null</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L150">src/ui/map.ts:150</a></p>
 <p>The maximum zoom level of the map (0-24).</p>
 <h4 id="default-value_26">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="mf">22</span>
 </span></code></pre></div>
+<hr />
 <h3 id="minpitch">minPitch?</h3>
 <blockquote>
 <p><code>optional</code> <strong>minPitch</strong>: <code>number</code> | <code>null</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L155">src/ui/map.ts:155</a></p>
 <p>The minimum pitch of the map (0-180).</p>
 <h4 id="default-value_27">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="mf">0</span>
 </span></code></pre></div>
+<hr />
 <h3 id="minzoom">minZoom?</h3>
 <blockquote>
 <p><code>optional</code> <strong>minZoom</strong>: <code>number</code> | <code>null</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L145">src/ui/map.ts:145</a></p>
 <p>The minimum zoom level of the map (0-24).</p>
 <h4 id="default-value_28">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="mf">0</span>
 </span></code></pre></div>
+<hr />
 <h3 id="pitch">pitch?</h3>
 <blockquote>
 <p><code>optional</code> <strong>pitch</strong>: <code>number</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L230">src/ui/map.ts:230</a></p>
 <p>The initial pitch (tilt) of the map, measured in degrees away from the plane of the screen (0-85). If <code>pitch</code> is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to <code>0</code>. Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.</p>
 <h4 id="default-value_29">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="mf">0</span>
 </span></code></pre></div>
+<hr />
 <h3 id="pitchwithrotate">pitchWithRotate?</h3>
 <blockquote>
 <p><code>optional</code> <strong>pitchWithRotate</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L321">src/ui/map.ts:321</a></p>
 <p>If <code>false</code>, the map's pitch (tilt) control with "drag to rotate" interaction will be disabled.</p>
 <h4 id="default-value_30">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="kc">true</span>
 </span></code></pre></div>
+<hr />
 <h3 id="pixelratio">pixelRatio?</h3>
 <blockquote>
 <p><code>optional</code> <strong>pixelRatio</strong>: <code>number</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L331">src/ui/map.ts:331</a></p>
 <p>The pixel ratio.
 The canvas' <code>width</code> attribute will be <code>container.clientWidth * pixelRatio</code> and its <code>height</code> attribute will be <code>container.clientHeight * pixelRatio</code>. Defaults to <code>devicePixelRatio</code> if not specified.</p>
+<hr />
 <h3 id="refreshexpiredtiles">refreshExpiredTiles?</h3>
 <blockquote>
 <p><code>optional</code> <strong>refreshExpiredTiles</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L131">src/ui/map.ts:131</a></p>
 <p>If <code>false</code>, the map won't attempt to re-request tiles once they expire per their HTTP <code>cacheControl</code>/<code>expires</code> headers.</p>
 <h4 id="default-value_31">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="kc">true</span>
 </span></code></pre></div>
+<hr />
 <h3 id="renderworldcopies">renderWorldCopies?</h3>
 <blockquote>
 <p><code>optional</code> <strong>renderWorldCopies</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L245">src/ui/map.ts:245</a></p>
 <p>If <code>true</code>, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to <code>false</code>:</p>
 <ul>
 <li>When the map is zoomed out far enough that a single representation of the world does not fill the map's entire
@@ -9997,92 +10076,114 @@ map and the other on the left edge of the map) at every zoom level.</li>
 <h4 id="default-value_32">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="kc">true</span>
 </span></code></pre></div>
+<hr />
 <h3 id="roll">roll?</h3>
 <blockquote>
 <p><code>optional</code> <strong>roll</strong>: <code>number</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L235">src/ui/map.ts:235</a></p>
 <p>The initial roll angle of the map, measured in degrees counter-clockwise about the camera boresight. If <code>roll</code> is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to <code>0</code>.</p>
 <h4 id="default-value_33">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a><span class="mf">0</span>
 </span></code></pre></div>
+<hr />
 <h3 id="rollenabled">rollEnabled?</h3>
 <blockquote>
 <p><code>optional</code> <strong>rollEnabled</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L326">src/ui/map.ts:326</a></p>
 <p>If <code>false</code>, the map's roll control with "drag to rotate" interaction will be disabled.</p>
 <h4 id="default-value_34">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a><span class="kc">false</span>
 </span></code></pre></div>
+<hr />
 <h3 id="scrollzoom">scrollZoom?</h3>
 <blockquote>
 <p><code>optional</code> <strong>scrollZoom</strong>: <code>boolean</code> | <a href="../AroundCenterOptions/"><code>AroundCenterOptions</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L140">src/ui/map.ts:140</a></p>
 <p>If <code>true</code>, the "scroll to zoom" interaction is enabled. <a href="../AroundCenterOptions/">AroundCenterOptions</a> are passed as options to <a href="../../classes/ScrollZoomHandler/#enable">ScrollZoomHandler#enable</a>.</p>
 <h4 id="default-value_35">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a><span class="kc">true</span>
 </span></code></pre></div>
+<hr />
 <h3 id="style">style?</h3>
 <blockquote>
 <p><code>optional</code> <strong>style</strong>: <code>StyleSpecification</code> | <code>string</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L316">src/ui/map.ts:316</a></p>
 <p>The map's MapLibre style. This must be a JSON object conforming to
 the schema described in the <a href="https://maplibre.org/maplibre-style-spec/">MapLibre Style Specification</a>,
 or a URL to such JSON.
 When the style is not specified, calling <a href="../../classes/Map/#setstyle">Map#setStyle</a> is required to render the map.</p>
+<hr />
 <h3 id="touchpitch">touchPitch?</h3>
 <blockquote>
 <p><code>optional</code> <strong>touchPitch</strong>: <code>boolean</code> | <a href="../AroundCenterOptions/"><code>AroundCenterOptions</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L195">src/ui/map.ts:195</a></p>
 <p>If <code>true</code>, the "drag to pitch" interaction is enabled. An <code>Object</code> value is passed as options to <a href="../../classes/TwoFingersTouchPitchHandler/#enable">TwoFingersTouchPitchHandler#enable</a>.</p>
 <h4 id="default-value_36">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a><span class="kc">true</span>
 </span></code></pre></div>
+<hr />
 <h3 id="touchzoomrotate">touchZoomRotate?</h3>
 <blockquote>
 <p><code>optional</code> <strong>touchZoomRotate</strong>: <code>boolean</code> | <a href="../AroundCenterOptions/"><code>AroundCenterOptions</code></a></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L190">src/ui/map.ts:190</a></p>
 <p>If <code>true</code>, the "pinch to rotate and zoom" interaction is enabled. An <code>Object</code> value is passed as options to <a href="../../classes/TwoFingersTouchZoomRotateHandler/#enable">TwoFingersTouchZoomRotateHandler#enable</a>.</p>
 <h4 id="default-value_37">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a><span class="kc">true</span>
 </span></code></pre></div>
+<hr />
 <h3 id="trackresize">trackResize?</h3>
 <blockquote>
 <p><code>optional</code> <strong>trackResize</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L205">src/ui/map.ts:205</a></p>
 <p>If <code>true</code>, the map will automatically resize when the browser window resizes.</p>
 <h4 id="default-value_38">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-38-1"><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a><span class="kc">true</span>
 </span></code></pre></div>
+<hr />
 <h3 id="transformcameraupdate">transformCameraUpdate?</h3>
 <blockquote>
 <p><code>optional</code> <strong>transformCameraUpdate</strong>: <a href="../CameraUpdateTransformFunction/"><code>CameraUpdateTransformFunction</code></a> | <code>null</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L267">src/ui/map.ts:267</a></p>
 <p>A callback run before the map's camera is moved due to user input or animation. The callback can be used to modify the new center, zoom, pitch and bearing.
 Expected to return an object containing center, zoom, pitch or bearing values to overwrite.</p>
 <h4 id="default-value_39">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-39-1"><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a><span class="kc">null</span>
 </span></code></pre></div>
+<hr />
 <h3 id="transformrequest">transformRequest?</h3>
 <blockquote>
 <p><code>optional</code> <strong>transformRequest</strong>: <a href="../RequestTransformFunction/"><code>RequestTransformFunction</code></a> | <code>null</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L261">src/ui/map.ts:261</a></p>
 <p>A callback run before the Map makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
 Expected to return an object with a <code>url</code> property and optionally <code>headers</code> and <code>credentials</code> properties.</p>
 <h4 id="default-value_40">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-40-1"><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a><span class="kc">null</span>
 </span></code></pre></div>
+<hr />
 <h3 id="validatestyle">validateStyle?</h3>
 <blockquote>
 <p><code>optional</code> <strong>validateStyle</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L336">src/ui/map.ts:336</a></p>
 <p>If false, style validation will be skipped. Useful in production environment.</p>
 <h4 id="default-value_41">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-41-1"><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a><span class="kc">true</span>
 </span></code></pre></div>
+<hr />
 <h3 id="zoom">zoom?</h3>
 <blockquote>
 <p><code>optional</code> <strong>zoom</strong>: <code>number</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/map.ts#L220">src/ui/map.ts:220</a></p>
 <p>The initial zoom level of the map. If <code>zoom</code> is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to <code>0</code>.</p>
 <h4 id="default-value_42">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-42-1"><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a><span class="mf">0</span>

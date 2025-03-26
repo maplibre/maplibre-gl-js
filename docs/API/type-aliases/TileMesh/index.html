@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.8608ea7d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.4af4bdda.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -5670,13 +5670,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#type-declaration" class="md-nav__link">
+  <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
-      Type declaration
+      Properties
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Type declaration">
+    <nav class="md-nav" aria-label="Properties">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -8740,13 +8740,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#type-declaration" class="md-nav__link">
+  <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
-      Type declaration
+      Properties
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Type declaration">
+    <nav class="md-nav" aria-label="Properties">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -8802,26 +8802,31 @@
 
 <h1 id="tilemesh">TileMesh</h1>
 <blockquote>
-<p><strong>TileMesh</strong>: <code>object</code></p>
+<p><strong>TileMesh</strong> = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/util/create_tile_mesh.ts#L47">src/util/create_tile_mesh.ts:47</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/util/create_tile_mesh.ts#L47">src/util/create_tile_mesh.ts:47</a></p>
 <p>Stores the prepared vertex and index buffer bytes for a mesh.</p>
-<h2 id="type-declaration">Type declaration</h2>
+<h2 id="properties">Properties</h2>
 <h3 id="indices">indices</h3>
 <blockquote>
 <p><strong>indices</strong>: <code>ArrayBuffer</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/util/create_tile_mesh.ts#L56">src/util/create_tile_mesh.ts:56</a></p>
 <p>The index data. Each triangle is defined by three indices. The indices may either be 16 bit or 32 bit unsigned integers,
 depending on the mesh creation arguments and on whether the mesh can fit into 16 bit indices.</p>
+<hr />
 <h3 id="uses32bitindices">uses32bitIndices</h3>
 <blockquote>
 <p><strong>uses32bitIndices</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/util/create_tile_mesh.ts#L60">src/util/create_tile_mesh.ts:60</a></p>
 <p>A helper boolean indicating whether the indices are 32 bit.</p>
+<hr />
 <h3 id="vertices">vertices</h3>
 <blockquote>
 <p><strong>vertices</strong>: <code>ArrayBuffer</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/util/create_tile_mesh.ts#L51">src/util/create_tile_mesh.ts:51</a></p>
 <p>The vertex data. Each vertex is two 16 bit signed integers, one for X, one for Y.</p>
 
 

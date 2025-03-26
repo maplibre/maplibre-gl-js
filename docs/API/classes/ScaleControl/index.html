@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.8608ea7d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.4af4bdda.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -1772,9 +1772,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#new-scalecontrol" class="md-nav__link">
+  <a href="#constructor" class="md-nav__link">
     <span class="md-ellipsis">
-      new ScaleControl()
+      Constructor
     </span>
   </a>
   
@@ -8819,9 +8819,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#new-scalecontrol" class="md-nav__link">
+  <a href="#constructor" class="md-nav__link">
     <span class="md-ellipsis">
-      new ScaleControl()
+      Constructor
     </span>
   </a>
   
@@ -8903,7 +8903,7 @@
 
 
 <h1 id="scalecontrol">ScaleControl</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/control/scale_control.ts#L48">src/ui/control/scale_control.ts:48</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/control/scale_control.ts#L48">src/ui/control/scale_control.ts:48</a></p>
 <p>A <code>ScaleControl</code> control displays the ratio of a distance on the map to the corresponding distance on the ground.</p>
 <h2 id="example">Example</h2>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">let</span><span class="w"> </span><span class="nx">scale</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ScaleControl</span><span class="p">({</span>
@@ -8919,11 +8919,11 @@
 <li><a href="../../interfaces/IControl/"><code>IControl</code></a></li>
 </ul>
 <h2 id="constructors">Constructors</h2>
-<h3 id="new-scalecontrol">new ScaleControl()</h3>
+<h3 id="constructor">Constructor</h3>
 <blockquote>
-<p><strong>new ScaleControl</strong>(<code>options</code>?: <a href="../../type-aliases/ScaleControlOptions/"><code>ScaleControlOptions</code></a>): <a href="./"><code>ScaleControl</code></a></p>
+<p><strong>new ScaleControl</strong>(<code>options</code>?: <a href="../../type-aliases/ScaleControlOptions/"><code>ScaleControlOptions</code></a>): <code>ScaleControl</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/control/scale_control.ts#L56">src/ui/control/scale_control.ts:56</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/control/scale_control.ts#L56">src/ui/control/scale_control.ts:56</a></p>
 <h4 id="parameters">Parameters</h4>
 <table>
 <thead>
@@ -8942,13 +8942,13 @@
 </tbody>
 </table>
 <h4 id="returns">Returns</h4>
-<p><a href="./"><code>ScaleControl</code></a></p>
+<p><code>ScaleControl</code></p>
 <h2 id="methods">Methods</h2>
 <h3 id="getdefaultposition">getDefaultPosition()</h3>
 <blockquote>
 <p><strong>getDefaultPosition</strong>(): <a href="../../type-aliases/ControlPosition/"><code>ControlPosition</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/control/scale_control.ts#L60">src/ui/control/scale_control.ts:60</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/control/scale_control.ts#L60">src/ui/control/scale_control.ts:60</a></p>
 <p>Optionally provide a default position for this control. If this method
 is implemented and <a href="../Map/#addcontrol">Map#addControl</a> is called without the <code>position</code>
 parameter, the value returned by getDefaultPosition will be used as the
@@ -8963,7 +8963,7 @@ control's position.</p>
 <blockquote>
 <p><strong>onAdd</strong>(<code>map</code>: <a href="../Map/"><code>Map</code></a>): <code>HTMLElement</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/control/scale_control.ts#L69">src/ui/control/scale_control.ts:69</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/control/scale_control.ts#L69">src/ui/control/scale_control.ts:69</a></p>
 <p>Register a control on the map and give it a chance to register event listeners
 and resources. This method is called by <a href="../Map/#addcontrol">Map#addControl</a>
 internally.</p>
@@ -8997,7 +8997,7 @@ as necessary.</p>
 <blockquote>
 <p><strong>onRemove</strong>(): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/control/scale_control.ts#L80">src/ui/control/scale_control.ts:80</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/control/scale_control.ts#L80">src/ui/control/scale_control.ts:80</a></p>
 <p>Unregister a control on the map and give it a chance to detach event listeners
 and resources. This method is called by <a href="../Map/#removecontrol">Map#removeControl</a>
 internally.</p>
@@ -9010,7 +9010,7 @@ internally.</p>
 <blockquote>
 <p><strong>setUnit</strong>(<code>unit</code>: <a href="../../type-aliases/Unit/"><code>Unit</code></a>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/control/scale_control.ts#L91">src/ui/control/scale_control.ts:91</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/control/scale_control.ts#L91">src/ui/control/scale_control.ts:91</a></p>
 <p>Set the scale's unit of the distance</p>
 <h4 id="parameters_2">Parameters</h4>
 <table>

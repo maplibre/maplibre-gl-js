@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.8608ea7d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.4af4bdda.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -3734,13 +3734,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#type-declaration" class="md-nav__link">
+  <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
-      Type declaration
+      Properties
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Type declaration">
+    <nav class="md-nav" aria-label="Properties">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -8749,13 +8749,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#type-declaration" class="md-nav__link">
+  <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
-      Type declaration
+      Properties
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Type declaration">
+    <nav class="md-nav" aria-label="Properties">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -8820,23 +8820,26 @@
 
 <h1 id="dragpanoptions">DragPanOptions</h1>
 <blockquote>
-<p><strong>DragPanOptions</strong>: <code>object</code></p>
+<p><strong>DragPanOptions</strong> = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/handler/shim/drag_pan.ts#L7">src/ui/handler/shim/drag_pan.ts:7</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/handler/shim/drag_pan.ts#L7">src/ui/handler/shim/drag_pan.ts:7</a></p>
 <p>A <a href="../../classes/DragPanHandler/">DragPanHandler</a> options object</p>
-<h2 id="type-declaration">Type declaration</h2>
+<h2 id="properties">Properties</h2>
 <h3 id="deceleration">deceleration?</h3>
 <blockquote>
 <p><code>optional</code> <strong>deceleration</strong>: <code>number</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/handler/shim/drag_pan.ts#L23">src/ui/handler/shim/drag_pan.ts:23</a></p>
 <p>the maximum value of the drag velocity.</p>
 <h4 id="default-value">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="mf">1400</span>
 </span></code></pre></div>
+<hr />
 <h3 id="easing">easing()?</h3>
 <blockquote>
 <p><code>optional</code> <strong>easing</strong>: (<code>t</code>: <code>number</code>) =&gt; <code>number</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/handler/shim/drag_pan.ts#L18">src/ui/handler/shim/drag_pan.ts:18</a></p>
 <p>easing function applied to <code>map.panTo</code> when applying the drag.</p>
 <h4 id="parameters">Parameters</h4>
 <table>
@@ -8860,18 +8863,22 @@
 <h4 id="default-value_1">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nx">bezier</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.3</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span>
 </span></code></pre></div>
+<hr />
 <h3 id="linearity">linearity?</h3>
 <blockquote>
 <p><code>optional</code> <strong>linearity</strong>: <code>number</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/handler/shim/drag_pan.ts#L12">src/ui/handler/shim/drag_pan.ts:12</a></p>
 <p>factor used to scale the drag velocity</p>
 <h4 id="default-value_2">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="mf">0</span>
 </span></code></pre></div>
+<hr />
 <h3 id="maxspeed">maxSpeed?</h3>
 <blockquote>
 <p><code>optional</code> <strong>maxSpeed</strong>: <code>number</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/handler/shim/drag_pan.ts#L28">src/ui/handler/shim/drag_pan.ts:28</a></p>
 <p>the rate at which the speed reduces after the pan ends.</p>
 <h4 id="default-value_3">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="mf">2500</span>

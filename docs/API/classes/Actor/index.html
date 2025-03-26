@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.8608ea7d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.4af4bdda.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -751,9 +751,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#new-actor" class="md-nav__link">
+  <a href="#constructor" class="md-nav__link">
     <span class="md-ellipsis">
-      new Actor()
+      Constructor
     </span>
   </a>
   
@@ -8774,9 +8774,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#new-actor" class="md-nav__link">
+  <a href="#constructor" class="md-nav__link">
     <span class="md-ellipsis">
-      new Actor()
+      Constructor
     </span>
   </a>
   
@@ -8831,7 +8831,7 @@
 
 
 <h1 id="actor">Actor</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/util/actor.ts#L56">src/util/actor.ts:56</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/util/actor.ts#L56">src/util/actor.ts:56</a></p>
 <p>An implementation of the <a href="https://en.wikipedia.org/wiki/Actor_model">Actor design pattern</a>
 that maintains the relationship between asynchronous tasks and the objects
 that spin them off - in this case, tasks like parsing parts of styles,
@@ -8841,11 +8841,11 @@ owned by the styles</p>
 <li><a href="../../interfaces/IActor/"><code>IActor</code></a></li>
 </ul>
 <h2 id="constructors">Constructors</h2>
-<h3 id="new-actor">new Actor()</h3>
+<h3 id="constructor">Constructor</h3>
 <blockquote>
-<p><strong>new Actor</strong>(<code>target</code>: <a href="../../interfaces/ActorTarget/"><code>ActorTarget</code></a>, <code>mapId</code>?: <code>string</code> | <code>number</code>): <a href="./"><code>Actor</code></a></p>
+<p><strong>new Actor</strong>(<code>target</code>: <a href="../../interfaces/ActorTarget/"><code>ActorTarget</code></a>, <code>mapId</code>?: <code>string</code> | <code>number</code>): <code>Actor</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/util/actor.ts#L73">src/util/actor.ts:73</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/util/actor.ts#L73">src/util/actor.ts:73</a></p>
 <h4 id="parameters">Parameters</h4>
 <table>
 <thead>
@@ -8869,13 +8869,13 @@ owned by the styles</p>
 </tbody>
 </table>
 <h4 id="returns">Returns</h4>
-<p><a href="./"><code>Actor</code></a></p>
+<p><code>Actor</code></p>
 <h2 id="methods">Methods</h2>
 <h3 id="sendasync">sendAsync()</h3>
 <blockquote>
 <p><strong>sendAsync</strong>&lt;<code>T</code>&gt;(<code>message</code>: <a href="../../type-aliases/ActorMessage/"><code>ActorMessage</code></a>&lt;<code>T</code>&gt;, <code>abortController</code>?: <code>AbortController</code>): <code>Promise</code>&lt;<a href="../../type-aliases/RequestResponseMessageMap/"><code>RequestResponseMessageMap</code></a>[<code>T</code>][<code>1</code>]&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/util/actor.ts#L97">src/util/actor.ts:97</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/util/actor.ts#L97">src/util/actor.ts:97</a></p>
 <p>Sends a message from a main-thread map to a Worker or from a Worker back to
 a main-thread map instance.</p>
 <h4 id="type-parameters">Type Parameters</h4>

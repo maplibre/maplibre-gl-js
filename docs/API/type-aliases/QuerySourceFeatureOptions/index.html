@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.8608ea7d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.4af4bdda.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -5164,13 +5164,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#type-declaration" class="md-nav__link">
+  <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
-      Type declaration
+      Properties
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Type declaration">
+    <nav class="md-nav" aria-label="Properties">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -8740,13 +8740,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#type-declaration" class="md-nav__link">
+  <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
-      Type declaration
+      Properties
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Type declaration">
+    <nav class="md-nav" aria-label="Properties">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -8802,26 +8802,31 @@
 
 <h1 id="querysourcefeatureoptions">QuerySourceFeatureOptions</h1>
 <blockquote>
-<p><strong>QuerySourceFeatureOptions</strong>: <code>object</code></p>
+<p><strong>QuerySourceFeatureOptions</strong> = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/source/query_features.ts#L48">src/source/query_features.ts:48</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/source/query_features.ts#L48">src/source/query_features.ts:48</a></p>
 <p>The options object related to the <a href="../../classes/Map/#querysourcefeatures">Map#querySourceFeatures</a> method</p>
-<h2 id="type-declaration">Type declaration</h2>
+<h2 id="properties">Properties</h2>
 <h3 id="filter">filter?</h3>
 <blockquote>
 <p><code>optional</code> <strong>filter</strong>: <code>FilterSpecification</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/source/query_features.ts#L57">src/source/query_features.ts:57</a></p>
 <p>A <a href="https://maplibre.org/maplibre-style-spec/layers/#filter">filter</a>
 to limit query results.</p>
+<hr />
 <h3 id="sourcelayer">sourceLayer?</h3>
 <blockquote>
 <p><code>optional</code> <strong>sourceLayer</strong>: <code>string</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/source/query_features.ts#L52">src/source/query_features.ts:52</a></p>
 <p>The name of the source layer to query. <em>For vector tile sources, this parameter is required.</em> For GeoJSON sources, it is ignored.</p>
+<hr />
 <h3 id="validate">validate?</h3>
 <blockquote>
 <p><code>optional</code> <strong>validate</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/source/query_features.ts#L62">src/source/query_features.ts:62</a></p>
 <p>Whether to check if the [parameters.filter] conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.</p>
 <h4 id="default-value">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kc">true</span>

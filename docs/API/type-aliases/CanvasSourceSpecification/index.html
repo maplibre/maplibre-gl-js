@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.8608ea7d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.4af4bdda.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -3382,13 +3382,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#type-declaration" class="md-nav__link">
+  <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
-      Type declaration
+      Properties
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Type declaration">
+    <nav class="md-nav" aria-label="Properties">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -8749,13 +8749,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#type-declaration" class="md-nav__link">
+  <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
-      Type declaration
+      Properties
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Type declaration">
+    <nav class="md-nav" aria-label="Properties">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -8820,33 +8820,40 @@
 
 <h1 id="canvassourcespecification">CanvasSourceSpecification</h1>
 <blockquote>
-<p><strong>CanvasSourceSpecification</strong>: <code>object</code></p>
+<p><strong>CanvasSourceSpecification</strong> = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/source/canvas_source.ts#L14">src/source/canvas_source.ts:14</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/source/canvas_source.ts#L14">src/source/canvas_source.ts:14</a></p>
 <p>Options to add a canvas source type to the map.</p>
-<h2 id="type-declaration">Type declaration</h2>
+<h2 id="properties">Properties</h2>
 <h3 id="animate">animate?</h3>
 <blockquote>
 <p><code>optional</code> <strong>animate</strong>: <code>boolean</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/source/canvas_source.ts#L27">src/source/canvas_source.ts:27</a></p>
 <p>Whether the canvas source is animated. If the canvas is static (i.e. pixels do not need to be re-read on every frame), <code>animate</code> should be set to <code>false</code> to improve performance.</p>
 <h4 id="default-value">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kc">true</span>
 </span></code></pre></div>
+<hr />
 <h3 id="canvas">canvas?</h3>
 <blockquote>
 <p><code>optional</code> <strong>canvas</strong>: <code>string</code> | <code>HTMLCanvasElement</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/source/canvas_source.ts#L31">src/source/canvas_source.ts:31</a></p>
 <p>Canvas source from which to read pixels. Can be a string representing the ID of the canvas element, or the <code>HTMLCanvasElement</code> itself.</p>
+<hr />
 <h3 id="coordinates">coordinates</h3>
 <blockquote>
 <p><strong>coordinates</strong>: [[<code>number</code>, <code>number</code>], [<code>number</code>, <code>number</code>], [<code>number</code>, <code>number</code>], [<code>number</code>, <code>number</code>]]</p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/source/canvas_source.ts#L22">src/source/canvas_source.ts:22</a></p>
 <p>Four geographical coordinates denoting where to place the corners of the canvas, specified in <code>[longitude, latitude]</code> pairs.</p>
+<hr />
 <h3 id="type">type</h3>
 <blockquote>
 <p><strong>type</strong>: <code>"canvas"</code></p>
 </blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/source/canvas_source.ts#L18">src/source/canvas_source.ts:18</a></p>
 <p>Source type. Must be <code>"canvas"</code>.</p>
 
 

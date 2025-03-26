@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.8608ea7d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.4af4bdda.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -940,9 +940,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#new-demdata" class="md-nav__link">
+  <a href="#constructor" class="md-nav__link">
     <span class="md-ellipsis">
-      new DEMData()
+      Constructor
     </span>
   </a>
   
@@ -8732,9 +8732,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#new-demdata" class="md-nav__link">
+  <a href="#constructor" class="md-nav__link">
     <span class="md-ellipsis">
-      new DEMData()
+      Constructor
     </span>
   </a>
   
@@ -8765,7 +8765,7 @@
 
 
 <h1 id="demdata">DEMData</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/data/dem_data.ts#L22">src/data/dem_data.ts:22</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/data/dem_data.ts#L22">src/data/dem_data.ts:22</a></p>
 <p>DEMData is a data structure for decoding, backfilling, and storing elevation data for processing in the hillshade shaders
 data can be populated either from a pngraw image tile or from serialized data sent back from a worker. When data is initially
 loaded from a image tile, we decode the pixel values using the appropriate decoding formula, but we store the
@@ -8775,11 +8775,11 @@ integer overflow when creating the texture used in the hillshadePrepare step.</p
 surrounding pixel values to compute the slope at that pixel, and we cannot accurately calculate the slope at pixels on a
 tile's edge without backfilling from neighboring tiles.</p>
 <h2 id="constructors">Constructors</h2>
-<h3 id="new-demdata">new DEMData()</h3>
+<h3 id="constructor">Constructor</h3>
 <blockquote>
-<p><strong>new DEMData</strong>(<code>uid</code>: <code>string</code> | <code>number</code>, <code>data</code>: <code>ImageData</code> | <a href="../RGBAImage/"><code>RGBAImage</code></a>, <code>encoding</code>: <a href="../../type-aliases/DEMEncoding/"><code>DEMEncoding</code></a>, <code>redFactor</code>: <code>number</code>, <code>greenFactor</code>: <code>number</code>, <code>blueFactor</code>: <code>number</code>, <code>baseShift</code>: <code>number</code>): <a href="./"><code>DEMData</code></a></p>
+<p><strong>new DEMData</strong>(<code>uid</code>: <code>string</code> | <code>number</code>, <code>data</code>: <code>ImageData</code> | <a href="../RGBAImage/"><code>RGBAImage</code></a>, <code>encoding</code>: <a href="../../type-aliases/DEMEncoding/"><code>DEMEncoding</code></a>, <code>redFactor</code>: <code>number</code>, <code>greenFactor</code>: <code>number</code>, <code>blueFactor</code>: <code>number</code>, <code>baseShift</code>: <code>number</code>): <code>DEMData</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/data/dem_data.ts#L45">src/data/dem_data.ts:45</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/data/dem_data.ts#L45">src/data/dem_data.ts:45</a></p>
 <p>Constructs a <code>DEMData</code> object</p>
 <h4 id="parameters">Parameters</h4>
 <table>
@@ -8837,7 +8837,7 @@ tile's edge without backfilling from neighboring tiles.</p>
 </tbody>
 </table>
 <h4 id="returns">Returns</h4>
-<p><a href="./"><code>DEMData</code></a></p>
+<p><code>DEMData</code></p>
 
 
 

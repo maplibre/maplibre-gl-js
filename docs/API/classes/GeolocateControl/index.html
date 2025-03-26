@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.8608ea7d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.4af4bdda.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -1280,9 +1280,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#new-geolocatecontrol" class="md-nav__link">
+  <a href="#constructor" class="md-nav__link">
     <span class="md-ellipsis">
-      new GeolocateControl()
+      Constructor
     </span>
   </a>
   
@@ -8963,9 +8963,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#new-geolocatecontrol" class="md-nav__link">
+  <a href="#constructor" class="md-nav__link">
     <span class="md-ellipsis">
-      new GeolocateControl()
+      Constructor
     </span>
   </a>
   
@@ -9119,7 +9119,7 @@
 
 
 <h1 id="geolocatecontrol">GeolocateControl</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/control/geolocate_control.ts#L240">src/ui/control/geolocate_control.ts:240</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/control/geolocate_control.ts#L240">src/ui/control/geolocate_control.ts:240</a></p>
 <p>A <code>GeolocateControl</code> control provides a button that uses the browser's geolocation
 API to locate the user on the map.</p>
 <p>Not all browsers support geolocation,
@@ -9270,11 +9270,11 @@ as disabled.</p>
 <li><a href="../../interfaces/IControl/"><code>IControl</code></a></li>
 </ul>
 <h2 id="constructors">Constructors</h2>
-<h3 id="new-geolocatecontrol">new GeolocateControl()</h3>
+<h3 id="constructor">Constructor</h3>
 <blockquote>
-<p><strong>new GeolocateControl</strong>(<code>options</code>: <a href="../../type-aliases/GeolocateControlOptions/"><code>GeolocateControlOptions</code></a>): <a href="./"><code>GeolocateControl</code></a></p>
+<p><strong>new GeolocateControl</strong>(<code>options</code>: <a href="../../type-aliases/GeolocateControlOptions/"><code>GeolocateControlOptions</code></a>): <code>GeolocateControl</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/control/geolocate_control.ts#L275">src/ui/control/geolocate_control.ts:275</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/control/geolocate_control.ts#L275">src/ui/control/geolocate_control.ts:275</a></p>
 <h4 id="parameters">Parameters</h4>
 <table>
 <thead>
@@ -9293,7 +9293,7 @@ as disabled.</p>
 </tbody>
 </table>
 <h4 id="returns">Returns</h4>
-<p><a href="./"><code>GeolocateControl</code></a></p>
+<p><code>GeolocateControl</code></p>
 <h4 id="overrides">Overrides</h4>
 <p><code>Evented.constructor</code></p>
 <h2 id="methods">Methods</h2>
@@ -9301,7 +9301,7 @@ as disabled.</p>
 <blockquote>
 <p><strong>_isOutOfMapMaxBounds</strong>(<code>position</code>: <code>GeolocationPosition</code>): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/control/geolocate_control.ts#L318">src/ui/control/geolocate_control.ts:318</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/control/geolocate_control.ts#L318">src/ui/control/geolocate_control.ts:318</a></p>
 <p>Check if the Geolocation API Position is outside the map's <code>maxBounds</code>.</p>
 <h4 id="parameters_1">Parameters</h4>
 <table>
@@ -9328,7 +9328,7 @@ as disabled.</p>
 <blockquote>
 <p><strong>_onSuccess</strong>(<code>position</code>: <code>GeolocationPosition</code>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/control/geolocate_control.ts#L363">src/ui/control/geolocate_control.ts:363</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/control/geolocate_control.ts#L363">src/ui/control/geolocate_control.ts:363</a></p>
 <p>When the Geolocation API returns a new location, update the <code>GeolocateControl</code>.</p>
 <h4 id="parameters_2">Parameters</h4>
 <table>
@@ -9354,7 +9354,7 @@ as disabled.</p>
 <blockquote>
 <p><strong>_updateCamera</strong>(<code>position</code>: <code>GeolocationPosition</code>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/control/geolocate_control.ts#L430">src/ui/control/geolocate_control.ts:430</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/control/geolocate_control.ts#L430">src/ui/control/geolocate_control.ts:430</a></p>
 <p>Update the camera location to center on the current position</p>
 <h4 id="parameters_3">Parameters</h4>
 <table>
@@ -9380,7 +9380,7 @@ as disabled.</p>
 <blockquote>
 <p><strong>_updateMarker</strong>(<code>position</code>?: <code>GeolocationPosition</code>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/control/geolocate_control.ts#L447">src/ui/control/geolocate_control.ts:447</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/control/geolocate_control.ts#L447">src/ui/control/geolocate_control.ts:447</a></p>
 <p>Update the user location dot Marker to the current position</p>
 <h4 id="parameters_4">Parameters</h4>
 <table>
@@ -9406,7 +9406,7 @@ as disabled.</p>
 <blockquote>
 <p><strong>listens</strong>(<code>type</code>: <code>string</code>): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/util/evented.ts#L165">src/util/evented.ts:165</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/util/evented.ts#L165">src/util/evented.ts:165</a></p>
 <p>Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.</p>
 <h4 id="parameters_5">Parameters</h4>
 <table>
@@ -9433,9 +9433,9 @@ as disabled.</p>
 <hr />
 <h3 id="off">off()</h3>
 <blockquote>
-<p><strong>off</strong>(<code>type</code>: <code>string</code>, <code>listener</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <a href="./"><code>GeolocateControl</code></a></p>
+<p><strong>off</strong>(<code>type</code>: <code>string</code>, <code>listener</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <code>GeolocateControl</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/util/evented.ts#L90">src/util/evented.ts:90</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/util/evented.ts#L90">src/util/evented.ts:90</a></p>
 <p>Removes a previously registered event listener.</p>
 <h4 id="parameters_6">Parameters</h4>
 <table>
@@ -9460,7 +9460,7 @@ as disabled.</p>
 </tbody>
 </table>
 <h4 id="returns_6">Returns</h4>
-<p><a href="./"><code>GeolocateControl</code></a></p>
+<p><code>GeolocateControl</code></p>
 <h4 id="inherited-from_1">Inherited from</h4>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#off"><code>off</code></a></p>
 <hr />
@@ -9468,7 +9468,7 @@ as disabled.</p>
 <blockquote>
 <p><strong>on</strong>(<code>type</code>: <code>string</code>, <code>listener</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <a href="../../interfaces/Subscription/"><code>Subscription</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/util/evented.ts#L73">src/util/evented.ts:73</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/util/evented.ts#L73">src/util/evented.ts:73</a></p>
 <p>Adds a listener to a specified event type.</p>
 <h4 id="parameters_7">Parameters</h4>
 <table>
@@ -9501,7 +9501,7 @@ as disabled.</p>
 <blockquote>
 <p><strong>onAdd</strong>(<code>map</code>: <a href="../Map/"><code>Map</code></a>): <code>HTMLElement</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/control/geolocate_control.ts#L281">src/ui/control/geolocate_control.ts:281</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/control/geolocate_control.ts#L281">src/ui/control/geolocate_control.ts:281</a></p>
 <p>Register a control on the map and give it a chance to register event listeners
 and resources. This method is called by <a href="../Map/#addcontrol">Map#addControl</a>
 internally.</p>
@@ -9533,9 +9533,9 @@ as necessary.</p>
 <hr />
 <h3 id="once">once()</h3>
 <blockquote>
-<p><strong>once</strong>(<code>type</code>: <code>string</code>, <code>listener</code>?: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <code>Promise</code>&lt;<code>any</code>&gt; | <a href="./"><code>GeolocateControl</code></a></p>
+<p><strong>once</strong>(<code>type</code>: <code>string</code>, <code>listener</code>?: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <code>Promise</code>&lt;<code>any</code>&gt; | <code>GeolocateControl</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/util/evented.ts#L106">src/util/evented.ts:106</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/util/evented.ts#L106">src/util/evented.ts:106</a></p>
 <p>Adds a listener that will be called only once to a specified event type.</p>
 <p>The listener will be called first time the event fires after the listener is registered.</p>
 <h4 id="parameters_9">Parameters</h4>
@@ -9561,7 +9561,7 @@ as necessary.</p>
 </tbody>
 </table>
 <h4 id="returns_9">Returns</h4>
-<p><code>Promise</code>&lt;<code>any</code>&gt; | <a href="./"><code>GeolocateControl</code></a></p>
+<p><code>Promise</code>&lt;<code>any</code>&gt; | <code>GeolocateControl</code></p>
 <p><code>this</code> or a promise if a listener is not provided</p>
 <h4 id="inherited-from_3">Inherited from</h4>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#once"><code>once</code></a></p>
@@ -9570,7 +9570,7 @@ as necessary.</p>
 <blockquote>
 <p><strong>onRemove</strong>(): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/control/geolocate_control.ts#L290">src/ui/control/geolocate_control.ts:290</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/control/geolocate_control.ts#L290">src/ui/control/geolocate_control.ts:290</a></p>
 <p>Unregister a control on the map and give it a chance to detach event listeners
 and resources. This method is called by <a href="../Map/#removecontrol">Map#removeControl</a>
 internally.</p>
@@ -9581,9 +9581,9 @@ internally.</p>
 <hr />
 <h3 id="seteventedparent">setEventedParent()</h3>
 <blockquote>
-<p><strong>setEventedParent</strong>(<code>parent</code>?: <a href="../Evented/"><code>Evented</code></a>, <code>data</code>?: <code>any</code>): <a href="./"><code>GeolocateControl</code></a></p>
+<p><strong>setEventedParent</strong>(<code>parent</code>?: <a href="../Evented/"><code>Evented</code></a>, <code>data</code>?: <code>any</code>): <code>GeolocateControl</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/util/evented.ts#L176">src/util/evented.ts:176</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/util/evented.ts#L176">src/util/evented.ts:176</a></p>
 <p>Bubble all events fired by this instance of Evented to this parent instance of Evented.</p>
 <h4 id="parameters_10">Parameters</h4>
 <table>
@@ -9605,7 +9605,7 @@ internally.</p>
 </tbody>
 </table>
 <h4 id="returns_11">Returns</h4>
-<p><a href="./"><code>GeolocateControl</code></a></p>
+<p><code>GeolocateControl</code></p>
 <h4 id="inherited-from_4">Inherited from</h4>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#seteventedparent"><code>setEventedParent</code></a></p>
 <hr />
@@ -9613,7 +9613,7 @@ internally.</p>
 <blockquote>
 <p><strong>trigger</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/control/geolocate_control.ts#L620">src/ui/control/geolocate_control.ts:620</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/control/geolocate_control.ts#L620">src/ui/control/geolocate_control.ts:620</a></p>
 <p>Programmatically request and move the map to the user's location.</p>
 <h4 id="returns_12">Returns</h4>
 <p><code>boolean</code></p>

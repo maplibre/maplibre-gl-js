@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.8608ea7d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.4af4bdda.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -4504,13 +4504,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#type-declaration" class="md-nav__link">
+  <a href="#example" class="md-nav__link">
     <span class="md-ellipsis">
-      Type declaration
+      Example
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Type declaration">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      Properties
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Properties">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -4542,15 +4551,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    <span class="md-ellipsis">
-      Example
-    </span>
-  </a>
   
 </li>
       
@@ -8749,13 +8749,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#type-declaration" class="md-nav__link">
+  <a href="#example" class="md-nav__link">
     <span class="md-ellipsis">
-      Type declaration
+      Example
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Type declaration">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      Properties
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Properties">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -8790,15 +8799,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    <span class="md-ellipsis">
-      Example
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -8820,9 +8820,9 @@
 
 <h1 id="mapdataevent">MapDataEvent</h1>
 <blockquote>
-<p><strong>MapDataEvent</strong>: <code>object</code></p>
+<p><strong>MapDataEvent</strong> = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/ui/events.ts#L720">src/ui/events.ts:720</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L721">src/ui/events.ts:721</a></p>
 <p>A <code>MapDataEvent</code> object is emitted with the <code>data</code>
 and <code>dataloading</code> events. Possible values for
 <code>dataType</code>s are:</p>
@@ -8837,22 +8837,6 @@ and <code>dataloading</code> events. Possible values for
 <li><code>'visibility'</code>: send when the source becomes used when at least one of its layers becomes visible in style sense (inside the layer's zoom range and with layout.visibility set to 'visible')</li>
 <li><code>'idle'</code>: indicates that no new source data has been fetched (but the source has done loading)</li>
 </ul>
-<h2 id="type-declaration">Type declaration</h2>
-<h3 id="datatype">dataType</h3>
-<blockquote>
-<p><strong>dataType</strong>: <code>string</code></p>
-</blockquote>
-<p>The type of data that has changed. One of <code>'source'</code>, <code>'style'</code>.</p>
-<h3 id="sourcedatatype">sourceDataType</h3>
-<blockquote>
-<p><strong>sourceDataType</strong>: <a href="../MapSourceDataType/"><code>MapSourceDataType</code></a></p>
-</blockquote>
-<p>Included if the event has a <code>dataType</code> of <code>source</code> and the event signals that internal data has been received or changed. Possible values are <code>metadata</code>, <code>content</code>, <code>visibility</code> and <code>idle</code>.</p>
-<h3 id="type">type</h3>
-<blockquote>
-<p><strong>type</strong>: <code>string</code></p>
-</blockquote>
-<p>The event type.</p>
 <h2 id="example">Example</h2>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1">// The sourcedata event is an example of MapDataEvent.</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1">// Set up an event listener on the map.</span>
@@ -8862,6 +8846,27 @@ and <code>dataloading</code> events. Possible values for
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">   </span><span class="p">}</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">});</span>
 </span></code></pre></div>
+<h2 id="properties">Properties</h2>
+<h3 id="datatype">dataType</h3>
+<blockquote>
+<p><strong>dataType</strong>: <code>string</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L729">src/ui/events.ts:729</a></p>
+<p>The type of data that has changed. One of <code>'source'</code>, <code>'style'</code>.</p>
+<hr />
+<h3 id="sourcedatatype">sourceDataType</h3>
+<blockquote>
+<p><strong>sourceDataType</strong>: <a href="../MapSourceDataType/"><code>MapSourceDataType</code></a></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L733">src/ui/events.ts:733</a></p>
+<p>Included if the event has a <code>dataType</code> of <code>source</code> and the event signals that internal data has been received or changed. Possible values are <code>metadata</code>, <code>content</code>, <code>visibility</code> and <code>idle</code>.</p>
+<hr />
+<h3 id="type">type</h3>
+<blockquote>
+<p><strong>type</strong>: <code>string</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/ui/events.ts#L725">src/ui/events.ts:725</a></p>
+<p>The event type.</p>
 
 
 

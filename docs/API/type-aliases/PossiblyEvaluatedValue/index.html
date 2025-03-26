@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.8608ea7d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.4af4bdda.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -8736,9 +8736,9 @@
 
 <h1 id="possiblyevaluatedvaluet">PossiblyEvaluatedValue&lt;T&gt;</h1>
 <blockquote>
-<p><strong>PossiblyEvaluatedValue</strong>&lt;<code>T</code>&gt;: { <code>kind</code>: <code>"constant"</code>; <code>value</code>: <code>T</code>; } | <code>SourceExpression</code> | <code>CompositeExpression</code></p>
+<p><strong>PossiblyEvaluatedValue</strong>&lt;<code>T</code>&gt; = { <code>kind</code>: <code>"constant"</code>; <code>value</code>: <code>T</code>; } | <code>SourceExpression</code> | <code>CompositeExpression</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/c238479fb242cf8b1ec8da44be838f871859a264/src/style/properties.ts#L377">src/style/properties.ts:377</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/a642ef46331c65afa32a0ac10001e92440307eca/src/style/properties.ts#L377">src/style/properties.ts:377</a></p>
 <p>"Possibly evaluated value" is an intermediate stage in the evaluation chain for both paint and layout property
 values. The purpose of this stage is to optimize away unnecessary recalculations for data-driven properties. Code
 which uses data-driven property values must assume that the value is dependent on feature data, and request that it
