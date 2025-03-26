@@ -5,11 +5,12 @@ import {polygonIntersectsBufferedPoint} from '../../util/intersection_tests';
 import {getMaximumPaintValue, translateDistance, translate} from '../query_utils';
 import properties, {type CircleLayoutPropsPossiblyEvaluated, type CirclePaintPropsPossiblyEvaluated} from './circle_style_layer_properties.g';
 import {type Transitionable, type Transitioning, type Layout, type PossiblyEvaluated} from '../properties';
-import {type mat4, vec4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Bucket, BucketParameters} from '../../data/bucket';
 import type {CircleLayoutProps, CirclePaintProps} from './circle_style_layer_properties.g';
+import type {IReadonlyTransform} from '../../geo/transform_interface';
+import type {UnwrappedTileID} from '../../source/tile_id';
 
 export const isCircleStyleLayer = (layer: StyleLayer): layer is CircleStyleLayer => layer.type === 'circle';
 
@@ -46,7 +47,8 @@ export class CircleStyleLayer extends StyleLayer {
         geometry,
         transform,
         pixelsToTileUnits,
-        pixelPosMatrix}: QueryIntersectsFeatureParams
+        unwrappedTileID,
+        getElevation}: QueryIntersectsFeatureParams
     ): boolean {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('circle-translate'),
@@ -61,20 +63,21 @@ export class CircleStyleLayer extends StyleLayer {
         // A circle with fixed scaling relative to the viewport gets larger in tile space as it moves into the distance
         // A circle with fixed scaling relative to the map gets smaller in viewport space as it moves into the distance
         const alignWithMap = this.paint.get('circle-pitch-alignment') === 'map';
-        const transformedPolygon = alignWithMap ? translatedPolygon : projectQueryGeometry(translatedPolygon, pixelPosMatrix);
+        const transformedPolygon = alignWithMap ? translatedPolygon : projectQueryGeometry(translatedPolygon, transform, unwrappedTileID, getElevation);
         const transformedSize = alignWithMap ? size * pixelsToTileUnits : size;
 
         for (const ring of geometry) {
             for (const point of ring) {
 
-                const transformedPoint = alignWithMap ? point : projectPoint(point, pixelPosMatrix);
+                const transformedPoint = alignWithMap ? point : projectPoint(point, transform, unwrappedTileID, getElevation);
 
                 let adjustedSize = transformedSize;
-                const projectedCenter = vec4.transformMat4([] as any, [point.x, point.y, 0, 1], pixelPosMatrix);
+                const w = transform.projectTileCoordinates(point.x, point.y, unwrappedTileID, getElevation).signedDistanceFromCamera;
+
                 if (this.paint.get('circle-pitch-scale') === 'viewport' && this.paint.get('circle-pitch-alignment') === 'map') {
-                    adjustedSize *= projectedCenter[3] / transform.cameraToCenterDistance;
+                    adjustedSize *= w / transform.cameraToCenterDistance;
                 } else if (this.paint.get('circle-pitch-scale') === 'map' && this.paint.get('circle-pitch-alignment') === 'viewport') {
-                    adjustedSize *= transform.cameraToCenterDistance / projectedCenter[3];
+                    adjustedSize *= transform.cameraToCenterDistance / w;
                 }
 
                 if (polygonIntersectsBufferedPoint(transformedPolygon, transformedPoint, adjustedSize)) return true;
@@ -85,13 +88,19 @@ export class CircleStyleLayer extends StyleLayer {
     }
 }
 
-function projectPoint(p: Point, pixelPosMatrix: mat4) {
-    const point = vec4.transformMat4([] as any, [p.x, p.y, 0, 1], pixelPosMatrix);
-    return new Point(point[0] / point[3], point[1] / point[3]);
+function projectPoint(tilePoint: Point, transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: undefined | ((x: number, y: number) => number)): Point {
+    // Convert `tilePoint` from tile coordinates to clip coordinates.
+    const clipPoint = transform.projectTileCoordinates(tilePoint.x, tilePoint.y, unwrappedTileID, getElevation).point;
+    // Convert `clipPoint` from clip coordinates into pixel/screen coordinates.
+    const pixelPoint = new Point(
+        (clipPoint.x * 0.5 + 0.5) * transform.width,
+        (-clipPoint.y * 0.5 + 0.5) * transform.height
+    );
+    return pixelPoint;
 }
 
-function projectQueryGeometry(queryGeometry: Array<Point>, pixelPosMatrix: mat4) {
+function projectQueryGeometry(queryGeometry: Array<Point>, transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: undefined | ((x: number, y: number) => number)) {
     return queryGeometry.map((p) => {
-        return projectPoint(p, pixelPosMatrix);
+        return projectPoint(p, transform, unwrappedTileID, getElevation);
     });
 }
