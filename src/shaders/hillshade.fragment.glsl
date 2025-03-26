@@ -26,6 +26,15 @@ void main() {
     float sin_alt = sin(alt);
 
     float cang = (sin_alt - (deriv.y*cos_az*cos_alt - deriv.x*sin_az*cos_alt)) / sqrt(1.0 + dot(deriv, deriv));
+#ifdef COMBINED
+    cang = mix(0.5, cang, atan(length(deriv)) * 2.0/PI);
+#endif
+#ifdef IGOR
+    float slope_stength = atan(length(deriv)) * 2.0/PI;
+    float aspect = deriv.x != 0.0 ? atan(deriv.y, -deriv.x) : PI / 2.0 * (deriv.y > 0.0 ? 1.0 : -1.0);
+    float aspect_strength = abs(mod((aspect + azimuth) / PI + 0.5, 2.0) - 1.0);
+    cang = 1.0 - slope_stength * aspect_strength;
+#endif
     float shade = clamp(cang, 0.0, 1.0);
     fragColor = mix(u_shadow, u_highlight, shade)*abs(2.0*shade - 1.0);
     
