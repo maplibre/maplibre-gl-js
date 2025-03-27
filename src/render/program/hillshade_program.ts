@@ -26,6 +26,7 @@ export type HillshadeUniformsType = {
     'u_shadow': UniformColor;
     'u_highlight': UniformColor;
     'u_accent': UniformColor;
+    'u_method': Uniform1i;
 };
 
 export type HillshadePrepareUniformsType = {
@@ -42,7 +43,8 @@ const hillshadeUniforms = (context: Context, locations: UniformLocations): Hills
     'u_light': new Uniform2f(context, locations.u_light),
     'u_shadow': new UniformColor(context, locations.u_shadow),
     'u_highlight': new UniformColor(context, locations.u_highlight),
-    'u_accent': new UniformColor(context, locations.u_accent)
+    'u_accent': new UniformColor(context, locations.u_accent),
+    'u_method': new Uniform1i(context, locations.u_method)
 });
 
 const hillshadePrepareUniforms = (context: Context, locations: UniformLocations): HillshadePrepareUniformsType => ({
@@ -61,6 +63,7 @@ const hillshadeUniformValues = (
     const shadow = layer.paint.get('hillshade-shadow-color');
     const highlight = layer.paint.get('hillshade-highlight-color');
     const accent = layer.paint.get('hillshade-accent-color');
+    const method = layer.paint.get('hillshade-method');
 
     let azimuthal = layer.paint.get('hillshade-illumination-direction') * (Math.PI / 180);
     // modify azimuthal angle by map rotation if light is anchored at the viewport
@@ -73,7 +76,10 @@ const hillshadeUniformValues = (
         'u_light': [layer.paint.get('hillshade-exaggeration'), azimuthal],
         'u_shadow': shadow,
         'u_highlight': highlight,
-        'u_accent': accent
+        'u_accent': accent,
+        'u_method': method == 'combined' ? 1 :
+            method == 'igor' ? 2 :
+            method == 'multidirectional' ? 3 : 0
     };
 };
 

@@ -8,6 +8,10 @@ import type {IReadonlyTransform} from '../transform_interface';
 import type {Terrain} from '../../render/terrain';
 import type {Frustum} from '../../util/primitives/frustum';
 
+declare const window: any;
+window.TILE_ZOOM_RATE = 1.0;
+window.TILE_ZOOM_DEADBAND = 0.0;
+
 type CoveringTilesResult = {
     tileID: OverscaledTileID;
     distanceSq: number;
@@ -108,14 +112,14 @@ function calculateTileZoom(requestedCenterZoom: number,
     * At 1, tiles are loaded with approximately constant screen area.
     * At 2, tiles are loaded with approximately constant screen Y resolution.
     */
-    const pitchTileLoadingBehavior = 1.0;
+    const pitchTileLoadingBehavior = window.TILE_ZOOM_RATE;
     /**
     * Controls how tiles are loaded at high pitch angles. Controls how different the distance to a tile must be (compared with the center point)
     * before a new zoom level is requested. For example, if tileZoomDeadband = 1 and the center zoom is 14, tiles distant enough to be loaded at
     * z13 will be loaded at z14, and tiles distant enough to be loaded at z14 will be loaded at z15. A higher number causes more tiles to be loaded
     * at the center zoom level. This also results in more tiles being loaded overall.
     */
-    const tileZoomDeadband = 0.0;
+    const tileZoomDeadband = window.TILE_ZOOM_DEADBAND;
     let thisTileDesiredZ = requestedCenterZoom;
     const thisTilePitch = Math.atan(distanceToTile2D / distanceToTileZ);
     const distanceToTile3D = Math.hypot(distanceToTile2D, distanceToTileZ);
