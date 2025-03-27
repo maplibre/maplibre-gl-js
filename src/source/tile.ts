@@ -288,7 +288,8 @@ export class Tile {
         params: Pick<QueryRenderedFeaturesOptionsStrict, 'filter' | 'layers' | 'availableImages'> | undefined,
         transform: IReadonlyTransform,
         maxPitchScaleFactor: number,
-        pixelPosMatrix: mat4
+        pixelPosMatrix: mat4,
+        getElevation: undefined | ((x: number, y: number) => number)
     ): QueryResults {
         if (!this.latestFeatureIndex || !this.latestFeatureIndex.rawTileData)
             return {};
@@ -301,7 +302,8 @@ export class Tile {
             pixelPosMatrix,
             transform,
             params,
-            queryPadding: this.queryPadding * maxPitchScaleFactor
+            queryPadding: this.queryPadding * maxPitchScaleFactor,
+            getElevation
         }, layers, serializedLayers, sourceFeatureState);
     }
 

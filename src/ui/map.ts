@@ -2086,7 +2086,12 @@ export class Map extends Camera {
                             this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
                         }
                     }
-                    this.terrain.sourceCache.freeRtt(e.tile.tileID);
+
+                    if (e.source?.type === 'image') {
+                        this.terrain.sourceCache.freeRtt();
+                    } else {
+                        this.terrain.sourceCache.freeRtt(e.tile.tileID);
+                    }
                 }
             };
             this.style.on('data', this._terrainDataCallback);
@@ -2847,8 +2852,8 @@ export class Map extends Camera {
      * This method can only be used with sources that have a `feature.id` attribute. The `feature.id` attribute can be defined in three ways:
      *
      * - For vector or GeoJSON sources, including an `id` attribute in the original data file.
-     * - For vector or GeoJSON sources, using the [`promoteId`](https://maplibre.org/maplibre-style-spec/sources/#vector-promoteId) option at the time the source is defined.
-     * - For GeoJSON sources, using the [`generateId`](https://maplibre.org/maplibre-style-spec/sources/#geojson-generateId) option to auto-assign an `id` based on the feature's index in the source data. If you change feature data using `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
+     * - For vector or GeoJSON sources, using the [`promoteId`](https://maplibre.org/maplibre-style-spec/sources/#promoteid) option at the time the source is defined.
+     * - For GeoJSON sources, using the [`generateId`](https://maplibre.org/maplibre-style-spec/sources/#generateid) option to auto-assign an `id` based on the feature's index in the source data. If you change feature data using `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
      *
      * _Note: You can use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state) to access the values in a feature's state object for the purposes of styling._
      *
@@ -3379,15 +3384,21 @@ export class Map extends Camera {
     triggerRepaint() {
         if (this.style && !this._frameRequest) {
             this._frameRequest = new AbortController();
-            browser.frameAsync(this._frameRequest).then((paintStartTimeStamp: number) => {
-                PerformanceUtils.frame(paintStartTimeStamp);
-                this._frameRequest = null;
-                this._render(paintStartTimeStamp);
-            }).catch((error: Error) => {
-                if (!isAbortError(error) && !isFramebufferNotCompleteError(error)) {
-                    throw error;
-                }
-            });
+            browser.frame(
+                this._frameRequest,
+                (paintStartTimeStamp) => {
+                    PerformanceUtils.frame(paintStartTimeStamp);
+                    this._frameRequest = null;
+                    try {
+                        this._render(paintStartTimeStamp);
+                    } catch(error) {
+                        if (!isAbortError(error) && !isFramebufferNotCompleteError(error)) {
+                            throw error;
+                        }
+                    }
+                },
+                () => {}
+            );
         }
     }
 

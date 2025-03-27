@@ -1,6 +1,6 @@
 import {extend} from '../util/util';
 import {Event, Evented} from '../util/evented';
-import {type MapMouseEvent} from '../ui/events';
+import {type MapMouseEvent} from './events';
 import {DOM} from '../util/dom';
 import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
@@ -18,7 +18,8 @@ const defaultOptions = {
     focusAfterOpen: true,
     className: '',
     maxWidth: '240px',
-    subpixelPositioning: false
+    subpixelPositioning: false,
+    locationOccludedOpacity: undefined,
 };
 
 /**
@@ -88,6 +89,12 @@ export type PopupOptions = {
      * @defaultValue false
      */
     subpixelPositioning?: boolean;
+    /**
+     * Optional opacity when the location is behind the globe.
+     * Note that if a number is provided, it will be converted to a string.
+     * @defaultValue undefined
+     */
+    locationOccludedOpacity?: number | string;
 };
 
 const focusQuerySelector = [
@@ -227,6 +234,20 @@ export class Popup extends Evented {
     }
 
     /**
+     * Add opacity to popup if in globe projection and location is behind view
+     */
+    _updateOpacity = () => {
+        if (this.options.locationOccludedOpacity === undefined) {
+            return;
+        }
+        if (this._map.transform.isLocationOccluded(this.getLngLat())) {
+            this._container.style.opacity = `${this.options.locationOccludedOpacity}`;
+        } else {
+            this._container.style.opacity = undefined;
+        }
+    };
+
+    /**
      * @returns `true` if the popup is open, `false` if it is closed.
      */
     isOpen() {
@@ -250,6 +271,10 @@ export class Popup extends Evented {
         if (this._container) {
             DOM.remove(this._container);
             delete this._container;
+        }
+
+        if(this._closeButton){
+            this._closeButton.removeEventListener('click', this._onClose);
         }
 
         if (this._map) {
@@ -646,6 +671,8 @@ export class Popup extends Evented {
 
         DOM.setTransform(this._container, `${anchorTranslate[anchor]} translate(${offsetedPos.x}px,${offsetedPos.y}px)`);
         applyAnchorClass(this._container, anchor, 'popup');
+
+        this._updateOpacity();
     };
 
     _focusFirstElement() {

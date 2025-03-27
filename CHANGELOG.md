@@ -7,24 +7,76 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- _...Add new stuff here..._
 
-- Skip control button css hover effects on touch devices (https://github.com/maplibre/maplibre-gl-js/pull/5285)
+## 5.3.0
+
+### ✨ Features and improvements
+
+- Added `getBounds` to GeoJSON source to allow getting the boundaries of the data in it ([#5575](https://github.com/maplibre/maplibre-gl-js/pull/5575))
+- Add a check for MouseEvent, to avoid errors when bot were crawling on website using Event instance instead of MouseEvent instance for types like mouseover, mouseout etc.. ([#5466](https://github.com/maplibre/maplibre-gl-js/pull/5466)).
+
+### 🐞 Bug fixes
+
+- Fix intersection detection between MultiPolygons and Points ([#5590](https://github.com/maplibre/maplibre-gl-js/pull/5590))
+- Fix issue with image rendered partially on terrain tiles ([#1559](https://github.com/maplibre/maplibre-gl-js/issues/1559)).
+- Fix circle layer hitbox in Globe projection mode ([#5599](https://github.com/maplibre/maplibre-gl-js/pull/5599))
+- Fix excessive attribution control rerendering ([#5673](https://github.com/maplibre/maplibre-gl-js/pull/5673))
+
+## 5.2.0
+
+### ✨ Features and improvements
+
+- Allow opacity to be set when location becomes invisible in the globe projection. ([#5532](https://github.com/maplibre/maplibre-gl-js/pull/5532))
+
+### 🐞 Bug fixes
+
+- Fix AbortController signal listener memory leak in frameAsync and sendAsync. ([#5561](https://github.com/maplibre/maplibre-gl-js/pull/5561))
+- Remove closeButton event listener on popup.remove(). ([#5564](https://github.com/maplibre/maplibre-gl-js/pull/5564))
+- Add missing `GeoJSONFeature` type to library export as it is exposed by `querySourceFeatures` ([#5567](https://github.com/maplibre/maplibre-gl-js/pull/5567))
+
+## 5.1.1
+
+### ✨ Features and improvements
+
+- Avoid setting marker opacity twice. ([#5441](https://github.com/maplibre/maplibre-gl-js/pull/5441))
+
+### 🐞 Bug fixes
+- Fix how padding is applied when using flyTo() with Globe ([#5406](https://github.com/maplibre/maplibre-gl-js/pull/5406))
+- Fix URL hash validation to support bearing range -180 to 180 ([#5461](https://github.com/maplibre/maplibre-gl-js/issues/5461))
+- Fix variable zoom tile calculation when padding is set ([#5486](https://github.com/maplibre/maplibre-gl-js/issues/5486))
+- Fix rendering Japanese symbols which are accidentally ignored. ([#5421](https://github.com/maplibre/maplibre-gl-js/pull/5421)
+
+## 5.1.0
+
+### ✨ Features and improvements
+
+- Add support for `vertical-align` in `format` expression ([specification](https://maplibre.org/maplibre-style-spec/expressions/#format))([#5043](https://github.com/maplibre/maplibre-gl-js/pull/5043)).
+
+### 🐞 Bug fixes
+
+- Render frame synchronized again in requestAnimationFrame callback ([#4535](https://github.com/maplibre/maplibre-gl-js/pull/4535))
+
+## 5.0.1
+
+### ✨ Features and improvements
+
+- ⚠️ Revert changes made in `geometry-type` ([#5285](https://github.com/maplibre/maplibre-gl-js/pull/5331)). This change was causing issues in a [large number of styles](https://github.com/maplibre/maplibre-style-spec/issues/965) and thus reverted.
+
+### 🐞 Bug fixes
+
+- Skip control button css hover effects on touch devices ([#5285](https://github.com/maplibre/maplibre-gl-js/pull/5285))
 
 ## 5.0.0
 
 ### ✨ Features and improvements
 
+- ~~⚠️ Changed `geometry-type` to identify "Multi-" features ([#4877](https://github.com/maplibre/maplibre-gl-js/pull/4877)). Use `$type` which has no "Multi-" support or use `in` expression to get the previous behavior.~~
 - ⚠️ `StyleLayer`'s `queryIntersectsFeature` method parameters were moved to `QueryIntersectsFeatureParams`. ([#5276](https://github.com/maplibre/maplibre-gl-js/pull/5276)) Wrap the method parameters with `{}` to solve this
 - ⚠️ Support setting WebGL context options on map creation ([#5196](https://github.com/maplibre/maplibre-gl-js/pull/5196)). Previously supported WebGL context options like `antialias`, `preserveDrawingBuffer` and `failIfMajorPerformanceCaveat` must now be defined inside the `canvasContextAttributes` object on `MapOptions`.
 - ⚠️ Change the return type of `on` method to return a `Subscription` to allow for easy unsubscribe ([#5080](https://github.com/maplibre/maplibre-gl-js/pull/5080)). `map.on('x').on('y')` => `map.on('x'); map.on('y');`.
 - ⚠️ Change drag rotate behavior to be around the center of the screen ([#5074](https://github.com/maplibre/maplibre-gl-js/pull/5074))
 - ⚠️ Return actual altitude from queryTerrainElevation + Pass non-translated matrices to custom layer on mercator map ([#3854](https://github.com/maplibre/maplibre-gl-js/pull/3854))
-- ⚠️ Changed `geometry-type` to identify "Multi-" features ([#4877](https://github.com/maplibre/maplibre-gl-js/pull/4877)). Use `$type` for non "Multi-" support or use `in` expression to get the previous behavior.
-Example:
-```diff
-- "filter": ["==", ["geometry-type"], "Polygon"]
-+ "filter": ["==", "$type", "Polygon"]
-```
 - ⚠️ Remove unminified prod build ([#4906](https://github.com/maplibre/maplibre-gl-js/pull/4906)). You'll need to use a different build.
 - Allows setting the desired WebGL version to use ([#5236](https://github.com/maplibre/maplibre-gl-js/pull/5236)). You can now use `contextType` inside `canvasContextAttributes` to choose which WebGL version to use
 - Dual-Stack WebGL Runtime with WebGL2 to WebGL1 Fallback ([#5198](https://github.com/maplibre/maplibre-gl-js/pull/5198))
