@@ -54,7 +54,9 @@ import type {
     SourceSpecification,
     TerrainSpecification,
     ProjectionSpecification,
-    SkySpecification
+    SkySpecification,
+    SchemaSpecification,
+    StateSpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
 import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson';
@@ -787,7 +789,7 @@ export class Map extends Camera {
      * @param newValue - The new value to validate against the current value.
      * @returns An ErrorEvent if validation fails, otherwise undefined.
      */
-    _validateGlobalStateProperty(key: string, schema: any, newValue: any) {
+    _validateGlobalStateProperty(key: string, schema: SchemaSpecification, newValue: any) {
         const errors = validateSchema({
             key,
             value: {
@@ -841,7 +843,7 @@ export class Map extends Camera {
         return this._globalState;
     }
 
-    _setGlobalState(stylesheetState: Record<string, any>) {
+    _setGlobalState(stylesheetState: StateSpecification) {
         for (const propertyName in stylesheetState) {
             const error = this._validateGlobalStateProperty(propertyName, this.style.stylesheet.state[propertyName], stylesheetState[propertyName].default);
             if (error) {
