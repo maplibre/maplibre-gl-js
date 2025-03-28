@@ -421,7 +421,6 @@ describe('Style#loadJSON', () => {
     test('sets state if defined', async () => {
         const map = getStubMap();
         const style = new Style(map);
-        map._setGlobalState = vi.fn();
         style.loadJSON(createStyleJSON({
             state: {
                 foo: 'bar'

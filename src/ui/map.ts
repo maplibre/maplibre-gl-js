@@ -47,7 +47,6 @@ import type {KeyboardHandler} from './handler/keyboard';
 import type {DoubleClickZoomHandler} from './handler/shim/dblclick_zoom';
 import type {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch';
 import type {TaskID} from '../util/task_queue';
-import {createExpression} from '@maplibre/maplibre-gl-style-spec';
 import type {
     FilterSpecification,
     StyleSpecification,
@@ -67,6 +66,7 @@ import {type ICameraHelper} from '../geo/projection/camera_helper';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 import {isAbortError} from '../util/abort_error';
 import {isFramebufferNotCompleteError} from '../util/framebuffer_error';
+import {validateSchema} from '../style/validate_style';
 
 const version = packageJSON.version;
 
@@ -521,7 +521,7 @@ export class Map extends Camera {
     _clickTolerance: number;
     _overridePixelRatio: number | null | undefined;
     _maxCanvasSize: [number, number];
-    _globalState: Record<string, any>;
+    _globalState: Record<string, any> = {};
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
 
     /**
@@ -787,31 +787,17 @@ export class Map extends Camera {
      * @param newValue - The new value to validate against the current value.
      * @returns An ErrorEvent if validation fails, otherwise undefined.
      */
-    _validateGlobalStateProperty(key: string, currentValue: any, newValue: any) {
-        const parsedNewValue = createExpression(newValue);
+    _validateGlobalStateProperty(key: string, schema: any, newValue: any) {
+        const errors = validateSchema({
+            key,
+            value: {
+                ...schema,
+                default: newValue,
+            },
+        });
 
-        if (parsedNewValue.result === 'error') {
-            return new ErrorEvent(new Error(`State property "${key}" cannot be parsed: ${parsedNewValue.value[0].message}`));
-        }
-
-        if (currentValue) {
-            const parsedCurrentValue = createExpression(currentValue);
-            // Current value should be already validated, this is for a case when style validation is disabled.
-            if (!parsedCurrentValue || parsedCurrentValue.result === 'error') {
-                return new ErrorEvent(new Error(`State property "${key}" cannot be parsed: ${parsedCurrentValue.value[0].message}`));
-            }
-
-            const newValueType = parsedNewValue.value.expression.type.kind;
-            if (newValueType === 'value') {
-                // If the new value type is "value", we can't compare it to the current value type.
-                //  "value" represents a type which type cannot be determined at parse time.
-                return;
-            }
-
-            const currentValueType = parsedCurrentValue.value.expression.type.kind;
-            if (currentValueType !== newValueType) {
-                return new ErrorEvent(new Error(`State property "${key}" type "${newValueType}" does not match expected type "${currentValueType}".`));
-            }
+        if (errors.length > 0) {
+            return new ErrorEvent(new Error(`State property "${key}" cannot be set: ${errors[0].message}`));
         }
     }
  
@@ -829,7 +815,7 @@ export class Map extends Camera {
             return;
         }
 
-        const error = this._validateGlobalStateProperty(propertyName, this._globalState[propertyName], value);
+        const error = this._validateGlobalStateProperty(propertyName, this.style.stylesheet.state[propertyName], value);
         if (error) {
             this.fire(error);
             return;
@@ -855,21 +841,20 @@ export class Map extends Camera {
         return this._globalState;
     }
 
-    /**
-     * Sets the global state with the provided key-value pairs.
-     * Validates each property before setting it.
-     * 
-     * @param globalState - An object containing key-value pairs to set in the global state.
-     */
-    _setGlobalState(globalState: Record<string, any>) {
-        for (const propertyName in globalState) {
-            const error = this._validateGlobalStateProperty(propertyName, this._globalState[propertyName], globalState[propertyName]);
+    _setGlobalState(stylesheetState: Record<string, any>) {
+        for (const propertyName in stylesheetState) {
+            const error = this._validateGlobalStateProperty(propertyName, this.style.stylesheet.state[propertyName], stylesheetState[propertyName].default);
             if (error) {
                 this.fire(error);
                 return;
             }
         }
-        this._globalState = globalState;
+
+        this._globalState = {};
+
+        for (const propertyName in stylesheetState) {
+            this._globalState[propertyName] = stylesheetState[propertyName].default;
+        }
     }
 
     /**

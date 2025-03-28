@@ -34,6 +34,7 @@ export const validateTerrain = validateStyle.terrain;
 export const validateFilter = validateStyle.filter;
 export const validatePaintProperty = validateStyle.paintProperty;
 export const validateLayoutProperty = validateStyle.layoutProperty;
+export const validateSchema = validateStyleMin.schema;
 
 export function emitValidationErrors(
     emitter: Evented,
