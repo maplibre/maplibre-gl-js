@@ -1,0 +1,125 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 1048
+    }
+  },
+  "pitch": 60,
+  "center": [-118.78224, 39.32157],
+  "zoom": 14,
+  "sources": {
+    "geojson": {
+        "type": "geojson",
+        "data": {
+            "type": "LineString",
+            "coordinates": [
+                [
+                  -118.78156097142148,
+                  39.47488496583114
+                ],
+                [
+                  -118.7823961479745,
+                  39.28832054802072
+                ]
+              ]
+        }
+    }
+},
+"sprite": "local://sprites/almccon",
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "layout": {"visibility": "visible"},
+      "paint": {"background-color": "rgba(204, 204, 204, 1)"}
+    },
+    {
+      "id": "streets",
+      "type": "line",
+      "source": "geojson",
+      "layout": {
+        "visibility": "visible",
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-color": "rgba(32, 32, 32, 1)",
+        "line-width": 150
+      }
+    },
+    {
+      "id": "road-lane-dashes-right",
+      "type": "line",
+      "source": "geojson",
+      "layout": {"line-cap": "round", "line-join": "round"},
+      "paint": {
+        "line-color": "hsl(0, 0%, 100%)",
+        "line-dasharray": [4, 12],
+        "line-offset": 7
+      }
+    },
+    {
+      "id": "road-lane-dashes-left",
+      "type": "line",
+      "source": "geojson",
+      "layout": {"line-cap": "round", "line-join": "round"},
+      "paint": {
+        "line-color": "hsl(0, 0%, 100%)",
+        "line-dasharray": [4, 12],
+        "line-offset": -7
+      }
+    },
+    {
+      "id": "road-arrows-center",
+      "type": "symbol",
+      "source": "geojson",
+      "layout": {
+        "icon-allow-overlap": true,
+        "icon-image": "through",
+        "icon-rotate": 90,
+        "icon-rotation-alignment": "map",
+        "icon-pitch-alignment": "map",
+        "icon-size": 1,
+        "symbol-placement": "line",
+        "symbol-spacing": 300
+      },
+      "paint": {"icon-opacity": 0.8}
+    },
+    {
+      "id": "road-arrows-right",
+      "type": "symbol",
+      "source": "geojson",
+      "layout": {
+        "icon-allow-overlap": true,
+        "icon-image": "through",
+        "icon-offset": [50.339999999999996, 0],
+        "icon-rotate": 90,
+        "icon-rotation-alignment": "map",
+        "icon-pitch-alignment": "map",
+        "icon-size": 1,
+        "symbol-placement": "line",
+        "symbol-spacing": 300
+      },
+      "paint": {"icon-opacity": 0.8}
+    },
+    {
+      "id": "road-arrows-left",
+      "type": "symbol",
+      "source": "geojson",
+      "layout": {
+        "icon-allow-overlap": true,
+        "icon-image": "through",
+        "icon-offset": [-53.339999999999996, 0],
+        "icon-rotate": 90,
+        "icon-rotation-alignment": "map",
+        "icon-pitch-alignment": "map",
+        "icon-size": 1,
+        "symbol-placement": "line",
+        "symbol-spacing": 300
+      },
+      "paint": {"icon-opacity": 0.8}
+    }
+  ] 
+}
+

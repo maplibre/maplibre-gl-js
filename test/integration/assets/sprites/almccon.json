@@ -1,0 +1,23 @@
+{
+  "through": {
+    "width": 48,
+    "height": 64,
+    "x": 531,
+    "y": 64,
+    "pixelRatio": 1
+  },
+  "through;right": {
+    "width": 48,
+    "height": 64,
+    "x": 579,
+    "y": 64,
+    "pixelRatio": 1
+  },
+  "through;slight_right": {
+    "width": 48,
+    "height": 64,
+    "x": 627,
+    "y": 64,
+    "pixelRatio": 1
+  }
+}
