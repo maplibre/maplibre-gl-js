@@ -8,6 +8,9 @@ uniform vec4 u_highlight;
 uniform vec4 u_accent;
 uniform int u_method;
 uniform float u_alt;
+uniform vec4 u_shadows[4];
+uniform vec4 u_highlights[4];
+uniform int u_num_multidirectional;
 
 #define PI 3.141592653589793
 
@@ -80,6 +83,27 @@ void basic_hillshade(vec2 deriv)
     fragColor = mix(u_shadow, u_highlight, shade)*abs(2.0*shade - 1.0);
 }
 
+void multidirectional_hillshade(vec2 deriv)
+{
+    float cos_alt = cos(u_alt);
+    float sin_alt = sin(u_alt);
+
+    int N = u_num_multidirectional;
+    fragColor = vec4(0,0,0,0);
+
+    for(int i = 0; i < N; i++)
+    {
+        float azimuth = u_light.y + PI + float(i-1)*PI/float(N);
+
+        float cos_az = cos(azimuth);
+        float sin_az = sin(azimuth);
+        float cang = (sin_alt - (deriv.y*cos_az*cos_alt - deriv.x*sin_az*cos_alt)) / sqrt(1.0 + dot(deriv, deriv));
+
+        float shade = clamp(cang, 0.0, 1.0);
+        fragColor += mix(u_shadows[i], u_highlights[i], shade)*abs(2.0*shade - 1.0)/float(N);
+    }
+}
+
 void combined_hillshade(vec2 deriv)
 {
     float azimuth = u_light.y + PI;
@@ -119,7 +143,7 @@ void main() {
     }
     else if(u_method == MULTIDIRECTIONAL)
     {
-        basic_hillshade(deriv);
+        multidirectional_hillshade(deriv);
     }
     else if(u_method == BASIC)
     {

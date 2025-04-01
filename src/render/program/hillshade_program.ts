@@ -5,6 +5,7 @@ import {
     Uniform1f,
     Uniform2f,
     UniformColor,
+    UniformColorArray,
     UniformMatrix4f,
     Uniform4f
 } from '../uniform_binding';
@@ -19,6 +20,7 @@ import type {HillshadeStyleLayer} from '../../style/style_layer/hillshade_style_
 import type {DEMData} from '../../data/dem_data';
 import type {OverscaledTileID} from '../../source/tile_id';
 import { degreesToRadians } from '../../util/util';
+import { Color } from '@maplibre/maplibre-gl-style-spec';
 
 export type HillshadeUniformsType = {
     'u_image': Uniform1i;
@@ -29,6 +31,9 @@ export type HillshadeUniformsType = {
     'u_highlight': UniformColor;
     'u_accent': UniformColor;
     'u_method': Uniform1i;
+    'u_shadows': UniformColorArray;
+    'u_highlights': UniformColorArray;
+    'u_num_multidirectional': Uniform1i;
 };
 
 export type HillshadePrepareUniformsType = {
@@ -47,7 +52,10 @@ const hillshadeUniforms = (context: Context, locations: UniformLocations): Hills
     'u_shadow': new UniformColor(context, locations.u_shadow),
     'u_highlight': new UniformColor(context, locations.u_highlight),
     'u_accent': new UniformColor(context, locations.u_accent),
-    'u_method': new Uniform1i(context, locations.u_method)
+    'u_method': new Uniform1i(context, locations.u_method),
+    'u_shadows': new UniformColorArray(context, locations.u_shadows),
+    'u_highlights': new UniformColorArray(context, locations.u_highlights),
+    'u_num_multidirectional':new Uniform1i(context, locations.u_num_multidirectional)
 });
 
 const hillshadePrepareUniforms = (context: Context, locations: UniformLocations): HillshadePrepareUniformsType => ({
@@ -84,8 +92,11 @@ const hillshadeUniformValues = (
         'u_accent': accent,
         'u_method': method == 'combined' ? 1 :
             method == 'igor' ? 2 :
-            method == 'multidirectional' ? 2 :
-            method == 'basic' ? 4 : 0
+            method == 'multidirectional' ? 3 :
+            method == 'basic' ? 4 : 0,
+        'u_highlights': [new Color(1, 0.475, 0.302), new Color(1,1,0.6), new Color(0.475, 1, 0.3019), new Color(0,1,0.502)],
+        'u_shadows': [new Color(0, 0.525, 0.698), new Color(0,0,0.4), new Color(0.525, 0, 0.698), new Color(1,0,0.498)],
+        'u_num_multidirectional': 4
     };
 };
 
