@@ -7,6 +7,7 @@ uniform vec4 u_shadow;
 uniform vec4 u_highlight;
 uniform vec4 u_accent;
 uniform int u_method;
+uniform float u_alt;
 
 #define PI 3.141592653589793
 
@@ -14,6 +15,7 @@ uniform int u_method;
 #define COMBINED 1
 #define IGOR 2
 #define MULTIDIRECTIONAL 3
+#define BASIC 4
 
 float get_aspect(vec2 deriv)
 {
@@ -67,11 +69,10 @@ void standard_hillshade(vec2 deriv)
 void basic_hillshade(vec2 deriv)
 {
     float azimuth = u_light.y + PI;
-    float alt = 25.0*PI/180.0;
     float cos_az = cos(azimuth);
     float sin_az = sin(azimuth);
-    float cos_alt = cos(alt);
-    float sin_alt = sin(alt);
+    float cos_alt = cos(u_alt);
+    float sin_alt = sin(u_alt);
 
     float cang = (sin_alt - (deriv.y*cos_az*cos_alt - deriv.x*sin_az*cos_alt)) / sqrt(1.0 + dot(deriv, deriv));
 
@@ -82,11 +83,10 @@ void basic_hillshade(vec2 deriv)
 void combined_hillshade(vec2 deriv)
 {
     float azimuth = u_light.y + PI;
-    float alt = 25.0*PI/180.0;
     float cos_az = cos(azimuth);
     float sin_az = sin(azimuth);
-    float cos_alt = cos(alt);
-    float sin_alt = sin(alt);
+    float cos_alt = cos(u_alt);
+    float sin_alt = sin(u_alt);
 
     float cang = (sin_alt - (deriv.y*cos_az*cos_alt - deriv.x*sin_az*cos_alt)) / sqrt(1.0 + dot(deriv, deriv));
 
@@ -118,6 +118,10 @@ void main() {
         igor_hillshade(deriv);
     }
     else if(u_method == MULTIDIRECTIONAL)
+    {
+        basic_hillshade(deriv);
+    }
+    else if(u_method == BASIC)
     {
         basic_hillshade(deriv);
     }

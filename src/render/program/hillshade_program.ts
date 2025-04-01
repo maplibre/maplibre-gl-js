@@ -18,11 +18,13 @@ import type {Painter} from '../painter';
 import type {HillshadeStyleLayer} from '../../style/style_layer/hillshade_style_layer';
 import type {DEMData} from '../../data/dem_data';
 import type {OverscaledTileID} from '../../source/tile_id';
+import { degreesToRadians } from '../../util/util';
 
 export type HillshadeUniformsType = {
     'u_image': Uniform1i;
     'u_latrange': Uniform2f;
     'u_light': Uniform2f;
+    'u_alt': Uniform1f;
     'u_shadow': UniformColor;
     'u_highlight': UniformColor;
     'u_accent': UniformColor;
@@ -41,6 +43,7 @@ const hillshadeUniforms = (context: Context, locations: UniformLocations): Hills
     'u_image': new Uniform1i(context, locations.u_image),
     'u_latrange': new Uniform2f(context, locations.u_latrange),
     'u_light': new Uniform2f(context, locations.u_light),
+    'u_alt': new Uniform1f(context, locations.u_alt),
     'u_shadow': new UniformColor(context, locations.u_shadow),
     'u_highlight': new UniformColor(context, locations.u_highlight),
     'u_accent': new UniformColor(context, locations.u_accent),
@@ -65,7 +68,8 @@ const hillshadeUniformValues = (
     const accent = layer.paint.get('hillshade-accent-color');
     const method = layer.paint.get('hillshade-method');
 
-    let azimuthal = layer.paint.get('hillshade-illumination-direction') * (Math.PI / 180);
+    let azimuthal = degreesToRadians(layer.paint.get('hillshade-illumination-direction'));
+    let altitude = degreesToRadians(layer.paint.get('hillshade-illumination-altitude'));
     // modify azimuthal angle by map rotation if light is anchored at the viewport
     if (layer.paint.get('hillshade-illumination-anchor') === 'viewport') {
         azimuthal += painter.transform.bearingInRadians;
@@ -74,12 +78,14 @@ const hillshadeUniformValues = (
         'u_image': 0,
         'u_latrange': getTileLatRange(painter, tile.tileID),
         'u_light': [layer.paint.get('hillshade-exaggeration'), azimuthal],
+        'u_alt': altitude,
         'u_shadow': shadow,
         'u_highlight': highlight,
         'u_accent': accent,
         'u_method': method == 'combined' ? 1 :
             method == 'igor' ? 2 :
-            method == 'multidirectional' ? 3 : 0
+            method == 'multidirectional' ? 2 :
+            method == 'basic' ? 4 : 0
     };
 };
 
