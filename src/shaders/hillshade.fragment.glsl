@@ -116,10 +116,10 @@ void combined_hillshade(vec2 deriv)
 
     cang = clamp(cang, 0.0, PI/2.0);
 
-    cang = 1.0 - cang* atan(length(deriv)) * 4.0/PI/PI;
-
-    float shade = clamp(cang, 0.0, 1.0);
-    fragColor = mix(u_shadow, u_highlight, shade)*abs(2.0*shade - 1.0);
+    float shade = cang* atan(length(deriv)) * 4.0/PI/PI;
+    float highlight = (PI/2.0-cang)* atan(length(deriv)) * 4.0/PI/PI;
+    
+    fragColor = u_shadow*shade + u_highlight*highlight;
 }
 
 void main() {
