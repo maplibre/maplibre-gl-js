@@ -601,7 +601,7 @@ export class Marker extends Evented {
             this._map.once('render', this._update);
         }
 
-        if (this._map.transform.renderWorldCopies) {
+        if (this._map.transform.renderWorldCopies && this._map.getProjection().type != 'globe') {
             this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform);
         } else {
             this._lngLat = this._lngLat?.wrap();
