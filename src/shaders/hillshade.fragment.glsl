@@ -112,9 +112,11 @@ void combined_hillshade(vec2 deriv)
     float cos_alt = cos(u_alt);
     float sin_alt = sin(u_alt);
 
-    float cang = (sin_alt - (deriv.y*cos_az*cos_alt - deriv.x*sin_az*cos_alt)) / sqrt(1.0 + dot(deriv, deriv));
+    float cang = acos((sin_alt - (deriv.y*cos_az*cos_alt - deriv.x*sin_az*cos_alt)) / sqrt(1.0 + dot(deriv, deriv)));
 
-    cang = mix(0.5, cang, atan(length(deriv)) * 2.0/PI);
+    cang = clamp(cang, 0.0, PI/2.0);
+
+    cang = 1.0 - cang* atan(length(deriv)) * 4.0/PI/PI;
 
     float shade = clamp(cang, 0.0, 1.0);
     fragColor = mix(u_shadow, u_highlight, shade)*abs(2.0*shade - 1.0);
