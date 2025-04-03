@@ -1104,13 +1104,13 @@ describe('marker', () => {
 
     test('Marker\'s lng is wrapped when slightly crossing 180 with zoomed out globe', async () => {
         const map = createMap({width: 1024, renderWorldCopies: true});
-        await new Promise<void>(resolve => map.once("load", () => {
+        await new Promise<void>(resolve => map.once('load', () => {
             map.setProjection({type: 'globe'});
             map.setZoom(0);
             
             const marker = new Marker()
-            .setLngLat([179, 0])
-            .addTo(map);
+                .setLngLat([179, 0])
+                .addTo(map);
             
             marker.setLngLat([181, 0]);
             

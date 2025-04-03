@@ -10,7 +10,7 @@ import type {Map} from './map';
 import {type Popup, type Offset} from './popup';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {MapMouseEvent, MapTouchEvent} from './events';
-import type {PointLike} from './camera'
+import type {PointLike} from './camera';
 
 /**
  * Alignment options of rotation and pitch

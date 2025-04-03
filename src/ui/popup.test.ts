@@ -345,25 +345,25 @@ describe('popup', () => {
         expect(popup._pos).toEqual(map.project([-5, 0]));
     });
 
-     test('Popup\'s lng is wrapped when slightly crossing 180 with zoomed out globe', async () => {
-            const map = createMap({width: 1024, renderWorldCopies: true});
-            await new Promise<void>(resolve => map.once("load", () => {
-                map.setProjection({type: 'globe'});
-                map.setZoom(0);
+    test('Popup\'s lng is wrapped when slightly crossing 180 with zoomed out globe', async () => {
+        const map = createMap({width: 1024, renderWorldCopies: true});
+        await new Promise<void>(resolve => map.once('load', () => {
+            map.setProjection({type: 'globe'});
+            map.setZoom(0);
                 
-                const popup = new Popup()
+            const popup = new Popup()
                 .setLngLat([179, 0])
                 .setText('Test')
                 .addTo(map);
                 
-                popup.setLngLat([181, 0]);
+            popup.setLngLat([181, 0]);
                 
-                expect(popup._lngLat.lng).toBe(-179);
+            expect(popup._lngLat.lng).toBe(-179);
     
-                resolve();
-            }
-            ));
-        });
+            resolve();
+        }
+        ));
+    });
 
     test('Popup is repositioned at the specified LngLat', () => {
         const map = createMap({width: 1024}); // longitude bounds: [-360, 360]
