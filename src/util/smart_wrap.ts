@@ -34,18 +34,23 @@ export function smartWrap(lngLat: LngLat, priorPos: Point, transform: IReadonlyT
         }
     }
 
-    // Second, wrap toward the center until the new position is on screen, or we can't get
-    // any closer.
-    while (Math.abs(lngLat.lng - transform.center.lng) > 180) {
-        const pos = transform.locationToScreenPoint(lngLat);
-        if (pos.x >= 0 && pos.y >= 0 && pos.x <= transform.width && pos.y <= transform.height) {
-            break;
+    if (transform.getCoveringTilesDetailsProvider().allowWorldCopies()) {
+        // Second, wrap toward the center until the new position is on screen, or we can't get
+        // any closer.
+        while (Math.abs(lngLat.lng - transform.center.lng) > 180) {
+            const pos = transform.locationToScreenPoint(lngLat);
+            if (pos.x >= 0 && pos.y >= 0 && pos.x <= transform.width && pos.y <= transform.height) {
+                break;
+            }
+            if (lngLat.lng > transform.center.lng) {
+                lngLat.lng -= 360;
+            } else {
+                lngLat.lng += 360;
+            }
         }
-        if (lngLat.lng > transform.center.lng) {
-            lngLat.lng -= 360;
-        } else {
-            lngLat.lng += 360;
-        }
+    } else {
+        // We don't have world copies rendered (e.g. globe)
+        lngLat = lngLat.wrap();
     }
 
     // Apply the change only if new coord is below horizon

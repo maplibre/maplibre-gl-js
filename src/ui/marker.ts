@@ -10,7 +10,7 @@ import type {Map} from './map';
 import {type Popup, type Offset} from './popup';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {MapMouseEvent, MapTouchEvent} from './events';
-import type {PointLike} from './camera';
+import type {PointLike} from './camera'
 
 /**
  * Alignment options of rotation and pitch
@@ -601,7 +601,7 @@ export class Marker extends Evented {
             this._map.once('render', this._update);
         }
 
-        if (this._map.transform.getCoveringTilesDetailsProvider().allowWorldCopies()) {
+        if (this._map.transform.renderWorldCopies) {
             this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform);
         } else {
             this._lngLat = this._lngLat?.wrap();
