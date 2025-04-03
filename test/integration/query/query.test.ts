@@ -156,7 +156,7 @@ describe('query tests', () => {
         await coverageReport.add(rawV8CoverageData);
         
         await coverageReport.generate();
-    });
+    }, 60000);
 
     const allTestsRoot = path.join('test', 'integration', 'query', 'tests');
     let globPattern = path.join(allTestsRoot, '**/style.json');
