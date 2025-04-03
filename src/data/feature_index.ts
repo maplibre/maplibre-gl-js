@@ -32,6 +32,7 @@ type QueryParameters = {
     queryGeometry: Array<Point>;
     cameraQueryGeometry: Array<Point>;
     queryPadding: number;
+    getElevation: undefined | ((x: number, y: number) => number);
     params: {
         filter?: FilterSpecification;
         layers?: Set<string> | null;
@@ -174,14 +175,16 @@ export class FeatureIndex {
                     }
 
                     return styleLayer.queryIntersectsFeature({
-                        queryGeometry, 
-                        feature, 
-                        featureState, 
-                        geometry: featureGeometry, 
-                        zoom: this.z, 
-                        transform: args.transform, 
-                        pixelsToTileUnits, 
-                        pixelPosMatrix: args.pixelPosMatrix
+                        queryGeometry,
+                        feature,
+                        featureState,
+                        geometry: featureGeometry,
+                        zoom: this.z,
+                        transform: args.transform,
+                        pixelsToTileUnits,
+                        pixelPosMatrix: args.pixelPosMatrix,
+                        unwrappedTileID: this.tileID.toUnwrapped(),
+                        getElevation: args.getElevation
                     });
                 }
             );
