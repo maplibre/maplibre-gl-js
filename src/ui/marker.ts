@@ -11,6 +11,7 @@ import {type Popup, type Offset} from './popup';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {MapMouseEvent, MapTouchEvent} from './events';
 import type {PointLike} from './camera';
+import { GlobeProjection } from '../geo/projection/globe_projection';
 
 /**
  * Alignment options of rotation and pitch
@@ -601,7 +602,7 @@ export class Marker extends Evented {
             this._map.once('render', this._update);
         }
 
-        if (this._map.transform.renderWorldCopies && this._map.style?.projection?.name != 'globe') {
+        if (this._map.transform.getCoveringTilesDetailsProvider().allowWorldCopies()) {
             this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform);
         } else {
             this._lngLat = this._lngLat?.wrap();
