@@ -80,7 +80,14 @@ void basic_hillshade(vec2 deriv)
     float cang = (sin_alt - (deriv.y*cos_az*cos_alt - deriv.x*sin_az*cos_alt)) / sqrt(1.0 + dot(deriv, deriv));
 
     float shade = clamp(cang, 0.0, 1.0);
-    fragColor = mix(u_shadow, u_highlight, shade)*abs(2.0*shade - 1.0);
+    if(shade > 0.5)
+    {
+        fragColor = u_highlight*(2.0*shade - 1.0);
+    }
+    else
+    {
+        fragColor = u_shadow*(1.0 - 2.0*shade);
+    }
 }
 
 void multidirectional_hillshade(vec2 deriv)
