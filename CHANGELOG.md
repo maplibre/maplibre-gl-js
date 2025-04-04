@@ -8,6 +8,7 @@
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
+- Fix marker drag Coordinates give Longitude off by ±360° with Globe ([#5473](https://github.com/maplibre/maplibre-gl-js/issues/5473))
 
 ## 5.3.0
 
