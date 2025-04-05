@@ -19,8 +19,8 @@ import type {Painter} from '../painter';
 import type {HillshadeStyleLayer} from '../../style/style_layer/hillshade_style_layer';
 import type {DEMData} from '../../data/dem_data';
 import type {OverscaledTileID} from '../../source/tile_id';
-import { degreesToRadians } from '../../util/util';
-import { Color } from '@maplibre/maplibre-gl-style-spec';
+import {degreesToRadians} from '../../util/util';
+import {Color} from '@maplibre/maplibre-gl-style-spec';
 
 export type HillshadeUniformsType = {
     'u_image': Uniform1i;
@@ -55,7 +55,7 @@ const hillshadeUniforms = (context: Context, locations: UniformLocations): Hills
     'u_method': new Uniform1i(context, locations.u_method),
     'u_shadows': new UniformColorArray(context, locations.u_shadows),
     'u_highlights': new UniformColorArray(context, locations.u_highlights),
-    'u_num_multidirectional':new Uniform1i(context, locations.u_num_multidirectional)
+    'u_num_multidirectional': new Uniform1i(context, locations.u_num_multidirectional)
 });
 
 const hillshadePrepareUniforms = (context: Context, locations: UniformLocations): HillshadePrepareUniformsType => ({
@@ -77,7 +77,7 @@ const hillshadeUniformValues = (
     const method = layer.paint.get('hillshade-method');
 
     let azimuthal = degreesToRadians(layer.paint.get('hillshade-illumination-direction'));
-    let altitude = degreesToRadians(layer.paint.get('hillshade-illumination-altitude'));
+    const altitude = degreesToRadians(layer.paint.get('hillshade-illumination-altitude'));
     // modify azimuthal angle by map rotation if light is anchored at the viewport
     if (layer.paint.get('hillshade-illumination-anchor') === 'viewport') {
         azimuthal += painter.transform.bearingInRadians;
@@ -92,8 +92,8 @@ const hillshadeUniformValues = (
         'u_accent': accent,
         'u_method': method == 'combined' ? 1 :
             method == 'igor' ? 2 :
-            method == 'multidirectional' ? 3 :
-            method == 'basic' ? 4 : 0,
+                method == 'multidirectional' ? 3 :
+                    method == 'basic' ? 4 : 0,
         'u_highlights': [new Color(1, 0.475, 0.302), new Color(1,1,0.6), new Color(0.475, 1, 0.3019), new Color(0,1,0.502)],
         'u_shadows': [new Color(0, 0.525, 0.698), new Color(0,0,0.4), new Color(0.525, 0, 0.698), new Color(1,0,0.498)],
         'u_num_multidirectional': 4

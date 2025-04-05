@@ -11,7 +11,7 @@ import {
     UniformColorArray,
     UniformMatrix4f
 } from './uniform_binding';
-import { Color } from '@maplibre/maplibre-gl-style-spec';
+import {Color} from '@maplibre/maplibre-gl-style-spec';
 
 describe('Uniform Binding', () => {
     test('Uniform1i', () => {
@@ -134,7 +134,7 @@ describe('Uniform Binding', () => {
 
         const u = new UniformColorArray(context, 0);
         expect(u.current).toEqual(new Array<Color>);
-        let v = [new Color(0.1, 0.2, 0.3), new Color(0.7, 0.8, 0.9)];
+        const v = [new Color(0.1, 0.2, 0.3), new Color(0.7, 0.8, 0.9)];
         u.set(v);
         expect(u.current).toEqual(v);
         u.set(v);
@@ -152,7 +152,7 @@ describe('Uniform Binding', () => {
 
         const u = new UniformFloatArray(context, 0);
         expect(u.current).toEqual(new Array<number>);
-        let v = [1.2, 3.4];
+        const v = [1.2, 3.4];
         u.set(v);
         expect(u.current).toEqual(v);
         u.set(v);
