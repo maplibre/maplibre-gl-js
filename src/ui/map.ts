@@ -66,6 +66,7 @@ import {type ICameraHelper} from '../geo/projection/camera_helper';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 import {isAbortError} from '../util/abort_error';
 import {isFramebufferNotCompleteError} from '../util/framebuffer_error';
+import {getCalculateTileZoomFunctionFromParams} from '../geo/projection/covering_tiles';
 
 const version = packageJSON.version;
 
@@ -2174,6 +2175,37 @@ export class Map extends Camera {
      */
     getSource<TSource extends Source>(id: string): TSource | undefined {
         return this.style.getSource(id) as TSource;
+    }
+
+    /**
+     * Change the tile LOD behavior of the specified source. These parameters have no effect when 
+     * pitch == 0, and the largest effect when the horizon is visible on screen.
+     *
+     * @param id - The ID of the source to set tile LOD parameters for.
+     * @param maxZoomLevelsOnScreen - The maximum number of distinct zoom levels allowed on screen at a time.
+     * There will generally be fewer zoom levels on the screen, the maximum can only be reached when the horizon
+     * is at the top of the screen. Increasing the maximum number of zoom levels causes the zoom level to decay 
+     * faster toward the horizon.
+     * @param tileCountMaxMinRatio - The ratio of the maximum number of tiles loaded (at high pitch) to the minimum
+     * number of tiles loaded. Increasing this ratio allows more tiles to be loaded at high pitch angles. If the ratio
+     * would otherwise be exceeded, the zoom level is reduced uniformly to keep the number of tiles within the limit.
+     * @returns True is success, false if failure (for example if the ID
+     * corresponds to no existing sources).
+     * @example
+     * ```ts
+     * let success = map.setSourceTileLodParams('terrain', 4, 3.0);
+     * ```
+     * @see [Modify LOD behavior](https://maplibre.org/maplibre-gl-js/docs/examples/lod-control/)
+
+     */
+    setSourceTileLodParams(id: string, maxZoomLevelsOnScreen: number, tileCountMaxMinRatio: number) : boolean {
+        const source = this.getSource(id);
+        if(!source) {
+            return false;
+        }
+        source.calculateTileZoom = getCalculateTileZoomFunctionFromParams(Math.max(1, maxZoomLevelsOnScreen), Math.max(1, tileCountMaxMinRatio));
+        this._update(true);
+        return true;
     }
 
     /**

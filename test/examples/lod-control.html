@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>LOD Control</title>
+    <meta property="og:description" content="Modify how Level Of Detail behaves at high pitch angles." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+    const map = (window.map = new maplibregl.Map({
+        container: 'map',
+        zoom: 12,
+        center: [0,0],
+        pitch: 77,
+        hash: true,
+        style: {
+            version: 8,
+            sources: {
+                numbers: {
+                    type: 'raster',
+                    url: 'https://demotiles.maplibre.org/debug-tiles/number/tiles.json',
+                    tileSize: 256,
+                    maxzoom: 19
+                }
+            },
+            layers: [
+                {
+                    id: 'numbers',
+                    type: 'raster',
+                    source: 'numbers'
+                }
+            ]
+        },
+        maxZoom: 22,
+        maxPitch: 85
+    }));
+
+    class LodControl {
+        onAdd(map) {
+            this._map = map;
+            this._maxZoomLevels = 4;
+            this._tileCountRatio = 4;
+            this._container = document.createElement('div');
+            this._container.className = 'maplibregl-ctrl';
+
+            let maxZoomLevelsLabel = document.createElement('span');
+            maxZoomLevelsLabel.innerHTML = "Max Zoom Levels On Screen = ";
+            let maxZoomLevelsValue = document.createElement('span');
+            maxZoomLevelsValue.innerHTML = this._maxZoomLevels;
+            let maxZoomLevelsDown = document.createElement('button');
+            maxZoomLevelsDown.innerHTML = "-";
+            maxZoomLevelsDown.onclick = (e) => {
+                if(this._maxZoomLevels > 1) {
+                    this._maxZoomLevels -= 1.0;
+                }
+                maxZoomLevelsValue.innerHTML = this._maxZoomLevels;
+                this._map.setSourceTileLodParams('numbers', this._maxZoomLevels, this._tileCountRatio);
+            };
+            let maxZoomLevelsUp = document.createElement('button');
+            maxZoomLevelsUp.innerHTML = "+";
+            maxZoomLevelsUp.onclick = (e) => {
+                this._maxZoomLevels += 1.0;
+                maxZoomLevelsValue.innerHTML = this._maxZoomLevels;
+                this._map.setSourceTileLodParams('numbers', this._maxZoomLevels, this._tileCountRatio);
+            };
+            this._container.appendChild(maxZoomLevelsLabel);
+            this._container.appendChild(maxZoomLevelsValue);
+            this._container.appendChild(maxZoomLevelsDown);
+            this._container.appendChild(maxZoomLevelsUp);
+
+            let tileCountRatioLabel = document.createElement('span');
+            tileCountRatioLabel.innerHTML = "<br>Tile Count Max/Min Ratio = ";
+            let tileCountRatioValue = document.createElement('span');
+            tileCountRatioValue.innerHTML = this._tileCountRatio;
+            let tileCountRatioDown = document.createElement('button');
+            tileCountRatioDown.innerHTML = "-";
+            tileCountRatioDown.onclick = (e) => {
+                if(this._tileCountRatio > 1) {
+                    this._tileCountRatio -= 1.0;
+                }
+                tileCountRatioValue.innerHTML = this._tileCountRatio;
+                this._map.setSourceTileLodParams('numbers', this._maxZoomLevels, this._tileCountRatio);
+            };
+            let tileCountRatioUp = document.createElement('button');
+            tileCountRatioUp.innerHTML = "+";
+            tileCountRatioUp.onclick = (e) => {
+                this._tileCountRatio += 1.0;
+                tileCountRatioValue.innerHTML = this._tileCountRatio;
+                this._map.setSourceTileLodParams('numbers', this._maxZoomLevels, this._tileCountRatio);
+            };
+            this._container.appendChild(tileCountRatioLabel);
+            this._container.appendChild(tileCountRatioValue);
+            this._container.appendChild(tileCountRatioDown);
+            this._container.appendChild(tileCountRatioUp);
+
+            return this._container;
+        }
+
+        onRemove() {
+            this._container.parentNode.removeChild(this._container);
+            this._map = undefined;
+        }
+    }
+
+    map.addControl(new LodControl());
+    map.on('load', () => {
+        map.setSourceTileLodParams('numbers', 4, 4);
+    });
+
+</script>
+</body>
+</html>

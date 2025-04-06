@@ -7,6 +7,7 @@ import {type Aabb, IntersectionResult} from '../../util/primitives/aabb';
 import type {IReadonlyTransform} from '../transform_interface';
 import type {Terrain} from '../../render/terrain';
 import type {Frustum} from '../../util/primitives/frustum';
+import {maxMercatorHorizonAngle} from './mercator_utils';
 
 type CoveringTilesResult = {
     tileID: OverscaledTileID;
@@ -125,6 +126,50 @@ function calculateTileZoom(requestedCenterZoom: number,
     thisTileDesiredZ += pitchTileLoadingBehavior * scaleZoom(Math.cos(thisTilePitch)) / 2;
     thisTileDesiredZ = thisTileDesiredZ + clamp(requestedCenterZoom - thisTileDesiredZ, -tileZoomDeadband, tileZoomDeadband);
     return thisTileDesiredZ;
+}
+
+function intCosXToP(p:number, x1: number, x2: number): number {
+    const N = 10;
+    let sum = 0;
+    const dx = (x2-x1)/N;
+    for( let i = 0; i < N; i++)
+    {
+        const x = x1 + (i+0.5)/10 * (x2-x1);
+        sum += dx*Math.pow(Math.cos(x), p);
+    }
+    return sum;
+}
+
+export function getCalculateTileZoomFunctionFromParams(maxZoomLevelsOnScreen: number, tileCountMaxMinRatio: number): CalculateTileZoomFunction {
+    return function (requestedCenterZoom: number,
+        distanceToTile2D: number,
+        distanceToTileZ: number,
+        distanceToCenter3D: number,
+        cameraVerticalFOV: number): number {
+        /**
+        * Controls how tiles are loaded at high pitch angles. Higher numbers cause fewer, lower resolution
+        * tiles to be loaded. Calculate the value that will result in the selected number of zoom levels in
+        * the worst-case condition (when the horizon is at the top of the screen). 
+        */
+        const pitchTileLoadingBehavior = 2*((1 - maxZoomLevelsOnScreen) /
+            scaleZoom(Math.cos(degreesToRadians(maxMercatorHorizonAngle)) /
+                Math.cos(degreesToRadians(maxMercatorHorizonAngle - cameraVerticalFOV))) - 1);
+
+        const centerPitch = Math.acos(distanceToTileZ / distanceToCenter3D);
+        const tileCountPitch0 = 2*intCosXToP(pitchTileLoadingBehavior - 1, 0, degreesToRadians(cameraVerticalFOV / 2));
+        const highestPitch = Math.min(degreesToRadians(maxMercatorHorizonAngle), centerPitch+degreesToRadians(cameraVerticalFOV / 2));
+        const tileCount = intCosXToP(pitchTileLoadingBehavior - 1, highestPitch-degreesToRadians(cameraVerticalFOV), highestPitch);
+
+        const thisTilePitch = Math.atan(distanceToTile2D / distanceToTileZ);
+        const distanceToTile3D = Math.hypot(distanceToTile2D, distanceToTileZ);
+        let thisTileDesiredZ = requestedCenterZoom -
+            scaleZoom(Math.max(1, tileCount/tileCountPitch0/tileCountMaxMinRatio)) / 2;
+        // if distance to candidate tile is a tiny bit farther than distance to center,
+        // use the same zoom as the center. This is achieved by the scaling distance ratio by cos(fov/2)
+        thisTileDesiredZ = thisTileDesiredZ + scaleZoom(distanceToCenter3D / distanceToTile3D / Math.max(0.5, Math.cos(degreesToRadians(cameraVerticalFOV / 2))));
+        thisTileDesiredZ += pitchTileLoadingBehavior * scaleZoom(Math.cos(thisTilePitch)) / 2;
+        return thisTileDesiredZ;
+    };
 }
 
 /**
