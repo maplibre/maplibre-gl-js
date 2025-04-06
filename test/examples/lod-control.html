@@ -62,14 +62,14 @@
                     this._maxZoomLevels -= 1.0;
                 }
                 maxZoomLevelsValue.innerHTML = this._maxZoomLevels;
-                this._map.setSourceTileLodParams('numbers', this._maxZoomLevels, this._tileCountRatio);
+                this._map.setSourceTileLodParams(this._maxZoomLevels, this._tileCountRatio);
             };
             let maxZoomLevelsUp = document.createElement('button');
             maxZoomLevelsUp.innerHTML = "+";
             maxZoomLevelsUp.onclick = (e) => {
                 this._maxZoomLevels += 1.0;
                 maxZoomLevelsValue.innerHTML = this._maxZoomLevels;
-                this._map.setSourceTileLodParams('numbers', this._maxZoomLevels, this._tileCountRatio);
+                this._map.setSourceTileLodParams(this._maxZoomLevels, this._tileCountRatio);
             };
             this._container.appendChild(maxZoomLevelsLabel);
             this._container.appendChild(maxZoomLevelsValue);
@@ -87,14 +87,14 @@
                     this._tileCountRatio -= 1.0;
                 }
                 tileCountRatioValue.innerHTML = this._tileCountRatio;
-                this._map.setSourceTileLodParams('numbers', this._maxZoomLevels, this._tileCountRatio);
+                this._map.setSourceTileLodParams(this._maxZoomLevels, this._tileCountRatio);
             };
             let tileCountRatioUp = document.createElement('button');
             tileCountRatioUp.innerHTML = "+";
             tileCountRatioUp.onclick = (e) => {
                 this._tileCountRatio += 1.0;
                 tileCountRatioValue.innerHTML = this._tileCountRatio;
-                this._map.setSourceTileLodParams('numbers', this._maxZoomLevels, this._tileCountRatio);
+                this._map.setSourceTileLodParams(this._maxZoomLevels, this._tileCountRatio);
             };
             this._container.appendChild(tileCountRatioLabel);
             this._container.appendChild(tileCountRatioValue);
@@ -112,7 +112,7 @@
 
     map.addControl(new LodControl());
     map.on('load', () => {
-        map.setSourceTileLodParams('numbers', 4, 4);
+        map.setSourceTileLodParams(4, 4);
     });
 
 </script>
