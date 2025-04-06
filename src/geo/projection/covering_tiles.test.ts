@@ -1,7 +1,7 @@
 import {beforeEach, describe, expect, test} from 'vitest';
 import {GlobeTransform} from './globe_transform';
 import {LngLat} from '../lng_lat';
-import {coveringTiles, coveringZoomLevel, type CoveringZoomOptions} from './covering_tiles';
+import {coveringTiles, coveringZoomLevel, getCalculateTileZoomFunctionFromParams, type CoveringZoomOptions} from './covering_tiles';
 import {OverscaledTileID} from '../../source/tile_id';
 import {MercatorTransform} from './mercator_transform';
 import {globeConstants} from './vertical_perspective_projection';
@@ -317,6 +317,46 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(7, 0, 7, 72, 37),
                 new OverscaledTileID(7, 0, 7, 73, 35),
                 new OverscaledTileID(7, 0, 7, 72, 36)
+            ]);
+        
+            let optionsWithTileLodParams = { 
+                minzoom: 1,
+                maxzoom: 10,
+                tileSize: 512,
+                calculateTileZoom: getCalculateTileZoomFunctionFromParams(1.0, 1.0)
+            };
+            expect(coveringTiles(transform, optionsWithTileLodParams)).toEqual([
+                new OverscaledTileID(5, 0, 5, 18, 9),
+                new OverscaledTileID(5, 0, 5, 18, 8)
+            ]);
+        
+            optionsWithTileLodParams = { 
+                minzoom: 1,
+                maxzoom: 10,
+                tileSize: 512,
+                calculateTileZoom: getCalculateTileZoomFunctionFromParams(1.0, 10.0)
+            };
+            expect(coveringTiles(transform, optionsWithTileLodParams)).toEqual([
+                new OverscaledTileID(6, 0, 6, 37, 18),
+                new OverscaledTileID(6, 0, 6, 37, 17),
+                new OverscaledTileID(6, 0, 6, 36, 18),
+                new OverscaledTileID(6, 0, 6, 36, 17)
+            ]);
+        
+            optionsWithTileLodParams = { 
+                minzoom: 1,
+                maxzoom: 10,
+                tileSize: 512,
+                calculateTileZoom: getCalculateTileZoomFunctionFromParams(10.0, 1.0)
+            };
+            expect(coveringTiles(transform, optionsWithTileLodParams)).toEqual([
+                new OverscaledTileID(7, 0, 7, 73, 37),
+                new OverscaledTileID(7, 0, 7, 73, 36),
+                new OverscaledTileID(7, 0, 7, 72, 36),
+                new OverscaledTileID(6, 0, 6, 37, 18),
+                new OverscaledTileID(5, 0, 5, 18, 8),
+                new OverscaledTileID(9, 0, 9, 290, 148),
+                new OverscaledTileID(9, 0, 9, 291, 148)
             ]);
     
             transform.setZoom(2);
