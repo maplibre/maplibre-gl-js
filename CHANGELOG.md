@@ -3,6 +3,7 @@
 ### ✨ Features and improvements
 
 - Now only adds `aria-label` on the Marker's element if it does not already has one ([#5298](https://github.com/maplibre/maplibre-gl-js/pull/5298))
+- Add tile LOD control to the public API ([#5719](https://github.com/maplibre/maplibre-gl-js/pull/5719))
 
 - _...Add new stuff here..._
 
