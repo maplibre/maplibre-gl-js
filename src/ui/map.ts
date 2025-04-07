@@ -66,7 +66,7 @@ import {type ICameraHelper} from '../geo/projection/camera_helper';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 import {isAbortError} from '../util/abort_error';
 import {isFramebufferNotCompleteError} from '../util/framebuffer_error';
-import {getCalculateTileZoomFunctionFromParams} from '../geo/projection/covering_tiles';
+import {createCalculateTileZoomFunction} from '../geo/projection/covering_tiles';
 
 const version = packageJSON.version;
 
@@ -2195,7 +2195,7 @@ export class Map extends Camera {
      * ```ts
      * let success = map.setSourceTileLodParams(4.0, 3.0, 'terrain');
      * ```
-     * @see [Modify LOD behavior](https://maplibre.org/maplibre-gl-js/docs/examples/lod-control/)
+     * @see [Modify Level of Detail behavior](https://maplibre.org/maplibre-gl-js/docs/examples/lod-control/)
 
      */
     setSourceTileLodParams(maxZoomLevelsOnScreen: number, tileCountMaxMinRatio: number, id?: string) : boolean {
@@ -2204,10 +2204,10 @@ export class Map extends Camera {
             if(!source) {
                 return false;
             }
-            source.calculateTileZoom = getCalculateTileZoomFunctionFromParams(Math.max(1, maxZoomLevelsOnScreen), Math.max(1, tileCountMaxMinRatio));
+            source.calculateTileZoom = createCalculateTileZoomFunction(Math.max(1, maxZoomLevelsOnScreen), Math.max(1, tileCountMaxMinRatio));
         } else {
             for (const id in this.style.sourceCaches) {
-                this.style.sourceCaches[id].getSource().calculateTileZoom = getCalculateTileZoomFunctionFromParams(Math.max(1, maxZoomLevelsOnScreen), Math.max(1, tileCountMaxMinRatio));
+                this.style.sourceCaches[id].getSource().calculateTileZoom = createCalculateTileZoomFunction(Math.max(1, maxZoomLevelsOnScreen), Math.max(1, tileCountMaxMinRatio));
             }
         }
         this._update(true);

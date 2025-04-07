@@ -1,7 +1,7 @@
 import {OverscaledTileID} from '../../source/tile_id';
 import {vec2, type vec4} from 'gl-matrix';
 import {MercatorCoordinate} from '../mercator_coordinate';
-import {clamp, degreesToRadians, scaleZoom} from '../../util/util';
+import {degreesToRadians, scaleZoom} from '../../util/util';
 import {type Aabb, IntersectionResult} from '../../util/primitives/aabb';
 
 import type {IReadonlyTransform} from '../transform_interface';
@@ -98,49 +98,7 @@ export function isTileVisible(frustum: Frustum, aabb: Aabb, plane?: vec4): Inter
     return IntersectionResult.Partial;
 }
 
-function calculateTileZoom(requestedCenterZoom: number,
-    distanceToTile2D: number,
-    distanceToTileZ: number,
-    distanceToCenter3D: number,
-    cameraVerticalFOV: number) : number {
-    /**
-    * Controls how tiles are loaded at high pitch angles. Higher numbers cause fewer, lower resolution
-    * tiles to be loaded. At 0, tiles are loaded with approximately constant screen X resolution.
-    * At 1, tiles are loaded with approximately constant screen area.
-    * At 2, tiles are loaded with approximately constant screen Y resolution.
-    */
-    const pitchTileLoadingBehavior = 1.0;
-    /**
-    * Controls how tiles are loaded at high pitch angles. Controls how different the distance to a tile must be (compared with the center point)
-    * before a new zoom level is requested. For example, if tileZoomDeadband = 1 and the center zoom is 14, tiles distant enough to be loaded at
-    * z13 will be loaded at z14, and tiles distant enough to be loaded at z14 will be loaded at z15. A higher number causes more tiles to be loaded
-    * at the center zoom level. This also results in more tiles being loaded overall.
-    */
-    const tileZoomDeadband = 0.0;
-    let thisTileDesiredZ = requestedCenterZoom;
-    const thisTilePitch = Math.atan(distanceToTile2D / distanceToTileZ);
-    const distanceToTile3D = Math.hypot(distanceToTile2D, distanceToTileZ);
-    // if distance to candidate tile is a tiny bit farther than distance to center,
-    // use the same zoom as the center. This is achieved by the scaling distance ratio by cos(fov/2)
-    thisTileDesiredZ = requestedCenterZoom + scaleZoom(distanceToCenter3D / distanceToTile3D / Math.max(0.5, Math.cos(degreesToRadians(cameraVerticalFOV / 2))));
-    thisTileDesiredZ += pitchTileLoadingBehavior * scaleZoom(Math.cos(thisTilePitch)) / 2;
-    thisTileDesiredZ = thisTileDesiredZ + clamp(requestedCenterZoom - thisTileDesiredZ, -tileZoomDeadband, tileZoomDeadband);
-    return thisTileDesiredZ;
-}
-
-function intCosXToP(p:number, x1: number, x2: number): number {
-    const N = 10;
-    let sum = 0;
-    const dx = (x2-x1)/N;
-    for( let i = 0; i < N; i++)
-    {
-        const x = x1 + (i+0.5)/10 * (x2-x1);
-        sum += dx*Math.pow(Math.cos(x), p);
-    }
-    return sum;
-}
-
-export function getCalculateTileZoomFunctionFromParams(maxZoomLevelsOnScreen: number, tileCountMaxMinRatio: number): CalculateTileZoomFunction {
+export function createCalculateTileZoomFunction(maxZoomLevelsOnScreen: number, tileCountMaxMinRatio: number): CalculateTileZoomFunction {
     return function (requestedCenterZoom: number,
         distanceToTile2D: number,
         distanceToTileZ: number,
@@ -171,6 +129,9 @@ export function getCalculateTileZoomFunctionFromParams(maxZoomLevelsOnScreen: nu
         return thisTileDesiredZ;
     };
 }
+const defaultMaxZoomLevelsOnScreen = 9.0;
+const defaultTileCountMaxMinRatio = 3.0;
+const calculateTileZoom = createCalculateTileZoomFunction(defaultMaxZoomLevelsOnScreen, defaultTileCountMaxMinRatio);
 
 /**
  * Return what zoom level of a tile source would most closely cover the tiles displayed by this transform.
