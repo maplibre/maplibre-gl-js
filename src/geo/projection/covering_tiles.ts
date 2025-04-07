@@ -141,7 +141,7 @@ export function createCalculateTileZoomFunction(maxZoomLevelsOnScreen: number, t
         return thisTileDesiredZ;
     };
 }
-const defaultMaxZoomLevelsOnScreen = 9.0;
+const defaultMaxZoomLevelsOnScreen = 9.314;
 const defaultTileCountMaxMinRatio = 3.0;
 const calculateTileZoom = createCalculateTileZoomFunction(defaultMaxZoomLevelsOnScreen, defaultTileCountMaxMinRatio);
 
