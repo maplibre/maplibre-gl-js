@@ -98,6 +98,18 @@ export function isTileVisible(frustum: Frustum, aabb: Aabb, plane?: vec4): Inter
     return IntersectionResult.Partial;
 }
 
+function intCosXToP(p:number, x1: number, x2: number): number {
+    const N = 10;
+    let sum = 0;
+    const dx = (x2-x1)/N;
+    for( let i = 0; i < N; i++)
+    {
+        const x = x1 + (i+0.5)/10 * (x2-x1);
+        sum += dx*Math.pow(Math.cos(x), p);
+    }
+    return sum;
+}
+
 export function createCalculateTileZoomFunction(maxZoomLevelsOnScreen: number, tileCountMaxMinRatio: number): CalculateTileZoomFunction {
     return function (requestedCenterZoom: number,
         distanceToTile2D: number,
