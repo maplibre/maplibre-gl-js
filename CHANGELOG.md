@@ -8,6 +8,8 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+
+- The state of `glPixelStore` is now properly cleaned after texture updates to avoid `glTexSubImage2D` calls made on the same gl context acting differently at random ([#5730](https://github.com/maplibre/maplibre-gl-js/pull/5730))
 - _...Add new stuff here..._
 
 ## 5.3.0
