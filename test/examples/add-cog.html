@@ -2,81 +2,42 @@
 <html lang="en">
 <head>
     <title>Add a COG raster source</title>
-    <meta property="og:description" content="Add an external Cloud Optimized Geotiff (COG) as source" />
+    <meta property="og:description" content="Add an external Cloud Optimized Geotiff (COG) as source." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css">
-    <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
-    <script src="https://unpkg.com/@geomatico/maplibre-cog-protocol/dist/index.js"></script>
+    <link rel="stylesheet" href="../../dist/maplibre-gl.css" />
+    <script src="../../dist/maplibre-gl-dev.js"></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
-
-
-        #info {
-              display: none;
-              position: absolute;
-              top: 0;
-              left: 0;
-              background: #2d2d2d;
-              border: 1px solid #bbbbbb;
-              color: #bbbbbb;
-              padding: 6px;
-              border-radius: 5px;
-              font-family: monospace;
-              font-size: 18px;
-        }
     </style>
 </head>
 <body>
 <div id="map"></div>
-<div id="info"></div>
+<script src="https://unpkg.com/@geomatico/maplibre-cog-protocol@0.4.0/dist/index.js"></script>
 <script>
+    maplibregl.addProtocol('cog', MaplibreCOGProtocol.cogProtocol);
+
     const map = new maplibregl.Map({
         container: 'map',
-        style: 'https://geoserveis.icgc.cat/contextmaps/icgc_mapa_base_gris_simplificat.json',
+        style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
         center: [1.83369, 41.5937],
         zoom: 13
     });
 
-    maplibregl.addProtocol('cog', MaplibreCOGProtocol.cogProtocol);
-
     map.on('load', () => {
-    map.addSource('imageSource', {
-      type: 'raster',
-      url: 'cog://https://labs.geomatico.es/maplibre-cog-protocol/data/image.tif',
-      tileSize: 256
+        map.addSource('cogSource', {
+            type: 'raster',
+            url: 'cog://https://labs.geomatico.es/maplibre-cog-protocol/data/image.tif',
+            tileSize: 256
+        });
+
+        map.addLayer({
+            id: 'cogLayer',
+            source: 'cogSource',
+            type: 'raster'
+        });
     });
-
-    map.addLayer({
-      id: 'imageLayer',
-      source: 'imageSource',
-      type: 'raster'
-    });
-
-    map.on('drag', () => document.getElementById('info').style.display = 'none');
-
-    map.on('mousemove', (e) => {
-        const {lngLat: {lat: latitude, lng: longitude}, point: {x, y}} = e;
-        const zoom = map.getZoom();
-
-        document.getElementById('info').style.left = x + 10 + 'px';
-        document.getElementById('info').style.top = y + 20 + 'px';
-
-        MaplibreCOGProtocol.locationValues('https://labs.geomatico.es/maplibre-cog-protocol/data/image.tif', {latitude, longitude}, zoom)
-          .then(([Y, Cb, Cr]) => {
-            if (isNaN(Y) || isNaN(Cb) || isNaN(Cr)) {
-              map.getCanvas().style.cursor = '';
-              document.getElementById('info').style.display = 'none';
-            } else {
-              map.getCanvas().style.cursor = 'default';
-              document.getElementById('info').style.display = 'block';
-              document.getElementById('info').innerHTML = `&nbsp;Y: <b>${Y}</b><br/>Cb: <b>${Cb}</b><br/>Cr: <b>${Cr}</b>`;
-            }
-          });
-    });
-
-});
 </script>
 </body>
 </html>
