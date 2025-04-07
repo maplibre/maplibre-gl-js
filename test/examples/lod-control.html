@@ -31,8 +31,8 @@
 <script>
     function setLodParamsFromUi() {
         map.setSourceTileLodParams(document.getElementById('max-zoom-levels-slider').value, document.getElementById('tile-count-ratio-slider').value);
-        document.getElementById('max-zoom-levels-value').innerHTML = document.getElementById('max-zoom-levels-slider').value;
-        document.getElementById('tile-count-ratio-value').innerHTML = document.getElementById('tile-count-ratio-slider').value;
+        document.getElementById('max-zoom-levels-value').textContent = document.getElementById('max-zoom-levels-slider').value;
+        document.getElementById('tile-count-ratio-value').textContent = document.getElementById('tile-count-ratio-slider').value;
     }
     const map = (window.map = new maplibregl.Map({
         container: 'map',
