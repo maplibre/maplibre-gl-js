@@ -347,22 +347,19 @@ describe('popup', () => {
 
     test('Popup\'s lng is wrapped when slightly crossing 180 with zoomed out globe', async () => {
         const map = createMap({width: 1024, renderWorldCopies: true});
-        await new Promise<void>(resolve => map.once('load', () => {
+        await map.once('load', () => {
             map.setProjection({type: 'globe'});
             map.setZoom(0);
-                
+
             const popup = new Popup()
                 .setLngLat([179, 0])
                 .setText('Test')
                 .addTo(map);
-                
+
             popup.setLngLat([181, 0]);
-                
+
             expect(popup._lngLat.lng).toBe(-179);
-    
-            resolve();
-        }
-        ));
+        });
     });
 
     test('Popup is repositioned at the specified LngLat', () => {
