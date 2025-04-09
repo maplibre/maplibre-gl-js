@@ -2,7 +2,7 @@ import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {ImageSource} from './image_source';
 import {Evented} from '../util/evented';
 import {type IReadonlyTransform} from '../geo/transform_interface';
-import {extend} from '../util/util';
+import {extend, MAX_TILE_ZOOM} from '../util/util';
 import {type FakeServer, fakeServer} from 'nise';
 import {type RequestManager} from '../util/request_manager';
 import {sleep, stubAjaxGetImage} from '../util/test/util';
@@ -229,5 +229,31 @@ describe('ImageSource', () => {
         await sleep(0);
 
         expect(missingImagesource.loaded()).toBe(true);
+    });
+
+    describe('terrainTileRanges', () => {
+        test('sets tile ranges for all zoom levels', () => {
+            const source = createSource({url: '/image.png'});
+            const map = new StubMap() as any;
+            source.onAdd(map);
+            server.respond();
+            source.setCoordinates([[-10, 10], [10, 10], [10, -10], [-10, -10]]);
+
+            for (let z = 0; z <= MAX_TILE_ZOOM; z++) {
+                expect(source.terrainTileRanges[z]).toBeDefined();
+            }
+        });
+
+        test('calculates tile ranges properly', () => {
+            const source = createSource({url: '/image.png'});
+            const map = new StubMap() as any;
+            source.onAdd(map);
+            server.respond();
+            source.setCoordinates([[11.39585,47.30074],[11.46585,47.30074],[11.46585,47.25074],[11.39585,47.25074]]);
+            expect(source.terrainTileRanges[9]).toEqual({minTileX: 272, minTileY: 179, maxTileX: 272, maxTileY: 179});
+            expect(source.terrainTileRanges[10]).toEqual({minTileX: 544, minTileY: 358, maxTileX: 544, maxTileY: 359});
+            expect(source.terrainTileRanges[11]).toEqual({minTileX: 1088, minTileY: 717, maxTileX: 1089, maxTileY: 718});
+            expect(source.terrainTileRanges[12]).toEqual({minTileX: 2177, minTileY: 1435, maxTileX: 2178, maxTileY: 1436});
+        });
     });
 });

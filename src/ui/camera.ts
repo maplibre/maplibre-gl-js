@@ -1159,7 +1159,7 @@ export abstract class Camera extends Evented {
         return this;
     }
 
-    _prepareEase(eventData: any, noMoveStart: boolean, 
+    _prepareEase(eventData: any, noMoveStart: boolean,
         currently: { moving?: boolean; zooming?: boolean; rotating?: boolean; pitching?: boolean; rolling?: boolean} = {}) {
         this._moving = true;
         if (!noMoveStart && !currently.moving) {
@@ -1619,13 +1619,12 @@ export abstract class Camera extends Evented {
     }
 
     /**
-     * Get the elevation difference between a given point
-     * and a point that is currently in the middle of the screen.
-     * This method should be used for proper positioning of custom 3d objects, as explained [here](https://maplibre.org/maplibre-gl-js/docs/examples/add-3d-model-with-terrain/)
+     * Gets the elevation at a given location, in meters above sea level.
      * Returns null if terrain is not enabled.
-     * This method is subject to change in Maplibre GL JS v5.
+     * If terrain is enabled with some exaggeration value, the value returned here will be reflective of (multiplied by) that exaggeration value.
+     * This method should be used for proper positioning of custom 3d objects, as explained [here](https://maplibre.org/maplibre-gl-js/docs/examples/add-3d-model-with-terrain/)
      * @param lngLatLike - [x,y] or LngLat coordinates of the location
-     * @returns elevation offset in meters
+     * @returns elevation in meters
      */
     queryTerrainElevation(lngLatLike: LngLatLike): number | null {
         if (!this.terrain) {

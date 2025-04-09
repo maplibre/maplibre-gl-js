@@ -92,7 +92,7 @@ jobs:
         if: '!cancelled()'
         uses: codecov/codecov-action@v5
         with:
-          files: ${{ github.workspace }}/coverage/vitest/integration/coverage-final.json
+          files: ${{ github.workspace }}/coverage/vitest/integration/coverage-final.json,${{ github.workspace }}/coverage/query/codecov.json
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
           disable_search: true

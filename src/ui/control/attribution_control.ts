@@ -44,7 +44,7 @@ export class AttributionControl implements IControl {
     _innerContainer: HTMLElement;
     _compactButton: HTMLElement;
     _editLink: HTMLAnchorElement;
-    _sanitizedAttributionHTML: string;
+    _attribHTML: string;
     styleId: string;
     styleOwner: string;
 
@@ -93,7 +93,7 @@ export class AttributionControl implements IControl {
 
         this._map = undefined;
         this._compact = undefined;
-        this._sanitizedAttributionHTML = undefined;
+        this._attribHTML = undefined;
     }
 
     _setElementTitle(element: HTMLElement, title: 'ToggleAttribution' | 'MapFeedback') {
@@ -168,12 +168,12 @@ export class AttributionControl implements IControl {
 
         // check if attribution string is different to minimize DOM changes
         const attribHTML = attributions.join(' | ');
-        if (attribHTML === this._sanitizedAttributionHTML) return;
+        if (attribHTML === this._attribHTML) return;
 
-        this._sanitizedAttributionHTML = DOM.sanitize(attribHTML);
+        this._attribHTML = attribHTML;
 
         if (attributions.length) {
-            this._innerContainer.innerHTML = this._sanitizedAttributionHTML;
+            this._innerContainer.innerHTML = DOM.sanitize(attribHTML);
             this._container.classList.remove('maplibregl-attrib-empty');
         } else {
             this._container.classList.add('maplibregl-attrib-empty');

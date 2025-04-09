@@ -1,15 +1,30 @@
 ## main
 
 ### ✨ Features and improvements
-- Added `getBounds` to GeoJSON source to allow getting the boundaries of the data in it ([#5575](https://github.com/maplibre/maplibre-gl-js/pull/5575))
-- Add a check for MouseEvent, to avoid errors when bot were crawling on website using Event instance instead of MouseEvent instance for types like mouseover, mouseout etc.. ([#5466](https://github.com/maplibre/maplibre-gl-js/pull/5466)).
+
+- Now only adds `aria-label` on the Marker's element if it does not already has one ([#5298](https://github.com/maplibre/maplibre-gl-js/pull/5298))
+
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 
-- Fix intersection detection between MultiPolygons and Points ([#5590](https://github.com/maplibre/maplibre-gl-js/pull/5590))
+- The state of `glPixelStore` is now properly cleaned after texture updates to avoid `glTexSubImage2D` calls made on the same gl context acting differently at random ([#5730](https://github.com/maplibre/maplibre-gl-js/pull/5730))
 - Fix [#5616](https://github.com/maplibre/maplibre-gl-js/issues/5616) `_updateRetainedTiles` checking for children when children len is 1 overscaled tile "child"
 - _...Add new stuff here..._
+
+## 5.3.0
+
+### ✨ Features and improvements
+
+- Added `getBounds` to GeoJSON source to allow getting the boundaries of the data in it ([#5575](https://github.com/maplibre/maplibre-gl-js/pull/5575))
+- Add a check for MouseEvent, to avoid errors when bot were crawling on website using Event instance instead of MouseEvent instance for types like mouseover, mouseout etc.. ([#5466](https://github.com/maplibre/maplibre-gl-js/pull/5466)).
+
+### 🐞 Bug fixes
+
+- Fix intersection detection between MultiPolygons and Points ([#5590](https://github.com/maplibre/maplibre-gl-js/pull/5590))
+- Fix issue with image rendered partially on terrain tiles ([#1559](https://github.com/maplibre/maplibre-gl-js/issues/1559)).
+- Fix circle layer hitbox in Globe projection mode ([#5599](https://github.com/maplibre/maplibre-gl-js/pull/5599))
+- Fix excessive attribution control rerendering ([#5673](https://github.com/maplibre/maplibre-gl-js/pull/5673))
 
 ## 5.2.0
 

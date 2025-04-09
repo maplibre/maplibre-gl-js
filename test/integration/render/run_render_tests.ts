@@ -182,9 +182,12 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
         }
     }
 
-    const diffBuf = PNG.sync.write(minDiffImg, {filterType: 4});
-
-    fs.writeFileSync(diffPath, diffBuf);
+    if (minDiffImg) {
+        const diffBuf = PNG.sync.write(minDiffImg, {filterType: 4});
+        fs.writeFileSync(diffPath, diffBuf);
+        testData.diff = diffBuf.toString('base64');
+        testData.expected = minExpectedBuf.toString('base64');
+    }
     fs.writeFileSync(actualPath, actualBuf);
 
     testData.difference = minDiff;
@@ -194,9 +197,6 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
         console.log(`Updating ${expectedPath}`);
         fs.writeFileSync(expectedPath, PNG.sync.write(actualImg));
     }
-
-    testData.expected = minExpectedBuf.toString('base64');
-    testData.diff = diffBuf.toString('base64');
 }
 
 /**
