@@ -2178,7 +2178,7 @@ export class Map extends Camera {
     }
 
     /**
-     * Change the tile LOD behavior of the specified source. These parameters have no effect when 
+     * Change the tile Level of Detail behavior of the specified source. These parameters have no effect when 
      * pitch == 0, and the largest effect when the horizon is visible on screen.
      *
      * @param maxZoomLevelsOnScreen - The maximum number of distinct zoom levels allowed on screen at a time.
@@ -2188,21 +2188,20 @@ export class Map extends Camera {
      * @param tileCountMaxMinRatio - The ratio of the maximum number of tiles loaded (at high pitch) to the minimum
      * number of tiles loaded. Increasing this ratio allows more tiles to be loaded at high pitch angles. If the ratio
      * would otherwise be exceeded, the zoom level is reduced uniformly to keep the number of tiles within the limit.
-     * @param id - The ID of the source to set tile LOD parameters for. All sources will be updated if unspecified.
-     * @returns True is success, false if failure (for example if the ID
-     * corresponds to no existing sources).
+     * @param sourceId - The ID of the source to set tile LOD parameters for. All sources will be updated if unspecified.
+     * If `sourceId` is specified but a corresponding source does not exist, an error is thrown.
      * @example
      * ```ts
-     * let success = map.setSourceTileLodParams(4.0, 3.0, 'terrain');
+     * map.setSourceTileLodParams(4.0, 3.0, 'terrain');
      * ```
      * @see [Modify Level of Detail behavior](https://maplibre.org/maplibre-gl-js/docs/examples/lod-control/)
 
      */
-    setSourceTileLodParams(maxZoomLevelsOnScreen: number, tileCountMaxMinRatio: number, id?: string) : boolean {
-        if (id) {
-            const source = this.getSource(id);
+    setSourceTileLodParams(maxZoomLevelsOnScreen: number, tileCountMaxMinRatio: number, sourceId?: string) : this {
+        if (sourceId) {
+            const source = this.getSource(sourceId);
             if(!source) {
-                return false;
+                throw new Error(`There is no source with ID "${sourceId}", cannot set LOD parameters`);
             }
             source.calculateTileZoom = createCalculateTileZoomFunction(Math.max(1, maxZoomLevelsOnScreen), Math.max(1, tileCountMaxMinRatio));
         } else {
@@ -2211,7 +2210,7 @@ export class Map extends Camera {
             }
         }
         this._update(true);
-        return true;
+        return this;
     }
 
     /**

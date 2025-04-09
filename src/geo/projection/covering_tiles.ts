@@ -143,7 +143,7 @@ export function createCalculateTileZoomFunction(maxZoomLevelsOnScreen: number, t
 }
 const defaultMaxZoomLevelsOnScreen = 9.314;
 const defaultTileCountMaxMinRatio = 3.0;
-const calculateTileZoom = createCalculateTileZoomFunction(defaultMaxZoomLevelsOnScreen, defaultTileCountMaxMinRatio);
+const defaultCalculateTileZoom = createCalculateTileZoomFunction(defaultMaxZoomLevelsOnScreen, defaultTileCountMaxMinRatio);
 
 /**
  * Return what zoom level of a tile source would most closely cover the tiles displayed by this transform.
@@ -237,7 +237,7 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
 
         let thisTileDesiredZ = desiredZ;
         if (allowVariableZoom) {
-            const tileZoomFunc = options.calculateTileZoom || calculateTileZoom;
+            const tileZoomFunc = options.calculateTileZoom || defaultCalculateTileZoom;
             thisTileDesiredZ = tileZoomFunc(transform.zoom + scaleZoom(transform.tileSize / options.tileSize),
                 distToTile2d,
                 distanceZ,
