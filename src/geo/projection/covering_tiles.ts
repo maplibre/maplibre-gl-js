@@ -1,12 +1,13 @@
 import {OverscaledTileID} from '../../source/tile_id';
 import {vec2, type vec4} from 'gl-matrix';
 import {MercatorCoordinate} from '../mercator_coordinate';
-import {clamp, degreesToRadians, scaleZoom} from '../../util/util';
+import {degreesToRadians, scaleZoom} from '../../util/util';
 import {type Aabb, IntersectionResult} from '../../util/primitives/aabb';
 
 import type {IReadonlyTransform} from '../transform_interface';
 import type {Terrain} from '../../render/terrain';
 import type {Frustum} from '../../util/primitives/frustum';
+import {maxMercatorHorizonAngle} from './mercator_utils';
 
 type CoveringTilesResult = {
     tileID: OverscaledTileID;
@@ -97,35 +98,52 @@ export function isTileVisible(frustum: Frustum, aabb: Aabb, plane?: vec4): Inter
     return IntersectionResult.Partial;
 }
 
-function calculateTileZoom(requestedCenterZoom: number,
-    distanceToTile2D: number,
-    distanceToTileZ: number,
-    distanceToCenter3D: number,
-    cameraVerticalFOV: number) : number {
-    /**
-    * Controls how tiles are loaded at high pitch angles. Higher numbers cause fewer, lower resolution
-    * tiles to be loaded. At 0, tiles are loaded with approximately constant screen X resolution.
-    * At 1, tiles are loaded with approximately constant screen area.
-    * At 2, tiles are loaded with approximately constant screen Y resolution.
-    */
-    const pitchTileLoadingBehavior = 1.0;
-    /**
-    * Controls how tiles are loaded at high pitch angles. Controls how different the distance to a tile must be (compared with the center point)
-    * before a new zoom level is requested. For example, if tileZoomDeadband = 1 and the center zoom is 14, tiles distant enough to be loaded at
-    * z13 will be loaded at z14, and tiles distant enough to be loaded at z14 will be loaded at z15. A higher number causes more tiles to be loaded
-    * at the center zoom level. This also results in more tiles being loaded overall.
-    */
-    const tileZoomDeadband = 0.0;
-    let thisTileDesiredZ = requestedCenterZoom;
-    const thisTilePitch = Math.atan(distanceToTile2D / distanceToTileZ);
-    const distanceToTile3D = Math.hypot(distanceToTile2D, distanceToTileZ);
-    // if distance to candidate tile is a tiny bit farther than distance to center,
-    // use the same zoom as the center. This is achieved by the scaling distance ratio by cos(fov/2)
-    thisTileDesiredZ = requestedCenterZoom + scaleZoom(distanceToCenter3D / distanceToTile3D / Math.max(0.5, Math.cos(degreesToRadians(cameraVerticalFOV / 2))));
-    thisTileDesiredZ += pitchTileLoadingBehavior * scaleZoom(Math.cos(thisTilePitch)) / 2;
-    thisTileDesiredZ = thisTileDesiredZ + clamp(requestedCenterZoom - thisTileDesiredZ, -tileZoomDeadband, tileZoomDeadband);
-    return thisTileDesiredZ;
+function intCosXToP(p:number, x1: number, x2: number): number {
+    const N = 10;
+    let sum = 0;
+    const dx = (x2-x1)/N;
+    for( let i = 0; i < N; i++)
+    {
+        const x = x1 + (i+0.5)/10 * (x2-x1);
+        sum += dx*Math.pow(Math.cos(x), p);
+    }
+    return sum;
 }
+
+export function createCalculateTileZoomFunction(maxZoomLevelsOnScreen: number, tileCountMaxMinRatio: number): CalculateTileZoomFunction {
+    return function (requestedCenterZoom: number,
+        distanceToTile2D: number,
+        distanceToTileZ: number,
+        distanceToCenter3D: number,
+        cameraVerticalFOV: number): number {
+        /**
+        * Controls how tiles are loaded at high pitch angles. Higher numbers cause fewer, lower resolution
+        * tiles to be loaded. Calculate the value that will result in the selected number of zoom levels in
+        * the worst-case condition (when the horizon is at the top of the screen). 
+        */
+        const pitchTileLoadingBehavior = 2*((1 - maxZoomLevelsOnScreen) /
+            scaleZoom(Math.cos(degreesToRadians(maxMercatorHorizonAngle)) /
+                Math.cos(degreesToRadians(maxMercatorHorizonAngle - cameraVerticalFOV))) - 1);
+
+        const centerPitch = Math.acos(distanceToTileZ / distanceToCenter3D);
+        const tileCountPitch0 = 2*intCosXToP(pitchTileLoadingBehavior - 1, 0, degreesToRadians(cameraVerticalFOV / 2));
+        const highestPitch = Math.min(degreesToRadians(maxMercatorHorizonAngle), centerPitch+degreesToRadians(cameraVerticalFOV / 2));
+        const tileCount = intCosXToP(pitchTileLoadingBehavior - 1, highestPitch-degreesToRadians(cameraVerticalFOV), highestPitch);
+
+        const thisTilePitch = Math.atan(distanceToTile2D / distanceToTileZ);
+        const distanceToTile3D = Math.hypot(distanceToTile2D, distanceToTileZ);
+        let thisTileDesiredZ = requestedCenterZoom -
+            scaleZoom(Math.max(1, tileCount/tileCountPitch0/tileCountMaxMinRatio)) / 2;
+        // if distance to candidate tile is a tiny bit farther than distance to center,
+        // use the same zoom as the center. This is achieved by the scaling distance ratio by cos(fov/2)
+        thisTileDesiredZ = thisTileDesiredZ + scaleZoom(distanceToCenter3D / distanceToTile3D / Math.max(0.5, Math.cos(degreesToRadians(cameraVerticalFOV / 2))));
+        thisTileDesiredZ += pitchTileLoadingBehavior * scaleZoom(Math.cos(thisTilePitch)) / 2;
+        return thisTileDesiredZ;
+    };
+}
+const defaultMaxZoomLevelsOnScreen = 9.314;
+const defaultTileCountMaxMinRatio = 3.0;
+const defaultCalculateTileZoom = createCalculateTileZoomFunction(defaultMaxZoomLevelsOnScreen, defaultTileCountMaxMinRatio);
 
 /**
  * Return what zoom level of a tile source would most closely cover the tiles displayed by this transform.
@@ -219,7 +237,7 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
 
         let thisTileDesiredZ = desiredZ;
         if (allowVariableZoom) {
-            const tileZoomFunc = options.calculateTileZoom || calculateTileZoom;
+            const tileZoomFunc = options.calculateTileZoom || defaultCalculateTileZoom;
             thisTileDesiredZ = tileZoomFunc(transform.zoom + scaleZoom(transform.tileSize / options.tileSize),
                 distToTile2d,
                 distanceZ,
