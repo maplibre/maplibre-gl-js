@@ -104,7 +104,7 @@ function intCosXToP(p:number, x1: number, x2: number): number {
     const dx = (x2-x1)/N;
     for( let i = 0; i < N; i++)
     {
-        const x = x1 + (i+0.5)/10 * (x2-x1);
+        const x = x1 + (i+0.5)/N * (x2-x1);
         sum += dx*Math.pow(Math.cos(x), p);
     }
     return sum;
@@ -128,7 +128,8 @@ export function createCalculateTileZoomFunction(maxZoomLevelsOnScreen: number, t
         const centerPitch = Math.acos(distanceToTileZ / distanceToCenter3D);
         const tileCountPitch0 = 2*intCosXToP(pitchTileLoadingBehavior - 1, 0, degreesToRadians(cameraVerticalFOV / 2));
         const highestPitch = Math.min(degreesToRadians(maxMercatorHorizonAngle), centerPitch+degreesToRadians(cameraVerticalFOV / 2));
-        const tileCount = intCosXToP(pitchTileLoadingBehavior - 1, highestPitch-degreesToRadians(cameraVerticalFOV), highestPitch);
+        const lowestPitch = Math.min(highestPitch, centerPitch-degreesToRadians(cameraVerticalFOV / 2));
+        const tileCount = intCosXToP(pitchTileLoadingBehavior - 1, lowestPitch, highestPitch);
 
         const thisTilePitch = Math.atan(distanceToTile2D / distanceToTileZ);
         const distanceToTile3D = Math.hypot(distanceToTile2D, distanceToTileZ);
