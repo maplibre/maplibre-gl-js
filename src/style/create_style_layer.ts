@@ -1,6 +1,7 @@
 import {CircleStyleLayer} from './style_layer/circle_style_layer';
 import {HeatmapStyleLayer} from './style_layer/heatmap_style_layer';
 import {HillshadeStyleLayer} from './style_layer/hillshade_style_layer';
+import {ColorReliefStyleLayer} from './style_layer/color_relief_style_layer';
 import {FillStyleLayer} from './style_layer/fill_style_layer';
 import {FillExtrusionStyleLayer} from './style_layer/fill_extrusion_style_layer';
 import {LineStyleLayer} from './style_layer/line_style_layer';
@@ -20,6 +21,8 @@ export function createStyleLayer(layer: LayerSpecification | CustomLayerInterfac
             return new BackgroundStyleLayer(layer);
         case 'circle':
             return new CircleStyleLayer(layer);
+        case 'color-relief':
+            return new ColorReliefStyleLayer(layer);
         case 'fill':
             return new FillStyleLayer(layer);
         case 'fill-extrusion':
