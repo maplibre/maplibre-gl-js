@@ -1,5 +1,8 @@
 uniform sampler2D u_image;
 uniform vec4 u_unpack;
+uniform float u_colormap_scale;
+uniform float u_elevation_start;
+uniform sampler2D u_colormap;
 in vec2 v_pos;
 
 float getElevation(vec2 coord) {
@@ -11,8 +14,8 @@ float getElevation(vec2 coord) {
 
 void main() {
     float el = getElevation(v_pos);
-
-    fragColor = vec4(el/3200.0, 0.0, 1.0, 1.0);
+    float x = (el - u_elevation_start)*u_colormap_scale;
+    fragColor = texture(u_colormap, vec2(x, 0));
 
 #ifdef OVERDRAW_INSPECTOR
     fragColor = vec4(1.0);
