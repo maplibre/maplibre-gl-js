@@ -2065,11 +2065,14 @@ export class Map extends Camera {
             if (!sourceCache) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
             // Update terrain tiles when adding new terrain
             if (this.terrain === null) sourceCache.reload();
-            // Warn once if user is using the same source for hillshade and terrain
+            // Warn once if user is using the same source for hillshade/color-relief and terrain
             for (const index in this.style._layers) {
                 const thisLayer = this.style._layers[index];
                 if (thisLayer.type === 'hillshade' && thisLayer.source === options.source) {
                     warnOnce('You are using the same source for a hillshade layer and for 3D terrain. Please consider using two separate sources to improve rendering quality.');
+                }
+                if (thisLayer.type === 'color-relief' && thisLayer.source === options.source) {
+                    warnOnce('You are using the same source for a color-relief layer and for 3D terrain. Please consider using two separate sources to improve rendering quality.');
                 }
             }
             this.terrain = new Terrain(this.painter, sourceCache, options);
