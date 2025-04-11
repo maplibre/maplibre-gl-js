@@ -80,10 +80,10 @@ function renderColorRelief(
         if (tile.demTexture) {
             const demTexture = tile.demTexture;
             demTexture.update(pixelData, {premultiply: false});
-            demTexture.bind(gl.NEAREST, gl.CLAMP_TO_EDGE);
+            demTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
         } else {
             tile.demTexture = new Texture(context, pixelData, gl.RGBA, {premultiply: false});
-            tile.demTexture.bind(gl.NEAREST, gl.CLAMP_TO_EDGE);
+            tile.demTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
         }
         
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, true, 'raster');

@@ -1,6 +1,7 @@
 import {
     Uniform1i,
     Uniform1f,
+    Uniform2f,
     Uniform4f
 } from '../uniform_binding';
 
@@ -15,6 +16,7 @@ export type ColorReliefUniformsType = {
     'u_colormap': Uniform1i;
     'u_colormap_scale': Uniform1f;
     'u_elevation_start': Uniform1f;
+    'u_dimension': Uniform2f;
 };
 
 const colorReliefUniforms = (context: Context, locations: UniformLocations): ColorReliefUniformsType => ({
@@ -22,7 +24,8 @@ const colorReliefUniforms = (context: Context, locations: UniformLocations): Col
     'u_unpack': new Uniform4f(context, locations.u_unpack),
     'u_colormap': new Uniform1i(context, locations.u_colormap),
     'u_colormap_scale': new Uniform1f(context, locations.u_colormap_scale),
-    'u_elevation_start': new Uniform1f(context, locations.u_elevation_start)
+    'u_elevation_start': new Uniform1f(context, locations.u_elevation_start),
+    'u_dimension': new Uniform2f(context, locations.u_dimension)
 });
 
 const colorReliefUniformValues = (
@@ -36,7 +39,8 @@ const colorReliefUniformValues = (
         'u_unpack': dem.getUnpackVector(),
         'u_colormap': 5,
         'u_colormap_scale': 1.0 / (elevationRange.end - elevationRange.start),
-        'u_elevation_start': elevationRange.start
+        'u_elevation_start': elevationRange.start,
+        'u_dimension': [dem.stride, dem.stride],
     };
 };
 
