@@ -16,7 +16,6 @@ import type {OverscaledTileID} from '../source/tile_id';
 import {clamp, nextPowerOfTwo} from '../util/util';
 import {renderColorRamp} from '../util/color_ramp';
 import {EXTENT} from '../data/extent';
-import {type StencilMode} from '../gl/stencil_mode';
 
 export function drawLine(painter: Painter, sourceCache: SourceCache, layer: LineStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
@@ -125,13 +124,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
             gradientTexture.bind(layer.stepInterpolant ? gl.NEAREST : gl.LINEAR, gl.CLAMP_TO_EDGE);
         }
 
-        let stencil: StencilMode;
-        if (isRenderingToTexture) {
-            const [stencilModes] = painter.getStencilConfigForOverlapAndUpdateStencilID(coords);
-            stencil = stencilModes[coord.overscaledZ];
-        } else {
-            stencil = painter.stencilModeForClipping(coord);
-        }
+        const stencil = painter.stencilModeForClipping(coord);
 
         program.draw(context, gl.TRIANGLES, depthMode,
             stencil, colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,
