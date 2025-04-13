@@ -2,7 +2,9 @@ import {
     Uniform1i,
     Uniform1f,
     Uniform2f,
-    Uniform4f
+    Uniform4f,
+    UniformFloatArray,
+    UniformColorArray
 } from '../uniform_binding';
 
 import type {Context} from '../../gl/context';
@@ -17,6 +19,9 @@ export type ColorReliefUniformsType = {
     'u_colormap_scale': Uniform1f;
     'u_elevation_start': Uniform1f;
     'u_dimension': Uniform2f;
+    'u_elevation_stops': UniformFloatArray;
+    'u_color_stops': UniformColorArray;
+    'u_colormap_length': Uniform1i;
 };
 
 const colorReliefUniforms = (context: Context, locations: UniformLocations): ColorReliefUniformsType => ({
@@ -25,7 +30,10 @@ const colorReliefUniforms = (context: Context, locations: UniformLocations): Col
     'u_colormap': new Uniform1i(context, locations.u_colormap),
     'u_colormap_scale': new Uniform1f(context, locations.u_colormap_scale),
     'u_elevation_start': new Uniform1f(context, locations.u_elevation_start),
-    'u_dimension': new Uniform2f(context, locations.u_dimension)
+    'u_dimension': new Uniform2f(context, locations.u_dimension),
+    'u_elevation_stops': new UniformFloatArray(context, locations.u_elevation_stops),
+    'u_color_stops': new UniformColorArray(context, locations.u_color_stops),
+    'u_colormap_length': new Uniform1i(context, locations.u_colormap_length)
 });
 
 const colorReliefUniformValues = (
@@ -41,6 +49,9 @@ const colorReliefUniformValues = (
         'u_colormap_scale': 1.0 / (elevationRange.end - elevationRange.start),
         'u_elevation_start': elevationRange.start,
         'u_dimension': [dem.stride, dem.stride],
+        'u_elevation_stops': layer.elevationStops,
+        'u_color_stops': layer.colorStops,
+        'u_colormap_length': layer.elevationStops.length
     };
 };
 
