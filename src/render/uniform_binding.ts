@@ -144,7 +144,7 @@ class UniformFloatArray extends Uniform<Array<number>> {
         if (v != this.current) {
             this.current = v;
             const values = new Float32Array(v);
-            this.gl.uniform4fv(this.location, values);
+            this.gl.uniform1fv(this.location, values);
         }
     }
 }
