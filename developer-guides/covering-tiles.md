@@ -60,6 +60,21 @@ If $b = -1$, then $S = S_c\frac{Dc}{cos\theta_c}$ and all tiles are loaded at th
 
 # `maxZoomLevelsOnScreen`
 
+The number of zoom levels on the screen is
+$$N=Z_{max} - Z_{min} + 1 = Z(\theta_{min}) - Z(\theta_{max}) + 1 = \log_2(\frac{S(\theta_{min})}{S(\theta_{max})}) + 1$$
+
+Given the above formula for $S$,
+
+$$ N = \log_2(\frac{\cos^{b/2+1}\theta_{min}}{\cos^{b/2+1}\theta_{max}}) + 1 = \log_2(\frac{\cos\theta_{min}}{\cos\theta_{max}})(b/2+1) + 1$$
+
+$N$ is maximized when $\theta_max$ is at the horizon:
+
+$$ N_{max} = \log_2(\frac{\cos(\theta_{horizon} - vFOV)}{\cos\theta_{horizon}})(b/2+1) + 1$$
+
+Rearranging, $b$ can be written as a funciton of $N_{max}$:
+
+$$ b = 2(\frac{N_{max} - 1}{\log_2(\frac{\cos(\theta_{horizon} - vFOV)}{\cos\theta_{horizon}})}-1) $$
+
 # `tileCountMaxMinRatio`
 
 Thus the total tile area is 
