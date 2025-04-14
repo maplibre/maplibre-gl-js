@@ -95,3 +95,11 @@ $$S_c = S_r(\text{tileCountMaxMinRatio} \frac{\int_{-vFOV/2}^{vFOV/2} \cos^{b-1}
 and
 
 $$Z_c = Z_r+\log_2{(\text{tileCountMaxMinRatio} \frac{\int_{-vFOV/2}^{vFOV/2} \cos^{b-1}\theta d\theta}{\int_{\theta_1}^{\theta2} \cos^{b-1}\theta d\theta})}/2 $$
+
+## The integral
+
+The term $\int_{\theta_1}^{\theta2} \cos^{p}\theta d\theta$ appears twice in the equation for $Z_c$. The solution is
+
+$$\int_{\theta_1}^{\theta2} \cos^{p}\theta d\theta = - \frac{\sin\theta_2}{|\sin\theta_2|}\frac{\cos^{p+1}\theta_2}{p+1} {}_2F_1(\frac{1}{2}, \frac{p+1}{2},\frac{p+3}{2}, \cos^2\theta_2) + \frac{\sin\theta_1}{|\sin\theta_1|}\frac{\cos^{p+1}\theta_1}{p+1} {}_2F_1(\frac{1}{2}, \frac{p+1}{2},\frac{p+3}{2}, \cos^2\theta_1)$$
+
+where ${}_2F_1()$ is the hypergeometric function.
