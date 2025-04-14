@@ -9,7 +9,7 @@
 ### 🐞 Bug fixes
 
 - The state of `glPixelStore` is now properly cleaned after texture updates to avoid `glTexSubImage2D` calls made on the same gl context acting differently at random ([#5730](https://github.com/maplibre/maplibre-gl-js/pull/5730))
-- Fix [#5616](https://github.com/maplibre/maplibre-gl-js/issues/5616) `_updateRetainedTiles` checking for children when children len is 1 overscaled tile "child"
+- Fix `_updateRetainedTiles` checking for children when children length is 1 overscaled tile "child" ([#5360](https://github.com/maplibre/maplibre-gl-js/pull/5630))
 - _...Add new stuff here..._
 
 ## 5.3.0
