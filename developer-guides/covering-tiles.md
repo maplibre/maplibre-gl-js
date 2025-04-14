@@ -13,7 +13,7 @@ $A$, area (map units)
 
 $Z$, tile zoom level
 
-$S$, tile scale factor (pixels per map unit): $ S = 2^Z$
+$S$, tile scale factor (pixels per map unit): $S = 2^Z$
 
 $S_r$, requested center scale factor (pixels per map unit)
 
