@@ -170,7 +170,7 @@ describe('marker', () => {
         
         // open popup
         marker.togglePopup();
-        let spy = vi.fn();
+        const spy = vi.fn();
         popup.on('close', spy);
         (document.getElementsByClassName('maplibregl-popup-close-button')[0] as HTMLButtonElement).click();
 
