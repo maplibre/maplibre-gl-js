@@ -32,7 +32,7 @@ $$ D(\theta) = h\sec\theta $$
 
 Assume the horizontal field of view is a small angle $\alpha$.
 
-Then the area of an infintesimal strip on the ground is 
+Then the area of an infinitesimal strip on the ground is 
 
 $$ dA = \alpha D dr$$
 
@@ -71,7 +71,7 @@ $N$ is maximized when $\theta_max$ is at the horizon:
 
 $$ N_{max} = \log_2(\frac{\cos(\theta_{horizon} - vFOV)}{\cos\theta_{horizon}})(b/2+1) + 1$$
 
-Rearranging, $b$ can be written as a funciton of $N_{max}$:
+Rearranging, $b$ can be written as a function of $N_{max}$:
 
 $$ b = 2(\frac{N_{max} - 1}{\log_2(\frac{\cos(\theta_{horizon} - vFOV)}{\cos\theta_{horizon}})}-1) $$
 
