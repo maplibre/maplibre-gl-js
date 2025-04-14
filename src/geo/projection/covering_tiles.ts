@@ -97,15 +97,23 @@ export function isTileVisible(frustum: Frustum, aabb: Aabb, plane?: vec4): Inter
 
     return IntersectionResult.Partial;
 }
-
-function intCosXToP(p:number, x1: number, x2: number): number {
-    const N = 10;
+/**
+ * Definite integral of cos(x)^p. The analytical solution is described in `developer-guides/covering-tiles.md`,
+ * but here the integral is evaluated numerically.
+ * @param p - the power to raise cos(x) to inside the itegral
+ * @param x1 - the starting point of the integral.
+ * @param x2 - the ending point of the integral.
+ * @return the integral of cos(x)^p from x=x1 to x=x2
+ */
+function intCosXToP(p: number, x1: number, x2: number): number {
+    const numPoints = 10;
     let sum = 0;
-    const dx = (x2-x1)/N;
-    for( let i = 0; i < N; i++)
+    const dx = (x2 - x1 ) / numPoints;
+    // Midpoint integration
+    for( let i = 0; i < numPoints; i++)
     {
-        const x = x1 + (i+0.5)/N * (x2-x1);
-        sum += dx*Math.pow(Math.cos(x), p);
+        const x = x1 + (i + 0.5)/numPoints * (x2 - x1);
+        sum += dx * Math.pow(Math.cos(x), p);
     }
     return sum;
 }
