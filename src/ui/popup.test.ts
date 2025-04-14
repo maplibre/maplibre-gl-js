@@ -498,6 +498,20 @@ describe('popup', () => {
         expect(map.getContainer().querySelectorAll('.maplibregl-popup')).toHaveLength(1);
     });
 
+    test('Popup can be removed and added again can be closed with click (#5576)', () => {
+        const map = createMap();
+
+        new Popup()
+            .setText('Test')
+            .setLngLat([0, 0])
+            .addTo(map)
+            .addTo(map);
+
+        (map.getContainer().querySelector('.maplibregl-popup-close-button') as HTMLButtonElement).click();
+
+        expect(map.getContainer().querySelectorAll('.maplibregl-popup')).toHaveLength(0);
+    });
+
     test('Popup#addTo is idempotent (#1811)', () => {
         const map = createMap();
 
