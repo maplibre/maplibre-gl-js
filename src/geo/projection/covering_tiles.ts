@@ -105,7 +105,7 @@ export function isTileVisible(frustum: Frustum, aabb: Aabb, plane?: vec4): Inter
  * @param x2 - the ending point of the integral.
  * @return the integral of cos(x)^p from x=x1 to x=x2
  */
-function intCosXToP(p: number, x1: number, x2: number): number {
+function integralOfCosXByP(p: number, x1: number, x2: number): number {
     const numPoints = 10;
     let sum = 0;
     const dx = (x2 - x1 ) / numPoints;
@@ -135,10 +135,10 @@ export function createCalculateTileZoomFunction(maxZoomLevelsOnScreen: number, t
                 Math.cos(degreesToRadians(maxMercatorHorizonAngle))) - 1);
 
         const centerPitch = Math.acos(distanceToTileZ / distanceToCenter3D);
-        const tileCountPitch0 = 2 * intCosXToP(pitchTileLoadingBehavior - 1, 0, degreesToRadians(cameraVerticalFOV / 2));
+        const tileCountPitch0 = 2 * integralOfCosXByP(pitchTileLoadingBehavior - 1, 0, degreesToRadians(cameraVerticalFOV / 2));
         const highestPitch = Math.min(degreesToRadians(maxMercatorHorizonAngle), centerPitch + degreesToRadians(cameraVerticalFOV / 2));
         const lowestPitch = Math.min(highestPitch, centerPitch - degreesToRadians(cameraVerticalFOV / 2));
-        const tileCount = intCosXToP(pitchTileLoadingBehavior - 1, lowestPitch, highestPitch);
+        const tileCount = integralOfCosXByP(pitchTileLoadingBehavior - 1, lowestPitch, highestPitch);
         const thisTilePitch = Math.atan(distanceToTile2D / distanceToTileZ);
         const distanceToTile3D = Math.hypot(distanceToTile2D, distanceToTileZ);
 
