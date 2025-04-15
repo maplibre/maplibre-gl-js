@@ -29,9 +29,9 @@ function nativeType(property) {
             return 'Color';
         case 'padding':
             return 'Padding';
-        case 'number-array':
+        case 'numberArray':
             return 'NumberArray';
-        case 'color-array':
+        case 'colorArray':
             return 'ColorArray';
         case 'variableAnchorOffsetCollection':
             return 'VariableAnchorOffsetCollection';
