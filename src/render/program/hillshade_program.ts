@@ -71,13 +71,13 @@ const hillshadeUniformValues = (
     tile: Tile,
     layer: HillshadeStyleLayer,
 ): UniformValues<HillshadeUniformsType> => {
-    const shadow = layer.paint.get('hillshade-shadow-color');
-    const highlight = layer.paint.get('hillshade-highlight-color');
+    const shadow = layer.paint.get('hillshade-shadow-color').values[0];
+    const highlight = layer.paint.get('hillshade-highlight-color').values[0];
     const accent = layer.paint.get('hillshade-accent-color');
     const method = layer.paint.get('hillshade-method');
 
-    let azimuthal = degreesToRadians(layer.paint.get('hillshade-illumination-direction'));
-    const altitude = degreesToRadians(layer.paint.get('hillshade-illumination-altitude'));
+    let azimuthal = degreesToRadians(layer.paint.get('hillshade-illumination-direction').values[0]);
+    const altitude = degreesToRadians(layer.paint.get('hillshade-illumination-altitude').values[0]);
     // modify azimuthal angle by map rotation if light is anchored at the viewport
     if (layer.paint.get('hillshade-illumination-anchor') === 'viewport') {
         azimuthal += painter.transform.bearingInRadians;
