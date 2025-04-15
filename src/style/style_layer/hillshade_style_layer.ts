@@ -4,7 +4,8 @@ import properties, {type HillshadePaintPropsPossiblyEvaluated} from './hillshade
 import {type Transitionable, type Transitioning, type PossiblyEvaluated} from '../properties';
 
 import type {HillshadePaintProps} from './hillshade_style_layer_properties.g';
-import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {Color, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {degreesToRadians} from '../../util/util';
 
 export const isHillshadeStyleLayer = (layer: StyleLayer): layer is HillshadeStyleLayer => layer.type === 'hillshade';
 
@@ -15,6 +16,37 @@ export class HillshadeStyleLayer extends StyleLayer {
 
     constructor(layer: LayerSpecification) {
         super(layer, properties);
+
+    }
+
+    getIlluminationProperties(): {directionRadians: number[]; altitudeRadians: number[]; shadowColor: Color[]; highlightColor: Color[]} {
+
+        const direction = this.paint.get('hillshade-illumination-direction').values;
+        const altitude = this.paint.get('hillshade-illumination-altitude').values;
+        const highlightColor = this.paint.get('hillshade-highlight-color').values;
+        const shadowColor = this.paint.get('hillshade-shadow-color').values;
+        // ensure all illumination properties have the same length
+        const numIlluminationSources = Math.max(direction.length, altitude.length, highlightColor.length, shadowColor.length);
+        for (let i = direction.length; i < numIlluminationSources; i++) {
+            direction.push(direction[i-1]);
+        }
+        for (let i = altitude.length; i < numIlluminationSources; i++) {
+            altitude.push(altitude[i-1]);
+        }
+        for (let i = highlightColor.length; i < numIlluminationSources; i++) {
+            highlightColor.push(highlightColor[i-1]);
+        }
+        for (let i = shadowColor.length; i < numIlluminationSources; i++) {
+            shadowColor.push(shadowColor[i-1]);
+        }
+        const altitudeRadians = [];
+        const directionRadians = [];
+        for (let i = 0; i < numIlluminationSources; i++) {
+            altitudeRadians.push(degreesToRadians(altitude[i]));
+            directionRadians.push(degreesToRadians(direction[i]));
+        }
+
+        return {directionRadians, altitudeRadians, shadowColor, highlightColor};
     }
 
     hasOffscreenPass() {

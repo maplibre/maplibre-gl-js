@@ -2,15 +2,13 @@ uniform sampler2D u_image;
 in vec2 v_pos;
 
 uniform vec2 u_latrange;
-uniform vec2 u_light;
-uniform vec4 u_shadow;
-uniform vec4 u_highlight;
+uniform float u_exaggeration;
 uniform vec4 u_accent;
 uniform int u_method;
-uniform float u_alt;
-uniform vec4 u_shadows[4];
-uniform vec4 u_highlights[4];
-uniform int u_num_multidirectional;
+uniform float u_altitudes[NUM_ILLUMINATION_SOURCES];
+uniform float u_azimuths[NUM_ILLUMINATION_SOURCES];
+uniform vec4 u_shadows[NUM_ILLUMINATION_SOURCES];
+uniform vec4 u_highlights[NUM_ILLUMINATION_SOURCES];
 
 #define PI 3.141592653589793
 
@@ -28,12 +26,12 @@ float get_aspect(vec2 deriv)
 void igor_hillshade(vec2 deriv)
 {
     float aspect = get_aspect(deriv);
-    float azimuth = u_light.y + PI;
+    float azimuth = u_azimuths[0] + PI;
     float slope_stength = atan(length(deriv)) * 2.0/PI;
     float aspect_strength = 1.0 - abs(mod((aspect + azimuth) / PI + 0.5, 2.0) - 1.0);
     float shadow_strength = slope_stength * aspect_strength;
     float highlight_strength = slope_stength * (1.0-aspect_strength);
-    fragColor = u_shadow * shadow_strength + u_highlight * highlight_strength;
+    fragColor = u_shadows[0] * shadow_strength + u_highlights[0] * highlight_strength;
 }
 
 void standard_hillshade(vec2 deriv)
@@ -41,13 +39,13 @@ void standard_hillshade(vec2 deriv)
     // We add PI to make this property match the global light object, which adds PI/2 to the light's azimuthal
     // position property to account for 0deg corresponding to north/the top of the viewport in the style spec
     // and the original shader was written to accept (-illuminationDirection - 90) as the azimuthal.
-    float azimuth = u_light.y + PI;
+    float azimuth = u_azimuths[0] + PI;
 
     // We also multiply the slope by an arbitrary z-factor of 1.25
     float slope = atan(1.25 * length(deriv));
     float aspect = get_aspect(deriv);
 
-    float intensity = u_light.x;
+    float intensity = u_exaggeration;
 
     // We scale the slope exponentially based on intensity, using a calculation similar to
     // the exponential interpolation function in the style spec:
@@ -65,59 +63,64 @@ void standard_hillshade(vec2 deriv)
     // while intensity values < 0.5 make the overall color more transparent.
     vec4 accent_color = (1.0 - accent) * u_accent * clamp(intensity * 2.0, 0.0, 1.0);
     float shade = abs(mod((aspect + azimuth) / PI + 0.5, 2.0) - 1.0);
-    vec4 shade_color = mix(u_shadow, u_highlight, shade) * sin(scaledSlope) * clamp(intensity * 2.0, 0.0, 1.0);
+    vec4 shade_color = mix(u_shadows[0], u_highlights[0], shade) * sin(scaledSlope) * clamp(intensity * 2.0, 0.0, 1.0);
     fragColor = accent_color * (1.0 - shade_color.a) + shade_color;
 }
 
 void basic_hillshade(vec2 deriv)
 {
-    float azimuth = u_light.y + PI;
+    float azimuth = u_azimuths[0] + PI;
     float cos_az = cos(azimuth);
     float sin_az = sin(azimuth);
-    float cos_alt = cos(u_alt);
-    float sin_alt = sin(u_alt);
+    float cos_alt = cos(u_altitudes[0]);
+    float sin_alt = sin(u_altitudes[0]);
 
     float cang = (sin_alt - (deriv.y*cos_az*cos_alt - deriv.x*sin_az*cos_alt)) / sqrt(1.0 + dot(deriv, deriv));
 
     float shade = clamp(cang, 0.0, 1.0);
     if(shade > 0.5)
     {
-        fragColor = u_highlight*(2.0*shade - 1.0);
+        fragColor = u_highlights[0]*(2.0*shade - 1.0);
     }
     else
     {
-        fragColor = u_shadow*(1.0 - 2.0*shade);
+        fragColor = u_shadows[0]*(1.0 - 2.0*shade);
     }
 }
 
 void multidirectional_hillshade(vec2 deriv)
 {
-    float cos_alt = cos(u_alt);
-    float sin_alt = sin(u_alt);
-
-    int N = u_num_multidirectional;
     fragColor = vec4(0,0,0,0);
 
-    for(int i = 0; i < N; i++)
+    for(int i = 0; i < NUM_ILLUMINATION_SOURCES; i++)
     {
-        float azimuth = u_light.y + PI + float(i-1)*PI/float(N);
+        float cos_alt = cos(u_altitudes[i]);
+        float sin_alt = sin(u_altitudes[i]);
+        float cos_az = -cos(u_azimuths[i]);
+        float sin_az = -sin(u_azimuths[i]);
 
-        float cos_az = cos(azimuth);
-        float sin_az = sin(azimuth);
         float cang = (sin_alt - (deriv.y*cos_az*cos_alt - deriv.x*sin_az*cos_alt)) / sqrt(1.0 + dot(deriv, deriv));
 
         float shade = clamp(cang, 0.0, 1.0);
-        fragColor += mix(u_shadows[i], u_highlights[i], shade)*abs(2.0*shade - 1.0)/float(N);
+        
+        if(shade > 0.5)
+        {
+            fragColor += u_highlights[i]*(2.0*shade - 1.0)/float(NUM_ILLUMINATION_SOURCES);
+        }
+        else
+        {
+            fragColor += u_shadows[i]*(1.0 - 2.0*shade)/float(NUM_ILLUMINATION_SOURCES);
+        }
     }
 }
 
 void combined_hillshade(vec2 deriv)
 {
-    float azimuth = u_light.y + PI;
+    float azimuth = u_azimuths[0] + PI;
     float cos_az = cos(azimuth);
     float sin_az = sin(azimuth);
-    float cos_alt = cos(u_alt);
-    float sin_alt = sin(u_alt);
+    float cos_alt = cos(u_altitudes[0]);
+    float sin_alt = sin(u_altitudes[0]);
 
     float cang = acos((sin_alt - (deriv.y*cos_az*cos_alt - deriv.x*sin_az*cos_alt)) / sqrt(1.0 + dot(deriv, deriv)));
 
@@ -126,7 +129,7 @@ void combined_hillshade(vec2 deriv)
     float shade = cang* atan(length(deriv)) * 4.0/PI/PI;
     float highlight = (PI/2.0-cang)* atan(length(deriv)) * 4.0/PI/PI;
     
-    fragColor = u_shadow*shade + u_highlight*highlight;
+    fragColor = u_shadows[0]*shade + u_highlights[0]*highlight;
 }
 
 void main() {

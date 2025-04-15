@@ -257,7 +257,7 @@ export class Painter {
         };
 
         // Note: we force a simple mercator projection for the shader, since we want to draw a fullscreen quad.
-        this.useProgram('clippingMask', null, true).draw(context, gl.TRIANGLES,
+        this.useProgram('clippingMask', null, null, true).draw(context, gl.TRIANGLES,
             DepthMode.disabled, this.stencilClearMode, ColorMode.disabled, CullFaceMode.disabled,
             null, null, projectionData,
             '$clipping', this.viewportBuffer,
@@ -716,7 +716,7 @@ export class Painter {
      * False by default. Use true when drawing with a simple projection matrix is desired, eg. when drawing a fullscreen quad.
      * @returns
      */
-    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, forceSimpleProjection: boolean = false): Program<any> {
+    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, defines?: Array<string> | null, forceSimpleProjection: boolean = false): Program<any> {
         this.cache = this.cache || {};
         const useTerrain = !!this.style.map.terrain;
 
@@ -729,8 +729,9 @@ export class Painter {
         const configurationKey = (programConfiguration ? programConfiguration.cacheKey : '');
         const overdrawKey = (this._showOverdrawInspector ? '/overdraw' : '');
         const terrainKey = (useTerrain ? '/terrain' : '');
+        const definesKey = (defines ? '/' + defines.join('/') : '');
 
-        const key = name + configurationKey + projectionKey + overdrawKey + terrainKey;
+        const key = name + configurationKey + projectionKey + overdrawKey + terrainKey + definesKey;
 
         if (!this.cache[key]) {
             this.cache[key] = new Program(
@@ -741,7 +742,8 @@ export class Painter {
                 this._showOverdrawInspector,
                 useTerrain,
                 projectionPrelude,
-                projectionDefine
+                projectionDefine,
+                defines
             );
         }
         return this.cache[key];
