@@ -160,6 +160,24 @@ describe('marker', () => {
         expect(!marker.getPopup()).toBeTruthy();
     });
 
+    test('Marker#setPopup binds a popup and allow closing it with click', () => {
+        const map = createMap();
+        const popup = new Popup()
+            .setText('Test');
+        const marker = new Marker()
+            .setLngLat([0,0])
+            .setPopup(popup)
+            .addTo(map);
+        
+        // open popup
+        marker.togglePopup();
+        const spy = vi.fn();
+        popup.on('close', spy);
+        (map.getContainer().querySelector('.maplibregl-popup-close-button') as HTMLButtonElement).click();
+
+        expect(spy).toHaveBeenCalled();
+    });
+
     test('Marker#togglePopup opens a popup that was closed', async () => {
         const map = createMap();
         const marker = new Marker()
