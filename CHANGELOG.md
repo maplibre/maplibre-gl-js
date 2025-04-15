@@ -9,6 +9,7 @@
 ### 🐞 Bug fixes
 
 - The state of `glPixelStore` is now properly cleaned after texture updates to avoid `glTexSubImage2D` calls made on the same gl context acting differently at random ([#5730](https://github.com/maplibre/maplibre-gl-js/pull/5730))
+- Fixes an issue with popup close button not working ([#5754](https://github.com/maplibre/maplibre-gl-js/pull/5754))
 - _...Add new stuff here..._
 
 ## 5.3.0
