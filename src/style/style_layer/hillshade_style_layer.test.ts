@@ -19,7 +19,7 @@ describe('HillshadeStyleLayer', () => {
         const layer = createStyleLayer(layerSpec);
         expect(layer).toBeInstanceOf(HillshadeStyleLayer);
         
-        const illumination = layer.getIlluminationProperties();
+        const illumination = (layer as HillshadeStyleLayer).getIlluminationProperties();
         expect(illumination.directionRadians).toEqual([degreesToRadians(335)]);
         expect(illumination.altitudeRadians).toEqual([degreesToRadians(45)]);
         expect(illumination.highlightColor).toEqual([Color.white]);
@@ -39,7 +39,7 @@ describe('HillshadeStyleLayer', () => {
         const layer = createStyleLayer(layerSpec);
         expect(layer).toBeInstanceOf(HillshadeStyleLayer);
         
-        const illumination = layer.getIlluminationProperties();
+        const illumination = (layer as HillshadeStyleLayer).getIlluminationProperties();
         expect(illumination.directionRadians).toEqual([degreesToRadians(3)]);
         expect(illumination.altitudeRadians).toEqual([degreesToRadians(4)]);
         expect(illumination.highlightColor).toEqual([Color.red]);
@@ -59,7 +59,7 @@ describe('HillshadeStyleLayer', () => {
         const layer = createStyleLayer(layerSpec);
         expect(layer).toBeInstanceOf(HillshadeStyleLayer);
         
-        const illumination = layer.getIlluminationProperties();
+        const illumination = (layer as HillshadeStyleLayer).getIlluminationProperties();
         expect(illumination.directionRadians).toEqual([degreesToRadians(6), degreesToRadians(7)]);
         expect(illumination.altitudeRadians).toEqual([degreesToRadians(8), degreesToRadians(9)]);
         expect(illumination.highlightColor).toEqual([Color.red, Color.red]);
@@ -79,7 +79,7 @@ describe('HillshadeStyleLayer', () => {
         let layer = createStyleLayer(layerSpec);
         expect(layer).toBeInstanceOf(HillshadeStyleLayer);
         
-        let illumination = layer.getIlluminationProperties();
+        let illumination = (layer as HillshadeStyleLayer).getIlluminationProperties();
         expect(illumination.directionRadians).toEqual([degreesToRadians(6), degreesToRadians(7)]);
         expect(illumination.altitudeRadians).toEqual([degreesToRadians(23), degreesToRadians(23)]);
         expect(illumination.highlightColor).toEqual([Color.red, Color.red]);
@@ -96,7 +96,7 @@ describe('HillshadeStyleLayer', () => {
         layer = createStyleLayer(layerSpec);
         expect(layer).toBeInstanceOf(HillshadeStyleLayer);
         
-        illumination = layer.getIlluminationProperties();
+        illumination = (layer as HillshadeStyleLayer).getIlluminationProperties();
         expect(illumination.directionRadians).toEqual([degreesToRadians(335), degreesToRadians(335)]);
         expect(illumination.altitudeRadians).toEqual([degreesToRadians(23), degreesToRadians(23)]);
         expect(illumination.highlightColor).toEqual([Color.red, Color.red]);
