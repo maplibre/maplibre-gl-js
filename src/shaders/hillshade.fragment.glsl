@@ -41,8 +41,8 @@ void standard_hillshade(vec2 deriv)
     // and the original shader was written to accept (-illuminationDirection - 90) as the azimuthal.
     float azimuth = u_azimuths[0] + PI;
 
-    // We also multiply the slope by an arbitrary z-factor of 1.25
-    float slope = atan(1.25 * length(deriv));
+    // We also multiply the slope by an arbitrary z-factor of 0.625
+    float slope = atan(0.625 * length(deriv));
     float aspect = get_aspect(deriv);
 
     float intensity = u_exaggeration;
@@ -139,7 +139,7 @@ void main() {
     // to account for mercator projection distortion. see #4807 for details
     float scaleFactor = cos(radians((u_latrange[0] - u_latrange[1]) * (1.0 - v_pos.y) + u_latrange[1]));
 
-    vec2 deriv = ((pixel.rg * 2.0) - 1.0)/scaleFactor;
+    vec2 deriv = ((pixel.rg * 8.0) - 4.0) / scaleFactor;
 
     if(u_method == STANDARD)
     {

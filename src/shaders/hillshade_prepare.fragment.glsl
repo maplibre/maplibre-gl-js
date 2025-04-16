@@ -64,11 +64,11 @@ void main() {
     vec2 deriv = vec2(
         (c + f + f + i) - (a + d + d + g),
         (g + h + h + i) - (a + b + b + c)
-    ) * tileSize/ pow(2.0, exaggeration + (28.2562 - u_zoom));
+    ) * tileSize / pow(2.0, exaggeration + (28.2562 - u_zoom));
 
     fragColor = clamp(vec4(
-        deriv.x / 2.0 + 0.5,
-        deriv.y / 2.0 + 0.5,
+        deriv.x / 8.0 + 0.5,
+        deriv.y / 8.0 + 0.5,
         1.0,
         1.0), 0.0, 1.0);
 
