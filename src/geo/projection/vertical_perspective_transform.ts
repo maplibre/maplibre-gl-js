@@ -218,6 +218,9 @@ export class VerticalPerspectiveTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
     }
+    get allowRenderWorldCopies(): boolean {
+        return false;
+    }
     public get nearZ(): number { 
         return this._helper.nearZ; 
     }
@@ -226,9 +229,6 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
     public get autoCalculateNearFarZ(): boolean { 
         return this._helper.autoCalculateNearFarZ; 
-    }
-    public get isGlobeRendering(): boolean {
-        return true;
     }
     setTransitionState(_value: number): void {
         // Do nothing

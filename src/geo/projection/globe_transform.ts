@@ -199,6 +199,9 @@ export class GlobeTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
     }
+    get allowRenderWorldCopies(): boolean {
+        return !this.isGlobeRendering && this.renderWorldCopies;
+    }
     get cameraToCenterDistance(): number {
         return this._helper.cameraToCenterDistance;
     }

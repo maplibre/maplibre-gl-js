@@ -198,6 +198,9 @@ export class MercatorTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
     }
+    get allowRenderWorldCopies(): boolean {
+        return this.renderWorldCopies;
+    }
     get cameraToCenterDistance(): number { 
         return this._helper.cameraToCenterDistance;
     }
@@ -209,9 +212,6 @@ export class MercatorTransform implements ITransform {
     }
     public get autoCalculateNearFarZ(): boolean { 
         return this._helper.autoCalculateNearFarZ; 
-    }
-    get isGlobeRendering(): boolean {
-        return false;
     }
     setTransitionState(_value: number, _error: number): void {
         // Do nothing

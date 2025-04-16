@@ -486,7 +486,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Globe automatically transitions to mercator at high zoom levels, which causes a switch from
      * globe to mercator render path.
      */
-    get isGlobeRendering(): boolean;
+    get allowRenderWorldCopies(): boolean;
 }
 
 /**
