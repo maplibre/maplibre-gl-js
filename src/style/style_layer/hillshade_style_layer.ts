@@ -6,6 +6,7 @@ import {type Transitionable, type Transitioning, type PossiblyEvaluated} from '.
 import type {HillshadePaintProps} from './hillshade_style_layer_properties.g';
 import type {Color, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {degreesToRadians} from '../../util/util';
+import {EvaluationParameters} from '../evaluation_parameters';
 
 export const isHillshadeStyleLayer = (layer: StyleLayer): layer is HillshadeStyleLayer => layer.type === 'hillshade';
 
@@ -16,6 +17,7 @@ export class HillshadeStyleLayer extends StyleLayer {
 
     constructor(layer: LayerSpecification) {
         super(layer, properties);
+        this.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
         if (this.paint.get('hillshade-illumination-direction').values.length < 1) {
             throw new Error('"hillshade-illumination-direction" cannot be an empty array');
         }
