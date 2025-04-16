@@ -480,6 +480,13 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Returns a tile-specific projection matrix. Used for symbol placement fast-path for mercator transform.
      */
     getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 | undefined;
+
+    /**
+     * True when globe render path should be used instead of the old but simpler mercator rendering.
+     * Globe automatically transitions to mercator at high zoom levels, which causes a switch from
+     * globe to mercator render path.
+     */
+    get isGlobeRendering(): boolean;
 }
 
 /**
