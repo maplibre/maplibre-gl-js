@@ -146,7 +146,7 @@ describe('Uniform Binding', () => {
 
         const context = {
             gl: {
-                uniform4fv: () => { expect(true).toBeTruthy(); }
+                uniform1fv: () => { expect(true).toBeTruthy(); }
             }
         } as any as Context;
 
