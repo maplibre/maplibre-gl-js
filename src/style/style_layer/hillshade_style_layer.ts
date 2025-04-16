@@ -6,7 +6,7 @@ import {type Transitionable, type Transitioning, type PossiblyEvaluated} from '.
 import type {HillshadePaintProps} from './hillshade_style_layer_properties.g';
 import type {Color, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {degreesToRadians} from '../../util/util';
-import {EvaluationParameters} from '../evaluation_parameters';
+import type {EvaluationParameters} from '../evaluation_parameters';
 
 export const isHillshadeStyleLayer = (layer: StyleLayer): layer is HillshadeStyleLayer => layer.type === 'hillshade';
 

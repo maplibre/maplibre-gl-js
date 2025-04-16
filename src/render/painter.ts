@@ -729,7 +729,7 @@ export class Painter {
         const configurationKey = (programConfiguration ? programConfiguration.cacheKey : '');
         const overdrawKey = (this._showOverdrawInspector ? '/overdraw' : '');
         const terrainKey = (useTerrain ? '/terrain' : '');
-        const definesKey = (defines ? '/' + defines.join('/') : '');
+        const definesKey = (defines ? `/${defines.join('/')}` : '');
 
         const key = name + configurationKey + projectionKey + overdrawKey + terrainKey + definesKey;
 

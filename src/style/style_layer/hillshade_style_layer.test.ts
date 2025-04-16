@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import {HillshadeStyleLayer} from './hillshade_style_layer';
-import {Color, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {Color, type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {createStyleLayer} from '../create_style_layer';
 import {degreesToRadians, extend} from '../../util/util';
 
@@ -136,6 +136,4 @@ describe('HillshadeStyleLayer', () => {
 
         expect(() => {createStyleLayer(layerSpec);}).toThrow('"hillshade-shadow-color" cannot be an empty array');
     });
-
-   
 });
