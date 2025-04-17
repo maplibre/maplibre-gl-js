@@ -198,9 +198,6 @@ export class MercatorTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
     }
-    get allowRenderWorldCopies(): boolean {
-        return this.renderWorldCopies;
-    }
     get cameraToCenterDistance(): number { 
         return this._helper.cameraToCenterDistance;
     }

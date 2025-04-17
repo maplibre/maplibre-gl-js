@@ -480,11 +480,6 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Returns a tile-specific projection matrix. Used for symbol placement fast-path for mercator transform.
      */
     getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 | undefined;
-
-    /**
-     * True when the renderWorldCopies is true and the current projection allows rendering world copies.
-     */
-    get allowRenderWorldCopies(): boolean;
 }
 
 /**
