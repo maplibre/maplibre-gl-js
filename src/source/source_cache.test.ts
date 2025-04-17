@@ -1577,7 +1577,7 @@ describe('SourceCache#tilesIn', () => {
         sourceCache.onAdd(undefined);
     }));
 
-    test('globe wrap', () => new Promise<void>(done => {
+    test('globe wrap', () => async () => {
         const transform = new GlobeTransform();
         transform.resize(512, 512);
         transform.setZoom(1.05);
@@ -1588,53 +1588,47 @@ describe('SourceCache#tilesIn', () => {
             tile.state = 'loaded';
         };
 
-        sourceCache.on('data', (e) => {
-            if (e.sourceDataType === 'metadata') {
+        while ((await sourceCache.once('data')).sourceDataType !== 'metadata') {}
 
-                sourceCache.update(transform);
+        sourceCache.update(transform);
 
-                expect(sourceCache.getIds()).toEqual([
-                    new OverscaledTileID(1, 1, 1, 0, 1).key,
-                    new OverscaledTileID(1, 1, 1, 0, 0).key,
-                    new OverscaledTileID(1, 0, 1, 1, 1).key,
-                    new OverscaledTileID(1, 0, 1, 1, 0).key,
-                ]);
+        expect(sourceCache.getIds()).toEqual([
+            new OverscaledTileID(1, 1, 1, 0, 1).key,
+            new OverscaledTileID(1, 1, 1, 0, 0).key,
+            new OverscaledTileID(1, 0, 1, 1, 1).key,
+            new OverscaledTileID(1, 0, 1, 1, 0).key,
+        ]);
 
-                expect(sourceCache.tilesIn([new Point(200, 200),], 1, false).map(tile => tile.tileID.key))
-                    .toEqual([new OverscaledTileID(1, 0, 1, 1, 0).key]);
-                expect(sourceCache.tilesIn([new Point(300, 200),], 1, false).map(tile => tile.tileID.key))
-                    .toEqual([new OverscaledTileID(1, 0, 1, 0, 0).key]);
-                expect(sourceCache.tilesIn([new Point(200, 300),], 1, false).map(tile => tile.tileID.key))
-                    .toEqual([new OverscaledTileID(1, 0, 1, 1, 1).key]);
-                expect(sourceCache.tilesIn([new Point(300, 300),], 1, false).map(tile => tile.tileID.key))
-                    .toEqual([new OverscaledTileID(1, 0, 1, 0, 1).key]);
+        expect(sourceCache.tilesIn([new Point(200, 200),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 1, 0).key]);
+        expect(sourceCache.tilesIn([new Point(300, 200),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 0, 0).key]);
+        expect(sourceCache.tilesIn([new Point(200, 300),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 1, 1).key]);
+        expect(sourceCache.tilesIn([new Point(300, 300),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 0, 1).key]);
 
-                transform.setCenter(new LngLat(-179.9, 0.1));
-                sourceCache.update(transform);
+        transform.setCenter(new LngLat(-179.9, 0.1));
+        sourceCache.update(transform);
 
-                expect(sourceCache.getIds()).toEqual([
-                    new OverscaledTileID(1, -1, 1, 1, 1).key,
-                    new OverscaledTileID(1, -1, 1, 1, 0).key,
-                    new OverscaledTileID(1, 0, 1, 0, 1).key,
-                    new OverscaledTileID(1, 0, 1, 0, 0).key,
-                ]);
+        expect(sourceCache.getIds()).toEqual([
+            new OverscaledTileID(1, -1, 1, 1, 1).key,
+            new OverscaledTileID(1, -1, 1, 1, 0).key,
+            new OverscaledTileID(1, 0, 1, 0, 1).key,
+            new OverscaledTileID(1, 0, 1, 0, 0).key,
+        ]);
 
-                expect(sourceCache.tilesIn([new Point(200, 200),], 1, false).map(tile => tile.tileID.key))
-                    .toEqual([new OverscaledTileID(1, 0, 1, 1, 0).key]);
-                expect(sourceCache.tilesIn([new Point(300, 200),], 1, false).map(tile => tile.tileID.key))
-                    .toEqual([new OverscaledTileID(1, 0, 1, 0, 0).key]);
-                expect(sourceCache.tilesIn([new Point(200, 300),], 1, false).map(tile => tile.tileID.key))
-                    .toEqual([new OverscaledTileID(1, 0, 1, 1, 1).key]);
-                expect(sourceCache.tilesIn([new Point(300, 300),], 1, false).map(tile => tile.tileID.key))
-                    .toEqual([new OverscaledTileID(1, 0, 1, 0, 1).key]);
+        expect(sourceCache.tilesIn([new Point(200, 200),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 1, 0).key]);
+        expect(sourceCache.tilesIn([new Point(300, 200),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 0, 0).key]);
+        expect(sourceCache.tilesIn([new Point(200, 300),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 1, 1).key]);
+        expect(sourceCache.tilesIn([new Point(300, 300),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 0, 1).key]);
+    });
 
-                done();
-            }
-        });
-        sourceCache.onAdd(undefined);
-    }));
-
-    test('mercator wrap', () => new Promise<void>(done => {
+    test('mercator wrap', () => async () => {
         const transform = new MercatorTransform();
         transform.resize(512, 512);
         transform.setZoom(1.05);
@@ -1645,50 +1639,45 @@ describe('SourceCache#tilesIn', () => {
             tile.state = 'loaded';
         };
 
-        sourceCache.on('data', (e) => {
-            if (e.sourceDataType === 'metadata') {
-                sourceCache.update(transform);
+        while ((await sourceCache.once('data')).sourceDataType !== 'metadata') {}
 
-                expect(sourceCache.getIds()).toEqual([
-                    new OverscaledTileID(1, 1, 1, 0, 1).key,
-                    new OverscaledTileID(1, 1, 1, 0, 0).key,
-                    new OverscaledTileID(1, 0, 1, 1, 1).key,
-                    new OverscaledTileID(1, 0, 1, 1, 0).key,
-                ]);
+        sourceCache.update(transform);
 
-                expect(sourceCache.tilesIn([new Point(200, 200),], 1, false).map(tile => tile.tileID.key))
-                    .toEqual([new OverscaledTileID(1, 0, 1, 1, 0).key]);
-                expect(sourceCache.tilesIn([new Point(300, 200),], 1, false).map(tile => tile.tileID.key))
-                    .toEqual([new OverscaledTileID(1, 1, 1, 0, 0).key]);
-                expect(sourceCache.tilesIn([new Point(200, 300),], 1, false).map(tile => tile.tileID.key))
-                    .toEqual([new OverscaledTileID(1, 0, 1, 1, 1).key]);
-                expect(sourceCache.tilesIn([new Point(300, 300),], 1, false).map(tile => tile.tileID.key))
-                    .toEqual([new OverscaledTileID(1, 1, 1, 0, 1).key]);
+        expect(sourceCache.getIds()).toEqual([
+            new OverscaledTileID(1, 1, 1, 0, 1).key,
+            new OverscaledTileID(1, 1, 1, 0, 0).key,
+            new OverscaledTileID(1, 0, 1, 1, 1).key,
+            new OverscaledTileID(1, 0, 1, 1, 0).key,
+        ]);
 
-                transform.setCenter(new LngLat(-179.9, 0.1));
-                sourceCache.update(transform);
+        expect(sourceCache.tilesIn([new Point(200, 200),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 1, 0).key]);
+        expect(sourceCache.tilesIn([new Point(300, 200),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 1, 1, 0, 0).key]);
+        expect(sourceCache.tilesIn([new Point(200, 300),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 1, 1).key]);
+        expect(sourceCache.tilesIn([new Point(300, 300),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 1, 1, 0, 1).key]);
 
-                expect(sourceCache.getIds()).toEqual([
-                    new OverscaledTileID(1, -1, 1, 1, 1).key,
-                    new OverscaledTileID(1, -1, 1, 1, 0).key,
-                    new OverscaledTileID(1, 0, 1, 0, 1).key,
-                    new OverscaledTileID(1, 0, 1, 0, 0).key,
-                ]);
+        transform.setCenter(new LngLat(-179.9, 0.1));
+        sourceCache.update(transform);
 
-                expect(sourceCache.tilesIn([new Point(200, 200),], 1, false).map(tile => tile.tileID.key))
-                    .toEqual([new OverscaledTileID(1, -1, 1, 1, 0).key]);
-                expect(sourceCache.tilesIn([new Point(300, 200),], 1, false).map(tile => tile.tileID.key))
-                    .toEqual([new OverscaledTileID(1, 0, 1, 0, 0).key]);
-                expect(sourceCache.tilesIn([new Point(200, 300),], 1, false).map(tile => tile.tileID.key))
-                    .toEqual([new OverscaledTileID(1, -1, 1, 1, 1).key]);
-                expect(sourceCache.tilesIn([new Point(300, 300),], 1, false).map(tile => tile.tileID.key))
-                    .toEqual([new OverscaledTileID(1, 0, 1, 0, 1).key]);
+        expect(sourceCache.getIds()).toEqual([
+            new OverscaledTileID(1, -1, 1, 1, 1).key,
+            new OverscaledTileID(1, -1, 1, 1, 0).key,
+            new OverscaledTileID(1, 0, 1, 0, 1).key,
+            new OverscaledTileID(1, 0, 1, 0, 0).key,
+        ]);
 
-                done();
-            }
-        });
-        sourceCache.onAdd(undefined);
-    }));
+        expect(sourceCache.tilesIn([new Point(200, 200),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, -1, 1, 1, 0).key]);
+        expect(sourceCache.tilesIn([new Point(300, 200),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 0, 0).key]);
+        expect(sourceCache.tilesIn([new Point(200, 300),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, -1, 1, 1, 1).key]);
+        expect(sourceCache.tilesIn([new Point(300, 300),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 0, 1).key]);
+    });
 });
 
 describe('source cache loaded', () => {
