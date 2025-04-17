@@ -2,13 +2,22 @@
 
 ### ✨ Features and improvements
 
-- Now only adds `aria-label` on the Marker's element if it does not already has one ([#5298](https://github.com/maplibre/maplibre-gl-js/pull/5298))
-
+- Add tile LOD control to the public API ([#5719](https://github.com/maplibre/maplibre-gl-js/pull/5719))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+
+-   Fix `queryRenderedFeatures` on globe view when crossing international date line ([#5765](https://github.com/maplibre/maplibre-gl-js/pull/5765))
 - _...Add new stuff here..._
 - Fix marker drag Coordinates give Longitude off by ±360° with Globe ([#5473](https://github.com/maplibre/maplibre-gl-js/issues/5473))
+
+## 5.3.1
+
+### 🐞 Bug fixes
+
+- Only add `aria-label` on the Marker's element if it does not already has one ([#5298](https://github.com/maplibre/maplibre-gl-js/pull/5298))
+- The state of `glPixelStore` is now properly cleaned after texture updates to avoid `glTexSubImage2D` calls made on the same gl context acting differently at random ([#5730](https://github.com/maplibre/maplibre-gl-js/pull/5730))
+- Fixes an issue with popup close button not working ([#5754](https://github.com/maplibre/maplibre-gl-js/pull/5754))
 
 ## 5.3.0
 
