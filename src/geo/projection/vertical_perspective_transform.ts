@@ -931,8 +931,11 @@ export class VerticalPerspectiveTransform implements ITransform {
 
         // Ray does not intersect the sphere -> find the closest point on the horizon to the ray.
         // Intersect the ray with the clipping plane, since we know that the intersection of the clipping plane and the sphere is the horizon.
-        const directionDotPlaneXyz = this._cachedClippingPlane[0] * rayDirection[0] + this._cachedClippingPlane[1] * rayDirection[1] + this._cachedClippingPlane[2] * rayDirection[2];
-        const originToPlaneDistance = pointPlaneSignedDistance(this._cachedClippingPlane, rayOrigin);
+        const n = vec3.length([this._cachedClippingPlane[0], this._cachedClippingPlane[1], this._cachedClippingPlane[2]]);
+        const horizonPlane = createVec4f64();
+        vec4.scale(horizonPlane, this._cachedClippingPlane, 1/n);
+        const directionDotPlaneXyz = horizonPlane[0] * rayDirection[0] + horizonPlane[1] * rayDirection[1] + horizonPlane[2] * rayDirection[2];
+        const originToPlaneDistance = pointPlaneSignedDistance(horizonPlane, rayOrigin);
         const distanceToIntersection = -originToPlaneDistance / directionDotPlaneXyz;
 
         const maxRayLength = 2.0; // One globe diameter
@@ -961,8 +964,21 @@ export class VerticalPerspectiveTransform implements ITransform {
             ]);
         }
 
+        const horizonCenter = createVec3f64();
+        horizonCenter[0] = horizonPlane[0] * -horizonPlane[3];
+        horizonCenter[1] = horizonPlane[1] * -horizonPlane[3];
+        horizonCenter[2] = horizonPlane[2] * -horizonPlane[3];
+        const horizonRadius = Math.sqrt(1 - horizonPlane[3] * horizonPlane[3]);
+
+        const horizonCenterToIntersection = createVec3f64();
+        vec3.sub(horizonCenterToIntersection, planeIntersection, horizonCenter);
+        const horizonCenterClosestOnHorizon = createVec3f64();
+        vec3.scale(horizonCenterClosestOnHorizon, horizonCenterToIntersection,
+            horizonRadius / vec3.len(horizonCenterToIntersection)
+        );
         const closestOnHorizon = createVec3f64();
-        vec3.normalize(closestOnHorizon, planeIntersection);
+        vec3.add(closestOnHorizon, horizonCenter, horizonCenterClosestOnHorizon);
+
         return sphereSurfacePointToCoordinates(closestOnHorizon);
     }
 

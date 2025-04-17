@@ -283,15 +283,21 @@ describe('GlobeTransform', () => {
                 expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
             });
 
-            test('unproject outside of sphere', () => {
+            test.only('unproject outside of sphere', () => {
                 const precisionDigits = 10;
                 const globeTransform = createGlobeTransform();
                 // Try unprojection a point somewhere above the western horizon
                 globeTransform.setPitch(60);
                 globeTransform.setBearing(-90);
                 const unprojected = globeTransform.screenPointToLocation(screenTopEdgeCenter);
-                expect(unprojected.lng).toBeCloseTo(-34.699626794124015, precisionDigits);
+                expect(unprojected.lng).toBeCloseTo(-28.990298145461963, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(0.0, precisionDigits);
+
+                // Try projections a point even further above the western horizon, it should project to the
+                // same location on the horizon
+                const unprojected2 = globeTransform.screenPointToLocation(screenTopEdgeCenter.sub(new Point(0, -100)));
+                expect(unprojected2.lng).toBeCloseTo(unprojected.lng, precisionDigits);
+                expect(unprojected2.lat).toBeCloseTo(unprojected.lat, precisionDigits);
             });
         });
 
