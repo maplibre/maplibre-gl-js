@@ -25,6 +25,7 @@ float get_aspect(vec2 deriv)
 
 void igor_hillshade(vec2 deriv)
 {
+    deriv = deriv * u_exaggeration * 2.0;
     float aspect = get_aspect(deriv);
     float azimuth = u_azimuths[0] + PI;
     float slope_stength = atan(length(deriv)) * 2.0/PI;
@@ -69,6 +70,7 @@ void standard_hillshade(vec2 deriv)
 
 void basic_hillshade(vec2 deriv)
 {
+    deriv = deriv * u_exaggeration * 2.0;
     float azimuth = u_azimuths[0] + PI;
     float cos_az = cos(azimuth);
     float sin_az = sin(azimuth);
@@ -90,6 +92,7 @@ void basic_hillshade(vec2 deriv)
 
 void multidirectional_hillshade(vec2 deriv)
 {
+    deriv = deriv * u_exaggeration * 2.0;
     fragColor = vec4(0,0,0,0);
 
     for(int i = 0; i < NUM_ILLUMINATION_SOURCES; i++)
@@ -116,6 +119,7 @@ void multidirectional_hillshade(vec2 deriv)
 
 void combined_hillshade(vec2 deriv)
 {
+    deriv = deriv * u_exaggeration * 2.0;
     float azimuth = u_azimuths[0] + PI;
     float cos_az = cos(azimuth);
     float sin_az = sin(azimuth);
