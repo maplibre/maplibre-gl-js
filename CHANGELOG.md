@@ -3,6 +3,7 @@
 ### ✨ Features and improvements
 
 - Add tile LOD control to the public API ([#5719](https://github.com/maplibre/maplibre-gl-js/pull/5719))
+- Add additional hillshade methods ([#5768](https://github.com/maplibre/maplibre-gl-js/pull/5768))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
