@@ -23,6 +23,8 @@ float get_aspect(vec2 deriv)
     return deriv.x != 0.0 ? atan(deriv.y, -deriv.x) : PI / 2.0 * (deriv.y > 0.0 ? 1.0 : -1.0);
 }
 
+// Based on GDALHillshadeIgorAlg(). GDAL's version only calculates shading.
+// This version also adds highlighting. To match GDAL's output, make hillshade-highlight-color transparent. 
 void igor_hillshade(vec2 deriv)
 {
     deriv = deriv * u_exaggeration * 2.0;
@@ -35,6 +37,7 @@ void igor_hillshade(vec2 deriv)
     fragColor = u_shadows[0] * shadow_strength + u_highlights[0] * highlight_strength;
 }
 
+// MapLibre's legacy hillshade algorithm
 void standard_hillshade(vec2 deriv)
 {
     // We add PI to make this property match the global light object, which adds PI/2 to the light's azimuthal
@@ -68,6 +71,10 @@ void standard_hillshade(vec2 deriv)
     fragColor = accent_color * (1.0 - shade_color.a) + shade_color;
 }
 
+// Based on GDALHillshadeAlg(). GDAL's output ranges from black to white, and is gray in the middle.
+// The output of this function ranges from hillshade-shadow-color to hillshade-highlight-color, and 
+// is transparent in the middle. To match GDAL's output, make hillshade-highlight-color white,
+// hillshade-shadow color black, and the background color gray.
 void basic_hillshade(vec2 deriv)
 {
     deriv = deriv * u_exaggeration * 2.0;
@@ -90,6 +97,8 @@ void basic_hillshade(vec2 deriv)
     }
 }
 
+// This functioon applies the basic_hillshade algorithm across multiple independent light sources.
+// The final color is the average of the contribution from each light source.
 void multidirectional_hillshade(vec2 deriv)
 {
     deriv = deriv * u_exaggeration * 2.0;
@@ -117,6 +126,8 @@ void multidirectional_hillshade(vec2 deriv)
     }
 }
 
+// Based on GDALHillshadeCombinedAlg(). GDAL's version only calculates shading.
+// This version also adds highlighting. To match GDAL's output, make hillshade-highlight-color transparent. 
 void combined_hillshade(vec2 deriv)
 {
     deriv = deriv * u_exaggeration * 2.0;
