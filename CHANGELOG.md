@@ -6,6 +6,8 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+
+-   Fix `queryRenderedFeatures` on globe view when crossing international date line ([#5765](https://github.com/maplibre/maplibre-gl-js/pull/5765))
 - _...Add new stuff here..._
 
 ## 5.3.1

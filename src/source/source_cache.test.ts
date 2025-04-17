@@ -1576,6 +1576,108 @@ describe('SourceCache#tilesIn', () => {
         });
         sourceCache.onAdd(undefined);
     }));
+
+    test('globe wrap', () => async () => {
+        const transform = new GlobeTransform();
+        transform.resize(512, 512);
+        transform.setZoom(1.05);
+        transform.setCenter(new LngLat(179.9, 0.1));
+
+        const sourceCache = createSourceCache();
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+
+        while ((await sourceCache.once('data')).sourceDataType !== 'metadata') {}
+
+        sourceCache.update(transform);
+
+        expect(sourceCache.getIds()).toEqual([
+            new OverscaledTileID(1, 1, 1, 0, 1).key,
+            new OverscaledTileID(1, 1, 1, 0, 0).key,
+            new OverscaledTileID(1, 0, 1, 1, 1).key,
+            new OverscaledTileID(1, 0, 1, 1, 0).key,
+        ]);
+
+        expect(sourceCache.tilesIn([new Point(200, 200),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 1, 0).key]);
+        expect(sourceCache.tilesIn([new Point(300, 200),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 0, 0).key]);
+        expect(sourceCache.tilesIn([new Point(200, 300),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 1, 1).key]);
+        expect(sourceCache.tilesIn([new Point(300, 300),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 0, 1).key]);
+
+        transform.setCenter(new LngLat(-179.9, 0.1));
+        sourceCache.update(transform);
+
+        expect(sourceCache.getIds()).toEqual([
+            new OverscaledTileID(1, -1, 1, 1, 1).key,
+            new OverscaledTileID(1, -1, 1, 1, 0).key,
+            new OverscaledTileID(1, 0, 1, 0, 1).key,
+            new OverscaledTileID(1, 0, 1, 0, 0).key,
+        ]);
+
+        expect(sourceCache.tilesIn([new Point(200, 200),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 1, 0).key]);
+        expect(sourceCache.tilesIn([new Point(300, 200),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 0, 0).key]);
+        expect(sourceCache.tilesIn([new Point(200, 300),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 1, 1).key]);
+        expect(sourceCache.tilesIn([new Point(300, 300),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 0, 1).key]);
+    });
+
+    test('mercator wrap', () => async () => {
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+        transform.setZoom(1.05);
+        transform.setCenter(new LngLat(179.9, 0.1));
+
+        const sourceCache = createSourceCache();
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+
+        while ((await sourceCache.once('data')).sourceDataType !== 'metadata') {}
+
+        sourceCache.update(transform);
+
+        expect(sourceCache.getIds()).toEqual([
+            new OverscaledTileID(1, 1, 1, 0, 1).key,
+            new OverscaledTileID(1, 1, 1, 0, 0).key,
+            new OverscaledTileID(1, 0, 1, 1, 1).key,
+            new OverscaledTileID(1, 0, 1, 1, 0).key,
+        ]);
+
+        expect(sourceCache.tilesIn([new Point(200, 200),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 1, 0).key]);
+        expect(sourceCache.tilesIn([new Point(300, 200),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 1, 1, 0, 0).key]);
+        expect(sourceCache.tilesIn([new Point(200, 300),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 1, 1).key]);
+        expect(sourceCache.tilesIn([new Point(300, 300),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 1, 1, 0, 1).key]);
+
+        transform.setCenter(new LngLat(-179.9, 0.1));
+        sourceCache.update(transform);
+
+        expect(sourceCache.getIds()).toEqual([
+            new OverscaledTileID(1, -1, 1, 1, 1).key,
+            new OverscaledTileID(1, -1, 1, 1, 0).key,
+            new OverscaledTileID(1, 0, 1, 0, 1).key,
+            new OverscaledTileID(1, 0, 1, 0, 0).key,
+        ]);
+
+        expect(sourceCache.tilesIn([new Point(200, 200),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, -1, 1, 1, 0).key]);
+        expect(sourceCache.tilesIn([new Point(300, 200),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 0, 0).key]);
+        expect(sourceCache.tilesIn([new Point(200, 300),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, -1, 1, 1, 1).key]);
+        expect(sourceCache.tilesIn([new Point(300, 300),], 1, false).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 0, 1).key]);
+    });
 });
 
 describe('source cache loaded', () => {
