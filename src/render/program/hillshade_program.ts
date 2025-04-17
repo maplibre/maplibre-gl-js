@@ -18,6 +18,7 @@ import type {Painter} from '../painter';
 import type {HillshadeStyleLayer} from '../../style/style_layer/hillshade_style_layer';
 import type {DEMData} from '../../data/dem_data';
 import type {OverscaledTileID} from '../../source/tile_id';
+import {degreesToRadians} from '../../util/util';
 
 export type HillshadeUniformsType = {
     'u_image': Uniform1i;
@@ -58,11 +59,11 @@ const hillshadeUniformValues = (
     tile: Tile,
     layer: HillshadeStyleLayer,
 ): UniformValues<HillshadeUniformsType> => {
-    const shadow = layer.paint.get('hillshade-shadow-color');
-    const highlight = layer.paint.get('hillshade-highlight-color');
+    const shadow = layer.paint.get('hillshade-shadow-color').values[0];
+    const highlight = layer.paint.get('hillshade-highlight-color').values[0];
     const accent = layer.paint.get('hillshade-accent-color');
 
-    let azimuthal = layer.paint.get('hillshade-illumination-direction') * (Math.PI / 180);
+    let azimuthal = degreesToRadians(layer.paint.get('hillshade-illumination-direction').values[0]);
     // modify azimuthal angle by map rotation if light is anchored at the viewport
     if (layer.paint.get('hillshade-illumination-anchor') === 'viewport') {
         azimuthal += painter.transform.bearingInRadians;
