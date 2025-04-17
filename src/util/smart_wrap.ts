@@ -16,7 +16,10 @@ import type {IReadonlyTransform} from '../geo/transform_interface';
  * map center changes by ±360° due to automatic wrapping, and when about to go off screen,
  * should wrap just enough to avoid doing so.
  */
-export function smartWrap(lngLat: LngLat, priorPos: Point, transform: IReadonlyTransform): LngLat {
+export function smartWrap(lngLat: LngLat, priorPos: Point, transform: IReadonlyTransform, useNormalWrap: boolean = false): LngLat {
+    if (useNormalWrap || !transform.getCoveringTilesDetailsProvider().allowWorldCopies()) {
+        return lngLat?.wrap();
+    }
     const originalLngLat = new LngLat(lngLat.lng, lngLat.lat);
     lngLat = new LngLat(lngLat.lng, lngLat.lat);
 
@@ -34,23 +37,18 @@ export function smartWrap(lngLat: LngLat, priorPos: Point, transform: IReadonlyT
         }
     }
 
-    if (transform.getCoveringTilesDetailsProvider().allowWorldCopies()) {
-        // Second, wrap toward the center until the new position is on screen, or we can't get
-        // any closer.
-        while (Math.abs(lngLat.lng - transform.center.lng) > 180) {
-            const pos = transform.locationToScreenPoint(lngLat);
-            if (pos.x >= 0 && pos.y >= 0 && pos.x <= transform.width && pos.y <= transform.height) {
-                break;
-            }
-            if (lngLat.lng > transform.center.lng) {
-                lngLat.lng -= 360;
-            } else {
-                lngLat.lng += 360;
-            }
+    // Second, wrap toward the center until the new position is on screen, or we can't get
+    // any closer.
+    while (Math.abs(lngLat.lng - transform.center.lng) > 180) {
+        const pos = transform.locationToScreenPoint(lngLat);
+        if (pos.x >= 0 && pos.y >= 0 && pos.x <= transform.width && pos.y <= transform.height) {
+            break;
         }
-    } else {
-        // We don't have world copies rendered (e.g. globe)
-        lngLat = lngLat.wrap();
+        if (lngLat.lng > transform.center.lng) {
+            lngLat.lng -= 360;
+        } else {
+            lngLat.lng += 360;
+        }
     }
 
     // Apply the change only if new coord is below horizon
