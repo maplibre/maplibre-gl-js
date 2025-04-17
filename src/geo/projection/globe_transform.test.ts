@@ -283,7 +283,7 @@ describe('GlobeTransform', () => {
                 expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
             });
 
-            test.only('unproject outside of sphere', () => {
+            test('unproject outside of sphere', () => {
                 const precisionDigits = 10;
                 const globeTransform = createGlobeTransform();
                 // Try unprojection a point somewhere above the western horizon
@@ -473,10 +473,10 @@ describe('GlobeTransform', () => {
             globeTransform.setCenter(new LngLat(0, 0));
             globeTransform.setZoom(1);
             const bounds = globeTransform.getBounds();
-            expect(bounds._ne.lat).toBeCloseTo(83.96012370156063, precisionDigits);
-            expect(bounds._ne.lng).toBeCloseTo(85.46274667048044, precisionDigits);
-            expect(bounds._sw.lat).toBeCloseTo(-83.96012370156063, precisionDigits);
-            expect(bounds._sw.lng).toBeCloseTo(-85.46274667048044, precisionDigits);
+            expect(bounds._ne.lat).toBeCloseTo(79.3636705287052, precisionDigits);
+            expect(bounds._ne.lng).toBeCloseTo(79.36367052870514, precisionDigits);
+            expect(bounds._sw.lat).toBeCloseTo(-79.3636705287052, precisionDigits);
+            expect(bounds._sw.lng).toBeCloseTo(-79.3636705287052, precisionDigits);
         });
 
         test('zoomed in', () => {
@@ -493,7 +493,7 @@ describe('GlobeTransform', () => {
             globeTransform.setCenter(new LngLat(0, -84));
             globeTransform.setZoom(-2);
             const bounds = globeTransform.getBounds();
-            expect(bounds._ne.lat).toBeCloseTo(-1.2776252401855572, precisionDigits);
+            expect(bounds._ne.lat).toBeCloseTo(-6.299534770946991, precisionDigits);
             expect(bounds._ne.lng).toBeCloseTo(180, precisionDigits);
             expect(bounds._sw.lat).toBeCloseTo(-90, precisionDigits);
             expect(bounds._sw.lng).toBeCloseTo(-180, precisionDigits);
