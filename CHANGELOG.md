@@ -10,6 +10,7 @@
 -   Fix `queryRenderedFeatures` on globe view when crossing international date line ([#5765](https://github.com/maplibre/maplibre-gl-js/pull/5765))
 -   Fix globe `unproject` to clamp points to horizon ([#5771](https://github.com/maplibre/maplibre-gl-js/pull/5771))
 - _...Add new stuff here..._
+- Fix marker drag Coordinates give Longitude off by ±360° with Globe ([#5473](https://github.com/maplibre/maplibre-gl-js/issues/5473))
 
 ## 5.3.1
 
