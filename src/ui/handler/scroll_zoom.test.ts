@@ -1,4 +1,4 @@
-import {describe, beforeEach, test, expect, vi} from 'vitest';
+import {describe, beforeEach, test, expect, vi, afterEach} from 'vitest';
 import {browser} from '../../util/browser';
 import {Map} from '../../ui/map';
 import {DOM} from '../../util/dom';
@@ -18,6 +18,11 @@ function createMap() {
 
 beforeEach(() => {
     beforeMapTest();
+});
+
+afterEach(() => {
+    vi.clearAllMocks();
+    vi.useRealTimers();
 });
 
 describe('ScrollZoomHandler', () => {
@@ -553,6 +558,7 @@ describe('ScrollZoomHandler', () => {
     });
 
     test('Terrain 3D zoom is in the same direction when pointing above horizon or under horizon', () => {
+        vi.useFakeTimers();
         // See also https://github.com/maplibre/maplibre-gl-js/issues/3398
         const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
@@ -607,5 +613,52 @@ describe('ScrollZoomHandler', () => {
         expect(map.getZoom()).toBeCloseTo(5.02856, 3);
 
         map.remove();
+    });
+
+    function scrollOutAtLat(map: Map, lat: number) {
+        map.setCenter([0, lat]);
+        map.setZoom(1);
+        for (let i = 0; i < 200; i++) {
+            simulate.wheel(map.getCanvas(), {
+                type: 'wheel',
+                deltaY: 5, 
+                clientX: map.transform.width / 2,
+                clientY: map.transform.height / 2});
+            vi.advanceTimersByTime(10);
+        }
+    }
+
+    test('Clamps zoom at high latitude to keep globe consistent size', async () => {
+        const map = createMap();
+        await map.once('load');
+
+        vi.useFakeTimers();
+
+        map.setProjection({type: 'globe'});
+        map.setMinZoom(0);
+
+        scrollOutAtLat(map, 80);
+        expect(map.getZoom()).toBeCloseTo(-2.53, 2);
+        scrollOutAtLat(map, -80);
+        expect(map.getZoom()).toBeCloseTo(-2.53, 2);
+        scrollOutAtLat(map, 0);
+        expect(map.getZoom()).toBeCloseTo(0, 2);
+    });
+
+    test('Clamps to min/max zoom when using mercator projection', async () => {
+        const map = createMap();
+        await map.once('load');
+
+        vi.useFakeTimers();
+
+        map.setProjection({type: 'mercator'});
+        map.setMinZoom(0);
+
+        scrollOutAtLat(map, 80);
+        expect(map.getZoom()).toBeCloseTo(0, 2);
+        scrollOutAtLat(map, -80);
+        expect(map.getZoom()).toBeCloseTo(0, 2);
+        scrollOutAtLat(map, 0);
+        expect(map.getZoom()).toBeCloseTo(0, 2);
     });
 });
