@@ -1,5 +1,5 @@
-import {vec3} from 'gl-matrix';
-import {clamp, lerp, MAX_VALID_LATITUDE, mod, remapSaturate, scaleZoom, wrap} from '../../util/util';
+import {type ReadonlyVec4, vec3} from 'gl-matrix';
+import {clamp, createVec3f64, lerp, MAX_VALID_LATITUDE, mod, remapSaturate, scaleZoom, wrap} from '../../util/util';
 import {LngLat} from '../lng_lat';
 import {EXTENT} from '../../data/extent';
 import type Point from '@mapbox/point-geometry';
@@ -106,6 +106,46 @@ export function sphereSurfacePointToCoordinates(surface: vec3): LngLat {
     } else {
         return new LngLat(0.0, latDegrees);
     }
+}
+
+/**
+ * Given a normalized horizon plane in Ax+By+Cz+D=0 format, compute the center and radius of
+ * the circle in that plain that contains the entire visible portion of the unit sphere from horizon
+ * to horizon.
+ * @param horizonPlane - The plane that passes through visible horizon in Ax + By + Cz + D = 0 format where mag(A,B,C)=1
+ * @returns the center point and radius of the disc that passes through the entire visible horizon
+ */
+export function horizonPlaneToCenterAndRadius(horizonPlane: ReadonlyVec4): { center: vec3; radius: number } {
+    const center = createVec3f64();
+    center[0] = horizonPlane[0] * -horizonPlane[3];
+    center[1] = horizonPlane[1] * -horizonPlane[3];
+    center[2] = horizonPlane[2] * -horizonPlane[3];
+    /*
+                     .*******
+                 ****|\
+               **    | \
+             **      |  1
+            * radius |   \
+           *         |    \
+           *  center +--D--+(0,0,0)
+     */
+    const radius = Math.sqrt(1 - horizonPlane[3] * horizonPlane[3]);
+    return {center, radius};
+}
+
+/**
+ * Computes the closest point on a sphere to `point`.
+ * @param center - Center of the sphere
+ * @param radius - Radius of the sphere
+ * @param point - Point inside or outside the sphere
+ * @returns A 3d vector of the point on the sphere closest to `point`
+ */
+export function clampToSphere(center: vec3, radius: number, point: vec3) {
+    const relativeToCenter = createVec3f64();
+    vec3.sub(relativeToCenter, point, center);
+    const clamped = createVec3f64();
+    vec3.scaleAndAdd(clamped, center, relativeToCenter, radius / vec3.len(relativeToCenter));
+    return clamped;
 }
 
 function planetScaleAtLatitude(latitudeDegrees: number): number {
