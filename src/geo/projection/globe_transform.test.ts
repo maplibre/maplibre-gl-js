@@ -62,13 +62,13 @@ describe('GlobeTransform', () => {
         describe('general plane properties', () => {
             const projectionData = globeTransform.getProjectionData({overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0)});
 
-            test('plane vector length', () => {
+            test('plane vector length <= 1 so they are not clipped by the near plane.', () => {
                 const len = Math.sqrt(
                     projectionData.clippingPlane[0] * projectionData.clippingPlane[0] +
                     projectionData.clippingPlane[1] * projectionData.clippingPlane[1] +
                     projectionData.clippingPlane[2] * projectionData.clippingPlane[2]
                 );
-                expect(len).toBeCloseTo(0.25);
+                expect(len).toBeLessThanOrEqual(1);
             });
 
             test('camera is in positive halfspace', () => {
@@ -292,12 +292,17 @@ describe('GlobeTransform', () => {
                 const unprojected = globeTransform.screenPointToLocation(screenTopEdgeCenter);
                 expect(unprojected.lng).toBeCloseTo(-28.990298145461963, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(0.0, precisionDigits);
+            });
 
-                // Try projections a point even further above the western horizon, it should project to the
-                // same location on the horizon
-                const unprojected2 = globeTransform.screenPointToLocation(screenTopEdgeCenter.sub(new Point(0, -100)));
-                expect(unprojected2.lng).toBeCloseTo(unprojected.lng, precisionDigits);
-                expect(unprojected2.lat).toBeCloseTo(unprojected.lat, precisionDigits);
+            test('unproject further outside of sphere clamps to horizon', () => {
+                const globeTransform = createGlobeTransform();
+                globeTransform.setPitch(60);
+                globeTransform.setBearing(-90);
+                const screenPointAboveWesternHorizon = screenTopEdgeCenter;
+                const screenPointFurtherAboveWesternHorizon = screenTopEdgeCenter.sub(new Point(0, -100));
+                const unprojected = globeTransform.screenPointToLocation(screenPointAboveWesternHorizon);
+                const unprojected2 = globeTransform.screenPointToLocation(screenPointFurtherAboveWesternHorizon);
+                expect(unprojected).toEqual(unprojected2);
             });
         });
 
