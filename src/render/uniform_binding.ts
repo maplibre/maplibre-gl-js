@@ -113,6 +113,42 @@ class UniformColor extends Uniform<Color> {
     }
 }
 
+class UniformColorArray extends Uniform<Array<Color>> {
+    constructor(context: Context, location: WebGLUniformLocation) {
+        super(context, location);
+        this.current = new Array<Color>();
+    }
+
+    set(v: Array<Color>): void {
+        if (v != this.current) {
+            this.current = v;
+            const values = new Float32Array(v.length*4);
+            for( let i = 0; i < v.length; i++) {
+                values[4*i] = v[i].r;
+                values[4*i+1] = v[i].g;
+                values[4*i+2] = v[i].b;
+                values[4*i+3] = v[i].a;
+            }
+            this.gl.uniform4fv(this.location, values);
+        }
+    }
+}
+
+class UniformFloatArray extends Uniform<Array<number>> {
+    constructor(context: Context, location: WebGLUniformLocation) {
+        super(context, location);
+        this.current = new Array<number>();
+    }
+
+    set(v: Array<number>): void {
+        if (v != this.current) {
+            this.current = v;
+            const values = new Float32Array(v);
+            this.gl.uniform1fv(this.location, values);
+        }
+    }
+}
+
 const emptyMat4 = new Float32Array(16) as mat4;
 class UniformMatrix4f extends Uniform<mat4> {
     constructor(context: Context, location: WebGLUniformLocation) {
@@ -147,6 +183,8 @@ export {
     Uniform3f,
     Uniform4f,
     UniformColor,
+    UniformColorArray,
+    UniformFloatArray,
     UniformMatrix4f
 };
 

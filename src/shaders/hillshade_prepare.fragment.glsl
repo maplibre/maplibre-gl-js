@@ -14,11 +14,12 @@ float getElevation(vec2 coord, float bias) {
     // Convert encoded elevation value to meters
     vec4 data = texture(u_image, coord) * 255.0;
     data.a = -1.0;
-    return dot(data, u_unpack) / 4.0;
+    return dot(data, u_unpack);
 }
 
 void main() {
     vec2 epsilon = 1.0 / u_dimension;
+    float tileSize = u_dimension.x - 2.0;
 
     // queried pixels:
     // +-----------+
@@ -48,8 +49,8 @@ void main() {
     // Here we divide the x and y slopes by 8 * pixel size
     // where pixel size (aka meters/pixel) is:
     // circumference of the world / (pixels per tile * number of tiles)
-    // which is equivalent to: 8 * 40075016.6855785 / (512 * pow(2, u_zoom))
-    // which can be reduced to: pow(2, 19.25619978527 - u_zoom).
+    // which is equivalent to: 8 * 40075016.6855785 / (tileSize * pow(2, u_zoom))
+    // which can be reduced to: pow(2, 28.25619978527 - u_zoom) / tileSize.
     // We want to vertically exaggerate the hillshading because otherwise
     // it is barely noticeable at low zooms. To do this, we multiply this by
     // a scale factor that is a function of zooms below 15, which is an arbitrary
@@ -63,11 +64,11 @@ void main() {
     vec2 deriv = vec2(
         (c + f + f + i) - (a + d + d + g),
         (g + h + h + i) - (a + b + b + c)
-    ) / pow(2.0, exaggeration + (19.2562 - u_zoom));
+    ) * tileSize / pow(2.0, exaggeration + (28.2562 - u_zoom));
 
     fragColor = clamp(vec4(
-        deriv.x / 2.0 + 0.5,
-        deriv.y / 2.0 + 0.5,
+        deriv.x / 8.0 + 0.5,
+        deriv.y / 8.0 + 0.5,
         1.0,
         1.0), 0.0, 1.0);
 
