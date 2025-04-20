@@ -254,3 +254,14 @@ export function createFramebuffer() {
         destroy: () => {}
     };
 }
+
+export function waitForEvent(evented: Evented, eventName: string, predicate: (e: any) => boolean): Promise<void> {
+    return new Promise((resolve) => {
+        const listener = (e: Event) => {
+            if (predicate(e)) {
+                resolve();
+            }
+        };
+        evented.on(eventName, listener);
+    });
+}

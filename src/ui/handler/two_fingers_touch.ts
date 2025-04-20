@@ -40,7 +40,6 @@ abstract class TwoFingersTouchHandler implements Handler {
     abstract _move(points: [Point, Point], pinchAround: Point | null, e: TouchEvent): HandlerResult | void;
 
     touchstart(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>): void {
-        //log('touchstart', points, e.target.innerHTML, e.targetTouches.length ? e.targetTouches[0].target.innerHTML: undefined);
         if (this._firstTwoTouches || mapTouches.length < 2) return;
 
         this._firstTwoTouches = [
