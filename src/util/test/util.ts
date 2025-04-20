@@ -255,11 +255,11 @@ export function createFramebuffer() {
     };
 }
 
-export function waitForEvent(evented: Evented, eventName: string, predicate: (e: any) => boolean): Promise<void> {
+export function waitForEvent(evented: Evented, eventName: string, predicate: (e: any) => boolean): Promise<any> {
     return new Promise((resolve) => {
         const listener = (e: Event) => {
             if (predicate(e)) {
-                resolve();
+                resolve(e);
             }
         };
         evented.on(eventName, listener);

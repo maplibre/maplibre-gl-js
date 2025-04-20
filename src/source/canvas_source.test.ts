@@ -116,7 +116,7 @@ describe('CanvasSource', () => {
 
         source.onAdd(map);
 
-        await expect(promise).resolves.toBeUndefined();
+        await expect(promise).resolves.toBeDefined();
     });
 
     test('can be static', async () => {
@@ -131,7 +131,7 @@ describe('CanvasSource', () => {
 
         source.onAdd(map);
 
-        await expect(promise).resolves.toBeUndefined();
+        await expect(promise).resolves.toBeDefined();
         expect(spy).not.toHaveBeenCalled();
     });
 
