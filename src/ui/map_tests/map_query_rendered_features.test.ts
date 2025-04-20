@@ -10,7 +10,7 @@ beforeEach(() => {
 describe('#queryRenderedFeatures', () => {
 
     test('if no arguments provided', async () => {
-        const map = createMap({});
+        const map = createMap();
         await map.once('load');
         const spy = vi.spyOn(map.style, 'queryRenderedFeatures');
 
@@ -23,7 +23,7 @@ describe('#queryRenderedFeatures', () => {
     });
 
     test('if only "geometry" provided', async () => {
-        const map = createMap({});
+        const map = createMap();
         await map.once('load');
         const spy = vi.spyOn(map.style, 'queryRenderedFeatures');
 
@@ -37,7 +37,7 @@ describe('#queryRenderedFeatures', () => {
     });
 
     test('if only "params" provided', async () => {
-        const map = createMap({});
+        const map = createMap();
         await map.once('load');
         const spy = vi.spyOn(map.style, 'queryRenderedFeatures');
 
@@ -50,7 +50,7 @@ describe('#queryRenderedFeatures', () => {
     });
 
     test('if both "geometry" and "params" provided', async () => {
-        const map = createMap({});
+        const map = createMap();
         await map.once('load');
         const spy = vi.spyOn(map.style, 'queryRenderedFeatures');
 
@@ -63,7 +63,7 @@ describe('#queryRenderedFeatures', () => {
     });
 
     test('if "geometry" with unwrapped coords provided', async () => {
-        const map = createMap({});
+        const map = createMap();
         await map.once('load');
         const spy = vi.spyOn(map.style, 'queryRenderedFeatures');
 
