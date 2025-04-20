@@ -28,20 +28,20 @@ describe('Map#isMoving', () => {
         expect(map.isMoving()).toBe(false);
     });
 
-    test('returns true during a camera zoom animation', () => new Promise<void>(done => {
+    test('returns true during a camera zoom animation', async () => {
         map.on('zoomstart', () => {
             expect(map.isMoving()).toBe(true);
         });
 
-        map.on('zoomend', () => {
-            expect(map.isMoving()).toBe(false);
-            done();
-        });
+        const zoomEndPromise = map.once('zoomend');
 
         map.zoomTo(5, {duration: 0});
-    }));
 
-    test('returns true when drag panning', () => new Promise<void>(done => {
+        await zoomEndPromise;
+        expect(map.isMoving()).toBe(false);
+    });
+
+    test('returns true when drag panning', async () => {
         map.on('movestart', () => {
             expect(map.isMoving()).toBe(true);
         });
@@ -52,10 +52,7 @@ describe('Map#isMoving', () => {
         map.on('dragend', () => {
             expect(map.isMoving()).toBe(false);
         });
-        map.on('moveend', () => {
-            expect(map.isMoving()).toBe(false);
-            done();
-        });
+        const moveEndPromise = map.once('moveend');
 
         simulate.mousedown(map.getCanvas());
         map._renderTaskQueue.run();
@@ -65,9 +62,12 @@ describe('Map#isMoving', () => {
 
         simulate.mouseup(map.getCanvas());
         map._renderTaskQueue.run();
-    }));
 
-    test('returns true when drag rotating', () => new Promise<void>(done => {
+        await moveEndPromise;
+        expect(map.isMoving()).toBe(false);
+    });
+
+    test('returns true when drag rotating', async () => {
         // Prevent inertial rotation.
         vi.spyOn(browser, 'now').mockImplementation(() => { return 0; });
 
@@ -85,8 +85,9 @@ describe('Map#isMoving', () => {
 
         map.on('moveend', () => {
             expect(map.isMoving()).toBe(false);
-            done();
         });
+
+        const moveEndPromise = map.once('moveend');
 
         simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2});
         map._renderTaskQueue.run();
@@ -96,17 +97,16 @@ describe('Map#isMoving', () => {
 
         simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2});
         map._renderTaskQueue.run();
-    }));
 
-    test('returns true when scroll zooming', () => new Promise<void>(done => {
+        await expect(moveEndPromise).resolves.toBeDefined();        
+    });
+
+    test('returns true when scroll zooming', async () => {
         map.on('zoomstart', () => {
             expect(map.isMoving()).toBe(true);
         });
 
-        map.on('zoomend', () => {
-            expect(map.isMoving()).toBe(false);
-            done();
-        });
+        const moveEndPromise = map.once('zoomend');
 
         let now = 0;
         vi.spyOn(browser, 'now').mockImplementation(() => { return now; });
@@ -118,9 +118,12 @@ describe('Map#isMoving', () => {
         setTimeout(() => {
             map._renderTaskQueue.run();
         }, 400);
-    }));
 
-    test('returns true when drag panning and scroll zooming interleave', () => new Promise<void>(done => {
+        await moveEndPromise;
+        expect(map.isMoving()).toBe(false);
+    });
+
+    test('returns true when drag panning and scroll zooming interleave', async () => {
         map.on('dragstart', () => {
             expect(map.isMoving()).toBe(true);
         });
@@ -129,14 +132,7 @@ describe('Map#isMoving', () => {
             expect(map.isMoving()).toBe(true);
         });
 
-        map.on('zoomend', () => {
-            expect(map.isMoving()).toBe(true);
-            simulate.mouseup(map.getCanvas());
-            setTimeout(() => {
-                map._renderTaskQueue.run();
-                done();
-            });
-        });
+        const zoomEndPromise = map.once('zoomend');
 
         map.on('dragend', () => {
             expect(map.isMoving()).toBe(false);
@@ -161,5 +157,10 @@ describe('Map#isMoving', () => {
         setTimeout(() => {
             map._renderTaskQueue.run();
         }, 400);
-    }));
+
+        await zoomEndPromise;
+        expect(map.isMoving()).toBe(true);
+        simulate.mouseup(map.getCanvas());
+        map._renderTaskQueue.run();
+    });
 });

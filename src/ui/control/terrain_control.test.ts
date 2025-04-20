@@ -22,7 +22,7 @@ function createMap() {
             id: 'demotiles',
         },
         hash: true
-    }, undefined);
+    });
 }
 
 let map;

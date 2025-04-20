@@ -31,61 +31,57 @@ describe('#setStyle', () => {
         })).toBe(map);
     });
 
-    test('sets up event forwarding', () => {
-        createMap({}, (error, map) => {
-            expect(error).toBeFalsy();
+    test('sets up event forwarding', async () => {
+        const map = createMap();
+        await map.once('load');
 
-            const events = [];
-            function recordEvent(event) { events.push(event.type); }
+        const events = [];
+        function recordEvent(event) { events.push(event.type); }
 
-            map.on('error', recordEvent);
-            map.on('data', recordEvent);
-            map.on('dataloading', recordEvent);
+        map.on('error', recordEvent);
+        map.on('data', recordEvent);
+        map.on('dataloading', recordEvent);
 
-            map.style.fire(new EventedEvent('error'));
-            map.style.fire(new EventedEvent('data'));
-            map.style.fire(new EventedEvent('dataloading'));
+        map.style.fire(new EventedEvent('error'));
+        map.style.fire(new EventedEvent('data'));
+        map.style.fire(new EventedEvent('dataloading'));
 
-            expect(events).toEqual([
-                'error',
-                'data',
-                'dataloading',
-            ]);
-
-        });
+        expect(events).toEqual([
+            'error',
+            'data',
+            'dataloading',
+        ]);
     });
 
-    test('fires *data and *dataloading events', () => {
-        createMap({}, (error, map: Map) => {
-            expect(error).toBeFalsy();
+    test('fires *data and *dataloading events', async () => {
+        const map = createMap();
+        await map.once('load');
 
-            const events = [];
-            function recordEvent(event) { events.push(event.type); }
+        const events = [];
+        function recordEvent(event) { events.push(event.type); }
 
-            map.on('styledata', recordEvent);
-            map.on('styledataloading', recordEvent);
-            map.on('sourcedata', recordEvent);
-            map.on('sourcedataloading', recordEvent);
-            map.on('tiledata', recordEvent);
-            map.on('tiledataloading', recordEvent);
+        map.on('styledata', recordEvent);
+        map.on('styledataloading', recordEvent);
+        map.on('sourcedata', recordEvent);
+        map.on('sourcedataloading', recordEvent);
+        map.on('tiledata', recordEvent);
+        map.on('tiledataloading', recordEvent);
 
-            map.style.fire(new EventedEvent('data', {dataType: 'style'}));
-            map.style.fire(new EventedEvent('dataloading', {dataType: 'style'}));
-            map.style.fire(new EventedEvent('data', {dataType: 'source'}));
-            map.style.fire(new EventedEvent('dataloading', {dataType: 'source'}));
-            map.style.fire(new EventedEvent('data', {dataType: 'tile'}));
-            map.style.fire(new EventedEvent('dataloading', {dataType: 'tile'}));
+        map.style.fire(new EventedEvent('data', {dataType: 'style'}));
+        map.style.fire(new EventedEvent('dataloading', {dataType: 'style'}));
+        map.style.fire(new EventedEvent('data', {dataType: 'source'}));
+        map.style.fire(new EventedEvent('dataloading', {dataType: 'source'}));
+        map.style.fire(new EventedEvent('data', {dataType: 'tile'}));
+        map.style.fire(new EventedEvent('dataloading', {dataType: 'tile'}));
 
-            expect(events).toEqual([
-                'styledata',
-                'styledataloading',
-                'sourcedata',
-                'sourcedataloading',
-                'tiledata',
-                'tiledataloading'
-            ]);
-
-        });
+        expect(events).toEqual([
+            'styledata',
+            'styledataloading',
+            'sourcedata',
+            'sourcedataloading',
+            'tiledata',
+            'tiledataloading'
+        ]);
     });
 
     test('can be called more than once', () => {
