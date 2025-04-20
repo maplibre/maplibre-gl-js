@@ -7,20 +7,18 @@ beforeEach(() => {
     global.fetch = null;
 });
 
-test('#listImages', () => new Promise<void>(done => {
+test('#listImages', async () => {
     const map = createMap();
 
-    map.on('load', () => {
-        expect(map.listImages()).toHaveLength(0);
+    await map.once('load');
+    expect(map.listImages()).toHaveLength(0);
 
-        map.addImage('img', {width: 1, height: 1, data: new Uint8Array(4)});
+    map.addImage('img', {width: 1, height: 1, data: new Uint8Array(4)});
 
-        const images = map.listImages();
-        expect(images).toHaveLength(1);
-        expect(images[0]).toBe('img');
-        done();
-    });
-}));
+    const images = map.listImages();
+    expect(images).toHaveLength(1);
+    expect(images[0]).toBe('img');  
+});
 
 test('#listImages throws an error if called before "load"', () => {
     const map = createMap();

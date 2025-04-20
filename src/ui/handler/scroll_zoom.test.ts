@@ -145,7 +145,7 @@ describe('ScrollZoomHandler', () => {
         map.remove();
     });
 
-    test('Zooms for single mouse wheel tick with non-magical deltaY', () => new Promise<void>(done => {
+    test('Zooms for single mouse wheel tick with non-magical deltaY', async () => {
         const browserNow = vi.spyOn(browser, 'now');
         const now = 1555555555555;
         browserNow.mockReturnValue(now);
@@ -157,11 +157,9 @@ describe('ScrollZoomHandler', () => {
         // This requires the handler to briefly wait to see if a subsequent
         // event is coming in order to guess trackpad vs. mouse wheel
         simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -20});
-        map.on('zoomstart', () => {
-            map.remove();
-            done();
-        });
-    }));
+        await map.once('zoomstart');
+        map.remove();  
+    });
 
     test('Zooms for single mouse wheel tick with non-magical deltaY with easing for smooth zooming', () => {
         const browserNow = vi.spyOn(browser, 'now');
