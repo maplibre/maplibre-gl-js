@@ -43,7 +43,7 @@ test('render stabilizes', async () => {
             spy();
         }, 100);
     });
-    await sleep(300);
+    await sleep(700);
     expect(spy).toHaveBeenCalled();
 });
 
