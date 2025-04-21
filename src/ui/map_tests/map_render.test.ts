@@ -1,5 +1,5 @@
 import {beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {createMap, beforeMapTest, createStyle, sleep, waitForEvent} from '../../util/test/util';
+import {createMap, beforeMapTest, createStyle, sleep} from '../../util/test/util';
 import {fakeServer, type FakeServer} from 'nise';
 
 let server: FakeServer;

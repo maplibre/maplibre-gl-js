@@ -150,7 +150,6 @@ test('map does not fire `styleimagemissing` for empty icon values', async () => 
     const map = createMap();
 
     await map.once('load');
-    
 
     map.addSource('foo', {
         type: 'geojson',
