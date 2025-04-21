@@ -553,7 +553,7 @@ describe('ScrollZoomHandler', () => {
         map.remove();
     });
 
-    test('Terrain 3D zoom is in the same direction when pointing above horizon or under horizon', async () => {
+    test('Terrain 3D zoom is in the same direction when pointing above horizon or under horizon', () => {
         // See also https://github.com/maplibre/maplibre-gl-js/issues/3398
         const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
