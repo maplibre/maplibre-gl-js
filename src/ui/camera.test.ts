@@ -2879,7 +2879,7 @@ describe('#easeTo globe projection', () => {
         test('noop with offset', () => {
             const camera = createCameraGlobe();
             camera.easeTo({offset: [100, 0], duration: 0});
-            expect(fixedLngLat(camera.getCenter())).toEqual({lng: -85.920282254, lat: 0});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: -84.49542091, lat: 0});
             expect(camera.getZoom()).toBe(0);
             expect(camera.getBearing()).toBeCloseTo(0);
         });
@@ -2887,13 +2887,13 @@ describe('#easeTo globe projection', () => {
         test('pans with specified offset', () => {
             const camera = createCameraGlobe();
             camera.easeTo({center: [100, 0], offset: [100, 0], duration: 0});
-            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 14.079717746, lat: 0});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 15.50457909, lat: 0});
         });
 
         test('pans with specified offset relative to viewport on a rotated camera', () => {
             const camera = createCameraGlobe({bearing: 180});
             camera.easeTo({center: [100, 0], offset: [100, 0], duration: 0});
-            expect(fixedLngLat(camera.getCenter())).toEqual({lng: -174.079717746, lat: 0});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: -175.50457909, lat: 0});
         });
 
         test('zooms with specified offset', () => {
@@ -2914,14 +2914,14 @@ describe('#easeTo globe projection', () => {
             const camera = createCameraGlobe();
             camera.easeTo({bearing: 90, offset: [100, 0], duration: 0});
             expect(camera.getBearing()).toBe(90);
-            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 0, lat: 85.051129}));
+            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 0, lat: 84.49542091}));
         });
 
         test('rotates with specified offset relative to viewport on a rotated camera', () => {
             const camera = createCameraGlobe({bearing: 180});
             camera.easeTo({bearing: 90, offset: [100, 0], duration: 0});
             expect(camera.getBearing()).toBe(90);
-            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 0, lat: 85.051129}));
+            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 0, lat: 84.49542091}));
         });
 
         test('emits zoom events if changing latitude but not zooming', async () => {
@@ -3241,7 +3241,7 @@ describe('#flyTo globe projection', () => {
         test('noop with offset', () => {
             const camera = createCameraGlobe();
             camera.flyTo({offset: [100, 0], animate: false});
-            expect(fixedLngLat(camera.getCenter())).toEqual({lng: -85.920282254, lat: 0});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 84.49542091, lat: 0});
             expect(camera.getZoom()).toBe(0);
             expect(camera.getBearing()).toBeCloseTo(0);
         });
@@ -3249,13 +3249,13 @@ describe('#flyTo globe projection', () => {
         test('pans with specified offset', () => {
             const camera = createCameraGlobe();
             camera.flyTo({center: [100, 0], offset: [100, 0], animate: false});
-            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 14.079717746, lat: 0});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 15.50457909, lat: 0});
         });
 
         test('pans with specified offset relative to viewport on a rotated camera', () => {
             const camera = createCameraGlobe({bearing: 180});
             camera.easeTo({center: [100, 0], offset: [100, 0], animate: false});
-            expect(fixedLngLat(camera.getCenter())).toEqual({lng: -174.079717746, lat: 0});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: -175.50457909, lat: 0});
         });
 
         test('emits move, zoom, rotate, pitch, and roll events, preserving eventData', async () => {

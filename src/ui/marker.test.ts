@@ -1120,6 +1120,21 @@ describe('marker', () => {
         expect(marker._lngLat.lng).toBe(-179);
     });
 
+    test('Marker\'s lng is wrapped when slightly crossing 180 with zoomed out globe', async () => {
+        const map = createMap({width: 1024, renderWorldCopies: true});
+        await map.once('load');
+        map.setProjection({type: 'globe'});
+        map.setZoom(0);
+
+        const marker = new Marker()
+            .setLngLat([179, 0])
+            .addTo(map);
+
+        marker.setLngLat([181, 0]);
+
+        expect(marker._lngLat.lng).toBe(-179);
+    });
+
     test('should round the marker transform position to whole pixels when subpixel positioning is disabled', () => {
         const map = createMap();
         const marker = new Marker()
