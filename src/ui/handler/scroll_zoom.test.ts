@@ -1,9 +1,9 @@
-import {describe, beforeEach, test, expect, vi, afterEach} from 'vitest';
+import {describe, beforeEach, test, expect, vi, afterEach, type MockInstance} from 'vitest';
 import {browser} from '../../util/browser';
 import {Map} from '../../ui/map';
 import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
-import {setPerformance, beforeMapTest} from '../../util/test/util';
+import {setPerformance, beforeMapTest, createTerrain} from '../../util/test/util';
 
 function createMap() {
     return new Map({
@@ -512,9 +512,7 @@ describe('ScrollZoomHandler', () => {
         const map = createMap();
         map._elevateCameraIfInsideTerrain = (_tr : any) => ({});
         map._renderTaskQueue.run();
-        map.terrain = {
-            pointCoordinate: () => null
-        } as any;
+        map.terrain = createTerrain();
 
         // simulate a single 'wheel' event
         simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta, clientX: 1000, clientY: 1000});
@@ -539,9 +537,7 @@ describe('ScrollZoomHandler', () => {
         const map = createMap();
         map._elevateCameraIfInsideTerrain = (_tr : any) => ({});
         map._renderTaskQueue.run();
-        map.terrain = {
-            pointCoordinate: () => null
-        } as any;
+        map.terrain = createTerrain();
 
         // simulate a single 'wheel' event
         simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta, clientX: 1000, clientY: 1000});
@@ -557,8 +553,7 @@ describe('ScrollZoomHandler', () => {
         map.remove();
     });
 
-    test('Terrain 3D zoom is in the same direction when pointing above horizon or under horizon', () => {
-        vi.useFakeTimers();
+    test('Terrain 3D zoom is in the same direction when pointing above horizon or under horizon', async () => {
         // See also https://github.com/maplibre/maplibre-gl-js/issues/3398
         const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
@@ -567,9 +562,7 @@ describe('ScrollZoomHandler', () => {
         let map = createMap();
         map._elevateCameraIfInsideTerrain = (_tr : any) => ({});
         map._renderTaskQueue.run();
-        map.terrain = {
-            pointCoordinate: () => null
-        } as any;
+        map.terrain = createTerrain();
         map.setZoom(5);
         map.setMaxPitch(85);
         map.setPitch(80);
@@ -587,14 +580,13 @@ describe('ScrollZoomHandler', () => {
         expect(map.getCenter().lat).toBeCloseTo(0, 3);
         expect(map.getCenter().lng).toBeCloseTo(0, 3);
         expect(map.getZoom()).toBeCloseTo(5.02856, 3);
+        map.remove();
 
         // do the same test on the bottom
         map = createMap();
         map._elevateCameraIfInsideTerrain = (_tr : any) => ({});
         map._renderTaskQueue.run();
-        map.terrain = {
-            pointCoordinate: () => null
-        } as any;
+        map.terrain = createTerrain();
         map.setZoom(5);
         map.setMaxPitch(85);
         map.setPitch(80);
@@ -615,50 +607,65 @@ describe('ScrollZoomHandler', () => {
         map.remove();
     });
 
-    function scrollOutAtLat(map: Map, lat: number) {
+    function scrollOutAtLat(map: Map, lat: number, browserNow: MockInstance, deltaY: number = 5) {
         map.setCenter([0, lat]);
         map.setZoom(1);
         for (let i = 0; i < 200; i++) {
             simulate.wheel(map.getCanvas(), {
                 type: 'wheel',
-                deltaY: 5, 
+                deltaY, 
                 clientX: map.transform.width / 2,
                 clientY: map.transform.height / 2});
-            vi.advanceTimersByTime(10);
+            browserNow.mockReturnValue(browser.now() + 10);
+            map._renderTaskQueue.run();
         }
     }
 
     test('Clamps zoom at high latitude to keep globe consistent size', async () => {
+        const browserNow = vi.spyOn(browser, 'now');
         const map = createMap();
         await map.once('load');
-
-        vi.useFakeTimers();
 
         map.setProjection({type: 'globe'});
         map.setMinZoom(0);
 
-        scrollOutAtLat(map, 80);
+        scrollOutAtLat(map, 80, browserNow);
         expect(map.getZoom()).toBeCloseTo(-2.53, 2);
-        scrollOutAtLat(map, -80);
+        scrollOutAtLat(map, -80, browserNow);
         expect(map.getZoom()).toBeCloseTo(-2.53, 2);
-        scrollOutAtLat(map, 0);
+        scrollOutAtLat(map, 0, browserNow);
+        expect(map.getZoom()).toBeCloseTo(0, 2);
+    });
+
+    test('Clamps zoom at high latitude to keep globe consistent size using mouse wheel', async () => {
+        const browserNow = vi.spyOn(browser, 'now');
+        const map = createMap();
+        await map.once('load');
+
+        map.setProjection({type: 'globe'});
+        map.setMinZoom(0);
+
+        scrollOutAtLat(map, 80, browserNow, simulate.magicWheelZoomDelta);
+        expect(map.getZoom()).toBeCloseTo(-2.53, 2);
+        scrollOutAtLat(map, -80, browserNow, simulate.magicWheelZoomDelta);
+        expect(map.getZoom()).toBeCloseTo(-2.53, 2);
+        scrollOutAtLat(map, 0, browserNow, simulate.magicWheelZoomDelta);
         expect(map.getZoom()).toBeCloseTo(0, 2);
     });
 
     test('Clamps to min/max zoom when using mercator projection', async () => {
+        const browserNow = vi.spyOn(browser, 'now');
         const map = createMap();
         await map.once('load');
-
-        vi.useFakeTimers();
 
         map.setProjection({type: 'mercator'});
         map.setMinZoom(0);
 
-        scrollOutAtLat(map, 80);
+        scrollOutAtLat(map, 80, browserNow);
         expect(map.getZoom()).toBeCloseTo(0, 2);
-        scrollOutAtLat(map, -80);
+        scrollOutAtLat(map, -80, browserNow);
         expect(map.getZoom()).toBeCloseTo(0, 2);
-        scrollOutAtLat(map, 0);
+        scrollOutAtLat(map, 0, browserNow);
         expect(map.getZoom()).toBeCloseTo(0, 2);
     });
 });
