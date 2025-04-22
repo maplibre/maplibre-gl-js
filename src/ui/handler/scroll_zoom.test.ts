@@ -1,4 +1,4 @@
-import {describe, beforeEach, test, expect, vi, afterEach, type MockInstance} from 'vitest';
+import {describe, beforeEach, test, expect, vi, type MockInstance} from 'vitest';
 import {browser} from '../../util/browser';
 import {Map} from '../../ui/map';
 import {DOM} from '../../util/dom';
