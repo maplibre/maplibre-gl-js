@@ -12,7 +12,7 @@ describe('FullscreenControl', () => {
             value: true,
             writable: true,
         });
-        const map = createMap(undefined, undefined);
+        const map = createMap();
         const fullscreen = new FullscreenControl({});
         map.addControl(fullscreen);
 
@@ -25,7 +25,7 @@ describe('FullscreenControl', () => {
             writable: true,
         });
 
-        const map = createMap(undefined, undefined);
+        const map = createMap();
         const container = window.document.querySelector('body')!;
         const fullscreen = new FullscreenControl({container});
         map.addControl(fullscreen);
@@ -38,7 +38,7 @@ describe('FullscreenControl', () => {
     });
 
     test('uses pseudo fullscreen when fullscreen is not supported', () => {
-        const map = createMap(undefined, undefined);
+        const map = createMap();
         const mapContainer = map.getContainer();
 
         const fullscreen = new FullscreenControl({});
@@ -55,7 +55,7 @@ describe('FullscreenControl', () => {
     });
 
     test('start and end events fire for fullscreen button clicks', () => {
-        const map = createMap(undefined, undefined);
+        const map = createMap();
         const fullscreen = new FullscreenControl({});
 
         const fullscreenstart = vi.fn();

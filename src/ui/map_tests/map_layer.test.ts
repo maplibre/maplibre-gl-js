@@ -1,5 +1,5 @@
 import {describe, beforeEach, afterEach, test, expect} from 'vitest';
-import {createMap, beforeMapTest, createStyle} from '../../util/test/util';
+import {createMap, beforeMapTest, createStyle, waitForEvent} from '../../util/test/util';
 import {extend} from '../../util/util';
 import {type EvaluationParameters} from '../../style/evaluation_parameters';
 import {fakeServer, type FakeServer} from 'nise';
@@ -76,7 +76,7 @@ test('#getLayer', async () => {
     expect(mapLayer.source).toBe(layer.source);
 });
 
-test('#removeLayer restores Map#loaded() to true', () => new Promise<void>(done => {
+test('#removeLayer restores Map#loaded() to true', async () => {
     const map = createMap({
         style: extend(createStyle(), {
             sources: {
@@ -96,19 +96,14 @@ test('#removeLayer restores Map#loaded() to true', () => new Promise<void>(done 
         })
     });
 
-    map.once('render', () => {
-        map.removeLayer('layerId');
-        map.on('render', () => {
-            if (map.loaded()) {
-                map.remove();
-                done();
-            }
-        });
-    });
-}));
+    await map.once('render');
+    map.removeLayer('layerId');
+    await waitForEvent(map, 'render', () => map.loaded());
+    map.remove();
+});
 
 describe('#getLayersOrder', () => {
-    test('returns ids of layers in the correct order', () => new Promise<void>(done => {
+    test('returns ids of layers in the correct order', async () => {
         const map = createMap({
             style: extend(createStyle(), {
                 'sources': {
@@ -125,20 +120,18 @@ describe('#getLayersOrder', () => {
             })
         });
 
-        map.on('style.load', () => {
-            map.addLayer({
-                id: 'custom',
-                type: 'custom',
-                render() {}
-            }, 'raster');
-            expect(map.getLayersOrder()).toEqual(['custom', 'raster']);
-            done();
-        });
-    }));
+        await map.once('style.load');
+        map.addLayer({
+            id: 'custom',
+            type: 'custom',
+            render() {}
+        }, 'raster');
+        expect(map.getLayersOrder()).toEqual(['custom', 'raster']);
+    });
 });
 
 describe('#setLayoutProperty', () => {
-    test('sets property', () => new Promise<void>(done => {
+    test('sets property', async () => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -162,19 +155,17 @@ describe('#setLayoutProperty', () => {
             }
         });
 
-        map.on('style.load', () => {
-            map.style.dispatcher.broadcast = function (key, value: any) {
-                expect(key).toBe(MessageType.updateLayers);
-                expect(value.layers.map((layer) => { return layer.id; })).toEqual(['symbol']);
-                return Promise.resolve({} as any);
-            };
+        await map.once('style.load');
+        map.style.dispatcher.broadcast = function (key, value: any) {
+            expect(key).toBe(MessageType.updateLayers);
+            expect(value.layers.map((layer) => { return layer.id; })).toEqual(['symbol']);
+            return Promise.resolve({} as any);
+        };
 
-            map.setLayoutProperty('symbol', 'text-transform', 'lowercase');
-            map.style.update({} as EvaluationParameters);
-            expect(map.getLayoutProperty('symbol', 'text-transform')).toBe('lowercase');
-            done();
-        });
-    }));
+        map.setLayoutProperty('symbol', 'text-transform', 'lowercase');
+        map.style.update({} as EvaluationParameters);
+        expect(map.getLayoutProperty('symbol', 'text-transform')).toBe('lowercase');
+    });
 
     test('throw before loaded', () => {
         const map = createMap({
@@ -191,7 +182,7 @@ describe('#setLayoutProperty', () => {
 
     });
 
-    test('fires an error if layer not found', () => new Promise<void>(done => {
+    test('fires an error if layer not found', async () => {
         const map = createMap({
             style: {
                 version: 8,
@@ -200,14 +191,12 @@ describe('#setLayoutProperty', () => {
             }
         });
 
-        map.on('style.load', () => {
-            map.on('error', ({error}) => {
-                expect(error.message).toMatch(/Cannot style non-existing layer "non-existant"./);
-                done();
-            });
-            map.setLayoutProperty('non-existant', 'text-transform', 'lowercase');
-        });
-    }));
+        await map.once('style.load');
+        const errorPromise = map.once('error');
+        map.setLayoutProperty('non-existant', 'text-transform', 'lowercase');
+        const error = await errorPromise;
+        expect(error.error.message).toMatch(/Cannot style non-existing layer "non-existant"./);
+    });
 
     test('fires a data event', async () => {
         // background layers do not have a source
@@ -232,7 +221,7 @@ describe('#setLayoutProperty', () => {
         expect(e.dataType).toBe('style');
     });
 
-    test('sets visibility on background layer', () => new Promise<void>(done => {
+    test('sets visibility on background layer', async () => {
         // background layers do not have a source
         const map = createMap({
             style: {
@@ -248,14 +237,12 @@ describe('#setLayoutProperty', () => {
             }
         });
 
-        map.on('style.load', () => {
-            map.setLayoutProperty('background', 'visibility', 'visible');
-            expect(map.getLayoutProperty('background', 'visibility')).toBe('visible');
-            done();
-        });
-    }));
+        await map.once('style.load');
+        map.setLayoutProperty('background', 'visibility', 'visible');
+        expect(map.getLayoutProperty('background', 'visibility')).toBe('visible');
+    });
 
-    test('sets visibility on raster layer', () => new Promise<void>(done => {
+    test('sets visibility on raster layer', async () => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -279,14 +266,12 @@ describe('#setLayoutProperty', () => {
         // Suppress errors because we're not loading tiles from a real URL.
         map.on('error', () => {});
 
-        map.on('style.load', () => {
-            map.setLayoutProperty('satellite', 'visibility', 'visible');
-            expect(map.getLayoutProperty('satellite', 'visibility')).toBe('visible');
-            done();
-        });
-    }));
+        await map.once('style.load');
+        map.setLayoutProperty('satellite', 'visibility', 'visible');
+        expect(map.getLayoutProperty('satellite', 'visibility')).toBe('visible');
+    });
 
-    test('sets visibility on video layer', () => new Promise<void>(done => {
+    test('sets visibility on video layer', async () => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -313,14 +298,12 @@ describe('#setLayoutProperty', () => {
             }
         });
 
-        map.on('style.load', () => {
-            map.setLayoutProperty('shore', 'visibility', 'visible');
-            expect(map.getLayoutProperty('shore', 'visibility')).toBe('visible');
-            done();
-        });
-    }));
+        await map.once('style.load');
+        map.setLayoutProperty('shore', 'visibility', 'visible');
+        expect(map.getLayoutProperty('shore', 'visibility')).toBe('visible');
+    });
 
-    test('sets visibility on image layer', () => new Promise<void>(done => {
+    test('sets visibility on image layer', async () => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -347,17 +330,14 @@ describe('#setLayoutProperty', () => {
             }
         });
 
-        map.on('style.load', () => {
-            map.setLayoutProperty('image', 'visibility', 'visible');
-            expect(map.getLayoutProperty('image', 'visibility')).toBe('visible');
-            done();
-        });
-    }));
-
+        await map.once('style.load');
+        map.setLayoutProperty('image', 'visibility', 'visible');
+        expect(map.getLayoutProperty('image', 'visibility')).toBe('visible');
+    });
 });
 
 describe('#getLayoutProperty', () => {
-    test('fires an error if layer not found', () => new Promise<void>(done => {
+    test('fires an error if layer not found', async () => {
         const map = createMap({
             style: {
                 version: 8,
@@ -366,19 +346,16 @@ describe('#getLayoutProperty', () => {
             }
         });
 
-        map.on('style.load', () => {
-            map.on('error', ({error}) => {
-                expect(error.message).toMatch(/Cannot get style of non-existing layer "non-existant"./);
-                done();
-            });
-            (map as any).getLayoutProperty('non-existant', 'text-transform', 'lowercase');
-        });
-    }));
-
+        await map.once('style.load');
+        const errorPromise = map.once('error');
+        map.getLayoutProperty('non-existant', 'text-transform');
+        const error = await errorPromise;
+        expect(error.error.message).toMatch(/Cannot get style of non-existing layer "non-existant"./);
+    });
 });
 
 describe('#setPaintProperty', () => {
-    test('sets property', () => new Promise<void>(done => {
+    test('sets property', async () => {
         const map = createMap({
             style: {
                 'version': 8,
@@ -390,12 +367,10 @@ describe('#setPaintProperty', () => {
             }
         });
 
-        map.on('style.load', () => {
-            map.setPaintProperty('background', 'background-color', 'red');
-            expect(map.getPaintProperty('background', 'background-color')).toBe('red');
-            done();
-        });
-    }));
+        await map.once('style.load');
+        map.setPaintProperty('background', 'background-color', 'red');
+        expect(map.getPaintProperty('background', 'background-color')).toBe('red');
+    });
 
     test('#3373 paint property should be synchronized with an update', async () => {
         const colors = ['red', 'blue'];
@@ -437,7 +412,7 @@ describe('#setPaintProperty', () => {
 
     });
 
-    test('fires an error if layer not found', () => new Promise<void>(done => {
+    test('fires an error if layer not found', async () => {
         const map = createMap({
             style: {
                 version: 8,
@@ -446,13 +421,10 @@ describe('#setPaintProperty', () => {
             }
         });
 
-        map.on('style.load', () => {
-            map.on('error', ({error}) => {
-                expect(error.message).toMatch(/Cannot style non-existing layer "non-existant"./);
-                done();
-            });
-            map.setPaintProperty('non-existant', 'background-color', 'red');
-        });
-    }));
-
+        await map.once('style.load');
+        const errorPromise = map.once('error');
+        map.setPaintProperty('non-existant', 'background-color', 'red');
+        const error = await errorPromise;
+        expect(error.error.message).toMatch(/Cannot style non-existing layer "non-existant"./);
+    });
 });

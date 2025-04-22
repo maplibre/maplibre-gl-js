@@ -1,9 +1,16 @@
 ## main
 
 ### ✨ Features and improvements
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 5.4.0
+
+### ✨ Features and improvements
 
 - Add tile LOD control to the public API ([#5719](https://github.com/maplibre/maplibre-gl-js/pull/5719))
-- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 

@@ -111,31 +111,27 @@ describe('Map', () => {
             await promise;
         });
 
-        test('Map#isStyleLoaded', () => new Promise<void>(done => {
+        test('Map#isStyleLoaded', async () => {
             const style = createStyle();
             const map = createMap({style});
 
             expect(map.isStyleLoaded()).toBe(false);
-            map.on('load', () => {
-                expect(map.isStyleLoaded()).toBe(true);
-                done();
-            });
-        }));
+            await map.once('load');
+            expect(map.isStyleLoaded()).toBe(true);  
+        });
 
-        test('Map#areTilesLoaded', () => new Promise<void>(done => {
+        test('Map#areTilesLoaded', async () => {
             const style = createStyle();
             const map = createMap({style});
             expect(map.areTilesLoaded()).toBe(true);
-            map.on('load', () => {
-                const fakeTileId = new OverscaledTileID(0, 0, 0, 0, 0);
-                map.addSource('geojson', createStyleSource());
-                map.style.sourceCaches.geojson._tiles[fakeTileId.key] = new Tile(fakeTileId, undefined);
-                expect(map.areTilesLoaded()).toBe(false);
-                map.style.sourceCaches.geojson._tiles[fakeTileId.key].state = 'loaded';
-                expect(map.areTilesLoaded()).toBe(true);
-                done();
-            });
-        }));
+            await map.once('load');
+            const fakeTileId = new OverscaledTileID(0, 0, 0, 0, 0);
+            map.addSource('geojson', createStyleSource());
+            map.style.sourceCaches.geojson._tiles[fakeTileId.key] = new Tile(fakeTileId, undefined);
+            expect(map.areTilesLoaded()).toBe(false);
+            map.style.sourceCaches.geojson._tiles[fakeTileId.key].state = 'loaded';
+            expect(map.areTilesLoaded()).toBe(true);  
+        });
     });
 
     test('#remove', () => {
@@ -163,10 +159,10 @@ describe('Map', () => {
         expect(control.onRemove).toHaveBeenCalledTimes(1);
     });
 
-    test('#remove calls onRemove on added controls before style is destroyed', () => new Promise<void>(done => {
+    test('#remove calls onRemove on added controls before style is destroyed', async () => {
         const map = createMap();
         let onRemoveCalled = 0;
-        let style;
+        let style = null;
         const control = {
             onRemove(map) {
                 onRemoveCalled++;
@@ -179,13 +175,11 @@ describe('Map', () => {
 
         map.addControl(control);
 
-        map.on('style.load', () => {
-            style = map.getStyle();
-            map.remove();
-            expect(onRemoveCalled).toBe(1);
-            done();
-        });
-    }));
+        map.once('style.load');
+        style = map.getStyle();
+        map.remove();
+        expect(onRemoveCalled).toBe(1);
+    });
 
     test('#remove broadcasts removeMap to worker', () => {
         const map = createMap();
