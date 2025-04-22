@@ -105,6 +105,7 @@ function setResizeObserver() {
 }
 
 export function beforeMapTest() {
+    vi.useRealTimers();
     setPerformance();
     setMatchMedia();
     setResizeObserver();

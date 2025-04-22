@@ -34,10 +34,6 @@ beforeEach(() => {
     beforeMapTest();
 });
 
-afterEach(() => {
-    vi.useRealTimers();
-});
-
 describe('ScrollZoomHandler', () => {
 
     test('Zooms for single mouse wheel tick', () => {
