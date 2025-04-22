@@ -16,7 +16,7 @@ function createMap() {
     });
 }
 
-function scrollOutAtLat(map: Map, lat: number, browserNow: MockInstance, deltaY: number = 5) {
+function scrollOutAtLat(map: Map, lat: number, browserNow: MockInstance<() => number>, deltaY: number = 5) {
     map.setCenter([0, lat]);
     map.setZoom(1);
     for (let i = 0; i < 200; i++) {
