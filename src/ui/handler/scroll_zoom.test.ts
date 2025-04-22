@@ -175,11 +175,10 @@ describe('ScrollZoomHandler', () => {
         map.remove();  
     });
 
-    test('Zooms for single mouse wheel tick with non-magical deltaY with easing for smooth zooming', () => {
+    test('Zooms for single mouse wheel tick with non-magical deltaY with easing for smooth zooming', async () => {
         const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
         browserNow.mockReturnValue(now);
-        vi.useFakeTimers();
         setPerformance();
         const map = createMap();
         map.setZoom(5);
@@ -189,7 +188,7 @@ describe('ScrollZoomHandler', () => {
 
         // simulate a single 'wheel' event with non-magical deltaY
         simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -20});
-        vi.advanceTimersByTime(40);
+        await map.once('zoom');
         now += 40;
         map._renderTaskQueue.run();
 
@@ -388,11 +387,10 @@ describe('ScrollZoomHandler', () => {
         map.remove();
     });
 
-    test('emits one movestart event and one moveend event while zooming', () => {
+    test('emits one movestart event and one moveend event while zooming', async () => {
         const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
         browserNow.mockReturnValue(now);
-        vi.useFakeTimers();
         setPerformance();
         const map = createMap();
 
@@ -428,7 +426,7 @@ describe('ScrollZoomHandler', () => {
             }
         }
 
-        vi.advanceTimersByTime(200);
+        await map.once('zoomend');
 
         map._renderTaskQueue.run();
 
@@ -437,12 +435,11 @@ describe('ScrollZoomHandler', () => {
 
     });
 
-    test('emits one zoomstart event and one zoomend event while zooming', () => {
+    test('emits one zoomstart event and one zoomend event while zooming', async () => {
         const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
         browserNow.mockReturnValue(now);
 
-        vi.useFakeTimers();
         setPerformance();
         const map = createMap();
 
@@ -478,7 +475,7 @@ describe('ScrollZoomHandler', () => {
             }
         }
 
-        vi.advanceTimersByTime(200);
+        await map.once('zoomend');
         map._renderTaskQueue.run();
 
         expect(startCount).toBe(1);
