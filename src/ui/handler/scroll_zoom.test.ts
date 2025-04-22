@@ -16,6 +16,20 @@ function createMap() {
     });
 }
 
+function scrollOutAtLat(map: Map, lat: number, browserNow: MockInstance, deltaY: number = 5) {
+    map.setCenter([0, lat]);
+    map.setZoom(1);
+    for (let i = 0; i < 200; i++) {
+        simulate.wheel(map.getCanvas(), {
+            type: 'wheel',
+            deltaY,
+            clientX: map.transform.width / 2,
+            clientY: map.transform.height / 2});
+        browserNow.mockReturnValue(browser.now() + 10);
+        map._renderTaskQueue.run();
+    }
+}
+
 beforeEach(() => {
     beforeMapTest();
 });
@@ -606,20 +620,6 @@ describe('ScrollZoomHandler', () => {
 
         map.remove();
     });
-
-    function scrollOutAtLat(map: Map, lat: number, browserNow: MockInstance, deltaY: number = 5) {
-        map.setCenter([0, lat]);
-        map.setZoom(1);
-        for (let i = 0; i < 200; i++) {
-            simulate.wheel(map.getCanvas(), {
-                type: 'wheel',
-                deltaY, 
-                clientX: map.transform.width / 2,
-                clientY: map.transform.height / 2});
-            browserNow.mockReturnValue(browser.now() + 10);
-            map._renderTaskQueue.run();
-        }
-    }
 
     test('Clamps zoom at high latitude to keep globe consistent size', async () => {
         const browserNow = vi.spyOn(browser, 'now');
