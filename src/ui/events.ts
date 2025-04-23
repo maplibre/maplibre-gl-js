@@ -751,9 +751,13 @@ export type MapProjectionEvent = {
     type: 'projectiontransition';
     /**
      * Specifies the name of the new projection.
-     * Additionally includes 'globe-mercator' to describe globe that has internally switched to mercator.
+     * For example: 
+     * 
+     *  - `globe` to describe globe that has internally switched to mercator
+     *  - `vertical-perspective` to describe a globe that doesn't change to mercator
+     *  - `mercator` to describe mercator projection
      */
-    newProjection: ProjectionSpecification['type'] | 'globe-mercator';
+    newProjection: ProjectionSpecification['type'];
 };
 
 /**

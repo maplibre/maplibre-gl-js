@@ -12,6 +12,8 @@ import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_s
 import {type ActorMessage, MessageType} from '../util/actor_messages';
 import {type Actor} from '../util/actor';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {sleep, waitForEvent} from '../util/test/util';
+import {type MapSourceDataEvent} from '../ui/events';
 
 const wrapDispatcher = (dispatcher) => {
     return {
@@ -106,15 +108,14 @@ describe('GeoJSONSource#setData', () => {
         await setDataPromise;
     });
 
-    test('fires "dataloading" event', () => new Promise<void>(done => {
+    test('fires "dataloading" event', async () => {
         const source = createSource();
-        source.on('dataloading', () => {
-            done();
-        });
+        const promise = source.once('dataloading');
         source.load();
-    }));
+        await expect(promise).resolves.toBeDefined();
+    });
 
-    test('fires "dataabort" event', () => new Promise<void>(done => {
+    test('fires "dataabort" event', async () => {
         const source = new GeoJSONSource('id', {} as any, wrapDispatcher({
             sendAsync(_message) {
                 return new Promise((resolve) => {
@@ -122,30 +123,31 @@ describe('GeoJSONSource#setData', () => {
                 });
             }
         }), undefined);
-        source.on('dataabort', () => {
-            done();
-        });
+        const promise = source.once('dataabort');
         source.load();
-    }));
+        await expect(promise).resolves.toBeDefined();
+    });
 
-    test('respects collectResourceTiming parameter on source', () => new Promise<void>(done => {
+    test('respects collectResourceTiming parameter on source', () => {
         const source = createSource({collectResourceTiming: true});
         source.map = {
             _requestManager: {
                 transformRequest: (url) => { return {url}; }
             } as any as RequestManager
         } as any;
+        const spy = vi.fn();
         source.actor.sendAsync = (message: ActorMessage<MessageType>) => {
             return new Promise((resolve) => {
                 if (message.type === MessageType.loadData) {
                     expect((message.data as any).request.collectResourceTiming).toBeTruthy();
                     setTimeout(() => resolve({} as any), 0);
-                    done();
+                    spy();
                 }
             });
         };
         source.setData('http://localhost/nonexistent');
-    }));
+        expect(spy).toHaveBeenCalled();
+    });
 
     test('only marks source as loaded when there are no pending loads', async () => {
         const source = createSource();
@@ -175,7 +177,7 @@ describe('GeoJSONSource#setData', () => {
         expect(source.loaded()).toBeTruthy();
     });
 
-    test('marks source as loaded before firing "dataabort" event', () => new Promise<void>(done => {
+    test('marks source as loaded before firing "dataabort" event', async () => {
         const source = new GeoJSONSource('id', {} as any, wrapDispatcher({
             sendAsync(_message: ActorMessage<MessageType>) {
                 return new Promise((resolve) => {
@@ -183,21 +185,21 @@ describe('GeoJSONSource#setData', () => {
                 });
             }
         }), undefined);
-        source.on('dataabort', () => {
-            expect(source.loaded()).toBeTruthy();
-            done();
-        });
+        const promise = waitForEvent(source, 'dataabort', () => true);
         source.setData({} as GeoJSON.GeoJSON);
-    }));
+        await promise;
+        expect(source.loaded()).toBeTruthy();
+    });
 });
 
 describe('GeoJSONSource#onRemove', () => {
-    test('broadcasts "removeSource" event', () => new Promise<void>(done => {
+    test('broadcasts "removeSource" event', () => {
+        const spy = vi.fn();
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
             sendAsync(message: ActorMessage<MessageType>) {
                 expect(message.type).toBe(MessageType.removeSource);
                 expect(message.data).toEqual({type: 'geojson', source: 'id'});
-                done();
+                spy();
                 return Promise.resolve({});
             },
             broadcast() {
@@ -205,7 +207,8 @@ describe('GeoJSONSource#onRemove', () => {
             }
         }), undefined);
         source.onRemove();
-    }));
+        expect(spy).toHaveBeenCalled();
+    });
 });
 
 describe('GeoJSONSource#update', () => {
@@ -216,19 +219,22 @@ describe('GeoJSONSource#update', () => {
     transform.setZoom(15);
     transform.setLocationAtPoint(lngLat, point);
 
-    test('sends initial loadData request to dispatcher', () => new Promise<void>(done => {
+    test('sends initial loadData request to dispatcher', () => {
+        const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
             sendAsync(message: ActorMessage<MessageType>) {
                 expect(message.type).toBe(MessageType.loadData);
-                done();
+                spy();
                 return Promise.resolve({});
             }
         });
 
         new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined).load();
-    }));
+        expect(spy).toHaveBeenCalled();
+    });
 
-    test('forwards geojson-vt options with worker request', () => new Promise<void>(done => {
+    test('forwards geojson-vt options with worker request', () => {
+        const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
             sendAsync(message: ActorMessage<any>) {
                 expect(message.type).toBe(MessageType.loadData);
@@ -240,7 +246,7 @@ describe('GeoJSONSource#update', () => {
                     lineMetrics: false,
                     generateId: true
                 });
-                done();
+                spy();
                 return Promise.resolve({});
             }
         });
@@ -252,9 +258,11 @@ describe('GeoJSONSource#update', () => {
             buffer: 16,
             generateId: true
         } as GeoJSONSourceOptions, mockDispatcher, undefined).load();
-    }));
+        expect(spy).toHaveBeenCalled();
+    });
 
-    test('forwards Supercluster options with worker request', () => new Promise<void>(done => {
+    test('forwards Supercluster options with worker request', () => {
+        const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
                 expect(message.type).toBe(MessageType.loadData);
@@ -266,7 +274,7 @@ describe('GeoJSONSource#update', () => {
                     log: false,
                     generateId: true
                 });
-                done();
+                spy();
                 return Promise.resolve({});
             }
         });
@@ -280,17 +288,19 @@ describe('GeoJSONSource#update', () => {
             generateId: true
         } as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.load();
-    }));
+        expect(spy).toHaveBeenCalled();
+    });
 
-    test('modifying cluster properties after adding a source', () => new Promise<void>(done => {
+    test('modifying cluster properties after adding a source', () => {
         // test setCluster function on GeoJSONSource
+        const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
                 expect(message.type).toBe(MessageType.loadData);
                 expect(message.data.cluster).toBe(true);
                 expect(message.data.superclusterOptions.radius).toBe(80 * EXTENT / source.tileSize);
                 expect(message.data.superclusterOptions.maxZoom).toBe(16);
-                done();
+                spy();
                 return Promise.resolve({});
             }
         });
@@ -304,9 +314,11 @@ describe('GeoJSONSource#update', () => {
             generateId: true
         }, mockDispatcher, undefined);
         source.setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
-    }));
+        expect(spy).toHaveBeenCalled();
+    });
 
-    test('forwards Supercluster options with worker request, ignore max zoom of source', () => new Promise<void>(done => {
+    test('forwards Supercluster options with worker request, ignore max zoom of source', () => {
+        const spy = vi.fn();
         vi.spyOn(console, 'warn').mockImplementation(() => {});
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
@@ -319,7 +331,7 @@ describe('GeoJSONSource#update', () => {
                     log: false,
                     generateId: true
                 });
-                done();
+                spy();
                 return Promise.resolve({});
             }
         });
@@ -334,7 +346,8 @@ describe('GeoJSONSource#update', () => {
             generateId: true
         } as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.load();
-    }));
+        expect(spy).toHaveBeenCalled();
+    });
 
     test('transforms url before making request', () => {
         const mapStub = {
@@ -348,7 +361,7 @@ describe('GeoJSONSource#update', () => {
         expect(transformSpy).toHaveBeenCalledTimes(1);
         expect(transformSpy.mock.calls[0][0]).toBe('https://example.com/data.geojson');
     });
-    test('fires event when metadata loads', () => new Promise<void>(done => {
+    test('fires event when metadata loads', async () =>  {
         const mockDispatcher = wrapDispatcher({
             sendAsync(_message: ActorMessage<MessageType>) {
                 return new Promise((resolve) => {
@@ -359,14 +372,14 @@ describe('GeoJSONSource#update', () => {
 
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
 
-        source.on('data', (e) => {
-            if (e.sourceDataType === 'metadata') done();
-        });
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
         source.load();
-    }));
 
-    test('fires metadata data event even when initial request is aborted', () => new Promise<void>(done => {
+        await expect(promise).resolves.toBeDefined();
+    });
+
+    test('fires metadata data event even when initial request is aborted', async () => {
         let requestCount = 0;
         const mockDispatcher = wrapDispatcher({
             sendAsync(_message) {
@@ -378,15 +391,15 @@ describe('GeoJSONSource#update', () => {
 
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
 
-        source.on('data', e => {
-            if (e.sourceDataType === 'metadata') done();
-        });
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
         source.load();
         source.setData({} as GeoJSON.GeoJSON);
-    }));
 
-    test('fires "error"', () => new Promise<void>(done => {
+        await expect(promise).resolves.toBeDefined();
+    });
+
+    test('fires "error"', async () => {
         const mockDispatcher = wrapDispatcher({
             sendAsync(_message) {
                 return Promise.reject('error');
@@ -395,20 +408,20 @@ describe('GeoJSONSource#update', () => {
 
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
 
-        source.on('error', (err) => {
-            expect(err.error).toBe('error');
-            done();
-        });
+        const promise = waitForEvent(source, 'error', () => true);
 
         source.load();
-    }));
 
-    test('sends loadData request to dispatcher after data update', () => new Promise<void>(done => {
-        let expectedLoadDataCalls = 2;
+        const err = await promise;
+        expect(err.error).toBe('error');
+    });
+
+    test('sends loadData request to dispatcher after data update', async () => {
+        let loadDataCalls = 0;
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
-                if (message.type === MessageType.loadData && --expectedLoadDataCalls <= 0) {
-                    done();
+                if (message.type === MessageType.loadData) {
+                    loadDataCalls++;
                 }
                 return new Promise((resolve) => setTimeout(() => resolve({}), 0));
             }
@@ -435,7 +448,10 @@ describe('GeoJSONSource#update', () => {
         });
 
         source.load();
-    }));
+
+        await sleep(10);
+        expect(loadDataCalls).toBeGreaterThan(2);
+    });
 });
 
 describe('GeoJSONSource#getData', () => {

@@ -7,7 +7,7 @@ import {OverscaledTileID} from './tile_id';
 import {Evented} from '../util/evented';
 import {RequestManager} from '../util/request_manager';
 import fixturesSource from '../../test/unit/assets/source.json' with {type: 'json'};
-import {getMockDispatcher, getWrapDispatcher, sleep, waitForMetadataEvent} from '../util/test/util';
+import {getMockDispatcher, getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util';
 import {type Map} from '../ui/map';
 import {type WorkerTileParameters} from './worker_source';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
@@ -87,14 +87,13 @@ describe('VectorTileSource', () => {
         expect(transformSpy).toHaveBeenCalledWith('/source.json', 'Source');
     });
 
-    test('fires event with metadata property', () => new Promise<void>(done => {
+    test('fires event with metadata property', async () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
         const source = createSource({url: '/source.json'});
-        source.on('data', (e) => {
-            if (e.sourceDataType === 'content') done();
-        });
+        const dataEvent = waitForEvent(source, 'data', (e) => e.sourceDataType === 'content');
         server.respond();
-    }));
+        await expect(dataEvent).resolves.toBeDefined();
+    });
 
     test('fires "dataloading" event', async () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));

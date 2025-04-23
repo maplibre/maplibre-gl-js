@@ -11,7 +11,7 @@ describe('QueryFeatures#rendered', () => {
     test('returns empty object if source returns no tiles', () => {
         const mockSourceCache = {tilesIn () { return []; }} as any as SourceCache;
         const transform = new MercatorTransform();
-        const result = queryRenderedFeatures(mockSourceCache, {}, undefined, [] as Point[], undefined, transform);
+        const result = queryRenderedFeatures(mockSourceCache, {}, undefined, [] as Point[], undefined, transform, undefined);
         expect(result).toEqual({});
     });
 
