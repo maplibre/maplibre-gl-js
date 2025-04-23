@@ -181,7 +181,7 @@ export class RasterTileSource extends Evented implements Source {
                 if (!requestParameters.headers) {
                     requestParameters.headers = {};
                 }
-                requestParameters.headers["If-Modified-Since"] = new Date(tile.modificationTime).toUTCString();
+                requestParameters.headers['If-Modified-Since'] = new Date(tile.modificationTime).toUTCString();
             }
             const response = await ImageRequest.getImage(requestParameters, tile.abortController, this.map._refreshExpiredTiles);
             delete tile.abortController;

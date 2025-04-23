@@ -181,7 +181,10 @@ async function makeFetchRequest(requestParameters: RequestParameters, abortContr
     if (abortController.signal.aborted) {
         throw createAbortError();
     }
-    return {data: result, cacheControl: response.headers.get('Cache-Control'), expires: response.headers.get('Expires'),
+    return {
+        data: result,
+        cacheControl: response.headers.get('Cache-Control'),
+        expires: response.headers.get('Expires'),
         lastModified: response.headers.get('Last-Modified')
     };
 }
