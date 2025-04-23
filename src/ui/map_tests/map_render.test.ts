@@ -1,5 +1,5 @@
 import {beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {createMap, beforeMapTest, createStyle} from '../../util/test/util';
+import {createMap, beforeMapTest, createStyle, sleep} from '../../util/test/util';
 import {fakeServer, type FakeServer} from 'nise';
 
 let server: FakeServer;
@@ -14,9 +14,9 @@ afterEach(() => {
     server.restore();
 });
 
-test('render stabilizes', () => new Promise<void>((done) => {
+test('render stabilizes', async () => {
     const style = createStyle();
-    style.sources.mapbox = {
+    style.sources.maplibre = {
         type: 'vector',
         minzoom: 1,
         maxzoom: 10,
@@ -25,12 +25,13 @@ test('render stabilizes', () => new Promise<void>((done) => {
     style.layers.push({
         id: 'layerId',
         type: 'circle',
-        source: 'mapbox',
+        source: 'maplibre',
         'source-layer': 'sourceLayer'
     });
 
     let timer;
     const map = createMap({style});
+    const spy = vi.fn();
     map.on('render', () => {
         if (timer) clearTimeout(timer);
         timer = setTimeout(() => {
@@ -39,25 +40,24 @@ test('render stabilizes', () => new Promise<void>((done) => {
                 throw new Error('test failed');
             });
             expect((map as any)._frameId).toBeFalsy();
-            done();
+            spy();
         }, 100);
     });
-}));
+    await sleep(700);
+    expect(spy).toHaveBeenCalled();
+});
 
-test('no render after idle event', () => new Promise<void>((done) => {
+test('no render after idle event', async () => {
     const style = createStyle();
     const map = createMap({style});
-    map.on('idle', () => {
-        map.on('render', () => {
-            throw new Error('test failed');
-        });
-        setTimeout(() => {
-            done();
-        }, 100);
-    });
-}));
+    await map.once('idle');
+    const spy = vi.fn();
+    map.on('render', spy);
+    await sleep(100);
+    expect(spy).not.toHaveBeenCalled();
+});
 
-test('no render before style loaded', () => new Promise<void>((done) => {
+test('no render before style loaded', async () => {
     server.respondWith('/styleUrl', JSON.stringify(createStyle()));
     const map = createMap({style: '/styleUrl'});
 
@@ -66,19 +66,19 @@ test('no render before style loaded', () => new Promise<void>((done) => {
             throw new Error('test failed');
         }
     });
+
+    let loaded = true;
     map.on('render', () => {
-        if (map.style._loaded) {
-            done();
-        } else {
-            throw new Error('test failed');
-        }
+        loaded = map.style._loaded;
     });
 
     // Force a update should not call triggerRepaint till style is loaded.
     // Once style is loaded, it will trigger the update.
     map._update();
+    expect(loaded).toBeTruthy();
     server.respond();
-}));
+    expect(loaded).toBeTruthy();
+});
 
 test('#redraw', async () => {
     const map = createMap();

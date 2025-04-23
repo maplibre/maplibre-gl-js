@@ -13,7 +13,7 @@ function createMap() {
             id: 'basic'
         },
         hash: true
-    }, undefined);
+    });
 }
 
 let map;

@@ -33,7 +33,7 @@ describe('TerrainSourceCache', () => {
     let style: Style;
     let tsc: TerrainSourceCache;
 
-    beforeAll(() => new Promise<void>(done => {
+    beforeAll(async () => {
         global.fetch = null;
         server = fakeServer.create();
         server.respondWith('/source.json', JSON.stringify({
@@ -45,19 +45,18 @@ describe('TerrainSourceCache', () => {
         }));
         const map = new StubMap();
         style = new Style(map as any);
-        style.on('style.load', () => {
-            const source = createSource({url: '/source.json'});
-            server.respond();
-            style.addSource('terrain', source as any);
-            tsc = new TerrainSourceCache(style.sourceCaches.terrain);
-            done();
-        });
+        const loadPromise = style.once('style.load');
         style.loadJSON({
             'version': 8,
             'sources': {},
             'layers': []
         });
-    }));
+        await loadPromise;
+        const source = createSource({url: '/source.json'});
+        server.respond();
+        style.addSource('terrain', source as any);
+        tsc = new TerrainSourceCache(style.sourceCaches.terrain);
+    });
 
     afterAll(() => {
         server.restore();

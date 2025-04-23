@@ -13,7 +13,7 @@ function createMap(logoPosition, maplibreLogo) {
         }
     };
 
-    return globalCreateMap(mapobj, undefined);
+    return globalCreateMap(mapobj);
 }
 
 beforeEach(() => {
@@ -29,35 +29,29 @@ describe('LogoControl', () => {
         )).toHaveLength(0);
     });
 
-    test('is not displayed when the maplibreLogo property is false', () => new Promise<void>(done => {
+    test('is not displayed when the maplibreLogo property is false', async () => {
         const map = createMap(undefined, false);
-        map.on('load', () => {
-            expect(map.getContainer().querySelectorAll(
-                '.maplibregl-ctrl-logo'
-            )).toHaveLength(0);
-            done();
-        });
-    }));
+        await map.once('load');
+        expect(map.getContainer().querySelectorAll(
+            '.maplibregl-ctrl-logo'
+        )).toHaveLength(0);
+    });
 
-    test('appears in bottom-left when maplibreLogo is true and logoPosition is undefined', () => new Promise<void>(done => {
+    test('appears in bottom-left when maplibreLogo is true and logoPosition is undefined', async () => {
         const map = createMap(undefined, true);
-        map.on('load', () => {
-            expect(map.getContainer().querySelectorAll(
-                '.maplibregl-ctrl-bottom-left .maplibregl-ctrl-logo'
-            )).toHaveLength(1);
-            done();
-        });
-    }));
+        await map.once('load');
+        expect(map.getContainer().querySelectorAll(
+            '.maplibregl-ctrl-bottom-left .maplibregl-ctrl-logo'
+        )).toHaveLength(1);
+    });
 
-    test('appears in the position specified by the position option', () => new Promise<void>(done => {
+    test('appears in the position specified by the position option', async () => {
         const map = createMap('top-left', true);
-        map.on('load', () => {
-            expect(map.getContainer().querySelectorAll(
-                '.maplibregl-ctrl-top-left .maplibregl-ctrl-logo'
-            )).toHaveLength(1);
-            done();
-        });
-    }));
+        await map.once('load');
+        expect(map.getContainer().querySelectorAll(
+            '.maplibregl-ctrl-top-left .maplibregl-ctrl-logo'
+        )).toHaveLength(1);
+    });
 
     test('appears in compact mode if container is less then 640 pixel wide', () => {
         const map = createMap(undefined, true);
@@ -76,14 +70,12 @@ describe('LogoControl', () => {
         ).toHaveLength(1);
     });
 
-    test('has `rel` noopener and nofollow', () => new Promise<void>(done => {
+    test('has `rel` noopener and nofollow', async () => {
         const map = createMap(undefined, true);
 
-        map.on('load', () => {
-            const container = map.getContainer();
-            const logo = container.querySelector('.maplibregl-ctrl-logo');
-            expect(logo).toHaveProperty('rel', 'noopener nofollow');
-            done();
-        });
-    }));
+        await map.once('load');
+        const container = map.getContainer();
+        const logo = container.querySelector('.maplibregl-ctrl-logo');
+        expect(logo).toHaveProperty('rel', 'noopener nofollow');
+    });
 });
