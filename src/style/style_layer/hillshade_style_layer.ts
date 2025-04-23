@@ -17,20 +17,6 @@ export class HillshadeStyleLayer extends StyleLayer {
 
     constructor(layer: LayerSpecification) {
         super(layer, properties);
-        this.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
-        if (this.paint.get('hillshade-illumination-direction').values.length < 1) {
-            throw new Error('"hillshade-illumination-direction" cannot be an empty array');
-        }
-        if (this.paint.get('hillshade-illumination-altitude').values.length < 1) {
-            throw new Error('"hillshade-illumination-altitude" cannot be an empty array');
-        }
-        if (this.paint.get('hillshade-highlight-color').values.length < 1) {
-            throw new Error('"hillshade-highlight-color" cannot be an empty array');
-        }
-        if (this.paint.get('hillshade-shadow-color').values.length < 1) {
-            throw new Error('"hillshade-shadow-color" cannot be an empty array');
-        }
-
     }
 
     getIlluminationProperties(): {directionRadians: number[]; altitudeRadians: number[]; shadowColor: Color[]; highlightColor: Color[]} {

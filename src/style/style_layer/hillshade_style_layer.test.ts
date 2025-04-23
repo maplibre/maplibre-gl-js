@@ -104,38 +104,4 @@ describe('HillshadeStyleLayer', () => {
         expect(illumination.highlightColor).toEqual([Color.red, Color.red]);
         expect(illumination.shadowColor).toEqual([Color.black, Color.white]);
     });
-
-    test('empty array illumination parameters', () => {
-        let layerSpec = createLayerSpec({
-            paint: {
-                'hillshade-illumination-direction': []
-            }
-        });
-
-        expect(() => {createStyleLayer(layerSpec);}).toThrow('"hillshade-illumination-direction" cannot be an empty array');
-
-        layerSpec = createLayerSpec({
-            paint: {
-                'hillshade-illumination-altitude': []
-            }
-        });
-
-        expect(() => {createStyleLayer(layerSpec);}).toThrow('"hillshade-illumination-altitude" cannot be an empty array');
-
-        layerSpec = createLayerSpec({
-            paint: {
-                'hillshade-highlight-color': []
-            }
-        });
-
-        expect(() => {createStyleLayer(layerSpec);}).toThrow('"hillshade-highlight-color" cannot be an empty array');
-
-        layerSpec = createLayerSpec({
-            paint: {
-                'hillshade-shadow-color': []
-            }
-        });
-
-        expect(() => {createStyleLayer(layerSpec);}).toThrow('"hillshade-shadow-color" cannot be an empty array');
-    });
 });
