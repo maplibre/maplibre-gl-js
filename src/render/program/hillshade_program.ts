@@ -67,7 +67,25 @@ const hillshadeUniformValues = (
     layer: HillshadeStyleLayer,
 ): UniformValues<HillshadeUniformsType> => {
     const accent = layer.paint.get('hillshade-accent-color');
-    const method = layer.paint.get('hillshade-method');
+    let method;
+    switch (layer.paint.get('hillshade-method')) {
+        case 'basic':
+            method = 4;
+            break;
+        case 'combined':
+            method = 1;
+            break;
+        case 'igor':
+            method = 2;
+            break;
+        case 'multidirectional':
+            method = 3;
+            break;
+        case 'standard':
+        default:
+            method = 0;
+            break;
+    }
 
     const illumination = layer.getIlluminationProperties();
 
@@ -84,10 +102,7 @@ const hillshadeUniformValues = (
         'u_altitudes': illumination.altitudeRadians,
         'u_azimuths': illumination.directionRadians,
         'u_accent': accent,
-        'u_method': method == 'combined' ? 1 :
-            method == 'igor' ? 2 :
-                method == 'multidirectional' ? 3 :
-                    method == 'basic' ? 4 : 0,
+        'u_method': method,
         'u_highlights': illumination.highlightColor,
         'u_shadows': illumination.shadowColor
     };
