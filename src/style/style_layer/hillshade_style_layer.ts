@@ -17,6 +17,7 @@ export class HillshadeStyleLayer extends StyleLayer {
 
     constructor(layer: LayerSpecification) {
         super(layer, properties);
+        this.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
     }
 
     getIlluminationProperties(): {directionRadians: number[]; altitudeRadians: number[]; shadowColor: Color[]; highlightColor: Color[]} {
