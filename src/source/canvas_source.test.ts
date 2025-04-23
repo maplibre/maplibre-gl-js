@@ -1,13 +1,14 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {CanvasSource} from '../source/canvas_source';
-import {type IReadonlyTransform} from '../geo/transform_interface';
 import {Event, Evented} from '../util/evented';
 import {extend} from '../util/util';
-
-import type {Dispatcher} from '../util/dispatcher';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {waitForEvent} from '../util/test/util';
+import type {IReadonlyTransform} from '../geo/transform_interface';
+import type {Dispatcher} from '../util/dispatcher';
+import type {MapSourceDataEvent} from '../ui/events';
 
 function createSource(options?) {
     const c = options && options.canvas || window.document.createElement('canvas');
@@ -53,22 +54,21 @@ describe('CanvasSource', () => {
         map = new StubMap();
     });
 
-    test('constructor', () => new Promise<void>(done => {
+    test('constructor', async () => {
         const source = createSource();
 
         expect(source.minzoom).toBe(0);
         expect(source.maxzoom).toBe(22);
         expect(source.tileSize).toBe(512);
         expect(source.animate).toBe(true);
-        source.on('data', (e) => {
-            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
-                expect(typeof source.play).toBe('function');
-                done();
-            }
-        });
+
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.dataType === 'source' && e.sourceDataType === 'metadata');
 
         source.onAdd(map);
-    }));
+        await promise;
+
+        expect(typeof source.play).toBe('function');
+    });
 
     test('self-validates', () => {
         const stub = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -95,53 +95,45 @@ describe('CanvasSource', () => {
 
     });
 
-    test('can be initialized with HTML element', () => new Promise<void>(done => {
+    test('can be initialized with HTML element', async () => {
         const el = window.document.createElement('canvas');
         const source = createSource({
             canvas: el
         });
 
-        source.on('data', (e) => {
-            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
-                expect(source.canvas).toBe(el);
-                done();
-            }
-        });
+        const prmoise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.dataType === 'source' && e.sourceDataType === 'metadata');
 
         source.onAdd(map);
-    }));
 
-    test('rerenders if animated', () => new Promise<void>(done => {
+        await prmoise;
+        expect(source.canvas).toBe(el);
+    });
+
+    test('rerenders if animated', async () => {
         const source = createSource();
 
-        map.on('rerender', () => {
-            expect(true).toBeTruthy();
-            done();
-        });
+        const promise = waitForEvent(map, 'rerender', () => true);
 
         source.onAdd(map);
-    }));
 
-    test('can be static', () => new Promise<void>(done => {
+        await expect(promise).resolves.toBeDefined();
+    });
+
+    test('can be static', async () => {
         const source = createSource({
             animate: false
         });
 
-        map.on('rerender', () => {
-            // this just confirms it didn't happen, so no need to run done() here
-            // if called the test will fail
-            expect(true).toBeFalsy();
-        });
+        const spy = vi.fn();
+        map.on('rerender', spy);
 
-        source.on('data', (e) => {
-            if (e.sourceDataType === 'metadata' && e.dataType === 'source') {
-                expect(true).toBeTruthy();
-                done();
-            }
-        });
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.dataType === 'source' && e.sourceDataType === 'metadata');
 
         source.onAdd(map);
-    }));
+
+        await expect(promise).resolves.toBeDefined();
+        expect(spy).not.toHaveBeenCalled();
+    });
 
     test('onRemove stops animation', () => {
         const source = createSource();
@@ -177,15 +169,11 @@ describe('CanvasSource', () => {
 
     });
 
-    test('fires idle event on prepare call when there is at least one not loaded tile', () => new Promise<void>(done => {
+    test('fires idle event on prepare call when there is at least one not loaded tile', async () => {
         const source = createSource();
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
-        source.on('data', (e) => {
-            if (e.dataType === 'source' && e.sourceDataType === 'idle') {
-                expect(tile.state).toBe('loaded');
-                done();
-            }
-        });
+
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.dataType === 'source' && e.sourceDataType === 'idle');
         source.onAdd(map);
 
         source.tiles[String(tile.tileID.wrap)] = tile;
@@ -194,7 +182,10 @@ describe('CanvasSource', () => {
             update: () => {}
         } as any;
         source.prepare();
-    }));
+
+        await promise;
+        expect(tile.state).toBe('loaded');
+    });
 
 });
 
