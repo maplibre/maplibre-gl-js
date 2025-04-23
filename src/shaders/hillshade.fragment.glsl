@@ -23,7 +23,8 @@ float get_aspect(vec2 deriv)
     return deriv.x != 0.0 ? atan(deriv.y, -deriv.x) : PI / 2.0 * (deriv.y > 0.0 ? 1.0 : -1.0);
 }
 
-// Based on GDALHillshadeIgorAlg(). GDAL's version only calculates shading.
+// Based on GDALHillshadeIgorAlg() (https://github.com/OSGeo/gdal/blob/ad4280be5aee202eea412c075e4591878aaeb018/apps/gdaldem_lib.cpp#L849).
+// GDAL's version only calculates shading.
 // This version also adds highlighting. To match GDAL's output, make hillshade-highlight-color transparent. 
 void igor_hillshade(vec2 deriv)
 {
@@ -71,7 +72,8 @@ void standard_hillshade(vec2 deriv)
     fragColor = accent_color * (1.0 - shade_color.a) + shade_color;
 }
 
-// Based on GDALHillshadeAlg(). GDAL's output ranges from black to white, and is gray in the middle.
+// Based on GDALHillshadeAlg(). (https://github.com/OSGeo/gdal/blob/ad4280be5aee202eea412c075e4591878aaeb018/apps/gdaldem_lib.cpp#L908)
+// GDAL's output ranges from black to white, and is gray in the middle.
 // The output of this function ranges from hillshade-shadow-color to hillshade-highlight-color, and 
 // is transparent in the middle. To match GDAL's output, make hillshade-highlight-color white,
 // hillshade-shadow color black, and the background color gray.
@@ -126,7 +128,8 @@ void multidirectional_hillshade(vec2 deriv)
     }
 }
 
-// Based on GDALHillshadeCombinedAlg(). GDAL's version only calculates shading.
+// Based on GDALHillshadeCombinedAlg(). (https://github.com/OSGeo/gdal/blob/ad4280be5aee202eea412c075e4591878aaeb018/apps/gdaldem_lib.cpp#L1084)
+// GDAL's version only calculates shading.
 // This version also adds highlighting. To match GDAL's output, make hillshade-highlight-color transparent. 
 void combined_hillshade(vec2 deriv)
 {
