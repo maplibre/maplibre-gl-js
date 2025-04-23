@@ -257,7 +257,7 @@ export class Painter {
         };
 
         // Note: we force a simple mercator projection for the shader, since we want to draw a fullscreen quad.
-        this.useProgram('clippingMask', null, null, true).draw(context, gl.TRIANGLES,
+        this.useProgram('clippingMask', null, true).draw(context, gl.TRIANGLES,
             DepthMode.disabled, this.stencilClearMode, ColorMode.disabled, CullFaceMode.disabled,
             null, null, projectionData,
             '$clipping', this.viewportBuffer,
@@ -711,12 +711,12 @@ export class Painter {
      * Finds the required shader and its variant (base/terrain/globe, etc.) and binds it, compiling a new shader if required.
      * @param name - Name of the desired shader.
      * @param programConfiguration - Configuration of shader's inputs.
-     * @param defines - Additional macros to be injected at the beginning of the shader. Expected format is `['#define XYZ']`, etc.
      * @param forceSimpleProjection - Whether to force the use of a shader variant with simple mercator projection vertex shader.
+     * @param defines - Additional macros to be injected at the beginning of the shader. Expected format is `['#define XYZ']`, etc.
      * False by default. Use true when drawing with a simple projection matrix is desired, eg. when drawing a fullscreen quad.
      * @returns
      */
-    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, defines?: Array<string> | null, forceSimpleProjection: boolean = false): Program<any> {
+    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, forceSimpleProjection: boolean = false, defines: Array<string> = []): Program<any> {
         this.cache = this.cache || {};
         const useTerrain = !!this.style.map.terrain;
 

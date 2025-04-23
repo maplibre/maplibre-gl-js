@@ -144,7 +144,7 @@ function prepareHeatmapTerrain(painter: Painter, tile: Tile, layer: HeatmapStyle
     context.clear({color: Color.transparent});
 
     const programConfiguration = bucket.programConfigurations.get(layer.id);
-    const program = painter.useProgram('heatmap', programConfiguration, null, !isRenderingGlobe);
+    const program = painter.useProgram('heatmap', programConfiguration, !isRenderingGlobe);
 
     const projectionData = painter.transform.getProjectionData({overscaledTileID: tile.tileID, applyGlobeMatrix: true, applyTerrainMatrix: true});
 

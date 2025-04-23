@@ -61,7 +61,7 @@ function renderHillshade(
     const gl = context.gl;
 
     const defines = [`#define NUM_ILLUMINATION_SOURCES ${layer.paint.get('hillshade-highlight-color').values.length}`];
-    const program = painter.useProgram('hillshade', null, defines);
+    const program = painter.useProgram('hillshade', null, false, defines);
     const align = !painter.options.moving;
 
     for (const coord of coords) {

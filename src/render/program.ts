@@ -53,7 +53,7 @@ export class Program<Us extends UniformBindings> {
         hasTerrain: boolean,
         projectionPrelude: PreparedShader,
         projectionDefine: string,
-        extraDefines?: Array<string> | null) {
+        extraDefines: Array<string> = []) {
 
         const gl = context.gl;
         this.program = gl.createProgram();
