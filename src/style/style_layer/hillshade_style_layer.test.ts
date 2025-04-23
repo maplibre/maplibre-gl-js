@@ -66,8 +66,8 @@ describe('HillshadeStyleLayer', () => {
         expect(illumination.shadowColor).toEqual([Color.red, Color.white]);
     });
 
-    test('mixed illumination parameters', () => {
-        let layerSpec = createLayerSpec({
+    test('mixed illumination parameters: number, color, and arrays', () => {
+        const layerSpec = createLayerSpec({
             paint: {
                 'hillshade-illumination-direction': [6, 7],
                 'hillshade-illumination-altitude': 23,
@@ -76,16 +76,18 @@ describe('HillshadeStyleLayer', () => {
             }
         });
         
-        let layer = createStyleLayer(layerSpec);
+        const layer = createStyleLayer(layerSpec);
         expect(layer).toBeInstanceOf(HillshadeStyleLayer);
         
-        let illumination = (layer as HillshadeStyleLayer).getIlluminationProperties();
+        const illumination = (layer as HillshadeStyleLayer).getIlluminationProperties();
         expect(illumination.directionRadians).toEqual([degreesToRadians(6), degreesToRadians(7)]);
         expect(illumination.altitudeRadians).toEqual([degreesToRadians(23), degreesToRadians(23)]);
         expect(illumination.highlightColor).toEqual([Color.red, Color.red]);
         expect(illumination.shadowColor).toEqual([Color.black, Color.black]);
+    });
 
-        layerSpec = createLayerSpec({
+    test('mixed illumination parameters: default, number, and arrays', () => {
+        const layerSpec = createLayerSpec({
             paint: {
                 'hillshade-illumination-altitude': 23,
                 'hillshade-highlight-color': ['#FF0000'],
@@ -93,10 +95,10 @@ describe('HillshadeStyleLayer', () => {
             }
         });
         
-        layer = createStyleLayer(layerSpec);
+        const layer = createStyleLayer(layerSpec);
         expect(layer).toBeInstanceOf(HillshadeStyleLayer);
         
-        illumination = (layer as HillshadeStyleLayer).getIlluminationProperties();
+        const illumination = (layer as HillshadeStyleLayer).getIlluminationProperties();
         expect(illumination.directionRadians).toEqual([degreesToRadians(335), degreesToRadians(335)]);
         expect(illumination.altitudeRadians).toEqual([degreesToRadians(23), degreesToRadians(23)]);
         expect(illumination.highlightColor).toEqual([Color.red, Color.red]);
