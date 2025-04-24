@@ -2161,7 +2161,6 @@ describe('SourceCache::refreshTiles', () => {
         expect(spy).toHaveBeenCalledOnce();
         expect(spy.mock.calls[0][1]).toBe('expired');
     });
-
     
     test('does not call reloadTile when tile does not exist', async () => {
         const coord = new OverscaledTileID(1, 0, 1, 1, 1);

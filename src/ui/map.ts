@@ -2214,11 +2214,32 @@ export class Map extends Camera {
         return this;
     }
 
+    /**
+     * Triggers a reload of the selected tile
+     *
+     * @param x - The tile X coordinate
+     * @param y - The tile Y coordinate
+     * @param z - The tile Z coordinate
+     * @param sourceId - The ID of the source
+     * @example
+     * ```ts
+     * map.refreshTile(1024, 1023, 11, 'satellite');
+     * ```
+     */
     refreshTile(x: number, y: number, z: number, sourceId: string) {
         this.refreshTiles([{x,y,z}], sourceId);
     }
-
-    refreshTiles(tileIds: Array<{x: number, y: number, z: number}>, sourceId: string) {
+    /**
+     * Triggers a reload of the selected tiles
+     *
+     * @param tileIds - An array of tile IDs to be reloaded
+     * @param sourceId - The ID of the source
+     * @example
+     * ```ts
+     * map.refreshTiles([{x:1024, y: 1023, z: 11}, {x:1023, y: 1023, z: 11}], 'satellite');
+     * ```
+     */
+    refreshTiles(tileIds: Array<{x: number; y: number; z: number}>, sourceId: string) {
         const sourceCache = this.style.sourceCaches[sourceId];
         if(!sourceCache) {
             throw new Error(`There is no source cache with ID "${sourceId}", cannot refresh tile`);
