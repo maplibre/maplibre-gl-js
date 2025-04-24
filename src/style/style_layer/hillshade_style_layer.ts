@@ -39,12 +39,8 @@ export class HillshadeStyleLayer extends StyleLayer {
         for (let i = shadowColor.length; i < numIlluminationSources; i++) {
             shadowColor.push(shadowColor[i-1]);
         }
-        const altitudeRadians = [];
-        const directionRadians = [];
-        for (let i = 0; i < numIlluminationSources; i++) {
-            altitudeRadians.push(degreesToRadians(altitude[i]));
-            directionRadians.push(degreesToRadians(direction[i]));
-        }
+        const altitudeRadians = altitude.map(degreesToRadians);
+        const directionRadians = direction.map(degreesToRadians);
 
         return {directionRadians, altitudeRadians, shadowColor, highlightColor};
     }
