@@ -97,7 +97,7 @@
     "eslint-plugin-tsdoc": "0.4.0",
     "eslint-plugin-vitest": "^0.5.4",
     "expect": "^29.7.0",
-    "glob": "^11.0.1",
+    "glob": "^11.0.2",
     "globals": "^16.0.0",
     "is-builtin-module": "^5.0.0",
     "jsdom": "^26.1.0",
