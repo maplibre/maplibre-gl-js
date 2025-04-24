@@ -5,7 +5,7 @@ import {OverscaledTileID} from './tile_id';
 import {RequestManager} from '../util/request_manager';
 import {type Tile} from './tile';
 import {waitForEvent, waitForMetadataEvent} from '../util/test/util';
-import {MapSourceDataEvent} from '../ui/events';
+import type {MapSourceDataEvent} from '../ui/events';
 
 function createSource(options, transformCallback?) {
     const source = new RasterDEMTileSource('id', options, {} as any, options.eventedParent);
@@ -167,7 +167,7 @@ describe('RasterDEMTileSource', () => {
             bounds: [-47, -7, -45, -5]
         }));
         server.respondWith('http://example.com/10/5/5.png', 
-            [200, { "Content-Type": "image/png", "Content-Length": 1, "Cache-Control": "max-age=100"}, "0"]
+            [200, {'Content-Type': 'image/png', 'Content-Length': 1, 'Cache-Control': 'max-age=100'}, '0']
         );
         const source = createSource({url: '/source.json'});
         source.map.painter = {context: {}, getTileTexture: () => { return {update: () => {}}; }} as any;
@@ -198,7 +198,7 @@ describe('RasterDEMTileSource', () => {
             bounds: [-47, -7, -45, -5]
         }));
         server.respondWith('http://example.com/10/5/5.png', 
-            [200, { "Content-Type": "image/png", "Content-Length": 1, "Expires": "Wed, 21 Oct 2015 07:28:00 GMT" }, "0"]
+            [200, {'Content-Type': 'image/png', 'Content-Length': 1, 'Expires': 'Wed, 21 Oct 2015 07:28:00 GMT'}, '0']
         );
         const source = createSource({url: '/source.json'});
         source.map.painter = {context: {}, getTileTexture: () => { return {update: () => {}}; }} as any;

@@ -201,7 +201,7 @@ describe('RasterTileSource', () => {
             bounds: [-47, -7, -45, -5]
         }));
         server.respondWith('http://example.com/10/5/5.png', 
-            [200, { "Content-Type": "image/png", "Content-Length": 1, "Cache-Control": "max-age=100"}, "0"]
+            [200, {'Content-Type': 'image/png', 'Content-Length': 1, 'Cache-Control': 'max-age=100'}, '0']
         );
         const source = createSource({url: '/source.json'});
         source.map.painter = {context: {}, getTileTexture: () => { return {update: () => {}}; }} as any;
@@ -232,7 +232,7 @@ describe('RasterTileSource', () => {
             bounds: [-47, -7, -45, -5]
         }));
         server.respondWith('http://example.com/10/5/5.png', 
-            [200, { "Content-Type": "image/png", "Content-Length": 1, "Expires": "Wed, 21 Oct 2015 07:28:00 GMT" }, "0"]
+            [200, {'Content-Type': 'image/png', 'Content-Length': 1, 'Expires': 'Wed, 21 Oct 2015 07:28:00 GMT'}, '0']
         );
         const source = createSource({url: '/source.json'});
         source.map.painter = {context: {}, getTileTexture: () => { return {update: () => {}}; }} as any;
