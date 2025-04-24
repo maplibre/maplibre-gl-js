@@ -1,4 +1,4 @@
-import {beforeEach, test, expect} from 'vitest';
+import {beforeEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
 import {type StyleImageInterface} from '../../style/style_image';
 
@@ -7,20 +7,18 @@ beforeEach(() => {
     global.fetch = null;
 });
 
-test('#listImages', () => new Promise<void>(done => {
+test('#listImages', async () => {
     const map = createMap();
 
-    map.on('load', () => {
-        expect(map.listImages()).toHaveLength(0);
+    await map.once('load');
+    expect(map.listImages()).toHaveLength(0);
 
-        map.addImage('img', {width: 1, height: 1, data: new Uint8Array(4)});
+    map.addImage('img', {width: 1, height: 1, data: new Uint8Array(4)});
 
-        const images = map.listImages();
-        expect(images).toHaveLength(1);
-        expect(images[0]).toBe('img');
-        done();
-    });
-}));
+    const images = map.listImages();
+    expect(images).toHaveLength(1);
+    expect(images[0]).toBe('img');  
+});
 
 test('#listImages throws an error if called before "load"', () => {
     const map = createMap();
@@ -148,29 +146,27 @@ test('map getImage matches addImage, StyleImageInterface SDF', () => {
     expect(gotImage.sdf).toBe(true);
 });
 
-test('map does not fire `styleimagemissing` for empty icon values', () => new Promise<void>((done) => {
+test('map does not fire `styleimagemissing` for empty icon values', async () => {
     const map = createMap();
 
-    map.on('load', () => {
-        map.on('idle', () => {
-            done();
-        });
+    await map.once('load');
 
-        map.addSource('foo', {
-            type: 'geojson',
-            data: {type: 'Point', coordinates: [0, 0]}
-        });
-        map.addLayer({
-            id: 'foo',
-            type: 'symbol',
-            source: 'foo',
-            layout: {
-                'icon-image': ['case', true, '', '']
-            }
-        });
-
-        map.on('styleimagemissing', ({id}) => {
-            throw new Error(`styleimagemissing fired for value ${id}`);
-        });
+    map.addSource('foo', {
+        type: 'geojson',
+        data: {type: 'Point', coordinates: [0, 0]}
     });
-}));
+    map.addLayer({
+        id: 'foo',
+        type: 'symbol',
+        source: 'foo',
+        layout: {
+            'icon-image': ['case', true, '', '']
+        }
+    });
+
+    const spy = vi.fn();
+    map.on('styleimagemissing', spy);
+
+    await map.once('idle');
+    expect(spy).not.toHaveBeenCalled();
+});

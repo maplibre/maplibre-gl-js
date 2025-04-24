@@ -5,6 +5,8 @@ import {
     Uniform1f,
     Uniform2f,
     UniformColor,
+    UniformFloatArray,
+    UniformColorArray,
     UniformMatrix4f,
     Uniform4f
 } from '../uniform_binding';
@@ -22,10 +24,13 @@ import type {OverscaledTileID} from '../../source/tile_id';
 export type HillshadeUniformsType = {
     'u_image': Uniform1i;
     'u_latrange': Uniform2f;
-    'u_light': Uniform2f;
-    'u_shadow': UniformColor;
-    'u_highlight': UniformColor;
+    'u_exaggeration': Uniform1f;
+    'u_altitudes': UniformFloatArray;
+    'u_azimuths': UniformFloatArray;
     'u_accent': UniformColor;
+    'u_method': Uniform1i;
+    'u_shadows': UniformColorArray;
+    'u_highlights': UniformColorArray;
 };
 
 export type HillshadePrepareUniformsType = {
@@ -39,10 +44,13 @@ export type HillshadePrepareUniformsType = {
 const hillshadeUniforms = (context: Context, locations: UniformLocations): HillshadeUniformsType => ({
     'u_image': new Uniform1i(context, locations.u_image),
     'u_latrange': new Uniform2f(context, locations.u_latrange),
-    'u_light': new Uniform2f(context, locations.u_light),
-    'u_shadow': new UniformColor(context, locations.u_shadow),
-    'u_highlight': new UniformColor(context, locations.u_highlight),
-    'u_accent': new UniformColor(context, locations.u_accent)
+    'u_exaggeration': new Uniform1f(context, locations.u_exaggeration),
+    'u_altitudes': new UniformFloatArray(context, locations.u_altitudes),
+    'u_azimuths': new UniformFloatArray(context, locations.u_azimuths),
+    'u_accent': new UniformColor(context, locations.u_accent),
+    'u_method': new Uniform1i(context, locations.u_method),
+    'u_shadows': new UniformColorArray(context, locations.u_shadows),
+    'u_highlights': new UniformColorArray(context, locations.u_highlights)
 });
 
 const hillshadePrepareUniforms = (context: Context, locations: UniformLocations): HillshadePrepareUniformsType => ({
@@ -58,22 +66,45 @@ const hillshadeUniformValues = (
     tile: Tile,
     layer: HillshadeStyleLayer,
 ): UniformValues<HillshadeUniformsType> => {
-    const shadow = layer.paint.get('hillshade-shadow-color');
-    const highlight = layer.paint.get('hillshade-highlight-color');
     const accent = layer.paint.get('hillshade-accent-color');
+    let method;
+    switch (layer.paint.get('hillshade-method')) {
+        case 'basic':
+            method = 4;
+            break;
+        case 'combined':
+            method = 1;
+            break;
+        case 'igor':
+            method = 2;
+            break;
+        case 'multidirectional':
+            method = 3;
+            break;
+        case 'standard':
+        default:
+            method = 0;
+            break;
+    }
 
-    let azimuthal = layer.paint.get('hillshade-illumination-direction') * (Math.PI / 180);
-    // modify azimuthal angle by map rotation if light is anchored at the viewport
-    if (layer.paint.get('hillshade-illumination-anchor') === 'viewport') {
-        azimuthal += painter.transform.bearingInRadians;
+    const illumination = layer.getIlluminationProperties();
+
+    for (let i = 0; i < illumination.directionRadians.length; i++) {
+        // modify azimuthal angle by map rotation if light is anchored at the viewport
+        if (layer.paint.get('hillshade-illumination-anchor') === 'viewport') {
+            illumination.directionRadians[i] += painter.transform.bearingInRadians;
+        }
     }
     return {
         'u_image': 0,
         'u_latrange': getTileLatRange(painter, tile.tileID),
-        'u_light': [layer.paint.get('hillshade-exaggeration'), azimuthal],
-        'u_shadow': shadow,
-        'u_highlight': highlight,
-        'u_accent': accent
+        'u_exaggeration': layer.paint.get('hillshade-exaggeration'),
+        'u_altitudes': illumination.altitudeRadians,
+        'u_azimuths': illumination.directionRadians,
+        'u_accent': accent,
+        'u_method': method,
+        'u_highlights': illumination.highlightColor,
+        'u_shadows': illumination.shadowColor
     };
 };
 

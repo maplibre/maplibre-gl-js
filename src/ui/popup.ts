@@ -273,10 +273,6 @@ export class Popup extends Evented {
             delete this._container;
         }
 
-        if(this._closeButton){
-            this._closeButton.removeEventListener('click', this._onClose);
-        }
-
         if (this._map) {
             this._map.off('move', this._update);
             this._map.off('move', this._onClose);
@@ -620,11 +616,7 @@ export class Popup extends Evented {
             this._container.style.maxWidth = this.options.maxWidth;
         }
 
-        if (this._map.transform.renderWorldCopies && !this._trackPointer) {
-            this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform);
-        } else {
-            this._lngLat = this._lngLat?.wrap();
-        }
+        this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform, this._trackPointer);
 
         if (this._trackPointer && !cursor) return;
 

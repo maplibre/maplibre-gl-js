@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Add a hillshade layer</title>
+    <meta property="og:description" content="Add a simple hillshade layer." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id='map'></div>
+
+<script>
+    const map = window.map = new maplibregl.Map({
+        container: 'map',
+        zoom: 10,
+        center: [11.491, 47.274],
+        pitch: 0,
+        renderWorldCopies: false,
+        hash: true,
+        style: {
+            version: 8,
+            sources: {
+                hillshadeSource: {
+                    type: 'raster-dem',
+                    url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                    tileSize: 256
+                }
+            },
+            layers: [
+                {
+                    id: 'hillshade',
+                    type: 'hillshade',
+                    source: 'hillshadeSource',
+                    paint: {
+                        'hillshade-method': 'standard',
+                        'hillshade-illumination-altitude': 45,
+                        'hillshade-illumination-direction': 315,
+                        'hillshade-shadow-color': '#000000',
+                        'hillshade-highlight-color': '#FFFFFF',
+                        'hillshade-accent-color': '#000000',
+                        'hillshade-exaggeration': 0.5
+                    }
+                }
+            ]
+        },
+        maxZoom: 18,
+        maxPitch: 85
+    });
+</script>
+
+</body>
+</html>

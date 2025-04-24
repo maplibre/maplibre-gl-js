@@ -4,7 +4,7 @@ import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util'
 import {NavigationControl} from './navigation_control';
 
 function createMap() {
-    return globalCreateMap({});
+    return globalCreateMap();
 }
 
 let map;

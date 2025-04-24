@@ -1,7 +1,7 @@
 import {describe, test, expect} from 'vitest';
 import {VideoSource} from './video_source';
 import {extend} from '../util/util';
-import {getMockDispatcher} from '../util/test/util';
+import {getMockDispatcher, waitForEvent} from '../util/test/util';
 
 import type {Coordinates} from './image_source';
 import {Tile} from './tile';
@@ -87,7 +87,7 @@ describe('VideoSource', () => {
         expect(source.getVideo()).toBe(el);
     });
 
-    test('fires idle event on prepare call when there is at least one not loaded tile', () => new Promise<void>(done => {
+    test('fires idle event on prepare call when there is at least one not loaded tile', async () => {
         const source = createSource({
             type: 'video',
             urls: [],
@@ -103,12 +103,7 @@ describe('VideoSource', () => {
             ]
         });
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
-        source.on('data', (e) => {
-            if (e.dataType === 'source' && e.sourceDataType === 'idle') {
-                expect(tile.state).toBe('loaded');
-                done();
-            }
-        });
+        const dataEvent = waitForEvent(source, 'data', (e) => e.dataType === 'source' && e.sourceDataType === 'idle');
         source.onAdd(new StubMap() as any);
 
         source.tiles[String(tile.tileID.wrap)] = tile;
@@ -118,5 +113,7 @@ describe('VideoSource', () => {
             bind: () => {}
         } as any;
         source.prepare();
-    }));
+        await dataEvent;
+        expect(tile.state).toBe('loaded');
+    });
 });
