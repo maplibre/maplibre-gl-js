@@ -2215,11 +2215,15 @@ export class Map extends Camera {
     }
 
     refreshTile(x: number, y: number, z: number, sourceId: string) {
+        this.refreshTiles([{x,y,z}], sourceId);
+    }
+
+    refreshTiles(tileIds: Array<{x: number, y: number, z: number}>, sourceId: string) {
         const sourceCache = this.style.sourceCaches[sourceId];
         if(!sourceCache) {
             throw new Error(`There is no source cache with ID "${sourceId}", cannot refresh tile`);
         }
-        sourceCache.refreshTile(new CanonicalTileID(z, x, y));
+        sourceCache.refreshTiles(tileIds.map((tileId) => {return new CanonicalTileID(tileId.z, tileId.x, tileId.y);}));
     }
 
     /**
