@@ -191,4 +191,68 @@ describe('RasterTileSource', () => {
             maxzoom: 10
         });
     });
+
+    test('Tile expiry data is set when "Cache-Control" is set but not "Expires"', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            attribution: 'MapLibre',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
+            bounds: [-47, -7, -45, -5]
+        }));
+        server.respondWith('http://example.com/10/5/5.png', 
+            [200, { "Content-Type": "image/png", "Content-Length": 1, "Cache-Control": "max-age=100"}, "0"]
+        );
+        const source = createSource({url: '/source.json'});
+        source.map.painter = {context: {}, getTileTexture: () => { return {update: () => {}}; }} as any;
+        source.map._refreshExpiredTiles = true;
+
+        const imageConstructorSpy = vi.spyOn(global, 'Image');
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        server.respond();
+        await promise;
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            setExpiryData() {}
+        } as any as Tile;
+        const expiryDataSpy = vi.spyOn(tile, 'setExpiryData');
+        const tilePromise = source.loadTile(tile);
+        server.respond();
+        await tilePromise;
+        expect(tile.state).toBe('loaded');
+        expect(expiryDataSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('Tile expiry data is set when "Expires" is set but not "Cache-Control"', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            attribution: 'MapLibre',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
+            bounds: [-47, -7, -45, -5]
+        }));
+        server.respondWith('http://example.com/10/5/5.png', 
+            [200, { "Content-Type": "image/png", "Content-Length": 1, "Expires": "Wed, 21 Oct 2015 07:28:00 GMT" }, "0"]
+        );
+        const source = createSource({url: '/source.json'});
+        source.map.painter = {context: {}, getTileTexture: () => { return {update: () => {}}; }} as any;
+        source.map._refreshExpiredTiles = true;
+
+        const imageConstructorSpy = vi.spyOn(global, 'Image');
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        server.respond();
+        await promise;
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            setExpiryData() {}
+        } as any as Tile;
+        const expiryDataSpy = vi.spyOn(tile, 'setExpiryData');
+        const tilePromise = source.loadTile(tile);
+        server.respond();
+        await tilePromise;
+        expect(tile.state).toBe('loaded');
+        expect(expiryDataSpy).toHaveBeenCalledTimes(1);
+    });
 });
