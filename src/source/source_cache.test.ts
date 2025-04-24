@@ -3,7 +3,7 @@ import {SourceCache} from './source_cache';
 import {type Map} from '../ui/map';
 import {type Source, addSourceType} from './source';
 import {Tile} from './tile';
-import {OverscaledTileID} from './tile_id';
+import {CanonicalTileID, OverscaledTileID} from './tile_id';
 import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
 import {Event, ErrorEvent, Evented} from '../util/evented';
@@ -2142,4 +2142,93 @@ describe('SourceCache#usedForTerrain', () => {
             ['3s44', '3r44', '3c44', '3b44']
         );
     });
+
+});
+    
+describe('SourceCache::refreshTiles', () => {
+    test('calls reloadTile when tile exists', async () => {
+        const coord = new OverscaledTileID(1, 0, 1, 0, 1);
+        const sourceCache = createSourceCache();
+
+        const spy = vi.fn();
+        sourceCache._reloadTile = spy;
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+
+        sourceCache._addTile(coord);
+        sourceCache.refreshTiles([new CanonicalTileID(1, 0, 1)]);
+        expect(spy).toHaveBeenCalledOnce();
+        expect(spy.mock.calls[0][1]).toBe('expired');
+    });
+
+    
+    test('does not call reloadTile when tile does not exist', async () => {
+        const coord = new OverscaledTileID(1, 0, 1, 1, 1);
+        const sourceCache = createSourceCache();
+
+        const spy = vi.fn();
+        sourceCache._reloadTile = spy;
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+
+        sourceCache._addTile(coord);
+        sourceCache.refreshTiles([new CanonicalTileID(1, 0, 1)]);
+        expect(spy).toHaveBeenCalledTimes(0);
+    });
+
+    test('calls reloadTile when wrapped tile exists', async () => {
+        const coord = new OverscaledTileID(1, 1, 1, 0, 1);
+        const sourceCache = createSourceCache();
+
+        const spy = vi.fn();
+        sourceCache._reloadTile = spy;
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+
+        sourceCache._addTile(coord);
+        sourceCache.refreshTiles([new CanonicalTileID(1, 0, 1)]);
+        expect(spy).toHaveBeenCalledOnce();
+        expect(spy.mock.calls[0][1]).toBe('expired');
+    });
+
+    test('calls reloadTile when overscaled tile exists', async () => {
+        const coord = new OverscaledTileID(2, 0, 1, 0, 1);
+        const sourceCache = createSourceCache();
+
+        const spy = vi.fn();
+        sourceCache._reloadTile = spy;
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+
+        sourceCache._addTile(coord);
+        sourceCache.refreshTiles([new CanonicalTileID(1, 0, 1)]);
+        expect(spy).toHaveBeenCalledOnce();
+        expect(spy.mock.calls[0][1]).toBe('expired');
+    });
+
+    test('calls reloadTile for standard, wrapped, and overscaled tiles', async () => {
+        const sourceCache = createSourceCache();
+
+        const spy = vi.fn();
+        sourceCache._reloadTile = spy;
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+
+        sourceCache._addTile(new OverscaledTileID(1, 0, 1, 0, 1));
+        sourceCache._addTile(new OverscaledTileID(1, 1, 1, 0, 1));
+        sourceCache._addTile(new OverscaledTileID(2, 0, 1, 0, 1));
+        sourceCache._addTile(new OverscaledTileID(2, 1, 1, 0, 1));
+        sourceCache.refreshTiles([new CanonicalTileID(1, 0, 1)]);
+        expect(spy).toHaveBeenCalledTimes(4);
+        expect(spy.mock.calls[0][1]).toBe('expired');
+        expect(spy.mock.calls[1][1]).toBe('expired');
+        expect(spy.mock.calls[2][1]).toBe('expired');
+        expect(spy.mock.calls[3][1]).toBe('expired');
+    });
+
 });

@@ -894,6 +894,9 @@ export class SourceCache extends Evented {
         }
     }
 
+    /**
+     * Reload any currently renderable tiles that are match one of the incoming `tileId` x/y/z
+     */
     refreshTiles(tileIds: Array<ICanonicalTileID>) {
         for (const id in this._tiles) {
             if (this._isIdRenderable(id)){
