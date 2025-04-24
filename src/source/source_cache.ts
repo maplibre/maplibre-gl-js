@@ -19,7 +19,7 @@ import type {Style} from '../style/style';
 import type {Dispatcher} from '../util/dispatcher';
 import type {IReadonlyTransform, ITransform} from '../geo/transform_interface';
 import type {TileState} from './tile';
-import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {ICanonicalTileID, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapSourceDataEvent} from '../ui/events';
 import type {Terrain} from '../render/terrain';
 import type {CanvasSourceSpecification} from './canvas_source';
@@ -891,6 +891,13 @@ export class SourceCache extends Evented {
                 this._reloadTile(id, 'expired');
                 delete this._timers[id];
             }, expiryTimeout);
+        }
+    }
+
+    refreshTile(tileID: ICanonicalTileID)
+    {
+        if(this._isIdRenderable(tileID.key)) {
+            this._reloadTile(tileID.key, 'expired');
         }
     }
 

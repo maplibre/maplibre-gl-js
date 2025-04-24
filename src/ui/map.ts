@@ -67,6 +67,7 @@ import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 import {isAbortError} from '../util/abort_error';
 import {isFramebufferNotCompleteError} from '../util/framebuffer_error';
 import {createCalculateTileZoomFunction} from '../geo/projection/covering_tiles';
+import {CanonicalTileID} from '../source/tile_id';
 
 const version = packageJSON.version;
 
@@ -2211,6 +2212,14 @@ export class Map extends Camera {
         }
         this._update(true);
         return this;
+    }
+
+    refreshTile(x: number, y: number, z: number, sourceId: string) {
+        const sourceCache = this.style.sourceCaches[sourceId];
+        if(!sourceCache) {
+            throw new Error(`There is no source cache with ID "${sourceId}", cannot refresh tile`);
+        }
+        sourceCache.refreshTile(new CanonicalTileID(z, x, y));
     }
 
     /**
