@@ -21,24 +21,18 @@ export class HillshadeStyleLayer extends StyleLayer {
     }
 
     getIlluminationProperties(): {directionRadians: number[]; altitudeRadians: number[]; shadowColor: Color[]; highlightColor: Color[]} {
-        const direction = this.paint.get('hillshade-illumination-direction').values;
-        const altitude = this.paint.get('hillshade-illumination-altitude').values;
-        const highlightColor = this.paint.get('hillshade-highlight-color').values;
-        const shadowColor = this.paint.get('hillshade-shadow-color').values;
+        let direction = this.paint.get('hillshade-illumination-direction').values;
+        let altitude = this.paint.get('hillshade-illumination-altitude').values;
+        let highlightColor = this.paint.get('hillshade-highlight-color').values;
+        let shadowColor = this.paint.get('hillshade-shadow-color').values;
+    
         // ensure all illumination properties have the same length
         const numIlluminationSources = Math.max(direction.length, altitude.length, highlightColor.length, shadowColor.length);
-        for (let i = direction.length; i < numIlluminationSources; i++) {
-            direction.push(direction[i-1]);
-        }
-        for (let i = altitude.length; i < numIlluminationSources; i++) {
-            altitude.push(altitude[i-1]);
-        }
-        for (let i = highlightColor.length; i < numIlluminationSources; i++) {
-            highlightColor.push(highlightColor[i-1]);
-        }
-        for (let i = shadowColor.length; i < numIlluminationSources; i++) {
-            shadowColor.push(shadowColor[i-1]);
-        }
+        direction = direction.concat(Array(numIlluminationSources - direction.length).fill(direction.at(-1)));
+        altitude = altitude.concat(Array(numIlluminationSources - altitude.length).fill(altitude.at(-1)));
+        highlightColor = highlightColor.concat(Array(numIlluminationSources - highlightColor.length).fill(highlightColor.at(-1)));
+        shadowColor = shadowColor.concat(Array(numIlluminationSources - shadowColor.length).fill(shadowColor.at(-1)));
+  
         const altitudeRadians = altitude.map(degreesToRadians);
         const directionRadians = direction.map(degreesToRadians);
 
