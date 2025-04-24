@@ -207,7 +207,6 @@ describe('RasterTileSource', () => {
         source.map.painter = {context: {}, getTileTexture: () => { return {update: () => {}}; }} as any;
         source.map._refreshExpiredTiles = true;
 
-        const imageConstructorSpy = vi.spyOn(global, 'Image');
         const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
         server.respond();
         await promise;
@@ -239,7 +238,6 @@ describe('RasterTileSource', () => {
         source.map.painter = {context: {}, getTileTexture: () => { return {update: () => {}}; }} as any;
         source.map._refreshExpiredTiles = true;
 
-        const imageConstructorSpy = vi.spyOn(global, 'Image');
         const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
         server.respond();
         await promise;
