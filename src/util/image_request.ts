@@ -173,8 +173,12 @@ export namespace ImageRequest {
                 // If HtmlImageElement is used to get image then response type will be HTMLImageElement
                 onSuccess(response as GetResourceResponse<HTMLImageElement | ImageBitmap | null>);
             } else if (response.data) {
-                const img = await arrayBufferToCanvasImageSource(response.data);
-                onSuccess({data: img, cacheControl: response.cacheControl, expires: response.expires});
+                if (response.data.byteLength > 0) {
+                    const img = await arrayBufferToCanvasImageSource(response.data);
+                    onSuccess({data: img, cacheControl: response.cacheControl, expires: response.expires, lastModified: response.lastModified});
+                } else {
+                    onSuccess({data: null, cacheControl: response.cacheControl, expires: response.expires, lastModified: response.lastModified});
+                }
             }
         } catch (err) {
             delete itemInQueue.abortController;

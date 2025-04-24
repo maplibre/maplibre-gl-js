@@ -63,6 +63,7 @@ export class Tile {
     glyphAtlasImage: AlphaImage;
     glyphAtlasTexture: Texture;
     expirationTime: any;
+    modificationTime: any;
     expiredRequestCount: number;
     state: TileState;
     timeAdded: number = 0;
@@ -357,6 +358,10 @@ export class Tile {
             if (parsedCC['max-age']) this.expirationTime = Date.now() + parsedCC['max-age'] * 1000;
         } else if (data.expires) {
             this.expirationTime = new Date(data.expires).getTime();
+        }
+
+        if (data.lastModified) {
+            this.modificationTime = new Date(data.lastModified).getTime();
         }
 
         if (this.expirationTime) {

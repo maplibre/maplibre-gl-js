@@ -175,25 +175,35 @@ export class RasterTileSource extends Evented implements Source {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         tile.abortController = new AbortController();
         try {
-            const response = await ImageRequest.getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), tile.abortController, this.map._refreshExpiredTiles);
+            const requestParameters = this.map._requestManager.transformRequest(url, ResourceType.Tile);
+            if (tile.modificationTime)
+            {
+                if (!requestParameters.headers) {
+                    requestParameters.headers = {};
+                }
+                requestParameters.headers['If-Modified-Since'] = new Date(tile.modificationTime).toUTCString();
+            }
+            const response = await ImageRequest.getImage(requestParameters, tile.abortController, this.map._refreshExpiredTiles);
             delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
                 return;
             }
-            if (response && response.data) {
+            if (response) {
                 if (this.map._refreshExpiredTiles && response.cacheControl && response.expires) {
-                    tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
+                    tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires, lastModified: response.lastModified});
                 }
-                const context = this.map.painter.context;
-                const gl = context.gl;
-                const img = response.data;
-                tile.texture = this.map.painter.getTileTexture(img.width);
-                if (tile.texture) {
-                    tile.texture.update(img, {useMipmap: true});
-                } else {
-                    tile.texture = new Texture(context, img, gl.RGBA, {useMipmap: true});
-                    tile.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
+                if (response.data) {
+                    const context = this.map.painter.context;
+                    const gl = context.gl;
+                    const img = response.data;
+                    tile.texture = this.map.painter.getTileTexture(img.width);
+                    if (tile.texture) {
+                        tile.texture.update(img, {useMipmap: true});
+                    } else {
+                        tile.texture = new Texture(context, img, gl.RGBA, {useMipmap: true});
+                        tile.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
+                    }
                 }
                 tile.state = 'loaded';
             }
