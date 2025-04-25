@@ -2217,19 +2217,23 @@ export class Map extends Camera {
     /**
      * Triggers a reload of the selected tiles
      *
-     * @param tileIds - An array of tile IDs to be reloaded
      * @param sourceId - The ID of the source
+     * @param tileIds - An array of tile IDs to be reloaded. If not defined, all tiles will be reloaded.
      * @example
      * ```ts
-     * map.refreshTiles([{x:1024, y: 1023, z: 11}, {x:1023, y: 1023, z: 11}], 'satellite');
+     * map.refreshTiles('satellite', [{x:1024, y: 1023, z: 11}, {x:1023, y: 1023, z: 11}]);
      * ```
      */
-    refreshTiles(tileIds: Array<{x: number; y: number; z: number}>, sourceId: string) {
+    refreshTiles(sourceId: string, tileIds?: Array<{x: number; y: number; z: number}>) {
         const sourceCache = this.style.sourceCaches[sourceId];
         if(!sourceCache) {
             throw new Error(`There is no source cache with ID "${sourceId}", cannot refresh tile`);
         }
-        sourceCache.refreshTiles(tileIds.map((tileId) => {return new CanonicalTileID(tileId.z, tileId.x, tileId.y);}));
+        if (tileIds === undefined) {
+            sourceCache.reload();
+        } else {
+            sourceCache.refreshTiles(tileIds.map((tileId) => {return new CanonicalTileID(tileId.z, tileId.x, tileId.y);}));
+        }
     }
 
     /**
