@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 - Add additional hillshade methods ([#5768](https://github.com/maplibre/maplibre-gl-js/pull/5768))
+- Add `refreshTile()` and `refreshTiles()` to the map public API ([#5806](https://github.com/maplibre/maplibre-gl-js/pull/5806))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
