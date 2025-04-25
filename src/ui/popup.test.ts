@@ -667,6 +667,20 @@ describe('popup', () => {
         ).not.toContain('maplibregl-track-pointer');
     });
 
+    test('Pointer-tracked popup has latest mouse position when added to the map', () => {
+        const map = createMap();
+        const popup = new Popup()
+            .setText('Test')
+            .trackPointer();
+
+        simulate.mousemove(map.getCanvas(), {clientX: 256, clientY: 256});
+
+        popup.addTo(map);
+
+        expect(popup._pos.x).toEqual(256);
+        expect(popup._pos.y).toEqual(256);
+    });
+
     test('Positioned popup lacks pointer-tracking class', () => {
         const map = createMap();
         const popup = new Popup()
