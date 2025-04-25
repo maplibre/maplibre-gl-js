@@ -2215,21 +2215,6 @@ export class Map extends Camera {
     }
 
     /**
-     * Triggers a reload of the selected tile
-     *
-     * @param x - The tile X coordinate
-     * @param y - The tile Y coordinate
-     * @param z - The tile Z coordinate
-     * @param sourceId - The ID of the source
-     * @example
-     * ```ts
-     * map.refreshTile(1024, 1023, 11, 'satellite');
-     * ```
-     */
-    refreshTile(x: number, y: number, z: number, sourceId: string) {
-        this.refreshTiles([{x,y,z}], sourceId);
-    }
-    /**
      * Triggers a reload of the selected tiles
      *
      * @param tileIds - An array of tile IDs to be reloaded
