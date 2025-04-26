@@ -902,11 +902,8 @@ export class SourceCache extends Evented {
             if (!this._isIdRenderable(id)) {
                 continue;
             }
-            for (const refreshId of tileIds) {
-                if (refreshId.equals(this._tiles[id].tileID.canonical)) {
-                    this._reloadTile(id, 'expired');
-                    break;
-                }
+            if (tileIds.some(tid => tid.equals(this._tiles[id].tileID.canonical))) {
+                this._reloadTile(id, 'expired');
             }
         }
     }
