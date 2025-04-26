@@ -36,8 +36,8 @@ out float v_depth;
 #pragma mapbox: define lowp float offset
 #pragma mapbox: define mediump float width
 #pragma mapbox: define lowp float floorwidth
-#pragma mapbox: define lowp float v_tex_a
-#pragma mapbox: define lowp float v_tex_b
+#pragma mapbox: define lowp float tex_y_a
+#pragma mapbox: define lowp float tex_y_b
 
 void main() {
     #pragma mapbox: initialize highp vec4 color
@@ -47,8 +47,8 @@ void main() {
     #pragma mapbox: initialize lowp float offset
     #pragma mapbox: initialize mediump float width
     #pragma mapbox: initialize lowp float floorwidth
-    #pragma mapbox: initialize lowp float v_tex_a
-    #pragma mapbox: initialize lowp float v_tex_b
+    #pragma mapbox: initialize lowp float tex_y_a
+    #pragma mapbox: initialize lowp float tex_y_b
 
     // the distance over which the line edge fades out.
     // Retina devices need a smaller distance to avoid aliasing.
@@ -105,7 +105,7 @@ void main() {
         v_gamma_scale = extrude_length_without_perspective / extrude_length_with_perspective;
     #endif
 
-    v_tex_a = vec2(a_linesofar * u_patternscale_a.x / floorwidth, normal.y * u_patternscale_a.y + v_tex_y_a);
-    v_tex_b = vec2(a_linesofar * u_patternscale_b.x / floorwidth, normal.y * u_patternscale_b.y + v_tex_y_b);
+    v_tex_a = vec2(a_linesofar * u_patternscale_a.x / floorwidth, normal.y * u_patternscale_a.y + tex_y_a);
+    v_tex_b = vec2(a_linesofar * u_patternscale_b.x / floorwidth, normal.y * u_patternscale_b.y + tex_y_b);
     v_width2 = vec2(outset, inset);
 }

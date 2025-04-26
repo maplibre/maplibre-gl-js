@@ -70,6 +70,14 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
         }
 
+        const constantDasharray = dasharray && dasharray.constantOr(null);
+        if (constantDasharray) {
+            const atlas = painter.lineAtlas;
+            const dashTo = atlas.getDash(constantDasharray.to, false); // TODO set round argument
+            const dashFrom = atlas.getDash(constantDasharray.from, false); // TODO set round argument
+            programConfiguration.setConstantDasharrayPositions(dashTo, dashFrom);
+        }
+
         const projectionData = transform.getProjectionData({
             overscaledTileID: coord,
             applyGlobeMatrix: !isRenderingToTexture,
