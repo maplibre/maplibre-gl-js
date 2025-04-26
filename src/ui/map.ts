@@ -67,6 +67,7 @@ import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 import {isAbortError} from '../util/abort_error';
 import {isFramebufferNotCompleteError} from '../util/framebuffer_error';
 import {createCalculateTileZoomFunction} from '../geo/projection/covering_tiles';
+import {CanonicalTileID} from '../source/tile_id';
 
 const version = packageJSON.version;
 
@@ -2211,6 +2212,28 @@ export class Map extends Camera {
         }
         this._update(true);
         return this;
+    }
+
+    /**
+     * Triggers a reload of the selected tiles
+     *
+     * @param sourceId - The ID of the source
+     * @param tileIds - An array of tile IDs to be reloaded. If not defined, all tiles will be reloaded.
+     * @example
+     * ```ts
+     * map.refreshTiles('satellite', [{x:1024, y: 1023, z: 11}, {x:1023, y: 1023, z: 11}]);
+     * ```
+     */
+    refreshTiles(sourceId: string, tileIds?: Array<{x: number; y: number; z: number}>) {
+        const sourceCache = this.style.sourceCaches[sourceId];
+        if(!sourceCache) {
+            throw new Error(`There is no source cache with ID "${sourceId}", cannot refresh tile`);
+        }
+        if (tileIds === undefined) {
+            sourceCache.reload();
+        } else {
+            sourceCache.refreshTiles(tileIds.map((tileId) => {return new CanonicalTileID(tileId.z, tileId.x, tileId.y);}));
+        }
     }
 
     /**
