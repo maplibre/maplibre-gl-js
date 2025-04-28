@@ -149,7 +149,7 @@ class CrossFadedConstantBinder implements UniformBinder {
         this.patternTo = posTo.tlbr;
     }
 
-    setConstantDasharrayPositions(posTo: DashEntry, posFrom: DashEntry) {
+    setConstantDasharrayPositions(posTo: number, posFrom: number) {
         this.dashFrom = posFrom;
         this.dashTo = posTo;
     }
@@ -492,6 +492,14 @@ export class ProgramConfiguration {
             const binder = this.binders[property];
             if (binder instanceof CrossFadedConstantBinder)
                 binder.setConstantPatternPositions(posTo, posFrom);
+        }
+    }
+
+    setConstantDasharrayPositions(posTo: number, posFrom: number) {
+        for (const property in this.binders) {
+            const binder = this.binders[property];
+            if (binder instanceof CrossFadedConstantBinder)
+                binder.setConstantDasharrayPositions(posTo, posFrom);
         }
     }
 
