@@ -22,7 +22,6 @@ type ValidateStyle = {
     filter: Validator;
     paintProperty: Validator;
     layoutProperty: Validator;
-    schema: Validator;
     (b: any, a?: any | null): ReadonlyArray<ValidationError>;
 };
 
@@ -35,7 +34,6 @@ export const validateTerrain = validateStyle.terrain;
 export const validateFilter = validateStyle.filter;
 export const validatePaintProperty = validateStyle.paintProperty;
 export const validateLayoutProperty = validateStyle.layoutProperty;
-export const validateSchema = validateStyle.schema;
 
 export function emitValidationErrors(
     emitter: Evented,

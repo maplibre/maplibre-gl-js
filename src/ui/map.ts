@@ -55,7 +55,6 @@ import type {
     TerrainSpecification,
     ProjectionSpecification,
     SkySpecification,
-    SchemaSpecification,
     StateSpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
@@ -68,7 +67,6 @@ import {type ICameraHelper} from '../geo/projection/camera_helper';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 import {isAbortError} from '../util/abort_error';
 import {isFramebufferNotCompleteError} from '../util/framebuffer_error';
-import {validateSchema} from '../style/validate_style';
 
 const version = packageJSON.version;
 
@@ -781,45 +779,15 @@ export class Map extends Camera {
     }
 
     /**
-     * Validates a global state property by checking if the new value can be parsed and matches the type of the current value.
-     * If the new value cannot be parsed or its type does not match the current value's type, an error event is fired.
-     * 
-     * @param key - The name of the state property to validate.
-     * @param currentValue - The current value of the state property.
-     * @param newValue - The new value to validate against the current value.
-     * @returns An ErrorEvent if validation fails, otherwise undefined.
-     */
-    _validateGlobalStateProperty(key: string, schema: SchemaSpecification, newValue: any) {
-        const errors = validateSchema({
-            key,
-            value: {
-                ...schema,
-                default: newValue,
-            },
-        });
-
-        if (errors.length > 0) {
-            return new ErrorEvent(new Error(`State property "${key}" cannot be set: ${errors[0].message}`));
-        }
-    }
- 
-    /**
      * Sets a global state property that can be retrieved with the `global-state` expression.
      * If the value is null, it resets the property to its default value defined in the `state` style property.
-     * If the value is invalid, an error event is fired.
-     * 
+     *
      * @param propertyName - The name of the state property to set.
      * @param value - The value of the state property to set.
      */
     setGlobalStateProperty(propertyName: string, value: any) {
         if (value === null) {
             this._globalState[propertyName] = this.style.stylesheet.state[propertyName];
-            return;
-        }
-
-        const error = this._validateGlobalStateProperty(propertyName, this.style.stylesheet.state[propertyName], value);
-        if (error) {
-            this.fire(error);
             return;
         }
 
@@ -844,14 +812,6 @@ export class Map extends Camera {
     }
 
     _setGlobalState(stylesheetState: StateSpecification) {
-        for (const propertyName in stylesheetState) {
-            const error = this._validateGlobalStateProperty(propertyName, this.style.stylesheet.state[propertyName], stylesheetState[propertyName].default);
-            if (error) {
-                this.fire(error);
-                return;
-            }
-        }
-
         this._globalState = {};
 
         for (const propertyName in stylesheetState) {

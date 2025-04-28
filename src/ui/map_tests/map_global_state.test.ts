@@ -21,7 +21,6 @@ describe('#setGlobalStateProperty', () => {
                 version: 8,
                 state: {
                     backgroundColor: {
-                        type: 'string',
                         default: 'red'
                     }
                 },
@@ -49,9 +48,8 @@ describe('#setGlobalStateProperty', () => {
                 version: 8,
                 state: {
                     backgroundColor: {
-                        type: 'string',
                         default: 'red'
-                    }                    
+                    }
                 },
                 sources: {},
                 layers: [{
