@@ -8,6 +8,7 @@ in vec2 v_width2;
 in vec2 v_tex_a;
 in vec2 v_tex_b;
 in float v_gamma_scale;
+in float v_sdfgamma;
 #ifdef GLOBE
 in float v_depth;
 #endif
@@ -37,7 +38,7 @@ void main() {
     float sdfdist_a = texture(u_image, v_tex_a).a;
     float sdfdist_b = texture(u_image, v_tex_b).a;
     float sdfdist = mix(sdfdist_a, sdfdist_b, u_mix);
-    alpha *= smoothstep(0.5 - sdfgamma / floorwidth, 0.5 + sdfgamma / floorwidth, sdfdist);
+    alpha *= smoothstep(0.5 - v_sdfgamma / floorwidth, 0.5 + v_sdfgamma / floorwidth, sdfdist);
 
     fragColor = color * (alpha * opacity);
 

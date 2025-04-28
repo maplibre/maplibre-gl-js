@@ -708,7 +708,7 @@ function paintAttributeNames(property, type) {
         'text-halo-width': ['halo_width'],
         'icon-halo-width': ['halo_width'],
         'line-gap-width': ['gapwidth'],
-        'line-dasharray': ['dasharray_from', 'dasharray_to'],
+        'line-dasharray': ['tex_from', 'tex_to'],
         'line-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
         'fill-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
         'fill-extrusion-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
@@ -721,19 +721,19 @@ function getLayoutException(property) {
     const propertyExceptions = {
         'line-pattern': {
             'source': PatternLayoutArray,
-            'composite': PatternLayoutArray,
+            'composite': PatternLayoutArray
         },
         'fill-pattern': {
             'source': PatternLayoutArray,
-            'composite': PatternLayoutArray,
+            'composite': PatternLayoutArray
         },
         'fill-extrusion-pattern': {
             'source': PatternLayoutArray,
-            'composite': PatternLayoutArray,
+            'composite': PatternLayoutArray
         },
         'line-dasharray': {
             'source': LineDasharrayLayoutArray,
-            'composite': LineDasharrayLayoutArray,
+            'composite': LineDasharrayLayoutArray
         },
     };
 
