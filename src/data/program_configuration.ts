@@ -129,6 +129,8 @@ class CrossFadedConstantBinder implements UniformBinder {
     patternTo: Array<number>;
     pixelRatioFrom: number;
     pixelRatioTo: number;
+    dashFrom: number;
+    dashTo: number;
 
     constructor(value: unknown, names: Array<string>) {
         this.uniformNames = names.map(name => `u_${name}`);
@@ -136,6 +138,8 @@ class CrossFadedConstantBinder implements UniformBinder {
         this.patternTo = null;
         this.pixelRatioFrom = 1.0;
         this.pixelRatioTo = 1.0;
+        this.dashFrom = null;
+        this.dashTo = null;
     }
 
     setConstantPatternPositions(posTo: ImagePosition, posFrom: ImagePosition) {
@@ -145,13 +149,25 @@ class CrossFadedConstantBinder implements UniformBinder {
         this.patternTo = posTo.tlbr;
     }
 
+    setConstantDasharrayPositions(posTo: DashEntry, posFrom: DashEntry) {
+        this.dashFrom = posFrom;
+        this.dashTo = posTo;
+    }
+
     setUniform(uniform: Uniform<any>, globals: GlobalProperties, currentValue: PossiblyEvaluatedPropertyValue<unknown>, uniformName: string) {
-        const pos =
-            uniformName === 'u_pattern_to' ? this.patternTo :
-                uniformName === 'u_pattern_from' ? this.patternFrom :
-                    uniformName === 'u_pixel_ratio_to' ? this.pixelRatioTo :
-                        uniformName === 'u_pixel_ratio_from' ? this.pixelRatioFrom : null;
-        if (pos) uniform.set(pos);
+        if (uniformName === 'u_pattern_to' && this.patternTo) {
+            uniform.set(this.patternTo);
+        } else if (uniformName === 'u_pattern_from' && this.patternFrom) {
+            uniform.set(this.patternFrom);
+        } else if (uniformName === 'u_pixel_ratio_to') {
+            uniform.set(this.pixelRatioTo);
+        } else if (uniformName === 'u_pixel_ratio_from') {
+            uniform.set(this.pixelRatioFrom);
+        } else if (uniformName === 'u_tex_y_from') {
+            uniform.set(this.dashFrom);
+        } else if (uniformName === 'u_tex_y_to') {
+            uniform.set(this.dashTo);
+        }
     }
 
     getBinding(context: Context, location: WebGLUniformLocation, name: string): Partial<Uniform<any>> {
@@ -683,7 +699,7 @@ function paintAttributeNames(property, type) {
         'text-halo-width': ['halo_width'],
         'icon-halo-width': ['halo_width'],
         'line-gap-width': ['gapwidth'],
-        'line-dasharray': ['tex_y_a', 'tex_y_b'],
+        'line-dasharray': ['tex_y_from', 'tex_y_to'],
         'line-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
         'fill-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
         'fill-extrusion-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],

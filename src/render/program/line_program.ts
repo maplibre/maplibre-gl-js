@@ -160,16 +160,16 @@ const lineSDFUniformValues = (
 
     const round = layer.layout.get('line-cap') === 'round';
 
-    const posA = lineAtlas.getDash(dasharray.from, round);
-    const posB = lineAtlas.getDash(dasharray.to, round);
+    const posFrom = lineAtlas.getDash(dasharray.from, round);
+    const posTo = lineAtlas.getDash(dasharray.to, round);
 
-    const widthA = posA.width * crossfade.fromScale;
-    const widthB = posB.width * crossfade.toScale;
+    const widthFrom = posFrom.width * crossfade.fromScale;
+    const widthTo = posTo.width * crossfade.toScale;
 
     return extend(lineUniformValues(painter, tile, layer, ratioScale), {
-        'u_patternscale_a': [tileRatio / widthA, -posA.height / 2],
-        'u_patternscale_b': [tileRatio / widthB, -posB.height / 2],
-        'u_sdfgamma': lineAtlas.width / (Math.min(widthA, widthB) * 256 * painter.pixelRatio) / 2,
+        'u_patternscale_from': [tileRatio / widthFrom, -posFrom.height / 2],
+        'u_patternscale_to': [tileRatio / widthTo, -posTo.height / 2],
+        'u_sdfgamma': lineAtlas.width / (Math.min(widthFrom, widthTo) * 256 * painter.pixelRatio) / 2,
         'u_image': 0,
         'u_mix': crossfade.t
     });
