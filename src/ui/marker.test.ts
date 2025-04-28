@@ -160,6 +160,24 @@ describe('marker', () => {
         expect(!marker.getPopup()).toBeTruthy();
     });
 
+    test('Marker#setPopup binds a popup and allow closing it with click', () => {
+        const map = createMap();
+        const popup = new Popup()
+            .setText('Test');
+        const marker = new Marker()
+            .setLngLat([0,0])
+            .setPopup(popup)
+            .addTo(map);
+        
+        // open popup
+        marker.togglePopup();
+        const spy = vi.fn();
+        popup.on('close', spy);
+        (map.getContainer().querySelector('.maplibregl-popup-close-button') as HTMLButtonElement).click();
+
+        expect(spy).toHaveBeenCalled();
+    });
+
     test('Marker#togglePopup opens a popup that was closed', async () => {
         const map = createMap();
         const marker = new Marker()
@@ -258,6 +276,18 @@ describe('marker', () => {
         const marker = new Marker().setLngLat([0, 0]).addTo(map);
 
         expect(marker.getElement().getAttribute('aria-label')).toBe('alt title');
+    });
+
+    test('Marker aria-label is not set if the element already has one', () => {
+        const map = createMap({locale: {'Marker.Title': 'alt title'}});
+        const customHtmlElement = document.createElement('div');
+        customHtmlElement.setAttribute('aria-label', 'custom aria label');
+
+        const markerWithHtmlElement = new Marker({
+            element: customHtmlElement
+        }).setLngLat([10, 10]).addTo(map);
+
+        expect(markerWithHtmlElement.getElement().getAttribute('aria-label')).toBe('custom aria label');
     });
 
     test('Marker anchor defaults to center', () => {
@@ -1081,6 +1111,21 @@ describe('marker', () => {
 
     test('Marker\'s lng is wrapped when slightly crossing 180 with {renderWorldCopies: false}', () => {
         const map = createMap({width: 1024, renderWorldCopies: false});
+        const marker = new Marker()
+            .setLngLat([179, 0])
+            .addTo(map);
+
+        marker.setLngLat([181, 0]);
+
+        expect(marker._lngLat.lng).toBe(-179);
+    });
+
+    test('Marker\'s lng is wrapped when slightly crossing 180 with zoomed out globe', async () => {
+        const map = createMap({width: 1024, renderWorldCopies: true});
+        await map.once('load');
+        map.setProjection({type: 'globe'});
+        map.setZoom(0);
+
         const marker = new Marker()
             .setLngLat([179, 0])
             .addTo(map);

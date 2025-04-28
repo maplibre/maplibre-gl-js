@@ -42,7 +42,7 @@ export class StubMap extends Evented {
     _setGlobalState = vi.fn();
 }
 
-export function createMap(options?, callback?) {
+export function createMap(options?) {
     const container = window.document.createElement('div');
     const defaultOptions = {
         container,
@@ -63,9 +63,6 @@ export function createMap(options?, callback?) {
     if (options?.deleteStyle) delete defaultOptions.style;
 
     const map = new Map(extend(defaultOptions, options));
-    if (callback) map.on('load', () => {
-        callback(null, map);
-    });
 
     return map;
 }
@@ -255,4 +252,15 @@ export function createFramebuffer() {
         },
         destroy: () => {}
     };
+}
+
+export function waitForEvent(evented: Evented, eventName: string, predicate: (e: any) => boolean): Promise<any> {
+    return new Promise((resolve) => {
+        const listener = (e: Event) => {
+            if (predicate(e)) {
+                resolve(e);
+            }
+        };
+        evented.on(eventName, listener);
+    });
 }

@@ -52,7 +52,8 @@ export class Program<Us extends UniformBindings> {
         showOverdrawInspector: boolean,
         hasTerrain: boolean,
         projectionPrelude: PreparedShader,
-        projectionDefine: string) {
+        projectionDefine: string,
+        extraDefines: Array<string> = []) {
 
         const gl = context.gl;
         this.program = gl.createProgram();
@@ -84,6 +85,9 @@ export class Program<Us extends UniformBindings> {
         }
         if (projectionDefine) {
             defines.push(projectionDefine);
+        }
+        if (extraDefines) {
+            defines.push(...extraDefines);
         }
 
         let fragmentSource = defines.concat(shaders.prelude.fragmentSource, projectionPrelude.fragmentSource, source.fragmentSource).join('\n');

@@ -30,7 +30,7 @@ describe('GeolocateControl with no options', () => {
 
     beforeEach(() => {
         beforeMapTest();
-        map = createMap(undefined, undefined);
+        map = createMap();
         (checkGeolocationSupport as unknown as MockInstance).mockImplementationOnce(() => Promise.resolve(true));
     });
 

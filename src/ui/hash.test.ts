@@ -14,7 +14,7 @@ describe('hash', () => {
         const container = window.document.createElement('div');
         Object.defineProperty(container, 'clientWidth', {value: 512});
         Object.defineProperty(container, 'clientHeight', {value: 512});
-        return globalCreateMap({container}, undefined);
+        return globalCreateMap({container});
     }
 
     let map: Map;
