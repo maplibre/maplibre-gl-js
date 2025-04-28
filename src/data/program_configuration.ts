@@ -2,7 +2,7 @@ import {packUint8ToFloat} from '../shaders/encode_attribute';
 import {type Color, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 import {register} from '../util/web_worker_transfer';
 import {PossiblyEvaluatedPropertyValue} from '../style/properties';
-import {StructArrayLayout1f4, StructArrayLayout2f8, StructArrayLayout4f16, PatternLayoutArray} from './array_types.g';
+import {StructArrayLayout1f4, StructArrayLayout2f8, StructArrayLayout4f16, PatternLayoutArray, LineDasharrayLayoutArray} from './array_types.g';
 import {clamp} from '../util/util';
 import {patternAttributes} from './bucket/pattern_attributes';
 import {EvaluationParameters} from '../style/evaluation_parameters';
@@ -28,6 +28,7 @@ import type {
 } from '@maplibre/maplibre-gl-style-spec';
 import type {FeatureStates} from '../source/source_state';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
+import {DashEntry} from '../../dist/maplibre-gl';
 
 export type BinderUniform = {
     name: string;
@@ -129,8 +130,8 @@ class CrossFadedConstantBinder implements UniformBinder {
     patternTo: Array<number>;
     pixelRatioFrom: number;
     pixelRatioTo: number;
-    dashFrom: number;
-    dashTo: number;
+    dashFrom: Array<number>;
+    dashTo: Array<number>;
 
     constructor(value: unknown, names: Array<string>) {
         this.uniformNames = names.map(name => `u_${name}`);
@@ -149,9 +150,9 @@ class CrossFadedConstantBinder implements UniformBinder {
         this.patternTo = posTo.tlbr;
     }
 
-    setConstantDasharrayPositions(posTo: number, posFrom: number) {
-        this.dashFrom = posFrom;
-        this.dashTo = posTo;
+    setConstantDasharrayPositions(dashTo: DashEntry, dashFrom: DashEntry) {
+        this.dashFrom = [dashFrom.height, dashFrom.width, dashFrom.y];
+        this.dashTo = [dashTo.height, dashTo.width, dashTo.y];
     }
 
     setUniform(uniform: Uniform<any>, globals: GlobalProperties, currentValue: PossiblyEvaluatedPropertyValue<unknown>, uniformName: string) {
@@ -163,10 +164,10 @@ class CrossFadedConstantBinder implements UniformBinder {
             uniform.set(this.pixelRatioTo);
         } else if (uniformName === 'u_pixel_ratio_from') {
             uniform.set(this.pixelRatioFrom);
-        } else if (uniformName === 'u_tex_y_from') {
-            uniform.set(this.dashFrom);
         } else if (uniformName === 'u_tex_y_to') {
             uniform.set(this.dashTo);
+        } else if (uniformName === 'u_tex_y_from') {
+            uniform.set([this.dashFrom]);
         }
     }
 
@@ -495,11 +496,11 @@ export class ProgramConfiguration {
         }
     }
 
-    setConstantDasharrayPositions(posTo: number, posFrom: number) {
+    setConstantDasharrayPositions(dashTo: DashEntry, dashFrom: DashEntry) {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof CrossFadedConstantBinder)
-                binder.setConstantDasharrayPositions(posTo, posFrom);
+                binder.setConstantDasharrayPositions(dashTo, dashFrom);
         }
     }
 
@@ -707,7 +708,7 @@ function paintAttributeNames(property, type) {
         'text-halo-width': ['halo_width'],
         'icon-halo-width': ['halo_width'],
         'line-gap-width': ['gapwidth'],
-        'line-dasharray': ['tex_y_from', 'tex_y_to'],
+        'line-dasharray': ['dasharray_from', 'dasharray_to', 'pixel_ratio_from', 'pixel_ratio_to'],
         'line-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
         'fill-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
         'fill-extrusion-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
@@ -723,8 +724,8 @@ function getLayoutException(property) {
             'composite': PatternLayoutArray,
         },
         'line-dasharray': {
-            'source': StructArrayLayout2f8,
-            'composite': StructArrayLayout2f8,
+            'source': LineDasharrayLayoutArray,
+            'composite': LineDasharrayLayoutArray,
         },
         'fill-pattern': {
             'source': PatternLayoutArray,
