@@ -164,10 +164,10 @@ class CrossFadedConstantBinder implements UniformBinder {
             uniform.set(this.pixelRatioTo);
         } else if (uniformName === 'u_pixel_ratio_from') {
             uniform.set(this.pixelRatioFrom);
-        } else if (uniformName === 'u_tex_y_to') {
+        } else if (uniformName === 'u_tex_from') {
+            uniform.set(this.dashFrom);
+        } else if (uniformName === 'u_tex_to') {
             uniform.set(this.dashTo);
-        } else if (uniformName === 'u_tex_y_from') {
-            uniform.set([this.dashFrom]);
         }
     }
 
@@ -708,7 +708,7 @@ function paintAttributeNames(property, type) {
         'text-halo-width': ['halo_width'],
         'icon-halo-width': ['halo_width'],
         'line-gap-width': ['gapwidth'],
-        'line-dasharray': ['dasharray_from', 'dasharray_to', 'pixel_ratio_from', 'pixel_ratio_to'],
+        'line-dasharray': ['dasharray_from', 'dasharray_to'],
         'line-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
         'fill-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
         'fill-extrusion-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
@@ -723,10 +723,6 @@ function getLayoutException(property) {
             'source': PatternLayoutArray,
             'composite': PatternLayoutArray,
         },
-        'line-dasharray': {
-            'source': LineDasharrayLayoutArray,
-            'composite': LineDasharrayLayoutArray,
-        },
         'fill-pattern': {
             'source': PatternLayoutArray,
             'composite': PatternLayoutArray,
@@ -734,6 +730,10 @@ function getLayoutException(property) {
         'fill-extrusion-pattern': {
             'source': PatternLayoutArray,
             'composite': PatternLayoutArray,
+        },
+        'line-dasharray': {
+            'source': LineDasharrayLayoutArray,
+            'composite': LineDasharrayLayoutArray,
         },
     };
 

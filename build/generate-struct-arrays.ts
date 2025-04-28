@@ -147,8 +147,8 @@ const layoutAttributes = {
     heatmap: circleAttributes,
     line: lineLayoutAttributes,
     lineExt: lineLayoutAttributesExt,
-    lineDasharray: lineDasharrayAttributes,
     pattern: patternAttributes,
+    lineDasharray: lineDasharrayAttributes
 };
 for (const name in layoutAttributes) {
     createStructArrayType(`${name.replace(/-/g, '_')}_layout`, layoutAttributes[name]);
