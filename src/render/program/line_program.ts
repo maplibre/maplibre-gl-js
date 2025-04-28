@@ -43,8 +43,8 @@ export type LineSDFUniformsType = {
     'u_ratio': Uniform1f;
     'u_device_pixel_ratio': Uniform1f;
     'u_units_to_pixels': Uniform2f;
-    'u_patternscale_a': Uniform2f;
-    'u_patternscale_b': Uniform2f;
+    'u_patternscale_from': Uniform2f;
+    'u_patternscale_to': Uniform2f;
     'u_sdfgamma': Uniform1f;
     'u_image': Uniform1i;
     'u_mix': Uniform1f;
@@ -82,8 +82,8 @@ const lineSDFUniforms = (context: Context, locations: UniformLocations): LineSDF
     'u_ratio': new Uniform1f(context, locations.u_ratio),
     'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
     'u_units_to_pixels': new Uniform2f(context, locations.u_units_to_pixels),
-    'u_patternscale_a': new Uniform2f(context, locations.u_patternscale_a),
-    'u_patternscale_b': new Uniform2f(context, locations.u_patternscale_b),
+    'u_patternscale_from': new Uniform2f(context, locations.u_patternscale_a),
+    'u_patternscale_to': new Uniform2f(context, locations.u_patternscale_b),
     'u_sdfgamma': new Uniform1f(context, locations.u_sdfgamma),
     'u_image': new Uniform1i(context, locations.u_image),
     'u_mix': new Uniform1f(context, locations.u_mix)
@@ -151,25 +151,11 @@ const lineSDFUniformValues = (
     tile: Tile,
     layer: LineStyleLayer,
     ratioScale: number,
-    dasharray: CrossFaded<Array<number>>,
     crossfade: CrossfadeParameters,
 ): UniformValues<LineSDFUniformsType> => {
-    const transform = painter.transform;
     const lineAtlas = painter.lineAtlas;
-    const tileRatio = calculateTileRatio(tile, transform);
-
-    const round = layer.layout.get('line-cap') === 'round';
-
-    const posFrom = lineAtlas.getDash(dasharray.from, round);
-    const posTo = lineAtlas.getDash(dasharray.to, round);
-
-    const widthFrom = posFrom.width * crossfade.fromScale;
-    const widthTo = posTo.width * crossfade.toScale;
 
     return extend(lineUniformValues(painter, tile, layer, ratioScale), {
-        'u_patternscale_from': [tileRatio / widthFrom, -posFrom.height / 2],
-        'u_patternscale_to': [tileRatio / widthTo, -posTo.height / 2],
-        'u_sdfgamma': lineAtlas.width / (Math.min(widthFrom, widthTo) * 256 * painter.pixelRatio) / 2,
         'u_image': 0,
         'u_mix': crossfade.t
     });

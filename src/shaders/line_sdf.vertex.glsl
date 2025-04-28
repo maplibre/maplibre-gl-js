@@ -16,8 +16,6 @@ in vec4 a_data;
 uniform vec2 u_translation;
 uniform mediump float u_ratio;
 uniform lowp float u_device_pixel_ratio;
-uniform vec2 u_patternscale_from;
-uniform vec2 u_patternscale_to;
 uniform vec2 u_units_to_pixels;
 
 out vec2 v_normal;
@@ -38,6 +36,8 @@ out float v_depth;
 #pragma mapbox: define lowp float floorwidth
 #pragma mapbox: define lowp float tex_y_from
 #pragma mapbox: define lowp float tex_y_to
+#pragma mapbox: define lowp float patternscale_from
+#pragma mapbox: define lowp float patternscale_to
 
 void main() {
     #pragma mapbox: initialize highp vec4 color
@@ -49,6 +49,8 @@ void main() {
     #pragma mapbox: initialize lowp float floorwidth
     #pragma mapbox: initialize lowp float tex_y_from
     #pragma mapbox: initialize lowp float tex_y_to
+    #pragma mapbox: initialize lowp float patternscale_from
+    #pragma mapbox: initialize lowp float patternscale_to
 
     // the distance over which the line edge fades out.
     // Retina devices need a smaller distance to avoid aliasing.
@@ -105,7 +107,7 @@ void main() {
         v_gamma_scale = extrude_length_without_perspective / extrude_length_with_perspective;
     #endif
 
-    v_tex_from = vec2(a_linesofar * u_patternscale_from.x / floorwidth, normal.y * u_patternscale_from.y + tex_y_from);
-    v_tex_to = vec2(a_linesofar * u_patternscale_to.x / floorwidth, normal.y * u_patternscale_to.y + tex_y_to);
+    v_tex_from = vec2(a_linesofar * patternscale_from.x / floorwidth, normal.y * patternscale_from.y + tex_y_from);
+    v_tex_to = vec2(a_linesofar * patternscale_to.x / floorwidth, normal.y * patternscale_to.y + tex_y_to);
     v_width2 = vec2(outset, inset);
 }
