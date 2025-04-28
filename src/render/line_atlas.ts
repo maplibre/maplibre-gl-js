@@ -5,7 +5,7 @@ import type {Context} from '../gl/context';
 /**
  * A dash entry
  */
-type DashEntry = {
+export type DashEntry = {
     y: number;
     height: number;
     width: number;

@@ -28,7 +28,7 @@ import type {
 } from '@maplibre/maplibre-gl-style-spec';
 import type {FeatureStates} from '../source/source_state';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
-import {DashEntry} from '../../dist/maplibre-gl';
+import type {DashEntry} from '../render/line_atlas';
 
 export type BinderUniform = {
     name: string;
@@ -150,7 +150,7 @@ class CrossFadedConstantBinder implements UniformBinder {
         this.patternTo = posTo.tlbr;
     }
 
-    setConstantDasharrayPositions(dashTo: DashEntry, dashFrom: DashEntry) {
+    setConstantDasharray(dashTo: DashEntry, dashFrom: DashEntry) {
         this.dashFrom = [dashFrom.height, dashFrom.width, dashFrom.y];
         this.dashTo = [dashTo.height, dashTo.width, dashTo.y];
     }
@@ -496,11 +496,11 @@ export class ProgramConfiguration {
         }
     }
 
-    setConstantDasharrayPositions(dashTo: DashEntry, dashFrom: DashEntry) {
+    setConstantDasharray(dashTo: DashEntry, dashFrom: DashEntry) {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof CrossFadedConstantBinder)
-                binder.setConstantDasharrayPositions(dashTo, dashFrom);
+                binder.setConstantDasharray(dashTo, dashFrom);
         }
     }
 

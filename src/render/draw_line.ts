@@ -75,7 +75,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
             const atlas = painter.lineAtlas;
             const dashTo = atlas.getDash(constantDasharray.to, false); // TODO set round argument
             const dashFrom = atlas.getDash(constantDasharray.from, false); // TODO set round argument
-            programConfiguration.setConstantDasharrayPositions(dashTo, dashFrom);
+            programConfiguration.setConstantDasharray(dashTo, dashFrom);
         }
 
         const projectionData = transform.getProjectionData({
