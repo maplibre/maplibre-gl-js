@@ -15,49 +15,10 @@
 <body>
     <div id="map"></div>
     <script>
-        const polygonSource = {
-            type: 'geojson',
-            data: {
-                'type': 'Feature',
-                'properties': {
-                    'category': 'polygon'
-                },
-                'geometry': {
-                    'coordinates': [
-                        [
-                            [
-                                -4.219698478713099,
-                                40.991169492527575
-                            ],
-                            [
-                                -4.219698478713099,
-                                -8.45754588313639
-                            ],
-                            [
-                                46.597677708013066,
-                                -8.45754588313639
-                            ],
-                            [
-                                46.597677708013066,
-                                40.991169492527575
-                            ],
-                            [
-                                -4.219698478713099,
-                                40.991169492527575
-                            ]
-                        ]
-                    ],
-                    'type': 'Polygon'
-                }
-            }
-        };
         const map = new maplibregl.Map({
             container: 'map',
             style: {
                 version: 8,
-                sources: {
-                    polygon: polygonSource
-                },
                 layers: [
                     {
                         id: 'bg',
@@ -65,28 +26,12 @@
                         paint: {
                             'background-color': ['global-state', 'backgroundColor']
                         }
-                    },
-                    {
-                        'id': 'green',
-                        type: 'fill',
-                        filter: ['==', ['global-state', 'category'], 'rectangle'],
-                        source: 'polygon',
-                        paint: {
-                            'fill-color': 'green',
-                            'fill-opacity': ['global-state', 'opacity']
-                        }
-                    }]
+                    }
             },
             center: [0, 0],
             zoom: 0
         });
-
-        map.setGlobalState({
-            'backgroundColor': 'blue',
-            'opacity': 0.5,
-            'category': 'rectangle'
-        });
-
+        map.setGlobalStateProperty('backgroundColor', 'blue');
     </script>
 </body>
 
