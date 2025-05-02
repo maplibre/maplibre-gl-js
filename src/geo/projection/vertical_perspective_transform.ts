@@ -448,7 +448,9 @@ export class VerticalPerspectiveTransform implements ITransform {
         const globeMatrixUncorrected = createMat4f64();
         if (this._helper.autoCalculateNearFarZ) {
             this._helper._nearZ = 0.5;
-            this._helper._farZ = this.cameraToCenterDistance + globeRadiusPixels * 2.0; // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
+            const cameraAltitudePixels = this.cameraToCenterDistance*Math.cos(this.pitchInRadians);
+            // Set the farZ at the horizon
+            this._helper._farZ = this.cameraToCenterDistance / cameraAltitudePixels * (globeRadiusPixels + cameraAltitudePixels - globeRadiusPixels * globeRadiusPixels / (globeRadiusPixels + cameraAltitudePixels));
         }
         mat4.perspective(globeMatrix, this.fovInRadians, this.width / this.height, this._helper._nearZ, this._helper._farZ);
 

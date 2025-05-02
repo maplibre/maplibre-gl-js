@@ -65,11 +65,7 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(3, 0, 3, 2, 3),
                 new OverscaledTileID(3, 0, 3, 2, 4),
                 new OverscaledTileID(3, 0, 3, 5, 3),
-                new OverscaledTileID(3, 0, 3, 5, 4),
-                new OverscaledTileID(3, 0, 3, 2, 2),
-                new OverscaledTileID(3, 0, 3, 2, 5),
-                new OverscaledTileID(3, 0, 3, 5, 2),
-                new OverscaledTileID(3, 0, 3, 5, 5),
+                new OverscaledTileID(3, 0, 3, 5, 4)
             ]);
         });
     
@@ -108,10 +104,8 @@ describe('coveringTiles', () => {
     
             expect(tiles).toEqual([
                 new OverscaledTileID(7, 0, 7, 64, 64),
-                new OverscaledTileID(7, 0, 7, 65, 63),
                 new OverscaledTileID(7, 0, 7, 64, 63),
                 new OverscaledTileID(7, 0, 7, 63, 63),
-                new OverscaledTileID(7, 0, 7, 64, 62),
                 new OverscaledTileID(10, 0, 10, 510, 512),
                 new OverscaledTileID(10, 0, 10, 511, 512),
                 new OverscaledTileID(10, 0, 10, 511, 513)
