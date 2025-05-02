@@ -228,6 +228,44 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(11, 0, 11, 1, 1)
             ]);
         });
+
+        test('zoom = 11, mid lat, mid lng', () => {
+            const transform = new GlobeTransform();
+            transform.resize(128, 128);
+            transform.setZoom(11);
+            transform.setPitch(0);
+            transform.setCenter(new LngLat(-58.97, 60.02));
+    
+            const tiles = coveringTiles(transform, {
+                tileSize: 512,
+                minzoom: 0,
+                maxzoom: 15,
+                reparseOverscaled: true
+            });
+    
+            expect(tiles).toEqual([
+                new OverscaledTileID(11, 0, 11, 688, 594)
+            ]);
+        });
+        
+        test('zoom = 11, mid lng', () => {
+            const transform = new GlobeTransform();
+            transform.resize(128, 128);
+            transform.setZoom(11);
+            transform.setPitch(0);
+            transform.setCenter(new LngLat(-58.97, -0.087));
+    
+            const tiles = coveringTiles(transform, {
+                tileSize: 512,
+                minzoom: 0,
+                maxzoom: 15,
+                reparseOverscaled: true
+            });
+    
+            expect(tiles).toEqual([
+                new OverscaledTileID(11, 0, 11, 688, 1024)
+            ]);
+        });
     });
 
     describe('mercator', () => {
@@ -560,6 +598,42 @@ describe('coveringTiles', () => {
         
             expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(11, 0, 11, 1, 1)
+            ]);
+        });
+
+        test('z11, mid lat, mid lng', () => {
+            const options = {
+                minzoom: 1,
+                maxzoom: 15,
+                tileSize: 512,
+                reparseOverscaled: true
+            };
+        
+            const transform = new MercatorTransform(0, 15, 0, 85, true);
+            transform.resize(128, 128);
+            transform.setZoom(11);
+            transform.setCenter(new LngLat(-58.97, 60.02));
+        
+            expect(coveringTiles(transform, options)).toEqual([
+                new OverscaledTileID(11, 0, 11, 688, 594)
+            ]);
+        });
+
+        test('z11, low lat, mid lng', () => {
+            const options = {
+                minzoom: 1,
+                maxzoom: 15,
+                tileSize: 512,
+                reparseOverscaled: true
+            };
+        
+            const transform = new MercatorTransform(0, 15, 0, 85, true);
+            transform.resize(128, 128);
+            transform.setZoom(11);
+            transform.setCenter(new LngLat(-58.97, -0.087));
+        
+            expect(coveringTiles(transform, options)).toEqual([
+                new OverscaledTileID(11, 0, 11, 688, 1024)
             ]);
         });
     
