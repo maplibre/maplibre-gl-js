@@ -171,6 +171,63 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(0, 0, 0, 0, 0)
             ]);
         });
+
+        test('zoom = 11', () => {
+            const transform = new GlobeTransform();
+            transform.resize(128, 128);
+            transform.setZoom(11);
+            transform.setPitch(0);
+            transform.setCenter(new LngLat(-179.73, -0.087));
+    
+            const tiles = coveringTiles(transform, {
+                tileSize: 512,
+                minzoom: 0,
+                maxzoom: 15,
+                reparseOverscaled: true
+            });
+    
+            expect(tiles).toEqual([
+                new OverscaledTileID(11, 0, 11, 1, 1024)
+            ]);
+        });
+        
+        test('zoom = 11, mid lat', () => {
+            const transform = new GlobeTransform();
+            transform.resize(128, 128);
+            transform.setZoom(11);
+            transform.setPitch(0);
+            transform.setCenter(new LngLat(-179.73, 60.02));
+    
+            const tiles = coveringTiles(transform, {
+                tileSize: 512,
+                minzoom: 0,
+                maxzoom: 15,
+                reparseOverscaled: true
+            });
+    
+            expect(tiles).toEqual([
+                new OverscaledTileID(11, 0, 11, 1, 594)
+            ]);
+        });
+        
+        test('zoom = 11, high lat', () => {
+            const transform = new GlobeTransform();
+            transform.resize(128, 128);
+            transform.setZoom(11);
+            transform.setPitch(0);
+            transform.setCenter(new LngLat(-179.73, 85.028));
+    
+            const tiles = coveringTiles(transform, {
+                tileSize: 512,
+                minzoom: 0,
+                maxzoom: 15,
+                reparseOverscaled: true
+            });
+    
+            expect(tiles).toEqual([
+                new OverscaledTileID(11, 0, 11, 1, 1)
+            ]);
+        });
     });
 
     describe('mercator', () => {
@@ -449,6 +506,60 @@ describe('coveringTiles', () => {
             transform.setZoom(8);
             expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(0, 0, 0, 0, 0)
+            ]);
+        });
+        
+        test('z11', () => {
+            const options = {
+                minzoom: 1,
+                maxzoom: 15,
+                tileSize: 512,
+                reparseOverscaled: true
+            };
+        
+            const transform = new MercatorTransform(0, 15, 0, 85, true);
+            transform.resize(128, 128);
+            transform.setZoom(11);
+            transform.setCenter(new LngLat(-179.73, -0.087));
+        
+            expect(coveringTiles(transform, options)).toEqual([
+                new OverscaledTileID(11, 0, 11, 1, 1024)
+            ]);
+        });
+        
+        test('z11, mid lat', () => {
+            const options = {
+                minzoom: 1,
+                maxzoom: 15,
+                tileSize: 512,
+                reparseOverscaled: true
+            };
+        
+            const transform = new MercatorTransform(0, 15, 0, 85, true);
+            transform.resize(128, 128);
+            transform.setZoom(11);
+            transform.setCenter(new LngLat(-179.73, 60.02));
+        
+            expect(coveringTiles(transform, options)).toEqual([
+                new OverscaledTileID(11, 0, 11, 1, 594)
+            ]);
+        });
+        
+        test('z11, high lat', () => {
+            const options = {
+                minzoom: 1,
+                maxzoom: 15,
+                tileSize: 512,
+                reparseOverscaled: true
+            };
+        
+            const transform = new MercatorTransform(0, 15, 0, 85, true);
+            transform.resize(128, 128);
+            transform.setZoom(11);
+            transform.setCenter(new LngLat(-179.73, 85.028));
+        
+            expect(coveringTiles(transform, options)).toEqual([
+                new OverscaledTileID(11, 0, 11, 1, 1)
             ]);
         });
     
