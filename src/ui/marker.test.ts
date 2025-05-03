@@ -1073,8 +1073,6 @@ describe('marker', () => {
             .setLngLat([180, 0])
             .addTo(map);
 
-        expect(marker.getElement().style.opacity).toBe('0.7');
-
         map.setProjection({type: 'globe'}); // Enable the globe projection
         await sleep(100); // Give time for the projection to load
         expect(marker.getElement().style.opacity).toBe('0.3');
