@@ -561,11 +561,14 @@ export class Marker extends Evented {
             }, 100);
         }
 
+        const terrain = this._map?.terrain
         const occluded = this._map.transform.isLocationOccluded(this._lngLat);
-        console.log(occluded);
-        if (occluded) {
+
+        if (!terrain || occluded) {
             // Display at _opacityWhenCovered when occluded
-            if (this._element.style.opacity !== this._opacityWhenCovered) { this._element.style.opacity = this._opacityWhenCovered; }
+            const targetOpacity = occluded ? this._opacityWhenCovered : this._opacity;
+            if (this._element.style.opacity !== targetOpacity) { this._element.style.opacity = targetOpacity; }
+            return;
         } else {
             const map = this._map;
 
@@ -575,8 +578,6 @@ export class Marker extends Evented {
             const elevation = map.terrain.getElevationForLngLatZoom(this._lngLat, map.transform.tileZoom);
             const markerDistance = map.transform.lngLatToCameraDepth(this._lngLat, elevation);
             const forgiveness = .006;
-            console.log('markerDistance - terrainDistance');
-            console.log(markerDistance - terrainDistance);
             if (markerDistance - terrainDistance < forgiveness) {
                 this._element.style.opacity = this._opacity;
                 return;
@@ -588,8 +589,6 @@ export class Marker extends Evented {
             const markerDistanceCenter = map.transform.lngLatToCameraDepth(this._lngLat, elevation + elevationToCenter);
             // Display at full opacity if center is visible.
             const centerIsInvisible = markerDistanceCenter - terrainDistanceCenter > forgiveness;
-            console.log('centerIsInvisible');
-            console.log(centerIsInvisible);
 
             if (this._popup?.isOpen() && centerIsInvisible) {
                 this._popup.remove();
