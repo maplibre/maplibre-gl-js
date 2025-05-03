@@ -3,7 +3,7 @@
 ### ✨ Features and improvements
 - Add additional hillshade methods ([#5768](https://github.com/maplibre/maplibre-gl-js/pull/5768))
 - Add `refreshTiles()` to the map public API ([#5806](https://github.com/maplibre/maplibre-gl-js/pull/5806))
-- _...Add new stuff here..._
+- Disable geolocate control button when permission is denied and `trackUserLocation` is off ([#5824](https://github.com/maplibre/maplibre-gl-js/pull/5824))
 
 ### 🐞 Bug fixes
 - Fix scroll min zoom on globe view ([#5775](https://github.com/maplibre/maplibre-gl-js/pull/5775))
