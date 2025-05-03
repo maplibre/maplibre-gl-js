@@ -1065,6 +1065,40 @@ describe('marker', () => {
         map.remove();
     });
 
+    test('Applies options.opacityWhenCovered when marker is covered by globe with terrain disabled or enabled', async () => {
+        const map = createMap({width: 1024, renderWorldCopies: true});
+        await map.once('load');
+
+        const marker = new CustomMarker({opacity: 0.7, opacityWhenCovered: 0.3})
+            .setLngLat([180, 0])
+            .addTo(map);
+
+        expect(marker.getElement().style.opacity).toBe('0.7');
+
+        map.setProjection({type: 'globe'}); // Enable the globe projection
+        await sleep(100); // Give time for the projection to load
+        expect(marker.getElement().style.opacity).toBe('0.3');
+        marker.setLngLat([0, 0]);
+        expect(marker.getElement().style.opacity).toBe('0.7');
+
+        map.terrain = createTerrain(); // Enable terrain
+        await sleep(100); // Give time for the terrain to load
+        map.fire('terrain'); // Trigger terrain event for marker
+        marker.setLngLat([180, 0]);
+        expect(marker.getElement().style.opacity).toBe('0.3');
+        marker.setLngLat([0, 0]);
+        expect(marker.getElement().style.opacity).toBe('0.7');
+
+        map.terrain = null; // Disable terrain
+        await sleep(100);
+        marker.setLngLat([180, 0]);
+        expect(marker.getElement().style.opacity).toBe('0.3');
+        marker.setLngLat([0, 0]);
+        expect(marker.getElement().style.opacity).toBe('0.7');
+
+        map.remove();
+    });
+
     test('Removes an open popup when going behind 3d terrain', async () => {
         const map = createMap();
         const marker = new Marker()
