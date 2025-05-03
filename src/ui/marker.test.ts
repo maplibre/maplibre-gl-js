@@ -1069,7 +1069,7 @@ describe('marker', () => {
         const map = createMap({width: 1024, renderWorldCopies: true});
         await map.once('load');
 
-        const marker = new CustomMarker({opacity: 0.7, opacityWhenCovered: 0.3})
+        const marker = new Marker({opacity: 0.7, opacityWhenCovered: 0.3})
             .setLngLat([180, 0])
             .addTo(map);
 
