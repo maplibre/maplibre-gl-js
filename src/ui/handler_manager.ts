@@ -150,6 +150,7 @@ export class HandlerManager {
         passive?: boolean;
         capture?: boolean;
     } | undefined]>;
+    _latestMousePos?: Point;
 
     constructor(map: Map, options: CompleteMapOptions) {
         this._map = map;
@@ -389,6 +390,7 @@ export class HandlerManager {
                 if (handler[eventName || e.type]) {
                     if (isPointableEvent(e, eventName || e.type)){
                         const point = DOM.mousePos(this._map.getCanvas(), e);
+                        this._latestMousePos = point;
                         data = handler[eventName || e.type](e, point);
                     } else if (isTouchableEvent(e, eventName || e.type)) {
                         const eventTouches = e.touches;

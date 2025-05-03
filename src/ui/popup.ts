@@ -618,7 +618,10 @@ export class Popup extends Evented {
 
         this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform, this._trackPointer);
 
-        if (this._trackPointer && !cursor) return;
+        if (this._trackPointer && !cursor) {
+            cursor = this._map.handlers._latestMousePos;
+            if (!cursor) return;
+        }
 
         const pos = this._flatPos = this._pos = this._trackPointer && cursor ? cursor : this._map.project(this._lngLat);
         if (this._map.terrain) {

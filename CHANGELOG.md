@@ -9,6 +9,7 @@
 - Fix scroll min zoom on globe view ([#5775](https://github.com/maplibre/maplibre-gl-js/pull/5775))
 - ⚠️ Fix hillshade appearance change between 256x256 and 512x512 tiles. This will change the appearance of hillshade layers using 512x512 tiles. ([#5768](https://github.com/maplibre/maplibre-gl-js/pull/5768))
 - Fix tile expiry logic for raster and raster-dem tiles ([#5798](https://github.com/maplibre/maplibre-gl-js/pull/5798))
+- Fix initial position of pointer-tracked popup ([#5811](https://github.com/maplibre/maplibre-gl-js/pull/5811))
 - _...Add new stuff here..._
 
 ## 5.4.0
