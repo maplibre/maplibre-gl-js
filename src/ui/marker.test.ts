@@ -1077,16 +1077,17 @@ describe('marker', () => {
         await sleep(100); // Give time for the projection to load
         expect(marker.getElement().style.opacity).toBe('0.3');
         marker.setLngLat([0, 0]);
-        await sleep(100); // Give time for the projection to load
+        await sleep(100); // Give marker change time to load
         expect(marker.getElement().style.opacity).toBe('0.7');
 
         map.terrain = createTerrain(); // Enable terrain
         await sleep(100); // Give time for the terrain to load
         map.fire('terrain'); // Trigger terrain event for marker
         marker.setLngLat([180, 0]);
+        await sleep(100); // Give marker change time to load
         expect(marker.getElement().style.opacity).toBe('0.3');
         marker.setLngLat([0, 0]);
-        await sleep(100); // Give time for the projection to load
+        await sleep(100); // Give marker change time to load
         expect(marker.getElement().style.opacity).toBe('0.7');
 
         map.remove();
