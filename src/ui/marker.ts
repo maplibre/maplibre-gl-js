@@ -552,13 +552,6 @@ export class Marker extends Evented {
     }
 
     _updateOpacity(force: boolean = false) {
-        const terrain = this._map?.terrain;
-        if (!terrain) {
-            const occluded = this._map.transform.isLocationOccluded(this._lngLat);
-            const targetOpacity = occluded ? this._opacityWhenCovered : this._opacity;
-            if (this._element.style.opacity !== targetOpacity) { this._element.style.opacity = targetOpacity; }
-            return;
-        }
         if (force) {
             this._opacityTimeout = null;
         } else {
@@ -568,29 +561,41 @@ export class Marker extends Evented {
             }, 100);
         }
 
-        const map = this._map;
+        const occluded = this._map.transform.isLocationOccluded(this._lngLat);
+        console.log(occluded);
+        if (occluded) {
+            // Display at _opacityWhenCovered when occluded
+            if (this._element.style.opacity !== this._opacityWhenCovered) { this._element.style.opacity = this._opacityWhenCovered; }
+        } else {
+            const map = this._map;
 
-        // Read depth framebuffer, getting position of terrain in line of sight to marker
-        const terrainDistance = map.terrain.depthAtPoint(this._pos);
-        // Transform marker position to clip space
-        const elevation = map.terrain.getElevationForLngLatZoom(this._lngLat, map.transform.tileZoom);
-        const markerDistance = map.transform.lngLatToCameraDepth(this._lngLat, elevation);
+            // Read depth framebuffer, getting position of terrain in line of sight to marker
+            const terrainDistance = map.terrain.depthAtPoint(this._pos);
+            // Transform marker position to clip space
+            const elevation = map.terrain.getElevationForLngLatZoom(this._lngLat, map.transform.tileZoom);
+            const markerDistance = map.transform.lngLatToCameraDepth(this._lngLat, elevation);
+            const forgiveness = .006;
+            console.log('markerDistance - terrainDistance');
+            console.log(markerDistance - terrainDistance);
+            if (markerDistance - terrainDistance < forgiveness) {
+                this._element.style.opacity = this._opacity;
+                return;
+            }
+            // If the base is obscured, use the offset to check if the marker's center is obscured.
+            const metersToCenter = -this._offset.y / map.transform.pixelsPerMeter;
+            const elevationToCenter = Math.sin(map.getPitch() * Math.PI / 180) * metersToCenter;
+            const terrainDistanceCenter = map.terrain.depthAtPoint(new Point(this._pos.x, this._pos.y - this._offset.y));
+            const markerDistanceCenter = map.transform.lngLatToCameraDepth(this._lngLat, elevation + elevationToCenter);
+            // Display at full opacity if center is visible.
+            const centerIsInvisible = markerDistanceCenter - terrainDistanceCenter > forgiveness;
+            console.log('centerIsInvisible');
+            console.log(centerIsInvisible);
 
-        const forgiveness = .006;
-        if (markerDistance - terrainDistance < forgiveness) {
-            this._element.style.opacity = this._opacity;
-            return;
+            if (this._popup?.isOpen() && centerIsInvisible) {
+                this._popup.remove();
+            }
+            this._element.style.opacity = centerIsInvisible ? this._opacityWhenCovered : this._opacity;
         }
-        // If the base is obscured, use the offset to check if the marker's center is obscured.
-        const metersToCenter = -this._offset.y / map.transform.pixelsPerMeter;
-        const elevationToCenter = Math.sin(map.getPitch() * Math.PI / 180) * metersToCenter;
-        const terrainDistanceCenter = map.terrain.depthAtPoint(new Point(this._pos.x, this._pos.y - this._offset.y));
-        const markerDistanceCenter = map.transform.lngLatToCameraDepth(this._lngLat, elevation + elevationToCenter);
-        // Display at full opacity if center is visible.
-        const centerIsInvisible = markerDistanceCenter - terrainDistanceCenter > forgiveness;
-
-        if (this._popup?.isOpen() && centerIsInvisible) this._popup.remove();
-        this._element.style.opacity = centerIsInvisible ? this._opacityWhenCovered : this._opacity;
     }
 
     _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'render' }) => {
