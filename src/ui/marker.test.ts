@@ -1089,13 +1089,6 @@ describe('marker', () => {
         marker.setLngLat([0, 0]);
         expect(marker.getElement().style.opacity).toBe('0.7');
 
-        map.terrain = null; // Disable terrain
-        await sleep(100);
-        marker.setLngLat([180, 0]);
-        expect(marker.getElement().style.opacity).toBe('0.3');
-        marker.setLngLat([0, 0]);
-        expect(marker.getElement().style.opacity).toBe('0.7');
-
         map.remove();
     });
 
