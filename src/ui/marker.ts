@@ -561,7 +561,7 @@ export class Marker extends Evented {
             }, 100);
         }
 
-        const terrain = this._map?.terrain
+        const terrain = this._map?.terrain;
         const occluded = this._map.transform.isLocationOccluded(this._lngLat);
 
         if (!terrain || occluded) {
