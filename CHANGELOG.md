@@ -316,6 +316,7 @@
 - Fixed a performance regression related to symbol placement ([#4599](https://github.com/maplibre/maplibre-gl-js/pull/4599))
 - Fix a bug where cloning a Transform instance didn't include the `lngRange`. This caused a bug where
 using `transformCameraUpdate` caused the `maxBounds` to stop working just for east/west bounds. ([#4625](https://github.com/maplibre/maplibre-gl-js/pull/4625))
+- Fix opacityWhenCovered not working to hide the marker behind the globe if terrain is enabled. ([#5838](https://github.com/maplibre/maplibre-gl-js/pull/5838))
 
 ## 4.6.0
 
