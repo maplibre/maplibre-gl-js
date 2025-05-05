@@ -1,12 +1,12 @@
 import {EXTENT} from '../../data/extent';
 import {projectTileCoordinatesToSphere} from './globe_utils';
-import {Aabb} from '../../util/primitives/aabb';
 import {BoundingVolumeCache} from '../../util/primitives/bounding_volume_cache';
 import {coveringZoomLevel, type CoveringTilesOptions} from './covering_tiles';
 import type {vec3} from 'gl-matrix';
 import type {IReadonlyTransform} from '../transform_interface';
 import type {MercatorCoordinate} from '../mercator_coordinate';
 import type {CoveringTilesDetailsProviderImplementation} from './covering_tiles_details_provider';
+import {OrientedBoundingBox} from '../../util/primitives/oriented_bounding_box';
 
 /**
  * Computes distance of a point to a tile in an arbitrary axis.
@@ -38,8 +38,8 @@ function distanceToTileWrapX(pointX: number, pointY: number, tileCornerX: number
     return Math.max(distanceX, distanceToTileSimple(pointY, tileCornerY, tileSize));
 }
 
-export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsProviderImplementation<Aabb> {
-    private _boundingVolumeCache: BoundingVolumeCache<Aabb> = new BoundingVolumeCache(this._computeTileAABB);
+export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsProviderImplementation<OrientedBoundingBox> {
+    private _boundingVolumeCache: BoundingVolumeCache<OrientedBoundingBox> = new BoundingVolumeCache(this._computeTileOBB);
 
     /**
      * Prepares the internal AABB cache for the next frame.
@@ -54,7 +54,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
      * Handles distances on a sphere correctly: X is wrapped when crossing the antimeridian,
      * when crossing the poles Y is mirrored and X is shifted by half world size.
      */
-    distanceToTile2d(pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, _aabb: Aabb): number {
+    distanceToTile2d(pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, _aabb: OrientedBoundingBox): number {
         const scale = 1 << tileID.z;
         const tileMercatorSize = 1.0 / scale;
         const tileCornerX = tileID.x / scale; // In range 0..1
@@ -105,40 +105,11 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
         return this._boundingVolumeCache.getTileBoundingVolume(tileID, wrap, elevation, options);
     }
 
-    private _computeTileAABB(tileID: {x: number; y: number; z: number}, _wrap: number, _elevation: number, _options: CoveringTilesOptions): Aabb {
-        // We can get away with only checking the 4 tile corners for AABB construction, because for any tile of zoom level 2 or higher
-        // it holds that the extremes (minimal or maximal value) of X, Y or Z coordinates must lie in one of the tile corners.
-        //
-        // To see why this holds, consider the formula for computing X,Y and Z from angular coordinates.
-        // It goes something like this:
-        //
-        // X = sin(lng) * cos(lat)
-        // Y = sin(lat)
-        // Z = cos(lng) * cos(lat)
-        //
-        // Note that a tile always covers a continuous range of lng and lat values,
-        // and that tiles that border the mercator north/south edge are assumed to extend all the way to the poles.
-        //
-        // We will consider each coordinate separately and show that an extreme must always lie in a tile corner for every axis, and must not lie inside the tile.
-        //
-        // For Y, it is clear that the only way for an extreme to not lie on an edge of the lat range is for the range to contain lat=90° or lat=-90° without either being the tile edge.
-        // This cannot happen for any tile, these latitudes will always:
-        // - either lie outside the tile entirely, thus Y will be monotonically increasing or decreasing across the entire tile, thus the extreme must lie at a corner/edge
-        // - or be the tile edge itself, thus the extreme will lie at the tile edge
-        //
-        // For X, considering only longitude, the tile would also have to contain lng=90° or lng=-90° (with neither being the tile edge) for the extreme to not lie on a tile edge.
-        // This can only happen at zoom levels 0 and 1, which are handled separately.
-        // But X is also scaled by cos(lat)! However, this can only cause an extreme to lie inside the tile if the tile crosses lat=0°, which cannot happen for zoom levels other than 0.
-        //
-        // For Z, similarly to X, the extremes must lie at lng=0° or lng=180°, but for zoom levels other than 0 these cannot lie inside the tile. Scaling by cos(lat) has the same effect as with the X axis.
-        //
-        // So checking the 4 tile corners only fails for tiles with zoom level <2, and these are handled separately with hardcoded AABBs:
-        // - zoom level 0 tile is the entire sphere
-        // - zoom level 1 tiles are "quarters of a sphere"
-
+    private _computeTileOBB(tileID: {x: number; y: number; z: number}, _wrap: number, _elevation: number, _options: CoveringTilesOptions): OrientedBoundingBox {
+        // Just returns AABBs for now.
         if (tileID.z <= 0) {
             // Tile covers the entire sphere.
-            return new Aabb(
+            return OrientedBoundingBox.fromAabb(
                 [-1, -1, -1],
                 [1, 1, 1]
             );
@@ -147,7 +118,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             // X is 1 at lng=E90°
             // Y is 1 at **north** pole
             // Z is 1 at null island
-            return new Aabb(
+            return OrientedBoundingBox.fromAabb(
                 [tileID.x === 0 ? -1 : 0, tileID.y === 0 ? 0 : -1, -1],
                 [tileID.x === 0 ? 0 : 1, tileID.y === 0 ? 1 : 0, 1]
             );
@@ -181,7 +152,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
                 }
             }
 
-            return new Aabb(
+            return OrientedBoundingBox.fromAabb(
                 min,
                 max
             );
