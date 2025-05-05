@@ -30,7 +30,7 @@ describe('GeolocateControl with no options', () => {
 
     beforeEach(() => {
         beforeMapTest();
-        map = createMap(undefined, undefined);
+        map = createMap();
         (checkGeolocationSupport as unknown as MockInstance).mockImplementationOnce(() => Promise.resolve(true));
     });
 
@@ -53,6 +53,18 @@ describe('GeolocateControl with no options', () => {
         map.addControl(geolocate);
         await sleep(0);
         expect(geolocate._geolocateButton.disabled).toBeFalsy();
+    });
+
+    test('is disabled when permission is denied and tracking is off', async () => {
+        const geolocate = new GeolocateControl({trackUserLocation: false});
+        map.addControl(geolocate);
+        await sleep(0);
+
+        const click = new window.Event('click');
+        geolocate._geolocateButton.dispatchEvent(click);
+        geolocation.sendError({code: 1, message: 'permission was denied'});
+
+        expect(geolocate._geolocateButton.disabled).toBeTruthy();
     });
 
     test('has permissions', async () => {

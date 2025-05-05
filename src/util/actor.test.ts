@@ -178,18 +178,18 @@ describe('Actor', () => {
         expect(spy).not.toHaveBeenCalled();
     });
 
-    test('#remove unbinds event listener', () => new Promise<void>(done => {
+    test('#remove unbinds event listener', () => {
+        const addEventListenerSpy = vi.fn();
+        const removeEventListenerSpy = vi.fn();
         const actor = new Actor({
-            addEventListener(type, callback, useCapture) {
-                this._addEventListenerArgs = [type, callback, useCapture];
-            },
-            removeEventListener(type, callback, useCapture) {
-                expect([type, callback, useCapture]).toEqual(this._addEventListenerArgs);
-                done();
-            }
-        } as ActorTarget, null);
+            addEventListener: addEventListenerSpy,
+            removeEventListener: removeEventListenerSpy,
+        } as any as ActorTarget, null);
         actor.remove();
-    }));
+        expect(addEventListenerSpy).toHaveBeenCalled();
+        expect(removeEventListenerSpy).toHaveBeenCalled();
+        expect(addEventListenerSpy.mock.calls[0]).toEqual(removeEventListenerSpy.mock.calls[0]);
+    });
 
     test('send a message that is rejected', async () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;

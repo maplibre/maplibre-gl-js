@@ -160,6 +160,24 @@ describe('marker', () => {
         expect(!marker.getPopup()).toBeTruthy();
     });
 
+    test('Marker#setPopup binds a popup and allow closing it with click', () => {
+        const map = createMap();
+        const popup = new Popup()
+            .setText('Test');
+        const marker = new Marker()
+            .setLngLat([0,0])
+            .setPopup(popup)
+            .addTo(map);
+        
+        // open popup
+        marker.togglePopup();
+        const spy = vi.fn();
+        popup.on('close', spy);
+        (map.getContainer().querySelector('.maplibregl-popup-close-button') as HTMLButtonElement).click();
+
+        expect(spy).toHaveBeenCalled();
+    });
+
     test('Marker#togglePopup opens a popup that was closed', async () => {
         const map = createMap();
         const marker = new Marker()
@@ -1047,6 +1065,34 @@ describe('marker', () => {
         map.remove();
     });
 
+    test('Applies options.opacityWhenCovered when marker is covered by globe with terrain disabled or enabled', async () => {
+        const map = createMap({width: 1024, renderWorldCopies: true});
+        await map.once('load');
+
+        const marker = new Marker({opacity: '0.7', opacityWhenCovered: '0.3'})
+            .setLngLat([180, 0])
+            .addTo(map);
+
+        map.setProjection({type: 'globe'}); // Enable the globe projection
+        await sleep(100); // Give time for the projection to load
+        expect(marker.getElement().style.opacity).toBe('0.3');
+        marker.setLngLat([0, 0]);
+        await sleep(100); // Give marker change time to load
+        expect(marker.getElement().style.opacity).toBe('0.7');
+
+        map.terrain = createTerrain(); // Enable terrain
+        await sleep(100); // Give time for the terrain to load
+        map.fire('terrain'); // Trigger terrain event for marker
+        marker.setLngLat([180, 0]);
+        await sleep(100); // Give marker change time to load
+        expect(marker.getElement().style.opacity).toBe('0.3');
+        marker.setLngLat([0, 0]);
+        await sleep(100); // Give marker change time to load
+        expect(marker.getElement().style.opacity).toBe('0.7');
+
+        map.remove();
+    });
+
     test('Removes an open popup when going behind 3d terrain', async () => {
         const map = createMap();
         const marker = new Marker()
@@ -1093,6 +1139,21 @@ describe('marker', () => {
 
     test('Marker\'s lng is wrapped when slightly crossing 180 with {renderWorldCopies: false}', () => {
         const map = createMap({width: 1024, renderWorldCopies: false});
+        const marker = new Marker()
+            .setLngLat([179, 0])
+            .addTo(map);
+
+        marker.setLngLat([181, 0]);
+
+        expect(marker._lngLat.lng).toBe(-179);
+    });
+
+    test('Marker\'s lng is wrapped when slightly crossing 180 with zoomed out globe', async () => {
+        const map = createMap({width: 1024, renderWorldCopies: true});
+        await map.once('load');
+        map.setProjection({type: 'globe'});
+        map.setZoom(0);
+
         const marker = new Marker()
             .setLngLat([179, 0])
             .addTo(map);

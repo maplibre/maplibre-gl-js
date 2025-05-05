@@ -7,7 +7,7 @@ import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {LngLatBounds} from '../lng_lat_bounds';
 import {tileCoordinatesToMercatorCoordinates} from './mercator_utils';
-import {angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, sphereSurfacePointToCoordinates} from './globe_utils';
+import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, getZoomAdjustment, horizonPlaneToCenterAndRadius, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, sphereSurfacePointToCoordinates} from './globe_utils';
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider';
 import {Frustum} from '../../util/primitives/frustum';
 
@@ -363,9 +363,8 @@ export class VerticalPerspectiveTransform implements ITransform {
         vec3.rotateZ(planeVector, planeVector, [0, 0, 0], -this.bearingInRadians);
         vec3.rotateX(planeVector, planeVector, [0, 0, 0], -1 * this.center.lat * Math.PI / 180.0);
         vec3.rotateY(planeVector, planeVector, [0, 0, 0], this.center.lng * Math.PI / 180.0);
-        // Scale the plane vector up
-        // we don't want the actually visible parts of the sphere to end up beyond distance 1 from the plane - otherwise they would be clipped by the near plane.
-        const scale = 0.25;
+        // Normalize the plane vector
+        const scale = 1 / vec3.length(planeVector);
         vec3.scale(planeVector, planeVector, scale);
         return [...planeVector, -tangentPlaneDistanceToC * scale];
     }
@@ -931,8 +930,9 @@ export class VerticalPerspectiveTransform implements ITransform {
 
         // Ray does not intersect the sphere -> find the closest point on the horizon to the ray.
         // Intersect the ray with the clipping plane, since we know that the intersection of the clipping plane and the sphere is the horizon.
-        const directionDotPlaneXyz = this._cachedClippingPlane[0] * rayDirection[0] + this._cachedClippingPlane[1] * rayDirection[1] + this._cachedClippingPlane[2] * rayDirection[2];
-        const originToPlaneDistance = pointPlaneSignedDistance(this._cachedClippingPlane, rayOrigin);
+        const horizonPlane = this._cachedClippingPlane;
+        const directionDotPlaneXyz = horizonPlane[0] * rayDirection[0] + horizonPlane[1] * rayDirection[1] + horizonPlane[2] * rayDirection[2];
+        const originToPlaneDistance = pointPlaneSignedDistance(horizonPlane, rayOrigin);
         const distanceToIntersection = -originToPlaneDistance / directionDotPlaneXyz;
 
         const maxRayLength = 2.0; // One globe diameter
@@ -961,8 +961,9 @@ export class VerticalPerspectiveTransform implements ITransform {
             ]);
         }
 
-        const closestOnHorizon = createVec3f64();
-        vec3.normalize(closestOnHorizon, planeIntersection);
+        const horizonDisk = horizonPlaneToCenterAndRadius(horizonPlane);
+        const closestOnHorizon = clampToSphere(horizonDisk.center, horizonDisk.radius, planeIntersection);
+
         return sphereSurfacePointToCoordinates(closestOnHorizon);
     }
 

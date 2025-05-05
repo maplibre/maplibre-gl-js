@@ -68,21 +68,19 @@ describe('Worker generic testing', () => {
         global.fetch = null;
     });
 
-    test('should validate handlers execution in worker for load tile', () => new Promise<void>(done => {
+    test('should validate handlers execution in worker for load tile', async () => {
         const server = fakeServer.create();
-        worker.actor.messageHandlers[MessageType.loadTile]('0', {
+        const messagePromise = worker.actor.messageHandlers[MessageType.loadTile]('0', {
             type: 'vector',
             source: 'source',
             uid: '0',
             tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0} as CanonicalTileID} as any as OverscaledTileID,
             request: {url: '/error'}// Sinon fake server gives 404 responses by default
-        } as WorkerTileParameters).catch((err) => {
-            expect(err).toBeTruthy();
-            server.restore();
-            done();
-        });
+        } as WorkerTileParameters);
         server.respond();
-    }));
+        await expect(messagePromise).rejects.toBeDefined();
+        server.restore();
+    });
 
     test('isolates different instances\' data', () => {
         worker.actor.messageHandlers[MessageType.setLayers]('0', [
@@ -97,16 +95,11 @@ describe('Worker generic testing', () => {
         expect(worker.layerIndexes[0]).not.toBe(worker.layerIndexes[1]);
     });
 
-    test('worker source messages dispatched to the correct map instance', () => new Promise<void>(done => {
+    test('worker source messages dispatched to the correct map instance', () => {
         const externalSourceName = 'test';
 
-        worker.actor.sendAsync = (message, abortController) => {
-            expect(message.type).toBe(MessageType.loadTile);
-            expect(message.targetMapId).toBe('999');
-            expect(abortController).toBeDefined();
-            done();
-            return Promise.resolve({} as any);
-        };
+        const sendAsyncSpy = vi.fn().mockReturnValue(Promise.resolve({} as any));
+        worker.actor.sendAsync = sendAsyncSpy;
 
         _self.registerWorkerSource(externalSourceName, WorkerSourceMock);
 
@@ -115,22 +108,25 @@ describe('Worker generic testing', () => {
         }).toThrow(`Worker source with name "${externalSourceName}" already registered.`);
 
         worker.actor.messageHandlers[MessageType.loadTile]('999', {type: externalSourceName} as WorkerTileParameters);
-    }));
+
+        expect(sendAsyncSpy).toHaveBeenCalled();
+        expect(sendAsyncSpy.mock.calls[0][0].type).toBe(MessageType.loadTile);
+        expect(sendAsyncSpy.mock.calls[0][0].targetMapId).toBe('999');
+        expect(sendAsyncSpy.mock.calls[0][1]).toBeDefined();
+    });
 
     test('Referrer is set', () => {
         worker.actor.messageHandlers[MessageType.setReferrer]('fakeId', 'myMap');
         expect(worker.referrer).toBe('myMap');
     });
 
-    test('calls callback on error', () => new Promise<void>(done => {
+    test('calls callback on error', async () => {
         const server = fakeServer.create();
-        worker.actor.messageHandlers[MessageType.importScript]('0', '/error').catch((err) => {
-            expect(err).toBeTruthy();
-            server.restore();
-            done();
-        });
+        const messagePromise = worker.actor.messageHandlers[MessageType.importScript]('0', '/error');
         server.respond();
-    }));
+        await expect(messagePromise).rejects.toBeDefined();
+        server.restore();
+    });
 
     test('set images', () => {
         expect(worker.availableImages['0']).toBeUndefined();
