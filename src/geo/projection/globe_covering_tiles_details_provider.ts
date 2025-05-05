@@ -1,12 +1,12 @@
 import {EXTENT} from '../../data/extent';
 import {projectTileCoordinatesToSphere} from './globe_utils';
 import {Aabb} from '../../util/primitives/aabb';
-import {AabbCache} from '../../util/primitives/aabb_cache';
+import {BoundingVolumeCache} from '../../util/primitives/bounding_volume_cache';
 import {coveringZoomLevel, type CoveringTilesOptions} from './covering_tiles';
 import type {vec3} from 'gl-matrix';
 import type {IReadonlyTransform} from '../transform_interface';
 import type {MercatorCoordinate} from '../mercator_coordinate';
-import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
+import type {CoveringTilesDetailsProviderImplementation} from './covering_tiles_details_provider';
 
 /**
  * Computes distance of a point to a tile in an arbitrary axis.
@@ -38,14 +38,14 @@ function distanceToTileWrapX(pointX: number, pointY: number, tileCornerX: number
     return Math.max(distanceX, distanceToTileSimple(pointY, tileCornerY, tileSize));
 }
 
-export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsProvider {
-    private _aabbCache: AabbCache = new AabbCache(this._computeTileAABB);
+export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsProviderImplementation<Aabb> {
+    private _boundingVolumeCache: BoundingVolumeCache<Aabb> = new BoundingVolumeCache(this._computeTileAABB);
 
     /**
      * Prepares the internal AABB cache for the next frame.
      */
     recalculateCache() {
-        this._aabbCache.recalculateCache();
+        this._boundingVolumeCache.recalculateCache();
     }
 
     /**
@@ -101,8 +101,8 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
         return false;
     }
 
-    getTileAABB(tileID: { x: number; y: number; z: number }, wrap: number, elevation: number, options: CoveringTilesOptions) {
-        return this._aabbCache.getTileAABB(tileID, wrap, elevation, options);
+    getTileBoundingVolume(tileID: { x: number; y: number; z: number }, wrap: number, elevation: number, options: CoveringTilesOptions) {
+        return this._boundingVolumeCache.getTileBoundingVolume(tileID, wrap, elevation, options);
     }
 
     private _computeTileAABB(tileID: {x: number; y: number; z: number}, _wrap: number, _elevation: number, _options: CoveringTilesOptions): Aabb {

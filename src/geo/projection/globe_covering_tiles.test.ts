@@ -6,7 +6,7 @@ import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_
 describe('aabb creation', () => {
     test('z=0', () => {
         const detailsProvider = new GlobeCoveringTilesDetailsProvider();
-        const aabb = detailsProvider.getTileAABB({
+        const aabb = detailsProvider.getTileBoundingVolume({
             x: 0,
             y: 0,
             z: 0,
@@ -19,7 +19,7 @@ describe('aabb creation', () => {
 
     test('z=1,x=0', () => {
         const detailsProvider = new GlobeCoveringTilesDetailsProvider();
-        const aabb = detailsProvider.getTileAABB({
+        const aabb = detailsProvider.getTileBoundingVolume({
             x: 0,
             y: 0,
             z: 1,
@@ -32,7 +32,7 @@ describe('aabb creation', () => {
 
     test('z=1,x=1', () => {
         const detailsProvider = new GlobeCoveringTilesDetailsProvider();
-        const aabb = detailsProvider.getTileAABB({
+        const aabb = detailsProvider.getTileBoundingVolume({
             x: 1,
             y: 0,
             z: 1,
@@ -45,7 +45,7 @@ describe('aabb creation', () => {
 
     test('z=2,x=1', () => {
         const detailsProvider = new GlobeCoveringTilesDetailsProvider();
-        const aabb = detailsProvider.getTileAABB({
+        const aabb = detailsProvider.getTileBoundingVolume({
             x: 1,
             y: 0,
             z: 2,
