@@ -11,9 +11,6 @@ export class OrientedBoundingBox implements IBoundingVolume {
     min: vec3;
     max: vec3;
 
-    private constructor() {
-    }
-
     public static fromAabb(min: vec3, max: vec3): OrientedBoundingBox {
         const obb = new OrientedBoundingBox();
         obb.min = min;
