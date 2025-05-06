@@ -140,7 +140,7 @@ export type FlyToOptions = AnimationOptions & CameraOptions & {
     /**
      * The average speed of the animation defined in relation to
      * `options.curve`. A speed of 1.2 means that the map appears to move along the flight path
-     * by 1.2 times `options.curve` screenfulls every second. A _screenful_ is the map's visible span.
+     * by 1.2 times `options.curve` screenfulls every second. A _screenfull_ is the map's visible span.
      * It does not correspond to a fixed physical distance, but varies by zoom level.
      * @defaultValue 1.2
      */
