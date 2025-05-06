@@ -39,4 +39,14 @@ describe('Bounds', () => {
         expect(bounds.contains(new Point(3.1, 4.1))).toBeFalsy();
         expect(bounds.contains(new Point(2, 4.1))).toBeFalsy();
     });
+
+    test('fromPoints', () => {
+        const bounds = Bounds.fromPoints([new Point(1, 2), new Point(3, 4)]);
+        expect(bounds).toMatchObject({
+            minX: 1,
+            maxX: 3,
+            minY: 2,
+            maxY: 4,
+        });
+    });
 });
