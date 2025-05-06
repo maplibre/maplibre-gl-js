@@ -1,16 +1,29 @@
 ## main
 
 ### ✨ Features and improvements
+
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+
+- _...Add new stuff here..._
+
+## 5.5.0
+
+### ✨ Features and improvements
+
 - Add additional hillshade methods ([#5768](https://github.com/maplibre/maplibre-gl-js/pull/5768))
 - Add `refreshTiles()` to the map public API ([#5806](https://github.com/maplibre/maplibre-gl-js/pull/5806))
 - Disable geolocate control button when permission is denied and `trackUserLocation` is off ([#5824](https://github.com/maplibre/maplibre-gl-js/pull/5824))
 - _... Add new stuff here..._
+
 ### 🐞 Bug fixes
+
 - Fix scroll min zoom on globe view ([#5775](https://github.com/maplibre/maplibre-gl-js/pull/5775))
 - ⚠️ Fix hillshade appearance change between 256x256 and 512x512 tiles. This will change the appearance of hillshade layers using 512x512 tiles. ([#5768](https://github.com/maplibre/maplibre-gl-js/pull/5768))
 - Fix tile expiry logic for raster and raster-dem tiles ([#5798](https://github.com/maplibre/maplibre-gl-js/pull/5798))
 - Fix opacityWhenCovered not working to hide the marker behind the globe if terrain is enabled. ([#5838](https://github.com/maplibre/maplibre-gl-js/pull/5838))
-- _...Add new stuff here..._
+- Fix transparent vector tiles sometimes showing geometry beyond tile borders when terrain is active ([#5746](https://github.com/maplibre/maplibre-gl-js/pull/5746))
 
 ## 5.4.0
 
@@ -65,6 +78,7 @@
 - Avoid setting marker opacity twice. ([#5441](https://github.com/maplibre/maplibre-gl-js/pull/5441))
 
 ### 🐞 Bug fixes
+
 - Fix how padding is applied when using flyTo() with Globe ([#5406](https://github.com/maplibre/maplibre-gl-js/pull/5406))
 - Fix URL hash validation to support bearing range -180 to 180 ([#5461](https://github.com/maplibre/maplibre-gl-js/issues/5461))
 - Fix variable zoom tile calculation when padding is set ([#5486](https://github.com/maplibre/maplibre-gl-js/issues/5486))
@@ -316,7 +330,7 @@
 - Fix white flickering on map resize ([#4158](https://github.com/maplibre/maplibre-gl-js/pull/4158))
 - Fixed a performance regression related to symbol placement ([#4599](https://github.com/maplibre/maplibre-gl-js/pull/4599))
 - Fix a bug where cloning a Transform instance didn't include the `lngRange`. This caused a bug where
-using `transformCameraUpdate` caused the `maxBounds` to stop working just for east/west bounds. ([#4625](https://github.com/maplibre/maplibre-gl-js/pull/4625))
+  using `transformCameraUpdate` caused the `maxBounds` to stop working just for east/west bounds. ([#4625](https://github.com/maplibre/maplibre-gl-js/pull/4625))
 
 ## 4.6.0
 
