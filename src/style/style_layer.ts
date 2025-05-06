@@ -29,14 +29,6 @@ import type {UnwrappedTileID} from '../source/tile_id';
 
 const TRANSITION_SUFFIX = '-transition';
 
-export type GlobalStateDrivenProperties = {
-    [globalStateRef: string]: {
-        layout?: boolean;
-        paint?: boolean;
-        filter?: boolean;
-    };
-};
-
 export type QueryIntersectsFeatureParams = {
     /**
      * The geometry to check intersection with.
@@ -158,6 +150,11 @@ export abstract class StyleLayer extends Evented {
         }
     }
 
+    setFilter(filter: FilterSpecification | void) {
+        this.filter = filter;
+        this._featureFilter = featureFilter(filter);
+    }
+
     getCrossfadeParameters() {
         return this._crossfadeParameters;
     }
@@ -170,40 +167,28 @@ export abstract class StyleLayer extends Evented {
         return this._unevaluatedLayout.getValue(name);
     }
 
-    getGlobalStateDrivenProperties(): GlobalStateDrivenProperties {
-        const globalStateDrivenProperties: GlobalStateDrivenProperties = {};
+    /**
+     * Get list of global state references that are used withing layout or filter properties.
+     * This is used to determine if layer source need to be reloaded when global state property changes.
+     *
+     */
+    getLayoutAffectingGlobalStateRefs() {
+        const globalStateRefs = new Set<string>();
 
         if (this._unevaluatedLayout) {
             for (const propertyName in this._unevaluatedLayout._values) {
                 const value = this._unevaluatedLayout._values[propertyName];
-    
-                const globalStateRefs = value.getGlobalStateRefs();
-                
-                globalStateRefs.forEach((globalStateRef) => {
-                    globalStateDrivenProperties[globalStateRef] ??= {};
-                    globalStateDrivenProperties[globalStateRef].layout = true;
+                value.getGlobalStateRefs().forEach((globalStateRef) => {
+                    globalStateRefs.add(globalStateRef);
                 });
             }
         }
-    
-        // for (const propertyName in this._transitionablePaint._values) {
-        //     const value = this._transitionablePaint._values[propertyName];
-
-        //     const globalStateRefs = value.value.getGlobalStateRefs();
-            
-        //     globalStateRefs.forEach((globalStateRef) => {
-        //         globalStateDrivenProperties[globalStateRef] ??= {};
-        //         globalStateDrivenProperties[globalStateRef].paint = true;
-        //     });
-        // }
 
         this._featureFilter.getGlobalStateRefs().forEach((globalStateRef) => {
-            globalStateDrivenProperties[globalStateRef] ??= {};
-            globalStateDrivenProperties[globalStateRef].filter = true;
+            globalStateRefs.add(globalStateRef);
         });
 
-        return globalStateDrivenProperties;
-        
+        return globalStateRefs;
     }
 
     setLayoutProperty(name: string, value: any, options: StyleSetterOptions = {}) {

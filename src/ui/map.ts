@@ -1,4 +1,4 @@
-import {extend, warnOnce, uniqueId, isImageBitmap, type Complete, pick, type Subscription} from '../util/util';
+import {extend, warnOnce, uniqueId, isImageBitmap, type Complete, pick, type Subscription, deepEqual} from '../util/util';
 import {browser} from '../util/browser';
 import {DOM} from '../util/dom';
 import packageJSON from '../../package.json' with {type: 'json'};
@@ -788,7 +788,13 @@ export class Map extends Camera {
      * @param value - The value of the state property to set.
      */
     setGlobalStateProperty(propertyName: string, value: any) {
-        this._globalState[propertyName] = value === null ? this.style.stylesheet.state[propertyName]?.default : value;
+        const newValue = value === null ? this.style.stylesheet.state[propertyName]?.default : value;
+
+        if (deepEqual(newValue, this._globalState[propertyName])) {
+            return this;
+        }
+
+        this._globalState[propertyName] = newValue;
         this.style.setGlobalStateProperty(propertyName);
 
         return this._update(true);

@@ -302,22 +302,19 @@ export class Style extends Evented {
         }
     };
 
-    setGlobalStateProperty(propertyName: string) {
+    setGlobalStateProperty(name: string) {
         const sourceIdsToReload = new Set<string>();
         for (const layerId in this._layers) {
             const layer = this._layers[layerId];
+            const globalStateRefs = layer.getLayoutAffectingGlobalStateRefs();
 
-            const globalStateDrivenProperties = layer.getGlobalStateDrivenProperties();
-            const affectedLayerProperties = globalStateDrivenProperties[propertyName];
-
-            if (affectedLayerProperties?.layout || affectedLayerProperties?.filter) {
+            if (globalStateRefs.has(name)) {
                 sourceIdsToReload.add(layer.source);
             }
         }
 
         for (const id in this.sourceCaches) {
-            const sourceType = this.sourceCaches[id].getSource().type;
-            if (sourceType === 'vector' || sourceType === 'geojson' && sourceIdsToReload.has(id)) {
+            if (sourceIdsToReload.has(id)) {
                 this._reloadSource(id);
                 this._changed = true;
             }
@@ -1174,7 +1171,7 @@ export class Style extends Evented {
         }
 
         if (filter === null || filter === undefined) {
-            layer.filter = undefined;
+            layer.setFilter(undefined);
             this._updateLayer(layer);
             return;
         }
@@ -1183,7 +1180,7 @@ export class Style extends Evented {
             return;
         }
 
-        layer.filter = clone(filter);
+        layer.setFilter(clone(filter));
         this._updateLayer(layer);
     }
 
