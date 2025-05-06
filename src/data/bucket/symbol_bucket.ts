@@ -460,7 +460,7 @@ export class SymbolBucket implements Bucket {
         const icons = options.iconDependencies;
         const stacks = options.glyphDependencies;
         const availableImages = options.availableImages;
-        const globalProperties = new EvaluationParameters(this.zoom);
+        const globalProperties = new EvaluationParameters(this.zoom, {globalState: this.globalState});
 
         for (const {feature, id, index, sourceLayerIndex} of features) {
 

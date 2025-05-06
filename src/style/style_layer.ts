@@ -1,6 +1,6 @@
 import {filterObject} from '../util/util';
 
-import {latest as styleSpec, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
+import {featureFilter, latest as styleSpec, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 import {
     validateStyle,
     validateLayoutProperty,
@@ -28,6 +28,14 @@ import type {VectorTileFeature} from '@mapbox/vector-tile';
 import type {UnwrappedTileID} from '../source/tile_id';
 
 const TRANSITION_SUFFIX = '-transition';
+
+export type GlobalStateDrivenProperties = {
+    [globalStateRef: string]: {
+        layout?: boolean;
+        paint?: boolean;
+        filter?: boolean;
+    };
+};
 
 export type QueryIntersectsFeatureParams = {
     /**
@@ -113,7 +121,7 @@ export abstract class StyleLayer extends Evented {
 
         this.id = layer.id;
         this.type = layer.type;
-        this._featureFilter = {filter: () => true, needGeometry: false};
+        this._featureFilter = {filter: () => true, needGeometry: false, getGlobalStateRefs: () => new Set()};
 
         if (layer.type === 'custom') return;
 
@@ -127,6 +135,7 @@ export abstract class StyleLayer extends Evented {
             this.source = layer.source;
             this.sourceLayer = layer['source-layer'];
             this.filter = layer.filter;
+            this._featureFilter = featureFilter(layer.filter);
         }
 
         if (properties.layout) {
@@ -159,6 +168,42 @@ export abstract class StyleLayer extends Evented {
         }
 
         return this._unevaluatedLayout.getValue(name);
+    }
+
+    getGlobalStateDrivenProperties(): GlobalStateDrivenProperties {
+        const globalStateDrivenProperties: GlobalStateDrivenProperties = {};
+
+        if (this._unevaluatedLayout) {
+            for (const propertyName in this._unevaluatedLayout._values) {
+                const value = this._unevaluatedLayout._values[propertyName];
+    
+                const globalStateRefs = value.getGlobalStateRefs();
+                
+                globalStateRefs.forEach((globalStateRef) => {
+                    globalStateDrivenProperties[globalStateRef] ??= {};
+                    globalStateDrivenProperties[globalStateRef].layout = true;
+                });
+            }
+        }
+    
+        // for (const propertyName in this._transitionablePaint._values) {
+        //     const value = this._transitionablePaint._values[propertyName];
+
+        //     const globalStateRefs = value.value.getGlobalStateRefs();
+            
+        //     globalStateRefs.forEach((globalStateRef) => {
+        //         globalStateDrivenProperties[globalStateRef] ??= {};
+        //         globalStateDrivenProperties[globalStateRef].paint = true;
+        //     });
+        // }
+
+        this._featureFilter.getGlobalStateRefs().forEach((globalStateRef) => {
+            globalStateDrivenProperties[globalStateRef] ??= {};
+            globalStateDrivenProperties[globalStateRef].filter = true;
+        });
+
+        return globalStateDrivenProperties;
+        
     }
 
     setLayoutProperty(name: string, value: any, options: StyleSetterOptions = {}) {

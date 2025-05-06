@@ -788,18 +788,8 @@ export class Map extends Camera {
      * @param value - The value of the state property to set.
      */
     setGlobalStateProperty(propertyName: string, value: any) {
-        if (value === null) {
-            this._globalState[propertyName] = this.style.stylesheet.state[propertyName];
-            return;
-        }
-
-        this._globalState[propertyName] = value;
-
-        if (this._loaded) {
-            for (const sourceCache of Object.values(this.style.sourceCaches)) {
-                sourceCache.reload();
-            }
-        }
+        this._globalState[propertyName] = value === null ? this.style.stylesheet.state[propertyName]?.default : value;
+        this.style.setGlobalStateProperty(propertyName);
 
         return this._update(true);
     }

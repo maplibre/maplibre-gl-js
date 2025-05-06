@@ -302,6 +302,28 @@ export class Style extends Evented {
         }
     };
 
+    setGlobalStateProperty(propertyName: string) {
+        const sourceIdsToReload = new Set<string>();
+        for (const layerId in this._layers) {
+            const layer = this._layers[layerId];
+
+            const globalStateDrivenProperties = layer.getGlobalStateDrivenProperties();
+            const affectedLayerProperties = globalStateDrivenProperties[propertyName];
+
+            if (affectedLayerProperties?.layout || affectedLayerProperties?.filter) {
+                sourceIdsToReload.add(layer.source);
+            }
+        }
+
+        for (const id in this.sourceCaches) {
+            const sourceType = this.sourceCaches[id].getSource().type;
+            if (sourceType === 'vector' || sourceType === 'geojson' && sourceIdsToReload.has(id)) {
+                this._reloadSource(id);
+                this._changed = true;
+            }
+        }
+    }
+
     loadURL(url: string, options: StyleSwapOptions & StyleSetterOptions = {}, previousStyle?: StyleSpecification) {
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
@@ -366,7 +388,7 @@ export class Style extends Evented {
         this.sky = new Sky(this.stylesheet.sky);
 
         this.map.setTerrain(this.stylesheet.terrain ?? null);
-        
+
         this.map._setGlobalState(this.stylesheet.state ?? null);
 
         this.fire(new Event('data', {dataType: 'style'}));
@@ -1183,7 +1205,7 @@ export class Style extends Evented {
             return;
         }
 
-        if (deepEqual(layer.getLayoutProperty(name), value)) return;
+        // if (deepEqual(layer.getLayoutProperty(name), value)) return;
 
         layer.setLayoutProperty(name, value, options);
         this._updateLayer(layer);

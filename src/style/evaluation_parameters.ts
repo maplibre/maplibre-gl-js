@@ -3,6 +3,7 @@ import {isStringInSupportedScript} from '../util/script_detection';
 import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker';
 
 import type {TransitionSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {browser} from '../util/browser';
 
 export type CrossfadeParameters = {
     fromScale: number;
@@ -27,13 +28,13 @@ export class EvaluationParameters {
         this.zoom = zoom;
 
         if (options) {
-            this.now = options.now || Date.now();
+            this.now = options.now || browser.now();
             this.fadeDuration = options.fadeDuration || 0;
             this.zoomHistory = options.zoomHistory || new ZoomHistory();
             this.transition = options.transition || {};
             this.globalState = options.globalState || {};
         } else {
-            this.now = 0;
+            this.now = browser.now();
             this.fadeDuration = 0;
             this.zoomHistory = new ZoomHistory();
             this.transition = {};
