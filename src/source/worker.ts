@@ -22,7 +22,7 @@ import {
     type ClusterIDAndSource,
     type GetClusterLeavesParams,
     type RemoveSourceParams,
-    type UpdateLayersParamaeters
+    type UpdateLayersParameters
 } from '../util/actor_messages';
 
 /**
@@ -169,7 +169,7 @@ export default class Worker {
             return this._setImages(mapId, params);
         });
 
-        this.actor.registerMessageHandler(MessageType.updateLayers, async (mapId: string, params: UpdateLayersParamaeters) => {
+        this.actor.registerMessageHandler(MessageType.updateLayers, async (mapId: string, params: UpdateLayersParameters) => {
             this._getLayerIndex(mapId).update(params.layers, params.removedIds);
         });
 
