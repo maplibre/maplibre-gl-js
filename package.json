@@ -138,7 +138,7 @@
         "vitest-webgl-canvas-mock": "^1.1.0"
     },
     "scripts": {
-        "postinstall": "cd .. && git clone https://github.com/lucaswoj/maplibre-style-spec.git && cd maplibre-style-spec && npm install && npm run build && npm run generate-typings && cd ../maplibre-gl-js && npm install ../maplibre-style-spec",
+        "postinstall": "cd .. && git clone https://github.com/lucaswoj/maplibre-style-spec.git && cd maplibre-style-spec && npm install && npm run build && npm run generate-typings && cd ../maplibre-gl-js && npm link ../maplibre-style-spec",
         "generate-dist-package": "node --no-warnings --loader ts-node/esm build/generate-dist-package.js",
         "generate-shaders": "node --no-warnings --loader ts-node/esm build/generate-shaders.ts",
         "generate-struct-arrays": "node --no-warnings --loader ts-node/esm build/generate-struct-arrays.ts",
