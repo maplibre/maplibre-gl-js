@@ -1034,19 +1034,21 @@ export class SourceCache extends Evented {
     private transformBbox(geom: Point[], transform: ITransform, checkWrap: boolean): MercatorCoordinate[] {
         let transformed = geom.map((p: Point) => transform.screenPointToMercatorCoordinate(p, this.terrain));
         if (checkWrap) {
-            // if the projection does not allow world copies, then a bounding box may span the antimeridian
+            // If the projection does not allow world copies, then a bounding box may span the antimeridian and
+            // instead of a bounding box going from 179°E to 179°W, it goes from 179°W to 179°E and covers the entire
+            // planet except for what should be inside it.
             const bounds = Bounds.fromPoints(geom);
             const center = bounds.center();
             const transformedCenter = transform.screenPointToMercatorCoordinate(center, this.terrain);
             const newBounds = Bounds.fromPoints(transformed);
             if (!newBounds.contains(transformedCenter)) {
                 if (transformedCenter.x < newBounds.minX) {
-                    transformed = transformed.map((coord) => coord.x > transformedCenter.x ?
+                    transformed = transformed.map((coord) => coord.x > 0.5 ?
                         new MercatorCoordinate(coord.x - 1, coord.y, coord.z) :
                         coord
                     );
                 } else if (transformedCenter.x > newBounds.maxX) {
-                    transformed = transformed.map((coord) => coord.x < transformedCenter.y ?
+                    transformed = transformed.map((coord) => coord.x < 0.5 ?
                         new MercatorCoordinate(coord.x + 1, coord.y, coord.z) :
                         coord
                     );
