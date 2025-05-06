@@ -1,9 +1,11 @@
 ## main
 
 ### ✨ Features and improvements
+
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+
 - _...Add new stuff here..._
 
 ## 5.5.0
