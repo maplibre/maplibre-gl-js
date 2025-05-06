@@ -2,6 +2,16 @@
 
 ### ✨ Features and improvements
 
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+
+- _...Add new stuff here..._
+
+## 5.5.0
+
+### ✨ Features and improvements
+
 - Add additional hillshade methods ([#5768](https://github.com/maplibre/maplibre-gl-js/pull/5768))
 - Add `refreshTiles()` to the map public API ([#5806](https://github.com/maplibre/maplibre-gl-js/pull/5806))
 - Disable geolocate control button when permission is denied and `trackUserLocation` is off ([#5824](https://github.com/maplibre/maplibre-gl-js/pull/5824))
@@ -14,7 +24,6 @@
 - Fix tile expiry logic for raster and raster-dem tiles ([#5798](https://github.com/maplibre/maplibre-gl-js/pull/5798))
 - Fix opacityWhenCovered not working to hide the marker behind the globe if terrain is enabled. ([#5838](https://github.com/maplibre/maplibre-gl-js/pull/5838))
 - Fix transparent vector tiles sometimes showing geometry beyond tile borders when terrain is active ([#5746](https://github.com/maplibre/maplibre-gl-js/pull/5746))
-- _...Add new stuff here..._
 
 ## 5.4.0
 
