@@ -19,7 +19,7 @@ import type {Style} from '../style/style';
 import type {Dispatcher} from '../util/dispatcher';
 import type {IReadonlyTransform, ITransform} from '../geo/transform_interface';
 import type {TileState} from './tile';
-import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {ICanonicalTileID, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapSourceDataEvent} from '../ui/events';
 import type {Terrain} from '../render/terrain';
 import type {CanvasSourceSpecification} from './canvas_source';
@@ -891,6 +891,20 @@ export class SourceCache extends Evented {
                 this._reloadTile(id, 'expired');
                 delete this._timers[id];
             }, expiryTimeout);
+        }
+    }
+
+    /**
+     * Reload any currently renderable tiles that are match one of the incoming `tileId` x/y/z
+     */
+    refreshTiles(tileIds: Array<ICanonicalTileID>) {
+        for (const id in this._tiles) {
+            if (!this._isIdRenderable(id)) {
+                continue;
+            }
+            if (tileIds.some(tid => tid.equals(this._tiles[id].tileID.canonical))) {
+                this._reloadTile(id, 'expired');
+            }
         }
     }
 
