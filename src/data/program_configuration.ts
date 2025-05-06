@@ -160,13 +160,13 @@ class CrossFadedConstantBinder implements UniformBinder {
             uniform.set(this.patternTo);
         } else if (uniformName === 'u_pattern_from' && this.patternFrom) {
             uniform.set(this.patternFrom);
-        } else if (uniformName === 'u_pixel_ratio_to') {
+        } else if (uniformName === 'u_pixel_ratio_to' && this.pixelRatioTo) {
             uniform.set(this.pixelRatioTo);
-        } else if (uniformName === 'u_pixel_ratio_from') {
+        } else if (uniformName === 'u_pixel_ratio_from' && this.pixelRatioFrom) {
             uniform.set(this.pixelRatioFrom);
-        } else if (uniformName === 'u_tex_from') {
+        } else if (uniformName === 'u_tex_from' && this.dashFrom) {
             uniform.set(this.dashFrom);
-        } else if (uniformName === 'u_tex_to') {
+        } else if (uniformName === 'u_tex_to' && this.dashFrom) {
             uniform.set(this.dashTo);
         }
     }
