@@ -171,7 +171,7 @@
         "test-build-ci": "vitest run --config vitest.config.build.ts --coverage",
         "test-watch-roots": "vitest --config vitest.config.unit.ts --watch",
         "test-render": "node --no-warnings --loader ts-node/esm test/integration/render/run_render_tests.ts",
-        "codegen": "cd /home/runner/work && git clone https://github.com/lucaswoj/maplibre-style-spec.git && cd maplibre-style-spec && npm install && npm run build && cd /home/runner/work/maplibre-gl-js/maplibre-gl-js && npm link ../maplibre-style-spec && run-p --print-label generate-dist-package generate-style-code generate-struct-arrays generate-shaders && npm run generate-typings",
+        "codegen": "cd .. && git clone https://github.com/lucaswoj/maplibre-style-spec.git && cd maplibre-style-spec && npm install && npm run build && cd ../maplibre-gl-js && npm link ../maplibre-style-spec && run-p --print-label generate-dist-package generate-style-code generate-struct-arrays generate-shaders && npm run generate-typings",
         "benchmark": "node --no-warnings --loader ts-node/esm test/bench/run-benchmarks.ts",
         "gl-stats": "node --no-warnings --loader ts-node/esm test/bench/gl-stats.ts",
         "prepare": "npm run codegen",
