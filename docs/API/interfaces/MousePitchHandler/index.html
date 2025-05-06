@@ -3062,15 +3062,6 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#extends" class="md-nav__link">
-    <span class="md-ellipsis">
-      Extends
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#methods" class="md-nav__link">
     <span class="md-ellipsis">
       Methods
@@ -7901,6 +7892,52 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../examples/hillshade-multidirectional/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a multidirectional hillshade layer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/hillshade-simple/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a hillshade layer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../examples/hover-styles/" class="md-nav__link">
         
   
@@ -9197,15 +9234,6 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#extends" class="md-nav__link">
-    <span class="md-ellipsis">
-      Extends
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#methods" class="md-nav__link">
     <span class="md-ellipsis">
       Methods
@@ -9282,18 +9310,14 @@
 
 
 <h1 id="mousepitchhandler">MousePitchHandler</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6ed25c0698c4987af5e538412ad9c665d9e2126d/src/ui/handler/mouse.ts#L19">src/ui/handler/mouse.ts:19</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/ui/handler/mouse.ts#L19">src/ui/handler/mouse.ts:19</a></p>
 <p><code>MousePitchHandler</code> allows the user to zoom the map by pitching</p>
-<h2 id="extends">Extends</h2>
-<ul>
-<li><code>DragMoveHandler</code>&lt;<code>DragPitchResult</code>, <code>MouseEvent</code>&gt;</li>
-</ul>
 <h2 id="methods">Methods</h2>
 <h3 id="isactive">isActive()</h3>
 <blockquote>
 <p><strong>isActive</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6ed25c0698c4987af5e538412ad9c665d9e2126d/src/ui/handler_manager.ts#L49">src/ui/handler_manager.ts:49</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/ui/handler_manager.ts#L49">src/ui/handler_manager.ts:49</a></p>
 <p>This is used to indicate if the handler is currently active or not.
 In case a handler is active, it will block other handlers from getting the relevant events.
 There is an allow list of handlers that can be active at the same time, which is configured when adding a handler.</p>
@@ -9306,7 +9330,7 @@ There is an allow list of handlers that can be active at the same time, which is
 <blockquote>
 <p><strong>reset</strong>(): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6ed25c0698c4987af5e538412ad9c665d9e2126d/src/ui/handler_manager.ts#L53">src/ui/handler_manager.ts:53</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/ui/handler_manager.ts#L53">src/ui/handler_manager.ts:53</a></p>
 <p><code>reset</code> can be called by the manager at any time and must reset everything to it's original state</p>
 <h4 id="returns_1">Returns</h4>
 <p><code>void</code></p>
@@ -9317,7 +9341,7 @@ There is an allow list of handlers that can be active at the same time, which is
 <blockquote>
 <p><code>readonly</code> <code>optional</code> <strong>renderFrame</strong>: () =&gt; <code>void</code> | <a href="../../type-aliases/HandlerResult/"><code>HandlerResult</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6ed25c0698c4987af5e538412ad9c665d9e2126d/src/ui/handler_manager.ts#L75">src/ui/handler_manager.ts:75</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/ui/handler_manager.ts#L75">src/ui/handler_manager.ts:75</a></p>
 <p><code>renderFrame</code> is the only non-dom event. It is called during render
 frames and can be used to smooth camera changes (see scroll handler).</p>
 <h4 id="returns_2">Returns</h4>

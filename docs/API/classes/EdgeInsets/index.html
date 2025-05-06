@@ -7928,6 +7928,52 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../examples/hillshade-multidirectional/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a multidirectional hillshade layer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/hillshade-simple/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a hillshade layer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../examples/hover-styles/" class="md-nav__link">
         
   
@@ -9336,7 +9382,7 @@
 
 
 <h1 id="edgeinsets">EdgeInsets</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6ed25c0698c4987af5e538412ad9c665d9e2126d/src/geo/edge_insets.ts#L12">src/geo/edge_insets.ts:12</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/geo/edge_insets.ts#L12">src/geo/edge_insets.ts:12</a></p>
 <p>An <code>EdgeInset</code> object represents screen space padding applied to the edges of the viewport.
 This shifts the apparent center or the vanishing point of the map. This is useful for adding floating UI elements
 on top of the map and having the vanishing point shift as UI elements resize.</p>
@@ -9345,7 +9391,7 @@ on top of the map and having the vanishing point shift as UI elements resize.</p
 <blockquote>
 <p><strong>getCenter</strong>(<code>width</code>: <code>number</code>, <code>height</code>: <code>number</code>): <code>Point</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6ed25c0698c4987af5e538412ad9c665d9e2126d/src/geo/edge_insets.ts#L70">src/geo/edge_insets.ts:70</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/geo/edge_insets.ts#L70">src/geo/edge_insets.ts:70</a></p>
 <p>Utility method that computes the new apprent center or vanishing point after applying insets.
 This is in pixels and with the top left being (0.0) and +y being downwards.</p>
 <h4 id="parameters">Parameters</h4>
@@ -9378,7 +9424,7 @@ This is in pixels and with the top left being (0.0) and +y being downwards.</p>
 <blockquote>
 <p><strong>interpolate</strong>(<code>start</code>: <code>EdgeInsets</code> | <a href="../../type-aliases/PaddingOptions/"><code>PaddingOptions</code></a>, <code>target</code>: <a href="../../type-aliases/PaddingOptions/"><code>PaddingOptions</code></a>, <code>t</code>: <code>number</code>): <code>EdgeInsets</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6ed25c0698c4987af5e538412ad9c665d9e2126d/src/geo/edge_insets.ts#L53">src/geo/edge_insets.ts:53</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/geo/edge_insets.ts#L53">src/geo/edge_insets.ts:53</a></p>
 <p>Interpolates the inset in-place.
 This maintains the current inset value for any inset not present in <code>target</code>.</p>
 <h4 id="parameters_1">Parameters</h4>
@@ -9416,7 +9462,7 @@ This maintains the current inset value for any inset not present in <code>target
 <blockquote>
 <p><strong>toJSON</strong>(): <a href="../../type-aliases/Complete/"><code>Complete</code></a>&lt;<a href="../../type-aliases/PaddingOptions/"><code>PaddingOptions</code></a>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6ed25c0698c4987af5e538412ad9c665d9e2126d/src/geo/edge_insets.ts#L95">src/geo/edge_insets.ts:95</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/geo/edge_insets.ts#L95">src/geo/edge_insets.ts:95</a></p>
 <p>Returns the current state as json, useful when you want to have a
 read-only representation of the inset.</p>
 <h4 id="returns_2">Returns</h4>
@@ -9427,7 +9473,7 @@ read-only representation of the inset.</p>
 <blockquote>
 <p><strong>bottom</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6ed25c0698c4987af5e538412ad9c665d9e2126d/src/geo/edge_insets.ts#L20">src/geo/edge_insets.ts:20</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/geo/edge_insets.ts#L20">src/geo/edge_insets.ts:20</a></p>
 <h4 id="default-value">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="mf">0</span>
 </span></code></pre></div>
@@ -9436,7 +9482,7 @@ read-only representation of the inset.</p>
 <blockquote>
 <p><strong>left</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6ed25c0698c4987af5e538412ad9c665d9e2126d/src/geo/edge_insets.ts#L24">src/geo/edge_insets.ts:24</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/geo/edge_insets.ts#L24">src/geo/edge_insets.ts:24</a></p>
 <h4 id="default-value_1">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="mf">0</span>
 </span></code></pre></div>
@@ -9445,7 +9491,7 @@ read-only representation of the inset.</p>
 <blockquote>
 <p><strong>right</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6ed25c0698c4987af5e538412ad9c665d9e2126d/src/geo/edge_insets.ts#L28">src/geo/edge_insets.ts:28</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/geo/edge_insets.ts#L28">src/geo/edge_insets.ts:28</a></p>
 <h4 id="default-value_2">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="mf">0</span>
 </span></code></pre></div>
@@ -9454,7 +9500,7 @@ read-only representation of the inset.</p>
 <blockquote>
 <p><strong>top</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6ed25c0698c4987af5e538412ad9c665d9e2126d/src/geo/edge_insets.ts#L16">src/geo/edge_insets.ts:16</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/geo/edge_insets.ts#L16">src/geo/edge_insets.ts:16</a></p>
 <h4 id="default-value_3">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="mf">0</span>
 </span></code></pre></div>

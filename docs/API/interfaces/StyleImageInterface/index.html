@@ -7895,6 +7895,52 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../examples/hillshade-multidirectional/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a multidirectional hillshade layer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/hillshade-simple/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a hillshade layer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../examples/hover-styles/" class="md-nav__link">
         
   
@@ -9270,7 +9316,7 @@
 
 
 <h1 id="styleimageinterface">StyleImageInterface</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6ed25c0698c4987af5e538412ad9c665d9e2126d/src/style/style_image.ts#L148">src/style/style_image.ts:148</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/style/style_image.ts#L148">src/style/style_image.ts:148</a></p>
 <p>Interface for dynamically generated style images. This is a specification for
 implementers to model: it is not an exported method or class.</p>
 <p>Images implementing this interface can be redrawn for every frame. They can be used to animate
@@ -9324,7 +9370,7 @@ can be used to update the image.</p>
 <blockquote>
 <p><code>optional</code> <strong>onAdd</strong>: (<code>map</code>: <a href="../../classes/Map/"><code>Map</code></a>, <code>id</code>: <code>string</code>) =&gt; <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6ed25c0698c4987af5e538412ad9c665d9e2126d/src/style/style_image.ts#L170">src/style/style_image.ts:170</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/style/style_image.ts#L170">src/style/style_image.ts:170</a></p>
 <p>Optional method called when the layer has been added to the Map with <a href="../../classes/Map/#addimage">Map#addImage</a>.</p>
 <h4 id="parameters">Parameters</h4>
 <table>
@@ -9355,7 +9401,7 @@ can be used to update the image.</p>
 <blockquote>
 <p><code>optional</code> <strong>onRemove</strong>: () =&gt; <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6ed25c0698c4987af5e538412ad9c665d9e2126d/src/style/style_image.ts#L175">src/style/style_image.ts:175</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/style/style_image.ts#L175">src/style/style_image.ts:175</a></p>
 <p>Optional method called when the icon is removed from the map with <a href="../../classes/Map/#removeimage">Map#removeImage</a>.
 This gives the image a chance to clean up resources and event listeners.</p>
 <h4 id="returns_1">Returns</h4>
@@ -9365,7 +9411,7 @@ This gives the image a chance to clean up resources and event listeners.</p>
 <blockquote>
 <p><code>optional</code> <strong>render</strong>: () =&gt; <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6ed25c0698c4987af5e538412ad9c665d9e2126d/src/style/style_image.ts#L164">src/style/style_image.ts:164</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/style/style_image.ts#L164">src/style/style_image.ts:164</a></p>
 <p>This method is called once before every frame where the icon will be used.
 The method can optionally update the image's <code>data</code> member with a new image.</p>
 <p>If the method updates the image it must return <code>true</code> to commit the change.
