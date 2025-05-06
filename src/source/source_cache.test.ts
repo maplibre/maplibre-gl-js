@@ -1526,7 +1526,7 @@ describe('SourceCache#tilesIn', () => {
         sourceCache.update(transform);
     });
 
-    test('globe wrap', () => async () => {
+    test('globe wrap', async () => {
         const transform = new GlobeTransform();
         transform.resize(512, 512);
         transform.setZoom(1.05);
@@ -1537,7 +1537,9 @@ describe('SourceCache#tilesIn', () => {
             tile.state = 'loaded';
         };
 
-        await waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
+        const dataPromise = waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
+        sourceCache.onAdd(undefined);
+        await dataPromise;
 
         sourceCache.update(transform);
 
@@ -1577,7 +1579,7 @@ describe('SourceCache#tilesIn', () => {
             .toEqual([new OverscaledTileID(1, 0, 1, 0, 1).key]);
     });
 
-    test('mercator wrap', () => async () => {
+    test('mercator wrap', async () => {
         const transform = new MercatorTransform();
         transform.resize(512, 512);
         transform.setZoom(1.05);
@@ -1588,7 +1590,9 @@ describe('SourceCache#tilesIn', () => {
             tile.state = 'loaded';
         };
 
-        await waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
+        const dataPromise = waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
+        sourceCache.onAdd(undefined);
+        await dataPromise;
 
         sourceCache.update(transform);
 
