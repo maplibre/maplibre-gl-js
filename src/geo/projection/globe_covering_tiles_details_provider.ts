@@ -153,20 +153,32 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             // Now we compute the actual OBB
             const center = projectTileCoordinatesToSphere(EXTENT / 2, EXTENT / 2, tileID.x, tileID.y, tileID.z);
 
-            // Handle north pole
+            const obbExtremes = [...corners];
+            obbExtremes.push(center); // We want to include the tile center point in the OBB calculation
+
+            // Handle poles - include them into the point set, if they are present
             if (tileID.y === 0) {
-                corners.push([0, 1, 0]);
+                // North pole
+                obbExtremes.push([0, 1, 0]);
+            } else if (tileID.y >= (1 << tileID.z) / 2) {
+                // South hemisphere - include the tile's north edge midpoint
+                obbExtremes.push(projectTileCoordinatesToSphere(EXTENT / 2, 0, tileID.x, tileID.y, tileID.z));
             }
-            // Handle south pole
             if (tileID.y === (1 << tileID.z) - 1) {
-                corners.push([0, -1, 0]);
+                // South pole
+                obbExtremes.push([0, -1, 0]);
+            } else if (tileID.y < (1 << tileID.z) / 2) {
+                // North hemisphere - include the tile's south edge midpoint
+                obbExtremes.push(projectTileCoordinatesToSphere(EXTENT / 2, EXTENT, tileID.x, tileID.y, tileID.z));
             }
 
             // vector "center" (from planet center to tile center) will be our first axis
             // vector to the east will be our second axis
-            const east = [center[2], 0, -center[1]] as vec3; // same as cross([0, 1, 0], center)
+            const east = vec3.cross([] as any, [0, 1, 0], center);
+            vec3.normalize(east, east);
             // vector north will be our third axis
             const north = vec3.cross([] as any, center, east);
+            vec3.normalize(north, north);
 
             const axes = [
                 center,
@@ -182,7 +194,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
                 let min = +Infinity;
                 let max = -Infinity;
                 const axis = axes[axisId];
-                for (const c of corners) {
+                for (const c of obbExtremes) {
                     const dot = vec3.dot(axis, c);
                     min = Math.min(min, dot);
                     max = Math.max(max, dot);

@@ -7,7 +7,9 @@ export class OrientedBoundingBox implements IBoundingVolume {
     axisY: vec3;
     axisZ: vec3;
     center: vec3;
-    // Precompute AABB for rejecting some frustum intersection.
+    // Precomputed AABB for rejecting frustum intersection.
+    // This AABB does not need to bound this oriented bounding box (it may be smaller),
+    // but it *must* accurately bound the actual shape this OBB is approximating.
     min: vec3;
     max: vec3;
 
@@ -24,7 +26,7 @@ export class OrientedBoundingBox implements IBoundingVolume {
     }
 
     /**
-     * Performs a frustum-aabb intersection test.
+     * Performs a frustum-obb intersection test.
      */
     intersectsFrustum(frustum: Frustum): IntersectionResult {
         // Execute separating axis test between two convex objects to find intersections
@@ -46,6 +48,7 @@ export class OrientedBoundingBox implements IBoundingVolume {
             return IntersectionResult.Full;
         }
 
+        // Frustum rejection using an AABB.
         if (frustum.aabb.min[0] > this.max[0] || frustum.aabb.min[1] > this.max[1] || frustum.aabb.min[2] > this.max[2] ||
             frustum.aabb.max[0] < this.min[0] || frustum.aabb.max[1] < this.min[1] || frustum.aabb.max[2] < this.min[2]) {
             return IntersectionResult.None;
@@ -55,7 +58,7 @@ export class OrientedBoundingBox implements IBoundingVolume {
     }
 
     /**
-     * Performs a halfspace-aabb intersection test.
+     * Performs a halfspace-obb intersection test.
      */
     intersectsPlane(plane: vec4): IntersectionResult {
         const dotX = this.axisX[0] * plane[0] + this.axisX[1] * plane[1] + this.axisX[2] * plane[2];
