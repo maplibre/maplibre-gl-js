@@ -150,12 +150,51 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
                 }
             }
 
-            // Now we compute the actual OBB
+            // Now we compute the actual OBB.
+            // We will first determine the 3 orthogonal axes of our OBB,
+            // then we will find the min and max extents of the box using a set of points
+            // where the extremes are likely to lie.
+
+            // Vector "center" (from planet center to tile center) will be our first axis.
             const center = projectTileCoordinatesToSphere(EXTENT / 2, EXTENT / 2, tileID.x, tileID.y, tileID.z);
+            // Vector to the east of "center" will be our second axis.
+            const east = vec3.cross([] as any, [0, 1, 0], center);
+            vec3.normalize(east, east);
+            // Vector to the north of "center" will be our third axis.
+            const north = vec3.cross([] as any, center, east);
+            vec3.normalize(north, north);
 
+            const axes = [
+                center,
+                east,
+                north
+            ];
+
+            // Now we will gather the extremes point set.
+            // we will include all 4 corners of the tile.
             const obbExtremes = [...corners];
-            obbExtremes.push(center); // We want to include the tile center point in the OBB calculation
+            // We will also include the tile center point, since it will always be an extreme for the "center" axis.
+            obbExtremes.push(center);
 
+            // The extremes might also lie on the midpoint of the north or south edge.
+            // For tiles in the north hemisphere, only the south edge can contain an extreme,
+            // since when we imagine the tile's actual shape projected onto the plane normal to "center" vector,
+            // the tile's north edge will curve towards the tile center, thus its extremes are accounted for by the
+            // corners, however the south edge will curve away from the center point, extending beyond the tile's edges,
+            // thus it must be included.
+            // The poles are an exception - they must always be included in the extremes, if the tile touches the north/south mercator range edge.
+            //
+            // A tile's exaggerated shape on the northern hemisphere, projected onto the normal plane of "center". The "c" is the tile's center point.
+            //
+            //      /--       --\
+            //     /   -------   \
+            //    /               \
+            //   /        c        \
+            //  /                   \
+            // /--                 --\
+            //    -----       -----
+            //         -------
+            
             // Handle poles - include them into the point set, if they are present
             if (tileID.y === 0) {
                 // North pole
@@ -172,24 +211,11 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
                 obbExtremes.push(projectTileCoordinatesToSphere(EXTENT / 2, EXTENT, tileID.x, tileID.y, tileID.z));
             }
 
-            // vector "center" (from planet center to tile center) will be our first axis
-            // vector to the east will be our second axis
-            const east = vec3.cross([] as any, [0, 1, 0], center);
-            vec3.normalize(east, east);
-            // vector north will be our third axis
-            const north = vec3.cross([] as any, center, east);
-            vec3.normalize(north, north);
-
-            const axes = [
-                center,
-                east,
-                north
-            ];
-
+            // Find the min and max extends and the midpoints along each axis,
+            // using the set of extreme points.
             const axisMin = [];
             const axisMax = [];
             const axisMid = [];
-
             for (let axisId = 0; axisId < 3; axisId++) {
                 let min = +Infinity;
                 let max = -Infinity;
@@ -205,16 +231,19 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             }
 
             const obb = new OrientedBoundingBox();
-            obb.min = aabbMin;
-            obb.max = aabbMax;
+            // Compute and assign the OBB's center using the mid points along each axis.
             obb.center = [
                 axes[0][0] * axisMid[0] + axes[1][0] * axisMid[1] + axes[2][0] * axisMid[2],
                 axes[0][1] * axisMid[0] + axes[1][1] * axisMid[1] + axes[2][1] * axisMid[2],
                 axes[0][2] * axisMid[0] + axes[1][2] * axisMid[1] + axes[2][2] * axisMid[2]
             ];
+            // Assign all axes, scaled by the half-size of the OBB in each axis.
             obb.axisX = vec3.scale([] as any, axes[0], axisMax[0] - axisMid[0]);
             obb.axisY = vec3.scale([] as any, axes[1], axisMax[1] - axisMid[1]);
             obb.axisZ = vec3.scale([] as any, axes[2], axisMax[2] - axisMid[2]);
+            // Assign the best-fit AABB.
+            obb.min = aabbMin;
+            obb.max = aabbMax;
 
             return obb;
         }
