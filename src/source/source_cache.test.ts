@@ -1579,6 +1579,103 @@ describe('SourceCache#tilesIn', () => {
             .toEqual([new OverscaledTileID(1, 0, 1, 0, 1).key]);
     });
 
+    test('globe wrap bounding box spanning antimeridian', async () => {
+        const transform = new GlobeTransform();
+        transform.resize(512, 512);
+        transform.setZoom(1.05);
+        transform.setCenter(new LngLat(179.9, 0.1));
+
+        const sourceCache = createSourceCache();
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+
+        const dataPromise = waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
+        sourceCache.onAdd(undefined);
+        await dataPromise;
+
+        sourceCache.update(transform);
+
+        expect(sourceCache.tilesIn([
+            new Point(200, 200),
+            new Point(300, 200),
+            new Point(300, 300),
+            new Point(200, 300),
+            new Point(200, 200),
+        ], 1, false).map(tile => [tile.tileID.key, tile.queryGeometry.map(p => p.round())]))
+            .toEqual([
+                [new OverscaledTileID(1, 0, 1, 0, 1).key, [
+                    new Point(-973, -931),
+                    new Point(745, -925),
+                    new Point(721, 703),
+                    new Point(-941, 707),
+                    new Point(-973, -931),
+                ]],
+                [new OverscaledTileID(1, 0, 1, 0, 0).key, [
+                    new Point(-973, 7261),
+                    new Point(745, 7267),
+                    new Point(721, 8895),
+                    new Point(-941, 8899),
+                    new Point(-973, 7261),
+                ]],
+                [new OverscaledTileID(1, 0, 1, 1, 1).key, [
+                    new Point(7219, -931),
+                    new Point(8937, -925),
+                    new Point(8913, 703),
+                    new Point(7251, 707),
+                    new Point(7219, -931),
+                ]],
+                [new OverscaledTileID(1, 0, 1, 1, 0).key, [
+                    new Point(7219, 7261),
+                    new Point(8937, 7267),
+                    new Point(8913, 8895),
+                    new Point(7251, 8899),
+                    new Point(7219, 7261),
+                ]]
+            ]);
+
+        transform.setCenter(new LngLat(-179.9, 0.1));
+        sourceCache.update(transform);
+
+        expect(sourceCache.tilesIn([
+            new Point(200, 200),
+            new Point(300, 200),
+            new Point(300, 300),
+            new Point(200, 300),
+            new Point(200, 200),
+        ], 1, false).map(tile => [tile.tileID.key, tile.queryGeometry.map(p => p.round())]))
+            .toEqual([
+                [new OverscaledTileID(1, 0, 1, 1, 1).key, [
+                    new Point(7228, -931),
+                    new Point(8946, -925),
+                    new Point(8922, 703),
+                    new Point(7260, 707),
+                    new Point(7228, -931),
+                ]],
+                [new OverscaledTileID(1, 0, 1, 1, 0).key, [
+                    new Point(7228, 7261),
+                    new Point(8946, 7267),
+                    new Point(8922, 8895),
+                    new Point(7260, 8899),
+                    new Point(7228, 7261),
+                ]],
+                [new OverscaledTileID(1, 0, 1, 0, 1).key, [
+                    new Point(-964, -931),
+                    new Point(754, -925),
+                    new Point(730, 703),
+                    new Point(-932, 707),
+                    new Point(-964, -931),
+                ]],
+                [new OverscaledTileID(1, 0, 1, 0, 0).key, [
+                    new Point(-964, 7261),
+                    new Point(754, 7267),
+                    new Point(730, 8895),
+                    new Point(-932, 8899),
+                    new Point(-964, 7261),
+                ]]
+            ]);
+    });
+
     test('mercator wrap', async () => {
         const transform = new MercatorTransform();
         transform.resize(512, 512);
@@ -1630,6 +1727,103 @@ describe('SourceCache#tilesIn', () => {
             .toEqual([new OverscaledTileID(1, -1, 1, 1, 1).key]);
         expect(sourceCache.tilesIn([new Point(300, 300),], 1, false).map(tile => tile.tileID.key))
             .toEqual([new OverscaledTileID(1, 0, 1, 0, 1).key]);
+    });
+
+    test('mercator wrap bounding box spanning antimeridian', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+        transform.setZoom(1.05);
+        transform.setCenter(new LngLat(179.9, 0.1));
+
+        const sourceCache = createSourceCache();
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+
+        const dataPromise = waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
+        sourceCache.onAdd(undefined);
+        await dataPromise;
+
+        sourceCache.update(transform);
+
+        expect(sourceCache.tilesIn([
+            new Point(200, 200),
+            new Point(300, 200),
+            new Point(300, 300),
+            new Point(200, 300),
+            new Point(200, 200),
+        ], 1, false).map(tile => [tile.tileID.key, tile.queryGeometry.map(p => p.round())]))
+            .toEqual([
+                [new OverscaledTileID(1, 1, 1, 0, 1).key, [
+                    new Point(-870, -870),
+                    new Point(675, -870),
+                    new Point(675, 675),
+                    new Point(-870, 675),
+                    new Point(-870, -870),
+                ]],
+                [new OverscaledTileID(1, 1, 1, 0, 0).key, [
+                    new Point(-870, 7322),
+                    new Point(675, 7322),
+                    new Point(675, 8867),
+                    new Point(-870, 8867),
+                    new Point(-870, 7322),
+                ]],
+                [new OverscaledTileID(1, 0, 1, 1, 1).key, [
+                    new Point(7322, -870),
+                    new Point(8867, -870),
+                    new Point(8867, 675),
+                    new Point(7322, 675),
+                    new Point(7322, -870),
+                ]],
+                [new OverscaledTileID(1, 0, 1, 1, 0).key, [
+                    new Point(7322, 7322),
+                    new Point(8867, 7322),
+                    new Point(8867, 8867),
+                    new Point(7322, 8867),
+                    new Point(7322, 7322),
+                ]],
+            ]);
+
+        transform.setCenter(new LngLat(-179.9, 0.1));
+        sourceCache.update(transform);
+
+        expect(sourceCache.tilesIn([
+            new Point(200, 200),
+            new Point(300, 200),
+            new Point(300, 300),
+            new Point(200, 300),
+            new Point(200, 200),
+        ], 1, false).map(tile => [tile.tileID.key, tile.queryGeometry.map(p => p.round())]))
+            .toEqual([
+                [new OverscaledTileID(1, -1, 1, 1, 1).key, [
+                    new Point(7331, -870),
+                    new Point(8877, -870),
+                    new Point(8877, 675),
+                    new Point(7331, 675),
+                    new Point(7331, -870),
+                ]],
+                [new OverscaledTileID(1, -1, 1, 1, 0).key, [
+                    new Point(7331, 7322),
+                    new Point(8877, 7322),
+                    new Point(8877, 8867),
+                    new Point(7331, 8867),
+                    new Point(7331, 7322),
+                ]],
+                [new OverscaledTileID(1, 0, 1, 0, 1).key, [
+                    new Point(-861, -870),
+                    new Point(685, -870),
+                    new Point(685, 675),
+                    new Point(-861, 675),
+                    new Point(-861, -870),
+                ]],
+                [new OverscaledTileID(1, 0, 1, 0, 0).key, [
+                    new Point(-861, 7322),
+                    new Point(685, 7322),
+                    new Point(685, 8867),
+                    new Point(-861, 8867),
+                    new Point(-861, 7322),
+                ]],
+            ]);
     });
 });
 
