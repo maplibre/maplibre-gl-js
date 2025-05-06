@@ -72,8 +72,9 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
         const constantDasharray = dasharray && dasharray.constantOr(null);
         if (constantDasharray) {
             const atlas = painter.lineAtlas;
-            const dashTo = atlas.getDash(constantDasharray.to, false); // TODO set round argument
-            const dashFrom = atlas.getDash(constantDasharray.from, false); // TODO set round argument
+            const round = layer.layout.get('line-cap') === 'round';
+            const dashTo = atlas.getDash(constantDasharray.to, round);
+            const dashFrom = atlas.getDash(constantDasharray.from, round);
             programConfiguration.setConstantDasharray(dashTo, dashFrom);
         }
 
