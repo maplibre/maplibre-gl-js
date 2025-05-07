@@ -58,8 +58,8 @@
             "line-dasharray": [
               "case",
               ["==", ["get", "foo"], 0],
-              [1, 1],
-              [2, 2]
+              ["literal", [1, 1]],
+              ["literal", [2, 2]]
             ]
         }
     }
