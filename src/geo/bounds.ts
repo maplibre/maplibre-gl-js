@@ -1,8 +1,60 @@
 import Point from '@mapbox/point-geometry';
 import {type Point2D} from '@maplibre/maplibre-gl-style-spec';
 
+export interface ReadOnlyBounds {
+    readonly minX: number;
+    readonly maxX: number;
+    readonly minY: number;
+    readonly maxY: number;
+
+    /**
+     * Returns whether this bounding box contains a point
+     * 
+     * @param point - The point to check
+     * @returns True if this bounding box contains point, false otherwise.
+     */
+    contains(point: Point2D): boolean;
+
+    /**
+     * Returns true if this bounding box contains no points
+     * 
+     * @returns True if this bounding box contains no points.
+     */
+    empty(): boolean;
+
+    /**
+     * Returns the width of this bounding box.
+     * 
+     * @returns `maxX - minX`.
+     */
+    width(): number;
+
+    /**
+     * Returns the height of this bounding box.
+     * 
+     * @returns `maxY - minY`.
+     */
+    height(): number;
+
+    /**
+     * Returns true if this bounding box completely covers `other`.
+     * 
+     * @param other - The other bounding box
+     * @returns True if this bounding box completely encloses `other`
+     */
+    covers(other: ReadOnlyBounds): boolean;
+
+    /**
+     * Returns true if this bounding box touches any part of `other`.
+     * 
+     * @param other - The other bounding box
+     * @returns True if this bounding box touches any part of `other`.
+     */
+    intersects(other: ReadOnlyBounds): boolean;
+}
+
 /** A 2-d bounding box covering an X and Y range. */
-export class Bounds {
+export class Bounds implements ReadOnlyBounds {
     minX: number = Infinity;
     maxX: number = -Infinity;
     minY: number = Infinity;
@@ -44,54 +96,13 @@ export class Bounds {
     }
 
     /**
-     * Creates a new bounding box that includes all points provided.
+     * Shrinks this bounding box by a fixed amount in each direction.
      * 
-     * @param points - The points to include inside the bounding box
-     * @returns The new bounding box
+     * @param amount - The amount to shrink the box by
+     * @returns This mutated bounding box
      */
-    static fromPoints(points: Point2D[]): Bounds {
-        const result = new Bounds();
-        for (const p of points) {
-            result.extend(p);
-        }
-        return result;
-    }
-
-    /**
-     * Returns whether this bounding box contains a point
-     * 
-     * @param point - The point to check
-     * @returns True if this bounding box contains point, false otherwise.
-     */
-    contains(point: Point2D): boolean {
-        return point.x >= this.minX && point.x <= this.maxX && point.y >= this.minY && point.y <= this.maxY;
-    }
-
-    /**
-     * Returns true if this bounding box contains no points
-     * 
-     * @returns True if this bounding box contains no points.
-     */
-    empty(): boolean {
-        return this.minX > this.maxX;
-    }
-
-    /**
-     * Returns the width of this bounding box.
-     * 
-     * @returns `maxX - minX`.
-     */
-    width(): number {
-        return this.maxX - this.minX;
-    }
-
-    /**
-     * Returns the height of this bounding box.
-     * 
-     * @returns `maxY - minY`.
-     */
-    height(): number {
-        return this.maxY - this.minY;
+    shrinkBy(amount: number): this {
+        return this.expandBy(-amount);
     }
 
     /**
@@ -111,12 +122,36 @@ export class Bounds {
     }
 
     /**
-     * Returns true if this bounding box completely covers `other`.
+     * Creates a new bounding box that includes all points provided.
      * 
-     * @param other - The other bounding box
-     * @returns True if this bounding box completely encloses `other`
+     * @param points - The points to include inside the bounding box
+     * @returns The new bounding box
      */
-    covers(other: Bounds) {
+    static fromPoints(points: Point2D[]): Bounds {
+        const result = new Bounds();
+        for (const p of points) {
+            result.extend(p);
+        }
+        return result;
+    }
+
+    contains(point: Point2D): boolean {
+        return point.x >= this.minX && point.x <= this.maxX && point.y >= this.minY && point.y <= this.maxY;
+    }
+
+    empty(): boolean {
+        return this.minX > this.maxX;
+    }
+
+    width(): number {
+        return this.maxX - this.minX;
+    }
+
+    height(): number {
+        return this.maxY - this.minY;
+    }
+
+    covers(other: ReadOnlyBounds) {
         return !this.empty() && !other.empty() &&
             other.minX >= this.minX &&
             other.maxX <= this.maxX &&
@@ -124,13 +159,7 @@ export class Bounds {
             other.maxY <= this.maxY;
     }
 
-    /**
-     * Returns true if this bounding box touches any part of `other`.
-     * 
-     * @param other - The other bounding box
-     * @returns True if this bounding box touches any part of `other`.
-     */
-    intersects(other: Bounds) {
+    intersects(other: ReadOnlyBounds) {
         return !this.empty() && !other.empty() &&
             other.minX <= this.maxX &&
             other.maxX >= this.minX &&

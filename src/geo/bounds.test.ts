@@ -86,6 +86,20 @@ describe('Bounds', () => {
         });
     });
 
+    test('shrinkBy', () => {
+        const bounds = new Bounds();
+        bounds.extend(new Point(0, 0));
+        bounds.expandBy(2);
+        bounds.shrinkBy(1);
+        expect(bounds.empty()).toBeFalsy();
+        expect(bounds).toMatchObject({
+            minX: -1,
+            maxX: 1,
+            minY: -1,
+            maxY: 1,
+        });
+    });
+
     test('expandBy collapse', () => {
         const bounds = new Bounds();
         bounds.extend(new Point(0, 0));

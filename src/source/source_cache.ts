@@ -5,7 +5,7 @@ import {Event, ErrorEvent, Evented} from '../util/evented';
 import {TileCache} from './tile_cache';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {keysDifference} from '../util/util';
-import {EXTENT, EXTENT_BOUNDS} from '../data/extent';
+import {EXTENT} from '../data/extent';
 import {type Context} from '../gl/context';
 import Point from '@mapbox/point-geometry';
 import {browser} from '../util/browser';
@@ -25,6 +25,7 @@ import type {Terrain} from '../render/terrain';
 import type {CanvasSourceSpecification} from './canvas_source';
 import {coveringTiles, coveringZoomLevel} from '../geo/projection/covering_tiles';
 import {Bounds} from '../geo/bounds';
+import {EXTENT_BOUNDS} from '../data/extent_bounds';
 
 type TileResult = {
     tile: Tile;
@@ -1036,7 +1037,7 @@ export class SourceCache extends Evented {
             // instead of a bounding box going from 179°E to 179°W, it goes from 179°W to 179°E and covers the entire
             // planet except for what should be inside it.
             const bounds = Bounds.fromPoints(geom);
-            bounds.expandBy(-Math.min(bounds.width(), bounds.height()) * 0.001);
+            bounds.shrinkBy(Math.min(bounds.width(), bounds.height()) * 0.001);
             const projected = bounds.map(project);
 
             const newBounds = Bounds.fromPoints(transformed); 
