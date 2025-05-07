@@ -42,10 +42,10 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
     private _boundingVolumeCache: BoundingVolumeCache<OrientedBoundingBox> = new BoundingVolumeCache(this._computeTileOBB);
 
     /**
-     * Prepares the internal AABB cache for the next frame.
+     * Prepares the internal bounding volume cache for the next frame.
      */
-    recalculateCache() {
-        this._boundingVolumeCache.recalculateCache();
+    prepareNextFrame() {
+        this._boundingVolumeCache.prepareNextFrame();
     }
 
     /**
@@ -54,7 +54,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
      * Handles distances on a sphere correctly: X is wrapped when crossing the antimeridian,
      * when crossing the poles Y is mirrored and X is shifted by half world size.
      */
-    distanceToTile2d(pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, _aabb: OrientedBoundingBox): number {
+    distanceToTile2d(pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, _obb: OrientedBoundingBox): number {
         const scale = 1 << tileID.z;
         const tileMercatorSize = 1.0 / scale;
         const tileCornerX = tileID.x / scale; // In range 0..1
@@ -184,7 +184,8 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             // thus it must be included.
             // The poles are an exception - they must always be included in the extremes, if the tile touches the north/south mercator range edge.
             //
-            // A tile's exaggerated shape on the northern hemisphere, projected onto the normal plane of "center". The "c" is the tile's center point.
+            // A tile's exaggerated shape on the northern hemisphere, projected onto the normal plane of "center".
+            // The "c" is the tile's center point. The "m" is the edge mid point we are looking for.
             //
             //      /--       --\
             //     /   -------   \
@@ -193,7 +194,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             //  /                   \
             // /--                 --\
             //    -----       -----
-            //         -------
+            //         ---m---
             
             // Handle poles - include them into the point set, if they are present
             if (tileID.y === 0) {

@@ -9,7 +9,7 @@ export interface CoveringTilesDetailsProvider {
      * @param pointX - point x.
      * @param pointY - point y.
      * @param tileID - Tile x, y and z for zoom.
-     * @param aabb - tile AABB
+     * @param boundingVolume - tile bounding volume
      */
     distanceToTile2d: (pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, boundingVolume: IBoundingVolume) => number;
 
@@ -19,7 +19,7 @@ export interface CoveringTilesDetailsProvider {
     getWrap: (centerCoord: MercatorCoordinate, tileID: {x:number; y: number; z: number}, parentWrap: number) => number;
 
     /**
-     * Returns the AABB of the specified tile.
+     * Returns the bounding volume of the specified tile.
      * @param tileID - Tile x, y and z for zoom.
      * @param wrap - wrap number of the tile.
      * @param elevation - camera center point elevation.
@@ -40,25 +40,25 @@ export interface CoveringTilesDetailsProvider {
     /**
      * Prepare cache for the next frame.
      */
-    recalculateCache(): void;
+    prepareNextFrame(): void;
 }
 
 /**
  * A generic variant of the {@link CoveringTilesDetailsProvider} indended for use by actual implementations.
  * Provides additional type safety to functions working with the given type of bounding volume.
  */
-export interface CoveringTilesDetailsProviderImplementation<T extends IBoundingVolume> {
+export interface CoveringTilesDetailsProviderImplementation<T extends IBoundingVolume> extends CoveringTilesDetailsProvider {
     /**
      * Returns the distance from the point to the tile
      * @param pointX - point x.
      * @param pointY - point y.
      * @param tileID - Tile x, y and z for zoom.
-     * @param aabb - tile AABB
+     * @param boundingVolume - tile bounding volume
      */
     distanceToTile2d: (pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, boundingVolume: T) => number;
 
     /**
-     * Returns the AABB of the specified tile.
+     * Returns the bounding volume of the specified tile.
      * @param tileID - Tile x, y and z for zoom.
      * @param wrap - wrap number of the tile.
      * @param elevation - camera center point elevation.

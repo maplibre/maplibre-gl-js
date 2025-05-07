@@ -49,7 +49,7 @@ export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetail
         return true;
     }
 
-    recalculateCache(): void { 
+    prepareNextFrame(): void { 
         // Do nothing
     }
 }

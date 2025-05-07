@@ -15,12 +15,12 @@ export class BoundingVolumeCache<T extends IBoundingVolume> {
 
     /**
      * Prepares bounding volume cache for next frame. Call at the beginning of a frame.
-     * Any tile accesses in the last frame is kept in the cache, other tiles are deleted.
+     * Bounding volume of any tile accesses in the last frame is kept in the cache, other (unaccessed) bounding volumes are deleted.
      * @returns 
      */
-    recalculateCache() {
+    prepareNextFrame() {
         if (!this._hadAnyChanges) {
-            // If no new boxes were added this frame, no need to conserve memory, do not clear caches.
+            // If no new bounding volumes were added this frame, no need to conserve memory, do not clear caches.
             return;
         }
         const oldCache = this._cachePrevious;
@@ -35,7 +35,7 @@ export class BoundingVolumeCache<T extends IBoundingVolume> {
      * @param tileID - Tile x, y and z for zoom.
      */
     getTileBoundingVolume(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions): T {
-        const key = `${tileID.z}_${tileID.x}_${tileID.y}`;
+        const key = `${tileID.z}_${tileID.x}_${tileID.y}_${options.terrain ? 't' : ''}`;
         const cached = this._cache.get(key);
         if (cached) {
             return cached;
