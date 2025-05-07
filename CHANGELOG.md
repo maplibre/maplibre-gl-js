@@ -5,7 +5,6 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-
 - Fix handling invalid glyph placement results along lines ([#5118](https://github.com/maplibre/maplibre-gl-js/pull/5118))
 - _...Add new stuff here..._
 
