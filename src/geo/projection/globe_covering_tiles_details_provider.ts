@@ -7,6 +7,8 @@ import type {IReadonlyTransform} from '../transform_interface';
 import type {MercatorCoordinate} from '../mercator_coordinate';
 import type {CoveringTilesDetailsProviderImplementation} from './covering_tiles_details_provider';
 import {OrientedBoundingBox} from '../../util/primitives/oriented_bounding_box';
+import {OverscaledTileID} from '../../source/tile_id';
+import {earthRadius} from '../lng_lat';
 
 /**
  * Computes distance of a point to a tile in an arbitrary axis.
@@ -105,12 +107,26 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
         return this._boundingVolumeCache.getTileBoundingVolume(tileID, wrap, elevation, options);
     }
 
-    private _computeTileOBB(tileID: {x: number; y: number; z: number}, _wrap: number, _elevation: number, _options: CoveringTilesOptions): OrientedBoundingBox {
+    private _computeTileOBB(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions): OrientedBoundingBox {
+        let minElevation = elevation;
+        let maxElevation = elevation;
+        if (options.terrain) {
+            const overscaledTileID = new OverscaledTileID(tileID.z, wrap, tileID.z, tileID.x, tileID.y);
+            const minMax = options.terrain.getMinMaxElevation(overscaledTileID);
+            minElevation = minMax.minElevation ?? elevation;
+            maxElevation = minMax.maxElevation ?? elevation;
+        }
+        // Convert elevation to distances from center of a unit sphere planet (so that 1 is surface)
+        minElevation /= earthRadius;
+        maxElevation /= earthRadius;
+        minElevation += 1;
+        maxElevation += 1;
+
         if (tileID.z <= 0) {
             // Tile covers the entire sphere.
             return OrientedBoundingBox.fromAabb( // We return an AABB in this case.
-                [-1, -1, -1],
-                [1, 1, 1]
+                [-maxElevation, -maxElevation, -maxElevation],
+                [maxElevation, maxElevation, maxElevation]
             );
         } else if (tileID.z === 1) {
             // Tile covers a quarter of the sphere.
@@ -118,8 +134,8 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             // Y is 1 at **north** pole
             // Z is 1 at null island
             return OrientedBoundingBox.fromAabb( // We also just use AABBs for this zoom level.
-                [tileID.x === 0 ? -1 : 0, tileID.y === 0 ? 0 : -1, -1],
-                [tileID.x === 0 ? 0 : 1, tileID.y === 0 ? 1 : 0, 1]
+                [tileID.x === 0 ? -maxElevation : 0, tileID.y === 0 ? 0 : -maxElevation, -maxElevation],
+                [tileID.x === 0 ? 0 : maxElevation, tileID.y === 0 ? maxElevation : 0, maxElevation]
             );
         } else {
             const corners = [
@@ -129,11 +145,24 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
                 projectTileCoordinatesToSphere(0, EXTENT, tileID.x, tileID.y, tileID.z),
             ];
 
+            const extremesPoints = [];
+
+            for (const c of corners) {
+                extremesPoints.push(vec3.scale([] as any, c, maxElevation));
+            }
+
+            if (maxElevation !== minElevation) {
+                // Only add additional points if terrain is enabled and is not flat.
+                for (const c of corners) {
+                    extremesPoints.push(vec3.scale([] as any, c, minElevation));
+                }
+            }
+
             // First, compute a best-fit AABB for the frustum rejection test
             const aabbMin: vec3 = [1, 1, 1];
             const aabbMax: vec3 = [-1, -1, -1];
 
-            for (const c of corners) {
+            for (const c of extremesPoints) {
                 for (let i = 0; i < 3; i++) {
                     aabbMin[i] = Math.min(aabbMin[i], c[i]);
                     aabbMax[i] = Math.max(aabbMax[i], c[i]);
@@ -152,7 +181,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
 
             // Now we compute the actual OBB.
             // We will first determine the 3 orthogonal axes of our OBB,
-            // then we will find the min and max extents of the box using a set of points
+            // then we will find the min and max extents of the box using the set of points
             // where the extremes are likely to lie.
 
             // Vector "center" (from planet center to tile center) will be our first axis.
@@ -170,11 +199,10 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
                 north
             ];
 
-            // Now we will gather the extremes point set.
-            // we will include all 4 corners of the tile.
-            const obbExtremes = [...corners];
+            // Now we will expand the extremes point set for OBB creation.
             // We will also include the tile center point, since it will always be an extreme for the "center" axis.
-            obbExtremes.push(center);
+            extremesPoints.push(vec3.scale([] as any, center, maxElevation));
+            // No need to include a minElevation-scaled center, since we already have minElevation corners in the set and these will always lie lower than the center.
 
             // The extremes might also lie on the midpoint of the north or south edge.
             // For tiles in the north hemisphere, only the south edge can contain an extreme,
@@ -199,17 +227,19 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             // Handle poles - include them into the point set, if they are present
             if (tileID.y === 0) {
                 // North pole
-                obbExtremes.push([0, 1, 0]);
+                extremesPoints.push([0, 1, 0]);
             } else if (tileID.y >= (1 << tileID.z) / 2) {
                 // South hemisphere - include the tile's north edge midpoint
-                obbExtremes.push(projectTileCoordinatesToSphere(EXTENT / 2, 0, tileID.x, tileID.y, tileID.z));
+                extremesPoints.push(vec3.scale([] as any, projectTileCoordinatesToSphere(EXTENT / 2, 0, tileID.x, tileID.y, tileID.z), maxElevation));
+                // No need to include minElevation variant of this point, for the same reason why we don't include minElevation center.
             }
             if (tileID.y === (1 << tileID.z) - 1) {
                 // South pole
-                obbExtremes.push([0, -1, 0]);
+                extremesPoints.push([0, -1, 0]);
             } else if (tileID.y < (1 << tileID.z) / 2) {
                 // North hemisphere - include the tile's south edge midpoint
-                obbExtremes.push(projectTileCoordinatesToSphere(EXTENT / 2, EXTENT, tileID.x, tileID.y, tileID.z));
+                extremesPoints.push(vec3.scale([] as any, projectTileCoordinatesToSphere(EXTENT / 2, EXTENT, tileID.x, tileID.y, tileID.z), maxElevation));
+                // No need to include minElevation variant of this point, for the same reason why we don't include minElevation center.
             }
 
             // Find the min and max extends and the midpoints along each axis,
@@ -221,7 +251,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
                 let min = +Infinity;
                 let max = -Infinity;
                 const axis = axes[axisId];
-                for (const c of obbExtremes) {
+                for (const c of extremesPoints) {
                     const dot = vec3.dot(axis, c);
                     min = Math.min(min, dot);
                     max = Math.max(max, dot);
