@@ -23,7 +23,7 @@ import type {StyleLayer} from '../style/style_layer';
 import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
-import Bounds from '../geo/bounds';
+import {Bounds} from '../geo/bounds';
 
 type QueryParameters = {
     scale: number;

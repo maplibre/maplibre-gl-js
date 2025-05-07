@@ -1579,7 +1579,7 @@ describe('SourceCache#tilesIn', () => {
             .toEqual([new OverscaledTileID(1, 0, 1, 0, 1).key]);
     });
 
-    test('globe wrap bounding box spanning antimeridian', async () => {
+    test('globe wrap bounding box spanning antimeridian from 179.9°E', async () => {
         const transform = new GlobeTransform();
         transform.resize(512, 512);
         transform.setZoom(1.05);
@@ -1633,8 +1633,23 @@ describe('SourceCache#tilesIn', () => {
                     new Point(7219, 7261),
                 ]]
             ]);
+    });
 
+    test('globe wrap bounding box spanning antimeridian from 179.9°W', async () => {
+        const transform = new GlobeTransform();
+        transform.resize(512, 512);
+        transform.setZoom(1.05);
         transform.setCenter(new LngLat(-179.9, 0.1));
+
+        const sourceCache = createSourceCache();
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+
+        const dataPromise = waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
+        sourceCache.onAdd(undefined);
+        await dataPromise;
+
         sourceCache.update(transform);
 
         expect(sourceCache.tilesIn([
@@ -1729,7 +1744,7 @@ describe('SourceCache#tilesIn', () => {
             .toEqual([new OverscaledTileID(1, 0, 1, 0, 1).key]);
     });
 
-    test('mercator wrap bounding box spanning antimeridian', async () => {
+    test('mercator wrap bounding box spanning antimeridian from 179.9°E', async () => {
         const transform = new MercatorTransform();
         transform.resize(512, 512);
         transform.setZoom(1.05);
@@ -1783,8 +1798,23 @@ describe('SourceCache#tilesIn', () => {
                     new Point(7322, 7322),
                 ]],
             ]);
+    });
 
+    test('mercator wrap bounding box spanning antimeridian from 179.9°W', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+        transform.setZoom(1.05);
         transform.setCenter(new LngLat(-179.9, 0.1));
+    
+        const sourceCache = createSourceCache();
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+    
+        const dataPromise = waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
+        sourceCache.onAdd(undefined);
+        await dataPromise;
+    
         sourceCache.update(transform);
 
         expect(sourceCache.tilesIn([

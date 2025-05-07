@@ -5,7 +5,7 @@ import {Event, ErrorEvent, Evented} from '../util/evented';
 import {TileCache} from './tile_cache';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {keysDifference} from '../util/util';
-import {EXTENT} from '../data/extent';
+import {EXTENT, EXTENT_BOUNDS} from '../data/extent';
 import {type Context} from '../gl/context';
 import Point from '@mapbox/point-geometry';
 import {browser} from '../util/browser';
@@ -24,7 +24,7 @@ import type {MapSourceDataEvent} from '../ui/events';
 import type {Terrain} from '../render/terrain';
 import type {CanvasSourceSpecification} from './canvas_source';
 import {coveringTiles, coveringZoomLevel} from '../geo/projection/covering_tiles';
-import Bounds from '../geo/bounds';
+import {Bounds} from '../geo/bounds';
 
 type TileResult = {
     tile: Tile;
@@ -986,8 +986,9 @@ export class SourceCache extends Evented {
             transform.getCameraQueryGeometry(pointQueryGeometry) :
             pointQueryGeometry;
 
-        const queryGeometry = this.transformBbox(pointQueryGeometry, transform, !allowWorldCopies);
-        const cameraQueryGeometry = this.transformBbox(cameraPointQueryGeometry, transform, !allowWorldCopies);
+        const project = (point: Point) => transform.screenPointToMercatorCoordinate(point, this.terrain);
+        const queryGeometry = this.transformBbox(pointQueryGeometry, project, !allowWorldCopies);
+        const cameraQueryGeometry = this.transformBbox(cameraPointQueryGeometry, project, !allowWorldCopies);
 
         const ids = this.getIds();
 
@@ -1006,13 +1007,10 @@ export class SourceCache extends Evented {
 
             for (const tileID of tileIDs) {
 
-                const tileSpaceBounds = [
-                    tileID.getTilePoint(new MercatorCoordinate(cameraBounds.minX, cameraBounds.minY)),
-                    tileID.getTilePoint(new MercatorCoordinate(cameraBounds.maxX, cameraBounds.maxY))
-                ];
+                const tileSpaceBounds = cameraBounds.map(point => tileID.getTilePoint(new MercatorCoordinate(point.x, point.y)));
+                tileSpaceBounds.expandBy(-queryPadding);
 
-                if (tileSpaceBounds[0].x - queryPadding < EXTENT && tileSpaceBounds[0].y - queryPadding < EXTENT &&
-                tileSpaceBounds[1].x + queryPadding >= 0 && tileSpaceBounds[1].y + queryPadding >= 0) {
+                if (tileSpaceBounds.intersects(EXTENT_BOUNDS)) {
 
                     const tileSpaceQueryGeometry: Array<Point> = queryGeometry.map((c) => tileID.getTilePoint(c));
                     const tileSpaceCameraQueryGeometry = cameraQueryGeometry.map((c) => tileID.getTilePoint(c));
@@ -1031,28 +1029,23 @@ export class SourceCache extends Evented {
         return tileResults;
     }
 
-    private transformBbox(geom: Point[], transform: ITransform, checkWrap: boolean): MercatorCoordinate[] {
-        let transformed = geom.map((p: Point) => transform.screenPointToMercatorCoordinate(p, this.terrain));
+    private transformBbox(geom: Point[], project: (point: Point) => MercatorCoordinate, checkWrap: boolean): MercatorCoordinate[] {
+        let transformed = geom.map(project);
         if (checkWrap) {
             // If the projection does not allow world copies, then a bounding box may span the antimeridian and
             // instead of a bounding box going from 179°E to 179°W, it goes from 179°W to 179°E and covers the entire
             // planet except for what should be inside it.
             const bounds = Bounds.fromPoints(geom);
-            const center = bounds.center();
-            const transformedCenter = transform.screenPointToMercatorCoordinate(center, this.terrain);
-            const newBounds = Bounds.fromPoints(transformed);
-            if (!newBounds.contains(transformedCenter)) {
-                if (transformedCenter.x < newBounds.minX) {
-                    transformed = transformed.map((coord) => coord.x > 0.5 ?
-                        new MercatorCoordinate(coord.x - 1, coord.y, coord.z) :
-                        coord
-                    );
-                } else if (transformedCenter.x > newBounds.maxX) {
-                    transformed = transformed.map((coord) => coord.x < 0.5 ?
-                        new MercatorCoordinate(coord.x + 1, coord.y, coord.z) :
-                        coord
-                    );
-                }
+            bounds.expandBy(-Math.min(bounds.width(), bounds.height()) / 1e3);
+            const projected = bounds.map(project);
+
+            const newBounds = Bounds.fromPoints(transformed); 
+
+            if (!newBounds.covers(projected)) {
+                transformed = transformed.map((coord) => coord.x > 0.5 ?
+                    new MercatorCoordinate(coord.x - 1, coord.y, coord.z) :
+                    coord
+                );
             }
         }
         return transformed;
