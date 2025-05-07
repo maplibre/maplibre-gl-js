@@ -6,7 +6,6 @@ import type {Context} from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {IReadonlyTransform} from '../../geo/transform_interface';
 import type {Tile} from '../../source/tile';
-import type {CrossFaded} from '../../style/properties';
 import type {LineStyleLayer} from '../../style/style_layer/line_style_layer';
 import type {Painter} from '../painter';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters';
