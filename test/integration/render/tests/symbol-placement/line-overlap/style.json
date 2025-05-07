@@ -1,0 +1,97 @@
+{
+    "metadata": {
+        "test": {
+            "width": 1024
+        }
+    },
+    "center": [30.482691078765697, 50.50714270996008],
+    "zoom": 22,
+    "version": 8,
+    "sources": {
+      "maplibre": {
+        "type": "vector",
+        "maxzoom": 14,
+        "tiles": ["local://tiles/{z}-{x}-{y}.mvt"]
+      }
+    },
+    "sprite": "local://sprites/sprite",
+    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+    "layers": [
+      {
+        "id": "highway_name_other",
+        "type": "symbol",
+        "source": "maplibre",
+        "source-layer": "transportation_name",
+        "filter": [
+          "all",
+          [
+            "!=",
+            [
+              "get",
+              "class"
+            ],
+            "motorway"
+          ],
+          [
+            "match",
+            [
+              "geometry-type"
+            ],
+            [
+              "LineString",
+              "MultiLineString"
+            ],
+            true, false]
+        ],
+        "layout": {
+          "symbol-placement": "line",
+          "symbol-spacing": 350,
+          "text-field": [
+            "case",
+            [
+              "has",
+              "name:nonlatin"
+            ],
+            [
+              "concat",
+              [
+                "get",
+                "name:latin"
+              ],
+              " ",
+              [
+                "get",
+                "name:nonlatin"
+              ]
+            ],
+            [
+              "coalesce",
+              [
+                "get",
+                "name_en"
+              ],
+              [
+                "get",
+                "name"
+              ]
+            ]
+          ],
+          "text-font": [
+            "Noto Sans Regular"
+          ],
+          "text-max-angle": 30,
+          "text-pitch-alignment": "viewport",
+          "text-rotation-alignment": "map",
+          "text-size": 10,
+          "text-transform": "uppercase"
+        },
+        "paint": {
+          "text-color": "rgba(80, 78, 78, 1)",
+          "text-halo-blur": 0,
+          "text-halo-color": "rgba(0, 0, 0, 1)",
+          "text-halo-width": 1,
+          "text-translate": [0, 0]
+        }
+      }
+  ]
+  }
