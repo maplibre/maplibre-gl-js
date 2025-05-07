@@ -1,18 +1,30 @@
 ## main
 
 ### ✨ Features and improvements
+
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+
+- Fix `queryRenderedFeatures` bounding box crossing antimeridian in globe view. ([#5856](https://github.com/maplibre/maplibre-gl-js/pull/5856))
+- _...Add new stuff here..._
+
+## 5.5.0
+
+### ✨ Features and improvements
+
 - Add additional hillshade methods ([#5768](https://github.com/maplibre/maplibre-gl-js/pull/5768))
 - Add `refreshTiles()` to the map public API ([#5806](https://github.com/maplibre/maplibre-gl-js/pull/5806))
 - Disable geolocate control button when permission is denied and `trackUserLocation` is off ([#5824](https://github.com/maplibre/maplibre-gl-js/pull/5824))
 - _... Add new stuff here..._
 
 ### 🐞 Bug fixes
+
 - Fix scroll min zoom on globe view ([#5775](https://github.com/maplibre/maplibre-gl-js/pull/5775))
 - ⚠️ Fix hillshade appearance change between 256x256 and 512x512 tiles. This will change the appearance of hillshade layers using 512x512 tiles. ([#5768](https://github.com/maplibre/maplibre-gl-js/pull/5768))
 - Fix tile expiry logic for raster and raster-dem tiles ([#5798](https://github.com/maplibre/maplibre-gl-js/pull/5798))
 - Fix opacityWhenCovered not working to hide the marker behind the globe if terrain is enabled. ([#5838](https://github.com/maplibre/maplibre-gl-js/pull/5838))
-- Fix `queryRenderedFeatures` bounding box crossing antimeridian in globe view. ([#5856](https://github.com/maplibre/maplibre-gl-js/pull/5856))
-- _...Add new stuff here..._
+- Fix transparent vector tiles sometimes showing geometry beyond tile borders when terrain is active ([#5746](https://github.com/maplibre/maplibre-gl-js/pull/5746))
 
 ## 5.4.0
 
@@ -67,6 +79,7 @@
 - Avoid setting marker opacity twice. ([#5441](https://github.com/maplibre/maplibre-gl-js/pull/5441))
 
 ### 🐞 Bug fixes
+
 - Fix how padding is applied when using flyTo() with Globe ([#5406](https://github.com/maplibre/maplibre-gl-js/pull/5406))
 - Fix URL hash validation to support bearing range -180 to 180 ([#5461](https://github.com/maplibre/maplibre-gl-js/issues/5461))
 - Fix variable zoom tile calculation when padding is set ([#5486](https://github.com/maplibre/maplibre-gl-js/issues/5486))
@@ -318,7 +331,7 @@
 - Fix white flickering on map resize ([#4158](https://github.com/maplibre/maplibre-gl-js/pull/4158))
 - Fixed a performance regression related to symbol placement ([#4599](https://github.com/maplibre/maplibre-gl-js/pull/4599))
 - Fix a bug where cloning a Transform instance didn't include the `lngRange`. This caused a bug where
-using `transformCameraUpdate` caused the `maxBounds` to stop working just for east/west bounds. ([#4625](https://github.com/maplibre/maplibre-gl-js/pull/4625))
+  using `transformCameraUpdate` caused the `maxBounds` to stop working just for east/west bounds. ([#4625](https://github.com/maplibre/maplibre-gl-js/pull/4625))
 
 ## 4.6.0
 
@@ -825,7 +838,7 @@ using `transformCameraUpdate` caused the `maxBounds` to stop working just for ea
 - Remove a deprecation warning by removing an empty texture that is no longer being used in the codebase ([#2299](https://github.com/maplibre/maplibre-gl-js/pull/2299))
 - Improve initial loading performance by lazy serializing layers only when needed. ([#2306](https://github.com/maplibre/maplibre-gl-js/pull/2306))
 - Add validateStyle MapOption to allow disabling style validation for faster performance in production environment. ([#2390](https://github.com/maplibre/maplibre-gl-js/pull/2390))
-- Add `setiClusterOptions` to update cluster properties of the added sources: fixing these issues ([#429](https://github.com/maplibre/maplibre-gl-js/issues/429)) and ([#1384](https://github.com/maplibre/maplibre-gl-js/issues/1384))
+- Add `setClusterOptions` to update cluster properties of the added sources: fixing these issues ([#429](https://github.com/maplibre/maplibre-gl-js/issues/429)) and ([#1384](https://github.com/maplibre/maplibre-gl-js/issues/1384))
 - Add types for `workerOptions` and `_options` in `geojson_source.ts`
 - Add fullscreenstart, fullscreenend events to FullscreenControl ([#2128](https://github.com/maplibre/maplibre-gl-js/issues/2128)
 - Throttle the image request queue while the map is moving to improve performance ([#2097](https://github.com/maplibre/maplibre-gl-js/issues/2097)
@@ -980,7 +993,7 @@ Most of these changes will not affect your code but read carefully through the l
 
 ### ✨ Features and improvements
 
-- Add `setiClusterOptions` to update cluster properties of the added sources: fixing these issues ([#429](https://github.com/maplibre/maplibre-gl-js/issues/429)) and ([#1384](https://github.com/maplibre/maplibre-gl-js/issues/1384))
+- Add `setClusterOptions` to update cluster properties of the added sources: fixing these issues ([#429](https://github.com/maplibre/maplibre-gl-js/issues/429)) and ([#1384](https://github.com/maplibre/maplibre-gl-js/issues/1384))
 - Add types for `workerOptions` and `_options` in `geojson_source.ts`
 - Add fullscreenstart, fullscreenend events to FullscreenControl ([#2128](https://github.com/maplibre/maplibre-gl-js/issues/2128)
 - Throttle the image request queue while the map is moving to improve performance ([#2097](https://github.com/maplibre/maplibre-gl-js/issues/2097)
@@ -1632,7 +1645,7 @@ This release also fixes several long-standing bugs and unintentional rendering b
 ### ✨ Features
 
 - Add ability to insert images into text labels using an `image` expression within a `format` expression: `"text-field": ["format", "Some text", ["image", "my-image"], "some more text"]` ([#8904](https://github.com/mapbox/mapbox-gl-js/pull/8904))
-- Add support for stretchable images (aka nine-part or nine-patch images). Stretchable images can be used with `icon-text-fit` to draw resized images with unstretched corners and borders. ([#8997](https://github.com/mapbox/mapbox-gl-js/pull/8997))
+- Add support for stretchable images (aka nine-part or nine-patch images). Stretchable images can be used with `icon-text-fit` to draw resized images with non-stretched corners and borders. ([#8997](https://github.com/mapbox/mapbox-gl-js/pull/8997))
 - Add `in` expression. It can check if a value is in an array (`["in", value, array]`) or a substring is in a string (`["in", substring, string]`) ([#8876](https://github.com/mapbox/mapbox-gl-js/pull/8876))
 - Add `minPitch` and `maxPitch` map options ([#8834](https://github.com/mapbox/mapbox-gl-js/pull/8834))
 - Add `rotation`, `rotationAlignment` and `pitchAlignment` options to markers ([#8836](https://github.com/mapbox/mapbox-gl-js/pull/8836)) (h/t [@dburnsii](https://github.com/dburnsii))
