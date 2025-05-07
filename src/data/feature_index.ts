@@ -135,9 +135,9 @@ export class FeatureIndex {
         const bounds = Bounds.fromPoints(queryGeometry);
         const matching = this.grid.query(bounds.minX - queryPadding, bounds.minY - queryPadding, bounds.maxX + queryPadding, bounds.maxY + queryPadding);
 
-        const cameraBounds = Bounds.fromPoints(args.cameraQueryGeometry);
+        const cameraBounds = Bounds.fromPoints(args.cameraQueryGeometry).expandBy(queryPadding);
         const matching3D = this.grid3D.query(
-            cameraBounds.minX - queryPadding, cameraBounds.minY - queryPadding, cameraBounds.maxX + queryPadding, cameraBounds.maxY + queryPadding,
+            cameraBounds.minX, cameraBounds.minY, cameraBounds.maxX, cameraBounds.maxY,
             (bx1, by1, bx2, by2) => {
                 return polygonIntersectsBox(args.cameraQueryGeometry, bx1 - queryPadding, by1 - queryPadding, bx2 + queryPadding, by2 + queryPadding);
             });
