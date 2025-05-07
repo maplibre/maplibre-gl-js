@@ -3,8 +3,25 @@ import {mat4, vec3, type vec4} from 'gl-matrix';
 import {Aabb} from './aabb';
 import {Frustum} from './frustum';
 import {IntersectionResult} from './bounding_volume';
+import {OrientedBoundingBox} from './oriented_bounding_box';
+import {expectToBeCloseToArray} from '../test/util';
 
-describe('primitives', () => {
+const createTestCameraFrustum = (fovy, aspectRatio, zNear, zFar, elevation, rotation) => {
+    const proj = new Float64Array(16) as any as mat4;
+    const invProj = new Float64Array(16) as any as mat4;
+
+    // Note that left handed coordinate space is used where z goes towards the sky.
+    // Y has to be flipped as well because it's part of the projection/camera matrix used in transform.js
+    mat4.perspective(proj, fovy, aspectRatio, zNear, zFar);
+    mat4.scale(proj, proj, [1, -1, 1]);
+    mat4.translate(proj, proj, [0, 0, elevation]);
+    mat4.rotateZ(proj, proj, rotation);
+    mat4.invert(invProj, proj);
+
+    return Frustum.fromInvProjectionMatrix(invProj, 1.0, 0.0);
+};
+
+describe('aabb', () => {
     test('Create an aabb', () => {
         const min = vec3.fromValues(0, 0, 0);
         const max = vec3.fromValues(2, 4, 6);
@@ -44,21 +61,6 @@ describe('primitives', () => {
         expect(aabb.distanceX([-2, -2])).toBe(1);
         expect(aabb.distanceY([-2, -2])).toBe(1);
     });
-
-    const createTestCameraFrustum = (fovy, aspectRatio, zNear, zFar, elevation, rotation) => {
-        const proj = new Float64Array(16) as any as mat4;
-        const invProj = new Float64Array(16) as any as mat4;
-
-        // Note that left handed coordinate space is used where z goes towards the sky.
-        // Y has to be flipped as well because it's part of the projection/camera matrix used in transform.js
-        mat4.perspective(proj, fovy, aspectRatio, zNear, zFar);
-        mat4.scale(proj, proj, [1, -1, 1]);
-        mat4.translate(proj, proj, [0, 0, elevation]);
-        mat4.rotateZ(proj, proj, rotation);
-        mat4.invert(invProj, proj);
-
-        return Frustum.fromInvProjectionMatrix(invProj, 1.0, 0.0);
-    };
 
     test('Aabb fully inside a frustum', () => {
         const frustum = createTestCameraFrustum(Math.PI / 2, 1.0, 0.1, 100.0, -5, 0);
@@ -195,5 +197,112 @@ describe('frustum', () => {
 
         expect(frustum.points).toEqual(expectedFrustumPoints);
         expect(frustum.planes).toEqual(expectedFrustumPlanes);
+    });
+});
+
+describe('oriented bounding box', () => {
+    describe('fromCenterSizeAngles', () => {
+        test('translated unit box', () => {
+            const obb = OrientedBoundingBox.fromCenterSizeAngles([0, 1, 0], [1, 1, 1], [0, 0, 0]);
+            expect(obb.min).toEqual([-1, 0, -1]);
+            expect(obb.max).toEqual([1, 2, 1]);
+        });
+
+        test('nonuniform box', () => {
+            const obb = OrientedBoundingBox.fromCenterSizeAngles([0, 0, 0], [1, 2, 3], [0, 0, 0]);
+            expect(obb.min).toEqual([-1, -2, -3]);
+            expect(obb.max).toEqual([1, 2, 3]);
+        });
+
+        test('translated rotated 90° unit box', () => {
+            const obb = OrientedBoundingBox.fromCenterSizeAngles([0, 2, 0], [1, 1, 1], [90, 0, 0]);
+            expectToBeCloseToArray([...obb.min], [-1, 1, -1]);
+            expectToBeCloseToArray([...obb.max], [1, 3, 1]);
+        });
+
+        test('rotated 45° in X axis elongated box', () => {
+            const obb = OrientedBoundingBox.fromCenterSizeAngles([0, 0, 0], [2, 1, 1], [45, 0, 0]);
+            expectToBeCloseToArray([...obb.center], [0, 0, 0]);
+            expectToBeCloseToArray([...obb.min], [-2, -1.414213562373095, -1.414213562373095]);
+            expectToBeCloseToArray([...obb.max], [2, 1.414213562373095, 1.414213562373095]);
+            expectToBeCloseToArray([...obb.axisX], [2, 0, 0]);
+            expectToBeCloseToArray([...obb.axisY], [0, 0.7071067811865475, 0.7071067811865476]);
+            expectToBeCloseToArray([...obb.axisZ], [0, -0.7071067811865476, 0.7071067811865475]);
+        });
+    });
+
+    test('Obb fully inside a frustum', () => {
+        const frustum = createTestCameraFrustum(Math.PI / 2, 1.0, 0.1, 100.0, -5, 0);
+        // Use same boxes as the AABB tests - this will still test the obb intersection logic.
+        const obbList = [
+            OrientedBoundingBox.fromAabb(vec3.fromValues(-1, -1, 0), vec3.fromValues(1, 1, 0)),
+            OrientedBoundingBox.fromAabb(vec3.fromValues(-5, -5, 0), vec3.fromValues(5, 5, 0)),
+            OrientedBoundingBox.fromAabb(vec3.fromValues(-5, -5, 0), vec3.fromValues(-4, -2, 0))
+        ];
+
+        for (const obb of obbList)
+            expect(obb.intersectsFrustum(frustum)).toBe(IntersectionResult.Full);
+
+    });
+
+    test('Obb intersecting with a frustum', () => {
+        const frustum = createTestCameraFrustum(Math.PI / 2, 1.0, 0.1, 100.0, -5, 0);
+
+        const obbList = [
+            OrientedBoundingBox.fromAabb(vec3.fromValues(-6, -6, 0), vec3.fromValues(6, 6, 0)),
+            OrientedBoundingBox.fromAabb(vec3.fromValues(-6, -6, 0), vec3.fromValues(-5, -5, 0))
+        ];
+
+        for (const obb of obbList)
+            expect(obb.intersectsFrustum(frustum)).toBe(IntersectionResult.Partial);
+
+    });
+
+    test('No intersection between obb and frustum', () => {
+        const frustum = createTestCameraFrustum(Math.PI / 2, 1.0, 0.1, 100.0, -5, 0);
+
+        const obbList = [
+            OrientedBoundingBox.fromAabb(vec3.fromValues(-6, 0, 0), vec3.fromValues(-5.5, 0, 0)),
+            OrientedBoundingBox.fromAabb(vec3.fromValues(-6, -6, 0), vec3.fromValues(-5.5, -5.5, 0)),
+            OrientedBoundingBox.fromAabb(vec3.fromValues(7, -10, 0), vec3.fromValues(7.1, 20, 0))
+        ];
+
+        for (const obb of obbList)
+            expect(obb.intersectsFrustum(frustum)).toBe(IntersectionResult.None);
+
+    });
+
+    test('Obb-plane intersection axis-aligned', () => {
+        const obb = OrientedBoundingBox.fromCenterSizeAngles([0, 0, 0], [1, 1, 1], [0, 0, 0]);
+        expect(obb.intersectsPlane([1, 0, 0, 1.0001])).toBe(IntersectionResult.Full);
+        expect(obb.intersectsPlane([1, 0, 0, 0.9999])).toBe(IntersectionResult.Partial);
+        expect(obb.intersectsPlane([1, 0, 0, 0])).toBe(IntersectionResult.Partial);
+        expect(obb.intersectsPlane([1, 0, 0, -0.9999])).toBe(IntersectionResult.Partial);
+        expect(obb.intersectsPlane([1, 0, 0, -1.0001])).toBe(IntersectionResult.None);
+    });
+
+    test('Obb-plane intersection rotated plane', () => {
+        const obb = OrientedBoundingBox.fromCenterSizeAngles([0, 0, 0], [1, 1, 1], [0, 0, 0]);
+        expect(obb.intersectsPlane([1, 1, 0, 2.0001])).toBe(IntersectionResult.Full);
+        expect(obb.intersectsPlane([1, 1, 0, 1.9999])).toBe(IntersectionResult.Partial);
+        expect(obb.intersectsPlane([1, 1, 0, 0])).toBe(IntersectionResult.Partial);
+        expect(obb.intersectsPlane([1, 1, 0, -1.9999])).toBe(IntersectionResult.Partial);
+        expect(obb.intersectsPlane([1, 1, 0, -2.0001])).toBe(IntersectionResult.None);
+    });
+
+    test('Obb-plane intersection rotated box', () => {
+        const obb = OrientedBoundingBox.fromCenterSizeAngles([0, 0, 0], [1, 1, 1], [0, 0, 45]);
+        expect(obb.intersectsPlane([1, 0, 0, 1.4143])).toBe(IntersectionResult.Full);
+        expect(obb.intersectsPlane([1, 0, 0, 1.4142])).toBe(IntersectionResult.Partial);
+        expect(obb.intersectsPlane([1, 0, 0, -1.4142])).toBe(IntersectionResult.Partial);
+        expect(obb.intersectsPlane([1, 0, 0, -1.4143])).toBe(IntersectionResult.None);
+    });
+
+    test('Obb-plane intersection rotated plane rotated box', () => {
+        const obb = OrientedBoundingBox.fromCenterSizeAngles([0, 0, 0], [1, 1, 1], [0, 0, 45]);
+        expect(obb.intersectsPlane([1, 1, 0, 1.4143])).toBe(IntersectionResult.Full);
+        expect(obb.intersectsPlane([1, 1, 0, 1.4142])).toBe(IntersectionResult.Partial);
+        expect(obb.intersectsPlane([1, 1, 0, -1.4142])).toBe(IntersectionResult.Partial);
+        expect(obb.intersectsPlane([1, 1, 0, -1.4143])).toBe(IntersectionResult.None);
     });
 });

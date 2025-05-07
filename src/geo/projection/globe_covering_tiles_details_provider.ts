@@ -263,6 +263,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
 
             const obb = new OrientedBoundingBox();
             // Compute and assign the OBB's center using the mid points along each axis.
+            // axisX * midX + axisY * midY + axisZ * midZ
             obb.center = [
                 axes[0][0] * axisMid[0] + axes[1][0] * axisMid[1] + axes[2][0] * axisMid[2],
                 axes[0][1] * axisMid[0] + axes[1][1] * axisMid[1] + axes[2][1] * axisMid[2],
