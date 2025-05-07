@@ -1010,7 +1010,7 @@ export class SourceCache extends Evented {
             for (const tileID of tileIDs) {
 
                 const tileSpaceBounds = cameraBounds.map(point => tileID.getTilePoint(new MercatorCoordinate(point.x, point.y)));
-                tileSpaceBounds.expandBy(-queryPadding);
+                tileSpaceBounds.expandBy(queryPadding);
 
                 if (tileSpaceBounds.intersects(EXTENT_BOUNDS)) {
 
