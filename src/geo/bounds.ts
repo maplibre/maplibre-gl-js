@@ -1,6 +1,5 @@
 import Point from '@mapbox/point-geometry';
-
-type Point2D = {x: number; y: number};
+import {type Point2D} from '@maplibre/maplibre-gl-style-spec';
 
 /** A 2-d bounding box covering an X and Y range. */
 export class Bounds {
