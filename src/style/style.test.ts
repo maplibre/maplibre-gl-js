@@ -1244,6 +1244,75 @@ describe('Style#setGeoJSONSourceData', () => {
     });
 });
 
+describe('Style#setGlobalStateProperty', () => {
+    test('throws before loaded', () => {
+        const style = new Style(getStubMap());
+        expect(() => style.setGlobalStateProperty('property')).toThrow(/load/i);
+    });
+
+    test('does not reload sources when state property is only used in paint properties', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'circle-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'layer-id',
+                type: 'circle',
+                source: 'circle-source-id',
+                paint: {
+                    'circle-color': ['global-state', 'circleColor']
+                }
+            }]
+        }));
+
+        await style.once('style.load');
+        vi.spyOn(style, '_reloadSource');
+        style.setGlobalStateProperty('circleColor');
+        expect(style._reloadSource).not.toHaveBeenCalled();
+    });
+
+    test('reloads sources when state property is used in filter property', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'circle-1-source-id': createGeoJSONSource(),
+                'circle-2-source-id': createGeoJSONSource(),
+                'fill-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'first-layer-id',
+                type: 'circle',
+                source: 'circle-1-source-id',
+                filter: ['global-state', 'showCircles']
+            }, {
+                id: 'second-layer-id',
+                type: 'fill',
+                source: 'fill-source-id',
+            }, {
+                id: 'third-layer-id',
+                type: 'circle',
+                source: 'circle-2-source-id',
+                filter: ['global-state', 'showCircles']
+            },
+            {
+                id: 'fourth-layer-id',
+                type: 'fill',
+                source: 'fill-source-id',
+                filter: ['global-state', 'showFill'],
+            }]
+        }));
+
+        await style.once('style.load');
+        vi.spyOn(style, '_reloadSource');
+        style.setGlobalStateProperty('showCircles');
+        // should only reload sources of layers where updated state property is used
+        expect(style._reloadSource).toHaveBeenCalledTimes(2);
+        expect(style._reloadSource).toHaveBeenNthCalledWith(1, 'circle-1-source-id');
+        expect(style._reloadSource).toHaveBeenNthCalledWith(2, 'circle-2-source-id');
+    });
+});
+
 describe('Style#addLayer', () => {
     test('throw before loaded', () => {
         const style = new Style(getStubMap());
