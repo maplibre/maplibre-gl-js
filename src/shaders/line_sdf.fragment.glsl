@@ -1,18 +1,18 @@
 
 uniform lowp float u_device_pixel_ratio;
 uniform sampler2D u_image;
-uniform float u_sdfgamma;
 uniform float u_mix;
 
 in vec2 v_normal;
 in vec2 v_width2;
-in vec2 v_tex_a;
-in vec2 v_tex_b;
 in float v_gamma_scale;
+in float v_sdfgamma;
 #ifdef GLOBE
 in float v_depth;
 #endif
 
+#pragma mapbox: define lowp vec4 pattern_from
+#pragma mapbox: define lowp vec4 pattern_to
 #pragma mapbox: define highp vec4 color
 #pragma mapbox: define lowp float blur
 #pragma mapbox: define lowp float opacity
@@ -20,6 +20,8 @@ in float v_depth;
 #pragma mapbox: define lowp float floorwidth
 
 void main() {
+    #pragma mapbox: initialize mediump vec4 pattern_from
+    #pragma mapbox: initialize mediump vec4 pattern_to
     #pragma mapbox: initialize highp vec4 color
     #pragma mapbox: initialize lowp float blur
     #pragma mapbox: initialize lowp float opacity
@@ -38,7 +40,7 @@ void main() {
     float sdfdist_a = texture(u_image, v_tex_a).a;
     float sdfdist_b = texture(u_image, v_tex_b).a;
     float sdfdist = mix(sdfdist_a, sdfdist_b, u_mix);
-    alpha *= smoothstep(0.5 - u_sdfgamma / floorwidth, 0.5 + u_sdfgamma / floorwidth, sdfdist);
+    alpha *= smoothstep(0.5 - v_sdfgamma / floorwidth, 0.5 + v_sdfgamma / floorwidth, sdfdist);
 
     fragColor = color * (alpha * opacity);
 

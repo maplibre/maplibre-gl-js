@@ -16,17 +16,15 @@ in vec4 a_data;
 uniform vec2 u_translation;
 uniform mediump float u_ratio;
 uniform lowp float u_device_pixel_ratio;
-uniform vec2 u_patternscale_a;
-uniform float u_tex_y_a;
-uniform vec2 u_patternscale_b;
-uniform float u_tex_y_b;
 uniform vec2 u_units_to_pixels;
 
 out vec2 v_normal;
 out vec2 v_width2;
-out vec2 v_tex_a;
-out vec2 v_tex_b;
+out vec2 v_tex_from;
+out vec2 v_tex_to;
 out float v_gamma_scale;
+out float v_sdfgamma;
+
 #ifdef GLOBE
 out float v_depth;
 #endif
@@ -38,6 +36,8 @@ out float v_depth;
 #pragma mapbox: define lowp float offset
 #pragma mapbox: define mediump float width
 #pragma mapbox: define lowp float floorwidth
+#pragma mapbox: define lowp vec4 pattern_from
+#pragma mapbox: define lowp vec4 pattern_to
 
 void main() {
     #pragma mapbox: initialize highp vec4 color
@@ -47,6 +47,8 @@ void main() {
     #pragma mapbox: initialize lowp float offset
     #pragma mapbox: initialize mediump float width
     #pragma mapbox: initialize lowp float floorwidth
+    #pragma mapbox: initialize mediump vec4 pattern_from
+    #pragma mapbox: initialize mediump vec4 pattern_to
 
     // the distance over which the line edge fades out.
     // Retina devices need a smaller distance to avoid aliasing.
@@ -103,7 +105,19 @@ void main() {
         v_gamma_scale = extrude_length_without_perspective / extrude_length_with_perspective;
     #endif
 
-    v_tex_a = vec2(a_linesofar * u_patternscale_a.x / floorwidth, normal.y * u_patternscale_a.y + u_tex_y_a);
-    v_tex_b = vec2(a_linesofar * u_patternscale_b.x / floorwidth, normal.y * u_patternscale_b.y + u_tex_y_b);
+    height_from = pattern_from.d - pattern_from.b;
+    width_from = pattern_from.c - pattern_from.a;
+    y_from = pattern_from.b;
+
+    height_to = pattern_to.d - pattern_to.b;
+    width_to = pattern_to.c - pattern_to.a;
+    y_to = pattern_to.b;
+
+    vec2 patternscale_from = [u_ratio / width_from, -height_from / 2];
+    vec2 patternscale_to = [u_ratio / width_to, -height_to / 2];
+
+    v_sdfgamma = u_line_atlas_width / (min(width_from, width_to) * 256 * u_device_pixel_ratio) / 2;
+    v_tex_from = vec2(a_linesofar * patternscale_from.x / floorwidth, normal.y * patternscale_from.y + y_from);
+    v_tex_to = vec2(a_linesofar * patternscale_to.x / floorwidth, normal.y * patternscale_to.y + y_to);
     v_width2 = vec2(outset, inset);
 }
