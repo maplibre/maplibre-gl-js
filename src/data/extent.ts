@@ -1,6 +1,3 @@
-import Point from '@mapbox/point-geometry';
-import {Bounds} from '../geo/bounds';
-
 /**
  * The maximum value of a coordinate in the internal tile coordinate system. Coordinates of
  * all source features normalized to this extent upon load.
