@@ -110,7 +110,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
     private _computeTileOBB(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions): OrientedBoundingBox {
         let minElevation = elevation;
         let maxElevation = elevation;
-        if (options.terrain) {
+        if (options?.terrain) {
             const overscaledTileID = new OverscaledTileID(tileID.z, wrap, tileID.z, tileID.x, tileID.y);
             const minMax = options.terrain.getMinMaxElevation(overscaledTileID);
             minElevation = minMax.minElevation ?? elevation;
