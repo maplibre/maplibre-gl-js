@@ -5,7 +5,7 @@ import {Event, ErrorEvent, Evented} from '../util/evented';
 import {TileCache} from './tile_cache';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {keysDifference} from '../util/util';
-import {EXTENT} from '../data/extent';
+import {EXTENT, EXTENT_BOUNDS} from '../data/extent';
 import {type Context} from '../gl/context';
 import Point from '@mapbox/point-geometry';
 import {browser} from '../util/browser';
