@@ -28,7 +28,6 @@ import type {
 } from '@maplibre/maplibre-gl-style-spec';
 import type {FeatureStates} from '../source/source_state';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
-import type {DashEntry} from '../render/line_atlas';
 
 export type BinderUniform = {
     name: string;
@@ -130,8 +129,6 @@ class CrossFadedConstantBinder implements UniformBinder {
     patternTo: Array<number>;
     pixelRatioFrom: number;
     pixelRatioTo: number;
-    dashFrom: Array<number>;
-    dashTo: Array<number>;
 
     constructor(value: unknown, names: Array<string>) {
         this.uniformNames = names.map(name => `u_${name}`);
@@ -139,8 +136,6 @@ class CrossFadedConstantBinder implements UniformBinder {
         this.patternTo = null;
         this.pixelRatioFrom = 1.0;
         this.pixelRatioTo = 1.0;
-        this.dashFrom = null;
-        this.dashTo = null;
     }
 
     setConstantPatternPositions(posTo: ImagePosition, posFrom: ImagePosition) {
@@ -151,19 +146,12 @@ class CrossFadedConstantBinder implements UniformBinder {
     }
 
     setUniform(uniform: Uniform<any>, globals: GlobalProperties, currentValue: PossiblyEvaluatedPropertyValue<unknown>, uniformName: string) {
-        if (uniformName === 'u_pattern_to' && this.patternTo) {
-            uniform.set(this.patternTo);
-        } else if (uniformName === 'u_pattern_from' && this.patternFrom) {
-            uniform.set(this.patternFrom);
-        } else if (uniformName === 'u_pixel_ratio_to' && this.pixelRatioTo) {
-            uniform.set(this.pixelRatioTo);
-        } else if (uniformName === 'u_pixel_ratio_from' && this.pixelRatioFrom) {
-            uniform.set(this.pixelRatioFrom);
-        } else if (uniformName === 'u_tex_from' && this.dashFrom) {
-            uniform.set(this.dashFrom);
-        } else if (uniformName === 'u_tex_to' && this.dashFrom) {
-            uniform.set(this.dashTo);
-        }
+        const pos =
+            uniformName === 'u_pattern_to' ? this.patternTo :
+                uniformName === 'u_pattern_from' ? this.patternFrom :
+                    uniformName === 'u_pixel_ratio_to' ? this.pixelRatioTo :
+                        uniformName === 'u_pixel_ratio_from' ? this.pixelRatioFrom : null;
+        if (pos) uniform.set(pos);
     }
 
     getBinding(context: Context, location: WebGLUniformLocation, name: string): Partial<Uniform<any>> {
