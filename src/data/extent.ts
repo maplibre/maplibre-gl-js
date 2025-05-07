@@ -1,3 +1,6 @@
+import Point from '@mapbox/point-geometry';
+import {Bounds} from '../geo/bounds';
+
 /**
  * The maximum value of a coordinate in the internal tile coordinate system. Coordinates of
  * all source features normalized to this extent upon load.
@@ -11,3 +14,8 @@
  * * This leaves us with 2^13 = 8192
  */
 export const EXTENT = 8192;
+
+/**
+ * The bounding box covering the entire extent.
+ */
+export const EXTENT_BOUNDS = Bounds.fromPoints([new Point(0, 0), new Point(EXTENT, EXTENT)]);

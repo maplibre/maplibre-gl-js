@@ -26,8 +26,6 @@ import type {CanvasSourceSpecification} from './canvas_source';
 import {coveringTiles, coveringZoomLevel} from '../geo/projection/covering_tiles';
 import {Bounds} from '../geo/bounds';
 
-const EXTENT_BOUNDS = Bounds.fromPoints([new Point(0, 0), new Point(EXTENT, EXTENT)]);
-
 type TileResult = {
     tile: Tile;
     tileID: OverscaledTileID;
@@ -1038,7 +1036,7 @@ export class SourceCache extends Evented {
             // instead of a bounding box going from 179°E to 179°W, it goes from 179°W to 179°E and covers the entire
             // planet except for what should be inside it.
             const bounds = Bounds.fromPoints(geom);
-            bounds.expandBy(-Math.min(bounds.width(), bounds.height()) / 1e3);
+            bounds.expandBy(-Math.min(bounds.width(), bounds.height()) * 0.001);
             const projected = bounds.map(project);
 
             const newBounds = Bounds.fromPoints(transformed); 
