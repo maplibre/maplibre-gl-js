@@ -14,8 +14,3 @@ import {Bounds} from '../geo/bounds';
  * * This leaves us with 2^13 = 8192
  */
 export const EXTENT = 8192;
-
-/**
- * The bounding box covering the entire extent.
- */
-export const EXTENT_BOUNDS = Bounds.fromPoints([new Point(0, 0), new Point(EXTENT, EXTENT)]);

@@ -5,7 +5,7 @@ import {Event, ErrorEvent, Evented} from '../util/evented';
 import {TileCache} from './tile_cache';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {keysDifference} from '../util/util';
-import {EXTENT, EXTENT_BOUNDS} from '../data/extent';
+import {EXTENT} from '../data/extent';
 import {type Context} from '../gl/context';
 import Point from '@mapbox/point-geometry';
 import {browser} from '../util/browser';
@@ -25,6 +25,8 @@ import type {Terrain} from '../render/terrain';
 import type {CanvasSourceSpecification} from './canvas_source';
 import {coveringTiles, coveringZoomLevel} from '../geo/projection/covering_tiles';
 import {Bounds} from '../geo/bounds';
+
+const EXTENT_BOUNDS = Bounds.fromPoints([new Point(0, 0), new Point(EXTENT, EXTENT)]);
 
 type TileResult = {
     tile: Tile;
