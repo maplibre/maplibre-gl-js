@@ -83,7 +83,7 @@ describe('render to texture', () => {
     } as SourceCache;
 
     const style = {
-        sourceCaches: {'maine': {getVisibleCoordinates: () => [tile.tileID]}},
+        sourceCaches: {'maine': {getVisibleCoordinates: () => [tile.tileID], getSource: () => ({})}},
         _order: ['maine-fill', 'maine-symbol'],
         _layers: {
             'maine-background': backgroundLayer,
@@ -92,6 +92,9 @@ describe('render to texture', () => {
             'maine-hillshade': hillshadeLayer,
             'maine-line': lineLayer,
             'maine-symbol': symbolLayer
+        },
+        projection: {
+            transitionState: 0,
         }
     } as any as Style;
     painter.style = style;

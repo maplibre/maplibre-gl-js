@@ -78,8 +78,7 @@
         container: 'map',
         style: 'https://demotiles.maplibre.org/style.json',
         zoom: 2,
-        center: [7.5, 58],
-        antialias: false,
+        center: [7.5, 58]
     });
 
     map.on('style.load', () => {
@@ -222,7 +221,7 @@
             const mesh = {
                 vbo,
                 ibo,
-                indexCount: meshBuffers.indices.length,
+                indexCount: meshBuffers.indices.byteLength / 2,
             };
             this.meshMap.set(key, mesh);
             return mesh;
@@ -262,7 +261,7 @@
                     }
                 };
 
-                const projectionData = map.transform.getProjectionData({overscaledTileID: tileID});
+                const projectionData = map.transform.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix: true});
 
                 gl.uniform4f(
                     locations['u_projection_clipping_plane'],

@@ -6,6 +6,7 @@ import type {WorkerGlobalScopeInterface} from './web_worker';
 import {mat3, mat4, quat, vec2, type vec3, type vec4} from 'gl-matrix';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
 import {type OverscaledTileID} from '../source/tile_id';
+import type {Event} from './evented';
 
 /**
  * Returns a new 64 bit float vec4 of zeroes.
@@ -405,6 +406,16 @@ export function nextPowerOfTwo(value: number): number {
     if (value <= 1) return 1;
     return Math.pow(2, Math.ceil(Math.log(value) / Math.LN2));
 }
+
+/**
+ * Computes scaling from zoom level.
+ */
+export function zoomScale(zoom: number) { return Math.pow(2, zoom); }
+
+/**
+ * Computes zoom level from scaling.
+ */
+export function scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
 
 /**
  * Create an object by mapping all the values of an existing object while
@@ -916,6 +927,10 @@ export type RollPitchBearing = {
     bearing: number;
 };
 
+export function rollPitchBearingEqual(a: RollPitchBearing, b: RollPitchBearing): boolean {
+    return a.roll == b.roll && a.pitch == b.pitch && a.bearing == b.bearing;
+}
+
 /**
  * This method converts a rotation quaternion to roll, pitch, and bearing angles in degrees.
  * @param rotation - The rotation quaternion
@@ -984,7 +999,7 @@ export function rollPitchBearingToQuat(roll: number, pitch: number, bearing: num
 
 export type Complete<T> = {
     [P in keyof Required<T>]: Pick<T, P> extends Required<Pick<T, P>> ? T[P] : (T[P] | undefined);
-}
+};
 
 /**
  * A helper to allow require of at least one property
@@ -1019,3 +1034,39 @@ export const MAX_TILE_ZOOM = 25;
  * In other words, the lower bound supported for tile zoom.
  */
 export const MIN_TILE_ZOOM = 0;
+
+export const MAX_VALID_LATITUDE = 85.051129;
+
+const touchableEvents = {
+    touchstart: true,
+    touchmove: true,
+    touchmoveWindow: true,
+    touchend: true,
+    touchcancel: true
+};
+
+const pointableEvents = {
+    dblclick: true,
+    click: true,
+    mouseover: true,
+    mouseout: true,
+    mousedown: true,
+    mousemove: true,
+    mousemoveWindow: true,
+    mouseup: true,
+    mouseupWindow: true,
+    contextmenu: true,
+    wheel: true
+};
+
+export function isTouchableEvent(event: Event, eventType: string): event is TouchEvent {
+    return touchableEvents[eventType] && 'touches' in event;
+}
+
+export function isPointableEvent(event: Event, eventType: string): event is MouseEvent {
+    return pointableEvents[eventType] && (event instanceof MouseEvent || event instanceof WheelEvent);
+}
+
+export function isTouchableOrPointableType(eventType: string): boolean {
+    return touchableEvents[eventType] || pointableEvents[eventType];
+}

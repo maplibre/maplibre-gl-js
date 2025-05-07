@@ -1,21 +1,20 @@
-import {extend, wrap, defaultEasing, pick} from '../util/util';
+import {extend, wrap, defaultEasing, pick, scaleZoom} from '../util/util';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {browser} from '../util/browser';
 import {LngLat} from '../geo/lng_lat';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {Event, Evented} from '../util/evented';
-import {type Terrain} from '../render/terrain';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 
+import type {Terrain} from '../render/terrain';
 import type {ITransform} from '../geo/transform_interface';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
 import type {HandlerManager} from './handler_manager';
-import {scaleZoom} from '../geo/transform_helper';
-import {type ICameraHelper} from '../geo/projection/camera_helper';
+import type {ICameraHelper} from '../geo/projection/camera_helper';
 
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
@@ -87,7 +86,7 @@ export type CenterZoomBearing = {
      * is "up". For example, `bearing: 90` orients the map so that east is up.
      */
     bearing?: number;
-}
+};
 
 /**
  * The options object related to the {@link Map#jumpTo} method
@@ -97,7 +96,7 @@ export type JumpToOptions = CameraOptions & {
      * Dimensions in pixels applied on each side of the viewport for shifting the vanishing point.
      */
     padding?: PaddingOptions;
-}
+};
 
 /**
  * A options object for the {@link Map#cameraForBounds} method
@@ -116,7 +115,7 @@ export type CameraForBoundsOptions = CameraOptions & {
      * The maximum zoom level to allow when the camera would transition to the specified bounds.
      */
     maxZoom?: number;
-}
+};
 
 /**
  * The {@link Map#flyTo} options object
@@ -141,13 +140,13 @@ export type FlyToOptions = AnimationOptions & CameraOptions & {
     /**
      * The average speed of the animation defined in relation to
      * `options.curve`. A speed of 1.2 means that the map appears to move along the flight path
-     * by 1.2 times `options.curve` screenfuls every second. A _screenful_ is the map's visible span.
+     * by 1.2 times `options.curve` screenfulls every second. A _screenfull_ is the map's visible span.
      * It does not correspond to a fixed physical distance, but varies by zoom level.
      * @defaultValue 1.2
      */
     speed?: number;
     /**
-     * The average speed of the animation measured in screenfuls
+     * The average speed of the animation measured in screenfulls
      * per second, assuming a linear timing curve. If `options.speed` is specified, this option is ignored.
      */
     screenSpeed?: number;
@@ -160,7 +159,7 @@ export type FlyToOptions = AnimationOptions & CameraOptions & {
      * The amount of padding in pixels to add to the given bounds.
      */
     padding?: number | PaddingOptions;
-}
+};
 
 /**
  * The {@link Map#easeTo} options object
@@ -174,7 +173,7 @@ export type EaseToOptions = AnimationOptions & CameraOptions & {
     around?: LngLatLike;
     easeId?: string;
     noMoveStart?: boolean;
-}
+};
 
 /**
  * Options for {@link Map#fitBounds} method
@@ -195,7 +194,7 @@ export type FitBoundsOptions = FlyToOptions & {
      * The maximum zoom level to allow when the map view transitions to the specified bounds.
      */
     maxZoom?: number;
-}
+};
 
 /**
  * Options common to map movement methods that involve animation, such as {@link Map#panBy} and
@@ -1160,7 +1159,7 @@ export abstract class Camera extends Evented {
         return this;
     }
 
-    _prepareEase(eventData: any, noMoveStart: boolean, 
+    _prepareEase(eventData: any, noMoveStart: boolean,
         currently: { moving?: boolean; zooming?: boolean; rotating?: boolean; pitching?: boolean; rolling?: boolean} = {}) {
         this._moving = true;
         if (!noMoveStart && !currently.moving) {
@@ -1477,7 +1476,7 @@ export abstract class Camera extends Evented {
             return w0 * ((cosh(r0) * tanh(r0 + rho * s) - sinh(r0)) / rho2) / u1;
         };
 
-        // S: Total length of the flight path, measured in ρ-screenfuls.
+        // S: Total length of the flight path, measured in ρ-screenfulls.
         let S = (zoomOutFactor(true) - r0) / rho;
 
         // When u₀ = u₁, the optimal path doesn’t require both ascent and descent.
@@ -1513,7 +1512,7 @@ export abstract class Camera extends Evented {
         if (this.terrain) this._prepareElevation(flyToHandler.targetCenter);
 
         this._ease((k) => {
-            // s: The distance traveled along the flight path, measured in ρ-screenfuls.
+            // s: The distance traveled along the flight path, measured in ρ-screenfulls.
             const s = k * S;
             const scale = 1 / w(s);
             const centerFactor = u(s);
@@ -1620,13 +1619,12 @@ export abstract class Camera extends Evented {
     }
 
     /**
-     * Get the elevation difference between a given point
-     * and a point that is currently in the middle of the screen.
-     * This method should be used for proper positioning of custom 3d objects, as explained [here](https://maplibre.org/maplibre-gl-js/docs/examples/add-3d-model-with-terrain/)
+     * Gets the elevation at a given location, in meters above sea level.
      * Returns null if terrain is not enabled.
-     * This method is subject to change in Maplibre GL JS v5.
+     * If terrain is enabled with some exaggeration value, the value returned here will be reflective of (multiplied by) that exaggeration value.
+     * This method should be used for proper positioning of custom 3d objects, as explained [here](https://maplibre.org/maplibre-gl-js/docs/examples/add-3d-model-with-terrain/)
      * @param lngLatLike - [x,y] or LngLat coordinates of the location
-     * @returns elevation offset in meters
+     * @returns elevation in meters
      */
     queryTerrainElevation(lngLatLike: LngLatLike): number | null {
         if (!this.terrain) {

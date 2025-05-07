@@ -20,7 +20,7 @@
         zoom: 3,
         center: [7.5, 58],
         style: 'https://demotiles.maplibre.org/style.json',
-        antialias: true // create the gl context with MSAA antialiasing, so custom layers are antialiased
+        canvasContextAttributes: {antialias: true} // create the gl context with MSAA antialiasing, so custom layers are antialiased
     });
 
     // create a custom style layer to implement the WebGL content

@@ -1,7 +1,8 @@
-import {type PreparedShader, shaders} from '../shaders/shaders';
+import {type PreparedShader, shaders, transpileVertexShaderToWebGL1, transpileFragmentShaderToWebGL1} from '../shaders/shaders';
 import {type ProgramConfiguration} from '../data/program_configuration';
 import {VertexArrayObject} from './vertex_array_object';
 import {type Context} from '../gl/context';
+import {isWebGL2} from '../gl/webgl2';
 
 import type {SegmentVector} from '../data/segment';
 import type {VertexBuffer} from '../gl/vertex_buffer';
@@ -51,7 +52,8 @@ export class Program<Us extends UniformBindings> {
         showOverdrawInspector: boolean,
         hasTerrain: boolean,
         projectionPrelude: PreparedShader,
-        projectionDefine: string) {
+        projectionDefine: string,
+        extraDefines: Array<string> = []) {
 
         const gl = context.gl;
         this.program = gl.createProgram();
@@ -72,6 +74,9 @@ export class Program<Us extends UniformBindings> {
         }
 
         const defines = configuration ? configuration.defines() : [];
+        if (isWebGL2(gl)) {
+            defines.unshift('#version 300 es');
+        }
         if (showOverdrawInspector) {
             defines.push('#define OVERDRAW_INSPECTOR;');
         }
@@ -81,9 +86,17 @@ export class Program<Us extends UniformBindings> {
         if (projectionDefine) {
             defines.push(projectionDefine);
         }
+        if (extraDefines) {
+            defines.push(...extraDefines);
+        }
 
-        const fragmentSource = defines.concat(shaders.prelude.fragmentSource, projectionPrelude.fragmentSource, source.fragmentSource).join('\n');
-        const vertexSource = defines.concat(shaders.prelude.vertexSource, projectionPrelude.vertexSource, source.vertexSource).join('\n');
+        let fragmentSource = defines.concat(shaders.prelude.fragmentSource, projectionPrelude.fragmentSource, source.fragmentSource).join('\n');
+        let vertexSource = defines.concat(shaders.prelude.vertexSource, projectionPrelude.vertexSource, source.vertexSource).join('\n');
+
+        if (!isWebGL2(gl)) {
+            fragmentSource = transpileFragmentShaderToWebGL1(fragmentSource);
+            vertexSource = transpileVertexShaderToWebGL1(vertexSource);
+        }
 
         const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
         if (gl.isContextLost()) {

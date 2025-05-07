@@ -168,7 +168,6 @@ export class Marker extends Evented {
         this._rotation = options && options.rotation || 0;
         this._rotationAlignment = options && options.rotationAlignment || 'auto';
         this._pitchAlignment = options && options.pitchAlignment && options.pitchAlignment !== 'auto' ?  options.pitchAlignment : this._rotationAlignment;
-        this.setOpacity(); // set default opacity
         this.setOpacity(options?.opacity, options?.opacityWhenCovered);
 
         if (!options || !options.element) {
@@ -316,7 +315,10 @@ export class Marker extends Evented {
     addTo(map: Map): this {
         this.remove();
         this._map = map;
-        this._element.setAttribute('aria-label', map._getUIString('Marker.Title'));
+
+        if (!this._element.hasAttribute('aria-label')) {
+            this._element.setAttribute('aria-label', map._getUIString('Marker.Title'));
+        }
 
         map.getCanvasContainer().appendChild(this._element);
         map.on('move', this._update);
@@ -551,8 +553,8 @@ export class Marker extends Evented {
 
     _updateOpacity(force: boolean = false) {
         const terrain = this._map?.terrain;
-        if (!terrain) {
-            const occluded = this._map.transform.isLocationOccluded(this._lngLat);
+        const occluded = this._map.transform.isLocationOccluded(this._lngLat);
+        if (!terrain || occluded) {
             const targetOpacity = occluded ? this._opacityWhenCovered : this._opacity;
             if (this._element.style.opacity !== targetOpacity) { this._element.style.opacity = targetOpacity; }
             return;
@@ -573,7 +575,6 @@ export class Marker extends Evented {
         // Transform marker position to clip space
         const elevation = map.terrain.getElevationForLngLatZoom(this._lngLat, map.transform.tileZoom);
         const markerDistance = map.transform.lngLatToCameraDepth(this._lngLat, elevation);
-
         const forgiveness = .006;
         if (markerDistance - terrainDistance < forgiveness) {
             this._element.style.opacity = this._opacity;
@@ -599,11 +600,7 @@ export class Marker extends Evented {
             this._map.once('render', this._update);
         }
 
-        if (this._map.transform.renderWorldCopies) {
-            this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform);
-        } else {
-            this._lngLat = this._lngLat?.wrap();
-        }
+        this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform);
 
         this._flatPos = this._pos = this._map.project(this._lngLat)._add(this._offset);
         if (this._map.terrain) {
@@ -857,16 +854,19 @@ export class Marker extends Evented {
      * @param opacityWhenCovered - Sets the `opacityWhenCovered` property of the marker.
      */
     setOpacity(opacity?: string, opacityWhenCovered?: string): this {
-        if (opacity === undefined && opacityWhenCovered === undefined) {
+        // Reset opacity when called without params or from constructor
+        if (this._opacity === undefined || (opacity === undefined && opacityWhenCovered === undefined)) {
             this._opacity = '1';
             this._opacityWhenCovered = '0.2';
         }
+
         if (opacity !== undefined) {
             this._opacity = opacity;
         }
         if (opacityWhenCovered !== undefined) {
             this._opacityWhenCovered = opacityWhenCovered;
         }
+
         if (this._map) {
             this._updateOpacity(true);
         }

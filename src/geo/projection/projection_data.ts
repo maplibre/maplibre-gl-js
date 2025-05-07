@@ -44,8 +44,12 @@ export type ProjectionData = {
      * Uniform name: `u_projection_fallback_matrix`.
      */
     fallbackMatrix: mat4;
-}
+};
 
+/**
+ * Parameters object for the transform's `getProjectionData` function.
+ * Contains the requested tile ID and more.
+ */
 export type ProjectionDataParams = {
     /**
      * The ID of the current tile
@@ -63,4 +67,4 @@ export type ProjectionDataParams = {
      * Set to true if the globe matrix should be applied (i.e. when rendering globe)
      */
     applyGlobeMatrix?: boolean;
-}
+};

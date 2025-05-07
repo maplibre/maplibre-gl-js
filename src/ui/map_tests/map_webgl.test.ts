@@ -1,40 +1,48 @@
-import {beforeEach, test, expect, vi} from 'vitest';
+import {beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
 
+let originalGetContext: typeof HTMLCanvasElement.prototype.getContext;
 beforeEach(() => {
     beforeMapTest();
     global.fetch = null;
+    originalGetContext = HTMLCanvasElement.prototype.getContext;
 });
 
-test('does not fire "webglcontextlost" after #remove has been called', () => new Promise<void>((done) => {
+afterEach(() => {
+    HTMLCanvasElement.prototype.getContext = originalGetContext;
+});
+
+test('does not fire "webglcontextlost" after #remove has been called', () => {
     const map = createMap();
     const canvas = map.getCanvas();
-    map.once('webglcontextlost', () => { throw new Error('"webglcontextlost" fired after #remove has been called'); });
+    const spy = vi.fn();
+    map.on('webglcontextlost', spy);
     map.remove();
     // Dispatch the event manually because at the time of this writing, gl does not support
     // the WEBGL_lose_context extension.
     canvas.dispatchEvent(new window.Event('webglcontextlost'));
-    done();
-}));
+    expect(spy).not.toHaveBeenCalled();
+});
 
-test('does not fire "webglcontextrestored" after #remove has been called', () => new Promise<void>((done) => {
+test('does not fire "webglcontextrestored" after #remove has been called', async () => {
     const map = createMap();
     const canvas = map.getCanvas();
 
-    map.once('webglcontextlost', () => {
-        map.once('webglcontextrestored', () => { throw new Error('"webglcontextrestored" fired after #remove has been called'); });
-        map.remove();
-        canvas.dispatchEvent(new window.Event('webglcontextrestored'));
-        done();
-    });
+    const contextLostPromise =  map.once('webglcontextlost');
 
     // Dispatch the event manually because at the time of this writing, gl does not support
     // the WEBGL_lose_context extension.
     canvas.dispatchEvent(new window.Event('webglcontextlost'));
-}));
+
+    await contextLostPromise;
+    const spy = vi.fn();
+    map.on('webglcontextrestored', spy);
+    map.remove();
+    canvas.dispatchEvent(new window.Event('webglcontextrestored'));
+    expect(spy).not.toHaveBeenCalled();
+});
 
 test('WebGL error while creating map', () => {
-    const original = HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.getContext = function (type: string) {
         if (type === 'webgl2' || type === 'webgl') {
             const errorEvent = new Event('webglcontextcreationerror');
@@ -53,10 +61,50 @@ test('WebGL error while creating map', () => {
 
         // this is from test mock
         expect(errorMessageObject.statusMessage).toBe('mocked webglcontextcreationerror message');
-    } finally {
-        HTMLCanvasElement.prototype.getContext = original;
     }
 });
+
+test('Check Map is being created with desired WebGL version', () => {
+    HTMLCanvasElement.prototype.getContext = function (type: string) {
+        const errorEvent = new Event('webglcontextcreationerror');
+        (errorEvent as any).statusMessage = `${type} is not supported`;
+        (this as HTMLCanvasElement).dispatchEvent(errorEvent);
+        return null;
+    };
+
+    try {
+        createMap({canvasContextAttributes: {contextType: 'webgl2'}});
+    } catch (e) {
+        const errorMessageObject = JSON.parse(e.message);
+        expect(errorMessageObject.statusMessage).toBe('webgl2 is not supported');
+    }
+  
+    try {
+        createMap({canvasContextAttributes: {contextType: 'webgl'}});
+    } catch (e) {
+        const errorMessageObject = JSON.parse(e.message);
+        expect(errorMessageObject.statusMessage).toBe('webgl is not supported');
+    }
+
+});
+
+test('Check Map falls back to WebGL if WebGL 2 is not supported', () => {
+    const mockGetContext = vi.fn().mockImplementation((type: string) => {
+        if (type === 'webgl2') {return null;}
+        return originalGetContext.apply(this, [type]);
+    });
+    HTMLCanvasElement.prototype.getContext = mockGetContext;
+  
+    try {
+        createMap();
+    } catch(_) { // eslint-disable-line @typescript-eslint/no-unused-vars
+    }
+    expect(mockGetContext).toHaveBeenCalledTimes(2);
+    expect(mockGetContext.mock.calls[0][0]).toBe('webgl2');
+    expect(mockGetContext.mock.calls[1][0]).toBe('webgl');
+  
+});
+
 test('Hit WebGL max drawing buffer limit', () => {
     // Simulate a device with MAX_TEXTURE_SIZE=16834 and max rendering area of ~32Mpx
     const container = window.document.createElement('div');

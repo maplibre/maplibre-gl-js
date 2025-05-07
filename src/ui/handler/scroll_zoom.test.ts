@@ -1,9 +1,9 @@
-import {describe, beforeEach, test, expect, vi} from 'vitest';
+import {describe, beforeEach, test, expect, vi, type MockInstance} from 'vitest';
 import {browser} from '../../util/browser';
 import {Map} from '../../ui/map';
 import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
-import {setPerformance, beforeMapTest} from '../../util/test/util';
+import {setPerformance, beforeMapTest, createTerrain} from '../../util/test/util';
 
 function createMap() {
     return new Map({
@@ -14,6 +14,20 @@ function createMap() {
             'layers': []
         }
     });
+}
+
+function scrollOutAtLat(map: Map, lat: number, browserNow: MockInstance<() => number>, deltaY: number = 5) {
+    map.setCenter([0, lat]);
+    map.setZoom(1);
+    for (let i = 0; i < 200; i++) {
+        simulate.wheel(map.getCanvas(), {
+            type: 'wheel',
+            deltaY,
+            clientX: map.transform.width / 2,
+            clientY: map.transform.height / 2});
+        browserNow.mockReturnValue(browser.now() + 10);
+        map._renderTaskQueue.run();
+    }
 }
 
 beforeEach(() => {
@@ -45,6 +59,38 @@ describe('ScrollZoomHandler', () => {
         map.remove();
     });
 
+    test('Zooms for single mouse wheel tick with easing for smooth zooming', () => {
+        const browserNow = vi.spyOn(browser, 'now');
+        let now = 1555555555555;
+        browserNow.mockReturnValue(now);
+
+        const map = createMap();
+        map.setZoom(5);
+        map._renderTaskQueue.run();
+
+        // simulate a single 'wheel' event
+        const startZoom = map.getZoom();
+
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        map._renderTaskQueue.run();
+
+        // A single tick zoom with easing completes in approx. 200ms
+        now += 100;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        const midZoom = map.getZoom();
+
+        now += 400;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        const endZoom = map.getZoom();
+
+        expect(midZoom).toBeGreaterThan(startZoom);
+        expect(midZoom).toBeLessThan(endZoom);
+
+        map.remove();
+    });
+
     test('Zooms for multiple fast mouse wheel ticks', () => {
         const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
@@ -66,12 +112,54 @@ describe('ScrollZoomHandler', () => {
             map._renderTaskQueue.run();
         }
 
+        now += 400;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+
         expect(map.getZoom() - startZoom).toBeCloseTo(0.0285 * iterations, 2);
 
         map.remove();
     });
 
-    test('Zooms for single mouse wheel tick with non-magical deltaY', () => new Promise<void>(done => {
+    test('Zooms for multiple fast mouse wheel ticks with easing for smooth zooming', () => {
+        const browserNow = vi.spyOn(browser, 'now');
+        let now = 1555555555555;
+        browserNow.mockReturnValue(now);
+
+        const map = createMap();
+        map.setZoom(5);
+        map._renderTaskQueue.run();
+
+        // simulate a multiple fast 'wheel' event
+        const startZoom = map.getZoom();
+        let midZoom = 0;
+
+        const iterations = 10;
+
+        for (let i = 0; i < iterations; i++) {
+            simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+            map._renderTaskQueue.run();
+            now += 0;
+            browserNow.mockReturnValue(now);
+            map._renderTaskQueue.run();
+
+            if (i === iterations - 1) {
+                midZoom = map.getZoom();
+            }
+        }
+
+        now += 400;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        const endZoom = map.getZoom();
+
+        expect(midZoom).toBeGreaterThan(startZoom);
+        expect(midZoom).toBeLessThan(endZoom);
+
+        map.remove();
+    });
+
+    test('Zooms for single mouse wheel tick with non-magical deltaY', async () => {
         const browserNow = vi.spyOn(browser, 'now');
         const now = 1555555555555;
         browserNow.mockReturnValue(now);
@@ -83,11 +171,43 @@ describe('ScrollZoomHandler', () => {
         // This requires the handler to briefly wait to see if a subsequent
         // event is coming in order to guess trackpad vs. mouse wheel
         simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -20});
-        map.on('zoomstart', () => {
-            map.remove();
-            done();
-        });
-    }));
+        await map.once('zoomstart');
+        map.remove();  
+    });
+
+    test('Zooms for single mouse wheel tick with non-magical deltaY with easing for smooth zooming', async () => {
+        const browserNow = vi.spyOn(browser, 'now');
+        let now = 1555555555555;
+        browserNow.mockReturnValue(now);
+        setPerformance();
+        const map = createMap();
+        map.setZoom(5);
+        map._renderTaskQueue.run();
+
+        const startZoom = map.getZoom();
+
+        // simulate a single 'wheel' event with non-magical deltaY
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -20});
+        await map.once('zoom');
+        now += 40;
+        map._renderTaskQueue.run();
+
+        // A single tick zoom with easing completes in approx. 200ms
+        now += 100;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        const midZoom = map.getZoom();
+
+        now += 400;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        const endZoom = map.getZoom();
+
+        expect(midZoom).toBeGreaterThan(startZoom);
+        expect(midZoom).toBeLessThan(endZoom);
+
+        map.remove();
+    });
 
     test('Zooms for multiple mouse wheel ticks', () => {
         const browserNow = vi.spyOn(browser, 'now');
@@ -95,39 +215,106 @@ describe('ScrollZoomHandler', () => {
         browserNow.mockReturnValue(now);
 
         const map = createMap();
-
         map._renderTaskQueue.run();
+
+        // simulate 3 'wheel' events
         const startZoom = map.getZoom();
 
-        const events = [
-            [2, {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta}],
-            [7, {type: 'wheel', deltaY: -41}],
-            [30, {type: 'wheel', deltaY: -169}],
-            [1, {type: 'wheel', deltaY: -801}],
-            [5, {type: 'wheel', deltaY: -326}],
-            [20, {type: 'wheel', deltaY: -345}],
-            [22, {type: 'wheel', deltaY: -376}],
-        ] as [number, any][];
+        now += 2;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        map._renderTaskQueue.run();
 
-        const end = now + 500;
-        let lastWheelEvent = now;
+        now += 7;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        map._renderTaskQueue.run();
 
-        // simulate the above sequence of wheel events, with render frames
-        // interspersed every 20ms
-        while (now  < end) {
-            now += 1;
-            browserNow.mockReturnValue(now);
-            if (events.length && lastWheelEvent + events[0][0] === now) {
-                const [, event] = events.shift();
-                simulate.wheel(map.getCanvas(), event);
-                lastWheelEvent = now;
-            }
-            if (now % 20 === 0) {
-                map._renderTaskQueue.run();
-            }
-        }
+        now += 30;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        map._renderTaskQueue.run();
 
-        expect(map.getZoom() - startZoom).toBeCloseTo(1.944, 3);
+        now += 400;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+
+        expect(map.getZoom() - startZoom).toBeCloseTo(0.0285 * 3, 3);
+
+        map.remove();
+    });
+
+    test('Zooms for multiple mouse wheel ticks with easing for smooth zooming', () => {
+        const browserNow = vi.spyOn(browser, 'now');
+        let now = 1555555555555;
+        browserNow.mockReturnValue(now);
+
+        const map = createMap();
+        map.setZoom(5);
+        map._renderTaskQueue.run();
+
+        // simulate 3 'wheel' events
+        // Event 1 Start
+        now += 2;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        const startZoomEvent1 = map.getZoom();
+        map._renderTaskQueue.run();
+
+        // Event 1 mid-zoom
+        now += 3;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        const midZoomEvent1 = map.getZoom();
+
+        // Event 2 Start
+        now += 4;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        const endZoomEvent1 = map.getZoom();
+        const startZoomEvent2 = map.getZoom();
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        map._renderTaskQueue.run();
+
+        // Event 2 mid-zoom
+        now += 15;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        const midZoomEvent2 = map.getZoom();
+
+        // Event 3 Start
+        now += 15;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        const endZoomEvent2 = map.getZoom();
+        const startZoomEvent3 = map.getZoom();
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        map._renderTaskQueue.run();
+
+        // Event 3 mid-zoom
+        // A single tick zoom with easing completes in approx. 200ms
+        now += 100;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        const midZoomEvent3 = map.getZoom();
+
+        now += 400;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+        const endZoomEvent3 = map.getZoom();
+
+        expect(midZoomEvent1).toBeGreaterThan(startZoomEvent1);
+        expect(midZoomEvent1).toBeLessThan(endZoomEvent1);
+
+        expect(midZoomEvent2).toBeGreaterThan(startZoomEvent2);
+        expect(midZoomEvent2).toBeLessThan(endZoomEvent2);
+
+        expect(midZoomEvent3).toBeGreaterThan(startZoomEvent3);
+        expect(midZoomEvent3).toBeLessThan(endZoomEvent3);
 
         map.remove();
     });
@@ -200,11 +387,10 @@ describe('ScrollZoomHandler', () => {
         map.remove();
     });
 
-    test('emits one movestart event and one moveend event while zooming', () => {
+    test('emits one movestart event and one moveend event while zooming', async () => {
         const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
         browserNow.mockReturnValue(now);
-        vi.useFakeTimers();
         setPerformance();
         const map = createMap();
 
@@ -240,7 +426,7 @@ describe('ScrollZoomHandler', () => {
             }
         }
 
-        vi.advanceTimersByTime(200);
+        await map.once('zoomend');
 
         map._renderTaskQueue.run();
 
@@ -249,12 +435,11 @@ describe('ScrollZoomHandler', () => {
 
     });
 
-    test('emits one zoomstart event and one zoomend event while zooming', () => {
+    test('emits one zoomstart event and one zoomend event while zooming', async () => {
         const browserNow = vi.spyOn(browser, 'now');
         let now = 1555555555555;
         browserNow.mockReturnValue(now);
 
-        vi.useFakeTimers();
         setPerformance();
         const map = createMap();
 
@@ -290,7 +475,7 @@ describe('ScrollZoomHandler', () => {
             }
         }
 
-        vi.advanceTimersByTime(200);
+        await map.once('zoomend');
         map._renderTaskQueue.run();
 
         expect(startCount).toBe(1);
@@ -331,9 +516,7 @@ describe('ScrollZoomHandler', () => {
         const map = createMap();
         map._elevateCameraIfInsideTerrain = (_tr : any) => ({});
         map._renderTaskQueue.run();
-        map.terrain = {
-            pointCoordinate: () => null
-        } as any;
+        map.terrain = createTerrain();
 
         // simulate a single 'wheel' event
         simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta, clientX: 1000, clientY: 1000});
@@ -358,9 +541,7 @@ describe('ScrollZoomHandler', () => {
         const map = createMap();
         map._elevateCameraIfInsideTerrain = (_tr : any) => ({});
         map._renderTaskQueue.run();
-        map.terrain = {
-            pointCoordinate: () => null
-        } as any;
+        map.terrain = createTerrain();
 
         // simulate a single 'wheel' event
         simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta, clientX: 1000, clientY: 1000});
@@ -385,9 +566,7 @@ describe('ScrollZoomHandler', () => {
         let map = createMap();
         map._elevateCameraIfInsideTerrain = (_tr : any) => ({});
         map._renderTaskQueue.run();
-        map.terrain = {
-            pointCoordinate: () => null
-        } as any;
+        map.terrain = createTerrain();
         map.setZoom(5);
         map.setMaxPitch(85);
         map.setPitch(80);
@@ -405,14 +584,13 @@ describe('ScrollZoomHandler', () => {
         expect(map.getCenter().lat).toBeCloseTo(0, 3);
         expect(map.getCenter().lng).toBeCloseTo(0, 3);
         expect(map.getZoom()).toBeCloseTo(5.02856, 3);
+        map.remove();
 
         // do the same test on the bottom
         map = createMap();
         map._elevateCameraIfInsideTerrain = (_tr : any) => ({});
         map._renderTaskQueue.run();
-        map.terrain = {
-            pointCoordinate: () => null
-        } as any;
+        map.terrain = createTerrain();
         map.setZoom(5);
         map.setMaxPitch(85);
         map.setPitch(80);
@@ -431,5 +609,53 @@ describe('ScrollZoomHandler', () => {
         expect(map.getZoom()).toBeCloseTo(5.02856, 3);
 
         map.remove();
+    });
+
+    test('Clamps zoom at high latitude to keep globe consistent size', async () => {
+        const browserNow = vi.spyOn(browser, 'now');
+        const map = createMap();
+        await map.once('load');
+
+        map.setProjection({type: 'globe'});
+        map.setMinZoom(0);
+
+        scrollOutAtLat(map, 80, browserNow);
+        expect(map.getZoom()).toBeCloseTo(-2.53, 2);
+        scrollOutAtLat(map, -80, browserNow);
+        expect(map.getZoom()).toBeCloseTo(-2.53, 2);
+        scrollOutAtLat(map, 0, browserNow);
+        expect(map.getZoom()).toBeCloseTo(0, 2);
+    });
+
+    test('Clamps zoom at high latitude to keep globe consistent size using mouse wheel', async () => {
+        const browserNow = vi.spyOn(browser, 'now');
+        const map = createMap();
+        await map.once('load');
+
+        map.setProjection({type: 'globe'});
+        map.setMinZoom(0);
+
+        scrollOutAtLat(map, 80, browserNow, simulate.magicWheelZoomDelta);
+        expect(map.getZoom()).toBeCloseTo(-2.53, 2);
+        scrollOutAtLat(map, -80, browserNow, simulate.magicWheelZoomDelta);
+        expect(map.getZoom()).toBeCloseTo(-2.53, 2);
+        scrollOutAtLat(map, 0, browserNow, simulate.magicWheelZoomDelta);
+        expect(map.getZoom()).toBeCloseTo(0, 2);
+    });
+
+    test('Clamps to min/max zoom when using mercator projection', async () => {
+        const browserNow = vi.spyOn(browser, 'now');
+        const map = createMap();
+        await map.once('load');
+
+        map.setProjection({type: 'mercator'});
+        map.setMinZoom(0);
+
+        scrollOutAtLat(map, 80, browserNow);
+        expect(map.getZoom()).toBeCloseTo(0, 2);
+        scrollOutAtLat(map, -80, browserNow);
+        expect(map.getZoom()).toBeCloseTo(0, 2);
+        scrollOutAtLat(map, 0, browserNow);
+        expect(map.getZoom()).toBeCloseTo(0, 2);
     });
 });

@@ -57,15 +57,22 @@ import type {
     SkySpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
-import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
+import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {type ITransform} from '../geo/transform_interface';
 import {type ICameraHelper} from '../geo/projection/camera_helper';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
+import {isAbortError} from '../util/abort_error';
+import {isFramebufferNotCompleteError} from '../util/framebuffer_error';
+import {createCalculateTileZoomFunction} from '../geo/projection/covering_tiles';
+import {CanonicalTileID} from '../source/tile_id';
 
 const version = packageJSON.version;
+
+type WebGLSupportedVersions = 'webgl2' | 'webgl' | undefined;
+type WebGLContextAttributesWithType = WebGLContextAttributes & {contextType?: WebGLSupportedVersions};
 
 /**
  * The {@link Map} options object.
@@ -113,21 +120,12 @@ export type MapOptions = {
      */
     logoPosition?: ControlPosition;
     /**
-     * If `true`, map creation will fail if the performance of MapLibre GL JS would be dramatically worse than expected
-     * (i.e. a software renderer would be used).
-     * @defaultValue false
+     * Set of WebGLContextAttributes that are applied to the WebGL context of the map.
+     * See https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext for more details.
+     * `contextType` can be set to `webgl2` or `webgl` to force a WebGL version. Not setting it, Maplibre will do it's best to get a suitable context.
+     * @defaultValue antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: false, failIfMajorPerformanceCaveat: false, desynchronized: false, contextType: 'webgl2withfallback'
      */
-    failIfMajorPerformanceCaveat?: boolean;
-    /**
-     * If `true`, the map's canvas can be exported to a PNG using `map.getCanvas().toDataURL()`. This is `false` by default as a performance optimization.
-     * @defaultValue false
-     */
-    preserveDrawingBuffer?: boolean;
-    /**
-     * If `true`, the gl context will be created with MSAA antialiasing, which can be useful for antialiasing custom layers.
-     * Disabled by default as a performance optimization.
-     */
-    antialias?: boolean;
+    canvasContextAttributes?: WebGLContextAttributesWithType;
     /**
      * If `false`, the map won't attempt to re-request tiles once they expire per their HTTP `cacheControl`/`expires` headers.
      * @defaultValue true
@@ -362,7 +360,7 @@ export type MapOptions = {
 
 export type AddImageOptions = {
 
-}
+};
 
 // This type is used inside map since all properties are assigned a default value.
 export type CompleteMapOptions = Complete<MapOptions>;
@@ -371,7 +369,7 @@ type DelegatedListener = {
     layers: string[];
     listener: Listener;
     delegates: {[E in keyof MapEventType]?: Delegate<MapEventType[E]>};
-}
+};
 
 type Delegate<E extends Event = Event> = (e: E) => void;
 
@@ -391,9 +389,16 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     bearingSnap: 7,
     attributionControl: defaultAttributionControlOptions,
     maplibreLogo: false,
-    failIfMajorPerformanceCaveat: false,
-    preserveDrawingBuffer: false,
     refreshExpiredTiles: true,
+
+    canvasContextAttributes: {
+        antialias: false,
+        preserveDrawingBuffer: false,
+        powerPreference: 'high-performance',
+        failIfMajorPerformanceCaveat: false,
+        desynchronized: false,
+        contextType: undefined
+    },
 
     scrollZoom: true,
     minZoom: defaultMinZoom,
@@ -498,9 +503,7 @@ export class Map extends Camera {
     _fullyLoaded: boolean;
     _trackResize: boolean;
     _resizeObserver: ResizeObserver;
-    _preserveDrawingBuffer: boolean;
-    _failIfMajorPerformanceCaveat: boolean;
-    _antialias: boolean;
+    _canvasContextAttributes: WebGLContextAttributesWithType;
     _refreshExpiredTiles: boolean;
     _hash: Hash;
     _delegatedListeners: Record<string, DelegatedListener[]>;
@@ -593,7 +596,10 @@ export class Map extends Camera {
     constructor(options: MapOptions) {
         PerformanceUtils.mark(PerformanceMarkers.create);
 
-        const resolvedOptions = {...defaultOptions, ...options} as CompleteMapOptions;
+        const resolvedOptions = {...defaultOptions, ...options, canvasContextAttributes: {
+            ...defaultOptions.canvasContextAttributes,
+            ...options.canvasContextAttributes
+        }} as CompleteMapOptions;
 
         if (resolvedOptions.minZoom != null && resolvedOptions.maxZoom != null && resolvedOptions.minZoom > resolvedOptions.maxZoom) {
             throw new Error('maxZoom must be greater than or equal to minZoom');
@@ -637,9 +643,7 @@ export class Map extends Camera {
         this._interactive = resolvedOptions.interactive;
         this._maxTileCacheSize = resolvedOptions.maxTileCacheSize;
         this._maxTileCacheZoomLevels = resolvedOptions.maxTileCacheZoomLevels;
-        this._failIfMajorPerformanceCaveat = resolvedOptions.failIfMajorPerformanceCaveat === true;
-        this._preserveDrawingBuffer = resolvedOptions.preserveDrawingBuffer === true;
-        this._antialias = resolvedOptions.antialias === true;
+        this._canvasContextAttributes = {...resolvedOptions.canvasContextAttributes};
         this._trackResize = resolvedOptions.trackResize === true;
         this._bearingSnap = resolvedOptions.bearingSnap;
         this._centerClampedToGround = resolvedOptions.centerClampedToGround;
@@ -725,7 +729,11 @@ export class Map extends Camera {
             }
         }
 
-        this.resize();
+        // When no style is set or it's using something other than the globe projection, we can constrain the camera.
+        // When a style is set with other projections though, we can't constrain the camera until the style is loaded
+        // and the correct transform is used. Otherwise, valid points in the desired projection could be rejected
+        const shouldConstrainUsingMercatorTransform = typeof resolvedOptions.style === 'string' || !(resolvedOptions.style?.projection?.type === 'globe');
+        this.resize(null, shouldConstrainUsingMercatorTransform);
 
         this._localIdeographFontFamily = resolvedOptions.localIdeographFontFamily;
         this._validateStyle = resolvedOptions.validateStyle;
@@ -739,6 +747,8 @@ export class Map extends Camera {
             this.addControl(new LogoControl(), resolvedOptions.logoPosition);
 
         this.on('style.load', () => {
+            // If we didn't constrain the camera before, we do it now
+            if (!shouldConstrainUsingMercatorTransform) this._resizeTransform();
             if (this.transform.unmodified) {
                 const coercedOptions = pick(this.style.stylesheet, ['center', 'zoom', 'bearing', 'pitch', 'roll']) as CameraOptions;
                 this.jumpTo(coercedOptions);
@@ -878,10 +888,8 @@ export class Map extends Camera {
      * if (mapDiv.style.visibility === true) map.resize();
      * ```
      */
-    resize(eventData?: any): Map {
-        const dimensions = this._containerDimensions();
-        const width = dimensions[0];
-        const height = dimensions[1];
+    resize(eventData?: any, constrainTransform = true): Map {
+        const [width, height] = this._containerDimensions();
 
         const clampedPixelRatio = this._getClampedPixelRatio(width, height);
         this._resizeCanvas(width, height, clampedPixelRatio);
@@ -897,8 +905,7 @@ export class Map extends Camera {
             this.painter.resize(width, height, clampedPixelRatio);
         }
 
-        this.transform.resize(width, height);
-        this._requestedCameraState?.resize(width, height);
+        this._resizeTransform(constrainTransform);
 
         const fireMoving = !this._moving;
         if (fireMoving) {
@@ -912,6 +919,13 @@ export class Map extends Camera {
         if (fireMoving) this.fire(new Event('moveend', eventData));
 
         return this;
+    }
+
+    _resizeTransform(constrainTransform = true) {
+        const [width, height] = this._containerDimensions();
+
+        this.transform.resize(width, height, constrainTransform);
+        this._requestedCameraState?.resize(width, height, constrainTransform);
     }
 
     /**
@@ -1714,7 +1728,7 @@ export class Map extends Camera {
         if (!this.style) {
             return [];
         }
-        let queryGeometry;
+        let queryGeometry: Point[];
         const isGeometry = geometryOrOptions instanceof Point || Array.isArray(geometryOrOptions);
         const geometry = isGeometry ? geometryOrOptions : [[0, 0], [this.transform.width, this.transform.height]];
         options = options || (isGeometry ? {} : geometryOrOptions) || {};
@@ -1760,7 +1774,7 @@ export class Map extends Camera {
      * ```
      *
      */
-    querySourceFeatures(sourceId: string, parameters?: QuerySourceFeatureOptions | null): MapGeoJSONFeature[] {
+    querySourceFeatures(sourceId: string, parameters?: QuerySourceFeatureOptions | null): GeoJSONFeature[] {
         return this.style.querySourceFeatures(sourceId, parameters);
     }
 
@@ -2074,7 +2088,12 @@ export class Map extends Camera {
                             this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
                         }
                     }
-                    this.terrain.sourceCache.freeRtt(e.tile.tileID);
+
+                    if (e.source?.type === 'image') {
+                        this.terrain.sourceCache.freeRtt();
+                    } else {
+                        this.terrain.sourceCache.freeRtt(e.tile.tileID);
+                    }
                 }
             };
             this.style.on('data', this._terrainDataCallback);
@@ -2157,6 +2176,64 @@ export class Map extends Camera {
      */
     getSource<TSource extends Source>(id: string): TSource | undefined {
         return this.style.getSource(id) as TSource;
+    }
+
+    /**
+     * Change the tile Level of Detail behavior of the specified source. These parameters have no effect when 
+     * pitch == 0, and the largest effect when the horizon is visible on screen.
+     *
+     * @param maxZoomLevelsOnScreen - The maximum number of distinct zoom levels allowed on screen at a time.
+     * There will generally be fewer zoom levels on the screen, the maximum can only be reached when the horizon
+     * is at the top of the screen. Increasing the maximum number of zoom levels causes the zoom level to decay 
+     * faster toward the horizon.
+     * @param tileCountMaxMinRatio - The ratio of the maximum number of tiles loaded (at high pitch) to the minimum
+     * number of tiles loaded. Increasing this ratio allows more tiles to be loaded at high pitch angles. If the ratio
+     * would otherwise be exceeded, the zoom level is reduced uniformly to keep the number of tiles within the limit.
+     * @param sourceId - The ID of the source to set tile LOD parameters for. All sources will be updated if unspecified.
+     * If `sourceId` is specified but a corresponding source does not exist, an error is thrown.
+     * @example
+     * ```ts
+     * map.setSourceTileLodParams(4.0, 3.0, 'terrain');
+     * ```
+     * @see [Modify Level of Detail behavior](https://maplibre.org/maplibre-gl-js/docs/examples/lod-control/)
+
+     */
+    setSourceTileLodParams(maxZoomLevelsOnScreen: number, tileCountMaxMinRatio: number, sourceId?: string) : this {
+        if (sourceId) {
+            const source = this.getSource(sourceId);
+            if(!source) {
+                throw new Error(`There is no source with ID "${sourceId}", cannot set LOD parameters`);
+            }
+            source.calculateTileZoom = createCalculateTileZoomFunction(Math.max(1, maxZoomLevelsOnScreen), Math.max(1, tileCountMaxMinRatio));
+        } else {
+            for (const id in this.style.sourceCaches) {
+                this.style.sourceCaches[id].getSource().calculateTileZoom = createCalculateTileZoomFunction(Math.max(1, maxZoomLevelsOnScreen), Math.max(1, tileCountMaxMinRatio));
+            }
+        }
+        this._update(true);
+        return this;
+    }
+
+    /**
+     * Triggers a reload of the selected tiles
+     *
+     * @param sourceId - The ID of the source
+     * @param tileIds - An array of tile IDs to be reloaded. If not defined, all tiles will be reloaded.
+     * @example
+     * ```ts
+     * map.refreshTiles('satellite', [{x:1024, y: 1023, z: 11}, {x:1023, y: 1023, z: 11}]);
+     * ```
+     */
+    refreshTiles(sourceId: string, tileIds?: Array<{x: number; y: number; z: number}>) {
+        const sourceCache = this.style.sourceCaches[sourceId];
+        if(!sourceCache) {
+            throw new Error(`There is no source cache with ID "${sourceId}", cannot refresh tile`);
+        }
+        if (tileIds === undefined) {
+            sourceCache.reload();
+        } else {
+            sourceCache.refreshTiles(tileIds.map((tileId) => {return new CanonicalTileID(tileId.z, tileId.x, tileId.y);}));
+        }
     }
 
     /**
@@ -2835,8 +2912,8 @@ export class Map extends Camera {
      * This method can only be used with sources that have a `feature.id` attribute. The `feature.id` attribute can be defined in three ways:
      *
      * - For vector or GeoJSON sources, including an `id` attribute in the original data file.
-     * - For vector or GeoJSON sources, using the [`promoteId`](https://maplibre.org/maplibre-style-spec/sources/#vector-promoteId) option at the time the source is defined.
-     * - For GeoJSON sources, using the [`generateId`](https://maplibre.org/maplibre-style-spec/sources/#geojson-generateId) option to auto-assign an `id` based on the feature's index in the source data. If you change feature data using `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
+     * - For vector or GeoJSON sources, using the [`promoteId`](https://maplibre.org/maplibre-style-spec/sources/#promoteid) option at the time the source is defined.
+     * - For GeoJSON sources, using the [`generateId`](https://maplibre.org/maplibre-style-spec/sources/#generateid) option to auto-assign an `id` based on the feature's index in the source data. If you change feature data using `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
      *
      * _Note: You can use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state) to access the values in a feature's state object for the purposes of styling._
      *
@@ -3038,13 +3115,14 @@ export class Map extends Camera {
 
     _setupPainter() {
 
+        // Maplibre WebGL context requires alpha, depth and stencil buffers. It also forces premultipliedAlpha: true.
+        // We use the values provided in the map constructor for the rest of context attributes
         const attributes = {
+            ...this._canvasContextAttributes,
             alpha: true,
-            stencil: true,
             depth: true,
-            failIfMajorPerformanceCaveat: this._failIfMajorPerformanceCaveat,
-            preserveDrawingBuffer: this._preserveDrawingBuffer,
-            antialias: this._antialias || false
+            stencil: true,
+            premultipliedAlpha: true
         };
 
         let webglcontextcreationerrorDetailObject: any = null;
@@ -3056,9 +3134,12 @@ export class Map extends Camera {
             }
         }, {once: true});
 
-        const gl =
-            this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext ||
-            this._canvas.getContext('webgl', attributes) as WebGLRenderingContext;
+        let gl: WebGL2RenderingContext | WebGLRenderingContext | null = null;
+        if (this._canvasContextAttributes.contextType) {
+            gl = this._canvas.getContext(this._canvasContextAttributes.contextType, attributes) as WebGL2RenderingContext | WebGLRenderingContext;
+        } else {
+            gl = this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext || this._canvas.getContext('webgl', attributes) as WebGLRenderingContext;
+        }
 
         if (!gl) {
             const msg = 'Failed to initialize WebGL';
@@ -3168,6 +3249,8 @@ export class Map extends Camera {
     _render(paintStartTimeStamp: number) {
         const fadeDuration = this._idleTriggered ? this._fadeDuration : 0;
 
+        const isGlobeRendering = this.style.projection?.transitionState > 0;
+
         // A custom layer may have used the context asynchronously. Mark the state as dirty.
         this.painter.context.setDirty();
         this.painter.setBaseState();
@@ -3204,12 +3287,14 @@ export class Map extends Camera {
             this.style.update(parameters);
         }
 
-        const transformUpdateResult = this.transform.newFrameUpdate();
+        const globeRenderingChanged = this.style.projection?.transitionState > 0 !== isGlobeRendering;
+        this.style.projection?.setErrorQueryLatitudeDegrees(this.transform.center.lat);
+        this.transform.setTransitionState(this.style.projection?.transitionState, this.style.projection?.latitudeErrorCorrectionRadians);
 
         // If we are in _render for any reason other than an in-progress paint
         // transition, update source caches to check for and load any tiles we
         // need for the current transform
-        if (this.style && (this._sourcesDirty || transformUpdateResult.forceSourceUpdate)) {
+        if (this.style && (this._sourcesDirty || globeRenderingChanged)) {
             this._sourcesDirty = false;
             this.style._updateSources(this.transform);
         }
@@ -3228,11 +3313,7 @@ export class Map extends Camera {
             }
         }
 
-        this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, transformUpdateResult.forcePlacementUpdate);
-
-        if (transformUpdateResult.fireProjectionEvent) {
-            this.fire(new Event('projectiontransition', transformUpdateResult.fireProjectionEvent));
-        }
+        this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
 
         // Actually draw
         this.painter.render(this.style, {
@@ -3269,7 +3350,7 @@ export class Map extends Camera {
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
         // method, synchronous events fired during Style#update or
         // Style#_updateSources could have caused them to be set again.
-        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this.style.projection.isRenderingDirty() || this.transform.isRenderingDirty();
+        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty;
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();
         } else if (!this.isMoving() && this.loaded()) {
@@ -3363,11 +3444,21 @@ export class Map extends Camera {
     triggerRepaint() {
         if (this.style && !this._frameRequest) {
             this._frameRequest = new AbortController();
-            browser.frameAsync(this._frameRequest).then((paintStartTimeStamp: number) => {
-                PerformanceUtils.frame(paintStartTimeStamp);
-                this._frameRequest = null;
-                this._render(paintStartTimeStamp);
-            }).catch(() => {}); // ignore abort error
+            browser.frame(
+                this._frameRequest,
+                (paintStartTimeStamp) => {
+                    PerformanceUtils.frame(paintStartTimeStamp);
+                    this._frameRequest = null;
+                    try {
+                        this._render(paintStartTimeStamp);
+                    } catch(error) {
+                        if (!isAbortError(error) && !isFramebufferNotCompleteError(error)) {
+                            throw error;
+                        }
+                    }
+                },
+                () => {}
+            );
         }
     }
 

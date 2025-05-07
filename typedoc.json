@@ -16,7 +16,6 @@
     "excludeNotDocumented": true,
     "treatWarningsAsErrors": true,
     "entryPoints": ["./src/index.ts"],
-    "intentionallyNotExported": ["CollisionBoxArray"],
     "navigation": {
         "includeCategories": false,
         "includeGroups": true

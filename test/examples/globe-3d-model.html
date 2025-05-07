@@ -63,7 +63,7 @@
             center: [150.16546137527212, -35.017179237129994],
             maxPitch: 80,
             pitch: 70,
-            antialias: true, // create the gl context with MSAA antialiasing, so custom layers are antialiased
+            canvasContextAttributes: {antialias: true} // create the gl context with MSAA antialiasing, so custom layers are antialiased
         });
 
         map.on('style.load', () => {
@@ -129,7 +129,7 @@
 
                 // We can use this API to get the correct model matrix.
                 // It will work regardless of current projection.
-                // See MapLibre source code, files mercator_transform.ts or globe_transform.ts, function "getCustomLayerArgs".
+                // See MapLibre source code, file "mercator_transform.ts" or "vertical_perspective_transform.ts".
                 const modelMatrix = map.transform.getMatrixForModel(modelOrigin, modelAltitude);
                 const m = new THREE.Matrix4().fromArray(args.defaultProjectionData.mainMatrix);
                 const l = new THREE.Matrix4().fromArray(modelMatrix).scale(

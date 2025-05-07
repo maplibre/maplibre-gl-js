@@ -182,7 +182,7 @@ export class RasterTileSource extends Evented implements Source {
                 return;
             }
             if (response && response.data) {
-                if (this.map._refreshExpiredTiles && response.cacheControl && response.expires) {
+                if (this.map._refreshExpiredTiles && (response.cacheControl || response.expires)) {
                     tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
                 }
                 const context = this.map.painter.context;

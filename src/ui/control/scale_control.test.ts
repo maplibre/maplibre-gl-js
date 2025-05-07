@@ -8,7 +8,7 @@ beforeEach(() => {
 
 describe('ScaleControl', () => {
     test('appears in bottom-left by default', () => {
-        const map = createMap(undefined, undefined);
+        const map = createMap();
         map.addControl(new ScaleControl(undefined));
 
         expect(
@@ -17,7 +17,7 @@ describe('ScaleControl', () => {
     });
 
     test('appears in the position specified by the position option', () => {
-        const map = createMap(undefined, undefined);
+        const map = createMap();
         map.addControl(new ScaleControl(undefined), 'top-left');
 
         expect(
@@ -26,7 +26,7 @@ describe('ScaleControl', () => {
     });
 
     test('should change unit of distance after calling setUnit', () => {
-        const map = createMap(undefined, undefined);
+        const map = createMap();
         const scale = new ScaleControl(undefined);
         const selector = '.maplibregl-ctrl-bottom-left .maplibregl-ctrl-scale';
         map.addControl(scale);
@@ -40,7 +40,7 @@ describe('ScaleControl', () => {
     });
 
     test('should respect the maxWidth regardless of the unit and actual scale', () => {
-        const map = createMap(undefined, undefined);
+        const map = createMap();
         const maxWidth = 100;
         const scale = new ScaleControl({maxWidth, unit: 'nautical'});
         const selector = '.maplibregl-ctrl-bottom-left .maplibregl-ctrl-scale';

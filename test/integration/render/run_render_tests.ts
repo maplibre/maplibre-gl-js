@@ -56,7 +56,7 @@ type TestData = {
     actual: string;
     diff: string;
     expected: string;
-}
+};
 
 type RenderOptions = {
     tests: any[];
@@ -65,13 +65,13 @@ type RenderOptions = {
     seed: string;
     debug: boolean;
     openBrowser: boolean;
-}
+};
 
 type StyleWithTestData = StyleSpecification & {
     metadata : {
         test: TestData;
     };
-}
+};
 
 type TestStats = {
     total: number;
@@ -156,11 +156,6 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
         throw new Error(`No expected*.png files found as ${dir}; did you mean to run tests with UPDATE=true?`);
     }
 
-    if (process.env.UPDATE) {
-        fs.writeFileSync(expectedPath, PNG.sync.write(actualImg));
-        return;
-    }
-
     // if we have multiple expected images, we'll compare against each one and pick the one with
     // the least amount of difference; this is useful for covering features that render differently
     // depending on platform, i.e. heatmaps use half-float textures for improved rendering where supported
@@ -187,16 +182,21 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
         }
     }
 
-    const diffBuf = PNG.sync.write(minDiffImg, {filterType: 4});
-
-    fs.writeFileSync(diffPath, diffBuf);
+    if (minDiffImg) {
+        const diffBuf = PNG.sync.write(minDiffImg, {filterType: 4});
+        fs.writeFileSync(diffPath, diffBuf);
+        testData.diff = diffBuf.toString('base64');
+        testData.expected = minExpectedBuf.toString('base64');
+    }
     fs.writeFileSync(actualPath, actualBuf);
 
     testData.difference = minDiff;
     testData.ok = minDiff <= testData.allowed;
 
-    testData.expected = minExpectedBuf.toString('base64');
-    testData.diff = diffBuf.toString('base64');
+    if (!testData.ok && process.env.UPDATE) {
+        console.log(`Updating ${expectedPath}`);
+        fs.writeFileSync(expectedPath, PNG.sync.write(actualImg));
+    }
 }
 
 /**
@@ -301,7 +301,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 }`;
 
                 const fragmentSource = `#version 300 es
-                
+
                 out highp vec4 fragColor;
                 void main() {
                     fragColor = vec4(1.0, 0.0, 0.0, 1.0);
@@ -452,7 +452,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 // Inject MapLibre projection code
                 ${shaderDescription.vertexShaderPrelude}
                 ${shaderDescription.define}
-                
+
                 in vec3 a_pos;
 
                 void main() {
@@ -732,7 +732,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 attributionControl: false,
                 maxPitch: options.maxPitch,
                 pixelRatio: options.pixelRatio,
-                preserveDrawingBuffer: true,
+                canvasContextAttributes: {preserveDrawingBuffer: true, powerPreference: 'default'},
                 fadeDuration: options.fadeDuration || 0,
                 localIdeographFontFamily: options.localIdeographFontFamily || false as any,
                 crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions,
@@ -982,15 +982,30 @@ async function executeRenderTests() {
         options.openBrowser = checkParameter(options, '--open-browser');
     }
 
-    const browser = await puppeteer.launch({headless: !options.openBrowser, args: ['--enable-webgl', '--no-sandbox',
-        '--disable-web-security']});
+    const browser = await puppeteer.launch({
+        headless: !options.openBrowser,
+        args: [
+            '--enable-webgl',
+            '--no-sandbox',
+            '--disable-web-security'
+        ]});
 
-    const server = http.createServer(
-        st({
-            path: 'test/integration/assets',
-            cors: true,
-        })
-    );
+    const mount = st({
+        path: 'test/integration/assets',
+        cors: true,
+        passthrough: true,
+    });
+    const server = http.createServer((req, res) => {
+        mount(req, res, () => {
+            if (req.url.includes('/sparse204/1-')) {
+                res.writeHead(204);
+                res.end('');
+            } else {
+                res.writeHead(404);
+                res.end('');
+            }
+        });
+    });
 
     const mvtServer = http.createServer(
         st({

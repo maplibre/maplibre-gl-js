@@ -1,5 +1,5 @@
 import {beforeEach, test, expect} from 'vitest';
-import {createMap, beforeMapTest} from '../../util/test/util';
+import {createMap, beforeMapTest, createTerrain} from '../../util/test/util';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 
 beforeEach(() => {
@@ -79,16 +79,14 @@ test('throw on maxZoom smaller than minZoom at init with falsey maxZoom', () => 
     }).toThrow(new Error('maxZoom must be greater than or equal to minZoom'));
 });
 
-test('recalculate zoom is done on the camera update transform', () => {
+test('recalculate zoom is done on the camera update transform', async () => {
     const map = createMap({
         interactive: true,
         clickTolerance: 4,
         transformCameraUpdate: ({zoom}) => ({zoom: zoom + 0.1})
     });
-    map.terrain = {
-        pointCoordinate: () => null,
-        getElevationForLngLatZoom: () => 1000
-    } as any;
+    await map.once('style.load');
+    map.terrain = createTerrain();
     const canvas = map.getCanvas();
     simulate.dragWithMove(canvas, {x: 100, y: 100}, {x: 100, y: 150});
     map._renderTaskQueue.run();

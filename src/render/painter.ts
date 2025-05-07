@@ -33,7 +33,7 @@ import {drawDepth, drawCoords} from './draw_terrain';
 import {type OverscaledTileID} from '../source/tile_id';
 import {drawSky, drawAtmosphere} from './draw_sky';
 import {Mesh} from './mesh';
-import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator';
+import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection';
 
 import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {Style} from '../style/style';
@@ -75,7 +75,7 @@ type PainterOptions = {
 export type RenderOptions = {
     isRenderingToTexture: boolean;
     isRenderingGlobe: boolean;
-}
+};
 
 /**
  * @internal
@@ -313,7 +313,7 @@ export class Painter {
 
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true, 'stencil');
 
-            const projectionData = transform.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix: true, applyTerrainMatrix: true});
+            const projectionData = transform.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix: !renderToTexture, applyTerrainMatrix: true});
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.
@@ -492,7 +492,7 @@ export class Painter {
         const coordsAscending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
-        const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: style.projection.name === 'globe'};
+        const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: style.projection?.transitionState > 0};
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
@@ -539,7 +539,7 @@ export class Painter {
         }
 
         // Execute offscreen GPU tasks of the projection manager
-        this.style.projection.updateGPUdependent({
+        this.style.projection?.updateGPUdependent({
             context: this.context,
             useProgram: (name: string) => this.useProgram(name)
         });
@@ -599,7 +599,7 @@ export class Painter {
             // separate clipping masks
             const coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
 
-            this._renderTileClippingMasks(layer, coordsAscending[layer.source], false);
+            this._renderTileClippingMasks(layer, coordsAscending[layer.source], !!this.renderToTexture);
             this.renderLayer(this, sourceCache, layer, coords, renderOptions);
         }
 
@@ -711,12 +711,12 @@ export class Painter {
      * Finds the required shader and its variant (base/terrain/globe, etc.) and binds it, compiling a new shader if required.
      * @param name - Name of the desired shader.
      * @param programConfiguration - Configuration of shader's inputs.
-     * @param defines - Additional macros to be injected at the beginning of the shader. Expected format is `['#define XYZ']`, etc.
      * @param forceSimpleProjection - Whether to force the use of a shader variant with simple mercator projection vertex shader.
+     * @param defines - Additional macros to be injected at the beginning of the shader. Expected format is `['#define XYZ']`, etc.
      * False by default. Use true when drawing with a simple projection matrix is desired, eg. when drawing a fullscreen quad.
      * @returns
      */
-    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, forceSimpleProjection: boolean = false): Program<any> {
+    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, forceSimpleProjection: boolean = false, defines: Array<string> = []): Program<any> {
         this.cache = this.cache || {};
         const useTerrain = !!this.style.map.terrain;
 
@@ -729,8 +729,9 @@ export class Painter {
         const configurationKey = (programConfiguration ? programConfiguration.cacheKey : '');
         const overdrawKey = (this._showOverdrawInspector ? '/overdraw' : '');
         const terrainKey = (useTerrain ? '/terrain' : '');
+        const definesKey = (defines ? `/${defines.join('/')}` : '');
 
-        const key = name + configurationKey + projectionKey + overdrawKey + terrainKey;
+        const key = name + configurationKey + projectionKey + overdrawKey + terrainKey + definesKey;
 
         if (!this.cache[key]) {
             this.cache[key] = new Program(
@@ -741,7 +742,8 @@ export class Painter {
                 this._showOverdrawInspector,
                 useTerrain,
                 projectionPrelude,
-                projectionDefine
+                projectionDefine,
+                defines
             );
         }
         return this.cache[key];

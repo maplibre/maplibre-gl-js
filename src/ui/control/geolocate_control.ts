@@ -482,32 +482,30 @@ export class GeolocateControl extends Evented implements IControl {
             return;
         }
 
-        if (this.options.trackUserLocation) {
-            if (error.code === 1) {
-                // PERMISSION_DENIED
-                this._watchState = 'OFF';
-                this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-waiting');
-                this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-active');
-                this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-active-error');
-                this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-background');
-                this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-background-error');
-                this._geolocateButton.disabled = true;
-                const title = this._map._getUIString('GeolocateControl.LocationNotAvailable');
-                this._geolocateButton.title = title;
-                this._geolocateButton.setAttribute('aria-label', title);
+        if (error.code === 1) {
+            // PERMISSION_DENIED
+            this._watchState = 'OFF';
+            this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-waiting');
+            this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-active');
+            this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-active-error');
+            this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-background');
+            this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-background-error');
+            this._geolocateButton.disabled = true;
+            const title = this._map._getUIString('GeolocateControl.LocationNotAvailable');
+            this._geolocateButton.title = title;
+            this._geolocateButton.setAttribute('aria-label', title);
 
-                if (this._geolocationWatchID !== undefined) {
-                    this._clearWatch();
-                }
-            } else if (error.code === 3 && noTimeout) {
-                // this represents a forced error state
-                // this was triggered to force immediate geolocation when a watch is already present
-                // see https://github.com/mapbox/mapbox-gl-js/issues/8214
-                // and https://w3c.github.io/geolocation-api/#example-5-forcing-the-user-agent-to-return-a-fresh-cached-position
-                return;
-            } else {
-                this._setErrorState();
+            if (this._geolocationWatchID !== undefined) {
+                this._clearWatch();
             }
+        } else if (error.code === 3 && noTimeout) {
+            // this represents a forced error state
+            // this was triggered to force immediate geolocation when a watch is already present
+            // see https://github.com/mapbox/mapbox-gl-js/issues/8214
+            // and https://w3c.github.io/geolocation-api/#example-5-forcing-the-user-agent-to-return-a-fresh-cached-position
+            return;
+        } else if (this.options.trackUserLocation) {
+            this._setErrorState();
         }
 
         if (this._watchState !== 'OFF' && this.options.showUserLocation) {

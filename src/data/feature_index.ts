@@ -32,11 +32,22 @@ type QueryParameters = {
     queryGeometry: Array<Point>;
     cameraQueryGeometry: Array<Point>;
     queryPadding: number;
+    getElevation: undefined | ((x: number, y: number) => number);
     params: {
         filter?: FilterSpecification;
         layers?: Set<string> | null;
         availableImages?: Array<string>;
     };
+};
+
+export type QueryResults = {
+    [_: string]: QueryResultsItem[];
+};
+
+export type QueryResultsItem = {
+    featureIndex: number;
+    feature: GeoJSONFeature;
+    intersectionZ?: boolean | number;
 };
 
 /**
@@ -110,7 +121,7 @@ export class FeatureIndex {
         styleLayers: {[_: string]: StyleLayer},
         serializedLayers: {[_: string]: any},
         sourceFeatureState: SourceFeatureState
-    ): {[_: string]: Array<{featureIndex: number; feature: GeoJSONFeature}>} {
+    ): QueryResults {
         this.loadVTLayers();
 
         const params = args.params;
@@ -136,7 +147,7 @@ export class FeatureIndex {
 
         matching.sort(topDownFeatureComparator);
 
-        const result = {};
+        const result: QueryResults = {};
         let previousIndex;
         for (let k = 0; k < matching.length; k++) {
             const index = matching[k];
@@ -163,7 +174,18 @@ export class FeatureIndex {
                         featureGeometry = loadGeometry(feature);
                     }
 
-                    return styleLayer.queryIntersectsFeature(queryGeometry, feature, featureState, featureGeometry, this.z, args.transform, pixelsToTileUnits, args.pixelPosMatrix);
+                    return styleLayer.queryIntersectsFeature({
+                        queryGeometry,
+                        feature,
+                        featureState,
+                        geometry: featureGeometry,
+                        zoom: this.z,
+                        transform: args.transform,
+                        pixelsToTileUnits,
+                        pixelPosMatrix: args.pixelPosMatrix,
+                        unwrappedTileID: this.tileID.toUnwrapped(),
+                        getElevation: args.getElevation
+                    });
                 }
             );
         }
@@ -172,13 +194,7 @@ export class FeatureIndex {
     }
 
     loadMatchingFeature(
-        result: {
-            [_: string]: Array<{
-                featureIndex: number;
-                feature: GeoJSONFeature;
-                intersectionZ?: boolean | number;
-            }>;
-        },
+        result: QueryResults,
         bucketIndex: number,
         sourceLayerIndex: number,
         featureIndex: number,
@@ -261,8 +277,8 @@ export class FeatureIndex {
         filterSpec: FilterSpecification,
         filterLayerIDs: Set<string> | null,
         availableImages: Array<string>,
-        styleLayers: {[_: string]: StyleLayer}) {
-        const result = {};
+        styleLayers: {[_: string]: StyleLayer}): QueryResults {
+        const result: QueryResults = {};
         this.loadVTLayers();
 
         const filter = featureFilter(filterSpec);

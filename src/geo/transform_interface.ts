@@ -1,22 +1,15 @@
-import {type LngLat, type LngLatLike} from './lng_lat';
-import {type LngLatBounds} from './lng_lat_bounds';
-import {type MercatorCoordinate} from './mercator_coordinate';
+import type {LngLat, LngLatLike} from './lng_lat';
+import type {LngLatBounds} from './lng_lat_bounds';
+import type {MercatorCoordinate} from './mercator_coordinate';
 import type Point from '@mapbox/point-geometry';
-import {type mat4, type mat2, type vec3, type vec4} from 'gl-matrix';
-import {type UnwrappedTileID, type OverscaledTileID, type CanonicalTileID} from '../source/tile_id';
+import type {mat4, mat2, vec3, vec4} from 'gl-matrix';
+import type {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import type {PaddingOptions} from './edge_insets';
-import {type Terrain} from '../render/terrain';
-import {type PointProjection} from '../symbol/projection';
-import {type MapProjectionEvent} from '../ui/events';
+import type {Terrain} from '../render/terrain';
+import type {PointProjection} from '../symbol/projection';
 import type {ProjectionData, ProjectionDataParams} from './projection/projection_data';
-import {type CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider';
-import {type Frustum} from '../util/primitives/frustum';
-
-export type TransformUpdateResult = {
-    forcePlacementUpdate?: boolean;
-    fireProjectionEvent?: MapProjectionEvent;
-    forceSourceUpdate?: boolean;
-};
+import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider';
+import type {Frustum} from '../util/primitives/frustum';
 
 export interface ITransformGetters {
     get tileSize(): number;
@@ -82,6 +75,14 @@ export interface ITransformGetters {
     get unmodified(): boolean;
 
     get renderWorldCopies(): boolean;
+    /**
+     * The distance from the camera to the center of the map in pixels space.
+     */
+    get cameraToCenterDistance(): number;
+
+    get nearZ(): number;
+    get farZ(): number;
+    get autoCalculateNearFarZ(): boolean;
 }
 
 /**
@@ -147,11 +148,22 @@ interface ITransformMutators {
     setElevation(elevation: number): void;
     setMinElevationForCurrentTile(elevation: number): void;
     setPadding(padding: PaddingOptions): void;
+    /**
+     * Sets the overriding values to use for near and far Z instead of what the transform would normally compute.
+     * If set to undefined, the transform will compute its ideal values.
+     * Calling this will set `autoCalculateNearFarZ` to false.
+     */
+    overrideNearFarZ(nearZ: number, farZ: number): void;
+
+    /**
+     * Resets near and far Z plane override. Sets `autoCalculateNearFarZ` to true.
+     */
+    clearNearFarZOverride(): void;
 
     /**
      * Sets the transform's width and height and recomputes internal matrices.
      */
-    resize(width: number, height: number): void;
+    resize(width: number, height: number, constrainTransform: boolean): void;
     /**
      * Helper method to update edge-insets in place
      *
@@ -184,19 +196,20 @@ interface ITransformMutators {
 
     /**
      * @internal
-     * Signals to the transform that a new frame is starting.
-     * The transform might update some of its internal variables and animations based on this.
-     */
-    newFrameUpdate(): TransformUpdateResult;
-
-    /**
-     * @internal
      * Called before rendering to allow the transform implementation
      * to precompute data needed to render the given tiles.
      * Used in mercator transform to precompute tile matrices (posMatrix).
      * @param coords - Array of tile IDs that will be rendered.
      */
-    precacheTiles(coords: Array<OverscaledTileID>): void;
+    populateCache(coords: Array<OverscaledTileID>): void;
+
+    /**
+     * @internal
+     * Sets the transform's transition state from one projection to another.
+     * @param value - The transition state value.
+     * @param error - The error value.
+     */
+    setTransitionState(value: number, error: number): void;
 }
 
 /**
@@ -242,9 +255,6 @@ export interface IReadonlyTransform extends ITransformGetters {
      */
     get cameraPosition(): vec3;
 
-    get nearZ(): number;
-    get farZ(): number;
-
     /**
      * Returns if the padding params match
      *
@@ -268,7 +278,7 @@ export interface IReadonlyTransform extends ITransformGetters {
 
     /**
      * @internal
-     * Return the clipping plane, behind wich nothing should be rendered. If the camera frustum is sufficient
+     * Return the clipping plane, behind which nothing should be rendered. If the camera frustum is sufficient
      * to describe the render geometry (additional clipping is not required), this may be null.
      */
     getClippingPlane(): vec4 | null;
@@ -399,13 +409,6 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @param unwrappedTileID - the tile ID
      */
     calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4;
-
-    /**
-     * @internal
-     * True when an animation handled by the transform is in progress,
-     * requiring MapLibre to keep rendering new frames.
-     */
-    isRenderingDirty(): boolean;
 
     /**
      * @internal

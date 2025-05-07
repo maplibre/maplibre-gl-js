@@ -19,7 +19,7 @@ import type {Style} from '../style/style';
 import type {Dispatcher} from '../util/dispatcher';
 import type {IReadonlyTransform, ITransform} from '../geo/transform_interface';
 import type {TileState} from './tile';
-import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {ICanonicalTileID, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapSourceDataEvent} from '../ui/events';
 import type {Terrain} from '../render/terrain';
 import type {CanvasSourceSpecification} from './canvas_source';
@@ -31,7 +31,7 @@ type TileResult = {
     queryGeometry: Array<Point>;
     cameraQueryGeometry: Array<Point>;
     scale: number;
-}
+};
 
 /**
  * @internal
@@ -394,7 +394,7 @@ export class SourceCache extends Evented {
             while (tileID.overscaledZ > zoom) {
                 tileID = tileID.scaledTo(tileID.overscaledZ - 1);
 
-                if (idealTiles[tileID.key]) {
+                if (idealTiles[tileID.key] || (idealTiles[tileID.canonical.key])) {
                     // found a parent that needed a loaded child; retain that child
                     retain[topmostLoadedID.key] = topmostLoadedID;
                     break;
@@ -895,6 +895,20 @@ export class SourceCache extends Evented {
     }
 
     /**
+     * Reload any currently renderable tiles that are match one of the incoming `tileId` x/y/z
+     */
+    refreshTiles(tileIds: Array<ICanonicalTileID>) {
+        for (const id in this._tiles) {
+            if (!this._isIdRenderable(id)) {
+                continue;
+            }
+            if (tileIds.some(tid => tid.equals(this._tiles[id].tileID.canonical))) {
+                this._reloadTile(id, 'expired');
+            }
+        }
+    }
+
+    /**
      * Remove a tile, given its id, from the pyramid
      */
     _removeTile(id: string) {
@@ -960,7 +974,7 @@ export class SourceCache extends Evented {
      * @param pointQueryGeometry - coordinates of the corners of bounding rectangle
      * @returns result items have `{tile, minX, maxX, minY, maxY}`, where min/max bounding values are the given bounds transformed in into the coordinate space of this tile.
      */
-    tilesIn(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean) {
+    tilesIn(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean): TileResult[] {
         const tileResults: TileResult[] = [];
 
         const transform = this.transform;
@@ -993,7 +1007,7 @@ export class SourceCache extends Evented {
                 // Tiles held for fading are covered by tiles that are closer to ideal
                 continue;
             }
-            const tileID = tile.tileID;
+            const tileID = transform.getCoveringTilesDetailsProvider().allowWorldCopies() ? tile.tileID : tile.tileID.unwrapTo(0);
             const scale = Math.pow(2, transform.zoom - tile.tileID.overscaledZ);
             const queryPadding = maxPitchScaleFactor * tile.queryPadding * EXTENT / tile.tileSize / scale;
 
@@ -1024,7 +1038,7 @@ export class SourceCache extends Evented {
     getVisibleCoordinates(symbolLayer?: boolean): Array<OverscaledTileID> {
         const coords = this.getRenderableIds(symbolLayer).map((id) => this._tiles[id].tileID);
         if (this.transform) {
-            this.transform.precacheTiles(coords);
+            this.transform.populateCache(coords);
         }
         return coords;
     }

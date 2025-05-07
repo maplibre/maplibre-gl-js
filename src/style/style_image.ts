@@ -7,7 +7,7 @@ export type SpriteJSON = {[id: string]: StyleImageMetadata & {
     height: number;
     x: number;
     y: number;
-};}
+};};
 
 /**
  * The sprite data

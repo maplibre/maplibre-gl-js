@@ -1,0 +1,45 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 512,
+      "width": 512
+    }
+  },
+  "center": [ 0, 0 ],
+  "zoom": 0,
+  "sources": {
+    "point": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [0, 0]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "sprite": "local://sprites/emerald",
+  "layers": [
+    {
+      "id": "vertical",
+      "type": "symbol",
+      "source": "point",
+      "layout": {
+        "text-writing-mode": ["vertical"],
+        "text-field": ["format", "H", { "vertical-align": "top" }, "H", { "vertical-align": "center" }, "H", ["image", "interstate_1"], { "vertical-align": "center" }, ["image", "government_icon"], { "vertical-align": "top" }, ["image", "government_icon"], { "vertical-align": "center" }, ["image", "government_icon"], "ッ",{"font-scale": 1.8}],
+        "text-font": [
+            "Open Sans Semibold",
+            "Arial Unicode MS Bold"
+          ]
+      }
+    }
+  ]
+}

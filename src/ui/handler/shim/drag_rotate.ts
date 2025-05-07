@@ -14,7 +14,7 @@ export type DragRotateHandlerOptions = {
      * @defaultValue false
      */
     rollEnabled: boolean;
-}
+};
 
 /**
  * The `DragRotateHandler` allows the user to rotate the map by clicking and

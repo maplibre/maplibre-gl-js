@@ -345,6 +345,22 @@ describe('popup', () => {
         expect(popup._pos).toEqual(map.project([-5, 0]));
     });
 
+    test('Popup\'s lng is wrapped when slightly crossing 180 with zoomed out globe', async () => {
+        const map = createMap({width: 1024, renderWorldCopies: true});
+        await map.once('load');
+        map.setProjection({type: 'globe'});
+        map.setZoom(0);
+
+        const popup = new Popup()
+            .setLngLat([179, 0])
+            .setText('Test')
+            .addTo(map);
+
+        popup.setLngLat([181, 0]);
+
+        expect(popup._lngLat.lng).toBe(-179);
+    });
+
     test('Popup is repositioned at the specified LngLat', () => {
         const map = createMap({width: 1024}); // longitude bounds: [-360, 360]
         map.terrain = {
@@ -496,6 +512,20 @@ describe('popup', () => {
             .addTo(map);
 
         expect(map.getContainer().querySelectorAll('.maplibregl-popup')).toHaveLength(1);
+    });
+
+    test('Popup can be removed and added again can be closed with click (#5576)', () => {
+        const map = createMap();
+
+        new Popup()
+            .setText('Test')
+            .setLngLat([0, 0])
+            .addTo(map)
+            .addTo(map);
+
+        (map.getContainer().querySelector('.maplibregl-popup-close-button') as HTMLButtonElement).click();
+
+        expect(map.getContainer().querySelectorAll('.maplibregl-popup')).toHaveLength(0);
     });
 
     test('Popup#addTo is idempotent (#1811)', () => {
@@ -824,5 +854,20 @@ describe('popup', () => {
         popup.setOffset([-0.1, 0.9]);
 
         expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(0px,1px)');
+    });
+    test('Popup changes opacity when location behind globe', async () => {
+        const map = createMap();
+
+        const popup = new Popup({locationOccludedOpacity: 0.2})
+            .setLngLat([0, 0])
+            .setText('Test')
+            .addTo(map);
+
+        await map.once('load');
+        map.setProjection({
+            type: 'globe'
+        });
+        map.setCenter([180, 0]);
+        expect(popup.getElement().style.opacity).toBe('0.2');
     });
 });

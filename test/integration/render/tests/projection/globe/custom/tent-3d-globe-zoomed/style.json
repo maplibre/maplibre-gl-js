@@ -1,0 +1,83 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 128,
+      "height": 128,
+      "description": "Tests that globe's custom layer works after the transition to mercator at high zooms.",
+      "operations": [
+        [
+          "addCustomLayer",
+          "tent-3d-globe"
+        ]
+      ]
+    }
+  },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "property": 30
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    -10,
+                    0
+                  ],
+                  [
+                    -10,
+                    10
+                  ],
+                  [
+                    10,
+                    10
+                  ],
+                  [
+                    10,
+                    0
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "center": [
+    -1.8,
+    -3.6
+  ],
+  "pitch": 0,
+  "zoom": 12.01,
+  "projection": {
+    "type": "globe"
+  },
+  "bearing": 0,
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "green"
+      }
+    },
+    {
+      "id": "extrusion",
+      "type": "fill-extrusion",
+      "source": "geojson",
+      "paint": {
+        "fill-extrusion-height": 200000,
+        "fill-extrusion-color": "blue"
+      }
+    }
+  ]
+}

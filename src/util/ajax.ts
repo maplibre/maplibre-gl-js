@@ -69,7 +69,7 @@ export type RequestParameters = {
  */
 export type GetResourceResponse<T> = ExpiryData & {
     data: T;
-}
+};
 
 /**
  * The response callback used in various places

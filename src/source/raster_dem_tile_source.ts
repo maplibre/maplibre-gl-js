@@ -67,7 +67,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
             }
             if (response && response.data) {
                 const img = response.data;
-                if (this.map._refreshExpiredTiles && response.cacheControl && response.expires) {
+                if (this.map._refreshExpiredTiles && (response.cacheControl || response.expires)) {
                     tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
                 }
                 const transfer = isImageBitmap(img) && offscreenCanvasSupported();

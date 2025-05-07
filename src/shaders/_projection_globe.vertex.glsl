@@ -43,10 +43,13 @@ float projectLineThickness(float tileY) {
     }
 }
 
-// get position inside the tile in range 0..8192 and project it onto the surface of a unit sphere
-vec3 projectToSphere(vec2 posInTile, vec2 rawPos) {
+// Get position inside the tile in range 0..8192 and project it onto the surface of a unit sphere.
+// Additionally project special Y values to the poles.
+// - translatedPos: tile-space vertex position, optionally with user-specified translation already applied
+// - rawPos: the original tile-space vertex position *without translation* - needed because we would not be able to detect pole vertices from coordinates modified by translation.
+vec3 projectToSphere(vec2 translatedPos, vec2 rawPos) {
     // Compute position in range 0..1 of the base tile of web mercator
-    vec2 mercator_pos = u_projection_tile_mercator_coords.xy + u_projection_tile_mercator_coords.zw * posInTile;
+    vec2 mercator_pos = u_projection_tile_mercator_coords.xy + u_projection_tile_mercator_coords.zw * translatedPos;
 
     // Now compute angular coordinates on the surface of a perfect sphere
     vec2 spherical;
@@ -86,30 +89,38 @@ vec4 interpolateProjection(vec2 posInTile, vec3 spherePos, float elevation) {
     // Z is overwritten by glDepthRange anyway - use a custom z value to clip geometry on the invisible side of the sphere.
     globePosition.z = globeComputeClippingZ(elevatedPos) * globePosition.w;
 
-    if (u_projection_transition < 0.999) {
-        vec4 flatPosition = u_projection_fallback_matrix * vec4(posInTile, elevation, 1.0);
-        // Only interpolate to globe's Z for the last 50% of the animation.
-        // (globe Z hides anything on the backfacing side of the planet)
-        const float z_globeness_threshold = 0.2;
-        vec4 result = globePosition;
-        result.z = mix(0.0, globePosition.z, clamp((u_projection_transition - z_globeness_threshold) / (1.0 - z_globeness_threshold), 0.0, 1.0));
-        result.xyw = mix(flatPosition.xyw, globePosition.xyw, u_projection_transition);
-        // Gradually hide poles during transition
-        if ((posInTile.y < -32767.5) || (posInTile.y > 32766.5)) {
-            result = globePosition;
-            const float poles_hidden_anim_percentage = 0.02; // Only draw poles in the last 2% of the animation.
-            result.z = mix(globePosition.z, 100.0, pow(max((1.0 - u_projection_transition) / poles_hidden_anim_percentage, 0.0), 8.0));
-        }
-        return result;
+    if (u_projection_transition > 0.999) {
+        // Simple case - no transition, only globe projection
+        return globePosition;
     }
 
-    return globePosition;
+    // Blend between globe and mercator projections.
+    vec4 flatPosition = u_projection_fallback_matrix * vec4(posInTile, elevation, 1.0);
+    // Only interpolate to globe's Z for the last 50% of the animation.
+    // (globe Z hides anything on the backfacing side of the planet)
+    const float z_globeness_threshold = 0.2;
+    vec4 result = globePosition;
+    result.z = mix(0.0, globePosition.z, clamp((u_projection_transition - z_globeness_threshold) / (1.0 - z_globeness_threshold), 0.0, 1.0));
+    result.xyw = mix(flatPosition.xyw, globePosition.xyw, u_projection_transition);
+    // Gradually hide poles during transition
+    if ((posInTile.y < -32767.5) || (posInTile.y > 32766.5)) {
+        result = globePosition;
+        const float poles_hidden_anim_percentage = 0.02; // Only draw poles in the last 2% of the animation.
+        result.z = mix(globePosition.z, 100.0, pow(max((1.0 - u_projection_transition) / poles_hidden_anim_percentage, 0.0), 8.0));
+    }
+    return result;
 }
 
 // Unlike interpolateProjection, this variant of the function preserves the Z value of the final vector.
 vec4 interpolateProjectionFor3D(vec2 posInTile, vec3 spherePos, float elevation) {
     vec3 elevatedPos = spherePos * (1.0 + elevation / GLOBE_RADIUS);
     vec4 globePosition = u_projection_matrix * vec4(elevatedPos, 1.0);
+
+    if (u_projection_transition > 0.999) {
+        return globePosition;
+    }
+
+    // Blend between globe and mercator projections.
     vec4 fallbackPosition = u_projection_fallback_matrix * vec4(posInTile, elevation, 1.0);
     return mix(fallbackPosition, globePosition, u_projection_transition);
 }
@@ -121,7 +132,7 @@ vec4 projectTile(vec2 posInTile) {
     return interpolateProjection(posInTile, projectToSphere(posInTile), 0.0);
 }
 
-// A variant that supports special pole and planet center vertices.
+// A variant that supports special pole vertices.
 vec4 projectTile(vec2 posInTile, vec2 rawPos) {
     return interpolateProjection(posInTile, projectToSphere(posInTile, rawPos), 0.0);
 }
@@ -134,7 +145,8 @@ vec4 projectTileWithElevation(vec2 posInTile, float elevation) {
 }
 
 // Projects the tile coordinates+elevation while **preserving Z** value from multiplication with the projection matrix.
+// Applies pole vertices.
 vec4 projectTileFor3D(vec2 posInTile, float elevation) {
-    vec3 spherePos = projectToSphere(posInTile);
+    vec3 spherePos = projectToSphere(posInTile, posInTile);
     return interpolateProjectionFor3D(posInTile, spherePos, elevation);
 }

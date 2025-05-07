@@ -81,7 +81,7 @@ describe('vector tile worker source', () => {
     });
 
     test('VectorTileWorkerSource#loadTile reparses tile if the reloadTile has been called during parsing', async () => {
-        const rawTileData = new Uint8Array([]);
+        const rawTileData = new ArrayBuffer(0);
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
                 vectorTile: {
@@ -161,7 +161,7 @@ describe('vector tile worker source', () => {
     });
 
     test('VectorTileWorkerSource#loadTile reparses tile if reloadTile is called during reparsing', async () => {
-        const rawTileData = new Uint8Array([]);
+        const rawTileData = new ArrayBuffer(0);
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
                 vectorTile: new vt.VectorTile(new Protobuf(rawTileData)),
@@ -245,7 +245,7 @@ describe('vector tile worker source', () => {
         expect(await promise).toBeNull();
     });
 
-    test('VectorTileWorkerSource#returns a good error message when failing to parse a tile', () => new Promise<void>(done => {
+    test('VectorTileWorkerSource#returns a good error message when failing to parse a tile', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
         const parse = vi.fn();
 
@@ -253,44 +253,40 @@ describe('vector tile worker source', () => {
             request.respond(200, {'Content-Type': 'application/pbf'}, 'something...');
         });
 
-        source.loadTile({
+        const loadTilePromise = source.loadTile({
             source: 'source',
             uid: 0,
             tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
             request: {url: 'http://localhost:2900/faketile.pbf'}
-        } as any as WorkerTileParameters).catch((err) => {
-            expect(err.message).toContain('Unable to parse the tile at');
-            done();
-        });
+        } as any as WorkerTileParameters);
 
         server.respond();
 
         expect(parse).not.toHaveBeenCalled();
-    }));
+        await expect(loadTilePromise).rejects.toThrowError(/Unable to parse the tile at/);
+    });
 
-    test('VectorTileWorkerSource#returns a good error message when failing to parse a gzipped tile', () => new Promise<void>(done => {
+    test('VectorTileWorkerSource#returns a good error message when failing to parse a gzipped tile', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
         const parse = vi.fn();
 
         server.respondWith(new Uint8Array([0x1f, 0x8b]).buffer);
 
-        source.loadTile({
+        const loadTilePromise = source.loadTile({
             source: 'source',
             uid: 0,
             tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
             request: {url: 'http://localhost:2900/faketile.pbf'}
-        } as any as WorkerTileParameters).catch((err) => {
-            expect(err.message).toContain('gzipped');
-            done();
-        });
+        } as any as WorkerTileParameters);
 
         server.respond();
 
         expect(parse).not.toHaveBeenCalled();
-    }));
+        await expect(loadTilePromise).rejects.toThrowError(/gzipped/);
+    });
 
     test('VectorTileWorkerSource provides resource timing information', async () => {
-        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf'));
+        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf')).buffer.slice(0) as ArrayBuffer;
 
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
@@ -346,7 +342,7 @@ describe('vector tile worker source', () => {
     });
 
     test('VectorTileWorkerSource provides resource timing information (fallback method)', async () => {
-        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf'));
+        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf')).buffer.slice(0) as ArrayBuffer;
 
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
