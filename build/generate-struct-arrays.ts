@@ -22,7 +22,6 @@ import fillExtrusionAttributes from '../src/data/bucket/fill_extrusion_attribute
 import {lineLayoutAttributes} from '../src/data/bucket/line_attributes';
 import {lineLayoutAttributesExt} from '../src/data/bucket/line_attributes_ext';
 import {patternAttributes} from '../src/data/bucket/pattern_attributes';
-import {lineDasharrayAttributes} from '../src/data/bucket/line_dasharray_attributes';
 // symbol layer specific arrays
 import {
     symbolLayoutAttributes,
@@ -147,8 +146,7 @@ const layoutAttributes = {
     heatmap: circleAttributes,
     line: lineLayoutAttributes,
     lineExt: lineLayoutAttributesExt,
-    pattern: patternAttributes,
-    lineDasharray: lineDasharrayAttributes
+    pattern: patternAttributes
 };
 for (const name in layoutAttributes) {
     createStructArrayType(`${name.replace(/-/g, '_')}_layout`, layoutAttributes[name]);

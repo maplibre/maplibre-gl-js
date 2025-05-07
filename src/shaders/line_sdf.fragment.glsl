@@ -5,14 +5,14 @@ uniform float u_mix;
 
 in vec2 v_normal;
 in vec2 v_width2;
-in vec2 v_tex_a;
-in vec2 v_tex_b;
 in float v_gamma_scale;
 in float v_sdfgamma;
 #ifdef GLOBE
 in float v_depth;
 #endif
 
+#pragma mapbox: define lowp vec4 pattern_from
+#pragma mapbox: define lowp vec4 pattern_to
 #pragma mapbox: define highp vec4 color
 #pragma mapbox: define lowp float blur
 #pragma mapbox: define lowp float opacity
@@ -20,6 +20,8 @@ in float v_depth;
 #pragma mapbox: define lowp float floorwidth
 
 void main() {
+    #pragma mapbox: initialize mediump vec4 pattern_from
+    #pragma mapbox: initialize mediump vec4 pattern_to
     #pragma mapbox: initialize highp vec4 color
     #pragma mapbox: initialize lowp float blur
     #pragma mapbox: initialize lowp float opacity

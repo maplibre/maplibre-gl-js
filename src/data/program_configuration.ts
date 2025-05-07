@@ -150,11 +150,6 @@ class CrossFadedConstantBinder implements UniformBinder {
         this.patternTo = posTo.tlbr;
     }
 
-    setConstantDasharray(dashTo: DashEntry, dashFrom: DashEntry) {
-        this.dashFrom = [dashFrom.height, dashFrom.width, dashFrom.y];
-        this.dashTo = [dashTo.height, dashTo.width, dashTo.y];
-    }
-
     setUniform(uniform: Uniform<any>, globals: GlobalProperties, currentValue: PossiblyEvaluatedPropertyValue<unknown>, uniformName: string) {
         if (uniformName === 'u_pattern_to' && this.patternTo) {
             uniform.set(this.patternTo);
@@ -496,14 +491,6 @@ export class ProgramConfiguration {
         }
     }
 
-    setConstantDasharray(dashTo: DashEntry, dashFrom: DashEntry) {
-        for (const property in this.binders) {
-            const binder = this.binders[property];
-            if (binder instanceof CrossFadedConstantBinder)
-                binder.setConstantDasharray(dashTo, dashFrom);
-        }
-    }
-
     updatePaintArrays(
         featureStates: FeatureStates,
         featureMap: FeaturePositionMap,
@@ -708,7 +695,7 @@ function paintAttributeNames(property, type) {
         'text-halo-width': ['halo_width'],
         'icon-halo-width': ['halo_width'],
         'line-gap-width': ['gapwidth'],
-        'line-dasharray': ['tex_from', 'tex_to'],
+        'line-dasharray': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
         'line-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
         'fill-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
         'fill-extrusion-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
@@ -732,8 +719,8 @@ function getLayoutException(property) {
             'composite': PatternLayoutArray
         },
         'line-dasharray': {
-            'source': LineDasharrayLayoutArray,
-            'composite': LineDasharrayLayoutArray
+            'source': PatternLayoutArray,
+            'composite': PatternLayoutArray
         },
     };
 
