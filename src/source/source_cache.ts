@@ -1001,8 +1001,8 @@ export class SourceCache extends Evented {
                 // Tiles held for fading are covered by tiles that are closer to ideal
                 continue;
             }
-            // if the projection does not render world copies then we need to explicitly check for the bounding box crossing the antimeridian in each direction
-            const tileIDs = allowWorldCopies ? [tile.tileID] : [tile.tileID.unwrapTo(-1), tile.tileID.unwrapTo(0), tile.tileID.unwrapTo(1)];
+            // if the projection does not render world copies then we need to explicitly check for the bounding box crossing the antimeridian
+            const tileIDs = allowWorldCopies ? [tile.tileID] : [tile.tileID.unwrapTo(-1), tile.tileID.unwrapTo(0)];
             const scale = Math.pow(2, transform.zoom - tile.tileID.overscaledZ);
             const queryPadding = maxPitchScaleFactor * tile.queryPadding * EXTENT / tile.tileSize / scale;
 
