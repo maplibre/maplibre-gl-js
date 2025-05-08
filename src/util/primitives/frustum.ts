@@ -1,11 +1,12 @@
 import {type mat4, vec3, vec4} from 'gl-matrix';
 import {Aabb} from './aabb';
+import {rayPlaneIntersection} from '../util';
 
 export class Frustum {
 
     constructor(public points: vec4[], public planes: vec4[], public aabb: Aabb) { }
 
-    public static fromInvProjectionMatrix(invProj: mat4, worldSize: number = 1, zoom: number = 0): Frustum {
+    public static fromInvProjectionMatrix(invProj: mat4, worldSize: number = 1, zoom: number = 0, plane?: vec4): Frustum {
         const clipSpaceCorners = [
             [-1, 1, -1, 1],
             [1, 1, -1, 1],
@@ -25,6 +26,41 @@ export class Frustum {
             const s = 1.0 / v[3] / worldSize * scale;
             return vec4.mul(v as any, v as any, [s, s, 1.0 / v[3], s] as vec4);
         });
+
+        if (plane) {
+            // A horizon clipping plane was supplied.
+            // For each of the 4 edges from near to far plane,
+            // we find at which distance these edges intersect the given clipping plane,
+            // select the maximal value from these distances and then we move
+            // the frustum's far plane so that it is at most as far away from the near plane
+            // as this maximal distance.
+            let maxDist = 0;
+            const lengths: number[] = [];
+            const dirs: vec3[] = [];
+            for (let i = 0; i < 4; i++) {
+                const dir = vec3.sub([] as any, frustumCoords[i] as vec3, frustumCoords[i + 4] as vec3);
+                const len = vec3.length(dir);
+                vec3.scale(dir, dir, 1.0 / len);
+                lengths.push(len);
+                dirs.push(dir);
+            }
+
+            for (let i = 0; i < 4; i++) {
+                const dist = rayPlaneIntersection(frustumCoords[i + 4] as vec3, dirs[i], plane);
+                maxDist = Math.max(maxDist, dist);
+            }
+
+            for (let i = 0; i < 4; i++) {
+                const targetLength = Math.min(maxDist, lengths[i]);
+                const newPoint = [
+                    frustumCoords[i + 4][0] + dirs[i][0] * targetLength,
+                    frustumCoords[i + 4][1] + dirs[i][1] * targetLength,
+                    frustumCoords[i + 4][2] + dirs[i][2] * targetLength,
+                    1,
+                ] as vec4;
+                frustumCoords[i] = newPoint;
+            }
+        }
 
         const frustumPlanePointIndices = [
             [0, 1, 2],  // near

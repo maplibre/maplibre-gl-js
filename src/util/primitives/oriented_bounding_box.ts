@@ -67,8 +67,6 @@ export class OrientedBoundingBox implements IBoundingVolume {
      * Performs a frustum-obb intersection test.
      */
     intersectsFrustum(frustum: Frustum): IntersectionResult {
-        // Execute separating axis test between two convex objects to find intersections
-        // Each frustum plane together with 3 major axes define the separating axes
         let fullyInside = true;
 
         for (let p = 0; p < frustum.planes.length; p++) {
