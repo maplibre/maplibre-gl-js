@@ -83,7 +83,7 @@ export class PropertyValue<T, R> {
     }
 
     getGlobalStateRefs(): Set<string> {
-        return this.expression.globalStateRefs;
+        return this.expression.globalStateRefs || new Set<string>();
     }
 
     possiblyEvaluate(

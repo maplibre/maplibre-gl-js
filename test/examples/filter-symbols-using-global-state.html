@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <title>Filter layer symbols using global state</title>
+    <meta property='og:description'
+        content='Filter a layer symbols based on user input using setGlobalStateProperty.' />
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body,
+        #map {
+            height: 100%;
+        }
+
+        fieldset {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: white;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id='map'></div>
+    <fieldset>
+        Filter by type
+        <select name="type">
+            <option value="" selected>All</option>
+
+            <option value="funivia">Funivia</option>
+            <option value="funicolare">Funicolare</option>
+        </select>
+    </fieldset>
+</body>
+
+<script>
+    const source = {
+        'type': 'FeatureCollection',
+        'features': [
+            {
+                'type': 'Feature',
+                'properties': {
+                    'name': 'Funivia Pani d\'Erna',
+                    'type': 'funivia'
+                },
+                'geometry': {
+                    'coordinates': [
+                        9.428832133068624,
+                        45.86316915700536
+                    ],
+                    'type': 'Point'
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'name': 'Funicolare Como-Brunate',
+                    'type': 'funicolare'
+                },
+                'geometry': {
+                    'coordinates': [
+                        9.082724408221196,
+                        45.8175517969448
+                    ],
+                    'type': 'Point'
+                },
+                'id': 1
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'name': 'Funivia Pigra Argegno',
+                    'type': 'funivia'
+                },
+                'geometry': {
+                    'coordinates': [
+                        9.129994484478942,
+                        45.94660892078414
+                    ],
+                    'type': 'Point'
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'name': 'Funicolare Sacro Monte',
+                    'type': 'funicolare'
+                },
+                'geometry': {
+                    'coordinates': [
+                        8.787919643563527,
+                        45.85848217923672
+                    ],
+                    'type': 'Point'
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'name': 'Funicolare Cassarate Monte Brè',
+                    'type': 'funicolare'
+                },
+                'geometry': {
+                    'coordinates': [
+                        8.970232317680455,
+                        46.00646782864027
+                    ],
+                    'type': 'Point'
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'name': 'Funicolare Monte San Salvatore'
+                },
+                'geometry': {
+                    'coordinates': [
+                        8.945347867434748,
+                        45.990386744943265
+                    ],
+                    'type': 'Point'
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'name': 'Funivia Monte Lema',
+                    'type': 'funivia'
+                },
+                'geometry': {
+                    'coordinates': [
+                        8.856229999561407,
+                        46.0237566800011
+                    ],
+                    'type': 'Point'
+                }
+            }
+        ]
+    };
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [9.0679, 45.8822],
+        zoom: 9.5
+    });
+
+
+    map.on('load', () => {
+        map.addLayer({
+            'id': 'funiculares_and_funivies',
+            'type': 'symbol',
+            'source': {
+                'type': 'geojson',
+                'data': source
+            },
+            'layout': {
+                'text-field': '{name}',
+                'text-font': ['Open Sans Semibold'],
+            },
+            'paint': {
+                'text-color': '#000000',
+                'text-halo-color': '#ffffff',
+                'text-halo-width': 2
+            },
+            'filter': [
+                'case',
+                ['==', ['to-string', ['global-state', 'type']], ''],
+                true,
+                ['==', ['get', 'type'], ['global-state', 'type']]
+            ]
+        });
+
+
+        const select = document.querySelector('select[name="type"]');
+        map.setGlobalStateProperty('type', select.value);
+
+        select.addEventListener('change', (e) => {
+            const value = e.target.value;
+            map.setGlobalStateProperty('type', value);
+        });
+    });
+</script>
+
+</html>
