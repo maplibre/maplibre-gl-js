@@ -983,6 +983,7 @@ async function executeRenderTests() {
     }
 
     const browser = await puppeteer.launch({
+        protocolTimeout: 600_000,
         headless: !options.openBrowser,
         args: [
             '--enable-webgl',
