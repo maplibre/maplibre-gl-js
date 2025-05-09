@@ -553,8 +553,8 @@ export class Marker extends Evented {
 
     _updateOpacity(force: boolean = false) {
         const terrain = this._map?.terrain;
-        if (!terrain) {
-            const occluded = this._map.transform.isLocationOccluded(this._lngLat);
+        const occluded = this._map.transform.isLocationOccluded(this._lngLat);
+        if (!terrain || occluded) {
             const targetOpacity = occluded ? this._opacityWhenCovered : this._opacity;
             if (this._element.style.opacity !== targetOpacity) { this._element.style.opacity = targetOpacity; }
             return;
@@ -575,7 +575,6 @@ export class Marker extends Evented {
         // Transform marker position to clip space
         const elevation = map.terrain.getElevationForLngLatZoom(this._lngLat, map.transform.tileZoom);
         const markerDistance = map.transform.lngLatToCameraDepth(this._lngLat, elevation);
-
         const forgiveness = .006;
         if (markerDistance - terrainDistance < forgiveness) {
             this._element.style.opacity = this._opacity;
