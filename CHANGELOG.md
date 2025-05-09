@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-
+- Fix `refreshTiles()` for vector tiles ([#5875](https://github.com/maplibre/maplibre-gl-js/pull/5875))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
