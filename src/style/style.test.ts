@@ -1267,9 +1267,15 @@ describe('Style#setGlobalStateProperty', () => {
         }));
 
         await style.once('style.load');
-        vi.spyOn(style, '_reloadSource');
+
+        style.sourceCaches['circle-source-id'].resume = vi.fn();
+        style.sourceCaches['circle-source-id'].reload = vi.fn();
+
         style.setGlobalStateProperty('circleColor');
-        expect(style._reloadSource).not.toHaveBeenCalled();
+
+        expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
+        expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
+
     });
 
     test('reloads sources when state property is used in filter property', async () => {
@@ -1304,12 +1310,26 @@ describe('Style#setGlobalStateProperty', () => {
         }));
 
         await style.once('style.load');
-        vi.spyOn(style, '_reloadSource');
+
+        style.sourceCaches['circle-1-source-id'].resume = vi.fn();
+        style.sourceCaches['circle-1-source-id'].reload = vi.fn();
+        style.sourceCaches['circle-2-source-id'].resume = vi.fn();
+        style.sourceCaches['circle-2-source-id'].reload = vi.fn();
+        style.sourceCaches['fill-source-id'].resume = vi.fn();
+        style.sourceCaches['fill-source-id'].reload = vi.fn();
+
         style.setGlobalStateProperty('showCircles');
-        // should only reload sources of layers where updated state property is used
-        expect(style._reloadSource).toHaveBeenCalledTimes(2);
-        expect(style._reloadSource).toHaveBeenNthCalledWith(1, 'circle-1-source-id');
-        expect(style._reloadSource).toHaveBeenNthCalledWith(2, 'circle-2-source-id');
+
+        // The circle sources should be reloaded
+        expect(style.sourceCaches['circle-1-source-id'].resume).toHaveBeenCalled();
+        expect(style.sourceCaches['circle-1-source-id'].reload).toHaveBeenCalled();
+        expect(style.sourceCaches['circle-2-source-id'].resume).toHaveBeenCalled();
+        expect(style.sourceCaches['circle-2-source-id'].reload).toHaveBeenCalled();
+
+        // The fill source should not be reloaded
+        expect(style.sourceCaches['fill-source-id'].resume).not.toHaveBeenCalled();
+        expect(style.sourceCaches['fill-source-id'].reload).not.toHaveBeenCalled();
+
     });
 });
 

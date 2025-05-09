@@ -1204,7 +1204,7 @@ export class Style extends Evented {
             return;
         }
 
-        // if (deepEqual(layer.getLayoutProperty(name), value)) return;
+        if (deepEqual(layer.getLayoutProperty(name), value)) return;
 
         layer.setLayoutProperty(name, value, options);
         this._updateLayer(layer);

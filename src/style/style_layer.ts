@@ -178,15 +178,16 @@ export abstract class StyleLayer extends Evented {
         if (this._unevaluatedLayout) {
             for (const propertyName in this._unevaluatedLayout._values) {
                 const value = this._unevaluatedLayout._values[propertyName];
-                value.getGlobalStateRefs().forEach((globalStateRef) => {
+
+                for (const globalStateRef of value.getGlobalStateRefs()) {
                     globalStateRefs.add(globalStateRef);
-                });
+                }
             }
         }
 
-        this._featureFilter.getGlobalStateRefs().forEach((globalStateRef) => {
+        for (const globalStateRef of this._featureFilter.getGlobalStateRefs()) {
             globalStateRefs.add(globalStateRef);
-        });
+        }
 
         return globalStateRefs;
     }

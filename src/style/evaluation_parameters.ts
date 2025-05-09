@@ -3,7 +3,6 @@ import {isStringInSupportedScript} from '../util/script_detection';
 import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker';
 
 import type {TransitionSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {browser} from '../util/browser';
 
 export type CrossfadeParameters = {
     fromScale: number;

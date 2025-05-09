@@ -15,7 +15,7 @@ afterEach(() => {
 });
 
 describe('#setGlobalStateProperty', () => {
-    test('sets state', () => {
+    test('sets state', async () => {
         const map = createMap({
             style: {
                 version: 8,
@@ -35,14 +35,14 @@ describe('#setGlobalStateProperty', () => {
             }
         });
 
-        map.on('style.load', () => {
+        await map.once('style.load', () => {
             map.setGlobalStateProperty('backgroundColor', 'blue');
             expect(map.getGlobalState()).toEqual({backgroundColor: 'blue'});
             expect(map._update).toHaveBeenCalledWith(true);
         });
     });
 
-    test('resets state to default value when called with null', () => {
+    test('resets state to default value when called with null', async () => {
         const map = createMap({
             style: {
                 version: 8,
@@ -62,7 +62,7 @@ describe('#setGlobalStateProperty', () => {
             }
         });
 
-        map.on('style.load', () => {
+        await map.once('style.load', () => {
             map.setGlobalStateProperty('backgroundColor', 'blue');
             expect(map.getGlobalState()).toEqual({backgroundColor: 'blue'});
             map.setGlobalStateProperty('backgroundColor', null);
