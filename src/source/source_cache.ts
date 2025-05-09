@@ -263,7 +263,9 @@ export class SourceCache extends Evented {
         this._cache.reset();
 
         for (const i in this._tiles) {
-            if (sourceDataChanged || this._tiles[i].state !== 'errored') {
+            if (sourceDataChanged) {
+                this._reloadTile(i, 'expired');
+            } else if (this._tiles[i].state !== 'errored') {
                 this._reloadTile(i, 'reloading');
             }
         }
@@ -899,7 +901,7 @@ export class SourceCache extends Evented {
      */
     refreshTiles(tileIds: Array<ICanonicalTileID>) {
         for (const id in this._tiles) {
-            if (!this._isIdRenderable(id)) {
+            if (!this._isIdRenderable(id) && this._tiles[id].state != 'errored') {
                 continue;
             }
             if (tileIds.some(tid => tid.equals(this._tiles[id].tileID.canonical))) {
