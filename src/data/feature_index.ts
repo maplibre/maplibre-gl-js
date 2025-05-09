@@ -23,6 +23,7 @@ import type {StyleLayer} from '../style/style_layer';
 import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
+import {Bounds} from '../geo/bounds';
 
 type QueryParameters = {
     scale: number;
@@ -131,12 +132,12 @@ export class FeatureIndex {
         const queryGeometry = args.queryGeometry;
         const queryPadding = args.queryPadding * pixelsToTileUnits;
 
-        const bounds = getBounds(queryGeometry);
+        const bounds = Bounds.fromPoints(queryGeometry);
         const matching = this.grid.query(bounds.minX - queryPadding, bounds.minY - queryPadding, bounds.maxX + queryPadding, bounds.maxY + queryPadding);
 
-        const cameraBounds = getBounds(args.cameraQueryGeometry);
+        const cameraBounds = Bounds.fromPoints(args.cameraQueryGeometry).expandBy(queryPadding);
         const matching3D = this.grid3D.query(
-            cameraBounds.minX - queryPadding, cameraBounds.minY - queryPadding, cameraBounds.maxX + queryPadding, cameraBounds.maxY + queryPadding,
+            cameraBounds.minX, cameraBounds.minY, cameraBounds.maxX, cameraBounds.maxY,
             (bx1, by1, bx2, by2) => {
                 return polygonIntersectsBox(args.cameraQueryGeometry, bx1 - queryPadding, by1 - queryPadding, bx2 + queryPadding, by2 + queryPadding);
             });
@@ -337,20 +338,6 @@ function evaluateProperties(serializedProperties, styleLayerProperties, feature,
         const prop = styleLayerProperties instanceof PossiblyEvaluated ? styleLayerProperties.get(key) : null;
         return prop && prop.evaluate ? prop.evaluate(feature, featureState, availableImages) : prop;
     });
-}
-
-function getBounds(geometry: Array<Point>) {
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-    for (const p of geometry) {
-        minX = Math.min(minX, p.x);
-        minY = Math.min(minY, p.y);
-        maxX = Math.max(maxX, p.x);
-        maxY = Math.max(maxY, p.y);
-    }
-    return {minX, minY, maxX, maxY};
 }
 
 function topDownFeatureComparator(a, b) {
