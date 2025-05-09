@@ -676,7 +676,7 @@ export class SourceCache extends Evented {
         for (const retainedId in retain) {
             // Make sure retained tiles always clear any existing fade holds
             // so that if they're removed again their fade timer starts fresh.
-            this._tiles[retainedId].clearFadeHold();
+            this._tiles[retainedId]?.clearFadeHold();
         }
 
         // Remove the tiles we don't need anymore.
