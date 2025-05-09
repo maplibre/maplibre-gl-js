@@ -1,11 +1,12 @@
 ## main
 
 ### ✨ Features and improvements
-- Fix `refreshTiles()` for vector tiles ([#5875](https://github.com/maplibre/maplibre-gl-js/pull/5875))
+
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Fix handling invalid glyph placement results along lines ([#5118](https://github.com/maplibre/maplibre-gl-js/pull/5118))
+- Fix `refreshTiles()` for vector tiles ([#5875](https://github.com/maplibre/maplibre-gl-js/pull/5875))
 - _...Add new stuff here..._
 
 ## 5.5.0
