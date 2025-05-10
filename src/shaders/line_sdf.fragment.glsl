@@ -7,12 +7,12 @@ in vec2 v_normal;
 in vec2 v_width2;
 in float v_gamma_scale;
 in float v_sdfgamma;
+in vec2 v_tex_from;
+in vec2 v_tex_to;
 #ifdef GLOBE
 in float v_depth;
 #endif
 
-#pragma mapbox: define lowp vec4 pattern_from
-#pragma mapbox: define lowp vec4 pattern_to
 #pragma mapbox: define highp vec4 color
 #pragma mapbox: define lowp float blur
 #pragma mapbox: define lowp float opacity
@@ -20,8 +20,6 @@ in float v_depth;
 #pragma mapbox: define lowp float floorwidth
 
 void main() {
-    #pragma mapbox: initialize mediump vec4 pattern_from
-    #pragma mapbox: initialize mediump vec4 pattern_to
     #pragma mapbox: initialize highp vec4 color
     #pragma mapbox: initialize lowp float blur
     #pragma mapbox: initialize lowp float opacity
@@ -37,8 +35,8 @@ void main() {
     float blur2 = (blur + 1.0 / u_device_pixel_ratio) * v_gamma_scale;
     float alpha = clamp(min(dist - (v_width2.t - blur2), v_width2.s - dist) / blur2, 0.0, 1.0);
 
-    float sdfdist_a = texture(u_image, v_tex_a).a;
-    float sdfdist_b = texture(u_image, v_tex_b).a;
+    float sdfdist_a = texture(u_image, v_tex_from).a;
+    float sdfdist_b = texture(u_image, v_tex_to).a;
     float sdfdist = mix(sdfdist_a, sdfdist_b, u_mix);
     alpha *= smoothstep(0.5 - v_sdfgamma / floorwidth, 0.5 + v_sdfgamma / floorwidth, sdfdist);
 

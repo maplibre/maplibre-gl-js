@@ -105,13 +105,13 @@ void main() {
         v_gamma_scale = extrude_length_without_perspective / extrude_length_with_perspective;
     #endif
 
-    height_from = pattern_from.d - pattern_from.b;
-    width_from = pattern_from.c - pattern_from.a;
-    y_from = pattern_from.b;
+    float height_from = pattern_from.d - pattern_from.b;
+    float width_from = pattern_from.c - pattern_from.a;
+    float y_from = pattern_from.b;
 
-    height_to = pattern_to.d - pattern_to.b;
-    width_to = pattern_to.c - pattern_to.a;
-    y_to = pattern_to.b;
+    float height_to = pattern_to.d - pattern_to.b;
+    float width_to = pattern_to.c - pattern_to.a;
+    float y_to = pattern_to.b;
 
     vec2 patternscale_from = [u_ratio / width_from, -height_from / 2];
     vec2 patternscale_to = [u_ratio / width_to, -height_to / 2];
