@@ -17,6 +17,7 @@ uniform vec2 u_translation;
 uniform mediump float u_ratio;
 uniform lowp float u_device_pixel_ratio;
 uniform vec2 u_units_to_pixels;
+uniform lowp float u_line_atlas_width;
 
 out vec2 v_normal;
 out vec2 v_width2;
@@ -105,18 +106,18 @@ void main() {
         v_gamma_scale = extrude_length_without_perspective / extrude_length_with_perspective;
     #endif
 
-    float height_from = pattern_from.d - pattern_from.b;
-    float width_from = pattern_from.c - pattern_from.a;
-    float y_from = pattern_from.b;
+    float height_from = pattern_from.w - pattern_from.y;
+    float width_from = pattern_from.z - pattern_from.x;
+    float y_from = pattern_from.y;
 
-    float height_to = pattern_to.d - pattern_to.b;
-    float width_to = pattern_to.c - pattern_to.a;
-    float y_to = pattern_to.b;
+    float height_to = pattern_to.w - pattern_to.y;
+    float width_to = pattern_to.z - pattern_to.x;
+    float y_to = pattern_to.y;
 
-    vec2 patternscale_from = [u_ratio / width_from, -height_from / 2];
-    vec2 patternscale_to = [u_ratio / width_to, -height_to / 2];
+    vec2 patternscale_from = vec2(u_ratio / width_from, -height_from / 2.0);
+    vec2 patternscale_to = vec2(u_ratio / width_to, -height_to / 2.0);
 
-    v_sdfgamma = u_line_atlas_width / (min(width_from, width_to) * 256 * u_device_pixel_ratio) / 2;
+    v_sdfgamma = u_line_atlas_width / (min(width_from, width_to) * 256.0 * u_device_pixel_ratio) / 2.0;
     v_tex_from = vec2(a_linesofar * patternscale_from.x / floorwidth, normal.y * patternscale_from.y + y_from);
     v_tex_to = vec2(a_linesofar * patternscale_to.x / floorwidth, normal.y * patternscale_to.y + y_to);
     v_width2 = vec2(outset, inset);
