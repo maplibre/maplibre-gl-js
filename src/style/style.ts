@@ -302,6 +302,27 @@ export class Style extends Evented {
         }
     };
 
+    setGlobalStateProperty(name: string) {
+        this._checkLoaded();
+
+        const sourceIdsToReload = new Set<string>();
+        for (const layerId in this._layers) {
+            const layer = this._layers[layerId];
+            const globalStateRefs = layer.getLayoutAffectingGlobalStateRefs();
+
+            if (globalStateRefs.has(name)) {
+                sourceIdsToReload.add(layer.source);
+            }
+        }
+
+        for (const id in this.sourceCaches) {
+            if (sourceIdsToReload.has(id)) {
+                this._reloadSource(id);
+                this._changed = true;
+            }
+        }
+    }
+
     loadURL(url: string, options: StyleSwapOptions & StyleSetterOptions = {}, previousStyle?: StyleSpecification) {
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
@@ -366,6 +387,8 @@ export class Style extends Evented {
         this.sky = new Sky(this.stylesheet.sky);
 
         this.map.setTerrain(this.stylesheet.terrain ?? null);
+
+        this.map._setGlobalState(this.stylesheet.state ?? null);
 
         this.fire(new Event('data', {dataType: 'style'}));
         this.fire(new Event('style.load'));
@@ -1150,7 +1173,7 @@ export class Style extends Evented {
         }
 
         if (filter === null || filter === undefined) {
-            layer.filter = undefined;
+            layer.setFilter(undefined);
             this._updateLayer(layer);
             return;
         }
@@ -1159,7 +1182,7 @@ export class Style extends Evented {
             return;
         }
 
-        layer.filter = clone(filter);
+        layer.setFilter(clone(filter));
         this._updateLayer(layer);
     }
 

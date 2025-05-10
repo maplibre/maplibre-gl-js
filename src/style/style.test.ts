@@ -413,6 +413,22 @@ describe('Style#loadJSON', () => {
         expect(style.map.setTerrain).toHaveBeenCalled();
     });
 
+    test('sets state if defined', async () => {
+        const map = getStubMap();
+        const style = new Style(map);
+        style.loadJSON(createStyleJSON({
+            state: {
+                foo: 'bar'
+            }
+        }));
+
+        await style.once('style.load');
+
+        expect(style.map._setGlobalState).toHaveBeenCalledWith({
+            foo: 'bar'
+        });
+    });
+
     test('applies transformStyle function', async () => {
         const previousStyle = createStyleJSON({
             sources: {
@@ -1225,6 +1241,95 @@ describe('Style#setGeoJSONSourceData', () => {
         style.loadJSON(createStyleJSON());
         await style.once('style.load');
         expect(() => style.setGeoJSONSourceData('source-id', geoJSON)).toThrow(/There is no source with this ID/);
+    });
+});
+
+describe('Style#setGlobalStateProperty', () => {
+    test('throws before loaded', () => {
+        const style = new Style(getStubMap());
+        expect(() => style.setGlobalStateProperty('property')).toThrow(/load/i);
+    });
+
+    test('does not reload sources when state property is only used in paint properties', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'circle-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'layer-id',
+                type: 'circle',
+                source: 'circle-source-id',
+                paint: {
+                    'circle-color': ['global-state', 'circleColor']
+                }
+            }]
+        }));
+
+        await style.once('style.load');
+
+        style.sourceCaches['circle-source-id'].resume = vi.fn();
+        style.sourceCaches['circle-source-id'].reload = vi.fn();
+
+        style.setGlobalStateProperty('circleColor');
+
+        expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
+        expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
+
+    });
+
+    test('reloads sources when state property is used in filter property', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'circle-1-source-id': createGeoJSONSource(),
+                'circle-2-source-id': createGeoJSONSource(),
+                'fill-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'first-layer-id',
+                type: 'circle',
+                source: 'circle-1-source-id',
+                filter: ['global-state', 'showCircles']
+            }, {
+                id: 'second-layer-id',
+                type: 'fill',
+                source: 'fill-source-id',
+            }, {
+                id: 'third-layer-id',
+                type: 'circle',
+                source: 'circle-2-source-id',
+                filter: ['global-state', 'showCircles']
+            },
+            {
+                id: 'fourth-layer-id',
+                type: 'fill',
+                source: 'fill-source-id',
+                filter: ['global-state', 'showFill'],
+            }]
+        }));
+
+        await style.once('style.load');
+
+        style.sourceCaches['circle-1-source-id'].resume = vi.fn();
+        style.sourceCaches['circle-1-source-id'].reload = vi.fn();
+        style.sourceCaches['circle-2-source-id'].resume = vi.fn();
+        style.sourceCaches['circle-2-source-id'].reload = vi.fn();
+        style.sourceCaches['fill-source-id'].resume = vi.fn();
+        style.sourceCaches['fill-source-id'].reload = vi.fn();
+
+        style.setGlobalStateProperty('showCircles');
+
+        // The circle sources should be reloaded
+        expect(style.sourceCaches['circle-1-source-id'].resume).toHaveBeenCalled();
+        expect(style.sourceCaches['circle-1-source-id'].reload).toHaveBeenCalled();
+        expect(style.sourceCaches['circle-2-source-id'].resume).toHaveBeenCalled();
+        expect(style.sourceCaches['circle-2-source-id'].reload).toHaveBeenCalled();
+
+        // The fill source should not be reloaded
+        expect(style.sourceCaches['fill-source-id'].resume).not.toHaveBeenCalled();
+        expect(style.sourceCaches['fill-source-id'].reload).not.toHaveBeenCalled();
+
     });
 });
 
