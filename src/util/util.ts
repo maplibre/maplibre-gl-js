@@ -86,6 +86,17 @@ export function pointPlaneSignedDistance(
 }
 
 /**
+ * Returns a parameter `t` such that the point obtained by
+ * `origin + direction * t` lies on the given plane.
+ * Direction does not need to be normalized.
+ */
+export function rayPlaneIntersection(origin: vec3, direction: vec3, plane: vec4): number {
+    const dotOriginPlane = origin[0] * plane[0] + origin[1] * plane[1] + origin[2] * plane[2];
+    const dotDirectionPlane = direction[0] * plane[0] + direction[1] * plane[1] + direction[2] * plane[2];
+    return (-dotOriginPlane -plane[3]) / dotDirectionPlane;
+}
+
+/**
  * Solves a quadratic equation in the form ax^2 + bx + c = 0 and returns its roots in no particular order.
  * Returns null if the equation has no roots or if it has infinitely many roots.
  */

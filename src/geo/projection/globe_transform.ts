@@ -230,8 +230,8 @@ export class GlobeTransform implements ITransform {
         this._globeness = globeness;
         this._globeLatitudeErrorCorrectionRadians = errorCorrectionValue;
         this._calcMatrices();
-        this._verticalPerspectiveTransform.getCoveringTilesDetailsProvider().recalculateCache();
-        this._mercatorTransform.getCoveringTilesDetailsProvider().recalculateCache();
+        this._verticalPerspectiveTransform.getCoveringTilesDetailsProvider().prepareNextFrame();
+        this._mercatorTransform.getCoveringTilesDetailsProvider().prepareNextFrame();
     }
 
     private get currentTransform(): ITransform {
