@@ -30,6 +30,7 @@ export class GeoJSONFeature {
     _geometry: GeoJSON.Geometry;
     properties: { [name: string]: any };
     id: number | string | undefined;
+    foreignMembers: { [name: string]: any };
 
     _vectorTileFeature: VectorTileFeature;
 
@@ -43,6 +44,15 @@ export class GeoJSONFeature {
 
         this.properties = vectorTileFeature.properties;
         this.id = id;
+        this.foreignMembers = {};
+
+        for (const key in vectorTileFeature) {
+            if (key !== 'type' && key !== 'properties' && key !== 'id' &&
+                key !== '_z' && key !== '_x' && key !== '_y' &&
+                key !== 'extent' && key !== 'loadGeometry' && key !== 'toGeoJSON') {
+                this.foreignMembers[key] = (vectorTileFeature as any)[key];
+            }
+        }
     }
 
     get geometry(): GeoJSON.Geometry {
@@ -67,6 +77,11 @@ export class GeoJSONFeature {
             if (i === '_geometry' || i === '_vectorTileFeature') continue;
             json[i] = (this)[i];
         }
+
+        for (const key in this.foreignMembers) {
+            json[key] = this.foreignMembers[key];
+        }
+
         return json;
     }
 }

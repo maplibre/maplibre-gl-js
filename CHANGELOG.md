@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 
+- Add support for GeoJSON Foreign Members to maintain additional data in GeoJSON objects ([#5747](https://github.com/maplibre/maplibre-gl-js/issues/5747))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
