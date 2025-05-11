@@ -85,7 +85,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
 
             const dashFrom = painter.lineAtlas.getDash(constantDasharray.from, round);
             const posFrom = new ImagePosition(
-                {x: 0, y: dashTo.y, h: dashFrom.height, w: dashFrom.width}, {
+                {x: 0, y: dashFrom.y, h: dashFrom.height, w: dashFrom.width}, {
                     data: null,
                     pixelRatio: 1,
                     sdf: true,
