@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Create a gradient line using an expression</title>
-    <meta property="og:description" content="Use the line-gradient paint property and an expression to visualize distance from the starting point of a line." />
+    <title>Data-driven line-dasharray</title>
+    <meta property="og:description" content="Data driven line-dasharray" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
@@ -18,10 +18,10 @@
 <script>
     const map = (window.map = new maplibregl.Map({
         container: 'map',
+        "center": [0, 0],
+        "zoom": 10,
         style:{
           "version": 8,
-          "center": [0, 0],
-          "zoom": 10,
           "sources": {
             "geojson": {
               "type": "geojson",
@@ -60,18 +60,24 @@
           },
           "layers": [
             {
+                "id": "background",
+                "type": "background",
+                "paint": {
+                    "background-color": "white"
+                }
+            },
+            {
                 "id": "line",
                 "type": "line",
                 "source": "geojson",
                 "paint": {
-                    "line-width": 4,
-                    "line-color": "#888",
-                    // "line-dasharray": [
-                    //   "case",
-                    //   ["==", ["get", "foo"], 0],
-                    //   ["literal", [1, 1]],
-                    //   ["literal", [2, 2]]
-                    // ]
+                    "line-width": 5,
+                    "line-color": "#000",
+                    "line-dasharray": [1, 1]
+                },
+                "layout": {
+                    "line-cap": "round",
+                    "line-join": "round"
                 }
             }
           ]

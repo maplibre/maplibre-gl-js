@@ -115,6 +115,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
         } else if (dasharray && (programChanged || painter.lineAtlas.dirty)) {
             context.activeTexture.set(gl.TEXTURE0);
             painter.lineAtlas.bind(context);
+            programConfiguration.updatePaintBuffers(crossfade);
         } else if (gradient) {
             const layerGradient = bucket.gradients[layer.id];
             let gradientTexture = layerGradient.texture;
