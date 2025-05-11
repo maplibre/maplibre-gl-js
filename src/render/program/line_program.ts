@@ -148,7 +148,8 @@ const lineSDFUniformValues = (
 ): UniformValues<LineSDFUniformsType> => {
     return extend(lineUniformValues(painter, tile, layer, ratioScale), {
         'u_image': 0,
-        'u_mix': crossfade.t
+        'u_mix': crossfade.t,
+        'u_line_atlas_width': painter.lineAtlas.width,
     });
 };
 
