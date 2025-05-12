@@ -2253,7 +2253,7 @@ export class Map extends Camera {
             throw new Error(`There is no source cache with ID "${sourceId}", cannot refresh tile`);
         }
         if (tileIds === undefined) {
-            sourceCache.reload();
+            sourceCache.reload(true);
         } else {
             sourceCache.refreshTiles(tileIds.map((tileId) => {return new CanonicalTileID(tileId.z, tileId.x, tileId.y);}));
         }

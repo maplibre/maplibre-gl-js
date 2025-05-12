@@ -1,0 +1,28 @@
+[
+  {
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        -179.89013671875,
+        1.0106897682409084
+      ]
+    },
+    "type": "Feature",
+    "properties": {},
+    "source": "circle",
+    "state": {}
+  },
+  {
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        179.89013671875,
+        1.0106897682409084
+      ]
+    },
+    "type": "Feature",
+    "properties": {},
+    "source": "circle",
+    "state": {}
+  }
+]

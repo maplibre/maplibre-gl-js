@@ -16,6 +16,7 @@ import type {
 } from '@maplibre/maplibre-gl-style-spec';
 import type Point from '@mapbox/point-geometry';
 import {MAX_TILE_ZOOM} from '../util/util';
+import {Bounds} from '../geo/bounds';
 
 /**
  * Four geographical coordinates,
@@ -308,17 +309,7 @@ export class ImageSource extends Evented implements Source {
     private _getOverlappingTileRanges(
         coords: Array<MercatorCoordinate>
     ): {[zoom: string]: CanonicalTileRange} {
-        let minX = Infinity;
-        let minY = Infinity;
-        let maxX = -Infinity;
-        let maxY = -Infinity;
-
-        for (const coord of coords) {
-            minX = Math.min(minX, coord.x);
-            minY = Math.min(minY, coord.y);
-            maxX = Math.max(maxX, coord.x);
-            maxY = Math.max(maxY, coord.y);
-        }
+        const {minX, minY, maxX, maxY} = Bounds.fromPoints(coords);
 
         const ranges: {[zoom: string]: CanonicalTileRange} = {};
 
@@ -348,28 +339,18 @@ export class ImageSource extends Evented implements Source {
  * @internal
  */
 export function getCoordinatesCenterTileID(coords: Array<MercatorCoordinate>) {
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
+    const bounds = Bounds.fromPoints(coords);
 
-    for (const coord of coords) {
-        minX = Math.min(minX, coord.x);
-        minY = Math.min(minY, coord.y);
-        maxX = Math.max(maxX, coord.x);
-        maxY = Math.max(maxY, coord.y);
-    }
-
-    const dx = maxX - minX;
-    const dy = maxY - minY;
+    const dx = bounds.width();
+    const dy = bounds.height();
     const dMax = Math.max(dx, dy);
     const zoom = Math.max(0, Math.floor(-Math.log(dMax) / Math.LN2));
     const tilesAtZoom = Math.pow(2, zoom);
 
     return new CanonicalTileID(
         zoom,
-        Math.floor((minX + maxX) / 2 * tilesAtZoom),
-        Math.floor((minY + maxY) / 2 * tilesAtZoom));
+        Math.floor((bounds.minX + bounds.maxX) / 2 * tilesAtZoom),
+        Math.floor((bounds.minY + bounds.maxY) / 2 * tilesAtZoom));
 }
 
 function hasWrongWindingOrder(coords: Array<Point>) {
