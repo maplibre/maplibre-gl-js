@@ -1,4 +1,4 @@
-import {extend, warnOnce, uniqueId, isImageBitmap, type Complete, pick, type Subscription, deepEqual} from '../util/util';
+import {extend, warnOnce, uniqueId, isImageBitmap, type Complete, pick, type Subscription} from '../util/util';
 import {browser} from '../util/browser';
 import {DOM} from '../util/dom';
 import packageJSON from '../../package.json' with {type: 'json'};
@@ -55,7 +55,6 @@ import type {
     TerrainSpecification,
     ProjectionSpecification,
     SkySpecification,
-    StateSpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
 import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson';
@@ -523,7 +522,6 @@ export class Map extends Camera {
     _clickTolerance: number;
     _overridePixelRatio: number | null | undefined;
     _maxCanvasSize: [number, number];
-    _globalState: Record<string, any> = {};
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
 
     /**
@@ -664,8 +662,6 @@ export class Map extends Camera {
 
         this._requestManager = new RequestManager(resolvedOptions.transformRequest);
 
-        this._globalState = {};
-
         if (typeof resolvedOptions.container === 'string') {
             this._container = document.getElementById(resolvedOptions.container);
             if (!this._container) {
@@ -790,16 +786,7 @@ export class Map extends Camera {
      * @param value - The value of the state property to set.
      */
     setGlobalStateProperty(propertyName: string, value: any) {
-        const newValue = value === null ?
-            this.style.stylesheet.state?.[propertyName]?.default ?? null :
-            value;
-
-        if (deepEqual(newValue, this._globalState[propertyName])) {
-            return this;
-        }
-
-        this._globalState[propertyName] = newValue;
-        this.style.setGlobalStateProperty(propertyName);
+        this.style.setGlobalStateProperty(propertyName, value);
         return this._update(true);
     }
 
@@ -809,15 +796,7 @@ export class Map extends Camera {
      * @returns The map state object.
     */
     getGlobalState(): Record<string, any> {
-        return this._globalState;
-    }
-
-    _setGlobalState(stylesheetState: StateSpecification) {
-        this._globalState = {};
-
-        for (const propertyName in stylesheetState) {
-            this._globalState[propertyName] = stylesheetState[propertyName].default;
-        }
+        return this.style.getGlobalState();
     }
 
     /**
@@ -3320,7 +3299,7 @@ export class Map extends Camera {
                 fadeDuration,
                 zoomHistory: this.style.zoomHistory,
                 transition: this.style.getTransition(),
-                globalState: this._globalState
+                globalState: this.style.getGlobalState()
             });
 
             const factor = parameters.crossFadingFactor();

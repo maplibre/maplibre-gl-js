@@ -436,7 +436,8 @@ describe('GeoJSONSource#update', () => {
                     get subdivisionGranularity() {
                         return SubdivisionGranularitySetting.noSubdivision;
                     }
-                }
+                },
+                getGlobalState: () => {}
             }
         } as any;
 

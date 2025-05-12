@@ -52,7 +52,8 @@ import type {
     SpriteSpecification,
     DiffOperations,
     ProjectionSpecification,
-    SkySpecification
+    SkySpecification,
+    StateSpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
@@ -229,7 +230,7 @@ export class Style extends Evented {
     _spritesImagesIds: {[spriteId: string]: string[]};
     // image ids of all images loaded (sprite + user)
     _availableImages: Array<string>;
-
+    _globalState: Record<string, any>;
     crossTileSymbolIndex: CrossTileSymbolIndex;
     pauseablePlacement: PauseablePlacement;
     placement: Placement;
@@ -260,6 +261,7 @@ export class Style extends Evented {
         this.zoomHistory = new ZoomHistory();
         this._loaded = false;
         this._availableImages = [];
+        this._globalState = {};
 
         this._resetUpdates();
 
@@ -302,8 +304,18 @@ export class Style extends Evented {
         }
     };
 
-    setGlobalStateProperty(name: string) {
+    setGlobalStateProperty(name: string, value: any) {
         this._checkLoaded();
+
+        const newValue = value === null ?
+            this.stylesheet.state?.[name]?.default ?? null :
+            value;
+
+        if (deepEqual(newValue, this._globalState[name])) {
+            return this;
+        }
+
+        this._globalState[name] = newValue;
 
         const sourceIdsToReload = new Set<string>();
         for (const layerId in this._layers) {
@@ -320,6 +332,18 @@ export class Style extends Evented {
                 this._reloadSource(id);
                 this._changed = true;
             }
+        }
+    }
+
+    getGlobalState() {
+        return this._globalState;
+    }
+
+    _setGlobalState(stylesheetState: StateSpecification) {
+        this._globalState = {};
+
+        for (const propertyName in stylesheetState) {
+            this._globalState[propertyName] = stylesheetState[propertyName].default;
         }
     }
 
@@ -388,7 +412,7 @@ export class Style extends Evented {
 
         this.map.setTerrain(this.stylesheet.terrain ?? null);
 
-        this.map._setGlobalState(this.stylesheet.state ?? null);
+        this._setGlobalState(this.stylesheet.state ?? null);
 
         this.fire(new Event('data', {dataType: 'style'}));
         this.fire(new Event('style.load'));
