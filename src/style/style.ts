@@ -317,15 +317,7 @@ export class Style extends Evented {
 
         this._globalState[name] = newValue;
 
-        const sourceIdsToReload = new Set<string>();
-        for (const layerId in this._layers) {
-            const layer = this._layers[layerId];
-            const globalStateRefs = layer.getLayoutAffectingGlobalStateRefs();
-
-            if (globalStateRefs.has(name)) {
-                sourceIdsToReload.add(layer.source);
-            }
-        }
+        const sourceIdsToReload = this._findGlobalStateAffectedSources([name]);
 
         for (const id in this.sourceCaches) {
             if (sourceIdsToReload.has(id)) {
@@ -339,12 +331,59 @@ export class Style extends Evented {
         return this._globalState;
     }
 
-    _setGlobalState(stylesheetState: StateSpecification) {
-        this._globalState = {};
+    _setGlobalState(newStylesheetState: StateSpecification) {
+        this._checkLoaded();
 
-        for (const propertyName in stylesheetState) {
-            this._globalState[propertyName] = stylesheetState[propertyName].default;
+        const stateValues = newStylesheetState ? mapObject(newStylesheetState, (value) => value.default) : {};
+
+        if (deepEqual(stateValues, this._globalState)) {
+            return;
         }
+
+        const changedGlobalStateRefs = [];
+
+        for (const propertyName in newStylesheetState) {
+            const didChange = !deepEqual(this._globalState[propertyName], newStylesheetState[propertyName].default);
+
+            if (didChange) {
+                changedGlobalStateRefs.push(propertyName);
+                this._globalState[propertyName] = newStylesheetState[propertyName].default;
+            }
+        }
+
+        const sourceIdsToReload = this._findGlobalStateAffectedSources(changedGlobalStateRefs);
+
+        for (const id in this.sourceCaches) {
+            if (sourceIdsToReload.has(id)) {
+                this._reloadSource(id);
+                this._changed = true;
+            }
+        }
+    }
+
+    /**
+     * Find all sources that are affected by the global state changes.
+     * For example, if a layer filter uses global-state expression, this function will return the source id of that layer.
+     */
+    _findGlobalStateAffectedSources(globalStateRefs: string[]) {
+        if (globalStateRefs.length === 0) {
+            return new Set<string>();
+        }
+
+        const sourceIdsToReload = new Set<string>();
+
+        for (const layerId in this._layers) {
+            const layer = this._layers[layerId];
+            const layoutAffectingGlobalStateRefs = layer.getLayoutAffectingGlobalStateRefs();
+
+            for (const ref of globalStateRefs) {
+                if (layoutAffectingGlobalStateRefs.has(ref)) {
+                    sourceIdsToReload.add(layer.source);
+                }
+            }
+        }
+
+        return sourceIdsToReload;
     }
 
     loadURL(url: string, options: StyleSwapOptions & StyleSetterOptions = {}, previousStyle?: StyleSpecification) {

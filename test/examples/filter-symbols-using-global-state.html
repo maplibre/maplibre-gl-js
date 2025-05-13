@@ -35,7 +35,6 @@
         Filter by type
         <select name="type">
             <option value="" selected>All</option>
-
             <option value="funivia">Funivia</option>
             <option value="funicolare">Funicolare</option>
         </select>
@@ -50,27 +49,28 @@
         zoom: 9
     });
 
-
     map.on('load', () => {
+        map.addSource('funicolares_and_funivias', {
+            type: 'geojson',
+            data: 'https://maplibre.org/maplibre-gl-js/docs/assets/funicolares-and-funivias-como.json'
+        });
+
         map.addLayer({
-            'id': 'funicolares_and_funivias_labels',
-            'type': 'symbol',
-            'source': {
-                'type': 'geojson',
-                'data': 'https://maplibre.org/maplibre-gl-js/docs/assets/funicolares-and-funivias-como.json'
-            },
-            'layout': {
+            id: 'funicolares_and_funivias_labels',
+            type: 'symbol',
+            source: 'funicolares_and_funivias',
+            layout: {
                 'text-field': '{name}',
                 'text-font': ['Open Sans Semibold'],
                 'text-offset': [0, 1],
                 'text-anchor': 'top'
             },
-            'paint': {
+            paint: {
                 'text-color': '#000000',
                 'text-halo-color': '#ffffff',
                 'text-halo-width': 2
             },
-            'filter': [
+            filter: [
                 'case',
                 ['==', ['to-string', ['global-state', 'type']], ''],
                 true,
@@ -80,10 +80,7 @@
         map.addLayer({
             type: 'circle',
             id: 'funiculares_and_funivies_points',
-            source: {
-                'type': 'geojson',
-                'data': 'https://maplibre.org/maplibre-gl-js/docs/assets/funicolares-and-funivias-como.json'
-            },
+            source: 'funicolares_and_funivias',
             paint: {
                 'circle-radius': 5,
                 'circle-color': '#000000',
@@ -94,7 +91,7 @@
                 true,
                 ['==', ['get', 'type'], ['global-state', 'type']]
             ]
-        })
+        });
 
         const select = document.querySelector('select[name="type"]');
         map.setGlobalStateProperty('type', select.value);
