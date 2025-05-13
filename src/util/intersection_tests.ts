@@ -130,16 +130,24 @@ function distToSegmentSquared(p: Point, v: Point, w: Point) {
     return p.distSqr(w.sub(v)._mult(t)._add(v));
 }
 
+// point in polygon ray casting algorithm
 function multiPolygonContainsPoint(rings: Array<Ring>, p: Point) {
+    let c = false,
+        ring, p1, p2;
+
     for (let k = 0; k < rings.length; k++) {
-        if (polygonContainsPoint(rings[k], p)) {
-            return true;
+        ring = rings[k];
+        for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+            p1 = ring[i];
+            p2 = ring[j];
+            if (((p1.y > p.y) !== (p2.y > p.y)) && (p.x < (p2.x - p1.x) * (p.y - p1.y) / (p2.y - p1.y) + p1.x)) {
+                c = !c;
+            }
         }
     }
-    return false;
+    return c;
 }
 
-// point in polygon ray casting algorithm
 function polygonContainsPoint(ring: Ring, p: Point) {
     let c = false;
     for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
