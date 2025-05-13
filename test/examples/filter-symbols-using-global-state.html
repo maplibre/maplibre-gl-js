@@ -35,8 +35,8 @@
         Filter by type
         <select name="type">
             <option value="" selected>All</option>
-            <option value="funivia">Funivia</option>
-            <option value="funicolare">Funicolare</option>
+            <option value="lift">Aerial lift</option>
+            <option value="railway">Cable railway</option>
         </select>
     </fieldset>
 </body>
@@ -50,15 +50,15 @@
     });
 
     map.on('load', () => {
-        map.addSource('funicolares_and_funivias', {
+        map.addSource('railways_and_lifts', {
             type: 'geojson',
             data: 'https://maplibre.org/maplibre-gl-js/docs/assets/funicolares-and-funivias-como.json'
         });
 
         map.addLayer({
-            id: 'funicolares_and_funivias_labels',
+            id: 'railways_and_lifts_labels',
             type: 'symbol',
-            source: 'funicolares_and_funivias',
+            source: 'railways_and_lifts',
             layout: {
                 'text-field': '{name}',
                 'text-font': ['Open Sans Semibold'],
@@ -79,8 +79,8 @@
         });
         map.addLayer({
             type: 'circle',
-            id: 'funiculares_and_funivies_points',
-            source: 'funicolares_and_funivias',
+            id: 'railways_and_lifts_points',
+            source: 'railways_and_lifts',
             paint: {
                 'circle-radius': 5,
                 'circle-color': '#000000',

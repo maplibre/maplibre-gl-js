@@ -5,7 +5,7 @@
           "type": "Feature",
           "properties": {
               "name": "Funivia Pani d\"Erna",
-              "type": "funivia"
+              "type": "lift"
           },
           "geometry": {
               "coordinates": [
@@ -19,7 +19,7 @@
           "type": "Feature",
           "properties": {
               "name": "Funicolare Como-Brunate",
-              "type": "funicolare"
+              "type": "railway"
           },
           "geometry": {
               "coordinates": [
@@ -34,7 +34,7 @@
           "type": "Feature",
           "properties": {
               "name": "Funivia Pigra Argegno",
-              "type": "funivia"
+              "type": "lift"
           },
           "geometry": {
               "coordinates": [
@@ -48,7 +48,7 @@
           "type": "Feature",
           "properties": {
               "name": "Funicolare Sacro Monte",
-              "type": "funicolare"
+              "type": "railway"
           },
           "geometry": {
               "coordinates": [
@@ -62,7 +62,7 @@
           "type": "Feature",
           "properties": {
               "name": "Funicolare Cassarate Monte Brè",
-              "type": "funicolare"
+              "type": "railway"
           },
           "geometry": {
               "coordinates": [
@@ -89,7 +89,7 @@
           "type": "Feature",
           "properties": {
               "name": "Funivia Monte Lema",
-              "type": "funivia"
+              "type": "lift"
           },
           "geometry": {
               "coordinates": [
