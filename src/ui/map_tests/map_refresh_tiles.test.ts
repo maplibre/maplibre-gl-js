@@ -44,5 +44,6 @@ describe('Map::refreshTiles', () => {
 
         map.refreshTiles('source-id1');
         expect(spy).toHaveBeenCalledOnce();
+        expect(spy.mock.calls[0][0]).toBe(true);
     });
 });

@@ -2,6 +2,7 @@ import Queue from 'tinyqueue';
 
 import Point from '@mapbox/point-geometry';
 import {distToSegmentSquared} from './intersection_tests';
+import {Bounds} from '../geo/bounds';
 
 /**
  * Finds an approximation of a polygon's Pole Of Inaccessibility https://en.wikipedia.org/wiki/Pole_of_inaccessibility
@@ -17,25 +18,15 @@ export function findPoleOfInaccessibility(
     precision: number = 1,
     debug: boolean = false
 ): Point {
-    // find the bounding box of the outer ring
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    const outerRing = polygonRings[0];
-    for (let i = 0; i < outerRing.length; i++) {
-        const p = outerRing[i];
-        if (!i || p.x < minX) minX = p.x;
-        if (!i || p.y < minY) minY = p.y;
-        if (!i || p.x > maxX) maxX = p.x;
-        if (!i || p.y > maxY) maxY = p.y;
-    }
+    const bounds = Bounds.fromPoints(polygonRings[0]);
 
-    const width = maxX - minX;
-    const height = maxY - minY;
-    const cellSize = Math.min(width, height);
+    const cellSize = Math.min(bounds.width(), bounds.height());
     let h = cellSize / 2;
 
     // a priority queue of cells in order of their "potential" (max distance to polygon)
     const cellQueue = new Queue([], compareMax);
 
+    const {minX, minY, maxX, maxY} = bounds;
     if (cellSize === 0) return new Point(minX, minY);
 
     // cover polygon with initial cells
