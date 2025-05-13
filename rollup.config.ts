@@ -10,7 +10,6 @@ const production = BUILD === 'production';
 const outputFile = production ? 'dist/maplibre-gl.js' : 'dist/maplibre-gl-dev.js';
 
 const config: RollupOptions[] = [{
-    // Before rollup you should run build-tsc to transpile from typescript to javascript (except when running rollup in watch mode)
     // Rollup will use code splitting to bundle GL JS into three "chunks":
     // - staging/maplibregl/index.js: the main module, plus all its dependencies not shared by the worker module
     // - staging/maplibregl/worker.js: the worker module, plus all dependencies not shared by the main module
