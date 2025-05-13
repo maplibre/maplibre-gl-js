@@ -168,7 +168,7 @@ export abstract class StyleLayer extends Evented {
     }
 
     /**
-     * Get list of global state references that are used withing layout or filter properties.
+     * Get list of global state references that are used within layout or filter properties.
      * This is used to determine if layer source need to be reloaded when global state property changes.
      *
      */

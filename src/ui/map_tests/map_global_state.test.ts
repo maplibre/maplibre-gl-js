@@ -1,4 +1,4 @@
-import {describe, beforeEach, afterEach, test, expect} from 'vitest';
+import {describe, beforeEach, afterEach, test, expect, vitest} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
 import {fakeServer, type FakeServer} from 'nise';
 
@@ -35,11 +35,13 @@ describe('#setGlobalStateProperty', () => {
             }
         });
 
-        await map.once('style.load', () => {
-            map.setGlobalStateProperty('backgroundColor', 'blue');
-            expect(map.getGlobalState()).toEqual({backgroundColor: 'blue'});
-            expect(map._update).toHaveBeenCalledWith(true);
-        });
+        await map.once('style.load');
+        map._update = vitest.fn();
+
+        map.setGlobalStateProperty('backgroundColor', 'blue');
+
+        expect(map.getGlobalState()).toEqual({backgroundColor: 'blue'});
+        expect(map._update).toHaveBeenCalledWith(true);
     });
 
     test('resets state to default value when called with null', async () => {
@@ -62,12 +64,19 @@ describe('#setGlobalStateProperty', () => {
             }
         });
 
-        await map.once('style.load', () => {
-            map.setGlobalStateProperty('backgroundColor', 'blue');
-            expect(map.getGlobalState()).toEqual({backgroundColor: 'blue'});
-            map.setGlobalStateProperty('backgroundColor', null);
-            expect(map.getGlobalState()).toEqual({backgroundColor: 'red'});
-            expect(map._update).toHaveBeenCalledWith(true);
-        });
+        await map.once('style.load');
+        map._update = vitest.fn();
+
+        map.setGlobalStateProperty('backgroundColor', 'blue');
+
+        expect(map.getGlobalState()).toEqual({backgroundColor: 'blue'});
+        expect(map._update).toHaveBeenCalledTimes(1);
+        expect(map._update).toHaveBeenCalledWith(true);
+
+        map.setGlobalStateProperty('backgroundColor', null);
+
+        expect(map.getGlobalState()).toEqual({backgroundColor: 'red'});
+        expect(map._update).toHaveBeenCalledTimes(2);
+        expect(map._update).toHaveBeenNthCalledWith(2, true);
     });
 });
