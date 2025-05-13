@@ -859,6 +859,9 @@ export class Style extends Evented {
                 case 'setProjection':
                     this.setProjection.apply(this, op.args);
                     break;
+                case 'setGlobalState':
+                    operations.push(() => this._setGlobalState.apply(this, op.args));
+                    break;
                 case 'setTransition':
                     operations.push(() => {});
                     break;
