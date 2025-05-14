@@ -2,6 +2,7 @@ uniform sampler2D u_image;
 uniform vec4 u_unpack;
 uniform float u_elevation_stops[NUM_ELEVATION_STOPS];
 uniform vec4 u_color_stops[NUM_ELEVATION_STOPS];
+uniform float u_opacity;
 
 in vec2 v_pos;
 
@@ -30,7 +31,7 @@ void main() {
             l = m;
         }
     }
-    fragColor = mix(u_color_stops[l],
+    fragColor = u_opacity*mix(u_color_stops[l],
         u_color_stops[r],
         clamp((el - u_elevation_stops[l])/(u_elevation_stops[r]-u_elevation_stops[l]), 0.0, 1.0));
 

@@ -1,5 +1,6 @@
 import {
     Uniform1i,
+    Uniform1f,
     Uniform2f,
     Uniform4f,
     UniformFloatArray,
@@ -17,6 +18,7 @@ export type ColorReliefUniformsType = {
     'u_dimension': Uniform2f;
     'u_elevation_stops': UniformFloatArray;
     'u_color_stops': UniformColorArray;
+    'u_opacity': Uniform1f;
 };
 
 const colorReliefUniforms = (context: Context, locations: UniformLocations): ColorReliefUniformsType => ({
@@ -24,7 +26,8 @@ const colorReliefUniforms = (context: Context, locations: UniformLocations): Col
     'u_unpack': new Uniform4f(context, locations.u_unpack),
     'u_dimension': new Uniform2f(context, locations.u_dimension),
     'u_elevation_stops': new UniformFloatArray(context, locations.u_elevation_stops),
-    'u_color_stops': new UniformColorArray(context, locations.u_color_stops)
+    'u_color_stops': new UniformColorArray(context, locations.u_color_stops),
+    'u_opacity': new Uniform1f(context, locations.u_opacity)
 });
 
 const colorReliefUniformValues = (
@@ -37,7 +40,8 @@ const colorReliefUniformValues = (
         'u_unpack': dem.getUnpackVector(),
         'u_dimension': [dem.stride, dem.stride],
         'u_elevation_stops': layer.elevationStops,
-        'u_color_stops': layer.colorStops
+        'u_color_stops': layer.colorStops,
+        'u_opacity': layer.paint.get('color-relief-opacity')
     };
 };
 
