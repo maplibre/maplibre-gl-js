@@ -25,9 +25,9 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
                 get subdivisionGranularity() {
                     return SubdivisionGranularitySetting.noSubdivision;
                 }
-            },
-            getGlobalState: () => ({}),
+            }
         },
+        getGlobalState: () => ({}),
         getPixelRatio() { return 1; },
     } as any as Map);
 

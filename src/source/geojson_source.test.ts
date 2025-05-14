@@ -431,13 +431,13 @@ describe('GeoJSONSource#update', () => {
         source.map = {
             transform: {} as IReadonlyTransform,
             getPixelRatio() { return 1; },
+            getGlobalState: () => ({}),
             style: {
                 projection: {
                     get subdivisionGranularity() {
                         return SubdivisionGranularitySetting.noSubdivision;
                     }
-                },
-                getGlobalState: () => ({})
+                }
             }
         } as any;
 
