@@ -11,7 +11,6 @@ import type {Painter, RenderOptions} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {ColorReliefStyleLayer} from '../style/style_layer/color_relief_style_layer';
 import type {OverscaledTileID} from '../source/tile_id';
-import type {Context} from '../gl/context';
 
 export function drawColorRelief(painter: Painter, sourceCache: SourceCache, layer: ColorReliefStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
@@ -53,14 +52,9 @@ function renderColorRelief(
     const context = painter.context;
     const transform = painter.transform;
     const gl = context.gl;
-    const program = painter.useProgram('colorRelief');
+    const defines = [`#define NUM_ELEVATION_STOPS ${layer.elevationStops.length}`];
+    const program = painter.useProgram('colorRelief', null, false, defines);
     const align = !painter.options.moving;
-
-    if(layer.colorRamp) {
-        const colorRampTexture = getColorRampTexture(context, layer);
-        context.activeTexture.set(gl.TEXTURE5);
-        colorRampTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
-    }
 
     for (const coord of coords) {
         const tile = sourceCache.getTile(coord);
@@ -100,11 +94,4 @@ function renderColorRelief(
         program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
             colorReliefUniformValues(layer, tile.dem, layer.elevationRange), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
-}
-
-function getColorRampTexture(context: Context, layer: ColorReliefStyleLayer): Texture {
-    if (!layer.colorRampTexture) {
-        layer.colorRampTexture = new Texture(context, layer.colorRamp, context.gl.RGBA);
-    }
-    return layer.colorRampTexture;
 }
