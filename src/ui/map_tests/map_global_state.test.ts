@@ -1,17 +1,8 @@
-import {describe, beforeEach, afterEach, test, expect, vitest} from 'vitest';
+import {describe, beforeEach, test, expect, vitest} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
-import {fakeServer, type FakeServer} from 'nise';
-
-let server: FakeServer;
 
 beforeEach(() => {
     beforeMapTest();
-    global.fetch = null;
-    server = fakeServer.create();
-});
-
-afterEach(() => {
-    server.restore();
 });
 
 describe('#setGlobalStateProperty', () => {
