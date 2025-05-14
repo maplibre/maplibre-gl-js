@@ -277,6 +277,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             obb.min = aabbMin;
             obb.max = aabbMax;
 
+            obb.precomputePoints();
             return obb;
         }
     }

@@ -1,6 +1,7 @@
 import {quat, vec3, type vec4} from 'gl-matrix';
 import {type Frustum} from './frustum';
 import {IntersectionResult, type IBoundingVolume} from './bounding_volume';
+import {pointPlaneSignedDistance} from '../util';
 
 export class OrientedBoundingBox implements IBoundingVolume {
     axisX: vec3; // Scaled according to the OBB's half-length in the given axis.
@@ -12,6 +13,8 @@ export class OrientedBoundingBox implements IBoundingVolume {
     // but it *must* accurately bound the actual shape this OBB is approximating.
     min: vec3;
     max: vec3;
+
+    points: vec3[];
 
     /**
      * Creates an oriented bounding box equivalent to the specified AABB.
@@ -27,6 +30,7 @@ export class OrientedBoundingBox implements IBoundingVolume {
         obb.axisX = [halfSize[0], 0, 0];
         obb.axisY = [0, halfSize[1], 0];
         obb.axisZ = [0, 0, halfSize[2]];
+        obb.precomputePoints();
         return obb;
     }
 
@@ -60,11 +64,23 @@ export class OrientedBoundingBox implements IBoundingVolume {
         obb.axisZ = axisZ;
         obb.min = min;
         obb.max = max;
+        obb.precomputePoints();
         return obb;
     }
 
+    public precomputePoints(): void {
+        this.points = [];
+        for (let i = 0; i < 8; i++) {
+            const p = [...this.center] as vec3;
+            vec3.add(p, p, vec3.scale([] as any, this.axisX, ((i >> 0) & 1) === 1 ? 1 : -1));
+            vec3.add(p, p, vec3.scale([] as any, this.axisY, ((i >> 1) & 1) === 1 ? 1 : -1));
+            vec3.add(p, p, vec3.scale([] as any, this.axisZ, ((i >> 2) & 1) === 1 ? 1 : -1));
+            this.points.push(p);
+        }
+    }
+
     /**
-     * Performs a frustum-obb intersection test.
+     * Performs an approximate frustum-obb intersection test.
      */
     intersectsFrustum(frustum: Frustum): IntersectionResult {
         let fullyInside = true;
@@ -97,21 +113,18 @@ export class OrientedBoundingBox implements IBoundingVolume {
      * Performs a halfspace-obb intersection test.
      */
     intersectsPlane(plane: vec4): IntersectionResult {
-        const dotX = this.axisX[0] * plane[0] + this.axisX[1] * plane[1] + this.axisX[2] * plane[2];
-        const dotY = this.axisY[0] * plane[0] + this.axisY[1] * plane[1] + this.axisY[2] * plane[2];
-        const dotZ = this.axisZ[0] * plane[0] + this.axisZ[1] * plane[1] + this.axisZ[2] * plane[2];
-        const distanceToCenter = this.center[0] * plane[0] + this.center[1] * plane[1] + this.center[2] * plane[2] + plane[3];
-        const diffX = Math.abs(dotX);
-        const diffY = Math.abs(dotY);
-        const diffZ = Math.abs(dotZ);
-        const totalDiff = diffX + diffY + diffZ;
-        const distMax = distanceToCenter + totalDiff;
-        const distMin = distanceToCenter - totalDiff;
+        let positivePoints = 0;
+        for (let i = 0; i < 8; i++) {
+            const dist = pointPlaneSignedDistance(plane, this.points[i]);
+            if (dist >= 0) {
+                positivePoints++;
+            }
+        }
 
-        if (distMin >= 0) {
+        if (positivePoints === 8) {
             return IntersectionResult.Full;
         }
-        if (distMax < 0) {
+        if (positivePoints === 0) {
             return IntersectionResult.None;
         }
         return IntersectionResult.Partial;
