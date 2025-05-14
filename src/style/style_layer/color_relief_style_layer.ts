@@ -10,7 +10,6 @@ import {nextPowerOfTwo} from '../../util/util';
 export const isColorReliefStyleLayer = (layer: StyleLayer): layer is ColorReliefStyleLayer => layer.type === 'color-relief';
 
 export class ColorReliefStyleLayer extends StyleLayer {
-    elevationRange: {start: number; end: number};
     elevationStops: Array<number>;
     colorStops: Array<Color>;
     _transitionablePaint: Transitionable<ColorReliefPaintProps>;
@@ -26,7 +25,6 @@ export class ColorReliefStyleLayer extends StyleLayer {
         const expression = this._transitionablePaint._values['color-relief-color'].value.expression;
         if (expression instanceof ZoomConstantExpression && expression._styleExpression.expression instanceof Interpolate) {
             const interpolater = expression._styleExpression.expression;
-            this.elevationRange = {start: interpolater.labels[0], end: interpolater.labels[interpolater.labels.length-1]};
             this.elevationStops = [];
             this.colorStops = [];
             for (const label of interpolater.labels) {
@@ -38,8 +36,6 @@ export class ColorReliefStyleLayer extends StyleLayer {
                 this.elevationStops.push(this.elevationStops.at(-1));
                 this.colorStops.push(this.colorStops.at(-1));
             }
-        } else{
-            this.elevationRange = {start: 0, end: 1};
         }
     }
 

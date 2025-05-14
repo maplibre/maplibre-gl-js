@@ -1,10 +1,7 @@
 uniform sampler2D u_image;
 uniform vec4 u_unpack;
-uniform float u_colormap_scale;
-uniform float u_elevation_start;
 uniform float u_elevation_stops[NUM_ELEVATION_STOPS];
 uniform vec4 u_color_stops[NUM_ELEVATION_STOPS];
-uniform int u_colormap_length;
 
 in vec2 v_pos;
 
@@ -19,7 +16,7 @@ void main() {
     float el = getElevation(v_pos);
 
     // Binary search
-    int r = (u_colormap_length - 1);
+    int r = (NUM_ELEVATION_STOPS - 1);
     int l = 0;
     while(r - l > 1)
     {
