@@ -1,0 +1,81 @@
+{
+  "$comment": "This tests that holes in polygons are not counted as intersecting",
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 512,
+      "height": 512,
+      "debug": true,
+      "queryGeometry": [
+        256,
+        256
+      ]
+    }
+  },
+  "center": [
+    0,
+    0
+  ],
+  "zoom": 0,
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -30,
+              30
+            ],
+            [
+              30,
+              30
+            ],
+            [
+              30,
+              -30
+            ],
+            [
+              -30,
+              -30
+            ],
+            [
+              -30,
+              30
+            ]
+          ],
+          [
+            [
+              -15,
+              15
+            ],
+            [
+              15,
+              15
+            ],
+            [
+              15,
+              -15
+            ],
+            [
+              -15,
+              -15
+            ],
+            [
+              -15,
+              15
+            ]
+          ]
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "circles",
+      "type": "fill",
+      "source": "geojson"
+    }
+  ]
+}

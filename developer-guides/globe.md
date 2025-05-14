@@ -2,7 +2,7 @@
 
 This guide describes the inner workings of globe projection.
 Globe draws the same vector polygons and lines as mercator projection,
-ensuring a clear, unstretched image at all view angles and support for dynamic layers and geometry.
+ensuring a clear, non-stretched image at all view angles and support for dynamic layers and geometry.
 
 The actual projection is done in three steps:
 

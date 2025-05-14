@@ -19,11 +19,13 @@ import type {Style} from '../style/style';
 import type {Dispatcher} from '../util/dispatcher';
 import type {IReadonlyTransform, ITransform} from '../geo/transform_interface';
 import type {TileState} from './tile';
-import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {ICanonicalTileID, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapSourceDataEvent} from '../ui/events';
 import type {Terrain} from '../render/terrain';
 import type {CanvasSourceSpecification} from './canvas_source';
 import {coveringTiles, coveringZoomLevel} from '../geo/projection/covering_tiles';
+import {Bounds} from '../geo/bounds';
+import {EXTENT_BOUNDS} from '../data/extent_bounds';
 
 type TileResult = {
     tile: Tile;
@@ -263,7 +265,9 @@ export class SourceCache extends Evented {
         this._cache.reset();
 
         for (const i in this._tiles) {
-            if (sourceDataChanged || this._tiles[i].state !== 'errored') {
+            if (sourceDataChanged) {
+                this._reloadTile(i, 'expired');
+            } else if (this._tiles[i].state !== 'errored') {
                 this._reloadTile(i, 'reloading');
             }
         }
@@ -895,6 +899,20 @@ export class SourceCache extends Evented {
     }
 
     /**
+     * Reload any currently renderable tiles that are match one of the incoming `tileId` x/y/z
+     */
+    refreshTiles(tileIds: Array<ICanonicalTileID>) {
+        for (const id in this._tiles) {
+            if (!this._isIdRenderable(id) && this._tiles[id].state != 'errored') {
+                continue;
+            }
+            if (tileIds.some(tid => tid.equals(this._tiles[id].tileID.canonical))) {
+                this._reloadTile(id, 'expired');
+            }
+        }
+    }
+
+    /**
      * Remove a tile, given its id, from the pyramid
      */
     _removeTile(id: string) {
@@ -965,27 +983,19 @@ export class SourceCache extends Evented {
 
         const transform = this.transform;
         if (!transform) return tileResults;
+        const allowWorldCopies = transform.getCoveringTilesDetailsProvider().allowWorldCopies();
 
         const cameraPointQueryGeometry = has3DLayer ?
             transform.getCameraQueryGeometry(pointQueryGeometry) :
             pointQueryGeometry;
 
-        const queryGeometry = pointQueryGeometry.map((p: Point) => transform.screenPointToMercatorCoordinate(p, this.terrain));
-        const cameraQueryGeometry = cameraPointQueryGeometry.map((p: Point) => transform.screenPointToMercatorCoordinate(p, this.terrain));
+        const project = (point: Point) => transform.screenPointToMercatorCoordinate(point, this.terrain);
+        const queryGeometry = this.transformBbox(pointQueryGeometry, project, !allowWorldCopies);
+        const cameraQueryGeometry = this.transformBbox(cameraPointQueryGeometry, project, !allowWorldCopies);
 
         const ids = this.getIds();
 
-        let minX = Infinity;
-        let minY = Infinity;
-        let maxX = -Infinity;
-        let maxY = -Infinity;
-
-        for (const p of cameraQueryGeometry) {
-            minX = Math.min(minX, p.x);
-            minY = Math.min(minY, p.y);
-            maxX = Math.max(maxX, p.x);
-            maxY = Math.max(maxY, p.y);
-        }
+        const cameraBounds = Bounds.fromPoints(cameraQueryGeometry);
 
         for (let i = 0; i < ids.length; i++) {
             const tile = this._tiles[ids[i]];
@@ -993,32 +1003,55 @@ export class SourceCache extends Evented {
                 // Tiles held for fading are covered by tiles that are closer to ideal
                 continue;
             }
-            const tileID = transform.getCoveringTilesDetailsProvider().allowWorldCopies() ? tile.tileID : tile.tileID.unwrapTo(0);
+            // if the projection does not render world copies then we need to explicitly check for the bounding box crossing the antimeridian
+            const tileIDs = allowWorldCopies ? [tile.tileID] : [tile.tileID.unwrapTo(-1), tile.tileID.unwrapTo(0)];
             const scale = Math.pow(2, transform.zoom - tile.tileID.overscaledZ);
             const queryPadding = maxPitchScaleFactor * tile.queryPadding * EXTENT / tile.tileSize / scale;
 
-            const tileSpaceBounds = [
-                tileID.getTilePoint(new MercatorCoordinate(minX, minY)),
-                tileID.getTilePoint(new MercatorCoordinate(maxX, maxY))
-            ];
+            for (const tileID of tileIDs) {
 
-            if (tileSpaceBounds[0].x - queryPadding < EXTENT && tileSpaceBounds[0].y - queryPadding < EXTENT &&
-                tileSpaceBounds[1].x + queryPadding >= 0 && tileSpaceBounds[1].y + queryPadding >= 0) {
+                const tileSpaceBounds = cameraBounds.map(point => tileID.getTilePoint(new MercatorCoordinate(point.x, point.y)));
+                tileSpaceBounds.expandBy(queryPadding);
 
-                const tileSpaceQueryGeometry: Array<Point> = queryGeometry.map((c) => tileID.getTilePoint(c));
-                const tileSpaceCameraQueryGeometry = cameraQueryGeometry.map((c) => tileID.getTilePoint(c));
+                if (tileSpaceBounds.intersects(EXTENT_BOUNDS)) {
 
-                tileResults.push({
-                    tile,
-                    tileID,
-                    queryGeometry: tileSpaceQueryGeometry,
-                    cameraQueryGeometry: tileSpaceCameraQueryGeometry,
-                    scale
-                });
+                    const tileSpaceQueryGeometry: Array<Point> = queryGeometry.map((c) => tileID.getTilePoint(c));
+                    const tileSpaceCameraQueryGeometry = cameraQueryGeometry.map((c) => tileID.getTilePoint(c));
+
+                    tileResults.push({
+                        tile,
+                        tileID: allowWorldCopies ? tileID : tileID.unwrapTo(0),
+                        queryGeometry: tileSpaceQueryGeometry,
+                        cameraQueryGeometry: tileSpaceCameraQueryGeometry,
+                        scale
+                    });
+                }
             }
         }
 
         return tileResults;
+    }
+
+    private transformBbox(geom: Point[], project: (point: Point) => MercatorCoordinate, checkWrap: boolean): MercatorCoordinate[] {
+        let transformed = geom.map(project);
+        if (checkWrap) {
+            // If the projection does not allow world copies, then a bounding box may span the antimeridian and
+            // instead of a bounding box going from 179°E to 179°W, it goes from 179°W to 179°E and covers the entire
+            // planet except for what should be inside it.
+            const bounds = Bounds.fromPoints(geom);
+            bounds.shrinkBy(Math.min(bounds.width(), bounds.height()) * 0.001);
+            const projected = bounds.map(project);
+
+            const newBounds = Bounds.fromPoints(transformed); 
+
+            if (!newBounds.covers(projected)) {
+                transformed = transformed.map((coord) => coord.x > 0.5 ?
+                    new MercatorCoordinate(coord.x - 1, coord.y, coord.z) :
+                    coord
+                );
+            }
+        }
+        return transformed;
     }
 
     getVisibleCoordinates(symbolLayer?: boolean): Array<OverscaledTileID> {
