@@ -259,6 +259,7 @@ describe('StyleLayer#getLayoutAffectingGlobalStateRefs', () => {
         const layer = createStyleLayer({
             'id': 'symbol',
             'type': 'symbol',
+            source: 'source',
             'filter': ['==', ['global-state', 'showSymbol'], true],
         });
 
@@ -269,9 +270,10 @@ describe('StyleLayer#getLayoutAffectingGlobalStateRefs', () => {
         const layer = createStyleLayer({
             'id': 'symbol',
             'type': 'symbol',
+            source: 'source',
             'layout': {
                 'text-field': '{text}',
-                'text-size': ['global-state', ['to-string', ['get', 'textSize']]],
+                'text-size': ['global-state', 'textSize'],
                 'text-transform': ['global-state', 'textTransform']
             }
         });
