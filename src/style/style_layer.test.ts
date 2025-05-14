@@ -260,6 +260,7 @@ describe('StyleLayer#getLayoutAffectingGlobalStateRefs', () => {
             'id': 'symbol',
             'type': 'symbol',
             source: 'source',
+            //@ts-ignore
             'filter': ['==', ['global-state', 'showSymbol'], true],
         });
 
@@ -273,7 +274,9 @@ describe('StyleLayer#getLayoutAffectingGlobalStateRefs', () => {
             source: 'source',
             'layout': {
                 'text-field': '{text}',
+                //@ts-ignore
                 'text-size': ['global-state', 'textSize'],
+                //@ts-ignore
                 'text-transform': ['global-state', 'textTransform']
             }
         });
