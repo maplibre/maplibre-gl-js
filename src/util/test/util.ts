@@ -38,8 +38,6 @@ export class StubMap extends Evented {
         newTransform.apply(this.transform);
         this.transform = newTransform;
     }
-
-    _setGlobalState = vi.fn();
 }
 
 export function createMap(options?) {

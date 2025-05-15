@@ -1244,16 +1244,16 @@ describe('Style#setGeoJSONSourceData', () => {
     });
 });
 
-describe('Style#_setGlobalState', () => {
+describe('Style#setGlobalState', () => {
     test('throws before loaded', () => {
         const style = new Style(getStubMap());
-        expect(() => style._setGlobalState({})).toThrow(/load/i);
+        expect(() => style.setGlobalState({})).toThrow(/load/i);
     });
     test('sets global state', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
         await style.once('style.load');
-        style._setGlobalState({accentColor: {default: 'yellow'}});
+        style.setGlobalState({accentColor: {default: 'yellow'}});
         expect(style.getGlobalState()).toEqual({accentColor: 'yellow'});
     });
 
@@ -1285,7 +1285,7 @@ describe('Style#_setGlobalState', () => {
         style.sourceCaches['fill-source-id'].resume = vi.fn();
         style.sourceCaches['fill-source-id'].reload = vi.fn();
 
-        style._setGlobalState({showCircles: {default: true}, showFill: {default: false}});
+        style.setGlobalState({showCircles: {default: true}, showFill: {default: false}});
 
         expect(style.sourceCaches['circle-source-id'].resume).toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).toHaveBeenCalled();
@@ -1318,7 +1318,7 @@ describe('Style#_setGlobalState', () => {
         style.sourceCaches['circle-source-id'].resume = vi.fn();
         style.sourceCaches['circle-source-id'].reload = vi.fn();
 
-        style._setGlobalState({showCircles: {default: true}});
+        style.setGlobalState({showCircles: {default: true}});
 
         expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();

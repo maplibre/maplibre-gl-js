@@ -331,7 +331,7 @@ export class Style extends Evented {
         return this._globalState;
     }
 
-    _setGlobalState(newStylesheetState: StateSpecification) {
+    setGlobalState(newStylesheetState: StateSpecification) {
         this._checkLoaded();
 
         const stateValues = newStylesheetState ? mapObject(newStylesheetState, (value) => value.default) : {};
@@ -451,7 +451,7 @@ export class Style extends Evented {
 
         this.map.setTerrain(this.stylesheet.terrain ?? null);
 
-        this._setGlobalState(this.stylesheet.state ?? null);
+        this.setGlobalState(this.stylesheet.state ?? null);
 
         this.fire(new Event('data', {dataType: 'style'}));
         this.fire(new Event('style.load'));
@@ -899,7 +899,7 @@ export class Style extends Evented {
                     this.setProjection.apply(this, op.args);
                     break;
                 case 'setGlobalState':
-                    operations.push(() => this._setGlobalState.apply(this, op.args));
+                    operations.push(() => this.setGlobalState.apply(this, op.args));
                     break;
                 case 'setTransition':
                     operations.push(() => {});
