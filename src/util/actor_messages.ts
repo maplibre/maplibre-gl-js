@@ -41,7 +41,7 @@ export type RemoveSourceParams = {
 /**
  * Parameters needed to update the layers
  */
-export type UpdateLayersParamaeters = {
+export type UpdateLayersParameters = {
     layers: Array<LayerSpecification>;
     removedIds: Array<string>;
 };
@@ -125,7 +125,7 @@ export type RequestResponseMessageMap = {
     [MessageType.getImages]: [GetImagesParameters, GetImagesResponse];
     [MessageType.setImages]: [string[], void];
     [MessageType.setLayers]: [Array<LayerSpecification>, void];
-    [MessageType.updateLayers]: [UpdateLayersParamaeters, void];
+    [MessageType.updateLayers]: [UpdateLayersParameters, void];
     [MessageType.syncRTLPluginState]: [PluginState, PluginState];
     [MessageType.setReferrer]: [string, void];
     [MessageType.removeSource]: [RemoveSourceParams, void];
