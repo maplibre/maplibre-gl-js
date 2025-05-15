@@ -1,7 +1,6 @@
 import {quat, vec3, type vec4} from 'gl-matrix';
 import {type Frustum} from './frustum';
 import {IntersectionResult, type IBoundingVolume} from './bounding_volume';
-import {pointPlaneSignedDistance} from '../util';
 
 /**
  * A general convex bounding volume, defined by a set of points.
@@ -102,15 +101,30 @@ export class ConvexVolume implements IBoundingVolume {
      * Performs an approximate frustum-obb intersection test.
      */
     intersectsFrustum(frustum: Frustum): IntersectionResult {
+        // Performance-critical
         let fullyInside = true;
 
-        for (let p = 0; p < frustum.planes.length; p++) {
-            const planeIntersection = this.intersectsPlane(frustum.planes[p]);
+        const boxPointCount = this.points.length;
+        const boxPlaneCount = this.planes.length;
+        const frustumPlaneCount = frustum.planes.length;
+        const frustumPointCount = frustum.points.length;
 
-            if (planeIntersection === IntersectionResult.None) {
+        // Test whether this volume's points are inside the frustum
+        for (let i = 0; i < frustumPlaneCount; i++) {
+            const plane = frustum.planes[i];
+            let boxPointsPassed = 0;
+            for(let j = 0; j < boxPointCount; j++) {
+                const point = this.points[j];
+                // Get point-plane distance sign
+                if (plane[0] * point[0] + plane[1] * point[1] + plane[2] * point[2] + plane[3] >= 0) {
+                    boxPointsPassed++;
+                }
+            }
+
+            if (boxPointsPassed === 0) {
                 return IntersectionResult.None;
             }
-            if (planeIntersection === IntersectionResult.Partial) {
+            if (boxPointsPassed < boxPointCount) {
                 fullyInside = false;
             }
         }
@@ -119,10 +133,13 @@ export class ConvexVolume implements IBoundingVolume {
             return IntersectionResult.Full;
         }
 
-        for (const plane of this.planes) {
+        // Test whether the frustum's points are inside this volume.
+        for (let i = 0; i < boxPlaneCount; i++) {
+            const plane = this.planes[i];
             let frustumPointsPassed = 0;
-            for (const point of frustum.points) {
-                if (pointPlaneSignedDistance(plane, point as vec3) >= 0) {
+            for (let j = 0; j < frustumPointCount; j++) {
+                const point = frustum.points[j];
+                if (plane[0] * point[0] + plane[1] * point[1] + plane[2] * point[2] + plane[3] >= 0) {
                     frustumPointsPassed++;
                 }
             }
@@ -141,8 +158,8 @@ export class ConvexVolume implements IBoundingVolume {
         const pointCount = this.points.length;
         let positivePoints = 0;
         for (let i = 0; i < pointCount; i++) {
-            const dist = pointPlaneSignedDistance(plane, this.points[i]);
-            if (dist >= 0) {
+            const point = this.points[i];
+            if (plane[0] * point[0] + plane[1] * point[1] + plane[2] * point[2] + plane[3] >= 0) {
                 positivePoints++;
             }
         }
