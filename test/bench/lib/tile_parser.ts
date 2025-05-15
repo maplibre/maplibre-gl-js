@@ -137,7 +137,8 @@ export default class TileParser {
             request: {url: ''},
             returnDependencies,
             promoteId: undefined,
-            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
+            globalState: {}
         });
 
         const vectorTile = new VT.VectorTile(new Protobuf(tile.buffer));
