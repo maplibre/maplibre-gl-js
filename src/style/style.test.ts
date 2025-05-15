@@ -666,6 +666,7 @@ describe('Style#setState', () => {
     test('do nothing if there are no changes', async () => {
         const style = createStyle();
         style.loadJSON(createStyleJSON());
+        await style.once('style.load');
         const spys = [];
         spys.push(vi.spyOn(style, 'addLayer').mockImplementation((() => {}) as any));
         spys.push(vi.spyOn(style, 'removeLayer').mockImplementation((() => {}) as any));
@@ -678,7 +679,7 @@ describe('Style#setState', () => {
         spys.push(vi.spyOn(style, 'setLayerZoomRange').mockImplementation((() => {}) as any));
         spys.push(vi.spyOn(style, 'setLight').mockImplementation((() => {}) as any));
         spys.push(vi.spyOn(style, 'setSky').mockImplementation((() => {}) as any));
-        await style.once('style.load');
+        spys.push(vi.spyOn(style, 'setGlobalState').mockImplementation((() => {}) as any));
         const didChange = style.setState(createStyleJSON());
         expect(didChange).toBeFalsy();
         for (const spy of spys) {
@@ -689,6 +690,11 @@ describe('Style#setState', () => {
     test('do operations if there are changes', async () => {
         const style = createStyle();
         const styleJson = createStyleJSON({
+            state: {
+                accentColor: {
+                    default: 'blue'
+                }
+            },
             layers: [{
                 id: 'layerId0',
                 type: 'symbol',
@@ -730,8 +736,10 @@ describe('Style#setState', () => {
         spys.push(vi.spyOn(style, 'setProjection').mockImplementation((() => {}) as any));
         spys.push(vi.spyOn(style.map, 'setTerrain').mockImplementation((() => {}) as any));
         spys.push(vi.spyOn(style, 'setSky').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setGlobalState').mockImplementation((() => {}) as any));
 
         const newStyle = JSON.parse(JSON.stringify(styleJson)) as StyleSpecification;
+        newStyle.state.accentColor.default = 'red';
         newStyle.layers[0].paint = {'text-color': '#7F7F7F',};
         newStyle.layers[0].layout = {'text-size': 16,};
         newStyle.layers[0].minzoom = 2;
