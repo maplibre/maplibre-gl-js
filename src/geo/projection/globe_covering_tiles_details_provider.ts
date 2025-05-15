@@ -8,7 +8,7 @@ import type {MercatorCoordinate} from '../mercator_coordinate';
 import type {CoveringTilesDetailsProviderImplementation} from './covering_tiles_details_provider';
 import {OverscaledTileID} from '../../source/tile_id';
 import {earthRadius} from '../lng_lat';
-import {ConvexBV} from '../../util/primitives/convexbv';
+import {ConvexVolume} from '../../util/primitives/convex_volume';
 import {threePlaneIntersection} from '../../util/util';
 
 /**
@@ -41,8 +41,8 @@ function distanceToTileWrapX(pointX: number, pointY: number, tileCornerX: number
     return Math.max(distanceX, distanceToTileSimple(pointY, tileCornerY, tileSize));
 }
 
-export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsProviderImplementation<ConvexBV> {
-    private _boundingVolumeCache: BoundingVolumeCache<ConvexBV> = new BoundingVolumeCache(this._computeTileBoundingVolume);
+export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsProviderImplementation<ConvexVolume> {
+    private _boundingVolumeCache: BoundingVolumeCache<ConvexVolume> = new BoundingVolumeCache(this._computeTileBoundingVolume);
 
     /**
      * Prepares the internal bounding volume cache for the next frame.
@@ -57,7 +57,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
      * Handles distances on a sphere correctly: X is wrapped when crossing the antimeridian,
      * when crossing the poles Y is mirrored and X is shifted by half world size.
      */
-    distanceToTile2d(pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, _bv: ConvexBV): number {
+    distanceToTile2d(pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, _bv: ConvexVolume): number {
         const scale = 1 << tileID.z;
         const tileMercatorSize = 1.0 / scale;
         const tileCornerX = tileID.x / scale; // In range 0..1
@@ -108,7 +108,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
         return this._boundingVolumeCache.getTileBoundingVolume(tileID, wrap, elevation, options);
     }
 
-    private _computeTileBoundingVolume(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions): ConvexBV {
+    private _computeTileBoundingVolume(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions): ConvexVolume {
         let minElevation = elevation;
         let maxElevation = elevation;
         if (options?.terrain) {
@@ -125,7 +125,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
 
         if (tileID.z <= 0) {
             // Tile covers the entire sphere.
-            return ConvexBV.fromAabb( // We return an AABB in this case.
+            return ConvexVolume.fromAabb( // We return an AABB in this case.
                 [-maxElevation, -maxElevation, -maxElevation],
                 [maxElevation, maxElevation, maxElevation]
             );
@@ -134,7 +134,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             // X is 1 at lng=E90°
             // Y is 1 at **north** pole
             // Z is 1 at null island
-            return ConvexBV.fromAabb( // We also just use AABBs for this zoom level.
+            return ConvexVolume.fromAabb( // We also just use AABBs for this zoom level.
                 [tileID.x === 0 ? -maxElevation : 0, tileID.y === 0 ? 0 : -maxElevation, -maxElevation],
                 [tileID.x === 0 ? 0 : maxElevation, tileID.y === 0 ? maxElevation : 0, maxElevation]
             );
@@ -284,7 +284,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
                 );
             }
 
-            return new ConvexBV(points, [
+            return new ConvexVolume(points, [
                 planeUp,
                 planeDown,
                 planeNorth,

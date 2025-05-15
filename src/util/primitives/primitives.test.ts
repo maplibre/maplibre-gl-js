@@ -4,7 +4,7 @@ import {Aabb} from './aabb';
 import {Frustum} from './frustum';
 import {IntersectionResult} from './bounding_volume';
 import {expectToBeCloseToArray} from '../test/util';
-import {ConvexBV} from './convexbv';
+import {ConvexVolume} from './convex_volume';
 
 const createTestCameraFrustum = (fovy, aspectRatio, zNear, zFar, elevation, rotation) => {
     const proj = new Float64Array(16) as any as mat4;
@@ -203,60 +203,60 @@ describe('frustum', () => {
 describe('convex bounding volume', () => {
     describe('fromCenterSizeAngles', () => {
         test('translated unit box', () => {
-            const obb = ConvexBV.fromCenterSizeAngles([0, 1, 0], [1, 1, 1], [0, 0, 0]);
+            const obb = ConvexVolume.fromCenterSizeAngles([0, 1, 0], [1, 1, 1], [0, 0, 0]);
             expect(obb.min).toEqual([-1, 0, -1]);
             expect(obb.max).toEqual([1, 2, 1]);
         });
 
         test('nonuniform box', () => {
-            const obb = ConvexBV.fromCenterSizeAngles([0, 0, 0], [1, 2, 3], [0, 0, 0]);
+            const obb = ConvexVolume.fromCenterSizeAngles([0, 0, 0], [1, 2, 3], [0, 0, 0]);
             expect(obb.min).toEqual([-1, -2, -3]);
             expect(obb.max).toEqual([1, 2, 3]);
         });
 
         test('translated rotated 90° unit box', () => {
-            const obb = ConvexBV.fromCenterSizeAngles([0, 2, 0], [1, 1, 1], [90, 0, 0]);
+            const obb = ConvexVolume.fromCenterSizeAngles([0, 2, 0], [1, 1, 1], [90, 0, 0]);
             expectToBeCloseToArray([...obb.min], [-1, 1, -1]);
             expectToBeCloseToArray([...obb.max], [1, 3, 1]);
         });
     });
 
-    test('Obb fully inside a frustum', () => {
+    test('box fully inside a frustum', () => {
         const frustum = createTestCameraFrustum(Math.PI / 2, 1.0, 0.1, 100.0, -5, 0);
-        // Use same boxes as the AABB tests - this will still test the obb intersection logic.
-        const obbList = [
-            ConvexBV.fromAabb(vec3.fromValues(-1, -1, 0), vec3.fromValues(1, 1, 0)),
-            ConvexBV.fromAabb(vec3.fromValues(-5, -5, 0), vec3.fromValues(5, 5, 0)),
-            ConvexBV.fromAabb(vec3.fromValues(-5, -5, 0), vec3.fromValues(-4, -2, 0))
+        // Use same boxes as the AABB tests - this will still test the convex volume intersection logic.
+        const boxList = [
+            ConvexVolume.fromAabb(vec3.fromValues(-1, -1, 0), vec3.fromValues(1, 1, 0)),
+            ConvexVolume.fromAabb(vec3.fromValues(-5, -5, 0), vec3.fromValues(5, 5, 0)),
+            ConvexVolume.fromAabb(vec3.fromValues(-5, -5, 0), vec3.fromValues(-4, -2, 0))
         ];
 
-        for (const obb of obbList)
-            expect(obb.intersectsFrustum(frustum)).toBe(IntersectionResult.Full);
+        for (const box of boxList)
+            expect(box.intersectsFrustum(frustum)).toBe(IntersectionResult.Full);
 
     });
 
-    test('Obb intersecting with a frustum', () => {
+    test('box intersecting with a frustum', () => {
         const frustum = createTestCameraFrustum(Math.PI / 2, 1.0, 0.1, 100.0, -5, 0);
-        expect(ConvexBV.fromAabb(vec3.fromValues(-6, -6, 0), vec3.fromValues(6, 6, 0)).intersectsFrustum(frustum)).toBe(IntersectionResult.Partial);
-        expect(ConvexBV.fromAabb(vec3.fromValues(-6, -6, 0), vec3.fromValues(-5, -5, 0)).intersectsFrustum(frustum)).toBe(IntersectionResult.Partial);
+        expect(ConvexVolume.fromAabb(vec3.fromValues(-6, -6, 0), vec3.fromValues(6, 6, 0)).intersectsFrustum(frustum)).toBe(IntersectionResult.Partial);
+        expect(ConvexVolume.fromAabb(vec3.fromValues(-6, -6, 0), vec3.fromValues(-5, -5, 0)).intersectsFrustum(frustum)).toBe(IntersectionResult.Partial);
     });
 
-    test('No intersection between obb and frustum', () => {
+    test('No intersection between box and frustum', () => {
         const frustum = createTestCameraFrustum(Math.PI / 2, 1.0, 0.1, 100.0, -5, 0);
 
-        const obbList = [
-            ConvexBV.fromAabb(vec3.fromValues(-6, 0, 0), vec3.fromValues(-5.5, 0, 0)),
-            ConvexBV.fromAabb(vec3.fromValues(-6, -6, 0), vec3.fromValues(-5.5, -5.5, 0)),
-            ConvexBV.fromAabb(vec3.fromValues(7, -10, 0), vec3.fromValues(7.1, 20, 0))
+        const boxList = [
+            ConvexVolume.fromAabb(vec3.fromValues(-6, 0, 0), vec3.fromValues(-5.5, 0, 0)),
+            ConvexVolume.fromAabb(vec3.fromValues(-6, -6, 0), vec3.fromValues(-5.5, -5.5, 0)),
+            ConvexVolume.fromAabb(vec3.fromValues(7, -10, 0), vec3.fromValues(7.1, 20, 0))
         ];
 
-        for (const obb of obbList)
-            expect(obb.intersectsFrustum(frustum)).toBe(IntersectionResult.None);
+        for (const box of boxList)
+            expect(box.intersectsFrustum(frustum)).toBe(IntersectionResult.None);
 
     });
 
     test('Obb-plane intersection axis-aligned', () => {
-        const obb = ConvexBV.fromCenterSizeAngles([0, 0, 0], [1, 1, 1], [0, 0, 0]);
+        const obb = ConvexVolume.fromCenterSizeAngles([0, 0, 0], [1, 1, 1], [0, 0, 0]);
         expect(obb.intersectsPlane([1, 0, 0, 1.0001])).toBe(IntersectionResult.Full);
         expect(obb.intersectsPlane([1, 0, 0, 0.9999])).toBe(IntersectionResult.Partial);
         expect(obb.intersectsPlane([1, 0, 0, 0])).toBe(IntersectionResult.Partial);
@@ -265,7 +265,7 @@ describe('convex bounding volume', () => {
     });
 
     test('Obb-plane intersection rotated plane', () => {
-        const obb = ConvexBV.fromCenterSizeAngles([0, 0, 0], [1, 1, 1], [0, 0, 0]);
+        const obb = ConvexVolume.fromCenterSizeAngles([0, 0, 0], [1, 1, 1], [0, 0, 0]);
         expect(obb.intersectsPlane([1, 1, 0, 2.0001])).toBe(IntersectionResult.Full);
         expect(obb.intersectsPlane([1, 1, 0, 1.9999])).toBe(IntersectionResult.Partial);
         expect(obb.intersectsPlane([1, 1, 0, 0])).toBe(IntersectionResult.Partial);
@@ -274,7 +274,7 @@ describe('convex bounding volume', () => {
     });
 
     test('Obb-plane intersection rotated box', () => {
-        const obb = ConvexBV.fromCenterSizeAngles([0, 0, 0], [1, 1, 1], [0, 0, 45]);
+        const obb = ConvexVolume.fromCenterSizeAngles([0, 0, 0], [1, 1, 1], [0, 0, 45]);
         expect(obb.intersectsPlane([1, 0, 0, 1.4143])).toBe(IntersectionResult.Full);
         expect(obb.intersectsPlane([1, 0, 0, 1.4142])).toBe(IntersectionResult.Partial);
         expect(obb.intersectsPlane([1, 0, 0, -1.4142])).toBe(IntersectionResult.Partial);
@@ -282,7 +282,7 @@ describe('convex bounding volume', () => {
     });
 
     test('Obb-plane intersection rotated plane rotated box', () => {
-        const obb = ConvexBV.fromCenterSizeAngles([0, 0, 0], [1, 1, 1], [0, 0, 45]);
+        const obb = ConvexVolume.fromCenterSizeAngles([0, 0, 0], [1, 1, 1], [0, 0, 45]);
         expect(obb.intersectsPlane([1, 1, 0, 1.4143])).toBe(IntersectionResult.Full);
         expect(obb.intersectsPlane([1, 1, 0, 1.4142])).toBe(IntersectionResult.Partial);
         expect(obb.intersectsPlane([1, 1, 0, -1.4142])).toBe(IntersectionResult.Partial);
@@ -297,9 +297,9 @@ describe('convex bounding volume', () => {
 
         const frustum = Frustum.fromInvProjectionMatrix(invProj, 1.0, 0.0);
 
-        expect(ConvexBV.fromAabb([-400, 50, -40], [400, 500, 400]).intersectsFrustum(frustum)).toBe(IntersectionResult.None);
-        expect(ConvexBV.fromAabb([-400, 101, -400], [400, 500, 400]).intersectsFrustum(frustum)).toBe(IntersectionResult.None);
+        expect(ConvexVolume.fromAabb([-400, 50, -40], [400, 500, 400]).intersectsFrustum(frustum)).toBe(IntersectionResult.None);
+        expect(ConvexVolume.fromAabb([-400, 101, -400], [400, 500, 400]).intersectsFrustum(frustum)).toBe(IntersectionResult.None);
         // Rotated box that lies entirely outside the frustum but intersects its far plane and some side planes as well.
-        expect(ConvexBV.fromCenterSizeAngles([0, 200, -200], [1000, 141, 1000], [45, 0, 0]).intersectsFrustum(frustum)).toBe(IntersectionResult.None);
+        expect(ConvexVolume.fromCenterSizeAngles([0, 200, -200], [1000, 141, 1000], [45, 0, 0]).intersectsFrustum(frustum)).toBe(IntersectionResult.None);
     });
 });

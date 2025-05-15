@@ -6,7 +6,7 @@ import {pointPlaneSignedDistance} from '../util';
 /**
  * A general convex bounding volume, defined by a set of points.
  */
-export class ConvexBV implements IBoundingVolume {
+export class ConvexVolume implements IBoundingVolume {
     // Precomputed AABB for rejecting frustum intersection.
     min: vec3;
     max: vec3;
@@ -37,7 +37,7 @@ export class ConvexBV implements IBoundingVolume {
      * @param min - The AABB's min point.
      * @param max - The AABB's max point.
      */
-    public static fromAabb(min: vec3, max: vec3): ConvexBV {
+    public static fromAabb(min: vec3, max: vec3): ConvexVolume {
         const points = [];
         for (let i = 0; i < 8; i++) {
             points.push([
@@ -46,7 +46,7 @@ export class ConvexBV implements IBoundingVolume {
                 ((i >> 2) & 1) === 1 ? max[2] : min[2]
             ]);
         }
-        return new ConvexBV(points, [
+        return new ConvexVolume(points, [
             [-1, 0, 0, max[0]],
             [1, 0, 0, -min[0]],
             [0, -1, 0, max[1]],
@@ -62,7 +62,7 @@ export class ConvexBV implements IBoundingVolume {
      * @param halfSize - The half-size of the OBB in each axis. The box will extend by this value in each direction for the given axis.
      * @param angles - The rotation of the box. Euler angles, in degrees.
      */
-    public static fromCenterSizeAngles(center: vec3, halfSize: vec3, angles: vec3): ConvexBV {
+    public static fromCenterSizeAngles(center: vec3, halfSize: vec3, angles: vec3): ConvexVolume {
         const q = quat.fromEuler([] as any, angles[0], angles[1], angles[2]);
         const axisX = vec3.transformQuat([] as any, [halfSize[0], 0, 0], q);
         const axisY = vec3.transformQuat([] as any, [0, halfSize[1], 0], q);
@@ -88,7 +88,7 @@ export class ConvexBV implements IBoundingVolume {
             vec3.add(p, p, vec3.scale([] as any, axisZ, ((i >> 2) & 1) === 1 ? 1 : -1));
             points.push(p);
         }
-        return new ConvexBV(points, [
+        return new ConvexVolume(points, [
             [...axisX, -vec3.dot(axisX, points[0])] as vec4,
             [...axisY, -vec3.dot(axisY, points[0])] as vec4,
             [...axisZ, -vec3.dot(axisZ, points[0])] as vec4,
