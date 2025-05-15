@@ -3,7 +3,7 @@ import {ColorReliefStyleLayer} from './color_relief_style_layer';
 import {Color, type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {createStyleLayer} from '../create_style_layer';
 import {extend} from '../../util/util';
-import {EvaluationParameters} from '../evaluation_parameters';
+import {type EvaluationParameters} from '../evaluation_parameters';
 
 function createLayerSpec(properties?): LayerSpecification {
     return extend({
@@ -28,11 +28,11 @@ describe('ColorReliefStyleLayer', () => {
             paint: {
                 'color-relief-opacity': 0.5,
                 'color-relief-color': [
-                    "interpolate",
-                    ["linear"],
-                    ["elevation"],
-                    0, "#000000",
-                    1000, "#ffffff"
+                    'interpolate',
+                    ['linear'],
+                    ['elevation'],
+                    0, '#000000',
+                    1000, '#ffffff'
                 ]
             }
         });
