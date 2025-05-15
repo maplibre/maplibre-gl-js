@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 
+- Improve tile frustum culling, leading to better performance and faster loading times. ([#5865](https://github.com/maplibre/maplibre-gl-js/pull/5865))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
