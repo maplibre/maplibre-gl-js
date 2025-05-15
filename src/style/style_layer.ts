@@ -113,7 +113,7 @@ export abstract class StyleLayer extends Evented {
 
         this.id = layer.id;
         this.type = layer.type;
-        this._featureFilter = {filter: () => true, needGeometry: false, getGlobalStateRefs: () => {return new Set<string>();}};
+        this._featureFilter = {filter: () => true, needGeometry: false, getGlobalStateRefs: () => new Set<string>()};
 
         if (layer.type === 'custom') return;
 
