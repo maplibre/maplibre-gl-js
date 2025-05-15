@@ -3,7 +3,7 @@ import UnitBezier from '@mapbox/unitbezier';
 import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';
 import type {Size} from './image';
 import type {WorkerGlobalScopeInterface} from './web_worker';
-import {mat3, mat4, quat, vec2, type vec3, type vec4} from 'gl-matrix';
+import {mat3, mat4, quat, vec2, vec3, type vec4} from 'gl-matrix';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
 import {type OverscaledTileID} from '../source/tile_id';
 import type {Event} from './evented';
@@ -83,6 +83,31 @@ export function pointPlaneSignedDistance(
     point: vec3 | [number, number, number]
 ): number {
     return plane[0] * point[0] + plane[1] * point[1] + plane[2] * point[2] + plane[3];
+}
+
+/**
+ * Finds an intersection points of three planes. Returns null if no such point exists.
+ * The planes *must* be in Hessian normal form - their xyz components must form a unit vector.
+ */
+export function threePlaneIntersection(plane0: vec4, plane1: vec4, plane2: vec4): vec3 {
+    // https://mathworld.wolfram.com/Plane-PlaneIntersection.html
+    const det = mat3.determinant([
+        plane0[0], plane0[1], plane0[2],
+        plane1[0], plane1[1], plane1[2],
+        plane2[0], plane2[1], plane2[2]
+    ] as mat3);
+    if (det === 0) {
+        return null;
+    }
+    const cross12 = vec3.cross([] as any, [plane1[0], plane1[1], plane1[2]], [plane2[0], plane2[1], plane2[2]]);
+    const cross20 = vec3.cross([] as any, [plane2[0], plane2[1], plane2[2]], [plane0[0], plane0[1], plane0[2]]);
+    const cross01 = vec3.cross([] as any, [plane0[0], plane0[1], plane0[2]], [plane1[0], plane1[1], plane1[2]]);
+
+    const sum = vec3.scale([] as any, cross12, -plane0[3]);
+    vec3.add(sum, sum, vec3.scale([] as any, cross20, -plane1[3]));
+    vec3.add(sum, sum, vec3.scale([] as any, cross01, -plane2[3]));
+    vec3.scale(sum, sum, 1.0 / det);
+    return sum;
 }
 
 /**
