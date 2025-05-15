@@ -1,0 +1,103 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+      {
+          "type": "Feature",
+          "properties": {
+              "name": "Funivia Pani d\"Erna",
+              "type": "lift"
+          },
+          "geometry": {
+              "coordinates": [
+                  9.428832133068624,
+                  45.86316915700536
+              ],
+              "type": "Point"
+          }
+      },
+      {
+          "type": "Feature",
+          "properties": {
+              "name": "Funicolare Como-Brunate",
+              "type": "railway"
+          },
+          "geometry": {
+              "coordinates": [
+                  9.082724408221196,
+                  45.8175517969448
+              ],
+              "type": "Point"
+          },
+          "id": 1
+      },
+      {
+          "type": "Feature",
+          "properties": {
+              "name": "Funivia Pigra Argegno",
+              "type": "lift"
+          },
+          "geometry": {
+              "coordinates": [
+                  9.129994484478942,
+                  45.94660892078414
+              ],
+              "type": "Point"
+          }
+      },
+      {
+          "type": "Feature",
+          "properties": {
+              "name": "Funicolare Sacro Monte",
+              "type": "railway"
+          },
+          "geometry": {
+              "coordinates": [
+                  8.787919643563527,
+                  45.85848217923672
+              ],
+              "type": "Point"
+          }
+      },
+      {
+          "type": "Feature",
+          "properties": {
+              "name": "Funicolare Cassarate Monte Brè",
+              "type": "railway"
+          },
+          "geometry": {
+              "coordinates": [
+                  8.970232317680455,
+                  46.00646782864027
+              ],
+              "type": "Point"
+          }
+      },
+      {
+          "type": "Feature",
+          "properties": {
+              "name": "Funicolare Monte San Salvatore"
+          },
+          "geometry": {
+              "coordinates": [
+                  8.945347867434748,
+                  45.990386744943265
+              ],
+              "type": "Point"
+          }
+      },
+      {
+          "type": "Feature",
+          "properties": {
+              "name": "Funivia Monte Lema",
+              "type": "lift"
+          },
+          "geometry": {
+              "coordinates": [
+                  8.856229999561407,
+                  46.0237566800011
+              ],
+              "type": "Point"
+          }
+      }
+  ]
+}

@@ -155,6 +155,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         }
         const workerTile = this.loaded[uid];
         workerTile.showCollisionBoxes = params.showCollisionBoxes;
+        workerTile.globalState = params.globalState;
         if (workerTile.status === 'parsing') {
             const result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
             // if we have cancelled the original parse, make sure to pass the rawTileData from the original fetch

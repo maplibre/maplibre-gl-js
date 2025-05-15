@@ -19,6 +19,7 @@ export type BucketParameters<Layer extends TypedStyleLayer> = {
     collisionBoxArray: CollisionBoxArray;
     sourceLayerIndex: number;
     sourceID: string;
+    globalState: Record<string, any>;
 };
 
 export type PopulateParameters = {

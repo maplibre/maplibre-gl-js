@@ -69,6 +69,7 @@ export function register<T extends any>(
 }
 
 register('Object', Object);
+register('Set', Set);
 register('TransferableGridIndex', TransferableGridIndex);
 
 register('Color', Color);
