@@ -18,6 +18,8 @@ in float v_depth;
 #pragma mapbox: define lowp float opacity
 #pragma mapbox: define mediump float width
 #pragma mapbox: define lowp float floorwidth
+#pragma mapbox: define lowp vec4 pattern_from
+#pragma mapbox: define lowp vec4 pattern_to
 
 void main() {
     #pragma mapbox: initialize highp vec4 color
@@ -25,6 +27,8 @@ void main() {
     #pragma mapbox: initialize lowp float opacity
     #pragma mapbox: initialize mediump float width
     #pragma mapbox: initialize lowp float floorwidth
+    #pragma mapbox: initialize lowp vec4 pattern_from
+    #pragma mapbox: initialize lowp vec4 pattern_to
 
     // Calculate the distance of the pixel from the line in pixels.
     float dist = length(v_normal) * v_width2.s;
