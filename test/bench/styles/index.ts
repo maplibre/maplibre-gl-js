@@ -9,7 +9,7 @@ import QueryBox from '../benchmarks/query_box';
 
 import {getGlobalWorkerPool} from '../../../src/util/global_worker_pool';
 
-const locations = locationsWithTileID(styleBenchmarkLocations.features as GeoJSON.Feature<GeoJSON.Point | GeoJSON.MultiPolygon>[]);
+const locations = locationsWithTileID(styleBenchmarkLocations.features as GeoJSON.Feature<GeoJSON.Point>[]);
 
 const benchmarks = (window as any).benchmarks = [];
 

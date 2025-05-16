@@ -11,6 +11,7 @@ import {EXTENT} from '../data/extent';
 import type {PaddingOptions} from './edge_insets';
 import type {IReadonlyTransform, ITransformGetters} from './transform_interface';
 import type {OverscaledTileID} from '../source/tile_id';
+import {Bounds} from './bounds';
 /**
  * If a path crossing the antimeridian would be shorter, extend the final coordinate so that
  * interpolating between the two endpoints will cross it.
@@ -476,16 +477,7 @@ export class TransformHelper implements ITransformGetters {
         if (queryGeometry.length === 1) {
             return [queryGeometry[0], cameraPoint];
         } else {
-            let minX = cameraPoint.x;
-            let minY = cameraPoint.y;
-            let maxX = cameraPoint.x;
-            let maxY = cameraPoint.y;
-            for (const p of queryGeometry) {
-                minX = Math.min(minX, p.x);
-                minY = Math.min(minY, p.y);
-                maxX = Math.max(maxX, p.x);
-                maxY = Math.max(maxY, p.y);
-            }
+            const {minX, minY, maxX, maxY} = Bounds.fromPoints(queryGeometry).extend(cameraPoint);
             return [
                 new Point(minX, minY),
                 new Point(maxX, minY),
