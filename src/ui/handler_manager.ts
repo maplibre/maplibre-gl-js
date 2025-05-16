@@ -555,8 +555,13 @@ export class HandlerManager {
                 // When starting to drag or move, flag it and register moveend to clear flagging
                 this._terrainMovement = true;
                 this._map._elevationFreeze = true;
+                this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
+            } else if (combinedEventsInProgress.drag && this._terrainMovement && this._map.getProjection()?.type == 'mercator') {
+                // drag map
+                tr.setCenter(tr.screenPointToLocation(tr.centerPoint.sub(panDelta)));
+            } else {
+                this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
             }
-            this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
         }
 
         map._applyUpdatedTransform(tr);
