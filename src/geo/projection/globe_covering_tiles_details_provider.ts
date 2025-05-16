@@ -48,7 +48,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
      * Prepares the internal bounding volume cache for the next frame.
      */
     prepareNextFrame() {
-        this._boundingVolumeCache.prepareNextFrame();
+        this._boundingVolumeCache.swapBuffers();
     }
 
     /**
