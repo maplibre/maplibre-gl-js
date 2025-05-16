@@ -27,6 +27,7 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
                 }
             }
         },
+        getGlobalState: () => ({}),
         getPixelRatio() { return 1; },
     } as any as Map);
 
