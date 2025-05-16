@@ -4,9 +4,9 @@ import {clamp} from '../../util/util';
 import {type MercatorCoordinate} from '../mercator_coordinate';
 import {type IReadonlyTransform} from '../transform_interface';
 import {type CoveringTilesOptions} from './covering_tiles';
-import {type CoveringTilesDetailsProviderImplementation} from './covering_tiles_details_provider';
+import {type CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
 
-export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetailsProviderImplementation<Aabb> {
+export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetailsProvider {
 
     distanceToTile2d(pointX: number, pointY: number, _tileID: {x: number; y: number; z: number}, aabb: Aabb): number {
         const distanceX = aabb.distanceX([pointX, pointY]);

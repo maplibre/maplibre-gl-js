@@ -5,7 +5,7 @@ import {coveringZoomLevel, type CoveringTilesOptions} from './covering_tiles';
 import {vec3, type vec4} from 'gl-matrix';
 import type {IReadonlyTransform} from '../transform_interface';
 import type {MercatorCoordinate} from '../mercator_coordinate';
-import type {CoveringTilesDetailsProviderImplementation} from './covering_tiles_details_provider';
+import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
 import {OverscaledTileID} from '../../source/tile_id';
 import {earthRadius} from '../lng_lat';
 import {ConvexVolume} from '../../util/primitives/convex_volume';
@@ -41,7 +41,7 @@ function distanceToTileWrapX(pointX: number, pointY: number, tileCornerX: number
     return Math.max(distanceX, distanceToTileSimple(pointY, tileCornerY, tileSize));
 }
 
-export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsProviderImplementation<ConvexVolume> {
+export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsProvider {
     private _boundingVolumeCache: BoundingVolumeCache<ConvexVolume> = new BoundingVolumeCache(this._computeTileBoundingVolume);
 
     /**
