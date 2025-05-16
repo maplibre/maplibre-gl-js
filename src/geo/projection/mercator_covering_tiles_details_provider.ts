@@ -8,7 +8,7 @@ import {type CoveringTilesDetailsProvider} from './covering_tiles_details_provid
 
 export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetailsProvider {
 
-    distanceToTile2d(pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, aabb: Aabb): number {
+    distanceToTile2d(pointX: number, pointY: number, _tileID: {x: number; y: number; z: number}, aabb: Aabb): number {
         const distanceX = aabb.distanceX([pointX, pointY]);
         const distanceY = aabb.distanceY([pointX, pointY]);
         return Math.hypot(distanceX, distanceY);
@@ -25,10 +25,10 @@ export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetail
      * Returns the AABB of the specified tile.
      * @param tileID - Tile x, y and z for zoom.
      */
-    getTileAABB(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions): Aabb {
+    getTileBoundingVolume(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions): Aabb {
         let minElevation = elevation;
         let maxElevation = elevation;
-        if (options.terrain) {
+        if (options?.terrain) {
             const overscaledTileID = new OverscaledTileID(tileID.z, wrap, tileID.z, tileID.x, tileID.y);
             const minMax = options.terrain.getMinMaxElevation(overscaledTileID);
             minElevation = minMax.minElevation ?? elevation;
@@ -49,7 +49,7 @@ export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetail
         return true;
     }
 
-    recalculateCache(): void { 
+    prepareNextFrame(): void { 
         // Do nothing
     }
 }

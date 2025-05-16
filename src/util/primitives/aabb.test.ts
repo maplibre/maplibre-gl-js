@@ -1,9 +1,10 @@
 import {describe, test, expect} from 'vitest';
-import {mat4, vec3, type vec4} from 'gl-matrix';
-import {Aabb, IntersectionResult} from './aabb';
-import {Frustum} from './frustum';
+import {vec3, type vec4} from 'gl-matrix';
+import {Aabb} from './aabb';
+import {IntersectionResult} from './bounding_volume';
+import {createTestCameraFrustum} from '../test/util';
 
-describe('primitives', () => {
+describe('aabb', () => {
     test('Create an aabb', () => {
         const min = vec3.fromValues(0, 0, 0);
         const max = vec3.fromValues(2, 4, 6);
@@ -43,21 +44,6 @@ describe('primitives', () => {
         expect(aabb.distanceX([-2, -2])).toBe(1);
         expect(aabb.distanceY([-2, -2])).toBe(1);
     });
-
-    const createTestCameraFrustum = (fovy, aspectRatio, zNear, zFar, elevation, rotation) => {
-        const proj = new Float64Array(16) as any as mat4;
-        const invProj = new Float64Array(16) as any as mat4;
-
-        // Note that left handed coordinate space is used where z goes towards the sky.
-        // Y has to be flipped as well because it's part of the projection/camera matrix used in transform.js
-        mat4.perspective(proj, fovy, aspectRatio, zNear, zFar);
-        mat4.scale(proj, proj, [1, -1, 1]);
-        mat4.translate(proj, proj, [0, 0, elevation]);
-        mat4.rotateZ(proj, proj, rotation);
-        mat4.invert(invProj, proj);
-
-        return Frustum.fromInvProjectionMatrix(invProj, 1.0, 0.0);
-    };
 
     test('Aabb fully inside a frustum', () => {
         const frustum = createTestCameraFrustum(Math.PI / 2, 1.0, 0.1, 100.0, -5, 0);
@@ -156,43 +142,5 @@ describe('primitives', () => {
         expect(new Aabb([0, 0, 0], [1, 1, 1]).intersectsPlane([-1, -1, -1, -0.00000001])).toBe(IntersectionResult.None);
         // Same plane as last time, but different box, with a single vertex barely outside the halfspace
         expect(new Aabb([-1, -1, -1], [0, 0, 0]).intersectsPlane([-1, -1, -1, -0.00000001])).toBe(IntersectionResult.Partial);
-    });
-});
-
-describe('frustum', () => {
-    test('Create a frustum from inverse projection matrix', () => {
-        const proj = new Float64Array(16) as any as mat4;
-        const invProj = new Float64Array(16) as any as mat4;
-        mat4.perspective(proj, Math.PI / 2, 1.0, 0.1, 100.0);
-        mat4.invert(invProj, proj);
-
-        const frustum = Frustum.fromInvProjectionMatrix(invProj, 1.0, 0.0);
-        // mat4.perspective generates a projection matrix for right handed coordinate space.
-        // This means that forward direction will be -z
-        const expectedFrustumPoints = [
-            [-0.1, 0.1, -0.1, 1.0],
-            [0.1, 0.1, -0.1, 1.0],
-            [0.1, -0.1, -0.1, 1.0],
-            [-0.1, -0.1, -0.1, 1.0],
-            [-100.0, 100.0, -100.0, 1.0],
-            [100.0, 100.0, -100.0, 1.0],
-            [100.0, -100.0, -100.0, 1.0],
-            [-100.0, -100.0, -100.0, 1.0],
-        ];
-
-        frustum.points = frustum.points.map(array => array.map(n => Math.round(n * 10) / 10)) as vec4[];
-        frustum.planes = frustum.planes.map(array => array.map(n => Math.round(n * 1000) / 1000)) as vec4[];
-
-        const expectedFrustumPlanes = [
-            [0, 0, 1.0, 0.1],
-            [-0, -0, -1.0, -100.0],
-            [-0.707, 0, 0.707, -0],
-            [0.707, 0, 0.707, -0],
-            [0, -0.707, 0.707, -0],
-            [-0, 0.707, 0.707, -0]
-        ];
-
-        expect(frustum.points).toEqual(expectedFrustumPoints);
-        expect(frustum.planes).toEqual(expectedFrustumPlanes);
     });
 });

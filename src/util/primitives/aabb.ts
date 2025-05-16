@@ -1,13 +1,8 @@
 import {vec3, type vec4} from 'gl-matrix';
 import {type Frustum} from './frustum';
+import {IntersectionResult, type IBoundingVolume} from './bounding_volume';
 
-export const enum IntersectionResult {
-    None = 0,
-    Partial = 1,
-    Full = 2,
-}
-
-export class Aabb {
+export class Aabb implements IBoundingVolume {
     min: vec3;
     max: vec3;
     center: vec3;
