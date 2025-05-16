@@ -16,6 +16,7 @@ import type {OverscaledTileID} from '../source/tile_id';
 import {clamp, nextPowerOfTwo} from '../util/util';
 import {renderColorRamp} from '../util/color_ramp';
 import {EXTENT} from '../data/extent';
+import {ImagePosition} from './image_atlas';
 
 export function drawLine(painter: Painter, sourceCache: SourceCache, layer: LineStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
@@ -69,6 +70,31 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
         }
 
+        const constantDasharray = dasharray && dasharray.constantOr(null);
+        if (constantDasharray) {
+            const round = layer.layout.get('line-cap') === 'round';
+
+            const dashTo = painter.lineAtlas.getDash(constantDasharray.to, round);
+            const posTo = new ImagePosition(
+                {x: 0, y: dashTo.y, h: dashTo.height, w: dashTo.width}, {
+                    data: null,
+                    pixelRatio: 1,
+                    sdf: true,
+                }
+            );
+
+            const dashFrom = painter.lineAtlas.getDash(constantDasharray.from, round);
+            const posFrom = new ImagePosition(
+                {x: 0, y: dashFrom.y, h: dashFrom.height, w: dashFrom.width}, {
+                    data: null,
+                    pixelRatio: 1,
+                    sdf: true,
+                }
+            );
+
+            programConfiguration.setConstantPatternPositions(posTo, posFrom);
+        }
+
         const projectionData = transform.getProjectionData({
             overscaledTileID: coord,
             applyGlobeMatrix: !isRenderingToTexture,
@@ -89,6 +115,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
         } else if (dasharray && (programChanged || painter.lineAtlas.dirty)) {
             context.activeTexture.set(gl.TEXTURE0);
             painter.lineAtlas.bind(context);
+            programConfiguration.updatePaintBuffers(crossfade);
         } else if (gradient) {
             const layerGradient = bucket.gradients[layer.id];
             let gradientTexture = layerGradient.texture;
