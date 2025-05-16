@@ -16,7 +16,6 @@ export class BoundingVolumeCache<T extends IBoundingVolume> {
     /**
      * Prepares bounding volume cache for next frame. Call at the beginning of a frame.
      * Bounding volume of any tile accesses in the last frame is kept in the cache, other (unaccessed) bounding volumes are deleted.
-     * @returns 
      */
     prepareNextFrame() {
         if (!this._hadAnyChanges) {

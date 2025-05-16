@@ -8,7 +8,7 @@ import {type CoveringTilesDetailsProviderImplementation} from './covering_tiles_
 
 export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetailsProviderImplementation<Aabb> {
 
-    distanceToTile2d(pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, aabb: Aabb): number {
+    distanceToTile2d(pointX: number, pointY: number, _tileID: {x: number; y: number; z: number}, aabb: Aabb): number {
         const distanceX = aabb.distanceX([pointX, pointY]);
         const distanceY = aabb.distanceY([pointX, pointY]);
         return Math.hypot(distanceX, distanceY);
