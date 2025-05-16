@@ -6,6 +6,7 @@ import type {Context} from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {IReadonlyTransform} from '../../geo/transform_interface';
 import type {Tile} from '../../source/tile';
+import type {CrossFaded} from '../../style/properties';
 import type {LineStyleLayer} from '../../style/style_layer/line_style_layer';
 import type {Painter} from '../painter';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters';
@@ -42,7 +43,12 @@ export type LineSDFUniformsType = {
     'u_ratio': Uniform1f;
     'u_device_pixel_ratio': Uniform1f;
     'u_units_to_pixels': Uniform2f;
+    'u_patternscale_a': Uniform2f;
+    'u_patternscale_b': Uniform2f;
+    'u_sdfgamma': Uniform1f;
     'u_image': Uniform1i;
+    'u_tex_y_a': Uniform1f;
+    'u_tex_y_b': Uniform1f;
     'u_mix': Uniform1f;
 };
 
@@ -78,7 +84,12 @@ const lineSDFUniforms = (context: Context, locations: UniformLocations): LineSDF
     'u_ratio': new Uniform1f(context, locations.u_ratio),
     'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
     'u_units_to_pixels': new Uniform2f(context, locations.u_units_to_pixels),
+    'u_patternscale_a': new Uniform2f(context, locations.u_patternscale_a),
+    'u_patternscale_b': new Uniform2f(context, locations.u_patternscale_b),
+    'u_sdfgamma': new Uniform1f(context, locations.u_sdfgamma),
     'u_image': new Uniform1i(context, locations.u_image),
+    'u_tex_y_a': new Uniform1f(context, locations.u_tex_y_a),
+    'u_tex_y_b': new Uniform1f(context, locations.u_tex_y_b),
     'u_mix': new Uniform1f(context, locations.u_mix)
 });
 
@@ -144,12 +155,29 @@ const lineSDFUniformValues = (
     tile: Tile,
     layer: LineStyleLayer,
     ratioScale: number,
+    dasharray: CrossFaded<Array<number>>,
     crossfade: CrossfadeParameters,
 ): UniformValues<LineSDFUniformsType> => {
+    const transform = painter.transform;
+    const lineAtlas = painter.lineAtlas;
+    const tileRatio = calculateTileRatio(tile, transform);
+
+    const round = layer.layout.get('line-cap') === 'round';
+
+    const posA = lineAtlas.getDash(dasharray.from, round);
+    const posB = lineAtlas.getDash(dasharray.to, round);
+
+    const widthA = posA.width * crossfade.fromScale;
+    const widthB = posB.width * crossfade.toScale;
+
     return extend(lineUniformValues(painter, tile, layer, ratioScale), {
+        'u_patternscale_a': [tileRatio / widthA, -posA.height / 2],
+        'u_patternscale_b': [tileRatio / widthB, -posB.height / 2],
+        'u_sdfgamma': lineAtlas.width / (Math.min(widthA, widthB) * 256 * painter.pixelRatio) / 2,
         'u_image': 0,
-        'u_mix': crossfade.t,
-        'u_line_atlas_width': painter.lineAtlas.width,
+        'u_tex_y_a': posA.y,
+        'u_tex_y_b': posB.y,
+        'u_mix': crossfade.t
     });
 };
 
