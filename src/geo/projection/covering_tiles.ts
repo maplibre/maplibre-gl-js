@@ -80,14 +80,13 @@ export type CalculateTileZoomFunction = (requestedCenterZoom: number,
  * @returns an {@link IntersectionResult}.
  */
 export function isTileVisible(frustum: Frustum, tileBoundingVolume: IBoundingVolume, plane?: vec4): IntersectionResult {
-
     const frustumTest = tileBoundingVolume.intersectsFrustum(frustum);
-    if (!plane) {
+    if (!plane || frustumTest === IntersectionResult.None) {
         return frustumTest;
     }
     const planeTest = tileBoundingVolume.intersectsPlane(plane);
 
-    if (frustumTest === IntersectionResult.None || planeTest === IntersectionResult.None) {
+    if (planeTest === IntersectionResult.None) {
         return IntersectionResult.None;
     }
 
@@ -97,6 +96,7 @@ export function isTileVisible(frustum: Frustum, tileBoundingVolume: IBoundingVol
 
     return IntersectionResult.Partial;
 }
+
 /**
  * Definite integral of cos(x)^p. The analytical solution is described in `developer-guides/covering-tiles.md`,
  * but here the integral is evaluated numerically.
