@@ -10,6 +10,7 @@ import {PropertyLevelRemove, FeatureLevelRemove, SourceLevelRemove} from '../ben
 import {LayerBackground, LayerCircle, LayerFill, LayerFillExtrusion, LayerHeatmap, LayerHillshade, LayerLine, LayerRaster, LayerSymbol, LayerSymbolWithIcons, LayerTextWithVariableAnchor, LayerSymbolWithSortKey} from '../benchmarks/layers';
 import Load from '../benchmarks/map_load';
 import HillshadeLoad from '../benchmarks/hillshade_load';
+import ColorReliefLoad from '../benchmarks/color_relief_load';
 import Validate from '../benchmarks/style_validate';
 import StyleLayerCreate from '../benchmarks/style_layer_create';
 import QueryPoint from '../benchmarks/query_point';
@@ -76,6 +77,7 @@ register('SymbolLayout', new SymbolLayout(style, styleLocations.map(location => 
 register('FilterCreate', new FilterCreate());
 register('FilterEvaluate', new FilterEvaluate());
 register('HillshadeLoad', new HillshadeLoad());
+register('ColorReliefLoad', new ColorReliefLoad());
 register('CustomLayer', new CustomLayer());
 register('MapIdle', new MapIdle());
 register('SymbolCollisionBox', new SymbolCollisionBox(false));

@@ -18,7 +18,8 @@ const LAYERS: { [keyof in StyleLayer['type']]?: boolean } = {
     fill: true,
     line: true,
     raster: true,
-    hillshade: true
+    hillshade: true,
+    'color-relief': true
 };
 
 /**

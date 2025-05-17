@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-
+- Add new `color-relief` layer type to render hypsometric tint from terrain-RGB tiles. ([#5742](https://github.com/maplibre/maplibre-gl-js/pull/5742))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
