@@ -86,10 +86,10 @@ export function pointPlaneSignedDistance(
 }
 
 /**
- * Finds an intersection points of three planes. Returns null if no such point exists.
+ * Finds an intersection points of three planes. Returns `null` if no such (single) point exists.
  * The planes *must* be in Hessian normal form - their xyz components must form a unit vector.
  */
-export function threePlaneIntersection(plane0: vec4, plane1: vec4, plane2: vec4): vec3 {
+export function threePlaneIntersection(plane0: vec4, plane1: vec4, plane2: vec4): vec3 | null {
     // https://mathworld.wolfram.com/Plane-PlaneIntersection.html
     const det = mat3.determinant([
         plane0[0], plane0[1], plane0[2],
@@ -102,7 +102,6 @@ export function threePlaneIntersection(plane0: vec4, plane1: vec4, plane2: vec4)
     const cross12 = vec3.cross([] as any, [plane1[0], plane1[1], plane1[2]], [plane2[0], plane2[1], plane2[2]]);
     const cross20 = vec3.cross([] as any, [plane2[0], plane2[1], plane2[2]], [plane0[0], plane0[1], plane0[2]]);
     const cross01 = vec3.cross([] as any, [plane0[0], plane0[1], plane0[2]], [plane1[0], plane1[1], plane1[2]]);
-
     const sum = vec3.scale([] as any, cross12, -plane0[3]);
     vec3.add(sum, sum, vec3.scale([] as any, cross20, -plane1[3]));
     vec3.add(sum, sum, vec3.scale([] as any, cross01, -plane2[3]));
