@@ -112,11 +112,16 @@ export function threePlaneIntersection(plane0: vec4, plane1: vec4, plane2: vec4)
 /**
  * Returns a parameter `t` such that the point obtained by
  * `origin + direction * t` lies on the given plane.
+ * If the ray is parallel to the plane, returns null.
+ * Returns a negative value if the ray is pointing away from the plane.
  * Direction does not need to be normalized.
  */
-export function rayPlaneIntersection(origin: vec3, direction: vec3, plane: vec4): number {
+export function rayPlaneIntersection(origin: vec3, direction: vec3, plane: vec4): number | null {
     const dotOriginPlane = origin[0] * plane[0] + origin[1] * plane[1] + origin[2] * plane[2];
     const dotDirectionPlane = direction[0] * plane[0] + direction[1] * plane[1] + direction[2] * plane[2];
+    if (dotDirectionPlane === 0) {
+        return null;
+    }
     return (-dotOriginPlane -plane[3]) / dotDirectionPlane;
 }
 
