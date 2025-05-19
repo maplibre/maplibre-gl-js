@@ -55,6 +55,7 @@ function renderColorRelief(
     const defines = [`#define NUM_ELEVATION_STOPS ${layer.elevationStops.length}`];
     const program = painter.useProgram('colorRelief', null, false, defines);
     const align = !painter.options.moving;
+    const maxLength = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
 
     for (const coord of coords) {
         const tile = sourceCache.getTile(coord);
@@ -92,6 +93,6 @@ function renderColorRelief(
         });
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
-            colorReliefUniformValues(layer, tile.dem), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+            colorReliefUniformValues(layer, tile.dem, maxLength), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 }

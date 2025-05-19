@@ -32,15 +32,17 @@ const colorReliefUniforms = (context: Context, locations: UniformLocations): Col
 
 const colorReliefUniformValues = (
     layer: ColorReliefStyleLayer,
-    dem: DEMData
+    dem: DEMData,
+    maxLength: number
 ): UniformValues<ColorReliefUniformsType> => {
 
+    const colorRamp = layer.getColorRamp(maxLength);
     return {
         'u_image': 0,
         'u_unpack': dem.getUnpackVector(),
         'u_dimension': [dem.stride, dem.stride],
-        'u_elevation_stops': layer.elevationStops,
-        'u_color_stops': layer.colorStops,
+        'u_elevation_stops': colorRamp.elevationStops,
+        'u_color_stops': colorRamp.colorStops,
         'u_opacity': layer.paint.get('color-relief-opacity')
     };
 };
