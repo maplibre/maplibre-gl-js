@@ -52,10 +52,11 @@ function renderColorRelief(
     const context = painter.context;
     const transform = painter.transform;
     const gl = context.gl;
-    const defines = [`#define NUM_ELEVATION_STOPS ${layer.elevationStops.length}`];
+    const maxLength = Math.floor((gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS) - 3) / 2);
+    const colorRampLength = Math.max(maxLength, this.colorRamp.elevationStops.length);
+    const defines = [`#define NUM_ELEVATION_STOPS ${colorRampLength}`];
     const program = painter.useProgram('colorRelief', null, false, defines);
     const align = !painter.options.moving;
-    const maxLength = Math.floor((gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS) - 3) / 2);
 
     for (const coord of coords) {
         const tile = sourceCache.getTile(coord);

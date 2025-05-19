@@ -9,61 +9,62 @@ import {warnOnce} from '../../util/util';
 
 export const isColorReliefStyleLayer = (layer: StyleLayer): layer is ColorReliefStyleLayer => layer.type === 'color-relief';
 
+export type ColorRamp = {elevationStops: Array<number>; colorStops: Array<Color>};
+
 export class ColorReliefStyleLayer extends StyleLayer {
-    elevationStops: Array<number>;
-    colorStops: Array<Color>;
+    colorRamp: ColorRamp;
     _transitionablePaint: Transitionable<ColorReliefPaintProps>;
     _transitioningPaint: Transitioning<ColorReliefPaintProps>;
     paint: PossiblyEvaluated<ColorReliefPaintProps, ColorReliefPaintPropsPossiblyEvaluated>;
 
     constructor(layer: LayerSpecification) {
         super(layer, properties);
-        this._updateColorRamp();
+        this.colorRamp = this._updateColorRamp();
     }
 
-    _updateColorRamp() {
-        this.elevationStops = [];
-        this.colorStops = [];
+    _updateColorRamp() : ColorRamp {
+        const colorRamp = {elevationStops: [], colorStops: []} as ColorRamp;
         const expression = this._transitionablePaint._values['color-relief-color'].value.expression;
         if (expression instanceof ZoomConstantExpression && expression._styleExpression.expression instanceof Interpolate) {
             const interpolater = expression._styleExpression.expression;
-            this.elevationStops = interpolater.labels;
-            this.colorStops = [];
-            for (const label of this.elevationStops) {
-                this.colorStops.push(interpolater.evaluate({globals: {elevation: label}} as EvaluationContext));
+            colorRamp.elevationStops = interpolater.labels;
+            colorRamp.colorStops = [];
+            for (const label of colorRamp.elevationStops) {
+                colorRamp.colorStops.push(interpolater.evaluate({globals: {elevation: label}} as EvaluationContext));
             }
         }
-        if (this.elevationStops.length < 1)
+        if (colorRamp.elevationStops.length < 1)
         {
-            this.elevationStops = [0];
-            this.colorStops = [Color.transparent];
+            colorRamp.elevationStops = [0];
+            colorRamp.colorStops = [Color.transparent];
         }
-        if (this.elevationStops.length < 2)
+        if (colorRamp.elevationStops.length < 2)
         {
-            this.elevationStops.push(this.elevationStops[0] + 1);
-            this.colorStops.push(this.colorStops[0]);
+            colorRamp.elevationStops.push(colorRamp.elevationStops[0] + 1);
+            colorRamp.colorStops.push(colorRamp.colorStops[0]);
         }
+        return colorRamp;
     }
     
     // Get the color ramp, enforcing a maximum length for the vectors. This modifies the internal color ramp,
     // so that the remapping is only performed once.
     getColorRamp(maxLength: number) : {elevationStops: Array<number>; colorStops: Array<Color>} {
-        if (this.elevationStops.length > maxLength) {
-            const remapStepSize = (this.elevationStops.length - 1)/(maxLength - 1);
+        if (this.colorRamp.elevationStops.length > maxLength) {
+            const remapStepSize = (this.colorRamp.elevationStops.length - 1)/(maxLength - 1);
             const remappedElevationStops = [];
             const remappedColorStops = [];
-            for (let i = 0; i < this.elevationStops.length - 0.5; i += remapStepSize) {
-                remappedElevationStops.push(this.elevationStops[Math.round(i)]);
-                remappedColorStops.push(this.colorStops[Math.round(i)]);
+            for (let i = 0; i < this.colorRamp.elevationStops.length - 0.5; i += remapStepSize) {
+                remappedElevationStops.push(this.colorRamp.elevationStops[Math.round(i)]);
+                remappedColorStops.push(this.colorRamp.colorStops[Math.round(i)]);
             }
             warnOnce(`Too many colors in specification of ${this.id} color-relief layer, may not render properly.`);
-            this.elevationStops = remappedElevationStops;
-            this.colorStops = remappedColorStops;
+            this.colorRamp.elevationStops = remappedElevationStops;
+            this.colorRamp.colorStops = remappedColorStops;
         }
-        return {elevationStops: this.elevationStops, colorStops: this.colorStops};
+        return this.colorRamp;
     }
 
     hasOffscreenPass() {
-        return this.visibility !== 'none' && !!this.elevationStops;
+        return this.visibility !== 'none' && !!this.colorRamp;
     }
 }
