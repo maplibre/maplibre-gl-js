@@ -55,7 +55,7 @@ function renderColorRelief(
     const defines = [`#define NUM_ELEVATION_STOPS ${layer.elevationStops.length}`];
     const program = painter.useProgram('colorRelief', null, false, defines);
     const align = !painter.options.moving;
-    const maxLength = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
+    const maxLength = Math.floor((gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS) - 3) / 2);
 
     for (const coord of coords) {
         const tile = sourceCache.getTile(coord);
