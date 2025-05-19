@@ -48,7 +48,7 @@ export class ColorReliefStyleLayer extends StyleLayer {
     
     // Get the color ramp, enforcing a maximum length for the vectors. This modifies the internal color ramp,
     // so that the remapping is only performed once.
-    getColorRamp(maxLength: number) : {elevationStops: Array<number>; colorStops: Array<Color>} {
+    getColorRamp(maxLength: number) : ColorRamp {
         if (this.colorRamp.elevationStops.length > maxLength) {
             const colorRamp: ColorRamp = {elevationStops: [], colorStops: []};
             const remapStepSize = (this.colorRamp.elevationStops.length - 1)/(maxLength - 1);
