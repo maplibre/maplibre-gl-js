@@ -128,6 +128,16 @@ export class DEMData {
         return (r * this.redFactor + g * this.greenFactor + b * this.blueFactor - this.baseShift);
     }
 
+    pack(v: number): {r: number, g: number, b: number} {
+        const minScale = Math.min(this.redFactor, this.greenFactor, this.blueFactor);
+        const vScaled = Math.round((v + this.baseShift)/minScale);
+        return {
+            r: Math.floor(vScaled*minScale/this.redFactor) % 256,
+            g: Math.floor(vScaled*minScale/this.greenFactor) % 256,
+            b: Math.floor(vScaled*minScale/this.blueFactor) % 256
+        };
+    }
+
     getPixels() {
         return new RGBAImage({width: this.stride, height: this.stride}, new Uint8Array(this.data.buffer));
     }
