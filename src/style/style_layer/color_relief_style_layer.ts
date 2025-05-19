@@ -23,7 +23,7 @@ export class ColorReliefStyleLayer extends StyleLayer {
     }
 
     _updateColorRamp() : ColorRamp {
-        const colorRamp = {elevationStops: [], colorStops: []} as ColorRamp;
+        const colorRamp: ColorRamp = {elevationStops: [], colorStops: []};
         const expression = this._transitionablePaint._values['color-relief-color'].value.expression;
         if (expression instanceof ZoomConstantExpression && expression._styleExpression.expression instanceof Interpolate) {
             const interpolater = expression._styleExpression.expression;
@@ -50,16 +50,15 @@ export class ColorReliefStyleLayer extends StyleLayer {
     // so that the remapping is only performed once.
     getColorRamp(maxLength: number) : {elevationStops: Array<number>; colorStops: Array<Color>} {
         if (this.colorRamp.elevationStops.length > maxLength) {
+            const colorRamp: ColorRamp = {elevationStops: [], colorStops: []};
             const remapStepSize = (this.colorRamp.elevationStops.length - 1)/(maxLength - 1);
-            const remappedElevationStops = [];
-            const remappedColorStops = [];
+
             for (let i = 0; i < this.colorRamp.elevationStops.length - 0.5; i += remapStepSize) {
-                remappedElevationStops.push(this.colorRamp.elevationStops[Math.round(i)]);
-                remappedColorStops.push(this.colorRamp.colorStops[Math.round(i)]);
+                colorRamp.elevationStops.push(this.colorRamp.elevationStops[Math.round(i)]);
+                colorRamp.colorStops.push(this.colorRamp.colorStops[Math.round(i)]);
             }
             warnOnce(`Too many colors in specification of ${this.id} color-relief layer, may not render properly.`);
-            this.colorRamp.elevationStops = remappedElevationStops;
-            this.colorRamp.colorStops = remappedColorStops;
+            this.colorRamp = colorRamp;
         }
         return this.colorRamp;
     }
