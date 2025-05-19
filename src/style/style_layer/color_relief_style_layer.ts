@@ -4,7 +4,7 @@ import properties, {type ColorReliefPaintPropsPossiblyEvaluated} from './color_r
 import {type Transitionable, type Transitioning, type PossiblyEvaluated} from '../properties';
 
 import type {ColorReliefPaintProps} from './color_relief_style_layer_properties.g';
-import {type Color, Interpolate, ZoomConstantExpression, type LayerSpecification, type EvaluationContext} from '@maplibre/maplibre-gl-style-spec';
+import {Color, Interpolate, ZoomConstantExpression, type LayerSpecification, type EvaluationContext} from '@maplibre/maplibre-gl-style-spec';
 import {warnOnce} from '../../util/util';
 
 export const isColorReliefStyleLayer = (layer: StyleLayer): layer is ColorReliefStyleLayer => layer.type === 'color-relief';
@@ -22,6 +22,8 @@ export class ColorReliefStyleLayer extends StyleLayer {
     }
 
     _updateColorRamp() {
+        this.elevationStops = [];
+        this.colorStops = [];
         const expression = this._transitionablePaint._values['color-relief-color'].value.expression;
         if (expression instanceof ZoomConstantExpression && expression._styleExpression.expression instanceof Interpolate) {
             const interpolater = expression._styleExpression.expression;
@@ -30,6 +32,16 @@ export class ColorReliefStyleLayer extends StyleLayer {
             for (const label of this.elevationStops) {
                 this.colorStops.push(interpolater.evaluate({globals: {elevation: label}} as EvaluationContext));
             }
+        }
+        if (this.elevationStops.length < 1)
+        {
+            this.elevationStops = [0];
+            this.colorStops = [Color.transparent];
+        }
+        if (this.elevationStops.length < 2)
+        {
+            this.elevationStops.push(this.elevationStops[0] + 1);
+            this.colorStops.push(this.colorStops[0]);
         }
     }
     
