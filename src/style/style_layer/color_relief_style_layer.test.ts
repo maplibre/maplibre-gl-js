@@ -5,7 +5,7 @@ import {createStyleLayer} from '../create_style_layer';
 import {extend} from '../../util/util';
 import {type EvaluationParameters} from '../evaluation_parameters';
 
-function createLayerSpec(properties?): LayerSpecification {
+function createColorReliefLayerSpec(properties?): LayerSpecification {
     return extend({
         type: 'color-relief',
         id: 'colorRelief',
@@ -16,7 +16,7 @@ function createLayerSpec(properties?): LayerSpecification {
 describe('ColorReliefStyleLayer', () => {
 
     test('default', () => {
-        const layerSpec = createLayerSpec();
+        const layerSpec = createColorReliefLayerSpec();
         const layer = createStyleLayer(layerSpec);
         expect(layer).toBeInstanceOf(ColorReliefStyleLayer);
         const colorReliefStyleLayer = layer as ColorReliefStyleLayer;
@@ -24,7 +24,7 @@ describe('ColorReliefStyleLayer', () => {
     });
 
     test('parameters specified', () => {
-        const layerSpec = createLayerSpec({
+        const layerSpec = createColorReliefLayerSpec({
             paint: {
                 'color-relief-opacity': 0.5,
                 'color-relief-color': [
