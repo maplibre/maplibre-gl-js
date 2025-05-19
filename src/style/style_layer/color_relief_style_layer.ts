@@ -30,12 +30,6 @@ export class ColorReliefStyleLayer extends StyleLayer {
             for (const label of this.elevationStops) {
                 this.colorStops.push(interpolater.evaluate({globals: {elevation: label}} as EvaluationContext));
             }
-            // The shader expects the colorramp length to be 1 plus a power of 2. Pad the colorramp with the last value to meet this requirement.
-            const colormapLength = nextPowerOfTwo(this.elevationStops.length - 1) + 1;
-            while (this.elevationStops.length < colormapLength) {
-                this.elevationStops.push(this.elevationStops.at(-1));
-                this.colorStops.push(this.colorStops.at(-1));
-            }
         }
     }
 
