@@ -5,12 +5,12 @@ import {createStyleLayer} from '../create_style_layer';
 import {extend} from '../../util/util';
 import {type EvaluationParameters} from '../evaluation_parameters';
 
-function createColorReliefLayerSpec(properties?): LayerSpecification {
+function createColorReliefLayerSpec(properties?: {paint: {'color-relief-opacity'?: number; 'color-relief-color'?: Array<any>}}): LayerSpecification {
     return extend({
         type: 'color-relief',
         id: 'colorRelief',
         source: 'colorReliefSource'
-    }, properties);
+    } as LayerSpecification, properties);
 }
 
 describe('ColorReliefStyleLayer', () => {
