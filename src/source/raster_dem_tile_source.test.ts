@@ -1,9 +1,11 @@
-import {fakeServer, FakeServer} from 'nise';
+import {describe, beforeEach, afterEach, test, expect, vi, it} from 'vitest';
+import {fakeServer, type FakeServer} from 'nise';
 import {RasterDEMTileSource} from './raster_dem_tile_source';
 import {OverscaledTileID} from './tile_id';
 import {RequestManager} from '../util/request_manager';
-import {Tile} from './tile';
-import {waitForMetadataEvent} from '../util/test/util';
+import {type Tile} from './tile';
+import {waitForEvent, waitForMetadataEvent} from '../util/test/util';
+import type {MapSourceDataEvent} from '../ui/events';
 
 function createSource(options, transformCallback?) {
     const source = new RasterDEMTileSource('id', options, {} as any, options.eventedParent);
@@ -40,7 +42,7 @@ describe('RasterDEMTileSource', () => {
             tiles: ['http://example.com/{z}/{x}/{y}.pngraw'],
             bounds: [-47, -7, -45, -5]
         }));
-        const transformSpy = jest.fn().mockImplementation((url) => {
+        const transformSpy = vi.fn().mockImplementation((url) => {
             return {url};
         });
 
@@ -60,7 +62,7 @@ describe('RasterDEMTileSource', () => {
             bounds: [-47, -7, -45, -5]
         }));
         const source = createSource({url: '/source.json'});
-        const transformSpy = jest.spyOn(source.map._requestManager, 'transformRequest');
+        const transformSpy = vi.spyOn(source.map._requestManager, 'transformRequest');
         const promise = waitForMetadataEvent(source);
         server.respond();
         await promise;
@@ -154,5 +156,98 @@ describe('RasterDEMTileSource', () => {
             minzoom: 2,
             maxzoom: 10
         });
+    });
+
+    test('Tile expiry data is set when "Cache-Control" is set but not "Expires"', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            attribution: 'MapLibre',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
+            bounds: [-47, -7, -45, -5]
+        }));
+        server.respondWith('http://example.com/10/5/5.png', 
+            [200, {'Content-Type': 'image/png', 'Content-Length': 1, 'Cache-Control': 'max-age=100'}, '0']
+        );
+        const source = createSource({url: '/source.json'});
+        source.map.painter = {context: {}, getTileTexture: () => { return {update: () => {}}; }} as any;
+        source.map._refreshExpiredTiles = true;
+
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        server.respond();
+        await promise;
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            setExpiryData() {},
+            actor: 1
+        } as any as Tile;
+        const expiryDataSpy = vi.spyOn(tile, 'setExpiryData');
+        const tilePromise = source.loadTile(tile);
+        server.respond();
+        await tilePromise;
+        expect(expiryDataSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('Tile expiry data is set when "Expires" is set but not "Cache-Control"', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            attribution: 'MapLibre',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
+            bounds: [-47, -7, -45, -5]
+        }));
+        server.respondWith('http://example.com/10/5/5.png', 
+            [200, {'Content-Type': 'image/png', 'Content-Length': 1, 'Expires': 'Wed, 21 Oct 2015 07:28:00 GMT'}, '0']
+        );
+        const source = createSource({url: '/source.json'});
+        source.map.painter = {context: {}, getTileTexture: () => { return {update: () => {}}; }} as any;
+        source.map._refreshExpiredTiles = true;
+
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        server.respond();
+        await promise;
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            setExpiryData() {},
+            actor: 1
+        } as any as Tile;
+        const expiryDataSpy = vi.spyOn(tile, 'setExpiryData');
+        const tilePromise = source.loadTile(tile);
+        server.respond();
+        await tilePromise;
+        expect(expiryDataSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('Tile expiry data is set when "Expires" is set and "Cache-Control" is an empty string', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            attribution: 'MapLibre',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
+            bounds: [-47, -7, -45, -5]
+        }));
+        server.respondWith('http://example.com/10/5/5.png', 
+            [200, {'Content-Type': 'image/png', 'Content-Length': 1, 'Cache-Control': '', 'Expires': 'Wed, 21 Oct 2015 07:28:00 GMT'}, '0']
+        );
+        const source = createSource({url: '/source.json'});
+        source.map.painter = {context: {}, getTileTexture: () => { return {update: () => {}}; }} as any;
+        source.map._refreshExpiredTiles = true;
+
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        server.respond();
+        await promise;
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            setExpiryData() {},
+            actor: 1
+        } as any as Tile;
+        const expiryDataSpy = vi.spyOn(tile, 'setExpiryData');
+        const tilePromise = source.loadTile(tile);
+        server.respond();
+        await tilePromise;
+        expect(expiryDataSpy).toHaveBeenCalledTimes(1);
     });
 });

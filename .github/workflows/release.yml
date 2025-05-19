@@ -96,15 +96,12 @@ jobs:
 
       - name: Build Release Notes
         id: release_notes
-        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
         run: |
           RELEASE_NOTES_PATH="${PWD}/release_notes.txt"
           ./build/release-notes.js > ${RELEASE_NOTES_PATH}
           echo "release_notes=${RELEASE_NOTES_PATH}" >> $GITHUB_OUTPUT
 
-      - name: Create GitHub Release (regular)
-        id: create_regular_release
-        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
+      - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -116,30 +113,7 @@ jobs:
           artifactContentType: "application/zip"
           allowUpdates: true
           draft: false
-          prerelease: false
-
-      - name: Create GitHub Release (prerelease)
-        id: create_prerelease
-        if: ${{ steps.prepare_release.outputs.release_type == 'prerelease' }}
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.tag_version.outputs.new_tag }}
-          release_name: ${{ steps.tag_version.outputs.new_tag }}
-          draft: false
-          prerelease: true
-
-      - name: Upload GitHub Release Assets (prerelease)
-        uses: actions/upload-release-asset@v1
-        if: ${{ steps.prepare_release.outputs.release_type == 'prerelease' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_prerelease.outputs.upload_url }}
-          asset_path: ./dist.zip
-          asset_name: dist.zip
-          asset_content_type: application/zip
+          prerelease: ${{ steps.prepare_release.outputs.release_type == 'prerelease' }}
 
       - name: Copy benchmarks_generated.js
         run: |

@@ -1,4 +1,5 @@
-import {Map, MapOptions} from '../map';
+import {describe, beforeEach, test, expect, vi} from 'vitest';
+import {Map, type MapOptions} from '../map';
 import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {beforeMapTest} from '../../util/test/util';
@@ -16,9 +17,9 @@ describe('map events', () => {
         const map = createMap();
         const target = map.getCanvas();
 
-        const touchstart = jest.fn();
-        const touchmove = jest.fn();
-        const touchend = jest.fn();
+        const touchstart = vi.fn();
+        const touchmove = vi.fn();
+        const touchend = vi.fn();
 
         map.on('touchstart', touchstart);
         map.on('touchmove', touchmove);
@@ -54,10 +55,10 @@ describe('map events', () => {
         const target = map.getCanvas();
         map.dragPan.enable();
 
-        const touchstart = jest.fn();
-        const touchmove = jest.fn();
-        const touchend = jest.fn();
-        const drag = jest.fn();
+        const touchstart = vi.fn();
+        const touchmove = vi.fn();
+        const touchend = vi.fn();
+        const drag = vi.fn();
 
         map.on('touchstart', touchstart);
         map.on('touchmove', touchmove);
@@ -97,7 +98,7 @@ describe('map events', () => {
         const target = map.getCanvas();
         map.dragPan.enable();
 
-        const contextmenu = jest.fn();
+        const contextmenu = vi.fn();
 
         map.on('contextmenu', contextmenu);
 
@@ -113,7 +114,7 @@ describe('map events', () => {
         const target = map.getCanvas();
         map.dragPan.enable();
 
-        const contextmenu = jest.fn();
+        const contextmenu = vi.fn();
 
         map.on('contextmenu', contextmenu);
 
@@ -129,7 +130,7 @@ describe('map events', () => {
         const target = map.getCanvas();
         map.dragPan.enable();
 
-        const contextmenu = jest.fn();
+        const contextmenu = vi.fn();
 
         map.on('contextmenu', contextmenu);
 
@@ -145,7 +146,7 @@ describe('map events', () => {
         const target = map.getCanvas();
         map.dragPan.enable();
 
-        const contextmenu = jest.fn();
+        const contextmenu = vi.fn();
 
         map.on('contextmenu', contextmenu);
 
@@ -154,5 +155,30 @@ describe('map events', () => {
         simulate.mouseup(map.getCanvas(), {target, button: 2, clientX: 50, clientY: 10});
         simulate.contextmenu(map.getCanvas(), {target, button: 2, clientX: 10, clientY: 10}); // triggered only after mouseup
         expect(contextmenu).toHaveBeenCalledTimes(0);
+    });
+
+    test('MapMouseEvent constructor does not throw error with Event instance instead of MouseEvent as originalEvent param', () => {
+        const map = createMap();
+        const target = map.getCanvasContainer();
+
+        expect(()=> {
+            target.dispatchEvent(new Event('mousedown'));
+            target.dispatchEvent(new Event('mouseup'));
+            target.dispatchEvent(new Event('click'));
+            target.dispatchEvent(new Event('dblclick'));
+            target.dispatchEvent(new Event('mousemove'));
+            target.dispatchEvent(new Event('mouseover'));
+            target.dispatchEvent(new Event('mouseenter'));
+            target.dispatchEvent(new Event('mouseleave'));
+            target.dispatchEvent(new Event('mouseout'));
+            target.dispatchEvent(new Event('contextmenu'));
+            target.dispatchEvent(new Event('wheel'));
+
+            target.dispatchEvent(new Event('touchstart'));
+            target.dispatchEvent(new Event('touchmove'));
+            target.dispatchEvent(new Event('touchmoveWindow'));
+            target.dispatchEvent(new Event('touchend'));
+            target.dispatchEvent(new Event('touchcancel'));
+        }).not.toThrow();
     });
 });

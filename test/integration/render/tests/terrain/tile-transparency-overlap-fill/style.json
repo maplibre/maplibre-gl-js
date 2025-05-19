@@ -1,0 +1,55 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Tests geometry beyond tile borders is not rendered when using terrain. The used tiles cover the entire 4096x4096 internal extent + 256 unit border.",
+      "width": 128,
+      "height": 128
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [
+    0,
+    0
+  ],
+  "zoom": 1,
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": ["local://tiles/terrain/10-189-401.terrain.png"],
+      "maxzoom": 12,
+      "tileSize": 1024
+    },
+    "vector_tiles": {
+      "type": "vector",
+      "tiles": [
+        "local://tiles/ocean_with_outside_overlap.mvt"
+      ]
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "ocean",
+      "type": "fill",
+      "source": "vector_tiles",
+      "source-layer": "water",
+      "paint": {
+        "fill-color": "rgb(0, 0, 128)",
+        "fill-opacity": 0.2
+      }
+    }
+  ],
+  "terrain": {
+    "source": "terrain",
+    "exaggeration": 0
+  }
+}

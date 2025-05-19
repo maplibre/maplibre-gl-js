@@ -1,6 +1,6 @@
 import {extend} from '../util/util';
 import {Event, Evented} from '../util/evented';
-import {MapMouseEvent} from '../ui/events';
+import {type MapMouseEvent} from './events';
 import {DOM} from '../util/dom';
 import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
@@ -18,15 +18,16 @@ const defaultOptions = {
     focusAfterOpen: true,
     className: '',
     maxWidth: '240px',
-    subpixelPositioning: false
+    subpixelPositioning: false,
+    locationOccludedOpacity: undefined,
 };
 
 /**
  * A pixel offset specified as:
  *
- * - a single number specifying a distance from the location
- * - a {@link PointLike} specifying a constant offset
- * - an object of {@link Point}s specifying an offset for each anchor position
+ * - A single number specifying a distance from the location
+ * - A {@link PointLike} specifying a constant offset
+ * - An object of {@link PointLike}s specifying an offset for each anchor position
  *
  * Negative offsets indicate left and up.
  */
@@ -88,6 +89,12 @@ export type PopupOptions = {
      * @defaultValue false
      */
     subpixelPositioning?: boolean;
+    /**
+     * Optional opacity when the location is behind the globe.
+     * Note that if a number is provided, it will be converted to a string.
+     * @defaultValue undefined
+     */
+    locationOccludedOpacity?: number | string;
 };
 
 const focusQuerySelector = [
@@ -225,6 +232,20 @@ export class Popup extends Evented {
 
         return this;
     }
+
+    /**
+     * Add opacity to popup if in globe projection and location is behind view
+     */
+    _updateOpacity = () => {
+        if (this.options.locationOccludedOpacity === undefined) {
+            return;
+        }
+        if (this._map.transform.isLocationOccluded(this.getLngLat())) {
+            this._container.style.opacity = `${this.options.locationOccludedOpacity}`;
+        } else {
+            this._container.style.opacity = undefined;
+        }
+    };
 
     /**
      * @returns `true` if the popup is open, `false` if it is closed.
@@ -398,7 +419,7 @@ export class Popup extends Evented {
     setHTML(html: string): this {
         const frag = document.createDocumentFragment();
         const temp = document.createElement('body');
-        let child;
+        let child: ChildNode;
         temp.innerHTML = html;
         while (true) {
             child = temp.firstChild;
@@ -595,18 +616,14 @@ export class Popup extends Evented {
             this._container.style.maxWidth = this.options.maxWidth;
         }
 
-        if (this._map.transform.renderWorldCopies && !this._trackPointer) {
-            this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform);
-        } else {
-            this._lngLat = this._lngLat?.wrap();
-        }
+        this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform, this._trackPointer);
 
         if (this._trackPointer && !cursor) return;
 
         const pos = this._flatPos = this._pos = this._trackPointer && cursor ? cursor : this._map.project(this._lngLat);
         if (this._map.terrain) {
             // flat position is saved because smartWrap needs non-elevated points
-            this._flatPos = this._trackPointer && cursor ? cursor : this._map.transform.locationPoint(this._lngLat);
+            this._flatPos = this._trackPointer && cursor ? cursor : this._map.transform.locationToScreenPoint(this._lngLat);
         }
 
         let anchor = this.options.anchor;
@@ -646,6 +663,8 @@ export class Popup extends Evented {
 
         DOM.setTransform(this._container, `${anchorTranslate[anchor]} translate(${offsetedPos.x}px,${offsetedPos.y}px)`);
         applyAnchorClass(this._container, anchor, 'popup');
+
+        this._updateOpacity();
     };
 
     _focusFirstElement() {

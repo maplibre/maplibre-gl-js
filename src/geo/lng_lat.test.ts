@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {LngLat} from '../geo/lng_lat';
 
 describe('LngLat', () => {
@@ -5,12 +6,10 @@ describe('LngLat', () => {
         expect(new LngLat(0, 0) instanceof LngLat).toBeTruthy();
 
         expect(() => {
-            /*eslint no-new: 0*/
             new LngLat(0, -91);
         }).toThrow('Invalid LngLat latitude value: must be between -90 and 90');
 
         expect(() => {
-            /*eslint no-new: 0*/
             new LngLat(0, 91);
         }).toThrow('Invalid LngLat latitude value: must be between -90 and 90');
     });

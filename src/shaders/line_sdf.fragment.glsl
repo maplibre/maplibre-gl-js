@@ -9,6 +9,9 @@ in vec2 v_width2;
 in vec2 v_tex_a;
 in vec2 v_tex_b;
 in float v_gamma_scale;
+#ifdef GLOBE
+in float v_depth;
+#endif
 
 #pragma mapbox: define highp vec4 color
 #pragma mapbox: define lowp float blur
@@ -38,6 +41,13 @@ void main() {
     alpha *= smoothstep(0.5 - u_sdfgamma / floorwidth, 0.5 + u_sdfgamma / floorwidth, sdfdist);
 
     fragColor = color * (alpha * opacity);
+
+    #ifdef GLOBE
+    if (v_depth > 1.0) {
+        // See comment in line.fragment.glsl
+        discard;
+    }
+    #endif
 
 #ifdef OVERDRAW_INSPECTOR
     fragColor = vec4(1.0);

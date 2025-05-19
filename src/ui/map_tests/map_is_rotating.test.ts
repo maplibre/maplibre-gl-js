@@ -1,3 +1,4 @@
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {Map} from '../map';
 import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
@@ -24,22 +25,22 @@ describe('Map#isRotating', () => {
         expect(map.isRotating()).toBe(false);
     });
 
-    test('returns true during a camera rotate animation', done => {
+    test('returns true during a camera rotate animation', async () => {
         map.on('rotatestart', () => {
             expect(map.isRotating()).toBe(true);
         });
 
-        map.on('rotateend', () => {
-            expect(map.isRotating()).toBe(false);
-            done();
-        });
+        const rotateEndPromise = map.once('rotateend');
 
         map.rotateTo(5, {duration: 0});
+
+        await rotateEndPromise;
+        expect(map.isRotating()).toBe(false);
     });
 
-    test('returns true when drag rotating', done => {
+    test('returns true when drag rotating', async () => {
         // Prevent inertial rotation.
-        jest.spyOn(browser, 'now').mockImplementation(() => { return 0; });
+        vi.spyOn(browser, 'now').mockImplementation(() => { return 0; });
 
         map.on('rotatestart', () => {
             expect(map.isRotating()).toBe(true);
@@ -47,8 +48,9 @@ describe('Map#isRotating', () => {
 
         map.on('rotateend', () => {
             expect(map.isRotating()).toBe(false);
-            done();
         });
+
+        const promise = map.once('rotateend');
 
         simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2});
         map._renderTaskQueue.run();
@@ -58,5 +60,7 @@ describe('Map#isRotating', () => {
 
         simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2});
         map._renderTaskQueue.run();
+
+        await expect(promise).resolves.toBeDefined();
     });
 });

@@ -1,16 +1,16 @@
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {ImageSource} from './image_source';
 import {Evented} from '../util/evented';
-import {Transform} from '../geo/transform';
-import {extend} from '../util/util';
+import {type IReadonlyTransform} from '../geo/transform_interface';
+import {extend, MAX_TILE_ZOOM} from '../util/util';
 import {type FakeServer, fakeServer} from 'nise';
-import {RequestManager} from '../util/request_manager';
-import {sleep, stubAjaxGetImage} from '../util/test/util';
+import {type RequestManager} from '../util/request_manager';
+import {sleep, stubAjaxGetImage, waitForEvent} from '../util/test/util';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
-import {VertexBuffer} from '../gl/vertex_buffer';
-import {SegmentVector} from '../data/segment';
-import {Texture} from '../render/texture';
+import {type Texture} from '../render/texture';
 import type {ImageSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 function createSource(options) {
     options = extend({
@@ -22,13 +22,13 @@ function createSource(options) {
 }
 
 class StubMap extends Evented {
-    transform: Transform;
+    transform: IReadonlyTransform;
     painter: any;
     _requestManager: RequestManager;
 
     constructor() {
         super();
-        this.transform = new Transform();
+        this.transform = new MercatorTransform();
         this._requestManager = {
             transformRequest: (url) => {
                 return {url};
@@ -75,7 +75,7 @@ describe('ImageSource', () => {
     test('transforms url request', () => {
         const source = createSource({url: '/image.png'});
         const map = new StubMap() as any;
-        const spy = jest.spyOn(map._requestManager, 'transformRequest');
+        const spy = vi.spyOn(map._requestManager, 'transformRequest');
         source.onAdd(map);
         server.respond();
         expect(spy).toHaveBeenCalledTimes(1);
@@ -86,7 +86,7 @@ describe('ImageSource', () => {
     test('updates url from updateImage', () => {
         const source = createSource({url: '/image.png'});
         const map = new StubMap() as any;
-        const spy = jest.spyOn(map._requestManager, 'transformRequest');
+        const spy = vi.spyOn(map._requestManager, 'transformRequest');
         source.onAdd(map);
         server.respond();
         expect(spy).toHaveBeenCalledTimes(1);
@@ -128,48 +128,37 @@ describe('ImageSource', () => {
         expect(afterSerialized.coordinates).toEqual([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
     });
 
-    test('fires data event when content is loaded', done => {
+    test('fires data event when content is loaded', async () => {
         const source = createSource({url: '/image.png'});
-        source.on('data', (e) => {
-            if (e.dataType === 'source' && e.sourceDataType === 'content') {
-                expect(typeof source.tileID == 'object').toBeTruthy();
-                done();
-            }
-        });
+        const promise = waitForEvent(source, 'data', (e) => e.dataType === 'source' && e.sourceDataType === 'content');
         source.onAdd(new StubMap() as any);
         server.respond();
+        await promise;
+        expect(typeof source.tileID == 'object').toBeTruthy();
     });
 
-    test('fires data event when metadata is loaded', done => {
+    test('fires data event when metadata is loaded', async () => {
         const source = createSource({url: '/image.png'});
-        source.on('data', (e) => {
-            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
-                done();
-            }
-        });
+        const promise = waitForEvent(source, 'data', (e) => e.dataType === 'source' && e.sourceDataType === 'metadata');
         source.onAdd(new StubMap() as any);
         server.respond();
+        await expect(promise).resolves.toBeDefined();
     });
 
-    test('fires idle event on prepare call when there is at least one not loaded tile', done => {
+    test('fires idle event on prepare call when there is at least one not loaded tile', async () => {
         const source = createSource({url: '/image.png'});
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
-        source.on('data', (e) => {
-            if (e.dataType === 'source' && e.sourceDataType === 'idle') {
-                expect(tile.state).toBe('loaded');
-                done();
-            }
-        });
+        const promise = waitForEvent(source, 'data', (e) => e.dataType === 'source' && e.sourceDataType === 'idle');
         source.onAdd(new StubMap() as any);
         server.respond();
 
         source.tiles[String(tile.tileID.wrap)] = tile;
         source.image = new ImageBitmap();
         // assign dummies directly so we don't need to stub the gl things
-        source.boundsBuffer = {destroy: () => {}} as VertexBuffer;
-        source.boundsSegments = {} as SegmentVector;
         source.texture = {} as Texture;
         source.prepare();
+        await promise;
+        expect(tile.state).toBe('loaded');
     });
 
     test('serialize url and coordinates', () => {
@@ -204,7 +193,7 @@ describe('ImageSource', () => {
         map.on('error', () => {});
         source.onAdd(map);
 
-        const spy = jest.spyOn(server.requests[0] as any, 'abort');
+        const spy = vi.spyOn(server.requests[0] as any, 'abort');
 
         source.updateImage({url: '/image2.png'});
         expect(spy).toHaveBeenCalled();
@@ -231,5 +220,31 @@ describe('ImageSource', () => {
         await sleep(0);
 
         expect(missingImagesource.loaded()).toBe(true);
+    });
+
+    describe('terrainTileRanges', () => {
+        test('sets tile ranges for all zoom levels', () => {
+            const source = createSource({url: '/image.png'});
+            const map = new StubMap() as any;
+            source.onAdd(map);
+            server.respond();
+            source.setCoordinates([[-10, 10], [10, 10], [10, -10], [-10, -10]]);
+
+            for (let z = 0; z <= MAX_TILE_ZOOM; z++) {
+                expect(source.terrainTileRanges[z]).toBeDefined();
+            }
+        });
+
+        test('calculates tile ranges properly', () => {
+            const source = createSource({url: '/image.png'});
+            const map = new StubMap() as any;
+            source.onAdd(map);
+            server.respond();
+            source.setCoordinates([[11.39585,47.30074],[11.46585,47.30074],[11.46585,47.25074],[11.39585,47.25074]]);
+            expect(source.terrainTileRanges[9]).toEqual({minTileX: 272, minTileY: 179, maxTileX: 272, maxTileY: 179});
+            expect(source.terrainTileRanges[10]).toEqual({minTileX: 544, minTileY: 358, maxTileX: 544, maxTileY: 359});
+            expect(source.terrainTileRanges[11]).toEqual({minTileX: 1088, minTileY: 717, maxTileX: 1089, maxTileY: 718});
+            expect(source.terrainTileRanges[12]).toEqual({minTileX: 2177, minTileY: 1435, maxTileX: 2178, maxTileY: 1436});
+        });
     });
 });

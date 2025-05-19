@@ -1,11 +1,15 @@
-import {OverscaledTileID} from './tile_id';
+import {type OverscaledTileID} from './tile_id';
 import {Tile} from './tile';
 import {EXTENT} from '../data/extent';
 import {mat4} from 'gl-matrix';
 import {Evented} from '../util/evented';
-import type {Transform} from '../geo/transform';
+import type {ITransform} from '../geo/transform_interface';
 import type {SourceCache} from '../source/source_cache';
-import {Terrain} from '../render/terrain';
+import {type Terrain} from '../render/terrain';
+import {browser} from '../util/browser';
+import {coveringTiles} from '../geo/projection/covering_tiles';
+import {createMat4f64} from '../util/util';
+import {type CanonicalTileRange} from './image_source';
 
 /**
  * @internal
@@ -50,6 +54,10 @@ export class TerrainSourceCache extends Evented {
      * raster-dem tiles will load for performance the actualZoom - deltaZoom zoom-level.
      */
     deltaZoom: number;
+    /**
+     * used to determine whether depth & coord framebuffers need updating
+     */
+    _lastTilesetChange: number = browser.now();
 
     constructor(sourceCache: SourceCache) {
         super();
@@ -59,10 +67,10 @@ export class TerrainSourceCache extends Evented {
         this._sourceTileCache = {};
         this.minzoom = 0;
         this.maxzoom = 22;
-        this.tileSize = 512;
         this.deltaZoom = 1;
+        this.tileSize = sourceCache._source.tileSize * 2 ** this.deltaZoom;
         sourceCache.usedForTerrain = true;
-        sourceCache.tileSize = this.tileSize * 2 ** this.deltaZoom;
+        sourceCache.tileSize = this.tileSize;
     }
 
     destruct() {
@@ -75,25 +83,27 @@ export class TerrainSourceCache extends Evented {
      * @param transform - the operation to do
      * @param terrain - the terrain
      */
-    update(transform: Transform, terrain: Terrain): void {
+    update(transform: ITransform, terrain: Terrain): void {
         // load raster-dem tiles for the current scene.
         this.sourceCache.update(transform, terrain);
         // create internal render-to-texture tiles for the current scene.
         this._renderableTilesKeys = [];
         const keys = {};
-        for (const tileID of transform.coveringTiles({
+        for (const tileID of coveringTiles(transform, {
             tileSize: this.tileSize,
             minzoom: this.minzoom,
             maxzoom: this.maxzoom,
             reparseOverscaled: false,
-            terrain
+            terrain,
+            calculateTileZoom: this.sourceCache._source.calculateTileZoom
         })) {
             keys[tileID.key] = true;
             this._renderableTilesKeys.push(tileID.key);
             if (!this._tiles[tileID.key]) {
-                tileID.posMatrix = new Float64Array(16) as any;
-                mat4.ortho(tileID.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
+                tileID.terrainRttPosMatrix32f = new Float64Array(16) as any;
+                mat4.ortho(tileID.terrainRttPosMatrix32f, 0, EXTENT, EXTENT, 0, 0, 1);
                 this._tiles[tileID.key] = new Tile(tileID, this.tileSize);
+                this._lastTilesetChange = browser.now();
             }
         }
         // free unused tiles
@@ -136,37 +146,109 @@ export class TerrainSourceCache extends Evented {
      * @param tileID - the tile to look for
      * @returns the tiles that were found
      */
-    getTerrainCoords(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
-        const coords = {};
+    getTerrainCoords(
+        tileID: OverscaledTileID,
+        terrainTileRanges?: {[zoom: string]: CanonicalTileRange}
+    ): Record<string, OverscaledTileID> {
+        if (terrainTileRanges) {
+            return this._getTerrainCoordsForTileRanges(tileID, terrainTileRanges);
+        } else {
+            return this._getTerrainCoordsForRegularTile(tileID);
+        }
+    }
+
+    /**
+     * Searches for the corresponding current renderable terrain-tiles.
+     * Includes terrain tiles that are either:
+     * - the same as the tileID
+     * - a parent of the tileID
+     * - a child of the tileID
+     * @param tileID - the tile to look for
+     * @returns the tiles that were found
+     */
+    _getTerrainCoordsForRegularTile(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
+        const coords: Record<string, OverscaledTileID> = {};
         for (const key of this._renderableTilesKeys) {
-            const _tileID = this._tiles[key].tileID;
-            if (_tileID.canonical.equals(tileID.canonical)) {
-                const coord = tileID.clone();
-                coord.posMatrix = new Float64Array(16) as any;
-                mat4.ortho(coord.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
-                coords[key] = coord;
-            } else if (_tileID.canonical.isChildOf(tileID.canonical)) {
-                const coord = tileID.clone();
-                coord.posMatrix = new Float64Array(16) as any;
-                const dz = _tileID.canonical.z - tileID.canonical.z;
-                const dx = _tileID.canonical.x - (_tileID.canonical.x >> dz << dz);
-                const dy = _tileID.canonical.y - (_tileID.canonical.y >> dz << dz);
+            const terrainTileID = this._tiles[key].tileID;
+            const coord = tileID.clone();
+            const mat = createMat4f64();
+            if (terrainTileID.canonical.equals(tileID.canonical)) {
+                mat4.ortho(mat, 0, EXTENT, EXTENT, 0, 0, 1);
+            } else if (terrainTileID.canonical.isChildOf(tileID.canonical)) {
+                const dz = terrainTileID.canonical.z - tileID.canonical.z;
+                const dx = terrainTileID.canonical.x - (terrainTileID.canonical.x >> dz << dz);
+                const dy = terrainTileID.canonical.y - (terrainTileID.canonical.y >> dz << dz);
                 const size = EXTENT >> dz;
-                mat4.ortho(coord.posMatrix, 0, size, 0, size, 0, 1);
-                mat4.translate(coord.posMatrix, coord.posMatrix, [-dx * size, -dy * size, 0]);
-                coords[key] = coord;
-            } else if (tileID.canonical.isChildOf(_tileID.canonical)) {
-                const coord = tileID.clone();
-                coord.posMatrix = new Float64Array(16) as any;
-                const dz = tileID.canonical.z - _tileID.canonical.z;
+                mat4.ortho(mat, 0, size, size, 0, 0, 1); // Note: we are using `size` instead of `EXTENT` here
+                mat4.translate(mat, mat, [-dx * size, -dy * size, 0]);
+            } else if (tileID.canonical.isChildOf(terrainTileID.canonical)) {
+                const dz = tileID.canonical.z - terrainTileID.canonical.z;
                 const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
                 const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
                 const size = EXTENT >> dz;
-                mat4.ortho(coord.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
-                mat4.translate(coord.posMatrix, coord.posMatrix, [dx * size, dy * size, 0]);
-                mat4.scale(coord.posMatrix, coord.posMatrix, [1 / (2 ** dz), 1 / (2 ** dz), 0]);
-                coords[key] = coord;
+                mat4.ortho(mat, 0, EXTENT, EXTENT, 0, 0, 1);
+                mat4.translate(mat, mat, [dx * size, dy * size, 0]);
+                mat4.scale(mat, mat, [1 / (2 ** dz), 1 / (2 ** dz), 0]);
+            } else {
+                continue;
             }
+            coord.terrainRttPosMatrix32f = new Float32Array(mat);
+            coords[key] = coord;
+        }
+        return coords;
+    }
+
+    /**
+     * Searches for the corresponding current renderable terrain-tiles.
+     * Includes terrain tiles that are within terrain tile ranges.
+     * @param tileID - the tile to look for
+     * @returns the tiles that were found
+     */
+    _getTerrainCoordsForTileRanges(
+        tileID: OverscaledTileID,
+        terrainTileRanges: {[zoom: string]: CanonicalTileRange}
+    ): Record<string, OverscaledTileID> {
+        const coords: Record<string, OverscaledTileID> = {};
+        for (const key of this._renderableTilesKeys) {
+            const terrainTileID = this._tiles[key].tileID;
+            if (!this._isWithinTileRanges(terrainTileID, terrainTileRanges)) {
+                continue;
+            }
+
+            const coord = tileID.clone();
+            const mat = createMat4f64();
+            if (terrainTileID.canonical.z === tileID.canonical.z) {
+                const dx = tileID.canonical.x - terrainTileID.canonical.x;
+                const dy = tileID.canonical.y - terrainTileID.canonical.y;
+                mat4.ortho(mat, 0, EXTENT, EXTENT, 0, 0, 1);
+                mat4.translate(mat, mat, [dx * EXTENT, dy * EXTENT, 0]);
+            } else if (terrainTileID.canonical.z > tileID.canonical.z) {
+                const dz = terrainTileID.canonical.z - tileID.canonical.z;
+                // this translation is needed to project tileID to terrainTileID zoom level
+                const dx = terrainTileID.canonical.x - (terrainTileID.canonical.x >> dz << dz);
+                const dy = terrainTileID.canonical.y - (terrainTileID.canonical.y >> dz << dz);
+                // this translation is needed if terrainTileID is not a parent of tileID
+                const dx2 = tileID.canonical.x - (terrainTileID.canonical.x >> dz);
+                const dy2 = tileID.canonical.y - (terrainTileID.canonical.y >> dz);
+
+                const size = EXTENT >> dz;
+                mat4.ortho(mat, 0, size, size, 0, 0, 1);
+                mat4.translate(mat, mat, [-dx * size + dx2 * EXTENT, -dy * size + dy2 * EXTENT, 0]);
+            } else { // terrainTileID.canonical.z < tileID.canonical.z
+                const dz = tileID.canonical.z - terrainTileID.canonical.z;
+                // this translation is needed to project tileID to terrainTileID zoom level
+                const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
+                const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
+                // this translation is needed if terrainTileID is not a parent of tileID
+                const dx2 = (tileID.canonical.x >> dz) - terrainTileID.canonical.x;
+                const dy2 = (tileID.canonical.y >> dz) - terrainTileID.canonical.y;
+
+                const size = EXTENT << dz;
+                mat4.ortho(mat, 0, size, size, 0, 0, 1);
+                mat4.translate(mat, mat, [dx * EXTENT + dx2 * size, dy * EXTENT + dy2 * size, 0]);
+            }
+            coord.terrainRttPosMatrix32f = new Float32Array(mat);
+            coords[key] = coord;
         }
         return coords;
     }
@@ -174,7 +256,7 @@ export class TerrainSourceCache extends Evented {
     /**
      * find the covering raster-dem tile
      * @param tileID - the tile to look for
-     * @param searchForDEM - Optional parameter to search for (parent) sourcetiles with loaded dem.
+     * @param searchForDEM - Optional parameter to search for (parent) source tiles with loaded dem.
      * @returns the tile
      */
     getSourceTile(tileID: OverscaledTileID, searchForDEM?: boolean): Tile {
@@ -194,11 +276,28 @@ export class TerrainSourceCache extends Evented {
     }
 
     /**
-     * get a list of tiles, loaded after a specific time. This is used to update depth & coords framebuffers.
+     * gets whether any tiles were loaded after a specific time. This is used to update depth & coords framebuffers.
      * @param time - the time
-     * @returns the relevant tiles
+     * @returns true if any tiles came into view at or after the specified time
      */
-    tilesAfterTime(time = Date.now()): Array<Tile> {
-        return Object.values(this._tiles).filter(t => t.timeAdded >= time);
+    anyTilesAfterTime(time = Date.now()): boolean {
+        return this._lastTilesetChange >= time;
+    }
+
+    /**
+     * Checks whether a tile is within the canonical tile ranges.
+     * @param tileID - Tile to check
+     * @param canonicalTileRanges - Canonical tile ranges
+     * @returns
+     */
+    private _isWithinTileRanges(
+        tileID: OverscaledTileID,
+        canonicalTileRanges: {[zoom: string]: CanonicalTileRange}
+    ): boolean {
+        return canonicalTileRanges[tileID.canonical.z] &&
+            tileID.canonical.x >= canonicalTileRanges[tileID.canonical.z].minTileX &&
+            tileID.canonical.x <= canonicalTileRanges[tileID.canonical.z].maxTileX &&
+            tileID.canonical.y >= canonicalTileRanges[tileID.canonical.z].minTileY &&
+            tileID.canonical.y <= canonicalTileRanges[tileID.canonical.z].maxTileY;
     }
 }

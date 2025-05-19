@@ -1,3 +1,4 @@
+import {describe, expect, it} from 'vitest';
 import {LngLat} from '../../dist/maplibre-gl';
 
 describe('Importing a class', () => {

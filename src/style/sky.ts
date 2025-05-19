@@ -1,10 +1,10 @@
-import {DataConstantProperty, PossiblyEvaluated, Properties, Transitionable, Transitioning, TransitionParameters} from './properties';
+import {DataConstantProperty, type PossiblyEvaluated, Properties, Transitionable, type Transitioning, type TransitionParameters} from './properties';
 import {Evented} from '../util/evented';
 import {EvaluationParameters} from './evaluation_parameters';
 import {emitValidationErrors, validateSky, validateStyle} from './validate_style';
 import {extend} from '../util/util';
-import {Color, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
-import {Mesh} from '../render/mesh';
+import {type Color, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
+import {type Mesh} from '../render/mesh';
 import type {StylePropertySpecification, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {StyleSetterOptions} from './style';
 
@@ -47,6 +47,7 @@ export class Sky extends Evented {
      * This is used to cache the gl mesh for the sky, it should be initialized only once.
      */
     mesh: Mesh | undefined;
+    atmosphereMesh: Mesh | undefined;
     _transitionable: Transitionable<SkyProps>;
     _transitioning: Transitioning<SkyProps>;
 
@@ -55,10 +56,21 @@ export class Sky extends Evented {
         this._transitionable = new Transitionable(properties);
         this.setSky(sky);
         this._transitioning = this._transitionable.untransitioned();
+        this.recalculate(new EvaluationParameters(0));
     }
 
     setSky(sky?: SkySpecification, options: StyleSetterOptions = {}) {
         if (this._validate(validateSky, sky, options)) return;
+
+        if (!sky) {
+            sky = {
+                'sky-color': 'transparent',
+                'horizon-color': 'transparent',
+                'fog-color': 'transparent',
+                'fog-ground-blend': 1,
+                'atmosphere-blend': 0,
+            };
+        }
 
         for (const name in sky) {
             const value = sky[name];

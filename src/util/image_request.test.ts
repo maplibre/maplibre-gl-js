@@ -1,3 +1,4 @@
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {config} from './config';
 import {webpSupported} from './webp_supported';
 import {sleep, stubAjaxGetImage} from './test/util';
@@ -144,7 +145,7 @@ describe('ImageRequest', () => {
     });
 
     test('getImage uses HTMLImageElement when createImageBitmap is not supported', async () => {
-        const makeRequestSky = jest.spyOn(ajax, 'makeRequest');
+        const makeRequestSky = vi.spyOn(ajax, 'makeRequest');
         server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
             'Expires': 'expires'}, ''));
@@ -161,7 +162,7 @@ describe('ImageRequest', () => {
     });
 
     test('getImage using HTMLImageElement with same-origin credentials', async () => {
-        const makeRequestSky = jest.spyOn(ajax, 'makeRequest');
+        const makeRequestSky = vi.spyOn(ajax, 'makeRequest');
         const promise = ImageRequest.getImage({url: '', credentials: 'same-origin'}, new AbortController(), false);
 
         expect(makeRequestSky).toHaveBeenCalledTimes(0);
@@ -174,7 +175,7 @@ describe('ImageRequest', () => {
     });
 
     test('getImage using HTMLImageElement with include credentials', async () => {
-        const makeRequestSky = jest.spyOn(ajax, 'makeRequest');
+        const makeRequestSky = vi.spyOn(ajax, 'makeRequest');
         const promise = ImageRequest.getImage({url: '', credentials: 'include'}, new AbortController(), false);
 
         expect(makeRequestSky).toHaveBeenCalledTimes(0);
@@ -187,7 +188,7 @@ describe('ImageRequest', () => {
     });
 
     test('getImage using HTMLImageElement with accept header', async () => {
-        const makeRequestSky = jest.spyOn(ajax, 'makeRequest');
+        const makeRequestSky = vi.spyOn(ajax, 'makeRequest');
         const promise = ImageRequest.getImage({url: '', credentials: 'include', headers: {accept: 'accept'}}, new AbortController(), false);
 
         expect(makeRequestSky).toHaveBeenCalledTimes(0);
@@ -199,7 +200,7 @@ describe('ImageRequest', () => {
     });
 
     test('getImage uses makeRequest when custom Headers are added', () => {
-        const makeRequestSky = jest.spyOn(ajax, 'makeRequest');
+        const makeRequestSky = vi.spyOn(ajax, 'makeRequest');
 
         ImageRequest.getImage({url: '', credentials: 'include', headers: {custom: 'test', accept: 'image'}}, new AbortController(), false);
 
@@ -225,7 +226,6 @@ describe('ImageRequest', () => {
     test('Cancel: getImage request cancelled for HTTPImageRequest', async () => {
         let imageUrl;
         const requestUrl = 'test';
-        // eslint-disable-next-line accessor-pairs
         Object.defineProperty(global.Image.prototype, 'src', {
             set(url: string) {
                 imageUrl = url;

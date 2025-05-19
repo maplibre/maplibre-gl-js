@@ -72,6 +72,19 @@ vec2 get_pattern_pos(const vec2 pixel_coord_upper, const vec2 pixel_coord_lower,
     return (tile_units_to_pixels * pos + offset) / pattern_size;
 }
 
+// Axis must be a normalized vector
+// Angle is in radians
+mat3 rotationMatrixFromAxisAngle(vec3 u, float angle) {
+    float c = cos(angle);
+    float s = sin(angle);
+    float c2 = 1.0 - c;
+    return mat3(
+        u.x*u.x * c2 +       c, u.x*u.y * c2 - u.z*s, u.x*u.z * c2 + u.y*s,
+        u.y*u.x * c2 + u.z * s, u.y*u.y * c2 +     c, u.y*u.z * c2 - u.x*s,
+        u.z*u.x * c2 - u.y * s, u.z*u.y * c2 + u.x*s, u.z*u.z * c2 +     c
+    );
+}
+
 // logic for terrain 3d
 
 #ifdef TERRAIN3D
@@ -109,7 +122,7 @@ highp float depthOpacity(vec3 frag) {
 float calculate_visibility(vec4 pos) {
     #ifdef TERRAIN3D
         vec3 frag = pos.xyz / pos.w;
-        // check if coordingate is fully visible
+        // check if coordinate is fully visible
         highp float d = depthOpacity(frag);
         if (d > 0.95) return 1.0;
         // if not, go some pixel above and check it this point is visible
@@ -132,6 +145,11 @@ float ele(vec2 pos) {
 // calculate the elevation with linear interpolation for  a coordinate
 float get_elevation(vec2 pos) {
     #ifdef TERRAIN3D
+        #ifdef GLOBE
+            if ((pos.y < -32767.5) || (pos.y > 32766.5)) {
+                return 0.0;
+            }
+        #endif
         vec2 coord = (u_terrain_matrix * vec4(pos, 0.0, 1.0)).xy * u_terrain_dim + 1.0;
         vec2 f = fract(coord);
         vec2 c = (floor(coord) + 0.5) / (u_terrain_dim + 2.0); // get the pixel center
@@ -146,3 +164,8 @@ float get_elevation(vec2 pos) {
         return 0.0;
     #endif
 }
+
+
+const float PI = 3.141592653589793;
+
+uniform mat4 u_projection_matrix;

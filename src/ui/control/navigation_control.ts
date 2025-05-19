@@ -1,9 +1,9 @@
 import Point from '@mapbox/point-geometry';
 
 import {DOM} from '../../util/dom';
-import {extend} from '../../util/util';
-import {generateMousePitchHandler, generateMouseRotationHandler, MousePitchHandler, MouseRotateHandler} from '../handler/mouse';
-import {generateOneFingerTouchPitchHandler, generateOneFingerTouchRotationHandler, OneFingerTouchPitchHandler, OneFingerTouchRotateHandler} from '../handler/one_finger_touch_drag';
+import {extend, getAngleDelta} from '../../util/util';
+import {DragHandler, type DragMoveHandler, type DragRotateResult} from '../handler/drag_handler';
+import {MouseOrTouchMoveStateManager} from '../handler/drag_move_state_manager';
 
 import type {Map} from '../map';
 import type {IControl} from './control';
@@ -24,12 +24,17 @@ type NavigationControlOptions = {
      * If `true` the pitch is visualized by rotating X-axis of compass.
      */
     visualizePitch?: boolean;
+    /**
+     * If `true` the roll is visualized by rotating the compass.
+     */
+    visualizeRoll?: boolean;
 };
 
 const defaultOptions: NavigationControlOptions = {
     showCompass: true,
     showZoom: true,
-    visualizePitch: false
+    visualizePitch: false,
+    visualizeRoll: true
 };
 
 /**
@@ -93,11 +98,19 @@ export class NavigationControl implements IControl {
     };
 
     _rotateCompassArrow = () => {
-        const rotate = this.options.visualizePitch ?
-            `scale(${1 / Math.pow(Math.cos(this._map.transform.pitch * (Math.PI / 180)), 0.5)}) rotateX(${this._map.transform.pitch}deg) rotateZ(${this._map.transform.angle * (180 / Math.PI)}deg)` :
-            `rotate(${this._map.transform.angle * (180 / Math.PI)}deg)`;
-
-        this._compassIcon.style.transform = rotate;
+        if (this.options.visualizePitch && this.options.visualizeRoll) {
+            this._compassIcon.style.transform = `scale(${1 / Math.pow(Math.cos(this._map.transform.pitchInRadians), 0.5)}) rotateZ(${-this._map.transform.roll}deg) rotateX(${this._map.transform.pitch}deg) rotateZ(${-this._map.transform.bearing}deg)`;
+            return;
+        }
+        if (this.options.visualizePitch) {
+            this._compassIcon.style.transform = `scale(${1 / Math.pow(Math.cos(this._map.transform.pitchInRadians), 0.5)}) rotateX(${this._map.transform.pitch}deg) rotateZ(${-this._map.transform.bearing}deg)`;
+            return;
+        }
+        if (this.options.visualizeRoll) {
+            this._compassIcon.style.transform = `rotate(${-this._map.transform.bearing - this._map.transform.roll}deg)`;
+            return;
+        }
+        this._compassIcon.style.transform = `rotate(${-this._map.transform.bearing}deg)`;
     };
 
     /** {@inheritDoc IControl.onAdd} */
@@ -113,6 +126,9 @@ export class NavigationControl implements IControl {
             this._setButtonTitle(this._compass, 'ResetBearing');
             if (this.options.visualizePitch) {
                 this._map.on('pitch', this._rotateCompassArrow);
+            }
+            if (this.options.visualizeRoll) {
+                this._map.on('roll', this._rotateCompassArrow);
             }
             this._map.on('rotate', this._rotateCompassArrow);
             this._rotateCompassArrow();
@@ -130,6 +146,9 @@ export class NavigationControl implements IControl {
         if (this.options.showCompass) {
             if (this.options.visualizePitch) {
                 this._map.off('pitch', this._rotateCompassArrow);
+            }
+            if (this.options.visualizeRoll) {
+                this._map.off('roll', this._rotateCompassArrow);
             }
             this._map.off('rotate', this._rotateCompassArrow);
             this._handler.off();
@@ -158,62 +177,45 @@ class MouseRotateWrapper {
     map: Map;
     _clickTolerance: number;
     element: HTMLElement;
-    // Rotation and pitch handlers are separated due to different _clickTolerance values
-    mouseRotate: MouseRotateHandler;
-    touchRotate: OneFingerTouchRotateHandler;
-    mousePitch: MousePitchHandler;
-    touchPitch: OneFingerTouchPitchHandler;
+    _rotatePitchHanlder: DragMoveHandler<DragRotateResult, MouseEvent | TouchEvent>;
     _startPos: Point;
     _lastPos: Point;
 
     constructor(map: Map, element: HTMLElement, pitch: boolean = false) {
         this._clickTolerance = 10;
-        const mapRotateTolerance = map.dragRotate._mouseRotate.getClickTolerance();
-        const mapPitchTolerance = map.dragRotate._mousePitch.getClickTolerance();
         this.element = element;
-        this.mouseRotate = generateMouseRotationHandler({clickTolerance: mapRotateTolerance, enable: true});
-        this.touchRotate = generateOneFingerTouchRotationHandler({clickTolerance: mapRotateTolerance, enable: true});
+        
+        const moveStateManager = new MouseOrTouchMoveStateManager();
+        this._rotatePitchHanlder = new DragHandler<DragRotateResult, MouseEvent | TouchEvent>({
+            clickTolerance: 3,
+            move: (lastPoint: Point, currentPoint: Point) => {
+                const rect = element.getBoundingClientRect();
+                const center = new Point((rect.bottom - rect.top) / 2, (rect.right - rect.left) / 2);
+                const bearingDelta = getAngleDelta(new Point(lastPoint.x, currentPoint.y), currentPoint, center);
+                const pitchDelta = pitch ? (currentPoint.y - lastPoint.y) * -0.5 : undefined;
+                return {bearingDelta, pitchDelta};
+            },
+            moveStateManager,
+            enable: true,
+            assignEvents: () => {},
+        });
         this.map = map;
-        if (pitch) {
-            this.mousePitch = generateMousePitchHandler({clickTolerance: mapPitchTolerance, enable: true});
-            this.touchPitch = generateOneFingerTouchPitchHandler({clickTolerance: mapPitchTolerance, enable: true});
-        }
 
         DOM.addEventListener(element, 'mousedown', this.mousedown);
         DOM.addEventListener(element, 'touchstart', this.touchstart, {passive: false});
         DOM.addEventListener(element, 'touchcancel', this.reset);
     }
 
-    startMouse(e: MouseEvent, point: Point) {
-        this.mouseRotate.dragStart(e, point);
-        if (this.mousePitch) this.mousePitch.dragStart(e, point);
+    startMove(e: MouseEvent | TouchEvent, point: Point) {
+        this._rotatePitchHanlder.dragStart(e, point);
         DOM.disableDrag();
     }
 
-    startTouch(e: TouchEvent, point: Point) {
-        this.touchRotate.dragStart(e, point);
-        if (this.touchPitch) this.touchPitch.dragStart(e, point);
-        DOM.disableDrag();
-    }
-
-    moveMouse(e: MouseEvent, point: Point) {
+    move(e: MouseEvent | TouchEvent, point: Point) {
         const map = this.map;
-        const {bearingDelta} = this.mouseRotate.dragMove(e, point) || {};
+        const {bearingDelta, pitchDelta} = this._rotatePitchHanlder.dragMove(e, point) || {};
         if (bearingDelta) map.setBearing(map.getBearing() + bearingDelta);
-        if (this.mousePitch) {
-            const {pitchDelta} = this.mousePitch.dragMove(e, point) || {};
-            if (pitchDelta) map.setPitch(map.getPitch() + pitchDelta);
-        }
-    }
-
-    moveTouch(e: TouchEvent, point: Point) {
-        const map = this.map;
-        const {bearingDelta} = this.touchRotate.dragMove(e, point) || {};
-        if (bearingDelta) map.setBearing(map.getBearing() + bearingDelta);
-        if (this.touchPitch) {
-            const {pitchDelta} = this.touchPitch.dragMove(e, point) || {};
-            if (pitchDelta) map.setPitch(map.getPitch() + pitchDelta);
-        }
+        if (pitchDelta) map.setPitch(map.getPitch() + pitchDelta);
     }
 
     off() {
@@ -235,18 +237,17 @@ class MouseRotateWrapper {
     }
 
     mousedown = (e: MouseEvent) => {
-        this.startMouse(extend({}, e, {ctrlKey: true, preventDefault: () => e.preventDefault()}), DOM.mousePos(this.element, e));
+        this.startMove(e, DOM.mousePos(this.element, e));
         DOM.addEventListener(window, 'mousemove', this.mousemove);
         DOM.addEventListener(window, 'mouseup', this.mouseup);
     };
 
     mousemove = (e: MouseEvent) => {
-        this.moveMouse(e, DOM.mousePos(this.element, e));
+        this.move(e, DOM.mousePos(this.element, e));
     };
 
     mouseup = (e: MouseEvent) => {
-        this.mouseRotate.dragEnd(e);
-        if (this.mousePitch) this.mousePitch.dragEnd(e);
+        this._rotatePitchHanlder.dragEnd(e);
         this.offTemp();
     };
 
@@ -255,7 +256,7 @@ class MouseRotateWrapper {
             this.reset();
         } else {
             this._startPos = this._lastPos = DOM.touchPos(this.element, e.targetTouches)[0];
-            this.startTouch(e, this._startPos);
+            this.startMove(e, this._startPos);
             DOM.addEventListener(window, 'touchmove', this.touchmove, {passive: false});
             DOM.addEventListener(window, 'touchend', this.touchend);
         }
@@ -266,7 +267,7 @@ class MouseRotateWrapper {
             this.reset();
         } else {
             this._lastPos = DOM.touchPos(this.element, e.targetTouches)[0];
-            this.moveTouch(e, this._lastPos);
+            this.move(e, this._lastPos);
         }
     };
 
@@ -283,10 +284,7 @@ class MouseRotateWrapper {
     };
 
     reset = () => {
-        this.mouseRotate.reset();
-        if (this.mousePitch) this.mousePitch.reset();
-        this.touchRotate.reset();
-        if (this.touchPitch) this.touchPitch.reset();
+        this._rotatePitchHanlder.reset();
         delete this._startPos;
         delete this._lastPos;
         this.offTemp();

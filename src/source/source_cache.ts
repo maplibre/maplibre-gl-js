@@ -6,22 +6,34 @@ import {TileCache} from './tile_cache';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {keysDifference} from '../util/util';
 import {EXTENT} from '../data/extent';
-import {Context} from '../gl/context';
+import {type Context} from '../gl/context';
 import Point from '@mapbox/point-geometry';
 import {browser} from '../util/browser';
 import {OverscaledTileID} from './tile_id';
 import {SourceFeatureState} from './source_state';
+import {config} from '../util/config';
 
 import type {Source} from './source';
 import type {Map} from '../ui/map';
 import type {Style} from '../style/style';
 import type {Dispatcher} from '../util/dispatcher';
-import type {Transform} from '../geo/transform';
+import type {IReadonlyTransform, ITransform} from '../geo/transform_interface';
 import type {TileState} from './tile';
-import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {ICanonicalTileID, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapSourceDataEvent} from '../ui/events';
-import {Terrain} from '../render/terrain';
-import {config} from '../util/config';
+import type {Terrain} from '../render/terrain';
+import type {CanvasSourceSpecification} from './canvas_source';
+import {coveringTiles, coveringZoomLevel} from '../geo/projection/covering_tiles';
+import {Bounds} from '../geo/bounds';
+import {EXTENT_BOUNDS} from '../data/extent_bounds';
+
+type TileResult = {
+    tile: Tile;
+    tileID: OverscaledTileID;
+    queryGeometry: Array<Point>;
+    cameraQueryGeometry: Array<Point>;
+    scale: number;
+};
 
 /**
  * @internal
@@ -64,7 +76,7 @@ export class SourceCache extends Evented {
     _paused: boolean;
     _shouldReloadOnResume: boolean;
     _coveredTiles: {[_: string]: boolean};
-    transform: Transform;
+    transform: ITransform;
     terrain: Terrain;
     used: boolean;
     usedForTerrain: boolean;
@@ -78,7 +90,7 @@ export class SourceCache extends Evented {
     static maxUnderzooming: number;
     static maxOverzooming: number;
 
-    constructor(id: string, options: SourceSpecification, dispatcher: Dispatcher) {
+    constructor(id: string, options: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher) {
         super();
         this.id = id;
         this.dispatcher = dispatcher;
@@ -223,8 +235,8 @@ export class SourceCache extends Evented {
             return renderables.sort((a_: Tile, b_: Tile) => {
                 const a = a_.tileID;
                 const b = b_.tileID;
-                const rotatedA = (new Point(a.canonical.x, a.canonical.y))._rotate(this.transform.angle);
-                const rotatedB = (new Point(b.canonical.x, b.canonical.y))._rotate(this.transform.angle);
+                const rotatedA = (new Point(a.canonical.x, a.canonical.y))._rotate(-this.transform.bearingInRadians);
+                const rotatedB = (new Point(b.canonical.x, b.canonical.y))._rotate(-this.transform.bearingInRadians);
                 return a.overscaledZ - b.overscaledZ || rotatedB.y - rotatedA.y || rotatedB.x - rotatedA.x;
             }).map(tile => tile.tileID.key);
         }
@@ -244,7 +256,7 @@ export class SourceCache extends Evented {
             !this._coveredTiles[id] && (symbolLayer || !this._tiles[id].holdingForFade());
     }
 
-    reload() {
+    reload(sourceDataChanged?: boolean) {
         if (this._paused) {
             this._shouldReloadOnResume = true;
             return;
@@ -253,7 +265,11 @@ export class SourceCache extends Evented {
         this._cache.reset();
 
         for (const i in this._tiles) {
-            if (this._tiles[i].state !== 'errored') this._reloadTile(i, 'reloading');
+            if (sourceDataChanged) {
+                this._reloadTile(i, 'expired');
+            } else if (this._tiles[i].state !== 'errored') {
+                this._reloadTile(i, 'reloading');
+            }
         }
     }
 
@@ -382,7 +398,7 @@ export class SourceCache extends Evented {
             while (tileID.overscaledZ > zoom) {
                 tileID = tileID.scaledTo(tileID.overscaledZ - 1);
 
-                if (idealTiles[tileID.key]) {
+                if (idealTiles[tileID.key] || (idealTiles[tileID.canonical.key])) {
                     // found a parent that needed a loaded child; retain that child
                     retain[topmostLoadedID.key] = topmostLoadedID;
                     break;
@@ -438,7 +454,7 @@ export class SourceCache extends Evented {
      * are more likely to be found on devices with more memory and on pages where
      * the map is more important.
      */
-    updateCacheSize(transform: Transform) {
+    updateCacheSize(transform: IReadonlyTransform) {
         const widthInTiles = Math.ceil(transform.width / this._source.tileSize) + 1;
         const heightInTiles = Math.ceil(transform.height / this._source.tileSize) + 1;
         const approxTilesInView = widthInTiles * heightInTiles;
@@ -453,7 +469,7 @@ export class SourceCache extends Evented {
 
     handleWrapJump(lng: number) {
         // On top of the regular z/x/y values, TileIDs have a `wrap` value that specify
-        // which cppy of the world the tile belongs to. For example, at `lng: 10` you
+        // which copy of the world the tile belongs to. For example, at `lng: 10` you
         // might render z/x/y/0 while at `lng: 370` you would render z/x/y/1.
         //
         // When lng values get wrapped (going from `lng: 370` to `long: 10`) you expect
@@ -587,7 +603,7 @@ export class SourceCache extends Evented {
      * Removes tiles that are outside the viewport and adds new tiles that
      * are inside the viewport.
      */
-    update(transform: Transform, terrain?: Terrain) {
+    update(transform: ITransform, terrain?: Terrain) {
         if (!this._sourceLoaded || this._paused) {
             return;
         }
@@ -609,13 +625,14 @@ export class SourceCache extends Evented {
             idealTileIDs = transform.getVisibleUnwrappedCoordinates(this._source.tileID)
                 .map((unwrapped) => new OverscaledTileID(unwrapped.canonical.z, unwrapped.wrap, unwrapped.canonical.z, unwrapped.canonical.x, unwrapped.canonical.y));
         } else {
-            idealTileIDs = transform.coveringTiles({
+            idealTileIDs = coveringTiles(transform, {
                 tileSize: this.usedForTerrain ? this.tileSize : this._source.tileSize,
                 minzoom: this._source.minzoom,
                 maxzoom: this._source.maxzoom,
                 roundZoom: this.usedForTerrain ? false : this._source.roundZoom,
                 reparseOverscaled: this._source.reparseOverscaled,
-                terrain
+                terrain,
+                calculateTileZoom: this._source.calculateTileZoom
             });
 
             if (this._source.hasTile) {
@@ -624,7 +641,7 @@ export class SourceCache extends Evented {
         }
 
         // Determine the overzooming/underzooming amounts.
-        const zoom = transform.coveringZoomLevel(this._source);
+        const zoom = coveringZoomLevel(transform, this._source);
         const minCoveringZoom = Math.max(zoom - SourceCache.maxOverzooming, this._source.minzoom);
         const maxCoveringZoom = Math.max(zoom + SourceCache.maxUnderzooming,  this._source.minzoom);
 
@@ -882,6 +899,20 @@ export class SourceCache extends Evented {
     }
 
     /**
+     * Reload any currently renderable tiles that are match one of the incoming `tileId` x/y/z
+     */
+    refreshTiles(tileIds: Array<ICanonicalTileID>) {
+        for (const id in this._tiles) {
+            if (!this._isIdRenderable(id) && this._tiles[id].state != 'errored') {
+                continue;
+            }
+            if (tileIds.some(tid => tid.equals(this._tiles[id].tileID.canonical))) {
+                this._reloadTile(id, 'expired');
+            }
+        }
+    }
+
+    /**
      * Remove a tile, given its id, from the pyramid
      */
     _removeTile(id: string) {
@@ -919,7 +950,7 @@ export class SourceCache extends Evented {
         // for sources with mutable data, this event fires when the underlying data
         // to a source is changed. (i.e. GeoJSONSource#setData and ImageSource#serCoordinates)
         if (this._sourceLoaded && !this._paused && e.dataType === 'source' && eventSourceDataType === 'content') {
-            this.reload();
+            this.reload(e.sourceDataChanged);
             if (this.transform) {
                 this.update(this.transform, this.terrain);
             }
@@ -947,33 +978,24 @@ export class SourceCache extends Evented {
      * @param pointQueryGeometry - coordinates of the corners of bounding rectangle
      * @returns result items have `{tile, minX, maxX, minY, maxY}`, where min/max bounding values are the given bounds transformed in into the coordinate space of this tile.
      */
-    tilesIn(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean): any[] {
-
-        const tileResults = [];
+    tilesIn(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean): TileResult[] {
+        const tileResults: TileResult[] = [];
 
         const transform = this.transform;
         if (!transform) return tileResults;
+        const allowWorldCopies = transform.getCoveringTilesDetailsProvider().allowWorldCopies();
 
         const cameraPointQueryGeometry = has3DLayer ?
             transform.getCameraQueryGeometry(pointQueryGeometry) :
             pointQueryGeometry;
 
-        const queryGeometry = pointQueryGeometry.map((p: Point) => transform.pointCoordinate(p, this.terrain));
-        const cameraQueryGeometry = cameraPointQueryGeometry.map((p: Point) => transform.pointCoordinate(p, this.terrain));
+        const project = (point: Point) => transform.screenPointToMercatorCoordinate(point, this.terrain);
+        const queryGeometry = this.transformBbox(pointQueryGeometry, project, !allowWorldCopies);
+        const cameraQueryGeometry = this.transformBbox(cameraPointQueryGeometry, project, !allowWorldCopies);
 
         const ids = this.getIds();
 
-        let minX = Infinity;
-        let minY = Infinity;
-        let maxX = -Infinity;
-        let maxY = -Infinity;
-
-        for (const p of cameraQueryGeometry) {
-            minX = Math.min(minX, p.x);
-            minY = Math.min(minY, p.y);
-            maxX = Math.max(maxX, p.x);
-            maxY = Math.max(maxY, p.y);
-        }
+        const cameraBounds = Bounds.fromPoints(cameraQueryGeometry);
 
         for (let i = 0; i < ids.length; i++) {
             const tile = this._tiles[ids[i]];
@@ -981,38 +1003,61 @@ export class SourceCache extends Evented {
                 // Tiles held for fading are covered by tiles that are closer to ideal
                 continue;
             }
-            const tileID = tile.tileID;
+            // if the projection does not render world copies then we need to explicitly check for the bounding box crossing the antimeridian
+            const tileIDs = allowWorldCopies ? [tile.tileID] : [tile.tileID.unwrapTo(-1), tile.tileID.unwrapTo(0)];
             const scale = Math.pow(2, transform.zoom - tile.tileID.overscaledZ);
             const queryPadding = maxPitchScaleFactor * tile.queryPadding * EXTENT / tile.tileSize / scale;
 
-            const tileSpaceBounds = [
-                tileID.getTilePoint(new MercatorCoordinate(minX, minY)),
-                tileID.getTilePoint(new MercatorCoordinate(maxX, maxY))
-            ];
+            for (const tileID of tileIDs) {
 
-            if (tileSpaceBounds[0].x - queryPadding < EXTENT && tileSpaceBounds[0].y - queryPadding < EXTENT &&
-                tileSpaceBounds[1].x + queryPadding >= 0 && tileSpaceBounds[1].y + queryPadding >= 0) {
+                const tileSpaceBounds = cameraBounds.map(point => tileID.getTilePoint(new MercatorCoordinate(point.x, point.y)));
+                tileSpaceBounds.expandBy(queryPadding);
 
-                const tileSpaceQueryGeometry: Array<Point> = queryGeometry.map((c) => tileID.getTilePoint(c));
-                const tileSpaceCameraQueryGeometry = cameraQueryGeometry.map((c) => tileID.getTilePoint(c));
+                if (tileSpaceBounds.intersects(EXTENT_BOUNDS)) {
 
-                tileResults.push({
-                    tile,
-                    tileID,
-                    queryGeometry: tileSpaceQueryGeometry,
-                    cameraQueryGeometry: tileSpaceCameraQueryGeometry,
-                    scale
-                });
+                    const tileSpaceQueryGeometry: Array<Point> = queryGeometry.map((c) => tileID.getTilePoint(c));
+                    const tileSpaceCameraQueryGeometry = cameraQueryGeometry.map((c) => tileID.getTilePoint(c));
+
+                    tileResults.push({
+                        tile,
+                        tileID: allowWorldCopies ? tileID : tileID.unwrapTo(0),
+                        queryGeometry: tileSpaceQueryGeometry,
+                        cameraQueryGeometry: tileSpaceCameraQueryGeometry,
+                        scale
+                    });
+                }
             }
         }
 
         return tileResults;
     }
 
+    private transformBbox(geom: Point[], project: (point: Point) => MercatorCoordinate, checkWrap: boolean): MercatorCoordinate[] {
+        let transformed = geom.map(project);
+        if (checkWrap) {
+            // If the projection does not allow world copies, then a bounding box may span the antimeridian and
+            // instead of a bounding box going from 179°E to 179°W, it goes from 179°W to 179°E and covers the entire
+            // planet except for what should be inside it.
+            const bounds = Bounds.fromPoints(geom);
+            bounds.shrinkBy(Math.min(bounds.width(), bounds.height()) * 0.001);
+            const projected = bounds.map(project);
+
+            const newBounds = Bounds.fromPoints(transformed); 
+
+            if (!newBounds.covers(projected)) {
+                transformed = transformed.map((coord) => coord.x > 0.5 ?
+                    new MercatorCoordinate(coord.x - 1, coord.y, coord.z) :
+                    coord
+                );
+            }
+        }
+        return transformed;
+    }
+
     getVisibleCoordinates(symbolLayer?: boolean): Array<OverscaledTileID> {
         const coords = this.getRenderableIds(symbolLayer).map((id) => this._tiles[id].tileID);
-        for (const coord of coords) {
-            coord.posMatrix = this.transform.calculatePosMatrix(coord.toUnwrapped());
+        if (this.transform) {
+            this.transform.populateCache(coords);
         }
         return coords;
     }

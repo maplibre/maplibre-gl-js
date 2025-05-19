@@ -1,10 +1,11 @@
-import {Map, MapOptions} from '../map';
+import {describe, beforeEach, test, expect, vi} from 'vitest';
+import {Map, type MapOptions} from '../map';
 import {createMap, beforeMapTest, createStyle, createStyleSource} from '../../util/test/util';
 import {Tile} from '../../source/tile';
 import {OverscaledTileID} from '../../source/tile_id';
 import {fixedLngLat} from '../../../test/unit/lib/fixed';
-import {RequestTransformFunction} from '../../util/request_manager';
-import {MapSourceDataEvent} from '../events';
+import {type RequestTransformFunction} from '../../util/request_manager';
+import {type MapSourceDataEvent} from '../events';
 import {MessageType} from '../../util/actor_messages';
 
 beforeEach(() => {
@@ -110,36 +111,32 @@ describe('Map', () => {
             await promise;
         });
 
-        test('Map#isStyleLoaded', done => {
+        test('Map#isStyleLoaded', async () => {
             const style = createStyle();
             const map = createMap({style});
 
             expect(map.isStyleLoaded()).toBe(false);
-            map.on('load', () => {
-                expect(map.isStyleLoaded()).toBe(true);
-                done();
-            });
+            await map.once('load');
+            expect(map.isStyleLoaded()).toBe(true);  
         });
 
-        test('Map#areTilesLoaded', done => {
+        test('Map#areTilesLoaded', async () => {
             const style = createStyle();
             const map = createMap({style});
             expect(map.areTilesLoaded()).toBe(true);
-            map.on('load', () => {
-                const fakeTileId = new OverscaledTileID(0, 0, 0, 0, 0);
-                map.addSource('geojson', createStyleSource());
-                map.style.sourceCaches.geojson._tiles[fakeTileId.key] = new Tile(fakeTileId, undefined);
-                expect(map.areTilesLoaded()).toBe(false);
-                map.style.sourceCaches.geojson._tiles[fakeTileId.key].state = 'loaded';
-                expect(map.areTilesLoaded()).toBe(true);
-                done();
-            });
+            await map.once('load');
+            const fakeTileId = new OverscaledTileID(0, 0, 0, 0, 0);
+            map.addSource('geojson', createStyleSource());
+            map.style.sourceCaches.geojson._tiles[fakeTileId.key] = new Tile(fakeTileId, undefined);
+            expect(map.areTilesLoaded()).toBe(false);
+            map.style.sourceCaches.geojson._tiles[fakeTileId.key].state = 'loaded';
+            expect(map.areTilesLoaded()).toBe(true);  
         });
     });
 
     test('#remove', () => {
         const map = createMap();
-        const spyWorkerPoolRelease = jest.spyOn(map.style.dispatcher.workerPool, 'release');
+        const spyWorkerPoolRelease = vi.spyOn(map.style.dispatcher.workerPool, 'release');
         expect(map.getContainer().childNodes).toHaveLength(2);
         map.remove();
         expect(spyWorkerPoolRelease).toHaveBeenCalledTimes(1);
@@ -152,7 +149,7 @@ describe('Map', () => {
     test('#remove calls onRemove on added controls', () => {
         const map = createMap();
         const control = {
-            onRemove: jest.fn(),
+            onRemove: vi.fn(),
             onAdd(_) {
                 return window.document.createElement('div');
             }
@@ -162,10 +159,10 @@ describe('Map', () => {
         expect(control.onRemove).toHaveBeenCalledTimes(1);
     });
 
-    test('#remove calls onRemove on added controls before style is destroyed', done => {
+    test('#remove calls onRemove on added controls before style is destroyed', async () => {
         const map = createMap();
         let onRemoveCalled = 0;
-        let style;
+        let style = null;
         const control = {
             onRemove(map) {
                 onRemoveCalled++;
@@ -178,17 +175,15 @@ describe('Map', () => {
 
         map.addControl(control);
 
-        map.on('style.load', () => {
-            style = map.getStyle();
-            map.remove();
-            expect(onRemoveCalled).toBe(1);
-            done();
-        });
+        map.once('style.load');
+        style = map.getStyle();
+        map.remove();
+        expect(onRemoveCalled).toBe(1);
     });
 
     test('#remove broadcasts removeMap to worker', () => {
         const map = createMap();
-        const _broadcastSpyOn = jest.spyOn(map.style.dispatcher, 'broadcast');
+        const _broadcastSpyOn = vi.spyOn(map.style.dispatcher, 'broadcast');
         map.remove();
         expect(_broadcastSpyOn).toHaveBeenCalledWith(MessageType.removeMap, undefined);
     });

@@ -13,6 +13,9 @@ in vec2 v_width2;
 in float v_linesofar;
 in float v_gamma_scale;
 in float v_width;
+#ifdef GLOBE
+in float v_depth;
+#endif
 
 #pragma mapbox: define lowp vec4 pattern_from
 #pragma mapbox: define lowp vec4 pattern_to
@@ -70,6 +73,13 @@ void main() {
     vec4 color = mix(texture(u_image, pos_a), texture(u_image, pos_b), u_fade);
 
     fragColor = color * alpha * opacity;
+
+    #ifdef GLOBE
+    if (v_depth > 1.0) {
+        // See comment in line.fragment.glsl
+        discard;
+    }
+    #endif
 
 #ifdef OVERDRAW_INSPECTOR
     fragColor = vec4(1.0);

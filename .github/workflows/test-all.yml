@@ -35,7 +35,9 @@ jobs:
           rm docs/README.md
           rm -rf docs/API/_media
           docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build --strict
-
+      - name: Check spelling
+        # This need to run after the docs are built
+        run: npm run spellcheck
 
   unit-tests:
     name: Unit tests and Coverage
@@ -51,17 +53,19 @@ jobs:
           echo "DISPLAY=:0" >> $GITHUB_ENV
       - run: npm ci
       - run: npm run test-unit-ci
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          files: ${{ github.workspace }}/coverage/jest/codecov.json
-          verbose: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-          disable_search: true
       - name: Upload test results to Codecov
+        if: '!cancelled()'
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ${{ github.workspace }}/coverage/vitest/unit/coverage-final.json
+          verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          disable_search: true
+
 
 
   integration-tests:
@@ -86,9 +90,9 @@ jobs:
       - run: npm run test-integration-ci
       - name: Upload coverage reports to Codecov
         if: '!cancelled()'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
-          files: ${{ github.workspace }}/coverage/jest/codecov.json
+          files: ${{ github.workspace }}/coverage/vitest/integration/coverage-final.json,${{ github.workspace }}/coverage/query/codecov.json
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
           disable_search: true
@@ -96,12 +100,12 @@ jobs:
   render-tests:
     name: Render tests
     env:
-      SPLIT_COUNT: 3
+      SPLIT_COUNT: 6
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        split: [0, 1, 2]
+        split: [0, 1, 2, 3, 4, 5]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
     steps:
@@ -124,7 +128,7 @@ jobs:
           CURRENT_SPLIT_INDEX: ${{ matrix.split }}
       - name: Upload coverage reports to Codecov
         if: '!cancelled()'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           files: ${{ github.workspace }}/coverage/render/codecov.json
           verbose: true

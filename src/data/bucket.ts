@@ -7,7 +7,8 @@ import type {FeatureStates} from '../source/source_state';
 import type {ImagePosition} from '../render/image_atlas';
 import type {CanonicalTileID} from '../source/tile_id';
 import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
-import Point from '@mapbox/point-geometry';
+import type Point from '@mapbox/point-geometry';
+import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 
 export type BucketParameters<Layer extends TypedStyleLayer> = {
     index: number;
@@ -26,6 +27,7 @@ export type PopulateParameters = {
     patternDependencies: {};
     glyphDependencies: {};
     availableImages: Array<string>;
+    subdivisionGranularity: SubdivisionGranularitySetting;
 };
 
 export type IndexedFeature = {

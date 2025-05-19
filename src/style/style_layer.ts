@@ -8,7 +8,7 @@ import {
     emitValidationErrors
 } from './validate_style';
 import {Evented} from '../util/evented';
-import {Layout, Transitionable, Transitioning, Properties, PossiblyEvaluated, PossiblyEvaluatedPropertyValue} from './properties';
+import {Layout, Transitionable, type Transitioning, type Properties, PossiblyEvaluated, PossiblyEvaluatedPropertyValue} from './properties';
 
 import type {Bucket} from '../data/bucket';
 import type Point from '@mapbox/point-geometry';
@@ -16,17 +16,64 @@ import type {FeatureFilter, FeatureState,
     LayerSpecification,
     FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {TransitionParameters, PropertyValue} from './properties';
-import {EvaluationParameters} from './evaluation_parameters';
+import {type EvaluationParameters} from './evaluation_parameters';
 import type {CrossfadeParameters} from './evaluation_parameters';
 
-import type {Transform} from '../geo/transform';
+import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Map} from '../ui/map';
 import type {StyleSetterOptions} from './style';
-import {mat4} from 'gl-matrix';
+import {type mat4} from 'gl-matrix';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
+import type {UnwrappedTileID} from '../source/tile_id';
 
 const TRANSITION_SUFFIX = '-transition';
+
+export type QueryIntersectsFeatureParams = {
+    /**
+     * The geometry to check intersection with.
+     * This geometry is in tile coordinates.
+     */
+    queryGeometry: Array<Point>;
+    /**
+     * The feature to allow expression evaluation.
+     */
+    feature: VectorTileFeature;
+    /**
+     * The feature state to allow expression evaluation.
+     */
+    featureState: FeatureState;
+    /**
+     * The geometry of the feature.
+     * This geometry is in tile coordinates.
+     */
+    geometry: Array<Array<Point>>;
+    /**
+     * The current zoom level.
+     */
+    zoom: number;
+    /**
+     * The transform to convert from tile coordinates to pixels.
+     */
+    transform: IReadonlyTransform;
+    /**
+     * The number of pixels per tile unit.
+     */
+    pixelsToTileUnits: number;
+    /**
+     * The matrix to convert from tile coordinates to pixel coordinates.
+     * The pixel coordinates are relative to the center of the screen.
+     */
+    pixelPosMatrix: mat4;
+    /**
+     * The unwrapped tile ID for the tile being queried.
+     */
+    unwrappedTileID: UnwrappedTileID;
+    /**
+     * A function to get the elevation of a point in tile coordinates.
+     */
+    getElevation: undefined | ((x: number, y: number) => number);
+};
 
 /**
  * A base class for style layers
@@ -56,16 +103,7 @@ export abstract class StyleLayer extends Evented {
     readonly onRemove: ((map: Map) => void);
 
     queryRadius?(bucket: Bucket): number;
-    queryIntersectsFeature?(
-        queryGeometry: Array<Point>,
-        feature: VectorTileFeature,
-        featureState: FeatureState,
-        geometry: Array<Array<Point>>,
-        zoom: number,
-        transform: Transform,
-        pixelsToTileUnits: number,
-        pixelPosMatrix: mat4
-    ): boolean | number;
+    queryIntersectsFeature?(params: QueryIntersectsFeatureParams): boolean | number;
 
     constructor(layer: LayerSpecification | CustomLayerInterface, properties: Readonly<{
         layout?: Properties<any>;
@@ -75,7 +113,7 @@ export abstract class StyleLayer extends Evented {
 
         this.id = layer.id;
         this.type = layer.type;
-        this._featureFilter = {filter: () => true, needGeometry: false};
+        this._featureFilter = {filter: () => true, needGeometry: false, getGlobalStateRefs: () => new Set<string>()};
 
         if (layer.type === 'custom') return;
 

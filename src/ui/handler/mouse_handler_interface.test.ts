@@ -1,10 +1,12 @@
+import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
 
-import {generateMousePanHandler, generateMousePitchHandler, generateMouseRotationHandler} from './mouse';
+import {generateMousePanHandler, generateMousePitchHandler, generateMouseRollHandler, generateMouseRotationHandler} from './mouse';
+import {type DragRotateResult} from './drag_handler';
 
 describe('mouse handler tests', () => {
     test('MouseRotateHandler', () => {
-        const mouseRotate = generateMouseRotationHandler({clickTolerance: 2});
+        const mouseRotate = generateMouseRotationHandler({clickTolerance: 2}, () => new Point(10, 10));
 
         expect(mouseRotate.isActive()).toBe(false);
         expect(mouseRotate.isEnabled()).toBe(false);
@@ -19,7 +21,7 @@ describe('mouse handler tests', () => {
         expect(mouseRotate.isActive()).toBe(false);
 
         const overToleranceMove = new MouseEvent('mousemove', {buttons: 2, clientX: 10, clientY: 10});
-        expect(mouseRotate.dragMove(overToleranceMove, new Point(10, 10))).toEqual({'bearingDelta': 8});
+        expect((mouseRotate.dragMove(overToleranceMove, new Point(10, 10)) as DragRotateResult).bearingDelta).toBeCloseTo(8);
         expect(mouseRotate.isActive()).toBe(true);
 
         mouseRotate.dragEnd(new MouseEvent('mouseup', {buttons: 0, button: 2}));
@@ -107,5 +109,40 @@ describe('mouse handler tests', () => {
 
         expect(mousePan.dragMove(overToleranceMove, new Point(10, 10))).toBeUndefined();
         expect(mousePan.isActive()).toBe(false);
+    });
+
+    test('MouseRollHandler', () => {
+        const mouseRoll = generateMouseRollHandler({clickTolerance: 2}, () => new Point(11, 11));
+
+        expect(mouseRoll.isActive()).toBe(false);
+        expect(mouseRoll.isEnabled()).toBe(false);
+        mouseRoll.enable();
+        expect(mouseRoll.isEnabled()).toBe(true);
+
+        mouseRoll.dragStart(new MouseEvent('mousedown', {buttons: 2, button: 2, ctrlKey: true}), new Point(0, 0));
+        expect(mouseRoll.isActive()).toBe(false);
+
+        const underToleranceMove = new MouseEvent('mousemove', {buttons: 2, clientX: 1, clientY: 1});
+        expect(mouseRoll.dragMove(underToleranceMove, new Point(1, 1))).toBeUndefined();
+        expect(mouseRoll.isActive()).toBe(false);
+
+        const overToleranceMove = new MouseEvent('mousemove', {buttons: 2, clientX: 10, clientY: 10});
+        expect(mouseRoll.dragMove(overToleranceMove, new Point(10, 10))).toEqual({'rollDelta': -3});
+        expect(mouseRoll.isActive()).toBe(true);
+
+        mouseRoll.dragEnd(new MouseEvent('mouseup', {buttons: 0, button: 2}));
+        expect(mouseRoll.isActive()).toBe(false);
+
+        mouseRoll.disable();
+        expect(mouseRoll.isEnabled()).toBe(false);
+
+        mouseRoll.dragStart(new MouseEvent('mousedown', {buttons: 2, button: 2}), new Point(0, 0));
+        expect(mouseRoll.isActive()).toBe(false);
+
+        expect(mouseRoll.dragMove(underToleranceMove, new Point(1, 1))).toBeUndefined();
+        expect(mouseRoll.isActive()).toBe(false);
+
+        expect(mouseRoll.dragMove(overToleranceMove, new Point(10, 10))).toBeUndefined();
+        expect(mouseRoll.isActive()).toBe(false);
     });
 });

@@ -1,3 +1,4 @@
+import {describe, test, expect, vi} from 'vitest';
 import {Actor} from './actor';
 import {Dispatcher} from './dispatcher';
 import {workerFactory} from './web_worker';
@@ -62,7 +63,7 @@ describe('Dispatcher', () => {
     test('#remove destroys actors', () => {
         const actorsRemoved = [];
         const mapId = 1;
-        const spy = jest.fn().mockImplementation(() => { actorsRemoved.push(this); });
+        const spy = vi.fn().mockImplementation(() => { actorsRemoved.push(this); });
         Actor.prototype.remove = spy;
         WorkerPool.workerCount = 4;
 

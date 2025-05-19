@@ -1,13 +1,19 @@
+import {describe, test, expect, vi} from 'vitest';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
-import {GeoJSONSource, GeoJSONSourceOptions} from './geojson_source';
-import {Transform} from '../geo/transform';
+import {GeoJSONSource, type GeoJSONSourceOptions} from './geojson_source';
+import {type IReadonlyTransform} from '../geo/transform_interface';
+import {EXTENT} from '../data/extent';
 import {LngLat} from '../geo/lng_lat';
 import {extend} from '../util/util';
-import {Dispatcher} from '../util/dispatcher';
-import {RequestManager} from '../util/request_manager';
-import {ActorMessage, MessageType} from '../util/actor_messages';
-import {Actor} from '../util/actor';
+import {type Dispatcher} from '../util/dispatcher';
+import {type RequestManager} from '../util/request_manager';
+import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
+import {type ActorMessage, MessageType} from '../util/actor_messages';
+import {type Actor} from '../util/actor';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {sleep, waitForEvent} from '../util/test/util';
+import {type MapSourceDataEvent} from '../ui/events';
 
 const wrapDispatcher = (dispatcher) => {
     return {
@@ -55,6 +61,25 @@ const hawkHill = {
     }]
 } as GeoJSON.GeoJSON;
 
+describe('GeoJSONSource#constructor', () => {
+    const mapStub = {
+        _requestManager: {
+            transformRequest: (url) => { return {url}; }
+        }
+    } as any;
+    test('warn if maxzoom <= clusterMaxZoom', () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+        const source = new GeoJSONSource('id', {data: hawkHill, maxzoom: 4, clusterMaxZoom: 4} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.map = mapStub;
+        source.load();
+
+        expect(warn).toHaveBeenCalledWith('The maxzoom value "4" is expected to be greater than the clusterMaxZoom value "4".');
+
+        warn.mockRestore();
+    });
+});
+
 describe('GeoJSONSource#setData', () => {
     function createSource(opts?) {
         opts = opts || {};
@@ -83,15 +108,14 @@ describe('GeoJSONSource#setData', () => {
         await setDataPromise;
     });
 
-    test('fires "dataloading" event', done => {
+    test('fires "dataloading" event', async () => {
         const source = createSource();
-        source.on('dataloading', () => {
-            done();
-        });
+        const promise = source.once('dataloading');
         source.load();
+        await expect(promise).resolves.toBeDefined();
     });
 
-    test('fires "dataabort" event', done => {
+    test('fires "dataabort" event', async () => {
         const source = new GeoJSONSource('id', {} as any, wrapDispatcher({
             sendAsync(_message) {
                 return new Promise((resolve) => {
@@ -99,29 +123,30 @@ describe('GeoJSONSource#setData', () => {
                 });
             }
         }), undefined);
-        source.on('dataabort', () => {
-            done();
-        });
+        const promise = source.once('dataabort');
         source.load();
+        await expect(promise).resolves.toBeDefined();
     });
 
-    test('respects collectResourceTiming parameter on source', done => {
+    test('respects collectResourceTiming parameter on source', () => {
         const source = createSource({collectResourceTiming: true});
         source.map = {
             _requestManager: {
                 transformRequest: (url) => { return {url}; }
             } as any as RequestManager
         } as any;
+        const spy = vi.fn();
         source.actor.sendAsync = (message: ActorMessage<MessageType>) => {
             return new Promise((resolve) => {
                 if (message.type === MessageType.loadData) {
                     expect((message.data as any).request.collectResourceTiming).toBeTruthy();
                     setTimeout(() => resolve({} as any), 0);
-                    done();
+                    spy();
                 }
             });
         };
         source.setData('http://localhost/nonexistent');
+        expect(spy).toHaveBeenCalled();
     });
 
     test('only marks source as loaded when there are no pending loads', async () => {
@@ -152,7 +177,7 @@ describe('GeoJSONSource#setData', () => {
         expect(source.loaded()).toBeTruthy();
     });
 
-    test('marks source as loaded before firing "dataabort" event', done => {
+    test('marks source as loaded before firing "dataabort" event', async () => {
         const source = new GeoJSONSource('id', {} as any, wrapDispatcher({
             sendAsync(_message: ActorMessage<MessageType>) {
                 return new Promise((resolve) => {
@@ -160,21 +185,21 @@ describe('GeoJSONSource#setData', () => {
                 });
             }
         }), undefined);
-        source.on('dataabort', () => {
-            expect(source.loaded()).toBeTruthy();
-            done();
-        });
+        const promise = waitForEvent(source, 'dataabort', () => true);
         source.setData({} as GeoJSON.GeoJSON);
+        await promise;
+        expect(source.loaded()).toBeTruthy();
     });
 });
 
 describe('GeoJSONSource#onRemove', () => {
-    test('broadcasts "removeSource" event', done => {
+    test('broadcasts "removeSource" event', () => {
+        const spy = vi.fn();
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
             sendAsync(message: ActorMessage<MessageType>) {
                 expect(message.type).toBe(MessageType.removeSource);
                 expect(message.data).toEqual({type: 'geojson', source: 'id'});
-                done();
+                spy();
                 return Promise.resolve({});
             },
             broadcast() {
@@ -182,42 +207,46 @@ describe('GeoJSONSource#onRemove', () => {
             }
         }), undefined);
         source.onRemove();
+        expect(spy).toHaveBeenCalled();
     });
 });
 
 describe('GeoJSONSource#update', () => {
-    const transform = new Transform();
+    const transform = new MercatorTransform();
     transform.resize(200, 200);
     const lngLat = LngLat.convert([-122.486052, 37.830348]);
-    const point = transform.locationPoint(lngLat);
-    transform.zoom = 15;
+    const point = transform.locationToScreenPoint(lngLat);
+    transform.setZoom(15);
     transform.setLocationAtPoint(lngLat, point);
 
-    test('sends initial loadData request to dispatcher', done => {
+    test('sends initial loadData request to dispatcher', () => {
+        const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
             sendAsync(message: ActorMessage<MessageType>) {
                 expect(message.type).toBe(MessageType.loadData);
-                done();
+                spy();
                 return Promise.resolve({});
             }
         });
 
         new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined).load();
+        expect(spy).toHaveBeenCalled();
     });
 
-    test('forwards geojson-vt options with worker request', done => {
+    test('forwards geojson-vt options with worker request', () => {
+        const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
             sendAsync(message: ActorMessage<any>) {
                 expect(message.type).toBe(MessageType.loadData);
                 expect(message.data.geojsonVtOptions).toEqual({
-                    extent: 8192,
+                    extent: EXTENT,
                     maxZoom: 10,
                     tolerance: 4,
                     buffer: 256,
                     lineMetrics: false,
                     generateId: true
                 });
-                done();
+                spy();
                 return Promise.resolve({});
             }
         });
@@ -229,75 +258,85 @@ describe('GeoJSONSource#update', () => {
             buffer: 16,
             generateId: true
         } as GeoJSONSourceOptions, mockDispatcher, undefined).load();
+        expect(spy).toHaveBeenCalled();
     });
 
-    test('forwards Supercluster options with worker request', done => {
+    test('forwards Supercluster options with worker request', () => {
+        const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
                 expect(message.type).toBe(MessageType.loadData);
                 expect(message.data.superclusterOptions).toEqual({
                     maxZoom: 12,
                     minPoints: 3,
-                    extent: 8192,
-                    radius: 1600,
+                    extent: EXTENT,
+                    radius: 100 * EXTENT / source.tileSize,
                     log: false,
                     generateId: true
                 });
-                done();
+                spy();
                 return Promise.resolve({});
             }
         });
 
-        new GeoJSONSource('id', {
+        const source = new GeoJSONSource('id', {
             data: {},
             cluster: true,
             clusterMaxZoom: 12,
             clusterRadius: 100,
             clusterMinPoints: 3,
             generateId: true
-        } as GeoJSONSourceOptions, mockDispatcher, undefined).load();
+        } as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.load();
+        expect(spy).toHaveBeenCalled();
     });
 
-    test('modifying cluster properties after adding a source', done => {
+    test('modifying cluster properties after adding a source', () => {
         // test setCluster function on GeoJSONSource
+        const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
                 expect(message.type).toBe(MessageType.loadData);
                 expect(message.data.cluster).toBe(true);
-                expect(message.data.superclusterOptions.radius).toBe(80);
+                expect(message.data.superclusterOptions.radius).toBe(80 * EXTENT / source.tileSize);
                 expect(message.data.superclusterOptions.maxZoom).toBe(16);
-                done();
+                spy();
                 return Promise.resolve({});
             }
         });
-        new GeoJSONSource('id', {
-            data: {},
+        const source = new GeoJSONSource('id', {
+            type: 'geojson',
+            data: {} as GeoJSON.GeoJSON,
             cluster: false,
             clusterMaxZoom: 8,
             clusterRadius: 100,
             clusterMinPoints: 3,
             generateId: true
-        } as GeoJSONSourceOptions, mockDispatcher, undefined).setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
+        }, mockDispatcher, undefined);
+        source.setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
+        expect(spy).toHaveBeenCalled();
     });
 
-    test('forwards Supercluster options with worker request, ignore max zoom of source', done => {
+    test('forwards Supercluster options with worker request, ignore max zoom of source', () => {
+        const spy = vi.fn();
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
                 expect(message.type).toBe(MessageType.loadData);
                 expect(message.data.superclusterOptions).toEqual({
                     maxZoom: 12,
                     minPoints: 3,
-                    extent: 8192,
-                    radius: 1600,
+                    extent: EXTENT,
+                    radius: 100 * EXTENT / source.tileSize,
                     log: false,
                     generateId: true
                 });
-                done();
+                spy();
                 return Promise.resolve({});
             }
         });
 
-        new GeoJSONSource('id', {
+        const source = new GeoJSONSource('id', {
             data: {},
             maxzoom: 10,
             cluster: true,
@@ -305,7 +344,9 @@ describe('GeoJSONSource#update', () => {
             clusterRadius: 100,
             clusterMinPoints: 3,
             generateId: true
-        } as GeoJSONSourceOptions, mockDispatcher, undefined).load();
+        } as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.load();
+        expect(spy).toHaveBeenCalled();
     });
 
     test('transforms url before making request', () => {
@@ -314,13 +355,13 @@ describe('GeoJSONSource#update', () => {
                 transformRequest: (url) => { return {url}; }
             }
         } as any;
-        const transformSpy = jest.spyOn(mapStub._requestManager, 'transformRequest');
+        const transformSpy = vi.spyOn(mapStub._requestManager, 'transformRequest');
         const source = new GeoJSONSource('id', {data: 'https://example.com/data.geojson'} as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.onAdd(mapStub);
         expect(transformSpy).toHaveBeenCalledTimes(1);
         expect(transformSpy.mock.calls[0][0]).toBe('https://example.com/data.geojson');
     });
-    test('fires event when metadata loads', done => {
+    test('fires event when metadata loads', async () =>  {
         const mockDispatcher = wrapDispatcher({
             sendAsync(_message: ActorMessage<MessageType>) {
                 return new Promise((resolve) => {
@@ -331,14 +372,14 @@ describe('GeoJSONSource#update', () => {
 
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
 
-        source.on('data', (e) => {
-            if (e.sourceDataType === 'metadata') done();
-        });
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
         source.load();
+
+        await expect(promise).resolves.toBeDefined();
     });
 
-    test('fires metadata data event even when initial request is aborted', done => {
+    test('fires metadata data event even when initial request is aborted', async () => {
         let requestCount = 0;
         const mockDispatcher = wrapDispatcher({
             sendAsync(_message) {
@@ -350,37 +391,37 @@ describe('GeoJSONSource#update', () => {
 
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
 
-        source.on('data', e => {
-            if (e.sourceDataType === 'metadata') done();
-        });
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
         source.load();
         source.setData({} as GeoJSON.GeoJSON);
+
+        await expect(promise).resolves.toBeDefined();
     });
 
-    test('fires "error"', done => {
+    test('fires "error"', async () => {
         const mockDispatcher = wrapDispatcher({
             sendAsync(_message) {
-                return Promise.reject('error'); // eslint-disable-line prefer-promise-reject-errors
+                return Promise.reject('error');
             }
         });
 
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
 
-        source.on('error', (err) => {
-            expect(err.error).toBe('error');
-            done();
-        });
+        const promise = waitForEvent(source, 'error', () => true);
 
         source.load();
+
+        const err = await promise;
+        expect(err.error).toBe('error');
     });
 
-    test('sends loadData request to dispatcher after data update', done => {
-        let expectedLoadDataCalls = 2;
+    test('sends loadData request to dispatcher after data update', async () => {
+        let loadDataCalls = 0;
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
-                if (message.type === MessageType.loadData && --expectedLoadDataCalls <= 0) {
-                    done();
+                if (message.type === MessageType.loadData) {
+                    loadDataCalls++;
                 }
                 return new Promise((resolve) => setTimeout(() => resolve({}), 0));
             }
@@ -388,18 +429,28 @@ describe('GeoJSONSource#update', () => {
 
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.map = {
-            transform: {} as Transform,
-            getPixelRatio() { return 1; }
+            transform: {} as IReadonlyTransform,
+            getPixelRatio() { return 1; },
+            style: {
+                projection: {
+                    get subdivisionGranularity() {
+                        return SubdivisionGranularitySetting.noSubdivision;
+                    }
+                }
+            }
         } as any;
 
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 source.setData({} as GeoJSON.GeoJSON);
-                source.loadTile(new Tile(new OverscaledTileID(0, 0, 0, 0, 0), 512));
+                source.loadTile(new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize));
             }
         });
 
         source.load();
+
+        await sleep(10);
+        expect(loadDataCalls).toBeGreaterThan(2);
     });
 });
 
@@ -422,7 +473,113 @@ describe('GeoJSONSource#getData', () => {
         // empty object instead of returning the result of an actual computation.
         await expect(source.getData()).resolves.toStrictEqual({});
     });
+});
 
+describe('GeoJSONSource#getBounds', () => {
+    const mapStub = {
+        _requestManager: {
+            transformRequest: (url) => { return {url}; }
+        }
+    } as any;
+
+    test('get bounds from empty geometry', async () => {
+        const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync(message) {
+                expect(message.type).toBe(MessageType.getData);
+                return Promise.resolve({
+                    type: 'LineString',
+                    coordinates: []
+                });
+            }
+        }), undefined);
+        source.map = mapStub;
+        const bounds = await source.getBounds();
+        expect(bounds.isEmpty()).toBeTruthy();
+    });
+
+    test('get bounds from geomerty collection', async () => {
+        const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync(message) {
+                expect(message.type).toBe(MessageType.getData);
+                return Promise.resolve({
+                    type: 'GeometryCollection',
+                    geometries: [{
+                        type: 'LineString',
+                        coordinates: [
+                            [1.1, 1.2],
+                            [1.3, 1.4]
+                        ]
+                    }]
+                });
+            }
+        }), undefined);
+        source.map = mapStub;
+        const bounds = await source.getBounds();
+        expect(bounds.getNorthEast().lat).toBe(1.4);
+        expect(bounds.getNorthEast().lng).toBe(1.3);
+        expect(bounds.getSouthWest().lat).toBe(1.2);
+        expect(bounds.getSouthWest().lng).toBe(1.1);
+    });
+
+    test('get bounds from feature', async () => {
+        const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync(message) {
+                expect(message.type).toBe(MessageType.getData);
+                return Promise.resolve({
+                    type: 'Feature',
+                    geometry: {
+                        type: 'LineString',
+                        coordinates: [
+                            [1.1, 1.2],
+                            [1.3, 1.4]
+                        ]
+                    }
+                });
+            }
+        }), undefined);
+        source.map = mapStub;
+        const bounds = await source.getBounds();
+        expect(bounds.getNorthEast().lat).toBe(1.4);
+        expect(bounds.getNorthEast().lng).toBe(1.3);
+        expect(bounds.getSouthWest().lat).toBe(1.2);
+        expect(bounds.getSouthWest().lng).toBe(1.1);
+    });
+
+    test('get bounds from feature collection', async () => {
+        const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync(message) {
+                expect(message.type).toBe(MessageType.getData);
+                return Promise.resolve({
+                    type: 'FeatureCollection',
+                    features: [{
+                        type: 'Feature',
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: [
+                                [1.1, 1.2],
+                                [1.3, 1.8]
+                            ]
+                        }
+                    }, {
+                        type: 'Feature',
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: [
+                                [1.5, 1.6],
+                                [1.7, 1.4]
+                            ]
+                        }
+                    }]
+                });
+            }
+        }), undefined);
+        source.map = mapStub;
+        const bounds = await source.getBounds();
+        expect(bounds.getNorthEast().lat).toBe(1.8);
+        expect(bounds.getNorthEast().lng).toBe(1.7);
+        expect(bounds.getSouthWest().lat).toBe(1.2);
+        expect(bounds.getSouthWest().lng).toBe(1.1);
+    });
 });
 
 describe('GeoJSONSource#serialize', () => {

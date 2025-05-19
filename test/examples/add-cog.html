@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Add a COG raster source</title>
+    <meta property="og:description" content="Add an external Cloud Optimized Geotiff (COG) as source." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../../dist/maplibre-gl.css" />
+    <script src="../../dist/maplibre-gl-dev.js"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script src="https://unpkg.com/@geomatico/maplibre-cog-protocol@0.4.0/dist/index.js"></script>
+<script>
+    maplibregl.addProtocol('cog', MaplibreCOGProtocol.cogProtocol);
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/styles/osm-bright-gl-style/style.json',
+        center: [11.39831, 47.26244],
+        zoom: 14
+    });
+
+    map.on('load', () => {
+        map.addSource('cogSource', {
+            type: 'raster',
+            url: 'cog://https://maplibre.org/maplibre-gl-js/docs/assets/cog.tif',
+            tileSize: 256
+        });
+
+        map.addLayer({
+            id: 'cogLayer',
+            source: 'cogSource',
+            type: 'raster'
+        });
+    });
+</script>
+</body>
+</html>

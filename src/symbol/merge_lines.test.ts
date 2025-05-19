@@ -1,3 +1,4 @@
+import {describe, test, expect} from 'vitest';
 import {mergeLines} from './merge_lines';
 import Point from '@mapbox/point-geometry';
 

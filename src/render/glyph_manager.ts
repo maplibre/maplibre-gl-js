@@ -120,13 +120,24 @@ export class GlyphManager {
     }
 
     _doesCharSupportLocalGlyph(id: number): boolean {
-        /* eslint-disable new-cap */
+        // The CJK Unified Ideographs blocks and Hangul Syllables blocks are
+        // spread across many glyph PBFs and are typically accessed very
+        // randomly. Preferring local rendering for these blocks reduces
+        // wasteful bandwidth consumption. For visual consistency within CJKV
+        // text, also include any other CJKV or siniform ideograph or hangul,
+        // hiragana, or katakana character.
         return !!this.localIdeographFontFamily &&
-            (unicodeBlockLookup['CJK Unified Ideographs'](id) ||
-            unicodeBlockLookup['Hangul Syllables'](id) ||
-            unicodeBlockLookup['Hiragana'](id) ||
-            unicodeBlockLookup['Katakana'](id));
-        /* eslint-enable new-cap */
+        (/\p{Ideo}|\p{sc=Hang}|\p{sc=Hira}|\p{sc=Kana}/u.test(String.fromCodePoint(id)) ||
+        // fallback: RegExp can't cover all cases. refer Issue #5420
+        unicodeBlockLookup['CJK Unified Ideographs'](id) ||
+        unicodeBlockLookup['Hangul Syllables'](id) ||
+        unicodeBlockLookup['Hiragana'](id) ||
+        unicodeBlockLookup['Katakana'](id) || // includes "ー"
+        // memo: these symbols are not all. others could be added if needed.
+        unicodeBlockLookup['CJK Symbols and Punctuation'](id) || // 、。〃〄々〆〇〈〉《》「...
+        unicodeBlockLookup['Halfwidth and Fullwidth Forms'](id) // ！？＂＃＄％＆...
+        );
+         
     }
 
     _tinySDF(entry: Entry, stack: string, id: number): StyleGlyph {

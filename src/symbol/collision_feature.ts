@@ -1,7 +1,7 @@
 import type {CollisionBoxArray} from '../data/array_types.g';
 import Point from '@mapbox/point-geometry';
 import type {Anchor} from './anchor';
-import {SymbolPadding} from '../style/style_layer/symbol_style_layer';
+import {type SymbolPadding} from '../style/style_layer/symbol_style_layer';
 import {applyTextFit} from './shaping';
 
 /**

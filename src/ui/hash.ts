@@ -1,4 +1,5 @@
 import {throttle} from '../util/throttle';
+import {LngLat} from '../geo/lng_lat';
 
 import type {Map} from './map';
 
@@ -35,6 +36,7 @@ export class Hash {
         removeEventListener('hashchange', this._onHashChange, false);
         this._map.off('moveend', this._updateHash);
         clearTimeout(this._updateHash());
+        this._removeHash();
 
         delete this._map;
         return this;
@@ -101,34 +103,76 @@ export class Hash {
     };
 
     _onHashChange = () => {
-        const loc = this._getCurrentHash();
-        if (loc.length >= 3 && !loc.some(v => isNaN(v))) {
-            const bearing = this._map.dragRotate.isEnabled() && this._map.touchZoomRotate.isEnabled() ? +(loc[3] || 0) : this._map.getBearing();
-            this._map.jumpTo({
-                center: [+loc[2], +loc[1]],
-                zoom: +loc[0],
-                bearing,
-                pitch: +(loc[4] || 0)
-            });
-            return true;
+        const hash = this._getCurrentHash();
+
+        if (!this._isValidHash(hash)) {
+            return false;
         }
-        return false;
+
+        const bearing = this._map.dragRotate.isEnabled() && this._map.touchZoomRotate.isEnabled() ? +(hash[3] || 0) : this._map.getBearing();
+        this._map.jumpTo({
+            center: [+hash[2], +hash[1]],
+            zoom: +hash[0],
+            bearing,
+            pitch: +(hash[4] || 0)
+        });
+
+        return true;
     };
 
     _updateHashUnthrottled = () => {
         // Replace if already present, else append the updated hash string
-        const location = window.location.href.replace(/(#.+)?$/, this.getHashString());
-        try {
-            window.history.replaceState(window.history.state, null, location);
-        } catch (SecurityError) {
-            // IE11 does not allow this if the page is within an iframe created
-            // with iframe.contentWindow.document.write(...).
-            // https://github.com/mapbox/mapbox-gl-js/issues/7410
+        const location = window.location.href.replace(/(#.*)?$/, this.getHashString());
+        window.history.replaceState(window.history.state, null, location);
+    };
+
+    _removeHash = () => {
+        const currentHash = this._getCurrentHash();
+        if (currentHash.length === 0) {
+            return;
         }
+        const baseHash = currentHash.join('/');
+        let targetHash = baseHash;
+        if (targetHash.split('&').length > 0) {
+            targetHash = targetHash.split('&')[0]; // #3/1/2&foo=bar -> #3/1/2
+        }
+        if (this._hashName) {
+            targetHash = `${this._hashName}=${baseHash}`;
+        }
+        let replaceString = window.location.hash.replace(targetHash, '');
+        if (replaceString.startsWith('#&')) {
+            replaceString = replaceString.slice(0, 1) + replaceString.slice(2);
+        } else if (replaceString === '#') {
+            replaceString = '';
+        }
+        let location = window.location.href.replace(/(#.+)?$/, replaceString);
+        location = location.replace('&&', '&');
+        window.history.replaceState(window.history.state, null, location);
     };
 
     /**
      * Mobile Safari doesn't allow updating the hash more than 100 times per 30 seconds.
      */
     _updateHash: () => ReturnType<typeof setTimeout> = throttle(this._updateHashUnthrottled, 30 * 1000 / 100);
+
+    _isValidHash(hash: number[]) {
+        if (hash.length < 3 || hash.some(isNaN)) {
+            return false;
+        }
+
+        // LngLat() throws error if latitude is out of range, and it's valid if it succeeds.
+        try {
+            new LngLat(+hash[2], +hash[1]);
+        } catch {
+            return false;
+        }
+
+        const zoom = +hash[0];
+        const bearing = +(hash[3] || 0);
+        const pitch = +(hash[4] || 0);
+
+        return zoom >= this._map.getMinZoom() && zoom <= this._map.getMaxZoom() &&
+            bearing >= -180 && bearing <= 180 &&
+            pitch >= this._map.getMinPitch() && pitch <= this._map.getMaxPitch();
+    };
 }

@@ -1,4 +1,5 @@
-import {Map, MapOptions} from '../map';
+import {describe, beforeEach, test, expect, vi} from 'vitest';
+import {Map, type MapOptions} from '../map';
 import {Marker} from '../marker';
 import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
@@ -18,9 +19,9 @@ describe('touch zoom rotate', () => {
         const map = createMap();
         const target = map.getCanvas();
 
-        const zoomstart = jest.fn();
-        const zoom      = jest.fn();
-        const zoomend   = jest.fn();
+        const zoomstart = vi.fn();
+        const zoom      = vi.fn();
+        const zoomend   = vi.fn();
 
         map.handlers._handlersById.tapZoom.disable();
         map.touchPitch.disable();
@@ -62,9 +63,9 @@ describe('touch zoom rotate', () => {
         const map = createMap();
         const target = map.getCanvas();
 
-        const rotatestart = jest.fn();
-        const rotate      = jest.fn();
-        const rotateend   = jest.fn();
+        const rotatestart = vi.fn();
+        const rotate      = vi.fn();
+        const rotateend   = vi.fn();
 
         map.on('rotatestart', rotatestart);
         map.on('rotate',      rotate);
@@ -103,7 +104,7 @@ describe('touch zoom rotate', () => {
 
         map.on('touchstart', e => e.preventDefault());
 
-        const move = jest.fn();
+        const move = vi.fn();
         map.on('move', move);
 
         simulate.touchstart(map.getCanvas(), {touches: [{target, clientX: 0, clientY: 0}, {target, clientX: 5, clientY: 0}]});
@@ -126,9 +127,9 @@ describe('touch zoom rotate', () => {
         map.touchZoomRotate.disableRotation();
         map.handlers._handlersById.tapZoom.disable();
 
-        const zoomstart = jest.fn();
-        const zoom      = jest.fn();
-        const zoomend   = jest.fn();
+        const zoomstart = vi.fn();
+        const zoom      = vi.fn();
+        const zoomend   = vi.fn();
 
         map.on('zoomstart', zoomstart);
         map.on('zoom',      zoom);
@@ -186,9 +187,9 @@ describe('touch zoom rotate', () => {
         const target1 = marker1.getElement();
         const target2 = marker2.getElement();
 
-        const zoomstart = jest.fn();
-        const zoom      = jest.fn();
-        const zoomend   = jest.fn();
+        const zoomstart = vi.fn();
+        const zoom      = vi.fn();
+        const zoomend   = vi.fn();
 
         map.handlers._handlersById.tapZoom.disable();
         map.touchPitch.disable();
@@ -239,9 +240,9 @@ describe('touch zoom rotate', () => {
         const target1 = marker1.getElement(); // on map
         const target2 = marker2.getElement(); // not on map
 
-        const zoomstart = jest.fn();
-        const zoom      = jest.fn();
-        const zoomend   = jest.fn();
+        const zoomstart = vi.fn();
+        const zoom      = vi.fn();
+        const zoomend   = vi.fn();
 
         map.handlers._handlersById.tapZoom.disable();
         map.touchPitch.disable();

@@ -78,6 +78,10 @@ export class Texture {
         if (this.useMipmap && this.isSizePowerOfTwo()) {
             gl.generateMipmap(gl.TEXTURE_2D);
         }
+
+        context.pixelStoreUnpackFlipY.setDefault();
+        context.pixelStoreUnpack.setDefault();
+        context.pixelStoreUnpackPremultiplyAlpha.setDefault();
     }
 
     bind(filter: TextureFilter, wrap: TextureWrap, minFilter?: TextureFilter | null) {

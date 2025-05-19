@@ -85,7 +85,7 @@ export class RasterTileSource extends Evented implements Source {
         extend(this, pick(options, ['url', 'scheme', 'tileSize']));
     }
 
-    async load() {
+    async load(sourceDataChanged: boolean = false) {
         this._loaded = false;
         this.fire(new Event('dataloading', {dataType: 'source'}));
         this._tileJSONRequest = new AbortController();
@@ -101,7 +101,7 @@ export class RasterTileSource extends Evented implements Source {
                 // before the TileJSON arrives. this makes sure the tiles needed are loaded once TileJSON arrives
                 // ref: https://github.com/mapbox/mapbox-gl-js/pull/4347#discussion_r104418088
                 this.fire(new Event('data', {dataType: 'source', sourceDataType: 'metadata'}));
-                this.fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
+                this.fire(new Event('data', {dataType: 'source', sourceDataType: 'content', sourceDataChanged}));
             }
         } catch (err) {
             this._tileJSONRequest = null;
@@ -133,7 +133,7 @@ export class RasterTileSource extends Evented implements Source {
 
         callback();
 
-        this.load();
+        this.load(true);
     }
 
     /**
@@ -182,7 +182,7 @@ export class RasterTileSource extends Evented implements Source {
                 return;
             }
             if (response && response.data) {
-                if (this.map._refreshExpiredTiles && response.cacheControl && response.expires) {
+                if (this.map._refreshExpiredTiles && (response.cacheControl || response.expires)) {
                     tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
                 }
                 const context = this.map.painter.context;
@@ -194,10 +194,6 @@ export class RasterTileSource extends Evented implements Source {
                 } else {
                     tile.texture = new Texture(context, img, gl.RGBA, {useMipmap: true});
                     tile.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
-
-                    if (context.extTextureFilterAnisotropic) {
-                        gl.texParameterf(gl.TEXTURE_2D, context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, context.extTextureFilterAnisotropicMax);
-                    }
                 }
                 tile.state = 'loaded';
             }

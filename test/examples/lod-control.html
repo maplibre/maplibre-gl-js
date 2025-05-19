@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Level of Detail Control</title>
+    <meta property="og:description" content="Modify how Level of Detail behaves at high pitch angles." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+        .listing-group {
+            font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            color: #fff;
+            background-color: gray;
+            padding: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<table id="listing-group" class="listing-group">
+    <tr><td><label for="max-zoom-levels-slider">Max Zoom Levels On Screen</label></td><td><input type="range" id="max-zoom-levels-slider" min="1" max="11" step="1.0" value="9.0" /></td><td><span id="max-zoom-levels-value">9.0</span></td></tr>
+    <tr><td><label for="tile-count-ratio-slider">Tile Count Max/Min Ratio</label></td><td><input type="range" id="tile-count-ratio-slider" min="1" max="10" step="0.1" value="3.0" /></td><td><span id="tile-count-ratio-value">3.0</span></td></tr>
+</table>
+<script>
+    function setLodParamsFromUi() {
+        map.setSourceTileLodParams(document.getElementById('max-zoom-levels-slider').value, document.getElementById('tile-count-ratio-slider').value);
+        document.getElementById('max-zoom-levels-value').textContent = document.getElementById('max-zoom-levels-slider').value;
+        document.getElementById('tile-count-ratio-value').textContent = document.getElementById('tile-count-ratio-slider').value;
+    }
+    const map = (window.map = new maplibregl.Map({
+        container: 'map',
+        zoom: 12,
+        center: [0,0],
+        pitch: 77,
+        hash: true,
+        style: {
+            version: 8,
+            sources: {
+                numbers: {
+                    type: 'raster',
+                    url: 'https://demotiles.maplibre.org/debug-tiles/number/tiles.json',
+                    tileSize: 256,
+                    maxzoom: 19
+                }
+            },
+            layers: [
+                {
+                    id: 'numbers',
+                    type: 'raster',
+                    source: 'numbers'
+                }
+            ]
+        },
+        maxZoom: 22,
+        maxPitch: 85
+    }));
+    map.on('load', () => {
+        document.getElementById('max-zoom-levels-slider').addEventListener('change', setLodParamsFromUi);
+        document.getElementById('tile-count-ratio-slider').addEventListener('change', setLodParamsFromUi);
+        setLodParamsFromUi();
+    });
+
+</script>
+</body>
+</html>

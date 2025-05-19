@@ -1,4 +1,4 @@
-import type {MousePitchHandler, MouseRotateHandler} from '../mouse';
+import type {MousePitchHandler, MouseRollHandler, MouseRotateHandler} from '../mouse';
 
 /**
  * Options object for `DragRotateHandler`.
@@ -9,7 +9,12 @@ export type DragRotateHandlerOptions = {
      * @defaultValue true
      */
     pitchWithRotate: boolean;
-}
+    /**
+     * Control the map roll in addition to the bearing
+     * @defaultValue false
+     */
+    rollEnabled: boolean;
+};
 
 /**
  * The `DragRotateHandler` allows the user to rotate the map by clicking and
@@ -21,13 +26,17 @@ export class DragRotateHandler {
 
     _mouseRotate: MouseRotateHandler;
     _mousePitch: MousePitchHandler;
+    _mouseRoll: MouseRollHandler;
     _pitchWithRotate: boolean;
+    _rollEnabled: boolean;
 
     /** @internal */
-    constructor(options: DragRotateHandlerOptions, mouseRotate: MouseRotateHandler, mousePitch: MousePitchHandler) {
+    constructor(options: DragRotateHandlerOptions, mouseRotate: MouseRotateHandler, mousePitch: MousePitchHandler, mouseRoll: MouseRollHandler) {
         this._pitchWithRotate = options.pitchWithRotate;
+        this._rollEnabled = options.rollEnabled;
         this._mouseRotate = mouseRotate;
         this._mousePitch = mousePitch;
+        this._mouseRoll = mouseRoll;
     }
 
     /**
@@ -41,6 +50,7 @@ export class DragRotateHandler {
     enable() {
         this._mouseRotate.enable();
         if (this._pitchWithRotate) this._mousePitch.enable();
+        if (this._rollEnabled) this._mouseRoll.enable();
     }
 
     /**
@@ -54,6 +64,7 @@ export class DragRotateHandler {
     disable() {
         this._mouseRotate.disable();
         this._mousePitch.disable();
+        this._mouseRoll.disable();
     }
 
     /**
@@ -62,7 +73,7 @@ export class DragRotateHandler {
      * @returns `true` if the "drag to rotate" interaction is enabled.
      */
     isEnabled() {
-        return this._mouseRotate.isEnabled() && (!this._pitchWithRotate || this._mousePitch.isEnabled());
+        return this._mouseRotate.isEnabled() && (!this._pitchWithRotate || this._mousePitch.isEnabled()) && (!this._rollEnabled || this._mouseRoll.isEnabled());
     }
 
     /**
@@ -71,6 +82,6 @@ export class DragRotateHandler {
      * @returns `true` if the "drag to rotate" interaction is active.
      */
     isActive() {
-        return this._mouseRotate.isActive() || this._mousePitch.isActive();
+        return this._mouseRotate.isActive() || this._mousePitch.isActive() || this._mouseRoll.isActive();
     }
 }

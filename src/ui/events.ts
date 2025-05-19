@@ -7,7 +7,7 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 
 import type {Map} from './map';
 import type {LngLat} from '../geo/lng_lat';
-import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {ProjectionSpecification, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 /**
  * An event from the mouse relevant to a specific layer.
@@ -77,6 +77,7 @@ export type MapLayerEventType = {
      * @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/mouse-position/)
      * @see [Highlight features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/hover-styles/)
      * @see [Display a popup on over](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-hover/)
+     * @see [Animate symbol to follow the mouse](https://maplibre.org/maplibre-gl-js/docs/examples/animate-symbol-to-follow-mouse/)
      */
     mousemove: MapLayerMouseEvent;
     /**
@@ -411,6 +412,17 @@ export type MapEventType = {
      * Fired when terrain is changed
      */
     terrain: MapTerrainEvent;
+    /**
+     * Fired whenever the cooperativeGestures option prevents a gesture from being handled by the map.
+     * This is useful for showing your own UI when this happens.
+     */
+    cooperativegestureprevented: MapLibreEvent<WheelEvent | TouchEvent> & {
+        gestureType: 'wheel_zoom' | 'touch_pan';
+    };
+    /**
+     * Fired when map's projection is modified in other ways than by map being moved.
+     */
+    projectiontransition: MapProjectionEvent;
 };
 
 /**
@@ -422,7 +434,7 @@ export type MapLibreEvent<TOrig = unknown> = {
     type: keyof MapEventType | keyof MapLayerEventType;
     target: Map;
     originalEvent: TOrig;
-}
+};
 
 /**
  * The style data event
@@ -431,7 +443,7 @@ export type MapLibreEvent<TOrig = unknown> = {
  */
 export type MapStyleDataEvent = MapLibreEvent & {
     dataType: 'style';
-}
+};
 
 /**
  * The source data event interface
@@ -450,12 +462,13 @@ export type MapSourceDataEvent = MapLibreEvent & {
     source: SourceSpecification;
     sourceId: string;
     sourceDataType: MapSourceDataType;
+    sourceDataChanged?: boolean;
     /**
      * The tile being loaded or changed, if the event has a `dataType` of `source` and
      * the event is related to loading of a tile.
      */
     tile: any;
-}
+};
 /**
  * `MapMouseEvent` is the event type for mouse-related map events.
  *
@@ -523,6 +536,7 @@ export class MapMouseEvent extends Event implements MapLibreEvent<MouseEvent> {
     _defaultPrevented: boolean;
 
     constructor(type: string, map: Map, originalEvent: MouseEvent, data: any = {}) {
+        originalEvent = originalEvent instanceof MouseEvent ? originalEvent : new MouseEvent(type, originalEvent);
         const point = DOM.mousePos(map.getCanvas(), originalEvent);
         const lngLat = map.unproject(point);
         super(type, extend({point, lngLat, originalEvent}, data));
@@ -729,6 +743,24 @@ export type MapTerrainEvent = {
 };
 
 /**
+ * The map projection event
+ *
+ * @group Event Related
+ */
+export type MapProjectionEvent = {
+    type: 'projectiontransition';
+    /**
+     * Specifies the name of the new projection.
+     * For example: 
+     * 
+     *  - `globe` to describe globe that has internally switched to mercator
+     *  - `vertical-perspective` to describe a globe that doesn't change to mercator
+     *  - `mercator` to describe mercator projection
+     */
+    newProjection: ProjectionSpecification['type'];
+};
+
+/**
  * An event related to the web gl context
  *
  * @group Event Related
@@ -748,4 +780,4 @@ export type MapContextEvent = {
 export type MapStyleImageMissingEvent = MapLibreEvent & {
     type: 'styleimagemissing';
     id: string;
-}
+};

@@ -10,7 +10,7 @@ import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 import type {Feature} from '@maplibre/maplibre-gl-style-spec';
 import type {StyleImage} from '../style/style_image';
 import ONE_EM from './one_em';
-import {Rect} from '../render/glyph_atlas';
+import {type Rect} from '../render/glyph_atlas';
 
 /**
  * A textured quad for rendering a single icon or glyph.

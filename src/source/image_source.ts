@@ -2,10 +2,6 @@ import {CanonicalTileID} from './tile_id';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {ImageRequest} from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
-import {EXTENT} from '../data/extent';
-import {RasterBoundsArray} from '../data/array_types.g';
-import rasterBoundsAttributes from '../data/raster_bounds_attributes';
-import {SegmentVector} from '../data/segment';
 import {Texture} from '../render/texture';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 
@@ -14,11 +10,13 @@ import type {CanvasSourceSpecification} from './canvas_source';
 import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from './tile';
-import type {VertexBuffer} from '../gl/vertex_buffer';
 import type {
     ImageSourceSpecification,
     VideoSourceSpecification
 } from '@maplibre/maplibre-gl-style-spec';
+import type Point from '@mapbox/point-geometry';
+import {MAX_TILE_ZOOM} from '../util/util';
+import {Bounds} from '../geo/bounds';
 
 /**
  * Four geographical coordinates,
@@ -40,7 +38,14 @@ export type UpdateImageOptions = {
      * The image coordinates
      */
     coordinates?: Coordinates;
-}
+};
+
+export type CanonicalTileRange = {
+    minTileX: number;
+    minTileY: number;
+    maxTileX: number;
+    maxTileY: number;
+};
 
 /**
  * A data source containing an image.
@@ -92,6 +97,11 @@ export class ImageSource extends Evented implements Source {
     maxzoom: number;
     tileSize: number;
     url: string;
+    /**
+     * This object is used to store the range of terrain tiles that overlap with this tile.
+     * It is relevant for image tiles, as the image exceeds single tile boundaries.
+     */
+    terrainTileRanges: {[zoom: string]: CanonicalTileRange};
 
     coordinates: Coordinates;
     tiles: {[_: string]: Tile};
@@ -101,9 +111,8 @@ export class ImageSource extends Evented implements Source {
     texture: Texture | null;
     image: HTMLImageElement | ImageBitmap;
     tileID: CanonicalTileID;
-    _boundsArray: RasterBoundsArray;
-    boundsBuffer: VertexBuffer;
-    boundsSegments: SegmentVector;
+    tileCoords: Array<Point>;
+    flippedWindingOrder: boolean = false;
     _loaded: boolean;
     _request: AbortController;
 
@@ -218,6 +227,10 @@ export class ImageSource extends Evented implements Source {
         // render data
         this.tileID = getCoordinatesCenterTileID(cornerCoords);
 
+        // Compute tiles overlapping with the image. We need to know for which
+        // terrain tiles we have to render the image.
+        this.terrainTileRanges = this._getOverlappingTileRanges(cornerCoords);
+
         // Constrain min/max zoom to our tile's zoom level in order to force
         // SourceCache to request this tile (no matter what the map's zoom
         // level)
@@ -225,18 +238,8 @@ export class ImageSource extends Evented implements Source {
 
         // Transform the corner coordinates into the coordinate space of our
         // tile.
-        const tileCoords = cornerCoords.map((coord) => this.tileID.getTilePoint(coord)._round());
-
-        this._boundsArray = new RasterBoundsArray();
-        this._boundsArray.emplaceBack(tileCoords[0].x, tileCoords[0].y, 0, 0);
-        this._boundsArray.emplaceBack(tileCoords[1].x, tileCoords[1].y, EXTENT, 0);
-        this._boundsArray.emplaceBack(tileCoords[3].x, tileCoords[3].y, 0, EXTENT);
-        this._boundsArray.emplaceBack(tileCoords[2].x, tileCoords[2].y, EXTENT, EXTENT);
-
-        if (this.boundsBuffer) {
-            this.boundsBuffer.destroy();
-            delete this.boundsBuffer;
-        }
+        this.tileCoords = cornerCoords.map((coord) => this.tileID.getTilePoint(coord)._round());
+        this.flippedWindingOrder = hasWrongWindingOrder(this.tileCoords);
 
         this.fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
         return this;
@@ -249,14 +252,6 @@ export class ImageSource extends Evented implements Source {
 
         const context = this.map.painter.context;
         const gl = context.gl;
-
-        if (!this.boundsBuffer) {
-            this.boundsBuffer = context.createVertexBuffer(this._boundsArray, rasterBoundsAttributes.members);
-        }
-
-        if (!this.boundsSegments) {
-            this.boundsSegments = SegmentVector.simpleSegment(0, 0, 4, 2);
-        }
 
         if (!this.texture) {
             this.texture = new Texture(context, this.image, gl.RGBA);
@@ -304,6 +299,37 @@ export class ImageSource extends Evented implements Source {
     hasTransition() {
         return false;
     }
+
+    /**
+     * Given a list of coordinates, determine overlapping tile ranges for all zoom levels.
+     *
+     * @returns Overlapping tile ranges for all zoom levels.
+     * @internal
+     */
+    private _getOverlappingTileRanges(
+        coords: Array<MercatorCoordinate>
+    ): {[zoom: string]: CanonicalTileRange} {
+        const {minX, minY, maxX, maxY} = Bounds.fromPoints(coords);
+
+        const ranges: {[zoom: string]: CanonicalTileRange} = {};
+
+        for (let z = 0; z <= MAX_TILE_ZOOM; z++) {
+            const tilesAtZoom = Math.pow(2, z);
+            const minTileX = Math.floor(minX * tilesAtZoom);
+            const minTileY = Math.floor(minY * tilesAtZoom);
+            const maxTileX = Math.floor(maxX * tilesAtZoom);
+            const maxTileY = Math.floor(maxY * tilesAtZoom);
+
+            ranges[z] = {
+                minTileX,
+                minTileY,
+                maxTileX,
+                maxTileY
+            };
+        }
+
+        return ranges;
+    }
 }
 
 /**
@@ -313,26 +339,27 @@ export class ImageSource extends Evented implements Source {
  * @internal
  */
 export function getCoordinatesCenterTileID(coords: Array<MercatorCoordinate>) {
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
+    const bounds = Bounds.fromPoints(coords);
 
-    for (const coord of coords) {
-        minX = Math.min(minX, coord.x);
-        minY = Math.min(minY, coord.y);
-        maxX = Math.max(maxX, coord.x);
-        maxY = Math.max(maxY, coord.y);
-    }
-
-    const dx = maxX - minX;
-    const dy = maxY - minY;
+    const dx = bounds.width();
+    const dy = bounds.height();
     const dMax = Math.max(dx, dy);
     const zoom = Math.max(0, Math.floor(-Math.log(dMax) / Math.LN2));
     const tilesAtZoom = Math.pow(2, zoom);
 
     return new CanonicalTileID(
         zoom,
-        Math.floor((minX + maxX) / 2 * tilesAtZoom),
-        Math.floor((minY + maxY) / 2 * tilesAtZoom));
+        Math.floor((bounds.minX + bounds.maxX) / 2 * tilesAtZoom),
+        Math.floor((bounds.minY + bounds.maxY) / 2 * tilesAtZoom));
+}
+
+function hasWrongWindingOrder(coords: Array<Point>) {
+    const e0x = coords[1].x - coords[0].x;
+    const e0y = coords[1].y - coords[0].y;
+    const e1x = coords[2].x - coords[0].x;
+    const e1y = coords[2].y - coords[0].y;
+
+    const crossProduct = e0x * e1y - e0y * e1x;
+
+    return crossProduct < 0;
 }

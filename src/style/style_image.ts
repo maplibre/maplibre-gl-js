@@ -1,4 +1,4 @@
-import {RGBAImage} from '../util/image';
+import {type RGBAImage} from '../util/image';
 
 import type {Map} from '../ui/map';
 
@@ -7,7 +7,7 @@ export type SpriteJSON = {[id: string]: StyleImageMetadata & {
     height: number;
     x: number;
     y: number;
-};}
+};};
 
 /**
  * The sprite data

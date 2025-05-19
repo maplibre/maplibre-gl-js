@@ -1,11 +1,46 @@
+import {vi, expect} from 'vitest';
 import {Map} from '../../ui/map';
 import {extend} from '../../util/util';
-import {Dispatcher} from '../../util/dispatcher';
-import {IActor} from '../actor';
-import type {Evented} from '../evented';
-import {SourceSpecification, StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {type Dispatcher} from '../../util/dispatcher';
+import {type IActor} from '../actor';
+import {Evented} from '../evented';
+import {type SourceSpecification, type StyleSpecification, type TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {MercatorTransform} from '../../geo/projection/mercator_transform';
+import {RequestManager} from '../request_manager';
+import {type IReadonlyTransform, type ITransform} from '../../geo/transform_interface';
+import {type Style} from '../../style/style';
+import {type Terrain} from '../../render/terrain';
 
-export function createMap(options?, callback?) {
+export class StubMap extends Evented {
+    style: Style;
+    transform: IReadonlyTransform;
+    private _requestManager: RequestManager;
+    _terrain: TerrainSpecification;
+
+    constructor() {
+        super();
+        this.transform = new MercatorTransform();
+        this._requestManager = new RequestManager();
+    }
+
+    _getMapId() {
+        return 1;
+    }
+
+    getPixelRatio() {
+        return 1;
+    }
+
+    setTerrain(terrain) { this._terrain = terrain; }
+    getTerrain() { return this._terrain; }
+
+    migrateProjection(newTransform: ITransform) {
+        newTransform.apply(this.transform);
+        this.transform = newTransform;
+    }
+}
+
+export function createMap(options?) {
     const container = window.document.createElement('div');
     const defaultOptions = {
         container,
@@ -26,9 +61,6 @@ export function createMap(options?, callback?) {
     if (options?.deleteStyle) delete defaultOptions.style;
 
     const map = new Map(extend(defaultOptions, options));
-    if (callback) map.on('load', () => {
-        callback(null, map);
-    });
 
     return map;
 }
@@ -42,33 +74,33 @@ export function equalWithPrecision(test, expected, actual, multiplier, message, 
 }
 
 export function setPerformance() {
-    window.performance.mark = jest.fn();
-    window.performance.clearMeasures = jest.fn();
-    window.performance.clearMarks = jest.fn();
+    window.performance.mark = vi.fn();
+    window.performance.clearMeasures = vi.fn();
+    window.performance.clearMarks = vi.fn();
 }
 
 export function setMatchMedia() {
     // https://jestjs.io/docs/manual-mocks#mocking-methods-which-are-not-implemented-in-jsdom
     Object.defineProperty(window, 'matchMedia', {
         writable: true,
-        value: jest.fn().mockImplementation(query => ({
+        value: vi.fn().mockImplementation(query => ({
             matches: false,
             media: query,
             onchange: null,
-            addListener: jest.fn(), // deprecated
-            removeListener: jest.fn(), // deprecated
-            addEventListener: jest.fn(),
-            removeEventListener: jest.fn(),
-            dispatchEvent: jest.fn(),
+            addListener: vi.fn(), // deprecated
+            removeListener: vi.fn(), // deprecated
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
+            dispatchEvent: vi.fn(),
         })),
     });
 }
 
 function setResizeObserver() {
-    global.ResizeObserver = jest.fn().mockImplementation(() => ({
-        observe: jest.fn(),
-        unobserve: jest.fn(),
-        disconnect: jest.fn(),
+    global.ResizeObserver = vi.fn().mockImplementation(() => ({
+        observe: vi.fn(),
+        unobserve: vi.fn(),
+        disconnect: vi.fn(),
     }));
 }
 
@@ -81,11 +113,11 @@ export function beforeMapTest() {
     (WebGLRenderingContext.prototype as any).createVertexArray = WebGLRenderingContext.prototype.getExtension('OES_vertex_array_object').createVertexArrayOES;
     if (!WebGLRenderingContext.prototype.drawingBufferHeight && !WebGLRenderingContext.prototype.drawingBufferWidth) {
         Object.defineProperty(WebGLRenderingContext.prototype, 'drawingBufferWidth', {
-            get: jest.fn(),
+            get: vi.fn(),
             configurable: true,
         });
         Object.defineProperty(WebGLRenderingContext.prototype, 'drawingBufferHeight', {
-            get: jest.fn(),
+            get: vi.fn(),
             configurable: true,
         });
     }
@@ -119,7 +151,6 @@ export function stubAjaxGetImage(createImageBitmap) {
     global.URL.revokeObjectURL = () => {};
     global.URL.createObjectURL = (_) => { return null; };
 
-    // eslint-disable-next-line accessor-pairs
     Object.defineProperty(global.Image.prototype, 'src', {
         set(url: string) {
             if (url === 'error') {
@@ -149,7 +180,7 @@ export function bufferToArrayBuffer(data: Buffer): ArrayBuffer {
  * @returns - a promise that resolves after the specified amount of time
  */
 export const sleep = (milliseconds: number = 0) => {
-    return new Promise(resolve => setTimeout(resolve, milliseconds));
+    return new Promise<void>(resolve => setTimeout(resolve, milliseconds));
 };
 
 export function waitForMetadataEvent(source: Evented): Promise<void> {
@@ -172,7 +203,7 @@ export function createStyleSource() {
     } as SourceSpecification;
 }
 
-export function createStyle() {
+export function createStyle(): StyleSpecification {
     return {
         version: 8,
         center: [-73.9749, 40.7736],
@@ -181,5 +212,53 @@ export function createStyle() {
         pitch: 50,
         sources: {},
         layers: []
-    } as StyleSpecification;
+    };
+}
+
+export function expectToBeCloseToArray(actual: Array<number>, expected: Array<number>, precision?: number) {
+    expect(actual).toHaveLength(expected.length);
+    for (let i = 0; i < expected.length; i++) {
+        expect(actual[i]).toBeCloseTo(expected[i], precision);
+    }
+}
+
+export function createTerrain(): Terrain {
+    return {
+        pointCoordinate: () => null,
+        getElevationForLngLatZoom: () => 1000,
+        getMinTileElevationForLngLatZoom: () => 0,
+        getFramebuffer: () => ({}),
+        getCoordsTexture: () => ({}),
+        depthAtPoint: () => .9,
+        sourceCache: {
+            update: () => {},
+            getRenderableTiles: () => [],
+            anyTilesAfterTime: () => false
+        }
+    } as any as Terrain;
+}
+
+export function createFramebuffer() {
+    return {
+        colorAttachment: {
+            get: () => null,
+            set: () => {}
+        },
+        depthAttachment: {
+            get: () => null,
+            set: () => {}
+        },
+        destroy: () => {}
+    };
+}
+
+export function waitForEvent(evented: Evented, eventName: string, predicate: (e: any) => boolean): Promise<any> {
+    return new Promise((resolve) => {
+        const listener = (e: Event) => {
+            if (predicate(e)) {
+                resolve(e);
+            }
+        };
+        evented.on(eventName, listener);
+    });
 }
