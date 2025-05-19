@@ -39,11 +39,14 @@ export class ColorReliefStyleLayer extends StyleLayer {
         if (this.elevationStops.length > maxLength) {
             const remapStepSize = (this.elevationStops.length - 1)/(maxLength - 1);
             const remappedElevationStops = [];
+            const remappedColorStops = [];
             for (let i = 0; i < this.elevationStops.length - 0.5; i += remapStepSize) {
                 remappedElevationStops.push(this.elevationStops[Math.round(i)]);
+                remappedColorStops.push(this.colorStops[Math.round(i)]);
             }
             warnOnce(`Too many colors in specification of ${this.id} color-relief layer, may not render properly.`);
             this.elevationStops = remappedElevationStops;
+            this.colorStops = remappedColorStops;
         }
         return {elevationStops: this.elevationStops, colorStops: this.colorStops};
     }

@@ -45,4 +45,59 @@ describe('ColorReliefStyleLayer', () => {
         colorReliefStyleLayer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
         expect(colorReliefStyleLayer.paint.get('color-relief-opacity')).toEqual(0.5);
     });
+
+    test('getColorRamp: no remapping', () => {
+        const layerSpec = createColorReliefLayerSpec({
+            paint: {
+                'color-relief-color': [
+                    'interpolate',
+                    ['linear'],
+                    ['elevation'],
+                    0, '#000000',
+                    1000, '#ff0000',
+                    2000, '#ff0000',
+                    3000, '#ffffff'
+                ]
+            }
+        });
+        const layer = createStyleLayer(layerSpec);
+        expect(layer).toBeInstanceOf(ColorReliefStyleLayer);
+        const colorReliefStyleLayer = layer as ColorReliefStyleLayer;
+        expect(colorReliefStyleLayer.elevationStops).toEqual([0, 1000, 2000, 3000]);
+        expect(colorReliefStyleLayer.colorStops).toEqual([Color.black, Color.red, Color.red, Color.white]);
+
+        const colorRamp = colorReliefStyleLayer.getColorRamp(4);
+
+        expect(colorRamp.elevationStops).toEqual([0, 1000, 2000, 3000]);
+        expect(colorRamp.colorStops).toEqual([Color.black, Color.red, Color.red, Color.white]);
+    });
+
+    test('getColorRamp: with remapping', () => {
+        const layerSpec = createColorReliefLayerSpec({
+            paint: {
+                'color-relief-color': [
+                    'interpolate',
+                    ['linear'],
+                    ['elevation'],
+                    0, '#000000',
+                    1000, '#ff0000',
+                    2000, '#ffffff',
+                    3000, '#000000',
+                    4000, '#ff0000'
+                ]
+            }
+        });
+        const layer = createStyleLayer(layerSpec);
+        expect(layer).toBeInstanceOf(ColorReliefStyleLayer);
+        const colorReliefStyleLayer = layer as ColorReliefStyleLayer;
+        expect(colorReliefStyleLayer.elevationStops).toEqual([0, 1000, 2000, 3000, 4000]);
+        expect(colorReliefStyleLayer.colorStops).toEqual([Color.black, Color.red, Color.white, Color.black, Color.red]);
+
+        const colorRamp = colorReliefStyleLayer.getColorRamp(4);
+
+        console.log(colorRamp);
+
+        expect(colorRamp.elevationStops).toEqual([0, 1000, 3000, 4000]);
+        expect(colorRamp.colorStops).toEqual([Color.black, Color.red, Color.black, Color.red]);
+    });
 });
