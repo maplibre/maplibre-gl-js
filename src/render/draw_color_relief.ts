@@ -68,7 +68,7 @@ function renderColorRelief(
             context.activeTexture.set(gl.TEXTURE5);
             elevationTexture.bind(gl.NEAREST, gl.CLAMP_TO_EDGE);
             context.activeTexture.set(gl.TEXTURE6);
-            colorTexture.bind(gl.NEAREST, gl.CLAMP_TO_EDGE);
+            colorTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
             firstTile = false;
         }
 
