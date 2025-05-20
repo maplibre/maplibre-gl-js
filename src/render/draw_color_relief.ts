@@ -52,10 +52,7 @@ function renderColorRelief(
     const context = painter.context;
     const transform = painter.transform;
     const gl = context.gl;
-    const maxLength = gl.getParameter(gl.MAX_TEXTURE_SIZE);
-    const colorRampLength = Math.min(maxLength, layer.colorRamp.elevationStops.length);
-    const defines = [`#define NUM_ELEVATION_STOPS ${colorRampLength}`];
-    const program = painter.useProgram('colorRelief', null, false, defines);
+    const program = painter.useProgram('colorRelief');
     const align = !painter.options.moving;
 
     let firstTile = true;
@@ -63,7 +60,8 @@ function renderColorRelief(
     for (const coord of coords) {
         const tile = sourceCache.getTile(coord);
         const dem = tile.dem;
-        if(firstTile && layer.colorRamp) {
+        if(firstTile) {
+            const maxLength = gl.getParameter(gl.MAX_TEXTURE_SIZE);
             const {elevationTexture, colorTexture} = layer.getColorRampTextures(context, maxLength, dem.getUnpackVector());
             context.activeTexture.set(gl.TEXTURE5);
             elevationTexture.bind(gl.NEAREST, gl.CLAMP_TO_EDGE);

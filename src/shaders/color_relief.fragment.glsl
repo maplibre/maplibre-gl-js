@@ -24,8 +24,10 @@ float getElevationStop(int stop) {
 void main() {
     float el = getElevation(v_pos);
 
+    int num_elevation_stops = textureSize(u_elevation_stops, 0)[0];
+
     // Binary search
-    int r = (NUM_ELEVATION_STOPS - 1);
+    int r = (num_elevation_stops - 1);
     int l = 0;
     float el_l = getElevationStop(l);
     float el_r = getElevationStop(r);
