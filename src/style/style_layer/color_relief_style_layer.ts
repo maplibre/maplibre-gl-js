@@ -25,10 +25,9 @@ export class ColorReliefStyleLayer extends StyleLayer {
 
     constructor(layer: LayerSpecification) {
         super(layer, properties);
-        this.colorRamp = this._updateColorRamp();
     }
 
-    _updateColorRamp() : ColorRamp {
+    _createColorRamp() : ColorRamp {
         const colorRamp: ColorRamp = {elevationStops: [], colorStops: []};
         const expression = this._transitionablePaint._values['color-relief-color'].value.expression;
         if (expression instanceof ZoomConstantExpression && expression._styleExpression.expression instanceof Interpolate) {
@@ -51,10 +50,20 @@ export class ColorReliefStyleLayer extends StyleLayer {
         }
         return colorRamp;
     }
-    
-    // Get the color ramp, enforcing a maximum length for the vectors. This modifies the internal color ramp,
-    // so that the remapping is only performed once.
+
+    /**
+     * Get the color ramp, enforcing a maximum length for the vectors. This modifies the internal color ramp,
+     * so that the remapping is only performed once.
+     *
+     * @param maxLength - the maximum number of stops in the color ramp
+     *
+     * @return a `ColorRamp` object with no more than `maxLength` stops.
+     *
+     */
     getColorRamp(maxLength: number) : ColorRamp {
+        if (!this.colorRamp) {
+            this.colorRamp = this._createColorRamp();
+        }
         if (this.colorRamp.elevationStops.length > maxLength) {
             const colorRamp: ColorRamp = {elevationStops: [], colorStops: []};
             const remapStepSize = (this.colorRamp.elevationStops.length - 1)/(maxLength - 1);
