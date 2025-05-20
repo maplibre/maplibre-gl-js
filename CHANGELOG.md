@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 - Add `setGlobalStateProperty()` and `getGlobalState()` to the map public API ([#5613](https://github.com/maplibre/maplibre-gl-js/pull/5613))
+- Improve tile frustum culling for globe, leading to better performance and faster loading times. ([#5865](https://github.com/maplibre/maplibre-gl-js/pull/5865))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
