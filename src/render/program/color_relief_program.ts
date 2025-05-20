@@ -37,8 +37,8 @@ const colorReliefUniformValues = (
         'u_image': 0,
         'u_unpack': dem.getUnpackVector(),
         'u_dimension': [dem.stride, dem.stride],
-        'u_elevation_stops': 5,
-        'u_color_stops': 6,
+        'u_elevation_stops': 1,
+        'u_color_stops': 4,
         'u_opacity': layer.paint.get('color-relief-opacity')
     };
 };

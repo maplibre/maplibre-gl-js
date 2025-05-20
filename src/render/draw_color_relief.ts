@@ -63,9 +63,9 @@ function renderColorRelief(
         if(firstTile) {
             const maxLength = gl.getParameter(gl.MAX_TEXTURE_SIZE);
             const {elevationTexture, colorTexture} = layer.getColorRampTextures(context, maxLength, dem.getUnpackVector());
-            context.activeTexture.set(gl.TEXTURE5);
+            context.activeTexture.set(gl.TEXTURE1);
             elevationTexture.bind(gl.NEAREST, gl.CLAMP_TO_EDGE);
-            context.activeTexture.set(gl.TEXTURE6);
+            context.activeTexture.set(gl.TEXTURE4);
             colorTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
             firstTile = false;
         }
