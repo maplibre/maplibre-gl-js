@@ -6,13 +6,19 @@ import {type Transitionable, type Transitioning, type PossiblyEvaluated} from '.
 import type {ColorReliefPaintProps} from './color_relief_style_layer_properties.g';
 import {Color, Interpolate, ZoomConstantExpression, type LayerSpecification, type EvaluationContext} from '@maplibre/maplibre-gl-style-spec';
 import {warnOnce} from '../../util/util';
+import {Texture} from '../../render/texture';
+import {RGBAImage} from '../../util/image';
+import {type Context} from '../../gl/context';
+import {packDEMData} from '../../data/dem_data';
 
 export const isColorReliefStyleLayer = (layer: StyleLayer): layer is ColorReliefStyleLayer => layer.type === 'color-relief';
 
 export type ColorRamp = {elevationStops: Array<number>; colorStops: Array<Color>};
+export type ColorRampTextures = {elevationTexture: Texture; colorTexture: Texture};
 
 export class ColorReliefStyleLayer extends StyleLayer {
     colorRamp: ColorRamp;
+    colorRampTextures: ColorRampTextures;
     _transitionablePaint: Transitionable<ColorReliefPaintProps>;
     _transitioningPaint: Transitioning<ColorReliefPaintProps>;
     paint: PossiblyEvaluated<ColorReliefPaintProps, ColorReliefPaintPropsPossiblyEvaluated>;
@@ -61,6 +67,32 @@ export class ColorReliefStyleLayer extends StyleLayer {
             this.colorRamp = colorRamp;
         }
         return this.colorRamp;
+    }
+    
+    getColorRampTextures(context: Context, maxLength: number, unpackVector: number[]): ColorRampTextures {
+        if (!this.colorRampTextures) {
+            const colorRamp = this.getColorRamp(maxLength);
+            const colorImage = new RGBAImage({width: colorRamp.colorStops.length, height: 1});
+            const elevationImage = new RGBAImage({width: colorRamp.colorStops.length, height: 1});
+            for (let i = 0; i < colorRamp.elevationStops.length; i++) {
+                const elevationPacked = packDEMData(colorRamp.elevationStops[i], unpackVector);
+                elevationImage.data[4*i + 0] = elevationPacked.r;
+                elevationImage.data[4*i + 1] = elevationPacked.g;
+                elevationImage.data[4*i + 2] = elevationPacked.b;
+                elevationImage.data[4*i + 3] = 255;
+
+                const pxColor = colorRamp.colorStops[i];
+                colorImage.data[4*i + 0] = Math.round(pxColor.r * 255 / pxColor.a);
+                colorImage.data[4*i + 1] = Math.round(pxColor.g * 255 / pxColor.a);
+                colorImage.data[4*i + 2] = Math.round(pxColor.b * 255 / pxColor.a);
+                colorImage.data[4*i + 3] = Math.round(pxColor.a * 255);
+            }
+            this.colorRampTextures = {
+                elevationTexture: new Texture(context, elevationImage, context.gl.RGBA),
+                colorTexture: new Texture(context, colorImage, context.gl.RGBA)
+            };
+        }
+        return this.colorRampTextures;
     }
 
     hasOffscreenPass() {

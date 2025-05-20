@@ -1,7 +1,7 @@
 uniform sampler2D u_image;
 uniform vec4 u_unpack;
-uniform float u_elevation_stops[NUM_ELEVATION_STOPS];
-uniform vec4 u_color_stops[NUM_ELEVATION_STOPS];
+uniform sampler2D u_elevation_stops;
+uniform sampler2D u_color_stops;
 uniform float u_opacity;
 
 in vec2 v_pos;
@@ -13,27 +13,42 @@ float getElevation(vec2 coord) {
     return dot(data, u_unpack);
 }
 
+float getElevationStop(int stop) {
+    // Convert encoded elevation value to meters
+    float x = float(stop)/float(textureSize(u_elevation_stops, 0)[0]);
+    vec4 data = texture(u_elevation_stops, vec2(x, 0)) * 255.0;
+    data.a = -1.0;
+    return dot(data, u_unpack);
+}
+
 void main() {
     float el = getElevation(v_pos);
 
     // Binary search
     int r = (NUM_ELEVATION_STOPS - 1);
     int l = 0;
+    float el_l = getElevationStop(l);
+    float el_r = getElevationStop(r);
     while(r - l > 1)
     {
         int m = (r + l) / 2;
-        if(el < u_elevation_stops[m])
+        float el_m = getElevationStop(m);
+        if(el < el_m)
         {
             r = m;
+            el_r = el_m;
         }
         else
         {
             l = m;
+            el_l = el_m;
         }
     }
-    fragColor = u_opacity*mix(u_color_stops[l],
-        u_color_stops[r],
-        clamp((el - u_elevation_stops[l])/(u_elevation_stops[r]-u_elevation_stops[l]), 0.0, 1.0));
+    vec4 color_l = texture(u_color_stops, vec2(float(l)/float(textureSize(u_color_stops, 0)[0]), 0));
+    vec4 color_r = texture(u_color_stops, vec2(float(r)/float(textureSize(u_color_stops, 0)[0]), 0));
+    fragColor = u_opacity*mix(color_l,
+        color_r,
+        clamp((el - el_l) / (el_r - el_l), 0.0, 1.0));
 
 #ifdef OVERDRAW_INSPECTOR
     fragColor = vec4(1.0);
