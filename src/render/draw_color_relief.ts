@@ -52,7 +52,7 @@ function renderColorRelief(
     const context = painter.context;
     const transform = painter.transform;
     const gl = context.gl;
-    const maxLength = Math.floor((gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS) - 3) / 2);
+    const maxLength = gl.getParameter(gl.MAX_TEXTURE_SIZE);
     const colorRampLength = Math.min(maxLength, layer.colorRamp.elevationStops.length);
     const defines = [`#define NUM_ELEVATION_STOPS ${colorRampLength}`];
     const program = painter.useProgram('colorRelief', null, false, defines);
