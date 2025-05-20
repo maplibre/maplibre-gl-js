@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <title>Filter layer symbols using global state</title>
+    <meta property="og:description" content="Filter a layer symbols based on user input using setGlobalStateProperty()." />
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body,
+        #map {
+            height: 100%;
+        }
+
+        fieldset {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: white;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id='map'></div>
+    <fieldset>
+        Filter by type
+        <select name="type">
+            <option value="" selected>All</option>
+            <option value="lift">Aerial lift</option>
+            <option value="railway">Cable railway</option>
+        </select>
+    </fieldset>
+</body>
+
+<script>
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [9.0679, 45.8822],
+        zoom: 9
+    });
+
+    map.on('load', () => {
+        map.addSource('railways_and_lifts', {
+            type: 'geojson',
+            data: 'https://maplibre.org/maplibre-gl-js/docs/assets/funicolares-and-funivias-como.json'
+        });
+
+        map.addLayer({
+            id: 'railways_and_lifts_labels',
+            type: 'symbol',
+            source: 'railways_and_lifts',
+            layout: {
+                'text-field': '{name}',
+                'text-font': ['Open Sans Semibold'],
+                'text-offset': [0, 1],
+                'text-anchor': 'top'
+            },
+            paint: {
+                'text-color': '#000000',
+                'text-halo-color': '#ffffff',
+                'text-halo-width': 2
+            },
+            filter: [
+                'case',
+                ['==', ['to-string', ['global-state', 'type']], ''],
+                true,
+                ['==', ['get', 'type'], ['global-state', 'type']]
+            ]
+        });
+        map.addLayer({
+            type: 'circle',
+            id: 'railways_and_lifts_points',
+            source: 'railways_and_lifts',
+            paint: {
+                'circle-radius': 5,
+                'circle-color': '#000000',
+            },
+            filter: [
+                'case',
+                ['==', ['to-string', ['global-state', 'type']], ''],
+                true,
+                ['==', ['get', 'type'], ['global-state', 'type']]
+            ]
+        });
+
+        const select = document.querySelector('select[name="type"]');
+        map.setGlobalStateProperty('type', select.value);
+
+        select.addEventListener('change', (e) => {
+            const value = e.target.value;
+            map.setGlobalStateProperty('type', value);
+        });
+    });
+</script>
+
+</html>

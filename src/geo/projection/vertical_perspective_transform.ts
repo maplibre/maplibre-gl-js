@@ -500,7 +500,7 @@ export class VerticalPerspectiveTransform implements ITransform {
 
         const matrix = mat4.clone(this._globeViewProjMatrixNoCorrectionInverted);
         mat4.scale(matrix, matrix, [1, 1, -1]);
-        this._cachedFrustum = Frustum.fromInvProjectionMatrix(matrix);
+        this._cachedFrustum = Frustum.fromInvProjectionMatrix(matrix, 1, 0, this._cachedClippingPlane, true);
     }
 
     calculateFogMatrix(_unwrappedTileID: UnwrappedTileID): mat4 {

@@ -10,6 +10,8 @@ import {RequestManager} from '../request_manager';
 import {type IReadonlyTransform, type ITransform} from '../../geo/transform_interface';
 import {type Style} from '../../style/style';
 import {type Terrain} from '../../render/terrain';
+import {Frustum} from '../primitives/frustum';
+import {mat4} from 'gl-matrix';
 
 export class StubMap extends Evented {
     style: Style;
@@ -262,3 +264,18 @@ export function waitForEvent(evented: Evented, eventName: string, predicate: (e:
         evented.on(eventName, listener);
     });
 }
+
+export function createTestCameraFrustum(fovy: number, aspectRatio: number, zNear: number, zFar: number, elevation: number, rotation: number): Frustum {
+    const proj = new Float64Array(16) as any as mat4;
+    const invProj = new Float64Array(16) as any as mat4;
+
+    // Note that left handed coordinate space is used where z goes towards the sky.
+    // Y has to be flipped as well because it's part of the projection/camera matrix used in transform.js
+    mat4.perspective(proj, fovy, aspectRatio, zNear, zFar);
+    mat4.scale(proj, proj, [1, -1, 1]);
+    mat4.translate(proj, proj, [0, 0, elevation]);
+    mat4.rotateZ(proj, proj, rotation);
+    mat4.invert(invProj, proj);
+
+    return Frustum.fromInvProjectionMatrix(invProj, 1.0, 0.0);
+};

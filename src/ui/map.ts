@@ -54,7 +54,7 @@ import type {
     SourceSpecification,
     TerrainSpecification,
     ProjectionSpecification,
-    SkySpecification
+    SkySpecification,
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
 import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson';
@@ -774,6 +774,29 @@ export class Map extends Camera {
      */
     _getMapId() {
         return this._mapId;
+    }
+
+    /**
+     * Sets a global state property that can be retrieved with the [`global-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#global-state).
+     * If the value is null, it resets the property to its default value defined in the [`state` style property](https://maplibre.org/maplibre-style-spec/root/#state).
+     *
+     * Note that changing `global-state` values defined in layout properties is not supported, and will be ignored.
+     *
+     * @param propertyName - The name of the state property to set.
+     * @param value - The value of the state property to set.
+     */
+    setGlobalStateProperty(propertyName: string, value: any) {
+        this.style.setGlobalStateProperty(propertyName, value);
+        return this._update(true);
+    }
+
+    /**
+     * Returns the global map state
+     *
+     * @returns The map state object.
+    */
+    getGlobalState(): Record<string, any> {
+        return this.style.getGlobalState();
     }
 
     /**
@@ -3278,7 +3301,8 @@ export class Map extends Camera {
                 now,
                 fadeDuration,
                 zoomHistory: this.style.zoomHistory,
-                transition: this.style.getTransition()
+                transition: this.style.getTransition(),
+                globalState: this.style.getGlobalState()
             });
 
             const factor = parameters.crossFadingFactor();
