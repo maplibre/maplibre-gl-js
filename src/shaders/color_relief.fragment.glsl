@@ -15,7 +15,7 @@ float getElevation(vec2 coord) {
 
 float getElevationStop(int stop) {
     // Convert encoded elevation value to meters
-    float x = float(stop)/float(textureSize(u_elevation_stops, 0)[0]);
+    float x = float(stop)/float(textureSize(u_elevation_stops, 0)[0]-1);
     vec4 data = texture(u_elevation_stops, vec2(x, 0)) * 255.0;
     data.a = -1.0;
     return dot(data, u_unpack);
@@ -44,8 +44,8 @@ void main() {
             el_l = el_m;
         }
     }
-    vec4 color_l = texture(u_color_stops, vec2(float(l)/float(textureSize(u_color_stops, 0)[0]), 0));
-    vec4 color_r = texture(u_color_stops, vec2(float(r)/float(textureSize(u_color_stops, 0)[0]), 0));
+    vec4 color_l = texture(u_color_stops, vec2(float(l)/float(textureSize(u_color_stops, 0)[0]-1), 0));
+    vec4 color_r = texture(u_color_stops, vec2(float(r)/float(textureSize(u_color_stops, 0)[0]-1), 0));
     fragColor = u_opacity*mix(color_l,
         color_r,
         clamp((el - el_l) / (el_r - el_l), 0.0, 1.0));
