@@ -1,7 +1,7 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import fs from 'fs';
 import path from 'path';
-import vt from '@mapbox/vector-tile';
+import {VectorTile} from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
 import {type LoadVectorData, VectorTileWorkerSource} from '../source/vector_tile_worker_source';
 import {StyleLayerIndex} from '../style/style_layer_index';
@@ -104,7 +104,7 @@ describe('vector tile worker source', () => {
                             })
                         }
                     }
-                } as any as vt.VectorTile,
+                } as any as VectorTile,
                 rawData: rawTileData
             };
         };
@@ -164,7 +164,7 @@ describe('vector tile worker source', () => {
         const rawTileData = new ArrayBuffer(0);
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
-                vectorTile: new vt.VectorTile(new Protobuf(rawTileData)),
+                vectorTile: new VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData
             };
         };
@@ -290,7 +290,7 @@ describe('vector tile worker source', () => {
 
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
-                vectorTile: new vt.VectorTile(new Protobuf(rawTileData)),
+                vectorTile: new VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData,
                 cacheControl: null,
                 expires: null
@@ -346,7 +346,7 @@ describe('vector tile worker source', () => {
 
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
-                vectorTile: new vt.VectorTile(new Protobuf(rawTileData)),
+                vectorTile: new VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData,
                 cacheControl: null,
                 expires: null
