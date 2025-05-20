@@ -334,12 +334,6 @@ export class Style extends Evented {
     setGlobalState(newStylesheetState: StateSpecification) {
         this._checkLoaded();
 
-        const stateValues = newStylesheetState ? mapObject(newStylesheetState, (value) => value.default) : {};
-
-        if (deepEqual(stateValues, this._globalState)) {
-            return;
-        }
-
         const changedGlobalStateRefs = [];
 
         for (const propertyName in newStylesheetState) {

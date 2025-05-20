@@ -1331,6 +1331,34 @@ describe('Style#setGlobalState', () => {
         expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
     });
+
+    test('does not reload sources when new state property is used in paint property', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'circle-source-id': createGeoJSONSource(),
+                'fill-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'first-layer-id',
+                type: 'circle',
+                source: 'circle-source-id',
+                paint: {
+                    'circle-color': ['global-state', 'circleColor']
+                }
+            }]
+        }));
+
+        await style.once('style.load');
+
+        style.sourceCaches['circle-source-id'].resume = vi.fn();
+        style.sourceCaches['circle-source-id'].reload = vi.fn();
+
+        style.setGlobalState({circleColor: {default: 'red'}});
+
+        expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
+        expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
+    });
 });
 
 describe('Style#setGlobalStateProperty', () => {
