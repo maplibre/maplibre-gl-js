@@ -21,8 +21,9 @@ describe('ColorReliefStyleLayer', () => {
         expect(layer).toBeInstanceOf(ColorReliefStyleLayer);
         const colorReliefStyleLayer = layer as ColorReliefStyleLayer;
         expect(colorReliefStyleLayer.paint.get('color-relief-opacity')).toEqual(1);
-        expect(colorReliefStyleLayer.colorRamp.elevationStops).toEqual([0,1]);
-        expect(colorReliefStyleLayer.colorRamp.colorStops).toEqual([Color.transparent,Color.transparent]);
+        const colorRamp = colorReliefStyleLayer.getColorRamp(256);
+        expect(colorRamp.elevationStops).toEqual([0,1]);
+        expect(colorRamp.colorStops).toEqual([Color.transparent,Color.transparent]);
     });
 
     test('parameters specified', () => {
@@ -41,8 +42,9 @@ describe('ColorReliefStyleLayer', () => {
         const layer = createStyleLayer(layerSpec);
         expect(layer).toBeInstanceOf(ColorReliefStyleLayer);
         const colorReliefStyleLayer = layer as ColorReliefStyleLayer;
-        expect(colorReliefStyleLayer.colorRamp.elevationStops).toEqual([0,1000]);
-        expect(colorReliefStyleLayer.colorRamp.colorStops).toEqual([Color.black,Color.white]);
+        const colorRamp = colorReliefStyleLayer.getColorRamp(256);
+        expect(colorRamp.elevationStops).toEqual([0,1000]);
+        expect(colorRamp.colorStops).toEqual([Color.black,Color.white]);
 
         colorReliefStyleLayer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
         expect(colorReliefStyleLayer.paint.get('color-relief-opacity')).toEqual(0.5);
@@ -62,8 +64,9 @@ describe('ColorReliefStyleLayer', () => {
         const layer = createStyleLayer(layerSpec);
         expect(layer).toBeInstanceOf(ColorReliefStyleLayer);
         const colorReliefStyleLayer = layer as ColorReliefStyleLayer;
-        expect(colorReliefStyleLayer.colorRamp.elevationStops).toEqual([0,1]);
-        expect(colorReliefStyleLayer.colorRamp.colorStops).toEqual([Color.red,Color.red]);
+        const colorRamp = colorReliefStyleLayer.getColorRamp(256);
+        expect(colorRamp.elevationStops).toEqual([0,1]);
+        expect(colorRamp.colorStops).toEqual([Color.red,Color.red]);
     });
 
     test('getColorRamp: no remapping', () => {
@@ -83,8 +86,6 @@ describe('ColorReliefStyleLayer', () => {
         const layer = createStyleLayer(layerSpec);
         expect(layer).toBeInstanceOf(ColorReliefStyleLayer);
         const colorReliefStyleLayer = layer as ColorReliefStyleLayer;
-        expect(colorReliefStyleLayer.colorRamp.elevationStops).toEqual([0, 1000, 2000, 3000]);
-        expect(colorReliefStyleLayer.colorRamp.colorStops).toEqual([Color.black, Color.red, Color.red, Color.white]);
 
         const colorRamp = colorReliefStyleLayer.getColorRamp(4);
 
@@ -110,8 +111,6 @@ describe('ColorReliefStyleLayer', () => {
         const layer = createStyleLayer(layerSpec);
         expect(layer).toBeInstanceOf(ColorReliefStyleLayer);
         const colorReliefStyleLayer = layer as ColorReliefStyleLayer;
-        expect(colorReliefStyleLayer.colorRamp.elevationStops).toEqual([0, 1000, 2000, 3000, 4000]);
-        expect(colorReliefStyleLayer.colorRamp.colorStops).toEqual([Color.black, Color.red, Color.white, Color.black, Color.red]);
 
         const colorRamp = colorReliefStyleLayer.getColorRamp(4);
 
