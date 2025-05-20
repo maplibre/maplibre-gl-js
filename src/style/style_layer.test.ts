@@ -242,6 +242,49 @@ describe('StyleLayer#setLayoutProperty', () => {
     });
 });
 
+describe('StyleLayer#getLayoutAffectingGlobalStateRefs', () => {
+    test('returns empty Set when no global state references', () => {
+        const layer = createStyleLayer({
+            'id': 'background',
+            'type': 'background',
+            'paint': {
+                'background-color': '#000000'
+            }
+        } as LayerSpecification);
+
+        expect(layer.getLayoutAffectingGlobalStateRefs()).toEqual(new Set());
+    });
+
+    test('returns global-state references from filter properties', () => {
+        const layer = createStyleLayer({
+            'id': 'symbol',
+            'type': 'symbol',
+            source: 'source',
+            //@ts-ignore
+            'filter': ['==', ['global-state', 'showSymbol'], true],
+        });
+
+        expect(layer.getLayoutAffectingGlobalStateRefs()).toEqual(new Set(['showSymbol']));
+    });
+
+    test('returns global-state references from layout properties', () => {
+        const layer = createStyleLayer({
+            'id': 'symbol',
+            'type': 'symbol',
+            source: 'source',
+            'layout': {
+                'text-field': '{text}',
+                //@ts-ignore
+                'text-size': ['global-state', 'textSize'],
+                //@ts-ignore
+                'text-transform': ['global-state', 'textTransform']
+            }
+        });
+
+        expect(layer.getLayoutAffectingGlobalStateRefs()).toEqual(new Set(['textSize', 'textTransform']));
+    });
+});
+
 describe('StyleLayer#serialize', () => {
 
     function createSymbolLayer(layer?) {
