@@ -18,7 +18,6 @@ export type ColorRampTextures = {elevationTexture: Texture; colorTexture: Textur
 
 export class ColorReliefStyleLayer extends StyleLayer {
     colorRampExpression: StylePropertyExpression;
-    colorRamp: ColorRamp;
     colorRampTextures: ColorRampTextures;
     _transitionablePaint: Transitionable<ColorReliefPaintProps>;
     _transitioningPaint: Transitioning<ColorReliefPaintProps>;
@@ -28,7 +27,17 @@ export class ColorReliefStyleLayer extends StyleLayer {
         super(layer, properties);
     }
 
-    _createColorRamp() : ColorRamp {
+    /**
+     * Create the color ramp, enforcing a maximum length for the vectors. This modifies the internal color ramp,
+     * so that the remapping is only performed once.
+     *
+     * @param maxLength - the maximum number of stops in the color ramp
+     *
+     * @return a `ColorRamp` object with no more than `maxLength` stops.
+     *
+     */
+
+    _createColorRamp(maxLength: number) : ColorRamp {
         const colorRamp: ColorRamp = {elevationStops: [], colorStops: []};
         const expression = this._transitionablePaint._values['color-relief-color'].value.expression;
         if (expression instanceof ZoomConstantExpression && expression._styleExpression.expression instanceof Interpolate) {
@@ -50,43 +59,30 @@ export class ColorReliefStyleLayer extends StyleLayer {
             colorRamp.elevationStops.push(colorRamp.elevationStops[0] + 1);
             colorRamp.colorStops.push(colorRamp.colorStops[0]);
         }
-        return colorRamp;
+        if (colorRamp.elevationStops.length <= maxLength) {
+            return colorRamp;
+        }
+
+        const remappedColorRamp: ColorRamp = {elevationStops: [], colorStops: []};
+        const remapStepSize = (colorRamp.elevationStops.length - 1)/(maxLength - 1);
+
+        for (let i = 0; i < colorRamp.elevationStops.length - 0.5; i += remapStepSize) {
+            remappedColorRamp.elevationStops.push(colorRamp.elevationStops[Math.round(i)]);
+            remappedColorRamp.colorStops.push(colorRamp.colorStops[Math.round(i)]);
+        }
+        warnOnce(`Too many colors in specification of ${this.id} color-relief layer, may not render properly.`);
+        return remappedColorRamp;
     }
     
     _colorRampChanged() : boolean {
         return this.colorRampExpression != this._transitionablePaint._values['color-relief-color'].value.expression;
-    }
-
-    /**
-     * Get the color ramp, enforcing a maximum length for the vectors. This modifies the internal color ramp,
-     * so that the remapping is only performed once.
-     *
-     * @param maxLength - the maximum number of stops in the color ramp
-     *
-     * @return a `ColorRamp` object with no more than `maxLength` stops.
-     *
-     */
-    getColorRamp(maxLength: number) : ColorRamp {
-        this.colorRamp = this._createColorRamp();
-        if (this.colorRamp.elevationStops.length > maxLength) {
-            const colorRamp: ColorRamp = {elevationStops: [], colorStops: []};
-            const remapStepSize = (this.colorRamp.elevationStops.length - 1)/(maxLength - 1);
-
-            for (let i = 0; i < this.colorRamp.elevationStops.length - 0.5; i += remapStepSize) {
-                colorRamp.elevationStops.push(this.colorRamp.elevationStops[Math.round(i)]);
-                colorRamp.colorStops.push(this.colorRamp.colorStops[Math.round(i)]);
-            }
-            warnOnce(`Too many colors in specification of ${this.id} color-relief layer, may not render properly.`);
-            this.colorRamp = colorRamp;
-        }
-        return this.colorRamp;
     }
     
     getColorRampTextures(context: Context, maxLength: number, unpackVector: number[]): ColorRampTextures {
         if (this.colorRampTextures && !this._colorRampChanged()) {
             return this.colorRampTextures;
         }
-        const colorRamp = this.getColorRamp(maxLength);
+        const colorRamp = this._createColorRamp(maxLength);
         const colorImage = new RGBAImage({width: colorRamp.colorStops.length, height: 1});
         const elevationImage = new RGBAImage({width: colorRamp.colorStops.length, height: 1});
         for (let i = 0; i < colorRamp.elevationStops.length; i++) {
