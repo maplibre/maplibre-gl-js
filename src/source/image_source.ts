@@ -45,6 +45,15 @@ export type CanonicalTileRange = {
     minTileY: number;
     maxTileX: number;
     maxTileY: number;
+
+    /**
+     * Image might be larger than a single tile, so we need to know the
+     * tile range for wrapping.
+     */
+    minTileXWrapped: number;
+    maxTileXWrapped: number;
+    minWrap: number;
+    maxWrap: number;
 };
 
 /**
@@ -320,11 +329,20 @@ export class ImageSource extends Evented implements Source {
             const maxTileX = Math.floor(maxX * tilesAtZoom);
             const maxTileY = Math.floor(maxY * tilesAtZoom);
 
+            const minTileXWrapped = minTileX % tilesAtZoom;
+            const maxTileXWrapped = maxTileX % tilesAtZoom;
+            const minWrap = Math.floor(minTileX / tilesAtZoom);
+            const maxWrap = Math.floor(maxTileX / tilesAtZoom);
+
             ranges[z] = {
                 minTileX,
                 minTileY,
                 maxTileX,
-                maxTileY
+                maxTileY,
+                minTileXWrapped,
+                maxTileXWrapped,
+                minWrap,
+                maxWrap
             };
         }
 
