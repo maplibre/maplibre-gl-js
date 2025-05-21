@@ -4,7 +4,7 @@ import properties, {type ColorReliefPaintPropsPossiblyEvaluated} from './color_r
 import {type Transitionable, type Transitioning, type PossiblyEvaluated} from '../properties';
 
 import type {ColorReliefPaintProps} from './color_relief_style_layer_properties.g';
-import {Color, Interpolate, ZoomConstantExpression, type LayerSpecification, type EvaluationContext} from '@maplibre/maplibre-gl-style-spec';
+import {Color, Interpolate, ZoomConstantExpression, type LayerSpecification, type EvaluationContext, type StylePropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 import {warnOnce} from '../../util/util';
 import {Texture} from '../../render/texture';
 import {RGBAImage} from '../../util/image';
@@ -17,6 +17,7 @@ export type ColorRamp = {elevationStops: Array<number>; colorStops: Array<Color>
 export type ColorRampTextures = {elevationTexture: Texture; colorTexture: Texture};
 
 export class ColorReliefStyleLayer extends StyleLayer {
+    colorRampExpression: StylePropertyExpression;
     colorRamp: ColorRamp;
     colorRampTextures: ColorRampTextures;
     _transitionablePaint: Transitionable<ColorReliefPaintProps>;
@@ -31,6 +32,7 @@ export class ColorReliefStyleLayer extends StyleLayer {
         const colorRamp: ColorRamp = {elevationStops: [], colorStops: []};
         const expression = this._transitionablePaint._values['color-relief-color'].value.expression;
         if (expression instanceof ZoomConstantExpression && expression._styleExpression.expression instanceof Interpolate) {
+            this.colorRampExpression = expression;
             const interpolater = expression._styleExpression.expression;
             colorRamp.elevationStops = interpolater.labels;
             colorRamp.colorStops = [];
@@ -50,6 +52,10 @@ export class ColorReliefStyleLayer extends StyleLayer {
         }
         return colorRamp;
     }
+    
+    _colorRampChanged() : boolean {
+        return this.colorRampExpression != this._transitionablePaint._values['color-relief-color'].value.expression;
+    }
 
     /**
      * Get the color ramp, enforcing a maximum length for the vectors. This modifies the internal color ramp,
@@ -61,9 +67,7 @@ export class ColorReliefStyleLayer extends StyleLayer {
      *
      */
     getColorRamp(maxLength: number) : ColorRamp {
-        if (!this.colorRamp) {
-            this.colorRamp = this._createColorRamp();
-        }
+        this.colorRamp = this._createColorRamp();
         if (this.colorRamp.elevationStops.length > maxLength) {
             const colorRamp: ColorRamp = {elevationStops: [], colorStops: []};
             const remapStepSize = (this.colorRamp.elevationStops.length - 1)/(maxLength - 1);
@@ -79,7 +83,7 @@ export class ColorReliefStyleLayer extends StyleLayer {
     }
     
     getColorRampTextures(context: Context, maxLength: number, unpackVector: number[]): ColorRampTextures {
-        if (!this.colorRampTextures) {
+        if (!this.colorRampTextures || this._colorRampChanged()) {
             const colorRamp = this.getColorRamp(maxLength);
             const colorImage = new RGBAImage({width: colorRamp.colorStops.length, height: 1});
             const elevationImage = new RGBAImage({width: colorRamp.colorStops.length, height: 1});
