@@ -1,4 +1,4 @@
-import {Color} from '@maplibre/maplibre-gl-style-spec';
+import {type Color} from '@maplibre/maplibre-gl-style-spec';
 import {register} from './web_worker_transfer';
 
 export type Size = {
