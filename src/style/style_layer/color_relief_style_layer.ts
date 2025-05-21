@@ -106,6 +106,6 @@ export class ColorReliefStyleLayer extends StyleLayer {
     }
 
     hasOffscreenPass() {
-        return this.visibility !== 'none' && !!this.colorRamp;
+        return this.visibility !== 'none' && !!this.colorRampTextures;
     }
 }
