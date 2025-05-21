@@ -83,28 +83,29 @@ export class ColorReliefStyleLayer extends StyleLayer {
     }
     
     getColorRampTextures(context: Context, maxLength: number, unpackVector: number[]): ColorRampTextures {
-        if (!this.colorRampTextures || this._colorRampChanged()) {
-            const colorRamp = this.getColorRamp(maxLength);
-            const colorImage = new RGBAImage({width: colorRamp.colorStops.length, height: 1});
-            const elevationImage = new RGBAImage({width: colorRamp.colorStops.length, height: 1});
-            for (let i = 0; i < colorRamp.elevationStops.length; i++) {
-                const elevationPacked = packDEMData(colorRamp.elevationStops[i], unpackVector);
-                elevationImage.data[4*i + 0] = elevationPacked.r;
-                elevationImage.data[4*i + 1] = elevationPacked.g;
-                elevationImage.data[4*i + 2] = elevationPacked.b;
-                elevationImage.data[4*i + 3] = 255;
-
-                const pxColor = colorRamp.colorStops[i];
-                colorImage.data[4*i + 0] = Math.round(pxColor.r * 255 / pxColor.a);
-                colorImage.data[4*i + 1] = Math.round(pxColor.g * 255 / pxColor.a);
-                colorImage.data[4*i + 2] = Math.round(pxColor.b * 255 / pxColor.a);
-                colorImage.data[4*i + 3] = Math.round(pxColor.a * 255);
-            }
-            this.colorRampTextures = {
-                elevationTexture: new Texture(context, elevationImage, context.gl.RGBA),
-                colorTexture: new Texture(context, colorImage, context.gl.RGBA)
-            };
+        if (this.colorRampTextures && !this._colorRampChanged()) {
+            return this.colorRampTextures;
         }
+        const colorRamp = this.getColorRamp(maxLength);
+        const colorImage = new RGBAImage({width: colorRamp.colorStops.length, height: 1});
+        const elevationImage = new RGBAImage({width: colorRamp.colorStops.length, height: 1});
+        for (let i = 0; i < colorRamp.elevationStops.length; i++) {
+            const elevationPacked = packDEMData(colorRamp.elevationStops[i], unpackVector);
+            elevationImage.data[4*i + 0] = elevationPacked.r;
+            elevationImage.data[4*i + 1] = elevationPacked.g;
+            elevationImage.data[4*i + 2] = elevationPacked.b;
+            elevationImage.data[4*i + 3] = 255;
+
+            const pxColor = colorRamp.colorStops[i];
+            colorImage.data[4*i + 0] = Math.round(pxColor.r * 255 / pxColor.a);
+            colorImage.data[4*i + 1] = Math.round(pxColor.g * 255 / pxColor.a);
+            colorImage.data[4*i + 2] = Math.round(pxColor.b * 255 / pxColor.a);
+            colorImage.data[4*i + 3] = Math.round(pxColor.a * 255);
+        }
+        this.colorRampTextures = {
+            elevationTexture: new Texture(context, elevationImage, context.gl.RGBA),
+            colorTexture: new Texture(context, colorImage, context.gl.RGBA)
+        };
         return this.colorRampTextures;
     }
 
