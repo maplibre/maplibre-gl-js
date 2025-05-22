@@ -1,3 +1,7 @@
+#ifdef GL_ES
+precision highp float;
+#endif
+
 uniform sampler2D u_image;
 uniform vec4 u_unpack;
 uniform sampler2D u_elevation_stops;
