@@ -241,10 +241,46 @@ describe('ImageSource', () => {
             source.onAdd(map);
             server.respond();
             source.setCoordinates([[11.39585,47.30074],[11.46585,47.30074],[11.46585,47.25074],[11.39585,47.25074]]);
-            expect(source.terrainTileRanges[9]).toEqual({minTileX: 272, minTileY: 179, maxTileX: 272, maxTileY: 179});
-            expect(source.terrainTileRanges[10]).toEqual({minTileX: 544, minTileY: 358, maxTileX: 544, maxTileY: 359});
-            expect(source.terrainTileRanges[11]).toEqual({minTileX: 1088, minTileY: 717, maxTileX: 1089, maxTileY: 718});
-            expect(source.terrainTileRanges[12]).toEqual({minTileX: 2177, minTileY: 1435, maxTileX: 2178, maxTileY: 1436});
+            expect(source.terrainTileRanges[9]).toEqual({
+                minTileX: 272,
+                minTileY: 179,
+                maxTileX: 272,
+                maxTileY: 179,
+                minWrap: 0,
+                maxWrap: 0,
+                minTileXWrapped: 272,
+                maxTileXWrapped: 272
+            });
+            expect(source.terrainTileRanges[10]).toEqual({
+                minTileX: 544,
+                minTileY: 358,
+                maxTileX: 544,
+                maxTileY: 359,
+                minWrap: 0,
+                maxWrap: 0,
+                minTileXWrapped: 544,
+                maxTileXWrapped: 544
+            });
+            expect(source.terrainTileRanges[11]).toEqual({
+                minTileX: 1088,
+                minTileY: 717,
+                maxTileX: 1089,
+                maxTileY: 718,
+                minWrap: 0,
+                maxWrap: 0,
+                minTileXWrapped: 1088,
+                maxTileXWrapped: 1089
+            });
+            expect(source.terrainTileRanges[12]).toEqual({
+                minTileX: 2177,
+                minTileY: 1435,
+                maxTileX: 2178,
+                maxTileY: 1436,
+                minWrap: 0,
+                maxWrap: 0,
+                minTileXWrapped: 2177,
+                maxTileXWrapped: 2178
+            });
         });
     });
 });
