@@ -45,7 +45,7 @@ export type SetClusterOptions = {
     cluster?: boolean;
     /**
      * The cluster's max zoom.
-     * Must be an integer due to internal implementation.
+     * Non-integer values are rounded to the closest integer due to supercluster integer value requirements.
      */
     clusterMaxZoom?: number;
     /**
@@ -179,8 +179,7 @@ export class GeoJSONSource extends Evented implements Source {
                 generateId: options.generateId || false
             },
             superclusterOptions: {
-                maxZoom: options.clusterMaxZoom !== undefined ?
-                    this._getClusterMaxZoom(options.clusterMaxZoom) : this.maxzoom - 1,
+                maxZoom: this._getClusterMaxZoom(options.clusterMaxZoom),
                 minPoints: Math.max(2, options.clusterMinPoints || 2),
                 extent: EXTENT,
                 radius: this._pixelsToTileUnits(options.clusterRadius || 50),
@@ -202,9 +201,9 @@ export class GeoJSONSource extends Evented implements Source {
     }
 
     private _getClusterMaxZoom(clusterMaxZoom: number): number {
-        const effectiveClusterMaxZoom = Math.round(clusterMaxZoom);
-        if (effectiveClusterMaxZoom !== clusterMaxZoom) {
-            warnOnce(`clusterMaxZoom is expected to be an integer, "${clusterMaxZoom}" provided.`);
+        const effectiveClusterMaxZoom = clusterMaxZoom ? Math.round(clusterMaxZoom) : this.maxzoom - 1;
+        if (!(Number.isInteger(clusterMaxZoom) || clusterMaxZoom === undefined)) {
+            warnOnce(`Integer expected for option 'clusterMaxZoom': provided value ${clusterMaxZoom} rounded to ${effectiveClusterMaxZoom}`);
         }
         return effectiveClusterMaxZoom;
     }
