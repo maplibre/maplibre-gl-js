@@ -31,6 +31,9 @@ export type TerrainData = {
     'u_terrain_dim': number;
     'u_terrain_matrix': mat4;
     'u_terrain_unpack': number[];
+    'u_terrain_range': number[];
+    'u_terrain_nodata': number[];
+    'u_terrain_nodataHeight': number;
     'u_terrain_exaggeration': number;
     texture: WebGLTexture;
     depthTexture: WebGLTexture;
@@ -252,6 +255,9 @@ export class Terrain {
             'u_terrain_dim': sourceTile && sourceTile.dem && sourceTile.dem.dim || 1,
             'u_terrain_matrix': matrixKey ? this._demMatrixCache[tileID.key].matrix : this._emptyDemMatrix,
             'u_terrain_unpack': sourceTile && sourceTile.dem && sourceTile.dem.getUnpackVector() || this._emptyDemUnpack,
+            'u_terrain_range': sourceTile && sourceTile.dem && sourceTile.dem.getRange() || [0, 0],
+            'u_terrain_nodata': sourceTile && sourceTile.dem && sourceTile.dem.getNodata() || [0, 0, 0],
+            'u_terrain_nodataHeight': sourceTile && sourceTile.dem && sourceTile.dem.getNodataHeight() || 0,
             'u_terrain_exaggeration': this.exaggeration,
             texture: (sourceTile && sourceTile.demTexture || this._emptyDemTexture).texture,
             depthTexture: (this._fboDepthTexture || this._emptyDepthTexture).texture,

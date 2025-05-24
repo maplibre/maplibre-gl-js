@@ -3,10 +3,11 @@ import {
     Uniform1f,
     Uniform4f,
     UniformMatrix4f,
-    UniformColor
+    UniformColor,
+    Uniform3f
 } from '../uniform_binding';
 import type {Context} from '../../gl/context';
-import type {UniformValues, UniformLocations} from '../../render/uniform_binding';
+import {type UniformValues, type UniformLocations, Uniform2f} from '../../render/uniform_binding';
 import {type Sky} from '../../style/sky';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {type mat4} from 'gl-matrix';
@@ -17,6 +18,9 @@ export type TerrainPreludeUniformsType = {
     'u_terrain_dim': Uniform1f;
     'u_terrain_matrix': UniformMatrix4f;
     'u_terrain_unpack': Uniform4f;
+    'u_terrain_range': Uniform2f;
+    'u_terrain_nodata': Uniform3f;
+    'u_terrain_nodataHeight': Uniform1f;
     'u_terrain_exaggeration': Uniform1f;
 };
 
@@ -48,6 +52,9 @@ const terrainPreludeUniforms = (context: Context, locations: UniformLocations): 
     'u_terrain_dim': new Uniform1f(context, locations.u_terrain_dim),
     'u_terrain_matrix': new UniformMatrix4f(context, locations.u_terrain_matrix),
     'u_terrain_unpack': new Uniform4f(context, locations.u_terrain_unpack),
+    'u_terrain_range': new Uniform2f(context, locations.u_terrain_range),
+    'u_terrain_nodata': new Uniform3f(context, locations.u_terrain_nodata),
+    'u_terrain_nodataHeight': new Uniform1f(context, locations.u_terrain_nodataHeight),
     'u_terrain_exaggeration': new Uniform1f(context, locations.u_terrain_exaggeration)
 });
 

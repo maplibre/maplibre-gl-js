@@ -30,6 +30,9 @@ export class DEMData {
     greenFactor: number;
     blueFactor: number;
     baseShift: number;
+    heightRange: [number, number];
+    nodata: [number, number, number];
+    nodataHeight: number;
 
     /**
      * Constructs a `DEMData` object
@@ -41,8 +44,11 @@ export class DEMData {
      * @param greenFactor - the green channel factor used to unpack the data, used for `custom` encoding only
      * @param blueFactor - the blue channel factor used to unpack the data, used for `custom` encoding only
      * @param baseShift - the base shift used to unpack the data, used for `custom` encoding only
+     * @param heightRange - the height range of the data
+     * @param nodata - the nodata value of the data
+     * @param nodataHeight - the height value of the nodata value
      */
-    constructor(uid: string | number, data: RGBAImage | ImageData, encoding: DEMEncoding, redFactor = 1.0, greenFactor = 1.0, blueFactor = 1.0, baseShift = 0.0) {
+    constructor(uid: string | number, data: RGBAImage | ImageData, encoding: DEMEncoding, redFactor = 1.0, greenFactor = 1.0, blueFactor = 1.0, baseShift = 0.0, heightRange?: [number, number], nodata?: [number, number, number], nodataHeight?: number) {
         this.uid = uid;
         if (data.height !== data.width) throw new RangeError('DEM tiles must be square');
         if (encoding && !['mapbox', 'terrarium', 'custom'].includes(encoding)) {
@@ -60,12 +66,14 @@ export class DEMData {
                 this.greenFactor = 1.0;
                 this.blueFactor = 1.0 / 256.0;
                 this.baseShift = 32768.0;
+                this.heightRange = [-32768, 32767];
                 break;
             case 'custom':
                 this.redFactor = redFactor;
                 this.greenFactor = greenFactor;
                 this.blueFactor = blueFactor;
                 this.baseShift = baseShift;
+                this.heightRange = heightRange;
                 break;
             case 'mapbox':
             default:
@@ -75,8 +83,12 @@ export class DEMData {
                 this.greenFactor = 25.6;
                 this.blueFactor = 0.1;
                 this.baseShift = 10000.0;
+                this.heightRange = [-10000, 1667721.5];
                 break;
         }
+
+        this.nodata = nodata || [0, 0, 0];
+        this.nodataHeight = nodataHeight || 0;
 
         // in order to avoid flashing seams between tiles, here we are initially populating a 1px border of pixels around the image
         // with the data of the nearest pixel from the image. this data is eventually replaced when the tile's neighboring
@@ -125,7 +137,15 @@ export class DEMData {
     }
 
     unpack(r: number, g: number, b: number) {
-        return (r * this.redFactor + g * this.greenFactor + b * this.blueFactor - this.baseShift);
+        if (r === this.nodata[0] && g === this.nodata[1] && b === this.nodata[2]) {
+            return this.nodataHeight;
+        }
+
+        let unpacked = (r * this.redFactor + g * this.greenFactor + b * this.blueFactor - this.baseShift);
+        if (unpacked > this.heightRange[1]) {
+            unpacked -= (this.heightRange[1] - this.heightRange[0]);
+        }
+        return unpacked;
     }
 
     pack(v: number): {r: number; g: number; b: number} {
@@ -169,6 +189,18 @@ export class DEMData {
                 this.data[this._idx(x, y)] = borderTile.data[this._idx(x + ox, y + oy)];
             }
         }
+    }
+
+    getRange() {
+        return this.heightRange;
+    }
+
+    getNodata() {
+        return this.nodata;
+    }
+
+    getNodataHeight() {
+        return this.nodataHeight;
     }
 }
 

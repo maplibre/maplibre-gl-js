@@ -40,6 +40,9 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
     greenFactor?: number;
     blueFactor?: number;
     baseShift?: number;
+    heightRange?: [number, number];
+    nodata?: [number, number, number];
+    nodataHeight?: number;
 
     constructor(id: string, options: RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
         super(id, options, dispatcher, eventedParent);
@@ -51,6 +54,12 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
         this.greenFactor = options.greenFactor;
         this.blueFactor = options.blueFactor;
         this.baseShift = options.baseShift;
+        // @ts-ignore
+        this.heightRange = options.heightRange;
+        // @ts-ignore
+        this.nodata = options.nodata;
+        // @ts-ignore
+        this.nodataHeight = options.nodataHeight;
     }
 
     override async loadTile(tile: Tile): Promise<void> {
@@ -81,7 +90,10 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                     redFactor: this.redFactor,
                     greenFactor: this.greenFactor,
                     blueFactor: this.blueFactor,
-                    baseShift: this.baseShift
+                    baseShift: this.baseShift,
+                    heightRange: this.heightRange,
+                    nodata: this.nodata,
+                    nodataHeight: this.nodataHeight
                 };
 
                 if (!tile.actor || tile.state === 'expired') {

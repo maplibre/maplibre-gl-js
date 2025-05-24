@@ -92,6 +92,9 @@ uniform sampler2D u_terrain;
 uniform float u_terrain_dim;
 uniform mat4 u_terrain_matrix;
 uniform vec4 u_terrain_unpack;
+uniform vec2 u_terrain_range;
+uniform vec3 u_terrain_nodata;
+uniform float u_terrain_nodataHeight;
 uniform float u_terrain_exaggeration;
 uniform highp sampler2D u_depth;
 #endif
@@ -135,8 +138,18 @@ float calculate_visibility(vec4 pos) {
 // grab an elevation value from a raster-dem texture
 float ele(vec2 pos) {
     #ifdef TERRAIN3D
-        vec4 rgb = (texture(u_terrain, pos) * 255.0) * u_terrain_unpack;
-        return rgb.r + rgb.g + rgb.b - u_terrain_unpack.a;
+        vec4 rgb = (texture(u_terrain, pos) * 255.0);
+
+        if (rgb.r == u_terrain_nodata[0] && rgb.g == u_terrain_nodata[1] && rgb.b == u_terrain_nodata[2]) {
+            return u_terrain_nodataHeight;
+        }
+
+        vec4 unpacked = rgb * u_terrain_unpack;
+        float elevation = unpacked.r + unpacked.g + unpacked.b - u_terrain_unpack.a;
+
+        // if elevation is above the maximum, subtract down to the minimum
+        elevation = mix(elevation, elevation - (u_terrain_range[1] - u_terrain_range[0]), elevation > u_terrain_range[1]);
+        return elevation * u_terrain_exaggeration;
     #else
         return 0.0;
     #endif
