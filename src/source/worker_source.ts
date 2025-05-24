@@ -53,7 +53,7 @@ export type WorkerDEMTileParameters = TileParameters & {
     blueFactor: number;
     baseShift: number;
     heightRange: [number, number];
-    nodata: [number, number, number];
+    nodataRgb: [number, number, number];
     nodataHeight: number;
 };
 

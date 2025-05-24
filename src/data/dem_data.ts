@@ -31,7 +31,7 @@ export class DEMData {
     blueFactor: number;
     baseShift: number;
     heightRange: [number, number];
-    nodata: [number, number, number];
+    nodataRgb: [number, number, number];
     nodataHeight: number;
 
     /**
@@ -45,10 +45,10 @@ export class DEMData {
      * @param blueFactor - the blue channel factor used to unpack the data, used for `custom` encoding only
      * @param baseShift - the base shift used to unpack the data, used for `custom` encoding only
      * @param heightRange - the height range of the data
-     * @param nodata - the nodata value of the data
+     * @param nodataRgb - the nodata value of the data
      * @param nodataHeight - the height value of the nodata value
      */
-    constructor(uid: string | number, data: RGBAImage | ImageData, encoding: DEMEncoding, redFactor = 1.0, greenFactor = 1.0, blueFactor = 1.0, baseShift = 0.0, heightRange?: [number, number], nodata?: [number, number, number], nodataHeight?: number) {
+    constructor(uid: string | number, data: RGBAImage | ImageData, encoding: DEMEncoding, redFactor = 1.0, greenFactor = 1.0, blueFactor = 1.0, baseShift = 0.0, heightRange?: [number, number], nodataRgb?: [number, number, number], nodataHeight?: number) {
         this.uid = uid;
         if (data.height !== data.width) throw new RangeError('DEM tiles must be square');
         if (encoding && !['mapbox', 'terrarium', 'custom'].includes(encoding)) {
@@ -87,7 +87,7 @@ export class DEMData {
                 break;
         }
 
-        this.nodata = nodata || [0, 0, 0];
+        this.nodataRgb = nodataRgb || [0, 0, 0];
         this.nodataHeight = nodataHeight || 0;
 
         // in order to avoid flashing seams between tiles, here we are initially populating a 1px border of pixels around the image
@@ -137,7 +137,7 @@ export class DEMData {
     }
 
     unpack(r: number, g: number, b: number) {
-        if (r === this.nodata[0] && g === this.nodata[1] && b === this.nodata[2]) {
+        if (r === this.nodataRgb[0] && g === this.nodataRgb[1] && b === this.nodataRgb[2]) {
             return this.nodataHeight;
         }
 
@@ -195,8 +195,8 @@ export class DEMData {
         return this.heightRange;
     }
 
-    getNodata() {
-        return this.nodata;
+    getNodataRgb() {
+        return this.nodataRgb;
     }
 
     getNodataHeight() {

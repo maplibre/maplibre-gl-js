@@ -41,7 +41,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
     blueFactor?: number;
     baseShift?: number;
     heightRange?: [number, number];
-    nodata?: [number, number, number];
+    nodataRgb?: [number, number, number];
     nodataHeight?: number;
 
     constructor(id: string, options: RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
@@ -57,7 +57,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
         // @ts-ignore
         this.heightRange = options.heightRange;
         // @ts-ignore
-        this.nodata = options.nodata;
+        this.nodataRgb = options.nodataRgb;
         // @ts-ignore
         this.nodataHeight = options.nodataHeight;
     }
@@ -92,7 +92,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                     blueFactor: this.blueFactor,
                     baseShift: this.baseShift,
                     heightRange: this.heightRange,
-                    nodata: this.nodata,
+                    nodataRgb: this.nodataRgb,
                     nodataHeight: this.nodataHeight
                 };
 

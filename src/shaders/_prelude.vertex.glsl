@@ -93,7 +93,7 @@ uniform float u_terrain_dim;
 uniform mat4 u_terrain_matrix;
 uniform vec4 u_terrain_unpack;
 uniform vec2 u_terrain_range;
-uniform vec3 u_terrain_nodata;
+uniform vec3 u_terrain_nodataRgb;
 uniform float u_terrain_nodataHeight;
 uniform float u_terrain_exaggeration;
 uniform highp sampler2D u_depth;
@@ -140,16 +140,12 @@ float ele(vec2 pos) {
     #ifdef TERRAIN3D
         vec4 rgb = (texture(u_terrain, pos) * 255.0);
 
-        if (rgb.r == u_terrain_nodata[0] && rgb.g == u_terrain_nodata[1] && rgb.b == u_terrain_nodata[2]) {
-            return u_terrain_nodataHeight;
-        }
-
+        float isNoData = step(0.5, abs(rgb.r - u_terrain_nodata[0]) + abs(rgb.g - u_terrain_nodata[1]) + abs(rgb.b - u_terrain_nodata[2]));
         vec4 unpacked = rgb * u_terrain_unpack;
         float elevation = unpacked.r + unpacked.g + unpacked.b - u_terrain_unpack.a;
-
-        // if elevation is above the maximum, subtract down to the minimum
         elevation = mix(elevation, elevation - (u_terrain_range[1] - u_terrain_range[0]), elevation > u_terrain_range[1]);
-        return elevation * u_terrain_exaggeration;
+        float result = elevation * u_terrain_exaggeration;
+        return mix(u_terrain_nodataHeight, result, isNoData);
     #else
         return 0.0;
     #endif
