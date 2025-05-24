@@ -236,3 +236,60 @@ describe('DEMData#getImage', () => {
     test('Image is correctly returned - terrarium', testGetPixels(terrariumDEM, imageData));
     test('Image is correctly returned - custom', testGetPixels(customDEM, imageData));
 });
+
+describe('DEMData pack and unpack', () => {
+    const imageData = createMockImage(4, 4);
+    test('mapbox', () => {
+        const dem = new DEMData('0', imageData, 'mapbox');
+        expect(dem.unpack(123, 177, 215)).toEqual(800645.5);
+        expect(dem.pack(800645.5)).toEqual({r: 123, g: 177, b: 215});
+
+        expect(dem.unpack(0, 0, 0)).toEqual(-10000);
+        expect(dem.pack(-10000)).toEqual({r: 0, g: 0, b: 0});
+
+        expect(dem.unpack(1, 1, 1)).toBeCloseTo(-3420.7);
+        expect(dem.pack(-3420.7)).toEqual({r: 1, g: 1, b: 1});
+
+        expect(dem.unpack(255, 255, 255)).toEqual(1667721.5);
+        expect(dem.pack(1667721.5)).toEqual({r: 255, g: 255, b: 255});
+
+        expect(dem.unpack(255, 0, 255)).toEqual(1661193.5);
+        expect(dem.pack(1661193.5)).toEqual({r: 255, g: 0, b: 255});
+    });
+    
+    test('terrarium', () => {
+        const dem = new DEMData('0', imageData, 'terrarium');
+        expect(dem.unpack(123, 177, 215)).toEqual(-1102.16015625);
+        expect(dem.pack(-1102.16015625)).toEqual({r: 123, g: 177, b: 215});
+
+        expect(dem.unpack(0, 0, 0)).toEqual(-32768);
+        expect(dem.pack(-32768)).toEqual({r: 0, g: 0, b: 0});
+
+        expect(dem.unpack(1, 1, 1)).toEqual(-32510.99609375);
+        expect(dem.pack(-32510.99609375)).toEqual({r: 1, g: 1, b: 1});
+
+        expect(dem.unpack(255, 255, 255)).toEqual(32767.99609375);
+        expect(dem.pack(32767.99609375)).toEqual({r: 255, g: 255, b: 255});
+
+        expect(dem.unpack(255, 0, 255)).toEqual(32512.99609375);
+        expect(dem.pack(32512.99609375)).toEqual({r: 255, g: 0, b: 255});
+    });
+    
+    test('custom', () => {
+        const dem = new DEMData('0', imageData, 'custom', 0.25, 64, 16384, 7000.0);
+        expect(dem.unpack(123, 177, 215)).toEqual(3526918.75);
+        expect(dem.pack(3526918.75)).toEqual({r: 123, g: 177, b: 215});
+
+        expect(dem.unpack(0, 0, 0)).toEqual(-7000);
+        expect(dem.pack(-7000)).toEqual({r: 0, g: 0, b: 0});
+
+        expect(dem.unpack(1, 1, 1)).toEqual(9448.25);
+        expect(dem.pack(9448.25)).toEqual({r: 1, g: 1, b: 1});
+
+        expect(dem.unpack(255, 255, 255)).toEqual(4187303.75);
+        expect(dem.pack(4187303.75)).toEqual({r: 255, g: 255, b: 255});
+
+        expect(dem.unpack(255, 0, 255)).toEqual(4170983.75);
+        expect(dem.pack(4170983.75)).toEqual({r: 255, g: 0, b: 255});
+    });
+});

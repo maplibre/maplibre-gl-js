@@ -26,12 +26,7 @@ export function renderColorRamp(params: ColorRampParams): RGBAImage {
     const renderPixel = (stride, index, progress) => {
         evaluationGlobals[params.evaluationKey] = progress;
         const pxColor = params.expression.evaluate(evaluationGlobals as any);
-        // the colors are being unpremultiplied because Color uses
-        // premultiplied values, and the Texture class expects unpremultiplied ones
-        image.data[stride + index + 0] = Math.floor(pxColor.r * 255 / pxColor.a);
-        image.data[stride + index + 1] = Math.floor(pxColor.g * 255 / pxColor.a);
-        image.data[stride + index + 2] = Math.floor(pxColor.b * 255 / pxColor.a);
-        image.data[stride + index + 3] = Math.floor(pxColor.a * 255);
+        image.setPixel(stride / 4 / width, index / 4, pxColor);
     };
 
     if (!params.clips) {

@@ -42,7 +42,7 @@ describe('renderColorRamp', () => {
 
         expect(pixelAt(ramp, 0)[3]).toBe(0);
         expect(nearlyEquals(pixelAt(ramp, 63), [255, 255, 255, 255])).toBeTruthy();
-        expect(nearlyEquals(pixelAt(ramp, 127), [0, 255, 255, 127])).toBeTruthy();
+        expect(nearlyEquals(pixelAt(ramp, 127), [0, 255, 255, 128])).toBeTruthy();
         expect(nearlyEquals(pixelAt(ramp, 191), [0, 0, 0, 255])).toBeTruthy();
         expect(nearlyEquals(pixelAt(ramp, 255), [255, 0, 0, 255])).toBeTruthy();
     });
@@ -65,8 +65,8 @@ describe('renderColorRamp', () => {
         expect(ramp.width).toBe(512);
         expect(ramp.height).toBe(1);
 
-        expect(pixelAt(ramp, 0)[3]).toBe(25);
-        expect(nearlyEquals(pixelAt(ramp, 50), [0, 0, 255, 25])).toBeTruthy();
+        expect(pixelAt(ramp, 0)[3]).toBe(26);
+        expect(nearlyEquals(pixelAt(ramp, 50), [0, 0, 255, 26])).toBeTruthy();
         expect(nearlyEquals(pixelAt(ramp, 53), [255, 0, 0, 255])).toBeTruthy();
         expect(nearlyEquals(pixelAt(ramp, 103), [255, 255, 0, 255])).toBeTruthy();
         expect(nearlyEquals(pixelAt(ramp, 160), [255, 255, 255, 255])).toBeTruthy();
@@ -94,8 +94,8 @@ describe('renderColorRamp', () => {
 
         renderColorRamp({expression, evaluationKey: 'lineProgress', resolution: 512, image: ramp});
 
-        expect(pixelAt(ramp, 0)[3]).toBe(127);
-        expect(nearlyEquals(pixelAt(ramp, 50), [255, 0, 0, 127])).toBeTruthy();
+        expect(pixelAt(ramp, 0)[3]).toBe(128);
+        expect(nearlyEquals(pixelAt(ramp, 50), [255, 0, 0, 128])).toBeTruthy();
         expect(nearlyEquals(pixelAt(ramp, 53), [0, 0, 0, 255])).toBeTruthy();
         expect(nearlyEquals(pixelAt(ramp, 103), [255, 0, 0, 255])).toBeTruthy();
         expect(nearlyEquals(pixelAt(ramp, 160), [0, 0, 255, 255])).toBeTruthy();

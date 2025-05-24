@@ -82,6 +82,10 @@ export class PropertyValue<T, R> {
         return this.expression.kind === 'source' || this.expression.kind === 'composite';
     }
 
+    getGlobalStateRefs(): Set<string> {
+        return this.expression.globalStateRefs || new Set<string>();
+    }
+
     possiblyEvaluate(
         parameters: EvaluationParameters,
         canonical?: CanonicalTileID,

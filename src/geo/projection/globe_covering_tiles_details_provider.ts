@@ -1,12 +1,15 @@
 import {EXTENT} from '../../data/extent';
 import {projectTileCoordinatesToSphere} from './globe_utils';
-import {Aabb} from '../../util/primitives/aabb';
-import {AabbCache} from '../../util/primitives/aabb_cache';
+import {BoundingVolumeCache} from '../../util/primitives/bounding_volume_cache';
 import {coveringZoomLevel, type CoveringTilesOptions} from './covering_tiles';
-import type {vec3} from 'gl-matrix';
+import {vec3, type vec4} from 'gl-matrix';
 import type {IReadonlyTransform} from '../transform_interface';
 import type {MercatorCoordinate} from '../mercator_coordinate';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
+import {OverscaledTileID} from '../../source/tile_id';
+import {earthRadius} from '../lng_lat';
+import {ConvexVolume} from '../../util/primitives/convex_volume';
+import {threePlaneIntersection} from '../../util/util';
 
 /**
  * Computes distance of a point to a tile in an arbitrary axis.
@@ -39,13 +42,13 @@ function distanceToTileWrapX(pointX: number, pointY: number, tileCornerX: number
 }
 
 export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsProvider {
-    private _aabbCache: AabbCache = new AabbCache(this._computeTileAABB);
+    private _boundingVolumeCache: BoundingVolumeCache<ConvexVolume> = new BoundingVolumeCache(this._computeTileBoundingVolume);
 
     /**
-     * Prepares the internal AABB cache for the next frame.
+     * Prepares the internal bounding volume cache for the next frame.
      */
-    recalculateCache() {
-        this._aabbCache.recalculateCache();
+    prepareNextFrame() {
+        this._boundingVolumeCache.swapBuffers();
     }
 
     /**
@@ -54,7 +57,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
      * Handles distances on a sphere correctly: X is wrapped when crossing the antimeridian,
      * when crossing the poles Y is mirrored and X is shifted by half world size.
      */
-    distanceToTile2d(pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, _aabb: Aabb): number {
+    distanceToTile2d(pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, _bv: ConvexVolume): number {
         const scale = 1 << tileID.z;
         const tileMercatorSize = 1.0 / scale;
         const tileCornerX = tileID.x / scale; // In range 0..1
@@ -101,59 +104,41 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
         return false;
     }
 
-    getTileAABB(tileID: { x: number; y: number; z: number }, wrap: number, elevation: number, options: CoveringTilesOptions) {
-        return this._aabbCache.getTileAABB(tileID, wrap, elevation, options);
+    getTileBoundingVolume(tileID: { x: number; y: number; z: number }, wrap: number, elevation: number, options: CoveringTilesOptions) {
+        return this._boundingVolumeCache.getTileBoundingVolume(tileID, wrap, elevation, options);
     }
 
-    private _computeTileAABB(tileID: {x: number; y: number; z: number}, _wrap: number, _elevation: number, _options: CoveringTilesOptions): Aabb {
-        // We can get away with only checking the 4 tile corners for AABB construction, because for any tile of zoom level 2 or higher
-        // it holds that the extremes (minimal or maximal value) of X, Y or Z coordinates must lie in one of the tile corners.
-        //
-        // To see why this holds, consider the formula for computing X,Y and Z from angular coordinates.
-        // It goes something like this:
-        //
-        // X = sin(lng) * cos(lat)
-        // Y = sin(lat)
-        // Z = cos(lng) * cos(lat)
-        //
-        // Note that a tile always covers a continuous range of lng and lat values,
-        // and that tiles that border the mercator north/south edge are assumed to extend all the way to the poles.
-        //
-        // We will consider each coordinate separately and show that an extreme must always lie in a tile corner for every axis, and must not lie inside the tile.
-        //
-        // For Y, it is clear that the only way for an extreme to not lie on an edge of the lat range is for the range to contain lat=90° or lat=-90° without either being the tile edge.
-        // This cannot happen for any tile, these latitudes will always:
-        // - either lie outside the tile entirely, thus Y will be monotonically increasing or decreasing across the entire tile, thus the extreme must lie at a corner/edge
-        // - or be the tile edge itself, thus the extreme will lie at the tile edge
-        //
-        // For X, considering only longitude, the tile would also have to contain lng=90° or lng=-90° (with neither being the tile edge) for the extreme to not lie on a tile edge.
-        // This can only happen at zoom levels 0 and 1, which are handled separately.
-        // But X is also scaled by cos(lat)! However, this can only cause an extreme to lie inside the tile if the tile crosses lat=0°, which cannot happen for zoom levels other than 0.
-        //
-        // For Z, similarly to X, the extremes must lie at lng=0° or lng=180°, but for zoom levels other than 0 these cannot lie inside the tile. Scaling by cos(lat) has the same effect as with the X axis.
-        //
-        // So checking the 4 tile corners only fails for tiles with zoom level <2, and these are handled separately with hardcoded AABBs:
-        // - zoom level 0 tile is the entire sphere
-        // - zoom level 1 tiles are "quarters of a sphere"
+    private _computeTileBoundingVolume(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions): ConvexVolume {
+        let minElevation = elevation;
+        let maxElevation = elevation;
+        if (options?.terrain) {
+            const overscaledTileID = new OverscaledTileID(tileID.z, wrap, tileID.z, tileID.x, tileID.y);
+            const minMax = options.terrain.getMinMaxElevation(overscaledTileID);
+            minElevation = minMax.minElevation ?? elevation;
+            maxElevation = minMax.maxElevation ?? elevation;
+        }
+        // Convert elevation to distances from center of a unit sphere planet (so that 1 is surface)
+        minElevation /= earthRadius;
+        maxElevation /= earthRadius;
+        minElevation += 1;
+        maxElevation += 1;
 
         if (tileID.z <= 0) {
             // Tile covers the entire sphere.
-            return new Aabb(
-                [-1, -1, -1],
-                [1, 1, 1]
+            return ConvexVolume.fromAabb( // We return an AABB in this case.
+                [-maxElevation, -maxElevation, -maxElevation],
+                [maxElevation, maxElevation, maxElevation]
             );
         } else if (tileID.z === 1) {
             // Tile covers a quarter of the sphere.
             // X is 1 at lng=E90°
             // Y is 1 at **north** pole
             // Z is 1 at null island
-            return new Aabb(
-                [tileID.x === 0 ? -1 : 0, tileID.y === 0 ? 0 : -1, -1],
-                [tileID.x === 0 ? 0 : 1, tileID.y === 0 ? 1 : 0, 1]
+            return ConvexVolume.fromAabb( // We also just use AABBs for this zoom level.
+                [tileID.x === 0 ? -maxElevation : 0, tileID.y === 0 ? 0 : -maxElevation, -maxElevation],
+                [tileID.x === 0 ? 0 : maxElevation, tileID.y === 0 ? maxElevation : 0, maxElevation]
             );
         } else {
-            // Compute AABB using the 4 corners.
-
             const corners = [
                 projectTileCoordinatesToSphere(0, 0, tileID.x, tileID.y, tileID.z),
                 projectTileCoordinatesToSphere(EXTENT, 0, tileID.x, tileID.y, tileID.z),
@@ -161,30 +146,166 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
                 projectTileCoordinatesToSphere(0, EXTENT, tileID.x, tileID.y, tileID.z),
             ];
 
-            const min: vec3 = [1, 1, 1];
-            const max: vec3 = [-1, -1, -1];
+            const extremesPoints = [];
 
             for (const c of corners) {
-                for (let i = 0; i < 3; i++) {
-                    min[i] = Math.min(min[i], c[i]);
-                    max[i] = Math.max(max[i], c[i]);
+                extremesPoints.push(vec3.scale([] as any, c, maxElevation));
+            }
+
+            if (maxElevation !== minElevation) {
+                // Only add additional points if terrain is enabled and is not flat.
+                for (const c of corners) {
+                    extremesPoints.push(vec3.scale([] as any, c, minElevation));
                 }
             }
 
             // Special handling of poles - we need to extend the tile AABB
             // to include the pole for tiles that border mercator north/south edge.
-            if (tileID.y === 0 || (tileID.y === (1 << tileID.z) - 1)) {
-                const pole = [0, tileID.y === 0 ? 1 : -1, 0];
+            if (tileID.y === 0) {
+                extremesPoints.push([0, 1, 0]); // North pole
+            }
+            if (tileID.y === (1 << tileID.z) - 1) {
+                extremesPoints.push([0, -1, 0]); // South pole
+            }
+
+            // Compute a best-fit AABB for the frustum rejection test
+            const aabbMin: vec3 = [1, 1, 1];
+            const aabbMax: vec3 = [-1, -1, -1];
+
+            for (const c of extremesPoints) {
                 for (let i = 0; i < 3; i++) {
-                    min[i] = Math.min(min[i], pole[i]);
-                    max[i] = Math.max(max[i], pole[i]);
+                    aabbMin[i] = Math.min(aabbMin[i], c[i]);
+                    aabbMax[i] = Math.max(aabbMax[i], c[i]);
                 }
             }
 
-            return new Aabb(
-                min,
-                max
-            );
+            // Now we compute the actual bounding volume.
+            // The up/down plane will be normal to the tile's center.
+            // The north/south plane will be used for the tile's north and south edge and will be orthogonal to the up/down plane.
+            // The left and right planes will be determined by the tile's east/west edges and will differ slightly - we are not creating a box!
+            // We will find the min and max extents for the up/down and north/south planes using the set of points
+            // where the extremes are likely to lie.
+
+            // Vector "center" (from planet center to tile center) will be our up/down axis.
+            const center = projectTileCoordinatesToSphere(EXTENT / 2, EXTENT / 2, tileID.x, tileID.y, tileID.z);
+            // Vector to the east of "center".
+            const centerEast = vec3.cross([] as any, [0, 1, 0], center);
+            vec3.normalize(centerEast, centerEast);
+            // Vector to the north of "center" will be our north/south axis.
+            const north = vec3.cross([] as any, center, centerEast);
+            vec3.normalize(north, north);
+
+            // Axes for the east and west edge of our bounding volume.
+            // These axes are NOT opposites of each other, they differ!
+            // They are also not orthogonal to the up/down and north/south axes.
+            const axisEast = vec3.cross([] as any, corners[2], corners[1]);
+            vec3.normalize(axisEast, axisEast);
+            const axisWest = vec3.cross([] as any, corners[0], corners[3]);
+            vec3.normalize(axisWest, axisWest);
+
+            // Now we will expand the extremes point set for bounding volume creation.
+            // We will also include the tile center point, since it will always be an extreme for the "center" axis.
+            extremesPoints.push(vec3.scale([] as any, center, maxElevation));
+            // No need to include a minElevation-scaled center, since we already have minElevation corners in the set and these will always lie lower than the center.
+
+            // The extremes might also lie on the midpoint of the north or south edge.
+            // For tiles in the north hemisphere, only the south edge can contain an extreme,
+            // since when we imagine the tile's actual shape projected onto the plane normal to "center" vector,
+            // the tile's north edge will curve towards the tile center, thus its extremes are accounted for by the
+            // corners, however the south edge will curve away from the center point, extending beyond the tile's edges,
+            // thus it must be included.
+            // The poles are an exception - they must always be included in the extremes, if the tile touches the north/south mercator range edge.
+            //
+            // A tile's exaggerated shape on the northern hemisphere, projected onto the normal plane of "center".
+            // The "c" is the tile's center point. The "m" is the edge mid point we are looking for.
+            //
+            //      /--       --\
+            //     /   -------   \
+            //    /               \
+            //   /        c        \
+            //  /                   \
+            // /--                 --\
+            //    -----       -----
+            //         ---m---
+            
+            if (tileID.y >= (1 << tileID.z) / 2) {
+                // South hemisphere - include the tile's north edge midpoint
+                extremesPoints.push(vec3.scale([] as any, projectTileCoordinatesToSphere(EXTENT / 2, 0, tileID.x, tileID.y, tileID.z), maxElevation));
+                // No need to include minElevation variant of this point, for the same reason why we don't include minElevation center.
+            }
+            if (tileID.y < (1 << tileID.z) / 2) {
+                // North hemisphere - include the tile's south edge midpoint
+                extremesPoints.push(vec3.scale([] as any, projectTileCoordinatesToSphere(EXTENT / 2, EXTENT, tileID.x, tileID.y, tileID.z), maxElevation));
+                // No need to include minElevation variant of this point, for the same reason why we don't include minElevation center.
+            }
+
+            // Find the min and max extends and the midpoints along each axis,
+            // using the set of extreme points.
+            const upDownMinMax = findAxisMinMax(center, extremesPoints);
+            const northSouthMinMax = findAxisMinMax(north, extremesPoints);
+
+            const planeUp = [-center[0], -center[1], -center[2], upDownMinMax.max] as vec4;
+            const planeDown = [center[0], center[1], center[2], -upDownMinMax.min] as vec4;
+            const planeNorth = [-north[0], -north[1], -north[2], northSouthMinMax.max] as vec4;
+            const planeSouth = [north[0], north[1], north[2], -northSouthMinMax.min] as vec4;
+            const planeEast = [...axisEast, 0] as vec4;
+            const planeWest = [...axisWest, 0] as vec4;
+
+            const points: vec3[] = [];
+
+            // North points
+            if (tileID.y === 0) {
+                // If the tile borders a pole, then 
+                points.push(
+                    threePlaneIntersection(planeWest, planeEast, planeUp),
+                    threePlaneIntersection(planeWest, planeEast, planeDown),
+                );
+            } else {
+                points.push(
+                    threePlaneIntersection(planeNorth, planeEast, planeUp),
+                    threePlaneIntersection(planeNorth, planeEast, planeDown),
+                    threePlaneIntersection(planeNorth, planeWest, planeUp),
+                    threePlaneIntersection(planeNorth, planeWest, planeDown)
+                );
+            }
+
+            // South points
+            if (tileID.y === (1 << tileID.z) - 1) {
+                points.push(
+                    threePlaneIntersection(planeWest, planeEast, planeUp),
+                    threePlaneIntersection(planeWest, planeEast, planeDown),
+                );
+            } else {
+                points.push(
+                    threePlaneIntersection(planeSouth, planeEast, planeUp),
+                    threePlaneIntersection(planeSouth, planeEast, planeDown),
+                    threePlaneIntersection(planeSouth, planeWest, planeUp),
+                    threePlaneIntersection(planeSouth, planeWest, planeDown)
+                );
+            }
+
+            return new ConvexVolume(points, [
+                planeUp,
+                planeDown,
+                planeNorth,
+                planeSouth,
+                planeEast,
+                planeWest
+            ], aabbMin, aabbMax);
         }
     }
+}
+
+function findAxisMinMax(axis: vec3, points: vec3[]) {
+    let min = +Infinity;
+    let max = -Infinity;
+    for (const c of points) {
+        const dot = vec3.dot(axis, c);
+        min = Math.min(min, dot);
+        max = Math.max(max, dot);
+    }
+    return {
+        min,
+        max
+    };
 }

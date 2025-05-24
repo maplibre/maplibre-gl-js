@@ -1,71 +1,71 @@
 import {describe, expect, test} from 'vitest';
 import {GlobeCoveringTilesDetailsProvider} from '../../geo/projection/globe_covering_tiles_details_provider';
 
-describe('aabb cache', () => {
-    test('retains aabbs from last frame', () => {
+describe('bounding volume cache', () => {
+    test('retains bounding volumes from last frame', () => {
         const detailsProvider = new GlobeCoveringTilesDetailsProvider();
-        const aabb1a = detailsProvider.getTileAABB({
+        const box1a = detailsProvider.getTileBoundingVolume({
             x: 0,
             y: 0,
             z: 1,
         }, null, null, null);
-        detailsProvider.recalculateCache();
-        const aabb1b = detailsProvider.getTileAABB({
+        detailsProvider.prepareNextFrame();
+        const box1b = detailsProvider.getTileBoundingVolume({
             x: 0,
             y: 0,
             z: 1,
         }, null, null, null);
-        expect(aabb1a).toBe(aabb1b); // Test reference equality
+        expect(box1a).toBe(box1b); // Test reference equality
     });
 
-    test('clears no longer used aabbs', () => {
+    test('clears no longer used bounding volumes', () => {
         const detailsProvider = new GlobeCoveringTilesDetailsProvider();
         // Get 1+2+3
-        const box1a = detailsProvider.getTileAABB({
+        const box1a = detailsProvider.getTileBoundingVolume({
             x: 0,
             y: 0,
             z: 1,
         }, null, null, null);
-        const box2a = detailsProvider.getTileAABB({
+        const box2a = detailsProvider.getTileBoundingVolume({
             x: 1,
             y: 0,
             z: 1,
         }, null, null, null);
-        const box3a = detailsProvider.getTileAABB({
+        const box3a = detailsProvider.getTileBoundingVolume({
             x: 0,
             y: 1,
             z: 1,
         }, null, null, null);
-        detailsProvider.recalculateCache();
+        detailsProvider.prepareNextFrame();
         // Get 2+3+4
-        const box2b = detailsProvider.getTileAABB({
+        const box2b = detailsProvider.getTileBoundingVolume({
             x: 1,
             y: 0,
             z: 1,
         }, null, null, null);
-        const box3b = detailsProvider.getTileAABB({
+        const box3b = detailsProvider.getTileBoundingVolume({
             x: 0,
             y: 1,
             z: 1,
         }, null, null, null);
-        const box4b = detailsProvider.getTileAABB({
+        const box4b = detailsProvider.getTileBoundingVolume({
             x: 1,
             y: 1,
             z: 1,
         }, null, null, null);
-        detailsProvider.recalculateCache();
+        detailsProvider.prepareNextFrame();
         // Get 1+3+4
-        const box1c = detailsProvider.getTileAABB({
+        const box1c = detailsProvider.getTileBoundingVolume({
             x: 0,
             y: 0,
             z: 1,
         }, null, null, null);
-        const box3c = detailsProvider.getTileAABB({
+        const box3c = detailsProvider.getTileBoundingVolume({
             x: 0,
             y: 1,
             z: 1,
         }, null, null, null);
-        const box4c = detailsProvider.getTileAABB({
+        const box4c = detailsProvider.getTileBoundingVolume({
             x: 1,
             y: 1,
             z: 1,
@@ -87,41 +87,41 @@ describe('aabb cache', () => {
     test('does not clear cache if no new box was added', () => {
         const detailsProvider = new GlobeCoveringTilesDetailsProvider();
         // Get 1+2+3
-        const box1a = detailsProvider.getTileAABB({
+        const box1a = detailsProvider.getTileBoundingVolume({
             x: 0,
             y: 0,
             z: 1,
         }, null, null, null);
-        const box2a = detailsProvider.getTileAABB({
+        const box2a = detailsProvider.getTileBoundingVolume({
             x: 1,
             y: 0,
             z: 1,
         }, null, null, null);
-        const box3a = detailsProvider.getTileAABB({
+        const box3a = detailsProvider.getTileBoundingVolume({
             x: 0,
             y: 1,
             z: 1,
         }, null, null, null);
-        detailsProvider.recalculateCache();
+        detailsProvider.prepareNextFrame();
         // Get 2+3
-        const box2b = detailsProvider.getTileAABB({
+        const box2b = detailsProvider.getTileBoundingVolume({
             x: 1,
             y: 0,
             z: 1,
         }, null, null, null);
-        const box3b = detailsProvider.getTileAABB({
+        const box3b = detailsProvider.getTileBoundingVolume({
             x: 0,
             y: 1,
             z: 1,
         }, null, null, null);
-        detailsProvider.recalculateCache();
+        detailsProvider.prepareNextFrame();
         // Get 1+3
-        const box1c = detailsProvider.getTileAABB({
+        const box1c = detailsProvider.getTileBoundingVolume({
             x: 0,
             y: 0,
             z: 1,
         }, null, null, null);
-        const box3c = detailsProvider.getTileAABB({
+        const box3c = detailsProvider.getTileBoundingVolume({
             x: 0,
             y: 1,
             z: 1,
