@@ -140,7 +140,7 @@ float ele(vec2 pos) {
     #ifdef TERRAIN3D
         vec4 rgb = (texture(u_terrain, pos) * 255.0);
 
-        float isNoData = step(0.5, abs(rgb.r - u_terrain_nodata[0]) + abs(rgb.g - u_terrain_nodata[1]) + abs(rgb.b - u_terrain_nodata[2]));
+        float isNoData = step(0.5, abs(rgb.r - u_terrain_nodataRgb[0]) + abs(rgb.g - u_terrain_nodataRgb[1]) + abs(rgb.b - u_terrain_nodataRgb[2]));
         vec4 unpacked = rgb * u_terrain_unpack;
         float elevation = unpacked.r + unpacked.g + unpacked.b - u_terrain_unpack.a;
         elevation = mix(elevation, elevation - (u_terrain_range[1] - u_terrain_range[0]), elevation > u_terrain_range[1]);

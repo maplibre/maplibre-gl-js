@@ -49,7 +49,7 @@
                             greenFactor: 2.56,
                             blueFactor: 0.01,
                             heightRange: [-83886.08, 83886.07],
-                            nodata: [128, 0, 0],
+                            nodataRgb: [128, 0, 0],
                             nodataHeight: 0,
                         },
                         gsiSeamlessphoto: {
@@ -63,6 +63,14 @@
                     },
                     layers: [
                         {
+                            id: "gsiSeamlessphoto",
+                            type: "raster",
+                            source: "gsiSeamlessphoto",
+                            paint: {
+                                "raster-opacity": 1.0,
+                            },
+                        },
+                        {
                             id: "hillshade",
                             type: "hillshade",
                             source: "hillshadeSource",
@@ -74,14 +82,6 @@
                                 "hillshade-highlight-color": "#FFFFFF",
                                 "hillshade-accent-color": "#000000",
                                 "hillshade-exaggeration": 0.5,
-                            },
-                        },
-                        {
-                            id: "gsiSeamlessphoto",
-                            type: "raster",
-                            source: "gsiSeamlessphoto",
-                            paint: {
-                                "raster-opacity": 0.5,
                             },
                         },
                     ],
