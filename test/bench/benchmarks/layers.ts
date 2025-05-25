@@ -169,6 +169,64 @@ export class LayerHillshade extends LayerBenchmark {
     }
 }
 
+export class LayerColorRelief2Colors extends LayerBenchmark {
+    constructor() {
+        super();
+
+        this.layerStyle = Object.assign({}, style, {
+            sources: {
+                'terrain-rgb': {
+                    'type': 'raster-dem',
+                    'url': 'https://api.maptiler.com/tiles/terrain-rgb/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
+                }
+            },
+            layers: generateLayers({
+                'id': 'layer',
+                'type': 'color-relief',
+                'source': 'terrain-rgb',
+                'paint': {
+                    'color-relief-color': [
+                        "interpolate",
+                        ["linear"],
+                        ["elevation"],
+                        0, 'rgb(112, 209, 255)',
+                        3724, 'rgb(255, 178, 129)'
+                    ]
+                }
+            })
+        });
+    }
+}
+
+export class LayerColorRelief256Colors extends LayerBenchmark {
+    constructor() {
+        super();
+
+        const colorSpec: any[] = ["interpolate", ["linear"], ["elevation"]];
+        for (let i = 0; i < 256; i++) {
+            colorSpec.push(i);
+            colorSpec.push(`rgb(${i}, 0, ${255-i})`);
+        }
+
+        this.layerStyle = Object.assign({}, style, {
+            sources: {
+                'terrain-rgb': {
+                    'type': 'raster-dem',
+                    'url': 'https://api.maptiler.com/tiles/terrain-rgb/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
+                }
+            },
+            layers: generateLayers({
+                'id': 'layer',
+                'type': 'color-relief',
+                'source': 'terrain-rgb',
+                'paint': {
+                    'color-relief-color': colorSpec
+                }
+            })
+        });
+    }
+}
+
 export class LayerLine extends LayerBenchmark {
     constructor() {
         super();
