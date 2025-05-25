@@ -203,7 +203,7 @@ export class GeoJSONSource extends Evented implements Source {
     private _getClusterMaxZoom(clusterMaxZoom: number): number {
         const effectiveClusterMaxZoom = clusterMaxZoom ? Math.round(clusterMaxZoom) : this.maxzoom - 1;
         if (!(Number.isInteger(clusterMaxZoom) || clusterMaxZoom === undefined)) {
-            warnOnce(`Integer expected for option 'clusterMaxZoom': provided value ${clusterMaxZoom} rounded to ${effectiveClusterMaxZoom}`);
+            warnOnce(`Integer expected for option 'clusterMaxZoom': provided value "${clusterMaxZoom}" rounded to "${effectiveClusterMaxZoom}"`);
         }
         return effectiveClusterMaxZoom;
     }
