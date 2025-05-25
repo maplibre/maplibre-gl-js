@@ -282,5 +282,61 @@ describe('ImageSource', () => {
                 maxTileXWrapped: 2178
             });
         });
+
+        test('calculates tile ranges for an image exceeds the world bounds - east', () => {
+            const source = createSource({url: '/image.png'});
+            const map = new StubMap() as any;
+            source.onAdd(map);
+            server.respond();
+            source.setCoordinates([[-180, 60], [270, 60], [270, -60], [-180, -60]]);
+            expect(source.terrainTileRanges[0]).toEqual({
+                minTileX: 0,
+                minTileY: 0,
+                maxTileX: 1,
+                maxTileY: 0,
+                minWrap: 0,
+                maxWrap: 1,
+                minTileXWrapped: 0,
+                maxTileXWrapped: 0
+            });
+            expect(source.terrainTileRanges[1]).toEqual({
+                minTileX: 0,
+                minTileY: 0,
+                maxTileX: 2,
+                maxTileY: 1,
+                minWrap: 0,
+                maxWrap: 1,
+                minTileXWrapped: 0,
+                maxTileXWrapped: 0
+            });
+        });
+
+        test('calculates tile ranges for an image exceeds the world bounds - west', () => {
+            const source = createSource({url: '/image.png'});
+            const map = new StubMap() as any;
+            source.onAdd(map);
+            server.respond();
+            source.setCoordinates([[120, 60], [-270, 60], [-270, -60], [120, -60]]);
+            expect(source.terrainTileRanges[0]).toEqual({
+                minTileX: -1,
+                minTileY: 0,
+                maxTileX: 0,
+                maxTileY: 0,
+                minWrap: -1,
+                maxWrap: 0,
+                minTileXWrapped: 0,
+                maxTileXWrapped: 0
+            });
+            expect(source.terrainTileRanges[1]).toEqual({
+                minTileX: -1,
+                minTileY: 0,
+                maxTileX: 1,
+                maxTileY: 1,
+                minWrap: -1,
+                maxWrap: 0,
+                minTileXWrapped: 1,
+                maxTileXWrapped: 1
+            });
+        });
     });
 });

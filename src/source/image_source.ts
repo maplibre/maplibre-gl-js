@@ -329,7 +329,7 @@ export class ImageSource extends Evented implements Source {
             const maxTileX = Math.floor(maxX * tilesAtZoom);
             const maxTileY = Math.floor(maxY * tilesAtZoom);
 
-            const minTileXWrapped = minTileX % tilesAtZoom;
+            const minTileXWrapped = ((minTileX % tilesAtZoom) + tilesAtZoom) % tilesAtZoom;
             const maxTileXWrapped = maxTileX % tilesAtZoom;
             const minWrap = Math.floor(minTileX / tilesAtZoom);
             const maxWrap = Math.floor(maxTileX / tilesAtZoom);
