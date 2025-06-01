@@ -67,6 +67,12 @@ export type CameraOptions = CenterZoomBearing & {
      * The elevation of the center point in meters above sea level.
      */
     elevation?: number;
+    /**
+     * The desired vertical field of view in degrees. The FoV is the angular extent of the world
+     * that is visible at any given moment. Valid range is between 1 and 179 degrees.
+     * When specified during flyTo animations, this FoV will be maintained throughout the animation.
+     */
+    fov?: number;
 };
 
 /**
@@ -1425,6 +1431,7 @@ export abstract class Camera extends Evented {
             center: options.center,
             minZoom: options.minZoom,
             zoom: options.zoom,
+            fov: options.fov,
         });
 
         let rho = options.curve;

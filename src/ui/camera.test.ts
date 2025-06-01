@@ -2063,6 +2063,95 @@ describe('#flyTo', () => {
         camera._finalizeElevation();
         expect(camera._elevationFreeze).toBeFalsy();
     });
+
+    test('sets field of view during flyTo', () => {
+        const camera = createCamera();
+        camera.flyTo({center: [100, 0], fov: 75, animate: false});
+        expect(camera.getVerticalFieldOfView()).toBe(75);
+    });
+
+    test('maintains FoV throughout flyTo animation', async () => {
+        const camera = createCamera();
+        const stub = vi.spyOn(browser, 'now');
+        
+        const fovValues: number[] = [];
+        camera.on('move', () => {
+            fovValues.push(camera.getVerticalFieldOfView());
+        });
+
+        const promise = camera.once('moveend');
+        
+        stub.mockImplementation(() => 0);
+        camera.flyTo({center: [100, 0], fov: 80, duration: 10});
+        
+        setTimeout(() => {
+            stub.mockImplementation(() => 5);
+            camera.simulateFrame();
+            
+            setTimeout(() => {
+                stub.mockImplementation(() => 10);
+                camera.simulateFrame();
+            }, 0);
+        }, 0);
+
+        await promise;
+        
+        // アニメーション中の全ての FoV 値は 80 であるべき
+        expect(fovValues.every(fov => fov === 80)).toBeTruthy();
+        expect(camera.getVerticalFieldOfView()).toBe(80);
+    });
+
+    test('flyTo with fov works with globe projection', () => {
+        const camera = createCameraGlobe();
+        camera.flyTo({center: [100, 0], zoom: 5, fov: 65, animate: false});
+        
+        expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
+        expect(camera.getZoom()).toBe(5);
+        expect(camera.getVerticalFieldOfView()).toBe(65);
+    });
+
+    test('flyTo preserves existing behavior when fov not specified', () => {
+        const camera = createCamera();
+        const initialFov = camera.getVerticalFieldOfView();
+        
+        camera.flyTo({center: [100, 0], zoom: 5, animate: false});
+        
+        expect(camera.getVerticalFieldOfView()).toBe(initialFov);
+    });
+
+    test('flyTo with complex options including fov', () => {
+        const camera = createCamera();
+        
+        camera.flyTo({
+            center: [100, 0],
+            zoom: 10,
+            bearing: 45,
+            pitch: 30,
+            fov: 90,
+            animate: false
+        });
+        
+        expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
+        expect(camera.getZoom()).toBe(10);
+        expect(camera.getBearing()).toBe(45);
+        expect(camera.getPitch()).toBeCloseTo(30, 6);
+        expect(camera.getVerticalFieldOfView()).toBe(90);
+    });
+
+    test('flyTo with invalid fov values', () => {
+        const camera = createCamera();
+        
+        // 負の値は適用されないべき
+        const initialFov = camera.getVerticalFieldOfView();
+        camera.flyTo({center: [100, 0], fov: -10, animate: false});
+        expect(camera.getVerticalFieldOfView()).toBe(initialFov);
+        
+        // 180度以上の値も適用されないべき
+        camera.flyTo({center: [100, 0], fov: 200, animate: false});
+        expect(camera.getVerticalFieldOfView()).toBe(initialFov);
+    });
+
+
 });
 
 describe('#isEasing', () => {

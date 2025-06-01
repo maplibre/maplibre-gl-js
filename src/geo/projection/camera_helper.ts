@@ -53,6 +53,7 @@ export type FlyToHandlerOptions = {
     locationAtOffset: LngLat;
     zoom?: number;
     minZoom?: number;
+    fov?: number;
 };
 
 export type FlyToHandlerResult = {

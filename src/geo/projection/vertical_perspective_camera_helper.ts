@@ -389,6 +389,11 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
 
             const interpolatedZoom = normalizedStartZoom + scaleZoom(scale);
             tr.setZoom(k === 1 ? targetZoom : (interpolatedZoom + getZoomAdjustment(0, newCenter.lat)));
+            
+            // Apply FoV if specified
+            if (typeof options.fov === 'number') {
+                tr.setFov(options.fov);
+            }
         };
 
         return {

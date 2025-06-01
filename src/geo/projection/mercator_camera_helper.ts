@@ -168,6 +168,11 @@ export class MercatorCameraHelper implements ICameraHelper {
             tr.setZoom(k === 1 ? targetZoom : startZoom + scaleZoom(scale));
             const newCenter = k === 1 ? targetCenter : unprojectFromWorldCoordinates(tr.worldSize, from.add(delta.mult(centerFactor)).mult(scale));
             tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
+            
+            // Apply FoV if specified
+            if (typeof options.fov === 'number') {
+                tr.setFov(options.fov);
+            }
         };
 
         return {
