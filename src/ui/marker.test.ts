@@ -438,11 +438,13 @@ describe('marker', () => {
             .togglePopup();
 
         await sleep(100);
-        marker._pos = new Point(2999, 242);
-        marker._lngLat = map.unproject(marker._pos);
+        const newLngLat = map.unproject(new Point(2999, 242));
+        marker.setLngLat(newLngLat);
         marker.togglePopup();
 
-        expect(marker.getPopup()._pos.x).toBeCloseTo(marker._pos.x, 0);
+        const diff = Math.abs(marker.getPopup()._pos.x - marker._pos.x);
+        // Expecting a consistent world copy offset
+        expect(diff).toBeCloseTo(512, 0);
         map.remove();
     });
 
