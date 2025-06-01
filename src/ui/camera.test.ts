@@ -2150,8 +2150,6 @@ describe('#flyTo', () => {
         camera.flyTo({center: [100, 0], fov: 200, animate: false});
         expect(camera.getVerticalFieldOfView()).toBe(initialFov);
     });
-
-
 });
 
 describe('#isEasing', () => {
