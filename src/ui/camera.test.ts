@@ -2096,7 +2096,6 @@ describe('#flyTo', () => {
 
         await promise;
         
-        // アニメーション中の全ての FoV 値は 80 であるべき
         expect(fovValues.every(fov => fov === 80)).toBeTruthy();
         expect(camera.getVerticalFieldOfView()).toBe(80);
     });
@@ -2141,12 +2140,10 @@ describe('#flyTo', () => {
     test('flyTo with invalid fov values', () => {
         const camera = createCamera();
         
-        // 負の値は適用されないべき
         const initialFov = camera.getVerticalFieldOfView();
         camera.flyTo({center: [100, 0], fov: -10, animate: false});
         expect(camera.getVerticalFieldOfView()).toBe(initialFov);
         
-        // 180度以上の値も適用されないべき
         camera.flyTo({center: [100, 0], fov: 200, animate: false});
         expect(camera.getVerticalFieldOfView()).toBe(initialFov);
     });
