@@ -1465,7 +1465,7 @@ export abstract class Camera extends Evented {
         const r0 = zoomOutFactor(false);
 
         // w(s): Returns the visible span on the ground, measured in pixels with respect to the
-        // initial scale. Assumes an angular field of view of 2 arctan ½ ≈ 53°.
+        // initial scale. Uses the current vertical field of view setting.
         let w: (_: number) => number = function (s) {
             return (cosh(r0) / cosh(r0 + rho * s));
         };
