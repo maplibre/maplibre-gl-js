@@ -125,7 +125,7 @@
     "sharp": "^0.34.2",
     "shuffle-seed": "^1.1.6",
     "source-map-explorer": "^2.5.3",
-    "st": "^3.0.1",
+    "st": "^3.0.2",
     "stylelint": "^16.20.0",
     "stylelint-config-standard": "^38.0.0",
     "ts-node": "^10.9.2",
