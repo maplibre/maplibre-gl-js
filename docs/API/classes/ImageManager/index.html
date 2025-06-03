@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.12">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.2afb09e1.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.342714a4.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -6145,12 +6145,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../type-aliases/UpdateLayersParamaeters/" class="md-nav__link">
+      <a href="../../type-aliases/UpdateLayersParameters/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    UpdateLayersParamaeters
+    UpdateLayersParameters
     
   </span>
   
@@ -7054,6 +7054,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../examples/color-relief/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a color relief layer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../examples/color-switcher/" class="md-nav__link">
         
   
@@ -7428,6 +7451,29 @@
   
   <span class="md-ellipsis">
     Filter symbols by toggling a list
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/filter-symbols-using-global-state/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Filter layer symbols using global state
     
   </span>
   
@@ -9382,7 +9428,7 @@
 
 
 <h1 id="imagemanager">ImageManager</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/render/image_manager.ts#L40">src/render/image_manager.ts:40</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b3e282bbb0b8f93b503895281ec313a4e2a1c6be/src/render/image_manager.ts#L40">src/render/image_manager.ts:40</a></p>
 <p>ImageManager does three things:</p>
 <ol>
 <li>Tracks requests for icon images from tile workers and sends responses when the requests are fulfilled.</li>
@@ -9401,7 +9447,7 @@ to refactor this.</p>
 <blockquote>
 <p><strong>listens</strong>(<code>type</code>: <code>string</code>): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/util/evented.ts#L165">src/util/evented.ts:165</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b3e282bbb0b8f93b503895281ec313a4e2a1c6be/src/util/evented.ts#L165">src/util/evented.ts:165</a></p>
 <p>Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.</p>
 <h4 id="parameters">Parameters</h4>
 <table>
@@ -9430,7 +9476,7 @@ to refactor this.</p>
 <blockquote>
 <p><strong>off</strong>(<code>type</code>: <code>string</code>, <code>listener</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <code>ImageManager</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/util/evented.ts#L90">src/util/evented.ts:90</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b3e282bbb0b8f93b503895281ec313a4e2a1c6be/src/util/evented.ts#L90">src/util/evented.ts:90</a></p>
 <p>Removes a previously registered event listener.</p>
 <h4 id="parameters_1">Parameters</h4>
 <table>
@@ -9463,7 +9509,7 @@ to refactor this.</p>
 <blockquote>
 <p><strong>on</strong>(<code>type</code>: <code>string</code>, <code>listener</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <a href="../../interfaces/Subscription/"><code>Subscription</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/util/evented.ts#L73">src/util/evented.ts:73</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b3e282bbb0b8f93b503895281ec313a4e2a1c6be/src/util/evented.ts#L73">src/util/evented.ts:73</a></p>
 <p>Adds a listener to a specified event type.</p>
 <h4 id="parameters_2">Parameters</h4>
 <table>
@@ -9496,7 +9542,7 @@ to refactor this.</p>
 <blockquote>
 <p><strong>once</strong>(<code>type</code>: <code>string</code>, <code>listener?</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <code>Promise</code>&lt;<code>any</code>&gt; | <code>ImageManager</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/util/evented.ts#L106">src/util/evented.ts:106</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b3e282bbb0b8f93b503895281ec313a4e2a1c6be/src/util/evented.ts#L106">src/util/evented.ts:106</a></p>
 <p>Adds a listener that will be called only once to a specified event type.</p>
 <p>The listener will be called first time the event fires after the listener is registered.</p>
 <h4 id="parameters_3">Parameters</h4>
@@ -9531,7 +9577,7 @@ to refactor this.</p>
 <blockquote>
 <p><strong>setEventedParent</strong>(<code>parent?</code>: <a href="../Evented/"><code>Evented</code></a>, <code>data?</code>: <code>any</code>): <code>ImageManager</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/util/evented.ts#L176">src/util/evented.ts:176</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b3e282bbb0b8f93b503895281ec313a4e2a1c6be/src/util/evented.ts#L176">src/util/evented.ts:176</a></p>
 <p>Bubble all events fired by this instance of Evented to this parent instance of Evented.</p>
 <h4 id="parameters_4">Parameters</h4>
 <table>
@@ -9561,7 +9607,7 @@ to refactor this.</p>
 <blockquote>
 <p><strong>requestors</strong>: <code>object</code>[]</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/render/image_manager.ts#L49">src/render/image_manager.ts:49</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b3e282bbb0b8f93b503895281ec313a4e2a1c6be/src/render/image_manager.ts#L49">src/render/image_manager.ts:49</a></p>
 <p>This is used to track requests for images that are not yet available. When the image is loaded,
 the requestors will be notified.</p>
 <h4 id="ids">ids</h4>
@@ -9707,10 +9753,10 @@ the requestors will be notified.</p>
     
     
       
-      <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky", "toc.follow", "search.suggest", "navigation.instant", "navigation.sections", "navigation.top"], "search": "../../../assets/javascripts/workers/search.f8cc74c7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky", "toc.follow", "search.suggest", "navigation.instant", "navigation.sections", "navigation.top"], "search": "../../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.c8b220af.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.13a4f30d.min.js"></script>
       
     
   </body>

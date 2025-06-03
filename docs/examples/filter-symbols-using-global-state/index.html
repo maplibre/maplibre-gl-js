@@ -10,28 +10,28 @@
       
       
       
-        <link rel="canonical" href="https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/UpdateLayersParamaeters/">
+        <link rel="canonical" href="https://www.maplibre.org/maplibre-gl-js/docs/examples/filter-symbols-using-global-state/">
       
       
-        <link rel="prev" href="../UpdateImageOptions/">
+        <link rel="prev" href="../filter-markers/">
       
       
-        <link rel="next" href="../WorkerDEMTileParameters/">
+        <link rel="next" href="../filter-within-layer/">
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.12">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
     
     
       
-        <title>UpdateLayersParamaeters - MapLibre GL JS</title>
+        <title>Filter layer symbols using global state - MapLibre GL JS</title>
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.2afb09e1.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.342714a4.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
       
       
 
@@ -50,9 +50,9 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/extra.css">
+      <link rel="stylesheet" href="../../assets/extra.css">
     
-    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -61,11 +61,11 @@
       
         <meta  property="og:type"  content="website" >
       
-        <meta  property="og:title"  content="UpdateLayersParamaeters - MapLibre GL JS" >
+        <meta  property="og:title"  content="Filter layer symbols using global state - MapLibre GL JS" >
       
         <meta  property="og:description"  content="MapLibre GL JS is a TypeScript library that uses WebGL to render interactive maps from vector tiles in a browser." >
       
-        <meta  property="og:image"  content="https://www.maplibre.org/maplibre-gl-js/docs/assets/images/social/API/type-aliases/UpdateLayersParamaeters.png" >
+        <meta  property="og:image"  content="https://www.maplibre.org/maplibre-gl-js/docs/assets/images/social/examples/filter-symbols-using-global-state.png" >
       
         <meta  property="og:image:type"  content="image/png" >
       
@@ -73,15 +73,15 @@
       
         <meta  property="og:image:height"  content="630" >
       
-        <meta  property="og:url"  content="https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/UpdateLayersParamaeters/" >
+        <meta  property="og:url"  content="https://www.maplibre.org/maplibre-gl-js/docs/examples/filter-symbols-using-global-state/" >
       
         <meta  name="twitter:card"  content="summary_large_image" >
       
-        <meta  name="twitter:title"  content="UpdateLayersParamaeters - MapLibre GL JS" >
+        <meta  name="twitter:title"  content="Filter layer symbols using global state - MapLibre GL JS" >
       
         <meta  name="twitter:description"  content="MapLibre GL JS is a TypeScript library that uses WebGL to render interactive maps from vector tiles in a browser." >
       
-        <meta  name="twitter:image"  content="https://www.maplibre.org/maplibre-gl-js/docs/assets/images/social/API/type-aliases/UpdateLayersParamaeters.png" >
+        <meta  name="twitter:image"  content="https://www.maplibre.org/maplibre-gl-js/docs/assets/images/social/examples/filter-symbols-using-global-state.png" >
       
     
     
@@ -104,7 +104,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#updatelayersparamaeters" class="md-skip">
+        <a href="#filter-layer-symbols-using-global-state" class="md-skip">
           Skip to content
         </a>
       
@@ -120,9 +120,9 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../.." title="MapLibre GL JS" class="md-header__button md-logo" aria-label="MapLibre GL JS" data-md-component="logo">
+    <a href="../.." title="MapLibre GL JS" class="md-header__button md-logo" aria-label="MapLibre GL JS" data-md-component="logo">
       
-  <img src="../../../assets/logo.svg" alt="logo">
+  <img src="../../assets/logo.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -139,7 +139,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              UpdateLayersParamaeters
+              Filter layer symbols using global state
             
           </span>
         </div>
@@ -256,7 +256,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../.." class="md-tabs__link">
+      <a href="../.." class="md-tabs__link">
         
   
   
@@ -275,7 +275,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../plugins/" class="md-tabs__link">
+      <a href="../../plugins/" class="md-tabs__link">
         
   
   
@@ -294,7 +294,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../style-spec/" class="md-tabs__link">
+      <a href="../../style-spec/" class="md-tabs__link">
         
   
   
@@ -311,13 +311,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../../" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../API/" class="md-tabs__link">
           
   
   
@@ -333,11 +331,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../../examples/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
           
   
   
@@ -357,7 +357,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../guides/" class="md-tabs__link">
+        <a href="../../guides/" class="md-tabs__link">
           
   
   
@@ -397,9 +397,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../.." title="MapLibre GL JS" class="md-nav__button md-logo" aria-label="MapLibre GL JS" data-md-component="logo">
+    <a href="../.." title="MapLibre GL JS" class="md-nav__button md-logo" aria-label="MapLibre GL JS" data-md-component="logo">
       
-  <img src="../../../assets/logo.svg" alt="logo">
+  <img src="../../assets/logo.svg" alt="logo">
 
     </a>
     MapLibre GL JS
@@ -426,7 +426,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../.." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -448,7 +448,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../plugins/" class="md-nav__link">
+      <a href="../../plugins/" class="md-nav__link">
         
   
   
@@ -470,7 +470,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../style-spec/" class="md-nav__link">
+      <a href="../../style-spec/" class="md-nav__link">
         
   
   
@@ -489,31 +489,26 @@
       
   
   
-    
   
   
-  
     
     
     
     
-      
-        
-        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -526,7 +521,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             API
@@ -540,7 +535,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../" class="md-nav__link">
+      <a href="../../API/" class="md-nav__link">
         
   
   
@@ -569,20 +564,17 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
         
           
-          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
             
   
   
@@ -609,7 +601,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../_media/CONTRIBUTING/" class="md-nav__link">
+      <a href="../../API/_media/CONTRIBUTING/" class="md-nav__link">
         
   
   
@@ -646,20 +638,17 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
         
           
-          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
             
   
   
@@ -686,7 +675,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/AJAXError/" class="md-nav__link">
+      <a href="../../API/classes/AJAXError/" class="md-nav__link">
         
   
   
@@ -709,7 +698,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/Actor/" class="md-nav__link">
+      <a href="../../API/classes/Actor/" class="md-nav__link">
         
   
   
@@ -732,7 +721,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/AlphaImage/" class="md-nav__link">
+      <a href="../../API/classes/AlphaImage/" class="md-nav__link">
         
   
   
@@ -755,7 +744,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/AttributionControl/" class="md-nav__link">
+      <a href="../../API/classes/AttributionControl/" class="md-nav__link">
         
   
   
@@ -778,7 +767,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/BoxZoomHandler/" class="md-nav__link">
+      <a href="../../API/classes/BoxZoomHandler/" class="md-nav__link">
         
   
   
@@ -801,7 +790,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/CanonicalTileID/" class="md-nav__link">
+      <a href="../../API/classes/CanonicalTileID/" class="md-nav__link">
         
   
   
@@ -824,7 +813,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/CanvasSource/" class="md-nav__link">
+      <a href="../../API/classes/CanvasSource/" class="md-nav__link">
         
   
   
@@ -847,7 +836,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/CircleStyleLayer/" class="md-nav__link">
+      <a href="../../API/classes/CircleStyleLayer/" class="md-nav__link">
         
   
   
@@ -870,7 +859,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/ClickZoomHandler/" class="md-nav__link">
+      <a href="../../API/classes/ClickZoomHandler/" class="md-nav__link">
         
   
   
@@ -893,7 +882,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/CooperativeGesturesHandler/" class="md-nav__link">
+      <a href="../../API/classes/CooperativeGesturesHandler/" class="md-nav__link">
         
   
   
@@ -916,7 +905,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/DEMData/" class="md-nav__link">
+      <a href="../../API/classes/DEMData/" class="md-nav__link">
         
   
   
@@ -939,7 +928,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/Dispatcher/" class="md-nav__link">
+      <a href="../../API/classes/Dispatcher/" class="md-nav__link">
         
   
   
@@ -962,7 +951,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/DoubleClickZoomHandler/" class="md-nav__link">
+      <a href="../../API/classes/DoubleClickZoomHandler/" class="md-nav__link">
         
   
   
@@ -985,7 +974,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/DragPanHandler/" class="md-nav__link">
+      <a href="../../API/classes/DragPanHandler/" class="md-nav__link">
         
   
   
@@ -1008,7 +997,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/DragRotateHandler/" class="md-nav__link">
+      <a href="../../API/classes/DragRotateHandler/" class="md-nav__link">
         
   
   
@@ -1031,7 +1020,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/EdgeInsets/" class="md-nav__link">
+      <a href="../../API/classes/EdgeInsets/" class="md-nav__link">
         
   
   
@@ -1054,7 +1043,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/ErrorEvent/" class="md-nav__link">
+      <a href="../../API/classes/ErrorEvent/" class="md-nav__link">
         
   
   
@@ -1077,7 +1066,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/Event/" class="md-nav__link">
+      <a href="../../API/classes/Event/" class="md-nav__link">
         
   
   
@@ -1100,7 +1089,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/Evented/" class="md-nav__link">
+      <a href="../../API/classes/Evented/" class="md-nav__link">
         
   
   
@@ -1123,7 +1112,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/FeatureIndex/" class="md-nav__link">
+      <a href="../../API/classes/FeatureIndex/" class="md-nav__link">
         
   
   
@@ -1146,7 +1135,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/FullscreenControl/" class="md-nav__link">
+      <a href="../../API/classes/FullscreenControl/" class="md-nav__link">
         
   
   
@@ -1169,7 +1158,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/GeoJSONFeature/" class="md-nav__link">
+      <a href="../../API/classes/GeoJSONFeature/" class="md-nav__link">
         
   
   
@@ -1192,7 +1181,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/GeoJSONSource/" class="md-nav__link">
+      <a href="../../API/classes/GeoJSONSource/" class="md-nav__link">
         
   
   
@@ -1215,7 +1204,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/GeolocateControl/" class="md-nav__link">
+      <a href="../../API/classes/GeolocateControl/" class="md-nav__link">
         
   
   
@@ -1238,7 +1227,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/GlobeControl/" class="md-nav__link">
+      <a href="../../API/classes/GlobeControl/" class="md-nav__link">
         
   
   
@@ -1261,7 +1250,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/Hash/" class="md-nav__link">
+      <a href="../../API/classes/Hash/" class="md-nav__link">
         
   
   
@@ -1284,7 +1273,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/HeatmapStyleLayer/" class="md-nav__link">
+      <a href="../../API/classes/HeatmapStyleLayer/" class="md-nav__link">
         
   
   
@@ -1307,7 +1296,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/ImageAtlas/" class="md-nav__link">
+      <a href="../../API/classes/ImageAtlas/" class="md-nav__link">
         
   
   
@@ -1330,7 +1319,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/ImageManager/" class="md-nav__link">
+      <a href="../../API/classes/ImageManager/" class="md-nav__link">
         
   
   
@@ -1353,7 +1342,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/ImageSource/" class="md-nav__link">
+      <a href="../../API/classes/ImageSource/" class="md-nav__link">
         
   
   
@@ -1376,7 +1365,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/KeyboardHandler/" class="md-nav__link">
+      <a href="../../API/classes/KeyboardHandler/" class="md-nav__link">
         
   
   
@@ -1399,7 +1388,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/Layout/" class="md-nav__link">
+      <a href="../../API/classes/Layout/" class="md-nav__link">
         
   
   
@@ -1422,7 +1411,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/LngLat/" class="md-nav__link">
+      <a href="../../API/classes/LngLat/" class="md-nav__link">
         
   
   
@@ -1445,7 +1434,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/LngLatBounds/" class="md-nav__link">
+      <a href="../../API/classes/LngLatBounds/" class="md-nav__link">
         
   
   
@@ -1468,7 +1457,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/LogoControl/" class="md-nav__link">
+      <a href="../../API/classes/LogoControl/" class="md-nav__link">
         
   
   
@@ -1491,7 +1480,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/Map/" class="md-nav__link">
+      <a href="../../API/classes/Map/" class="md-nav__link">
         
   
   
@@ -1514,7 +1503,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/MapMouseEvent/" class="md-nav__link">
+      <a href="../../API/classes/MapMouseEvent/" class="md-nav__link">
         
   
   
@@ -1537,7 +1526,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/MapTouchEvent/" class="md-nav__link">
+      <a href="../../API/classes/MapTouchEvent/" class="md-nav__link">
         
   
   
@@ -1560,7 +1549,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/MapWheelEvent/" class="md-nav__link">
+      <a href="../../API/classes/MapWheelEvent/" class="md-nav__link">
         
   
   
@@ -1583,7 +1572,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/Marker/" class="md-nav__link">
+      <a href="../../API/classes/Marker/" class="md-nav__link">
         
   
   
@@ -1606,7 +1595,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/MercatorCoordinate/" class="md-nav__link">
+      <a href="../../API/classes/MercatorCoordinate/" class="md-nav__link">
         
   
   
@@ -1629,7 +1618,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/NavigationControl/" class="md-nav__link">
+      <a href="../../API/classes/NavigationControl/" class="md-nav__link">
         
   
   
@@ -1652,7 +1641,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/OverscaledTileID/" class="md-nav__link">
+      <a href="../../API/classes/OverscaledTileID/" class="md-nav__link">
         
   
   
@@ -1675,7 +1664,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/Popup/" class="md-nav__link">
+      <a href="../../API/classes/Popup/" class="md-nav__link">
         
   
   
@@ -1698,7 +1687,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/RGBAImage/" class="md-nav__link">
+      <a href="../../API/classes/RGBAImage/" class="md-nav__link">
         
   
   
@@ -1721,7 +1710,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/RasterDEMTileSource/" class="md-nav__link">
+      <a href="../../API/classes/RasterDEMTileSource/" class="md-nav__link">
         
   
   
@@ -1744,7 +1733,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/RasterTileSource/" class="md-nav__link">
+      <a href="../../API/classes/RasterTileSource/" class="md-nav__link">
         
   
   
@@ -1767,7 +1756,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/ScaleControl/" class="md-nav__link">
+      <a href="../../API/classes/ScaleControl/" class="md-nav__link">
         
   
   
@@ -1790,7 +1779,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/ScrollZoomHandler/" class="md-nav__link">
+      <a href="../../API/classes/ScrollZoomHandler/" class="md-nav__link">
         
   
   
@@ -1813,7 +1802,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/Style/" class="md-nav__link">
+      <a href="../../API/classes/Style/" class="md-nav__link">
         
   
   
@@ -1836,7 +1825,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/StyleLayer/" class="md-nav__link">
+      <a href="../../API/classes/StyleLayer/" class="md-nav__link">
         
   
   
@@ -1859,7 +1848,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/SubdivisionGranularityExpression/" class="md-nav__link">
+      <a href="../../API/classes/SubdivisionGranularityExpression/" class="md-nav__link">
         
   
   
@@ -1882,7 +1871,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/SubdivisionGranularitySetting/" class="md-nav__link">
+      <a href="../../API/classes/SubdivisionGranularitySetting/" class="md-nav__link">
         
   
   
@@ -1905,7 +1894,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/TapDragZoomHandler/" class="md-nav__link">
+      <a href="../../API/classes/TapDragZoomHandler/" class="md-nav__link">
         
   
   
@@ -1928,7 +1917,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/TapZoomHandler/" class="md-nav__link">
+      <a href="../../API/classes/TapZoomHandler/" class="md-nav__link">
         
   
   
@@ -1951,7 +1940,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/TerrainControl/" class="md-nav__link">
+      <a href="../../API/classes/TerrainControl/" class="md-nav__link">
         
   
   
@@ -1974,7 +1963,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/ThrottledInvoker/" class="md-nav__link">
+      <a href="../../API/classes/ThrottledInvoker/" class="md-nav__link">
         
   
   
@@ -1997,7 +1986,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/Tile/" class="md-nav__link">
+      <a href="../../API/classes/Tile/" class="md-nav__link">
         
   
   
@@ -2020,7 +2009,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/TouchPanHandler/" class="md-nav__link">
+      <a href="../../API/classes/TouchPanHandler/" class="md-nav__link">
         
   
   
@@ -2043,7 +2032,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/TwoFingersTouchHandler/" class="md-nav__link">
+      <a href="../../API/classes/TwoFingersTouchHandler/" class="md-nav__link">
         
   
   
@@ -2066,7 +2055,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/TwoFingersTouchPitchHandler/" class="md-nav__link">
+      <a href="../../API/classes/TwoFingersTouchPitchHandler/" class="md-nav__link">
         
   
   
@@ -2089,7 +2078,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/TwoFingersTouchRotateHandler/" class="md-nav__link">
+      <a href="../../API/classes/TwoFingersTouchRotateHandler/" class="md-nav__link">
         
   
   
@@ -2112,7 +2101,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/TwoFingersTouchZoomHandler/" class="md-nav__link">
+      <a href="../../API/classes/TwoFingersTouchZoomHandler/" class="md-nav__link">
         
   
   
@@ -2135,7 +2124,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/TwoFingersTouchZoomRotateHandler/" class="md-nav__link">
+      <a href="../../API/classes/TwoFingersTouchZoomRotateHandler/" class="md-nav__link">
         
   
   
@@ -2158,7 +2147,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/VectorTileSource/" class="md-nav__link">
+      <a href="../../API/classes/VectorTileSource/" class="md-nav__link">
         
   
   
@@ -2181,7 +2170,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/VideoSource/" class="md-nav__link">
+      <a href="../../API/classes/VideoSource/" class="md-nav__link">
         
   
   
@@ -2204,7 +2193,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../classes/WorkerPool/" class="md-nav__link">
+      <a href="../../API/classes/WorkerPool/" class="md-nav__link">
         
   
   
@@ -2241,20 +2230,17 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
         
           
-          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
             
   
   
@@ -2281,7 +2267,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../enumerations/MessageType/" class="md-nav__link">
+      <a href="../../API/enumerations/MessageType/" class="md-nav__link">
         
   
   
@@ -2304,7 +2290,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../enumerations/ResourceType/" class="md-nav__link">
+      <a href="../../API/enumerations/ResourceType/" class="md-nav__link">
         
   
   
@@ -2327,7 +2313,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../enumerations/TextFit/" class="md-nav__link">
+      <a href="../../API/enumerations/TextFit/" class="md-nav__link">
         
   
   
@@ -2364,20 +2350,17 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
         
           
-          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
             
   
   
@@ -2404,7 +2387,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../functions/addProtocol/" class="md-nav__link">
+      <a href="../../API/functions/addProtocol/" class="md-nav__link">
         
   
   
@@ -2427,7 +2410,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../functions/addSourceType/" class="md-nav__link">
+      <a href="../../API/functions/addSourceType/" class="md-nav__link">
         
   
   
@@ -2450,7 +2433,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../functions/clearPrewarmedResources/" class="md-nav__link">
+      <a href="../../API/functions/clearPrewarmedResources/" class="md-nav__link">
         
   
   
@@ -2473,7 +2456,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../functions/createTileMesh/" class="md-nav__link">
+      <a href="../../API/functions/createTileMesh/" class="md-nav__link">
         
   
   
@@ -2496,7 +2479,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../functions/getMaxParallelImageRequests/" class="md-nav__link">
+      <a href="../../API/functions/getMaxParallelImageRequests/" class="md-nav__link">
         
   
   
@@ -2519,7 +2502,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../functions/getRTLTextPluginStatus/" class="md-nav__link">
+      <a href="../../API/functions/getRTLTextPluginStatus/" class="md-nav__link">
         
   
   
@@ -2542,7 +2525,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../functions/getVersion/" class="md-nav__link">
+      <a href="../../API/functions/getVersion/" class="md-nav__link">
         
   
   
@@ -2565,7 +2548,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../functions/getWorkerCount/" class="md-nav__link">
+      <a href="../../API/functions/getWorkerCount/" class="md-nav__link">
         
   
   
@@ -2588,7 +2571,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../functions/getWorkerUrl/" class="md-nav__link">
+      <a href="../../API/functions/getWorkerUrl/" class="md-nav__link">
         
   
   
@@ -2611,7 +2594,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../functions/importScriptInWorkers/" class="md-nav__link">
+      <a href="../../API/functions/importScriptInWorkers/" class="md-nav__link">
         
   
   
@@ -2634,7 +2617,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../functions/prewarm/" class="md-nav__link">
+      <a href="../../API/functions/prewarm/" class="md-nav__link">
         
   
   
@@ -2657,7 +2640,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../functions/removeProtocol/" class="md-nav__link">
+      <a href="../../API/functions/removeProtocol/" class="md-nav__link">
         
   
   
@@ -2680,7 +2663,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../functions/setMaxParallelImageRequests/" class="md-nav__link">
+      <a href="../../API/functions/setMaxParallelImageRequests/" class="md-nav__link">
         
   
   
@@ -2703,7 +2686,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../functions/setRTLTextPlugin/" class="md-nav__link">
+      <a href="../../API/functions/setRTLTextPlugin/" class="md-nav__link">
         
   
   
@@ -2726,7 +2709,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../functions/setWorkerCount/" class="md-nav__link">
+      <a href="../../API/functions/setWorkerCount/" class="md-nav__link">
         
   
   
@@ -2749,7 +2732,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../functions/setWorkerUrl/" class="md-nav__link">
+      <a href="../../API/functions/setWorkerUrl/" class="md-nav__link">
         
   
   
@@ -2786,20 +2769,17 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
         
           
-          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
             
   
   
@@ -2826,7 +2806,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../interfaces/ActorTarget/" class="md-nav__link">
+      <a href="../../API/interfaces/ActorTarget/" class="md-nav__link">
         
   
   
@@ -2849,7 +2829,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../interfaces/AttributeBinder/" class="md-nav__link">
+      <a href="../../API/interfaces/AttributeBinder/" class="md-nav__link">
         
   
   
@@ -2872,7 +2852,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../interfaces/Bucket/" class="md-nav__link">
+      <a href="../../API/interfaces/Bucket/" class="md-nav__link">
         
   
   
@@ -2895,7 +2875,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../interfaces/CustomLayerInterface/" class="md-nav__link">
+      <a href="../../API/interfaces/CustomLayerInterface/" class="md-nav__link">
         
   
   
@@ -2918,7 +2898,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../interfaces/Handler/" class="md-nav__link">
+      <a href="../../API/interfaces/Handler/" class="md-nav__link">
         
   
   
@@ -2941,7 +2921,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../interfaces/IActor/" class="md-nav__link">
+      <a href="../../API/interfaces/IActor/" class="md-nav__link">
         
   
   
@@ -2964,7 +2944,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../interfaces/IControl/" class="md-nav__link">
+      <a href="../../API/interfaces/IControl/" class="md-nav__link">
         
   
   
@@ -2987,7 +2967,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../interfaces/MousePanHandler/" class="md-nav__link">
+      <a href="../../API/interfaces/MousePanHandler/" class="md-nav__link">
         
   
   
@@ -3010,7 +2990,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../interfaces/MousePitchHandler/" class="md-nav__link">
+      <a href="../../API/interfaces/MousePitchHandler/" class="md-nav__link">
         
   
   
@@ -3033,7 +3013,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../interfaces/MouseRollHandler/" class="md-nav__link">
+      <a href="../../API/interfaces/MouseRollHandler/" class="md-nav__link">
         
   
   
@@ -3056,7 +3036,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../interfaces/MouseRotateHandler/" class="md-nav__link">
+      <a href="../../API/interfaces/MouseRotateHandler/" class="md-nav__link">
         
   
   
@@ -3079,7 +3059,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../interfaces/Projection/" class="md-nav__link">
+      <a href="../../API/interfaces/Projection/" class="md-nav__link">
         
   
   
@@ -3102,7 +3082,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../interfaces/Source/" class="md-nav__link">
+      <a href="../../API/interfaces/Source/" class="md-nav__link">
         
   
   
@@ -3125,7 +3105,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../interfaces/StyleImageInterface/" class="md-nav__link">
+      <a href="../../API/interfaces/StyleImageInterface/" class="md-nav__link">
         
   
   
@@ -3148,7 +3128,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../interfaces/Subscription/" class="md-nav__link">
+      <a href="../../API/interfaces/Subscription/" class="md-nav__link">
         
   
   
@@ -3176,31 +3156,26 @@
                 
   
   
-    
   
   
-  
     
     
     
     
       
       
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7" >
         
           
-          
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7" checked>
-        
-          
-          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="0">
             
   
   
@@ -3213,7 +3188,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4_7">
             <span class="md-nav__icon md-icon"></span>
             Type aliases
@@ -3227,7 +3202,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ActorMessage/" class="md-nav__link">
+      <a href="../../API/type-aliases/ActorMessage/" class="md-nav__link">
         
   
   
@@ -3250,7 +3225,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../AddLayerObject/" class="md-nav__link">
+      <a href="../../API/type-aliases/AddLayerObject/" class="md-nav__link">
         
   
   
@@ -3273,7 +3248,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../AddProtocolAction/" class="md-nav__link">
+      <a href="../../API/type-aliases/AddProtocolAction/" class="md-nav__link">
         
   
   
@@ -3296,7 +3271,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Alignment/" class="md-nav__link">
+      <a href="../../API/type-aliases/Alignment/" class="md-nav__link">
         
   
   
@@ -3319,7 +3294,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../AnimationOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/AnimationOptions/" class="md-nav__link">
         
   
   
@@ -3342,7 +3317,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../AroundCenterOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/AroundCenterOptions/" class="md-nav__link">
         
   
   
@@ -3365,7 +3340,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../AttributionControlOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/AttributionControlOptions/" class="md-nav__link">
         
   
   
@@ -3388,7 +3363,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../CalculateTileZoomFunction/" class="md-nav__link">
+      <a href="../../API/type-aliases/CalculateTileZoomFunction/" class="md-nav__link">
         
   
   
@@ -3411,7 +3386,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../CameraForBoundsOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/CameraForBoundsOptions/" class="md-nav__link">
         
   
   
@@ -3434,7 +3409,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../CameraOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/CameraOptions/" class="md-nav__link">
         
   
   
@@ -3457,7 +3432,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../CameraUpdateTransformFunction/" class="md-nav__link">
+      <a href="../../API/type-aliases/CameraUpdateTransformFunction/" class="md-nav__link">
         
   
   
@@ -3480,7 +3455,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../CanvasSourceSpecification/" class="md-nav__link">
+      <a href="../../API/type-aliases/CanvasSourceSpecification/" class="md-nav__link">
         
   
   
@@ -3503,7 +3478,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../CenterZoomBearing/" class="md-nav__link">
+      <a href="../../API/type-aliases/CenterZoomBearing/" class="md-nav__link">
         
   
   
@@ -3526,7 +3501,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../CircleGranularity/" class="md-nav__link">
+      <a href="../../API/type-aliases/CircleGranularity/" class="md-nav__link">
         
   
   
@@ -3549,7 +3524,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ClusterIDAndSource/" class="md-nav__link">
+      <a href="../../API/type-aliases/ClusterIDAndSource/" class="md-nav__link">
         
   
   
@@ -3572,7 +3547,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Complete/" class="md-nav__link">
+      <a href="../../API/type-aliases/Complete/" class="md-nav__link">
         
   
   
@@ -3595,7 +3570,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Config/" class="md-nav__link">
+      <a href="../../API/type-aliases/Config/" class="md-nav__link">
         
   
   
@@ -3618,7 +3593,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ControlPosition/" class="md-nav__link">
+      <a href="../../API/type-aliases/ControlPosition/" class="md-nav__link">
         
   
   
@@ -3641,7 +3616,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Coordinates/" class="md-nav__link">
+      <a href="../../API/type-aliases/Coordinates/" class="md-nav__link">
         
   
   
@@ -3664,7 +3639,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../CreateTileMeshOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/CreateTileMeshOptions/" class="md-nav__link">
         
   
   
@@ -3687,7 +3662,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../CrossFaded/" class="md-nav__link">
+      <a href="../../API/type-aliases/CrossFaded/" class="md-nav__link">
         
   
   
@@ -3710,7 +3685,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../CustomRenderMethod/" class="md-nav__link">
+      <a href="../../API/type-aliases/CustomRenderMethod/" class="md-nav__link">
         
   
   
@@ -3733,7 +3708,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../CustomRenderMethodInput/" class="md-nav__link">
+      <a href="../../API/type-aliases/CustomRenderMethodInput/" class="md-nav__link">
         
   
   
@@ -3756,7 +3731,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../DEMEncoding/" class="md-nav__link">
+      <a href="../../API/type-aliases/DEMEncoding/" class="md-nav__link">
         
   
   
@@ -3779,7 +3754,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../DashEntry/" class="md-nav__link">
+      <a href="../../API/type-aliases/DashEntry/" class="md-nav__link">
         
   
   
@@ -3802,7 +3777,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../DistributiveKeys/" class="md-nav__link">
+      <a href="../../API/type-aliases/DistributiveKeys/" class="md-nav__link">
         
   
   
@@ -3825,7 +3800,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../DistributiveOmit/" class="md-nav__link">
+      <a href="../../API/type-aliases/DistributiveOmit/" class="md-nav__link">
         
   
   
@@ -3848,7 +3823,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../DragPanOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/DragPanOptions/" class="md-nav__link">
         
   
   
@@ -3871,7 +3846,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../DragRotateHandlerOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/DragRotateHandlerOptions/" class="md-nav__link">
         
   
   
@@ -3894,7 +3869,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../EaseToOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/EaseToOptions/" class="md-nav__link">
         
   
   
@@ -3917,7 +3892,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ExpiryData/" class="md-nav__link">
+      <a href="../../API/type-aliases/ExpiryData/" class="md-nav__link">
         
   
   
@@ -3940,7 +3915,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../FeatureIdentifier/" class="md-nav__link">
+      <a href="../../API/type-aliases/FeatureIdentifier/" class="md-nav__link">
         
   
   
@@ -3963,7 +3938,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../FitBoundsOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/FitBoundsOptions/" class="md-nav__link">
         
   
   
@@ -3986,7 +3961,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../FlyToOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/FlyToOptions/" class="md-nav__link">
         
   
   
@@ -4009,7 +3984,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../FullscreenControlOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/FullscreenControlOptions/" class="md-nav__link">
         
   
   
@@ -4032,7 +4007,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../GeoJSONFeatureDiff/" class="md-nav__link">
+      <a href="../../API/type-aliases/GeoJSONFeatureDiff/" class="md-nav__link">
         
   
   
@@ -4055,7 +4030,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../GeoJSONFeatureId/" class="md-nav__link">
+      <a href="../../API/type-aliases/GeoJSONFeatureId/" class="md-nav__link">
         
   
   
@@ -4078,7 +4053,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../GeoJSONSourceDiff/" class="md-nav__link">
+      <a href="../../API/type-aliases/GeoJSONSourceDiff/" class="md-nav__link">
         
   
   
@@ -4101,7 +4076,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../GeoJSONSourceOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/GeoJSONSourceOptions/" class="md-nav__link">
         
   
   
@@ -4124,7 +4099,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../GeoJSONWorkerOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/GeoJSONWorkerOptions/" class="md-nav__link">
         
   
   
@@ -4147,7 +4122,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../GeoJSONWorkerSourceLoadDataResult/" class="md-nav__link">
+      <a href="../../API/type-aliases/GeoJSONWorkerSourceLoadDataResult/" class="md-nav__link">
         
   
   
@@ -4170,7 +4145,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../GeolocateControlOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/GeolocateControlOptions/" class="md-nav__link">
         
   
   
@@ -4193,7 +4168,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../GestureOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/GestureOptions/" class="md-nav__link">
         
   
   
@@ -4216,7 +4191,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../GetClusterLeavesParams/" class="md-nav__link">
+      <a href="../../API/type-aliases/GetClusterLeavesParams/" class="md-nav__link">
         
   
   
@@ -4239,7 +4214,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../GetGlyphsParameters/" class="md-nav__link">
+      <a href="../../API/type-aliases/GetGlyphsParameters/" class="md-nav__link">
         
   
   
@@ -4262,7 +4237,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../GetGlyphsResponse/" class="md-nav__link">
+      <a href="../../API/type-aliases/GetGlyphsResponse/" class="md-nav__link">
         
   
   
@@ -4285,7 +4260,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../GetImagesParameters/" class="md-nav__link">
+      <a href="../../API/type-aliases/GetImagesParameters/" class="md-nav__link">
         
   
   
@@ -4308,7 +4283,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../GetImagesResponse/" class="md-nav__link">
+      <a href="../../API/type-aliases/GetImagesResponse/" class="md-nav__link">
         
   
   
@@ -4331,7 +4306,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../GetResourceResponse/" class="md-nav__link">
+      <a href="../../API/type-aliases/GetResourceResponse/" class="md-nav__link">
         
   
   
@@ -4354,7 +4329,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../GlyphMetrics/" class="md-nav__link">
+      <a href="../../API/type-aliases/GlyphMetrics/" class="md-nav__link">
         
   
   
@@ -4377,7 +4352,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../GlyphPosition/" class="md-nav__link">
+      <a href="../../API/type-aliases/GlyphPosition/" class="md-nav__link">
         
   
   
@@ -4400,7 +4375,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../GlyphPositions/" class="md-nav__link">
+      <a href="../../API/type-aliases/GlyphPositions/" class="md-nav__link">
         
   
   
@@ -4423,7 +4398,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../GridKey/" class="md-nav__link">
+      <a href="../../API/type-aliases/GridKey/" class="md-nav__link">
         
   
   
@@ -4446,7 +4421,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../HandlerResult/" class="md-nav__link">
+      <a href="../../API/type-aliases/HandlerResult/" class="md-nav__link">
         
   
   
@@ -4469,7 +4444,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../IndicesType/" class="md-nav__link">
+      <a href="../../API/type-aliases/IndicesType/" class="md-nav__link">
         
   
   
@@ -4492,7 +4467,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../JumpToOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/JumpToOptions/" class="md-nav__link">
         
   
   
@@ -4515,7 +4490,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Listener/" class="md-nav__link">
+      <a href="../../API/type-aliases/Listener/" class="md-nav__link">
         
   
   
@@ -4538,7 +4513,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../LngLatBoundsLike/" class="md-nav__link">
+      <a href="../../API/type-aliases/LngLatBoundsLike/" class="md-nav__link">
         
   
   
@@ -4561,7 +4536,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../LngLatLike/" class="md-nav__link">
+      <a href="../../API/type-aliases/LngLatLike/" class="md-nav__link">
         
   
   
@@ -4584,7 +4559,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../LoadGeoJSONParameters/" class="md-nav__link">
+      <a href="../../API/type-aliases/LoadGeoJSONParameters/" class="md-nav__link">
         
   
   
@@ -4607,7 +4582,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../LogoControlOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/LogoControlOptions/" class="md-nav__link">
         
   
   
@@ -4630,7 +4605,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../MapContextEvent/" class="md-nav__link">
+      <a href="../../API/type-aliases/MapContextEvent/" class="md-nav__link">
         
   
   
@@ -4653,7 +4628,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../MapDataEvent/" class="md-nav__link">
+      <a href="../../API/type-aliases/MapDataEvent/" class="md-nav__link">
         
   
   
@@ -4676,7 +4651,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../MapEventType/" class="md-nav__link">
+      <a href="../../API/type-aliases/MapEventType/" class="md-nav__link">
         
   
   
@@ -4699,7 +4674,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../MapGeoJSONFeature/" class="md-nav__link">
+      <a href="../../API/type-aliases/MapGeoJSONFeature/" class="md-nav__link">
         
   
   
@@ -4722,7 +4697,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../MapLayerEventType/" class="md-nav__link">
+      <a href="../../API/type-aliases/MapLayerEventType/" class="md-nav__link">
         
   
   
@@ -4745,7 +4720,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../MapLayerMouseEvent/" class="md-nav__link">
+      <a href="../../API/type-aliases/MapLayerMouseEvent/" class="md-nav__link">
         
   
   
@@ -4768,7 +4743,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../MapLayerTouchEvent/" class="md-nav__link">
+      <a href="../../API/type-aliases/MapLayerTouchEvent/" class="md-nav__link">
         
   
   
@@ -4791,7 +4766,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../MapLibreEvent/" class="md-nav__link">
+      <a href="../../API/type-aliases/MapLibreEvent/" class="md-nav__link">
         
   
   
@@ -4814,7 +4789,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../MapLibreZoomEvent/" class="md-nav__link">
+      <a href="../../API/type-aliases/MapLibreZoomEvent/" class="md-nav__link">
         
   
   
@@ -4837,7 +4812,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../MapOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/MapOptions/" class="md-nav__link">
         
   
   
@@ -4860,7 +4835,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../MapProjectionEvent/" class="md-nav__link">
+      <a href="../../API/type-aliases/MapProjectionEvent/" class="md-nav__link">
         
   
   
@@ -4883,7 +4858,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../MapSourceDataEvent/" class="md-nav__link">
+      <a href="../../API/type-aliases/MapSourceDataEvent/" class="md-nav__link">
         
   
   
@@ -4906,7 +4881,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../MapSourceDataType/" class="md-nav__link">
+      <a href="../../API/type-aliases/MapSourceDataType/" class="md-nav__link">
         
   
   
@@ -4929,7 +4904,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../MapStyleDataEvent/" class="md-nav__link">
+      <a href="../../API/type-aliases/MapStyleDataEvent/" class="md-nav__link">
         
   
   
@@ -4952,7 +4927,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../MapStyleImageMissingEvent/" class="md-nav__link">
+      <a href="../../API/type-aliases/MapStyleImageMissingEvent/" class="md-nav__link">
         
   
   
@@ -4975,7 +4950,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../MapTerrainEvent/" class="md-nav__link">
+      <a href="../../API/type-aliases/MapTerrainEvent/" class="md-nav__link">
         
   
   
@@ -4998,7 +4973,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../MarkerOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/MarkerOptions/" class="md-nav__link">
         
   
   
@@ -5021,7 +4996,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../MessageData/" class="md-nav__link">
+      <a href="../../API/type-aliases/MessageData/" class="md-nav__link">
         
   
   
@@ -5044,7 +5019,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../NavigationControlOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/NavigationControlOptions/" class="md-nav__link">
         
   
   
@@ -5067,7 +5042,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Offset/" class="md-nav__link">
+      <a href="../../API/type-aliases/Offset/" class="md-nav__link">
         
   
   
@@ -5090,7 +5065,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../OverlapMode/" class="md-nav__link">
+      <a href="../../API/type-aliases/OverlapMode/" class="md-nav__link">
         
   
   
@@ -5113,7 +5088,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../PaddingOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/PaddingOptions/" class="md-nav__link">
         
   
   
@@ -5136,7 +5111,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../PluginState/" class="md-nav__link">
+      <a href="../../API/type-aliases/PluginState/" class="md-nav__link">
         
   
   
@@ -5159,7 +5134,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../PointLike/" class="md-nav__link">
+      <a href="../../API/type-aliases/PointLike/" class="md-nav__link">
         
   
   
@@ -5182,7 +5157,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../PointProjection/" class="md-nav__link">
+      <a href="../../API/type-aliases/PointProjection/" class="md-nav__link">
         
   
   
@@ -5205,7 +5180,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../PopupOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/PopupOptions/" class="md-nav__link">
         
   
   
@@ -5228,7 +5203,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../PositionAnchor/" class="md-nav__link">
+      <a href="../../API/type-aliases/PositionAnchor/" class="md-nav__link">
         
   
   
@@ -5251,7 +5226,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../PossiblyEvaluatedValue/" class="md-nav__link">
+      <a href="../../API/type-aliases/PossiblyEvaluatedValue/" class="md-nav__link">
         
   
   
@@ -5274,7 +5249,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ProjectionData/" class="md-nav__link">
+      <a href="../../API/type-aliases/ProjectionData/" class="md-nav__link">
         
   
   
@@ -5297,7 +5272,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ProjectionDataParams/" class="md-nav__link">
+      <a href="../../API/type-aliases/ProjectionDataParams/" class="md-nav__link">
         
   
   
@@ -5320,7 +5295,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../QueryRenderedFeaturesOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/QueryRenderedFeaturesOptions/" class="md-nav__link">
         
   
   
@@ -5343,7 +5318,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../QuerySourceFeatureOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/QuerySourceFeatureOptions/" class="md-nav__link">
         
   
   
@@ -5366,7 +5341,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../RTLPluginStatus/" class="md-nav__link">
+      <a href="../../API/type-aliases/RTLPluginStatus/" class="md-nav__link">
         
   
   
@@ -5389,7 +5364,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Rect/" class="md-nav__link">
+      <a href="../../API/type-aliases/Rect/" class="md-nav__link">
         
   
   
@@ -5412,7 +5387,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../RemoveSourceParams/" class="md-nav__link">
+      <a href="../../API/type-aliases/RemoveSourceParams/" class="md-nav__link">
         
   
   
@@ -5435,7 +5410,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../RequestParameters/" class="md-nav__link">
+      <a href="../../API/type-aliases/RequestParameters/" class="md-nav__link">
         
   
   
@@ -5458,7 +5433,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../RequestResponseMessageMap/" class="md-nav__link">
+      <a href="../../API/type-aliases/RequestResponseMessageMap/" class="md-nav__link">
         
   
   
@@ -5481,7 +5456,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../RequestTransformFunction/" class="md-nav__link">
+      <a href="../../API/type-aliases/RequestTransformFunction/" class="md-nav__link">
         
   
   
@@ -5504,7 +5479,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../RequireAtLeastOne/" class="md-nav__link">
+      <a href="../../API/type-aliases/RequireAtLeastOne/" class="md-nav__link">
         
   
   
@@ -5527,7 +5502,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ScaleControlOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/ScaleControlOptions/" class="md-nav__link">
         
   
   
@@ -5550,7 +5525,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Serialized/" class="md-nav__link">
+      <a href="../../API/type-aliases/Serialized/" class="md-nav__link">
         
   
   
@@ -5573,7 +5548,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../SerializedObject/" class="md-nav__link">
+      <a href="../../API/type-aliases/SerializedObject/" class="md-nav__link">
         
   
   
@@ -5596,7 +5571,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../SerializedStructArray/" class="md-nav__link">
+      <a href="../../API/type-aliases/SerializedStructArray/" class="md-nav__link">
         
   
   
@@ -5619,7 +5594,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../SetClusterOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/SetClusterOptions/" class="md-nav__link">
         
   
   
@@ -5642,7 +5617,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../SourceClass/" class="md-nav__link">
+      <a href="../../API/type-aliases/SourceClass/" class="md-nav__link">
         
   
   
@@ -5665,7 +5640,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../SpriteOnDemandStyleImage/" class="md-nav__link">
+      <a href="../../API/type-aliases/SpriteOnDemandStyleImage/" class="md-nav__link">
         
   
   
@@ -5688,7 +5663,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../StyleGlyph/" class="md-nav__link">
+      <a href="../../API/type-aliases/StyleGlyph/" class="md-nav__link">
         
   
   
@@ -5711,7 +5686,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../StyleImage/" class="md-nav__link">
+      <a href="../../API/type-aliases/StyleImage/" class="md-nav__link">
         
   
   
@@ -5734,7 +5709,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../StyleImageData/" class="md-nav__link">
+      <a href="../../API/type-aliases/StyleImageData/" class="md-nav__link">
         
   
   
@@ -5757,7 +5732,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../StyleImageMetadata/" class="md-nav__link">
+      <a href="../../API/type-aliases/StyleImageMetadata/" class="md-nav__link">
         
   
   
@@ -5780,7 +5755,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../StyleOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/StyleOptions/" class="md-nav__link">
         
   
   
@@ -5803,7 +5778,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../StyleSetterOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/StyleSetterOptions/" class="md-nav__link">
         
   
   
@@ -5826,7 +5801,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../StyleSwapOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/StyleSwapOptions/" class="md-nav__link">
         
   
   
@@ -5849,7 +5824,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../SymbolQuad/" class="md-nav__link">
+      <a href="../../API/type-aliases/SymbolQuad/" class="md-nav__link">
         
   
   
@@ -5872,7 +5847,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../TileMesh/" class="md-nav__link">
+      <a href="../../API/type-aliases/TileMesh/" class="md-nav__link">
         
   
   
@@ -5895,7 +5870,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../TileParameters/" class="md-nav__link">
+      <a href="../../API/type-aliases/TileParameters/" class="md-nav__link">
         
   
   
@@ -5918,7 +5893,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../TileState/" class="md-nav__link">
+      <a href="../../API/type-aliases/TileState/" class="md-nav__link">
         
   
   
@@ -5941,7 +5916,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../TransformStyleFunction/" class="md-nav__link">
+      <a href="../../API/type-aliases/TransformStyleFunction/" class="md-nav__link">
         
   
   
@@ -5964,7 +5939,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Unit/" class="md-nav__link">
+      <a href="../../API/type-aliases/Unit/" class="md-nav__link">
         
   
   
@@ -5987,7 +5962,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../UpdateImageOptions/" class="md-nav__link">
+      <a href="../../API/type-aliases/UpdateImageOptions/" class="md-nav__link">
         
   
   
@@ -6007,30 +5982,20 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../API/type-aliases/UpdateLayersParameters/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    UpdateLayersParamaeters
+    UpdateLayersParameters
     
   </span>
   
 
       </a>
-      
     </li>
   
 
@@ -6043,7 +6008,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../WorkerDEMTileParameters/" class="md-nav__link">
+      <a href="../../API/type-aliases/WorkerDEMTileParameters/" class="md-nav__link">
         
   
   
@@ -6066,7 +6031,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../WorkerTileParameters/" class="md-nav__link">
+      <a href="../../API/type-aliases/WorkerTileParameters/" class="md-nav__link">
         
   
   
@@ -6089,7 +6054,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../WorkerTileResult/" class="md-nav__link">
+      <a href="../../API/type-aliases/WorkerTileResult/" class="md-nav__link">
         
   
   
@@ -6124,26 +6089,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
             
   
   
@@ -6156,7 +6126,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             Examples
@@ -6170,7 +6140,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/" class="md-nav__link">
+      <a href="../" class="md-nav__link">
         
   
   
@@ -6193,7 +6163,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/3d-buildings/" class="md-nav__link">
+      <a href="../3d-buildings/" class="md-nav__link">
         
   
   
@@ -6216,7 +6186,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/3d-extrusion-floorplan/" class="md-nav__link">
+      <a href="../3d-extrusion-floorplan/" class="md-nav__link">
         
   
   
@@ -6239,7 +6209,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/3d-terrain/" class="md-nav__link">
+      <a href="../3d-terrain/" class="md-nav__link">
         
   
   
@@ -6262,7 +6232,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/add-3d-model-babylon/" class="md-nav__link">
+      <a href="../add-3d-model-babylon/" class="md-nav__link">
         
   
   
@@ -6285,7 +6255,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/add-3d-model-threejs-with-shadow/" class="md-nav__link">
+      <a href="../add-3d-model-threejs-with-shadow/" class="md-nav__link">
         
   
   
@@ -6308,7 +6278,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/add-3d-model-with-terrain/" class="md-nav__link">
+      <a href="../add-3d-model-with-terrain/" class="md-nav__link">
         
   
   
@@ -6331,7 +6301,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/add-3d-model/" class="md-nav__link">
+      <a href="../add-3d-model/" class="md-nav__link">
         
   
   
@@ -6354,7 +6324,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/add-a-marker/" class="md-nav__link">
+      <a href="../add-a-marker/" class="md-nav__link">
         
   
   
@@ -6377,7 +6347,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/add-cog/" class="md-nav__link">
+      <a href="../add-cog/" class="md-nav__link">
         
   
   
@@ -6400,7 +6370,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/add-deckgl-layer-using-rest-api/" class="md-nav__link">
+      <a href="../add-deckgl-layer-using-rest-api/" class="md-nav__link">
         
   
   
@@ -6423,7 +6393,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/add-image-animated/" class="md-nav__link">
+      <a href="../add-image-animated/" class="md-nav__link">
         
   
   
@@ -6446,7 +6416,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/add-image-generated/" class="md-nav__link">
+      <a href="../add-image-generated/" class="md-nav__link">
         
   
   
@@ -6469,7 +6439,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/add-image-missing-generated/" class="md-nav__link">
+      <a href="../add-image-missing-generated/" class="md-nav__link">
         
   
   
@@ -6492,7 +6462,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/add-image-stretchable/" class="md-nav__link">
+      <a href="../add-image-stretchable/" class="md-nav__link">
         
   
   
@@ -6515,7 +6485,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/add-image/" class="md-nav__link">
+      <a href="../add-image/" class="md-nav__link">
         
   
   
@@ -6538,7 +6508,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/animate-a-line/" class="md-nav__link">
+      <a href="../animate-a-line/" class="md-nav__link">
         
   
   
@@ -6561,7 +6531,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/animate-camera-around-point/" class="md-nav__link">
+      <a href="../animate-camera-around-point/" class="md-nav__link">
         
   
   
@@ -6584,7 +6554,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/animate-images/" class="md-nav__link">
+      <a href="../animate-images/" class="md-nav__link">
         
   
   
@@ -6607,7 +6577,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/animate-marker/" class="md-nav__link">
+      <a href="../animate-marker/" class="md-nav__link">
         
   
   
@@ -6630,7 +6600,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/animate-point-along-line/" class="md-nav__link">
+      <a href="../animate-point-along-line/" class="md-nav__link">
         
   
   
@@ -6653,7 +6623,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/animate-point-along-route/" class="md-nav__link">
+      <a href="../animate-point-along-route/" class="md-nav__link">
         
   
   
@@ -6676,7 +6646,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/animate-symbol-to-follow-mouse/" class="md-nav__link">
+      <a href="../animate-symbol-to-follow-mouse/" class="md-nav__link">
         
   
   
@@ -6699,7 +6669,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/attribution-position/" class="md-nav__link">
+      <a href="../attribution-position/" class="md-nav__link">
         
   
   
@@ -6722,7 +6692,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/camera-animation/" class="md-nav__link">
+      <a href="../camera-animation/" class="md-nav__link">
         
   
   
@@ -6745,7 +6715,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/canvas-source/" class="md-nav__link">
+      <a href="../canvas-source/" class="md-nav__link">
         
   
   
@@ -6768,7 +6738,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/center-on-symbol/" class="md-nav__link">
+      <a href="../center-on-symbol/" class="md-nav__link">
         
   
   
@@ -6791,7 +6761,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/center-point/" class="md-nav__link">
+      <a href="../center-point/" class="md-nav__link">
         
   
   
@@ -6814,7 +6784,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/change-building-color-based-on-zoom-level/" class="md-nav__link">
+      <a href="../change-building-color-based-on-zoom-level/" class="md-nav__link">
         
   
   
@@ -6837,7 +6807,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/change-case-of-labels/" class="md-nav__link">
+      <a href="../change-case-of-labels/" class="md-nav__link">
         
   
   
@@ -6860,7 +6830,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/check-for-support/" class="md-nav__link">
+      <a href="../check-for-support/" class="md-nav__link">
         
   
   
@@ -6883,7 +6853,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/cluster-html/" class="md-nav__link">
+      <a href="../cluster-html/" class="md-nav__link">
         
   
   
@@ -6906,7 +6876,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/cluster/" class="md-nav__link">
+      <a href="../cluster/" class="md-nav__link">
         
   
   
@@ -6929,7 +6899,30 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/color-switcher/" class="md-nav__link">
+      <a href="../color-relief/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a color relief layer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../color-switcher/" class="md-nav__link">
         
   
   
@@ -6952,7 +6945,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/contour-lines/" class="md-nav__link">
+      <a href="../contour-lines/" class="md-nav__link">
         
   
   
@@ -6975,7 +6968,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/cooperative-gestures/" class="md-nav__link">
+      <a href="../cooperative-gestures/" class="md-nav__link">
         
   
   
@@ -6998,7 +6991,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/custom-marker-icons/" class="md-nav__link">
+      <a href="../custom-marker-icons/" class="md-nav__link">
         
   
   
@@ -7021,7 +7014,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/custom-style-layer/" class="md-nav__link">
+      <a href="../custom-style-layer/" class="md-nav__link">
         
   
   
@@ -7044,7 +7037,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/data-driven-lines/" class="md-nav__link">
+      <a href="../data-driven-lines/" class="md-nav__link">
         
   
   
@@ -7067,7 +7060,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/disable-rotation/" class="md-nav__link">
+      <a href="../disable-rotation/" class="md-nav__link">
         
   
   
@@ -7090,7 +7083,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/disable-scroll-zoom/" class="md-nav__link">
+      <a href="../disable-scroll-zoom/" class="md-nav__link">
         
   
   
@@ -7113,7 +7106,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/display-and-style-rich-text-labels/" class="md-nav__link">
+      <a href="../display-and-style-rich-text-labels/" class="md-nav__link">
         
   
   
@@ -7136,7 +7129,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/drag-a-marker/" class="md-nav__link">
+      <a href="../drag-a-marker/" class="md-nav__link">
         
   
   
@@ -7159,7 +7152,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/drag-a-point/" class="md-nav__link">
+      <a href="../drag-a-point/" class="md-nav__link">
         
   
   
@@ -7182,7 +7175,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/draw-a-radius/" class="md-nav__link">
+      <a href="../draw-a-radius/" class="md-nav__link">
         
   
   
@@ -7205,7 +7198,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/fallback-image/" class="md-nav__link">
+      <a href="../fallback-image/" class="md-nav__link">
         
   
   
@@ -7228,7 +7221,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/feature-properties-transform/" class="md-nav__link">
+      <a href="../feature-properties-transform/" class="md-nav__link">
         
   
   
@@ -7251,7 +7244,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/fill-pattern/" class="md-nav__link">
+      <a href="../fill-pattern/" class="md-nav__link">
         
   
   
@@ -7274,7 +7267,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/filter-markers-by-input/" class="md-nav__link">
+      <a href="../filter-markers-by-input/" class="md-nav__link">
         
   
   
@@ -7297,7 +7290,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/filter-markers/" class="md-nav__link">
+      <a href="../filter-markers/" class="md-nav__link">
         
   
   
@@ -7317,10 +7310,43 @@
                 
   
   
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Filter layer symbols using global state
+    
+  </span>
+  
+
+      </a>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/filter-within-layer/" class="md-nav__link">
+      <a href="../filter-within-layer/" class="md-nav__link">
         
   
   
@@ -7343,7 +7369,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/fitbounds/" class="md-nav__link">
+      <a href="../fitbounds/" class="md-nav__link">
         
   
   
@@ -7366,7 +7392,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/flyto-options/" class="md-nav__link">
+      <a href="../flyto-options/" class="md-nav__link">
         
   
   
@@ -7389,7 +7415,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/flyto/" class="md-nav__link">
+      <a href="../flyto/" class="md-nav__link">
         
   
   
@@ -7412,7 +7438,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/fullscreen/" class="md-nav__link">
+      <a href="../fullscreen/" class="md-nav__link">
         
   
   
@@ -7435,7 +7461,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/game-controls/" class="md-nav__link">
+      <a href="../game-controls/" class="md-nav__link">
         
   
   
@@ -7458,7 +7484,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/geocoder/" class="md-nav__link">
+      <a href="../geocoder/" class="md-nav__link">
         
   
   
@@ -7481,7 +7507,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/geojson-layer-in-stack/" class="md-nav__link">
+      <a href="../geojson-layer-in-stack/" class="md-nav__link">
         
   
   
@@ -7504,7 +7530,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/geojson-line/" class="md-nav__link">
+      <a href="../geojson-line/" class="md-nav__link">
         
   
   
@@ -7527,7 +7553,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/geojson-markers/" class="md-nav__link">
+      <a href="../geojson-markers/" class="md-nav__link">
         
   
   
@@ -7550,7 +7576,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/geojson-polygon/" class="md-nav__link">
+      <a href="../geojson-polygon/" class="md-nav__link">
         
   
   
@@ -7573,7 +7599,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/globe-3d-model/" class="md-nav__link">
+      <a href="../globe-3d-model/" class="md-nav__link">
         
   
   
@@ -7596,7 +7622,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/globe-atmosphere/" class="md-nav__link">
+      <a href="../globe-atmosphere/" class="md-nav__link">
         
   
   
@@ -7619,7 +7645,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/globe-custom-simple/" class="md-nav__link">
+      <a href="../globe-custom-simple/" class="md-nav__link">
         
   
   
@@ -7642,7 +7668,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/globe-custom-tiles/" class="md-nav__link">
+      <a href="../globe-custom-tiles/" class="md-nav__link">
         
   
   
@@ -7665,7 +7691,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/globe-fill-extrusion/" class="md-nav__link">
+      <a href="../globe-fill-extrusion/" class="md-nav__link">
         
   
   
@@ -7688,7 +7714,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/globe-vector-tiles/" class="md-nav__link">
+      <a href="../globe-vector-tiles/" class="md-nav__link">
         
   
   
@@ -7711,7 +7737,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/globe-zoom-planet-size-function/" class="md-nav__link">
+      <a href="../globe-zoom-planet-size-function/" class="md-nav__link">
         
   
   
@@ -7734,7 +7760,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/hash-router/" class="md-nav__link">
+      <a href="../hash-router/" class="md-nav__link">
         
   
   
@@ -7757,7 +7783,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/heatmap-globe-terrain/" class="md-nav__link">
+      <a href="../heatmap-globe-terrain/" class="md-nav__link">
         
   
   
@@ -7780,7 +7806,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/heatmap-layer/" class="md-nav__link">
+      <a href="../heatmap-layer/" class="md-nav__link">
         
   
   
@@ -7803,7 +7829,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/hillshade-multidirectional/" class="md-nav__link">
+      <a href="../hillshade-multidirectional/" class="md-nav__link">
         
   
   
@@ -7826,7 +7852,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/hillshade-simple/" class="md-nav__link">
+      <a href="../hillshade-simple/" class="md-nav__link">
         
   
   
@@ -7849,7 +7875,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/hover-styles/" class="md-nav__link">
+      <a href="../hover-styles/" class="md-nav__link">
         
   
   
@@ -7872,7 +7898,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/hybrid-terrain/" class="md-nav__link">
+      <a href="../hybrid-terrain/" class="md-nav__link">
         
   
   
@@ -7895,7 +7921,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/interactive-false/" class="md-nav__link">
+      <a href="../interactive-false/" class="md-nav__link">
         
   
   
@@ -7918,7 +7944,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/jump-to/" class="md-nav__link">
+      <a href="../jump-to/" class="md-nav__link">
         
   
   
@@ -7941,7 +7967,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/language-switch/" class="md-nav__link">
+      <a href="../language-switch/" class="md-nav__link">
         
   
   
@@ -7964,7 +7990,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/line-across-180th-meridian/" class="md-nav__link">
+      <a href="../line-across-180th-meridian/" class="md-nav__link">
         
   
   
@@ -7987,7 +8013,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/line-gradient/" class="md-nav__link">
+      <a href="../line-gradient/" class="md-nav__link">
         
   
   
@@ -8010,7 +8036,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/live-geojson/" class="md-nav__link">
+      <a href="../live-geojson/" class="md-nav__link">
         
   
   
@@ -8033,7 +8059,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/live-update-feature/" class="md-nav__link">
+      <a href="../live-update-feature/" class="md-nav__link">
         
   
   
@@ -8056,7 +8082,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/local-geojson-experimental/" class="md-nav__link">
+      <a href="../local-geojson-experimental/" class="md-nav__link">
         
   
   
@@ -8079,7 +8105,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/local-geojson/" class="md-nav__link">
+      <a href="../local-geojson/" class="md-nav__link">
         
   
   
@@ -8102,7 +8128,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/local-ideographs/" class="md-nav__link">
+      <a href="../local-ideographs/" class="md-nav__link">
         
   
   
@@ -8125,7 +8151,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/locate-user/" class="md-nav__link">
+      <a href="../locate-user/" class="md-nav__link">
         
   
   
@@ -8148,7 +8174,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/lod-control/" class="md-nav__link">
+      <a href="../lod-control/" class="md-nav__link">
         
   
   
@@ -8171,7 +8197,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/map-tiles/" class="md-nav__link">
+      <a href="../map-tiles/" class="md-nav__link">
         
   
   
@@ -8194,7 +8220,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/mapbox-gl-draw/" class="md-nav__link">
+      <a href="../mapbox-gl-draw/" class="md-nav__link">
         
   
   
@@ -8217,7 +8243,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/mapbox-gl-rtl-text/" class="md-nav__link">
+      <a href="../mapbox-gl-rtl-text/" class="md-nav__link">
         
   
   
@@ -8240,7 +8266,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/maplibre-gl-terradraw/" class="md-nav__link">
+      <a href="../maplibre-gl-terradraw/" class="md-nav__link">
         
   
   
@@ -8263,7 +8289,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/measure/" class="md-nav__link">
+      <a href="../measure/" class="md-nav__link">
         
   
   
@@ -8286,7 +8312,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/mouse-position/" class="md-nav__link">
+      <a href="../mouse-position/" class="md-nav__link">
         
   
   
@@ -8309,7 +8335,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/multiple-geometries/" class="md-nav__link">
+      <a href="../multiple-geometries/" class="md-nav__link">
         
   
   
@@ -8332,7 +8358,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/navigation/" class="md-nav__link">
+      <a href="../navigation/" class="md-nav__link">
         
   
   
@@ -8355,7 +8381,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/offset-vanishing-point-with-padding/" class="md-nav__link">
+      <a href="../offset-vanishing-point-with-padding/" class="md-nav__link">
         
   
   
@@ -8378,7 +8404,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/pmtiles/" class="md-nav__link">
+      <a href="../pmtiles/" class="md-nav__link">
         
   
   
@@ -8401,7 +8427,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/polygon-popup-on-click/" class="md-nav__link">
+      <a href="../polygon-popup-on-click/" class="md-nav__link">
         
   
   
@@ -8424,7 +8450,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/popup-on-click/" class="md-nav__link">
+      <a href="../popup-on-click/" class="md-nav__link">
         
   
   
@@ -8447,7 +8473,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/popup-on-hover/" class="md-nav__link">
+      <a href="../popup-on-hover/" class="md-nav__link">
         
   
   
@@ -8470,7 +8496,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/popup/" class="md-nav__link">
+      <a href="../popup/" class="md-nav__link">
         
   
   
@@ -8493,7 +8519,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/queryrenderedfeatures/" class="md-nav__link">
+      <a href="../queryrenderedfeatures/" class="md-nav__link">
         
   
   
@@ -8516,7 +8542,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/render-world-copies/" class="md-nav__link">
+      <a href="../render-world-copies/" class="md-nav__link">
         
   
   
@@ -8539,7 +8565,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/restrict-bounds/" class="md-nav__link">
+      <a href="../restrict-bounds/" class="md-nav__link">
         
   
   
@@ -8562,7 +8588,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/satellite-map/" class="md-nav__link">
+      <a href="../satellite-map/" class="md-nav__link">
         
   
   
@@ -8585,7 +8611,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/scroll-fly-to/" class="md-nav__link">
+      <a href="../scroll-fly-to/" class="md-nav__link">
         
   
   
@@ -8608,7 +8634,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/set-perspective/" class="md-nav__link">
+      <a href="../set-perspective/" class="md-nav__link">
         
   
   
@@ -8631,7 +8657,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/set-popup/" class="md-nav__link">
+      <a href="../set-popup/" class="md-nav__link">
         
   
   
@@ -8654,7 +8680,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/simple-map/" class="md-nav__link">
+      <a href="../simple-map/" class="md-nav__link">
         
   
   
@@ -8677,7 +8703,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/sky-with-fog-and-terrain/" class="md-nav__link">
+      <a href="../sky-with-fog-and-terrain/" class="md-nav__link">
         
   
   
@@ -8700,7 +8726,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/sync-move/" class="md-nav__link">
+      <a href="../sync-move/" class="md-nav__link">
         
   
   
@@ -8723,7 +8749,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/timeline-animation/" class="md-nav__link">
+      <a href="../timeline-animation/" class="md-nav__link">
         
   
   
@@ -8746,7 +8772,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/toggle-deckgl-layer/" class="md-nav__link">
+      <a href="../toggle-deckgl-layer/" class="md-nav__link">
         
   
   
@@ -8769,7 +8795,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/toggle-interaction-handlers/" class="md-nav__link">
+      <a href="../toggle-interaction-handlers/" class="md-nav__link">
         
   
   
@@ -8792,7 +8818,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/variable-label-placement/" class="md-nav__link">
+      <a href="../variable-label-placement/" class="md-nav__link">
         
   
   
@@ -8815,7 +8841,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/variable-offset-label-placement/" class="md-nav__link">
+      <a href="../variable-offset-label-placement/" class="md-nav__link">
         
   
   
@@ -8838,7 +8864,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/vector-source/" class="md-nav__link">
+      <a href="../vector-source/" class="md-nav__link">
         
   
   
@@ -8861,7 +8887,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/video-on-a-map/" class="md-nav__link">
+      <a href="../video-on-a-map/" class="md-nav__link">
         
   
   
@@ -8884,7 +8910,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/visualize-population-density/" class="md-nav__link">
+      <a href="../visualize-population-density/" class="md-nav__link">
         
   
   
@@ -8907,7 +8933,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/wms/" class="md-nav__link">
+      <a href="../wms/" class="md-nav__link">
         
   
   
@@ -8930,7 +8956,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/zoomto-linestring/" class="md-nav__link">
+      <a href="../zoomto-linestring/" class="md-nav__link">
         
   
   
@@ -9003,7 +9029,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../guides/" class="md-nav__link">
+      <a href="../../guides/" class="md-nav__link">
         
   
   
@@ -9026,7 +9052,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../guides/large-data/" class="md-nav__link">
+      <a href="../../guides/large-data/" class="md-nav__link">
         
   
   
@@ -9049,7 +9075,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../guides/leaflet-migration-guide/" class="md-nav__link">
+      <a href="../../guides/leaflet-migration-guide/" class="md-nav__link">
         
   
   
@@ -9072,7 +9098,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../guides/mapbox-migration-guide/" class="md-nav__link">
+      <a href="../../guides/mapbox-migration-guide/" class="md-nav__link">
         
   
   
@@ -9095,7 +9121,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../guides/openlayers-migration-guide/" class="md-nav__link">
+      <a href="../../guides/openlayers-migration-guide/" class="md-nav__link">
         
   
   
@@ -9155,12 +9181,117 @@
   
 
 
-<h1 id="updatelayersparamaeters">UpdateLayersParamaeters</h1>
-<blockquote>
-<p><strong>UpdateLayersParamaeters</strong> = <code>object</code></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/util/actor_messages.ts#L44">src/util/actor_messages.ts:44</a></p>
-<p>Parameters needed to update the layers</p>
+<h1 id="filter-layer-symbols-using-global-state">Filter layer symbols using global state</h1>
+<p>Filter a layer symbols based on user input using setGlobalStateProperty().</p>
+<iframe src="../filter-symbols-using-global-state.html" width="100%" style="border:none; height:400px"></iframe>
+
+<div class="language-html highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="cp">&lt;!DOCTYPE html&gt;</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="p">&lt;</span><span class="nt">html</span> <span class="na">lang</span><span class="o">=</span><span class="s">&#39;en&#39;</span><span class="p">&gt;</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="p">&lt;</span><span class="nt">title</span><span class="p">&gt;</span>Filter layer symbols using global state<span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">property</span><span class="o">=</span><span class="s">&quot;og:description&quot;</span> <span class="na">content</span><span class="o">=</span><span class="s">&quot;Filter a layer symbols based on user input using setGlobalStateProperty().&quot;</span> <span class="p">/&gt;</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">charset</span><span class="o">=</span><span class="s">&#39;utf-8&#39;</span><span class="p">&gt;</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">name</span><span class="o">=</span><span class="s">&#39;viewport&#39;</span> <span class="na">content</span><span class="o">=</span><span class="s">&#39;width=device-width, initial-scale=1&#39;</span><span class="p">&gt;</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class="o">=</span><span class="s">&#39;stylesheet&#39;</span> <span class="na">href</span><span class="o">=</span><span class="s">&#39;https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css&#39;</span> <span class="p">/&gt;</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&#39;https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js&#39;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="p">&lt;</span><span class="nt">style</span><span class="p">&gt;</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">        </span><span class="nt">body</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">            </span><span class="k">margin</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">            </span><span class="k">padding</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">        </span><span class="nt">html</span><span class="o">,</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">        </span><span class="nt">body</span><span class="o">,</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">        </span><span class="p">#</span><span class="nn">map</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">            </span><span class="k">height</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="kt">%</span><span class="p">;</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">        </span><span class="nt">fieldset</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="w">            </span><span class="k">position</span><span class="p">:</span><span class="w"> </span><span class="kc">absolute</span><span class="p">;</span>
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="w">            </span><span class="k">top</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="kt">px</span><span class="p">;</span>
+</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="w">            </span><span class="k">left</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="kt">px</span><span class="p">;</span>
+</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="w">            </span><span class="k">background-color</span><span class="p">:</span><span class="w"> </span><span class="kc">white</span><span class="p">;</span>
+</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="w">            </span><span class="k">padding</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="kt">px</span><span class="p">;</span>
+</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="w">    </span><span class="p">&lt;/</span><span class="nt">style</span><span class="p">&gt;</span>
+</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
+</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
+</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
+</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    <span class="p">&lt;</span><span class="nt">div</span> <span class="na">id</span><span class="o">=</span><span class="s">&#39;map&#39;</span><span class="p">&gt;&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    <span class="p">&lt;</span><span class="nt">fieldset</span><span class="p">&gt;</span>
+</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>        Filter by type
+</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>        <span class="p">&lt;</span><span class="nt">select</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;type&quot;</span><span class="p">&gt;</span>
+</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>            <span class="p">&lt;</span><span class="nt">option</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;&quot;</span> <span class="na">selected</span><span class="p">&gt;</span>All<span class="p">&lt;/</span><span class="nt">option</span><span class="p">&gt;</span>
+</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>            <span class="p">&lt;</span><span class="nt">option</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;lift&quot;</span><span class="p">&gt;</span>Aerial lift<span class="p">&lt;/</span><span class="nt">option</span><span class="p">&gt;</span>
+</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>            <span class="p">&lt;</span><span class="nt">option</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;railway&quot;</span><span class="p">&gt;</span>Cable railway<span class="p">&lt;/</span><span class="nt">option</span><span class="p">&gt;</span>
+</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>        <span class="p">&lt;/</span><span class="nt">select</span><span class="p">&gt;</span>
+</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    <span class="p">&lt;/</span><span class="nt">fieldset</span><span class="p">&gt;</span>
+</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
+</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
+</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="p">&lt;</span><span class="nt">script</span><span class="p">&gt;</span>
+</span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">map</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">maplibregl</span><span class="p">.</span><span class="nb">Map</span><span class="p">({</span>
+</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="w">        </span><span class="nx">container</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;map&#39;</span><span class="p">,</span>
+</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="w">        </span><span class="nx">style</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;https://demotiles.maplibre.org/style.json&#39;</span><span class="p">,</span>
+</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="w">        </span><span class="nx">center</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="mf">9.0679</span><span class="p">,</span><span class="w"> </span><span class="mf">45.8822</span><span class="p">],</span>
+</span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="w">        </span><span class="nx">zoom</span><span class="o">:</span><span class="w"> </span><span class="mf">9</span>
+</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="w">    </span><span class="p">});</span>
+</span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
+</span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="w">    </span><span class="nx">map</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;load&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="w">        </span><span class="nx">map</span><span class="p">.</span><span class="nx">addSource</span><span class="p">(</span><span class="s1">&#39;railways_and_lifts&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="w">            </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;geojson&#39;</span><span class="p">,</span>
+</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="w">            </span><span class="nx">data</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;https://maplibre.org/maplibre-gl-js/docs/assets/funicolares-and-funivias-como.json&#39;</span>
+</span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="w">        </span><span class="p">});</span>
+</span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
+</span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="w">        </span><span class="nx">map</span><span class="p">.</span><span class="nx">addLayer</span><span class="p">({</span>
+</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="w">            </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;railways_and_lifts_labels&#39;</span><span class="p">,</span>
+</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="w">            </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;symbol&#39;</span><span class="p">,</span>
+</span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="w">            </span><span class="nx">source</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;railways_and_lifts&#39;</span><span class="p">,</span>
+</span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="w">            </span><span class="nx">layout</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="w">                </span><span class="s1">&#39;text-field&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;{name}&#39;</span><span class="p">,</span>
+</span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="w">                </span><span class="s1">&#39;text-font&#39;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;Open Sans Semibold&#39;</span><span class="p">],</span>
+</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="w">                </span><span class="s1">&#39;text-offset&#39;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">],</span>
+</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="w">                </span><span class="s1">&#39;text-anchor&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;top&#39;</span>
+</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="w">            </span><span class="p">},</span>
+</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="w">            </span><span class="nx">paint</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="w">                </span><span class="s1">&#39;text-color&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;#000000&#39;</span><span class="p">,</span>
+</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="w">                </span><span class="s1">&#39;text-halo-color&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;#ffffff&#39;</span><span class="p">,</span>
+</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="w">                </span><span class="s1">&#39;text-halo-width&#39;</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span>
+</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="w">            </span><span class="p">},</span>
+</span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="w">            </span><span class="nx">filter</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="w">                </span><span class="s1">&#39;case&#39;</span><span class="p">,</span>
+</span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="w">                </span><span class="p">[</span><span class="s1">&#39;==&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;to-string&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;global-state&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;type&#39;</span><span class="p">]],</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">],</span>
+</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="w">                </span><span class="kc">true</span><span class="p">,</span>
+</span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="w">                </span><span class="p">[</span><span class="s1">&#39;==&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;get&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;type&#39;</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;global-state&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;type&#39;</span><span class="p">]]</span>
+</span><span id="__span-0-78"><a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="w">            </span><span class="p">]</span>
+</span><span id="__span-0-79"><a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="w">        </span><span class="p">});</span>
+</span><span id="__span-0-80"><a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="w">        </span><span class="nx">map</span><span class="p">.</span><span class="nx">addLayer</span><span class="p">({</span>
+</span><span id="__span-0-81"><a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="w">            </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;circle&#39;</span><span class="p">,</span>
+</span><span id="__span-0-82"><a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="w">            </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;railways_and_lifts_points&#39;</span><span class="p">,</span>
+</span><span id="__span-0-83"><a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="w">            </span><span class="nx">source</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;railways_and_lifts&#39;</span><span class="p">,</span>
+</span><span id="__span-0-84"><a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="w">            </span><span class="nx">paint</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-85"><a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="w">                </span><span class="s1">&#39;circle-radius&#39;</span><span class="o">:</span><span class="w"> </span><span class="mf">5</span><span class="p">,</span>
+</span><span id="__span-0-86"><a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="w">                </span><span class="s1">&#39;circle-color&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;#000000&#39;</span><span class="p">,</span>
+</span><span id="__span-0-87"><a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="w">            </span><span class="p">},</span>
+</span><span id="__span-0-88"><a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="w">            </span><span class="nx">filter</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-0-89"><a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="w">                </span><span class="s1">&#39;case&#39;</span><span class="p">,</span>
+</span><span id="__span-0-90"><a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="w">                </span><span class="p">[</span><span class="s1">&#39;==&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;to-string&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;global-state&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;type&#39;</span><span class="p">]],</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">],</span>
+</span><span id="__span-0-91"><a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="w">                </span><span class="kc">true</span><span class="p">,</span>
+</span><span id="__span-0-92"><a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="w">                </span><span class="p">[</span><span class="s1">&#39;==&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;get&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;type&#39;</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;global-state&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;type&#39;</span><span class="p">]]</span>
+</span><span id="__span-0-93"><a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="w">            </span><span class="p">]</span>
+</span><span id="__span-0-94"><a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="w">        </span><span class="p">});</span>
+</span><span id="__span-0-95"><a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>
+</span><span id="__span-0-96"><a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">select</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">&#39;select[name=&quot;type&quot;]&#39;</span><span class="p">);</span>
+</span><span id="__span-0-97"><a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="w">        </span><span class="nx">map</span><span class="p">.</span><span class="nx">setGlobalStateProperty</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">select</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+</span><span id="__span-0-98"><a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>
+</span><span id="__span-0-99"><a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="w">        </span><span class="nx">select</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">&#39;change&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-100"><a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="w">            </span><span class="kd">const</span><span class="w"> </span><span class="nx">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
+</span><span id="__span-0-101"><a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="w">            </span><span class="nx">map</span><span class="p">.</span><span class="nx">setGlobalStateProperty</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="p">);</span>
+</span><span id="__span-0-102"><a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="w">        </span><span class="p">});</span>
+</span><span id="__span-0-103"><a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="w">    </span><span class="p">});</span>
+</span><span id="__span-0-104"><a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</span><span id="__span-0-105"><a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>
+</span><span id="__span-0-106"><a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
+</span></code></pre></div>
 
 
 
@@ -9279,10 +9410,10 @@
     
     
       
-      <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky", "toc.follow", "search.suggest", "navigation.instant", "navigation.sections", "navigation.top"], "search": "../../../assets/javascripts/workers/search.f8cc74c7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky", "toc.follow", "search.suggest", "navigation.instant", "navigation.sections", "navigation.top"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.c8b220af.min.js"></script>
+      <script src="../../assets/javascripts/bundle.13a4f30d.min.js"></script>
       
     
   </body>

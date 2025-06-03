@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.12">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.2afb09e1.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.342714a4.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -916,6 +916,15 @@
   
     <nav class="md-nav" aria-label="Methods">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#getlayoutaffectingglobalstaterefs" class="md-nav__link">
+    <span class="md-ellipsis">
+      getLayoutAffectingGlobalStateRefs()
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#listens" class="md-nav__link">
@@ -6121,12 +6130,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../type-aliases/UpdateLayersParamaeters/" class="md-nav__link">
+      <a href="../../type-aliases/UpdateLayersParameters/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    UpdateLayersParamaeters
+    UpdateLayersParameters
     
   </span>
   
@@ -7030,6 +7039,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../examples/color-relief/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a color relief layer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../examples/color-switcher/" class="md-nav__link">
         
   
@@ -7404,6 +7436,29 @@
   
   <span class="md-ellipsis">
     Filter symbols by toggling a list
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/filter-symbols-using-global-state/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Filter layer symbols using global state
     
   </span>
   
@@ -9265,6 +9320,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#getlayoutaffectingglobalstaterefs" class="md-nav__link">
+    <span class="md-ellipsis">
+      getLayoutAffectingGlobalStateRefs()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#listens" class="md-nav__link">
     <span class="md-ellipsis">
       listens()
@@ -9334,18 +9398,30 @@
 
 
 <h1 id="circlestylelayer">CircleStyleLayer</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/style/style_layer/circle_style_layer.ts#L20">src/style/style_layer/circle_style_layer.ts:20</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b3e282bbb0b8f93b503895281ec313a4e2a1c6be/src/style/style_layer/circle_style_layer.ts#L20">src/style/style_layer/circle_style_layer.ts:20</a></p>
 <p>A style layer that defines a circle</p>
 <h2 id="extends">Extends</h2>
 <ul>
 <li><a href="../StyleLayer/"><code>StyleLayer</code></a></li>
 </ul>
 <h2 id="methods">Methods</h2>
+<h3 id="getlayoutaffectingglobalstaterefs">getLayoutAffectingGlobalStateRefs()</h3>
+<blockquote>
+<p><strong>getLayoutAffectingGlobalStateRefs</strong>(): <code>Set</code>&lt;<code>string</code>&gt;</p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b3e282bbb0b8f93b503895281ec313a4e2a1c6be/src/style/style_layer.ts#L175">src/style/style_layer.ts:175</a></p>
+<p>Get list of global state references that are used within layout or filter properties.
+This is used to determine if layer source need to be reloaded when global state property changes.</p>
+<h4 id="returns">Returns</h4>
+<p><code>Set</code>&lt;<code>string</code>&gt;</p>
+<h4 id="inherited-from">Inherited from</h4>
+<p><a href="../StyleLayer/"><code>StyleLayer</code></a>.<a href="../StyleLayer/#getlayoutaffectingglobalstaterefs"><code>getLayoutAffectingGlobalStateRefs</code></a></p>
+<hr />
 <h3 id="listens">listens()</h3>
 <blockquote>
 <p><strong>listens</strong>(<code>type</code>: <code>string</code>): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/util/evented.ts#L165">src/util/evented.ts:165</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b3e282bbb0b8f93b503895281ec313a4e2a1c6be/src/util/evented.ts#L165">src/util/evented.ts:165</a></p>
 <p>Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.</p>
 <h4 id="parameters">Parameters</h4>
 <table>
@@ -9364,17 +9440,17 @@
 </tr>
 </tbody>
 </table>
-<h4 id="returns">Returns</h4>
+<h4 id="returns_1">Returns</h4>
 <p><code>boolean</code></p>
 <p><code>true</code> if there is at least one registered listener for specified event type, <code>false</code> otherwise</p>
-<h4 id="inherited-from">Inherited from</h4>
+<h4 id="inherited-from_1">Inherited from</h4>
 <p><a href="../StyleLayer/"><code>StyleLayer</code></a>.<a href="../StyleLayer/#listens"><code>listens</code></a></p>
 <hr />
 <h3 id="off">off()</h3>
 <blockquote>
 <p><strong>off</strong>(<code>type</code>: <code>string</code>, <code>listener</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <code>CircleStyleLayer</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/util/evented.ts#L90">src/util/evented.ts:90</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b3e282bbb0b8f93b503895281ec313a4e2a1c6be/src/util/evented.ts#L90">src/util/evented.ts:90</a></p>
 <p>Removes a previously registered event listener.</p>
 <h4 id="parameters_1">Parameters</h4>
 <table>
@@ -9398,16 +9474,16 @@
 </tr>
 </tbody>
 </table>
-<h4 id="returns_1">Returns</h4>
+<h4 id="returns_2">Returns</h4>
 <p><code>CircleStyleLayer</code></p>
-<h4 id="inherited-from_1">Inherited from</h4>
+<h4 id="inherited-from_2">Inherited from</h4>
 <p><a href="../StyleLayer/"><code>StyleLayer</code></a>.<a href="../StyleLayer/#off"><code>off</code></a></p>
 <hr />
 <h3 id="on">on()</h3>
 <blockquote>
 <p><strong>on</strong>(<code>type</code>: <code>string</code>, <code>listener</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <a href="../../interfaces/Subscription/"><code>Subscription</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/util/evented.ts#L73">src/util/evented.ts:73</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b3e282bbb0b8f93b503895281ec313a4e2a1c6be/src/util/evented.ts#L73">src/util/evented.ts:73</a></p>
 <p>Adds a listener to a specified event type.</p>
 <h4 id="parameters_2">Parameters</h4>
 <table>
@@ -9431,16 +9507,16 @@
 </tr>
 </tbody>
 </table>
-<h4 id="returns_2">Returns</h4>
+<h4 id="returns_3">Returns</h4>
 <p><a href="../../interfaces/Subscription/"><code>Subscription</code></a></p>
-<h4 id="inherited-from_2">Inherited from</h4>
+<h4 id="inherited-from_3">Inherited from</h4>
 <p><a href="../StyleLayer/"><code>StyleLayer</code></a>.<a href="../StyleLayer/#on"><code>on</code></a></p>
 <hr />
 <h3 id="once">once()</h3>
 <blockquote>
 <p><strong>once</strong>(<code>type</code>: <code>string</code>, <code>listener?</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <code>Promise</code>&lt;<code>any</code>&gt; | <code>CircleStyleLayer</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/util/evented.ts#L106">src/util/evented.ts:106</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b3e282bbb0b8f93b503895281ec313a4e2a1c6be/src/util/evented.ts#L106">src/util/evented.ts:106</a></p>
 <p>Adds a listener that will be called only once to a specified event type.</p>
 <p>The listener will be called first time the event fires after the listener is registered.</p>
 <h4 id="parameters_3">Parameters</h4>
@@ -9465,17 +9541,17 @@
 </tr>
 </tbody>
 </table>
-<h4 id="returns_3">Returns</h4>
+<h4 id="returns_4">Returns</h4>
 <p><code>Promise</code>&lt;<code>any</code>&gt; | <code>CircleStyleLayer</code></p>
 <p><code>this</code> or a promise if a listener is not provided</p>
-<h4 id="inherited-from_3">Inherited from</h4>
+<h4 id="inherited-from_4">Inherited from</h4>
 <p><a href="../StyleLayer/"><code>StyleLayer</code></a>.<a href="../StyleLayer/#once"><code>once</code></a></p>
 <hr />
 <h3 id="seteventedparent">setEventedParent()</h3>
 <blockquote>
 <p><strong>setEventedParent</strong>(<code>parent?</code>: <a href="../Evented/"><code>Evented</code></a>, <code>data?</code>: <code>any</code>): <code>CircleStyleLayer</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/34b95c06259014661cf72a418fd81917313088bf/src/util/evented.ts#L176">src/util/evented.ts:176</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b3e282bbb0b8f93b503895281ec313a4e2a1c6be/src/util/evented.ts#L176">src/util/evented.ts:176</a></p>
 <p>Bubble all events fired by this instance of Evented to this parent instance of Evented.</p>
 <h4 id="parameters_4">Parameters</h4>
 <table>
@@ -9496,9 +9572,9 @@
 </tr>
 </tbody>
 </table>
-<h4 id="returns_4">Returns</h4>
+<h4 id="returns_5">Returns</h4>
 <p><code>CircleStyleLayer</code></p>
-<h4 id="inherited-from_4">Inherited from</h4>
+<h4 id="inherited-from_5">Inherited from</h4>
 <p><a href="../StyleLayer/"><code>StyleLayer</code></a>.<a href="../StyleLayer/#seteventedparent"><code>setEventedParent</code></a></p>
 
 
@@ -9618,10 +9694,10 @@
     
     
       
-      <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky", "toc.follow", "search.suggest", "navigation.instant", "navigation.sections", "navigation.top"], "search": "../../../assets/javascripts/workers/search.f8cc74c7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky", "toc.follow", "search.suggest", "navigation.instant", "navigation.sections", "navigation.top"], "search": "../../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.c8b220af.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.13a4f30d.min.js"></script>
       
     
   </body>
