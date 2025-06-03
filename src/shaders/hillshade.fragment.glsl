@@ -25,7 +25,7 @@ float get_aspect(vec2 deriv)
 
 // Based on GDALHillshadeIgorAlg() (https://github.com/OSGeo/gdal/blob/ad4280be5aee202eea412c075e4591878aaeb018/apps/gdaldem_lib.cpp#L849).
 // GDAL's version only calculates shading.
-// This version also adds highlighting. To match GDAL's output, make hillshade-highlight-color transparent. 
+// This version also adds highlighting. To match GDAL's output, make hillshade-highlight-color transparent.
 void igor_hillshade(vec2 deriv)
 {
     deriv = deriv * u_exaggeration * 2.0;
@@ -74,7 +74,7 @@ void standard_hillshade(vec2 deriv)
 
 // Based on GDALHillshadeAlg(). (https://github.com/OSGeo/gdal/blob/ad4280be5aee202eea412c075e4591878aaeb018/apps/gdaldem_lib.cpp#L908)
 // GDAL's output ranges from black to white, and is gray in the middle.
-// The output of this function ranges from hillshade-shadow-color to hillshade-highlight-color, and 
+// The output of this function ranges from hillshade-shadow-color to hillshade-highlight-color, and
 // is transparent in the middle. To match GDAL's output, make hillshade-highlight-color white,
 // hillshade-shadow color black, and the background color gray.
 void basic_hillshade(vec2 deriv)
@@ -116,7 +116,7 @@ void multidirectional_hillshade(vec2 deriv)
         float cang = (sin_alt - (deriv.y*cos_az*cos_alt - deriv.x*sin_az*cos_alt)) / sqrt(1.0 + dot(deriv, deriv));
 
         float shade = clamp(cang, 0.0, 1.0);
-        
+
         if(shade > 0.5)
         {
             fragColor += u_highlights[i]*(2.0*shade - 1.0)/float(NUM_ILLUMINATION_SOURCES);
@@ -130,7 +130,7 @@ void multidirectional_hillshade(vec2 deriv)
 
 // Based on GDALHillshadeCombinedAlg(). (https://github.com/OSGeo/gdal/blob/ad4280be5aee202eea412c075e4591878aaeb018/apps/gdaldem_lib.cpp#L1084)
 // GDAL's version only calculates shading.
-// This version also adds highlighting. To match GDAL's output, make hillshade-highlight-color transparent. 
+// This version also adds highlighting. To match GDAL's output, make hillshade-highlight-color transparent.
 void combined_hillshade(vec2 deriv)
 {
     deriv = deriv * u_exaggeration * 2.0;
@@ -146,7 +146,7 @@ void combined_hillshade(vec2 deriv)
 
     float shade = cang* atan(length(deriv)) * 4.0/PI/PI;
     float highlight = (PI/2.0-cang)* atan(length(deriv)) * 4.0/PI/PI;
-    
+
     fragColor = u_shadows[0]*shade + u_highlights[0]*highlight;
 }
 
@@ -159,24 +159,18 @@ void main() {
 
     vec2 deriv = ((pixel.rg * 8.0) - 4.0) / scaleFactor;
 
-    switch(u_method)
-    {
-        case BASIC:
-            basic_hillshade(deriv);
-            break;
-        case COMBINED:
-            combined_hillshade(deriv);
-            break;
-        case IGOR:
-            igor_hillshade(deriv);
-            break;
-        case MULTIDIRECTIONAL:
-            multidirectional_hillshade(deriv);
-            break;
-        case STANDARD:
-        default:
-            standard_hillshade(deriv);
-            break;
+    if (u_method == BASIC) {
+        basic_hillshade(deriv);
+    } else if (u_method == COMBINED) {
+        combined_hillshade(deriv);
+    } else if (u_method == IGOR) {
+        igor_hillshade(deriv);
+    } else if (u_method == MULTIDIRECTIONAL) {
+        multidirectional_hillshade(deriv);
+    } else if (u_method == STANDARD) {
+        standard_hillshade(deriv);
+    } else {
+        standard_hillshade(deriv);
     }
 
 #ifdef OVERDRAW_INSPECTOR
