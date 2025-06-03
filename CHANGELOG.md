@@ -1,10 +1,17 @@
 ## main
 
 ### ✨ Features and improvements
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 5.6.0
+
+### ✨ Features and improvements
 - Add `setGlobalStateProperty()` and `getGlobalState()` to the map public API ([#5613](https://github.com/maplibre/maplibre-gl-js/pull/5613))
 - Improve tile frustum culling for globe, leading to better performance and faster loading times. ([#5865](https://github.com/maplibre/maplibre-gl-js/pull/5865))
 - Add new `color-relief` layer type to render hypsometric tint from terrain-RGB tiles. ([#5742](https://github.com/maplibre/maplibre-gl-js/pull/5742))
-- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Fix `queryRenderedFeatures` bounding box crossing antimeridian in globe view. ([#5856](https://github.com/maplibre/maplibre-gl-js/pull/5856))
@@ -13,7 +20,6 @@
 - Revert changes to polygon intersection detection ([#5590](https://github.com/maplibre/maplibre-gl-js/pull/5590) caused issue [5864](https://github.com/maplibre/maplibre-gl-js/issues/5864))
 - Fix breaking clusters when non-integer value provided for `clusterMaxZoom` (warning is shown) ([#5929](https://github.com/maplibre/maplibre-gl-js/issues/5929)) + clarify API docs
 
-- _...Add new stuff here..._
 
 ## 5.5.0
 
