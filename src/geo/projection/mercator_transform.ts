@@ -324,10 +324,26 @@ export class MercatorTransform implements ITransform {
         return this.screenPointToMercatorCoordinate(p, terrain)?.toLngLat();
     }
 
+    /**
+     * @deprecated Use screenPointToMercatorCoordinateAsync instead. This function is synchronous and blocks the main thread, making huge performance hit on terrain-enabled maps.
+     * @param p - Screen-Coordinate
+     * @param terrain - Terrain
+     * @returns Mercator coordinate for a screen pixel, or null, if the pixel is not covered by terrain (is in the sky).
+     */
     screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
         // get point-coordinate from terrain coordinates framebuffer
         if (terrain) {
             const coordinate = terrain.pointCoordinate(p);
+            if (coordinate != null) {
+                return coordinate;
+            }
+        }
+        return this.screenPointToMercatorCoordinateAtZ(p);
+    }
+
+    async screenPointToMercatorCoordinateAsync(p: Point, terrain?: Terrain): Promise<MercatorCoordinate> {
+        if (terrain) {
+            const coordinate = await terrain.pointCoordinateAsync(p);
             if (coordinate != null) {
                 return coordinate;
             }

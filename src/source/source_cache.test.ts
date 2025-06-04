@@ -1857,6 +1857,445 @@ describe('SourceCache#tilesIn', () => {
     });
 });
 
+describe('SourceCache#tilesInAsync', () => {
+    test('graceful response before source loaded', async () => {
+        const tr = new MercatorTransform();
+        tr.resize(512, 512);
+        const sourceCache = createSourceCache({noLoad: true});
+        sourceCache.transform = tr;
+        sourceCache.onAdd(undefined);
+        expect(await sourceCache.tilesInAsync([
+            new Point(0, 0),
+            new Point(512, 256)
+        ], 10, true)).toEqual([]);
+    });
+
+    function round(queryGeometry) {
+        return queryGeometry.map((p) => {
+            return p.round();
+        });
+    }
+
+    test('regular tiles', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+        transform.setZoom(1);
+        transform.setCenter(new LngLat(0, 1));
+
+        const sourceCache = createSourceCache();
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+
+        const dataPromise = waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
+        sourceCache.onAdd(undefined);
+        await dataPromise;
+        sourceCache.update(transform);
+
+        expect(sourceCache.getIds()).toEqual([
+            new OverscaledTileID(1, 0, 1, 1, 1).key,
+            new OverscaledTileID(1, 0, 1, 0, 1).key,
+            new OverscaledTileID(1, 0, 1, 1, 0).key,
+            new OverscaledTileID(1, 0, 1, 0, 0).key
+        ]);
+
+        const tiles = await sourceCache.tilesInAsync([
+            new Point(0, 0),
+            new Point(512, 256)
+        ], 1, true);
+
+        tiles.sort((a, b) => { return a.tile.tileID.canonical.x - b.tile.tileID.canonical.x; });
+        tiles.forEach((result) => { delete result.tile.uid; });
+
+        expect(tiles[0].tile.tileID.key).toBe('011');
+        expect(tiles[0].tile.tileSize).toBe(512);
+        expect(tiles[0].scale).toBe(1);
+        expect(round(tiles[0].queryGeometry)).toEqual([{x: 4096, y: 4050}, {x: 12288, y: 8146}]);
+
+        expect(tiles[1].tile.tileID.key).toBe('111');
+        expect(tiles[1].tile.tileSize).toBe(512);
+        expect(tiles[1].scale).toBe(1);
+        expect(round(tiles[1].queryGeometry)).toEqual([{x: -4096, y: 4050}, {x: 4096, y: 8146}]);
+    });
+
+    test('reparsed overscaled tiles', async () => {
+        const sourceCache = createSourceCache({
+            reparseOverscaled: true,
+            minzoom: 1,
+            maxzoom: 1,
+            tileSize: 512
+        });
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+
+        const dataPromise = waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
+        sourceCache.onAdd(undefined);
+        await dataPromise;
+
+        const transform = new MercatorTransform();
+        transform.resize(1024, 1024);
+        transform.setZoom(2);
+        transform.setCenter(new LngLat(0, 1));
+        sourceCache.update(transform);
+
+        expect(sourceCache.getIds()).toEqual([
+            new OverscaledTileID(2, 0, 1, 1, 1).key,
+            new OverscaledTileID(2, 0, 1, 0, 1).key,
+            new OverscaledTileID(2, 0, 1, 1, 0).key,
+            new OverscaledTileID(2, 0, 1, 0, 0).key
+        ]);
+
+        const tiles = await sourceCache.tilesInAsync([
+            new Point(0, 0),
+            new Point(1024, 512)
+        ], 1, true);
+
+        tiles.sort((a, b) => { return a.tile.tileID.canonical.x - b.tile.tileID.canonical.x; });
+        tiles.forEach((result) => { delete result.tile.uid; });
+
+        expect(tiles[0].tile.tileID.key).toBe('012');
+        expect(tiles[0].tile.tileSize).toBe(1024);
+        expect(tiles[0].scale).toBe(1);
+        expect(round(tiles[0].queryGeometry)).toEqual([{x: 4096, y: 4050}, {x: 12288, y: 8146}]);
+
+        expect(tiles[1].tile.tileID.key).toBe('112');
+        expect(tiles[1].tile.tileSize).toBe(1024);
+        expect(tiles[1].scale).toBe(1);
+        expect(round(tiles[1].queryGeometry)).toEqual([{x: -4096, y: 4050}, {x: 4096, y: 8146}]);
+    });
+
+    test('globe wrap', async () => {
+        const transform = new GlobeTransform();
+        transform.resize(512, 512);
+        transform.setZoom(1.05);
+        transform.setCenter(new LngLat(179.9, 0.1));
+
+        const sourceCache = createSourceCache();
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+
+        const dataPromise = waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
+        sourceCache.onAdd(undefined);
+        await dataPromise;
+
+        sourceCache.update(transform);
+
+        expect(sourceCache.getIds()).toEqual([
+            new OverscaledTileID(1, 1, 1, 0, 1).key,
+            new OverscaledTileID(1, 1, 1, 0, 0).key,
+            new OverscaledTileID(1, 0, 1, 1, 1).key,
+            new OverscaledTileID(1, 0, 1, 1, 0).key,
+        ]);
+
+        expect((await sourceCache.tilesInAsync([new Point(200, 200),], 1, false)).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 1, 0).key]);
+        expect((await sourceCache.tilesInAsync([new Point(300, 200),], 1, false)).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 0, 0).key]);
+        expect((await sourceCache.tilesInAsync([new Point(200, 300),], 1, false)).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 1, 1).key]);
+        expect((await sourceCache.tilesInAsync([new Point(300, 300),], 1, false)).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 0, 1).key]);
+
+        transform.setCenter(new LngLat(-179.9, 0.1));
+        sourceCache.update(transform);
+
+        expect(sourceCache.getIds()).toEqual([
+            new OverscaledTileID(1, -1, 1, 1, 1).key,
+            new OverscaledTileID(1, -1, 1, 1, 0).key,
+            new OverscaledTileID(1, 0, 1, 0, 1).key,
+            new OverscaledTileID(1, 0, 1, 0, 0).key,
+        ]);
+
+        expect((await sourceCache.tilesInAsync([new Point(200, 200),], 1, false)).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 1, 0).key]);
+        expect((await sourceCache.tilesInAsync([new Point(300, 200),], 1, false)).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 0, 0).key]);
+        expect((await sourceCache.tilesInAsync([new Point(200, 300),], 1, false)).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 1, 1).key]);
+        expect((await sourceCache.tilesInAsync([new Point(300, 300),], 1, false)).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 0, 1).key]);
+    });
+
+    test('globe wrap bounding box spanning antimeridian from 179.9°E', async () => {
+        const transform = new GlobeTransform();
+        transform.resize(512, 512);
+        transform.setZoom(1.05);
+        transform.setCenter(new LngLat(179.9, 0.1));
+
+        const sourceCache = createSourceCache();
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+
+        const dataPromise = waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
+        sourceCache.onAdd(undefined);
+        await dataPromise;
+
+        sourceCache.update(transform);
+
+        expect((await sourceCache.tilesInAsync([
+            new Point(200, 200),
+            new Point(300, 200),
+            new Point(300, 300),
+            new Point(200, 300),
+            new Point(200, 200),
+        ], 1, false)).map(tile => [tile.tileID.key, tile.queryGeometry.map(p => p.round())]))
+            .toEqual([
+                [new OverscaledTileID(1, 0, 1, 0, 1).key, [
+                    new Point(-973, -931),
+                    new Point(745, -925),
+                    new Point(721, 703),
+                    new Point(-941, 707),
+                    new Point(-973, -931),
+                ]],
+                [new OverscaledTileID(1, 0, 1, 0, 0).key, [
+                    new Point(-973, 7261),
+                    new Point(745, 7267),
+                    new Point(721, 8895),
+                    new Point(-941, 8899),
+                    new Point(-973, 7261),
+                ]],
+                [new OverscaledTileID(1, 0, 1, 1, 1).key, [
+                    new Point(7219, -931),
+                    new Point(8937, -925),
+                    new Point(8913, 703),
+                    new Point(7251, 707),
+                    new Point(7219, -931),
+                ]],
+                [new OverscaledTileID(1, 0, 1, 1, 0).key, [
+                    new Point(7219, 7261),
+                    new Point(8937, 7267),
+                    new Point(8913, 8895),
+                    new Point(7251, 8899),
+                    new Point(7219, 7261),
+                ]]
+            ]);
+    });
+
+    test('globe wrap bounding box spanning antimeridian from 179.9°W', async () => {
+        const transform = new GlobeTransform();
+        transform.resize(512, 512);
+        transform.setZoom(1.05);
+        transform.setCenter(new LngLat(-179.9, 0.1));
+
+        const sourceCache = createSourceCache();
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+
+        const dataPromise = waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
+        sourceCache.onAdd(undefined);
+        await dataPromise;
+
+        sourceCache.update(transform);
+
+        expect((await sourceCache.tilesInAsync([
+            new Point(200, 200),
+            new Point(300, 200),
+            new Point(300, 300),
+            new Point(200, 300),
+            new Point(200, 200),
+        ], 1, false)).map(tile => [tile.tileID.key, tile.queryGeometry.map(p => p.round())]))
+            .toEqual([
+                [new OverscaledTileID(1, 0, 1, 1, 1).key, [
+                    new Point(7228, -931),
+                    new Point(8946, -925),
+                    new Point(8922, 703),
+                    new Point(7260, 707),
+                    new Point(7228, -931),
+                ]],
+                [new OverscaledTileID(1, 0, 1, 1, 0).key, [
+                    new Point(7228, 7261),
+                    new Point(8946, 7267),
+                    new Point(8922, 8895),
+                    new Point(7260, 8899),
+                    new Point(7228, 7261),
+                ]],
+                [new OverscaledTileID(1, 0, 1, 0, 1).key, [
+                    new Point(-964, -931),
+                    new Point(754, -925),
+                    new Point(730, 703),
+                    new Point(-932, 707),
+                    new Point(-964, -931),
+                ]],
+                [new OverscaledTileID(1, 0, 1, 0, 0).key, [
+                    new Point(-964, 7261),
+                    new Point(754, 7267),
+                    new Point(730, 8895),
+                    new Point(-932, 8899),
+                    new Point(-964, 7261),
+                ]]
+            ]);
+    });
+
+    test('mercator wrap', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+        transform.setZoom(1.05);
+        transform.setCenter(new LngLat(179.9, 0.1));
+
+        const sourceCache = createSourceCache();
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+
+        const dataPromise = waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
+        sourceCache.onAdd(undefined);
+        await dataPromise;
+
+        sourceCache.update(transform);
+
+        expect(sourceCache.getIds()).toEqual([
+            new OverscaledTileID(1, 1, 1, 0, 1).key,
+            new OverscaledTileID(1, 1, 1, 0, 0).key,
+            new OverscaledTileID(1, 0, 1, 1, 1).key,
+            new OverscaledTileID(1, 0, 1, 1, 0).key,
+        ]);
+
+        expect((await sourceCache.tilesInAsync([new Point(200, 200),], 1, false)).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 1, 0).key]);
+        expect((await sourceCache.tilesInAsync([new Point(300, 200),], 1, false)).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 1, 1, 0, 0).key]);
+        expect((await sourceCache.tilesInAsync([new Point(200, 300),], 1, false)).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 1, 1).key]);
+        expect((await sourceCache.tilesInAsync([new Point(300, 300),], 1, false)).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 1, 1, 0, 1).key]);
+
+        transform.setCenter(new LngLat(-179.9, 0.1));
+        sourceCache.update(transform);
+
+        expect(sourceCache.getIds()).toEqual([
+            new OverscaledTileID(1, -1, 1, 1, 1).key,
+            new OverscaledTileID(1, -1, 1, 1, 0).key,
+            new OverscaledTileID(1, 0, 1, 0, 1).key,
+            new OverscaledTileID(1, 0, 1, 0, 0).key,
+        ]);
+
+        expect((await sourceCache.tilesInAsync([new Point(200, 200),], 1, false)).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, -1, 1, 1, 0).key]);
+        expect((await sourceCache.tilesInAsync([new Point(300, 200),], 1, false)).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 0, 0).key]);
+        expect((await sourceCache.tilesInAsync([new Point(200, 300),], 1, false)).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, -1, 1, 1, 1).key]);
+        expect((await sourceCache.tilesInAsync([new Point(300, 300),], 1, false)).map(tile => tile.tileID.key))
+            .toEqual([new OverscaledTileID(1, 0, 1, 0, 1).key]);
+    });
+
+    test('mercator wrap bounding box spanning antimeridian from 179.9°E', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+        transform.setZoom(1.05);
+        transform.setCenter(new LngLat(179.9, 0.1));
+
+        const sourceCache = createSourceCache();
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+
+        const dataPromise = waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
+        sourceCache.onAdd(undefined);
+        await dataPromise;
+
+        sourceCache.update(transform);
+
+        expect((await sourceCache.tilesInAsync([
+            new Point(200, 200),
+            new Point(300, 200),
+            new Point(300, 300),
+            new Point(200, 300),
+            new Point(200, 200),
+        ], 1, false)).map(tile => [tile.tileID.key, tile.queryGeometry.map(p => p.round())]))
+            .toEqual([
+                [new OverscaledTileID(1, 1, 1, 0, 1).key, [
+                    new Point(-870, -870),
+                    new Point(675, -870),
+                    new Point(675, 675),
+                    new Point(-870, 675),
+                    new Point(-870, -870),
+                ]],
+                [new OverscaledTileID(1, 1, 1, 0, 0).key, [
+                    new Point(-870, 7322),
+                    new Point(675, 7322),
+                    new Point(675, 8867),
+                    new Point(-870, 8867),
+                    new Point(-870, 7322),
+                ]],
+                [new OverscaledTileID(1, 0, 1, 1, 1).key, [
+                    new Point(7322, -870),
+                    new Point(8867, -870),
+                    new Point(8867, 675),
+                    new Point(7322, 675),
+                    new Point(7322, -870),
+                ]],
+                [new OverscaledTileID(1, 0, 1, 1, 0).key, [
+                    new Point(7322, 7322),
+                    new Point(8867, 7322),
+                    new Point(8867, 8867),
+                    new Point(7322, 8867),
+                    new Point(7322, 7322),
+                ]],
+            ]);
+    });
+
+    test('mercator wrap bounding box spanning antimeridian from 179.9°W', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+        transform.setZoom(1.05);
+        transform.setCenter(new LngLat(-179.9, 0.1));
+    
+        const sourceCache = createSourceCache();
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+    
+        const dataPromise = waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
+        sourceCache.onAdd(undefined);
+        await dataPromise;
+    
+        sourceCache.update(transform);
+
+        expect((await sourceCache.tilesInAsync([
+            new Point(200, 200),
+            new Point(300, 200),
+            new Point(300, 300),
+            new Point(200, 300),
+            new Point(200, 200),
+        ], 1, false)).map(tile => [tile.tileID.key, tile.queryGeometry.map(p => p.round())]))
+            .toEqual([
+                [new OverscaledTileID(1, -1, 1, 1, 1).key, [
+                    new Point(7331, -870),
+                    new Point(8877, -870),
+                    new Point(8877, 675),
+                    new Point(7331, 675),
+                    new Point(7331, -870),
+                ]],
+                [new OverscaledTileID(1, -1, 1, 1, 0).key, [
+                    new Point(7331, 7322),
+                    new Point(8877, 7322),
+                    new Point(8877, 8867),
+                    new Point(7331, 8867),
+                    new Point(7331, 7322),
+                ]],
+                [new OverscaledTileID(1, 0, 1, 0, 1).key, [
+                    new Point(-861, -870),
+                    new Point(685, -870),
+                    new Point(685, 675),
+                    new Point(-861, 675),
+                    new Point(-861, -870),
+                ]],
+                [new OverscaledTileID(1, 0, 1, 0, 0).key, [
+                    new Point(-861, 7322),
+                    new Point(685, 7322),
+                    new Point(685, 8867),
+                    new Point(-861, 8867),
+                    new Point(-861, 7322),
+                ]],
+            ]);
+    });
+});
+
 describe('source cache loaded', () => {
     test('SourceCache#loaded (no errors)', async () => {
         const sourceCache = createSourceCache();

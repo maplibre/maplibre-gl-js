@@ -1,6 +1,7 @@
 import {describe, test, expect} from 'vitest';
 import {
     queryRenderedFeatures,
+    queryRenderedFeaturesAsync,
     querySourceFeatures
 } from './query_features';
 import {SourceCache} from './source_cache';
@@ -12,6 +13,13 @@ describe('QueryFeatures#rendered', () => {
         const mockSourceCache = {tilesIn () { return []; }} as any as SourceCache;
         const transform = new MercatorTransform();
         const result = queryRenderedFeatures(mockSourceCache, {}, undefined, [] as Point[], undefined, transform, undefined);
+        expect(result).toEqual({});
+    });
+
+    test('async returns empty object if source returns no tiles', async () => {
+        const mockSourceCache = {tilesIn () { return []; }} as any as SourceCache;
+        const transform = new MercatorTransform();
+        const result = await queryRenderedFeaturesAsync(mockSourceCache, {}, undefined, [] as Point[], undefined, transform, undefined);
         expect(result).toEqual({});
     });
 

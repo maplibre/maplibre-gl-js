@@ -11,7 +11,7 @@ import {mat4} from 'gl-matrix';
 import {expectToBeCloseToArray} from '../../util/test/util';
 
 describe('transform', () => {
-    test('creates a transform', () => {
+    test('creates a transform', async () => {
         const transform = new MercatorTransform(0, 22, 0, 60, true);
         transform.resize(500, 500);
         expect(transform.unmodified).toBe(true);
@@ -54,6 +54,7 @@ describe('transform', () => {
         expect([...transform.modelViewProjectionMatrix.values()]).toEqual([3, 0, 0, 0, 0, -2.954423259036624, -0.1780177690666898, -0.17364817766693033, -0, 0.006822967915294533, -0.013222891287479163, -0.012898324631281611, -786432, 774484.3308168967, 47414.91102496082, 46270.827886319785]);
         expect(fixedLngLat(transform.screenPointToLocation(new Point(250, 250)))).toEqual({lng: 0, lat: 0});
         expect(fixedCoord(transform.screenPointToMercatorCoordinate(new Point(250, 250)))).toEqual({x: 0.5, y: 0.5, z: 0});
+        expect(fixedCoord(await transform.screenPointToMercatorCoordinateAsync(new Point(250, 250)))).toEqual({x: 0.5, y: 0.5, z: 0});
         expect(fixedCoord(transform.screenPointToMercatorCoordinateAtZ(new Point(250, 250), 1))).toEqual({x: 0.5, y: 0.5000000044, z: 1});
         expect(transform.locationToScreenPoint(new LngLat(0, 0))).toEqual({x: 250, y: 250});
     });
@@ -353,15 +354,16 @@ describe('transform', () => {
         expect(transform.zoom).toBeCloseTo(13.836362951286565, 10);
     });
 
-    test('pointCoordinate with terrain when returning null should fall back to 2D', () => {
+    test('pointCoordinate with terrain when returning null should fall back to 2D', async () => {
         const transform = new MercatorTransform(0, 22, 0, 60, true);
         transform.resize(500, 500);
         const terrain = {
             pointCoordinate: () => null
         } as any as Terrain;
         const coordinate = transform.screenPointToMercatorCoordinate(new Point(0, 0), terrain);
-
         expect(coordinate).toBeDefined();
+        const coordinateAsync = await transform.screenPointToMercatorCoordinateAsync(new Point(0, 0), terrain);
+        expect(coordinateAsync).toBeDefined();
     });
 
     test('getBounds with horizon', () => {

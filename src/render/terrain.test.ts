@@ -31,8 +31,8 @@ describe('Terrain', () => {
         vi.restoreAllMocks();
     });
 
-    test('pointCoordinate should not return null', () => {
-        expect.assertions(2);
+    test('pointCoordinate should not return null', async () => {
+        expect.assertions(4);
         const painter = {
             context: new Context(gl),
             width: 1,
@@ -61,10 +61,11 @@ describe('Terrain', () => {
         terrain.coordsIndex.push('abcd');
 
         const coordinate = terrain.pointCoordinate(new Point(0, 0));
+        const coordinateAsync = await terrain.pointCoordinateAsync(new Point(0, 0));
 
         expect(coordinate).not.toBeNull();
+        expect(coordinateAsync).not.toBeNull();
         expect(painter.maybeDrawDepthAndCoords).toHaveBeenCalled();
-
     });
 
     const setupMercatorOverflow = (pixelRatio: number = 1) => {
@@ -101,42 +102,50 @@ describe('Terrain', () => {
     test(
         `pointCoordinate should return negative mercator x
         if the point is on the LEFT outside the central globe`,
-        () => {
-            expect.assertions(2);
+        async () => {
+            expect.assertions(4);
             const pointX = 0;
             const terrain = setupMercatorOverflow();
             const coordinate = terrain.pointCoordinate(new Point(pointX, 0));
+            const coordinateAsync = await terrain.pointCoordinateAsync(new Point(pointX, 0));
 
             expect(coordinate.x).toBe(-1);
+            expect(coordinateAsync.x).toBe(-1);
             expect(terrain.painter.maybeDrawDepthAndCoords).toHaveBeenCalled();
         });
 
     test(
         `pointCoordinate should return mercator x greater than 1
         if the point is on the RIGHT outside the central globe`,
-        () => {
-            expect.assertions(2);
+        async () => {
+            expect.assertions(4);
             const pointX = 3;
             const terrain = setupMercatorOverflow();
             const coordinate = terrain.pointCoordinate(new Point(pointX, 0));
+            const coordinateAsync = await terrain.pointCoordinateAsync(new Point(pointX, 0));
 
             expect(coordinate.x).toBe(2);
+            expect(coordinateAsync.x).toBe(2);
             expect(terrain.painter.maybeDrawDepthAndCoords).toHaveBeenCalled();
         });
 
     test(
         'pointCoordinate should respect painter.pixelRatio',
-        () => {
+        async () => {
             const terrain = setupMercatorOverflow(2);
 
             let pointX = 0;
             let coordinate = terrain.pointCoordinate(new Point(pointX, 0));
+            let coordinateAsync = await terrain.pointCoordinateAsync(new Point(pointX, 0));
             expect(coordinate.x).toBe(-1);
+            expect(coordinateAsync.x).toBe(-1);
             expect(terrain.painter.maybeDrawDepthAndCoords).toHaveBeenCalled();
 
             pointX = 3;
             coordinate = terrain.pointCoordinate(new Point(pointX, 0));
+            coordinateAsync = await terrain.pointCoordinateAsync(new Point(pointX, 0));
             expect(coordinate.x).toBe(2);
+            expect(coordinateAsync.x).toBe(2);
             expect(terrain.painter.maybeDrawDepthAndCoords).toHaveBeenCalled();
         });
 

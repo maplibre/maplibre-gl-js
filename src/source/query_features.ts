@@ -1,6 +1,6 @@
 import {mat4} from 'gl-matrix';
 import type Point from '@mapbox/point-geometry';
-import type {SourceCache} from './source_cache';
+import type {SourceCache, TileResult} from './source_cache';
 import type {StyleLayer} from '../style/style_layer';
 import type {CollisionIndex} from '../symbol/collision_index';
 import type {IReadonlyTransform} from '../geo/transform_interface';
@@ -110,11 +110,22 @@ export function queryRenderedFeatures(
     transform: IReadonlyTransform,
     getElevation: undefined | ((id: OverscaledTileID, x: number, y: number) => number)
 ): QueryRenderedFeaturesResults {
-
     const has3DLayer = queryIncludes3DLayer(params?.layers ?? null, styleLayers, sourceCache.id);
     const maxPitchScaleFactor = transform.maxPitchScaleFactor();
     const tilesIn = sourceCache.tilesIn(queryGeometry, maxPitchScaleFactor, has3DLayer);
+    return _queryRenderedFeaturesPostprocess(tilesIn, sourceCache, styleLayers, serializedLayers, maxPitchScaleFactor, params, transform, getElevation);
+}
 
+function _queryRenderedFeaturesPostprocess(
+    tilesIn: TileResult[],
+    sourceCache: SourceCache,
+    styleLayers: {[_: string]: StyleLayer},
+    serializedLayers: {[_: string]: any},
+    maxPitchScaleFactor: number,
+    params: QueryRenderedFeaturesOptionsStrict | undefined,
+    transform: IReadonlyTransform,
+    getElevation: undefined | ((id: OverscaledTileID, x: number, y: number) => number)
+): QueryRenderedFeaturesResults {
     tilesIn.sort(sortTilesIn);
     const renderedFeatureLayers: RenderedFeatureLayer[] = [];
     for (const tileIn of tilesIn) {
@@ -139,6 +150,22 @@ export function queryRenderedFeatures(
     const result = mergeRenderedFeatureLayers(renderedFeatureLayers);
 
     return convertFeaturesToMapFeatures(result, sourceCache);
+}
+
+export async function queryRenderedFeaturesAsync(
+    sourceCache: SourceCache,
+    styleLayers: {[_: string]: StyleLayer},
+    serializedLayers: {[_: string]: any},
+    queryGeometry: Array<Point>,
+    params: QueryRenderedFeaturesOptionsStrict | undefined,
+    transform: IReadonlyTransform,
+    getElevation: undefined | ((id: OverscaledTileID, x: number, y: number) => number)
+): Promise<QueryRenderedFeaturesResults> {
+    const has3DLayer = queryIncludes3DLayer(params?.layers ?? null, styleLayers, sourceCache.id);
+    const maxPitchScaleFactor = transform.maxPitchScaleFactor();
+    const tilesIn = await sourceCache.tilesInAsync(queryGeometry, maxPitchScaleFactor, has3DLayer);
+
+    return _queryRenderedFeaturesPostprocess(tilesIn, sourceCache, styleLayers, serializedLayers, maxPitchScaleFactor, params, transform, getElevation);
 }
 
 export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},

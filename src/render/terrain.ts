@@ -20,6 +20,7 @@ import {type LngLat, earthRadius} from '../geo/lng_lat';
 import {Mesh} from './mesh';
 import {isInBoundsForZoomLngLat} from '../util/world_bounds';
 import {NORTH_POLE_Y, SOUTH_POLE_Y} from './subdivision';
+import {isWebGL2} from '../gl/webgl2';
 
 /**
  * @internal
@@ -319,15 +320,9 @@ export class Terrain {
         return texture;
     }
 
-    /**
-     * Reads a pixel from the coords-framebuffer and translate this to mercator, or null, if the pixel doesn't lie on the terrain's surface (but the sky instead).
-     * @param p - Screen-Coordinate
-     * @returns Mercator coordinate for a screen pixel, or null, if the pixel is not covered by terrain (is in the sky).
-     */
-    pointCoordinate(p: Point): MercatorCoordinate {
+    private _buildPointCoordinateInput(p: Point) {
         // First, ensure the coords framebuffer is up to date.
         this.painter.maybeDrawDepthAndCoords(true);
-
         const rgba = new Uint8Array(4);
         const context = this.painter.context, gl = context.gl;
         const px = Math.round(p.x * this.painter.pixelRatio / devicePixelRatio);
@@ -335,7 +330,22 @@ export class Terrain {
         const fbHeight = Math.round(this.painter.height / devicePixelRatio);
         // grab coordinate pixel from coordinates framebuffer
         context.bindFramebuffer.set(this.getFramebuffer('coords').framebuffer);
+        return {rgba, context, gl, px, py, fbHeight};
+    }
+
+    /**
+     * Reads a pixel from the coords-framebuffer and translate this to mercator, or null, if the pixel doesn't lie on the terrain's surface (but the sky instead).
+     * @deprecated Use pointCoordinateAsync instead. This function is synchronous and blocks the main thread, making huge performance hit on terrain-enabled maps..
+     * @param p - Screen-Coordinate
+     * @returns Mercator coordinate for a screen pixel, or null, if the pixel is not covered by terrain (is in the sky).
+     */
+    pointCoordinate(p: Point): MercatorCoordinate {
+        const {rgba, context, gl, px, py, fbHeight} = this._buildPointCoordinateInput(p);
         gl.readPixels(px, fbHeight - py - 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
+        return this._postprocessPointCoordinateOutput(rgba, context);
+    }
+
+    private _postprocessPointCoordinateOutput(rgba: Uint8Array, context) {
         context.bindFramebuffer.set(null);
         // decode coordinates (encoding see getCoordsTexture)
         const x = rgba[0] + ((rgba[2] >> 4) << 8);
@@ -356,12 +366,69 @@ export class Terrain {
         );
     }
 
+    private _clientWaitAsync(gl: WebGL2RenderingContext, sync: WebGLSync, flags: number, interval_ms: number) {
+        return new Promise((resolve, reject) => {
+            function checkReady() {
+                const res = gl.clientWaitSync(sync, flags, 0);
+                if (res === gl.WAIT_FAILED) {
+                    reject(new Error('clientWaitSync failed'));
+                    return;
+                }
+                if (res === gl.TIMEOUT_EXPIRED) {
+                    setTimeout(checkReady, interval_ms);
+                    return;
+                }
+                resolve(void 0);
+            }
+            checkReady();
+        });
+    }
+
+    private async _getBufferSubDataAsync(gl: WebGL2RenderingContext, target: number, buffer: WebGLBuffer, srcByteOffset: number, dstBuffer: Uint8Array, dstOffset: number, length: number) {
+        const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+        gl.flush();      
+        await this._clientWaitAsync(gl, sync, 0, 10);
+        gl.deleteSync(sync);
+        gl.bindBuffer(target, buffer);
+        gl.getBufferSubData(target, srcByteOffset, dstBuffer, dstOffset, length);
+        gl.bindBuffer(target, null);
+        return dstBuffer;
+    }
+
+    private async _readPixelsAsync(gl: WebGL2RenderingContext, x: number, y: number, w: number, h: number, format: number, type: number, dest: Uint8Array) {
+        const buf = gl.createBuffer();
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);
+        gl.bufferData(gl.PIXEL_PACK_BUFFER, dest.byteLength, gl.STREAM_READ);
+        gl.readPixels(x, y, w, h, format, type, 0);
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);      
+        await this._getBufferSubDataAsync(gl, gl.PIXEL_PACK_BUFFER, buf, 0, dest, 0, dest.byteLength);
+        gl.deleteBuffer(buf);
+        return dest;
+    }
+
+    /**
+     * Reads a pixel from the coords-framebuffer and translate this to mercator, or null, if the pixel doesn't lie on the terrain's surface (but the sky instead).
+     * @see pointCoordinate being a legacy, blocking variant.
+     * @param p - Screen-Coordinate
+     * @returns Mercator coordinate for a screen pixel, or null, if the pixel is not covered by terrain (is in the sky).
+     */
+    async pointCoordinateAsync(p: Point): Promise<MercatorCoordinate> {
+        const {rgba, context, gl, px, py, fbHeight} = this._buildPointCoordinateInput(p);        
+        if (isWebGL2(gl)) {
+            await this._readPixelsAsync(gl as WebGL2RenderingContext, px, fbHeight - py - 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
+        } else {
+            // WebGL1 fallback: need to use blocking readPixels.
+            gl.readPixels(px, fbHeight - py - 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
+        }
+        
+        return this._postprocessPointCoordinateOutput(rgba, context);
+    }
+
     /**
      * Reads the depth value from the depth-framebuffer at a given screen pixel
      * @param p - Screen coordinate
      * @returns depth value in clip space (between 0 and 1)
      */
-
     depthAtPoint(p: Point): number {
         const rgba = new Uint8Array(4);
         const context = this.painter.context, gl = context.gl;

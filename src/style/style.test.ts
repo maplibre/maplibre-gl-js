@@ -19,6 +19,7 @@ import {MessageType} from '../util/actor_messages';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {type Tile} from '../source/tile';
 import type Point from '@mapbox/point-geometry';
+import type {TileResult} from '../source/source_cache';
 
 function createStyleJSON(properties?): StyleSpecification {
     return extend({
@@ -2599,6 +2600,204 @@ describe('Style#queryRenderedFeatures', () => {
             return style;
         });
         const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: ['merp']}, transform);
+        expect(errors).toBe(1);
+        expect(results).toHaveLength(0);
+    });
+});
+
+describe('Style#queryRenderedFeaturesAsync', () => {
+
+    let style: Style;
+    let transform: MercatorTransform;
+
+    beforeEach(() => new Promise<void>(callback => {
+        style = new Style(getStubMap());
+        transform = new MercatorTransform();
+        transform.resize(512, 512);
+        function queryMapLibreFeatures(layers, serializedLayers, getFeatureState, queryGeom, cameraQueryGeom, scale, params) {
+            const features = {
+                'land': [{
+                    type: 'Feature',
+                    layer: style._layers.land.serialize(),
+                    geometry: {
+                        type: 'Polygon'
+                    }
+                }, {
+                    type: 'Feature',
+                    layer: style._layers.land.serialize(),
+                    geometry: {
+                        type: 'Point'
+                    }
+                }],
+                'landref': [{
+                    type: 'Feature',
+                    layer: style._layers.landref.serialize(),
+                    geometry: {
+                        type: 'Line'
+                    }
+                }]
+            };
+
+            // format result to shape of tile.queryRenderedFeatures result
+            for (const layer in features) {
+                features[layer] = features[layer].map((feature, featureIndex) =>
+                    ({feature, featureIndex}));
+            }
+
+            if (params.layers) {
+                for (const l in features) {
+                    if (!params.layers.has(l)) {
+                        delete features[l];
+                    }
+                }
+            }
+
+            return features;
+        }
+        async function queryMapLibreFeaturesAsync(layers, serializedLayers, getFeatureState, queryGeom, cameraQueryGeom, scale, params) {
+            return queryMapLibreFeatures(layers, serializedLayers, getFeatureState, queryGeom, cameraQueryGeom, scale, params);
+        }
+
+        style.loadJSON({
+            'version': 8,
+            'sources': {
+                'mapLibre': {
+                    'type': 'geojson',
+                    'data': {type: 'FeatureCollection', features: []}
+                },
+                'other': {
+                    'type': 'geojson',
+                    'data': {type: 'FeatureCollection', features: []}
+                }
+            },
+            'layers': [{
+                'id': 'land',
+                'type': 'line',
+                'source': 'mapLibre',
+                'source-layer': 'water',
+                'layout': {
+                    'line-cap': 'round'
+                },
+                'paint': {
+                    'line-color': 'red'
+                },
+                'metadata': {
+                    'something': 'else'
+                }
+            }, {
+                'id': 'landref',
+                'ref': 'land',
+                'paint': {
+                    'line-color': 'blue'
+                }
+            } as any as LayerSpecification, {
+                'id': 'land--other',
+                'type': 'line',
+                'source': 'other',
+                'source-layer': 'water',
+                'layout': {
+                    'line-cap': 'round'
+                },
+                'paint': {
+                    'line-color': 'red'
+                },
+                'metadata': {
+                    'something': 'else'
+                }
+            }]
+        });
+
+        style.on('style.load', () => {
+            style.sourceCaches.mapLibre.tilesInAsync = async () => {
+                return [{
+                    tile: {queryRenderedFeatures: queryMapLibreFeatures, queryRenderedFeaturesAsync: queryMapLibreFeaturesAsync} as unknown as Tile,
+                    tileID: new OverscaledTileID(0, 0, 0, 0, 0),
+                    queryGeometry: [],
+                    scale: 1,
+                    cameraQueryGeometry: []
+                }] as TileResult[];
+            };
+            style.sourceCaches.other.tilesInAsync = async () => {
+                return [] as TileResult[];
+            };
+
+            style.sourceCaches.mapLibre.transform = transform;
+            style.sourceCaches.other.transform = transform;
+
+            style.update(0 as any as EvaluationParameters);
+            style._updateSources(transform);
+            callback();
+        });
+    }));
+
+    afterEach(() => {
+        style = undefined;
+        transform = undefined;
+    });
+
+    test('returns feature type', async () => {
+        const results = await style.queryRenderedFeaturesAsync([{x: 0, y: 0} as Point], {}, transform);
+        expect(results[0].geometry.type).toBe('Line');
+    });
+
+    test('filters by `layers` option', async () => {
+        const results = await style.queryRenderedFeaturesAsync([{x: 0, y: 0} as Point], {layers: ['land']}, transform);
+        expect(results).toHaveLength(2);
+    });
+
+    test('filters by `layers` option as a Set', async () => {
+        const results = await style.queryRenderedFeaturesAsync([{x: 0, y: 0} as Point], {layers: new Set(['land'])}, transform);
+        expect(results).toHaveLength(2);
+    });
+
+    test('checks type of `layers` option', async () => {
+        let errors = 0;
+        vi.spyOn(style, 'fire').mockImplementation((event) => {
+            if (event['error'] && event['error'].message.includes('parameters.layers must be an Array')) {
+                errors++;
+            }
+            return style;
+        });
+        await style.queryRenderedFeaturesAsync([{x: 0, y: 0} as Point], {layers: 'string' as any}, transform);
+        expect(errors).toBe(1);
+    });
+
+    test('includes layout properties', async () => {
+        const results = await style.queryRenderedFeaturesAsync([{x: 0, y: 0} as Point], {}, transform);
+        const layout = results[0].layer.layout;
+        expect(layout['line-cap']).toBe('round');
+    });
+
+    test('includes paint properties', async () => {
+        const results = await style.queryRenderedFeaturesAsync([{x: 0, y: 0} as Point], {}, transform);
+        expect(results[2].layer.paint['line-color']).toBe('red');
+    });
+
+    test('includes metadata', async () => {
+        const results = await style.queryRenderedFeaturesAsync([{x: 0, y: 0} as Point], {}, transform);
+
+        const layer = results[1].layer;
+        expect((layer.metadata as any).something).toBe('else');
+    });
+
+    test('include multiple layers', async () => {
+        const results = await style.queryRenderedFeaturesAsync([{x: 0, y: 0} as Point], {layers: new Set(['land', 'landref'])}, transform);
+        expect(results).toHaveLength(3);
+    });
+
+    test('does not query sources not implicated by `layers` parameter', async () => {
+        style.sourceCaches.mapLibre.map.queryRenderedFeaturesAsync = vi.fn();
+        await style.queryRenderedFeaturesAsync([{x: 0, y: 0} as Point], {layers: ['land--other']}, transform);
+        expect(style.sourceCaches.mapLibre.map.queryRenderedFeaturesAsync).not.toHaveBeenCalled();
+    });
+
+    test('fires an error if layer included in params does not exist on the style', async () => {
+        let errors = 0;
+        vi.spyOn(style, 'fire').mockImplementation((event) => {
+            if (event['error'] && event['error'].message.includes('does not exist in the map\'s style and cannot be queried for features.')) errors++;
+            return style;
+        });
+        const results = await style.queryRenderedFeaturesAsync([{x: 0, y: 0} as Point], {layers: ['merp']}, transform);
         expect(errors).toBe(1);
         expect(results).toHaveLength(0);
     });

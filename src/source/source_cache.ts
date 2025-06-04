@@ -27,7 +27,7 @@ import {coveringTiles, coveringZoomLevel} from '../geo/projection/covering_tiles
 import {Bounds} from '../geo/bounds';
 import {EXTENT_BOUNDS} from '../data/extent_bounds';
 
-type TileResult = {
+export type TileResult = {
     tile: Tile;
     tileID: OverscaledTileID;
     queryGeometry: Array<Point>;
@@ -972,29 +972,35 @@ export class SourceCache extends Evented {
         this._cache.reset();
     }
 
+    private _buildTilesInInput(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean) {
+        const allowWorldCopies = this.transform.getCoveringTilesDetailsProvider().allowWorldCopies();
+        const cameraPointQueryGeometry = has3DLayer ?
+            this.transform.getCameraQueryGeometry(pointQueryGeometry) : 
+            pointQueryGeometry;
+        return {allowWorldCopies, cameraPointQueryGeometry};      
+    }
+
     /**
      * Search through our current tiles and attempt to find the tiles that
      * cover the given bounds.
+     * @deprecated Use tilesInAsync when possible. This function is synchronous and blocks the main thread on `WebGL.readPixels`, making huge performance hit on terrain-enabled maps.
      * @param pointQueryGeometry - coordinates of the corners of bounding rectangle
      * @returns result items have `{tile, minX, maxX, minY, maxY}`, where min/max bounding values are the given bounds transformed in into the coordinate space of this tile.
      */
     tilesIn(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean): TileResult[] {
-        const tileResults: TileResult[] = [];
+        if (!this.transform) return [];
+        const {allowWorldCopies, cameraPointQueryGeometry} = this._buildTilesInInput(pointQueryGeometry, maxPitchScaleFactor, has3DLayer);
 
-        const transform = this.transform;
-        if (!transform) return tileResults;
-        const allowWorldCopies = transform.getCoveringTilesDetailsProvider().allowWorldCopies();
-
-        const cameraPointQueryGeometry = has3DLayer ?
-            transform.getCameraQueryGeometry(pointQueryGeometry) :
-            pointQueryGeometry;
-
-        const project = (point: Point) => transform.screenPointToMercatorCoordinate(point, this.terrain);
+        const project = (point: Point) => this.transform.screenPointToMercatorCoordinate(point, this.terrain);
         const queryGeometry = this.transformBbox(pointQueryGeometry, project, !allowWorldCopies);
         const cameraQueryGeometry = this.transformBbox(cameraPointQueryGeometry, project, !allowWorldCopies);
 
-        const ids = this.getIds();
+        return this._tilesIn(queryGeometry, cameraQueryGeometry, maxPitchScaleFactor, allowWorldCopies);
+    }
 
+    private _tilesIn(queryGeometry: MercatorCoordinate[], cameraQueryGeometry: MercatorCoordinate[], maxPitchScaleFactor: number, allowWorldCopies: boolean) {
+        const tileResults: TileResult[] = [];
+        const ids = this.getIds();
         const cameraBounds = Bounds.fromPoints(cameraQueryGeometry);
 
         for (let i = 0; i < ids.length; i++) {
@@ -1005,7 +1011,7 @@ export class SourceCache extends Evented {
             }
             // if the projection does not render world copies then we need to explicitly check for the bounding box crossing the antimeridian
             const tileIDs = allowWorldCopies ? [tile.tileID] : [tile.tileID.unwrapTo(-1), tile.tileID.unwrapTo(0)];
-            const scale = Math.pow(2, transform.zoom - tile.tileID.overscaledZ);
+            const scale = Math.pow(2, this.transform.zoom - tile.tileID.overscaledZ);
             const queryPadding = maxPitchScaleFactor * tile.queryPadding * EXTENT / tile.tileSize / scale;
 
             for (const tileID of tileIDs) {
@@ -1045,6 +1051,46 @@ export class SourceCache extends Evented {
             const newBounds = Bounds.fromPoints(transformed); 
 
             if (!newBounds.covers(projected)) {
+                transformed = transformed.map((coord) => coord.x > 0.5 ?
+                    new MercatorCoordinate(coord.x - 1, coord.y, coord.z) :
+                    coord
+                );
+            }
+        }
+        return transformed;
+    }
+
+    async tilesInAsync(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean): Promise<TileResult[]> {
+        if (!this.transform) return[];
+        const {allowWorldCopies, cameraPointQueryGeometry} = this._buildTilesInInput(pointQueryGeometry, maxPitchScaleFactor, has3DLayer);
+        
+        const project = async (point: Point) => await this.transform.screenPointToMercatorCoordinateAsync(point, this.terrain);
+        const [queryGeometry, cameraQueryGeometry] = await Promise.all([
+            this.transformBboxAsync(pointQueryGeometry, project, !allowWorldCopies),
+            this.transformBboxAsync(cameraPointQueryGeometry, project, !allowWorldCopies)
+        ]);
+        return this._tilesIn(queryGeometry, cameraQueryGeometry, maxPitchScaleFactor, allowWorldCopies);
+    }
+
+    private async transformBboxAsync(geom: Point[], project: (point: Point) => Promise<MercatorCoordinate>, checkWrap: boolean): Promise<MercatorCoordinate[]> {
+        let transformed = await Promise.all(geom.map(project));
+        if (checkWrap) {
+            // If the projection does not allow world copies, then a bounding box may span the antimeridian and
+            // instead of a bounding box going from 179°E to 179°W, it goes from 179°W to 179°E and covers the entire
+            // planet except for what should be inside it.
+            const bounds = Bounds.fromPoints(geom);
+            bounds.shrinkBy(Math.min(bounds.width(), bounds.height()) * 0.001);
+            // Bounds.map returns a new Bounds, not an array of points, so we need to project each corner manually
+            const corners = [
+                new Point(bounds.minX, bounds.minY),
+                new Point(bounds.maxX, bounds.minY),
+                new Point(bounds.minX, bounds.maxY),
+                new Point(bounds.maxX, bounds.maxY)
+            ];
+            const projected = await Promise.all(corners.map(project));
+            const projectedBounds = Bounds.fromPoints(projected); 
+
+            if (!projectedBounds.covers(bounds)) {
                 transformed = transformed.map((coord) => coord.x > 0.5 ?
                     new MercatorCoordinate(coord.x - 1, coord.y, coord.z) :
                     coord

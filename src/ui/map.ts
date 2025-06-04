@@ -1310,9 +1310,9 @@ export class Map extends Camera {
     _createDelegatedListener(type: keyof MapEventType | string, layerIds: string[], listener: Listener): DelegatedListener {
         if (type === 'mouseenter' || type === 'mouseover') {
             let mousein = false;
-            const mousemove = (e) => {
+            const mousemove = async (e) => {
                 const existingLayers = layerIds.filter((layerId) => this.getLayer(layerId));
-                const features = existingLayers.length !== 0 ? this.queryRenderedFeatures(e.point, {layers: existingLayers}) : [];
+                const features = existingLayers.length !== 0 ? await this.queryRenderedFeaturesAsync(e.point, {layers: existingLayers}) : [];
                 if (!features.length) {
                     mousein = false;
                 } else if (!mousein) {
@@ -1326,9 +1326,9 @@ export class Map extends Camera {
             return {layers: layerIds, listener, delegates: {mousemove, mouseout}};
         } else if (type === 'mouseleave' || type === 'mouseout') {
             let mousein = false;
-            const mousemove = (e) => {
+            const mousemove = async (e) => {
                 const existingLayers = layerIds.filter((layerId) => this.getLayer(layerId));
-                const features = existingLayers.length !== 0 ? this.queryRenderedFeatures(e.point, {layers: existingLayers}) : [];
+                const features = existingLayers.length !== 0 ? await this.queryRenderedFeaturesAsync(e.point, {layers: existingLayers}) : [];
                 if (features.length) {
                     mousein = true;
                 } else if (mousein) {
@@ -1344,9 +1344,9 @@ export class Map extends Camera {
             };
             return {layers: layerIds, listener, delegates: {mousemove, mouseout}};
         } else {
-            const delegate = (e) => {
+            const delegate = async (e) => {
                 const existingLayers = layerIds.filter((layerId) => this.getLayer(layerId));
-                const features = existingLayers.length !== 0 ? this.queryRenderedFeatures(e.point, {layers: existingLayers}) : [];
+                const features = existingLayers.length !== 0 ? await this.queryRenderedFeaturesAsync(e.point, {layers: existingLayers}) : [];
                 if (features.length) {
                     // Here we need to mutate the original event, so that preventDefault works as expected.
                     e.features = features;
@@ -1751,6 +1751,11 @@ export class Map extends Camera {
         if (!this.style) {
             return [];
         }
+        const {queryGeometry, options: newOptions} = this.buildQueryGeometry(geometryOrOptions, options);
+        return this.style.queryRenderedFeatures(queryGeometry, newOptions, this.transform);
+    }
+
+    private buildQueryGeometry(geometryOrOptions?: PointLike | [PointLike, PointLike] | QueryRenderedFeaturesOptions, options?: QueryRenderedFeaturesOptions): { queryGeometry: Point[]; options: QueryRenderedFeaturesOptions } {
         let queryGeometry: Point[];
         const isGeometry = geometryOrOptions instanceof Point || Array.isArray(geometryOrOptions);
         const geometry = isGeometry ? geometryOrOptions : [[0, 0], [this.transform.width, this.transform.height]];
@@ -1763,8 +1768,15 @@ export class Map extends Camera {
             const br = Point.convert(geometry[1] as PointLike);
             queryGeometry = [tl, new Point(br.x, tl.y), br, new Point(tl.x, br.y), tl];
         }
+        return {queryGeometry, options};
+    }
 
-        return this.style.queryRenderedFeatures(queryGeometry, options, this.transform);
+    async queryRenderedFeaturesAsync(geometryOrOptions?: PointLike | [PointLike, PointLike] | QueryRenderedFeaturesOptions, options?: QueryRenderedFeaturesOptions): Promise<MapGeoJSONFeature[]> {
+        if (!this.style) {
+            return [];
+        }
+        const {queryGeometry, options: newOptions} = this.buildQueryGeometry(geometryOrOptions, options);
+        return this.style.queryRenderedFeaturesAsync(queryGeometry, newOptions, this.transform);
     }
 
     /**
