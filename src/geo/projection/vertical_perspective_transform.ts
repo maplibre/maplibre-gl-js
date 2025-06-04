@@ -793,6 +793,18 @@ export class VerticalPerspectiveTransform implements ITransform {
         return MercatorCoordinate.fromLngLat(this.unprojectScreenPoint(p));
     }
 
+    async screenPointToMercatorCoordinateAsync(p: Point, terrain?: Terrain): Promise<MercatorCoordinate> {
+        if (terrain) {
+            // Mercator has terrain handling implemented properly and since terrain
+            // simply draws tile coordinates into a special framebuffer, this works well even for globe.
+            const coordinate = await terrain.pointCoordinateAsync(p);
+            if (coordinate) {
+                return coordinate;
+            }
+        }
+        return MercatorCoordinate.fromLngLat(this.unprojectScreenPoint(p));
+    }
+
     screenPointToLocation(p: Point, terrain?: Terrain): LngLat {
         return this.screenPointToMercatorCoordinate(p, terrain)?.toLngLat();
     }

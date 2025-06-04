@@ -310,11 +310,21 @@ export interface IReadonlyTransform extends ITransformGetters {
     /**
      * @internal
      * Given a point on screen, return its mercator coordinate.
+     * @deprecated Use screenPointToMercatorCoordinateAsync if possible. This function is synchronous and blocks the main thread on `WebGL.readPixels`, making huge performance hit on terrain-enabled maps.
      * @param p - the point
      * @param terrain - optional terrain
      * @returns lnglat
      */
     screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate;
+
+    /**
+     * @internal
+     * Given a point on screen, return its mercator coordinate. This function is asynchronous and does not block the main thread on `WebGL.readPixels`.
+     * @param p - the point
+     * @param terrain - optional terrain
+     * @returns lnglat
+     */
+    screenPointToMercatorCoordinateAsync(p: Point, terrain?: Terrain): Promise<MercatorCoordinate>;
 
     /**
      * @internal

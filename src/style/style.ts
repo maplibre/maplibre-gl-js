@@ -15,7 +15,7 @@ import {browser} from '../util/browser';
 import {Dispatcher} from '../util/dispatcher';
 import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
 import {type Source} from '../source/source';
-import {type QueryRenderedFeaturesOptions, type QueryRenderedFeaturesOptionsStrict, type QueryRenderedFeaturesResults, type QueryRenderedFeaturesResultsItem, type QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
+import {type QueryRenderedFeaturesOptions, type QueryRenderedFeaturesOptionsStrict, type QueryRenderedFeaturesResults, type QueryRenderedFeaturesResultsItem, type QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedFeaturesAsync, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
 import {SourceCache} from '../source/source_cache';
 import {type GeoJSONSource} from '../source/geojson_source';
 import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, type DiffCommand} from '@maplibre/maplibre-gl-style-spec';
@@ -1506,7 +1506,7 @@ export class Style extends Evented {
         return features;
     }
 
-    queryRenderedFeatures(queryGeometry: Point[], params: QueryRenderedFeaturesOptions, transform: IReadonlyTransform): MapGeoJSONFeature[] {
+    private _prepareQueryRenderedFeatures(params: QueryRenderedFeaturesOptions) {
         if (params && params.filter) {
             this._validate(validateStyle.filter, 'queryRenderedFeatures.filter', params.filter, null, params);
         }
@@ -1516,20 +1516,18 @@ export class Style extends Evented {
             const isArrayOrSet = Array.isArray(params.layers) || params.layers instanceof Set;
             if (!isArrayOrSet) {
                 this.fire(new ErrorEvent(new Error('parameters.layers must be an Array or a Set of strings')));
-                return [];
+                return null;
             }
             for (const layerId of params.layers) {
                 const layer = this._layers[layerId];
                 if (!layer) {
                     // this layer is not in the style.layers array
                     this.fire(new ErrorEvent(new Error(`The layer '${layerId}' does not exist in the map's style and cannot be queried for features.`)));
-                    return [];
+                    return null;
                 }
                 includedSources[layer.source] = true;
             }
         }
-
-        const sourceResults: QueryRenderedFeaturesResults[] = [];
 
         params.availableImages = this._availableImages;
 
@@ -1541,6 +1539,33 @@ export class Style extends Evented {
             ...params,
             layers: layersAsSet,
         };
+
+        return {includedSources, serializedLayers, paramsStrict};
+    }
+
+    private _addPlacementResults(sourceResults: QueryRenderedFeaturesResults[], queryGeometry: Point[], paramsStrict: QueryRenderedFeaturesOptionsStrict, serializedLayers: {[_: string]: StyleLayer}) {
+        if (this.placement) {
+            // If a placement has run, query against its CollisionIndex
+            // for symbol results, and treat it as an extra source to merge
+            sourceResults.push(
+                queryRenderedSymbols(
+                    this._layers,
+                    serializedLayers,
+                    this.sourceCaches,
+                    queryGeometry,
+                    paramsStrict,
+                    this.placement.collisionIndex,
+                    this.placement.retainedQueryData)
+            );
+        }
+    }
+
+    queryRenderedFeatures(queryGeometry: Point[], params: QueryRenderedFeaturesOptions, transform: IReadonlyTransform): MapGeoJSONFeature[] {
+        const prepared = this._prepareQueryRenderedFeatures(params);
+        if (!prepared) return [];
+
+        const {includedSources, serializedLayers, paramsStrict} = prepared;
+        const sourceResults: QueryRenderedFeaturesResults[] = [];
 
         for (const id in this.sourceCaches) {
             if (params.layers && !includedSources[id]) continue;
@@ -1559,21 +1584,36 @@ export class Style extends Evented {
             );
         }
 
-        if (this.placement) {
-            // If a placement has run, query against its CollisionIndex
-            // for symbol results, and treat it as an extra source to merge
-            sourceResults.push(
-                queryRenderedSymbols(
+        this._addPlacementResults(sourceResults, queryGeometry, paramsStrict, serializedLayers);
+        return this._flattenAndSortRenderedFeatures(sourceResults);
+    }
+
+    async queryRenderedFeaturesAsync(queryGeometry: Point[], params: QueryRenderedFeaturesOptions, transform: IReadonlyTransform): Promise<MapGeoJSONFeature[]> {
+        const prepared = this._prepareQueryRenderedFeatures(params);
+        if (!prepared) return [];
+
+        const {includedSources, serializedLayers, paramsStrict} = prepared;
+        const sourceResultsPromises: Promise<QueryRenderedFeaturesResults>[] = [];
+
+        for (const id in this.sourceCaches) {
+            if (params.layers && !includedSources[id]) continue;
+            sourceResultsPromises.push(
+                queryRenderedFeaturesAsync(
+                    this.sourceCaches[id],
                     this._layers,
                     serializedLayers,
-                    this.sourceCaches,
                     queryGeometry,
                     paramsStrict,
-                    this.placement.collisionIndex,
-                    this.placement.retainedQueryData)
+                    transform,
+                    this.map.terrain ?
+                        (id: OverscaledTileID, x: number, y: number) =>
+                            this.map.terrain.getElevation(id, x, y) :
+                        undefined)
             );
         }
 
+        const sourceResults = await Promise.all(sourceResultsPromises);
+        this._addPlacementResults(sourceResults, queryGeometry, paramsStrict, serializedLayers);
         return this._flattenAndSortRenderedFeatures(sourceResults);
     }
 

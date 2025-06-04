@@ -423,6 +423,10 @@ export class GlobeTransform implements ITransform {
         return this.currentTransform.screenPointToMercatorCoordinate(p, terrain);
     }
 
+    async screenPointToMercatorCoordinateAsync(p: Point, terrain?: Terrain): Promise<MercatorCoordinate> {
+        return await this.currentTransform.screenPointToMercatorCoordinateAsync(p, terrain);
+    }
+
     screenPointToLocation(p: Point, terrain?: Terrain): LngLat {
         return this.currentTransform.screenPointToLocation(p, terrain);
     }
