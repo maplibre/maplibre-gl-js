@@ -41,6 +41,20 @@ class Uniform1i extends Uniform<number> {
     }
 }
 
+class Uniform2i extends Uniform<vec2> {
+    constructor(context: Context, location: WebGLUniformLocation) {
+        super(context, location);
+        this.current = [0, 0];
+    }
+
+    set(v: vec2): void {
+        if (v[0] !== this.current[0] || v[1] !== this.current[1]) {
+            this.current = v;
+            this.gl.uniform2i(this.location, v[0], v[1]);
+        }
+    }
+}
+
 class Uniform1f extends Uniform<number> {
     constructor(context: Context, location: WebGLUniformLocation) {
         super(context, location);
@@ -178,6 +192,7 @@ class UniformMatrix4f extends Uniform<mat4> {
 export {
     Uniform,
     Uniform1i,
+    Uniform2i,
     Uniform1f,
     Uniform2f,
     Uniform3f,
