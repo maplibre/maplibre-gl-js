@@ -22,6 +22,7 @@
 - Revert changes to polygon intersection detection ([#5590](https://github.com/maplibre/maplibre-gl-js/pull/5590) caused issue [5864](https://github.com/maplibre/maplibre-gl-js/issues/5864))
 - Fix breaking clusters when non-integer value provided for `clusterMaxZoom` (warning is shown) ([#5929](https://github.com/maplibre/maplibre-gl-js/issues/5929)) + clarify API docs
 - Fix use of reserved GLSL `switch` statement in hillshade shader ([#5972](https://github.com/maplibre/maplibre-gl-js/pull/5972))
+- Fix use of `textureSize` call in color relief shader ([#5980](https://github.com/maplibre/maplibre-gl-js/pull/5980))
 
 
 ## 5.5.0
