@@ -34,7 +34,7 @@ const colorReliefUniforms = (context: Context, locations: UniformLocations): Col
 const colorReliefUniformValues = (
     layer: ColorReliefStyleLayer,
     dem: DEMData,
-    textureSizes?: Array<Number>
+    textureSizes?: [number, number]
 ): UniformValues<ColorReliefUniformsType> => {
 
     return {

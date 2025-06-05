@@ -56,7 +56,7 @@ function renderColorRelief(
     const align = !painter.options.moving;
 
     let firstTile = true;
-    const textureSizes: Array<Number> = [0, 0];
+    const textureSizes: [number, number] = [0, 0];
 
     for (const coord of coords) {
         const tile = sourceCache.getTile(coord);
