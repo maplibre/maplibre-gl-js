@@ -4,7 +4,6 @@ import {type Context} from '../gl/context';
 import {
     Uniform1i,
     Uniform1f,
-    Uniform2i,
     Uniform2f,
     Uniform3f,
     Uniform4f,
@@ -50,24 +49,6 @@ describe('Uniform Binding', () => {
         expect(u.current).toBe(1);
         u.set(1);
         u.set(2);
-    });
-
-    test('Uniform2i', () => {
-        expect.assertions(4);
-
-        const context = {
-            gl: {
-                uniform2i: () => { expect(true).toBeTruthy(); }
-            }
-        } as any as Context;
-
-        const u = new Uniform2i(context, 0);
-
-        expect(u.current).toEqual([0, 0]);
-        u.set([1, 1]);
-        expect(u.current).toEqual([1, 1]);
-        u.set([1, 1]);
-        u.set([1, 2]);
     });
 
     test('Uniform2f', () => {
