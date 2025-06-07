@@ -141,7 +141,7 @@ type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, opt
  *         this.renderingMode = '2d';
  *     }
  *
- *     onAdd(map, gl) {
+ *      onAdd(map: maplibregl.Map, gl: WebGLRenderingContext | WebGL2RenderingContext) {
  *         const vertexSource = `
  *         uniform mat4 u_matrix;
  *         void main() {
@@ -167,7 +167,13 @@ type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, opt
  *         gl.linkProgram(this.program);
  *     }
  *
- *     render(gl, matrix) {
+ *     render({
+ *      gl,
+ *      modelViewProjectionMatrix: matrix
+ *      }: {
+ *      gl: WebGLRenderingContext | WebGL2RenderingContext;
+ *      modelViewProjectionMatrix: Float32Array;
+ *      }) {
  *         gl.useProgram(this.program);
  *         gl.uniformMatrix4fv(gl.getUniformLocation(this.program, "u_matrix"), false, matrix);
  *         gl.drawArrays(gl.POINTS, 0, 1);
