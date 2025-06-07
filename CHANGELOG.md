@@ -4,6 +4,8 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix use of `textureSize` call in color relief shader ([#5980](https://github.com/maplibre/maplibre-gl-js/pull/5980))
+
 - _...Add new stuff here..._
 
 ## 5.6.0
