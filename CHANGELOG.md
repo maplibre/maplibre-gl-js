@@ -5,6 +5,7 @@
 
 ### 🐞 Bug fixes
 - Fix image sources being clipped at -180 and 180 longitude when terrain is enabled ([#4088](https://github.com/maplibre/maplibre-gl-js/issues/4088))
+- Fix use of `textureSize` call in color relief shader ([#5980](https://github.com/maplibre/maplibre-gl-js/pull/5980))
 - _...Add new stuff here..._
 
 ## 5.6.0
