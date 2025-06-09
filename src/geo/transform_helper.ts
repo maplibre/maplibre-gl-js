@@ -54,6 +54,7 @@ export type TransformHelperCallbacks = {
      * 1) everything beyond the bounds is excluded
      * 2) a given lngLat is as near the center as possible
      * Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
+     * Underzooming and overpanning beyond the bounds is done if 1 globe is displayed and allowUnderzoom=true.
      */
     getConstrained: (center: LngLat, zoom: number) => { center: LngLat; zoom: number };
 
@@ -101,6 +102,9 @@ export class TransformHelper implements ITransformGetters {
     _rollInRadians: number;
     _zoom: number;
     _renderWorldCopies: boolean;
+    _allowUnderzoom: boolean;
+    _underzoom: number;
+    _overpan: number;
     _minZoom: number;
     _maxZoom: number;
     _minPitch: number;
@@ -123,13 +127,16 @@ export class TransformHelper implements ITransformGetters {
     _farZ: number;
     _autoCalculateNearFarZ: boolean;
 
-    constructor(callbacks: TransformHelperCallbacks, minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
+    constructor(callbacks: TransformHelperCallbacks, minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean, allowUnderzoom?: boolean, underzoom?: number, overpan?: number) {
         this._callbacks = callbacks;
         this._tileSize = 512; // constant
 
         this._renderWorldCopies = renderWorldCopies === undefined ? true : !!renderWorldCopies;
         this._minZoom = minZoom || 0;
         this._maxZoom = maxZoom || 22;
+        this._allowUnderzoom = allowUnderzoom === undefined ? false : !!allowUnderzoom;
+        this._underzoom = underzoom || 80;
+        this._overpan = overpan || 0;
 
         this._minPitch = (minPitch === undefined || minPitch === null) ? 0 : minPitch;
         this._maxPitch = (maxPitch === undefined || maxPitch === null) ? 60 : maxPitch;
@@ -175,6 +182,9 @@ export class TransformHelper implements ITransformGetters {
         this._minPitch = thatI.minPitch;
         this._maxPitch = thatI.maxPitch;
         this._renderWorldCopies = thatI.renderWorldCopies;
+        this._allowUnderzoom = thatI.allowUnderzoom;
+        this._underzoom = thatI.underzoom;
+        this._overpan = thatI.overpan;
         this._cameraToCenterDistance = thatI.cameraToCenterDistance;
         this._nearZ = thatI.nearZ;
         this._farZ = thatI.farZ;
@@ -254,6 +264,38 @@ export class TransformHelper implements ITransformGetters {
         }
 
         this._renderWorldCopies = renderWorldCopies;
+    }
+
+    get allowUnderzoom(): boolean { return this._allowUnderzoom; }
+    setAllowUnderzoom(allowUnderzoom: boolean) {
+        if (allowUnderzoom === undefined) {
+            allowUnderzoom = false;
+        } else if (allowUnderzoom === null) {
+            allowUnderzoom = false;
+        }
+
+        this._allowUnderzoom = allowUnderzoom;
+
+        this._constrain();
+        this._calcMatrices();
+    }
+
+    get underzoom(): number { return this._underzoom; }
+    setUnderzoom(underzoom: number) {
+        if (this._underzoom === underzoom) return;
+        this._underzoom = underzoom;
+
+        this._constrain();
+        this._calcMatrices();
+    }
+
+    get overpan(): number { return this._overpan; }
+    setOverpan(overpan: number) {
+        if (this._overpan === overpan) return;
+        this._overpan = overpan;
+
+        this._constrain();
+        this._calcMatrices();
     }
 
     get worldSize(): number {

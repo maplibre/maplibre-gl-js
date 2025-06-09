@@ -49,6 +49,16 @@
     <tr><td><label for='allow-underzoom'>allow underzoom</label></td><td><input type='checkbox' id='allow-underzoom' checked/></td></tr>
     <tr><td><label for='underzoom-slider' id='underzoom-label'>underzoom</label></td><td><input type='range' id='underzoom-slider' min='0' max='100' step='10' value='80' /></td></tr>
     <tr><td><label for='overpan-slider' id='overpan-label'>overpan ratio</label></td><td><input type='range' id='overpan-slider' min='0' max='50' step='10' value='50' /></td></tr>
+    <tr>
+        <td><label for='max-bounds-select'>maxBounds</label></td>
+        <td>
+            <select name="max-bounds-select" id="max-bounds-select">
+                <option value="undefined">World (undefined)</option>
+                <option value="wide">NYC (wide)</option>
+                <option value="tall">Amsterdam (tall)</option>
+            </select>
+        </td>
+    </tr>
 </table>
 
 <table id='listing-group-top-left' class='listing-group'>
@@ -56,6 +66,44 @@
 </table>
 
 <script>
+    // New York, New York
+    const w_north = 40.78;
+    const w_east = -73.81;
+    const w_south = 40.68;
+    const w_west = -74.15;
+    const w_bounds = [
+        [w_west, w_south], // Southwest coordinates
+        [w_east, w_north] // Northeast coordinates
+    ];
+
+    // Amsterdam, Netherlands
+    const t_north = 52.3676 + 0.5;
+    const t_east = 4.9041 + 0.25;
+    const t_south = 52.3676 - 0.5;
+    const t_west = 4.9041 - 0.25;
+    const t_bounds = [
+        [t_west, t_south], // Southwest coordinates
+        [t_east, t_north] // Northeast coordinates
+    ];
+
+    const w_center = [(w_west + w_east) / 2, (w_north + w_south) / 2]
+    const t_center = [(t_west + t_east) / 2, (t_north + t_south) / 2]
+
+    const bounds_options = {
+        "undefined": {
+            "bounds": undefined,
+            "center": [0, 0]
+        },
+        "wide": {
+            "bounds": w_bounds,
+            "center": w_center
+        },
+        "tall": {
+            "bounds": t_bounds,
+            "center": t_center
+        },
+    }
+
     const zeroPad = (num, places) => String(num).padStart(places, '0');
     function setUnderzoomFromUi() {
         map.setRenderWorldCopies(
@@ -76,14 +124,17 @@
         map.setOverpan(overpan);
         document.getElementById('overpan-label').textContent = `overpan (${zeroPad(overpan, 2)}%)`;
     }
+    function selectMaxBoundsFromUi() {
+        const option = document.getElementById('max-bounds-select').value;
+        map.setMaxBounds(bounds_options[option].bounds);
+        map.setCenter(bounds_options[option].center);
+        if (document.getElementById('zoom-out').checked) {
+            map.setZoom(-Infinity);
+        }
+    }
 
     const map = new maplibregl.Map({
         container: 'map',
-        center: [0, 0], // starting position [lng, lat]
-        renderWorldCopies: false,
-        allowUnderzoom: true,
-        underzoomPercent: 80,
-        overpanRatio: 1.0,
         style: {
             version: 8,
             sources: {
@@ -114,19 +165,69 @@
         'top-right'
     );
 
-    // World bounds
-    const north = 85.0511287798066;
-    const east = 180;
-    const south = -85.05112877980659;
-    const west = -180;
-
     map.on('load', () => {
+        map.addSource('bounds-wide', {
+            'type': 'geojson',
+            'data': {
+                'type': 'Feature',
+                'properties': {},
+                'geometry': {
+                    'type': 'LineString',
+                    'coordinates': [
+                        [w_west, w_south],
+                        [w_west, w_north],
+                        [w_east, w_north],
+                        [w_east, w_south],
+                        [w_west, w_south],
+                    ]
+                }
+            }
+        });
+        map.addLayer({
+            'id': 'bounds-wide',
+            'type': 'line',
+            'source': 'bounds-wide',
+            'paint': {
+                'line-color': '#ff0000',
+                'line-width': 4,
+                'line-offset': -2,
+            }
+        });
+        map.addSource('bounds-tall', {
+            'type': 'geojson',
+            'data': {
+                'type': 'Feature',
+                'properties': {},
+                'geometry': {
+                    'type': 'LineString',
+                    'coordinates': [
+                        [t_west, t_south],
+                        [t_west, t_north],
+                        [t_east, t_north],
+                        [t_east, t_south],
+                        [t_west, t_south],
+                    ]
+                }
+            }
+        });
+        map.addLayer({
+            'id': 'bounds-tall',
+            'type': 'line',
+            'source': 'bounds-tall',
+            'paint': {
+                'line-color': '#ff0000',
+                'line-width': 4,
+                'line-offset': -2,
+            }
+        });
         document.getElementById('render-world-copies').addEventListener('change', setUnderzoomFromUi);
         document.getElementById('allow-underzoom').addEventListener('change', setUnderzoomFromUi);
         document.getElementById('underzoom-slider').addEventListener('input', setUnderzoomFromUi);
         document.getElementById('overpan-slider').addEventListener('input', setOverpanFromUi);
+        document.getElementById('max-bounds-select').addEventListener('change', selectMaxBoundsFromUi);
         setUnderzoomFromUi();
         setOverpanFromUi();
+        selectMaxBoundsFromUi();
     });
 </script>
 </body>

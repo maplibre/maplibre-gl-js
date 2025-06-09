@@ -65,6 +65,15 @@ export class MercatorTransform implements ITransform {
     setRenderWorldCopies(renderWorldCopies: boolean): void {
         this._helper.setRenderWorldCopies(renderWorldCopies);
     }
+    setAllowUnderzoom(allowUnderzoom: boolean): void {
+        this._helper.setAllowUnderzoom(allowUnderzoom);
+    }
+    setUnderzoom(underzoom: number): void {
+        this._helper.setUnderzoom(underzoom);
+    }
+    setOverpan(overpan: number): void {
+        this._helper.setOverpan(overpan);
+    }
     setBearing(bearing: number): void {
         this._helper.setBearing(bearing);
     }
@@ -198,6 +207,15 @@ export class MercatorTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
     }
+    get allowUnderzoom(): boolean {
+        return this._helper._allowUnderzoom;
+    }
+    get underzoom(): number {
+        return this._helper.underzoom;
+    }
+    get overpan(): number {
+        return this._helper.overpan;
+    }
     get cameraToCenterDistance(): number { 
         return this._helper.cameraToCenterDistance;
     }
@@ -236,11 +254,11 @@ export class MercatorTransform implements ITransform {
 
     private _coveringTilesDetailsProvider;
 
-    constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
+    constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean, allowUnderzoom?: boolean, underzoom?: number, overpan?: number) {
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
             getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
-        }, minZoom, maxZoom, minPitch, maxPitch, renderWorldCopies);
+        }, minZoom, maxZoom, minPitch, maxPitch, renderWorldCopies, allowUnderzoom, underzoom, overpan);
         this._coveringTilesDetailsProvider = new MercatorCoveringTilesDetailsProvider();
     }
 
@@ -445,10 +463,6 @@ export class MercatorTransform implements ITransform {
      * Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
      */
     getConstrained(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
-        const this_helper_allowUnderzoom = true  // this._helper._allowUnderzoom
-        const this_helper_underzoom = 0  // this._helper._underzoom
-        const this_helper_overpan = 50  // this._helper._overpan
-
         zoom = clamp(+zoom, this.minZoom, this.maxZoom);
         const result = {
             center: new LngLat(lngLat.lng, lngLat.lat),
@@ -493,8 +507,8 @@ export class MercatorTransform implements ITransform {
         // |_______________________|
 
         const underzoom =  // 0-1 (percent as normalized factor of viewport minimum dimension)
-            (!this._helper._renderWorldCopies && this_helper_allowUnderzoom) ?
-                clamp(this_helper_underzoom, 0, 100) / 100 :
+            (!this._helper._renderWorldCopies && this._helper._allowUnderzoom) ?
+                clamp(this._helper._underzoom, 0, 100) / 100 :
                 1.0;
 
         if (this._helper._latRange) {
@@ -527,7 +541,7 @@ export class MercatorTransform implements ITransform {
         let modifiedX, modifiedY;
 
         const scale =
-            (!this._helper._renderWorldCopies && this_helper_allowUnderzoom) ?
+            (!this._helper._renderWorldCopies && this._helper._allowUnderzoom) ?
                 Math.min(scaleX || 0, scaleY || 0) :
                 Math.max(scaleX || 0, scaleY || 0);
 
@@ -547,8 +561,8 @@ export class MercatorTransform implements ITransform {
         // the overpan to 50% the bounds to match that external limit.
         let lngOverpan = 0.0;
         let latOverpan = 0.0;
-        if (!this._helper._renderWorldCopies && this_helper_allowUnderzoom) {
-            const overpan = 2 * clamp(this_helper_overpan, 0, 50) / 100;  // 0-1 (percent as a normalized factor from viewport edge to center)
+        if (!this._helper._renderWorldCopies && this._helper._allowUnderzoom) {
+            const overpan = 2 * clamp(this._helper._overpan, 0, 50) / 100;  // 0-1 (percent as a normalized factor from viewport edge to center)
             const latUnderzoomMinimumPan = 1.0 - ((maxY - minY) / screenHeight);
             const lngUnderzoomMinimumPan = 1.0 - ((maxX - minX) / screenWidth);
             lngOverpan = Math.max(lngUnderzoomMinimumPan, overpan);
