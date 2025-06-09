@@ -445,6 +445,10 @@ export class MercatorTransform implements ITransform {
      * Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
      */
     getConstrained(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
+        const this_helper_allowUnderzoom = true  // this._helper._allowUnderzoom
+        const this_helper_underzoom = 0  // this._helper._underzoom
+        const this_helper_overpan = 50  // this._helper._overpan
+
         zoom = clamp(+zoom, this.minZoom, this.maxZoom);
         const result = {
             center: new LngLat(lngLat.lng, lngLat.lat),
@@ -467,12 +471,38 @@ export class MercatorTransform implements ITransform {
         let scaleX = 0;
         const {x: screenWidth, y: screenHeight} = this.size;
 
+        // For a single-world map, a user can underzoom the world to see it
+        // entirely in the viewport. This works by reducing the viewport's
+        // apparent size to a square with a side length equal to the smallest
+        // viewport dimension scaled by the `underzoom` percentage.
+        // The user can also overpan the world bounds up to 50% the viewport
+        // dimensions, limited by the `overpan` percentage.
+        // _________________________
+        // |viewport               |
+        // |                       |
+        // |                       |
+        // |     -———————————-     |
+        // |     |map bounds |     |
+        // |     |           |     |
+        // |·····|···········|<--->| overpan
+        // |     |           |     |
+        // |     -———————————-     |
+        // |·····<----------->·····| underzoom
+        // |                       |
+        // |                       |
+        // |_______________________|
+
+        const underzoom =  // 0-1 (percent as normalized factor of viewport minimum dimension)
+            (!this._helper._renderWorldCopies && this_helper_allowUnderzoom) ?
+                clamp(this_helper_underzoom, 0, 100) / 100 :
+                1.0;
+
         if (this._helper._latRange) {
             const latRange = this._helper._latRange;
             minY = mercatorYfromLat(latRange[1]) * worldSize;
             maxY = mercatorYfromLat(latRange[0]) * worldSize;
-            const shouldZoomIn = maxY - minY < screenHeight;
-            if (shouldZoomIn) scaleY = screenHeight / (maxY - minY);
+            const shouldZoomIn = maxY - minY < (underzoom * screenHeight);
+            if (shouldZoomIn) scaleY = underzoom * screenHeight / (maxY - minY);
         }
 
         if (lngRange) {
@@ -489,27 +519,46 @@ export class MercatorTransform implements ITransform {
 
             if (maxX < minX) maxX += worldSize;
 
-            const shouldZoomIn = maxX - minX < screenWidth;
-            if (shouldZoomIn) scaleX = screenWidth / (maxX - minX);
+            const shouldZoomIn = maxX - minX < (underzoom * screenWidth);
+            if (shouldZoomIn) scaleX = underzoom * screenWidth / (maxX - minX);
         }
 
         const {x: originalX, y: originalY} = projectToWorldCoordinates(worldSize, lngLat);
         let modifiedX, modifiedY;
 
-        const scale = Math.max(scaleX || 0, scaleY || 0);
+        const scale =
+            (!this._helper._renderWorldCopies && this_helper_allowUnderzoom) ?
+                Math.min(scaleX || 0, scaleY || 0) :
+                Math.max(scaleX || 0, scaleY || 0);
 
         if (scale) {
             // zoom in to exclude all beyond the given lng/lat ranges
             const newPoint = new Point(
                 scaleX ? (maxX + minX) / 2 : originalX,
                 scaleY ? (maxY + minY) / 2 : originalY);
-            result.center = unprojectFromWorldCoordinates(worldSize, newPoint).wrap();
+            if (this._helper._renderWorldCopies) result.center = unprojectFromWorldCoordinates(worldSize, newPoint).wrap();
             result.zoom += scaleZoom(scale);
             return result;
         }
 
+        // Panning up and down in latitude is externally limited by project() with MAX_VALID_LATITUDE.
+        // This limit prevents panning the top and bottom bounds farther than the center of the viewport.
+        // Due to the complexity and consequence of altering project() or MAX_VALID_LATITUDE, we'll simply limit
+        // the overpan to 50% the bounds to match that external limit.
+        let lngOverpan = 0.0;
+        let latOverpan = 0.0;
+        if (!this._helper._renderWorldCopies && this_helper_allowUnderzoom) {
+            const overpan = 2 * clamp(this_helper_overpan, 0, 50) / 100;  // 0-1 (percent as a normalized factor from viewport edge to center)
+            const latUnderzoomMinimumPan = 1.0 - ((maxY - minY) / screenHeight);
+            const lngUnderzoomMinimumPan = 1.0 - ((maxX - minX) / screenWidth);
+            lngOverpan = Math.max(lngUnderzoomMinimumPan, overpan);
+            latOverpan = Math.max(latUnderzoomMinimumPan, overpan);
+        }
+        const lngPanScale = 1.0 - lngOverpan;
+        const latPanScale = 1.0 - latOverpan;
+
         if (this._helper._latRange) {
-            const h2 = screenHeight / 2;
+            const h2 = latPanScale * screenHeight / 2;
             if (originalY - h2 < minY) modifiedY = minY + h2;
             if (originalY + h2 > maxY) modifiedY = maxY - h2;
         }
@@ -520,7 +569,7 @@ export class MercatorTransform implements ITransform {
             if (this._helper._renderWorldCopies) {
                 wrappedX = wrap(originalX, centerX - worldSize / 2, centerX + worldSize / 2);
             }
-            const w2 = screenWidth / 2;
+            const w2 = lngPanScale * screenWidth / 2;
 
             if (wrappedX - w2 < minX) modifiedX = minX + w2;
             if (wrappedX + w2 > maxX) modifiedX = maxX - w2;
@@ -530,6 +579,7 @@ export class MercatorTransform implements ITransform {
         if (modifiedX !== undefined || modifiedY !== undefined) {
             const newPoint = new Point(modifiedX ?? originalX, modifiedY ?? originalY);
             result.center = unprojectFromWorldCoordinates(worldSize, newPoint).wrap();
+            if (this._helper._renderWorldCopies) result.center = result.center.wrap();
         }
 
         return result;
