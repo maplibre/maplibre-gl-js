@@ -135,25 +135,10 @@
 
     const map = new maplibregl.Map({
         container: 'map',
-        style: {
-            version: 8,
-            sources: {
-                rgb: {
-                    type: 'raster',
-                    tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
-                    tileSize: 256,
-                    attribution: '&copy; OpenStreetMap Contributors',
-                    maxzoom: 19
-                },
-            },
-            layers: [
-                {
-                    id: 'rgb',
-                    type: 'raster',
-                    source: 'rgb'
-                },
-            ]
-        },
+        renderWorldCopies: false,
+        allowUnderzoom: true,
+        style:
+            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
     });
 
     map.addControl(
