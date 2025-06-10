@@ -1,6 +1,8 @@
 ## main
 
 ### ✨ Features and improvements
+- Add `allowUnderzoom`, `underzoom`, and `overpan` options to map constructor to allow users to zoom out to show the entire bounded map area when `renderWorldsCopies=false`; add respective setters and getters to map public API ([#5995](https://github.com/maplibre/maplibre-gl-js/pull/5995))
+
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
