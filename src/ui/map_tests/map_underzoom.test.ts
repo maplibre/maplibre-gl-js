@@ -1,7 +1,5 @@
 import {describe, beforeEach, test, expect} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
-import { on } from 'events';
-import { off } from 'process';
 
 beforeEach(() => {
     beforeMapTest();
@@ -145,7 +143,7 @@ describe('#allowUnderzoom', () => {
         map.setAllowUnderzoom(false);
         expect(map.getCenter().lat).toBeCloseTo(73.226700429668, 0);
     });
-})
+});
 
 describe('#underzoom', () => {
     test('constrains zoom out to viewport with highest allowed underzoom', () => {
@@ -164,7 +162,7 @@ describe('#underzoom', () => {
         map.setZoom(-Infinity);
         expect(map.getZoom()).toBeCloseTo(4);
     });
-})
+});
 
 describe('#overpan', () => {
     test('not constrained in horizontal panning with highest allowed overpan', () => {
@@ -175,7 +173,7 @@ describe('#overpan', () => {
 
     test('not constrained in vertical panning with highest allowed overpan', () => {
         const map = createMap({renderWorldCopies: false, allowUnderzoom: true, overpan: 50});
-        map.setCenter({lng: 0, lat: 90})
+        map.setCenter({lng: 0, lat: 90});
         expect(map.getCenter().lat).toBeCloseTo(90, 0);
     });
-})
+});
