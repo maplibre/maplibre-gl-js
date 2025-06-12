@@ -75,6 +75,9 @@ export interface ITransformGetters {
     get unmodified(): boolean;
 
     get renderWorldCopies(): boolean;
+    get allowUnderzoom(): boolean;
+    get underzoom(): number;
+    get overpan(): number;
     /**
      * The distance from the camera to the center of the map in pixels space.
      */
@@ -115,6 +118,17 @@ interface ITransformMutators {
      */
     setMaxPitch(pitch: number): void;
     setRenderWorldCopies(renderWorldCopies: boolean): void;
+    setAllowUnderzoom(allowUnderzoom: boolean): void;
+    /**
+     * Sets the transform's allowed underzoom, in percent of the size of the map's bounds relative to the viewport size.
+     * Automatically constrains the transform to the new underzoom and recomputes internal matrices if needed.
+     */
+    setUnderzoom(underzoom: number): void;
+    /**
+     * Sets the transform's allowed overpan, in percent of how far the map's latitude-longitude bounds can be exceeded relative to the viewport's height and width.
+     * Automatically constrains the transform to the new overpan and recomputes internal matrices if needed.
+     */
+    setOverpan(overpan: number): void;
     /**
      * Sets the transform's bearing, in degrees.
      * Recomputes internal matrices if needed.
