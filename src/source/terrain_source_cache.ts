@@ -299,7 +299,7 @@ export class TerrainSourceCache extends Evented {
     ): boolean {
         const range = canonicalTileRanges[tileID.canonical.z];
 
-        return range && (
+        return !!range && (
             tileID.wrap > range.minWrap || tileID.wrap < range.maxWrap ||
             tileID.canonical.x >= range.minTileXWrapped &&
             tileID.canonical.x <= range.maxTileXWrapped &&
