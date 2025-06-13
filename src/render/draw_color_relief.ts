@@ -56,6 +56,7 @@ function renderColorRelief(
     const align = !painter.options.moving;
 
     let firstTile = true;
+    let colorRampSize = 0;
 
     for (const coord of coords) {
         const tile = sourceCache.getTile(coord);
@@ -68,6 +69,7 @@ function renderColorRelief(
             context.activeTexture.set(gl.TEXTURE4);
             colorTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
             firstTile = false;
+            colorRampSize = elevationTexture.size[0];
         }
 
         if (!dem || !dem.data) {
@@ -89,7 +91,7 @@ function renderColorRelief(
             tile.demTexture = new Texture(context, pixelData, gl.RGBA, {premultiply: false});
             tile.demTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
         }
-        
+
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, true, 'raster');
 
         const terrainData = painter.style.map.terrain?.getTerrainData(coord);
@@ -102,6 +104,6 @@ function renderColorRelief(
         });
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
-            colorReliefUniformValues(layer, tile.dem), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+            colorReliefUniformValues(layer, tile.dem, colorRampSize), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 }
