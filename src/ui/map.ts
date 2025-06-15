@@ -246,6 +246,21 @@ export type MapOptions = {
      */
     renderWorldCopies?: boolean;
     /**
+     * If `true`, a user may zoom out a single-copy world beyond its bounds until the bounded area is a percent of the viewport size as defined by `underzoom` unless `minZoom` is reached. If  `false`, a user may not zoom out beyond the map bounds.
+     * @defaultValue false
+     */
+    allowUnderzoom?: boolean;
+    /**
+     * The allowable underzoom of the map, measured as a percentage of the size of the map's bounds relative to the viewport size (0-100). If `underzoom` is not specified in the constructor options, MapLibre GL JS will default to `100`. `allowUnderzoom` must be set `true` for underzooming to occur.
+     * @defaultValue 100
+     */
+    underzoom?: number;
+    /**
+     * The allowable overpan of the map, measured as a percentage of how far the map's latitude-longitude bounds can be exceeded relative to the viewport's height and width (0-50). If `overpan` is not specified in the constructor options, MapLibre GL JS will default to `0`. `allowUnderzoom` must be set `true` for overpanning to occur. `overpan` is exceeded when necessary for underzooming.
+     * @defaultValue 0
+     */
+    overpan?: number;
+    /**
      * The maximum number of tiles stored in the tile cache for a given source. If omitted, the cache will be dynamically sized based on the current viewport which can be set using `maxTileCacheZoomLevels` constructor options.
      * @defaultValue null
      */
@@ -383,6 +398,14 @@ const defaultMaxPitch = 60;
 // use this variable to check maxPitch for validity
 const maxPitchThreshold = 180;
 
+const defaultUnderzoom = 80;
+const minUnderzoom = 0;
+const maxUnderzoom = 100;
+
+const defaultOverpan = 0;
+const minOverpan = 0;
+const maxOverpan = 50;
+
 const defaultOptions: Readonly<Partial<MapOptions>> = {
     hash: false,
     interactive: true,
@@ -425,6 +448,9 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     roll: 0,
 
     renderWorldCopies: true,
+    allowUnderzoom: false,
+    underzoom: defaultUnderzoom,
+    overpan: defaultOverpan,
     maxTileCacheSize: null,
     maxTileCacheZoomLevels: config.MAX_TILE_CACHE_ZOOM_LEVELS,
     transformRequest: null,
@@ -617,6 +643,22 @@ export class Map extends Camera {
             throw new Error(`maxPitch must be less than or equal to ${maxPitchThreshold}`);
         }
 
+        if (resolvedOptions.underzoom != null && resolvedOptions.underzoom > maxUnderzoom) {
+            throw new Error(`underzoom must be less than or equal to ${maxUnderzoom}`);
+        }
+
+        if (resolvedOptions.underzoom != null && resolvedOptions.underzoom < minUnderzoom) {
+            throw new Error(`underzoom must be greater than or equal to ${minUnderzoom}`);
+        }
+
+        if (resolvedOptions.overpan != null && resolvedOptions.overpan > maxOverpan) {
+            throw new Error(`overpan must be less than or equal to ${maxOverpan}`);
+        }
+
+        if (resolvedOptions.overpan != null && resolvedOptions.overpan < minOverpan) {
+            throw new Error(`overpan must be greater than or equal to ${minOverpan}`);
+        }
+
         // For now we will use a temporary MercatorTransform instance.
         // Transform specialization will later be set by style when it creates its projection instance.
         // When this happens, the new transform will inherit all properties of this temporary transform.
@@ -636,6 +678,15 @@ export class Map extends Camera {
         }
         if (resolvedOptions.renderWorldCopies !== undefined) {
             transform.setRenderWorldCopies(resolvedOptions.renderWorldCopies);
+        }
+        if (resolvedOptions.allowUnderzoom !== undefined) {
+            transform.setAllowUnderzoom(resolvedOptions.allowUnderzoom);
+        }
+        if (resolvedOptions.underzoom !== undefined) {
+            transform.setUnderzoom(resolvedOptions.underzoom);
+        }
+        if (resolvedOptions.overpan !== undefined) {
+            transform.setOverpan(resolvedOptions.overpan);
         }
 
         super(transform, cameraHelper, {bearingSnap: resolvedOptions.bearingSnap});
@@ -1234,6 +1285,137 @@ export class Map extends Camera {
      */
     setRenderWorldCopies(renderWorldCopies?: boolean | null): Map {
         this.transform.setRenderWorldCopies(renderWorldCopies);
+        return this._update();
+    }
+
+    /**
+     * Returns the state of `allowUnderzoom`.
+     * 
+     * If `true`, a user may zoom out a single-copy world beyond its bounds
+     * until the bounded area is a percent of the viewport size as defined by
+     * `underzoom` unless `minZoom` is reached.
+     * If `false`, a user may not zoom out beyond the map bounds.
+     *
+     * @returns The allowUnderzoom
+     * @example
+     * ```ts
+     * let worldUnderzoomAllowed = map.getAllowUnderzoom();
+     * ```
+     * @see [Allow underzoom](https://maplibre.org/maplibre-gl-js/docs/examples/underzoom/)
+     */
+    getAllowUnderzoom(): boolean { return this.transform.allowUnderzoom; }
+
+    /**
+     * Sets the state of `allowUnderzoom`.
+     * 
+     * `renderWorldCopies` must be `false` for underzooming to occur.
+     *
+     * @param allowUnderzoom - If `true`, a user may zoom out a single-copy
+     * world beyond its bounds until the bounded area is a percent of the
+     * viewport size as defined by `underzoom` unless `minZoom` is reached.
+     * If `false`, a user may not zoom out beyond the map bounds.
+     *
+     * `undefined` is treated as `false`, `null` is treated as `false`.
+     * @example
+     * ```ts
+     * map.setAllowUnderzoom(true);
+     * ```
+     * @see [Allow underzoom](https://maplibre.org/maplibre-gl-js/docs/examples/underzoom/)
+     */
+    setAllowUnderzoom(allowUnderzoom?: boolean | null): Map {
+        this.transform.setAllowUnderzoom(allowUnderzoom);
+        return this._update();
+    }
+
+    /**
+     * Returns the map's allowable underzoom percentage.
+     *
+     * @returns underzoom
+     * @example
+     * ```ts
+     * let underzoom = map.getUnderzoom();
+     * ```
+     */
+    getUnderzoom(): number { return this.transform.underzoom; }
+
+    /**
+     * Sets the map's allowable underzoom percentage.
+     *
+     * For underzooming to occur, both `allowUnderzoom` must be `true` and `renderWorldCopies` must be `false`.
+     *
+     * If the map is currently underzoomed to a size lower than the new
+     * underzoom, the map will zoom in to respect the new underzoom.
+     *
+     * `minZoom` is always respected, meaning if the map is already at
+     * `minZoom = 0` but the map is larger than the allowable underzoom size,
+     * it is not possible to zoom out any further.
+     *
+     * A {@link ErrorEvent} event will be fired if underzoom is out of bounds.
+     *
+     * @param underzoom - The allowable underzoom percentage to set (0-100).
+     * If `null` or `undefined` is provided, the function removes the current
+     * underzoom and sets it to the default (80).
+     * @example
+     * ```ts
+     * map.setUnderzoom(25);
+     * ```
+     * @see [Underzoom](https://maplibre.org/maplibre-gl-js/docs/examples/underzoom/)
+     */
+    setUnderzoom(underzoom?: number | null): Map {
+
+        underzoom = underzoom === null || underzoom === undefined ? defaultUnderzoom : underzoom;
+
+        if (underzoom > maxUnderzoom) {
+            throw new Error(`underzoom must be less than or equal to ${maxUnderzoom}`);
+        } else if (underzoom < minUnderzoom) {
+            throw new Error(`underzoom must be greater than or equal to ${minUnderzoom}`);
+        }
+
+        this.transform.setUnderzoom(underzoom);
+        return this._update();
+    }
+
+    /**
+     * Returns the map's allowable overpan percentage.
+     *
+     * @returns overpan
+     * @example
+     * ```ts
+     * let overpan = map.getOverpan();
+     * ```
+     */
+    getOverpan(): number { return this.transform.overpan; }
+
+    /**
+     * Sets the map's allowable overpan percentage.
+     *
+     * For overpanning to occur, both `allowUnderzoom` must be `true` and `renderWorldCopies` must be `false`.
+     *
+    * If the map is underzoomed such that the bounds must exceed `overpan`, the
+     * map will allow that.
+     *
+     * A {@link ErrorEvent} event will be fired if overpan is out of bounds.
+     *
+     * @param overpan - The allowable overpan percentage to set (0 - 50).
+     * If `null` or `undefined` is provided, the function removes the current
+     * overpan and sets it to the default (0).
+     * @example
+     * ```ts
+     * map.setOverpan(25);
+     * ```
+     * @see [Underzoom](https://maplibre.org/maplibre-gl-js/docs/examples/underzoom/)
+     */
+    setOverpan(overpan?: number | null): Map {
+
+        overpan = overpan === null || overpan === undefined ? defaultOverpan : overpan;
+
+        if (overpan > maxOverpan) {
+            throw new Error(`overpan must be less than or equal to ${maxOverpan}`);
+        } else if (overpan < minOverpan) {
+            throw new Error(`overpan must be greater than or equal to ${minOverpan}`);
+        }
+
+        this.transform.setOverpan(overpan);
         return this._update();
     }
 

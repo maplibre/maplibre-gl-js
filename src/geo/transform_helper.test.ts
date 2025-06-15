@@ -33,6 +33,9 @@ describe('TransformHelper', () => {
         original.setPitch(3);
         original.setRoll(7);
         original.setRenderWorldCopies(false);
+        original.setAllowUnderzoom(true);
+        original.setUnderzoom(90);
+        original.setOverpan(50);
         original.setZoom(2.3);
 
         const cloned = new TransformHelper(emptyCallbacks);
@@ -63,6 +66,9 @@ describe('TransformHelper', () => {
         expect(cloned.padding).toEqual(original.padding);
         expect(cloned.unmodified).toEqual(original.unmodified);
         expect(cloned.renderWorldCopies).toEqual(original.renderWorldCopies);
+        expect(cloned.allowUnderzoom).toEqual(original.allowUnderzoom);
+        expect(cloned.underzoom).toEqual(original.underzoom);
+        expect(cloned.overpan).toEqual(original.overpan);
     });
 
     describe('getMercatorTilesCoordinates', () => {

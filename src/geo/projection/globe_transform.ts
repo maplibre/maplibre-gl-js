@@ -66,6 +66,15 @@ export class GlobeTransform implements ITransform {
     setRenderWorldCopies(renderWorldCopies: boolean): void {
         this._helper.setRenderWorldCopies(renderWorldCopies);
     }
+    setAllowUnderzoom(allowUnderzoom: boolean): void {
+        this._helper.setAllowUnderzoom(allowUnderzoom);
+    }
+    setUnderzoom(underzoom: number): void {
+        this._helper.setUnderzoom(underzoom);
+    }
+    setOverpan(overpan: number): void {
+        this._helper.setOverpan(overpan);
+    }
     setBearing(bearing: number): void {
         this._helper.setBearing(bearing);
     }
@@ -198,6 +207,15 @@ export class GlobeTransform implements ITransform {
     }
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
+    }
+    get allowUnderzoom(): boolean {
+        return this._helper.allowUnderzoom;
+    }
+    get underzoom(): number {
+        return this._helper.underzoom;
+    }
+    get overpan(): number {
+        return this._helper.overpan;
     }
     get cameraToCenterDistance(): number {
         return this._helper.cameraToCenterDistance;
