@@ -4,7 +4,7 @@ import {VerticalPerspectiveCameraHelper} from './vertical_perspective_camera_hel
 import type Point from '@mapbox/point-geometry';
 import type {CameraForBoxAndBearingHandlerResult, EaseToHandlerResult, EaseToHandlerOptions, FlyToHandlerResult, FlyToHandlerOptions, ICameraHelper, MapControlsDeltas} from './camera_helper';
 import type {LngLat, LngLatLike} from '../lng_lat';
-import type {IReadonlyTransform, ITransform} from '../transform_interface';
+import type {ITransform} from '../transform_interface';
 import type {GlobeProjection} from './globe_projection';
 import type {CameraForBoundsOptions} from '../../ui/camera';
 import type {LngLatBounds} from '../lng_lat_bounds';
@@ -30,19 +30,19 @@ export class GlobeCameraHelper implements ICameraHelper {
         return this.useGlobeControls ? this._verticalPerspectiveCameraHelper : this._mercatorCameraHelper;
     }
 
-    handlePanInertia(pan: Point, transform: IReadonlyTransform): {
+    handlePanInertia(around: Point, pan: Point, tr: ITransform): {
         easingCenter: LngLat;
         easingOffset: Point;
     } {
-        return this.currentHelper.handlePanInertia(pan, transform);
+        return this.currentHelper.handlePanInertia(around, pan, tr);
     }
 
     handleMapControlsRollPitchBearingZoom(deltas: MapControlsDeltas, tr: ITransform): void {
         return this.currentHelper.handleMapControlsRollPitchBearingZoom(deltas, tr);
     }
 
-    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void {
-        this.currentHelper.handleMapControlsPan(deltas, tr, preZoomAroundLoc);
+    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat, fixedBearing: boolean): void {
+        this.currentHelper.handleMapControlsPan(deltas, tr, preZoomAroundLoc, fixedBearing);
     }
 
     cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
