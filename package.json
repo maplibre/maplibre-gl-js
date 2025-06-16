@@ -90,7 +90,7 @@
     "devtools-protocol": "^0.0.1472835",
     "diff": "^8.0.2",
     "dts-bundle-generator": "^9.5.1",
-    "eslint": "^9.28.0",
+    "eslint": "^9.29.0",
     "eslint-plugin-html": "^8.1.3",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-react": "^7.37.5",
