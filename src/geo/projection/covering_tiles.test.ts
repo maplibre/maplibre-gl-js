@@ -262,7 +262,7 @@ describe('coveringTiles', () => {
         });
         
 
-        test('nonzero center', () => {
+        test('nonzero center elevation', () => {
             const options = {
                 minzoom: 1,
                 maxzoom: 15,
@@ -652,7 +652,7 @@ describe('coveringTiles', () => {
             ]);
         });
 
-        test('nonzero center', () => {
+        test('nonzero center elevation', () => {
             const options = {
                 minzoom: 1,
                 maxzoom: 15,
