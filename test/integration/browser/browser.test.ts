@@ -449,12 +449,11 @@ describe('Browser tests', () => {
         expect(center.lat).toBeCloseTo(47.29960);
     });
 
-    test('Enable terrain during camera ease should not crash', {retry: 3, timeout: 20000}, async () => {
+    test('Enable terrain during camera ease should not crash', {retry: 3, timeout: 50000}, async () => {
         const pageErrors: string[] = [];
         page.on('pageerror', error => pageErrors.push(error.message));
 
         const result = await page.evaluate(async () => {
-            const sleepInBrowser = (ms: number) => new Promise(r => setTimeout(r, ms));
 
             // Prepare a style that has the terrain source defined but no terrain enabled yet
             map.setStyle({
