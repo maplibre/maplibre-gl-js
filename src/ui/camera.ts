@@ -1388,10 +1388,10 @@ export abstract class Camera extends Evented {
             return this.jumpTo(coercedOptions, eventData);
         }
 
-        // This method implements an "optimal path" animation, as detailed in:
+        // This method implements an “optimal path” animation, as detailed in:
         //
-        // Van Wijk, Jarke J.; Nuij, Wim A. A. "Smooth and efficient zooming and panning." INFOVIS
-        //   '03. pp. 15–22. <https://www.win.tue.nl/~vanwijk/zoompan.pdf#page=5>.
+        // Van Wijk, Jarke J.; Nuij, Wim A. A. “Smooth and efficient zooming and panning.” INFOVIS
+        //   ’03. pp. 15–22. <https://www.win.tue.nl/~vanwijk/zoompan.pdf#page=5>.
         //
         // Where applicable, local variable documentation begins with the associated variable or
         // function in van Wijk (2003).
@@ -1484,7 +1484,7 @@ export abstract class Camera extends Evented {
         // S: Total length of the flight path, measured in ρ-screenfulls.
         let S = (zoomOutFactor(true) - r0) / rho;
 
-        // When u₀ = u₁, the optimal path doesn't require both ascent and descent.
+        // When u₀ = u₁, the optimal path doesn’t require both ascent and descent.
         if (Math.abs(u1) < 0.000002 || !isFinite(S)) {
             // Perform a more or less instantaneous transition if the path is too short.
             if (Math.abs(w0 - w1) < 0.000001) return this.easeTo(options, eventData);
