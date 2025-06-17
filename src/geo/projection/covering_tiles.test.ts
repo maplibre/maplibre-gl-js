@@ -260,7 +260,6 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(11, 0, 11, 688, 1024)
             ]);
         });
-        
 
         test('nonzero center elevation', () => {
             const options = {
