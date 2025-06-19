@@ -5,6 +5,7 @@
 
 ### 🐞 Bug fixes
 - Fix use of `textureSize` call in color relief shader ([#5980](https://github.com/maplibre/maplibre-gl-js/pull/5980))
+- Fix Y axis transformation in projectFromLabelPlaneToClipSpace ([#6021](https://github.com/maplibre/maplibre-gl-js/pull/6021))
 
 - _...Add new stuff here..._
 
