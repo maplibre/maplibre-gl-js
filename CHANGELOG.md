@@ -5,6 +5,7 @@
 
 ### 🐞 Bug fixes
 - Fix use of `textureSize` call in color relief shader ([#5980](https://github.com/maplibre/maplibre-gl-js/pull/5980))
+- Fix white artifacts when using non-zero elevation ([#6032](https://github.com/maplibre/maplibre-gl-js/pull/6032))
 
 - _...Add new stuff here..._
 
