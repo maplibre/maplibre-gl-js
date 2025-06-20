@@ -82,7 +82,7 @@
     "address": "^2.0.3",
     "autoprefixer": "^10.4.21",
     "benchmark": "^2.1.4",
-    "canvas": "^3.1.0",
+    "canvas": "^3.1.1",
     "cspell": "^9.1.1",
     "cssnano": "^7.0.7",
     "d3": "^7.9.0",
