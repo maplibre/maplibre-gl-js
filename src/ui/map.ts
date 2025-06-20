@@ -694,7 +694,7 @@ export class Map extends Camera {
             let initialResizeEventCaptured = false;
             const throttledResizeCallback = throttle((entries: ResizeObserverEntry[]) => {
                 if (this._trackResize && !this._removed) {
-                    this.resize(entries);
+                    this.resize({type: 'resize', entries});
                     this.redraw();
                 }
             }, 50);
@@ -933,13 +933,13 @@ export class Map extends Camera {
         const fireMoving = !this._moving;
         if (fireMoving) {
             this.stop();
-            this.fire(new Event('movestart', eventData))
-                .fire(new Event('move', eventData));
+            this.fire(new Event('movestart', {originalEvent: eventData}))
+                .fire(new Event('move', {originalEvent: eventData}));
         }
 
-        this.fire(new Event('resize', eventData));
+        this.fire(new Event('resize', {originalEvent: eventData}));
 
-        if (fireMoving) this.fire(new Event('moveend', eventData));
+        if (fireMoving) this.fire(new Event('moveend', {originalEvent: eventData}));
 
         return this;
     }
