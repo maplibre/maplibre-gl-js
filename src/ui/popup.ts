@@ -20,6 +20,7 @@ const defaultOptions = {
     maxWidth: '240px',
     subpixelPositioning: false,
     locationOccludedOpacity: undefined,
+    popupPadding: undefined,
 };
 
 /**
@@ -33,6 +34,24 @@ const defaultOptions = {
  */
 export type Offset = number | PointLike | {
     [_ in PositionAnchor]: PointLike;
+};
+
+/**
+ * A pixel padding specified as:
+ *
+ * - A single number specifying equal padding on all sides
+ * - A {@link PointLike} specifying padding for [horizontal, vertical]
+ * - A four-element array specifying [top, right, bottom, left] padding
+ * - An object specifying padding for each side
+ *
+ * Padding creates a buffer zone around the edges of the map container
+ * where the popup will avoid being positioned.
+ */
+export type PopupPadding = number | PointLike | [number, number, number, number] | {
+    top?: number;
+    right?: number;
+    bottom?: number;
+    left?: number;
 };
 
 /**
@@ -95,6 +114,13 @@ export type PopupOptions = {
      * @defaultValue undefined
      */
     locationOccludedOpacity?: number | string;
+    /**
+     * A pixel padding applied to the popup's positioning constraints.
+     * The popup will be positioned to avoid being placed within this padding area
+     * from the edges of the map container.
+     * @defaultValue undefined
+     */
+    popupPadding?: PopupPadding;
 };
 
 const focusQuerySelector = [
@@ -567,6 +593,31 @@ export class Popup extends Evented {
         this.options.subpixelPositioning = value;
     }
 
+    /**
+     * Sets the popup's padding constraints for positioning.
+     *
+     * @param padding - The padding to apply. Can be a number (all sides), array, or object.
+     * @example
+     * ```ts
+     * // Equal padding on all sides
+     * popup.setPopupPadding(20);
+     * 
+     * // Different padding per side
+     * popup.setPopupPadding({ top: 10, right: 20, bottom: 30, left: 40 });
+     * 
+     * // Horizontal and vertical padding
+     * popup.setPopupPadding([20, 10]); // [horizontal, vertical]
+     * 
+     * // CSS-style padding
+     * popup.setPopupPadding([10, 20, 30, 40]); // [top, right, bottom, left]
+     * ```
+     */
+    setPopupPadding(padding?: PopupPadding): this {
+        this.options.popupPadding = padding;
+        this._update();
+        return this;
+    }
+
     _createCloseButton() {
         if (this.options.closeButton) {
             this._closeButton = DOM.create('button', 'maplibregl-popup-close-button', this._content);
@@ -632,19 +683,20 @@ export class Popup extends Evented {
         if (!anchor) {
             const width = this._container.offsetWidth;
             const height = this._container.offsetHeight;
+            const padding = normalizePopupPadding(this.options.popupPadding);
             let anchorComponents;
 
-            if (pos.y + offset.bottom.y < height) {
+            if (pos.y + offset.bottom.y < height + padding.top) {
                 anchorComponents = ['top'];
-            } else if (pos.y > this._map.transform.height - height) {
+            } else if (pos.y > this._map.transform.height - height - padding.bottom) {
                 anchorComponents = ['bottom'];
             } else {
                 anchorComponents = [];
             }
 
-            if (pos.x < width / 2) {
+            if (pos.x < width / 2 + padding.left) {
                 anchorComponents.push('left');
-            } else if (pos.x > this._map.transform.width - width / 2) {
+            } else if (pos.x > this._map.transform.width - width / 2 - padding.right) {
                 anchorComponents.push('right');
             }
 
@@ -728,4 +780,55 @@ function normalizeOffset(offset?: Offset | null) {
             'right': Point.convert(offset['right'] || [0, 0])
         };
     }
+}
+
+export function normalizePopupPadding(padding?: PopupPadding | null): {top: number; right: number; bottom: number; left: number} {
+    if (!padding) {
+        return {top: 0, right: 0, bottom: 0, left: 0};
+    }
+
+    if (typeof padding === 'number') {
+        // Single number applies to all sides - handle NaN/Infinity safely
+        const safePadding = isFinite(padding) ? padding : 0;
+        return {top: safePadding, right: safePadding, bottom: safePadding, left: safePadding};
+    }
+
+    if (Array.isArray(padding)) {
+        if (padding.length === 2) {
+            // [horizontal, vertical]
+            const [horizontal, vertical] = padding;
+            const safeH = isFinite(horizontal) ? horizontal : 0;
+            const safeV = isFinite(vertical) ? vertical : 0;
+            return {top: safeV, right: safeH, bottom: safeV, left: safeH};
+        } else if (padding.length === 4) {
+            // [top, right, bottom, left]
+            const [top, right, bottom, left] = padding;
+            return {
+                top: isFinite(top) ? top : 0,
+                right: isFinite(right) ? right : 0,
+                bottom: isFinite(bottom) ? bottom : 0,
+                left: isFinite(left) ? left : 0
+            };
+        }
+    }
+
+    if (typeof padding === 'object' && !Array.isArray(padding) && !(padding instanceof Point)) {
+        // Object with explicit properties (not a Point)
+        return {
+            top: isFinite(padding.top) ? padding.top : 0,
+            right: isFinite(padding.right) ? padding.right : 0,
+            bottom: isFinite(padding.bottom) ? padding.bottom : 0,
+            left: isFinite(padding.left) ? padding.left : 0
+        };
+    }
+
+    if (padding instanceof Point) {
+        // Handle Point as [horizontal, vertical]
+        const safeX = isFinite(padding.x) ? padding.x : 0;
+        const safeY = isFinite(padding.y) ? padding.y : 0;
+        return {top: safeY, right: safeX, bottom: safeY, left: safeX};
+    }
+
+    // Fallback to no padding
+    return {top: 0, right: 0, bottom: 0, left: 0};
 }
