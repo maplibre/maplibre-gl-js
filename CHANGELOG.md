@@ -7,6 +7,7 @@
 - Fix use of `textureSize` call in color relief shader ([#5980](https://github.com/maplibre/maplibre-gl-js/pull/5980))
 - Fix Y axis transformation in projectFromLabelPlaneToClipSpace ([#6021](https://github.com/maplibre/maplibre-gl-js/pull/6021))
 - Alpha-sort all examples ([#6049](https://github.com/maplibre/maplibre-gl-js/pull/6049))
+- Fix "texImage: Alpha-premult and y-flip are deprecated for non-DOM-Element uploads." warning in Firefox ([#6067](https://github.com/maplibre/maplibre-gl-js/pull/6067))
 
 - _...Add new stuff here..._
 
