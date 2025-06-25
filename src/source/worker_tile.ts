@@ -7,8 +7,10 @@ import {LineBucket} from '../data/bucket/line_bucket';
 import {FillBucket} from '../data/bucket/fill_bucket';
 import {FillExtrusionBucket} from '../data/bucket/fill_extrusion_bucket';
 import {warnOnce, mapObject} from '../util/util';
+import {addDasharrayDependencies} from '../data/bucket/pattern_bucket_features';
 import {ImageAtlas} from '../render/image_atlas';
 import {GlyphAtlas} from '../render/glyph_atlas';
+import {LineAtlas} from '../render/line_atlas';
 import {EvaluationParameters} from '../style/evaluation_parameters';
 import {OverscaledTileID} from './tile_id';
 
@@ -165,6 +167,11 @@ export class WorkerTile {
         const [glyphMap, iconMap, patternMap] = await Promise.all([getGlyphsPromise, getIconsPromise, getPatternsPromise]);
         const glyphAtlas = new GlyphAtlas(glyphMap);
         const imageAtlas = new ImageAtlas(iconMap, patternMap);
+        const lineAtlas = new LineAtlas(256, 512);
+        
+        // Process dasharray dependencies and generate dash positions
+        const dasharrayPositions = addDasharrayDependencies(buckets, lineAtlas);
+        const allPatternPositions = {...imageAtlas.patternPositions, ...dasharrayPositions};
 
         for (const key in buckets) {
             const bucket = buckets[key];
@@ -185,7 +192,7 @@ export class WorkerTile {
                 bucket instanceof FillBucket ||
                 bucket instanceof FillExtrusionBucket)) {
                 recalculateLayers(bucket.layers, this.zoom, availableImages);
-                bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions);
+                bucket.addFeatures(options, this.tileID.canonical, allPatternPositions);
             }
         }
 
