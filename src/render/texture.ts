@@ -53,14 +53,19 @@ export class Texture {
         this.useMipmap = Boolean(options && options.useMipmap);
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
 
-        context.pixelStoreUnpackFlipY.set(false);
+        const isDOMElement = image instanceof HTMLImageElement || image instanceof HTMLCanvasElement || image instanceof HTMLVideoElement || image instanceof ImageData || isImageBitmap(image);
+
         context.pixelStoreUnpack.set(1);
-        context.pixelStoreUnpackPremultiplyAlpha.set(this.format === gl.RGBA && (!options || options.premultiply !== false));
+
+        if (isDOMElement) {
+            context.pixelStoreUnpackFlipY.set(false);
+            context.pixelStoreUnpackPremultiplyAlpha.set(this.format === gl.RGBA && (!options || options.premultiply !== false));
+        }
 
         if (resize) {
             this.size = [width, height];
 
-            if (image instanceof HTMLImageElement || image instanceof HTMLCanvasElement || image instanceof HTMLVideoElement || image instanceof ImageData || isImageBitmap(image)) {
+            if (isDOMElement) {
                 gl.texImage2D(gl.TEXTURE_2D, 0, this.format, this.format, gl.UNSIGNED_BYTE, image);
             } else {
                 gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, gl.UNSIGNED_BYTE, (image as DataTextureImage).data);
@@ -68,7 +73,7 @@ export class Texture {
 
         } else {
             const {x, y} = position || {x: 0, y: 0};
-            if (image instanceof HTMLImageElement || image instanceof HTMLCanvasElement || image instanceof HTMLVideoElement || image instanceof ImageData || isImageBitmap(image)) {
+            if (isDOMElement) {
                 gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, gl.RGBA, gl.UNSIGNED_BYTE, image);
             } else {
                 gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, (image as DataTextureImage).data);
@@ -79,9 +84,12 @@ export class Texture {
             gl.generateMipmap(gl.TEXTURE_2D);
         }
 
-        context.pixelStoreUnpackFlipY.setDefault();
         context.pixelStoreUnpack.setDefault();
-        context.pixelStoreUnpackPremultiplyAlpha.setDefault();
+
+        if (isDOMElement) {
+            context.pixelStoreUnpackFlipY.setDefault();
+            context.pixelStoreUnpackPremultiplyAlpha.setDefault();
+        }
     }
 
     bind(filter: TextureFilter, wrap: TextureWrap, minFilter?: TextureFilter | null) {
