@@ -21,6 +21,7 @@ uniform float u_tex_y_a;
 uniform vec2 u_patternscale_b;
 uniform float u_tex_y_b;
 uniform vec2 u_units_to_pixels;
+uniform float u_line_atlas_width;
 
 out vec2 v_normal;
 out vec2 v_width2;

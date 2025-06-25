@@ -78,6 +78,17 @@ describe('GeoJSONSource#constructor', () => {
 
         warn.mockRestore();
     });
+    test('warn if clusterMaxZoom non-integer', () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+        const source = new GeoJSONSource('id', {data: hawkHill, maxzoom: 4, clusterMaxZoom: 3.5} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.map = mapStub;
+        source.load();
+
+        expect(warn).toHaveBeenCalledWith('Integer expected for option \'clusterMaxZoom\': provided value "3.5" rounded to "4"');
+
+        warn.mockRestore();
+    });
 });
 
 describe('GeoJSONSource#setData', () => {
@@ -431,6 +442,7 @@ describe('GeoJSONSource#update', () => {
         source.map = {
             transform: {} as IReadonlyTransform,
             getPixelRatio() { return 1; },
+            getGlobalState: () => ({}),
             style: {
                 projection: {
                     get subdivisionGranularity() {

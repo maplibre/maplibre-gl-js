@@ -4,7 +4,7 @@ MapLibre GL JS is a TypeScript library that uses WebGL to render interactive map
 
 ## Quickstart
 
-<iframe src="./examples/simple-map.html" width="100%" height="400px" style="border:none"></iframe>
+<iframe src="./examples/display-a-map.html" width="100%" height="400px" style="border:none"></iframe>
 
 ```html
 <div id="map"></div>
@@ -94,6 +94,6 @@ Note too that if the CSS isn't available by the first render, as soon as the CSS
 MapLibre GL JS is also distributed via UNPKG. Our latest version can installed by adding below tags this in the html `<head>`. Further instructions on how to select specific versions and semver ranges can be found on at [unpkg.com](https://unpkg.com).
 
 ```html
-<script src="https://unpkg.com/maplibre-gl@^5.4.0/dist/maplibre-gl.js"></script>
-<link href="https://unpkg.com/maplibre-gl@^5.4.0/dist/maplibre-gl.css" rel="stylesheet" />
+<script src="https://unpkg.com/maplibre-gl@^5.5.0/dist/maplibre-gl.js"></script>
+<link href="https://unpkg.com/maplibre-gl@^5.5.0/dist/maplibre-gl.css" rel="stylesheet" />
 ```

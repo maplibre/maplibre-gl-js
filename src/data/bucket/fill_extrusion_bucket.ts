@@ -61,6 +61,7 @@ type CentroidAccumulator = {
 export class FillExtrusionBucket implements Bucket {
     index: number;
     zoom: number;
+    globalState: Record<string, any>;
     overscaling: number;
     layers: Array<FillExtrusionStyleLayer>;
     layerIds: Array<string>;
@@ -84,6 +85,7 @@ export class FillExtrusionBucket implements Bucket {
 
     constructor(options: BucketParameters<FillExtrusionStyleLayer>) {
         this.zoom = options.zoom;
+        this.globalState = options.globalState;
         this.overscaling = options.overscaling;
         this.layers = options.layers;
         this.layerIds = this.layers.map(layer => layer.id);
@@ -106,7 +108,7 @@ export class FillExtrusionBucket implements Bucket {
             const needGeometry = this.layers[0]._featureFilter.needGeometry;
             const evaluationFeature = toEvaluationFeature(feature, needGeometry);
 
-            if (!this.layers[0]._featureFilter.filter(new EvaluationParameters(this.zoom), evaluationFeature, canonical)) continue;
+            if (!this.layers[0]._featureFilter.filter(new EvaluationParameters(this.zoom, {globalState: this.globalState}), evaluationFeature, canonical)) continue;
 
             const bucketFeature: BucketFeature = {
                 id,

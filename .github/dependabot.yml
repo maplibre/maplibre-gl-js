@@ -11,6 +11,10 @@ updates:
       interval: "daily"
     open-pull-requests-limit: 20
     versioning-strategy: increase
+    groups:
+      vitest:
+        patterns:
+          - "*vitest*"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

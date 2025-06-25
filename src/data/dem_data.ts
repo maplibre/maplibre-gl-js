@@ -128,6 +128,10 @@ export class DEMData {
         return (r * this.redFactor + g * this.greenFactor + b * this.blueFactor - this.baseShift);
     }
 
+    pack(v: number): {r: number; g: number; b: number} {
+        return packDEMData(v, this.getUnpackVector());
+    }
+
     getPixels() {
         return new RGBAImage({width: this.stride, height: this.stride}, new Uint8Array(this.data.buffer));
     }
@@ -166,6 +170,20 @@ export class DEMData {
             }
         }
     }
+}
+
+export function packDEMData(v: number, unpackVector: number[]): {r: number; g: number; b: number} {
+    const redFactor = unpackVector[0];
+    const greenFactor = unpackVector[1];
+    const blueFactor = unpackVector[2];
+    const baseShift = unpackVector[3];
+    const minScale = Math.min(redFactor, greenFactor, blueFactor);
+    const vScaled = Math.round((v + baseShift)/minScale);
+    return {
+        r: Math.floor(vScaled*minScale/redFactor) % 256,
+        g: Math.floor(vScaled*minScale/greenFactor) % 256,
+        b: Math.floor(vScaled*minScale/blueFactor) % 256
+    };
 }
 
 register('DEMData', DEMData);

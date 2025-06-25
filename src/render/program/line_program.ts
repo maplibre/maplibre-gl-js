@@ -177,7 +177,8 @@ const lineSDFUniformValues = (
         'u_image': 0,
         'u_tex_y_a': posA.y,
         'u_tex_y_b': posB.y,
-        'u_mix': crossfade.t
+        'u_mix': crossfade.t,
+        'u_line_atlas_width': painter.lineAtlas.width,
     });
 };
 

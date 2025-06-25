@@ -19,16 +19,18 @@ import type {
 } from '@maplibre/maplibre-gl-style-spec';
 
 /**
- * A source containing raster tiles (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)
+ * A source containing raster tiles (See the [raster source documentation](https://maplibre.org/maplibre-style-spec/sources/#raster) for detailed documentation of options.)
  *
  * @group Sources
+ *
+ * \> ℹ️ **Note:** The default `tileSize` is `512`. If your tile provider (such as OpenStreetMap or Stadia Maps) serves 256px tiles, set `tileSize: 256` manually to avoid blurry rendering due to upscaling.
  *
  * @example
  * ```ts
  * map.addSource('raster-source', {
  *     'type': 'raster',
  *     'tiles': ['https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg'],
- *     'tileSize': 256,
+ *     'tileSize': 256, // Set this to match tile server output to avoid blurry rendering
  * });
  * ```
  *
@@ -40,7 +42,7 @@ import type {
  *      'tiles': [
  *          'https://img.nj.gov/imagerywms/Natural2015?bbox={bbox-epsg-3857}&format=image/png&service=WMS&version=1.1.1&request=GetMap&srs=EPSG:3857&transparent=true&width=256&height=256&layers=Natural2015'
  *      ],
- *      'tileSize': 256
+ *      'tileSize': 256 // Important for WMS if tiles are 256px
  * });
  * ```
  * @see [Add a raster tile source](https://maplibre.org/maplibre-gl-js/docs/examples/map-tiles/)

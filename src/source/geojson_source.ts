@@ -44,7 +44,8 @@ export type SetClusterOptions = {
      */
     cluster?: boolean;
     /**
-     * The cluster's max zoom
+     * The cluster's max zoom.
+     * Non-integer values are rounded to the closest integer due to supercluster integer value requirements.
      */
     clusterMaxZoom?: number;
     /**
@@ -178,7 +179,7 @@ export class GeoJSONSource extends Evented implements Source {
                 generateId: options.generateId || false
             },
             superclusterOptions: {
-                maxZoom: options.clusterMaxZoom !== undefined ? options.clusterMaxZoom : this.maxzoom - 1,
+                maxZoom: this._getClusterMaxZoom(options.clusterMaxZoom),
                 minPoints: Math.max(2, options.clusterMinPoints || 2),
                 extent: EXTENT,
                 radius: this._pixelsToTileUnits(options.clusterRadius || 50),
@@ -197,6 +198,14 @@ export class GeoJSONSource extends Evented implements Source {
 
     private _pixelsToTileUnits(pixelValue: number): number {
         return pixelValue * (EXTENT / this.tileSize);
+    }
+
+    private _getClusterMaxZoom(clusterMaxZoom: number): number {
+        const effectiveClusterMaxZoom = clusterMaxZoom ? Math.round(clusterMaxZoom) : this.maxzoom - 1;
+        if (!(Number.isInteger(clusterMaxZoom) || clusterMaxZoom === undefined)) {
+            warnOnce(`Integer expected for option 'clusterMaxZoom': provided value "${clusterMaxZoom}" rounded to "${effectiveClusterMaxZoom}"`);
+        }
+        return effectiveClusterMaxZoom;
     }
 
     async load() {
@@ -253,7 +262,7 @@ export class GeoJSONSource extends Evented implements Source {
     private getCoordinatesFromGeometry(geometry: GeoJSON.Geometry): number[] {
         if (geometry.type === 'GeometryCollection') {
             return geometry.geometries.map((g: Exclude<GeoJSON.Geometry, GeoJSON.GeometryCollection>) => g.coordinates).flat(Infinity) as number[];
-        } 
+        }
         return geometry.coordinates.flat(Infinity) as number[];
     }
 
@@ -299,7 +308,9 @@ export class GeoJSONSource extends Evented implements Source {
         this.workerOptions.cluster = options.cluster;
         if (options) {
             if (options.clusterRadius !== undefined) this.workerOptions.superclusterOptions.radius = this._pixelsToTileUnits(options.clusterRadius);
-            if (options.clusterMaxZoom !== undefined) this.workerOptions.superclusterOptions.maxZoom = options.clusterMaxZoom;
+            if (options.clusterMaxZoom !== undefined) {
+                this.workerOptions.superclusterOptions.maxZoom = this._getClusterMaxZoom(options.clusterMaxZoom);
+            }
         }
         this._updateWorkerData();
         return this;
@@ -428,7 +439,8 @@ export class GeoJSONSource extends Evented implements Source {
             pixelRatio: this.map.getPixelRatio(),
             showCollisionBoxes: this.map.showCollisionBoxes,
             promoteId: this.promoteId,
-            subdivisionGranularity: this.map.style.projection.subdivisionGranularity
+            subdivisionGranularity: this.map.style.projection.subdivisionGranularity,
+            globalState: this.map.getGlobalState()
         };
 
         tile.abortController = new AbortController();

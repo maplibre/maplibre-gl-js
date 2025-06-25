@@ -46,10 +46,10 @@ export type PointLike = Point | [number, number];
  *   zoom: 10
  * });
  * ```
- * @see [Set pitch and bearing](https://maplibre.org/maplibre-gl-js/docs/examples/set-perspective/)
- * @see [Jump to a series of locations](https://maplibre.org/maplibre-gl-js/docs/examples/jump-to/)
- * @see [Fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/flyto/)
- * @see [Display buildings in 3D](https://maplibre.org/maplibre-gl-js/docs/examples/3d-buildings/)
+ * @see [Set pitch and bearing](https://maplibre.org/maplibre-gl-js/docs/examples/set-pitch-and-bearing/)
+ * @see [Jump to a series of locations](https://maplibre.org/maplibre-gl-js/docs/examples/jump-to-a-series-of-locations/)
+ * @see [Fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/fly-to-a-location/)
+ * @see [Display buildings in 3D](https://maplibre.org/maplibre-gl-js/docs/examples/display-buildings-in-3d/)
  */
 export type CameraOptions = CenterZoomBearing & {
     /**
@@ -430,7 +430,7 @@ export abstract class Camera extends Evented {
      * @param offset - `x` and `y` coordinates by which to pan the map.
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
+     * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigate-the-map-with-game-like-controls/)
      */
     panBy(offset: PointLike, options?: EaseToOptions, eventData?: any): this {
         offset = Point.convert(offset).mult(-1);
@@ -451,7 +451,7 @@ export abstract class Camera extends Evented {
      * // Specify that the panTo animation should last 5000 milliseconds.
      * map.panTo([-74, 38], {duration: 5000});
      * ```
-     * @see [Update a feature in realtime](https://maplibre.org/maplibre-gl-js/docs/examples/live-update-feature/)
+     * @see [Update a feature in realtime](https://maplibre.org/maplibre-gl-js/docs/examples/update-a-feature-in-realtime/)
      */
     panTo(lnglat: LngLatLike, options?: EaseToOptions, eventData?: any): this {
         return this.easeTo(extend({
@@ -590,7 +590,7 @@ export abstract class Camera extends Evented {
      * of 90° orients the map so that east is up.
      *
      * @returns The map's current bearing.
-     * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
+     * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigate-the-map-with-game-like-controls/)
      */
     getBearing(): number { return this.transform.bearing; }
 
@@ -838,7 +838,7 @@ export abstract class Camera extends Evented {
      *   padding: {top: 10, bottom:25, left: 15, right: 5}
      * });
      * ```
-     * @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/fitbounds/)
+     * @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/fit-a-map-to-a-bounding-box/)
      */
     fitBounds(bounds: LngLatBoundsLike, options?: FitBoundsOptions, eventData?: any): this {
         return this._fitInternal(
@@ -915,8 +915,8 @@ export abstract class Camera extends Evented {
      *   bearing: 90
      * });
      * ```
-     * @see [Jump to a series of locations](https://maplibre.org/maplibre-gl-js/docs/examples/jump-to/)
-     * @see [Update a feature in realtime](https://maplibre.org/maplibre-gl-js/docs/examples/live-update-feature/)
+     * @see [Jump to a series of locations](https://maplibre.org/maplibre-gl-js/docs/examples/jump-to-a-series-of-locations/)
+     * @see [Update a feature in realtime](https://maplibre.org/maplibre-gl-js/docs/examples/update-a-feature-in-realtime/)
      */
     jumpTo(options: JumpToOptions, eventData?: any): this {
         this.stop();
@@ -1079,7 +1079,7 @@ export abstract class Camera extends Evented {
      * @param options - Options describing the destination and animation of the transition.
      * Accepts {@link CameraOptions} and {@link AnimationOptions}.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
+     * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigate-the-map-with-game-like-controls/)
      */
     easeTo(options: EaseToOptions, eventData?: any): this {
         this._stop(false, options.easeId);
@@ -1372,9 +1372,9 @@ export abstract class Camera extends Evented {
      *   }
      * });
      * ```
-     * @see [Fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/flyto/)
-     * @see [Slowly fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/flyto-options/)
-     * @see [Fly to a location based on scroll position](https://maplibre.org/maplibre-gl-js/docs/examples/scroll-fly-to/)
+     * @see [Fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/fly-to-a-location/)
+     * @see [Slowly fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/slowly-fly-to-a-location/)
+     * @see [Fly to a location based on scroll position](https://maplibre.org/maplibre-gl-js/docs/examples/fly-to-a-location-based-on-scroll-position/)
      */
     flyTo(options: FlyToOptions, eventData?: any): this {
         // Fall through to jumpTo if user has set prefers-reduced-motion
@@ -1465,7 +1465,7 @@ export abstract class Camera extends Evented {
         const r0 = zoomOutFactor(false);
 
         // w(s): Returns the visible span on the ground, measured in pixels with respect to the
-        // initial scale. Assumes an angular field of view of 2 arctan ½ ≈ 53°.
+        // initial scale. Uses the current vertical field of view setting.
         let w: (_: number) => number = function (s) {
             return (cosh(r0) / cosh(r0 + rho * s));
         };
@@ -1622,7 +1622,7 @@ export abstract class Camera extends Evented {
      * Gets the elevation at a given location, in meters above sea level.
      * Returns null if terrain is not enabled.
      * If terrain is enabled with some exaggeration value, the value returned here will be reflective of (multiplied by) that exaggeration value.
-     * This method should be used for proper positioning of custom 3d objects, as explained [here](https://maplibre.org/maplibre-gl-js/docs/examples/add-3d-model-with-terrain/)
+     * This method should be used for proper positioning of custom 3d objects, as explained [here](https://maplibre.org/maplibre-gl-js/docs/examples/adding-3d-models-using-threejs-on-terrain/)
      * @param lngLatLike - [x,y] or LngLat coordinates of the location
      * @returns elevation in meters
      */

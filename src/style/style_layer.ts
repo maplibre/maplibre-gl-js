@@ -1,6 +1,6 @@
 import {filterObject} from '../util/util';
 
-import {latest as styleSpec, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
+import {featureFilter, latest as styleSpec, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 import {
     validateStyle,
     validateLayoutProperty,
@@ -113,7 +113,7 @@ export abstract class StyleLayer extends Evented {
 
         this.id = layer.id;
         this.type = layer.type;
-        this._featureFilter = {filter: () => true, needGeometry: false};
+        this._featureFilter = {filter: () => true, needGeometry: false, getGlobalStateRefs: () => new Set<string>()};
 
         if (layer.type === 'custom') return;
 
@@ -127,6 +127,7 @@ export abstract class StyleLayer extends Evented {
             this.source = layer.source;
             this.sourceLayer = layer['source-layer'];
             this.filter = layer.filter;
+            this._featureFilter = featureFilter(layer.filter);
         }
 
         if (properties.layout) {
@@ -149,6 +150,11 @@ export abstract class StyleLayer extends Evented {
         }
     }
 
+    setFilter(filter: FilterSpecification | void) {
+        this.filter = filter;
+        this._featureFilter = featureFilter(filter);
+    }
+
     getCrossfadeParameters() {
         return this._crossfadeParameters;
     }
@@ -159,6 +165,31 @@ export abstract class StyleLayer extends Evented {
         }
 
         return this._unevaluatedLayout.getValue(name);
+    }
+
+    /**
+     * Get list of global state references that are used within layout or filter properties.
+     * This is used to determine if layer source need to be reloaded when global state property changes.
+     *
+     */
+    getLayoutAffectingGlobalStateRefs() {
+        const globalStateRefs = new Set<string>();
+
+        if (this._unevaluatedLayout) {
+            for (const propertyName in this._unevaluatedLayout._values) {
+                const value = this._unevaluatedLayout._values[propertyName];
+
+                for (const globalStateRef of value.getGlobalStateRefs()) {
+                    globalStateRefs.add(globalStateRef);
+                }
+            }
+        }
+
+        for (const globalStateRef of this._featureFilter.getGlobalStateRefs()) {
+            globalStateRefs.add(globalStateRef);
+        }
+
+        return globalStateRefs;
     }
 
     setLayoutProperty(name: string, value: any, options: StyleSetterOptions = {}) {

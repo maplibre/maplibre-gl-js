@@ -1,3 +1,4 @@
+import {type Color} from '@maplibre/maplibre-gl-style-spec';
 import {register} from './web_worker_transfer';
 
 export type Size = {
@@ -143,6 +144,14 @@ export class RGBAImage {
 
     static copy(srcImg: RGBAImage | ImageData, dstImg: RGBAImage, srcPt: Point2D, dstPt: Point2D, size: Size) {
         copyImage(srcImg, dstImg, srcPt, dstPt, size, 4);
+    }
+
+    setPixel(row: number, col: number, value: Color) {
+        const rLocation = (row * this.width + col) * 4;
+        this.data[rLocation + 0] = Math.round(value.r * 255 / value.a);
+        this.data[rLocation + 1] = Math.round(value.g * 255 / value.a);
+        this.data[rLocation + 2] = Math.round(value.b * 255 / value.a);
+        this.data[rLocation + 3] = Math.round(value.a * 255);
     }
 }
 

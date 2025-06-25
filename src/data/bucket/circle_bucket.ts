@@ -49,6 +49,7 @@ function addCircleVertex(layoutVertexArray, x, y, extrudeX, extrudeY) {
 export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implements Bucket {
     index: number;
     zoom: number;
+    globalState: Record<string, any>;
     overscaling: number;
     layerIds: Array<string>;
     layers: Array<Layer>;
@@ -68,6 +69,7 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
 
     constructor(options: BucketParameters<Layer>) {
         this.zoom = options.zoom;
+        this.globalState = options.globalState;
         this.overscaling = options.overscaling;
         this.layers = options.layers;
         this.layerIds = this.layers.map(layer => layer.id);
@@ -106,7 +108,7 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
             const needGeometry = this.layers[0]._featureFilter.needGeometry;
             const evaluationFeature = toEvaluationFeature(feature, needGeometry);
 
-            if (!this.layers[0]._featureFilter.filter(new EvaluationParameters(this.zoom), evaluationFeature, canonical)) continue;
+            if (!this.layers[0]._featureFilter.filter(new EvaluationParameters(this.zoom, {globalState: this.globalState}), evaluationFeature, canonical)) continue;
 
             const sortKey = sortFeaturesByKey ?
                 circleSortKey.evaluate(evaluationFeature, {}, canonical) :
