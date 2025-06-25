@@ -61,7 +61,6 @@ export class Texture {
         let usePremultiply = this.format === gl.RGBA && (!options || options.premultiply !== false);
 
         if (!isDOMElement && usePremultiply) {
-            // Avoid the Firefox warning by premultiplying on the CPU for typed-array uploads
             if ((image as any).data) {
                 const data: Uint8Array = (image as any).data;
                 for (let i = 0; i < data.length; i += 4) {
@@ -75,7 +74,7 @@ export class Texture {
                     }
                 }
             }
-            // Apply premultiplication manually and disable it in WebGL
+            // Disable Premultiply in WebGL in this case where we manually premultiply
             usePremultiply = false;
         }
 
