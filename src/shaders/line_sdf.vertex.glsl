@@ -16,17 +16,12 @@ in vec4 a_data;
 uniform vec2 u_translation;
 uniform mediump float u_ratio;
 uniform lowp float u_device_pixel_ratio;
-uniform vec2 u_patternscale_a;
-uniform float u_tex_y_a;
-uniform vec2 u_patternscale_b;
-uniform float u_tex_y_b;
 uniform vec2 u_units_to_pixels;
 uniform float u_line_atlas_width;
 
 out vec2 v_normal;
 out vec2 v_width2;
-out vec2 v_tex_a;
-out vec2 v_tex_b;
+out float v_linesofar;
 out float v_gamma_scale;
 #ifdef GLOBE
 out float v_depth;
@@ -108,7 +103,6 @@ void main() {
         v_gamma_scale = extrude_length_without_perspective / extrude_length_with_perspective;
     #endif
 
-    v_tex_a = vec2(a_linesofar * u_patternscale_a.x / floorwidth, normal.y * u_patternscale_a.y + u_tex_y_a);
-    v_tex_b = vec2(a_linesofar * u_patternscale_b.x / floorwidth, normal.y * u_patternscale_b.y + u_tex_y_b);
+    v_linesofar = a_linesofar;
     v_width2 = vec2(outset, inset);
 }
