@@ -55,11 +55,31 @@ export class Texture {
 
         const isDOMElement = image instanceof HTMLImageElement || image instanceof HTMLCanvasElement || image instanceof HTMLVideoElement || image instanceof ImageData || isImageBitmap(image);
 
-        context.pixelStoreUnpack.set(1);
+        context.pixelStoreUnpack.set(1);        context.pixelStoreUnpackFlipY.set(false);
 
-        if (isDOMElement) {
-            context.pixelStoreUnpackFlipY.set(false);
-            context.pixelStoreUnpackPremultiplyAlpha.set(this.format === gl.RGBA && (!options || options.premultiply !== false));
+        let usePremultiply = this.format === gl.RGBA && (!options || options.premultiply !== false);
+
+        if (!isDOMElement && usePremultiply) {
+            // Avoid the Firefox warning by premultiplying on the CPU for typed-array uploads
+            if ((image as any).data) {
+                const data: Uint8Array = (image as any).data;
+                for (let i = 0; i < data.length; i += 4) {
+                    const a = data[i + 3];
+                    if (a === 0) {
+                        data[i] = data[i + 1] = data[i + 2] = 0;
+                    } else {
+                        data[i]     = (data[i]     * a + 127) / 255;
+                        data[i + 1] = (data[i + 1] * a + 127) / 255;
+                        data[i + 2] = (data[i + 2] * a + 127) / 255;
+                    }
+                }
+            }
+            // Apply premultiplication manually and disable it in WebGL
+            usePremultiply = false;
+        }
+
+        if (isDOMElement && usePremultiply) {
+            context.pixelStoreUnpackPremultiplyAlpha.set(true);
         }
 
         if (resize) {
@@ -84,10 +104,11 @@ export class Texture {
             gl.generateMipmap(gl.TEXTURE_2D);
         }
 
+        // Reset parameters back to defaults so state changes do not leak
         context.pixelStoreUnpack.setDefault();
 
-        if (isDOMElement) {
-            context.pixelStoreUnpackFlipY.setDefault();
+        context.pixelStoreUnpackFlipY.setDefault();
+        if (isDOMElement && usePremultiply) {
             context.pixelStoreUnpackPremultiplyAlpha.setDefault();
         }
     }
