@@ -72,9 +72,8 @@ export function addPatternDependencies(type: string, layers: PatternStyleLayers,
                 const mid = dasharrayPropertyValue.evaluate({zoom}, patternFeature, {});
                 const max = dasharrayPropertyValue.evaluate({zoom: zoom + 1}, patternFeature, {});
 
-                // Store dasharray values for later use by CrossFadedCompositeBinder
-                // We use a special key pattern to distinguish from regular patterns
-                patternFeature.patterns[`${layer.id}_dasharray`] = {min, mid, max};
+                // Store dasharray values directly under layer.id since lines cannot have both pattern and dasharray
+                patternFeature.patterns[layer.id] = {min, mid, max};
             }
         }
     }
@@ -89,10 +88,10 @@ export function addDasharrayDependencies(buckets: {[_: string]: any}, lineAtlas:
         if (bucket.hasPattern && bucket.patternFeatures) {
             for (const patternFeature of bucket.patternFeatures) {
                 for (const layer of bucket.layers) {
-                    const dasharrayKey = `${layer.id}_dasharray`;
-                    const dasharrayPattern = patternFeature.patterns[dasharrayKey];
+                    const dasharrayPattern = patternFeature.patterns[layer.id];
 
-                    if (dasharrayPattern) {
+                    // Check if this is a dasharray pattern (arrays vs string pattern names)
+                    if (dasharrayPattern && Array.isArray(dasharrayPattern.min)) {
                         const round = layer.layout.get('line-cap') === 'round';
                         const {min, mid, max} = dasharrayPattern;
 
