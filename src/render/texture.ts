@@ -55,7 +55,8 @@ export class Texture {
 
         const isDOMElement = image instanceof HTMLImageElement || image instanceof HTMLCanvasElement || image instanceof HTMLVideoElement || image instanceof ImageData || isImageBitmap(image);
 
-        context.pixelStoreUnpack.set(1);        context.pixelStoreUnpackFlipY.set(false);
+        context.pixelStoreUnpack.set(1);
+        context.pixelStoreUnpackFlipY.set(false);
 
         let usePremultiply = this.format === gl.RGBA && (!options || options.premultiply !== false);
 
