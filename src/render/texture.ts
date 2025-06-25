@@ -104,7 +104,6 @@ export class Texture {
             gl.generateMipmap(gl.TEXTURE_2D);
         }
 
-        // Reset parameters back to defaults so state changes do not leak
         context.pixelStoreUnpack.setDefault();
 
         context.pixelStoreUnpackFlipY.setDefault();
