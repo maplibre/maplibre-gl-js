@@ -341,10 +341,11 @@ class CrossFadedCompositeBinder implements AttributeBinder {
     }
 
     populatePaintArray(length: number, feature: Feature, imagePositions: {[_: string]: ImagePosition}) {
+        const pattern = feature.patterns && feature.patterns[this.layerId];
         const start = this.zoomInPaintVertexArray.length;
         this.zoomInPaintVertexArray.resize(length);
         this.zoomOutPaintVertexArray.resize(length);
-        this._setPaintValues(start, length, feature.patterns && feature.patterns[this.layerId], imagePositions);
+        this._setPaintValues(start, length, pattern, imagePositions);
     }
 
     updatePaintArray(start: number, end: number, feature: Feature, featureState: FeatureState, imagePositions: {[_: string]: ImagePosition}) {

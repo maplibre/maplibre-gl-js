@@ -106,16 +106,36 @@ export function addDasharrayDependencies(buckets: {[_: string]: any}, lineAtlas:
                         const maxKey = `dash_${JSON.stringify(max)}_${round}_max`;
 
                         // Create ImagePosition objects for the dash patterns
+                        // Convert raw LineAtlas pixel coordinates to normalized texture coordinates
+                        const height = Math.max(dashMin.height, 1);
+                        const atlasWidth = lineAtlas.width;
+                        const atlasHeight = lineAtlas.height;
+                        
                         dasharrayPositions[minKey] = new ImagePosition(
-                            {x: 0, y: dashMin.y, h: dashMin.height, w: dashMin.width},
+                            {
+                                x: 0 / atlasWidth, 
+                                y: dashMin.y / atlasHeight, 
+                                h: height / atlasHeight, 
+                                w: dashMin.width / atlasWidth
+                            },
                             {data: null, pixelRatio: 1, sdf: true}
                         );
                         dasharrayPositions[midKey] = new ImagePosition(
-                            {x: 0, y: dashMid.y, h: dashMid.height, w: dashMid.width},
+                            {
+                                x: 0 / atlasWidth, 
+                                y: dashMid.y / atlasHeight, 
+                                h: height / atlasHeight, 
+                                w: dashMid.width / atlasWidth
+                            },
                             {data: null, pixelRatio: 1, sdf: true}
                         );
                         dasharrayPositions[maxKey] = new ImagePosition(
-                            {x: 0, y: dashMax.y, h: dashMax.height, w: dashMax.width},
+                            {
+                                x: 0 / atlasWidth, 
+                                y: dashMax.y / atlasHeight, 
+                                h: height / atlasHeight, 
+                                w: dashMax.width / atlasWidth
+                            },
                             {data: null, pixelRatio: 1, sdf: true}
                         );
 
