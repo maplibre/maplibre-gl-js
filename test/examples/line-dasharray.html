@@ -20,7 +20,7 @@
         container: 'map',
         "center": [0, 0],
         "zoom": 10,
-        style:{
+        style: {
             "version": 8,
             "metadata": {
                 "test": {
@@ -72,11 +72,16 @@
                     "source": "geojson",
                     "paint": {
                         "line-width": 4,
-                        "line-dasharray": ["literal", [2, 2]]
+                        "line-dasharray": [
+                        "case",
+                        ["==", ["get", "foo"], 0],
+                        ["literal", [1, 1]],
+                        ["literal", [2, 2]]
+                        ]
                     }
                 }
             ]
-            }
+        }
     }));
 
 </script>

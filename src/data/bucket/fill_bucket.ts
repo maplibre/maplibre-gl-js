@@ -136,7 +136,7 @@ export class FillBucket implements Bucket {
     }
 
     addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {
-        [_: string]: ImagePosition;
+        [_: string]: {tlbr: number[]; pixelRatio: number};
     }) {
         for (const feature of this.patternFeatures) {
             this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions, options.subdivisionGranularity);
@@ -171,7 +171,7 @@ export class FillBucket implements Bucket {
     }
 
     addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {
-        [_: string]: ImagePosition;
+        [_: string]: {tlbr: number[]; pixelRatio: number};
     }, subdivisionGranularity: SubdivisionGranularitySetting) {
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
             const subdivided = subdividePolygon(polygon, canonical, subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z));

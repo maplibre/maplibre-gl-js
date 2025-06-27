@@ -72,7 +72,6 @@ export function addPatternDependencies(type: string, layers: PatternStyleLayers,
                 const mid = dasharrayPropertyValue.evaluate({zoom}, patternFeature, {});
                 const max = dasharrayPropertyValue.evaluate({zoom: zoom + 1}, patternFeature, {});
 
-                // Store dasharray values directly under layer.id since lines cannot have both pattern and dasharray
                 patternFeature.patterns[layer.id] = {min, mid, max};
             }
         }
@@ -80,8 +79,8 @@ export function addPatternDependencies(type: string, layers: PatternStyleLayers,
     return patternFeature;
 }
 
-export function addDasharrayDependencies(buckets: {[_: string]: any}, lineAtlas: LineAtlas): {[_: string]: ImagePosition} {
-    const dasharrayPositions: {[_: string]: ImagePosition} = {};
+export function addDasharrayDependencies(buckets: {[_: string]: any}, lineAtlas: LineAtlas): {[_: string]: {tlbr: number[]; pixelRatio: number}} {
+    const dasharrayPositions: {[_: string]: {tlbr: number[]; pixelRatio: number}} = {};
 
     for (const key in buckets) {
         const bucket = buckets[key];
@@ -105,39 +104,9 @@ export function addDasharrayDependencies(buckets: {[_: string]: any}, lineAtlas:
                         const midKey = `dash_${JSON.stringify(mid)}_${round}_mid`;
                         const maxKey = `dash_${JSON.stringify(max)}_${round}_max`;
 
-                        // Create ImagePosition objects for the dash patterns
-                        // Convert raw LineAtlas pixel coordinates to normalized texture coordinates
-                        const height = Math.max(dashMin.height, 1);
-                        const atlasWidth = lineAtlas.width;
-                        const atlasHeight = lineAtlas.height;
-                        
-                        dasharrayPositions[minKey] = new ImagePosition(
-                            {
-                                x: 0 / atlasWidth, 
-                                y: dashMin.y / atlasHeight, 
-                                h: height / atlasHeight, 
-                                w: dashMin.width / atlasWidth
-                            },
-                            {data: null, pixelRatio: 1, sdf: true}
-                        );
-                        dasharrayPositions[midKey] = new ImagePosition(
-                            {
-                                x: 0 / atlasWidth, 
-                                y: dashMid.y / atlasHeight, 
-                                h: height / atlasHeight, 
-                                w: dashMid.width / atlasWidth
-                            },
-                            {data: null, pixelRatio: 1, sdf: true}
-                        );
-                        dasharrayPositions[maxKey] = new ImagePosition(
-                            {
-                                x: 0 / atlasWidth, 
-                                y: dashMax.y / atlasHeight, 
-                                h: height / atlasHeight, 
-                                w: dashMax.width / atlasWidth
-                            },
-                            {data: null, pixelRatio: 1, sdf: true}
-                        );
+                        dasharrayPositions[minKey] = {tlbr: [0, dashMin.y, dashMin.height, dashMin.width], pixelRatio: 1};
+                        dasharrayPositions[midKey] = {tlbr: [0, dashMid.y, dashMid.height, dashMid.width], pixelRatio: 1};
+                        dasharrayPositions[maxKey] = {tlbr: [0, dashMax.y, dashMax.height, dashMax.width], pixelRatio: 1};
 
                         // Update the pattern feature to reference these new keys
                         patternFeature.patterns[layer.id] = {min: minKey, mid: midKey, max: maxKey};
