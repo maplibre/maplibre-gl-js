@@ -75,22 +75,10 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
             const round = layer.layout.get('line-cap') === 'round';
 
             const dashTo = painter.lineAtlas.getDash(constantDasharray.to, round);
-            const posTo = new ImagePosition(
-                {x: 0, y: dashTo.y, h: dashTo.height, w: dashTo.width}, {
-                    data: null,
-                    pixelRatio: 1,
-                    sdf: true,
-                }
-            );
+            const posTo = {tlbr: [0, dashTo.y, dashTo.height, dashTo.width], pixelRatio: 1};
 
             const dashFrom = painter.lineAtlas.getDash(constantDasharray.from, round);
-            const posFrom = new ImagePosition(
-                {x: 0, y: dashFrom.y, h: dashFrom.height, w: dashFrom.width}, {
-                    data: null,
-                    pixelRatio: 1,
-                    sdf: true,
-                }
-            );
+            const posFrom = {tlbr: [0, dashFrom.y, dashFrom.height, dashFrom.width], pixelRatio: 1};
 
             programConfiguration.setConstantPatternPositions(posTo, posFrom);
         }

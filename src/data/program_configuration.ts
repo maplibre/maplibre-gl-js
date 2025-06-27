@@ -138,7 +138,7 @@ class CrossFadedConstantBinder implements UniformBinder {
         this.pixelRatioTo = 1.0;
     }
 
-    setConstantPatternPositions(posTo: ImagePosition, posFrom: ImagePosition) {
+    setConstantPatternPositions(posTo: {tlbr: number[]; pixelRatio: number}, posFrom: {tlbr: number[]; pixelRatio: number}) {
         this.pixelRatioFrom = posFrom.pixelRatio;
         this.pixelRatioTo = posTo.pixelRatio;
         this.patternFrom = posFrom.tlbr;
@@ -472,7 +472,7 @@ export class ProgramConfiguration {
                 (binder as AttributeBinder).populatePaintArray(newLength, feature, imagePositions, canonical, formattedSection);
         }
     }
-    setConstantPatternPositions(posTo: ImagePosition, posFrom: ImagePosition) {
+    setConstantPatternPositions(posTo: {tlbr: number[]; pixelRatio: number}, posFrom: {tlbr: number[]; pixelRatio: number}) {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof CrossFadedConstantBinder)

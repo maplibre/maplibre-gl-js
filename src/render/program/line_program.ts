@@ -91,8 +91,6 @@ const lineSDFUniforms = (context: Context, locations: UniformLocations): LineSDF
     'u_mix': new Uniform1f(context, locations.u_mix),
     'u_tileratio': new Uniform1f(context, locations.u_tileratio),
     'u_sdfgammaratio': new Uniform1f(context, locations.u_sdfgammaratio),
-
-    // TODO replace these with u_mix?
     'u_crossfade_from': new Uniform1f(context, locations.u_crossfade_from),
     'u_crossfade_to': new Uniform1f(context, locations.u_crossfade_to),
 });
@@ -171,10 +169,11 @@ const lineSDFUniformValues = (
     const posA = lineAtlas.getDash(dasharray.from, round);
     const posB = lineAtlas.getDash(dasharray.to, round);
 
+    const widthA = posA.width * crossfade.fromScale;
     const widthB = posB.width * crossfade.toScale;
 
     return extend(lineUniformValues(painter, tile, layer, ratioScale), {
-        'u_patternscale_a': [0, -posA.height / 2],
+        'u_patternscale_a': [tileRatio / widthA, -posA.height / 2],
         'u_patternscale_b': [tileRatio / widthB, -posB.height / 2],
         'u_tileratio': tileRatio,
         'u_crossfade_from': crossfade.fromScale,

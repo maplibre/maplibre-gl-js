@@ -113,7 +113,7 @@ void main() {
     float u_patternscale_b_x = u_tileratio / pattern_to.w / u_crossfade_to;
     float u_patternscale_b_y = -pattern_to.z / 2.0;
 
-    v_tex_a = vec2(a_linesofar * u_patternscale_a_x / floorwidth, normal.y * u_patternscale_a.y + pattern_from.y);
-    v_tex_b = vec2(a_linesofar * u_patternscale_b.x / floorwidth, normal.y * u_patternscale_b.y + pattern_to.y);
+    v_tex_a = vec2(a_linesofar * u_patternscale_a_x / floorwidth, normal.y * u_patternscale_a_y + pattern_from.y);
+    v_tex_b = vec2(a_linesofar * u_patternscale_b_x / floorwidth, normal.y * u_patternscale_b_y + pattern_to.y);
     v_width2 = vec2(outset, inset);
 }
