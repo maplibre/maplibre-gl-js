@@ -108,10 +108,6 @@ export function addDasharrayDependencies(buckets: {[_: string]: any}, lineAtlas:
                         dasharrayPositions[midKey] = {tlbr: [0, dashMid.y, dashMid.height, dashMid.width], pixelRatio: 1};
                         dasharrayPositions[maxKey] = {tlbr: [0, dashMax.y, dashMax.height, dashMax.width], pixelRatio: 1};
 
-                        dasharrayPositions[minKey] = {tlbr: [1, 2, 3, 4], pixelRatio: 1};
-                        dasharrayPositions[midKey] = {tlbr: [1, 2, 3, 4], pixelRatio: 1};
-                        dasharrayPositions[maxKey] = {tlbr: [1, 2, 3, 4], pixelRatio: 1};
-
                         // Update the pattern feature to reference these new keys
                         patternFeature.patterns[layer.id] = {min: minKey, mid: midKey, max: maxKey};
                     }
