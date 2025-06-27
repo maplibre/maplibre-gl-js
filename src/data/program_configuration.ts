@@ -17,7 +17,7 @@ import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer';
 import type {CrossfadeParameters} from '../style/evaluation_parameters';
 import type {StructArray, StructArrayMember} from '../util/struct_array';
 import type {VertexBuffer} from '../gl/vertex_buffer';
-import type {ImagePosition} from '../render/image_atlas';
+import type {ImagePosition, ImagePositionLike} from '../render/image_atlas';
 import type {
     Feature,
     FeatureState,
@@ -71,7 +71,7 @@ interface AttributeBinder {
     populatePaintArray(
         length: number,
         feature: Feature,
-        imagePositions: {[_: string]: {tlbr: number[]; pixelRatio: number}},
+        imagePositions: {[_: string]: ImagePositionLike},
         canonical?: CanonicalTileID,
         formattedSection?: FormattedSection
     ): void;
@@ -80,7 +80,7 @@ interface AttributeBinder {
         length: number,
         feature: Feature,
         featureState: FeatureState,
-        imagePositions: {[_: string]: {tlbr: number[]; pixelRatio: number}}
+        imagePositions: {[_: string]: ImagePositionLike}
     ): void;
     upload(a: Context): void;
     destroy(): void;
@@ -138,7 +138,7 @@ class CrossFadedConstantBinder implements UniformBinder {
         this.pixelRatioTo = 1.0;
     }
 
-    setConstantPatternPositions(posTo: {tlbr: number[]; pixelRatio: number}, posFrom: {tlbr: number[]; pixelRatio: number}) {
+    setConstantPatternPositions(posTo: ImagePositionLike, posFrom: ImagePositionLike) {
         this.pixelRatioFrom = posFrom.pixelRatio;
         this.pixelRatioTo = posTo.pixelRatio;
         this.patternFrom = posFrom.tlbr;
@@ -465,14 +465,14 @@ export class ProgramConfiguration {
         return binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder ? binder.maxValue : 0;
     }
 
-    populatePaintArrays(newLength: number, feature: Feature, imagePositions: {[_: string]: {tlbr: number[]; pixelRatio: number}}, canonical?: CanonicalTileID, formattedSection?: FormattedSection) {
+    populatePaintArrays(newLength: number, feature: Feature, imagePositions: {[_: string]: ImagePositionLike}, canonical?: CanonicalTileID, formattedSection?: FormattedSection) {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedCompositeBinder)
                 (binder as AttributeBinder).populatePaintArray(newLength, feature, imagePositions, canonical, formattedSection);
         }
     }
-    setConstantPatternPositions(posTo: {tlbr: number[]; pixelRatio: number}, posFrom: {tlbr: number[]; pixelRatio: number}) {
+    setConstantPatternPositions(posTo: ImagePositionLike, posFrom: ImagePositionLike) {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof CrossFadedConstantBinder)
@@ -485,7 +485,7 @@ export class ProgramConfiguration {
         featureMap: FeaturePositionMap,
         vtLayer: VectorTileLayer,
         layer: TypedStyleLayer,
-        imagePositions: {[_: string]: {tlbr: number[]; pixelRatio: number}}
+        imagePositions: {[_: string]: ImagePositionLike}
     ): boolean {
         let dirty: boolean = false;
         for (const id in featureStates) {
@@ -633,7 +633,7 @@ export class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
         this._bufferOffset = 0;
     }
 
-    populatePaintArrays(length: number, feature: Feature, index: number, imagePositions: {[_: string]: {tlbr: number[]; pixelRatio: number}}, canonical: CanonicalTileID, formattedSection?: FormattedSection) {
+    populatePaintArrays(length: number, feature: Feature, index: number, imagePositions: {[_: string]: ImagePositionLike}, canonical: CanonicalTileID, formattedSection?: FormattedSection) {
         for (const key in this.programConfigurations) {
             this.programConfigurations[key].populatePaintArrays(length, feature, imagePositions, canonical, formattedSection);
         }
@@ -646,7 +646,7 @@ export class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
         this.needsUpload = true;
     }
 
-    updatePaintArrays(featureStates: FeatureStates, vtLayer: VectorTileLayer, layers: ReadonlyArray<TypedStyleLayer>, imagePositions: {[_: string]: {tlbr: number[]; pixelRatio: number}}) {
+    updatePaintArrays(featureStates: FeatureStates, vtLayer: VectorTileLayer, layers: ReadonlyArray<TypedStyleLayer>, imagePositions: {[_: string]: ImagePositionLike}) {
         for (const layer of layers) {
             this.needsUpload = this.programConfigurations[layer.id].updatePaintArrays(featureStates, this._featureMap, vtLayer, layer, imagePositions) || this.needsUpload;
         }

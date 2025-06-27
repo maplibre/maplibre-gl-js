@@ -8,7 +8,7 @@ import type {
 } from '../bucket';
 import {type PossiblyEvaluated} from '../../style/properties';
 import type {LineAtlas} from '../../render/line_atlas';
-import {ImagePosition} from '../../render/image_atlas';
+import {ImagePosition, ImagePositionLike} from '../../render/image_atlas';
 
 type PatternStyleLayers = Array<LineStyleLayer> | Array<FillStyleLayer> | Array<FillExtrusionStyleLayer>;
 
@@ -79,8 +79,8 @@ export function addPatternDependencies(type: string, layers: PatternStyleLayers,
     return patternFeature;
 }
 
-export function addDasharrayDependencies(buckets: {[_: string]: any}, lineAtlas: LineAtlas): {[_: string]: {tlbr: number[]; pixelRatio: number}} {
-    const dasharrayPositions: {[_: string]: {tlbr: number[]; pixelRatio: number}} = {};
+export function addDasharrayDependencies(buckets: {[_: string]: any}, lineAtlas: LineAtlas): {[_: string]: ImagePositionLike} {
+    const dasharrayPositions: {[_: string]: ImagePositionLike} = {};
 
     for (const key in buckets) {
         const bucket = buckets[key];

@@ -30,7 +30,7 @@ import type {IndexBuffer} from '../../gl/index_buffer';
 import type {VertexBuffer} from '../../gl/vertex_buffer';
 import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
-import type {ImagePosition} from '../../render/image_atlas';
+import type {ImagePosition, ImagePositionLike} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 import {subdividePolygon, subdivideVertexLine} from '../../render/subdivision';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
@@ -130,7 +130,7 @@ export class FillExtrusionBucket implements Bucket {
         }
     }
 
-    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: {tlbr: number[]; pixelRatio: number}}) {
+    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePositionLike}) {
         for (const feature of this.features) {
             const {geometry} = feature;
             this.addFeature(feature, geometry, feature.index, canonical, imagePositions, options.subdivisionGranularity);
@@ -169,7 +169,7 @@ export class FillExtrusionBucket implements Bucket {
         this.centroidVertexBuffer.destroy();
     }
 
-    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: {tlbr: number[]; pixelRatio: number}}, subdivisionGranularity: SubdivisionGranularitySetting) {
+    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePositionLike}, subdivisionGranularity: SubdivisionGranularitySetting) {
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
             // Compute polygon centroid to calculate elevation in GPU
             const centroid: CentroidAccumulator = {x: 0, y: 0, sampleCount: 0};
