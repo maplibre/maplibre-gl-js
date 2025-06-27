@@ -8,7 +8,7 @@ import type {
 } from '../bucket';
 import {type PossiblyEvaluated} from '../../style/properties';
 import type {LineAtlas} from '../../render/line_atlas';
-import {ImagePositionLike} from '../../render/image_atlas';
+import type {ImagePositionLike} from '../../render/image_atlas';
 
 type PatternStyleLayers = Array<LineStyleLayer> | Array<FillStyleLayer> | Array<FillExtrusionStyleLayer>;
 

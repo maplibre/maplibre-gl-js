@@ -468,7 +468,7 @@ export class ProgramConfiguration {
     populatePaintArrays(newLength: number, feature: Feature, imagePositions: {[_: string]: ImagePositionLike}, canonical?: CanonicalTileID, formattedSection?: FormattedSection) {
         for (const property in this.binders) {
             const binder = this.binders[property];
-            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedCompositeBinder)
+            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder)
                 (binder as AttributeBinder).populatePaintArray(newLength, feature, imagePositions, canonical, formattedSection);
         }
     }
@@ -514,7 +514,8 @@ export class ProgramConfiguration {
         const result = [];
         for (const property in this.binders) {
             const binder = this.binders[property];
-            if (binder instanceof ConstantBinder || binder instanceof CrossFadedConstantBinder) {
+            console.log(property, binder);
+            if (property !== 'line-pattern' && (binder instanceof ConstantBinder || binder instanceof CrossFadedConstantBinder)) {
                 result.push(...binder.uniformNames.map(name => `#define HAS_UNIFORM_${name}`));
             }
         }
