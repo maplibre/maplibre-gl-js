@@ -43,8 +43,6 @@ export type LineSDFUniformsType = {
     'u_ratio': Uniform1f;
     'u_device_pixel_ratio': Uniform1f;
     'u_units_to_pixels': Uniform2f;
-    'u_patternscale_a': Uniform2f;
-    'u_patternscale_b': Uniform2f;
     'u_tileratio': Uniform1f;
     'u_crossfade_from': Uniform1f;
     'u_crossfade_to': Uniform1f;
@@ -85,8 +83,6 @@ const lineSDFUniforms = (context: Context, locations: UniformLocations): LineSDF
     'u_ratio': new Uniform1f(context, locations.u_ratio),
     'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
     'u_units_to_pixels': new Uniform2f(context, locations.u_units_to_pixels),
-    'u_patternscale_a': new Uniform2f(context, locations.u_patternscale_a),
-    'u_patternscale_b': new Uniform2f(context, locations.u_patternscale_b),
     'u_image': new Uniform1i(context, locations.u_image),
     'u_mix': new Uniform1f(context, locations.u_mix),
     'u_tileratio': new Uniform1f(context, locations.u_tileratio),
@@ -161,20 +157,9 @@ const lineSDFUniformValues = (
     crossfade: CrossfadeParameters,
 ): UniformValues<LineSDFUniformsType> => {
     const transform = painter.transform;
-    const lineAtlas = painter.lineAtlas;
     const tileRatio = calculateTileRatio(tile, transform);
 
-    const round = layer.layout.get('line-cap') === 'round';
-
-    const posA = lineAtlas.getDash(dasharray.from, round);
-    const posB = lineAtlas.getDash(dasharray.to, round);
-
-    const widthA = posA.width * crossfade.fromScale;
-    const widthB = posB.width * crossfade.toScale;
-
     return extend(lineUniformValues(painter, tile, layer, ratioScale), {
-        'u_patternscale_a': [tileRatio / widthA, -posA.height / 2],
-        'u_patternscale_b': [tileRatio / widthB, -posB.height / 2],
         'u_tileratio': tileRatio,
         'u_crossfade_from': crossfade.fromScale,
         'u_crossfade_to': crossfade.toScale,

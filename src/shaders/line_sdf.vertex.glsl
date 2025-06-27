@@ -16,8 +16,6 @@ in vec4 a_data;
 uniform vec2 u_translation;
 uniform mediump float u_ratio;
 uniform lowp float u_device_pixel_ratio;
-uniform vec2 u_patternscale_a;
-uniform vec2 u_patternscale_b;
 uniform vec2 u_units_to_pixels;
 uniform float u_tileratio;
 uniform float u_crossfade_from;
