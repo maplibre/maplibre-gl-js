@@ -104,7 +104,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
         const pixelRatio = transform.getPixelScale();
 
         const uniformValues = image ? linePatternUniformValues(painter, tile, layer, pixelRatio, crossfade) :
-            dasharray ? lineSDFUniformValues(painter, tile, layer, pixelRatio, crossfade) :
+            dasharray ? lineSDFUniformValues(painter, tile, layer, pixelRatio, dasharray.constantOr(null), crossfade) :
                 gradient ? lineGradientUniformValues(painter, tile, layer, pixelRatio, bucket.lineClipsArray.length) :
                     lineUniformValues(painter, tile, layer, pixelRatio);
 
