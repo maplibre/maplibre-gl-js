@@ -8,7 +8,7 @@ import type {
 } from '../bucket';
 import {type PossiblyEvaluated} from '../../style/properties';
 import type {LineAtlas} from '../../render/line_atlas';
-import {ImagePosition, ImagePositionLike} from '../../render/image_atlas';
+import {ImagePositionLike} from '../../render/image_atlas';
 
 type PatternStyleLayers = Array<LineStyleLayer> | Array<FillStyleLayer> | Array<FillExtrusionStyleLayer>;
 
@@ -107,6 +107,10 @@ export function addDasharrayDependencies(buckets: {[_: string]: any}, lineAtlas:
                         dasharrayPositions[minKey] = {tlbr: [0, dashMin.y, dashMin.height, dashMin.width], pixelRatio: 1};
                         dasharrayPositions[midKey] = {tlbr: [0, dashMid.y, dashMid.height, dashMid.width], pixelRatio: 1};
                         dasharrayPositions[maxKey] = {tlbr: [0, dashMax.y, dashMax.height, dashMax.width], pixelRatio: 1};
+
+                        dasharrayPositions[minKey] = {tlbr: [1, 2, 3, 4], pixelRatio: 1};
+                        dasharrayPositions[midKey] = {tlbr: [1, 2, 3, 4], pixelRatio: 1};
+                        dasharrayPositions[maxKey] = {tlbr: [1, 2, 3, 4], pixelRatio: 1};
 
                         // Update the pattern feature to reference these new keys
                         patternFeature.patterns[layer.id] = {min: minKey, mid: midKey, max: maxKey};
