@@ -153,7 +153,6 @@ const lineSDFUniformValues = (
     tile: Tile,
     layer: LineStyleLayer,
     ratioScale: number,
-    dasharray: CrossFaded<Array<number>>,
     crossfade: CrossfadeParameters,
 ): UniformValues<LineSDFUniformsType> => {
     const transform = painter.transform;
