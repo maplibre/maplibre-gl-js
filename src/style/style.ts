@@ -1876,10 +1876,15 @@ export class Style extends Evented {
     }
 
     async getDashes(mapId: string | number, params: GetDashesParameters): Promise<GetDashesResponse> {
-        return params.dashes.map((dash) => ({
-            ...dash,
-            ...this.lineAtlas.getDash(dash.dasharray, dash.round)
-        }));
+        const result: GetDashesResponse = {};
+        for (const dash of params.dashes) {
+            const key = JSON.stringify(dash);
+            result[key] = {
+                ...dash,
+                ...this.lineAtlas.getDash(dash.dasharray, dash.round)
+            };
+        }
+        return result;
     }
 
     /**

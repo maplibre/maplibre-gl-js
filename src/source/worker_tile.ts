@@ -166,7 +166,7 @@ export class WorkerTile {
 
         const dasharray = options.dasharrayDependencies;
         const dasharrayValues = Object.values(dasharray);
-        let getDasharrayPromise = Promise.resolve<GetDashesResponse>([] as GetDashesResponse);
+        let getDasharrayPromise = Promise.resolve<GetDashesResponse>({} as GetDashesResponse);
         if (dasharrayValues.length) {
             const abortController = new AbortController();
             this.inFlightDependencies.push(abortController);
@@ -179,7 +179,7 @@ export class WorkerTile {
         const imageAtlas = new ImageAtlas(iconMap, patternMap);
 
         // Process dasharray dependencies and generate dash positions
-        const dasharrayPositions = addDasharrayDependencies(buckets, dasharrayMap, options.dasharrayDependencies);
+        const dasharrayPositions = addDasharrayDependencies(buckets, dasharrayMap);
 
         for (const key in buckets) {
             const bucket = buckets[key];

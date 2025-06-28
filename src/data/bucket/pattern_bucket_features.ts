@@ -90,7 +90,7 @@ export function addPatternDependencies(type: string, layers: PatternStyleLayers,
     return patternFeature;
 }
 
-export function addDasharrayDependencies(buckets: {[_: string]: any}, dashes: GetDashesResponse, dasharrayDeps: {[key: string]: {round: boolean; dasharray: Array<number>}}): {[_: string]: ImagePositionLike} {
+export function addDasharrayDependencies(buckets: {[_: string]: any}, dashes: GetDashesResponse): {[_: string]: ImagePositionLike} {
     const dasharrayPositions: {[_: string]: ImagePositionLike} = {};
 
     for (const key in buckets) {
@@ -104,23 +104,16 @@ export function addDasharrayDependencies(buckets: {[_: string]: any}, dashes: Ge
                     if (dasharrayPattern) {
                         const {min: minKey, mid: midKey, max: maxKey} = dasharrayPattern;
 
-                        // Look up the actual dash data from our dependencies
-                        const minDash = dasharrayDeps[minKey];
-                        const midDash = dasharrayDeps[midKey];
-                        const maxDash = dasharrayDeps[maxKey];
+                        // Look up the dashes directly using the keys
+                        const dashMin = dashes[minKey];
+                        const dashMid = dashes[midKey];
+                        const dashMax = dashes[maxKey];
 
-                        if (minDash && midDash && maxDash) {
-                            // Find corresponding dashes in the response
-                            const dashMin = dashes.find(d => JSON.stringify(d.dasharray) === JSON.stringify(minDash.dasharray) && d.round === minDash.round);
-                            const dashMid = dashes.find(d => JSON.stringify(d.dasharray) === JSON.stringify(midDash.dasharray) && d.round === midDash.round);
-                            const dashMax = dashes.find(d => JSON.stringify(d.dasharray) === JSON.stringify(maxDash.dasharray) && d.round === maxDash.round);
-
-                            if (dashMin && dashMid && dashMax) {
-                                // Use the original keys for consistency
-                                dasharrayPositions[minKey] = {tlbr: [0, dashMin.y, dashMin.height, dashMin.width], pixelRatio: 1};
-                                dasharrayPositions[midKey] = {tlbr: [0, dashMid.y, dashMid.height, dashMid.width], pixelRatio: 1};
-                                dasharrayPositions[maxKey] = {tlbr: [0, dashMax.y, dashMax.height, dashMax.width], pixelRatio: 1};
-                            }
+                        if (dashMin && dashMid && dashMax) {
+                            // Use the original keys for consistency
+                            dasharrayPositions[minKey] = {tlbr: [0, dashMin.y, dashMin.height, dashMin.width], pixelRatio: 1};
+                            dasharrayPositions[midKey] = {tlbr: [0, dashMid.y, dashMid.height, dashMid.width], pixelRatio: 1};
+                            dasharrayPositions[maxKey] = {tlbr: [0, dashMax.y, dashMax.height, dashMax.width], pixelRatio: 1};
                         }
                     }
                 }

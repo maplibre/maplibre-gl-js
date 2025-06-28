@@ -97,10 +97,10 @@ export type GetDashesParameters = {
 /**
  * A response object returned when requesting line dashes
  */
-export type GetDashesResponse = (DashEntry & {
+export type GetDashesResponse = {[dashId: string]: DashEntry & {
     dasharray: Array<number>;
     round: boolean;
-})[];
+}};
 
 /**
  * All the possible message types that can be sent to and from the worker
