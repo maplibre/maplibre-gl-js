@@ -9,6 +9,7 @@ import type {
 import {type PossiblyEvaluated} from '../../style/properties';
 import type {LineAtlas} from '../../render/line_atlas';
 import type {ImagePositionLike} from '../../render/image_atlas';
+import {GetDashesResponse} from '../../util/actor_messages';
 
 type PatternStyleLayers = Array<LineStyleLayer> | Array<FillStyleLayer> | Array<FillExtrusionStyleLayer>;
 
@@ -43,6 +44,8 @@ export function hasPattern(type: string, layers: PatternStyleLayers, options: Po
 
 export function addPatternDependencies(type: string, layers: PatternStyleLayers, patternFeature: BucketFeature, zoom: number, options: PopulateParameters) {
     const patterns = options.patternDependencies;
+    const dasharrays = options.dasharrayDependencies;
+
     for (const layer of layers) {
         const patternProperty = (layer.paint  as PossiblyEvaluated<any, any>).get(`${type}-pattern`);
 
@@ -67,10 +70,16 @@ export function addPatternDependencies(type: string, layers: PatternStyleLayers,
         if (type === 'line') {
             const dasharrayProperty = (layer.paint as PossiblyEvaluated<any, any>).get('line-dasharray');
             if (dasharrayProperty && dasharrayProperty.value.kind !== 'constant') {
+                const round = false; // TODO handle round caps if needed
+
                 const dasharrayPropertyValue = dasharrayProperty.value;
-                const min = dasharrayPropertyValue.evaluate({zoom: zoom - 1}, patternFeature, {});
-                const mid = dasharrayPropertyValue.evaluate({zoom}, patternFeature, {});
-                const max = dasharrayPropertyValue.evaluate({zoom: zoom + 1}, patternFeature, {});
+                const min = {dasharray: dasharrayPropertyValue.evaluate({zoom: zoom - 1}, patternFeature, {}), round};
+                const mid = {dasharray: dasharrayPropertyValue.evaluate({zoom}, patternFeature, {}), round};
+                const max = {dasharray: dasharrayPropertyValue.evaluate({zoom: zoom + 1}, patternFeature, {}), round};
+
+                dasharrays.push(min);
+                dasharrays.push(mid);
+                dasharrays.push(max);
 
                 patternFeature.patterns[layer.id] = {min, mid, max};
             }
@@ -79,7 +88,7 @@ export function addPatternDependencies(type: string, layers: PatternStyleLayers,
     return patternFeature;
 }
 
-export function addDasharrayDependencies(buckets: {[_: string]: any}, lineAtlas: LineAtlas): {[_: string]: ImagePositionLike} {
+export function addDasharrayDependencies(buckets: {[_: string]: any}, dashes: GetDashesResponse): {[_: string]: ImagePositionLike} {
     const dasharrayPositions: {[_: string]: ImagePositionLike} = {};
 
     for (const key in buckets) {
@@ -90,14 +99,16 @@ export function addDasharrayDependencies(buckets: {[_: string]: any}, lineAtlas:
                     const dasharrayPattern = patternFeature.patterns[layer.id];
 
                     // Check if this is a dasharray pattern (arrays vs string pattern names)
-                    if (dasharrayPattern && Array.isArray(dasharrayPattern.min)) {
+                    if (dasharrayPattern) {
                         const round = layer.layout.get('line-cap') === 'round';
                         const {min, mid, max} = dasharrayPattern;
 
                         // Generate dash positions for min, mid, max zoom levels
-                        const dashMin = lineAtlas.getDash(min, round);
-                        const dashMid = lineAtlas.getDash(mid, round);
-                        const dashMax = lineAtlas.getDash(max, round);
+                        const dashMin = dashes.find(d => JSON.stringify(d.dasharray) === JSON.stringify(min.dasharray) && d.round === min.round);
+                        const dashMid = dashes.find(d => JSON.stringify(d.dasharray) === JSON.stringify(mid.dasharray) && d.round === mid.round);
+                        const dashMax = dashes.find(d => JSON.stringify(d.dasharray) === JSON.stringify(max.dasharray) && d.round === max.round);
+
+                        debugger;
 
                         // Create unique keys for each dash pattern
                         const minKey = `dash_${JSON.stringify(min)}_${round}_min`;

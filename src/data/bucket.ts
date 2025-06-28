@@ -27,6 +27,7 @@ export type PopulateParameters = {
     iconDependencies: {};
     patternDependencies: {};
     glyphDependencies: {};
+    dasharrayDependencies: {round: boolean; dasharray: Array<number>}[];
     availableImages: Array<string>;
     subdivisionGranularity: SubdivisionGranularitySetting;
 };
@@ -47,9 +48,9 @@ export type BucketFeature = {
     id?: any;
     readonly patterns: {
         [_: string]: {
-            'min': string;
-            'mid': string;
-            'max': string;
+            'min': any;
+            'mid': any;
+            'max': any;
         };
     };
     sortKey?: number;

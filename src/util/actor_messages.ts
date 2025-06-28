@@ -7,6 +7,7 @@ import type {PluginState} from '../source/rtl_text_plugin_status';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {OverscaledTileID} from '../source/tile_id';
 import type {GetResourceResponse, RequestParameters} from './ajax';
+import {DashEntry} from '../render/line_atlas';
 
 /**
  * The parameters needed in order to get information about the cluster
@@ -57,6 +58,11 @@ export type GetImagesParameters = {
 };
 
 /**
+ * A response object returned when requesting images
+ */
+export type GetImagesResponse = {[_: string]: StyleImage};
+
+/**
  * Parameters needed to get the glyphs
  */
 export type GetGlyphsParameters = {
@@ -76,9 +82,25 @@ export type GetGlyphsResponse = {
 };
 
 /**
- * A response object returned when requesting images
+ * Parameters needed to get the line dashes
  */
-export type GetImagesResponse = {[_: string]: StyleImage};
+export type GetDashesParameters = {
+    dashes: Array<{
+        dasharray: Array<number>;
+        round: boolean;
+    }>;
+    source: string;
+    tileID: OverscaledTileID;
+    type: string;
+};
+
+/**
+ * A response object returned when requesting line dashes
+ */
+export type GetDashesResponse = (DashEntry & {
+    dasharray: Array<number>;
+    round: boolean;
+})[];
 
 /**
  * All the possible message types that can be sent to and from the worker
@@ -93,6 +115,7 @@ export const enum MessageType {
     loadTile = 'LT',
     reloadTile = 'RT',
     getGlyphs = 'GG',
+    getDashes = 'GDA',
     getImages = 'GI',
     setImages = 'SI',
     setLayers = 'SL',
@@ -135,6 +158,7 @@ export type RequestResponseMessageMap = {
     [MessageType.abortTile]: [TileParameters, void];
     [MessageType.removeDEMTile]: [TileParameters, void];
     [MessageType.getResource]: [RequestParameters, GetResourceResponse<any>];
+    [MessageType.getDashes]: [GetDashesParameters, GetDashesResponse];
 };
 
 /**

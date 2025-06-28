@@ -59,6 +59,8 @@ import type {CanvasSourceSpecification} from '../source/canvas_source';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
 import {
+    GetDashesParameters,
+    GetDashesResponse,
     MessageType,
     type GetGlyphsParameters,
     type GetGlyphsResponse,
@@ -246,6 +248,9 @@ export class Style extends Evented {
         });
         this.dispatcher.registerMessageHandler(MessageType.getImages, (mapId, params) => {
             return this.getImages(mapId, params);
+        });
+        this.dispatcher.registerMessageHandler(MessageType.getDashes, (mapId, params) => {
+            return this.getDashes(mapId, params);
         });
         this.imageManager = new ImageManager();
         this.imageManager.setEventedParent(this);
@@ -1868,6 +1873,13 @@ export class Style extends Evented {
         this.stylesheet.glyphs = glyphsUrl;
         this.glyphManager.entries = {};
         this.glyphManager.setURL(glyphsUrl);
+    }
+
+    async getDashes(mapId: string | number, params: GetDashesParameters): Promise<GetDashesResponse> {
+        return params.dashes.map((dash) => ({
+            ...dash,
+            ...this.lineAtlas.getDash(dash.dasharray, dash.round)
+        }));
     }
 
     /**
