@@ -17,7 +17,7 @@ import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer';
 import type {CrossfadeParameters} from '../style/evaluation_parameters';
 import type {StructArray, StructArrayMember} from '../util/struct_array';
 import type {VertexBuffer} from '../gl/vertex_buffer';
-import type {ImagePosition} from '../render/image_atlas';
+import type {ImagePosition, ImagePositionLike} from '../render/image_atlas';
 import type {
     Feature,
     FeatureState,
@@ -71,7 +71,7 @@ interface AttributeBinder {
     populatePaintArray(
         length: number,
         feature: Feature,
-        imagePositions: {[_: string]: ImagePosition},
+        imagePositions: {[_: string]: ImagePositionLike},
         canonical?: CanonicalTileID,
         formattedSection?: FormattedSection
     ): void;
@@ -80,7 +80,7 @@ interface AttributeBinder {
         length: number,
         feature: Feature,
         featureState: FeatureState,
-        imagePositions: {[_: string]: ImagePosition}
+        imagePositions: {[_: string]: ImagePositionLike}
     ): void;
     upload(a: Context): void;
     destroy(): void;
@@ -138,7 +138,7 @@ class CrossFadedConstantBinder implements UniformBinder {
         this.pixelRatioTo = 1.0;
     }
 
-    setConstantPatternPositions(posTo: ImagePosition, posFrom: ImagePosition) {
+    setConstantPatternPositions(posTo: ImagePositionLike, posFrom: ImagePositionLike) {
         this.pixelRatioFrom = posFrom.pixelRatio;
         this.pixelRatioTo = posTo.pixelRatio;
         this.patternFrom = posFrom.tlbr;
@@ -344,11 +344,11 @@ class CrossFadedCompositeBinder implements AttributeBinder {
         const start = this.zoomInPaintVertexArray.length;
         this.zoomInPaintVertexArray.resize(length);
         this.zoomOutPaintVertexArray.resize(length);
-        this._setPaintValues(start, length, feature.patterns && feature.patterns[this.layerId], imagePositions);
+        this._setPaintValues(start, length, (feature.dashes && feature.dashes[this.layerId]) || (feature.patterns && feature.patterns[this.layerId]), imagePositions);
     }
 
     updatePaintArray(start: number, end: number, feature: Feature, featureState: FeatureState, imagePositions: {[_: string]: ImagePosition}) {
-        this._setPaintValues(start, end, feature.patterns && feature.patterns[this.layerId], imagePositions);
+        this._setPaintValues(start, end, (feature.dashes && feature.dashes[this.layerId]) || (feature.patterns && feature.patterns[this.layerId]), imagePositions);
     }
 
     _setPaintValues(start, end, patterns, positions) {
@@ -365,14 +365,14 @@ class CrossFadedCompositeBinder implements AttributeBinder {
         // unnecessary vertex data to the shaders, we determine which to upload at draw time.
         for (let i = start; i < end; i++) {
             this.zoomInPaintVertexArray.emplace(i,
-                imageMid.tl[0], imageMid.tl[1], imageMid.br[0], imageMid.br[1],
-                imageMin.tl[0], imageMin.tl[1], imageMin.br[0], imageMin.br[1],
+                imageMid.tlbr[0], imageMid.tlbr[1], imageMid.tlbr[2], imageMid.tlbr[3],
+                imageMin.tlbr[0], imageMin.tlbr[1], imageMin.tlbr[2], imageMin.tlbr[3],
                 imageMid.pixelRatio,
                 imageMin.pixelRatio,
             );
             this.zoomOutPaintVertexArray.emplace(i,
-                imageMid.tl[0], imageMid.tl[1], imageMid.br[0], imageMid.br[1],
-                imageMax.tl[0], imageMax.tl[1], imageMax.br[0], imageMax.br[1],
+                imageMid.tlbr[0], imageMid.tlbr[1], imageMid.tlbr[2], imageMid.tlbr[3],
+                imageMax.tlbr[0], imageMax.tlbr[1], imageMax.tlbr[2], imageMax.tlbr[3],
                 imageMid.pixelRatio,
                 imageMax.pixelRatio,
             );
@@ -464,14 +464,14 @@ export class ProgramConfiguration {
         return binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder ? binder.maxValue : 0;
     }
 
-    populatePaintArrays(newLength: number, feature: Feature, imagePositions: {[_: string]: ImagePosition}, canonical?: CanonicalTileID, formattedSection?: FormattedSection) {
+    populatePaintArrays(newLength: number, feature: Feature, imagePositions: {[_: string]: ImagePositionLike}, canonical?: CanonicalTileID, formattedSection?: FormattedSection) {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedCompositeBinder)
                 (binder as AttributeBinder).populatePaintArray(newLength, feature, imagePositions, canonical, formattedSection);
         }
     }
-    setConstantPatternPositions(posTo: ImagePosition, posFrom: ImagePosition) {
+    setConstantPatternPositions(posTo: ImagePositionLike, posFrom: ImagePositionLike) {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof CrossFadedConstantBinder)
@@ -484,7 +484,7 @@ export class ProgramConfiguration {
         featureMap: FeaturePositionMap,
         vtLayer: VectorTileLayer,
         layer: TypedStyleLayer,
-        imagePositions: {[_: string]: ImagePosition}
+        imagePositions: {[_: string]: ImagePositionLike}
     ): boolean {
         let dirty: boolean = false;
         for (const id in featureStates) {
@@ -513,7 +513,7 @@ export class ProgramConfiguration {
         const result = [];
         for (const property in this.binders) {
             const binder = this.binders[property];
-            if (binder instanceof ConstantBinder || binder instanceof CrossFadedConstantBinder) {
+            if (property !== 'line-pattern' && (binder instanceof ConstantBinder || binder instanceof CrossFadedConstantBinder)) {
                 result.push(...binder.uniformNames.map(name => `#define HAS_UNIFORM_${name}`));
             }
         }
@@ -632,7 +632,7 @@ export class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
         this._bufferOffset = 0;
     }
 
-    populatePaintArrays(length: number, feature: Feature, index: number, imagePositions: {[_: string]: ImagePosition}, canonical: CanonicalTileID, formattedSection?: FormattedSection) {
+    populatePaintArrays(length: number, feature: Feature, index: number, imagePositions: {[_: string]: ImagePositionLike}, canonical: CanonicalTileID, formattedSection?: FormattedSection) {
         for (const key in this.programConfigurations) {
             this.programConfigurations[key].populatePaintArrays(length, feature, imagePositions, canonical, formattedSection);
         }
@@ -645,7 +645,7 @@ export class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
         this.needsUpload = true;
     }
 
-    updatePaintArrays(featureStates: FeatureStates, vtLayer: VectorTileLayer, layers: ReadonlyArray<TypedStyleLayer>, imagePositions: {[_: string]: ImagePosition}) {
+    updatePaintArrays(featureStates: FeatureStates, vtLayer: VectorTileLayer, layers: ReadonlyArray<TypedStyleLayer>, imagePositions: {[_: string]: ImagePositionLike}) {
         for (const layer of layers) {
             this.needsUpload = this.programConfigurations[layer.id].updatePaintArrays(featureStates, this._featureMap, vtLayer, layer, imagePositions) || this.needsUpload;
         }
@@ -683,6 +683,7 @@ function paintAttributeNames(property, type) {
         'text-halo-width': ['halo_width'],
         'icon-halo-width': ['halo_width'],
         'line-gap-width': ['gapwidth'],
+        'line-dasharray': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
         'line-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
         'fill-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
         'fill-extrusion-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
@@ -704,7 +705,11 @@ function getLayoutException(property) {
         'fill-extrusion-pattern': {
             'source': PatternLayoutArray,
             'composite': PatternLayoutArray
-        }
+        },
+        'line-dasharray': {
+            'source': PatternLayoutArray,
+            'composite': PatternLayoutArray
+        },
     };
 
     return propertyExceptions[property];

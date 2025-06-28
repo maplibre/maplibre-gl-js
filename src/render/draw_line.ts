@@ -16,6 +16,7 @@ import type {OverscaledTileID} from '../source/tile_id';
 import {clamp, nextPowerOfTwo} from '../util/util';
 import {renderColorRamp} from '../util/color_ramp';
 import {EXTENT} from '../data/extent';
+import {ImagePosition} from './image_atlas';
 
 export function drawLine(painter: Painter, sourceCache: SourceCache, layer: LineStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
@@ -69,6 +70,19 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
         }
 
+        const constantDasharray = dasharray && dasharray.constantOr(null);
+        if (constantDasharray) {
+            const round = layer.layout.get('line-cap') === 'round';
+
+            const dashTo = painter.lineAtlas.getDash(constantDasharray.to, round);
+            const posTo = {tlbr: [0, dashTo.y, dashTo.height, dashTo.width], pixelRatio: 1};
+
+            const dashFrom = painter.lineAtlas.getDash(constantDasharray.from, round);
+            const posFrom = {tlbr: [0, dashFrom.y, dashFrom.height, dashFrom.width], pixelRatio: 1};
+
+            programConfiguration.setConstantPatternPositions(posTo, posFrom);
+        }
+
         const projectionData = transform.getProjectionData({
             overscaledTileID: coord,
             applyGlobeMatrix: !isRenderingToTexture,
@@ -78,7 +92,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
         const pixelRatio = transform.getPixelScale();
 
         const uniformValues = image ? linePatternUniformValues(painter, tile, layer, pixelRatio, crossfade) :
-            dasharray ? lineSDFUniformValues(painter, tile, layer, pixelRatio, dasharray, crossfade) :
+            dasharray ? lineSDFUniformValues(painter, tile, layer, pixelRatio, crossfade) :
                 gradient ? lineGradientUniformValues(painter, tile, layer, pixelRatio, bucket.lineClipsArray.length) :
                     lineUniformValues(painter, tile, layer, pixelRatio);
 
@@ -86,9 +100,10 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
             context.activeTexture.set(gl.TEXTURE0);
             tile.imageAtlasTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
             programConfiguration.updatePaintBuffers(crossfade);
-        } else if (dasharray && (programChanged || painter.lineAtlas.dirty)) {
+        } else if (dasharray) {
             context.activeTexture.set(gl.TEXTURE0);
             painter.lineAtlas.bind(context);
+            programConfiguration.updatePaintBuffers(crossfade);
         } else if (gradient) {
             const layerGradient = bucket.gradients[layer.id];
             let gradientTexture = layerGradient.texture;
