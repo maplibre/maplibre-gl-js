@@ -53,6 +53,13 @@ export type BucketFeature = {
             'max': any;
         };
     };
+    readonly dashes: {
+        [_: string]: {
+            'min': any;
+            'mid': any;
+            'max': any;
+        };
+    };
     sortKey?: number;
 };
 

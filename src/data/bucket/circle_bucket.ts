@@ -122,6 +122,7 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
                 index,
                 geometry: needGeometry ? evaluationFeature.geometry : loadGeometry(feature),
                 patterns: {},
+                dashes: {},
                 sortKey
             };
 

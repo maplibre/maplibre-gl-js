@@ -81,7 +81,7 @@ export function addPatternDependencies(type: string, layers: PatternStyleLayers,
                 dasharrays.push(mid);
                 dasharrays.push(max);
 
-                patternFeature.patterns[layer.id] = {min, mid, max};
+                patternFeature.dashes[layer.id] = {min, mid, max};
             }
         }
     }
@@ -96,7 +96,7 @@ export function addDasharrayDependencies(buckets: {[_: string]: any}, dashes: Ge
         if (bucket.hasPattern && bucket.patternFeatures) {
             for (const patternFeature of bucket.patternFeatures) {
                 for (const layer of bucket.layers) {
-                    const dasharrayPattern = patternFeature.patterns[layer.id];
+                    const dasharrayPattern = patternFeature.dashes[layer.id];
 
                     // Check if this is a dasharray pattern (arrays vs string pattern names)
                     if (dasharrayPattern) {
@@ -117,8 +117,8 @@ export function addDasharrayDependencies(buckets: {[_: string]: any}, dashes: Ge
                         dasharrayPositions[midKey] = {tlbr: [0, dashMid.y, dashMid.height, dashMid.width], pixelRatio: 1};
                         dasharrayPositions[maxKey] = {tlbr: [0, dashMax.y, dashMax.height, dashMax.width], pixelRatio: 1};
 
-                        // Update the pattern feature to reference these new keys
-                        patternFeature.patterns[layer.id] = {min: minKey, mid: midKey, max: maxKey};
+                        // Update the dashes feature to reference these new keys
+                        patternFeature.dashes[layer.id] = {min: minKey, mid: midKey, max: maxKey};
                     }
                 }
             }

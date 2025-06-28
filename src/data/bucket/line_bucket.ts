@@ -171,6 +171,7 @@ export class LineBucket implements Bucket {
                 index,
                 geometry: needGeometry ? evaluationFeature.geometry : loadGeometry(feature),
                 patterns: {},
+                dashes: {},
                 sortKey
             };
 
@@ -205,9 +206,10 @@ export class LineBucket implements Bucket {
         this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, imagePositions);
     }
 
-    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePositionLike}) {
+    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePositionLike}, dashPositions?: {[_: string]: ImagePositionLike}) {
+        const allPositions = dashPositions ? {...imagePositions, ...dashPositions} : imagePositions;
         for (const feature of this.patternFeatures) {
-            this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions, options.subdivisionGranularity);
+            this.addFeature(feature, feature.geometry, feature.index, canonical, allPositions, options.subdivisionGranularity);
         }
     }
 

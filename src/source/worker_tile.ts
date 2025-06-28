@@ -180,7 +180,6 @@ export class WorkerTile {
 
         // Process dasharray dependencies and generate dash positions
         const dasharrayPositions = addDasharrayDependencies(buckets, dasharrayMap);
-        const allPatternPositions = {...imageAtlas.patternPositions, ...dasharrayPositions};
 
         for (const key in buckets) {
             const bucket = buckets[key];
@@ -201,7 +200,7 @@ export class WorkerTile {
                 bucket instanceof FillBucket ||
                 bucket instanceof FillExtrusionBucket)) {
                 recalculateLayers(bucket.layers, this.zoom, availableImages);
-                bucket.addFeatures(options, this.tileID.canonical, allPatternPositions);
+                bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions, dasharrayPositions);
             }
         }
 

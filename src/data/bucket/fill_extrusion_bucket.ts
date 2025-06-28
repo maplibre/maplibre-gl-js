@@ -117,7 +117,8 @@ export class FillExtrusionBucket implements Bucket {
                 geometry: needGeometry ? evaluationFeature.geometry : loadGeometry(feature),
                 properties: feature.properties,
                 type: feature.type,
-                patterns: {}
+                patterns: {},
+                dashes: {}
             };
 
             if (this.hasPattern) {

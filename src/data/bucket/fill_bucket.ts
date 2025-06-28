@@ -101,6 +101,7 @@ export class FillBucket implements Bucket {
                 index,
                 geometry: needGeometry ? evaluationFeature.geometry : loadGeometry(feature),
                 patterns: {},
+                dashes: {},
                 sortKey
             };
 
