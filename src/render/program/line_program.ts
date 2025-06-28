@@ -49,6 +49,8 @@ export type LineSDFUniformsType = {
     'u_sdfgammaratio': Uniform1f;
     'u_image': Uniform1i;
     'u_mix': Uniform1f;
+    'u_lineatlas_width': Uniform1f;
+    'u_lineatlas_height': Uniform1f;
 };
 
 const lineUniforms = (context: Context, locations: UniformLocations): LineUniformsType => ({
@@ -89,6 +91,8 @@ const lineSDFUniforms = (context: Context, locations: UniformLocations): LineSDF
     'u_sdfgammaratio': new Uniform1f(context, locations.u_sdfgammaratio),
     'u_crossfade_from': new Uniform1f(context, locations.u_crossfade_from),
     'u_crossfade_to': new Uniform1f(context, locations.u_crossfade_to),
+    'u_lineatlas_width': new Uniform1f(context, locations.u_lineatlas_width),
+    'u_lineatlas_height': new Uniform1f(context, locations.u_lineatlas_height)
 });
 
 const lineUniformValues = (
@@ -164,7 +168,9 @@ const lineSDFUniformValues = (
         'u_crossfade_to': crossfade.toScale,
         'u_sdfgammaratio': painter.lineAtlas.width / (256 * painter.pixelRatio) / 2,
         'u_image': 0,
-        'u_mix': crossfade.t
+        'u_mix': crossfade.t,
+        'u_lineatlas_width': painter.lineAtlas.width,
+        'u_lineatlas_height': painter.lineAtlas.height,
     });
 };
 

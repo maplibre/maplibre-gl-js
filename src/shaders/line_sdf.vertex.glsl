@@ -20,6 +20,7 @@ uniform vec2 u_units_to_pixels;
 uniform float u_tileratio;
 uniform float u_crossfade_from;
 uniform float u_crossfade_to; // TODO: this is always 1, consider removing it
+uniform float u_lineatlas_height;
 
 out vec2 v_normal;
 out vec2 v_width2;
@@ -111,7 +112,7 @@ void main() {
     float u_patternscale_b_x = u_tileratio / pattern_to.w / u_crossfade_to;
     float u_patternscale_b_y = -pattern_to.z / 2.0;
 
-    v_tex_a = vec2(a_linesofar * u_patternscale_a_x / floorwidth, normal.y * u_patternscale_a_y + (float(pattern_from.y) / 1024.0));
-    v_tex_b = vec2(a_linesofar * u_patternscale_b_x / floorwidth, normal.y * u_patternscale_b_y + (float(pattern_to.y) / 1024.0));
+    v_tex_a = vec2(a_linesofar * u_patternscale_a_x / floorwidth, normal.y * u_patternscale_a_y + (float(pattern_from.y) + 0.5) / u_lineatlas_height);
+    v_tex_b = vec2(a_linesofar * u_patternscale_b_x / floorwidth, normal.y * u_patternscale_b_y + (float(pattern_to.y) + 0.5) / u_lineatlas_height);
     v_width2 = vec2(outset, inset);
 }
