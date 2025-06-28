@@ -27,7 +27,7 @@ export type PopulateParameters = {
     iconDependencies: {};
     patternDependencies: {};
     glyphDependencies: {};
-    dasharrayDependencies: {round: boolean; dasharray: Array<number>}[];
+    dasharrayDependencies: {[key: string]: {round: boolean; dasharray: Array<number>}};
     availableImages: Array<string>;
     subdivisionGranularity: SubdivisionGranularitySetting;
 };
@@ -55,9 +55,9 @@ export type BucketFeature = {
     };
     readonly dashes: {
         [layerId: string]: {
-            'min': {dasharray: Array<number>; round: boolean};
-            'mid': {dasharray: Array<number>; round: boolean};
-            'max': {dasharray: Array<number>; round: boolean};
+            'min': string;
+            'mid': string;
+            'max': string;
         };
     };
     sortKey?: number;

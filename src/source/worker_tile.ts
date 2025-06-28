@@ -10,7 +10,6 @@ import {warnOnce, mapObject} from '../util/util';
 import {addDasharrayDependencies} from '../data/bucket/pattern_bucket_features';
 import {ImageAtlas} from '../render/image_atlas';
 import {GlyphAtlas} from '../render/glyph_atlas';
-import {LineAtlas} from '../render/line_atlas';
 import {EvaluationParameters} from '../style/evaluation_parameters';
 import {OverscaledTileID} from './tile_id';
 
@@ -24,7 +23,7 @@ import type {
 } from '../source/worker_source';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTile} from '@mapbox/vector-tile';
-import {GetDashesParameters, GetDashesResponse, MessageType, type GetGlyphsResponse, type GetImagesResponse} from '../util/actor_messages';
+import {type GetDashesParameters, type GetDashesResponse, MessageType, type GetGlyphsResponse, type GetImagesResponse} from '../util/actor_messages';
 import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 export class WorkerTile {
     tileID: OverscaledTileID;
@@ -81,7 +80,7 @@ export class WorkerTile {
             iconDependencies: {},
             patternDependencies: {},
             glyphDependencies: {},
-            dasharrayDependencies: [] as GetDashesParameters['dashes'],
+            dasharrayDependencies: {} as {[key: string]: {round: boolean; dasharray: Array<number>}},
             availableImages,
             subdivisionGranularity
         };
@@ -166,11 +165,12 @@ export class WorkerTile {
         }
 
         const dasharray = options.dasharrayDependencies;
+        const dasharrayValues = Object.values(dasharray);
         let getDasharrayPromise = Promise.resolve<GetDashesResponse>([] as GetDashesResponse);
-        if (dasharray.length) {
+        if (dasharrayValues.length) {
             const abortController = new AbortController();
             this.inFlightDependencies.push(abortController);
-            getDasharrayPromise = actor.sendAsync({type: MessageType.getDashes, data: {dashes: dasharray, source: this.source, tileID: this.tileID, type: 'dasharray'}}, abortController);
+            getDasharrayPromise = actor.sendAsync({type: MessageType.getDashes, data: {dashes: dasharrayValues, source: this.source, tileID: this.tileID, type: 'dasharray'}}, abortController);
         }
 
         const [glyphMap, iconMap, patternMap, dasharrayMap] = await Promise.all([getGlyphsPromise, getIconsPromise, getPatternsPromise, getDasharrayPromise]);
@@ -179,7 +179,7 @@ export class WorkerTile {
         const imageAtlas = new ImageAtlas(iconMap, patternMap);
 
         // Process dasharray dependencies and generate dash positions
-        const dasharrayPositions = addDasharrayDependencies(buckets, dasharrayMap);
+        const dasharrayPositions = addDasharrayDependencies(buckets, dasharrayMap, options.dasharrayDependencies);
 
         for (const key in buckets) {
             const bucket = buckets[key];
