@@ -47,17 +47,17 @@ export type BucketFeature = {
     type: 0 | 1 | 2 | 3;
     id?: any;
     readonly patterns: {
-        [_: string]: {
-            'min': any;
-            'mid': any;
-            'max': any;
+        [layerId: string]: {
+            'min': string;
+            'mid': string;
+            'max': string;
         };
     };
     readonly dashes: {
-        [_: string]: {
-            'min': any;
-            'mid': any;
-            'max': any;
+        [layerId: string]: {
+            'min': {dasharray: Array<number>; round: boolean};
+            'mid': {dasharray: Array<number>; round: boolean};
+            'max': {dasharray: Array<number>; round: boolean};
         };
     };
     sortKey?: number;
