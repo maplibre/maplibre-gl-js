@@ -108,8 +108,6 @@ export function addDasharrayDependencies(buckets: {[_: string]: any}, dashes: Ge
                         const dashMid = dashes.find(d => JSON.stringify(d.dasharray) === JSON.stringify(mid.dasharray) && d.round === mid.round);
                         const dashMax = dashes.find(d => JSON.stringify(d.dasharray) === JSON.stringify(max.dasharray) && d.round === max.round);
 
-                        debugger;
-
                         // Create unique keys for each dash pattern
                         const minKey = `dash_${JSON.stringify(min)}_${round}_min`;
                         const midKey = `dash_${JSON.stringify(mid)}_${round}_mid`;
