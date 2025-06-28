@@ -481,7 +481,7 @@ export class Map extends Camera {
     _container: HTMLElement;
     _canvasContainer: HTMLElement;
     _controlContainer: HTMLElement;
-    _controlPositions: Record<string, HTMLElement>;
+    _controlPositions: Partial<Record<ControlPosition, HTMLElement>>;
     _interactive: boolean;
     _showTileBoundaries: boolean;
     _showCollisionBoxes: boolean;
