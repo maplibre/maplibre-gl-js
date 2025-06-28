@@ -45,7 +45,8 @@ void main() {
     float sdfgamma = u_sdfgammaratio / min(pattern_from.w, pattern_to.w);
     alpha *= smoothstep(0.5 - sdfgamma / floorwidth, 0.5 + sdfgamma / floorwidth, sdfdist);
 
-    fragColor = vec4(pattern_from.y, pattern_from.z, pattern_from.w, 1.0);
+    fragColor = vec4(0.0, 0.0, sdfdist_a * 2.0, 1.0);
+    // fragColor = color * (alpha * opacity);
 
     #ifdef GLOBE
     if (v_depth > 1.0) {
