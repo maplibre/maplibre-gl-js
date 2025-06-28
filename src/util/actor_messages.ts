@@ -85,10 +85,10 @@ export type GetGlyphsResponse = {
  * Parameters needed to get the line dashes
  */
 export type GetDashesParameters = {
-    dashes: Array<{
+    dashes: {[key: string]: {
         dasharray: Array<number>;
         round: boolean;
-    }>;
+    }};
     source: string;
     tileID: OverscaledTileID;
     type: string;
