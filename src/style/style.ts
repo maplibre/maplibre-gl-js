@@ -59,8 +59,8 @@ import type {CanvasSourceSpecification} from '../source/canvas_source';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
 import {
-    GetDashesParameters,
-    GetDashesResponse,
+    type GetDashesParameters,
+    type GetDashesResponse,
     MessageType,
     type GetGlyphsParameters,
     type GetGlyphsResponse,

@@ -7,7 +7,7 @@ import type {PluginState} from '../source/rtl_text_plugin_status';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {OverscaledTileID} from '../source/tile_id';
 import type {GetResourceResponse, RequestParameters} from './ajax';
-import {DashEntry} from '../render/line_atlas';
+import {type DashEntry} from '../render/line_atlas';
 
 /**
  * The parameters needed in order to get information about the cluster
@@ -88,7 +88,7 @@ export type GetDashesParameters = {
     dashes: {[key: string]: {
         dasharray: Array<number>;
         round: boolean;
-    }};
+    };};
     source: string;
     tileID: OverscaledTileID;
     type: string;
@@ -100,7 +100,7 @@ export type GetDashesParameters = {
 export type GetDashesResponse = {[dashId: string]: DashEntry & {
     dasharray: Array<number>;
     round: boolean;
-}};
+};};
 
 /**
  * All the possible message types that can be sent to and from the worker
