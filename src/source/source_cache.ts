@@ -431,9 +431,24 @@ export class SourceCache extends Evented {
     /**
      * Find a loaded sibling of the given tile
      */
-    findLoadedSibling(tileID: OverscaledTileID): Tile {
-        // If a tile with this ID already exists, return it
-        return this._getLoadedTile(tileID);
+    findLoadedSibling(tileID: OverscaledTileID): Tile | null {
+        // Sibling tiles: same z/x/y, different wrap
+        for (const key in this._tiles) {
+            const candidate = this._tiles[key];
+            if (
+                candidate.tileID.canonical.z === tileID.canonical.z &&
+                candidate.tileID.canonical.x === tileID.canonical.x &&
+                candidate.tileID.canonical.y === tileID.canonical.y &&
+                candidate.tileID.wrap !== tileID.wrap
+            ) {
+                // Only return if the candidate is loaded
+                const loadedCandidate = this._getLoadedTile(candidate.tileID);
+                if (loadedCandidate) {
+                    return loadedCandidate;
+                }
+            }
+        }
+        return null;
     }
 
     _getLoadedTile(tileID: OverscaledTileID): Tile {
@@ -1042,7 +1057,7 @@ export class SourceCache extends Evented {
             bounds.shrinkBy(Math.min(bounds.width(), bounds.height()) * 0.001);
             const projected = bounds.map(project);
 
-            const newBounds = Bounds.fromPoints(transformed); 
+            const newBounds = Bounds.fromPoints(transformed);
 
             if (!newBounds.covers(projected)) {
                 transformed = transformed.map((coord) => coord.x > 0.5 ?

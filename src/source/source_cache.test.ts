@@ -110,7 +110,7 @@ describe('SourceCache#addTile', () => {
         const sourceCache = createSourceCache();
         const spy = vi.fn();
         sourceCache._source.loadTile = spy;
-        
+
         sourceCache.onAdd(undefined);
         sourceCache._addTile(tileID);
         expect(spy).toHaveBeenCalledTimes(1);
@@ -594,7 +594,7 @@ describe('SourceCache#update', () => {
             hasTile: (coord) => (coord.canonical.x !== 0)
         });
         const dataPromise = waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
-                
+
         sourceCache.onAdd(undefined);
         await dataPromise;
         sourceCache.update(transform);
@@ -1805,16 +1805,16 @@ describe('SourceCache#tilesIn', () => {
         transform.resize(512, 512);
         transform.setZoom(1.05);
         transform.setCenter(new LngLat(-179.9, 0.1));
-    
+
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'loaded';
         };
-    
+
         const dataPromise = waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
         sourceCache.onAdd(undefined);
         await dataPromise;
-    
+
         sourceCache.update(transform);
 
         expect(sourceCache.tilesIn([
@@ -2216,6 +2216,39 @@ describe('SourceCache#findLoadedSibling', () => {
         expect(sourceCache.findLoadedSibling(notLoadedTiles[2])).toBeNull();
         expect(sourceCache.findLoadedSibling(notLoadedTiles[3])).toBeNull();
     });
+
+    test('returns a loaded sibling tile with same z/x/y but different wrap', () => {
+        const sourceCache = createSourceCache({});
+        sourceCache.onAdd(undefined);
+        const tr = new MercatorTransform();
+        tr.resize(512, 512);
+        sourceCache.updateCacheSize(tr);
+
+        // Add a tile at z=2, x=1, y=0, wrap=0
+        const tile0 = {
+            tileID: new OverscaledTileID(2, 0, 2, 1, 0),
+            hasData() { return true; }
+        } as any as Tile;
+
+        // Add a sibling tile at z=2, x=1, y=0, wrap=1
+        const tile1 = {
+            tileID: new OverscaledTileID(2, 1, 2, 1, 0),
+            hasData() { return true; }
+        } as any as Tile;
+
+        sourceCache.getTiles()[tile0.tileID.key] = tile0;
+        sourceCache.getTiles()[tile1.tileID.key] = tile1;
+
+        // Should find tile1 as a sibling of tile0
+        expect(sourceCache.findLoadedSibling(tile0.tileID)).toBe(tile1);
+
+        // Should find tile0 as a sibling of tile1
+        expect(sourceCache.findLoadedSibling(tile1.tileID)).toBe(tile0);
+
+        // Should return null when no sibling exists (z=2, x=2, y=0, wrap=0)
+        const tile2 = new OverscaledTileID(2, 0, 2, 2, 0);
+        expect(sourceCache.findLoadedSibling(tile2)).toBeNull();
+    });
 });
 
 describe('SourceCache#reload', () => {
@@ -2372,7 +2405,7 @@ describe('SourceCache#usedForTerrain', () => {
     });
 
 });
-    
+
 describe('SourceCache::refreshTiles', () => {
     test('calls reloadTile when tile exists', async () => {
         const coord = new OverscaledTileID(1, 0, 1, 0, 1);
@@ -2389,7 +2422,7 @@ describe('SourceCache::refreshTiles', () => {
         expect(spy).toHaveBeenCalledOnce();
         expect(spy.mock.calls[0][1]).toBe('expired');
     });
-    
+
     test('does not call reloadTile when tile does not exist', async () => {
         const coord = new OverscaledTileID(1, 0, 1, 1, 1);
         const sourceCache = createSourceCache();
