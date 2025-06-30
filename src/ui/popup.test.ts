@@ -870,4 +870,21 @@ describe('popup', () => {
         map.setCenter([180, 0]);
         expect(popup.getElement().style.opacity).toBe('0.2');
     });
+    test('Popup resets opacity when no longer behind globe', async () => {
+        const map = createMap();
+
+        const popup = new Popup({locationOccludedOpacity: 0.3})
+            .setLngLat([0, 0])
+            .setText('Test')
+            .addTo(map);
+
+        await map.once('load');
+        map.setProjection({
+            type: 'globe'
+        });
+        map.setCenter([180, 0]);
+        expect(popup.getElement().style.opacity).toBe('0.3');
+        map.setCenter([0, 0]);
+        expect(popup.getElement().style.opacity).toBe('');
+    });
 });
