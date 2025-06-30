@@ -20,7 +20,7 @@ afterEach(() => {
     map.remove();
 });
 
-describe('Map#isRotating', () => {
+describe('Map.isRotating', () => {
     test('returns false by default', () => {
         expect(map.isRotating()).toBe(false);
     });

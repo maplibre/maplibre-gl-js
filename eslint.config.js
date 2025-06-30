@@ -1,5 +1,5 @@
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
-import stylisticTs from '@stylistic/eslint-plugin-ts';
+import stylisticTs from '@stylistic/eslint-plugin';
 import tsdoc from 'eslint-plugin-tsdoc';
 import vitest from 'eslint-plugin-vitest';
 import globals from 'globals';

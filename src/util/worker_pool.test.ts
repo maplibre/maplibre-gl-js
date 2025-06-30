@@ -2,7 +2,7 @@ import {describe, test, expect} from 'vitest';
 import {WorkerPool} from './worker_pool';
 
 describe('WorkerPool', () => {
-    test('#acquire', () => {
+    test('acquire', () => {
         Object.defineProperty(WorkerPool, 'workerCount', {value: 4});
 
         const pool = new WorkerPool();
@@ -17,7 +17,7 @@ describe('WorkerPool', () => {
         workers1.forEach((w, i) => { expect(w).toBe(workers2[i]); });
     });
 
-    test('#release', () => {
+    test('release', () => {
         let workersTerminated = 0;
         Object.defineProperty(WorkerPool, 'workerCount', {value: 4});
 

@@ -277,12 +277,12 @@ register('CollisionBuffers', CollisionBuffers);
 
 /**
  * @internal
- * Unlike other buckets, which simply implement #addFeature with type-specific
+ * Unlike other buckets, which simply implement `addFeature` with type-specific
  * logic for (essentially) triangulating feature geometries, SymbolBucket
  * requires specialized behavior:
  *
- * 1. WorkerTile#parse(), the logical owner of the bucket creation process,
- *    calls SymbolBucket#populate(), which resolves text and icon tokens on
+ * 1. WorkerTile.parse(), the logical owner of the bucket creation process,
+ *    calls SymbolBucket.populate(), which resolves text and icon tokens on
  *    each feature, adds each glyphs and symbols needed to the passed-in
  *    collections options.glyphDependencies and options.iconDependencies, and
  *    stores the feature data for use in subsequent step (this.features).

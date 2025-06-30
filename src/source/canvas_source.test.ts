@@ -189,7 +189,7 @@ describe('CanvasSource', () => {
 
 });
 
-test('CanvasSource#serialize', () => {
+test('CanvasSource.serialize', () => {
     const source = createSource();
 
     const serialized = source.serialize();

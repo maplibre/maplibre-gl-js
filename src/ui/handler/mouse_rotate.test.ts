@@ -15,7 +15,7 @@ beforeEach(() => {
 });
 
 describe('mouse rotate', () => {
-    test('MouseRotateHandler#isActive', () => {
+    test('MouseRotateHandler.isActive', () => {
         const map = createMap({interactive: true});
         const mouseRotate = map.handlers._handlersById.mouseRotate;
 
@@ -38,7 +38,7 @@ describe('mouse rotate', () => {
         map.remove();
     });
 
-    test('MouseRotateHandler#isActive #4622 regression test', () => {
+    test('MouseRotateHandler.isActive #4622 regression test', () => {
         const map = createMap({interactive: true});
         const mouseRotate = map.handlers._handlersById.mouseRotate;
 

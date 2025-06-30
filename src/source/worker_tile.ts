@@ -115,7 +115,7 @@ export class WorkerTile {
 
                 recalculateLayers(family, this.zoom, availableImages);
 
-                const bucket: Bucket = buckets[layer.id] = layer.createBucket({
+                const bucket = buckets[layer.id] = layer.createBucket({
                     index: featureIndex.bucketLayerIDs.length,
                     layers: family,
                     zoom: this.zoom,

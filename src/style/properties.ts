@@ -510,12 +510,12 @@ export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPrope
         }
 
         // Special case hack solely for fill-outline-color. The undefined value is subsequently handled in
-        // FillStyleLayer#recalculate, which sets fill-outline-color to the fill-color value if the former
+        // FillStyleLayer.recalculate, which sets fill-outline-color to the fill-color value if the former
         // is a PossiblyEvaluatedPropertyValue containing a constant undefined value. In addition to the
         // return value here, the other source of a PossiblyEvaluatedPropertyValue containing a constant
         // undefined value is the "default value" for fill-outline-color held in
-        // `Properties#defaultPossiblyEvaluatedValues`, which serves as the prototype of
-        // `PossiblyEvaluated#_values`.
+        // `Properties.defaultPossiblyEvaluatedValues`, which serves as the prototype of
+        // `PossiblyEvaluated._values`.
         if (a.value.value === undefined || b.value.value === undefined) {
             return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: undefined}, a.parameters);
         }

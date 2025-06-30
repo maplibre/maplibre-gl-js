@@ -12,7 +12,7 @@ afterEach(() => {
     HTMLCanvasElement.prototype.getContext = originalGetContext;
 });
 
-test('does not fire "webglcontextlost" after #remove has been called', () => {
+test('does not fire "webglcontextlost" after remove has been called', () => {
     const map = createMap();
     const canvas = map.getCanvas();
     const spy = vi.fn();
@@ -24,7 +24,7 @@ test('does not fire "webglcontextlost" after #remove has been called', () => {
     expect(spy).not.toHaveBeenCalled();
 });
 
-test('does not fire "webglcontextrestored" after #remove has been called', async () => {
+test('does not fire "webglcontextrestored" after remove has been called', async () => {
     const map = createMap();
     const canvas = map.getCanvas();
 

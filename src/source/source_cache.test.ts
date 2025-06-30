@@ -104,7 +104,7 @@ afterEach(() => {
     vi.clearAllMocks();
 });
 
-describe('SourceCache#addTile', () => {
+describe('SourceCache.addTile', () => {
     test('loads tile when uncached', () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const sourceCache = createSourceCache();
@@ -277,7 +277,7 @@ describe('SourceCache#addTile', () => {
     });
 });
 
-describe('SourceCache#removeTile', () => {
+describe('SourceCache.removeTile', () => {
     test('removes tile', async () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const sourceCache = createSourceCache({});
@@ -557,7 +557,7 @@ describe('SourceCache / Source lifecycle', () => {
 
 });
 
-describe('SourceCache#update', () => {
+describe('SourceCache.update', () => {
     test('loads no tiles if used is false', async () => {
         const transform = new MercatorTransform();
         transform.resize(512, 512);
@@ -585,7 +585,7 @@ describe('SourceCache#update', () => {
         expect(sourceCache.getIds()).toEqual([new OverscaledTileID(0, 0, 0, 0, 0).key]);
     });
 
-    test('respects Source#hasTile method if it is present', async () => {
+    test('respects Source.hasTile method if it is present', async () => {
         const transform = new MercatorTransform();
         transform.resize(511, 511);
         transform.setZoom(1);
@@ -911,7 +911,7 @@ describe('SourceCache#update', () => {
 
 });
 
-describe('SourceCache#_updateRetainedTiles', () => {
+describe('SourceCache._updateRetainedTiles', () => {
 
     test('loads ideal tiles if they exist', () => {
         const stateCache = {};
@@ -1369,7 +1369,7 @@ describe('SourceCache#_updateRetainedTiles', () => {
 
 });
 
-describe('SourceCache#clearTiles', () => {
+describe('SourceCache.clearTiles', () => {
     test('unloads tiles', () => {
         const coord = new OverscaledTileID(0, 0, 0, 0, 0);
         let abort = 0,
@@ -1395,7 +1395,7 @@ describe('SourceCache#clearTiles', () => {
     });
 });
 
-describe('SourceCache#tilesIn', () => {
+describe('SourceCache.tilesIn', () => {
     test('graceful response before source loaded', () => {
         const tr = new MercatorTransform();
         tr.resize(512, 512);
@@ -1858,7 +1858,7 @@ describe('SourceCache#tilesIn', () => {
 });
 
 describe('source cache loaded', () => {
-    test('SourceCache#loaded (no errors)', async () => {
+    test('SourceCache.loaded (no errors)', async () => {
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'loaded';
@@ -1877,7 +1877,7 @@ describe('source cache loaded', () => {
         expect(sourceCache.loaded()).toBeTruthy();
     });
 
-    test('SourceCache#loaded (with errors)', async () => {
+    test('SourceCache.loaded (with errors)', async () => {
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'errored';
@@ -1897,7 +1897,7 @@ describe('source cache loaded', () => {
         expect(sourceCache.loaded()).toBeTruthy();
     });
 
-    test('SourceCache#loaded (unused)', async () => {
+    test('SourceCache.loaded (unused)', async () => {
         const sourceCache = createSourceCache(undefined, false);
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'errored';
@@ -1910,7 +1910,7 @@ describe('source cache loaded', () => {
         expect(sourceCache.loaded()).toBeTruthy();
     });
 
-    test('SourceCache#loaded (unusedForTerrain)', async () => {
+    test('SourceCache.loaded (unusedForTerrain)', async () => {
         const sourceCache = createSourceCache(undefined, false);
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'errored';
@@ -1924,7 +1924,7 @@ describe('source cache loaded', () => {
         expect(sourceCache.loaded()).toBeTruthy();
     });
 
-    test('SourceCache#loaded (not loaded when no update)', async () => {
+    test('SourceCache.loaded (not loaded when no update)', async () => {
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'errored';
@@ -1937,7 +1937,7 @@ describe('source cache loaded', () => {
         expect(sourceCache.loaded()).toBeFalsy();
     });
 
-    test('SourceCache#loaded (on last tile load)', async () => {
+    test('SourceCache.loaded (on last tile load)', async () => {
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'loading';
@@ -1967,7 +1967,7 @@ describe('source cache loaded', () => {
         expect(spy.mock.calls.length).toBe(5); // 4 tiles + 1 source loaded
     });
 
-    test('SourceCache#loaded (tiles outside bounds, idle)', async () => {
+    test('SourceCache.loaded (tiles outside bounds, idle)', async () => {
         const japan = new TileBounds([122.74, 19.33, 149.0, 45.67]);
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
@@ -2011,7 +2011,7 @@ describe('source cache loaded', () => {
 });
 
 describe('source cache get ids', () => {
-    test('SourceCache#getIds (ascending order by zoom level)', () => {
+    test('SourceCache.getIds (ascending order by zoom level)', () => {
         const ids = [
             new OverscaledTileID(0, 0, 0, 0, 0),
             new OverscaledTileID(3, 0, 3, 0, 0),
@@ -2033,7 +2033,7 @@ describe('source cache get ids', () => {
     });
 });
 
-describe('SourceCache#findLoadedParent', () => {
+describe('SourceCache.findLoadedParent', () => {
 
     test('adds from previously used tiles (sourceCache._tiles)', () => {
         const sourceCache = createSourceCache({});
@@ -2133,7 +2133,7 @@ describe('SourceCache#findLoadedParent', () => {
 
 });
 
-describe('SourceCache#findLoadedSibling', () => {
+describe('SourceCache.findLoadedSibling', () => {
 
     test('adds from previously used tiles (sourceCache._tiles)', () => {
         const sourceCache = createSourceCache({});
@@ -2218,7 +2218,7 @@ describe('SourceCache#findLoadedSibling', () => {
     });
 });
 
-describe('SourceCache#reload', () => {
+describe('SourceCache.reload', () => {
     test('before loaded', () => {
         const sourceCache = createSourceCache({noLoad: true});
         sourceCache.onAdd(undefined);
@@ -2279,7 +2279,7 @@ describe('SourceCache sets max cache size correctly', () => {
 
 });
 
-describe('SourceCache#onRemove', () => {
+describe('SourceCache.onRemove', () => {
     test('clears tiles', () => {
         const sourceCache = createSourceCache();
         vi.spyOn(sourceCache, 'clearTiles');
@@ -2301,7 +2301,7 @@ describe('SourceCache#onRemove', () => {
     });
 });
 
-describe('SourceCache#usedForTerrain', () => {
+describe('SourceCache.usedForTerrain', () => {
     test('loads covering tiles with usedForTerrain with source zoom 0-14', async () => {
         const transform = new MercatorTransform();
         transform.resize(511, 511);

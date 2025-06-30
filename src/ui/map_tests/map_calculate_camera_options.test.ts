@@ -11,7 +11,7 @@ beforeEach(() => {
     global.fetch = null;
 });
 
-describe('#calculateCameraOptionsFromTo', () => {
+describe('calculateCameraOptionsFromTo', () => {
     // Choose initial zoom to avoid center being constrained by mercator latitude limits.
     test('pitch 90 with terrain', () => {
         const map = createMap();

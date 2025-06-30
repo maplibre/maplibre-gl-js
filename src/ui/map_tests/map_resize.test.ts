@@ -7,7 +7,7 @@ beforeEach(() => {
     global.fetch = null;
 });
 
-describe('#resize', () => {
+describe('resize', () => {
     test('sets width and height from container clients', () => {
         const map = createMap(),
             container = map.getContainer();

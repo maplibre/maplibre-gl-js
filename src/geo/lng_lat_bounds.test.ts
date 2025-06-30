@@ -3,7 +3,7 @@ import {LngLat} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
 
 describe('LngLatBounds', () => {
-    test('#constructor', () => {
+    test('constructor', () => {
         const sw = new LngLat(0, 0);
         const ne = new LngLat(-10, 10);
         const bounds = new LngLatBounds(sw, ne);
@@ -13,7 +13,7 @@ describe('LngLatBounds', () => {
         expect(bounds.getEast()).toBe(-10);
     });
 
-    test('#constructor across dateline', () => {
+    test('constructor across dateline', () => {
         const sw = new LngLat(170, 0);
         const ne = new LngLat(-170, 10);
         const bounds = new LngLatBounds(sw, ne);
@@ -23,7 +23,7 @@ describe('LngLatBounds', () => {
         expect(bounds.getEast()).toBe(-170);
     });
 
-    test('#constructor across pole', () => {
+    test('constructor across pole', () => {
         const sw = new LngLat(0, 85);
         const ne = new LngLat(-10, -85);
         const bounds = new LngLatBounds(sw, ne);
@@ -33,7 +33,7 @@ describe('LngLatBounds', () => {
         expect(bounds.getEast()).toBe(-10);
     });
 
-    test('#constructor no args', () => {
+    test('constructor no args', () => {
         const bounds = new LngLatBounds();
         const t1 = () => {
             bounds.getCenter();
@@ -41,7 +41,7 @@ describe('LngLatBounds', () => {
         expect(t1).toThrow();
     });
 
-    test('#extend with coordinate', () => {
+    test('extend with coordinate', () => {
         const bounds = new LngLatBounds([0, 0], [10, 10]);
         bounds.extend([-10, -10]);
 
@@ -79,7 +79,7 @@ describe('LngLatBounds', () => {
         expect(bounds.getEast()).toBe(90);
     });
 
-    test('#extend with bounds', () => {
+    test('extend with bounds', () => {
         const bounds1 = new LngLatBounds([0, 0], [10, 10]);
         const bounds2 = new LngLatBounds([-10, -10], [10, 10]);
 
@@ -107,7 +107,7 @@ describe('LngLatBounds', () => {
         expect(bounds1.getEast()).toBe(20);
     });
 
-    test('#extend with null', () => {
+    test('extend with null', () => {
         const bounds = new LngLatBounds([0, 0], [10, 10]);
 
         bounds.extend(null);
@@ -118,7 +118,7 @@ describe('LngLatBounds', () => {
         expect(bounds.getEast()).toBe(10);
     });
 
-    test('#extend undefined bounding box', () => {
+    test('extend undefined bounding box', () => {
         const bounds1 = new LngLatBounds(undefined, undefined);
         const bounds2 = new LngLatBounds([-10, -10], [10, 10]);
 
@@ -130,7 +130,7 @@ describe('LngLatBounds', () => {
         expect(bounds1.getEast()).toBe(10);
     });
 
-    test('#extend same LngLat instance', () => {
+    test('extend same LngLat instance', () => {
         const point = new LngLat(0, 0);
         const bounds = new LngLatBounds(point, point);
 
@@ -157,7 +157,7 @@ describe('LngLatBounds', () => {
         expect(bounds.getNorthWest()).toEqual(new LngLat(0, -20));
     });
 
-    test('#convert', () => {
+    test('convert', () => {
         const sw = new LngLat(0, 0);
         const ne = new LngLat(-10, 10);
         const bounds = new LngLatBounds(sw, ne);
@@ -169,17 +169,17 @@ describe('LngLatBounds', () => {
         ).toEqual(bounds);
     });
 
-    test('#toArray', () => {
+    test('toArray', () => {
         const llb = new LngLatBounds([-73.9876, 40.7661], [-73.9397, 40.8002]);
         expect(llb.toArray()).toEqual([[-73.9876, 40.7661], [-73.9397, 40.8002]]);
     });
 
-    test('#toString', () => {
+    test('toString', () => {
         const llb = new LngLatBounds([-73.9876, 40.7661], [-73.9397, 40.8002]);
         expect(llb.toString()).toBe('LngLatBounds(LngLat(-73.9876, 40.7661), LngLat(-73.9397, 40.8002))');
     });
 
-    test('#isEmpty', () => {
+    test('isEmpty', () => {
         const nullBounds = new LngLatBounds();
         expect(nullBounds.isEmpty()).toBe(true);
 
@@ -189,7 +189,7 @@ describe('LngLatBounds', () => {
         expect(bounds.isEmpty()).toBe(false);
     });
 
-    test('#fromLngLat', () => {
+    test('fromLngLat', () => {
         const center0 = new LngLat(0, 0);
         const center1 = new LngLat(-73.9749, 40.7736);
 

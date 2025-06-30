@@ -54,7 +54,7 @@ describe('Map', () => {
         //t.error();
     });
 
-    describe('#setTransformRequest', () => {
+    describe('setTransformRequest', () => {
         test('returns self', () => {
             const transformRequest = (() => {}) as any as RequestTransformFunction;
             const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
@@ -71,9 +71,9 @@ describe('Map', () => {
         });
     });
 
-    describe('#is_Loaded', () => {
+    describe('is_Loaded', () => {
 
-        test('Map#isSourceLoaded', async () => {
+        test('Map.isSourceLoaded', async () => {
             const style = createStyle();
             const map = createMap({style});
 
@@ -91,7 +91,7 @@ describe('Map', () => {
             await promise;
         });
 
-        test('Map#isSourceLoaded (equivalent to event.isSourceLoaded)', async () => {
+        test('Map.isSourceLoaded (equivalent to event.isSourceLoaded)', async () => {
             const style = createStyle();
             const map = createMap({style});
 
@@ -111,7 +111,7 @@ describe('Map', () => {
             await promise;
         });
 
-        test('Map#isStyleLoaded', async () => {
+        test('Map.isStyleLoaded', async () => {
             const style = createStyle();
             const map = createMap({style});
 
@@ -120,7 +120,7 @@ describe('Map', () => {
             expect(map.isStyleLoaded()).toBe(true);  
         });
 
-        test('Map#areTilesLoaded', async () => {
+        test('Map.areTilesLoaded', async () => {
             const style = createStyle();
             const map = createMap({style});
             expect(map.areTilesLoaded()).toBe(true);
@@ -134,7 +134,7 @@ describe('Map', () => {
         });
     });
 
-    test('#remove', () => {
+    test('remove', () => {
         const map = createMap();
         const spyWorkerPoolRelease = vi.spyOn(map.style.dispatcher.workerPool, 'release');
         expect(map.getContainer().childNodes).toHaveLength(2);
@@ -146,7 +146,7 @@ describe('Map', () => {
         spyWorkerPoolRelease.mockClear();
     });
 
-    test('#remove calls onRemove on added controls', () => {
+    test('remove calls onRemove on added controls', () => {
         const map = createMap();
         const control = {
             onRemove: vi.fn(),
@@ -159,7 +159,7 @@ describe('Map', () => {
         expect(control.onRemove).toHaveBeenCalledTimes(1);
     });
 
-    test('#remove calls onRemove on added controls before style is destroyed', async () => {
+    test('remove calls onRemove on added controls before style is destroyed', async () => {
         const map = createMap();
         let onRemoveCalled = 0;
         let style = null;
@@ -181,19 +181,19 @@ describe('Map', () => {
         expect(onRemoveCalled).toBe(1);
     });
 
-    test('#remove broadcasts removeMap to worker', () => {
+    test('remove broadcasts removeMap to worker', () => {
         const map = createMap();
         const _broadcastSpyOn = vi.spyOn(map.style.dispatcher, 'broadcast');
         map.remove();
         expect(_broadcastSpyOn).toHaveBeenCalledWith(MessageType.removeMap, undefined);
     });
 
-    test('#project', () => {
+    test('project', () => {
         const map = createMap();
         expect(map.project([0, 0])).toEqual({x: 100, y: 100});
     });
 
-    test('#unproject', () => {
+    test('unproject', () => {
         const map = createMap();
         expect(fixedLngLat(map.unproject([100, 100]))).toEqual({lng: 0, lat: 0});
     });

@@ -20,7 +20,7 @@ afterEach(() => {
     map.remove();
 });
 
-describe('Map#isMoving', () => {
+describe('Map.isMoving', () => {
     // MouseEvent.buttons
     const buttons = 1;
 

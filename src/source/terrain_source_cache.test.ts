@@ -62,12 +62,12 @@ describe('TerrainSourceCache', () => {
         server.restore();
     });
 
-    test('#constructor', () => {
+    test('constructor', () => {
         expect(tsc.sourceCache.usedForTerrain).toBeTruthy();
         expect(tsc.sourceCache.tileSize).toBe(tsc.sourceCache._source.tileSize * 2 ** tsc.deltaZoom);
     });
 
-    test('#getSourceTile', () => {
+    test('getSourceTile', () => {
         const tileID = new OverscaledTileID(5, 0, 5, 17, 11);
         const tile = new Tile(tileID, 256);
         tile.dem = {} as DEMData;
@@ -79,7 +79,7 @@ describe('TerrainSourceCache', () => {
         expect(tsc.getSourceTile(tileID.children(12)[0].children(12)[0], true)).toBeTruthy();
     });
 
-    describe('#getTerrainCoords', () => {
+    describe('getTerrainCoords', () => {
         describe('tile without custom range', () => {
             test('includes only overlapping tiles', () => {
                 const testTile = new OverscaledTileID(2, 0, 2, 1, 1);

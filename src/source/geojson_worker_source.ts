@@ -99,10 +99,10 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
 
     /**
      * Fetches (if appropriate), parses, and index geojson data into tiles. This
-     * preparatory method must be called before {@link GeoJSONWorkerSource#loadTile}
+     * preparatory method must be called before {@link GeoJSONWorkerSource.loadTile}
      * can correctly serve up tiles.
      *
-     * Defers to {@link GeoJSONWorkerSource#loadAndProcessGeoJSON} for the pre-processing.
+     * Defers to {@link GeoJSONWorkerSource.loadAndProcessGeoJSON} for the pre-processing.
      *
      * When a `loadData` request comes in while a previous one is being processed,
      * the previous one is aborted.
@@ -155,7 +155,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     }
 
     /**
-    * Implements {@link WorkerSource#reloadTile}.
+    * Implements {@link WorkerSource.reloadTile}.
     *
     * If the tile is loaded, uses the implementation in VectorTileWorkerSource.
     * Otherwise, such as after a setData() call, we load the tile fresh.
@@ -177,7 +177,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     /**
      * Fetch, parse and process GeoJSON according to the given params.
      *
-     * Defers to {@link GeoJSONWorkerSource#loadGeoJSON} for the fetching and parsing.
+     * Defers to {@link GeoJSONWorkerSource.loadGeoJSON} for the fetching and parsing.
      *
      * @param params - the parameters
      * @param abortController - the abort controller that allows aborting this operation

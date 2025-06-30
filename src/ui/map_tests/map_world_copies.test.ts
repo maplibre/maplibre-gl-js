@@ -6,7 +6,7 @@ beforeEach(() => {
     global.fetch = null;
 });
 
-describe('#getRenderWorldCopies', () => {
+describe('getRenderWorldCopies', () => {
     test('initially false', () => {
         const map = createMap({renderWorldCopies: false});
         expect(map.getRenderWorldCopies()).toBe(false);
@@ -19,7 +19,7 @@ describe('#getRenderWorldCopies', () => {
 
 });
 
-describe('#setRenderWorldCopies', () => {
+describe('setRenderWorldCopies', () => {
     test('initially false', () => {
         const map = createMap({renderWorldCopies: false});
         map.setRenderWorldCopies(true);
@@ -46,7 +46,7 @@ describe('#setRenderWorldCopies', () => {
 
 });
 
-describe('#renderWorldCopies', () => {
+describe('renderWorldCopies', () => {
     test('does not constrain horizontal panning when renderWorldCopies is set to true', () => {
         const map = createMap({renderWorldCopies: true});
         map.setCenter({lng: 180, lat: 0});

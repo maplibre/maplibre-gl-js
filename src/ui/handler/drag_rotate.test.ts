@@ -17,7 +17,7 @@ beforeEach(() => {
 
 describe('drag rotate', () => {
 
-    test('DragRotateHandler#isActive', () => {
+    test('DragRotateHandler.isActive', () => {
         const map = createMap();
 
         // Prevent inertial rotation.

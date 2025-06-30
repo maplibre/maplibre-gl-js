@@ -38,7 +38,7 @@ export class IndexBuffer {
     updateData(array: StructArray) {
         const gl = this.context.gl;
         if (!this.dynamicDraw) throw new Error('Attempted to update data while not in dynamic mode.');
-        // The right VAO will get this buffer re-bound later in VertexArrayObject#bind
+        // The right VAO will get this buffer re-bound later in VertexArrayObject.bind
         // See https://github.com/mapbox/mapbox-gl-js/issues/5620
         this.context.unbindVAO();
         this.bind();

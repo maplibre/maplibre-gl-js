@@ -27,7 +27,7 @@ import {Bounds} from '../geo/bounds';
 export type Coordinates = [[number, number], [number, number], [number, number], [number, number]];
 
 /**
- * The options object for the {@link ImageSource#updateImage} method
+ * The options object for the {@link ImageSource.updateImage} method
  */
 export type UpdateImageOptions = {
     /**

@@ -9,7 +9,7 @@ function createMap() {
     return new Map({style: '', container: DOM.create('div', '', window.document.body)});
 }
 
-describe('Map#isZooming', () => {
+describe('Map.isZooming', () => {
     let map: Map;
     beforeEach(() => {
         beforeMapTest();

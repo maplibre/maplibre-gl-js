@@ -36,7 +36,7 @@ test('initial bounds options in constructor options', () => {
     expect(unpadded.getZoom() > padded.getZoom()).toBeTruthy();
 });
 
-describe('#getBounds', () => {
+describe('getBounds', () => {
 
     test('getBounds', () => {
         const map = createMap({zoom: 0});
@@ -75,7 +75,7 @@ describe('#getBounds', () => {
     }
 });
 
-describe('#setMaxBounds', () => {
+describe('setMaxBounds', () => {
     test('constrains map bounds', () => {
         const map = createMap({zoom: 0});
         map.setMaxBounds([[-130.4297, 50.0642], [-61.52344, 24.20688]]);
@@ -108,7 +108,7 @@ describe('#setMaxBounds', () => {
 
 });
 
-describe('#getMaxBounds', () => {
+describe('getMaxBounds', () => {
     test('returns null when no bounds set', () => {
         const map = createMap({zoom: 0});
         expect(map.getMaxBounds()).toBeNull();

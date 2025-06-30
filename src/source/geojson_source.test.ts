@@ -61,7 +61,7 @@ const hawkHill = {
     }]
 } as GeoJSON.GeoJSON;
 
-describe('GeoJSONSource#constructor', () => {
+describe('GeoJSONSource.constructor', () => {
     const mapStub = {
         _requestManager: {
             transformRequest: (url) => { return {url}; }
@@ -91,7 +91,7 @@ describe('GeoJSONSource#constructor', () => {
     });
 });
 
-describe('GeoJSONSource#setData', () => {
+describe('GeoJSONSource.setData', () => {
     function createSource(opts?) {
         opts = opts || {};
         opts = extend(opts, {data: {}});
@@ -203,7 +203,7 @@ describe('GeoJSONSource#setData', () => {
     });
 });
 
-describe('GeoJSONSource#onRemove', () => {
+describe('GeoJSONSource.onRemove', () => {
     test('broadcasts "removeSource" event', () => {
         const spy = vi.fn();
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
@@ -222,7 +222,7 @@ describe('GeoJSONSource#onRemove', () => {
     });
 });
 
-describe('GeoJSONSource#update', () => {
+describe('GeoJSONSource.update', () => {
     const transform = new MercatorTransform();
     transform.resize(200, 200);
     const lngLat = LngLat.convert([-122.486052, 37.830348]);
@@ -466,7 +466,7 @@ describe('GeoJSONSource#update', () => {
     });
 });
 
-describe('GeoJSONSource#getData', () => {
+describe('GeoJSONSource.getData', () => {
     const mapStub = {
         _requestManager: {
             transformRequest: (url) => { return {url}; }
@@ -487,7 +487,7 @@ describe('GeoJSONSource#getData', () => {
     });
 });
 
-describe('GeoJSONSource#getBounds', () => {
+describe('GeoJSONSource.getBounds', () => {
     const mapStub = {
         _requestManager: {
             transformRequest: (url) => { return {url}; }
@@ -594,7 +594,7 @@ describe('GeoJSONSource#getBounds', () => {
     });
 });
 
-describe('GeoJSONSource#serialize', () => {
+describe('GeoJSONSource.serialize', () => {
     const mapStub = {
         _requestManager: {
             transformRequest: (url) => { return {url}; }

@@ -56,11 +56,12 @@ export type BucketFeature = {
 };
 
 /**
+ * @hidden
  * The `Bucket` interface is the single point of knowledge about turning vector
  * tiles into WebGL buffers.
  *
  * `Bucket` is an abstract interface. An implementation exists for each style layer type.
- * Create a bucket via the `StyleLayer#createBucket` method.
+ * Create a bucket via the `StyleLayer.createBucket` method.
  *
  * The concrete bucket types, using layout options from the style layer,
  * transform feature geometries into vertex and index data for use by the
