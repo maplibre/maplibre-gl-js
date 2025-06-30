@@ -471,7 +471,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
  *   }
  * });
  * ```
- * @see [Display a map](https://maplibre.org/maplibre-gl-js/docs/examples/simple-map/)
+ * @see [Display a map](https://maplibre.org/maplibre-gl-js/docs/examples/display-a-map/)
  */
 export class Map extends Camera {
     style: Style;
@@ -481,7 +481,7 @@ export class Map extends Camera {
     _container: HTMLElement;
     _canvasContainer: HTMLElement;
     _controlContainer: HTMLElement;
-    _controlPositions: Record<string, HTMLElement>;
+    _controlPositions: Partial<Record<ControlPosition, HTMLElement>>;
     _interactive: boolean;
     _showTileBoundaries: boolean;
     _showCollisionBoxes: boolean;
@@ -812,7 +812,7 @@ export class Map extends Camera {
      * ```ts
      * map.addControl(new NavigationControl());
      * ```
-     * @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigation/)
+     * @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/display-map-navigation-controls/)
      */
     addControl(control: IControl, position?: ControlPosition): Map {
         if (position === undefined) {
@@ -1486,10 +1486,10 @@ export class Map extends Camera {
      *     .addTo(map);
      * });
      * ```
-     * @see [Display popup on click](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-click/)
-     * @see [Center the map on a clicked symbol](https://maplibre.org/maplibre-gl-js/docs/examples/center-on-symbol/)
-     * @see [Create a hover effect](https://maplibre.org/maplibre-gl-js/docs/examples/hover-styles/)
-     * @see [Create a draggable marker](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
+     * @see [Display popup on click](https://maplibre.org/maplibre-gl-js/docs/examples/display-a-popup-on-click/)
+     * @see [Center the map on a clicked symbol](https://maplibre.org/maplibre-gl-js/docs/examples/center-the-map-on-a-clicked-symbol/)
+     * @see [Create a hover effect](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-hover-effect/)
+     * @see [Create a draggable marker](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/)
      */
     on<T extends keyof MapLayerEventType>(
         type: T,
@@ -1745,7 +1745,7 @@ export class Map extends Camera {
      * ```ts
      * let features = map.queryRenderedFeatures({ layers: ['my-layer-name'] });
      * ```
-     * @see [Get features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/queryrenderedfeatures/)
+     * @see [Get features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/get-features-under-the-mouse-pointer/)
      */
     queryRenderedFeatures(geometryOrOptions?: PointLike | [PointLike, PointLike] | QueryRenderedFeaturesOptions, options?: QueryRenderedFeaturesOptions): MapGeoJSONFeature[] {
         if (!this.style) {
@@ -2027,7 +2027,7 @@ export class Map extends Camera {
      *   }
      * });
      * ```
-     * @see GeoJSON source: [Add live realtime data](https://maplibre.org/maplibre-gl-js/docs/examples/live-geojson/)
+     * @see GeoJSON source: [Add live realtime data](https://maplibre.org/maplibre-gl-js/docs/examples/add-live-realtime-data/)
      */
     addSource(id: string, source: SourceSpecification | CanvasSourceSpecification): this {
         this._lazyInitEmptyStyle();
@@ -2196,9 +2196,9 @@ export class Map extends Camera {
      * ```ts
      * let sourceObject = map.getSource('points');
      * ```
-     * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
-     * @see [Animate a point](https://maplibre.org/maplibre-gl-js/docs/examples/animate-point-along-line/)
-     * @see [Add live realtime data](https://maplibre.org/maplibre-gl-js/docs/examples/live-geojson/)
+     * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/)
+     * @see [Animate a point](https://maplibre.org/maplibre-gl-js/docs/examples/animate-a-point/)
+     * @see [Add live realtime data](https://maplibre.org/maplibre-gl-js/docs/examples/add-live-realtime-data/)
      */
     getSource<TSource extends Source>(id: string): TSource | undefined {
         return this.style.getSource(id) as TSource;
@@ -2221,7 +2221,7 @@ export class Map extends Camera {
      * ```ts
      * map.setSourceTileLodParams(4.0, 3.0, 'terrain');
      * ```
-     * @see [Modify Level of Detail behavior](https://maplibre.org/maplibre-gl-js/docs/examples/lod-control/)
+     * @see [Modify Level of Detail behavior](https://maplibre.org/maplibre-gl-js/docs/examples/level-of-detail-control/)
 
      */
     setSourceTileLodParams(maxZoomLevelsOnScreen: number, tileCountMaxMinRatio: number, sourceId?: string) : this {
@@ -2293,8 +2293,8 @@ export class Map extends Camera {
      *     stretchY: [[16, 384]], // stretch everything vertically except the 16px border
      * });
      * ```
-     * @see Use `HTMLImageElement`: [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
-     * @see Use `ImageData`: [Add a generated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image-generated/)
+     * @see Use `HTMLImageElement`: [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-an-icon-to-the-map/)
+     * @see Use `ImageData`: [Add a generated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-generated-icon-to-the-map/)
      */
     addImage(id: string,
         image: HTMLImageElement | ImageBitmap | ImageData | {
@@ -2475,7 +2475,7 @@ export class Map extends Camera {
      * // Add the loaded image to the style's sprite with the ID 'photo'.
      * map.addImage('photo', response.data);
      * ```
-     * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
+     * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-an-icon-to-the-map/)
      */
     loadImage(url: string): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap>> {
         return ImageRequest.getImage(this._requestManager.transformRequest(url, ResourceType.Image), new AbortController());
@@ -2572,9 +2572,9 @@ export class Map extends Camera {
      * // Add the layer before the existing `cities` layer
      * }, 'cities');
      * ```
-     * @see [Create and style clusters](https://maplibre.org/maplibre-gl-js/docs/examples/cluster/)
-     * @see [Add a vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/vector-source/)
-     * @see [Add a WMS source](https://maplibre.org/maplibre-gl-js/docs/examples/wms/)
+     * @see [Create and style clusters](https://maplibre.org/maplibre-gl-js/docs/examples/create-and-style-clusters/)
+     * @see [Add a vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-vector-tile-source/)
+     * @see [Add a WMS source](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-wms-source/)
      */
     addLayer(layer: AddLayerObject, beforeId?: string) {
         this._lazyInitEmptyStyle();
@@ -2628,8 +2628,8 @@ export class Map extends Camera {
      * ```ts
      * let stateDataLayer = map.getLayer('state-data');
      * ```
-     * @see [Filter symbols by toggling a list](https://maplibre.org/maplibre-gl-js/docs/examples/filter-markers/)
-     * @see [Filter symbols by text input](https://maplibre.org/maplibre-gl-js/docs/examples/filter-markers-by-input/)
+     * @see [Filter symbols by toggling a list](https://maplibre.org/maplibre-gl-js/docs/examples/filter-symbols-by-toggling-a-list/)
+     * @see [Filter symbols by text input](https://maplibre.org/maplibre-gl-js/docs/examples/filter-symbols-by-text-input/)
      */
     getLayer(id: string): StyleLayer | undefined {
         return this.style.getLayer(id);
@@ -2705,7 +2705,7 @@ export class Map extends Camera {
      * ```ts
      * map.setFilter('bike-docks', null);
      * ```
-     * @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
+     * @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-time-slider/)
      */
     setFilter(layerId: string, filter?: FilterSpecification | null, options: StyleSetterOptions = {}) {
         this.style.setFilter(layerId, filter, options);
@@ -2735,8 +2735,8 @@ export class Map extends Camera {
      * ```ts
      * map.setPaintProperty('my-layer', 'fill-color', '#faafee');
      * ```
-     * @see [Change a layer's color with buttons](https://maplibre.org/maplibre-gl-js/docs/examples/color-switcher/)
-     * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
+     * @see [Change a layer's color with buttons](https://maplibre.org/maplibre-gl-js/docs/examples/change-a-layers-color-with-buttons/)
+     * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/)
      */
     setPaintProperty(layerId: string, name: string, value: any, options: StyleSetterOptions = {}): this {
         this.style.setPaintProperty(layerId, name, value, options);
@@ -2963,7 +2963,7 @@ export class Map extends Camera {
      *   }
      * });
      * ```
-     * @see [Create a hover effect](https://maplibre.org/maplibre-gl-js/docs/examples/hover-styles/)
+     * @see [Create a hover effect](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-hover-effect/)
      */
     setFeatureState(feature: FeatureIdentifier, state: any): this {
         this.style.setFeatureState(feature, state);
@@ -3070,7 +3070,7 @@ export class Map extends Camera {
      * map controls.
      *
      * @returns The container of the map's `<canvas>`.
-     * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
+     * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/)
      */
     getCanvasContainer(): HTMLElement {
         return this._canvasContainer;
@@ -3080,9 +3080,9 @@ export class Map extends Camera {
      * Returns the map's `<canvas>` element.
      *
      * @returns The map's `<canvas>` element.
-     * @see [Measure distances](https://maplibre.org/maplibre-gl-js/docs/examples/measure/)
-     * @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-hover/)
-     * @see [Center the map on a clicked symbol](https://maplibre.org/maplibre-gl-js/docs/examples/center-on-symbol/)
+     * @see [Measure distances](https://maplibre.org/maplibre-gl-js/docs/examples/measure-distances/)
+     * @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js/docs/examples/display-a-popup-on-hover/)
+     * @see [Center the map on a clicked symbol](https://maplibre.org/maplibre-gl-js/docs/examples/center-the-map-on-a-clicked-symbol/)
      */
     getCanvas(): HTMLCanvasElement {
         return this._canvas;
@@ -3465,8 +3465,8 @@ export class Map extends Camera {
      * ```ts
      * map.triggerRepaint();
      * ```
-     * @see [Add a 3D model](https://maplibre.org/maplibre-gl-js/docs/examples/add-3d-model/)
-     * @see [Add an animated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image-animated/)
+     * @see [Add a 3D model](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-3d-model-using-threejs/)
+     * @see [Add an animated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-an-animated-icon-to-the-map/)
      */
     triggerRepaint() {
         if (this.style && !this._frameRequest) {
