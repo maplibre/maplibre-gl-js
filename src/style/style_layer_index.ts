@@ -1,18 +1,16 @@
-import {type StyleLayer} from './style_layer';
 import {createStyleLayer} from './create_style_layer';
+import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
+import {groupByLayout} from '../util/group_by_layout';
+import type {StyleLayer} from './style_layer';
 
-import {featureFilter, groupByLayout} from '@maplibre/maplibre-gl-style-spec';
-
-import type {TypedStyleLayer} from './style_layer/typed_style_layer';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export type LayerConfigs = {[_: string]: LayerSpecification};
-export type Family<Layer extends TypedStyleLayer> = Array<Layer>;
 
 export class StyleLayerIndex {
     familiesBySource: {
         [source: string]: {
-            [sourceLayer: string]: Array<Family<any>>;
+            [sourceLayer: string]: Array<Array<StyleLayer>>;
         };
     };
     keyCache: {[source: string]: string};

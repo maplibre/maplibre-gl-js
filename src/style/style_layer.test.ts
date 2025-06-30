@@ -16,7 +16,7 @@ describe('StyleLayer', () => {
     });
 });
 
-describe('StyleLayer#setPaintProperty', () => {
+describe('StyleLayer.setPaintProperty', () => {
     test('sets new property value', () => {
         const layer = createStyleLayer({
             'id': 'background',
@@ -155,7 +155,7 @@ describe('StyleLayer#setPaintProperty', () => {
         }) as FillStyleLayer;
 
         // setup: set and then unset fill-outline-color so that, when we then try
-        // to re-set it, StyleTransition#calculate() attempts interpolation
+        // to re-set it, StyleTransition.calculate() attempts interpolation
         layer.setPaintProperty('fill-outline-color', '#f00');
         layer.updateTransitions({} as TransitionParameters);
         layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
@@ -187,7 +187,7 @@ describe('StyleLayer#setPaintProperty', () => {
 
 });
 
-describe('StyleLayer#setLayoutProperty', () => {
+describe('StyleLayer.setLayoutProperty', () => {
     test('sets new property value', () => {
         const layer = createStyleLayer({
             'id': 'symbol',
@@ -242,7 +242,7 @@ describe('StyleLayer#setLayoutProperty', () => {
     });
 });
 
-describe('StyleLayer#getLayoutAffectingGlobalStateRefs', () => {
+describe('StyleLayer.getLayoutAffectingGlobalStateRefs', () => {
     test('returns empty Set when no global state references', () => {
         const layer = createStyleLayer({
             'id': 'background',
@@ -285,7 +285,7 @@ describe('StyleLayer#getLayoutAffectingGlobalStateRefs', () => {
     });
 });
 
-describe('StyleLayer#serialize', () => {
+describe('StyleLayer.serialize', () => {
 
     function createSymbolLayer(layer?) {
         return extend({
@@ -359,7 +359,7 @@ describe('StyleLayer#serialize', () => {
 
 });
 
-describe('StyleLayer#serialize', () => {
+describe('StyleLayer.serialize', () => {
 
     function createSymbolLayer(layer?) {
         return extend({

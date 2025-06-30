@@ -6,7 +6,7 @@ beforeEach(() => {
     global.fetch = null;
 });
 
-test('#setMinPitch', () => {
+test('setMinPitch', () => {
     const map = createMap({pitch: 20});
     map.setMinPitch(10);
     map.setPitch(0);
@@ -20,7 +20,7 @@ test('unset minPitch', () => {
     expect(map.getPitch()).toBe(0);
 });
 
-test('#getMinPitch', () => {
+test('getMinPitch', () => {
     const map = createMap({pitch: 0});
     expect(map.getMinPitch()).toBe(0);
     map.setMinPitch(10);
@@ -36,7 +36,7 @@ test('ignore minPitchs over maxPitch', () => {
     expect(map.getPitch()).toBe(0);
 });
 
-test('#setMaxPitch', () => {
+test('setMaxPitch', () => {
     const map = createMap({pitch: 0});
     map.setMaxPitch(10);
     map.setPitch(20);
@@ -50,7 +50,7 @@ test('unset maxPitch', () => {
     expect(map.getPitch()).toBe(20);
 });
 
-test('#getMaxPitch', () => {
+test('getMaxPitch', () => {
     const map = createMap({pitch: 0});
     expect(map.getMaxPitch()).toBe(60);
     map.setMaxPitch(10);

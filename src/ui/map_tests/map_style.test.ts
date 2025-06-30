@@ -21,7 +21,7 @@ afterEach(() => {
     server.restore();
 });
 
-describe('#setStyle', () => {
+describe('setStyle', () => {
     test('returns self', () => {
         const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
         expect(map.setStyle({
@@ -327,7 +327,7 @@ describe('#setStyle', () => {
     });
 });
 
-describe('#getStyle', () => {
+describe('getStyle', () => {
     test('returns undefined if the style has not loaded yet', () => {
         const style = createStyle();
         const map = createMap({style});
@@ -474,7 +474,7 @@ describe('#getStyle', () => {
         expect(spy).not.toHaveBeenCalled();
     });
 
-    describe('#setSky', () => {
+    describe('setSky', () => {
         test('calls style setSky when set', () => {
             const map = createMap();
             const spy = vi.fn();
@@ -485,14 +485,14 @@ describe('#getStyle', () => {
         });
     });
 
-    describe('#getSky', () => {
+    describe('getSky', () => {
         test('returns undefined when not set', () => {
             const map = createMap();
             expect(map.getSky()).toBeUndefined();
         });
     });
 
-    describe('#setLight', () => {
+    describe('setLight', () => {
         test('calls style setLight when set', () => {
             const map = createMap();
             const spy = vi.fn();
@@ -503,7 +503,7 @@ describe('#getStyle', () => {
         });
     });
 
-    describe('#getLight', () => {
+    describe('getLight', () => {
         test('calls style getLight when invoked', () => {
             const map = createMap();
             const spy = vi.fn();
