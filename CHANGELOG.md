@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Add `popupPadding` option to Popup class to prevent popups from being positioned too close to map container edges ([#5978](https://github.com/maplibre/maplibre-gl-js/issues/5978))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
