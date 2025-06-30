@@ -455,7 +455,7 @@ describe('map events', () => {
         expect(spy).toHaveBeenCalledTimes(1);
     });
 
-    test('Map.off removes listener registered with map.once', () => {
+    test('Map.off removes listener registered with Map.once', () => {
         const map = createMap();
 
         vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
