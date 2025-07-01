@@ -1,6 +1,5 @@
 import {createStyleLayer} from './create_style_layer';
-import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
-import {groupByLayout} from '../util/group_by_layout';
+import {featureFilter, groupByLayout} from '@maplibre/maplibre-gl-style-spec';
 import type {StyleLayer} from './style_layer';
 
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
