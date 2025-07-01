@@ -243,7 +243,7 @@ export class Popup extends Evented {
         if (this._map.transform.isLocationOccluded(this.getLngLat())) {
             this._container.style.opacity = `${this.options.locationOccludedOpacity}`;
         } else {
-            this._container.style.opacity = undefined;
+            this._container.style.opacity = '';
         }
     };
 
