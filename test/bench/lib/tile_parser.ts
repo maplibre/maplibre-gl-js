@@ -1,7 +1,7 @@
 import Protobuf from 'pbf';
 import VT from '@mapbox/vector-tile';
 
-import {derefLayers} from '../../../src/util/deref';
+import {derefLayers} from '@maplibre/maplibre-gl-style-spec'
 import {Style} from '../../../src/style/style';
 import {IReadonlyTransform} from '../../../src/geo/transform_interface';
 import {Evented} from '../../../src/util/evented';
