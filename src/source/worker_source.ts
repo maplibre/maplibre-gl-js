@@ -87,7 +87,7 @@ export interface WorkerSourceConstructor {
 /**
  * `WorkerSource` should be implemented by custom source types to provide code that can be run on the WebWorkers.
  * Each of the methods has a relevant event that triggers it from the main thread with the relevant parameters.
- * @see {@link Map#addSourceType}
+ * @see {@link Map.addSourceType}
  */
 export interface WorkerSource {
     availableImages: Array<string>;
@@ -100,7 +100,7 @@ export interface WorkerSource {
     loadTile(params: WorkerTileParameters): Promise<WorkerTileResult>;
     /**
      * Re-parses a tile that has already been loaded.  Yields the same data as
-     * {@link WorkerSource#loadTile}.
+     * {@link WorkerSource.loadTile}.
      */
     reloadTile(params: WorkerTileParameters): Promise<WorkerTileResult>;
     /**

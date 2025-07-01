@@ -336,9 +336,9 @@ export class Placement {
         getElevation?: (x: number, y: number) => number,
         simpleProjectionMatrix?: mat4,
     ): {
-            shift: Point;
-            placedGlyphBoxes: PlacedBox;
-        } {
+        shift: Point;
+        placedGlyphBoxes: PlacedBox;
+    } {
 
         const anchor = TextAnchorEnum[textAnchorOffset.textAnchor] as TextAnchor;
         const textOffset = [textAnchorOffset.textOffset0, textAnchorOffset.textOffset1] as [number, number];

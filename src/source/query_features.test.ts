@@ -7,7 +7,7 @@ import {SourceCache} from './source_cache';
 import type Point from '@mapbox/point-geometry';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 
-describe('QueryFeatures#rendered', () => {
+describe('QueryFeatures.rendered', () => {
     test('returns empty object if source returns no tiles', () => {
         const mockSourceCache = {tilesIn () { return []; }} as any as SourceCache;
         const transform = new MercatorTransform();
@@ -17,7 +17,7 @@ describe('QueryFeatures#rendered', () => {
 
 });
 
-describe('QueryFeatures#source', () => {
+describe('QueryFeatures.source', () => {
     test('returns empty result when source has no features', () => {
         const sourceCache = new SourceCache('test', {
             type: 'geojson',

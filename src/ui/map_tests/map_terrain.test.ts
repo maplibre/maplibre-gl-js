@@ -20,7 +20,7 @@ afterEach(() => {
     server.restore();
 });
 
-describe('#setTerrain', () => {
+describe('setTerrain', () => {
     test('warn when terrain and hillshade source identical', async () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 5,
@@ -43,7 +43,7 @@ describe('#setTerrain', () => {
     });
 });
 
-describe('#getTerrain', () => {
+describe('getTerrain', () => {
     test('returns null when not set', () => {
         const map = createMap();
         expect(map.getTerrain()).toBeNull();
