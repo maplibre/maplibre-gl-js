@@ -933,13 +933,13 @@ export class Map extends Camera {
         const fireMoving = !this._moving;
         if (fireMoving) {
             this.stop();
-            this.fire(new Event('movestart', {originalEvent: eventData}))
-                .fire(new Event('move', {originalEvent: eventData}));
+            this.fire(new Event('movestart', eventData))
+                .fire(new Event('move', eventData));
         }
 
-        this.fire(new Event('resize', {originalEvent: eventData}));
+        this.fire(new Event('resize', eventData));
 
-        if (fireMoving) this.fire(new Event('moveend', {originalEvent: eventData}));
+        if (fireMoving) this.fire(new Event('moveend', eventData));
 
         return this;
     }

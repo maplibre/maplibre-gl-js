@@ -483,8 +483,7 @@ describe('GeolocateControl with no options', () => {
         geolocation.send({latitude: 10, longitude: 20, accuracy: 30, timestamp: 40});
         await geolocatePromise;
         expect(geolocate._watchState).toBe('ACTIVE_LOCK');
-        window.dispatchEvent(new window.Event('resize', {bubbles: true}));
-        await sleep(0);
+        window.dispatchEvent(new window.Event('resize'));
         expect(geolocate._watchState).toBe('ACTIVE_LOCK');
     });
 
