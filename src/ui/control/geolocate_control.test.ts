@@ -10,7 +10,6 @@ vi.mock('../../util/geolocation_support', () => (
 ));
 import {checkGeolocationSupport} from '../../util/geolocation_support';
 import type {LngLat} from '../../geo/lng_lat';
-import { create } from 'domain';
 
 /**
  * Convert the coordinates of a LngLat object to a fixed number of digits
@@ -31,7 +30,7 @@ function lngLatAsFixed(lngLat: LngLat, digits: number): {lat: string; lng: strin
 function createResizeObserverEntryMock() {
     const spy = vi.fn();
     global.ResizeObserverEntry = vi.fn().mockImplementation(() => ({
-           observe: spy
+        observe: spy,
     }));
 }
 
