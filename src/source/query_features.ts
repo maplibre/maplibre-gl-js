@@ -43,7 +43,7 @@ export type QueryRenderedFeaturesOptionsStrict = Omit<QueryRenderedFeaturesOptio
 };
 
 /**
- * The options object related to the {@link Map#querySourceFeatures} method
+ * The options object related to the {@link Map.querySourceFeatures} method
  */
 export type QuerySourceFeatureOptions = {
     /**

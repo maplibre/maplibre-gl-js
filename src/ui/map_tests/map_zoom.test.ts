@@ -7,7 +7,7 @@ beforeEach(() => {
     global.fetch = null;
 });
 
-test('#setMinZoom', () => {
+test('setMinZoom', () => {
     const map = createMap({zoom: 5});
     map.setMinZoom(3.5);
     map.setZoom(1);
@@ -21,7 +21,7 @@ test('unset minZoom', () => {
     expect(map.getZoom()).toBe(1);
 });
 
-test('#getMinZoom', () => {
+test('getMinZoom', () => {
     const map = createMap({zoom: 0});
     expect(map.getMinZoom()).toBe(-2);
     map.setMinZoom(10);
@@ -37,7 +37,7 @@ test('ignore minZooms over maxZoom', () => {
     expect(map.getZoom()).toBe(0);
 });
 
-test('#setMaxZoom', () => {
+test('setMaxZoom', () => {
     const map = createMap({zoom: 0});
     map.setMaxZoom(3.5);
     map.setZoom(4);
@@ -51,7 +51,7 @@ test('unset maxZoom', () => {
     expect(map.getZoom()).toBe(6);
 });
 
-test('#getMaxZoom', () => {
+test('getMaxZoom', () => {
     const map = createMap({zoom: 0});
     expect(map.getMaxZoom()).toBe(22);
     map.setMaxZoom(10);

@@ -30,7 +30,7 @@ theme:
         icon: material/brightness-4
         name: Switch to system preference
     - media: "(prefers-color-scheme: light)"
-      scheme: default 
+      scheme: default
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
@@ -51,6 +51,8 @@ markdown_extensions:
 
 extra:
   social:
+    - icon: fontawesome/brands/bluesky
+      link: https://bsky.app/profile/maplibre.org
     - icon: fontawesome/brands/mastodon
       link: https://mastodon.social/@maplibre
     - icon: fontawesome/brands/x-twitter

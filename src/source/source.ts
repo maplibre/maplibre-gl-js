@@ -178,7 +178,7 @@ const setSourceType = (name: string, type: SourceClass) => {
 };
 
 /**
- * Adds a custom source type, making it available for use with {@link Map#addSource}.
+ * Adds a custom source type, making it available for use with {@link Map.addSource}.
  * @param name - The name of the source type; source definition objects use this name in the `{type: ...}` field.
  * @param SourceType - A {@link SourceClass} - which is a constructor for the `Source` interface.
  * @returns a promise that is resolved when the source type is ready or rejected with an error.

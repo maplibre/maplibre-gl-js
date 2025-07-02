@@ -6,6 +6,9 @@
 ### 🐞 Bug fixes
 - Fix image sources being clipped at -180 and 180 longitude when terrain is enabled ([#4088](https://github.com/maplibre/maplibre-gl-js/issues/4088))
 - Fix use of `textureSize` call in color relief shader ([#5980](https://github.com/maplibre/maplibre-gl-js/pull/5980))
+- Fix Y axis transformation in projectFromLabelPlaneToClipSpace ([#6021](https://github.com/maplibre/maplibre-gl-js/pull/6021))
+- Alpha-sort all examples ([#6049](https://github.com/maplibre/maplibre-gl-js/pull/6049))
+- Ensure opacity is reset for popups when `locationOccludedOpacity` no longer applicable ([#6088](https://github.com/maplibre/maplibre-gl-js/pull/6088))
 - _...Add new stuff here..._
 
 ## 5.6.0

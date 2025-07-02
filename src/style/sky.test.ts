@@ -38,13 +38,13 @@ test('Sky with interpolate function', () => {
     expect(sky.properties.get('atmosphere-blend')).toBe(0.5);
 });
 
-test('Sky#getSky', () => {
+test('Sky.getSky', () => {
     const defaults = {'atmosphere-blend': 0.8};
 
     expect(new Sky(defaults).getSky()).toEqual(defaults);
 });
 
-describe('Sky#setSky', () => {
+describe('Sky.setSky', () => {
     test('sets Sky', () => {
         const sky = new Sky({});
         sky.setSky({'atmosphere-blend': 1} as SkySpecification);
