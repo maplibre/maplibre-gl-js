@@ -5,7 +5,7 @@ beforeEach(() => {
     beforeMapTest();
 });
 
-describe('#setGlobalStateProperty', () => {
+describe('setGlobalStateProperty', () => {
     test('sets state', async () => {
         const map = createMap({
             style: {

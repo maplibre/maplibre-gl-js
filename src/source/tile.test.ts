@@ -131,7 +131,7 @@ describe('querySourceFeatures', () => {
 
 });
 
-describe('Tile#isLessThan', () => {
+describe('Tile.isLessThan', () => {
     test('correctly sorts tiles', () => {
         const tiles = [
             new OverscaledTileID(9, 0, 9, 146, 195),
@@ -253,7 +253,7 @@ describe('expiring tiles', () => {
 });
 
 describe('rtl text detection', () => {
-    test('Tile#hasRTLText is true when a tile loads a symbol bucket with rtl text', () => {
+    test('Tile.hasRTLText is true when a tile loads a symbol bucket with rtl text', () => {
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
         // Create a stub symbol bucket
         const symbolBucket = createSymbolBucket('test', 'Test', 'test', new CollisionBoxArray());

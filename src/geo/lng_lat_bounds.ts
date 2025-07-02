@@ -291,7 +291,7 @@ export class LngLatBounds {
      *
      * If a `LngLatBounds` object is passed in, the function returns it unchanged.
      *
-     * Internally, the function calls `LngLat#convert` to convert arrays to `LngLat` values.
+     * Internally, the function calls {@link LngLat.convert} to convert arrays to `LngLat` values.
      *
      * @param input - An array of two coordinates to convert, or a `LngLatBounds` object to return.
      * @returns A new `LngLatBounds` object, if a conversion occurred, or the original `LngLatBounds` object.

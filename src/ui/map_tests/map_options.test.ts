@@ -9,7 +9,7 @@ beforeEach(() => {
     global.fetch = null;
 });
 
-describe('#mapOptions', () => {
+describe('mapOptions', () => {
     test('maxTileCacheZoomLevels: Default value is set', () => {
         const map = createMap();
         expect(map._maxTileCacheZoomLevels).toBe(config.MAX_TILE_CACHE_ZOOM_LEVELS);

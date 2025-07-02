@@ -7,7 +7,7 @@ beforeEach(() => {
     global.fetch = null;
 });
 
-test('#addControl', () => {
+test('addControl', () => {
     const map = createMap();
     const control = {
         onAdd(_) {
@@ -19,7 +19,7 @@ test('#addControl', () => {
     expect(map._controls[0]).toBe(control);
 });
 
-test('#removeControl errors on invalid arguments', () => {
+test('removeControl errors on invalid arguments', () => {
     const map = createMap();
     const control = {} as any as IControl;
     const stub = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -30,7 +30,7 @@ test('#removeControl errors on invalid arguments', () => {
 
 });
 
-test('#removeControl', () => {
+test('removeControl', () => {
     const map = createMap();
     const control = {
         onAdd() {
@@ -46,7 +46,7 @@ test('#removeControl', () => {
 
 });
 
-test('#hasControl', () => {
+test('hasControl', () => {
     const map = createMap();
     function Ctrl() {}
     Ctrl.prototype = {
