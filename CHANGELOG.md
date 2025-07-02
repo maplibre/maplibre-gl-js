@@ -4,8 +4,6 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix use of `textureSize` call in color relief shader ([#5980](https://github.com/maplibre/maplibre-gl-js/pull/5980))
-
 - Fix geolocate control lock loss on window resize ([#3504](https://github.com/maplibre/maplibre-gl-js/issues/3504))
 
 - _...Add new stuff here..._
