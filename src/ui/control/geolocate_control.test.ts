@@ -10,6 +10,7 @@ vi.mock('../../util/geolocation_support', () => (
 ));
 import {checkGeolocationSupport} from '../../util/geolocation_support';
 import type {LngLat} from '../../geo/lng_lat';
+import { create } from 'domain';
 
 /**
  * Convert the coordinates of a LngLat object to a fixed number of digits
@@ -24,6 +25,16 @@ function lngLatAsFixed(lngLat: LngLat, digits: number): {lat: string; lng: strin
     };
 }
 
+/**
+ * Since we are running in a Node.js environment, we need to mock the ResizeObserverEntry
+ */
+function createResizeObserverEntryMock() {
+    const spy = vi.fn();
+    global.ResizeObserverEntry = vi.fn().mockImplementation(() => ({
+           observe: spy
+    }));
+}
+
 describe('GeolocateControl with no options', () => {
     geolocation.use();
     let map;
@@ -32,6 +43,7 @@ describe('GeolocateControl with no options', () => {
         beforeMapTest();
         map = createMap();
         (checkGeolocationSupport as unknown as MockInstance).mockImplementationOnce(() => Promise.resolve(true));
+        createResizeObserverEntryMock();
     });
 
     afterEach(() => {
