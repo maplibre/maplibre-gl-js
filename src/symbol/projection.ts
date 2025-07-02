@@ -685,7 +685,7 @@ function projectFromLabelPlaneToClipSpace(x: number, y: number, projectionContex
     } else {
         return {
             x: (x / projectionContext.width) * 2.0 - 1.0,
-            y: (y / projectionContext.height) * 2.0 - 1.0
+            y: 1.0 - (y / projectionContext.height) * 2.0
         };
     }
 }

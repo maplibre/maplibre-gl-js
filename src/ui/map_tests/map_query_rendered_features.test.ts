@@ -7,7 +7,7 @@ beforeEach(() => {
     global.fetch = null;
 });
 
-describe('#queryRenderedFeatures', () => {
+describe('queryRenderedFeatures', () => {
 
     test('if no arguments provided', async () => {
         const map = createMap();

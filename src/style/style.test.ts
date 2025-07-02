@@ -105,7 +105,7 @@ describe('Style', () => {
     });
 });
 
-describe('Style#loadURL', () => {
+describe('Style.loadURL', () => {
     test('fires "dataloading"', () => {
         const style = new Style(getStubMap());
         const spy = vi.fn();
@@ -178,7 +178,7 @@ describe('Style#loadURL', () => {
     });
 });
 
-describe('Style#loadJSON', () => {
+describe('Style.loadJSON', () => {
     test('serialize() returns undefined until style is loaded', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
@@ -471,7 +471,7 @@ describe('Style#loadJSON', () => {
     });
 });
 
-describe('Style#_load', () => {
+describe('Style._load', () => {
     test('initiates sprite loading when it\'s present', () => {
         const style = new Style(getStubMap());
 
@@ -588,7 +588,7 @@ describe('Style#_load', () => {
     });
 });
 
-describe('Style#_remove', () => {
+describe('Style._remove', () => {
     test('removes cache sources and clears their tiles', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON({
@@ -620,7 +620,7 @@ describe('Style#_remove', () => {
     });
 });
 
-describe('Style#update', () => {
+describe('Style.update', () => {
     test('on error', async () => {
         const style = createStyle();
         style.loadJSON({
@@ -657,7 +657,7 @@ describe('Style#update', () => {
     });
 });
 
-describe('Style#setState', () => {
+describe('Style.setState', () => {
     test('throw before loaded', () => {
         const style = new Style(getStubMap());
         expect(() => style.setState(createStyleJSON())).toThrow(/load/i);
@@ -937,7 +937,7 @@ describe('Style#setState', () => {
         expect(style.stylesheet.layers).toHaveLength(1);
     });
 
-    test('Style#setState skips validateStyle when validate false', async () => {
+    test('Style.setState skips validateStyle when validate false', async () => {
         const style = new Style(getStubMap());
         const styleSpec = createStyleJSON();
         style.loadJSON(styleSpec);
@@ -954,7 +954,7 @@ describe('Style#setState', () => {
     });
 });
 
-describe('Style#addSource', () => {
+describe('Style.addSource', () => {
     test('throw before loaded', () => {
         const style = new Style(getStubMap());
         expect(() => style.addSource('source-id', createSource())).toThrow(/load/i);
@@ -1035,7 +1035,7 @@ describe('Style#addSource', () => {
     });
 });
 
-describe('Style#removeSource', () => {
+describe('Style.removeSource', () => {
     test('throw before loaded', () => {
         const style = new Style(getStubMap());
         expect(() => style.removeSource('source-id')).toThrow(/load/i);
@@ -1132,7 +1132,7 @@ describe('Style#removeSource', () => {
     });
 });
 
-describe('Style#addSprite', () => {
+describe('Style.addSprite', () => {
     test('throw before loaded', () => {
         const style = new Style(getStubMap());
         expect(() => style.addSprite('test', 'https://example.com/sprite')).toThrow(/load/i);
@@ -1180,7 +1180,7 @@ describe('Style#addSprite', () => {
     });
 });
 
-describe('Style#removeSprite', () => {
+describe('Style.removeSprite', () => {
     test('throw before loaded', () => {
         const style = new Style(getStubMap());
         expect(() => style.removeSprite('test')).toThrow(/load/i);
@@ -1236,7 +1236,7 @@ describe('Style#removeSprite', () => {
     });
 });
 
-describe('Style#setGeoJSONSourceData', () => {
+describe('Style.setGeoJSONSourceData', () => {
     const geoJSON = {type: 'FeatureCollection', features: []} as GeoJSON.GeoJSON;
 
     test('throws before loaded', () => {
@@ -1252,7 +1252,7 @@ describe('Style#setGeoJSONSourceData', () => {
     });
 });
 
-describe('Style#setGlobalState', () => {
+describe('Style.setGlobalState', () => {
     test('throws before loaded', () => {
         const style = new Style(getStubMap());
         expect(() => style.setGlobalState({})).toThrow(/load/i);
@@ -1361,7 +1361,7 @@ describe('Style#setGlobalState', () => {
     });
 });
 
-describe('Style#setGlobalStateProperty', () => {
+describe('Style.setGlobalStateProperty', () => {
     test('throws before loaded', () => {
         const style = new Style(getStubMap());
         expect(() => style.setGlobalStateProperty('accentColor', 'yellow')).toThrow(/load/i);
@@ -1509,7 +1509,7 @@ describe('Style#setGlobalStateProperty', () => {
     });
 });
 
-describe('Style#addLayer', () => {
+describe('Style.addLayer', () => {
     test('throw before loaded', () => {
         const style = new Style(getStubMap());
         expect(() => style.addLayer({id: 'background', type: 'background'})).toThrow(/load/i);
@@ -1803,7 +1803,7 @@ describe('Style#addLayer', () => {
     });
 });
 
-describe('Style#removeLayer', () => {
+describe('Style.removeLayer', () => {
     test('throw before loaded', () => {
         const style = new Style(getStubMap());
         expect(() => style.removeLayer('background')).toThrow(/load/i);
@@ -1895,7 +1895,7 @@ describe('Style#removeLayer', () => {
     });
 });
 
-describe('Style#moveLayer', () => {
+describe('Style.moveLayer', () => {
     test('throw before loaded', () => {
         const style = new Style(getStubMap());
         expect(() => style.moveLayer('background')).toThrow(/load/i);
@@ -1957,7 +1957,7 @@ describe('Style#moveLayer', () => {
     });
 });
 
-describe('Style#setPaintProperty', () => {
+describe('Style.setPaintProperty', () => {
     test('#4738 postpones source reload until layers have been broadcast to workers', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(extend(createStyleJSON(), {
@@ -2054,7 +2054,7 @@ describe('Style#setPaintProperty', () => {
     });
 });
 
-describe('Style#getPaintProperty', () => {
+describe('Style.getPaintProperty', () => {
     test('#5802 clones the output', async () => {
         const style = new Style(getStubMap());
         style.loadJSON({
@@ -2080,7 +2080,7 @@ describe('Style#getPaintProperty', () => {
     });
 });
 
-describe('Style#setLayoutProperty', () => {
+describe('Style.setLayoutProperty', () => {
     test('#5802 clones the input', async () => {
         const style = new Style(getStubMap());
         style.loadJSON({
@@ -2155,7 +2155,7 @@ describe('Style#setLayoutProperty', () => {
     });
 });
 
-describe('Style#getLayoutProperty', () => {
+describe('Style.getLayoutProperty', () => {
     test('#5802 clones the output', async () => {
         const style = new Style(getStubMap());
         style.loadJSON({
@@ -2190,7 +2190,7 @@ describe('Style#getLayoutProperty', () => {
     });
 });
 
-describe('Style#setFilter', () => {
+describe('Style.setFilter', () => {
     test('throws if style is not loaded', () => {
         const style = new Style(getStubMap());
         expect(() => style.setFilter('symbol', ['==', 'id', 1])).toThrow(/load/i);
@@ -2309,7 +2309,7 @@ describe('Style#setFilter', () => {
     });
 });
 
-describe('Style#setLayerZoomRange', () => {
+describe('Style.setLayerZoomRange', () => {
     test('throw before loaded', () => {
         const style = new Style(getStubMap());
         expect(() => style.setLayerZoomRange('symbol', 5, 12)).toThrow(/load/i);
@@ -2380,7 +2380,7 @@ describe('Style#setLayerZoomRange', () => {
     });
 });
 
-describe('Style#getLayersOrder', () => {
+describe('Style.getLayersOrder', () => {
     test('returns ids of layers in the correct order', async () => {
         const style = new Style(getStubMap());
         style.loadJSON({
@@ -2408,7 +2408,7 @@ describe('Style#getLayersOrder', () => {
     });
 });
 
-describe('Style#queryRenderedFeatures', () => {
+describe('Style.queryRenderedFeatures', () => {
 
     let style: Style;
     let transform: MercatorTransform;
@@ -2647,7 +2647,7 @@ describe('Style defers  ...', () => {
     });
 });
 
-describe('Style#query*Features', () => {
+describe('Style.query*Features', () => {
 
     // These tests only cover filter validation. Most tests for these methods
     // live in the integration tests.
@@ -2737,7 +2737,7 @@ describe('Style#query*Features', () => {
     });
 });
 
-describe('Style#hasTransitions', () => {
+describe('Style.hasTransitions', () => {
     test('returns false when the style is loading', () => {
         const style = new Style(getStubMap());
         expect(style.hasTransitions()).toBe(false);
@@ -2778,7 +2778,7 @@ describe('Style#hasTransitions', () => {
     });
 });
 
-describe('Style#serialize', () => {
+describe('Style.serialize', () => {
     test('include terrain property when map has 3D terrain', async () => {
         const terrain = {
             source: 'terrainSource',

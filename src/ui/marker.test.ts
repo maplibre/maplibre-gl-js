@@ -84,7 +84,7 @@ describe('marker', () => {
         expect(marker.getElement()).toBe(element);
     });
 
-    test('Marker#addTo adds the marker element to the canvas container', () => {
+    test('Marker.addTo adds the marker element to the canvas container', () => {
         const map = createMap();
         new Marker()
             .setLngLat([-77.01866, 38.888])
@@ -146,21 +146,21 @@ describe('marker', () => {
 
     });
 
-    test('Marker#setPopup binds a popup', () => {
+    test('Marker.setPopup binds a popup', () => {
         const popup = new Popup();
         const marker = new Marker()
             .setPopup(popup);
         expect(marker.getPopup()).toBe(popup);
     });
 
-    test('Marker#setPopup unbinds a popup', () => {
+    test('Marker.setPopup unbinds a popup', () => {
         const marker = new Marker()
             .setPopup(new Popup())
             .setPopup();
         expect(!marker.getPopup()).toBeTruthy();
     });
 
-    test('Marker#setPopup binds a popup and allow closing it with click', () => {
+    test('Marker.setPopup binds a popup and allow closing it with click', () => {
         const map = createMap();
         const popup = new Popup()
             .setText('Test');
@@ -178,7 +178,7 @@ describe('marker', () => {
         expect(spy).toHaveBeenCalled();
     });
 
-    test('Marker#togglePopup opens a popup that was closed', async () => {
+    test('Marker.togglePopup opens a popup that was closed', async () => {
         const map = createMap();
         const marker = new Marker()
             .setLngLat([0, 0])
@@ -193,7 +193,7 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Marker#togglePopup closes a popup that was open', () => {
+    test('Marker.togglePopup closes a popup that was open', () => {
         const map = createMap();
         const marker = new Marker()
             .setLngLat([0, 0])
@@ -247,14 +247,14 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Marker#setPopup sets a tabindex', () => {
+    test('Marker.setPopup sets a tabindex', () => {
         const popup = new Popup();
         const marker = new Marker()
             .setPopup(popup);
         expect(marker.getElement().getAttribute('tabindex')).toBe('0');
     });
 
-    test('Marker#setPopup removes tabindex when unset', () => {
+    test('Marker.setPopup removes tabindex when unset', () => {
         const popup = new Popup();
         const marker = new Marker()
             .setPopup(popup)
@@ -262,7 +262,7 @@ describe('marker', () => {
         expect(marker.getElement().getAttribute('tabindex')).toBeFalsy();
     });
 
-    test('Marker#setPopup does not replace existing tabindex', () => {
+    test('Marker.setPopup does not replace existing tabindex', () => {
         const element = window.document.createElement('div');
         element.setAttribute('tabindex', '5');
         const popup = new Popup();
@@ -457,7 +457,7 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Marker#setDraggable adds drag functionality', () => {
+    test('Marker.setDraggable adds drag functionality', () => {
         const map = createMap();
         const marker = new Marker()
             .setLngLat([0, 0])
@@ -469,7 +469,7 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Marker#setDraggable turns off drag functionality', () => {
+    test('Marker.setDraggable turns off drag functionality', () => {
         const map = createMap();
         const marker = new Marker({draggable: true})
             .setLngLat([0, 0])

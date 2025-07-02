@@ -1,0 +1,59 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Chinese text should follow the line vertically, top to bottom.",
+      "height": 512
+    }
+  },
+  "center": [
+    13.418056,
+    52.499167
+  ],
+  "zoom": 16,
+  "sources": {
+    "maplibre": {
+      "type": "vector",
+      "maxzoom": 14,
+      "tiles": [
+        "local://tiles/{z}-{x}-{y}.mvt"
+      ]
+    }
+  },
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "line-center",
+      "type": "symbol",
+      "source": "maplibre",
+      "source-layer": "road_label",
+      "layout": {
+        "text-field": "高速公路",
+        "symbol-placement": "line-center",
+        "text-allow-overlap": true,
+        "text-pitch-alignment": "viewport",
+        "text-keep-upright": true,
+        "text-font": [
+          "NotoCJK"
+        ]
+      }
+    },
+    {
+      "id": "road",
+      "type": "line",
+      "source": "maplibre",
+      "source-layer": "road_label",
+      "paint": {
+        "line-width": 1,
+        "line-color":"black"
+      }
+    }
+  ]
+}

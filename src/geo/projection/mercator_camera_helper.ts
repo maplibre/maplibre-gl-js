@@ -107,7 +107,7 @@ export class MercatorCameraHelper implements ICameraHelper {
             }
             if (doPadding) {
                 tr.interpolatePadding(startPadding, options.padding, k);
-                // When padding is being applied, Transform#centerPoint is changing continuously,
+                // When padding is being applied, Transform.centerPoint is changing continuously,
                 // thus we need to recalculate offsetPoint every frame
                 pointAtOffset = tr.centerPoint.add(options.offsetAsPoint);
             }
