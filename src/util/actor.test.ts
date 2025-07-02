@@ -178,7 +178,7 @@ describe('Actor', () => {
         expect(spy).not.toHaveBeenCalled();
     });
 
-    test('#remove unbinds event listener', () => {
+    test('remove unbinds event listener', () => {
         const addEventListenerSpy = vi.fn();
         const removeEventListenerSpy = vi.fn();
         const actor = new Actor({

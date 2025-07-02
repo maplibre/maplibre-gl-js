@@ -61,7 +61,7 @@ export type PopupOptions = {
     focusAfterOpen?: boolean;
     /**
      * A string indicating the part of the Popup that should
-     * be positioned closest to the coordinate set via {@link Popup#setLngLat}.
+     * be positioned closest to the coordinate set via {@link Popup.setLngLat}.
      * Options are `'center'`, `'top'`, `'bottom'`, `'left'`, `'right'`, `'top-left'`,
      * `'top-right'`, `'bottom-left'`, and `'bottom-right'`. If unset the anchor will be
      * dynamically set to ensure the popup falls within the map container with a preference
@@ -243,7 +243,7 @@ export class Popup extends Evented {
         if (this._map.transform.isLocationOccluded(this.getLngLat())) {
             this._container.style.opacity = `${this.options.locationOccludedOpacity}`;
         } else {
-            this._container.style.opacity = undefined;
+            this._container.style.opacity = '';
         }
     };
 
@@ -400,7 +400,7 @@ export class Popup extends Evented {
      * Sets the popup's content to the HTML provided as a string.
      *
      * This method does not perform HTML filtering or sanitization, and must be
-     * used only with trusted content. Consider {@link Popup#setText} if
+     * used only with trusted content. Consider {@link Popup.setText} if
      * the content is an untrusted text string.
      *
      * @param html - A string representing HTML content for the popup.

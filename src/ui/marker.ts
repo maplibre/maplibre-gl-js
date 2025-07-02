@@ -34,7 +34,7 @@ type MarkerOptions = {
      */
     offset?: PointLike;
     /**
-     * A string indicating the part of the Marker that should be positioned closest to the coordinate set via {@link Marker#setLngLat}.
+     * A string indicating the part of the Marker that should be positioned closest to the coordinate set via {@link Marker.setLngLat}.
      * Options are `'center'`, `'top'`, `'bottom'`, `'left'`, `'right'`, `'top-left'`, `'top-right'`, `'bottom-left'`, and `'bottom-right'`.
      * @defaultValue 'center'
      * */
@@ -331,7 +331,7 @@ export class Marker extends Evented {
 
         // If we attached the `click` listener to the marker element, the popup
         // would close once the event propagated to `map` due to the
-        // `Popup#_onClickClose` listener.
+        // `Popup._onClickClose` listener.
         this._map.on('click', this._onMapClick);
 
         return this;
@@ -624,7 +624,7 @@ export class Marker extends Evented {
 
         // because rounding the coordinates at every `move` event causes stuttered zooming
         // we only round them when _update is called with `moveend` or when its called with
-        // no arguments (when the Marker is initialized or Marker#setLngLat is invoked).
+        // no arguments (when the Marker is initialized or Marker.setLngLat is invoked).
         if (!this._subpixelPositioning && (!e || e.type === 'moveend')) {
             this._pos = this._pos.round();
         }
@@ -795,7 +795,7 @@ export class Marker extends Evented {
 
     /**
      * Sets the `rotation` property of the marker.
-     * @param rotation - The rotation angle of the marker (clockwise, in degrees), relative to its respective {@link Marker#setRotationAlignment} setting.
+     * @param rotation - The rotation angle of the marker (clockwise, in degrees), relative to its respective {@link Marker.setRotationAlignment} setting.
      */
     setRotation(rotation?: number): this {
         this._rotation = rotation || 0;

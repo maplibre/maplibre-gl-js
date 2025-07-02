@@ -31,7 +31,7 @@ export type MapSourceDataType = 'content' | 'metadata' | 'visibility' | 'idle';
 /**
  * `MapLayerEventType` - a mapping between the event name and the event.
  * **Note:** These events are compatible with the optional `layerId` parameter.
- * If `layerId` is included as the second argument in {@link Map#on}, the event listener will fire only when the
+ * If `layerId` is included as the second argument in {@link Map.on}, the event listener will fire only when the
  * event action contains a visible portion of the specified layer.
  * The following example can be used for all the events.
  *
@@ -131,8 +131,8 @@ export type MapLayerEventType = {
 
 /**
  * `MapEventType` - a mapping between the event name and the event value.
- * These events are used with the {@link Map#on} method.
- * When using a `layerId` with {@link Map#on} method, please refer to {@link MapLayerEventType}.
+ * These events are used with the {@link Map.on} method.
+ * When using a `layerId` with {@link Map.on} method, please refer to {@link MapLayerEventType}.
  * The following example can be used for all the events.
  *
  * @group Event Related
@@ -173,7 +173,7 @@ export type MapEventType = {
      */
     idle: MapLibreEvent;
     /**
-     * Fired immediately after the map has been removed with {@link Map#remove}.
+     * Fired immediately after the map has been removed with {@link Map.remove}.
      */
     remove: MapLibreEvent;
     /**
@@ -231,7 +231,7 @@ export type MapEventType = {
     styledata: MapStyleDataEvent;
     /**
      * Fired when an icon or pattern needed by the style is missing. The missing image can
-     * be added with {@link Map#addImage} within this event listener callback to prevent the image from
+     * be added with {@link Map.addImage} within this event listener callback to prevent the image from
      * being skipped. This event can be used to dynamically generate icons and patterns.
      * @see [Generate and add a missing icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/generate-and-add-a-missing-icon-to-the-map/)
      */
@@ -330,37 +330,37 @@ export type MapEventType = {
     mouseover: MapMouseEvent;
     /**
      * Fired just before the map begins a transition from one
-     * view to another, as the result of either user interaction or methods such as {@link Map#jumpTo}.
+     * view to another, as the result of either user interaction or methods such as {@link Map.jumpTo}.
      *
      */
     movestart: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
     /**
      * Fired repeatedly during an animated transition from one view to
-     * another, as the result of either user interaction or methods such as {@link Map#flyTo}.
+     * another, as the result of either user interaction or methods such as {@link Map.flyTo}.
      *
      * @see [Display HTML clusters with custom properties](https://maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/)
      */
     move: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
     /**
      * Fired just after the map completes a transition from one
-     * view to another, as the result of either user interaction or methods such as {@link Map#jumpTo}.
+     * view to another, as the result of either user interaction or methods such as {@link Map.jumpTo}.
      *
      * @see [Display HTML clusters with custom properties](https://maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/)
      */
     moveend: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
     /**
      * Fired just before the map begins a transition from one zoom level to another,
-     * as the result of either user interaction or methods such as {@link Map#flyTo}.
+     * as the result of either user interaction or methods such as {@link Map.flyTo}.
      */
     zoomstart: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
     /**
      * Fired repeatedly during an animated transition from one zoom level to another,
-     * as the result of either user interaction or methods such as {@link Map#flyTo}.
+     * as the result of either user interaction or methods such as {@link Map.flyTo}.
      */
     zoom: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
     /**
      * Fired just after the map completes a transition from one zoom level to another,
-     * as the result of either user interaction or methods such as {@link Map#flyTo}.
+     * as the result of either user interaction or methods such as {@link Map.flyTo}.
      */
     zoomend: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
     /**
@@ -390,18 +390,18 @@ export type MapEventType = {
     dragend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
     /**
      * Fired whenever the map's pitch (tilt) begins a change as
-     * the result of either user interaction or methods such as {@link Map#flyTo} .
+     * the result of either user interaction or methods such as {@link Map.flyTo} .
      */
     pitchstart: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
     /**
      * Fired repeatedly during the map's pitch (tilt) animation between
      * one state and another as the result of either user interaction
-     * or methods such as {@link Map#flyTo}.
+     * or methods such as {@link Map.flyTo}.
      */
     pitch: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
     /**
      * Fired immediately after the map's pitch (tilt) finishes changing as
-     * the result of either user interaction or methods such as {@link Map#flyTo}.
+     * the result of either user interaction or methods such as {@link Map.flyTo}.
      */
     pitchend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
     /**
