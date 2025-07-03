@@ -90,7 +90,7 @@ let noTimeout = false;
  *     trackUserLocation: true
  * }));
  * ```
- * @see [Locate the user](https://maplibre.org/maplibre-gl-js/docs/examples/locate-user/)
+ * @see [Locate the user](https://maplibre.org/maplibre-gl-js/docs/examples/locate-the-user/)
  *
  * ## Events
  *
