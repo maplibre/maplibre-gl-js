@@ -96,7 +96,7 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-tsdoc": "0.4.0",
     "eslint-plugin-vitest": "^0.5.4",
-    "expect": "^30.0.3",
+    "expect": "^30.0.4",
     "glob": "^11.0.3",
     "globals": "^16.3.0",
     "is-builtin-module": "^5.0.0",
