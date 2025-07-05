@@ -20,7 +20,12 @@ const defaultOptions = {
     maxWidth: '240px',
     subpixelPositioning: false,
     locationOccludedOpacity: undefined,
-    popupPadding: { top: 80, right: 80, bottom: 80, left: 80 }
+    popupPadding: {
+        top: 80,
+        right: 80,
+        bottom: 80,
+        left: 80
+    }
 };
 
 /**
@@ -100,8 +105,8 @@ export type PopupOptions = {
      * A pixel padding applied to the popup's positioning logic.
      * This ensures the popup stays within the map viewport and doesn't overlap padded edges.
      * Useful for UI where parts of the map are visually obstructed (e.g. sidebars, headers).
-     * @example { top: 20, right: 30, bottom: 40, left: 10 }
-     * @defaultValue { top: 0, right: 0, bottom: 0, left: 0 }
+     * @example {top: 20, right: 30, bottom: 40, left: 10}
+     * @defaultValue {top: 80, right: 80, bottom: 80, left: 80}
      */
     popupPadding?: {
         top: number;
@@ -646,6 +651,7 @@ export class Popup extends Evented {
         if (!anchor) {
             const width = this._container.offsetWidth;
             const height = this._container.offsetHeight;
+            this.options.popupPadding ??= {top: 80, right: 80, bottom: 80, left: 80};
             const padding = this.options.popupPadding;
 
             let anchorComponents;
