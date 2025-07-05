@@ -103,7 +103,7 @@ export type PopupOptions = {
      * @example { top: 20, right: 30, bottom: 40, left: 10 }
      * @defaultValue { top: 0, right: 0, bottom: 0, left: 0 }
      */
-    popupPadding: {
+    popupPadding?: {
         top: number;
         right: number;
         bottom: number;
