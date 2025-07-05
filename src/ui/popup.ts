@@ -20,6 +20,7 @@ const defaultOptions = {
     maxWidth: '240px',
     subpixelPositioning: false,
     locationOccludedOpacity: undefined,
+    popupPadding: { top: 80, right: 80, bottom: 80, left: 80 }
 };
 
 /**
@@ -95,6 +96,19 @@ export type PopupOptions = {
      * @defaultValue undefined
      */
     locationOccludedOpacity?: number | string;
+    /**
+     * A pixel padding applied to the popup's positioning logic.
+     * This ensures the popup stays within the map viewport and doesn't overlap padded edges.
+     * Useful for UI where parts of the map are visually obstructed (e.g. sidebars, headers).
+     * @example { top: 20, right: 30, bottom: 40, left: 10 }
+     * @defaultValue { top: 0, right: 0, bottom: 0, left: 0 }
+     */
+    popupPadding: {
+        top: number;
+        right: number;
+        bottom: number;
+        left: number;
+    };
 };
 
 const focusQuerySelector = [
@@ -632,19 +646,21 @@ export class Popup extends Evented {
         if (!anchor) {
             const width = this._container.offsetWidth;
             const height = this._container.offsetHeight;
+            const padding = this.options.popupPadding;
+
             let anchorComponents;
 
-            if (pos.y + offset.bottom.y < height) {
+            if (pos.y + offset.bottom.y < height + padding.top) {
                 anchorComponents = ['top'];
-            } else if (pos.y > this._map.transform.height - height) {
+            } else if (pos.y > this._map.transform.height - height - padding.bottom) {
                 anchorComponents = ['bottom'];
             } else {
                 anchorComponents = [];
             }
 
-            if (pos.x < width / 2) {
+            if (pos.x < width / 2 + padding.left) {
                 anchorComponents.push('left');
-            } else if (pos.x > this._map.transform.width - width / 2) {
+            } else if (pos.x > this._map.transform.width - width / 2 - padding.right) {
                 anchorComponents.push('right');
             }
 
