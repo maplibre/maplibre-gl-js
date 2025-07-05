@@ -7,6 +7,8 @@ import type {
     PopulateParameters
 } from '../bucket';
 import {type PossiblyEvaluated} from '../../style/properties';
+import type {ImagePositionLike} from '../../render/image_atlas';
+import {type GetDashesResponse} from '../../util/actor_messages';
 
 type PatternStyleLayers = Array<LineStyleLayer> | Array<FillStyleLayer> | Array<FillExtrusionStyleLayer>;
 
@@ -26,6 +28,14 @@ export function hasPattern(type: string, layers: PatternStyleLayers, options: Po
             patterns[constantPattern.to] =  true;
             patterns[constantPattern.from] =  true;
         }
+
+        // Also check for data-driven dasharray
+        if (type === 'line') {
+            const dasharrayProperty = (layer.paint as PossiblyEvaluated<any, any>).get('line-dasharray');
+            if (dasharrayProperty && !dasharrayProperty.isConstant()) {
+                hasPattern = true;
+            }
+        }
     }
 
     return hasPattern;
@@ -33,6 +43,8 @@ export function hasPattern(type: string, layers: PatternStyleLayers, options: Po
 
 export function addPatternDependencies(type: string, layers: PatternStyleLayers, patternFeature: BucketFeature, zoom: number, options: PopulateParameters) {
     const patterns = options.patternDependencies;
+    const dasharrays = options.dasharrayDependencies;
+
     for (const layer of layers) {
         const patternProperty = (layer.paint  as PossiblyEvaluated<any, any>).get(`${type}-pattern`);
 
@@ -52,6 +64,62 @@ export function addPatternDependencies(type: string, layers: PatternStyleLayers,
             // save for layout
             patternFeature.patterns[layer.id] = {min, mid, max};
         }
+
+        // Handle data-driven dasharray
+        if (type === 'line') {
+            const dasharrayProperty = (layer.paint as PossiblyEvaluated<any, any>).get('line-dasharray');
+            if (dasharrayProperty && dasharrayProperty.value.kind !== 'constant') {
+                const round = false; // TODO handle round caps if needed
+
+                const min = {dasharray: dasharrayProperty.value.evaluate({zoom: zoom - 1}, patternFeature, {}), round};
+                const mid = {dasharray: dasharrayProperty.value.evaluate({zoom}, patternFeature, {}), round};
+                const max = {dasharray: dasharrayProperty.value.evaluate({zoom: zoom + 1}, patternFeature, {}), round};
+
+                const minKey = JSON.stringify(min);
+                const midKey = JSON.stringify(mid);
+                const maxKey = JSON.stringify(max);
+
+                dasharrays[minKey] = min;
+                dasharrays[midKey] = mid;
+                dasharrays[maxKey] = max;
+
+                patternFeature.dashes[layer.id] = {min: minKey, mid: midKey, max: maxKey};
+            }
+        }
     }
     return patternFeature;
+}
+
+export function addDasharrayDependencies(buckets: {[_: string]: any}, dashes: GetDashesResponse): {[_: string]: ImagePositionLike} {
+    const dasharrayPositions: {[_: string]: ImagePositionLike} = {};
+
+    for (const key in buckets) {
+        const bucket = buckets[key];
+        if (bucket.hasPattern && bucket.patternFeatures) {
+            for (const patternFeature of bucket.patternFeatures) {
+                for (const layer of bucket.layers) {
+                    const dasharrayPattern = patternFeature.dashes[layer.id];
+
+                    // Check if this is a dasharray pattern (keys vs string pattern names)
+                    if (dasharrayPattern) {
+                        const {min: minKey, mid: midKey, max: maxKey} = dasharrayPattern;
+
+                        // Look up the dashes directly using the keys
+                        const dashMin = dashes[minKey];
+                        const dashMid = dashes[midKey];
+                        const dashMax = dashes[maxKey];
+
+                        if (dashMin && dashMid && dashMax) {
+                            // Use the original keys for consistency
+                            dasharrayPositions[minKey] = {tlbr: [0, dashMin.y, dashMin.height, dashMin.width], pixelRatio: 1};
+                            dasharrayPositions[midKey] = {tlbr: [0, dashMid.y, dashMid.height, dashMid.width], pixelRatio: 1};
+                            dasharrayPositions[maxKey] = {tlbr: [0, dashMax.y, dashMax.height, dashMax.width], pixelRatio: 1};
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return dasharrayPositions;
 }
