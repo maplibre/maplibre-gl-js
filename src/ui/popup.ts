@@ -21,10 +21,10 @@ const defaultOptions = {
     subpixelPositioning: false,
     locationOccludedOpacity: undefined,
     popupPadding: {
-        top: 80,
-        right: 80,
-        bottom: 80,
-        left: 80
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0
     }
 };
 
@@ -651,7 +651,6 @@ export class Popup extends Evented {
         if (!anchor) {
             const width = this._container.offsetWidth;
             const height = this._container.offsetHeight;
-            this.options.popupPadding ??= {top: 80, right: 80, bottom: 80, left: 80};
             const padding = this.options.popupPadding;
 
             let anchorComponents;
