@@ -4,7 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix in test/README.md line that mentions sinonjs, replaced with link to Vitest manual entry of Vitest mocking. No issue ticket exists for this fix.
+- _...Add new stuff here..._
 
 ## 5.6.1
 
