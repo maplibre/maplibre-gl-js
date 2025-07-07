@@ -302,6 +302,11 @@ export abstract class Camera extends Evented {
     _elevationFreeze: boolean;
     /**
      * @internal
+     * Saves the current state of the elevation target freeze - this is used during map movement to prevent updating the elevation target when a user-specified elevation is set.
+     */
+    _elevationTargetFreeze: boolean;
+    /**
+     * @internal
      * Used to track accumulated changes during continuous interaction
      */
     _requestedCameraState?: ITransform;
@@ -1104,6 +1109,10 @@ export abstract class Camera extends Evented {
             padding = ('padding' in options ? options.padding : tr.padding) as PaddingOptions;
         const offsetAsPoint = Point.convert(options.offset);
 
+        if (options.elevation !== undefined) {
+            tr.setElevation(+options.elevation);
+        }
+
         let around, aroundPoint;
 
         if (options.around) {
@@ -1141,7 +1150,7 @@ export abstract class Camera extends Evented {
         this._prepareEase(eventData, options.noMoveStart, currently);
 
         if (this.terrain) {
-            this._prepareElevation(easeHandler.elevationCenter);
+            this._prepareElevation(easeHandler.elevationCenter, options.elevation);
         }
 
         this._ease((k) => {
@@ -1179,16 +1188,19 @@ export abstract class Camera extends Evented {
         }
     }
 
-    _prepareElevation(center: LngLat) {
+    _prepareElevation(center: LngLat, optionsElevation?: number) {
         this._elevationCenter = center;
         this._elevationStart = this.transform.elevation;
-        this._elevationTarget = this.terrain.getElevationForLngLatZoom(center, this.transform.tileZoom);
+        this._elevationTargetFreeze = optionsElevation !== undefined;
+        this._elevationTarget = optionsElevation ?? this.terrain.getElevationForLngLatZoom(center, this.transform.tileZoom);
         this._elevationFreeze = true;
     }
 
     _updateElevation(k: number) {
         this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, this.transform.tileZoom));
-        const elevation = this.terrain.getElevationForLngLatZoom(this._elevationCenter, this.transform.tileZoom);
+        const elevation = this._elevationTargetFreeze ?
+            this._elevationTarget :
+            this.terrain.getElevationForLngLatZoom(this._elevationCenter, this.transform.tileZoom);
         // target terrain updated during flight, slowly move camera to new height
         if (k < 1 && elevation !== this._elevationTarget) {
             const pitch1 = this._elevationTarget - this._elevationStart;
@@ -1201,6 +1213,7 @@ export abstract class Camera extends Evented {
 
     _finalizeElevation() {
         this._elevationFreeze = false;
+        this._elevationTargetFreeze = false;
         if (this.getCenterClampedToGround()) {
             this.transform.recalculateZoomAndCenter(this.terrain);
         }
@@ -1414,6 +1427,10 @@ export abstract class Camera extends Evented {
         const offsetAsPoint = Point.convert(options.offset);
         let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
         const locationAtOffset = tr.screenPointToLocation(pointAtOffset);
+
+        if (options.elevation !== undefined) {
+            tr.setElevation(+options.elevation);
+        }
 
         const flyToHandler = this.cameraHelper.handleFlyTo(tr, {
             bearing,
