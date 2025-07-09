@@ -39,7 +39,6 @@ describe('Browser tests', () => {
 
     beforeEach(async () => {
         page = await browser.newPage();
-        await page.setCacheEnabled(false);
 
         await page.setViewport({width: testWidth, height: testHeight, deviceScaleFactor});
 
