@@ -42,6 +42,6 @@ See [`test/integration/README.md`](./integration/README.md).
 
 ## Spies, Stubs, and Mocks
 
-The test object is augmented with methods from Sinon.js for [spies](https://sinonjs.org/docs/#spies), [stubs](https://sinonjs.org/docs/#stubs), and [mocks](https://sinonjs.org/docs/#mocks). For example, to use Sinon's spy API, call `t.spy(...)` within a test.
+In the tests you can leverage the Vitest functions for mocking, as described [in the manual of Vitest](https://vitest.dev/guide/mocking.html).
 
 The test framework is set up such that spies, stubs, and mocks on global objects are restored at the end of each test.
