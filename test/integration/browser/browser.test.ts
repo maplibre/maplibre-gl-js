@@ -39,6 +39,8 @@ describe('Browser tests', () => {
 
     beforeEach(async () => {
         page = await browser.newPage();
+        await page.setCacheEnabled(false);
+
         await page.setViewport({width: testWidth, height: testHeight, deviceScaleFactor});
 
         const port = (server.address() as AddressInfo).port;
@@ -54,6 +56,7 @@ describe('Browser tests', () => {
                 }
             });
         });
+
     }, 40000);
 
     afterEach(async() => {
@@ -138,7 +141,6 @@ describe('Browser tests', () => {
     });
 
     test('Resize viewport (page)', {retry: 3, timeout: 20000}, async () => {
-
         await page.setViewport({width: 400, height: 400, deviceScaleFactor: 2});
 
         await sleep(200);
@@ -147,6 +149,31 @@ describe('Browser tests', () => {
         const canvasBB = await canvas?.boundingBox();
         expect(canvasBB?.width).toBeCloseTo(400);
         expect(canvasBB?.height).toBeCloseTo(400);
+    });
+
+    test('Resize viewport, geolocate button still active', {retry: 3, timeout: 20000}, async () => {
+        await page.setGeolocation({latitude: 59.95, longitude: 30.31667});
+        const geolocateElement = await page.$('.maplibregl-ctrl-geolocate');
+        expect(geolocateElement).toBeTruthy();
+        await geolocateElement?.click();
+
+        // Wait until the map has settled
+        await page.evaluate(() => {
+            return new Promise((resolve, _reject) => {
+                map.once('idle', () => {resolve(true);});
+            });
+        });
+
+        await page.setViewport({width: 400, height: 750, deviceScaleFactor: 2});
+        // Wait until the map has settled
+        await page.evaluate(() => {
+            return new Promise((resolve, _reject) => {
+                map.once('idle', () => {resolve(true);});
+            });
+        });
+
+        const getlocateActiveElement = await page.$('.maplibregl-ctrl-geolocate-active');
+        expect(getlocateActiveElement).toBeTruthy();
     });
 
     test('Resize div', {retry: 3, timeout: 20000}, async () => {
@@ -164,7 +191,6 @@ describe('Browser tests', () => {
     });
 
     test('Zoom: Double click at the center', {retry: 3, timeout: 20000}, async () => {
-
         const canvas = await page.$('.maplibregl-canvas');
         const canvasBB = await canvas?.boundingBox()!;
         await page.mouse.click(canvasBB?.x!, canvasBB?.y!, {clickCount: 2});
