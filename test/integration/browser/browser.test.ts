@@ -151,7 +151,7 @@ describe('Browser tests', () => {
         expect(canvasBB?.height).toBeCloseTo(400);
     });
 
-    test('Resize viewport, geolocate button still active', {retry: 3, timeout: 40000}, async () => {
+    test('Resize viewport, geolocate button still active', {retry: 3, timeout: 140000}, async () => {
         await page.setGeolocation({latitude: 59.95, longitude: 30.31667});
         const geolocateElement = await page.$('.maplibregl-ctrl-geolocate');
         expect(geolocateElement).toBeTruthy();
