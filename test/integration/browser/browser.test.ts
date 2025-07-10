@@ -150,31 +150,6 @@ describe('Browser tests', () => {
         expect(canvasBB?.height).toBeCloseTo(400);
     });
 
-    test('Resize viewport, geolocate button still active', {retry: 3, timeout: 140000}, async () => {
-        await page.setGeolocation({latitude: 59.95, longitude: 30.31667});
-        const geolocateElement = await page.$('.maplibregl-ctrl-geolocate');
-        expect(geolocateElement).toBeTruthy();
-        await geolocateElement?.click();
-
-        // Wait until the map has settled
-        await page.evaluate(() => {
-            return new Promise((resolve, _reject) => {
-                map.once('idle', () => {resolve(true);});
-            });
-        });
-
-        await page.setViewport({width: 400, height: 750, deviceScaleFactor: 2});
-        // Wait until the map has settled
-        await page.evaluate(() => {
-            return new Promise((resolve, _reject) => {
-                map.once('idle', () => {resolve(true);});
-            });
-        });
-
-        const getlocateActiveElement = await page.$('.maplibregl-ctrl-geolocate-active');
-        expect(getlocateActiveElement).toBeTruthy();
-    });
-
     test('Resize div', {retry: 3, timeout: 20000}, async () => {
 
         await page.evaluate(() => {

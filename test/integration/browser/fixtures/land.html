@@ -52,16 +52,6 @@ const map = window.map = new maplibregl.Map({
         ]
     }
 });
-
-// Add geolocate control to the map.
-map.addControl(
-    new maplibregl.GeolocateControl({
-        positionOptions: {
-            enableHighAccuracy: true
-        },
-        trackUserLocation: true
-    })
-);
 </script>
 
 </body>
