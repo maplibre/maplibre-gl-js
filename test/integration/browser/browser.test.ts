@@ -39,7 +39,6 @@ describe('Browser tests', () => {
 
     beforeEach(async () => {
         page = await browser.newPage();
-
         await page.setViewport({width: testWidth, height: testHeight, deviceScaleFactor});
 
         const port = (server.address() as AddressInfo).port;
@@ -55,7 +54,6 @@ describe('Browser tests', () => {
                 }
             });
         });
-
     }, 40000);
 
     afterEach(async() => {
