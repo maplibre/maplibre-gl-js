@@ -260,6 +260,26 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(11, 0, 11, 688, 1024)
             ]);
         });
+
+        test('nonzero center elevation', () => {
+            const options = {
+                minzoom: 1,
+                maxzoom: 15,
+                tileSize: 512,
+                reparseOverscaled: true
+            };
+        
+            const transform = new GlobeTransform();
+            transform.resize(128, 128);
+            transform.setZoom(11);
+            transform.setCenter(new LngLat(0.021, 0.0915));
+            transform.setElevation(20000);
+
+            expect(coveringTiles(transform, options)).toEqual([
+                new OverscaledTileID(11, 0, 11, 1024, 1023),
+                new OverscaledTileID(11, 0, 11, 1023, 1023)
+            ]);
+        });
     });
 
     describe('mercator', () => {
@@ -628,6 +648,26 @@ describe('coveringTiles', () => {
         
             expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(11, 0, 11, 688, 1024)
+            ]);
+        });
+
+        test('nonzero center elevation', () => {
+            const options = {
+                minzoom: 1,
+                maxzoom: 15,
+                tileSize: 512,
+                reparseOverscaled: true
+            };
+        
+            const transform = new MercatorTransform(0, 15, 0, 85, true);
+            transform.resize(128, 128);
+            transform.setZoom(11);
+            transform.setCenter(new LngLat(0.03, 0.0915));
+            transform.setElevation(20000);
+
+            expect(coveringTiles(transform, options)).toEqual([
+                new OverscaledTileID(11, 0, 11, 1024, 1023),
+                new OverscaledTileID(11, 0, 11, 1023, 1023)
             ]);
         });
     
