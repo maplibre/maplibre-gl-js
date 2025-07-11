@@ -138,6 +138,7 @@ describe('Browser tests', () => {
     });
 
     test('Resize viewport (page)', {retry: 3, timeout: 20000}, async () => {
+        
         await page.setViewport({width: 400, height: 400, deviceScaleFactor: 2});
 
         await sleep(200);

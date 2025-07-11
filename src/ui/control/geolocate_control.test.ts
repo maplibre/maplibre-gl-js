@@ -46,7 +46,6 @@ function createResizeObserverEntryMock() {
                 right: 0,
                 bottom: 0,
                 left: 0,
-                toJSON: () => ({}) // Mock toJSON method
             } as DOMRectReadOnly; // Default contentRect
             this.borderBoxSize = [];
             this.contentBoxSize = [];
