@@ -164,6 +164,7 @@ describe('Browser tests', () => {
     });
 
     test('Zoom: Double click at the center', {retry: 3, timeout: 20000}, async () => {
+        
         const canvas = await page.$('.maplibregl-canvas');
         const canvasBB = await canvas?.boundingBox()!;
         await page.mouse.click(canvasBB?.x!, canvasBB?.y!, {clickCount: 2});
