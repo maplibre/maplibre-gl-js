@@ -46,7 +46,7 @@ function createResizeObserverEntryMock() {
                 right: 0,
                 bottom: 0,
                 left: 0,
-            } as DOMRectReadOnly; // Default contentRect
+            } as DOMRectReadOnly;
             this.borderBoxSize = [];
             this.contentBoxSize = [];
             this.devicePixelContentBoxSize = [];
