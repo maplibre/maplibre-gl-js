@@ -1,6 +1,6 @@
 import {describe, test, expect, vi} from 'vitest';
 import {WorkerTile} from '../source/worker_tile';
-import {GeoJSONWrapper, type Feature} from '../source/geojson_wrapper';
+import {type Feature, GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {OverscaledTileID} from '../source/tile_id';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {type WorkerTileParameters} from './worker_source';

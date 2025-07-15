@@ -1,11 +1,10 @@
 import {describe, test, expect, vi} from 'vitest';
 import {createSymbolBucket} from '../../test/unit/lib/create_symbol_layer';
 import {Tile} from '../source/tile';
-import {GeoJSONWrapper, type Feature} from '../source/geojson_wrapper';
 import {OverscaledTileID} from '../source/tile_id';
 import fs from 'fs';
 import path from 'path';
-import vtpbf from 'vt-pbf';
+import {type Feature, fromVectorTileJs, GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {FeatureIndex} from '../data/feature_index';
 import {CollisionBoxArray} from '../data/array_types.g';
 import {extend} from '../util/util';
@@ -29,7 +28,7 @@ describe('querySourceFeatures', () => {
         const geojsonWrapper = new GeoJSONWrapper(features);
         geojsonWrapper.name = '_geojsonTileLayer';
         tile.loadVectorData(
-            createVectorData({rawTileData: vtpbf({layers: {'_geojsonTileLayer': geojsonWrapper}})}),
+            createVectorData({rawTileData: fromVectorTileJs({layers: {'_geojsonTileLayer': geojsonWrapper}})}),
             createPainter()
         );
 
