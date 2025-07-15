@@ -84,7 +84,7 @@
     "benchmark": "^2.1.4",
     "canvas": "^3.1.2",
     "cspell": "^9.1.5",
-    "cssnano": "^7.0.7",
+    "cssnano": "^7.1.0",
     "d3": "^7.9.0",
     "d3-queue": "^3.0.7",
     "devtools-protocol": "^0.0.1485358",
