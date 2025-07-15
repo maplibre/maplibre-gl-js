@@ -85,7 +85,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
         // Encode the geojson-vt tile into binary vector tile form.  This
         // is a convenience that allows `FeatureIndex` to operate the same way
         // across `VectorTileSource` and `GeoJSONSource` data.
-        let pbf: Uint8Array = fromVectorTileJs(geojsonWrapper);
+        let pbf = fromVectorTileJs(geojsonWrapper);
         if (pbf.byteOffset !== 0 || pbf.byteLength !== pbf.buffer.byteLength) {
             // Compatibility with node Buffer (https://github.com/mapbox/pbf/issues/35)
             pbf = new Uint8Array(pbf);
