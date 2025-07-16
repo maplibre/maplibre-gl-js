@@ -1,5 +1,5 @@
 import Protobuf from 'pbf';
-import VT from '@mapbox/vector-tile';
+import {VectorTile} from '@mapbox/vector-tile';
 
 import {derefLayers} from '@maplibre/maplibre-gl-style-spec'
 import {Style} from '../../../src/style/style';
@@ -141,7 +141,7 @@ export default class TileParser {
             globalState: {}
         });
 
-        const vectorTile = new VT.VectorTile(new Protobuf(tile.buffer));
+        const vectorTile = new VectorTile(new Protobuf(tile.buffer));
 
         return workerTile.parse(vectorTile, this.layerIndex, [], this.actor, SubdivisionGranularitySetting.noSubdivision);
     }
