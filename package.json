@@ -29,7 +29,7 @@
     "@types/geojson": "^7946.0.16",
     "@types/geojson-vt": "3.2.5",
     "@types/supercluster": "^7.1.3",
-    "earcut": "^3.0.1",
+    "earcut": "^3.0.2",
     "geojson-vt": "^4.0.2",
     "gl-matrix": "^3.4.3",
     "kdbush": "^4.0.2",
