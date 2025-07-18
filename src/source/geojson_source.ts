@@ -103,10 +103,10 @@ export type SetClusterOptions = {
  *   }]
  * });
  * ```
- * @see [Draw GeoJSON points](https://maplibre.org/maplibre-gl-js/docs/examples/geojson-markers/)
- * @see [Add a GeoJSON line](https://maplibre.org/maplibre-gl-js/docs/examples/geojson-line/)
- * @see [Create a heatmap from points](https://maplibre.org/maplibre-gl-js/docs/examples/heatmap-layer/)
- * @see [Create and style clusters](https://maplibre.org/maplibre-gl-js/docs/examples/cluster/)
+ * @see [Draw GeoJSON points](https://maplibre.org/maplibre-gl-js/docs/examples/draw-geojson-points/)
+ * @see [Add a GeoJSON line](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-geojson-line/)
+ * @see [Create a heatmap from points](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-heatmap-layer/)
+ * @see [Create and style clusters](https://maplibre.org/maplibre-gl-js/docs/examples/create-and-style-clusters/)
  */
 export class GeoJSONSource extends Evented implements Source {
     type: 'geojson';
