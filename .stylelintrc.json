@@ -13,7 +13,7 @@
     "function-no-unknown": [true, {
       "ignoreFunctions": ["svg-load", "svg-inline"]
     }],
-    "function-disallowed-list": ["rgb"]
+    "function-disallowed-list": ["/^rgb\\((?!\\d+,\\s*\\d+,\\s*\\d+\\))/"]
   },
   "ignoreFiles": [
       "dist/**/*.css"
