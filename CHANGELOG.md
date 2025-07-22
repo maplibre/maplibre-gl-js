@@ -7,6 +7,7 @@
 - Fix white artifacts when using non-zero elevation ([#6032](https://github.com/maplibre/maplibre-gl-js/pull/6032))
 - Fix geolocate control lock loss on window resize ([#3504](https://github.com/maplibre/maplibre-gl-js/issues/3504))
 - _...Add new stuff here..._
+- Fix cacheControl for Tile to not ignore values of 0
 
 ## 5.6.1
 
