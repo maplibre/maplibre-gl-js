@@ -170,3 +170,36 @@ export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Featur
         }
     }
 }
+
+export function mergeSourceDiffs(
+    existing: GeoJSONSourceDiff | undefined,
+    newDiff: GeoJSONSourceDiff | undefined
+): GeoJSONSourceDiff {
+    if (!existing) {
+        return newDiff || {};
+    }
+
+    if (!newDiff) {
+        return existing;
+    }
+
+    const merged: GeoJSONSourceDiff = {...existing};
+
+    if (newDiff.removeAll) {
+        merged.removeAll = true;
+    }
+
+    if (newDiff.remove) {
+        merged.remove = [...(merged.remove ?? []), ...(newDiff.remove ?? [])];
+    }
+
+    if (newDiff.add) {
+        merged.add = [...(merged.add ?? []), ...(newDiff.add ?? [])];
+    }
+
+    if (newDiff.update) {
+        merged.update = [...(merged.update ?? []), ...(newDiff.update ?? [])];
+    }
+
+    return merged;
+}

@@ -5,6 +5,7 @@ import {EXTENT} from '../data/extent';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
+import {mergeSourceDiffs} from './geojson_source_diff';
 
 import type {Source} from './source';
 import type {Map} from '../ui/map';
@@ -124,12 +125,10 @@ export class GeoJSONSource extends Evented implements Source {
     workerOptions: GeoJSONWorkerOptions;
     map: Map;
     actor: Actor;
-    _pendingLoads: number;
+    _isUpdatingWorker: boolean;
+    _pendingWorkerUpdate: { data?: GeoJSON.GeoJSON | string; diff?: GeoJSONSourceDiff };
     _collectResourceTiming: boolean;
     _removed: boolean;
-
-    _pendingData: GeoJSON.GeoJSON | string | undefined;
-    _pendingDataDiff: GeoJSONSourceDiff | undefined;
 
     /** @internal */
     constructor(id: string, options: GeoJSONSourceOptions, dispatcher: Dispatcher, eventedParent: Evented) {
@@ -147,12 +146,13 @@ export class GeoJSONSource extends Evented implements Source {
         this.isTileClipped = true;
         this.reparseOverscaled = true;
         this._removed = false;
-        this._pendingLoads = 0;
+        this._isUpdatingWorker = false;
+        this._pendingWorkerUpdate = {data: options.data};
 
         this.actor = dispatcher.getActor();
         this.setEventedParent(eventedParent);
 
-        this._data = this._pendingData = (options.data as any);
+        this._data = options.data;
         this._options = extend({}, options);
 
         this._collectResourceTiming = options.collectResourceTiming;
@@ -226,8 +226,8 @@ export class GeoJSONSource extends Evented implements Source {
      * @param data - A GeoJSON data object or a URL to one. The latter is preferable in the case of large GeoJSON files.
      */
     setData(data: GeoJSON.GeoJSON | string): this {
-        this._data = this._pendingData = data;
-        this._pendingDataDiff = undefined;
+        this._data = data;
+        this._pendingWorkerUpdate = {data};
         this._updateWorkerData();
         return this;
     }
@@ -247,24 +247,7 @@ export class GeoJSONSource extends Evented implements Source {
      * @param diff - The changes that need to be applied.
      */
     updateData(diff: GeoJSONSourceDiff): this {
-        if (!this._pendingDataDiff) {
-            this._pendingDataDiff = {};
-        }
-
-        // Merge pending data diff with the new diff
-        if (this._pendingDataDiff.removeAll || diff.removeAll) {
-            this._pendingDataDiff.removeAll = true;
-        }
-        if (this._pendingDataDiff.remove || diff.remove) {
-            this._pendingDataDiff.remove = (this._pendingDataDiff.remove ?? []).concat(diff.remove ?? []);
-        }
-        if (this._pendingDataDiff.add || diff.add) {
-            this._pendingDataDiff.add = (this._pendingDataDiff.add ?? []).concat(diff.add ?? []);
-        }
-        if (this._pendingDataDiff.update || diff.update) {
-            this._pendingDataDiff.update = (this._pendingDataDiff.update ?? []).concat(diff.update ?? []);
-        }
-
+        this._pendingWorkerUpdate.diff = mergeSourceDiffs(this._pendingWorkerUpdate.diff, diff);
         this._updateWorkerData();
         return this;
     }
@@ -397,10 +380,9 @@ export class GeoJSONSource extends Evented implements Source {
      * using geojson-vt or supercluster as appropriate.
      */
     async _updateWorkerData(): Promise<void> {
-        if (this._pendingLoads > 0) return;
+        if (this._isUpdatingWorker) return;
 
-        const data = this._pendingData;
-        const diff = this._pendingDataDiff;
+        const {data, diff} = this._pendingWorkerUpdate;
 
         if (!data && !diff) {
             warnOnce(`No data or diff provided to GeoJSONSource ${this.id}.`);
@@ -416,13 +398,13 @@ export class GeoJSONSource extends Evented implements Source {
                 options.data = JSON.stringify(data);
             }
 
-            this._pendingData = undefined;
+            this._pendingWorkerUpdate.data = undefined;
         } else if (diff) {
             options.dataDiff = diff;
-            this._pendingDataDiff = undefined;
+            this._pendingWorkerUpdate.diff = undefined;
         }
 
-        this._pendingLoads++;
+        this._isUpdatingWorker = true;
         this.fire(new Event('dataloading', {dataType: 'source'}));
         try {
             const result = await this.actor.sendAsync({type: MessageType.loadData, data: options});
@@ -454,17 +436,17 @@ export class GeoJSONSource extends Evented implements Source {
             }
             this.fire(new ErrorEvent(err));
         } finally {
-            this._pendingLoads--;
+            this._isUpdatingWorker = false;
 
             // If there is more pending data, update worker again.
-            if (this._pendingData || this._pendingDataDiff) {
+            if (this._pendingWorkerUpdate.data || this._pendingWorkerUpdate.diff) {
                 this._updateWorkerData();
             }
         }
     }
 
     loaded(): boolean {
-        return this._pendingLoads === 0;
+        return !this._isUpdatingWorker;
     }
 
     async loadTile(tile: Tile): Promise<void> {

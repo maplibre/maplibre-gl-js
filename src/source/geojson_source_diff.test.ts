@@ -1,6 +1,6 @@
 import {describe, beforeEach, test, expect} from 'vitest';
 import {setPerformance} from '../util/test/util';
-import {type GeoJSONFeatureId, isUpdateableGeoJSON, toUpdateable, applySourceDiff} from './geojson_source_diff';
+import {type GeoJSONFeatureId, type GeoJSONSourceDiff, isUpdateableGeoJSON, toUpdateable, applySourceDiff, mergeSourceDiffs} from './geojson_source_diff';
 
 beforeEach(() => {
     setPerformance();
@@ -361,5 +361,54 @@ describe('applySourceDiff', () => {
         });
         expect(updateable.size).toBe(1);
         expect(Object.keys(updateable.get('point')?.properties!)).toHaveLength(0);
+    });
+});
+
+describe('mergeSourceDiffs', () => {
+    test('merges two diffs', () => {
+        const diff1 = {
+            add: [{type: 'Feature', id: 'feature1', geometry: {type: 'Point', coordinates: [0, 0]}, properties: {}}],
+            remove: ['feature2'],
+            update: [{id: 'feature3', newGeometry: {type: 'Point', coordinates: [1, 1]}}],
+        } satisfies GeoJSONSourceDiff;
+
+        const diff2 = {
+            add: [{type: 'Feature', id: 'feature4', geometry: {type: 'Point', coordinates: [2, 2]}, properties: {}}],
+            remove: ['feature5'],
+            update: [{id: 'feature6', addOrUpdateProperties: [{key: 'prop', value: 'value'}]}],
+        } satisfies GeoJSONSourceDiff;
+
+        const merged = mergeSourceDiffs(diff1, diff2);
+        expect(merged.add).toHaveLength(2);
+        expect(merged.remove).toHaveLength(2);
+        expect(merged.update).toHaveLength(2);
+    });
+
+    test('merges two diffs with removeAll', () => {
+        const diff1 = {
+            removeAll: true,
+        } satisfies GeoJSONSourceDiff;
+
+        const diff2 = {
+            add: [{type: 'Feature', id: 'feature2', geometry: {type: 'Point', coordinates: [1, 1]}, properties: {}}],
+        } satisfies GeoJSONSourceDiff;
+
+        const merged = mergeSourceDiffs(diff1, diff2);
+        expect(merged.add).toHaveLength(1);
+        expect(merged.removeAll).toBe(true);
+    });
+
+    test('merges diff with undefined', () => {
+        const diff1 = {
+            add: [{type: 'Feature', id: 'feature1', geometry: {type: 'Point', coordinates: [0, 0]}, properties: {}}],
+        } satisfies GeoJSONSourceDiff;
+
+        const merged = mergeSourceDiffs(diff1, undefined);
+        expect(merged).toEqual(diff1);
+    });
+
+    test('merges two undefined diffs', () => {
+        const merged = mergeSourceDiffs(undefined, undefined);
+        expect(merged).toEqual({});
     });
 });

@@ -490,7 +490,7 @@ describe('GeoJSONSource.getData', () => {
 describe('GeoJSONSource.updateData', () => {
     test('it combines multiple diffs when data is loading', async () => {
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({}), undefined);
-        source._pendingLoads = 1; // Simulate a loading state
+        source._isUpdatingWorker = true; // Simulate a loading state
         source.updateData({
             remove: ['1'],
             add: [{id: '2', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}],
@@ -502,10 +502,13 @@ describe('GeoJSONSource.updateData', () => {
             update: [{id: '6', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}]
         });
 
-        expect(source._pendingDataDiff).toEqual({
-            remove: ['1', '4'],
-            add: [{id: '2', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}, {id: '5', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}],
-            update: [{id: '3', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}, {id: '6', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}]
+        expect(source._pendingWorkerUpdate).toEqual({
+            data: {},
+            diff: {
+                remove: ['1', '4'],
+                add: [{id: '2', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}, {id: '5', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}],
+                update: [{id: '3', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}, {id: '6', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}]
+            }
         });
     });
 });
