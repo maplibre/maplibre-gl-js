@@ -128,6 +128,9 @@ export class GeoJSONSource extends Evented implements Source {
     _collectResourceTiming: boolean;
     _removed: boolean;
 
+    _pendingData: GeoJSON.GeoJSON | string | undefined;
+    _pendingDataDiff: GeoJSONSourceDiff | undefined;
+
     /** @internal */
     constructor(id: string, options: GeoJSONSourceOptions, dispatcher: Dispatcher, eventedParent: Evented) {
         super();
@@ -149,7 +152,7 @@ export class GeoJSONSource extends Evented implements Source {
         this.actor = dispatcher.getActor();
         this.setEventedParent(eventedParent);
 
-        this._data = (options.data as any);
+        this._data = this._pendingData = (options.data as any);
         this._options = extend({}, options);
 
         this._collectResourceTiming = options.collectResourceTiming;
@@ -223,9 +226,9 @@ export class GeoJSONSource extends Evented implements Source {
      * @param data - A GeoJSON data object or a URL to one. The latter is preferable in the case of large GeoJSON files.
      */
     setData(data: GeoJSON.GeoJSON | string): this {
-        this._data = data;
+        this._data = this._pendingData = data;
+        this._pendingDataDiff = undefined;
         this._updateWorkerData();
-
         return this;
     }
 
@@ -244,8 +247,25 @@ export class GeoJSONSource extends Evented implements Source {
      * @param diff - The changes that need to be applied.
      */
     updateData(diff: GeoJSONSourceDiff): this {
-        this._updateWorkerData(diff);
+        if (!this._pendingDataDiff) {
+            this._pendingDataDiff = {};
+        }
 
+        // Merge pending data diff with the new diff
+        if (this._pendingDataDiff.removeAll || diff.removeAll) {
+            this._pendingDataDiff.removeAll = true;
+        }
+        if (this._pendingDataDiff.remove || diff.remove) {
+            this._pendingDataDiff.remove = (this._pendingDataDiff.remove ?? []).concat(diff.remove ?? []);
+        }
+        if (this._pendingDataDiff.add || diff.add) {
+            this._pendingDataDiff.add = (this._pendingDataDiff.add ?? []).concat(diff.add ?? []);
+        }
+        if (this._pendingDataDiff.update || diff.update) {
+            this._pendingDataDiff.update = (this._pendingDataDiff.update ?? []).concat(diff.update ?? []);
+        }
+
+        this._updateWorkerData();
         return this;
     }
 
@@ -375,49 +395,71 @@ export class GeoJSONSource extends Evented implements Source {
      * Responsible for invoking WorkerSource's geojson.loadData target, which
      * handles loading the geojson data and preparing to serve it up as tiles,
      * using geojson-vt or supercluster as appropriate.
-     * @param diff - the diff object
      */
-    async _updateWorkerData(diff?: GeoJSONSourceDiff) {
-        const options: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
-        if (diff) {
-            options.dataDiff = diff;
-        } else if (typeof this._data === 'string') {
-            options.request = this.map._requestManager.transformRequest(browser.resolveURL(this._data as string), ResourceType.Source);
-            options.request.collectResourceTiming = this._collectResourceTiming;
-        } else {
-            options.data = JSON.stringify(this._data);
+    async _updateWorkerData(): Promise<void> {
+        if (this._pendingLoads > 0) return;
+
+        const data = this._pendingData;
+        const diff = this._pendingDataDiff;
+
+        if (!data && !diff) {
+            warnOnce(`No data or diff provided to GeoJSONSource ${this.id}.`);
+            return;
         }
+
+        const options: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
+        if (data) {
+            if (typeof data === 'string') {
+                options.request = this.map._requestManager.transformRequest(browser.resolveURL(data as string), ResourceType.Source);
+                options.request.collectResourceTiming = this._collectResourceTiming;
+            } else {
+                options.data = JSON.stringify(data);
+            }
+
+            this._pendingData = undefined;
+        } else if (diff) {
+            options.dataDiff = diff;
+            this._pendingDataDiff = undefined;
+        }
+
         this._pendingLoads++;
         this.fire(new Event('dataloading', {dataType: 'source'}));
         try {
             const result = await this.actor.sendAsync({type: MessageType.loadData, data: options});
-            this._pendingLoads--;
             if (this._removed || result.abandoned) {
                 this.fire(new Event('dataabort', {dataType: 'source'}));
                 return;
             }
+
+            this._data = result.data;
 
             let resourceTiming: PerformanceResourceTiming[] = null;
             if (result.resourceTiming && result.resourceTiming[this.id]) {
                 resourceTiming = result.resourceTiming[this.id].slice(0);
             }
 
-            const data: any = {dataType: 'source'};
+            const eventData: any = {dataType: 'source'};
             if (this._collectResourceTiming && resourceTiming && resourceTiming.length > 0) {
-                extend(data, {resourceTiming});
+                extend(eventData, {resourceTiming});
             }
 
             // although GeoJSON sources contain no metadata, we fire this event to let the SourceCache
             // know its ok to start requesting tiles.
-            this.fire(new Event('data', {...data, sourceDataType: 'metadata'}));
-            this.fire(new Event('data', {...data, sourceDataType: 'content'}));
+            this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
+            this.fire(new Event('data', {...eventData, sourceDataType: 'content'}));
         } catch (err) {
-            this._pendingLoads--;
             if (this._removed) {
                 this.fire(new Event('dataabort', {dataType: 'source'}));
                 return;
             }
             this.fire(new ErrorEvent(err));
+        } finally {
+            this._pendingLoads--;
+
+            // If there is more pending data, update worker again.
+            if (this._pendingData || this._pendingDataDiff) {
+                this._updateWorkerData();
+            }
         }
     }
 

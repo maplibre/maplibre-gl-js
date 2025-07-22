@@ -127,7 +127,7 @@ describe('GeoJSONSource.setData', () => {
     });
 
     test('fires "dataabort" event', async () => {
-        const source = new GeoJSONSource('id', {} as any, wrapDispatcher({
+        const source = new GeoJSONSource('id', {data: {}} as any, wrapDispatcher({
             sendAsync(_message) {
                 return new Promise((resolve) => {
                     setTimeout(() => resolve({abandoned: true}), 0);
@@ -484,6 +484,29 @@ describe('GeoJSONSource.getData', () => {
         // This is a bit dumb test, as communication with the worker is mocked, and thus the worker always returns an
         // empty object instead of returning the result of an actual computation.
         await expect(source.getData()).resolves.toStrictEqual({});
+    });
+});
+
+describe('GeoJSONSource.updateData', () => {
+    test('it combines multiple diffs when data is loading', async () => {
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({}), undefined);
+        source._pendingLoads = 1; // Simulate a loading state
+        source.updateData({
+            remove: ['1'],
+            add: [{id: '2', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}],
+            update: [{id: '3', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}]
+        });
+        source.updateData({
+            remove: ['4'],
+            add: [{id: '5', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}],
+            update: [{id: '6', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}]
+        });
+
+        expect(source._pendingDataDiff).toEqual({
+            remove: ['1', '4'],
+            add: [{id: '2', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}, {id: '5', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}],
+            update: [{id: '3', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}, {id: '6', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}]
+        });
     });
 });
 
