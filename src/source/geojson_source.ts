@@ -408,6 +408,7 @@ export class GeoJSONSource extends Evented implements Source {
         this.fire(new Event('dataloading', {dataType: 'source'}));
         try {
             const result = await this.actor.sendAsync({type: MessageType.loadData, data: options});
+            this._isUpdatingWorker = false;
             if (this._removed || result.abandoned) {
                 this.fire(new Event('dataabort', {dataType: 'source'}));
                 return;
@@ -430,14 +431,13 @@ export class GeoJSONSource extends Evented implements Source {
             this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
             this.fire(new Event('data', {...eventData, sourceDataType: 'content'}));
         } catch (err) {
+            this._isUpdatingWorker = false;
             if (this._removed) {
                 this.fire(new Event('dataabort', {dataType: 'source'}));
                 return;
             }
             this.fire(new ErrorEvent(err));
         } finally {
-            this._isUpdatingWorker = false;
-
             // If there is more pending data, update worker again.
             if (this._pendingWorkerUpdate.data || this._pendingWorkerUpdate.diff) {
                 this._updateWorkerData();
@@ -446,7 +446,7 @@ export class GeoJSONSource extends Evented implements Source {
     }
 
     loaded(): boolean {
-        return !this._isUpdatingWorker;
+        return !this._isUpdatingWorker && this._pendingWorkerUpdate.data === undefined && this._pendingWorkerUpdate.diff === undefined;
     }
 
     async loadTile(tile: Tile): Promise<void> {
