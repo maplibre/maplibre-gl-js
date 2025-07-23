@@ -522,6 +522,7 @@ describe('GeoJSONSource.updateData', () => {
         source.updateData(update1);
         source.updateData(update2);
 
+        // Wait for both updateData calls to be performed
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
@@ -543,7 +544,7 @@ describe('GeoJSONSource.updateData', () => {
 
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
 
-        // Kick off an initial worker communication
+        // Perform an initial setData
         const data1 = {type: 'FeatureCollection', features: []} satisfies GeoJSON.GeoJSON;
         source.setData(data1);
 
@@ -561,6 +562,7 @@ describe('GeoJSONSource.updateData', () => {
         source.updateData(update1);
         source.updateData(update2);
 
+        // Wait for the setData and updateData calls to be performed
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
@@ -586,6 +588,7 @@ describe('GeoJSONSource.updateData', () => {
 
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
 
+        // Perform an initial setData
         const data1 = {type: 'FeatureCollection', features: []} satisfies GeoJSON.GeoJSON;
         source.setData(data1);
 
@@ -601,12 +604,53 @@ describe('GeoJSONSource.updateData', () => {
         const data2 = {type: 'FeatureCollection', features: [{id: '1', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}]} satisfies GeoJSON.GeoJSON;
         source.setData(data2);
 
+        // Wait for both setData calls to be performed
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
         expect(spy).toHaveBeenCalledTimes(2);
         expect(spy.mock.calls[0][0].data.data).toEqual(JSON.stringify(data1));
         expect(spy.mock.calls[1][0].data.data).toEqual(JSON.stringify(data2));
+    });
+
+    test('is queued after setData when data is loading', async () => {
+        const spy = vi.fn();
+        const mockDispatcher = wrapDispatcher({
+            sendAsync(message) {
+                spy(message);
+                return new Promise((resolve) => {
+                    setTimeout(() => resolve({}), 0);
+                });
+            }
+        });
+
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+
+        // Perform an initial setData
+        const data1 = {type: 'FeatureCollection', features: []} satisfies GeoJSON.GeoJSON;
+        source.setData(data1);
+
+        // Queue a setData
+        const data2 = {type: 'FeatureCollection', features: [{type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}]} satisfies GeoJSON.GeoJSON;
+        source.setData(data2);
+
+        // Queue an updateData
+        const update1 = {
+            remove: ['1'],
+            add: [{id: '2', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}],
+            update: [{id: '3', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}]
+        } satisfies GeoJSONSourceDiff;
+        source.updateData(update1);
+
+        // Wait for the calls to be performed
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+        expect(spy).toHaveBeenCalledTimes(3);
+        expect(spy.mock.calls[0][0].data.data).toEqual(JSON.stringify(data1));
+        expect(spy.mock.calls[1][0].data.data).toEqual(JSON.stringify(data2));
+        expect(spy.mock.calls[2][0].data.dataDiff).toEqual(update1);
     });
 });
 
