@@ -14,6 +14,7 @@ import {type Actor} from '../util/actor';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {sleep, waitForEvent} from '../util/test/util';
 import {type MapSourceDataEvent} from '../ui/events';
+import {type GeoJSONSourceDiff} from './geojson_source_diff';
 
 const wrapDispatcher = (dispatcher) => {
     return {
@@ -26,6 +27,16 @@ const wrapDispatcher = (dispatcher) => {
 const mockDispatcher = wrapDispatcher({
     sendAsync() { return Promise.resolve({}); }
 });
+
+const waitForLoaded = (source: GeoJSONSource) => {
+    return new Promise<void>((resolve) => {
+        source.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                resolve();
+            }
+        });
+    });
+};
 
 const hawkHill = {
     'type': 'FeatureCollection',
@@ -488,28 +499,145 @@ describe('GeoJSONSource.getData', () => {
 });
 
 describe('GeoJSONSource.updateData', () => {
-    test('it combines multiple diffs when data is loading', async () => {
-        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({}), undefined);
-        source._isUpdatingWorker = true; // Simulate a loading state
-        source.updateData({
+    test('queues a second call to updateData', async () => {
+        const spy = vi.fn();
+        const mockDispatcher = wrapDispatcher({
+            sendAsync(message) {
+                spy(message);
+                return new Promise((resolve) => {
+                    setTimeout(() => resolve({}), 0);
+                });
+            }
+        });
+
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+
+        // Wait for initial data to be loaded
+        await source.load();
+
+        // Call updateData multiple times while the worker is still processing the initial data
+        const update1 = {
             remove: ['1'],
             add: [{id: '2', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}],
             update: [{id: '3', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}]
-        });
-        source.updateData({
+        } satisfies GeoJSONSourceDiff;
+        const update2 = {
             remove: ['4'],
             add: [{id: '5', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}],
             update: [{id: '6', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}]
-        });
+        } satisfies GeoJSONSourceDiff;
+        source.updateData(update1);
+        source.updateData(update2);
 
         expect(source._pendingWorkerUpdate).toEqual({
-            data: {},
+            data: undefined,
+            diff: {
+                remove: ['4'],
+                add: [{id: '5', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}],
+                update: [{id: '6', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}]
+            },
+        });
+
+        await waitForLoaded(source);
+        await waitForLoaded(source);
+
+        expect(source._pendingWorkerUpdate).toEqual({data: undefined, diff: undefined});
+        expect(spy).toHaveBeenCalledTimes(3);
+        expect(spy.mock.calls[0][0].data.data).toEqual('{}');
+        expect(spy.mock.calls[1][0].data.dataDiff).toEqual(update1);
+        expect(spy.mock.calls[2][0].data.dataDiff).toEqual(update2);
+    });
+
+    test('combines multiple diffs when data is loading', async () => {
+        const spy = vi.fn();
+        const mockDispatcher = wrapDispatcher({
+            sendAsync(message) {
+                spy(message);
+                return new Promise((resolve) => {
+                    setTimeout(() => resolve({}), 0);
+                });
+            }
+        });
+
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+
+        // Kick off an initial worker communication
+        const data1 = {type: 'FeatureCollection', features: []} satisfies GeoJSON.GeoJSON;
+        source.setData(data1);
+
+        // Call updateData multiple times while the worker is still processing the initial data
+        const update1 = {
+            remove: ['1'],
+            add: [{id: '2', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}],
+            update: [{id: '3', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}]
+        } satisfies GeoJSONSourceDiff;
+        const update2 = {
+            remove: ['4'],
+            add: [{id: '5', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}],
+            update: [{id: '3', addOrUpdateProperties: [], newGeometry: {type: 'Point', coordinates: []}}, {id: '6', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}]
+        } satisfies GeoJSONSourceDiff;
+        source.updateData(update1);
+        source.updateData(update2);
+
+        expect(source._pendingWorkerUpdate).toEqual({
+            data: undefined,
             diff: {
                 remove: ['1', '4'],
                 add: [{id: '2', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}, {id: '5', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}],
-                update: [{id: '3', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}, {id: '6', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}]
+                update: [{id: '3', addOrUpdateProperties: [], newGeometry: {type: 'Point', coordinates: []}}, {id: '6', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}]
             }
         });
+
+        await waitForLoaded(source);
+        await waitForLoaded(source);
+
+        expect(source._pendingWorkerUpdate).toEqual({data: undefined, diff: undefined});
+        expect(spy).toHaveBeenCalledTimes(2);
+        expect(spy.mock.calls[0][0].data.data).toEqual(JSON.stringify(data1));
+        expect(spy.mock.calls[1][0].data.dataDiff).toEqual({
+            remove: ['1', '4'],
+            add: [{id: '2', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}, {id: '5', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}],
+            update: [{id: '3', addOrUpdateProperties: [], newGeometry: {type: 'Point', coordinates: []}}, {id: '6', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}]
+        });
+    });
+
+    test('is overwritten by a subsequent call to setData when data is loading', async () => {
+        const spy = vi.fn();
+        const mockDispatcher = wrapDispatcher({
+            sendAsync(message) {
+                spy(message);
+                return new Promise((resolve) => {
+                    setTimeout(() => resolve({}), 0);
+                });
+            }
+        });
+
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+
+        const data1 = {type: 'FeatureCollection', features: []} satisfies GeoJSON.GeoJSON;
+        source.setData(data1);
+
+        // Queue an updateData
+        const update1 = {
+            remove: ['1'],
+            add: [{id: '2', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}],
+            update: [{id: '3', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}]
+        } satisfies GeoJSONSourceDiff;
+        source.updateData(update1);
+
+        // Call setData while the worker is still processing the initial data
+        const data2 = {type: 'FeatureCollection', features: [{id: '1', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}]} satisfies GeoJSON.GeoJSON;
+        source.setData(data2);
+
+        expect(source._pendingWorkerUpdate).toEqual({data: data2});
+
+        await waitForLoaded(source);
+        await waitForLoaded(source);
+
+        expect(source._pendingWorkerUpdate).toEqual({data: undefined});
+        expect(spy).toHaveBeenCalledTimes(2);
+        expect(spy.mock.calls[0][0].data.data).toEqual(JSON.stringify(data1));
+        expect(spy.mock.calls[1][0].data.data).toEqual(JSON.stringify(data2));
     });
 });
 
@@ -664,5 +792,31 @@ describe('GeoJSONSource.serialize', () => {
             data: {},
             cluster: true
         });
+    });
+});
+
+describe('GeoJSONSource.load', () => {
+    test('is noop when all data is already loaded', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const spy = vi.fn();
+        const mockDispatcher = wrapDispatcher({
+            sendAsync(message) {
+                spy(message);
+                return new Promise((resolve) => {
+                    setTimeout(() => resolve({}), 0);
+                });
+            }
+        });
+
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+
+        // Wait for initial data to be loaded
+        await source.load();
+
+        // Run again, with no additional data loaded
+        await source.load();
+
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(warnSpy).toHaveBeenCalledWith('No data or diff provided to GeoJSONSource id.');
     });
 });
