@@ -439,11 +439,11 @@ describe('GeoJSONSource.update', () => {
     });
 
     test('sends loadData request to dispatcher after data update', async () => {
-        let loadDataCalls = 0;
+        const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
                 if (message.type === MessageType.loadData) {
-                    loadDataCalls++;
+                    spy();
                 }
                 return new Promise((resolve) => setTimeout(() => resolve({}), 0));
             }
@@ -473,7 +473,7 @@ describe('GeoJSONSource.update', () => {
         source.load();
 
         await sleep(10);
-        expect(loadDataCalls).toBeGreaterThan(2);
+        expect(spy.mock.calls.length).toBeGreaterThan(2);
     });
 });
 
