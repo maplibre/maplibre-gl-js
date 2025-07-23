@@ -172,33 +172,56 @@ export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Featur
 }
 
 export function mergeSourceDiffs(
-    existing: GeoJSONSourceDiff | undefined,
+    existingDiff: GeoJSONSourceDiff | undefined,
     newDiff: GeoJSONSourceDiff | undefined
 ): GeoJSONSourceDiff {
-    if (!existing) {
-        return newDiff || {};
+    if (!existingDiff) {
+        return newDiff ?? {};
     }
 
     if (!newDiff) {
-        return existing;
+        return existingDiff;
     }
 
-    const merged: GeoJSONSourceDiff = {...existing};
+    const merged: GeoJSONSourceDiff = {...existingDiff};
 
     if (newDiff.removeAll) {
         merged.removeAll = true;
     }
 
     if (newDiff.remove) {
-        merged.remove = [...(merged.remove ?? []), ...(newDiff.remove ?? [])];
+        const removedSet = new Set(merged.remove ? merged.remove.concat(newDiff.remove) : newDiff.remove);
+        merged.remove = Array.from(removedSet.values());
     }
 
     if (newDiff.add) {
-        merged.add = [...(merged.add ?? []), ...(newDiff.add ?? [])];
+        const combinedAdd = merged.add ? merged.add.concat(newDiff.add) : newDiff.add;
+        const addMap = new Map(combinedAdd.map((feature) => [feature.id, feature]));
+        merged.add = Array.from(addMap.values());
     }
 
     if (newDiff.update) {
-        merged.update = [...(merged.update ?? []), ...(newDiff.update ?? [])];
+        const updateMap = new Map(merged.update?.map((feature) => [feature.id, feature]));
+        for (const feature of newDiff.update) {
+            const featureUpdate = updateMap.get(feature.id) ?? {id: feature.id} satisfies GeoJSONFeatureDiff;
+
+            if (feature.newGeometry) {
+                featureUpdate.newGeometry = feature.newGeometry;
+            }
+            if (feature.addOrUpdateProperties) {
+                featureUpdate.addOrUpdateProperties = (featureUpdate.addOrUpdateProperties ?? []).concat(feature.addOrUpdateProperties);
+            }
+            if (feature.removeProperties) {
+                featureUpdate.removeProperties = (featureUpdate.removeProperties ?? []).concat(feature.removeProperties);
+            }
+            if (feature.removeAllProperties) {
+                featureUpdate.removeAllProperties = true;
+            }
+
+            updateMap.set(feature.id, featureUpdate);
+        }
+
+        merged.update = Array.from(updateMap.values());
     }
 
     return merged;
