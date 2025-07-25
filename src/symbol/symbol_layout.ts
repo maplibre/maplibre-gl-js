@@ -280,7 +280,7 @@ export function getAnchorJustification(anchor: TextAnchor): TextJustify {
 /**
  * Given a feature and its shaped text and icon data, add a 'symbol
  * instance' for each _possible_ placement of the symbol feature.
- * (At render timePlaceSymbols#place() selects which of these instances to
+ * (At render it selects which of these instances to
  * show or hide based on collisions with symbols in other layers.)
  */
 function addFeature(bucket: SymbolBucket,

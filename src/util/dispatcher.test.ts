@@ -60,7 +60,7 @@ describe('Dispatcher', () => {
 
     });
 
-    test('#remove destroys actors', () => {
+    test('remove destroys actors', () => {
         const actorsRemoved = [];
         const mapId = 1;
         const spy = vi.fn().mockImplementation(() => { actorsRemoved.push(this); });

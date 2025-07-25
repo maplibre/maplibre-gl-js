@@ -90,7 +90,7 @@ let noTimeout = false;
  *     trackUserLocation: true
  * }));
  * ```
- * @see [Locate the user](https://maplibre.org/maplibre-gl-js/docs/examples/locate-user/)
+ * @see [Locate the user](https://maplibre.org/maplibre-gl-js/docs/examples/locate-the-user/)
  *
  * ## Events
  *
@@ -582,7 +582,7 @@ export class GeolocateControl extends Evented implements IControl {
         // the watch mode to background watch, so that the marker is updated but not the camera.
         if (this.options.trackUserLocation) {
             this._map.on('movestart', (event: any) => {
-                const fromResize = event.originalEvent && event.originalEvent.type === 'resize';
+                const fromResize = event?.[0] instanceof ResizeObserverEntry;
                 if (!event.geolocateSource && this._watchState === 'ACTIVE_LOCK' && !fromResize) {
                     this._watchState = 'BACKGROUND';
                     this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background');

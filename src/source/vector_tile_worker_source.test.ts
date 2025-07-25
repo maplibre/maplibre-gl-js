@@ -1,7 +1,6 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import fs from 'fs';
 import path from 'path';
-import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
 import {type LoadVectorData, VectorTileWorkerSource} from '../source/vector_tile_worker_source';
 import {StyleLayerIndex} from '../style/style_layer_index';
@@ -12,6 +11,7 @@ import {WorkerTile} from './worker_tile';
 import {setPerformance, sleep} from '../util/test/util';
 import {ABORT_ERROR} from '../util/abort_error';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
+import {VectorTile} from '@mapbox/vector-tile';
 
 describe('vector tile worker source', () => {
     const actor = {sendAsync: () => Promise.resolve({})} as IActor;
@@ -27,7 +27,7 @@ describe('vector tile worker source', () => {
         server.restore();
         vi.clearAllMocks();
     });
-    test('VectorTileWorkerSource#abortTile aborts pending request', async () => {
+    test('VectorTileWorkerSource.abortTile aborts pending request', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
 
         const loadPromise = source.loadTile({
@@ -47,7 +47,7 @@ describe('vector tile worker source', () => {
         await expect(loadPromise).rejects.toThrow(ABORT_ERROR);
     });
 
-    test('VectorTileWorkerSource#removeTile removes loaded tile', async () => {
+    test('VectorTileWorkerSource.removeTile removes loaded tile', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
 
         source.loaded = {
@@ -63,7 +63,7 @@ describe('vector tile worker source', () => {
         expect(source.loaded).toEqual({});
     });
 
-    test('VectorTileWorkerSource#reloadTile reloads a previously-loaded tile', async () => {
+    test('VectorTileWorkerSource.reloadTile reloads a previously-loaded tile', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
         const parse = vi.fn().mockReturnValue(Promise.resolve({} as WorkerTileResult));
 
@@ -80,7 +80,7 @@ describe('vector tile worker source', () => {
         await expect(reloadPromise).resolves.toBeTruthy();
     });
 
-    test('VectorTileWorkerSource#loadTile reparses tile if the reloadTile has been called during parsing', async () => {
+    test('VectorTileWorkerSource.loadTile reparses tile if the reloadTile has been called during parsing', async () => {
         const rawTileData = new ArrayBuffer(0);
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
@@ -104,7 +104,7 @@ describe('vector tile worker source', () => {
                             })
                         }
                     }
-                } as any as vt.VectorTile,
+                } as any as VectorTile,
                 rawData: rawTileData
             };
         };
@@ -160,11 +160,11 @@ describe('vector tile worker source', () => {
         expect(res.rawTileData).toStrictEqual(rawTileData);
     });
 
-    test('VectorTileWorkerSource#loadTile reparses tile if reloadTile is called during reparsing', async () => {
+    test('VectorTileWorkerSource.loadTile reparses tile if reloadTile is called during reparsing', async () => {
         const rawTileData = new ArrayBuffer(0);
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
-                vectorTile: new vt.VectorTile(new Protobuf(rawTileData)),
+                vectorTile: new VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData
             };
         };
@@ -208,7 +208,7 @@ describe('vector tile worker source', () => {
         await expect(loadPromise).resolves.toBeTruthy();
     });
 
-    test('VectorTileWorkerSource#reloadTile does not reparse tiles with no vectorTile data but does call callback', async () => {
+    test('VectorTileWorkerSource.reloadTile does not reparse tiles with no vectorTile data but does call callback', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
         const parse = vi.fn();
 
@@ -223,7 +223,7 @@ describe('vector tile worker source', () => {
         expect(parse).not.toHaveBeenCalled();
     });
 
-    test('VectorTileWorkerSource#loadTile returns null for an empty tile', async () => {
+    test('VectorTileWorkerSource.loadTile returns null for an empty tile', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
         source.loadVectorTile = (_params, _abortController) => Promise.resolve(null);
         const parse = vi.fn();
@@ -245,7 +245,7 @@ describe('vector tile worker source', () => {
         expect(await promise).toBeNull();
     });
 
-    test('VectorTileWorkerSource#returns a good error message when failing to parse a tile', async () => {
+    test('VectorTileWorkerSource.returns a good error message when failing to parse a tile', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
         const parse = vi.fn();
 
@@ -266,7 +266,7 @@ describe('vector tile worker source', () => {
         await expect(loadTilePromise).rejects.toThrowError(/Unable to parse the tile at/);
     });
 
-    test('VectorTileWorkerSource#returns a good error message when failing to parse a gzipped tile', async () => {
+    test('VectorTileWorkerSource.returns a good error message when failing to parse a gzipped tile', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
         const parse = vi.fn();
 
@@ -290,7 +290,7 @@ describe('vector tile worker source', () => {
 
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
-                vectorTile: new vt.VectorTile(new Protobuf(rawTileData)),
+                vectorTile: new VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData,
                 cacheControl: null,
                 expires: null
@@ -346,7 +346,7 @@ describe('vector tile worker source', () => {
 
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
-                vectorTile: new vt.VectorTile(new Protobuf(rawTileData)),
+                vectorTile: new VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData,
                 cacheControl: null,
                 expires: null

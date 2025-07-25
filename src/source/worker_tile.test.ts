@@ -1,6 +1,6 @@
 import {describe, test, expect, vi} from 'vitest';
 import {WorkerTile} from '../source/worker_tile';
-import {GeoJSONWrapper, type Feature} from '../source/geojson_wrapper';
+import {type Feature, GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {OverscaledTileID} from '../source/tile_id';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {type WorkerTileParameters} from './worker_source';
@@ -28,7 +28,7 @@ function createWrapper() {
 }
 
 describe('worker tile', () => {
-    test('WorkerTile#parse', async () => {
+    test('WorkerTile.parse', async () => {
         const layerIndex = new StyleLayerIndex([{
             id: 'test',
             source: 'source',
@@ -40,7 +40,7 @@ describe('worker tile', () => {
         expect(result.buckets[0]).toBeTruthy();
     });
 
-    test('WorkerTile#parse skips hidden layers', async () => {
+    test('WorkerTile.parse skips hidden layers', async () => {
         const layerIndex = new StyleLayerIndex([{
             id: 'test-hidden',
             source: 'source',
@@ -53,7 +53,7 @@ describe('worker tile', () => {
         expect(result.buckets).toHaveLength(0);
     });
 
-    test('WorkerTile#parse skips layers without a corresponding source layer', async () => {
+    test('WorkerTile.parse skips layers without a corresponding source layer', async () => {
         const layerIndex = new StyleLayerIndex([{
             id: 'test',
             source: 'source',
@@ -66,7 +66,7 @@ describe('worker tile', () => {
         expect(result.buckets).toHaveLength(0);
     });
 
-    test('WorkerTile#parse warns once when encountering a v1 vector tile layer', async () => {
+    test('WorkerTile.parse warns once when encountering a v1 vector tile layer', async () => {
         const layerIndex = new StyleLayerIndex([{
             id: 'test',
             source: 'source',
@@ -89,7 +89,7 @@ describe('worker tile', () => {
         expect(spy.mock.calls[0][0]).toMatch(/does not use vector tile spec v2/);
     });
 
-    test('WorkerTile#parse would request all types of dependencies', async () => {
+    test('WorkerTile.parse would request all types of dependencies', async () => {
         const tile = createWorkerTile();
         const layerIndex = new StyleLayerIndex([{
             id: '1',
@@ -151,7 +151,7 @@ describe('worker tile', () => {
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}})}), expect.any(Object));
     });
 
-    test('WorkerTile#parse would cancel and only event once on repeated reparsing', async () => {
+    test('WorkerTile.parse would cancel and only event once on repeated reparsing', async () => {
         const tile = createWorkerTile();
         const layerIndex = new StyleLayerIndex([{
             id: '1',

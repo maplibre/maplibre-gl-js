@@ -1,11 +1,10 @@
 import {describe, test, expect, vi} from 'vitest';
 import {createSymbolBucket} from '../../test/unit/lib/create_symbol_layer';
 import {Tile} from '../source/tile';
-import {GeoJSONWrapper, type Feature} from '../source/geojson_wrapper';
 import {OverscaledTileID} from '../source/tile_id';
 import fs from 'fs';
 import path from 'path';
-import vtpbf from 'vt-pbf';
+import {type Feature, fromVectorTileJs, GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {FeatureIndex} from '../data/feature_index';
 import {CollisionBoxArray} from '../data/array_types.g';
 import {extend} from '../util/util';
@@ -29,7 +28,7 @@ describe('querySourceFeatures', () => {
         const geojsonWrapper = new GeoJSONWrapper(features);
         geojsonWrapper.name = '_geojsonTileLayer';
         tile.loadVectorData(
-            createVectorData({rawTileData: vtpbf({layers: {'_geojsonTileLayer': geojsonWrapper}})}),
+            createVectorData({rawTileData: fromVectorTileJs({layers: {'_geojsonTileLayer': geojsonWrapper}})}),
             createPainter()
         );
 
@@ -131,7 +130,7 @@ describe('querySourceFeatures', () => {
 
 });
 
-describe('Tile#isLessThan', () => {
+describe('Tile.isLessThan', () => {
     test('correctly sorts tiles', () => {
         const tiles = [
             new OverscaledTileID(9, 0, 9, 146, 195),
@@ -253,7 +252,7 @@ describe('expiring tiles', () => {
 });
 
 describe('rtl text detection', () => {
-    test('Tile#hasRTLText is true when a tile loads a symbol bucket with rtl text', () => {
+    test('Tile.hasRTLText is true when a tile loads a symbol bucket with rtl text', () => {
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
         // Create a stub symbol bucket
         const symbolBucket = createSymbolBucket('test', 'Test', 'test', new CollisionBoxArray());

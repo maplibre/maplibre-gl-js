@@ -136,7 +136,7 @@ export type MapOptions = {
      */
     maxBounds?: LngLatBoundsLike;
     /**
-     * If `true`, the "scroll to zoom" interaction is enabled. {@link AroundCenterOptions} are passed as options to {@link ScrollZoomHandler#enable}.
+     * If `true`, the "scroll to zoom" interaction is enabled. {@link AroundCenterOptions} are passed as options to {@link ScrollZoomHandler.enable}.
      * @defaultValue true
      */
     scrollZoom?: boolean | AroundCenterOptions;
@@ -171,7 +171,7 @@ export type MapOptions = {
      */
     dragRotate?: boolean;
     /**
-     * If `true`, the "drag to pan" interaction is enabled. An `Object` value is passed as options to {@link DragPanHandler#enable}.
+     * If `true`, the "drag to pan" interaction is enabled. An `Object` value is passed as options to {@link DragPanHandler.enable}.
      * @defaultValue true
      */
     dragPan?: boolean | DragPanOptions;
@@ -186,12 +186,12 @@ export type MapOptions = {
      */
     doubleClickZoom?: boolean;
     /**
-     * If `true`, the "pinch to rotate and zoom" interaction is enabled. An `Object` value is passed as options to {@link TwoFingersTouchZoomRotateHandler#enable}.
+     * If `true`, the "pinch to rotate and zoom" interaction is enabled. An `Object` value is passed as options to {@link TwoFingersTouchZoomRotateHandler.enable}.
      * @defaultValue true
      */
     touchZoomRotate?: boolean | AroundCenterOptions;
     /**
-     * If `true`, the "drag to pitch" interaction is enabled. An `Object` value is passed as options to {@link TwoFingersTouchPitchHandler#enable}.
+     * If `true`, the "drag to pitch" interaction is enabled. An `Object` value is passed as options to {@link TwoFingersTouchPitchHandler.enable}.
      * @defaultValue true
      */
     touchPitch?: boolean | AroundCenterOptions;
@@ -305,7 +305,7 @@ export type MapOptions = {
      * font-family for locally overriding generation of Chinese, Japanese, and Korean characters.
      * For these characters, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
      * Set to `false`, to enable font settings from the map's style for these glyph ranges.
-     * The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js/docs/examples/local-ideographs).)
+     * The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js/docs/examples/use-locally-generated-ideographs).)
      * @defaultValue 'sans-serif'
      */
     localIdeographFontFamily?: string | false;
@@ -313,7 +313,7 @@ export type MapOptions = {
      * The map's MapLibre style. This must be a JSON object conforming to
      * the schema described in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/),
      * or a URL to such JSON.
-     * When the style is not specified, calling {@link Map#setStyle} is required to render the map.
+     * When the style is not specified, calling {@link Map.setStyle} is required to render the map.
      */
     style?: StyleSpecification | string;
     /**
@@ -481,7 +481,7 @@ export class Map extends Camera {
     _container: HTMLElement;
     _canvasContainer: HTMLElement;
     _controlContainer: HTMLElement;
-    _controlPositions: Record<string, HTMLElement>;
+    _controlPositions: Partial<Record<ControlPosition, HTMLElement>>;
     _interactive: boolean;
     _showTileBoundaries: boolean;
     _showCollisionBoxes: boolean;
@@ -1618,7 +1618,7 @@ export class Map extends Camera {
     }
 
     /**
-     * Removes an event listener for events previously added with `Map#on`.
+     * Removes an event listener for events previously added with `{@link Map.on}`.
      *
      * @event
      * @param type - The event type previously used to install the listener.
@@ -1674,7 +1674,7 @@ export class Map extends Camera {
      *
      * @param geometryOrOptions - (optional) The geometry of the query region:
      * either a single point or southwest and northeast points describing a bounding box.
-     * Omitting this parameter (i.e. calling {@link Map#queryRenderedFeatures} with zero arguments,
+     * Omitting this parameter (i.e. calling {@link Map.queryRenderedFeatures} with zero arguments,
      * or with only a `options` argument) is equivalent to passing a bounding box encompassing the entire
      * map viewport.
      * The geometryOrOptions can receive a {@link QueryRenderedFeaturesOptions} only to support a situation where the function receives only one parameter which is the options parameter.
@@ -1775,7 +1775,7 @@ export class Map extends Camera {
      * @param parameters - The options object.
      * @returns An array of MapGeoJSONFeature objects.
      *
-     * In contrast to {@link Map#queryRenderedFeatures}, this function returns all features matching the query parameters,
+     * In contrast to {@link Map.queryRenderedFeatures}, this function returns all features matching the query parameters,
      * whether or not they are rendered by the current style (i.e. visible). The domain of the query includes all currently-loaded
      * vector tiles and GeoJSON source tiles: this function does not check tiles outside the currently
      * visible viewport.
@@ -2404,7 +2404,7 @@ export class Map extends Camera {
     /**
      * Returns an image, specified by ID, currently available in the map.
      * This includes both images from the style's original sprite
-     * and any images that have been added at runtime using {@link Map#addImage}.
+     * and any images that have been added at runtime using {@link Map.addImage}.
      *
      * @param id - The ID of the image.
      * @returns An image in the map with the specified ID.
@@ -2421,7 +2421,7 @@ export class Map extends Camera {
     /**
      * Check whether or not an image with a specific ID exists in the style. This checks both images
      * in the style's original sprite and any images
-     * that have been added at runtime using {@link Map#addImage}.
+     * that have been added at runtime using {@link Map.addImage}.
      *
      * An {@link ErrorEvent} will be fired if the image parameter is invalid.
      *
@@ -2446,7 +2446,7 @@ export class Map extends Camera {
     /**
      * Remove an image from a style. This can be an image from the style's original
      * sprite or any images
-     * that have been added at runtime using {@link Map#addImage}.
+     * that have been added at runtime using {@link Map.addImage}.
      *
      * @param id - The ID of the image.
      *
@@ -2462,7 +2462,7 @@ export class Map extends Camera {
     }
 
     /**
-     * Load an image from an external URL to be used with {@link Map#addImage}. External
+     * Load an image from an external URL to be used with {@link Map.addImage}. External
      * domains must support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS).
      *
      * @param url - The URL of the image file. Image file must be in png, webp, or jpg format.
@@ -2484,7 +2484,7 @@ export class Map extends Camera {
     /**
      * Returns an Array of strings containing the IDs of all images currently available in the map.
      * This includes both images from the style's original sprite
-     * and any images that have been added at runtime using {@link Map#addImage}.
+     * and any images that have been added at runtime using {@link Map.addImage}.
      *
      * @returns An Array of strings containing the names of all sprites/images currently available in the map.
      *
@@ -2944,7 +2944,7 @@ export class Map extends Camera {
      * _Note: You can use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state) to access the values in a feature's state object for the purposes of styling._
      *
      * @param feature - Feature identifier. Feature objects returned from
-     * {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
+     * {@link Map.queryRenderedFeatures} or event handlers can be used as feature identifiers.
      * @param state - A set of key-value pairs. The values should be valid JSON types.
      *
      * @example
@@ -2978,7 +2978,7 @@ export class Map extends Camera {
      * Features are identified by their `feature.id` attribute, which can be any number or string.
      *
      * @param target - Identifier of where to remove state. It can be a source, a feature, or a specific key of feature.
-     * Feature objects returned from {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
+     * Feature objects returned from {@link Map.queryRenderedFeatures} or event handlers can be used as feature identifiers.
      * @param key - (optional) The key in the feature state to reset.
      * @example
      * Reset the entire state object for all features in the `my-source` source
@@ -3029,7 +3029,7 @@ export class Map extends Camera {
      * _Note: To access the values in a feature's state object for the purposes of styling the feature, use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state)._
      *
      * @param feature - Feature identifier. Feature objects returned from
-     * {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
+     * {@link Map.queryRenderedFeatures} or event handlers can be used as feature identifiers.
      * @returns The state of the feature: a set of key-value pairs that was assigned to the feature at runtime.
      *
      * @example
@@ -3375,8 +3375,8 @@ export class Map extends Camera {
         // Schedule another render frame if it's needed.
         //
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
-        // method, synchronous events fired during Style#update or
-        // Style#_updateSources could have caused them to be set again.
+        // method, synchronous events fired during Style.update or
+        // Style._updateSources could have caused them to be set again.
         const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty;
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();

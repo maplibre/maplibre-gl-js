@@ -17,7 +17,7 @@ afterEach(() => {
     server.restore();
 });
 
-test('#moveLayer', async () => {
+test('moveLayer', async () => {
     const map = createMap({
         style: extend(createStyle(), {
             sources: {
@@ -48,7 +48,7 @@ test('#moveLayer', async () => {
     expect(map.getLayer('layerId2').id).toBe('layerId2');
 });
 
-test('#getLayer', async () => {
+test('getLayer', async () => {
     const layer = {
         id: 'layerId',
         type: 'circle',
@@ -76,7 +76,7 @@ test('#getLayer', async () => {
     expect(mapLayer.source).toBe(layer.source);
 });
 
-test('#removeLayer restores Map#loaded() to true', async () => {
+test('removeLayer restores Map.loaded() to true', async () => {
     const map = createMap({
         style: extend(createStyle(), {
             sources: {
@@ -102,7 +102,7 @@ test('#removeLayer restores Map#loaded() to true', async () => {
     map.remove();
 });
 
-describe('#getLayersOrder', () => {
+describe('getLayersOrder', () => {
     test('returns ids of layers in the correct order', async () => {
         const map = createMap({
             style: extend(createStyle(), {
@@ -130,7 +130,7 @@ describe('#getLayersOrder', () => {
     });
 });
 
-describe('#setLayoutProperty', () => {
+describe('setLayoutProperty', () => {
     test('sets property', async () => {
         const map = createMap({
             style: {
@@ -336,7 +336,7 @@ describe('#setLayoutProperty', () => {
     });
 });
 
-describe('#getLayoutProperty', () => {
+describe('getLayoutProperty', () => {
     test('fires an error if layer not found', async () => {
         const map = createMap({
             style: {
@@ -354,7 +354,7 @@ describe('#getLayoutProperty', () => {
     });
 });
 
-describe('#setPaintProperty', () => {
+describe('setPaintProperty', () => {
     test('sets property', async () => {
         const map = createMap({
             style: {
