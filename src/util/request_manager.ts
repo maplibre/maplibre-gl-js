@@ -21,10 +21,10 @@ export const enum ResourceType {
 export type RequestTransformFunction = (url: string, resourceType?: ResourceType) => RequestParameters | undefined;
 
 export class RequestManager {
-    _transformRequestFn: RequestTransformFunction;
+    _transformRequestFn: RequestTransformFunction | null;
 
-    constructor(transformRequestFn?: RequestTransformFunction) {
-        this._transformRequestFn = transformRequestFn;
+    constructor(transformRequestFn?: RequestTransformFunction | null) {
+        this._transformRequestFn = transformRequestFn ?? null;
     }
 
     transformRequest(url: string, type: ResourceType) {
@@ -35,7 +35,7 @@ export class RequestManager {
         return {url};
     }
 
-    setTransformRequest(transformRequest: RequestTransformFunction) {
+    setTransformRequest(transformRequest: RequestTransformFunction | null) {
         this._transformRequestFn = transformRequest;
     }
 }
