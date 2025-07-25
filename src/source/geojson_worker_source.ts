@@ -119,13 +119,15 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
         try {
             this._pendingData = this.loadAndProcessGeoJSON(params, this._pendingRequest);
 
+            const data = await this._pendingData;
+
             this._geoJSONIndex = params.cluster ?
-                new Supercluster(getSuperclusterOptions(params)).load((await this._pendingData as any).features) :
-                geojsonvt(await this._pendingData, params.geojsonVtOptions);
+                new Supercluster(getSuperclusterOptions(params)).load((data as any).features) :
+                geojsonvt(data, params.geojsonVtOptions);
 
             this.loaded = {};
 
-            const result = {} as GeoJSONWorkerSourceLoadDataResult;
+            const result = {data} as GeoJSONWorkerSourceLoadDataResult;
             if (perf) {
                 const resourceTimingData = perf.finish();
                 // it's necessary to eval the result of getEntriesByName() here via parse/stringify
