@@ -47,9 +47,9 @@ describe('querySourceFeatures', () => {
         tile.querySourceFeatures(result, {sourceLayer: undefined, filter: ['!=', 'oneway', true]});
         expect(result).toHaveLength(0);
         result = [];
-        // TODO enable me
-        // tile.querySourceFeatures(result, {sourceLayer: undefined, filter: ['within', polygon]});
-        // expect(result).toHaveLength(1);
+        const polygon = {type: 'Polygon',  coordinates: [[[-91, -1], [-89, -1], [-89, 1], [-91, 1], [-91, -1]]]};
+        tile.querySourceFeatures(result, {sourceLayer: undefined, filter: ['within', polygon]});
+        expect(result).toHaveLength(1);
     });
 
     test('empty geojson tile', () => {
