@@ -513,7 +513,7 @@ export class ProgramConfiguration {
         const result = [];
         for (const property in this.binders) {
             const binder = this.binders[property];
-            if (property !== 'line-pattern' && (binder instanceof ConstantBinder || binder instanceof CrossFadedConstantBinder)) {
+            if (binder instanceof ConstantBinder || binder instanceof CrossFadedConstantBinder) {
                 result.push(...binder.uniformNames.map(name => `#define HAS_UNIFORM_${name}`));
             }
         }
