@@ -69,7 +69,7 @@ export function addPatternDependencies(type: string, layers: PatternStyleLayers,
         if (type === 'line') {
             const dasharrayProperty = (layer.paint as PossiblyEvaluated<any, any>).get('line-dasharray');
             if (dasharrayProperty && dasharrayProperty.value.kind !== 'constant') {
-                const round = false; // TODO handle round caps if needed
+                const round = false;
 
                 const min = {dasharray: dasharrayProperty.value.evaluate({zoom: zoom - 1}, patternFeature, {}), round};
                 const mid = {dasharray: dasharrayProperty.value.evaluate({zoom}, patternFeature, {}), round};
