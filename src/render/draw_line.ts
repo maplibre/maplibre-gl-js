@@ -59,15 +59,15 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
         const terrainData = painter.style.map.terrain &&  painter.style.map.terrain.getTerrainData(coord);
 
         const constantPattern = patternProperty.constantOr(null);
+        const constantDasharray = dasharrayProperty && dasharrayProperty.constantOr(null);
+
         if (constantPattern && tile.imageAtlas) {
             const atlas = tile.imageAtlas;
             const posTo = atlas.patternPositions[constantPattern.to.toString()];
             const posFrom = atlas.patternPositions[constantPattern.from.toString()];
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
-        }
 
-        const constantDasharray = dasharrayProperty && dasharrayProperty.constantOr(null);
-        if (constantDasharray) {
+        } else if (constantDasharray) {
             const round = layer.layout.get('line-cap') === 'round';
 
             const dashTo = painter.lineAtlas.getDash(constantDasharray.to, round);
