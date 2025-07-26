@@ -513,8 +513,19 @@ export class ProgramConfiguration {
         const result = [];
         for (const property in this.binders) {
             const binder = this.binders[property];
-            if (property !== 'line-pattern' && (binder instanceof ConstantBinder || binder instanceof CrossFadedConstantBinder)) {
-                result.push(...binder.uniformNames.map(name => `#define HAS_UNIFORM_${name}`));
+
+            if (binder instanceof ConstantBinder || binder instanceof CrossFadedConstantBinder) {
+                if (property === 'line-dasharray' || property === 'line-pattern') {
+                    const lineDasharrayBinder = this.binders['line-dasharray'];
+                    const linePatternBinder = this.binders['line-pattern'];
+
+                    if ((lineDasharrayBinder instanceof ConstantBinder || lineDasharrayBinder instanceof CrossFadedConstantBinder) && (linePatternBinder instanceof ConstantBinder || linePatternBinder instanceof CrossFadedConstantBinder)) {
+                        result.push(...binder.uniformNames.map(name => `#define HAS_UNIFORM_${name}`));
+                    }
+                } else {
+
+                    result.push(...binder.uniformNames.map(name => `#define HAS_UNIFORM_${name}`));
+                }
             }
         }
         return result;
