@@ -165,7 +165,7 @@ const lineSDFUniformValues = (
         'u_tileratio': tileRatio,
         'u_crossfade_from': crossfade.fromScale,
         'u_crossfade_to': crossfade.toScale,
-        'u_sdfgammaratio': painter.lineAtlas.width / (256 * painter.pixelRatio) / 2,
+        'u_sdfgammaratio': painter.lineAtlas.width / 256,
         'u_image': 0,
         'u_mix': crossfade.t,
         'u_lineatlas_width': painter.lineAtlas.width,
