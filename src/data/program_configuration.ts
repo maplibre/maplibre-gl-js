@@ -5,7 +5,7 @@ import {PossiblyEvaluatedPropertyValue} from '../style/properties';
 import {StructArrayLayout1f4, StructArrayLayout2f8, StructArrayLayout4f16, PatternLayoutArray, DasharrayLayoutArray} from './array_types.g';
 import {clamp} from '../util/util';
 import {patternAttributes} from './bucket/pattern_attributes';
-import {dasharrayAttributes} from './bucket/dasharray_attributes';
+import {dashAttributes} from './bucket/dash_attributes';
 import {EvaluationParameters} from '../style/evaluation_parameters';
 import {FeaturePositionMap} from './feature_position_map';
 import {type Uniform, Uniform1f, UniformColor, Uniform4f} from '../render/uniform_binding';
@@ -464,8 +464,8 @@ class CrossFadedDasharrayBinder implements AttributeBinder {
 
     upload(context: Context) {
         if (this.zoomInPaintVertexArray && this.zoomInPaintVertexArray.arrayBuffer && this.zoomOutPaintVertexArray && this.zoomOutPaintVertexArray.arrayBuffer) {
-            this.zoomInPaintVertexBuffer = context.createVertexBuffer(this.zoomInPaintVertexArray, dasharrayAttributes.members, this.expression.isStateDependent);
-            this.zoomOutPaintVertexBuffer = context.createVertexBuffer(this.zoomOutPaintVertexArray, dasharrayAttributes.members, this.expression.isStateDependent);
+            this.zoomInPaintVertexBuffer = context.createVertexBuffer(this.zoomInPaintVertexArray, dashAttributes.members, this.expression.isStateDependent);
+            this.zoomOutPaintVertexBuffer = context.createVertexBuffer(this.zoomOutPaintVertexArray, dashAttributes.members, this.expression.isStateDependent);
         }
     }
 
@@ -618,8 +618,8 @@ export class ProgramConfiguration {
                     result.push(patternAttributes.members[i].name);
                 }
             } else if (binder instanceof CrossFadedDasharrayBinder) {
-                for (let i = 0; i < dasharrayAttributes.members.length; i++) {
-                    result.push(dasharrayAttributes.members[i].name);
+                for (let i = 0; i < dashAttributes.members.length; i++) {
+                    result.push(dashAttributes.members[i].name);
                 }
             }
         }

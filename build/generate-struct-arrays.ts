@@ -22,7 +22,7 @@ import fillExtrusionAttributes from '../src/data/bucket/fill_extrusion_attribute
 import {lineLayoutAttributes} from '../src/data/bucket/line_attributes';
 import {lineLayoutAttributesExt} from '../src/data/bucket/line_attributes_ext';
 import {patternAttributes} from '../src/data/bucket/pattern_attributes';
-import {dasharrayAttributes} from '../src/data/bucket/dasharray_attributes';
+import {dashAttributes} from '../src/data/bucket/dash_attributes';
 // symbol layer specific arrays
 import {
     symbolLayoutAttributes,
@@ -148,7 +148,7 @@ const layoutAttributes = {
     line: lineLayoutAttributes,
     lineExt: lineLayoutAttributesExt,
     pattern: patternAttributes,
-    dasharray: dasharrayAttributes
+    dash: dashAttributes
 };
 for (const name in layoutAttributes) {
     createStructArrayType(`${name.replace(/-/g, '_')}_layout`, layoutAttributes[name]);
