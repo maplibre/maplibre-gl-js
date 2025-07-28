@@ -4,7 +4,7 @@ import {createMap, beforeMapTest, createStyle, createStyleSource} from '../../ut
 import {Tile} from '../../source/tile';
 import {OverscaledTileID} from '../../source/tile_id';
 import {fixedLngLat} from '../../../test/unit/lib/fixed';
-import {type RequestTransformFunction} from '../../util/request_manager';
+import {type RequestTransformFunction, ResourceType} from '../../util/request_manager';
 import {type MapSourceDataEvent} from '../events';
 import {MessageType} from '../../util/actor_messages';
 
@@ -73,10 +73,11 @@ describe('Map', () => {
         test('removes function when called with null', () => {
             const map = createMap();
 
-            const transformRequest = (() => {}) as any as RequestTransformFunction;
+            const transformRequest = vi.fn();
             map.setTransformRequest(transformRequest);
             map.setTransformRequest(null);
-            expect(map._requestManager._transformRequestFn).not.toBe(transformRequest);
+            map._requestManager.transformRequest('', ResourceType.Unknown);
+            expect(transformRequest).not.toHaveBeenCalled();
         });
     });
 
