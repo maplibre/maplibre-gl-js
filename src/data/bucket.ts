@@ -47,14 +47,14 @@ export type BucketFeature = {
     type: 0 | 1 | 2 | 3;
     id?: any;
     readonly patterns: {
-        [layerId: string]: {
+        [_: string]: {
             'min': string;
             'mid': string;
             'max': string;
         };
     };
     readonly dashes: {
-        [layerId: string]: {
+        [_: string]: {
             'min': string;
             'mid': string;
             'max': string;

@@ -160,7 +160,7 @@ class CrossFadedConstantBinder implements UniformBinder {
     }
 
     getBinding(context: Context, location: WebGLUniformLocation, name: string): Partial<Uniform<any>> {
-        return (name.substr(0, 9) === 'u_pattern' || name.substr(0, 12) === 'u_dasharray_') ?
+        return (name.substr(0, 9) === 'u_pattern' || name.substr(0, 12) === 'u_dasharray') ?
             new Uniform4f(context, location) :
             new Uniform1f(context, location);
     }
@@ -598,7 +598,6 @@ export class ProgramConfiguration {
         const result = [];
         for (const property in this.binders) {
             const binder = this.binders[property];
-
             if (binder instanceof ConstantBinder || binder instanceof CrossFadedConstantBinder) {
                 result.push(...binder.uniformNames.map(name => `#define HAS_UNIFORM_${name}`));
             }
