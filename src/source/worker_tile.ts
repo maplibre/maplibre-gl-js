@@ -80,7 +80,7 @@ export class WorkerTile {
             iconDependencies: {},
             patternDependencies: {},
             glyphDependencies: {},
-            dasharrayDependencies: {} as {[key: string]: {round: boolean; dasharray: Array<number>}},
+            dasharrayDependencies: {},
             availableImages,
             subdivisionGranularity
         };
