@@ -28,10 +28,8 @@ describe('Browser tests', () => {
         browser = await puppeteer.launch({
             headless: true,
             args: [
-                '--enable-webgl',
-                '--use-gl=angle',
-                '--use-angle=gl',
                 '--no-sandbox',
+                '--enable-webgl'
             ],
         });
 
