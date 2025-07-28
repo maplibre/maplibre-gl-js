@@ -27,7 +27,7 @@ export type PopulateParameters = {
     iconDependencies: {};
     patternDependencies: {};
     glyphDependencies: {};
-    dasharrayDependencies: {[key: string]: {round: boolean; dasharray: Array<number>}};
+    dashDependencies: {[key: string]: {round: boolean; dasharray: Array<number>}};
     availableImages: Array<string>;
     subdivisionGranularity: SubdivisionGranularitySetting;
 };

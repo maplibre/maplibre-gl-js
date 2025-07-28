@@ -41,7 +41,7 @@ export function hasPattern(type: string, layers: PatternStyleLayers, options: Po
 
 export function addPatternDependencies(type: string, layers: PatternStyleLayers, patternFeature: BucketFeature, zoom: number, options: PopulateParameters) {
     const patterns = options.patternDependencies;
-    const dasharrays = options.dasharrayDependencies;
+    const dasharrays = options.dashDependencies;
 
     for (const layer of layers) {
         const patternProperty = (layer.paint  as PossiblyEvaluated<any, any>).get(`${type}-pattern`);

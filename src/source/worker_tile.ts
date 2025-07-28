@@ -80,7 +80,7 @@ export class WorkerTile {
             iconDependencies: {},
             patternDependencies: {},
             glyphDependencies: {},
-            dasharrayDependencies: {},
+            dashDependencies: {},
             availableImages,
             subdivisionGranularity
         };
@@ -164,7 +164,7 @@ export class WorkerTile {
             getPatternsPromise = actor.sendAsync({type: MessageType.getImages, data: {icons: patterns, source: this.source, tileID: this.tileID, type: 'patterns'}}, abortController);
         }
 
-        const dasharray = options.dasharrayDependencies;
+        const dasharray = options.dashDependencies;
         let getDasharrayPromise = Promise.resolve<GetDashesResponse>({} as GetDashesResponse);
         if (Object.keys(dasharray).length) {
             const abortController = new AbortController();
