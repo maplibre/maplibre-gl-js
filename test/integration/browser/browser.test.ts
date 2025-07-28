@@ -28,8 +28,12 @@ describe('Browser tests', () => {
         browser = await puppeteer.launch({
             headless: true,
             args: [
-                '--no-sandbox',
-                '--enable-webgl'
+                '--no-sandbox', // Essential for CI environments
+                '--disable-gpu', // Crucial: Tell Chromium NOT to try to use a hardware GPU
+                '--disable-setuid-sandbox', // Good practice in CI/Docker
+                '--disable-dev-shm-usage', // Recommended for Docker/CI to prevent shared memory issues
+                '--enable-webgl', // Keep this
+                '--use-gl=swiftshader', // Force software rendering via SwiftShader
             ],
         });
 
