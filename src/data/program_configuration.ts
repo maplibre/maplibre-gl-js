@@ -2,7 +2,7 @@ import {packUint8ToFloat} from '../shaders/encode_attribute';
 import {type Color, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 import {register} from '../util/web_worker_transfer';
 import {PossiblyEvaluatedPropertyValue} from '../style/properties';
-import {StructArrayLayout1f4, StructArrayLayout2f8, StructArrayLayout4f16, PatternLayoutArray, DasharrayLayoutArray} from './array_types.g';
+import {StructArrayLayout1f4, StructArrayLayout2f8, StructArrayLayout4f16, PatternLayoutArray, DashLayoutArray} from './array_types.g';
 import {clamp} from '../util/util';
 import {patternAttributes} from './bucket/pattern_attributes';
 import {dashAttributes} from './bucket/dash_attributes';
@@ -796,8 +796,8 @@ function getLayoutException(property) {
             'composite': PatternLayoutArray
         },
         'line-dasharray': {
-            'source': DasharrayLayoutArray,
-            'composite': DasharrayLayoutArray
+            'source': DashLayoutArray,
+            'composite': DashLayoutArray
         },
     };
 
