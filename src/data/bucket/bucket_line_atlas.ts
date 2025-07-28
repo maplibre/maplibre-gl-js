@@ -1,8 +1,8 @@
 import type {ImagePositionLike} from '../../render/image_atlas';
 import type {GetDashesResponse} from '../../util/actor_messages';
 
-export function createBucketLineAtlas(buckets: {[_: string]: any;}, dashes: GetDashesResponse): {[_: string]: ImagePositionLike;} {
-    const dasharrayPositions: {[_: string]: ImagePositionLike;} = {};
+export function createBucketLineAtlas(buckets: {[_: string]: any}, dashes: GetDashesResponse): {[_: string]: ImagePositionLike} {
+    const dasharrayPositions: {[_: string]: ImagePositionLike} = {};
 
     for (const key in buckets) {
         const bucket = buckets[key];

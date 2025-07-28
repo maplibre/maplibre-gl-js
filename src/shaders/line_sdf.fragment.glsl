@@ -18,8 +18,8 @@ in float v_depth;
 #pragma mapbox: define lowp float opacity
 #pragma mapbox: define mediump float width
 #pragma mapbox: define lowp float floorwidth
-#pragma mapbox: define mediump vec4 pattern_from
-#pragma mapbox: define mediump vec4 pattern_to
+#pragma mapbox: define mediump vec4 dasharray_from
+#pragma mapbox: define mediump vec4 dasharray_to
 
 void main() {
     #pragma mapbox: initialize highp vec4 color
@@ -27,8 +27,8 @@ void main() {
     #pragma mapbox: initialize lowp float opacity
     #pragma mapbox: initialize mediump float width
     #pragma mapbox: initialize lowp float floorwidth
-    #pragma mapbox: initialize mediump vec4 pattern_from
-    #pragma mapbox: initialize mediump vec4 pattern_to
+    #pragma mapbox: initialize mediump vec4 dasharray_from
+    #pragma mapbox: initialize mediump vec4 dasharray_to
 
     // Calculate the distance of the pixel from the line in pixels.
     float dist = length(v_normal) * v_width2.s;
@@ -42,7 +42,7 @@ void main() {
     float sdfdist_a = texture(u_image, v_tex_a).a;
     float sdfdist_b = texture(u_image, v_tex_b).a;
     float sdfdist = mix(sdfdist_a, sdfdist_b, u_mix);
-    float sdfgamma = u_sdfgammaratio / min(pattern_from.w, pattern_to.w);
+    float sdfgamma = u_sdfgammaratio / min(dasharray_from.w, dasharray_to.w);
     alpha *= smoothstep(0.5 - sdfgamma / floorwidth, 0.5 + sdfgamma / floorwidth, sdfdist);
 
     // fragColor = vec4(0.0, 0.0, sdfdist_a * 2.0, 1.0);
