@@ -7,7 +7,7 @@ import {LineBucket} from '../data/bucket/line_bucket';
 import {FillBucket} from '../data/bucket/fill_bucket';
 import {FillExtrusionBucket} from '../data/bucket/fill_extrusion_bucket';
 import {warnOnce, mapObject} from '../util/util';
-import {addDasharrayDependencies} from '../data/bucket/pattern_bucket_features';
+import {createBucketLineAtlas} from '../data/bucket/bucket_line_atlas';
 import {ImageAtlas} from '../render/image_atlas';
 import {GlyphAtlas} from '../render/glyph_atlas';
 import {EvaluationParameters} from '../style/evaluation_parameters';
@@ -176,9 +176,7 @@ export class WorkerTile {
 
         const glyphAtlas = new GlyphAtlas(glyphMap);
         const imageAtlas = new ImageAtlas(iconMap, patternMap);
-
-        // Process dasharray dependencies and generate dash positions
-        const dasharrayPositions = addDasharrayDependencies(buckets, dasharrayMap);
+        const lineAtlas = createBucketLineAtlas(buckets, dasharrayMap);
 
         for (const key in buckets) {
             const bucket = buckets[key];
@@ -199,7 +197,7 @@ export class WorkerTile {
                 bucket instanceof FillBucket ||
                 bucket instanceof FillExtrusionBucket)) {
                 recalculateLayers(bucket.layers, this.zoom, availableImages);
-                bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions, dasharrayPositions);
+                bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions, lineAtlas);
             }
         }
 
