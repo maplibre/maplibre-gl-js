@@ -10,6 +10,7 @@
 - Fix `Map.setTransformRequest` parameter type to include `null` ([#6179](https://github.com/maplibre/maplibre-gl-js/issues/6179))
 
 - _...Add new stuff here..._
+- Fix cacheControl for Tile to not ignore values of 0
 
 ## 5.6.1
 
