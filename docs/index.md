@@ -36,9 +36,9 @@ Each section describes classes or objects as well as their **properties**, **par
 
 In the examples, we use vector tiles from our [Demo tiles repository](https://github.com/maplibre/demotiles) and from [MapTiler](https://maptiler.com). Get your own API key if you want to use MapTiler data in your project.
 
-## NPM
+## npm
 
-Install the MapLibre GL JS package via NPM.
+Install the MapLibre GL JS package via [npm](https://www.npmjs.com/package/maplibre-gl).
 
 ```bash
 npm install maplibre-gl
