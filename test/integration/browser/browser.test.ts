@@ -28,12 +28,7 @@ describe('Browser tests', () => {
         browser = await puppeteer.launch({
             headless: true,
             args: [
-                '--no-sandbox', // Essential for CI environments
-                '--headless=new',
-                '--enable-unsafe-webgpu',
-                '--disable-vulkan-surface',
-                '--enable-features=Vulkan',
-                '--use-angle=vulkan'
+                '--no-sandbox'
             ],
         });
 
