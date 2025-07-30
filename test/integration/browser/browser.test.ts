@@ -29,8 +29,11 @@ describe('Browser tests', () => {
             headless: true,
             args: [
                 '--no-sandbox', // Essential for CI environments
-                '--enable-webgl', // Keep this
-                '--enable-unsafe-swiftshader'
+                '--headless=new',
+                '--enable-unsafe-webgpu',
+                '--disable-vulkan-surface',
+                '--enable-features=Vulkan',
+                '--use-angle=vulkan'
             ],
         });
 
