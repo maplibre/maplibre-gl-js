@@ -28,19 +28,10 @@ describe('Browser tests', () => {
         browser = await puppeteer.launch({
             headless: true,
             args: [
-                '--no-sandbox', // Essential for CI environments to prevent sandbox issues
-                '--disable-setuid-sandbox', // Also good for CI
-                '--enable-webgl', // Explicitly enable WebGL
-                '--ignore-gpu-blocklist', // Tries to bypass GPU blacklisting
-                '--enable-gpu-rasterization', // Enable GPU rasterization
-                '--enable-zero-copy', // Enable zero-copy textures
-                '--use-gl=angle', // Force Angle rendering backend
-                '--use-angle=swiftshader', // Or try 'swiftshader' if 'angle' doesn't work well
-                // '--use-angle=gl', // Might also be an option for Windows, but 'swiftshader' is often more reliable in headless
-                '--disable-gl-drawing-for-tests', // This can sometimes help with drawing issues
-                '--disable-software-rasterizer', // Prevent software rasterizer fallback if you want hardware acceleration
-                '--enable-unsafe-webgpu', // If you're also dealing with WebGPU (might not be relevant to your specific issue, but good to know)
-                // '--disable-features=UseSkiaRenderer', // Sometimes disabling Skia renderer helps with specific rendering issues
+                '--no-sandbox',
+                '--enable-features=AllowSwiftShaderFallback,AllowSoftwareGLFallbackDueToCrashes',
+                '--enable-unsafe-swiftshader'
+
             ],
         });
 
