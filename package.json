@@ -121,7 +121,7 @@
     "shuffle-seed": "^1.1.6",
     "st": "^3.0.2",
     "stylelint": "^16.23.0",
-    "stylelint-config-standard": "^38.0.0",
+    "stylelint-config-standard": "^39.0.0",
     "ts-node": "^10.9.2",
     "tslib": "^2.8.1",
     "typedoc": "^0.28.7",
