@@ -2,9 +2,10 @@ import {packUint8ToFloat} from '../shaders/encode_attribute';
 import {type Color, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 import {register} from '../util/web_worker_transfer';
 import {PossiblyEvaluatedPropertyValue} from '../style/properties';
-import {StructArrayLayout1f4, StructArrayLayout2f8, StructArrayLayout4f16, PatternLayoutArray} from './array_types.g';
+import {StructArrayLayout1f4, StructArrayLayout2f8, StructArrayLayout4f16, PatternLayoutArray, DashLayoutArray} from './array_types.g';
 import {clamp} from '../util/util';
 import {patternAttributes} from './bucket/pattern_attributes';
+import {dashAttributes} from './bucket/dash_attributes';
 import {EvaluationParameters} from '../style/evaluation_parameters';
 import {FeaturePositionMap} from './feature_position_map';
 import {type Uniform, Uniform1f, UniformColor, Uniform4f} from '../render/uniform_binding';
@@ -17,7 +18,7 @@ import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer';
 import type {CrossfadeParameters} from '../style/evaluation_parameters';
 import type {StructArray, StructArrayMember} from '../util/struct_array';
 import type {VertexBuffer} from '../gl/vertex_buffer';
-import type {ImagePosition} from '../render/image_atlas';
+import type {ImagePosition, ImagePositionLike} from '../render/image_atlas';
 import type {
     Feature,
     FeatureState,
@@ -71,7 +72,7 @@ interface AttributeBinder {
     populatePaintArray(
         length: number,
         feature: Feature,
-        imagePositions: {[_: string]: ImagePosition},
+        imagePositions: {[_: string]: ImagePositionLike},
         canonical?: CanonicalTileID,
         formattedSection?: FormattedSection
     ): void;
@@ -80,7 +81,7 @@ interface AttributeBinder {
         length: number,
         feature: Feature,
         featureState: FeatureState,
-        imagePositions: {[_: string]: ImagePosition}
+        imagePositions: {[_: string]: ImagePositionLike}
     ): void;
     upload(a: Context): void;
     destroy(): void;
@@ -138,7 +139,7 @@ class CrossFadedConstantBinder implements UniformBinder {
         this.pixelRatioTo = 1.0;
     }
 
-    setConstantPatternPositions(posTo: ImagePosition, posFrom: ImagePosition) {
+    setConstantPatternPositions(posTo: ImagePositionLike, posFrom: ImagePositionLike) {
         this.pixelRatioFrom = posFrom.pixelRatio;
         this.pixelRatioTo = posTo.pixelRatio;
         this.patternFrom = posFrom.tlbr;
@@ -149,13 +150,17 @@ class CrossFadedConstantBinder implements UniformBinder {
         const pos =
             uniformName === 'u_pattern_to' ? this.patternTo :
                 uniformName === 'u_pattern_from' ? this.patternFrom :
-                    uniformName === 'u_pixel_ratio_to' ? this.pixelRatioTo :
-                        uniformName === 'u_pixel_ratio_from' ? this.pixelRatioFrom : null;
+                    uniformName === 'u_dasharray_to' ? this.patternTo :
+                        uniformName === 'u_dasharray_from' ? this.patternFrom :
+                            uniformName === 'u_pixel_ratio_to' ? this.pixelRatioTo :
+                                uniformName === 'u_pixel_ratio_from' ? this.pixelRatioFrom :
+                                    uniformName === 'u_dash_pixel_ratio_to' ? this.pixelRatioTo :
+                                        uniformName === 'u_dash_pixel_ratio_from' ? this.pixelRatioFrom : null;
         if (pos) uniform.set(pos);
     }
 
     getBinding(context: Context, location: WebGLUniformLocation, name: string): Partial<Uniform<any>> {
-        return name.substr(0, 9) === 'u_pattern' ?
+        return (name.substr(0, 9) === 'u_pattern' || name.substr(0, 12) === 'u_dasharray_') ?
             new Uniform4f(context, location) :
             new Uniform1f(context, location);
     }
@@ -365,14 +370,14 @@ class CrossFadedCompositeBinder implements AttributeBinder {
         // unnecessary vertex data to the shaders, we determine which to upload at draw time.
         for (let i = start; i < end; i++) {
             this.zoomInPaintVertexArray.emplace(i,
-                imageMid.tl[0], imageMid.tl[1], imageMid.br[0], imageMid.br[1],
-                imageMin.tl[0], imageMin.tl[1], imageMin.br[0], imageMin.br[1],
+                imageMid.tlbr[0], imageMid.tlbr[1], imageMid.tlbr[2], imageMid.tlbr[3],
+                imageMin.tlbr[0], imageMin.tlbr[1], imageMin.tlbr[2], imageMin.tlbr[3],
                 imageMid.pixelRatio,
                 imageMin.pixelRatio,
             );
             this.zoomOutPaintVertexArray.emplace(i,
-                imageMid.tl[0], imageMid.tl[1], imageMid.br[0], imageMid.br[1],
-                imageMax.tl[0], imageMax.tl[1], imageMax.br[0], imageMax.br[1],
+                imageMid.tlbr[0], imageMid.tlbr[1], imageMid.tlbr[2], imageMid.tlbr[3],
+                imageMax.tlbr[0], imageMax.tlbr[1], imageMax.tlbr[2], imageMax.tlbr[3],
                 imageMid.pixelRatio,
                 imageMax.pixelRatio,
             );
@@ -383,6 +388,84 @@ class CrossFadedCompositeBinder implements AttributeBinder {
         if (this.zoomInPaintVertexArray && this.zoomInPaintVertexArray.arrayBuffer && this.zoomOutPaintVertexArray && this.zoomOutPaintVertexArray.arrayBuffer) {
             this.zoomInPaintVertexBuffer = context.createVertexBuffer(this.zoomInPaintVertexArray, patternAttributes.members, this.expression.isStateDependent);
             this.zoomOutPaintVertexBuffer = context.createVertexBuffer(this.zoomOutPaintVertexArray, patternAttributes.members, this.expression.isStateDependent);
+        }
+    }
+
+    destroy() {
+        if (this.zoomOutPaintVertexBuffer) this.zoomOutPaintVertexBuffer.destroy();
+        if (this.zoomInPaintVertexBuffer) this.zoomInPaintVertexBuffer.destroy();
+    }
+}
+
+class CrossFadedDasharrayBinder implements AttributeBinder {
+    expression: CompositeExpression;
+    type: string;
+    useIntegerZoom: boolean;
+    zoom: number;
+    layerId: string;
+
+    zoomInPaintVertexArray: StructArray;
+    zoomOutPaintVertexArray: StructArray;
+    zoomInPaintVertexBuffer: VertexBuffer;
+    zoomOutPaintVertexBuffer: VertexBuffer;
+    paintVertexAttributes: Array<StructArrayMember>;
+
+    constructor(expression: CompositeExpression, type: string, useIntegerZoom: boolean, zoom: number, PaintVertexArray: {
+        new (...args: any): StructArray;
+    }, layerId: string) {
+        this.expression = expression;
+        this.type = type;
+        this.useIntegerZoom = useIntegerZoom;
+        this.zoom = zoom;
+        this.layerId = layerId;
+
+        this.zoomInPaintVertexArray = new PaintVertexArray();
+        this.zoomOutPaintVertexArray = new PaintVertexArray();
+    }
+
+    populatePaintArray(length: number, feature: Feature, imagePositions: {[_: string]: ImagePositionLike}) {
+        const start = this.zoomInPaintVertexArray.length;
+        this.zoomInPaintVertexArray.resize(length);
+        this.zoomOutPaintVertexArray.resize(length);
+        this._setPaintValues(start, length, feature.dashes && feature.dashes[this.layerId], imagePositions);
+    }
+
+    updatePaintArray(start: number, end: number, feature: Feature, featureState: FeatureState, imagePositions: {[_: string]: ImagePositionLike}) {
+        this._setPaintValues(start, end, feature.dashes && feature.dashes[this.layerId], imagePositions);
+    }
+
+    _setPaintValues(start, end, dashes, positions) {
+        if (!positions || !dashes) return;
+
+        const {min, mid, max} = dashes;
+        const dashMin = positions[min];
+        const dashMid = positions[mid];
+        const dashMax = positions[max];
+        if (!dashMin || !dashMid || !dashMax) return;
+
+        // We populate two paint arrays because, for cross-faded properties, we don't know which direction
+        // we're cross-fading to at layout time. In order to keep vertex attributes to a minimum and not pass
+        // unnecessary vertex data to the shaders, we determine which to upload at draw time.
+        for (let i = start; i < end; i++) {
+            this.zoomInPaintVertexArray.emplace(i,
+                dashMid.tlbr[0], dashMid.tlbr[1], dashMid.tlbr[2], dashMid.tlbr[3],
+                dashMin.tlbr[0], dashMin.tlbr[1], dashMin.tlbr[2], dashMin.tlbr[3],
+                dashMid.pixelRatio,
+                dashMin.pixelRatio,
+            );
+            this.zoomOutPaintVertexArray.emplace(i,
+                dashMid.tlbr[0], dashMid.tlbr[1], dashMid.tlbr[2], dashMid.tlbr[3],
+                dashMax.tlbr[0], dashMax.tlbr[1], dashMax.tlbr[2], dashMax.tlbr[3],
+                dashMid.pixelRatio,
+                dashMax.pixelRatio,
+            );
+        }
+    }
+
+    upload(context: Context) {
+        if (this.zoomInPaintVertexArray && this.zoomInPaintVertexArray.arrayBuffer && this.zoomOutPaintVertexArray && this.zoomOutPaintVertexArray.arrayBuffer) {
+            this.zoomInPaintVertexBuffer = context.createVertexBuffer(this.zoomInPaintVertexArray, dashAttributes.members, this.expression.isStateDependent);
+            this.zoomOutPaintVertexBuffer = context.createVertexBuffer(this.zoomOutPaintVertexArray, dashAttributes.members, this.expression.isStateDependent);
         }
     }
 
@@ -445,7 +528,9 @@ export class ProgramConfiguration {
             } else if (expression.kind === 'source' || isCrossFaded) {
                 const StructArrayLayout = layoutType(property, type, 'source');
                 this.binders[property] = isCrossFaded ?
-                    new CrossFadedCompositeBinder(expression as CompositeExpression, type, useIntegerZoom, zoom, StructArrayLayout, layer.id) :
+                    property === 'line-dasharray' ?
+                        new CrossFadedDasharrayBinder(expression as CompositeExpression, type, useIntegerZoom, zoom, StructArrayLayout, layer.id) :
+                        new CrossFadedCompositeBinder(expression as CompositeExpression, type, useIntegerZoom, zoom, StructArrayLayout, layer.id) :
                     new SourceExpressionBinder(expression as SourceExpression, names, type, StructArrayLayout);
                 keys.push(`/a_${property}`);
 
@@ -464,14 +549,14 @@ export class ProgramConfiguration {
         return binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder ? binder.maxValue : 0;
     }
 
-    populatePaintArrays(newLength: number, feature: Feature, imagePositions: {[_: string]: ImagePosition}, canonical?: CanonicalTileID, formattedSection?: FormattedSection) {
+    populatePaintArrays(newLength: number, feature: Feature, imagePositions: {[_: string]: ImagePositionLike}, canonical?: CanonicalTileID, formattedSection?: FormattedSection) {
         for (const property in this.binders) {
             const binder = this.binders[property];
-            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedCompositeBinder)
+            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedCompositeBinder || binder instanceof CrossFadedDasharrayBinder)
                 (binder as AttributeBinder).populatePaintArray(newLength, feature, imagePositions, canonical, formattedSection);
         }
     }
-    setConstantPatternPositions(posTo: ImagePosition, posFrom: ImagePosition) {
+    setConstantPatternPositions(posTo: ImagePositionLike, posFrom: ImagePositionLike) {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof CrossFadedConstantBinder)
@@ -484,7 +569,7 @@ export class ProgramConfiguration {
         featureMap: FeaturePositionMap,
         vtLayer: VectorTileLayer,
         layer: TypedStyleLayer,
-        imagePositions: {[_: string]: ImagePosition}
+        imagePositions: {[_: string]: ImagePositionLike}
     ): boolean {
         let dirty: boolean = false;
         for (const id in featureStates) {
@@ -496,7 +581,7 @@ export class ProgramConfiguration {
                 for (const property in this.binders) {
                     const binder = this.binders[property];
                     if ((binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder ||
-                         binder instanceof CrossFadedCompositeBinder) && (binder as any).expression.isStateDependent === true) {
+                         binder instanceof CrossFadedCompositeBinder || binder instanceof CrossFadedDasharrayBinder) && (binder as any).expression.isStateDependent === true) {
                         //AHM: Remove after https://github.com/mapbox/mapbox-gl-js/issues/6255
                         const value = (layer.paint as any).get(property);
                         (binder as any).expression = value.value;
@@ -531,6 +616,10 @@ export class ProgramConfiguration {
             } else if (binder instanceof CrossFadedCompositeBinder) {
                 for (let i = 0; i < patternAttributes.members.length; i++) {
                     result.push(patternAttributes.members[i].name);
+                }
+            } else if (binder instanceof CrossFadedDasharrayBinder) {
+                for (let i = 0; i < dashAttributes.members.length; i++) {
+                    result.push(dashAttributes.members[i].name);
                 }
             }
         }
@@ -588,7 +677,7 @@ export class ProgramConfiguration {
 
         for (const property in this.binders) {
             const binder = this.binders[property];
-            if (crossfade && binder instanceof CrossFadedCompositeBinder) {
+            if (crossfade && (binder instanceof CrossFadedCompositeBinder || binder instanceof CrossFadedDasharrayBinder)) {
                 const patternVertexBuffer = crossfade.fromScale === 2 ? binder.zoomInPaintVertexBuffer : binder.zoomOutPaintVertexBuffer;
                 if (patternVertexBuffer) this._buffers.push(patternVertexBuffer);
 
@@ -601,7 +690,7 @@ export class ProgramConfiguration {
     upload(context: Context) {
         for (const property in this.binders) {
             const binder = this.binders[property];
-            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedCompositeBinder)
+            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedCompositeBinder || binder instanceof CrossFadedDasharrayBinder)
                 binder.upload(context);
         }
         this.updatePaintBuffers();
@@ -610,7 +699,7 @@ export class ProgramConfiguration {
     destroy() {
         for (const property in this.binders) {
             const binder = this.binders[property];
-            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedCompositeBinder)
+            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedCompositeBinder || binder instanceof CrossFadedDasharrayBinder)
                 binder.destroy();
         }
     }
@@ -632,7 +721,7 @@ export class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
         this._bufferOffset = 0;
     }
 
-    populatePaintArrays(length: number, feature: Feature, index: number, imagePositions: {[_: string]: ImagePosition}, canonical: CanonicalTileID, formattedSection?: FormattedSection) {
+    populatePaintArrays(length: number, feature: Feature, index: number, imagePositions: {[_: string]: ImagePositionLike}, canonical: CanonicalTileID, formattedSection?: FormattedSection) {
         for (const key in this.programConfigurations) {
             this.programConfigurations[key].populatePaintArrays(length, feature, imagePositions, canonical, formattedSection);
         }
@@ -645,7 +734,7 @@ export class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
         this.needsUpload = true;
     }
 
-    updatePaintArrays(featureStates: FeatureStates, vtLayer: VectorTileLayer, layers: ReadonlyArray<TypedStyleLayer>, imagePositions: {[_: string]: ImagePosition}) {
+    updatePaintArrays(featureStates: FeatureStates, vtLayer: VectorTileLayer, layers: ReadonlyArray<TypedStyleLayer>, imagePositions: {[_: string]: ImagePositionLike}) {
         for (const layer of layers) {
             this.needsUpload = this.programConfigurations[layer.id].updatePaintArrays(featureStates, this._featureMap, vtLayer, layer, imagePositions) || this.needsUpload;
         }
@@ -683,6 +772,7 @@ function paintAttributeNames(property, type) {
         'text-halo-width': ['halo_width'],
         'icon-halo-width': ['halo_width'],
         'line-gap-width': ['gapwidth'],
+        'line-dasharray': ['dasharray_to', 'dasharray_from', 'dash_pixel_ratio_to', 'dash_pixel_ratio_from'],
         'line-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
         'fill-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
         'fill-extrusion-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
@@ -704,7 +794,11 @@ function getLayoutException(property) {
         'fill-extrusion-pattern': {
             'source': PatternLayoutArray,
             'composite': PatternLayoutArray
-        }
+        },
+        'line-dasharray': {
+            'source': DashLayoutArray,
+            'composite': DashLayoutArray
+        },
     };
 
     return propertyExceptions[property];
@@ -730,6 +824,7 @@ register('ConstantBinder', ConstantBinder);
 register('CrossFadedConstantBinder', CrossFadedConstantBinder);
 register('SourceExpressionBinder', SourceExpressionBinder);
 register('CrossFadedCompositeBinder', CrossFadedCompositeBinder);
+register('CrossFadedDasharrayBinder', CrossFadedDasharrayBinder);
 register('CompositeExpressionBinder', CompositeExpressionBinder);
 register('ProgramConfiguration', ProgramConfiguration, {omit: ['_buffers']});
 register('ProgramConfigurationSet', ProgramConfigurationSet);
