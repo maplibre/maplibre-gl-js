@@ -1,4 +1,5 @@
 ## main
+- Fix typo `_rotatePitchHandler` in the `navigation_control.ts` file ([#6207](https://github.com/maplibre/maplibre-gl-js/issues/6207))
 
 ### ✨ Features and improvements
 - _...Add new stuff here..._

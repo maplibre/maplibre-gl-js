@@ -177,7 +177,7 @@ class MouseRotateWrapper {
     map: Map;
     _clickTolerance: number;
     element: HTMLElement;
-    _rotatePitchHanlder: DragMoveHandler<DragRotateResult, MouseEvent | TouchEvent>;
+    _rotatePitchHandler: DragMoveHandler<DragRotateResult, MouseEvent | TouchEvent>;
     _startPos: Point;
     _lastPos: Point;
 
@@ -186,7 +186,7 @@ class MouseRotateWrapper {
         this.element = element;
         
         const moveStateManager = new MouseOrTouchMoveStateManager();
-        this._rotatePitchHanlder = new DragHandler<DragRotateResult, MouseEvent | TouchEvent>({
+        this._rotatePitchHandler = new DragHandler<DragRotateResult, MouseEvent | TouchEvent>({
             clickTolerance: 3,
             move: (lastPoint: Point, currentPoint: Point) => {
                 const rect = element.getBoundingClientRect();
@@ -207,13 +207,13 @@ class MouseRotateWrapper {
     }
 
     startMove(e: MouseEvent | TouchEvent, point: Point) {
-        this._rotatePitchHanlder.dragStart(e, point);
+        this._rotatePitchHandler.dragStart(e, point);
         DOM.disableDrag();
     }
 
     move(e: MouseEvent | TouchEvent, point: Point) {
         const map = this.map;
-        const {bearingDelta, pitchDelta} = this._rotatePitchHanlder.dragMove(e, point) || {};
+        const {bearingDelta, pitchDelta} = this._rotatePitchHandler.dragMove(e, point) || {};
         if (bearingDelta) map.setBearing(map.getBearing() + bearingDelta);
         if (pitchDelta) map.setPitch(map.getPitch() + pitchDelta);
     }
@@ -247,7 +247,7 @@ class MouseRotateWrapper {
     };
 
     mouseup = (e: MouseEvent) => {
-        this._rotatePitchHanlder.dragEnd(e);
+        this._rotatePitchHandler.dragEnd(e);
         this.offTemp();
     };
 
@@ -284,7 +284,7 @@ class MouseRotateWrapper {
     };
 
     reset = () => {
-        this._rotatePitchHanlder.reset();
+        this._rotatePitchHandler.reset();
         delete this._startPos;
         delete this._lastPos;
         this.offTemp();
