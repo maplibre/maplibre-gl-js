@@ -28,10 +28,9 @@ describe('Browser tests', () => {
         browser = await puppeteer.launch({
             headless: true,
             args: [
-                '--no-sandbox',
+                '--disable-gpu',
                 '--enable-features=AllowSwiftShaderFallback,AllowSoftwareGLFallbackDueToCrashes',
                 '--enable-unsafe-swiftshader'
-
             ],
         });
 
