@@ -1301,6 +1301,33 @@ describe('Style.setGlobalState', () => {
         expect(style.sourceCaches['fill-source-id'].reload).toHaveBeenCalled();
     });
 
+    test('reloads sources when state property is used in layout property', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'line-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'first-layer-id',
+                type: 'line',
+                source: 'line-source-id',
+                layout: {
+                    'line-join': ['global-state', 'lineJoin']
+                }
+            }]
+        }));
+
+        await style.once('style.load');
+
+        style.sourceCaches['line-source-id'].resume = vi.fn();
+        style.sourceCaches['line-source-id'].reload = vi.fn();
+
+        style.setGlobalState({lineJoin: {default: 'bevel'}});
+
+        expect(style.sourceCaches['line-source-id'].resume).toHaveBeenCalled();
+        expect(style.sourceCaches['line-source-id'].reload).toHaveBeenCalled();
+    });
+
     test('does not reload sources when state property is set to the same value as current one', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON({
@@ -1358,6 +1385,64 @@ describe('Style.setGlobalState', () => {
 
         expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
+    });
+
+    test('does not reload sources when new state property is used in paint property while state property used in filter is unchanged', async() => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'circle-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'first-layer-id',
+                type: 'circle',
+                source: 'circle-source-id',
+                filter: ['global-state', 'showFill'],
+                paint: {
+                    'circle-color': ['global-state', 'circleColor']
+                }
+            }]
+        }));
+
+        await style.once('style.load');
+
+        style.sourceCaches['circle-source-id'].resume = vi.fn();
+        style.sourceCaches['circle-source-id'].reload = vi.fn();
+
+        style.setGlobalState({circleColor: {default: 'red'}});
+
+        expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
+        expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
+    });
+
+    test('does not reload sources when new state property is used in paint property while state property used in layout is unchanged', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'line-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'first-layer-id',
+                type: 'line',
+                source: 'line-source-id',
+                layout: {
+                    'line-join': ['global-state', 'lineJoin']
+                },
+                paint: {
+                    'line-color': ['global-state', 'lineColor']
+                }
+            }]
+        }));
+
+        await style.once('style.load');
+
+        style.sourceCaches['line-source-id'].resume = vi.fn();
+        style.sourceCaches['line-source-id'].reload = vi.fn();
+
+        style.setGlobalState({lineColor: {default: 'red'}});
+
+        expect(style.sourceCaches['line-source-id'].resume).not.toHaveBeenCalled();
+        expect(style.sourceCaches['line-source-id'].reload).not.toHaveBeenCalled();
     });
 });
 
@@ -1449,6 +1534,63 @@ describe('Style.setGlobalStateProperty', () => {
         expect(style.sourceCaches['fill-source-id'].reload).not.toHaveBeenCalled();
     });
 
+    test('reloads sources when state property is used in layout property', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'line-1-source-id': createGeoJSONSource(),
+                'line-2-source-id': createGeoJSONSource(),
+                'line-3-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'first-layer-id',
+                type: 'line',
+                source: 'line-1-source-id',
+                layout: {
+                    'line-join': ['global-state', 'lineJoin']
+                }
+            }, {
+                id: 'second-layer-id',
+                type: 'line',
+                source: 'line-3-source-id'
+            }, {
+                id: 'third-layer-id',
+                type: 'line',
+                source: 'line-2-source-id',
+                layout: {
+                    'line-join': ['global-state', 'lineJoin']
+                }
+            }, {
+                id: 'fourth-layer-id',
+                type: 'line',
+                source: 'line-3-source-id',
+                layout: {
+                    'line-cap': ['global-state', 'lineCap']
+                }
+            }]
+        }));
+
+        await style.once('style.load');
+
+        style.sourceCaches['line-1-source-id'].resume = vi.fn();
+        style.sourceCaches['line-1-source-id'].reload = vi.fn();
+        style.sourceCaches['line-2-source-id'].resume = vi.fn();
+        style.sourceCaches['line-2-source-id'].reload = vi.fn();
+        style.sourceCaches['line-3-source-id'].resume = vi.fn();
+        style.sourceCaches['line-3-source-id'].reload = vi.fn();
+
+        style.setGlobalStateProperty('lineJoin', 'bevel');
+
+        // sources line-1 and line-2 should be reloaded
+        expect(style.sourceCaches['line-1-source-id'].resume).toHaveBeenCalled();
+        expect(style.sourceCaches['line-1-source-id'].reload).toHaveBeenCalled();
+        expect(style.sourceCaches['line-2-source-id'].resume).toHaveBeenCalled();
+        expect(style.sourceCaches['line-2-source-id'].reload).toHaveBeenCalled();
+        // source line-3 should not be reloaded
+        expect(style.sourceCaches['line-3-source-id'].resume).not.toHaveBeenCalled();
+        expect(style.sourceCaches['line-3-source-id'].reload).not.toHaveBeenCalled();
+    });
+
     test('does not reload sources when state property is set to the same value as current one', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON({
@@ -1506,6 +1648,64 @@ describe('Style.setGlobalStateProperty', () => {
 
         expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
+    });
+
+    test('does not reload sources when state property is used in paint property while a different state property used in filter is unchanged', async() => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'circle-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'first-layer-id',
+                type: 'circle',
+                source: 'circle-source-id',
+                filter: ['global-state', 'showFill'],
+                paint: {
+                    'circle-color': ['global-state', 'circleColor']
+                }
+            }]
+        }));
+
+        await style.once('style.load');
+
+        style.sourceCaches['circle-source-id'].resume = vi.fn();
+        style.sourceCaches['circle-source-id'].reload = vi.fn();
+
+        style.setGlobalStateProperty('circleColor', 'red');
+
+        expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
+        expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
+    });
+
+    test('does not reload sources when state property is used in paint property while a different state property used in layout is unchanged', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'line-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'first-layer-id',
+                type: 'line',
+                source: 'line-source-id',
+                layout: {
+                    'line-join': ['global-state', 'lineJoin']
+                },
+                paint: {
+                    'line-color': ['global-state', 'lineColor']
+                }
+            }]
+        }));
+
+        await style.once('style.load');
+
+        style.sourceCaches['line-source-id'].resume = vi.fn();
+        style.sourceCaches['line-source-id'].reload = vi.fn();
+
+        style.setGlobalStateProperty('lineColor', 'red');
+
+        expect(style.sourceCaches['line-source-id'].resume).not.toHaveBeenCalled();
+        expect(style.sourceCaches['line-source-id'].reload).not.toHaveBeenCalled();
     });
 });
 
@@ -1568,7 +1768,7 @@ describe('Style.addLayer', () => {
         style.loadJSON(createStyleJSON());
         await style.once('style.load');
         const errorPromise = style.once('error');
-            
+
         style.addLayer({
             id: 'background',
             type: 'background',
@@ -1795,9 +1995,9 @@ describe('Style.addLayer', () => {
         }as LayerSpecification;
 
         await style.once('style.load');
-        const errorPromise = style.once('error');      
+        const errorPromise = style.once('error');
         style.addLayer(layer);
-        
+
         const {error} = await errorPromise;
         expect(error.message).toMatch(/does not exist on source/);
     });
@@ -1986,7 +2186,7 @@ describe('Style.setPaintProperty', () => {
 
         await source.once('data');
         vi.spyOn(sourceCache, 'reload');
-            
+
         source.setData({'type': 'FeatureCollection', 'features': []});
         style.setPaintProperty('circle', 'circle-color', {type: 'identity', property: 'foo'});
         await waitForEvent(source, 'data', (e) => e.sourceDataType === 'content');
