@@ -1132,6 +1132,54 @@ describe('Style.removeSource', () => {
     });
 });
 
+describe('Style.setProjection', () => {
+    test('does not mutate original input style JSON', async () => {
+        const style = new Style(getStubMap());
+        const inputJson = createStyleJSON({projection: {type: 'mercator'}});
+        const inputJsonString = JSON.stringify(inputJson);
+        const inputProjection = inputJson.projection;
+        style.loadJSON(inputJson);
+        await style.once('style.load');
+
+        style.setProjection({type: 'globe'});
+
+        expect(inputJson.projection).toBe(inputProjection);
+        expect(inputJsonString).toEqual(JSON.stringify(inputJson));
+    });
+});
+
+describe('Style.setSky', () => {
+    test('does not mutate original input style JSON', async () => {
+        const style = new Style(getStubMap());
+        const inputJson = createStyleJSON({sky: {'sky-color': 'fuchsia'}});
+        const inputJsonString = JSON.stringify(inputJson);
+        const inputSky = inputJson.sky;
+        style.loadJSON(inputJson);
+        await style.once('style.load');
+
+        style.setSky({'sky-color': 'magenta'});
+
+        expect(inputJson.sky).toBe(inputSky);
+        expect(inputJsonString).toEqual(JSON.stringify(inputJson));
+    });
+});
+
+describe('Style.setGlyphs', () => {
+    test('does not mutate original input style JSON', async () => {
+        const style = new Style(getStubMap());
+        const inputJson = createStyleJSON({glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf'});
+        const inputJsonString = JSON.stringify(inputJson);
+        const inputGlyphs = inputJson.glyphs;
+        style.loadJSON(inputJson);
+        await style.once('style.load');
+
+        style.setGlyphs('https://foo.maplibre.org/font/{fontstack}/{range}.pbf');
+
+        expect(inputJson.glyphs).toBe(inputGlyphs);
+        expect(inputJsonString).toEqual(JSON.stringify(inputJson));
+    });
+});
+
 describe('Style.addSprite', () => {
     test('throw before loaded', () => {
         const style = new Style(getStubMap());
@@ -1177,6 +1225,20 @@ describe('Style.addSprite', () => {
             {id: 'default', url: 'https://example.com/default'},
             {id: 'test', url: 'https://example.com/sprite'}
         ]);
+    });
+
+    test('does not mutate original input style JSON', async () => {
+        const style = new Style(getStubMap());
+        const inputJson = createStyleJSON({sprite: [{id: '0', url: 'https://example.com/sprite-0'}]});
+        const inputJsonString = JSON.stringify(inputJson);
+        const inputSprite = inputJson.sprite;
+        style.loadJSON(inputJson);
+        await style.once('style.load');
+
+        style.addSprite('1', 'https://example.com/sprite-1')
+
+        expect(inputJson.sprite).toBe(inputSprite);
+        expect(JSON.stringify(inputJson)).toEqual(inputJsonString);
     });
 });
 
@@ -1233,6 +1295,36 @@ describe('Style.removeSprite', () => {
         await style.once('style.load');
         style.removeSprite('default');
         expect(style.stylesheet.sprite).toBeUndefined();
+    });
+
+    test('does not mutate original input style JSON', async () => {
+        const style = new Style(getStubMap());
+        const inputJson = createStyleJSON({sprite: 'https://example.com/sprite'});
+        const inputJsonString = JSON.stringify(inputJson);
+        const inputSprite = inputJson.sprite;
+        style.loadJSON(inputJson);
+        await style.once('style.load');
+
+        style.removeSprite('default');
+
+        expect(inputJson.sprite).toBe(inputSprite);
+        expect(inputJsonString).toEqual(JSON.stringify(inputJson));
+    });
+});
+
+describe('Style.setSprite', () => {
+    test('does not mutate original input style JSON', async () => {
+        const style = new Style(getStubMap());
+        const inputJson = createStyleJSON({sprite: [{id: '0', url: 'https://example.com/sprite-0'}]});
+        const inputJsonString = JSON.stringify(inputJson);
+        const inputSprite = inputJson.sprite;
+        style.loadJSON(inputJson);
+        await style.once('style.load');
+
+        style.setSprite([{id: '1', url: 'https://example.com/sprite-1'}]);
+
+        expect(inputJson.sprite).toBe(inputSprite);
+        expect(inputJsonString).toEqual(JSON.stringify(inputJson));
     });
 });
 
