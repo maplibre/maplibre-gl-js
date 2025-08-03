@@ -318,14 +318,7 @@ export class Style extends Evented {
 
         this._globalState[name] = newValue;
 
-        const sourceIdsToReload = this._findGlobalStateAffectedSources([name]);
-
-        for (const id in this.sourceCaches) {
-            if (sourceIdsToReload.has(id)) {
-                this._reloadSource(id);
-                this._changed = true;
-            }
-        }
+        this._applyGlobalStateChanges([name]);
     }
 
     getGlobalState() {
@@ -346,23 +339,18 @@ export class Style extends Evented {
             }
         }
 
-        const sourceIdsToReload = this._findGlobalStateAffectedSources(changedGlobalStateRefs);
-
-        for (const id in this.sourceCaches) {
-            if (sourceIdsToReload.has(id)) {
-                this._reloadSource(id);
-                this._changed = true;
-            }
-        }
+        this._applyGlobalStateChanges(changedGlobalStateRefs);
     }
 
     /**
-     * Find all sources that are affected by the global state changes.
-     * For example, if a layer filter uses global-state expression, this function will return the source id of that layer.
+     * @internal
+     * Find all sources that are affected by the global state changes and reload them.
+     * Find all paint properties that are affected by the global state changes and update them.
+     * For example, if a layer filter uses global-state expression, this function will find the source id of that layer.
      */
-    _findGlobalStateAffectedSources(globalStateRefs: string[]) {
+    _applyGlobalStateChanges(globalStateRefs: string[]) {
         if (globalStateRefs.length === 0) {
-            return new Set<string>();
+            return;
         }
 
         const sourceIdsToReload = new Set<string>();
@@ -370,15 +358,26 @@ export class Style extends Evented {
         for (const layerId in this._layers) {
             const layer = this._layers[layerId];
             const layoutAffectingGlobalStateRefs = layer.getLayoutAffectingGlobalStateRefs();
+            const paintAffectingGlobalStateRefs = layer.getPaintAffectingGlobalStateRefs();
 
             for (const ref of globalStateRefs) {
                 if (layoutAffectingGlobalStateRefs.has(ref)) {
                     sourceIdsToReload.add(layer.source);
                 }
+                if (paintAffectingGlobalStateRefs.has(ref)) {
+                    for (const {name, value} of paintAffectingGlobalStateRefs.get(ref)) {
+                        this._updatePaintProperty(layer, name, value);
+                    }
+                }
             }
         }
 
-        return sourceIdsToReload;
+        for (const id in this.sourceCaches) {
+            if (sourceIdsToReload.has(id)) {
+                this._reloadSource(id);
+                this._changed = true;
+            }
+        }
     }
 
     loadURL(url: string, options: StyleSwapOptions & StyleSetterOptions = {}, previousStyle?: StyleSpecification) {
@@ -1300,13 +1299,17 @@ export class Style extends Evented {
 
         if (deepEqual(layer.getPaintProperty(name), value)) return;
 
+        this._updatePaintProperty(layer, name, value, options);
+    }
+
+    _updatePaintProperty(layer: StyleLayer, name: string, value: any, options: StyleSetterOptions = {}) {
         const requiresRelayout = layer.setPaintProperty(name, value, options);
         if (requiresRelayout) {
             this._updateLayer(layer);
         }
 
         this._changed = true;
-        this._updatedPaintProps[layerId] = true;
+        this._updatedPaintProps[layer.id] = true;
         // reset serialization field, to be populated only when needed
         this._serializedLayers = null;
     }
