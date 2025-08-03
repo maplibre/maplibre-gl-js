@@ -192,7 +192,7 @@ export class FillBucket implements Bucket {
                 subdivided.indicesLineList,
             );
         }
-        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, imagePositions, canonical);
+        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {imagePositions, canonical, globalState: this.globalState});
     }
 }
 
