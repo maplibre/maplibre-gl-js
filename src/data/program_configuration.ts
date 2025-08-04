@@ -87,7 +87,7 @@ interface AttributeBinder {
         length: number,
         feature: Feature,
         featureState: FeatureState,
-        imagePositions: {[_: string]: ImagePosition}
+        options: PaintOptions
     ): void;
     upload(a: Context): void;
     destroy(): void;
@@ -199,8 +199,8 @@ class SourceExpressionBinder implements AttributeBinder {
         this._setPaintValue(start, newLength, value);
     }
 
-    updatePaintArray(start: number, end: number, feature: Feature, featureState: FeatureState) {
-        const value = this.expression.evaluate({zoom: 0}, feature, featureState);
+    updatePaintArray(start: number, end: number, feature: Feature, featureState: FeatureState, options: PaintOptions) {
+        const value = this.expression.evaluate(new EvaluationParameters(0, options), feature, featureState);
         this._setPaintValue(start, end, value);
     }
 
@@ -273,9 +273,9 @@ class CompositeExpressionBinder implements AttributeBinder, UniformBinder {
         this._setPaintValue(start, newLength, min, max);
     }
 
-    updatePaintArray(start: number, end: number, feature: Feature, featureState: FeatureState) {
-        const min = this.expression.evaluate({zoom: this.zoom}, feature, featureState);
-        const max = this.expression.evaluate({zoom: this.zoom + 1}, feature, featureState);
+    updatePaintArray(start: number, end: number, feature: Feature, featureState: FeatureState, options: PaintOptions) {
+        const min = this.expression.evaluate(new EvaluationParameters(this.zoom, options), feature, featureState);
+        const max = this.expression.evaluate(new EvaluationParameters(this.zoom + 1, options), feature, featureState);
         this._setPaintValue(start, end, min, max);
     }
 
@@ -354,8 +354,8 @@ class CrossFadedCompositeBinder implements AttributeBinder {
         this._setPaintValues(start, length, feature.patterns && feature.patterns[this.layerId], options.imagePositions);
     }
 
-    updatePaintArray(start: number, end: number, feature: Feature, featureState: FeatureState, imagePositions: {[_: string]: ImagePosition}) {
-        this._setPaintValues(start, end, feature.patterns && feature.patterns[this.layerId], imagePositions);
+    updatePaintArray(start: number, end: number, feature: Feature, featureState: FeatureState, options: PaintOptions) {
+        this._setPaintValues(start, end, feature.patterns && feature.patterns[this.layerId], options.imagePositions);
     }
 
     _setPaintValues(start, end, patterns, positions) {
@@ -491,7 +491,7 @@ export class ProgramConfiguration {
         featureMap: FeaturePositionMap,
         vtLayer: VectorTileLayer,
         layer: TypedStyleLayer,
-        imagePositions: {[_: string]: ImagePosition}
+        options: PaintOptions
     ): boolean {
         let dirty: boolean = false;
         for (const id in featureStates) {
@@ -507,7 +507,7 @@ export class ProgramConfiguration {
                         //AHM: Remove after https://github.com/mapbox/mapbox-gl-js/issues/6255
                         const value = (layer.paint as any).get(property);
                         (binder as any).expression = value.value;
-                        (binder as AttributeBinder).updatePaintArray(pos.start, pos.end, feature, featureStates[id], imagePositions);
+                        (binder as AttributeBinder).updatePaintArray(pos.start, pos.end, feature, featureStates[id], options);
                         dirty = true;
                     }
                 }
@@ -652,9 +652,9 @@ export class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
         this.needsUpload = true;
     }
 
-    updatePaintArrays(featureStates: FeatureStates, vtLayer: VectorTileLayer, layers: ReadonlyArray<TypedStyleLayer>, imagePositions: {[_: string]: ImagePosition}) {
+    updatePaintArrays(featureStates: FeatureStates, vtLayer: VectorTileLayer, layers: ReadonlyArray<TypedStyleLayer>, options: PaintOptions) {
         for (const layer of layers) {
-            this.needsUpload = this.programConfigurations[layer.id].updatePaintArrays(featureStates, this._featureMap, vtLayer, layer, imagePositions) || this.needsUpload;
+            this.needsUpload = this.programConfigurations[layer.id].updatePaintArrays(featureStates, this._featureMap, vtLayer, layer, options) || this.needsUpload;
         }
     }
 
