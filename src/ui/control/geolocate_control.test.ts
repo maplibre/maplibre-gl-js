@@ -522,7 +522,6 @@ describe('GeolocateControl with no options', () => {
         expect(geolocate._watchState).toBe('ACTIVE_LOCK');
     });
 
-
     test('does not switch to BACKGROUND and stays in ACTIVE_LOCK state on zoom', async () => {
         const geolocate = new GeolocateControl({
             trackUserLocation: true,
