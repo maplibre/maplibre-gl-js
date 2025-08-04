@@ -522,6 +522,28 @@ describe('GeolocateControl with no options', () => {
         expect(geolocate._watchState).toBe('ACTIVE_LOCK');
     });
 
+
+    test('does not switch to BACKGROUND and stays in ACTIVE_LOCK state on zoom', async () => {
+        const geolocate = new GeolocateControl({
+            trackUserLocation: true,
+        });
+        map.addControl(geolocate);
+        await sleep(0);
+        const click = new window.Event('click');
+
+        const geolocatePromise = geolocate.once('geolocate');
+        geolocate._geolocateButton.dispatchEvent(click);
+        geolocation.send({latitude: 10, longitude: 20, accuracy: 30, timestamp: 40});
+        await geolocatePromise;
+        expect(geolocate._watchState).toBe('ACTIVE_LOCK');
+
+        const zoomendPromise = map.once('zoomend');
+        map.zoomTo(10, {duration: 0});
+        await zoomendPromise;
+
+        expect(geolocate._watchState).toBe('ACTIVE_LOCK');
+    });
+
     test('switches to BACKGROUND state on map manipulation', async () => {
         const geolocate = new GeolocateControl({
             trackUserLocation: true,
