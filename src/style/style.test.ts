@@ -1235,7 +1235,7 @@ describe('Style.addSprite', () => {
         style.loadJSON(inputJson);
         await style.once('style.load');
 
-        style.addSprite('1', 'https://example.com/sprite-1')
+        style.addSprite('1', 'https://example.com/sprite-1');
 
         expect(inputJson.sprite).toBe(inputSprite);
         expect(JSON.stringify(inputJson)).toEqual(inputJsonString);
