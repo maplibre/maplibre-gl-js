@@ -26,6 +26,14 @@ export function hasPattern(type: string, layers: PatternStyleLayers, options: Po
             patterns[constantPattern.to] =  true;
             patterns[constantPattern.from] =  true;
         }
+
+        // Also check for data-driven dasharray
+        if (type === 'line') {
+            const dasharrayProperty = (layer.paint as PossiblyEvaluated<any, any>).get('line-dasharray');
+            if (dasharrayProperty && !dasharrayProperty.isConstant()) {
+                hasPattern = true;
+            }
+        }
     }
 
     return hasPattern;
@@ -33,6 +41,8 @@ export function hasPattern(type: string, layers: PatternStyleLayers, options: Po
 
 export function addPatternDependencies(type: string, layers: PatternStyleLayers, patternFeature: BucketFeature, zoom: number, options: PopulateParameters) {
     const patterns = options.patternDependencies;
+    const dasharrays = options.dashDependencies;
+
     for (const layer of layers) {
         const patternProperty = (layer.paint  as PossiblyEvaluated<any, any>).get(`${type}-pattern`);
 
@@ -52,6 +62,29 @@ export function addPatternDependencies(type: string, layers: PatternStyleLayers,
             // save for layout
             patternFeature.patterns[layer.id] = {min, mid, max};
         }
+
+        // Handle data-driven dasharray
+        if (type === 'line') {
+            const dasharrayProperty = (layer.paint as PossiblyEvaluated<any, any>).get('line-dasharray');
+            if (dasharrayProperty && dasharrayProperty.value.kind !== 'constant') {
+                const round = false;
+
+                const min = {dasharray: dasharrayProperty.value.evaluate({zoom: zoom - 1}, patternFeature, {}), round};
+                const mid = {dasharray: dasharrayProperty.value.evaluate({zoom}, patternFeature, {}), round};
+                const max = {dasharray: dasharrayProperty.value.evaluate({zoom: zoom + 1}, patternFeature, {}), round};
+
+                const minKey = JSON.stringify(min);
+                const midKey = JSON.stringify(mid);
+                const maxKey = JSON.stringify(max);
+
+                dasharrays[minKey] = min;
+                dasharrays[midKey] = mid;
+                dasharrays[maxKey] = max;
+
+                patternFeature.dashes[layer.id] = {min: minKey, mid: midKey, max: maxKey};
+            }
+        }
     }
     return patternFeature;
 }
+
