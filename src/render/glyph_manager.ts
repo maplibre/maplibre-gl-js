@@ -27,15 +27,17 @@ export class GlyphManager {
     localIdeographFontFamily: string | false;
     entries: {[stack: string]: Entry};
     url: string;
+    language?: string;
 
     // exposed as statics to enable stubbing in unit tests
     static loadGlyphRange = loadGlyphRange;
     static TinySDF = TinySDF;
 
-    constructor(requestManager: RequestManager, localIdeographFontFamily?: string | false) {
+    constructor(requestManager: RequestManager, localIdeographFontFamily?: string | false, language?: string) {
         this.requestManager = requestManager;
         this.localIdeographFontFamily = localIdeographFontFamily;
         this.entries = {};
+        this.language = language;
     }
 
     setURL(url?: string | null) {
@@ -169,6 +171,7 @@ export class GlyphManager {
                 buffer: 3 * textureScale,
                 radius: 8 * textureScale,
                 cutoff: 0.25,
+                lang: this.language,
                 fontFamily,
                 fontWeight
             });
