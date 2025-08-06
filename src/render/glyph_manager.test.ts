@@ -23,7 +23,7 @@ describe('GlyphManager', () => {
         });
     };
 
-    const createGlyphManager = (font?, language?) => {
+    const createGlyphManager = (font?: string | false, language?: string) => {
         const manager = new GlyphManager(identityTransform, font, language);
         manager.setURL('https://localhost/fonts/v1/{fontstack}/{range}.pbf');
         return manager;
