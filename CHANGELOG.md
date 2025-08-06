@@ -1,11 +1,11 @@
 ## main
 
 ### ✨ Features and improvements
+- Pass document's `lang` to Tiny-SDF to render Simplified and Traditional Chinese characters ([#6223](https://github.com/maplibre/maplibre-gl-js/issues/6223))
+
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Pass document's `lang` to Tiny-SDF to render Simplified and Traditional Chinese characters ([#6223](https://github.com/maplibre/maplibre-gl-js/issues/6223))
-
 - _...Add new stuff here..._
 
 ## 5.6.2
