@@ -169,7 +169,7 @@ export class GlyphManager {
                 buffer: 3 * textureScale,
                 radius: 8 * textureScale,
                 cutoff: 0.25,
-                lang: document?.documentElement?.lang,
+                lang: typeof document !== 'undefined' ? document.documentElement?.lang ?? '' : '',
                 fontFamily,
                 fontWeight
             });
