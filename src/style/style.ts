@@ -417,10 +417,12 @@ export class Style extends Evented {
     }
 
     _load(json: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions, previousStyle?: StyleSpecification) {
-        const nextState = options.transformStyle ? options.transformStyle(previousStyle, json) : json;
+        let nextState = options.transformStyle ? options.transformStyle(previousStyle, json) : json;
         if (options.validate && emitValidationErrors(this, validateStyle(nextState))) {
             return;
         }
+
+        nextState = {...nextState};
 
         this._loaded = true;
         this.stylesheet = nextState;
