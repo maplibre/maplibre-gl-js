@@ -1,6 +1,7 @@
 import {describe, afterEach, test, expect, vi} from 'vitest';
 import {parseGlyphPbf} from '../style/parse_glyph_pbf';
 import {GlyphManager} from './glyph_manager';
+import TinySDF from '@mapbox/tiny-sdf';
 import fs from 'fs';
 import {type RequestManager} from '../util/request_manager';
 
@@ -150,5 +151,17 @@ describe('GlyphManager', () => {
         expect(returnedGlyphs['Arial Unicode MS'][0x30c6].metrics.advance).toBe(24);
         await manager.getGlyphs({'Arial Unicode MS': [0x30c6]});
         expect(drawSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('GlyphManager passes document language to TinySDF', async () => {
+        const langSpy = GlyphManager.TinySDF = vi.fn().mockImplementation(() => new TinySDF({}));
+        const manager = createGlyphManager('sans-serif');
+        await manager.getGlyphs({'Arial Unicode MS': [0x30c6]});
+        expect(langSpy).toHaveBeenCalledWith(expect.objectContaining({fontFamily: 'sans-serif', lang: ''}));
+
+        document.documentElement.lang = 'zh';
+        await manager.getGlyphs({'Arial': [0x30c6]});
+        expect(langSpy).toHaveBeenCalledWith(expect.objectContaining({lang: 'zh'}));
+        document.documentElement.lang = '';
     });
 });
