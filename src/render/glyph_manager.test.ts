@@ -1,7 +1,6 @@
 import {describe, afterEach, test, expect, vi} from 'vitest';
 import {parseGlyphPbf} from '../style/parse_glyph_pbf';
 import {GlyphManager} from './glyph_manager';
-import TinySDF from '@mapbox/tiny-sdf';
 import fs from 'fs';
 import {type RequestManager} from '../util/request_manager';
 
@@ -153,21 +152,21 @@ describe('GlyphManager', () => {
         expect(drawSpy).toHaveBeenCalledTimes(1);
     });
 
-    test('GlyphManager passes container language to TinySDF', async () => {
-        const langSpy = GlyphManager.TinySDF = vi.fn().mockImplementation(() => new TinySDF({}));
+    test('GlyphManager passes no language to TinySDF by default', async () => {
+        const langSpy = GlyphManager.TinySDF = vi.fn().mockImplementation(() => ({
+            draw: () => GLYPHS[0]
+        }));
         const manager = createGlyphManager('sans-serif');
         await manager.getGlyphs({'Arial Unicode MS': [0x30c6]});
-        expect(langSpy).toHaveBeenCalledWith(expect.objectContaining({fontFamily: 'sans-serif', lang: ''}));
+        expect(langSpy).toHaveBeenCalledWith(expect.not.objectContaining({lang: expect.anything()}));
+    });
 
-        // read document language
-        document.documentElement.lang = 'zh';
-        await manager.getGlyphs({'Arial': [0x30c6]});
+    test('GlyphManager sets the language on TinySDF', async () => {
+        const langSpy = GlyphManager.TinySDF = vi.fn().mockImplementation(() => ({
+            draw: () => GLYPHS[0]
+        }));
+        const manager = createGlyphManager('sans-serif', 'zh');
+        await manager.getGlyphs({'Arial Unicode MS': [0x30c6]});
         expect(langSpy).toHaveBeenCalledWith(expect.objectContaining({lang: 'zh'}));
-        // container language takes precedent over document language
-        const manager2 = createGlyphManager('sans-serif', 'ja');
-        await manager2.getGlyphs({'Arial': [0x30c6]});
-        expect(langSpy).toHaveBeenCalledWith(expect.objectContaining({lang: 'ja'}));
-        // reset document language
-        document.documentElement.lang = '';
     });
 });
