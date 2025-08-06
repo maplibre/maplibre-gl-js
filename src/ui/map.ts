@@ -310,10 +310,6 @@ export type MapOptions = {
      */
     localIdeographFontFamily?: string | false;
     /**
-     * Sets a language to render Chinese, Japanese, and Korean characters in TinySDF
-     */
-    language?: string;
-    /**
      * The map's MapLibre style. This must be a JSON object conforming to
      * the schema described in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/),
      * or a URL to such JSON.
@@ -742,10 +738,7 @@ export class Map extends Camera {
         this._localIdeographFontFamily = resolvedOptions.localIdeographFontFamily;
         this._validateStyle = resolvedOptions.validateStyle;
 
-        if (resolvedOptions.style) this.setStyle(resolvedOptions.style, {
-            localIdeographFontFamily: resolvedOptions.localIdeographFontFamily,
-            language: resolvedOptions.language,
-        });
+        if (resolvedOptions.style) this.setStyle(resolvedOptions.style, {localIdeographFontFamily: resolvedOptions.localIdeographFontFamily});
 
         if (resolvedOptions.attributionControl)
             this.addControl(new AttributionControl(typeof resolvedOptions.attributionControl === 'boolean' ? undefined : resolvedOptions.attributionControl));

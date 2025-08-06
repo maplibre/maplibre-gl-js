@@ -104,10 +104,6 @@ export type StyleOptions = {
      * Forces a full update.
      */
     localIdeographFontFamily?: string | false;
-    /**
-     * Sets a language to render Chinese, Japanese, and Korean characters in TinySDF
-     */
-    language?: string;
 };
 
 /**
@@ -253,7 +249,7 @@ export class Style extends Evented {
         });
         this.imageManager = new ImageManager();
         this.imageManager.setEventedParent(this);
-        this.glyphManager = new GlyphManager(map._requestManager, options.localIdeographFontFamily, options.language);
+        this.glyphManager = new GlyphManager(map._requestManager, options.localIdeographFontFamily);
         this.lineAtlas = new LineAtlas(256, 512);
         this.crossTileSymbolIndex = new CrossTileSymbolIndex();
 
