@@ -249,7 +249,7 @@ export class Style extends Evented {
         });
         this.imageManager = new ImageManager();
         this.imageManager.setEventedParent(this);
-        this.glyphManager = new GlyphManager(map._requestManager, options.localIdeographFontFamily);
+        this.glyphManager = new GlyphManager(map._requestManager, options.localIdeographFontFamily, map._container?.lang);
         this.lineAtlas = new LineAtlas(256, 512);
         this.crossTileSymbolIndex = new CrossTileSymbolIndex();
 

@@ -23,8 +23,8 @@ describe('GlyphManager', () => {
         });
     };
 
-    const createGlyphManager = (font?) => {
-        const manager = new GlyphManager(identityTransform, font);
+    const createGlyphManager = (font?, language?) => {
+        const manager = new GlyphManager(identityTransform, font, language);
         manager.setURL('https://localhost/fonts/v1/{fontstack}/{range}.pbf');
         return manager;
     };
@@ -153,15 +153,21 @@ describe('GlyphManager', () => {
         expect(drawSpy).toHaveBeenCalledTimes(1);
     });
 
-    test('GlyphManager passes document language to TinySDF', async () => {
+    test('GlyphManager passes container language to TinySDF', async () => {
         const langSpy = GlyphManager.TinySDF = vi.fn().mockImplementation(() => new TinySDF({}));
         const manager = createGlyphManager('sans-serif');
         await manager.getGlyphs({'Arial Unicode MS': [0x30c6]});
         expect(langSpy).toHaveBeenCalledWith(expect.objectContaining({fontFamily: 'sans-serif', lang: ''}));
 
+        // read document language
         document.documentElement.lang = 'zh';
         await manager.getGlyphs({'Arial': [0x30c6]});
         expect(langSpy).toHaveBeenCalledWith(expect.objectContaining({lang: 'zh'}));
+        // container language takes precedent over document language
+        const manager2 = createGlyphManager('sans-serif', 'ja');
+        await manager2.getGlyphs({'Arial': [0x30c6]});
+        expect(langSpy).toHaveBeenCalledWith(expect.objectContaining({lang: 'ja'}));
+        // reset document language
         document.documentElement.lang = '';
     });
 });
