@@ -7,6 +7,7 @@ import {type EvaluationParameters} from './evaluation_parameters';
 import {type TransitionParameters} from './properties';
 import {type BackgroundStyleLayer} from './style_layer/background_style_layer';
 import {type SymbolStyleLayer} from './style_layer/symbol_style_layer';
+import {LayoutAffectingGlobalRefs, PaintAffectingGlobalStateRefs} from './global_state';
 
 describe('StyleLayer', () => {
     test('instantiates the correct subclass', () => {
@@ -252,7 +253,7 @@ describe('StyleLayer.getLayoutAffectingGlobalStateRefs', () => {
             }
         } as LayerSpecification);
 
-        expect(layer.getLayoutAffectingGlobalStateRefs()).toEqual(new Set());
+        expect(layer.getLayoutAffectingGlobalStateRefs()).toEqual(new LayoutAffectingGlobalRefs());
     });
 
     test('returns global-state references from filter properties', () => {
@@ -264,7 +265,7 @@ describe('StyleLayer.getLayoutAffectingGlobalStateRefs', () => {
             'filter': ['==', ['global-state', 'showSymbol'], true],
         });
 
-        expect(layer.getLayoutAffectingGlobalStateRefs()).toEqual(new Set(['showSymbol']));
+        expect(layer.getLayoutAffectingGlobalStateRefs()).toEqual(new LayoutAffectingGlobalRefs(['showSymbol']));
     });
 
     test('returns global-state references from layout properties', () => {
@@ -281,7 +282,51 @@ describe('StyleLayer.getLayoutAffectingGlobalStateRefs', () => {
             }
         });
 
-        expect(layer.getLayoutAffectingGlobalStateRefs()).toEqual(new Set(['textSize', 'textTransform']));
+        expect(layer.getLayoutAffectingGlobalStateRefs()).toEqual(new LayoutAffectingGlobalRefs(['textSize', 'textTransform']));
+    });
+});
+
+describe('StyleLayer.getPaintAffectingGlobalStateRefs', () => {
+    test('returns empty map when no global state references', () => {
+        const layer = createStyleLayer({
+            'id': 'background',
+            'type': 'background',
+            'paint': {
+                'background-color': '#000000'
+            }
+        } as LayerSpecification);
+
+        expect(layer.getPaintAffectingGlobalStateRefs()).toEqual(new PaintAffectingGlobalStateRefs());
+    });
+
+    test('returns global-state references from paint properties', () => {
+        const layer = createStyleLayer({
+            'id': 'symbol',
+            'type': 'symbol',
+            source: 'source',
+            'paint': {
+                //@ts-ignore
+                'text-color': ['global-state', 'color'],
+                //@ts-ignore
+                'text-halo-color': ['global-state', 'color'],
+                'text-halo-width': 1,
+                'text-opacity': ['global-state', 'opacity']
+            }
+        });
+        const expectMap = new PaintAffectingGlobalStateRefs();
+        expectMap.set('color', [{
+            name: 'text-color',
+            value: ['global-state', 'color']
+        }, {
+            name: 'text-halo-color',
+            value: ['global-state', 'color']
+        }]);
+        expectMap.set('opacity', [{
+            name: 'text-opacity',
+            value: ['global-state', 'opacity']
+        }]);
+
+        expect(layer.getPaintAffectingGlobalStateRefs()).toEqual(expectMap);
     });
 });
 

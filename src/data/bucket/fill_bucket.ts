@@ -132,7 +132,10 @@ export class FillBucket implements Bucket {
         [_: string]: ImagePosition;
     }) {
         if (!this.stateDependentLayers.length) return;
-        this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, imagePositions);
+        this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, {
+            imagePositions,
+            globalState: this.globalState
+        });
     }
 
     addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {
@@ -192,7 +195,7 @@ export class FillBucket implements Bucket {
                 subdivided.indicesLineList,
             );
         }
-        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, imagePositions, canonical);
+        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {imagePositions, canonical, globalState: this.globalState});
     }
 }
 

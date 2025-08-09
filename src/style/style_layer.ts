@@ -26,6 +26,7 @@ import type {StyleSetterOptions} from './style';
 import {type mat4} from 'gl-matrix';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 import type {UnwrappedTileID} from '../source/tile_id';
+import {LayoutAffectingGlobalRefs, PaintAffectingGlobalStateRefs} from './global_state';
 
 const TRANSITION_SUFFIX = '-transition';
 
@@ -173,8 +174,8 @@ export abstract class StyleLayer extends Evented {
      * This is used to determine if layer source need to be reloaded when global state property changes.
      *
      */
-    getLayoutAffectingGlobalStateRefs() {
-        const globalStateRefs = new Set<string>();
+    getLayoutAffectingGlobalStateRefs(): LayoutAffectingGlobalRefs {
+        const globalStateRefs = new LayoutAffectingGlobalRefs();
 
         if (this._unevaluatedLayout) {
             for (const propertyName in this._unevaluatedLayout._values) {
@@ -188,6 +189,29 @@ export abstract class StyleLayer extends Evented {
 
         for (const globalStateRef of this._featureFilter.getGlobalStateRefs()) {
             globalStateRefs.add(globalStateRef);
+        }
+
+        return globalStateRefs;
+    }
+
+    /**
+     * Get list of global state references that are used within paint properties.
+     * This is used to determine if layer needs to be repainted when global state property changes.
+     *
+     */
+    getPaintAffectingGlobalStateRefs(): PaintAffectingGlobalStateRefs {
+        const globalStateRefs = new PaintAffectingGlobalStateRefs();
+
+        if (this._transitionablePaint) {
+            for (const propertyName in this._transitionablePaint._values) {
+                const value = this._transitionablePaint._values[propertyName].value;
+
+                for (const globalStateRef of value.getGlobalStateRefs()) {
+                    const properties = globalStateRefs.get(globalStateRef) ?? [];
+                    properties.push({name: propertyName, value: value.value});
+                    globalStateRefs.set(globalStateRef, properties);
+                }
+            }
         }
 
         return globalStateRefs;
