@@ -3,6 +3,7 @@
 ### ✨ Features and improvements
 - Pass document's `lang` to Tiny-SDF to render Simplified and Traditional Chinese characters ([#6223](https://github.com/maplibre/maplibre-gl-js/issues/6223))
 - Enable `global-state` expressions in layout properties([#6209](https://github.com/maplibre/maplibre-gl-js/pull/6209))
+- Align typescript types generation with docs generation and avoid exporting non-exported types [#6217](https://github.com/maplibre/maplibre-gl-js/pull/6217)
 
 - _...Add new stuff here..._
 
