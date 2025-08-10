@@ -11,7 +11,7 @@ import type {IControl} from './control';
 /**
  * The {@link NavigationControl} options object
  */
-type NavigationControlOptions = {
+export type NavigationControlOptions = {
     /**
      * If `true` the compass button is included.
      */

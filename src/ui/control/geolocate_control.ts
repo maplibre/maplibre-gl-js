@@ -13,7 +13,7 @@ import {LngLatBounds} from '../../geo/lng_lat_bounds';
 /**
  * The {@link GeolocateControl} options object
  */
-type GeolocateControlOptions = {
+export type GeolocateControlOptions = {
     /**
      * A Geolocation API [PositionOptions](https://developer.mozilla.org/en-US/docs/Web/API/PositionOptions) object.
      * @defaultValue `{enableHighAccuracy: false, timeout: 6000}`
