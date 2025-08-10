@@ -71,8 +71,8 @@ import {CanonicalTileID} from '../source/tile_id';
 
 const version = packageJSON.version;
 
-type WebGLSupportedVersions = 'webgl2' | 'webgl' | undefined;
-type WebGLContextAttributesWithType = WebGLContextAttributes & {contextType?: WebGLSupportedVersions};
+export type WebGLSupportedVersions = 'webgl2' | 'webgl' | undefined;
+export type WebGLContextAttributesWithType = WebGLContextAttributes & {contextType?: WebGLSupportedVersions};
 
 /**
  * The {@link Map} options object.

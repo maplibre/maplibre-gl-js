@@ -4,11 +4,11 @@ import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 /**
  * A helper for type to omit a property from a type
  */
-type DistributiveKeys<T> = T extends T ? keyof T : never;
+export type DistributiveKeys<T> = T extends T ? keyof T : never;
 /**
  * A helper for type to omit a property from a type
  */
-type DistributiveOmit<T, K extends DistributiveKeys<T>> = T extends unknown
+export type DistributiveOmit<T, K extends DistributiveKeys<T>> = T extends unknown
     ? Omit<T, K>
     : never;
 
