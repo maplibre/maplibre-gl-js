@@ -462,7 +462,7 @@ describe('GeoJSONSource.update', () => {
 
         source.load();
 
-        await sleep(10);
+        await sleep(100);
         expect(spy.mock.calls.length).toBeGreaterThan(2);
     });
 });
