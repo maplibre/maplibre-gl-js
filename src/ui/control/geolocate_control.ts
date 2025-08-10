@@ -583,7 +583,7 @@ export class GeolocateControl extends Evented implements IControl {
         if (this.options.trackUserLocation) {
             this._map.on('movestart', (event: any) => {
                 const fromResize = event?.[0] instanceof ResizeObserverEntry;
-                if (!event.geolocateSource && this._watchState === 'ACTIVE_LOCK' && !fromResize) {
+                if (!event.geolocateSource && this._watchState === 'ACTIVE_LOCK' && !fromResize && !this._map.isZooming()) {
                     this._watchState = 'BACKGROUND';
                     this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background');
                     this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-active');
