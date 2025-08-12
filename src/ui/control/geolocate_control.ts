@@ -1,7 +1,7 @@
 import {Event, Evented} from '../../util/evented';
 import {DOM} from '../../util/dom';
 import {extend, warnOnce} from '../../util/util';
-import {checkGeolocationSupport} from '../../util/geolocation_support';
+import {checkGeolocationSupport, computeCirclePixelDiameter} from '../../util/geolocation_support';
 import {LngLat} from '../../geo/lng_lat';
 import {Marker} from '../marker';
 
@@ -9,6 +9,8 @@ import type {Map} from '../map';
 import type {FitBoundsOptions} from '../camera';
 import type {IControl} from './control';
 import {LngLatBounds} from '../../geo/lng_lat_bounds';
+
+const UPDATE_CIRCLE_RADIUS_SAMPLES = 16;
 
 /**
  * The {@link GeolocateControl} options object
@@ -303,7 +305,11 @@ export class GeolocateControl extends Evented implements IControl {
         }
 
         DOM.remove(this._container);
-        this._map.off('zoom', this._onZoom);
+        this._map.off('zoom', this._onUpdate);
+        this._map.off('move', this._onUpdate);
+        this._map.off('pitch', this._onUpdate);
+        this._map.off('rotate', this._onUpdate);
+        this._map.off('render', this._onUpdate);
         this._map = undefined;
         numberOfWatches = 0;
         noTimeout = false;
@@ -460,17 +466,25 @@ export class GeolocateControl extends Evented implements IControl {
     };
 
     _updateCircleRadius() {
-        const bounds = this._map.getBounds();
-        const southEastPoint = bounds.getSouthEast();
-        const northEastPoint = bounds.getNorthEast();
-        const mapHeightInMeters = southEastPoint.distanceTo(northEastPoint);
-        const mapHeightInPixels = this._map._container.clientHeight;
-        const circleDiameter = Math.ceil(2 * (this._accuracy / (mapHeightInMeters / mapHeightInPixels)));
-        this._circleElement.style.width = `${circleDiameter}px`;
-        this._circleElement.style.height = `${circleDiameter}px`;
+        if (!this._circleElement || !this._userLocationDotMarker || this._accuracy == null) return;
+
+        const centerLngLat = this._userLocationDotMarker.getLngLat();
+        if (!centerLngLat) return;
+
+        const diameterPx = computeCirclePixelDiameter(
+            {project: (ll) => this._map.project(ll)},
+            centerLngLat,
+            this._accuracy,
+            {samples: UPDATE_CIRCLE_RADIUS_SAMPLES, seedAngleDeg: this._map.getBearing()}
+        );
+
+        // Use fractional pixels for smooth animation; no rounding to avoid visible “steps”
+        const diameter = Math.max(1, diameterPx);
+        this._circleElement.style.width = `${diameter.toFixed(2)}px`;
+        this._circleElement.style.height = `${diameter.toFixed(2)}px`;
     }
 
-    _onZoom = () => {
+    _onUpdate = () => {
         if (this.options.showUserLocation && this.options.showAccuracyCircle) {
             this._updateCircleRadius();
         }
@@ -518,7 +532,9 @@ export class GeolocateControl extends Evented implements IControl {
     };
 
     _finish = () => {
-        if (this._timeoutId) { clearTimeout(this._timeoutId); }
+        if (this._timeoutId) {
+            clearTimeout(this._timeoutId);
+        }
         this._timeoutId = undefined;
     };
 
@@ -571,7 +587,13 @@ export class GeolocateControl extends Evented implements IControl {
 
             if (this.options.trackUserLocation) this._watchState = 'OFF';
 
-            this._map.on('zoom', this._onZoom);
+            // Recompute on all camera-affecting events and per-frame during animations
+            this._map.on('zoom', this._onUpdate);
+            this._map.on('move', this._onUpdate);
+            this._map.on('pitch', this._onUpdate);
+            this._map.on('rotate', this._onUpdate);
+            this._map.on('render', this._onUpdate);
+
         }
 
         this._geolocateButton.addEventListener('click', () => this.trigger());
@@ -624,7 +646,7 @@ export class GeolocateControl extends Evented implements IControl {
             // update watchState and do any outgoing state cleanup
             switch (this._watchState) {
                 case 'OFF':
-                // turn on the Geolocate Control
+                    // turn on the Geolocate Control
                     this._watchState = 'WAITING_ACTIVE';
 
                     this.fire(new Event('trackuserlocationstart'));
@@ -633,7 +655,7 @@ export class GeolocateControl extends Evented implements IControl {
                 case 'ACTIVE_LOCK':
                 case 'ACTIVE_ERROR':
                 case 'BACKGROUND_ERROR':
-                // turn off the Geolocate Control
+                    // turn off the Geolocate Control
                     numberOfWatches--;
                     noTimeout = false;
                     this._watchState = 'OFF';

@@ -3,11 +3,18 @@ import geolocation from 'mock-geolocation';
 import {LngLatBounds} from '../../geo/lng_lat_bounds';
 import {createMap, beforeMapTest, sleep} from '../../util/test/util';
 import {GeolocateControl} from './geolocate_control';
-vi.mock('../../util/geolocation_support', () => (
-    {
-        checkGeolocationSupport: vi.fn()
-    }
-));
+import type geolocationSupport from '../../util/geolocation_support';
+
+// IMPORTANT: partial mock — keep real implementations except for checkGeolocationSupport
+vi.mock('../../util/geolocation_support', async () => {
+    const actual = await vi.importActual<typeof geolocationSupport>('../../util/geolocation_support');
+    return {
+        ...actual,
+        checkGeolocationSupport: vi.fn(), // mocked
+        // computeCirclePixelDiameter stays real via ...actual
+    };
+});
+
 import {checkGeolocationSupport} from '../../util/geolocation_support';
 import type {LngLat} from '../../geo/lng_lat';
 
@@ -608,22 +615,22 @@ describe('GeolocateControl with no options', () => {
         let zoomendPromise = map.once('zoomend');
         map.zoomTo(12, {duration: 0});
         await zoomendPromise;
-        expect(geolocate._circleElement.style.width).toBe('79px');
+        expect(geolocate._circleElement.style.width).toBe('74.48px');
         zoomendPromise = map.once('zoomend');
         map.zoomTo(10, {duration: 0});
         await zoomendPromise;
-        expect(geolocate._circleElement.style.width).toBe('20px');
+        expect(geolocate._circleElement.style.width).toBe('18.62px');
         zoomendPromise = map.once('zoomend');
 
         // test with smaller radius
         geolocation.send({latitude: 10, longitude: 20, accuracy: 20});
         map.zoomTo(20, {duration: 0});
         await zoomendPromise;
-        expect(geolocate._circleElement.style.width).toBe('19982px');
+        expect(geolocate._circleElement.style.width).toBe('19066.32px');
         zoomendPromise = map.once('zoomend');
         map.zoomTo(18, {duration: 0});
         await zoomendPromise;
-        expect(geolocate._circleElement.style.width).toBe('4996px');
+        expect(geolocate._circleElement.style.width).toBe('4766.58px');
     });
 
     test('shown even if trackUserLocation = false', async () => {
