@@ -17,7 +17,7 @@ export function workerFactory() {
     
     if (useModuleWorker) {
         try {
-            return new Worker(config.WORKER_URL, { type: 'module' });
+            return new Worker(config.WORKER_URL, {type: 'module'});
         } catch (e) {
             // Fallback to regular worker if module workers not supported
             console.warn('Module worker not supported, falling back to classic worker', e);
