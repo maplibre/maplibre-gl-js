@@ -3,7 +3,17 @@
   "description": "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library",
   "version": "5.6.2",
   "main": "dist/maplibre-gl.js",
+  "module": "dist/maplibre-gl.mjs",
   "style": "dist/maplibre-gl.css",
+  "exports": {
+    ".": {
+      "import": "./dist/maplibre-gl.mjs",
+      "require": "./dist/maplibre-gl.js",
+      "types": "./dist/maplibre-gl.d.ts"
+    },
+    "./dist/maplibre-gl.css": "./dist/maplibre-gl.css",
+    "./package.json": "./package.json"
+  },
   "license": "BSD-3-Clause",
   "homepage": "https://maplibre.org/",
   "funding": "https://github.com/maplibre/maplibre-gl-js?sponsor=1",
