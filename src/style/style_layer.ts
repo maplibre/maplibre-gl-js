@@ -173,7 +173,7 @@ export abstract class StyleLayer extends Evented {
      * This is used to determine if layer source need to be reloaded when global state property changes.
      *
      */
-    getLayoutAffectingGlobalStateRefs() {
+    getLayoutAffectingGlobalStateRefs(): Set<string> {
         const globalStateRefs = new Set<string>();
 
         if (this._unevaluatedLayout) {
@@ -188,6 +188,29 @@ export abstract class StyleLayer extends Evented {
 
         for (const globalStateRef of this._featureFilter.getGlobalStateRefs()) {
             globalStateRefs.add(globalStateRef);
+        }
+
+        return globalStateRefs;
+    }
+
+    /**
+     * Get list of global state references that are used within paint properties.
+     * This is used to determine if layer needs to be repainted when global state property changes.
+     *
+     */
+    getPaintAffectingGlobalStateRefs(): globalThis.Map<string, Array<{name: string; value: any}>> {
+        const globalStateRefs = new globalThis.Map<string, Array<{name: string; value: any}>>();
+
+        if (this._transitionablePaint) {
+            for (const propertyName in this._transitionablePaint._values) {
+                const value = this._transitionablePaint._values[propertyName].value;
+
+                for (const globalStateRef of value.getGlobalStateRefs()) {
+                    const properties = globalStateRefs.get(globalStateRef) ?? [];
+                    properties.push({name: propertyName, value: value.value});
+                    globalStateRefs.set(globalStateRef, properties);
+                }
+            }
         }
 
         return globalStateRefs;

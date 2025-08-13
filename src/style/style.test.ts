@@ -1410,7 +1410,6 @@ describe('Style.setGlobalState', () => {
         }));
 
         await style.once('style.load');
-
         style.sourceCaches['line-source-id'].resume = vi.fn();
         style.sourceCaches['line-source-id'].reload = vi.fn();
 
@@ -1418,6 +1417,35 @@ describe('Style.setGlobalState', () => {
 
         expect(style.sourceCaches['line-source-id'].resume).toHaveBeenCalled();
         expect(style.sourceCaches['line-source-id'].reload).toHaveBeenCalled();
+    });
+
+    test('reloads sources when a new state property is used in a paint property that affects layout', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'circle-source-id': createGeoJSONSource(),
+                'fill-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'first-layer-id',
+                type: 'circle',
+                source: 'circle-source-id',
+                paint: {
+                    'circle-color': ['coalesce', ['get', 'color'], ['global-state', 'circleColor']]
+                }
+            }]
+        }));
+
+        await style.once('style.load');
+
+        style.sourceCaches['circle-source-id'].resume = vi.fn();
+        style.sourceCaches['circle-source-id'].reload = vi.fn();
+
+        style.setGlobalState({circleColor: {default: 'red'}});
+        style.update({} as EvaluationParameters);
+
+        expect(style.sourceCaches['circle-source-id'].resume).toHaveBeenCalled();
+        expect(style.sourceCaches['circle-source-id'].reload).toHaveBeenCalled();
     });
 
     test('does not reload sources when state property is set to the same value as current one', async () => {
@@ -1474,6 +1502,36 @@ describe('Style.setGlobalState', () => {
         style.sourceCaches['circle-source-id'].reload = vi.fn();
 
         style.setGlobalState({circleColor: {default: 'red'}});
+        style.update({} as EvaluationParameters);
+
+        expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
+        expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
+    });
+
+    test('does not reload sources when a new state property is used in a paint property while state property used in filter is unchanged', async() => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'circle-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'first-layer-id',
+                type: 'circle',
+                source: 'circle-source-id',
+                filter: ['global-state', 'showFill'],
+                paint: {
+                    'circle-color': ['global-state', 'circleColor']
+                }
+            }]
+        }));
+
+        await style.once('style.load');
+
+        style.sourceCaches['circle-source-id'].resume = vi.fn();
+        style.sourceCaches['circle-source-id'].reload = vi.fn();
+
+        style.setGlobalState({circleColor: {default: 'red'}});
+        style.update({} as EvaluationParameters);
 
         expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
@@ -1655,6 +1713,34 @@ describe('Style.setGlobalStateProperty', () => {
         expect(style.sourceCaches['line-3-source-id'].reload).not.toHaveBeenCalled();
     });
 
+    test('reloads sources when state property is used in a paint property that affects layout', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'circle-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'layer-id',
+                type: 'circle',
+                source: 'circle-source-id',
+                paint: {
+                    'circle-color': ['coalesce', ['get', 'color'], ['global-state', 'circleColor']]
+                }
+            }]
+        }));
+
+        await style.once('style.load');
+
+        style.sourceCaches['circle-source-id'].resume = vi.fn();
+        style.sourceCaches['circle-source-id'].reload = vi.fn();
+
+        style.setGlobalStateProperty('circleColor', 'red');
+        style.update({} as EvaluationParameters);
+
+        expect(style.sourceCaches['circle-source-id'].resume).toHaveBeenCalled();
+        expect(style.sourceCaches['circle-source-id'].reload).toHaveBeenCalled();
+    });
+
     test('does not reload sources when state property is set to the same value as current one', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON({
@@ -1709,6 +1795,36 @@ describe('Style.setGlobalStateProperty', () => {
         style.sourceCaches['circle-source-id'].reload = vi.fn();
 
         style.setGlobalStateProperty('circleColor', 'red');
+        style.update({} as EvaluationParameters);
+
+        expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
+        expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
+    });
+
+    test('does not reload sources when state property is used in paint property while a different state property used in filter is unchanged', async() => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'circle-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'first-layer-id',
+                type: 'circle',
+                source: 'circle-source-id',
+                filter: ['global-state', 'showFill'],
+                paint: {
+                    'circle-color': ['global-state', 'circleColor']
+                }
+            }]
+        }));
+
+        await style.once('style.load');
+
+        style.sourceCaches['circle-source-id'].resume = vi.fn();
+        style.sourceCaches['circle-source-id'].reload = vi.fn();
+
+        style.setGlobalStateProperty('circleColor', 'red');
+        style.update({} as EvaluationParameters);
 
         expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
