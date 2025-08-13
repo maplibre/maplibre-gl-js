@@ -25,8 +25,13 @@ const config = (input: InputOption, file: string, format: ModuleFormat): RollupO
 });
 
 const configs = [
+    // UMD/IIFE builds for CSP
     config('src/index.ts', `dist/maplibre-gl-csp${outputPostfix}.js`, 'umd'),
-    config('src/source/worker.ts', `dist/maplibre-gl-csp-worker${outputPostfix}.js`, 'iife')
+    config('src/source/worker.ts', `dist/maplibre-gl-csp-worker${outputPostfix}.js`, 'iife'),
+
+    // ESM builds for CSP
+    config('src/index.ts', `dist/maplibre-gl-csp${outputPostfix}.mjs`, 'es'),
+    config('src/source/worker.ts', `dist/maplibre-gl-csp-worker${outputPostfix}.mjs`, 'es')
 ];
 
 export default configs;
