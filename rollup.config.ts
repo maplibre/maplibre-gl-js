@@ -59,14 +59,18 @@ const config: RollupOptions[] = [
     // ESM build configuration
     {
         // First pass for ESM: Split into ES modules
-        input: ['src/index.ts', 'src/source/worker.ts'],
+        input: ['src/index_esm.ts', 'src/source/worker.ts'],
         output: {
             dir: 'staging/esm',
             format: 'es',
             sourcemap: 'inline',
             indent: false,
             chunkFileNames: '[name].js',
-            entryFileNames: '[name].js',
+            entryFileNames: (chunkInfo) => {
+                // Rename index_esm to index for consistency
+                if (chunkInfo.name === 'index_esm') return 'index.js';
+                return '[name].js';
+            },
             minifyInternalExports: production,
             manualChunks: (id) => {
             // Shared utilities go into a shared chunk

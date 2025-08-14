@@ -7,10 +7,17 @@
   "style": "dist/maplibre-gl.css",
   "exports": {
     ".": {
+      "types": "./dist/maplibre-gl.d.ts",
       "import": "./dist/maplibre-gl.mjs",
-      "require": "./dist/maplibre-gl.js",
-      "types": "./dist/maplibre-gl.d.ts"
+      "require": "./dist/maplibre-gl.js"
     },
+    "./dist/maplibre-gl": {
+      "types": "./dist/maplibre-gl.d.ts",
+      "import": "./dist/maplibre-gl.mjs",
+      "require": "./dist/maplibre-gl.js"
+    },
+    "./dist/maplibre-gl.js": "./dist/maplibre-gl.js",
+    "./dist/maplibre-gl.mjs": "./dist/maplibre-gl.mjs",
     "./dist/maplibre-gl.css": "./dist/maplibre-gl.css",
     "./package.json": "./package.json"
   },

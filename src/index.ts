@@ -2,7 +2,6 @@ import packageJSON from '../package.json' with {type: 'json'};
 import {Map, type MapOptions, type WebGLContextAttributesWithType} from './ui/map';
 import {NavigationControl, type NavigationControlOptions} from './ui/control/navigation_control';
 import {GeolocateControl, type GeolocateControlOptions} from './ui/control/geolocate_control';
-import './util/setup_esm_worker';
 import {AttributionControl, type AttributionControlOptions} from './ui/control/attribution_control';
 import {LogoControl, type LogoControlOptions} from './ui/control/logo_control';
 import {ScaleControl, type ScaleControlOptions, type Unit} from './ui/control/scale_control';
