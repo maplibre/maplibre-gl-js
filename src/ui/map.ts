@@ -68,11 +68,28 @@ import {isAbortError} from '../util/abort_error';
 import {isFramebufferNotCompleteError} from '../util/framebuffer_error';
 import {createCalculateTileZoomFunction} from '../geo/projection/covering_tiles';
 import {CanonicalTileID} from '../source/tile_id';
+import {coveringTiles} from '../geo/projection/covering_tiles';
+import type {OverscaledTileID} from '../source/tile_id';
 
 const version = packageJSON.version;
 
-type WebGLSupportedVersions = 'webgl2' | 'webgl' | undefined;
-type WebGLContextAttributesWithType = WebGLContextAttributes & {contextType?: WebGLSupportedVersions};
+export type WebGLSupportedVersions = 'webgl2' | 'webgl' | undefined;
+export type WebGLContextAttributesWithType = WebGLContextAttributes & {contextType?: WebGLSupportedVersions};
+
+/**
+ * Options for calculating the covering tiles in {@link Map.coveringTiles}.
+ *
+ * @property tileSize - The size of the tiles to cover the viewport with, in pixels (e.g., 512).
+ * @property minzoom - Optional minimum zoom level to generate tiles for.
+ * @property maxzoom - Optional maximum zoom level to generate tiles for.
+ * @property roundZoom - If `true`, the zoom level used for the calculation will be rounded to the nearest integer. Defaults to `false` (flooring the zoom).
+ */
+export type CoveringTilesOptions = {
+    tileSize: number;
+    minzoom?: number;
+    maxzoom?: number;
+    roundZoom?: boolean;
+};
 
 /**
  * The {@link Map} options object.
@@ -836,6 +853,23 @@ export class Map extends Camera {
             positionContainer.appendChild(controlElement);
         }
         return this;
+    }
+
+    /**
+    * Returns an array of `OverscaledTileID` objects that cover the current viewport for a given tile size.
+    *
+    * This method is useful for fetching tiled data from a server for a custom overlay (e.g., a tiled GeoJSON source).
+    *
+    * @param options - Options for calculating the covering tiles.
+    * @returns An array of `OverscaledTileID` objects.
+    * @example
+    * ```ts
+    * // Get the tiles to cover the view for a 512x512px tile source
+    * const tiles = map.coveringTiles({tileSize: 512});
+    * ```
+    */
+    coveringTiles(options: CoveringTilesOptions): OverscaledTileID[] {
+        return coveringTiles(this.transform, options);
     }
 
     /**
@@ -1875,7 +1909,7 @@ export class Map extends Camera {
      * map.setTransformRequest((url: string, resourceType: string) => {});
      * ```
      */
-    setTransformRequest(transformRequest: RequestTransformFunction): this {
+    setTransformRequest(transformRequest: RequestTransformFunction | null): this {
         this._requestManager.setTransformRequest(transformRequest);
         return this;
     }
@@ -2205,12 +2239,12 @@ export class Map extends Camera {
     }
 
     /**
-     * Change the tile Level of Detail behavior of the specified source. These parameters have no effect when 
+     * Change the tile Level of Detail behavior of the specified source. These parameters have no effect when
      * pitch == 0, and the largest effect when the horizon is visible on screen.
      *
      * @param maxZoomLevelsOnScreen - The maximum number of distinct zoom levels allowed on screen at a time.
      * There will generally be fewer zoom levels on the screen, the maximum can only be reached when the horizon
-     * is at the top of the screen. Increasing the maximum number of zoom levels causes the zoom level to decay 
+     * is at the top of the screen. Increasing the maximum number of zoom levels causes the zoom level to decay
      * faster toward the horizon.
      * @param tileCountMaxMinRatio - The ratio of the maximum number of tiles loaded (at high pitch) to the minimum
      * number of tiles loaded. Increasing this ratio allows more tiles to be loaded at high pitch angles. If the ratio

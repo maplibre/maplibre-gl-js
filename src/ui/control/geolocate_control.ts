@@ -13,7 +13,7 @@ import {LngLatBounds} from '../../geo/lng_lat_bounds';
 /**
  * The {@link GeolocateControl} options object
  */
-type GeolocateControlOptions = {
+export type GeolocateControlOptions = {
     /**
      * A Geolocation API [PositionOptions](https://developer.mozilla.org/en-US/docs/Web/API/PositionOptions) object.
      * @defaultValue `{enableHighAccuracy: false, timeout: 6000}`
@@ -583,7 +583,7 @@ export class GeolocateControl extends Evented implements IControl {
         if (this.options.trackUserLocation) {
             this._map.on('movestart', (event: any) => {
                 const fromResize = event?.[0] instanceof ResizeObserverEntry;
-                if (!event.geolocateSource && this._watchState === 'ACTIVE_LOCK' && !fromResize) {
+                if (!event.geolocateSource && this._watchState === 'ACTIVE_LOCK' && !fromResize && !this._map.isZooming()) {
                     this._watchState = 'BACKGROUND';
                     this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background');
                     this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-active');

@@ -1,6 +1,6 @@
 {
     "$schema": "https://typedoc.org/schema.json",
-    "plugin": ["typedoc-plugin-missing-exports", "typedoc-plugin-markdown"],
+    "plugin": ["typedoc-plugin-markdown"],
     "groupOrder": [
         "Main",
         "Markers and Controls",
@@ -12,7 +12,6 @@
     "out": "./docs/API",
     "excludeExternals": true,
     "excludeInternal": true,
-    "placeInternalsInOwningModule": true,
     "excludeNotDocumented": true,
     "treatWarningsAsErrors": true,
     "entryPoints": ["./src/index.ts"],
