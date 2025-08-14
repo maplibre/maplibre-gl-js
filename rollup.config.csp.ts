@@ -30,7 +30,7 @@ const configs = [
     config('src/source/worker.ts', `dist/maplibre-gl-csp-worker${outputPostfix}.js`, 'iife'),
 
     // ESM builds for CSP
-    config('src/index_esm.ts', `dist/maplibre-gl-csp${outputPostfix}.mjs`, 'es'),
+    config('src/index.ts', `dist/maplibre-gl-csp${outputPostfix}.mjs`, 'es'),
     config('src/source/worker.ts', `dist/maplibre-gl-csp-worker${outputPostfix}.mjs`, 'es')
 ];
 

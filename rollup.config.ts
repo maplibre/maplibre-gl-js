@@ -63,77 +63,39 @@ const config: RollupOptions[] = [{
         // only they get built, but not the merged dev build js
         ...production ? [] : [watchStagingPlugin]
     ],
-},
-// ESM build configuration
-{
-    // First pass for ESM: Split into ES modules
-    input: ['src/index_esm.ts', 'src/source/worker.ts'],
-    output: {
-        dir: 'staging/esm',
-        format: 'es',
-        sourcemap: 'inline',
-        indent: false,
-        chunkFileNames: '[name].js',
-        entryFileNames: (chunkInfo) => {
-            // Rename index_esm to index for consistency
-            if (chunkInfo.name === 'index_esm') return 'index.js';
-            return '[name].js';
-        },
-        minifyInternalExports: production,
-        manualChunks: (id) => {
-        // Shared utilities go into a shared chunk
-            if (id.includes('src/util/') ||
-            id.includes('src/style-spec/') ||
-            id.includes('src/data/')) {
-                return 'shared';
-            }
-        }
-    },
-    onwarn: (message) => {
-        console.error(message);
-        throw message;
-    },
-    treeshake: production,
-    plugins: plugins(production)
-}, {
-// Second pass for ESM: Bundle with module worker support
-    input: 'build/rollup/maplibregl.esm.js',
-    output: {
-        file: esmOutputFile,
-        format: 'es',
-        sourcemap: true,
-        indent: false,
-        banner
-    },
-    watch: {
-        buildDelay: 1000
-    },
-    treeshake: false,
-    plugins: [
-        sourcemaps(),
-        {
-            name: 'watch-esm-staging',
-            buildStart() {
-                if (!production) {
-                    this.addWatchFile('staging/esm/index.js');
-                    this.addWatchFile('staging/esm/worker.js');
-                    this.addWatchFile('staging/esm/shared.js');
-                }
-            }
-        }
-    ]
-}, {
-// Separate ESM worker bundle
-    input: 'src/source/worker.ts',
-    output: {
-        file: production ? 'dist/maplibre-gl-worker.mjs' : 'dist/maplibre-gl-worker-dev.mjs',
-        format: 'es',
-        sourcemap: true,
-        indent: false,
-        banner
-    },
-    treeshake: production,
-    plugins: plugins(production)
 }];
+
+// ESM builds (following CSP pattern - separate main and worker files)
+// Users must explicitly call setWorkerUrl() when using these builds
+const esmConfig: RollupOptions[] = [
+    {
+        // ESM main bundle
+        input: 'src/index.ts',
+        output: {
+            file: production ? 'dist/maplibre-gl.mjs' : 'dist/maplibre-gl-dev.mjs',
+            format: 'es',
+            sourcemap: true,
+            indent: false,
+            banner
+        },
+        treeshake: production,
+        plugins: plugins(production)
+    },
+    {
+        // ESM worker bundle
+        input: 'src/source/worker.ts',
+        output: {
+            file: production ? 'dist/maplibre-gl-worker.mjs' : 'dist/maplibre-gl-worker-dev.mjs',
+            format: 'es',
+            sourcemap: true,
+            indent: false,
+            banner
+        },
+        treeshake: production,
+        plugins: plugins(production)
+    }
+];
+
+config.push(...esmConfig);
 
 export default config;
