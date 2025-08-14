@@ -8,7 +8,6 @@ const {BUILD} = process.env;
 
 const production = BUILD === 'production';
 const outputFile = production ? 'dist/maplibre-gl.js' : 'dist/maplibre-gl-dev.js';
-const esmOutputFile = production ? 'dist/maplibre-gl.mjs' : 'dist/maplibre-gl-dev.mjs';
 
 const config: RollupOptions[] = [{
     // Rollup will use code splitting to bundle GL JS into three "chunks":
