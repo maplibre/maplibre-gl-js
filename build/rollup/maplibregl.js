@@ -19,6 +19,4 @@ import '../../staging/maplibregl/worker';
 // Main module and its dependencies
 import '../../staging/maplibregl/index';
 
-// The maplibregl object is defined in bundle_prelude.js and populated by the define() calls above
- 
 export default maplibregl;
