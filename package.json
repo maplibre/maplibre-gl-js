@@ -5,19 +5,6 @@
   "main": "dist/maplibre-gl.js",
   "module": "dist/maplibre-gl.mjs",
   "style": "dist/maplibre-gl.css",
-  "exports": {
-    ".": {
-      "types": "./dist/maplibre-gl.d.ts",
-      "import": "./dist/maplibre-gl.mjs",
-      "require": "./dist/maplibre-gl.js"
-    },
-    "./dist/maplibre-gl": {
-      "types": "./dist/maplibre-gl.d.ts",
-      "import": "./dist/maplibre-gl.mjs",
-      "require": "./dist/maplibre-gl.js"
-    },
-    "./dist/maplibre-gl.css": "./dist/maplibre-gl.css"
-  },
   "license": "BSD-3-Clause",
   "homepage": "https://maplibre.org/",
   "funding": "https://github.com/maplibre/maplibre-gl-js?sponsor=1",

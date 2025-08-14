@@ -10,7 +10,7 @@ const {BUILD} = process.env;
 const production: boolean = (BUILD !== 'dev');
 const outputPostfix: string = production ? '' : '-dev';
 
-const config = (input: InputOption, file: string, format: ModuleFormat): RollupOptions => ({
+export const config = (input: InputOption, file: string, format: ModuleFormat): RollupOptions => ({
     input,
     output: {
         name: 'maplibregl',
