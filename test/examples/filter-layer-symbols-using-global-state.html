@@ -6,6 +6,7 @@
     <meta charset='utf-8'>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
     <style>
         body {
             margin: 0;
@@ -40,12 +41,7 @@
     </fieldset>
 </body>
 
-<script type="module">
-    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
-    
-    // Set the worker URL for ESM build (CSP-style pattern)
-    maplibregl.setWorkerUrl('../../dist/maplibre-gl-worker-dev.mjs');
-
+<script>
     const map = new maplibregl.Map({
         container: 'map',
         style: 'https://demotiles.maplibre.org/style.json',
