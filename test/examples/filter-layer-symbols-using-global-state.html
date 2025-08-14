@@ -43,9 +43,6 @@
 <script type="module">
     import maplibregl from '../../dist/maplibre-gl-dev.mjs';
 
-    // Explicitly set the worker URL for ESM
-    maplibregl.setWorkerUrl('../../dist/maplibre-gl-worker-dev.mjs');
-
     const map = new maplibregl.Map({
         container: 'map',
         style: 'https://demotiles.maplibre.org/style.json',

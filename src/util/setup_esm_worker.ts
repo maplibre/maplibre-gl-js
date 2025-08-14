@@ -14,7 +14,7 @@ if (typeof window !== 'undefined' && typeof Worker !== 'undefined') {
             // Derive worker URL from current module URL
             // @ts-ignore
             const moduleUrl = import.meta.url;
-            const workerUrl = moduleUrl.replace(/\.mjs$/, '-worker.mjs').replace(/\.js$/, '-worker.js');
+            const workerUrl = moduleUrl.replace(/maplibre-gl(-dev)?\.mjs/, 'maplibre-gl-worker$1.mjs').replace(/maplibre-gl(-dev)?\.js/, 'maplibre-gl-worker$1.js');
             
             // Set the worker URL immediately
             config.WORKER_URL = workerUrl;
