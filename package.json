@@ -16,10 +16,7 @@
       "import": "./dist/maplibre-gl.mjs",
       "require": "./dist/maplibre-gl.js"
     },
-    "./dist/maplibre-gl.js": "./dist/maplibre-gl.js",
-    "./dist/maplibre-gl.mjs": "./dist/maplibre-gl.mjs",
-    "./dist/maplibre-gl.css": "./dist/maplibre-gl.css",
-    "./package.json": "./package.json"
+    "./dist/maplibre-gl.css": "./dist/maplibre-gl.css"
   },
   "license": "BSD-3-Clause",
   "homepage": "https://maplibre.org/",
