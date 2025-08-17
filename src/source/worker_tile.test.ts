@@ -83,6 +83,24 @@ describe('worker tile', () => {
         expect(result.buckets[0].layers[0].layout._values['line-join'].value.value).toBe('bevel');
     });
 
+    test('WorkerTile.parse layer with paint property using global-state', async () => {
+        const layerIndex = new StyleLayerIndex([{
+            id: 'test',
+            source: 'source',
+            type: 'fill-extrusion',
+            paint: {
+                'fill-extrusion-height': ['global-state', 'test']
+            }
+        }]);
+
+        const tile = createWorkerTile({
+            globalState: {test: 1}
+        });
+        const result = await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
+        expect(result.buckets[0]).toBeTruthy();
+        expect(result.buckets[0].layers[0].paint._values['fill-extrusion-height'].value.value).toBe(1);
+    });
+
     test('WorkerTile.parse skips hidden layers', async () => {
         const layerIndex = new StyleLayerIndex([{
             id: 'test-hidden',
