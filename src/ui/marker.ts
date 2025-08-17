@@ -15,12 +15,12 @@ import type {PointLike} from './camera';
 /**
  * Alignment options of rotation and pitch
  */
-type Alignment = 'map' | 'viewport' | 'auto';
+export type Alignment = 'map' | 'viewport' | 'auto';
 
 /**
  * The {@link Marker} options object
  */
-type MarkerOptions = {
+export type MarkerOptions = {
     /**
      * DOM element to use as a marker. The default is a light blue, droplet-shaped SVG marker.
      */
@@ -34,7 +34,7 @@ type MarkerOptions = {
      */
     offset?: PointLike;
     /**
-     * A string indicating the part of the Marker that should be positioned closest to the coordinate set via {@link Marker#setLngLat}.
+     * A string indicating the part of the Marker that should be positioned closest to the coordinate set via {@link Marker.setLngLat}.
      * Options are `'center'`, `'top'`, `'bottom'`, `'left'`, `'right'`, `'top-left'`, `'top-right'`, `'bottom-left'`, and `'bottom-right'`.
      * @defaultValue 'center'
      * */
@@ -113,8 +113,8 @@ type MarkerOptions = {
  *   }).setLngLat([30.5, 50.5])
  *   .addTo(map);
  * ```
- * @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js/docs/examples/custom-marker-icons/)
- * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-marker/)
+ * @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js/docs/examples/add-custom-icons-with-markers/)
+ * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-marker/)
  *
  * ## Events
  *
@@ -331,7 +331,7 @@ export class Marker extends Evented {
 
         // If we attached the `click` listener to the marker element, the popup
         // would close once the event propagated to `map` due to the
-        // `Popup#_onClickClose` listener.
+        // `Popup._onClickClose` listener.
         this._map.on('click', this._onMapClick);
 
         return this;
@@ -384,7 +384,7 @@ export class Marker extends Evented {
      * // Print the marker's longitude and latitude values in the console
      * console.log('Longitude: ' + lngLat.lng + ', Latitude: ' + lngLat.lat )
      * ```
-     * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-marker/)
+     * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-marker/)
      */
     getLngLat(): LngLat {
         return this._lngLat;
@@ -400,8 +400,8 @@ export class Marker extends Evented {
      *   .setLngLat([-65.017, -16.457])
      *   .addTo(map);
      * ```
-     * @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js/docs/examples/custom-marker-icons/)
-     * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-marker/)
+     * @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js/docs/examples/add-custom-icons-with-markers/)
+     * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-marker/)
      */
     setLngLat(lnglat: LngLatLike): this {
         this._lngLat = LngLat.convert(lnglat);
@@ -430,7 +430,7 @@ export class Marker extends Evented {
      *  .setPopup(new Popup().setHTML("<h1>Hello World!</h1>")) // add popup
      *  .addTo(map);
      * ```
-     * @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js/docs/examples/set-popup/)
+     * @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js/docs/examples/attach-a-popup-to-a-marker-instance/)
      */
     setPopup(popup?: Popup | null): this {
         if (this._popup) {
@@ -624,7 +624,7 @@ export class Marker extends Evented {
 
         // because rounding the coordinates at every `move` event causes stuttered zooming
         // we only round them when _update is called with `moveend` or when its called with
-        // no arguments (when the Marker is initialized or Marker#setLngLat is invoked).
+        // no arguments (when the Marker is initialized or Marker.setLngLat is invoked).
         if (!this._subpixelPositioning && (!e || e.type === 'moveend')) {
             this._pos = this._pos.round();
         }
@@ -795,7 +795,7 @@ export class Marker extends Evented {
 
     /**
      * Sets the `rotation` property of the marker.
-     * @param rotation - The rotation angle of the marker (clockwise, in degrees), relative to its respective {@link Marker#setRotationAlignment} setting.
+     * @param rotation - The rotation angle of the marker (clockwise, in degrees), relative to its respective {@link Marker.setRotationAlignment} setting.
      */
     setRotation(rotation?: number): this {
         this._rotation = rotation || 0;

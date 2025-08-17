@@ -113,9 +113,9 @@ export class WorkerTile {
                 if (layer.maxzoom && this.zoom >= layer.maxzoom) continue;
                 if (layer.visibility === 'none') continue;
 
-                recalculateLayers(family, this.zoom, availableImages);
+                recalculateLayers(family, this.zoom, availableImages, this.globalState);
 
-                const bucket: Bucket = buckets[layer.id] = layer.createBucket({
+                const bucket = buckets[layer.id] = layer.createBucket({
                     index: featureIndex.bucketLayerIDs.length,
                     layers: family,
                     zoom: this.zoom,
@@ -169,7 +169,7 @@ export class WorkerTile {
         for (const key in buckets) {
             const bucket = buckets[key];
             if (bucket instanceof SymbolBucket) {
-                recalculateLayers(bucket.layers, this.zoom, availableImages);
+                recalculateLayers(bucket.layers, this.zoom, availableImages, this.globalState);
                 performSymbolLayout({
                     bucket,
                     glyphMap,
@@ -184,7 +184,7 @@ export class WorkerTile {
                 (bucket instanceof LineBucket ||
                 bucket instanceof FillBucket ||
                 bucket instanceof FillExtrusionBucket)) {
-                recalculateLayers(bucket.layers, this.zoom, availableImages);
+                recalculateLayers(bucket.layers, this.zoom, availableImages, this.globalState);
                 bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions);
             }
         }
@@ -204,9 +204,9 @@ export class WorkerTile {
     }
 }
 
-function recalculateLayers(layers: ReadonlyArray<StyleLayer>, zoom: number, availableImages: Array<string>) {
+function recalculateLayers(layers: ReadonlyArray<StyleLayer>, zoom: number, availableImages: Array<string>, globalState: Record<string, any>) {
     // Layers are shared and may have been used by a WorkerTile with a different zoom.
-    const parameters = new EvaluationParameters(zoom);
+    const parameters = new EvaluationParameters(zoom, {globalState});
     for (const layer of layers) {
         layer.recalculate(parameters, availableImages);
     }

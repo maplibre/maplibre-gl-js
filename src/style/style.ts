@@ -18,7 +18,7 @@ import {type Source} from '../source/source';
 import {type QueryRenderedFeaturesOptions, type QueryRenderedFeaturesOptionsStrict, type QueryRenderedFeaturesResults, type QueryRenderedFeaturesResultsItem, type QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
 import {SourceCache} from '../source/source_cache';
 import {type GeoJSONSource} from '../source/geojson_source';
-import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, type DiffCommand} from '@maplibre/maplibre-gl-style-spec';
+import {latest as styleSpec, derefLayers, emptyStyle, diff as diffStyles, type DiffCommand} from '@maplibre/maplibre-gl-style-spec';
 import {getGlobalWorkerPool} from '../util/global_worker_pool';
 import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
@@ -117,7 +117,7 @@ export type StyleSetterOptions = {
 };
 
 /**
- * Part of {@link Map#setStyle} options, transformStyle is a convenience function that allows to modify a style after it is fetched but before it is committed to the map state.
+ * Part of {@link Map.setStyle} options, transformStyle is a convenience function that allows to modify a style after it is fetched but before it is committed to the map state.
  *
  * This function exposes previous and next styles, it can be commonly used to support a range of functionalities like:
  *
@@ -249,7 +249,8 @@ export class Style extends Evented {
         });
         this.imageManager = new ImageManager();
         this.imageManager.setEventedParent(this);
-        this.glyphManager = new GlyphManager(map._requestManager, options.localIdeographFontFamily);
+        const glyphLang = map._container?.lang || (typeof document !== 'undefined' && document.documentElement?.lang) || undefined;
+        this.glyphManager = new GlyphManager(map._requestManager, options.localIdeographFontFamily, glyphLang);
         this.lineAtlas = new LineAtlas(256, 512);
         this.crossTileSymbolIndex = new CrossTileSymbolIndex();
 
@@ -317,14 +318,7 @@ export class Style extends Evented {
 
         this._globalState[name] = newValue;
 
-        const sourceIdsToReload = this._findGlobalStateAffectedSources([name]);
-
-        for (const id in this.sourceCaches) {
-            if (sourceIdsToReload.has(id)) {
-                this._reloadSource(id);
-                this._changed = true;
-            }
-        }
+        this._applyGlobalStateChanges([name]);
     }
 
     getGlobalState() {
@@ -345,23 +339,18 @@ export class Style extends Evented {
             }
         }
 
-        const sourceIdsToReload = this._findGlobalStateAffectedSources(changedGlobalStateRefs);
-
-        for (const id in this.sourceCaches) {
-            if (sourceIdsToReload.has(id)) {
-                this._reloadSource(id);
-                this._changed = true;
-            }
-        }
+        this._applyGlobalStateChanges(changedGlobalStateRefs);
     }
 
     /**
-     * Find all sources that are affected by the global state changes.
-     * For example, if a layer filter uses global-state expression, this function will return the source id of that layer.
+     * @internal
+     * Find all sources that are affected by the global state changes and reload them.
+     * Find all paint properties that are affected by the global state changes and update them.
+     * For example, if a layer filter uses global-state expression, this function will find the source id of that layer.
      */
-    _findGlobalStateAffectedSources(globalStateRefs: string[]) {
+    _applyGlobalStateChanges(globalStateRefs: string[]) {
         if (globalStateRefs.length === 0) {
-            return new Set<string>();
+            return;
         }
 
         const sourceIdsToReload = new Set<string>();
@@ -369,15 +358,26 @@ export class Style extends Evented {
         for (const layerId in this._layers) {
             const layer = this._layers[layerId];
             const layoutAffectingGlobalStateRefs = layer.getLayoutAffectingGlobalStateRefs();
+            const paintAffectingGlobalStateRefs = layer.getPaintAffectingGlobalStateRefs();
 
             for (const ref of globalStateRefs) {
                 if (layoutAffectingGlobalStateRefs.has(ref)) {
                     sourceIdsToReload.add(layer.source);
                 }
+                if (paintAffectingGlobalStateRefs.has(ref)) {
+                    for (const {name, value} of paintAffectingGlobalStateRefs.get(ref)) {
+                        this._updatePaintProperty(layer, name, value);
+                    }
+                }
             }
         }
 
-        return sourceIdsToReload;
+        for (const id in this.sourceCaches) {
+            if (sourceIdsToReload.has(id)) {
+                this._reloadSource(id);
+                this._changed = true;
+            }
+        }
     }
 
     loadURL(url: string, options: StyleSwapOptions & StyleSetterOptions = {}, previousStyle?: StyleSpecification) {
@@ -417,10 +417,12 @@ export class Style extends Evented {
     }
 
     _load(json: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions, previousStyle?: StyleSpecification) {
-        const nextState = options.transformStyle ? options.transformStyle(previousStyle, json) : json;
+        let nextState = options.transformStyle ? options.transformStyle(previousStyle, json) : json;
         if (options.validate && emitValidationErrors(this, validateStyle(nextState))) {
             return;
         }
+
+        nextState = {...nextState};
 
         this._loaded = true;
         this.stylesheet = nextState;
@@ -452,7 +454,7 @@ export class Style extends Evented {
     }
 
     private _createLayers() {
-        const dereferencedLayers = deref(this.stylesheet.layers);
+        const dereferencedLayers = derefLayers(this.stylesheet.layers);
 
         // Broadcast layers to workers first, so that expensive style processing (createStyleLayer)
         // can happen in parallel on both main and worker threads.
@@ -811,7 +813,7 @@ export class Style extends Evented {
         if (validate && emitValidationErrors(this, validateStyle(nextState))) return false;
 
         nextState = clone(nextState);
-        nextState.layers = deref(nextState.layers);
+        nextState.layers = derefLayers(nextState.layers);
 
         const changes = diffStyles(serializedStyle, nextState);
         const operations = this._getOperationsToPerform(changes);
@@ -1297,13 +1299,17 @@ export class Style extends Evented {
 
         if (deepEqual(layer.getPaintProperty(name), value)) return;
 
+        this._updatePaintProperty(layer, name, value, options);
+    }
+
+    _updatePaintProperty(layer: StyleLayer, name: string, value: any, options: StyleSetterOptions = {}) {
         const requiresRelayout = layer.setPaintProperty(name, value, options);
         if (requiresRelayout) {
             this._updateLayer(layer);
         }
 
         this._changed = true;
-        this._updatedPaintProps[layerId] = true;
+        this._updatedPaintProps[layer.id] = true;
         // reset serialization field, to be populated only when needed
         this._serializedLayers = null;
     }

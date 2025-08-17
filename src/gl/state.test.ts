@@ -18,14 +18,14 @@ describe('Value classes', () => {
             equality?: (a: T, b: T) => boolean;
         }
     ) => {
-        test('#constructor', () => {
+        test('constructor', () => {
             const v = new Constructor(context);
             expect(v).toBeTruthy();
             const currentV = v.get();
             expect(typeof currentV).not.toBe('undefined');
         });
 
-        test('#set', () => {
+        test('set', () => {
             const v = new Constructor(context);
             v.set(options.setValue);
             const equality = (options.equality) || ((a, b) => deepEqual(a, b));

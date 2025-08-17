@@ -111,25 +111,25 @@ export type CustomRenderMethodInput = {
  * @param gl - The map's gl context.
  * @param options - Argument object with render inputs like camera properties.
  */
-type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, options: CustomRenderMethodInput) => void;
+export type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, options: CustomRenderMethodInput) => void;
 
 /**
  * Interface for custom style layers. This is a specification for
  * implementers to model: it is not an exported method or class.
  *
  * Custom layers allow a user to render directly into the map's GL context using the map's camera.
- * These layers can be added between any regular layers using {@link Map#addLayer}.
+ * These layers can be added between any regular layers using {@link Map.addLayer}.
  *
  * Custom layers must have a unique `id` and must have the `type` of `"custom"`.
  * They must implement `render` and may implement `prerender`, `onAdd` and `onRemove`.
- * They can trigger rendering using {@link Map#triggerRepaint}
+ * They can trigger rendering using {@link Map.triggerRepaint}
  * and they should appropriately handle {@link MapContextEvent} with `webglcontextlost` and `webglcontextrestored`.
  *
  * The `renderingMode` property controls whether the layer is treated as a `"2d"` or `"3d"` map layer. Use:
  *
  * - `"renderingMode": "3d"` to use the depth buffer and share it with other layers
  * - `"renderingMode": "2d"` to add a layer with no depth. If you need to use the depth buffer for a `"2d"` layer you must use an offscreen
- *   framebuffer and {@link CustomLayerInterface#prerender}
+ *   framebuffer and {@link CustomLayerInterface.prerender}
  *
  * @example
  * Custom layer implemented as ES6 class
@@ -222,7 +222,7 @@ export interface CustomLayerInterface {
      */
     prerender?: CustomRenderMethod;
     /**
-     * Optional method called when the layer has been added to the Map with {@link Map#addLayer}. This
+     * Optional method called when the layer has been added to the Map with {@link Map.addLayer}. This
      * gives the layer a chance to initialize gl resources and register event listeners.
      *
      * @param map - The Map this custom layer was just added to.
@@ -230,7 +230,7 @@ export interface CustomLayerInterface {
      */
     onAdd?(map: Map, gl: WebGLRenderingContext | WebGL2RenderingContext): void;
     /**
-     * Optional method called when the layer has been removed from the Map with {@link Map#removeLayer}. This
+     * Optional method called when the layer has been removed from the Map with {@link Map.removeLayer}. This
      * gives the layer a chance to clean up gl resources and event listeners.
      *
      * @param map - The Map this custom layer was just added to.

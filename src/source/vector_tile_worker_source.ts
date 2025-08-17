@@ -1,6 +1,5 @@
 import {type ExpiryData, getArrayBuffer} from '../util/ajax';
 
-import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
 import {WorkerTile} from './worker_tile';
 import {extend} from '../util/util';
@@ -15,16 +14,16 @@ import type {
 
 import type {IActor} from '../util/actor';
 import type {StyleLayerIndex} from '../style/style_layer_index';
-import type {VectorTile} from '@mapbox/vector-tile';
+import {VectorTile} from '@mapbox/vector-tile';
 
 export type LoadVectorTileResult = {
     vectorTile: VectorTile;
-    rawData: ArrayBuffer;
+    rawData: ArrayBufferLike;
     resourceTiming?: Array<PerformanceResourceTiming>;
 } & ExpiryData;
 
 type FetchingState = {
-    rawTileData: ArrayBuffer;
+    rawTileData: ArrayBufferLike;
     cacheControl: ExpiryData;
     resourceTiming: any;
 };
@@ -49,7 +48,7 @@ export class VectorTileWorkerSource implements WorkerSource {
     /**
      * @param loadVectorData - Optional method for custom loading of a VectorTile
      * object based on parameters passed from the main-thread Source. See
-     * {@link VectorTileWorkerSource#loadTile}. The default implementation simply
+     * {@link VectorTileWorkerSource.loadTile}. The default implementation simply
      * loads the pbf at `params.url`.
      */
     constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: Array<string>) {
@@ -67,7 +66,7 @@ export class VectorTileWorkerSource implements WorkerSource {
     async loadVectorTile(params: WorkerTileParameters, abortController: AbortController): Promise<LoadVectorTileResult> {
         const response = await getArrayBuffer(params.request, abortController);
         try {
-            const vectorTile = new vt.VectorTile(new Protobuf(response.data));
+            const vectorTile = new VectorTile(new Protobuf(response.data));
             return {
                 vectorTile,
                 rawData: response.data,
@@ -88,8 +87,8 @@ export class VectorTileWorkerSource implements WorkerSource {
     }
 
     /**
-     * Implements {@link WorkerSource#loadTile}. Delegates to
-     * {@link VectorTileWorkerSource#loadVectorData} (which by default expects
+     * Implements {@link WorkerSource.loadTile}. Delegates to
+     * {@link VectorTileWorkerSource.loadVectorData} (which by default expects
      * a `params.url` property) for fetching and producing a VectorTile object.
      */
     async loadTile(params: WorkerTileParameters): Promise<WorkerTileResult | null> {
@@ -146,7 +145,7 @@ export class VectorTileWorkerSource implements WorkerSource {
     }
 
     /**
-     * Implements {@link WorkerSource#reloadTile}.
+     * Implements {@link WorkerSource.reloadTile}.
      */
     async reloadTile(params: WorkerTileParameters): Promise<WorkerTileResult> {
         const uid = params.uid;
@@ -178,7 +177,7 @@ export class VectorTileWorkerSource implements WorkerSource {
     }
 
     /**
-     * Implements {@link WorkerSource#abortTile}.
+     * Implements {@link WorkerSource.abortTile}.
      */
     async abortTile(params: TileParameters): Promise<void> {
         const loading = this.loading;
@@ -190,7 +189,7 @@ export class VectorTileWorkerSource implements WorkerSource {
     }
 
     /**
-     * Implements {@link WorkerSource#removeTile}.
+     * Implements {@link WorkerSource.removeTile}.
      */
     async removeTile(params: TileParameters): Promise<void> {
         if (this.loaded && this.loaded[params.uid]) {

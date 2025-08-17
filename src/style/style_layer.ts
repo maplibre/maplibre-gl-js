@@ -10,7 +10,7 @@ import {
 import {Evented} from '../util/evented';
 import {Layout, Transitionable, type Transitioning, type Properties, PossiblyEvaluated, PossiblyEvaluatedPropertyValue} from './properties';
 
-import type {Bucket} from '../data/bucket';
+import type {Bucket, BucketParameters} from '../data/bucket';
 import type Point from '@mapbox/point-geometry';
 import type {FeatureFilter, FeatureState,
     LayerSpecification,
@@ -104,6 +104,7 @@ export abstract class StyleLayer extends Evented {
 
     queryRadius?(bucket: Bucket): number;
     queryIntersectsFeature?(params: QueryIntersectsFeatureParams): boolean | number;
+    createBucket?(parameters: BucketParameters<any>): Bucket;
 
     constructor(layer: LayerSpecification | CustomLayerInterface, properties: Readonly<{
         layout?: Properties<any>;
@@ -172,7 +173,7 @@ export abstract class StyleLayer extends Evented {
      * This is used to determine if layer source need to be reloaded when global state property changes.
      *
      */
-    getLayoutAffectingGlobalStateRefs() {
+    getLayoutAffectingGlobalStateRefs(): Set<string> {
         const globalStateRefs = new Set<string>();
 
         if (this._unevaluatedLayout) {
@@ -187,6 +188,29 @@ export abstract class StyleLayer extends Evented {
 
         for (const globalStateRef of this._featureFilter.getGlobalStateRefs()) {
             globalStateRefs.add(globalStateRef);
+        }
+
+        return globalStateRefs;
+    }
+
+    /**
+     * Get list of global state references that are used within paint properties.
+     * This is used to determine if layer needs to be repainted when global state property changes.
+     *
+     */
+    getPaintAffectingGlobalStateRefs(): globalThis.Map<string, Array<{name: string; value: any}>> {
+        const globalStateRefs = new globalThis.Map<string, Array<{name: string; value: any}>>();
+
+        if (this._transitionablePaint) {
+            for (const propertyName in this._transitionablePaint._values) {
+                const value = this._transitionablePaint._values[propertyName].value;
+
+                for (const globalStateRef of value.getGlobalStateRefs()) {
+                    const properties = globalStateRefs.get(globalStateRef) ?? [];
+                    properties.push({name: propertyName, value: value.value});
+                    globalStateRefs.set(globalStateRef, properties);
+                }
+            }
         }
 
         return globalStateRefs;
@@ -241,7 +265,7 @@ export abstract class StyleLayer extends Evented {
 
             // if a cross-faded value is changed, we need to make sure the new icons get added to each tile's iconAtlas
             // so a call to _updateLayer is necessary, and we return true from this function so it gets called in
-            // Style#setPaintProperty
+            // Style.setPaintProperty
             return isDataDriven || wasDataDriven || isCrossFadedProperty || this._handleOverridablePaintPropertyUpdate(name, oldValue, newValue);
         }
     }

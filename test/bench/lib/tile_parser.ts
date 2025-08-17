@@ -1,7 +1,7 @@
 import Protobuf from 'pbf';
-import VT from '@mapbox/vector-tile';
+import {VectorTile} from '@mapbox/vector-tile';
 
-import {derefLayers as deref} from '@maplibre/maplibre-gl-style-spec';
+import {derefLayers} from '@maplibre/maplibre-gl-style-spec'
 import {Style} from '../../../src/style/style';
 import {IReadonlyTransform} from '../../../src/geo/transform_interface';
 import {Evented} from '../../../src/util/evented';
@@ -67,7 +67,7 @@ export default class TileParser {
     constructor(styleJSON: StyleSpecification, sourceID: string) {
         this.styleJSON = styleJSON;
         this.sourceID = sourceID;
-        this.layerIndex = new StyleLayerIndex(deref(this.styleJSON.layers));
+        this.layerIndex = new StyleLayerIndex(derefLayers(this.styleJSON.layers));
         this.glyphs = {};
         this.icons = {};
     }
@@ -141,7 +141,7 @@ export default class TileParser {
             globalState: {}
         });
 
-        const vectorTile = new VT.VectorTile(new Protobuf(tile.buffer));
+        const vectorTile = new VectorTile(new Protobuf(tile.buffer));
 
         return workerTile.parse(vectorTile, this.layerIndex, [], this.actor, SubdivisionGranularitySetting.noSubdivision);
     }

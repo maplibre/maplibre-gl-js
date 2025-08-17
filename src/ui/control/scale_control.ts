@@ -11,7 +11,7 @@ export type Unit = 'imperial' | 'metric' | 'nautical';
 /**
  * The {@link ScaleControl} options object
  */
-type ScaleControlOptions = {
+export type ScaleControlOptions = {
     /**
      * The maximum length of the scale control in pixels.
      * @defaultValue 100
