@@ -1,6 +1,6 @@
 import {diffJson} from 'diff';
 
-export function generateDiffLog(expected, actual) {
+export function generateDiffLog(expected: string | object, actual: string | object): string {
     return diffJson(expected, actual).map((hunk) => {
         if (hunk.added) {
             return `+ ${hunk.value}`;
@@ -12,7 +12,7 @@ export function generateDiffLog(expected, actual) {
     }).join('');
 }
 
-export function deepEqual(a, b, decimalSigFigs = 10): boolean {
+export function deepEqual(a: any, b: any, decimalSigFigs = 10): boolean {
     if (typeof a !== typeof b)
         return false;
     if (typeof a === 'number') {
@@ -37,7 +37,7 @@ export function deepEqual(a, b, decimalSigFigs = 10): boolean {
     return true;
 }
 
-export function stripPrecision(x, decimalSigFigs = 10) {
+export function stripPrecision(x: any, decimalSigFigs = 10): any {
     // Intended for test output serialization:
     // strips down to 6 decimal sigfigs but stops at decimal point
     if (typeof x === 'number') {
@@ -58,7 +58,7 @@ export function stripPrecision(x, decimalSigFigs = 10) {
     } else if (Array.isArray(x)) {
         return x.map((v) => stripPrecision(v, decimalSigFigs));
     } else {
-        const stripped = {};
+        const stripped: typeof x = {};
         for (const key of Object.keys(x)) {
             stripped[key] = stripPrecision(x[key], decimalSigFigs);
         }

@@ -20,8 +20,8 @@ const feature = vt.layers.water.feature(0);
 
 const canonicalTileID = new CanonicalTileID(20, 1, 1);
 
-function createPolygon(numPoints) {
-    const points = [];
+function createPolygon(numPoints: number): Point[] {
+    const points: Point[] = [];
     for (let i = 0; i < numPoints; i++) {
         points.push(new Point(2048 + 256 * Math.cos(i / numPoints * 2 * Math.PI), 2048 + 256 * Math.sin(i / numPoints * 2 * Math.PI)));
     }

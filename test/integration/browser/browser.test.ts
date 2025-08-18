@@ -1,5 +1,6 @@
 import {describe, beforeEach, beforeAll, afterEach, afterAll, test, expect} from 'vitest';
 import puppeteer, {type Page, type Browser} from 'puppeteer';
+// @ts-ignore
 import st from 'st';
 import http, {type Server} from 'http';
 import type {AddressInfo} from 'net';

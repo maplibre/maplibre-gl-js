@@ -2,12 +2,13 @@
 import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
 import style from '../data/empty.json' with {type: 'json'};
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 const width = 1024;
 const height = 768;
 const layerCount = 50;
 
-function generateLayers(layer) {
+function generateLayers(layer: LayerSpecification): LayerSpecification[] {
     const generated = [];
     for (let i = 0; i < layerCount; i++) {
         const id = layer.id + i;

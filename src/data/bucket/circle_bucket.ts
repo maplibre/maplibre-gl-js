@@ -32,7 +32,7 @@ import {type CircleGranularity} from '../../render/subdivision_granularity_setti
 const VERTEX_MIN_VALUE = -32768; // -(2^15)
 
 // Extrude is in range 0..7, which will be mapped to -1..1 in the shader.
-function addCircleVertex(layoutVertexArray, x, y, extrudeX, extrudeY) {
+function addCircleVertex(layoutVertexArray: CircleLayoutArray, x: number, y: number, extrudeX: number, extrudeY: number) {
     // We pack circle position and extrude into range 0..65535, but vertices are stored as *signed* 16-bit integers, so we need to offset the number by 2^15.
     layoutVertexArray.emplaceBack(
         VERTEX_MIN_VALUE + (x * 8) + extrudeX,

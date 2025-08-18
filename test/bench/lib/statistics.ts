@@ -23,7 +23,7 @@ export type Summary = {
     max: number;
 }
 
-export function probabilitiesOfSuperiority(before, after) {
+export function probabilitiesOfSuperiority(before: number[], after: number[]): {superior: number, inferior: number} {
     const timerPrecision = 0.005;
 
     let superiorCount = 0;
@@ -45,7 +45,7 @@ export function probabilitiesOfSuperiority(before, after) {
     };
 }
 
-export function summaryStatistics(data): Summary {
+export function summaryStatistics(data: number[]): Summary {
     const variance = d3.variance(data);
     const sorted = data.slice().sort(d3.ascending);
     const [q1, q2, q3] = [.25, .5, .75].map((d) => d3.quantile(sorted, d));
@@ -84,8 +84,8 @@ export function summaryStatistics(data): Summary {
     };
 }
 
-export function regression(measurements) {
-    const result = [];
+export function regression(measurements: {iterations: number, time: number}[]): RegressionResults {
+    const result: [number, number][] = [];
     for (let i = 0, n = 1; i + n < measurements.length; i += n, n++) {
         const subset = measurements.slice(i, i + n);
         result.push([
@@ -96,7 +96,7 @@ export function regression(measurements) {
     return leastSquaresRegression(result);
 }
 
-function leastSquaresRegression(data): RegressionResults {
+function leastSquaresRegression(data: [number, number][]): RegressionResults {
     const meanX = d3.sum(data, d => d[0]) / data.length;
     const meanY = d3.sum(data, d => d[1]) / data.length;
     const varianceX = d3.variance(data, d => d[0]);
@@ -113,7 +113,7 @@ function leastSquaresRegression(data): RegressionResults {
     return {correlation, slope, intercept, data};
 }
 
-export function kde(samples, summary, ticks): [number, number][] {
+export function kde(samples: number[], summary: Summary, ticks: number[]): [number, number][] {
     const kernel = kernelEpanechnikov;
 
     if (samples.length === 0) {
@@ -126,7 +126,7 @@ export function kde(samples, summary, ticks): [number, number][] {
     });
 }
 
-function kernelEpanechnikov(v) {
+function kernelEpanechnikov(v: number): number {
     return Math.abs(v) <= 1 ? 0.75 * (1 - v * v) : 0;
 }
 

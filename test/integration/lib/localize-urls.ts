@@ -1,41 +1,33 @@
 import path from 'path';
 import fs from 'fs';
-import {type StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {type SourceSpecification, type StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-export function localizeURLs(style: any, port: number, baseTestsDir: string) {
+export function localizeURLs(style: StyleSpecification, port: number, baseTestsDir: string) {
     localizeStyleURLs(style, port);
-    if (style.metadata && style.metadata.test && style.metadata.test.operations) {
-        style.metadata.test.operations.forEach((op) => {
-            if (op[0] === 'addSource') {
-                localizeSourceURLs(op[2], port);
-            } else if (op[0] === 'setStyle') {
-                if (typeof op[1] === 'object') {
-                    localizeStyleURLs(op[1], port);
-                    return;
-                }
-
-                let styleJSON;
-                try {
-                    const relativePath = op[1].replace(/^local:\/\//, '');
-                    styleJSON = fs.readFileSync(path.join(baseTestsDir, 'assets', relativePath));
-                } catch (error) {
-                    console.log(`* ${error}`);
-                    return;
-                }
-
-                try {
-                    styleJSON = JSON.parse(styleJSON);
-                } catch (error) {
-                    console.log(`* Error while parsing ${op[1]}: ${error}`);
-                    return;
-                }
-
-                localizeStyleURLs(styleJSON, port);
-
-                op[1] = styleJSON;
-                op[2] = {diff: false};
+    if (!(style.metadata as any)?.test?.operations) {
+        return;
+    }
+    for (const op of (style.metadata as any).test.operations) {
+        if (op[0] === 'addSource') {
+            localizeSourceURLs(op[2], port);
+        } else if (op[0] === 'setStyle') {
+            if (typeof op[1] === 'object') {
+                localizeStyleURLs(op[1], port);
+                return;
             }
-        });
+
+            try {
+                const relativePath = op[1].replace(/^local:\/\//, '');
+                const styleJSON = fs.readFileSync(path.join(baseTestsDir, 'assets', relativePath), 'utf8');
+                const styleJSONObject = JSON.parse(styleJSON);
+                localizeStyleURLs(styleJSONObject, port);
+                op[1] = styleJSONObject;
+                op[2] = {diff: false};
+            } catch (error) {
+                console.log(`* Error while parsing ${op[1]}: ${error}`);
+                return;
+            }
+        }
     }
 }
 
@@ -59,23 +51,25 @@ function localizeMapboxTilesetURL(url: string, port: number) {
     return url.replace(/^mapbox:\/\//, `http://localhost:${port}/tilesets/`);
 }
 
-function localizeSourceURLs(source: any, port: number) {
-    for (const tile in source.tiles) {
-        source.tiles[tile] = localizeMapboxTilesURL(source.tiles[tile], port);
-        source.tiles[tile] = localizeURL(source.tiles[tile], port);
+function localizeSourceURLs(source: SourceSpecification, port: number) {
+    if ('tiles' in source && Array.isArray(source.tiles)) {
+        for (const tile in source.tiles) {
+            source.tiles[tile] = localizeMapboxTilesURL(source.tiles[tile], port);
+            source.tiles[tile] = localizeURL(source.tiles[tile], port);
+        }
     }
 
-    if (source.urls) {
+    if ('urls' in source) {
         source.urls = source.urls.map((url) => localizeMapboxTilesetURL(url, port));
         source.urls = source.urls.map((url) => localizeURL(url, port));
     }
 
-    if (source.url) {
+    if ('url' in source) {
         source.url = localizeMapboxTilesetURL(source.url, port);
         source.url = localizeURL(source.url, port);
     }
 
-    if (source.data && typeof source.data == 'string') {
+    if ('data' in source && typeof source.data == 'string') {
         source.data = localizeURL(source.data, port);
     }
 }

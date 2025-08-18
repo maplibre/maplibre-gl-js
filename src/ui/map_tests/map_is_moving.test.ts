@@ -5,7 +5,7 @@ import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {beforeMapTest} from '../../util/test/util';
 
-let map;
+let map: Map;
 
 function createMap() {
     return new Map({style: '', container: DOM.create('div', '', window.document.body)});

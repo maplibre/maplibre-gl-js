@@ -2,6 +2,7 @@ import {describe, beforeAll, afterAll, test, expect} from 'vitest';
 import puppeteer, {type Page, type Browser} from 'puppeteer';
 
 import {deepEqual} from '../lib/json-diff';
+// @ts-ignore
 import st from 'st';
 import http from 'node:http';
 import type {Server} from 'node:http';
@@ -17,9 +18,16 @@ import type * as maplibreglModule from '../../../dist/maplibre-gl';
 import {CoverageReport} from 'monocart-coverage-reports';
 let maplibregl: typeof maplibreglModule;
 
-async function performQueryOnFixture(fixture)  {
+type Fixture = {
+    style?: any;
+    expected?: any;
+    actual?: any;
+    [s: string]: maplibregl.StyleSpecification;
+};
 
-    async function handleOperation(map: maplibregl.Map, operation) {
+async function performQueryOnFixture(fixture: Fixture)  {
+
+    async function handleOperation(map: maplibregl.Map, operation: any[]) {
         const opName = operation[0];
         
         switch (opName) {
@@ -34,12 +42,12 @@ async function performQueryOnFixture(fixture)  {
                 }
                 break;
             default:
-                map[opName](...operation.slice(1));
+                map[opName as keyof maplibregl.Map](...operation.slice(1));
                 break;
         }
     }
 
-    async function applyOperations(map, operations) {
+    async function applyOperations(map: maplibregl.Map, operations: any[]) {
         // No operations specified, end immediately and invoke done.
         if (!operations || operations.length === 0) {
             return;
@@ -193,12 +201,7 @@ async function dirToJson(dir: string, port: number) {
     const files = await fs.promises.readdir(dir);
 
     // Extract the filedata into a flat dictionary
-    const result = {} as {
-        style?: any;
-        expected?: any;
-        actual?: any;
-        [s:string]:unknown;
-    };
+    const result: Fixture = {};
 
     for (const file of files) {
         const fullname = path.join(dir, file);

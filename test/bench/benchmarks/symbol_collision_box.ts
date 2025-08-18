@@ -8,8 +8,8 @@ import {SingleCollisionBox} from '../../../src/data/bucket/symbol_bucket';
 import {EXTENT} from '../../../src/data/extent';
 import {MercatorTransform} from '../../../src/geo/projection/mercator_transform';
 import {mat4} from 'gl-matrix';
-import {GlobeProjection} from '../../../src/geo/projection/globe_projection';
 import {GlobeTransform} from '../../../src/geo/projection/globe_transform';
+import {splitmix32} from '../../unit/lib/mesh_utils';
 
 type TestSymbol = {
     collisionBox: SingleCollisionBox;
@@ -22,21 +22,6 @@ type TestSymbol = {
     translation: [number, number];
     shift?: Point;
     simpleProjectionMatrix?: mat4;
-}
-
-// For this benchmark we need a deterministic random number generator. This function provides one.
-// It returns random floats in range 0..1.
-// Taken directly from: https://stackoverflow.com/a/47593316
-function splitmix32(a) {
-    return function() {
-        a |= 0;
-        a = a + 0x9e3779b9 | 0;
-        let t = a ^ a >>> 16;
-        t = Math.imul(t, 0x21f0aaad);
-        t = t ^ t >>> 15;
-        t = Math.imul(t, 0x735a2d97);
-        return ((t = t ^ t >>> 15) >>> 0) / 4294967296;
-    };
 }
 
 export default class SymbolCollisionBox extends Benchmark {
@@ -53,7 +38,7 @@ export default class SymbolCollisionBox extends Benchmark {
         if (this._useGlobeProjection) {
             return {
                 transform: new GlobeTransform(),
-                calculatePosMatrix: (_tileID: UnwrappedTileID) => { return undefined; },
+                calculatePosMatrix: (_tileID: UnwrappedTileID): mat4 => { return undefined; },
             };
         } else {
             const tr = new MercatorTransform(0, 22, 0, 60, true);
@@ -72,7 +57,7 @@ export default class SymbolCollisionBox extends Benchmark {
         const unwrappedTileID = tileID.toUnwrapped();
 
         const rng = splitmix32(0xdeadbeef);
-        const rndRange = (min, max) => {
+        const rndRange = (min: number, max: number) => {
             return rng() * (max - min) + min;
         };
 

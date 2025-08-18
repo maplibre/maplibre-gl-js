@@ -1,5 +1,6 @@
 import path, {dirname} from 'path';
 import fs from 'fs';
+// @ts-ignore
 import st from 'st';
 import {PNG} from 'pngjs';
 import pixelmatch from 'pixelmatch';
@@ -9,7 +10,7 @@ import http from 'http';
 import puppeteer, {type Page, type Browser} from 'puppeteer';
 import {CoverageReport} from 'monocart-coverage-reports';
 import {localizeURLs} from '../lib/localize-urls';
-import type {Map as MaplibreMap, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
+import type {Map as MaplibreMap, CanvasSource, PointLike, StyleSpecification, CustomRenderMethodInput, CustomLayerInterface} from '../../../dist/maplibre-gl';
 import junitReportBuilder, {type TestSuite} from 'junit-report-builder';
 import type * as maplibreglModule from '../../../dist/maplibre-gl';
 
@@ -280,10 +281,10 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
 
         const options = style.metadata.test;
 
-        class NullIsland {
+        class NullIsland implements CustomLayerInterface {
             id: string;
-            type: string;
-            renderingMode: string;
+            type: 'custom';
+            renderingMode: '2d';
             program: WebGLProgram;
             constructor() {
                 this.id = 'null-island';
@@ -320,7 +321,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 gl.linkProgram(this.program);
             }
 
-            render(gl: WebGL2RenderingContext, args) {
+            render(gl: WebGL2RenderingContext, args: CustomRenderMethodInput) {
                 const vertexArray = new Float32Array([0.5, 0.5, 0.0]);
                 gl.useProgram(this.program);
                 const vertexBuffer = gl.createBuffer();
@@ -334,10 +335,10 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             }
         }
 
-        class Tent3D {
+        class Tent3D implements CustomLayerInterface {
             id: string;
-            type: string;
-            renderingMode: string;
+            type: 'custom';
+            renderingMode: '3d';
             program: WebGLProgram & {
                 a_pos?: number;
                 aPos?: number;
@@ -412,7 +413,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexArray, gl.STATIC_DRAW);
             }
 
-            render(gl: WebGL2RenderingContext, args) {
+            render(gl: WebGL2RenderingContext, args: CustomRenderMethodInput) {
                 gl.useProgram(this.program);
                 gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
                 gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
@@ -423,10 +424,10 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             }
         }
 
-        class Tent3DGlobe {
+        class Tent3DGlobe implements CustomLayerInterface {
             id: string;
-            type: string;
-            renderingMode: string;
+            type: 'custom';
+            renderingMode: '3d';
 
             vertexBuffer: WebGLBuffer;
             indexBuffer: WebGLBuffer;
@@ -443,7 +444,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 this.renderingMode = '3d';
             }
 
-            getShader(gl, shaderDescription) {
+            getShader(gl: WebGL2RenderingContext, shaderDescription: any) {
                 if (this.shaderMap.has(shaderDescription.variantName)) {
                     return this.shaderMap.get(shaderDescription.variantName);
                 }
@@ -493,7 +494,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 return result;
             }
 
-            onAdd (map, gl) {
+            onAdd(map: MaplibreMap, gl: WebGL2RenderingContext) {
                 const x = 0.5 - 0.015;
                 const y = 0.5 - 0.01;
                 const z = 500_000;
@@ -521,7 +522,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexArray, gl.STATIC_DRAW);
             }
 
-            render (gl, args) {
+            render(gl: WebGL2RenderingContext, args: CustomRenderMethodInput) {
                 const shader = this.getShader(gl, args.shaderData);
                 gl.useProgram(shader.program);
                 gl.uniformMatrix4fv(
@@ -563,7 +564,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             }
         }
 
-        const customLayerImplementations = {
+        const customLayerImplementations: Record<string, new () => CustomLayerInterface> = {
             'tent-3d': Tent3D,
             'tent-3d-globe': Tent3DGlobe,
             'null-island': NullIsland
@@ -572,7 +573,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
         async function updateFakeCanvas(document: Document, id: string, imagePath: string) {
             const fakeCanvas = document.getElementById(id) as HTMLCanvasElement;
 
-            const getMeta = async (url) => {
+            const getMeta = async (url: string) => {
                 const img = new Image();
                 img.src = url;
                 img.crossOrigin = 'anonymous';
@@ -643,7 +644,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                         });
                         break;
                     case 'addImage': {
-                        const getImage = async (url) => {
+                        const getImage = async (url: string) => {
                             const img = new Image();
                             img.src = url;
                             img.crossOrigin = 'anonymous';
@@ -677,8 +678,8 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                         map.style.sourceCaches[operation[1]].pause();
                         break;
                     default:
-                        if (typeof map[operation[0]] === 'function') {
-                            map[operation[0]](...operation.slice(1));
+                        if (typeof map[operation[0] as keyof MaplibreMap] === 'function') {
+                            map[operation[0] as keyof MaplibreMap](...operation.slice(1));
                         }
                 }
             }
@@ -688,7 +689,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
         async function createFakeCanvas(document: Document, id: string, imagePath: string): Promise<HTMLCanvasElement> {
             const fakeCanvas: HTMLCanvasElement = document.createElement('canvas');
 
-            const getImage = async (url) => {
+            const getImage = async (url: string) => {
                 const img = new Image();
                 img.src = url;
                 img.crossOrigin = 'anonymous';

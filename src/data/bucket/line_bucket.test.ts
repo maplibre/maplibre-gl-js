@@ -18,8 +18,8 @@ const noSubdivision = SubdivisionGranularitySetting.noSubdivision;
 const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))));
 const feature = vt.layers.road.feature(0);
 
-function createLine(numPoints) {
-    const points = [];
+function createLine(numPoints: number): Point[] {
+    const points: Point[] = [];
     for (let i = 0; i < numPoints; i++) {
         points.push(new Point(i / numPoints, i / numPoints));
     }

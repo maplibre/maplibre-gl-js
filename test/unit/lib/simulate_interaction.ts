@@ -6,7 +6,7 @@ function click(target: HTMLElement | Window | Element) {
     target.dispatchEvent(new MouseEvent('click', options));
 }
 
-function drag(target: HTMLElement | Window, mousedownOptions, mouseUpOptions) {
+function drag(target: HTMLElement | Window, mousedownOptions: MouseEventInit, mouseUpOptions: MouseEventInit) {
     mousedownOptions = Object.assign({bubbles: true}, mousedownOptions); // eslint-disable-line no-restricted-properties
     mouseUpOptions = Object.assign({bubbles: true}, mouseUpOptions); // eslint-disable-line no-restricted-properties
     target.dispatchEvent(new MouseEvent('mousedown', mousedownOptions));
@@ -32,28 +32,28 @@ function dblclick(target: HTMLElement | Window) {
 }
 
 function keyFunctionFactory(event: string) {
-    return (target: HTMLElement | Window, options) => {
+    return (target: HTMLElement | Window, options: KeyboardEventInit) => {
         options = Object.assign({bubbles: true}, options); // eslint-disable-line no-restricted-properties
         target.dispatchEvent(new KeyboardEvent(event, options));
     };
 }
 
 function mouseFunctionFactory(event: string) {
-    return (target: HTMLElement | Window, options?) => {
+    return (target: HTMLElement | Window, options?: MouseEventInit) => {
         options = Object.assign({bubbles: true}, options); // eslint-disable-line no-restricted-properties
         target.dispatchEvent(new MouseEvent(event, options));
     };
 }
 
 function wheelFunctionFactory(event: string) {
-    return (target: HTMLElement | Window, options) => {
+    return (target: HTMLElement | Window, options: WheelEventInit) => {
         options = Object.assign({bubbles: true}, options); // eslint-disable-line no-restricted-properties
         target.dispatchEvent(new WheelEvent(event, options));
     };
 }
 
 function touchFunctionFactory(event: string) {
-    return (target: HTMLElement | Window, options?) => {
+    return (target: HTMLElement | Window, options: TouchEventInit) => {
         const defaultTouches = event.endsWith('end') || event.endsWith('cancel') ? [] : [{clientX: 0, clientY: 0}];
         options = Object.assign({bubbles: true, touches: defaultTouches}, options); // eslint-disable-line no-restricted-properties
         target.dispatchEvent(new TouchEvent(event, options));

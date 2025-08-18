@@ -2,8 +2,10 @@
 import emptystyle from '../data/empty.json' with {type: 'json'};
 import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {Map} from '../../../src/ui/map';
 
-function generateLayers(layer) {
+function generateLayers(layer: LayerSpecification): LayerSpecification[] {
     const generated = [];
     for (let i = 0; i < 50; i++) {
         const id = layer.id + i;
@@ -18,11 +20,11 @@ const zoom = 4;
 
 class RemovePaintState extends Benchmark {
 
-    center: any;
-    numFeatures: any;
-    map: any;
+    center: [number, number];
+    numFeatures: number;
+    map: Map;
 
-    constructor(center) {
+    constructor(center: [number, number]) {
         super();
         this.center = center;
     }
@@ -63,7 +65,7 @@ class RemovePaintState extends Benchmark {
     bench() {
         this.map._styleDirty = true;
         this.map._sourcesDirty = true;
-        this.map._render();
+        this.map._render(undefined);
     }
 
     teardown() {
@@ -80,7 +82,7 @@ export class PropertyLevelRemove extends RemovePaintState {
         for (let i = 0; i < this.numFeatures; i += 50) {
             this.map.removeFeatureState({source: 'land', id: i}, 'bench');
         }
-        this.map._render();
+        this.map._render(undefined);
 
     }
 }
@@ -94,7 +96,7 @@ export class FeatureLevelRemove extends RemovePaintState {
         for (let i = 0; i < this.numFeatures; i += 50) {
             this.map.removeFeatureState({source: 'land', id: i});
         }
-        this.map._render();
+        this.map._render(undefined);
 
     }
 }
@@ -108,7 +110,7 @@ export class SourceLevelRemove extends RemovePaintState {
         for (let i = 0; i < this.numFeatures; i += 50) {
             this.map.removeFeatureState({source: 'land', id: i});
         }
-        this.map._render();
+        this.map._render(undefined);
 
     }
 }

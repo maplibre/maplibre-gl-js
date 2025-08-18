@@ -25,9 +25,9 @@ describe('map events', () => {
         map.on('touchmove', touchmove);
         map.on('touchend', touchend);
 
-        const touchesStart = [{target, identifier: 1, clientX: 0, clientY: 50}];
-        const touchesMove = [{target, identifier: 1, clientX: 0, clientY: 60}];
-        const touchesEnd = [{target, identifier: 1, clientX: 0, clientY: 60}];
+        const touchesStart = [{target, identifier: 1, clientX: 0, clientY: 50}] as any as Touch[];
+        const touchesMove = [{target, identifier: 1, clientX: 0, clientY: 60}] as any as Touch[];
+        const touchesEnd = [{target, identifier: 1, clientX: 0, clientY: 60}] as any as Touch[];
 
         simulate.touchstart(map.getCanvas(), {touches: touchesStart, targetTouches: touchesStart});
         expect(touchstart).toHaveBeenCalledTimes(1);
@@ -65,9 +65,9 @@ describe('map events', () => {
         map.on('touchend', touchend);
         map.on('drag', drag);
 
-        const touchesStart = [{target, identifier: 1, clientX: 0, clientY: 50}];
-        const touchesMove = [{target, identifier: 1, clientX: 0, clientY: 60}];
-        const touchesEnd = [{target, identifier: 1, clientX: 0, clientY: 60}];
+        const touchesStart = [{target, identifier: 1, clientX: 0, clientY: 50}] as any as Touch[];
+        const touchesMove = [{target, identifier: 1, clientX: 0, clientY: 60}] as any as Touch[];
+        const touchesEnd = [{target, identifier: 1, clientX: 0, clientY: 60}] as any as Touch[];
 
         simulate.touchstart(map.getCanvas(), {touches: touchesStart, targetTouches: touchesStart});
         expect(touchstart).toHaveBeenCalledTimes(1);

@@ -69,7 +69,7 @@ export default class WorkerTransfer extends Benchmark {
     }
 }
 
-function barePayload(obj) {
+function barePayload(obj: object) {
     // strip all transferable from a worker payload, because we can't transfer them repeatedly in the bench:
     // as soon as it's transferred once, it's no longer available on the main thread
     return JSON.parse(JSON.stringify(obj, (key, value) => ArrayBuffer.isView(value) ? {} : value) || '{}');

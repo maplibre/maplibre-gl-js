@@ -10,7 +10,7 @@ export function fixedNum(n:number, precision = 10) {
     }
 }
 
-export function fixedLngLat(l, precision = 9) {
+export function fixedLngLat(l: { lng: number; lat: number }, precision = 9) {
 
     return {
         lng: fixedNum(l.lng, precision),
@@ -18,7 +18,7 @@ export function fixedLngLat(l, precision = 9) {
     };
 }
 
-export function fixedCoord(coord, precision = 10) {
+export function fixedCoord(coord: { x: number; y: number; z: number }, precision = 10) {
 
     return {
         x: fixedNum(coord.x, precision),

@@ -1,24 +1,24 @@
 import {ScaleBand, ScaleLinear} from 'd3';
 import React from 'react';
 
-function identity(x) {
+function identity(x: any): any {
     return x;
 }
-function translateX(x) {
+function translateX(x: number): string {
     return `translate(${x + 0.5},0)`;
 }
-function translateY(y) {
+function translateY(y: number): string {
     return `translate(0,${y + 0.5})`;
 }
-function number(scale) {
-    return (d) => {
+function number(scale: any) {
+    return (d: any) => {
         return +scale(d);
     };
 }
-function center(scale) {
+function center(scale: any) {
     let offset = Math.max(0, scale.bandwidth() - 1) / 2; // Adjust for 0.5px offset.
     if (scale.round()) offset = Math.round(offset);
-    return (d) => {
+    return (d: string | number) => {
         return +scale(d) + offset;
     };
 }

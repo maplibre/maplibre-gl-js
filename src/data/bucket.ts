@@ -24,10 +24,10 @@ export type BucketParameters<Layer extends TypedStyleLayer> = {
 
 export type PopulateParameters = {
     featureIndex: FeatureIndex;
-    iconDependencies: {};
-    patternDependencies: {};
-    glyphDependencies: {};
-    availableImages: Array<string>;
+    iconDependencies: Record<string, boolean>;
+    patternDependencies: Record<string, boolean>;
+    glyphDependencies: Record<string, {}>;
+    availableImages: string[];
     subdivisionGranularity: SubdivisionGranularitySetting;
 };
 
@@ -96,8 +96,8 @@ export interface Bucket {
     destroy(): void;
 }
 
-export function deserialize(input: Array<Bucket>, style: Style): {[_: string]: Bucket} {
-    const output = {};
+export function deserialize(input: Array<Bucket>, style: Style): Record<string, Bucket> {
+    const output: Record<string, Bucket> = {};
 
     // Guard against the case where the map's style has been set to null while
     // this bucket has been parsing.

@@ -14,6 +14,7 @@
     "resolveJsonModule": true,
     "skipLibCheck": false,
     "strict": false,
+    //"noImplicitAny": true,
     "target": "ES2016",
     "lib": [
       "ESNext",

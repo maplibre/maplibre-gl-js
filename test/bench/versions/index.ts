@@ -27,6 +27,7 @@ import Subdivide from '../benchmarks/subdivide';
 import LoadMatchingFeature from '../benchmarks/feature_index';
 import CoveringTilesGlobe from '../benchmarks/covering_tiles_globe';
 import CoveringTilesMercator from '../benchmarks/covering_tiles_mercator';
+import type Benchmark from '../lib/benchmark';
 
 const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as GeoJSON.Feature<GeoJSON.Point>[]).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
 
@@ -34,13 +35,13 @@ const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as 
 
 const version = process.env.BENCHMARK_VERSION;
 
-function register(name, bench) {
+function register(name: string, bench: Benchmark) {
     (window as any).maplibreglBenchmarks[name] = (window as any).maplibreglBenchmarks[name] || {};
     (window as any).maplibreglBenchmarks[name][version] = bench;
 }
 
 const style = 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL';
-const center = [-77.032194, 38.912753];
+const center: [number, number] = [-77.032194, 38.912753];
 const zooms = [4, 8, 11, 13, 15, 17];
 const locations = zooms.map(zoom => ({center, zoom}));
 

@@ -1,11 +1,11 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {Map} from '../../ui/map';
+import {Map, type MapOptions} from '../../ui/map';
 import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {extend} from '../../util/util';
 import {beforeMapTest} from '../../util/test/util';
 
-function createMap(options?) {
+function createMap(options?: Omit<MapOptions, 'container'>): Map {
     return new Map(extend({
         container: DOM.create('div', '', window.document.body),
     }, options));
@@ -35,27 +35,27 @@ describe('keyboard', () => {
 
         simulate.keydown(map.getCanvas(), {keyCode: 37, key: 'ArrowLeft'});
         expect(map.easeTo).toHaveBeenCalled();
-        let easeToArgs = spy.mock.calls[0][0];
-        expect(easeToArgs.offset[0]).toBe(100);
-        expect(easeToArgs.offset[1]).toBe(-0);
+        let offset = spy.mock.calls[0][0].offset as [number, number];
+        expect(offset[0]).toBe(100);
+        expect(offset[1]).toBe(-0);
 
         simulate.keydown(map.getCanvas(), {keyCode: 39, key: 'ArrowRight'});
         expect(spy).toHaveBeenCalledTimes(2);
-        easeToArgs = spy.mock.calls[1][0];
-        expect(easeToArgs.offset[0]).toBe(-100);
-        expect(easeToArgs.offset[1]).toBe(-0);
+        offset = spy.mock.calls[1][0].offset as [number, number];
+        expect(offset[0]).toBe(-100);
+        expect(offset[1]).toBe(-0);
 
         simulate.keydown(map.getCanvas(), {keyCode: 40, key: 'ArrowDown'});
         expect(spy).toHaveBeenCalledTimes(3);
-        easeToArgs = spy.mock.calls[2][0];
-        expect(easeToArgs.offset[0]).toBe(-0);
-        expect(easeToArgs.offset[1]).toBe(-100);
+        offset = spy.mock.calls[2][0].offset as [number, number];
+        expect(offset[0]).toBe(-0);
+        expect(offset[1]).toBe(-100);
 
         simulate.keydown(map.getCanvas(), {keyCode: 38, key: 'ArrowUp'});
         expect(spy).toHaveBeenCalledTimes(4);
-        easeToArgs = spy.mock.calls[3][0];
-        expect(easeToArgs.offset[0]).toBe(-0);
-        expect(easeToArgs.offset[1]).toBe(100);
+        offset = spy.mock.calls[3][0].offset as [number, number];
+        expect(offset[0]).toBe(-0);
+        expect(offset[1]).toBe(100);
 
     });
 
@@ -69,27 +69,27 @@ describe('keyboard', () => {
 
         simulate.keydown(map.getCanvas(), {keyCode: 37, key: 'ArrowLeft'});
         expect(map.easeTo).toHaveBeenCalled();
-        let easeToArgs = spy.mock.calls[0][0];
-        expect(easeToArgs.offset[0]).toBe(100);
-        expect(easeToArgs.offset[1]).toBe(-0);
+        let offset = spy.mock.calls[0][0].offset as [number, number];
+        expect(offset[0]).toBe(100);
+        expect(offset[1]).toBe(-0);
 
         simulate.keydown(map.getCanvas(), {keyCode: 39, key: 'ArrowRight'});
         expect(spy).toHaveBeenCalledTimes(2);
-        easeToArgs = spy.mock.calls[1][0];
-        expect(easeToArgs.offset[0]).toBe(-100);
-        expect(easeToArgs.offset[1]).toBe(-0);
+        offset = spy.mock.calls[1][0].offset as [number, number];
+        expect(offset[0]).toBe(-100);
+        expect(offset[1]).toBe(-0);
 
         simulate.keydown(map.getCanvas(), {keyCode: 40, key: 'ArrowDown'});
         expect(spy).toHaveBeenCalledTimes(3);
-        easeToArgs = spy.mock.calls[2][0];
-        expect(easeToArgs.offset[0]).toBe(-0);
-        expect(easeToArgs.offset[1]).toBe(-100);
+        offset = spy.mock.calls[2][0].offset as [number, number];
+        expect(offset[0]).toBe(-0);
+        expect(offset[1]).toBe(-100);
 
         simulate.keydown(map.getCanvas(), {keyCode: 38, key: 'ArrowUp'});
         expect(spy).toHaveBeenCalledTimes(4);
-        easeToArgs = spy.mock.calls[3][0];
-        expect(easeToArgs.offset[0]).toBe(-0);
-        expect(easeToArgs.offset[1]).toBe(100);
+        offset = spy.mock.calls[3][0].offset as [number, number];
+        expect(offset[0]).toBe(-0);
+        expect(offset[1]).toBe(100);
 
     });
 
@@ -104,14 +104,14 @@ describe('keyboard', () => {
         expect(map.easeTo).toHaveBeenCalled();
         let easeToArgs = spy.mock.calls[0][0];
         expect(easeToArgs.bearing).toBe(-15);
-        expect(easeToArgs.offset[0]).toBe(-0);
+        expect((easeToArgs.offset as [number, number])[0]).toBe(-0);
 
         map.setBearing(0);
         simulate.keydown(map.getCanvas(), {keyCode: 39, key: 'ArrowRight', shiftKey: true});
         expect(spy).toHaveBeenCalledTimes(2);
         easeToArgs = spy.mock.calls[1][0];
         expect(easeToArgs.bearing).toBe(15);
-        expect(easeToArgs.offset[0]).toBe(-0);
+        expect((easeToArgs.offset as [number, number])[0]).toBe(-0);
 
     });
 
@@ -127,14 +127,14 @@ describe('keyboard', () => {
         expect(map.easeTo).toHaveBeenCalled();
         let easeToArgs = spy.mock.calls[0][0];
         expect(easeToArgs.bearing).toBe(0);
-        expect(easeToArgs.offset[0]).toBe(-0);
+        expect((easeToArgs.offset as [number, number])[0]).toBe(-0);
 
         map.setBearing(0);
         simulate.keydown(map.getCanvas(), {keyCode: 39, key: 'ArrowRight', shiftKey: true});
         expect(spy).toHaveBeenCalledTimes(2);
         easeToArgs = spy.mock.calls[1][0];
         expect(easeToArgs.bearing).toBe(0);
-        expect(easeToArgs.offset[0]).toBe(-0);
+        expect((easeToArgs.offset as [number, number])[0]).toBe(-0);
 
     });
 
@@ -149,14 +149,14 @@ describe('keyboard', () => {
         expect(map.easeTo).toHaveBeenCalled();
         let easeToArgs = spy.mock.calls[0][0];
         expect(easeToArgs.pitch).toBe(20);
-        expect(easeToArgs.offset[1]).toBe(-0);
+        expect((easeToArgs.offset as [number, number])[1]).toBe(-0);
 
         map.setPitch(30);
         simulate.keydown(map.getCanvas(), {keyCode: 38, key: 'ArrowUp', shiftKey: true});
         expect(spy).toHaveBeenCalledTimes(2);
         easeToArgs = spy.mock.calls[1][0];
         expect(easeToArgs.pitch).toBe(40);
-        expect(easeToArgs.offset[1]).toBe(-0);
+        expect((easeToArgs.offset as [number, number])[1]).toBe(-0);
 
     });
 
@@ -172,14 +172,14 @@ describe('keyboard', () => {
         expect(map.easeTo).toHaveBeenCalled();
         let easeToArgs = spy.mock.calls[0][0];
         expect(easeToArgs.pitch).toBe(30);
-        expect(easeToArgs.offset[1]).toBe(-0);
+        expect((easeToArgs.offset as [number, number])[1]).toBe(-0);
 
         map.setPitch(30);
         simulate.keydown(map.getCanvas(), {keyCode: 38, key: 'ArrowUp', shiftKey: true});
         expect(spy).toHaveBeenCalledTimes(2);
         easeToArgs = spy.mock.calls[1][0];
         expect(easeToArgs.pitch).toBe(30);
-        expect(easeToArgs.offset[1]).toBe(-0);
+        expect((easeToArgs.offset as [number, number])[1]).toBe(-0);
 
     });
 

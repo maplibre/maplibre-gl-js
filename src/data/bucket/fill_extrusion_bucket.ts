@@ -36,7 +36,7 @@ import {fillLargeMeshArrays} from '../../render/fill_large_mesh_arrays';
 
 const FACTOR = Math.pow(2, 13);
 
-function addVertex(vertexArray, x, y, nx, ny, nz, t, e) {
+function addVertex(vertexArray: FillExtrusionLayoutArray, x: number, y: number, nx: number, ny: number, nz: number, t: number, e: number) {
     vertexArray.emplaceBack(
         // a_pos
         x,
@@ -322,12 +322,12 @@ function accumulatePointsToCentroid(centroid: CentroidAccumulator, geometry: Arr
 
 register('FillExtrusionBucket', FillExtrusionBucket, {omit: ['layers', 'features']});
 
-function isBoundaryEdge(p1, p2) {
+function isBoundaryEdge(p1: Point, p2: Point): boolean {
     return (p1.x === p2.x && (p1.x < 0 || p1.x > EXTENT)) ||
         (p1.y === p2.y && (p1.y < 0 || p1.y > EXTENT));
 }
 
-function isEntirelyOutside(ring) {
+function isEntirelyOutside(ring: Point[]): boolean {
     return ring.every(p => p.x < 0) ||
         ring.every(p => p.x > EXTENT) ||
         ring.every(p => p.y < 0) ||

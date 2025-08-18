@@ -29,19 +29,19 @@ describe('touch zoom rotate', () => {
         map.on('zoom',      zoom);
         map.on('zoomend',   zoomend);
 
-        simulate.touchstart(map.getCanvas(), {touches: [{target, identifier: 1, clientX: 0, clientY: -50}, {target, identifier: 2, clientX: 0, clientY: 50}]});
+        simulate.touchstart(map.getCanvas(), {touches: [{target, identifier: 1, clientX: 0, clientY: -50}, {target, identifier: 2, clientX: 0, clientY: 50}] as any as Touch[]});
         map._renderTaskQueue.run();
         expect(zoomstart).toHaveBeenCalledTimes(0);
         expect(zoom).toHaveBeenCalledTimes(0);
         expect(zoomend).toHaveBeenCalledTimes(0);
 
-        simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 1, clientX: 0, clientY: -100}, {target, identifier: 2, clientX: 0, clientY: 100}]});
+        simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 1, clientX: 0, clientY: -100}, {target, identifier: 2, clientX: 0, clientY: 100}] as any as Touch[]});
         map._renderTaskQueue.run();
         expect(zoomstart).toHaveBeenCalledTimes(1);
         expect(zoom).toHaveBeenCalledTimes(1);
         expect(zoomend).toHaveBeenCalledTimes(0);
 
-        simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 1, clientX: 0, clientY: -60}, {target, identifier: 2, clientX: 0, clientY: 60}]});
+        simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 1, clientX: 0, clientY: -60}, {target, identifier: 2, clientX: 0, clientY: 60}] as any as Touch[]});
         map._renderTaskQueue.run();
         expect(zoomstart).toHaveBeenCalledTimes(1);
         expect(zoom).toHaveBeenCalledTimes(2);
@@ -71,19 +71,19 @@ describe('touch zoom rotate', () => {
         map.on('rotate',      rotate);
         map.on('rotateend',   rotateend);
 
-        simulate.touchstart(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -50}, {target, identifier: 1, clientX: 0, clientY: 50}]});
+        simulate.touchstart(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -50}, {target, identifier: 1, clientX: 0, clientY: 50}] as any as Touch[]});
         map._renderTaskQueue.run();
         expect(rotatestart).toHaveBeenCalledTimes(0);
         expect(rotate).toHaveBeenCalledTimes(0);
         expect(rotateend).toHaveBeenCalledTimes(0);
 
-        simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 0, clientX: -50, clientY: 0}, {target, identifier: 1, clientX: 50, clientY: 0}]});
+        simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 0, clientX: -50, clientY: 0}, {target, identifier: 1, clientX: 50, clientY: 0}] as any as Touch[]});
         map._renderTaskQueue.run();
         expect(rotatestart).toHaveBeenCalledTimes(1);
         expect(rotate).toHaveBeenCalledTimes(1);
         expect(rotateend).toHaveBeenCalledTimes(0);
 
-        simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -50}, {target, identifier: 1, clientX: 0, clientY: 50}]});
+        simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -50}, {target, identifier: 1, clientX: 0, clientY: 50}] as any as Touch[]});
         map._renderTaskQueue.run();
         expect(rotatestart).toHaveBeenCalledTimes(1);
         expect(rotate).toHaveBeenCalledTimes(2);
@@ -107,10 +107,10 @@ describe('touch zoom rotate', () => {
         const move = vi.fn();
         map.on('move', move);
 
-        simulate.touchstart(map.getCanvas(), {touches: [{target, clientX: 0, clientY: 0}, {target, clientX: 5, clientY: 0}]});
+        simulate.touchstart(map.getCanvas(), {touches: [{target, clientX: 0, clientY: 0}, {target, clientX: 5, clientY: 0}] as any as Touch[]});
         map._renderTaskQueue.run();
 
-        simulate.touchmove(map.getCanvas(), {touches: [{target, clientX: 0, clientY: 0}, {target, clientX: 0, clientY: 5}]});
+        simulate.touchmove(map.getCanvas(), {touches: [{target, clientX: 0, clientY: 0}, {target, clientX: 0, clientY: 5}] as any as Touch[]});
         map._renderTaskQueue.run();
 
         simulate.touchend(map.getCanvas(), {touches: []});
@@ -135,19 +135,19 @@ describe('touch zoom rotate', () => {
         map.on('zoom',      zoom);
         map.on('zoomend',   zoomend);
 
-        simulate.touchstart(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -5}, {target, identifier: 2, clientX: 0, clientY: 5}]});
+        simulate.touchstart(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -5}, {target, identifier: 2, clientX: 0, clientY: 5}] as any as Touch[]});
         map._renderTaskQueue.run();
         expect(zoomstart).toHaveBeenCalledTimes(0);
         expect(zoom).toHaveBeenCalledTimes(0);
         expect(zoomend).toHaveBeenCalledTimes(0);
 
-        simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -5}, {target, identifier: 2, clientX: 0, clientY: 6}]});
+        simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -5}, {target, identifier: 2, clientX: 0, clientY: 6}] as any as Touch[]});
         map._renderTaskQueue.run();
         expect(zoomstart).toHaveBeenCalledTimes(1);
         expect(zoom).toHaveBeenCalledTimes(1);
         expect(zoomend).toHaveBeenCalledTimes(0);
 
-        simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -5}, {target, identifier: 2, clientX: 0, clientY: 4}]});
+        simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -5}, {target, identifier: 2, clientX: 0, clientY: 4}] as any as Touch[]});
         map._renderTaskQueue.run();
         expect(zoomstart).toHaveBeenCalledTimes(1);
         expect(zoom).toHaveBeenCalledTimes(2);
@@ -197,20 +197,20 @@ describe('touch zoom rotate', () => {
         map.on('zoom',      zoom);
         map.on('zoomend',   zoomend);
 
-        simulate.touchstart(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -50}]});
-        simulate.touchstart(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -50}, {target: target2, identifier: 2, clientX: 0, clientY: 50}]});
+        simulate.touchstart(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -50}] as any as Touch[]});
+        simulate.touchstart(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -50}, {target: target2, identifier: 2, clientX: 0, clientY: 50}] as any as Touch[]});
         map._renderTaskQueue.run();
         expect(zoomstart).toHaveBeenCalledTimes(0);
         expect(zoom).toHaveBeenCalledTimes(0);
         expect(zoomend).toHaveBeenCalledTimes(0);
 
-        simulate.touchmove(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -100}, {target: target2, identifier: 2, clientX: 0, clientY: 100}]});
+        simulate.touchmove(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -100}, {target: target2, identifier: 2, clientX: 0, clientY: 100}] as any as Touch[]});
         map._renderTaskQueue.run();
         expect(zoomstart).toHaveBeenCalledTimes(1);
         expect(zoom).toHaveBeenCalledTimes(1);
         expect(zoomend).toHaveBeenCalledTimes(0);
 
-        simulate.touchmove(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -60}, {target: target2, identifier: 2, clientX: 0, clientY: 60}]});
+        simulate.touchmove(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -60}, {target: target2, identifier: 2, clientX: 0, clientY: 60}] as any as Touch[]});
         map._renderTaskQueue.run();
         expect(zoomstart).toHaveBeenCalledTimes(1);
         expect(zoom).toHaveBeenCalledTimes(2);
@@ -251,20 +251,20 @@ describe('touch zoom rotate', () => {
         map.on('zoom',      zoom);
         map.on('zoomend',   zoomend);
 
-        simulate.touchstart(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -50}]});
-        simulate.touchstart(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -50}, {target: target2, identifier: 2, clientX: 0, clientY: 50}]});
+        simulate.touchstart(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -50}] as any as Touch[]});
+        simulate.touchstart(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -50}, {target: target2, identifier: 2, clientX: 0, clientY: 50}] as any as Touch[]});
         map._renderTaskQueue.run();
         expect(zoomstart).toHaveBeenCalledTimes(0);
         expect(zoom).toHaveBeenCalledTimes(0);
         expect(zoomend).toHaveBeenCalledTimes(0);
 
-        simulate.touchmove(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -100}, {target: target2, identifier: 2, clientX: 0, clientY: 100}]});
+        simulate.touchmove(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -100}, {target: target2, identifier: 2, clientX: 0, clientY: 100}] as any as Touch[]});
         map._renderTaskQueue.run();
         expect(zoomstart).toHaveBeenCalledTimes(0);
         expect(zoom).toHaveBeenCalledTimes(0);
         expect(zoomend).toHaveBeenCalledTimes(0);
 
-        simulate.touchmove(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -60}, {target: target2, identifier: 2, clientX: 0, clientY: 60}]});
+        simulate.touchmove(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -60}, {target: target2, identifier: 2, clientX: 0, clientY: 60}] as any as Touch[]});
         map._renderTaskQueue.run();
         expect(zoomstart).toHaveBeenCalledTimes(0);
         expect(zoom).toHaveBeenCalledTimes(0);

@@ -92,10 +92,12 @@ export function getGridMesh(size: number): SimpleMesh {
     };
 }
 
+// A deterministic random number generator.
+// It returns random floats in range 0..1.
 // https://stackoverflow.com/a/47593316
 // https://gist.github.com/tommyettinger/46a874533244883189143505d203312c?permalink_comment_id=4365431#gistcomment-4365431
-function splitmix32(a) {
-    return function() {
+export function splitmix32(a: number): () => number {
+    return () => {
         a |= 0;
         a = a + 0x9e3779b9 | 0;
         let t = a ^ a >>> 16;

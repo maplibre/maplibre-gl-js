@@ -33,7 +33,7 @@ class ExpressionBenchmark extends Benchmark {
                 continue;
             }
 
-            const expressionData = (rawValue, propertySpec: StylePropertySpecification): DataT => {
+            const expressionData = (rawValue: any, propertySpec: StylePropertySpecification): DataT => {
                 const rawExpression = convertFunction(rawValue, propertySpec);
                 const compiledFunction = createFunction(rawValue, propertySpec) as StylePropertyExpression;
                 const compiledExpression = createPropertyExpression(rawExpression, propertySpec);
@@ -50,14 +50,14 @@ class ExpressionBenchmark extends Benchmark {
             };
 
             for (const key in layer.paint) {
-                if (isFunction(layer.paint[key])) {
-                    this.data.push(expressionData(layer.paint[key], spec[`paint_${layer.type}`][key]));
+                if (isFunction(layer.paint[key as keyof typeof layer.paint])) {
+                    this.data.push(expressionData(layer.paint[key as keyof typeof layer.paint], spec[`paint_${layer.type}`][key]));
                 }
             }
 
             for (const key in layer.layout) {
-                if (isFunction(layer.layout[key])) {
-                    this.data.push(expressionData(layer.layout[key], spec[`layout_${layer.type}`][key]));
+                if (isFunction(layer.layout[key as keyof typeof layer.layout])) {
+                    this.data.push(expressionData(layer.layout[key as keyof typeof layer.layout], spec[`layout_${layer.type}`][key]));
                 }
             }
         }

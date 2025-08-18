@@ -1,4 +1,4 @@
-import locationsWithTileID from '../lib/locations_with_tile_id';
+import locationsWithTileID, { LocationsWithTileID } from '../lib/locations_with_tile_id';
 import styleBenchmarkLocations from '../data/style-benchmark-locations.json' with {type: 'json'};
 import StyleLayerCreate from '../benchmarks/style_layer_create';
 import Validate from '../benchmarks/style_validate';
@@ -8,18 +8,25 @@ import QueryPoint from '../benchmarks/query_point';
 import QueryBox from '../benchmarks/query_box';
 
 import {getGlobalWorkerPool} from '../../../src/util/global_worker_pool';
+import {OverscaledTileID} from '../../../src/source/tile_id';
+import type Benchmark from '../lib/benchmark';
 
 const locations = locationsWithTileID(styleBenchmarkLocations.features as GeoJSON.Feature<GeoJSON.Point>[]);
 
-const benchmarks = (window as any).benchmarks = [];
+type VersionedBenchmark = {
+    name: string;
+    bench: Benchmark;
+};
 
-function register(name, Benchmark, locations?, location?) {
+const benchmarks: {name: string, versions: VersionedBenchmark[], location?: LocationsWithTileID}[] = (window as any).benchmarks = [];
+
+function register(name: string, BenchmarkCtor: new (...args: any[]) => Benchmark, locations?: LocationsWithTileID[] | OverscaledTileID[], location?: LocationsWithTileID) {
     const versions = [];
 
     for (const style of process.env.MAPLIBRE_STYLES) {
         versions.push({
-            name: typeof style === 'string' ? style : (style as any).name,
-            bench: new Benchmark(style, locations)
+            name: typeof style === 'string' ? style : (style as any).name as string,
+            bench: new BenchmarkCtor(style, locations)
         });
     }
     benchmarks.push({name, versions, location});
