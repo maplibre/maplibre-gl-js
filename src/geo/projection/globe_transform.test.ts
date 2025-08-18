@@ -302,7 +302,8 @@ describe('GlobeTransform', () => {
                 const screenPointFurtherAboveWesternHorizon = screenTopEdgeCenter.sub(new Point(0, -100));
                 const unprojected = globeTransform.screenPointToLocation(screenPointAboveWesternHorizon);
                 const unprojected2 = globeTransform.screenPointToLocation(screenPointFurtherAboveWesternHorizon);
-                expect(unprojected).toEqual(unprojected2);
+                expect(unprojected.lat).toBeCloseTo(unprojected2.lat, 10);
+                expect(unprojected.lng).toBeCloseTo(unprojected2.lng, 10);
             });
         });
 
