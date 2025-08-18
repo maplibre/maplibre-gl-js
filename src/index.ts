@@ -1,5 +1,6 @@
 import packageJSON from '../package.json' with {type: 'json'};
-import {Map, type MapOptions, type WebGLContextAttributesWithType, type CoveringTilesOptions} from './ui/map';
+import {Map, type MapOptions, type WebGLContextAttributesWithType} from './ui/map';
+import type {CoveringTilesOptionsInternal} from './geo/projection/covering_tiles';
 import {NavigationControl, type NavigationControlOptions} from './ui/control/navigation_control';
 import {GeolocateControl, type GeolocateControlOptions} from './ui/control/geolocate_control';
 import {AttributionControl, type AttributionControlOptions} from './ui/control/attribution_control';
@@ -366,5 +367,5 @@ export {
     addSourceType,
     importScriptInWorkers,
     createTileMesh,
-    CoveringTilesOptions
+    CoveringTilesOptionsInternal
 };

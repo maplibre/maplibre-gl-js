@@ -34,15 +34,24 @@ export type CoveringZoomOptions = {
     tileSize: number;
 };
 
-export type CoveringTilesOptions = CoveringZoomOptions & {
-    /**
-     * Smallest allowed tile zoom.
-     */
+/**
+ * Options for calculating covering tiles, used in {@link Map.coveringTiles}.
+ */
+export type CoveringTilesOptionsInternal = {
+    /** The size of the tiles to cover the viewport with, in pixels (e.g., 512). */
+    tileSize: number;
+    /** Optional minimum zoom level to generate tiles for. */
     minzoom?: number;
-    /**
-     * Largest allowed tile zoom.
-     */
+    /** Optional maximum zoom level to generate tiles for. */
     maxzoom?: number;
+    /** If `true`, the zoom level used for the calculation will be rounded to the nearest integer. Defaults to `false` (flooring the zoom). */
+    roundZoom?: boolean;
+};
+
+/**
+ * Internal options for covering tiles, extends public options with additional properties.
+ */
+export type CoveringTilesOptions = CoveringTilesOptionsInternal & {
     /**
      * `true` if tiles should be sent back to the worker for each overzoomed zoom level, `false` if not.
      * Fill this option when computing covering tiles for a source.
