@@ -15,20 +15,19 @@
 <body>
 <div id="map"></div>
 <script>
-  const MAPTILER_KEY = 'get_your_own_OpIi9ZULNHzrESv6T2vL';
   const map = new maplibregl.Map({
       style: {
         version: 8,
         sources: {
-            openmaptiles: {
-                url: `https://api.maptiler.com/tiles/v3/tiles.json?key=${MAPTILER_KEY}`,
+            openfreemap: {
+                url: `https://tiles.openfreemap.org/planet`,
                 type: 'vector',
             }
         },
         layers: [
             {
               'id': '3d-buildings',
-              'source': 'openmaptiles',
+              'source': 'openfreemap',
               'source-layer': 'building',
               'type': 'fill-extrusion',
               'minzoom': 13,

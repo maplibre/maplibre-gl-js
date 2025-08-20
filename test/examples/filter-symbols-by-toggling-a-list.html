@@ -145,8 +145,7 @@
     const filterGroup = document.getElementById('filter-group');
     const map = new maplibregl.Map({
         container: 'map',
-        style:
-            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        style: 'https://tiles.openfreemap.org/styles/bright',
         center: [-77.04, 38.907],
         zoom: 11.15
     });
@@ -169,7 +168,7 @@
                     'type': 'symbol',
                     'source': 'places',
                     'layout': {
-                        'icon-image': `${symbol}_15`,
+                        'icon-image': `${symbol}_11`,
                         'icon-overlap': 'always'
                     },
                     'filter': ['==', 'icon', symbol]
