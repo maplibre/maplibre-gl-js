@@ -61,7 +61,7 @@ if (exampleName === 'all') {
     const allFiles = fs.readdirSync(examplePath).filter(f => f.endsWith('html'));
     console.log(`Generating ${allFiles.length} images.`);
     for (const file of allFiles) {
-        await createImage(file);
+        await createImage(file.replace('.html', ''));
     }
 } else if (exampleName) {
     await createImage(exampleName);
