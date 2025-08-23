@@ -3,11 +3,13 @@ import sourcemaps from 'rollup-plugin-sourcemaps2';
 import {plugins, watchStagingPlugin} from './build/rollup_plugins';
 import banner from './build/banner';
 import {type RollupOptions} from 'rollup';
+import {config as cspConfig} from './rollup.config.csp';
 
 const {BUILD} = process.env;
 
 const production = BUILD === 'production';
 const outputFile = production ? 'dist/maplibre-gl.js' : 'dist/maplibre-gl-dev.js';
+const outputPostfix: string = production ? '' : '-dev';
 
 const config: RollupOptions[] = [{
     // Rollup will use code splitting to bundle GL JS into three "chunks":
@@ -62,6 +64,12 @@ const config: RollupOptions[] = [{
         // only they get built, but not the merged dev build js
         ...production ? [] : [watchStagingPlugin]
     ],
-}];
+},
+
+// ESM builds
+cspConfig('src/index.ts', `dist/maplibre-gl${outputPostfix}.mjs`, 'es'),
+cspConfig('src/source/worker.ts', `dist/maplibre-gl-worker${outputPostfix}.mjs`, 'es'),
+
+];
 
 export default config;
