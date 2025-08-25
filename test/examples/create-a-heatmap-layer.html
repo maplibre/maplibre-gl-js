@@ -18,8 +18,7 @@
 <script>
     const map = new maplibregl.Map({
         container: 'map',
-        style:
-            'https://api.maptiler.com/maps/basic/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        style: 'https://demotiles.maplibre.org/style.json',
         center: [-120, 50],
         zoom: 2
     });
@@ -102,8 +101,7 @@
                         0
                     ]
                 }
-            },
-            'waterway'
+            }
         );
 
         map.addLayer(
@@ -154,8 +152,7 @@
                         1
                     ]
                 }
-            },
-            'waterway'
+            }
         );
     });
 </script>
