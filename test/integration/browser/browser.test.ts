@@ -1,41 +1,12 @@
-import {describe, beforeEach, test, expect} from 'vitest';
-import puppeteer, {type Browser} from 'puppeteer';
-
-describe('webgl', function () {
-    let browser: Browser;
-    beforeEach(async () => {
-        browser = await puppeteer.launch({
-            headless: true,
-            args: [
-            // Current flags that enable software rendering.
-                '--disable-gpu',
-                '--enable-features=AllowSwiftShaderFallback,AllowSoftwareGLFallbackDueToCrashes',
-                '--enable-unsafe-swiftshader'
-            ],
-        });
-    });
-  
-    test('should work', async () => {
-        let page = await browser.newPage();
-        await page.evaluate(() => {
-            const canvas = document.createElement('canvas');
-            const gl = canvas.getContext('webgl');
-            if (!gl) {
-                throw new Error('WebGL context not created');
-            }
-        });
-        expect(true).toBeTruthy();
-    });
-});
-
-/*
 import {describe, beforeEach, beforeAll, afterEach, afterAll, test, expect} from 'vitest';
-import puppeteer, {type Page, type Browser} from 'puppeteer';
+import {type Page, type Browser} from 'puppeteer';
 import st from 'st';
 import http, {type Server} from 'http';
 import type {AddressInfo} from 'net';
-import type {default as MapLibreGL, Map} from '../../../dist/maplibre-gl';
+
 import {sleep} from '../../../src/util/test/util';
+import {launchPuppeteer} from '../lib/puppeteer_config';
+import type {default as MapLibreGL, Map} from '../../../dist/maplibre-gl';
 
 const testWidth = 800;
 const testHeight = 600;
@@ -56,14 +27,7 @@ describe('Browser tests', () => {
         );
         await new Promise<void>((resolve) => server.listen(resolve));
 
-        browser = await puppeteer.launch({
-            headless: true,
-            args: [
-                '--disable-gpu',
-                '--enable-features=AllowSwiftShaderFallback,AllowSoftwareGLFallbackDueToCrashes',
-                '--enable-unsafe-swiftshader'
-            ],
-        });
+        browser = await launchPuppeteer();
 
     }, 40000);
 
@@ -479,4 +443,3 @@ describe('Browser tests', () => {
         expect(center.lat).toBeCloseTo(47.29960);
     });
 });
-*/
