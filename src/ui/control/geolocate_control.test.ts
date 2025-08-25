@@ -3,13 +3,11 @@ import geolocation from 'mock-geolocation';
 import {LngLatBounds} from '../../geo/lng_lat_bounds';
 import {createMap, beforeMapTest, sleep} from '../../util/test/util';
 import {GeolocateControl} from './geolocate_control';
-import type geolocationSupport from '../../util/geolocation_support';
 vi.mock('../../util/geolocation_support', () => (
     {
         checkGeolocationSupport: vi.fn()
     }
 ));
-
 import {checkGeolocationSupport} from '../../util/geolocation_support';
 import type {LngLat} from '../../geo/lng_lat';
 
