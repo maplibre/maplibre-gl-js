@@ -2,15 +2,16 @@
 
 ### ✨ Features and improvements
 - Pass document's `lang` to Tiny-SDF to render Simplified and Traditional Chinese characters ([#6223](https://github.com/maplibre/maplibre-gl-js/issues/6223))
-- Enable `global-state` expressions in layout properties([#6209](https://github.com/maplibre/maplibre-gl-js/pull/6209))
-- Align typescript types generation with docs generation and avoid exporting non-exported types [#6217](https://github.com/maplibre/maplibre-gl-js/pull/6217)
+- Enable `global-state` expressions in layout properties ([#6209](https://github.com/maplibre/maplibre-gl-js/pull/6209))
+- Align typescript types generation with docs generation and avoid exporting non-exported types ([#6217](https://github.com/maplibre/maplibre-gl-js/pull/6217))
+- Add `coveringTiles` method to the public API of the map object ([#6292](https://github.com/maplibre/maplibre-gl-js/pull/6292))
 
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Prevent original input style JSON from being mutated by `Style.set*` methods ([#6216](https://github.com/maplibre/maplibre-gl-js/pull/6216))
 - Fix evaluating `global-state` in paint properties with other subexpressions ([#6048](https://github.com/maplibre/maplibre-gl-js/issues/6048))
-- Fix enabling terrain while transitioning [#6011](https://github.com/maplibre/maplibre-gl-js/issues/6011)
+- Fix enabling terrain while transitioning ([#6011](https://github.com/maplibre/maplibre-gl-js/issues/6011))
 
 ## 5.6.2
 

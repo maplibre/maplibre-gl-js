@@ -29,6 +29,12 @@ import {Terrain} from '../render/terrain';
 import {RenderToTexture} from '../render/render_to_texture';
 import {config} from '../util/config';
 import {defaultLocale} from './default_locale';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
+import {isAbortError} from '../util/abort_error';
+import {isFramebufferNotCompleteError} from '../util/framebuffer_error';
+import {coveringTiles, type CoveringTilesOptions, createCalculateTileZoomFunction} from '../geo/projection/covering_tiles';
+import {CanonicalTileID, type OverscaledTileID} from '../source/tile_id';
 
 import type {RequestTransformFunction} from '../util/request_manager';
 import type {LngLatLike} from '../geo/lng_lat';
@@ -60,14 +66,8 @@ import type {CanvasSourceSpecification} from '../source/canvas_source';
 import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {type ITransform} from '../geo/transform_interface';
-import {type ICameraHelper} from '../geo/projection/camera_helper';
-import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
-import {isAbortError} from '../util/abort_error';
-import {isFramebufferNotCompleteError} from '../util/framebuffer_error';
-import {createCalculateTileZoomFunction} from '../geo/projection/covering_tiles';
-import {CanonicalTileID} from '../source/tile_id';
+import type {ITransform} from '../geo/transform_interface';
+import type {ICameraHelper} from '../geo/projection/camera_helper';
 
 const version = packageJSON.version;
 
@@ -882,6 +882,22 @@ export class Map extends Camera {
      */
     hasControl(control: IControl): boolean {
         return this._controls.indexOf(control) > -1;
+    }
+
+    /**
+    * Returns an array of `OverscaledTileID` objects that cover the current viewport for a given tile size.
+    * This method is useful for determining which tiles are visible in the current viewport.
+    *
+    * @param options - Options for calculating the covering tiles.
+    * @returns An array of `OverscaledTileID` objects.
+    * @example
+    * ```ts
+    * // Get the tiles to cover the view for a 512x512px tile source
+    * const tiles = map.coveringTiles({tileSize: 512});
+    * ```
+    */
+    coveringTiles(options: CoveringTilesOptions): OverscaledTileID[] {
+        return coveringTiles(this.transform, options);
     }
 
     calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo?: number): CameraOptions {
