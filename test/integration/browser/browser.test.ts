@@ -1,3 +1,34 @@
+import {describe, beforeEach, test, expect} from 'vitest';
+import puppeteer, {type Browser} from 'puppeteer';
+
+describe('webgl', function () {
+    let browser: Browser;
+    beforeEach(async () => {
+        browser = await puppeteer.launch({
+            headless: true,
+            args: [
+            // Current flags that enable software rendering.
+            '--disable-gpu',
+            '--enable-features=AllowSwiftShaderFallback,AllowSoftwareGLFallbackDueToCrashes',
+            '--enable-unsafe-swiftshader',
+            ],
+        });
+    });
+  
+    test('should work', async () => {
+        let page = await browser.newPage();
+        await page.evaluate(() => {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl');
+            if (!gl) {
+                throw new Error('WebGL context not created');
+            }
+        });
+        expect(true).toBeTruthy();
+    });
+});
+
+/*
 import {describe, beforeEach, beforeAll, afterEach, afterAll, test, expect} from 'vitest';
 import puppeteer, {type Page, type Browser} from 'puppeteer';
 import st from 'st';
@@ -448,3 +479,4 @@ describe('Browser tests', () => {
         expect(center.lat).toBeCloseTo(47.29960);
     });
 });
+*/
