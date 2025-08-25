@@ -462,7 +462,7 @@ export class GeolocateControl extends Evented implements IControl {
 
     _updateCircleRadiusIfNeeded() {
         const userLocation = this._userLocationDotMarker.getLngLat();
-        if (!this.options.showUserLocation || !this.options.showAccuracyCircle || !this._accuracy ||!userLocation) {
+        if (!this.options.showUserLocation || !this.options.showAccuracyCircle || !this._accuracy || !userLocation) {
             return;
         }
         const screenPosition = this._map.project(userLocation);
