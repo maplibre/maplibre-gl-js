@@ -469,8 +469,8 @@ export class GeolocateControl extends Evented implements IControl {
         const userLocationWith100Px = this._map.unproject([screenPosition.x + 100, screenPosition.y]);
         const pixelsToMeters = userLocation.distanceTo(userLocationWith100Px) / 100;
         const circleDiameter = 2 * this._accuracy / pixelsToMeters;
-        this._circleElement.style.width = `${circleDiameter}px`;
-        this._circleElement.style.height = `${circleDiameter}px`;
+        this._circleElement.style.width = `${circleDiameter.toFixed(2)}px`;
+        this._circleElement.style.height = `${circleDiameter.toFixed(2)}px`;
     }
 
     _onUpdate = () => {
