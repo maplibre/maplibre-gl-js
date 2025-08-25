@@ -608,22 +608,22 @@ describe('GeolocateControl with no options', () => {
         let zoomendPromise = map.once('zoomend');
         map.zoomTo(12, {duration: 0});
         await zoomendPromise;
-        expect(geolocate._circleElement.style.width).toBe('79px');
+        expect(geolocate._circleElement.style.width).toBe('74.48px');
         zoomendPromise = map.once('zoomend');
         map.zoomTo(10, {duration: 0});
         await zoomendPromise;
-        expect(geolocate._circleElement.style.width).toBe('20px');
+        expect(geolocate._circleElement.style.width).toBe('18.62px');
         zoomendPromise = map.once('zoomend');
 
         // test with smaller radius
         geolocation.send({latitude: 10, longitude: 20, accuracy: 20});
         map.zoomTo(20, {duration: 0});
         await zoomendPromise;
-        expect(geolocate._circleElement.style.width).toBe('19982px');
+        expect(geolocate._circleElement.style.width).toBe('19063.56px');
         zoomendPromise = map.once('zoomend');
         map.zoomTo(18, {duration: 0});
         await zoomendPromise;
-        expect(geolocate._circleElement.style.width).toBe('4996px');
+        expect(geolocate._circleElement.style.width).toBe('4766.49px');
     });
 
     test('shown even if trackUserLocation = false', async () => {
