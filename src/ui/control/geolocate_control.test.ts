@@ -4,16 +4,11 @@ import {LngLatBounds} from '../../geo/lng_lat_bounds';
 import {createMap, beforeMapTest, sleep} from '../../util/test/util';
 import {GeolocateControl} from './geolocate_control';
 import type geolocationSupport from '../../util/geolocation_support';
-
-// IMPORTANT: partial mock — keep real implementations except for checkGeolocationSupport
-vi.mock('../../util/geolocation_support', async () => {
-    const actual = await vi.importActual<typeof geolocationSupport>('../../util/geolocation_support');
-    return {
-        ...actual,
-        checkGeolocationSupport: vi.fn(), // mocked
-        // computeCirclePixelDiameter stays real via ...actual
-    };
-});
+vi.mock('../../util/geolocation_support', () => (
+    {
+        checkGeolocationSupport: vi.fn()
+    }
+));
 
 import {checkGeolocationSupport} from '../../util/geolocation_support';
 import type {LngLat} from '../../geo/lng_lat';
