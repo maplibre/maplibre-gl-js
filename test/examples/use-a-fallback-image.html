@@ -17,7 +17,7 @@
 <script>
     const map = new maplibregl.Map({
         container: 'map',
-        style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        style: 'https://tiles.openfreemap.org/styles/bright',
         center: [-77, 38.75],
         zoom: 5
     });
@@ -72,11 +72,11 @@
             'layout': {
                 'icon-image': [
                     'coalesce',
-                    ['image', ['concat', ['get', 'icon'], '_15']],
-                    ['image', 'marker_15']
+                    ['image', ['concat', ['get', 'icon'], '_11']],
+                    ['image', 'marker_11']
                 ],
                 'text-field': ['get', 'title'],
-                'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+                'text-font': ['Noto Sans Regular'],
                 'text-offset': [0, 0.6],
                 'text-anchor': 'top'
             }

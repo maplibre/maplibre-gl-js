@@ -1258,6 +1258,27 @@ describe('easeTo', () => {
 
         expect(spy.mock.calls.find(c => 'done' in c[0])).toBeTruthy();
     });
+
+    test('terrain set during easeTo', () => {
+        const camera = createCamera();
+        const stubNow = vi.spyOn(browser, 'now');
+
+        stubNow.mockImplementation(() => 0);
+
+        camera.easeTo({bearing: 97, duration: 500});
+        
+        stubNow.mockImplementation(() => 100);
+        camera.simulateFrame();
+
+        const terrain = {getMinTileElevationForLngLatZoom: () => 0,
+            getElevationForLngLatZoom: () => 0};
+        camera.terrain = terrain as any;
+
+        stubNow.mockImplementation(() => 500);
+        camera.simulateFrame();
+
+        expect(camera.getBearing()).toEqual(97);
+    });
 });
 
 describe('flyTo', () => {

@@ -1,7 +1,7 @@
 import {beforeEach, describe, expect, test} from 'vitest';
 import {GlobeTransform} from './globe_transform';
 import {LngLat} from '../lng_lat';
-import {coveringTiles, coveringZoomLevel, createCalculateTileZoomFunction, type CoveringZoomOptions} from './covering_tiles';
+import {coveringTiles, coveringZoomLevel, createCalculateTileZoomFunction, type CoveringTilesOptions} from './covering_tiles';
 import {OverscaledTileID} from '../../source/tile_id';
 import {MercatorTransform} from './mercator_transform';
 import {globeConstants} from './vertical_perspective_projection';
@@ -676,7 +676,7 @@ describe('coveringTiles', () => {
 
 describe('coveringZoomLevel', () => {
     let transform: MercatorTransform;
-    let options: CoveringZoomOptions;
+    let options: CoveringTilesOptions;
 
     beforeEach(() => {
         transform = new MercatorTransform(0, 22, 0, 60, true);

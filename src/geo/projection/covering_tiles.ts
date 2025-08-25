@@ -23,7 +23,15 @@ type CoveringTilesStackEntry = {
     fullyVisible: boolean;
 };
 
-export type CoveringZoomOptions = {
+export type CoveringTilesOptions = {
+    /**
+     * Smallest allowed tile zoom.
+     */
+    minzoom?: number;
+    /**
+     * Largest allowed tile zoom.
+     */
+    maxzoom?: number;
     /**
      * Whether to round or floor the target zoom level. If true, the value will be rounded to the closest integer. Otherwise the value will be floored.
      */
@@ -34,15 +42,7 @@ export type CoveringZoomOptions = {
     tileSize: number;
 };
 
-export type CoveringTilesOptions = CoveringZoomOptions & {
-    /**
-     * Smallest allowed tile zoom.
-     */
-    minzoom?: number;
-    /**
-     * Largest allowed tile zoom.
-     */
-    maxzoom?: number;
+export type CoveringTilesOptionsInternal = CoveringTilesOptions & {
     /**
      * `true` if tiles should be sent back to the worker for each overzoomed zoom level, `false` if not.
      * Fill this option when computing covering tiles for a source.
@@ -160,7 +160,7 @@ const defaultCalculateTileZoom = createCalculateTileZoomFunction(defaultMaxZoomL
  * @param options - The options, most importantly the source's tile size.
  * @returns An integer zoom level at which all tiles will be visible.
  */
-export function coveringZoomLevel(transform: IReadonlyTransform, options: CoveringZoomOptions): number {
+export function coveringZoomLevel(transform: IReadonlyTransform, options: CoveringTilesOptions): number {
     const z = (options.roundZoom ? Math.round : Math.floor)(
         transform.zoom + scaleZoom(transform.tileSize / options.tileSize)
     );
@@ -180,7 +180,7 @@ export function coveringZoomLevel(transform: IReadonlyTransform, options: Coveri
  * @param details - Interface to define required helper functions.
  * @returns A list of tile coordinates, ordered by ascending distance from camera.
  */
-export function coveringTiles(transform: IReadonlyTransform, options: CoveringTilesOptions): OverscaledTileID[] {
+export function coveringTiles(transform: IReadonlyTransform, options: CoveringTilesOptionsInternal): OverscaledTileID[] {
     const frustum = transform.getCameraFrustum();
     const plane = transform.getClippingPlane();
     const cameraCoord = transform.screenPointToMercatorCoordinate(transform.getCameraPoint());

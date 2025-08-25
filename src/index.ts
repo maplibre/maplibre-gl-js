@@ -51,7 +51,7 @@ import type {AnimationOptions, CameraForBoundsOptions, CameraOptions, CameraUpda
 import type {DistributiveKeys, DistributiveOmit, GeoJSONFeature, MapGeoJSONFeature} from './util/vectortile_to_geojson';
 import type {Handler, HandlerResult} from './ui/handler_manager';
 import type {Complete, RequireAtLeastOne, Subscription} from './util/util';
-import type {CalculateTileZoomFunction} from './geo/projection/covering_tiles';
+import type {CalculateTileZoomFunction, CoveringTilesOptions} from './geo/projection/covering_tiles';
 import type {StyleImage, StyleImageData, StyleImageInterface, StyleImageMetadata, TextFit} from './style/style_image';
 import type {StyleLayer} from './style/style_layer';
 import type {Tile} from './source/tile';
@@ -350,6 +350,7 @@ export {
     type MapContextEvent,
     type ErrorEvent,
     type GeoJSONFeature,
+    type CoveringTilesOptions,
     setRTLTextPlugin,
     getRTLTextPluginStatus,
     prewarm,
