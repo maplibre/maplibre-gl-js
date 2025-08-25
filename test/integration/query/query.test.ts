@@ -1,21 +1,20 @@
 import {describe, beforeAll, afterAll, test, expect} from 'vitest';
-import puppeteer, {type Page, type Browser} from 'puppeteer';
-
-import {deepEqual} from '../lib/json-diff';
+import {globSync} from 'glob';
+import {CoverageReport} from 'monocart-coverage-reports';
 import st from 'st';
 import http from 'node:http';
-import type {Server} from 'node:http';
-
 import path from 'node:path/posix';
 import fs from 'node:fs';
+import type {Page, Browser} from 'puppeteer';
+import type {Server} from 'node:http';
 import type {AddressInfo} from 'node:net';
 
+import {deepEqual} from '../lib/json-diff';
 import {localizeURLs} from '../lib/localize-urls';
-import {globSync} from 'glob';
+import {launchPuppeteer} from '../lib/puppeteer_config';
+import type {default as MapLibreGL} from '../../../dist/maplibre-gl';
 
-import type * as maplibreglModule from '../../../dist/maplibre-gl';
-import {CoverageReport} from 'monocart-coverage-reports';
-let maplibregl: typeof maplibreglModule;
+let maplibregl: typeof MapLibreGL;
 
 async function performQueryOnFixture(fixture)  {
 
@@ -105,13 +104,7 @@ describe('query tests', () => {
                 cors: true,
             })
         );
-        browser = await puppeteer.launch({
-            headless: true,
-            args: [
-                '--enable-webgl', 
-                '--no-sandbox',
-            ],
-        });
+        browser = await launchPuppeteer();
         await new Promise<void>((resolve) => server.listen(resolve));
         page = await browser.newPage();
         await page.coverage.startJSCoverage({includeRawScriptCoverage: true});

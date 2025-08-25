@@ -6,15 +6,16 @@ import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
 import {globSync} from 'glob';
 import http from 'http';
-import puppeteer, {type Page, type Browser} from 'puppeteer';
 import {CoverageReport} from 'monocart-coverage-reports';
-import {localizeURLs} from '../lib/localize-urls';
-import type {Map as MaplibreMap, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
 import junitReportBuilder, {type TestSuite} from 'junit-report-builder';
-import type * as maplibreglModule from '../../../dist/maplibre-gl';
+import type {Page, Browser} from 'puppeteer';
+
+import {localizeURLs} from '../lib/localize-urls';
+import {launchPuppeteer} from '../lib/puppeteer_config';
+import type {default as MapLibreGL, Map as MaplibreMap, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-let maplibregl: typeof maplibreglModule;
+let maplibregl: typeof MapLibreGL;
 
 type TestData = {
     id: string;
@@ -982,13 +983,7 @@ async function executeRenderTests() {
         options.openBrowser = checkParameter(options, '--open-browser');
     }
 
-    const browser = await puppeteer.launch({
-        headless: !options.openBrowser,
-        args: [
-            '--enable-webgl',
-            '--no-sandbox',
-            '--disable-web-security'
-        ]});
+    const browser = await launchPuppeteer(!options.openBrowser);
 
     const mount = st({
         path: 'test/integration/assets',
@@ -996,6 +991,9 @@ async function executeRenderTests() {
         passthrough: true,
     });
     const server = http.createServer((req, res) => {
+        res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all origins, or specify 'http://your-frontend-domain.com'
+        res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET, POST, PUT, DELETE');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Include any custom headers your client might send
         mount(req, res, () => {
             if (req.url.includes('/sparse204/1-')) {
                 res.writeHead(204);
