@@ -8,9 +8,9 @@ describe('webgl', function () {
             headless: true,
             args: [
             // Current flags that enable software rendering.
-            '--disable-gpu',
-            '--enable-features=AllowSwiftShaderFallback,AllowSoftwareGLFallbackDueToCrashes',
-            '--enable-unsafe-swiftshader',
+                '--disable-gpu',
+                '--enable-features=AllowSwiftShaderFallback,AllowSoftwareGLFallbackDueToCrashes',
+                '--enable-unsafe-swiftshader'
             ],
         });
     });

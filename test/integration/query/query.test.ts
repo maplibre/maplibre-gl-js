@@ -108,8 +108,9 @@ describe('query tests', () => {
         browser = await puppeteer.launch({
             headless: true,
             args: [
-                '--enable-webgl', 
-                '--no-sandbox',
+                '--disable-gpu',
+                '--enable-features=AllowSwiftShaderFallback,AllowSoftwareGLFallbackDueToCrashes',
+                '--enable-unsafe-swiftshader'
             ],
         });
         await new Promise<void>((resolve) => server.listen(resolve));
