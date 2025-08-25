@@ -5,8 +5,8 @@
     <meta property="og:description" content="Place attribution in the top-left position when initializing a map." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -18,10 +18,9 @@
 <script>
     const map = new maplibregl.Map({
         container: 'map',
-        style:
-            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        style: 'https://demotiles.maplibre.org/style.json',
         center: [-77.04, 38.907],
-        zoom: 11.15,
+        zoom: 2,
         attributionControl: false
     });
     map.addControl(new maplibregl.AttributionControl(), 'top-left');

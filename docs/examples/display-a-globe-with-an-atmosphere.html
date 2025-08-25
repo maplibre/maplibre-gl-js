@@ -5,8 +5,8 @@
     <meta property="og:description" content="Display a globe with an atmosphere." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -31,7 +31,7 @@
             },
             'sources': {
                 'satellite': {
-                    'url': 'https://api.maptiler.com/tiles/satellite-v2/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+                    'tiles': ['https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg'],
                     'type': 'raster'
                 },
             },

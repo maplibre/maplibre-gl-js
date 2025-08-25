@@ -1,0 +1,8362 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="MapLibre GL JS is a TypeScript library that uses WebGL to render interactive maps from vector tiles in a browser.">
+      
+      
+      
+        <link rel="canonical" href="https://www.maplibre.org/maplibre-gl-js/docs/API/interfaces/StyleLayer/">
+      
+      
+        <link rel="prev" href="../StyleImageInterface/">
+      
+      
+        <link rel="next" href="../Subscription/">
+      
+      
+      <link rel="icon" href="https://maplibre.org/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.18">
+    
+    
+      
+        <title>StyleLayer - MapLibre GL JS</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.7e37652d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+      
+        <meta  property="og:type"  content="website" >
+      
+        <meta  property="og:title"  content="StyleLayer - MapLibre GL JS" >
+      
+        <meta  property="og:description"  content="MapLibre GL JS is a TypeScript library that uses WebGL to render interactive maps from vector tiles in a browser." >
+      
+        <meta  property="og:image"  content="https://www.maplibre.org/maplibre-gl-js/docs/assets/images/social/API/interfaces/StyleLayer.png" >
+      
+        <meta  property="og:image:type"  content="image/png" >
+      
+        <meta  property="og:image:width"  content="1200" >
+      
+        <meta  property="og:image:height"  content="630" >
+      
+        <meta  property="og:url"  content="https://www.maplibre.org/maplibre-gl-js/docs/API/interfaces/StyleLayer/" >
+      
+        <meta  name="twitter:card"  content="summary_large_image" >
+      
+        <meta  name="twitter:title"  content="StyleLayer - MapLibre GL JS" >
+      
+        <meta  name="twitter:description"  content="MapLibre GL JS is a TypeScript library that uses WebGL to render interactive maps from vector tiles in a browser." >
+      
+        <meta  name="twitter:image"  content="https://www.maplibre.org/maplibre-gl-js/docs/assets/images/social/API/interfaces/StyleLayer.png" >
+      
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#stylelayer" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="MapLibre GL JS" class="md-header__button md-logo" aria-label="MapLibre GL JS" data-md-component="logo">
+      
+  <img src="../../../assets/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            MapLibre GL JS
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              StyleLayer
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to system preference"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to system preference" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/maplibre/maplibre-gl-js/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Introduction
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../plugins/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Plugins
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../style-spec/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Style Specifications
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../" class="md-tabs__link">
+          
+  
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../examples/" class="md-tabs__link">
+          
+  
+  
+  Examples
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../guides/" class="md-tabs__link">
+          
+  
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="MapLibre GL JS" class="md-nav__button md-logo" aria-label="MapLibre GL JS" data-md-component="logo">
+      
+  <img src="../../../assets/logo.svg" alt="logo">
+
+    </a>
+    MapLibre GL JS
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/maplibre/maplibre-gl-js/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Introduction
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../plugins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Plugins
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../style-spec/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Style Specifications
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    API
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            API
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Intro
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+     media
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+             media
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_media/CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Contributing to MapLibre GL JS
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Classes
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            Classes
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/AJAXError/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    AJAXError
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/AttributionControl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    AttributionControl
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/BoxZoomHandler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    BoxZoomHandler
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/CanvasSource/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CanvasSource
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/CooperativeGesturesHandler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CooperativeGesturesHandler
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/DoubleClickZoomHandler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    DoubleClickZoomHandler
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/DragPanHandler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    DragPanHandler
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/DragRotateHandler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    DragRotateHandler
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/EdgeInsets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    EdgeInsets
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/Event/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Event
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/Evented/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Evented
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/FullscreenControl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FullscreenControl
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/GeoJSONSource/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    GeoJSONSource
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/GeolocateControl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    GeolocateControl
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/GlobeControl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    GlobeControl
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/Hash/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Hash
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/ImageSource/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ImageSource
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/KeyboardHandler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    KeyboardHandler
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/LngLat/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    LngLat
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/LngLatBounds/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    LngLatBounds
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/LogoControl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    LogoControl
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/Map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Map
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/MapMouseEvent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MapMouseEvent
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/MapTouchEvent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MapTouchEvent
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/MapWheelEvent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MapWheelEvent
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/Marker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Marker
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/MercatorCoordinate/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MercatorCoordinate
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/NavigationControl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    NavigationControl
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/Popup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Popup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/RasterDEMTileSource/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    RasterDEMTileSource
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/RasterTileSource/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    RasterTileSource
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/ScaleControl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ScaleControl
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/ScrollZoomHandler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ScrollZoomHandler
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/Style/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Style
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/TerrainControl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    TerrainControl
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/TwoFingersTouchPitchHandler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    TwoFingersTouchPitchHandler
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/TwoFingersTouchRotateHandler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    TwoFingersTouchRotateHandler
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/TwoFingersTouchZoomHandler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    TwoFingersTouchZoomHandler
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/TwoFingersTouchZoomRotateHandler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    TwoFingersTouchZoomRotateHandler
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/VectorTileSource/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    VectorTileSource
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/VideoSource/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    VideoSource
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Enumerations
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            Enumerations
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../enumerations/MessageType/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MessageType
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../enumerations/ResourceType/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ResourceType
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../enumerations/TextFit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    TextFit
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Functions
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            Functions
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../functions/addProtocol/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    addProtocol()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../functions/addSourceType/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    addSourceType()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../functions/clearPrewarmedResources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    clearPrewarmedResources()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../functions/createTileMesh/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    createTileMesh()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../functions/getMaxParallelImageRequests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    getMaxParallelImageRequests()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../functions/getRTLTextPluginStatus/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    getRTLTextPluginStatus()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../functions/getVersion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    getVersion()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../functions/getWorkerCount/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    getWorkerCount()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../functions/getWorkerUrl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    getWorkerUrl()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../functions/importScriptInWorkers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    importScriptInWorkers()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../functions/prewarm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    prewarm()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../functions/removeProtocol/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    removeProtocol()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../functions/setMaxParallelImageRequests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    setMaxParallelImageRequests()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../functions/setRTLTextPlugin/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    setRTLTextPlugin()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../functions/setWorkerCount/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    setWorkerCount()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../functions/setWorkerUrl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    setWorkerUrl()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Interfaces
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            Interfaces
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Actor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Actor
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../AlphaImage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    AlphaImage
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CustomLayerInterface/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CustomLayerInterface
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Dispatcher/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Dispatcher
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ErrorEvent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ErrorEvent
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FeatureIndex/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FeatureIndex
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GeoJSONFeature/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    GeoJSONFeature
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Handler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Handler
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../IActor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    IActor
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../IControl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    IControl
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ImageAtlas/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ImageAtlas
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../OverscaledTileID/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    OverscaledTileID
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Source/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Source
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../StyleImageInterface/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    StyleImageInterface
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    StyleLayer
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    StyleLayer
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#extends" class="md-nav__link">
+    <span class="md-ellipsis">
+      Extends
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#getlayoutaffectingglobalstaterefs" class="md-nav__link">
+    <span class="md-ellipsis">
+      getLayoutAffectingGlobalStateRefs()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getpaintaffectingglobalstaterefs" class="md-nav__link">
+    <span class="md-ellipsis">
+      getPaintAffectingGlobalStateRefs()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#listens" class="md-nav__link">
+    <span class="md-ellipsis">
+      listens()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#off" class="md-nav__link">
+    <span class="md-ellipsis">
+      off()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#on" class="md-nav__link">
+    <span class="md-ellipsis">
+      on()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#once" class="md-nav__link">
+    <span class="md-ellipsis">
+      once()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#seteventedparent" class="md-nav__link">
+    <span class="md-ellipsis">
+      setEventedParent()
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Subscription/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Subscription
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Tile/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tile
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Type aliases
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            Type aliases
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/ActorMessage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ActorMessage&lt;T&gt;
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/AddLayerObject/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    AddLayerObject
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/AddProtocolAction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    AddProtocolAction()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/Alignment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Alignment
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/AnimationOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    AnimationOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/AroundCenterOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    AroundCenterOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/AttributionControlOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    AttributionControlOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/CalculateTileZoomFunction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CalculateTileZoomFunction()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/CameraForBoundsOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CameraForBoundsOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/CameraOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CameraOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/CameraUpdateTransformFunction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CameraUpdateTransformFunction()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/CanvasSourceSpecification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CanvasSourceSpecification
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/CenterZoomBearing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CenterZoomBearing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/Complete/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Complete&lt;T&gt;
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/ControlPosition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ControlPosition
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/Coordinates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Coordinates
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/CreateTileMeshOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CreateTileMeshOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/CustomRenderMethod/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CustomRenderMethod()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/CustomRenderMethodInput/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CustomRenderMethodInput
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/DistributiveKeys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    DistributiveKeys&lt;T&gt;
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/DistributiveOmit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    DistributiveOmit&lt;T, K&gt;
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/DragPanOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    DragPanOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/EaseToOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    EaseToOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/ExpiryData/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ExpiryData
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/FeatureIdentifier/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FeatureIdentifier
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/FitBoundsOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FitBoundsOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/FlyToOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FlyToOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/FullscreenControlOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FullscreenControlOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/GeoJSONFeatureDiff/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    GeoJSONFeatureDiff
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/GeoJSONFeatureId/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    GeoJSONFeatureId
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/GeoJSONSourceDiff/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    GeoJSONSourceDiff
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/GeolocateControlOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    GeolocateControlOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/GestureOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    GestureOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/GetResourceResponse/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    GetResourceResponse&lt;T&gt;
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/GlyphPosition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    GlyphPosition
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/GlyphPositions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    GlyphPositions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/HandlerResult/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    HandlerResult
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/IndicesType/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    IndicesType
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/JumpToOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    JumpToOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/Listener/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Listener()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/LngLatBoundsLike/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    LngLatBoundsLike
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/LngLatLike/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    LngLatLike
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/LogoControlOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    LogoControlOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/MapContextEvent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MapContextEvent
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/MapDataEvent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MapDataEvent
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/MapEventType/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MapEventType
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/MapGeoJSONFeature/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MapGeoJSONFeature
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/MapLayerEventType/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MapLayerEventType
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/MapLayerMouseEvent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MapLayerMouseEvent
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/MapLayerTouchEvent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MapLayerTouchEvent
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/MapLibreEvent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MapLibreEvent&lt;TOrig&gt;
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/MapLibreZoomEvent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MapLibreZoomEvent
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/MapOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MapOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/MapProjectionEvent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MapProjectionEvent
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/MapSourceDataEvent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MapSourceDataEvent
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/MapSourceDataType/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MapSourceDataType
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/MapStyleDataEvent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MapStyleDataEvent
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/MapStyleImageMissingEvent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MapStyleImageMissingEvent
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/MapTerrainEvent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MapTerrainEvent
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/MarkerOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MarkerOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/NavigationControlOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    NavigationControlOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/Offset/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Offset
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/PaddingOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    PaddingOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/PointLike/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    PointLike
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/PopupOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    PopupOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/PositionAnchor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    PositionAnchor
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/ProjectionData/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ProjectionData
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/QueryRenderedFeaturesOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    QueryRenderedFeaturesOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/QuerySourceFeatureOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    QuerySourceFeatureOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/RequestParameters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    RequestParameters
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/RequestResponseMessageMap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    RequestResponseMessageMap
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/RequestTransformFunction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    RequestTransformFunction()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/RequireAtLeastOne/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    RequireAtLeastOne&lt;T&gt;
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/ScaleControlOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ScaleControlOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/SetClusterOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    SetClusterOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/SourceClass/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    SourceClass()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/StyleGlyph/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    StyleGlyph
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/StyleImage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    StyleImage
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/StyleImageData/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    StyleImageData
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/StyleImageMetadata/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    StyleImageMetadata
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/StyleOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    StyleOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/StyleSetterOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    StyleSetterOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/StyleSwapOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    StyleSwapOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/TileMesh/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    TileMesh
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/TransformStyleFunction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    TransformStyleFunction()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/Unit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Unit
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/UpdateImageOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    UpdateImageOptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/WorkerTileResult/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    WorkerTileResult
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Examples
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/3d-terrain/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    3D Terrain
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-a-3d-model-to-globe-using-threejs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a 3D model to globe using three.js
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-a-3d-model-using-threejs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a 3D model using three.js
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-a-3d-model-with-babylonjs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a 3D model with babylon.js
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-a-3d-model-with-shadow-using-threejs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a 3D model with shadow using three.js
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-a-canvas-source/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a canvas source
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-a-cog-raster-source/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a COG raster source
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-a-color-relief-layer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a color relief layer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-a-custom-layer-with-tiles-to-a-globe/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a custom layer with tiles to a globe
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-a-custom-style-layer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a custom style layer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-a-default-marker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a default marker
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-a-generated-icon-to-the-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a generated icon to the map
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-a-geojson-line/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a GeoJSON line
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-a-geojson-polygon/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a GeoJSON polygon
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-a-hillshade-layer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a hillshade layer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-a-multidirectional-hillshade-layer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a multidirectional hillshade layer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-a-new-layer-below-labels/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a new layer below labels
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-a-pattern-to-a-polygon/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a pattern to a polygon
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-a-raster-tile-source/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a raster tile source
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-a-simple-custom-layer-on-a-globe/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a simple custom layer on a globe
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-a-stretchable-image-to-the-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a stretchable image to the map
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-a-vector-tile-source/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a vector tile source
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-a-video/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a video
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-a-wms-source/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add a WMS source
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-an-animated-icon-to-the-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add an animated icon to the map
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-an-icon-to-the-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add an icon to the map
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-contour-lines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add Contour Lines
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-custom-icons-with-markers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add custom icons with Markers
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-live-realtime-data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add live realtime data
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-multiple-geometries-from-one-geojson-source/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add multiple geometries from one GeoJSON source
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/add-support-for-right-to-left-scripts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Add support for right-to-left scripts
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/adding-3d-models-using-threejs-on-terrain/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Adding 3D models using three.js on terrain
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/animate-a-line/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Animate a line
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/animate-a-marker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Animate a marker
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/animate-a-point-along-a-route/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Animate a point along a route
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/animate-a-point/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Animate a point
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/animate-a-series-of-images/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Animate a series of images
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/animate-map-camera-around-a-point/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Animate map camera around a point
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/animate-symbol-to-follow-the-mouse/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Animate symbol to follow the mouse
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/attach-a-popup-to-a-marker-instance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Attach a popup to a marker instance
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/center-the-map-on-a-clicked-symbol/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Center the map on a clicked symbol
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/change-a-layers-color-with-buttons/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Change a layer's color with buttons
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/change-a-maps-language/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Change a map's language
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/change-building-color-based-on-zoom-level/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Change building color based on zoom level
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/change-the-case-of-labels/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Change the case of labels
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/change-the-default-position-for-attribution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Change the default position for attribution
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/check-if-webgl-is-supported/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Check if WebGL is supported
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/cooperative-gestures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Cooperative gestures
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/create-a-draggable-marker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Create a draggable Marker
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/create-a-draggable-point/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Create a draggable point
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/create-a-gradient-line-using-an-expression/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Create a gradient line using an expression
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/create-a-heatmap-layer-on-a-globe-with-terrain-elevation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Create a Heatmap layer on a globe with terrain elevation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/create-a-heatmap-layer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Create a heatmap layer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/create-a-hover-effect/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Create a hover effect
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/create-a-time-slider/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Create a time slider
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/create-and-style-clusters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Create and style clusters
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/create-deckgl-layer-using-rest-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Create deck.gl layer using REST API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/customize-camera-animations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Customize camera animations
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/disable-map-rotation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Disable map rotation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/disable-scroll-zoom/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Disable scroll zoom
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/display-a-globe-with-a-fill-extrusion-layer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Display a globe with a fill extrusion layer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/display-a-globe-with-a-vector-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Display a globe with a vector map
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/display-a-globe-with-an-atmosphere/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Display a globe with an atmosphere
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/display-a-hybrid-satellite-map-with-terrain-elevation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Display a hybrid satellite map with terrain elevation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/display-a-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Display a map
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/display-a-non-interactive-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Display a non-interactive map
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/display-a-popup-on-click/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Display a popup on click
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/display-a-popup-on-hover/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Display a popup on hover
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/display-a-popup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Display a popup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/display-a-remote-svg-symbol/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Display a remote SVG symbol
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/display-a-satellite-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Display a satellite map
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/display-and-style-rich-text-labels/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Display and style rich text labels
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/display-buildings-in-3d/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Display buildings in 3D
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/display-html-clusters-with-custom-properties/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Display HTML clusters with custom properties
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/display-line-that-crosses-180th-meridian/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Display line that crosses 180th meridian
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/display-map-navigation-controls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Display map navigation controls
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/draw-a-circle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Draw a Circle
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/draw-geojson-points/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Draw GeoJSON points
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/draw-geometries-with-terra-draw/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Draw geometries with terra-draw
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/draw-polygon-with-mapbox-gl-draw/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Draw polygon with mapbox-gl-draw
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/extrude-polygons-for-3d-indoor-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Extrude polygons for 3D indoor mapping
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/filter-layer-symbols-using-global-state/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Filter layer symbols using global state
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/filter-symbols-by-text-input/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Filter symbols by text input
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/filter-symbols-by-toggling-a-list/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Filter symbols by toggling a list
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/filter-within-a-layer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Filter within a Layer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/fit-a-map-to-a-bounding-box/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Fit a map to a bounding box
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/fit-to-the-bounds-of-a-linestring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Fit to the bounds of a LineString
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/fly-to-a-location-based-on-scroll-position/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Fly to a location based on scroll position
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/fly-to-a-location/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Fly to a location
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/generate-and-add-a-missing-icon-to-the-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Generate and add a missing icon to the map
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/geocode-with-nominatim/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Geocode with Nominatim
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/get-coordinates-of-the-mouse-pointer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Get coordinates of the mouse pointer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/get-features-under-the-mouse-pointer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Get features under the mouse pointer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/hash-routing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Hash routing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/jump-to-a-series-of-locations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Jump to a series of locations
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/level-of-detail-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Level of Detail Control
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/locate-the-user/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Locate the user
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/measure-distances/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Measure distances
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/navigate-the-map-with-game-like-controls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Navigate the map with game-like controls
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/offset-the-vanishing-point-using-padding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Offset the vanishing point using padding
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/pmtiles-source-and-protocol/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    PMTiles source and protocol
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/render-world-copies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Render world copies
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/restrict-map-panning-to-an-area/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Restrict map panning to an area
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/set-center-point-above-ground/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Set center point above ground
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/set-pitch-and-bearing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Set pitch and bearing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/show-polygon-information-on-click/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Show polygon information on click
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/sky-fog-terrain/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Sky, Fog, Terrain
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/slowly-fly-to-a-location/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Slowly fly to a location
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/style-lines-with-a-data-driven-property/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Style lines with a data-driven property
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/sync-movement-of-multiple-maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Sync movement of multiple maps
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/toggle-deckgl-layer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Toggle deck.gl layer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/toggle-interactions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Toggle interactions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/update-a-feature-in-realtime/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Update a feature in realtime
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/use-a-fallback-image/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Use a fallback image
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/use-addprotocol-to-transform-feature-properties/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Use addProtocol to Transform Feature Properties
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/use-locally-generated-ideographs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Use locally generated ideographs
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/variable-label-placement-with-offset/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Variable label placement with offset
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/variable-label-placement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Variable label placement
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/view-a-fullscreen-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    View a fullscreen map
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/view-local-geojson-experimental/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    View local GeoJSON (experimental)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/view-local-geojson/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    View local GeoJSON
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/visualize-population-density/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Visualize population density
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/zoom-and-planet-size-relation-on-globe/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Zoom and planet size relation on globe
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Guides
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guides/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Guides
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guides/large-data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Optimising MapLibre Performance: Tips for Large GeoJSON Datasets
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guides/leaflet-migration-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Leaflet migration guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guides/mapbox-migration-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Mapbox migration guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guides/openlayers-migration-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    OpenLayers migration guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#extends" class="md-nav__link">
+    <span class="md-ellipsis">
+      Extends
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#getlayoutaffectingglobalstaterefs" class="md-nav__link">
+    <span class="md-ellipsis">
+      getLayoutAffectingGlobalStateRefs()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getpaintaffectingglobalstaterefs" class="md-nav__link">
+    <span class="md-ellipsis">
+      getPaintAffectingGlobalStateRefs()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#listens" class="md-nav__link">
+    <span class="md-ellipsis">
+      listens()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#off" class="md-nav__link">
+    <span class="md-ellipsis">
+      off()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#on" class="md-nav__link">
+    <span class="md-ellipsis">
+      on()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#once" class="md-nav__link">
+    <span class="md-ellipsis">
+      once()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#seteventedparent" class="md-nav__link">
+    <span class="md-ellipsis">
+      setEventedParent()
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="stylelayer">StyleLayer</h1>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6d02b8fbdd4b0cd2573adbcafb30cbc6e823f4b5/src/style/style_layer.ts#L81">src/style/style_layer.ts:81</a></p>
+<p>A base class for style layers</p>
+<h2 id="extends">Extends</h2>
+<ul>
+<li><a href="../../classes/Evented/"><code>Evented</code></a></li>
+</ul>
+<h2 id="methods">Methods</h2>
+<h3 id="getlayoutaffectingglobalstaterefs">getLayoutAffectingGlobalStateRefs()</h3>
+<blockquote>
+<p><strong>getLayoutAffectingGlobalStateRefs</strong>(): <code>Set</code>&lt;<code>string</code>&gt;</p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6d02b8fbdd4b0cd2573adbcafb30cbc6e823f4b5/src/style/style_layer.ts#L176">src/style/style_layer.ts:176</a></p>
+<p>Get list of global state references that are used within layout or filter properties.
+This is used to determine if layer source need to be reloaded when global state property changes.</p>
+<h4 id="returns">Returns</h4>
+<p><code>Set</code>&lt;<code>string</code>&gt;</p>
+<hr />
+<h3 id="getpaintaffectingglobalstaterefs">getPaintAffectingGlobalStateRefs()</h3>
+<blockquote>
+<p><strong>getPaintAffectingGlobalStateRefs</strong>(): <code>Map</code>&lt;<code>string</code>, <code>object</code>[]&gt;</p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6d02b8fbdd4b0cd2573adbcafb30cbc6e823f4b5/src/style/style_layer.ts#L201">src/style/style_layer.ts:201</a></p>
+<p>Get list of global state references that are used within paint properties.
+This is used to determine if layer needs to be repainted when global state property changes.</p>
+<h4 id="returns_1">Returns</h4>
+<p><code>Map</code>&lt;<code>string</code>, <code>object</code>[]&gt;</p>
+<hr />
+<h3 id="listens">listens()</h3>
+<blockquote>
+<p><strong>listens</strong>(<code>type</code>: <code>string</code>): <code>boolean</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6d02b8fbdd4b0cd2573adbcafb30cbc6e823f4b5/src/util/evented.ts#L165">src/util/evented.ts:165</a></p>
+<p>Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.</p>
+<h4 id="parameters">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>type</code></td>
+<td><code>string</code></td>
+<td>The event type</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_2">Returns</h4>
+<p><code>boolean</code></p>
+<p><code>true</code> if there is at least one registered listener for specified event type, <code>false</code> otherwise</p>
+<h4 id="inherited-from">Inherited from</h4>
+<p><a href="../../classes/Evented/"><code>Evented</code></a>.<a href="../../classes/Evented/#listens"><code>listens</code></a></p>
+<hr />
+<h3 id="off">off()</h3>
+<blockquote>
+<p><strong>off</strong>(<code>type</code>: <code>string</code>, <code>listener</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <code>StyleLayer</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6d02b8fbdd4b0cd2573adbcafb30cbc6e823f4b5/src/util/evented.ts#L90">src/util/evented.ts:90</a></p>
+<p>Removes a previously registered event listener.</p>
+<h4 id="parameters_1">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>type</code></td>
+<td><code>string</code></td>
+<td>The event type to remove listeners for.</td>
+</tr>
+<tr>
+<td><code>listener</code></td>
+<td><a href="../../type-aliases/Listener/"><code>Listener</code></a></td>
+<td>The listener function to remove.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_3">Returns</h4>
+<p><code>StyleLayer</code></p>
+<h4 id="inherited-from_1">Inherited from</h4>
+<p><a href="../../classes/Evented/"><code>Evented</code></a>.<a href="../../classes/Evented/#off"><code>off</code></a></p>
+<hr />
+<h3 id="on">on()</h3>
+<blockquote>
+<p><strong>on</strong>(<code>type</code>: <code>string</code>, <code>listener</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <a href="../Subscription/"><code>Subscription</code></a></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6d02b8fbdd4b0cd2573adbcafb30cbc6e823f4b5/src/util/evented.ts#L73">src/util/evented.ts:73</a></p>
+<p>Adds a listener to a specified event type.</p>
+<h4 id="parameters_2">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>type</code></td>
+<td><code>string</code></td>
+<td>The event type to add a listen for.</td>
+</tr>
+<tr>
+<td><code>listener</code></td>
+<td><a href="../../type-aliases/Listener/"><code>Listener</code></a></td>
+<td>The function to be called when the event is fired. The listener function is called with the data object passed to <code>fire</code>, extended with <code>target</code> and <code>type</code> properties.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_4">Returns</h4>
+<p><a href="../Subscription/"><code>Subscription</code></a></p>
+<h4 id="inherited-from_2">Inherited from</h4>
+<p><a href="../../classes/Evented/"><code>Evented</code></a>.<a href="../../classes/Evented/#on"><code>on</code></a></p>
+<hr />
+<h3 id="once">once()</h3>
+<blockquote>
+<p><strong>once</strong>(<code>type</code>: <code>string</code>, <code>listener?</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <code>Promise</code>&lt;<code>any</code>&gt; | <code>StyleLayer</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6d02b8fbdd4b0cd2573adbcafb30cbc6e823f4b5/src/util/evented.ts#L106">src/util/evented.ts:106</a></p>
+<p>Adds a listener that will be called only once to a specified event type.</p>
+<p>The listener will be called first time the event fires after the listener is registered.</p>
+<h4 id="parameters_3">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>type</code></td>
+<td><code>string</code></td>
+<td>The event type to listen for.</td>
+</tr>
+<tr>
+<td><code>listener?</code></td>
+<td><a href="../../type-aliases/Listener/"><code>Listener</code></a></td>
+<td>The function to be called when the event is fired the first time.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_5">Returns</h4>
+<p><code>Promise</code>&lt;<code>any</code>&gt; | <code>StyleLayer</code></p>
+<p><code>this</code> or a promise if a listener is not provided</p>
+<h4 id="inherited-from_3">Inherited from</h4>
+<p><a href="../../classes/Evented/"><code>Evented</code></a>.<a href="../../classes/Evented/#once"><code>once</code></a></p>
+<hr />
+<h3 id="seteventedparent">setEventedParent()</h3>
+<blockquote>
+<p><strong>setEventedParent</strong>(<code>parent?</code>: <a href="../../classes/Evented/"><code>Evented</code></a>, <code>data?</code>: <code>any</code>): <code>StyleLayer</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6d02b8fbdd4b0cd2573adbcafb30cbc6e823f4b5/src/util/evented.ts#L176">src/util/evented.ts:176</a></p>
+<p>Bubble all events fired by this instance of Evented to this parent instance of Evented.</p>
+<h4 id="parameters_4">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>parent?</code></td>
+<td><a href="../../classes/Evented/"><code>Evented</code></a></td>
+</tr>
+<tr>
+<td><code>data?</code></td>
+<td><code>any</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_6">Returns</h4>
+<p><code>StyleLayer</code></p>
+<h4 id="inherited-from_4">Inherited from</h4>
+<p><a href="../../classes/Evented/"><code>Evented</code></a>.<a href="../../classes/Evented/#seteventedparent"><code>setEventedParent</code></a></p>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://bsky.app/profile/maplibre.org" target="_blank" rel="noopener" title="bsky.app" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M407.8 294.7c-3.3-.4-6.7-.8-10-1.3 3.4.4 6.7.9 10 1.3M288 227.1c-26.1-50.7-97.1-145.2-163.1-191.8C61.6-9.4 37.5-1.7 21.6 5.5 3.3 13.8 0 41.9 0 58.4S9.1 194 15 213.9c19.5 65.7 89.1 87.9 153.2 80.7 3.3-.5 6.6-.9 10-1.4-3.3.5-6.6 1-10 1.4-93.9 14-177.3 48.2-67.9 169.9C220.6 589.1 265.1 437.8 288 361.1c22.9 76.7 49.2 222.5 185.6 103.4 102.4-103.4 28.1-156-65.8-169.9-3.3-.4-6.7-.8-10-1.3 3.4.4 6.7.9 10 1.3 64.1 7.1 133.6-15.1 153.2-80.7C566.9 194 576 75 576 58.4s-3.3-44.7-21.6-52.9c-15.8-7.1-40-14.9-103.2 29.8C385.1 81.9 314.1 176.4 288 227.1"/></svg>
+    </a>
+  
+    
+    
+      
+    
+    
+    
+      
+      
+    
+    <a href="https://mastodon.social/@maplibre" target="_blank" rel="noopener me" title="mastodon.social" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M433 179.1c0-97.2-63.7-125.7-63.7-125.7-62.5-28.7-228.6-28.4-290.5 0 0 0-63.7 28.5-63.7 125.7 0 115.7-6.6 259.4 105.6 289.1 40.5 10.7 75.3 13 103.3 11.4 50.8-2.8 79.3-18.1 79.3-18.1l-1.7-36.9s-36.3 11.4-77.1 10.1c-40.4-1.4-83-4.4-89.6-54-.6-4.6-.9-9.3-.9-13.9 85.6 20.9 158.7 9.1 178.7 6.7 56.1-6.7 105-41.3 111.2-72.9 9.8-49.8 9-121.5 9-121.5zm-75.1 125.2h-46.6V190.1c0-49.7-64-51.6-64 6.9v62.5H201V197c0-58.5-64-56.6-64-6.9v114.2H90.3c0-122.1-5.2-147.9 18.4-175 25.9-28.9 79.8-30.8 103.8 6.1l11.6 19.5 11.6-19.5c24.1-37.1 78.1-34.8 103.8-6.1 23.7 27.3 18.4 53 18.4 175"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://x.com/maplibre" target="_blank" rel="noopener" title="x.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M357.2 48h70.6L273.6 224.2 455 464H313L201.7 318.6 74.5 464H3.8l164.9-188.5L-5.2 48h145.6l100.5 132.9zm-24.8 373.8h39.1L119.1 88h-42z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://www.linkedin.com/company/maplibre" target="_blank" rel="noopener" title="www.linkedin.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3M135.4 416H69V202.2h66.5V416zM102.2 96a38.5 38.5 0 1 1 0 77 38.5 38.5 0 1 1 0-77m282.1 320h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://osmus.slack.com/archives/C01G3D28DAB" target="_blank" rel="noopener" title="osmus.slack.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M94.1 315.1c0 25.9-21.2 47.1-47.1 47.1S0 341 0 315.1 21.2 268 47.1 268h47.1v47.1zm23.7 0c0-25.9 21.2-47.1 47.1-47.1s47.1 21.2 47.1 47.1v117.8c0 25.9-21.2 47.1-47.1 47.1s-47.1-21.2-47.1-47.1zm47.1-189c-25.9 0-47.1-21.2-47.1-47.1s21.2-47 47.1-47S212 53.2 212 79.1v47.1h-47.1zm0 23.7c25.9 0 47.1 21.2 47.1 47.1S190.8 244 164.9 244H47.1C21.2 244 0 222.8 0 196.9s21.2-47.1 47.1-47.1zm189 47.1c0-25.9 21.2-47.1 47.1-47.1s47 21.2 47 47.1-21.2 47.1-47.1 47.1h-47.1v-47.1zm-23.7 0c0 25.9-21.2 47.1-47.1 47.1S236 222.8 236 196.9V79.1c0-25.9 21.2-47.1 47.1-47.1s47.1 21.2 47.1 47.1zm-47.1 189c25.9 0 47.1 21.2 47.1 47.1s-21.2 47-47.1 47-47.1-21.2-47.1-47.1v-47.1h47.1zm0-23.7c-25.9 0-47.1-21.2-47.1-47.1s21.2-47.1 47.1-47.1h117.8c25.9 0 47.1 21.2 47.1 47.1s-21.2 47.1-47.1 47.1z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/maplibre" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky", "toc.follow", "search.suggest", "navigation.instant", "navigation.sections", "navigation.top"], "search": "../../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.92b07e13.min.js"></script>
+      
+    
+  </body>
+</html>

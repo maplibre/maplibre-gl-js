@@ -5,8 +5,8 @@
     <meta property="og:description" content="Prevent users from rotating a map." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -17,10 +17,9 @@
 <script>
     const map = new maplibregl.Map({
         container: 'map', // container id
-        style:
-            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL', //stylesheet location
+        style: 'https://demotiles.maplibre.org/style.json', // style URL
         center: [-122.65, 45.52], // starting position
-        zoom: 9 // starting zoom
+        zoom: 3 // starting zoom
     });
 
     // disable map rotation using right click + drag

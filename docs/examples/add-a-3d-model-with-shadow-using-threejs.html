@@ -7,8 +7,8 @@
         content="Use a custom style layer with three.js to add a 3D model with shadow to the map." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.js'></script>
     <style>
         body {
             margin: 0;
@@ -40,8 +40,7 @@
 
         const map = new maplibregl.Map({
             container: 'map',
-            style:
-                'https://api.maptiler.com/maps/basic/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+            style: 'https://tiles.openfreemap.org/styles/bright',
             zoom: 18,
             center: [148.9819, -35.3981],
             pitch: 60,

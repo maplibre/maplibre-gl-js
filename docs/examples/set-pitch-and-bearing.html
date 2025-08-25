@@ -5,8 +5,8 @@
     <meta property="og:description" content="Initialize a map with pitch and bearing camera options." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -17,13 +17,12 @@
 <script>
     const map = new maplibregl.Map({
         container: 'map',
-        style:
-            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        style: 'https://demotiles.maplibre.org/style.json',
         // camera options properties
         center: [-73.5804, 45.53483],
         pitch: 60, // pitch in degrees
         bearing: -60, // bearing in degrees
-        zoom: 10
+        zoom: 4
     });
 </script>
 </body>

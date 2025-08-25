@@ -5,8 +5,8 @@
     <meta property="og:description" content="Filter a set of symbols based on a property value in the data." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -145,8 +145,7 @@
     const filterGroup = document.getElementById('filter-group');
     const map = new maplibregl.Map({
         container: 'map',
-        style:
-            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        style: 'https://tiles.openfreemap.org/styles/bright',
         center: [-77.04, 38.907],
         zoom: 11.15
     });
@@ -169,7 +168,7 @@
                     'type': 'symbol',
                     'source': 'places',
                     'layout': {
-                        'icon-image': `${symbol}_15`,
+                        'icon-image': `${symbol}_11`,
                         'icon-overlap': 'always'
                     },
                     'filter': ['==', 'icon', symbol]

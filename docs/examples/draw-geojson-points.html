@@ -5,8 +5,8 @@
     <meta property="og:description" content="Draw points from a GeoJSON collection to a map." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -17,8 +17,7 @@
 <script>
     const map = new maplibregl.Map({
         container: 'map',
-        style:
-            'https://api.maptiler.com/maps/positron/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        style: 'https://demotiles.maplibre.org/style.json',
         center: [0, 0],
         zoom: 1
     });
@@ -166,10 +165,7 @@
                 'icon-image': 'custom-marker',
                 // get the year from the source's "year" property
                 'text-field': ['get', 'year'],
-                'text-font': [
-                    'Open Sans Semibold',
-                    'Arial Unicode MS Bold'
-                ],
+                'text-font': [ 'Noto Sans Regular' ],
                 'text-offset': [0, 1.25],
                 'text-anchor': 'top'
             }

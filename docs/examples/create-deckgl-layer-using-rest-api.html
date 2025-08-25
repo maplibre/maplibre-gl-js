@@ -5,8 +5,8 @@
     <meta property="og:description" content="Create a deck.gl layer as an overlay from a REST API." />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.css" />
-    <script src="https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.css" />
+    <script src="https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.js"></script>
     <script src="https://unpkg.com/deck.gl@8.9.33/dist.min.js"></script>
     <style>
       body {
@@ -27,12 +27,10 @@
   <body>
     <div id="map"></div>
     <script>
-      const url = 'https://maps.clockworkmicro.com/streets/v1/style?x-api-key=';
-      const apiKey = 'Dr4eW3s233rRkk8I_public';
 
       const map = new maplibregl.Map({
           container: 'map',
-          style: url + apiKey,
+          style: 'https://tiles.openfreemap.org/styles/liberty',
           center: [2.343957, 48.862011],
           zoom: 10.5,
       });

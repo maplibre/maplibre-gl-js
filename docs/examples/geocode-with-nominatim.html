@@ -5,8 +5,8 @@
     <meta property="og:description" content="Geocode with Nominatim and the maplibre-gl-geocoder plugin." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -24,36 +24,7 @@
     const map = new maplibregl.Map({
         container: 'map',
         // Use a minimalist raster style
-        style: {
-            'version': 8,
-            'name': 'Blank',
-            'center': [0, 0],
-            'zoom': 0,
-            'sources': {
-                'raster-tiles': {
-                    'type': 'raster',
-                    'tiles': ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-                    'tileSize': 256,
-                    'minzoom': 0,
-                    'maxzoom': 19
-                }
-            },
-            'layers': [
-                {
-                    'id': 'background',
-                    'type': 'background',
-                    'paint': {
-                        'background-color': '#e0dfdf'
-                    }
-                },
-                {
-                    'id': 'simple-tiles',
-                    'type': 'raster',
-                    'source': 'raster-tiles'
-                }
-            ],
-            'id': 'blank'
-        },
+        style: 'https://tiles.openfreemap.org/styles/bright',
         center: [-87.61694, 41.86625],
         zoom: 15.99,
         pitch: 40,

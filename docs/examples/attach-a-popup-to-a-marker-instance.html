@@ -5,8 +5,8 @@
     <meta property="og:description" content="Attach a popup to a marker and display it on click." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -34,9 +34,9 @@
     const monument = [-77.0353, 38.8895];
     const map = new maplibregl.Map({
         container: 'map',
-        style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        style: 'https://demotiles.maplibre.org/style.json',
         center: monument,
-        zoom: 15
+        zoom: 5
     });
 
     // create the popup

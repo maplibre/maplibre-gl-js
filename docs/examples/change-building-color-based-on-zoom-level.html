@@ -5,8 +5,8 @@
     <meta property="og:description" content="Use the interpolate expression to ease-in the building layer and smoothly fade from one color to the next." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -36,14 +36,13 @@
 <script>
     const map = new maplibregl.Map({
         container: 'map',
-        style:
-            'https://api.maptiler.com/maps/basic/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        style: 'https://tiles.openfreemap.org/styles/bright',
         center: [-90.73414, 14.55524],
         zoom: 13
     });
 
     map.on('load', () => {
-        map.setPaintProperty('building', 'fill-color', [
+        map.setPaintProperty('building-top', 'fill-color', [
             'interpolate',
             ['exponential', 0.5],
             ['zoom'],
@@ -53,7 +52,7 @@
             '#eee695'
         ]);
 
-        map.setPaintProperty('building', 'fill-opacity', [
+        map.setPaintProperty('building-top', 'fill-opacity', [
             'interpolate',
             ['exponential', 0.5],
             ['zoom'],
