@@ -1,14 +1,22 @@
 ## main
 
 ### ✨ Features and improvements
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 5.7.0
+
+### ✨ Features and improvements
+
 - Pass document's `lang` to Tiny-SDF to render Simplified and Traditional Chinese characters ([#6223](https://github.com/maplibre/maplibre-gl-js/issues/6223))
 - Enable `global-state` expressions in layout properties ([#6209](https://github.com/maplibre/maplibre-gl-js/pull/6209))
 - Align typescript types generation with docs generation and avoid exporting non-exported types ([#6217](https://github.com/maplibre/maplibre-gl-js/pull/6217))
 - Add `coveringTiles` method to the public API of the map object ([#6292](https://github.com/maplibre/maplibre-gl-js/pull/6292))
 
-- _...Add new stuff here..._
-
 ### 🐞 Bug fixes
+
 - Prevent original input style JSON from being mutated by `Style.set*` methods ([#6216](https://github.com/maplibre/maplibre-gl-js/pull/6216))
 - Fix evaluating `global-state` in paint properties with other subexpressions ([#6048](https://github.com/maplibre/maplibre-gl-js/issues/6048))
 - Fix enabling terrain while transitioning ([#6011](https://github.com/maplibre/maplibre-gl-js/issues/6011))
@@ -16,6 +24,7 @@
 ## 5.6.2
 
 ### 🐞 Bug fixes
+
 - Fix white artifacts when using non-zero elevation ([#6032](https://github.com/maplibre/maplibre-gl-js/pull/6032))
 - Fix geolocate control lock loss on window resize and zoom ([#3504](https://github.com/maplibre/maplibre-gl-js/issues/3504))
 - Fix a memory leak in `GeoJSONSource` when rapidly updating data ([#6163](https://github.com/maplibre/maplibre-gl-js/pull/6163))
