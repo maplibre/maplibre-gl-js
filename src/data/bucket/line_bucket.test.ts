@@ -9,8 +9,10 @@ import {LineBucket} from './line_bucket';
 import {LineStyleLayer} from '../../style/style_layer/line_style_layer';
 import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type EvaluationParameters} from '../../style/evaluation_parameters';
-import {type BucketFeature, type BucketParameters} from '../bucket';
+import {type BucketFeature, type BucketParameters, type IndexedFeature, type PopulateParameters} from '../bucket';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
+import {OverscaledTileID} from '../../source/tile_id';
+import {FeatureIndex} from '../feature_index';
 
 const noSubdivision = SubdivisionGranularitySetting.noSubdivision;
 
@@ -144,5 +146,36 @@ describe('LineBucket', () => {
 
         expect(console.warn).toHaveBeenCalledTimes(1);
 
+    });
+
+    test('LineBucket line-pattern with global-state', () => {
+        const availableImages = [];
+        const globalState = {pattern: 'test-pattern'} as Record<string, any>;
+        const layer = new LineStyleLayer({
+            id: 'test',
+            type: 'line',
+            source: 'test-source',
+            paint: {'line-pattern': ['coalesce', ['get', 'pattern'], ['global-state', 'pattern']]}
+        } as LayerSpecification);
+        layer.recalculate({zoom: 0, globalState} as EvaluationParameters, availableImages);
+
+        const bucket = new LineBucket({layers: [layer], globalState} as BucketParameters<LineStyleLayer>);
+
+        const sourceLayer = vt.layers.road;
+        const features = new Array<IndexedFeature>(sourceLayer.length);
+        for (let i = 0; i < sourceLayer.length; i++) {
+            features[i] = {feature: sourceLayer.feature(i), index: 0} as IndexedFeature;
+        }
+
+        bucket.populate(features, {
+            patternDependencies: {},
+            featureIndex: new FeatureIndex(new OverscaledTileID(0, 0, 0, 0, 0)),
+            availableImages,
+        } as PopulateParameters, undefined);
+
+        expect(bucket.patternFeatures.length).toBeGreaterThan(0);
+        expect(bucket.patternFeatures[0].patterns).toEqual({
+            test: {min: 'test-pattern', mid: 'test-pattern', max: 'test-pattern'}
+        });
     });
 });
