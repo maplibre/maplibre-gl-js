@@ -31,16 +31,17 @@ export function hasPattern(type: string, layers: PatternStyleLayers, options: Po
     return hasPattern;
 }
 
-export function addPatternDependencies(type: string, layers: PatternStyleLayers, patternFeature: BucketFeature, zoom: number, options: PopulateParameters) {
+export function addPatternDependencies(type: string, layers: PatternStyleLayers, patternFeature: BucketFeature, parameters: { zoom: number; globalState: Record<string, any> }, options: PopulateParameters) {
+    const {zoom, globalState} = parameters;
     const patterns = options.patternDependencies;
     for (const layer of layers) {
         const patternProperty = (layer.paint  as PossiblyEvaluated<any, any>).get(`${type}-pattern`);
 
         const patternPropertyValue = patternProperty.value;
         if (patternPropertyValue.kind !== 'constant') {
-            let min = patternPropertyValue.evaluate({zoom: zoom - 1}, patternFeature, {}, options.availableImages);
-            let mid = patternPropertyValue.evaluate({zoom}, patternFeature, {}, options.availableImages);
-            let max = patternPropertyValue.evaluate({zoom: zoom + 1}, patternFeature, {}, options.availableImages);
+            let min = patternPropertyValue.evaluate({zoom: zoom - 1, globalState}, patternFeature, {}, options.availableImages);
+            let mid = patternPropertyValue.evaluate({zoom, globalState}, patternFeature, {}, options.availableImages);
+            let max = patternPropertyValue.evaluate({zoom: zoom + 1, globalState}, patternFeature, {}, options.availableImages);
             min = min && min.name ? min.name : min;
             mid = mid && mid.name ? mid.name : mid;
             max = max && max.name ? max.name : max;
