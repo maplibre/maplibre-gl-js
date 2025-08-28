@@ -1,24 +1,17 @@
-import {describe, test, expect, vi} from 'vitest';
-import fs from 'fs';
-import path from 'path';
-import Protobuf from 'pbf';
-import {VectorTile} from '@mapbox/vector-tile';
+import {beforeAll, describe, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {SegmentVector} from '../segment';
 import {LineBucket} from './line_bucket';
 import {LineStyleLayer} from '../../style/style_layer/line_style_layer';
 import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type EvaluationParameters} from '../../style/evaluation_parameters';
-import {type BucketFeature, type BucketParameters, type IndexedFeature, type PopulateParameters} from '../bucket';
+import {type ZoomHistory} from '../../../src/style/zoom_history';
+import {type BucketFeature, type BucketParameters} from '../bucket';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import {OverscaledTileID} from '../../source/tile_id';
-import {FeatureIndex} from '../feature_index';
+import {type CreateBucketParameters, createPopulateOptions, getFeaturesFromLayer, loadVectorTile} from '../../../test/unit/lib/tile';
+import {type VectorTileLayer} from '@mapbox/vector-tile';
 
-const noSubdivision = SubdivisionGranularitySetting.noSubdivision;
-
-// Load a line feature from fixture tile.
-const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))));
-const feature = vt.layers.road.feature(0);
+const {noSubdivision} = SubdivisionGranularitySetting;
 
 function createLine(numPoints) {
     const points = [];
@@ -28,13 +21,30 @@ function createLine(numPoints) {
     return points;
 }
 
+function createLineBucket({id, layout, paint, globalState, availableImages}: CreateBucketParameters): LineBucket {
+    const layer = new LineStyleLayer({
+        id,
+        type: 'line',
+        layout,
+        paint
+    } as LayerSpecification);
+    layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory, globalState} as EvaluationParameters,
+        availableImages as Array<string>);
+
+    return new LineBucket({layers: [layer], globalState} as BucketParameters<LineStyleLayer>);
+}
+
 describe('LineBucket', () => {
+    let sourceLayer: VectorTileLayer;
+    beforeAll(() => {
+        // Load line features from fixture tile.
+        sourceLayer = loadVectorTile().layers.road;
+    });
     test('LineBucket', () => {
         expect(() => {
-            const layer = new LineStyleLayer({id: 'test', type: 'line'} as LayerSpecification);
-            layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
-
-            const bucket = new LineBucket({layers: [layer]} as BucketParameters<LineStyleLayer>);
+            const bucket = createLineBucket({
+                id: 'test'
+            });
 
             const line = {
                 type: 2,
@@ -102,6 +112,7 @@ describe('LineBucket', () => {
                 new Point(0, 0)
             ], polygon, undefined, undefined, undefined, undefined, undefined, noSubdivision);
 
+            const feature = sourceLayer.feature(0);
             bucket.addFeature(feature as any, feature.loadGeometry(), undefined, undefined, undefined, noSubdivision);
         }).not.toThrow();
     });
@@ -113,10 +124,9 @@ describe('LineBucket', () => {
         // breaking across array groups without tests taking a _long_ time.
         SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 256;
 
-        const layer = new LineStyleLayer({id: 'test', type: 'line'} as LayerSpecification);
-        layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
-
-        const bucket = new LineBucket({layers: [layer]} as BucketParameters<LineStyleLayer>);
+        const bucket = createLineBucket({
+            id: 'test'
+        });
 
         // first add an initial, small feature to make sure the next one starts at
         // a non-zero offset
@@ -150,28 +160,13 @@ describe('LineBucket', () => {
 
     test('LineBucket line-pattern with global-state', () => {
         const availableImages = [];
-        const globalState = {pattern: 'test-pattern'} as Record<string, any>;
-        const layer = new LineStyleLayer({
-            id: 'test',
-            type: 'line',
-            source: 'test-source',
-            paint: {'line-pattern': ['coalesce', ['get', 'pattern'], ['global-state', 'pattern']]}
-        } as LayerSpecification);
-        layer.recalculate({zoom: 0, globalState} as EvaluationParameters, availableImages);
+        const bucket = createLineBucket({id: 'test',
+            paint: {'line-pattern': ['coalesce', ['get', 'pattern'], ['global-state', 'pattern']]},
+            globalState: {pattern: 'test-pattern'},
+            availableImages
+        });
 
-        const bucket = new LineBucket({layers: [layer], globalState} as BucketParameters<LineStyleLayer>);
-
-        const sourceLayer = vt.layers.road;
-        const features = new Array<IndexedFeature>(sourceLayer.length);
-        for (let i = 0; i < sourceLayer.length; i++) {
-            features[i] = {feature: sourceLayer.feature(i), index: 0} as IndexedFeature;
-        }
-
-        bucket.populate(features, {
-            patternDependencies: {},
-            featureIndex: new FeatureIndex(new OverscaledTileID(0, 0, 0, 0, 0)),
-            availableImages,
-        } as PopulateParameters, undefined);
+        bucket.populate(getFeaturesFromLayer(sourceLayer), createPopulateOptions(availableImages), undefined);
 
         expect(bucket.patternFeatures.length).toBeGreaterThan(0);
         expect(bucket.patternFeatures[0].patterns).toEqual({
