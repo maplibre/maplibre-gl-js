@@ -447,8 +447,6 @@ export class Style extends Evented {
 
         this.map.setTerrain(this.stylesheet.terrain ?? null);
 
-        this.setGlobalState(this.stylesheet.state ?? null);
-
         this.fire(new Event('data', {dataType: 'style'}));
         this.fire(new Event('style.load'));
     }
@@ -463,11 +461,14 @@ export class Style extends Evented {
         this._order = dereferencedLayers.map((layer) => layer.id);
         this._layers = {};
 
+        this.setGlobalState(this.stylesheet.state ?? null);
+
         // reset serialization field, to be populated only when needed
         this._serializedLayers = null;
         for (const layer of dereferencedLayers) {
             const styledLayer = createStyleLayer(layer);
             styledLayer.setEventedParent(this, {layer: {id: layer.id}});
+            styledLayer.setGlobalState(this._globalState);
             this._layers[layer.id] = styledLayer;
         }
     }

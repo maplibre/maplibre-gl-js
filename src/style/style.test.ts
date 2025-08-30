@@ -11,7 +11,7 @@ import {OverscaledTileID} from '../source/tile_id';
 import {fakeServer, type FakeServer} from 'nise';
 
 import {type EvaluationParameters} from './evaluation_parameters';
-import {type LayerSpecification, type GeoJSONSourceSpecification, type FilterSpecification, type SourceSpecification, type StyleSpecification, type SymbolLayerSpecification, type SkySpecification} from '@maplibre/maplibre-gl-style-spec';
+import {type Feature, type LayerSpecification, type GeoJSONSourceSpecification, type FilterSpecification, type SourceSpecification, type StyleSpecification, type SymbolLayerSpecification, type SkySpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type GeoJSONSource} from '../source/geojson_source';
 import {StubMap, sleep, waitForEvent} from '../util/test/util';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
@@ -19,6 +19,8 @@ import {MessageType} from '../util/actor_messages';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {type Tile} from '../source/tile';
 import type Point from '@mapbox/point-geometry';
+import {type PossiblyEvaluated} from './properties';
+import {type SymbolLayoutProps, type SymbolLayoutPropsPossiblyEvaluated} from './style_layer/symbol_style_layer_properties.g';
 
 function createStyleJSON(properties?): StyleSpecification {
     return extend({
@@ -468,6 +470,37 @@ describe('Style.loadJSON', () => {
         expect('base' in style.stylesheet.sources).toBeTruthy();
         expect(style.stylesheet.layers[0].id).toBe(previousStyle.layers[0].id);
         expect(style.stylesheet.layers).toHaveLength(1);
+    });
+
+    test('propagates global state object to layers', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(
+            createStyleJSON({
+                sources: {
+                    'source-id': createGeoJSONSource()
+                },
+                layers: [
+                    {
+                        id: 'layer-id',
+                        type: 'symbol',
+                        source: 'source-id',
+                        layout: {
+                            'text-size': ['global-state', 'size']
+                        }
+                    }
+                ]
+            })
+        );
+        await style.once('style.load');
+        // tests that reference to globalState is propagated to layers
+        // by changing globalState property and checking if the changed value
+        // was used when evaluating the layer
+        const globalState = style.getGlobalState();
+        globalState.size = 12;
+        const layer = style.getLayer('layer-id');
+        layer.recalculate({} as EvaluationParameters, []);
+        const layout = layer.layout as PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>;
+        expect(layout.get('text-size').evaluate({} as Feature, {})).toBe(12);
     });
 });
 
