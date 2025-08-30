@@ -1090,7 +1090,7 @@ describe('Style.removeSource', () => {
             }]
         }));
         await style.once('style.load');
-        style.update(1 as any as EvaluationParameters);
+        style.update({zoom: 1} as EvaluationParameters);
         return style;
     }
 
@@ -2344,7 +2344,7 @@ describe('Style.setPaintProperty', () => {
         tr.resize(512, 512);
 
         await style.once('style.load');
-        style.update(tr.zoom as any as EvaluationParameters);
+        style.update({zoom: tr.zoom} as EvaluationParameters);
         const sourceCache = style.sourceCaches['geojson'];
         const source = style.getSource('geojson') as GeoJSONSource;
 
@@ -2739,7 +2739,7 @@ describe('Style.setLayerZoomRange', () => {
         vi.spyOn(style, '_reloadSource');
 
         style.setLayerZoomRange('raster', 5, 12);
-        style.update(0 as any as EvaluationParameters);
+        style.update({zoom: 0} as EvaluationParameters);
         expect(style._reloadSource).not.toHaveBeenCalled();
     });
 });
@@ -2888,7 +2888,7 @@ describe('Style.queryRenderedFeatures', () => {
             style.sourceCaches.mapLibre.transform = transform;
             style.sourceCaches.other.transform = transform;
 
-            style.update(0 as any as EvaluationParameters);
+            style.update({zoom: 0} as EvaluationParameters);
             style._updateSources(transform);
             callback();
         });
