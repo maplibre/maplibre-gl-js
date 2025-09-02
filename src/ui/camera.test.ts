@@ -908,6 +908,25 @@ describe('easeTo', () => {
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 170.3125, lat: 0});
     });
 
+    test('pans with offset with camera pitch', () => {
+        const camera = createCamera({pitch: 85});
+        camera.easeTo({center: [0, 0], offset: [0, -100], noMoveStart: true, duration: 0});
+        expect(fixedLngLat(camera.getCenter()).lat).toBeLessThan(0);
+    });
+
+    test('pans with large offset with camera pitch', () => {
+        const camera = createCamera({pitch: 85});
+        camera.easeTo({center: [0, 0], offset: [0, -500], noMoveStart: true, duration: 0});
+        expect(fixedLngLat(camera.getCenter()).lat).toBeLessThan(0);
+    });
+
+    test('pans with large offset with camera pitch and bearing', () => {
+        const camera = createCamera({pitch: 85, bearing: 135});
+        camera.easeTo({center: [0, 0], offset: [0, -500], noMoveStart: true, duration: 0});
+        expect(fixedLngLat(camera.getCenter()).lat).toBeGreaterThan(0);
+        expect(fixedLngLat(camera.getCenter()).lng).toBeLessThan(0);
+    });
+
     test('zooms with specified offset', () => {
         const camera = createCamera();
         camera.easeTo({zoom: 3.2, offset: [100, 0], duration: 0});
@@ -2915,6 +2934,25 @@ describe('easeTo globe projection', () => {
             const camera = createCameraGlobe({bearing: 180});
             camera.easeTo({center: [100, 0], offset: [100, 0], duration: 0});
             expect(fixedLngLat(camera.getCenter())).toEqual({lng: -175.50457909, lat: 0});
+        });
+
+        test('pans with offset with camera pitch', () => {
+            const camera = createCameraGlobe({pitch: 85});
+            camera.easeTo({center: [0, 0], offset: [0, -100], noMoveStart: true, duration: 0});
+            expect(fixedLngLat(camera.getCenter()).lat).toBeLessThan(0);
+        });
+
+        test('pans with large offset with camera pitch', () => {
+            const camera = createCameraGlobe({pitch: 85});
+            camera.easeTo({center: [0, 0], offset: [0, -500], noMoveStart: true, duration: 0});
+            expect(fixedLngLat(camera.getCenter()).lat).toBeLessThan(0);
+        });
+
+        test('pans with large offset with camera pitch and bearing', () => {
+            const camera = createCameraGlobe({pitch: 85, bearing: 135});
+            camera.easeTo({center: [0, 0], offset: [0, -500], noMoveStart: true, duration: 0});
+            expect(fixedLngLat(camera.getCenter()).lat).toBeGreaterThan(0);
+            expect(fixedLngLat(camera.getCenter()).lng).toBeLessThan(0);
         });
 
         test('zooms with specified offset', () => {
