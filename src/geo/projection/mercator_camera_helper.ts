@@ -3,7 +3,7 @@ import {LngLat, type LngLatLike} from '../lng_lat';
 import {cameraForBoxAndBearing, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation, type UpdateRotationArgs} from './camera_helper';
 import {normalizeCenter} from '../transform_helper';
 import {rollPitchBearingEqual, scaleZoom, zoomScale} from '../../util/util';
-import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils';
+import {getMercatorHorizon, projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
 import type {IReadonlyTransform, ITransform} from '../transform_interface';
@@ -79,7 +79,15 @@ export class MercatorCameraHelper implements ICameraHelper {
 
         const zoom = optionsZoom ? +options.zoom : tr.zoom;
 
-        let pointAtOffset = tr.centerPoint.add(options.offsetAsPoint);
+        // Reduce the offset so that it never goes past the horizon. If it goes past
+        // the horizon, the pan direction is opposite of the intended direction.
+        const offsetLength = options.offsetAsPoint.mag();
+        const pixelsToHorizon = Math.abs(getMercatorHorizon(tr));
+        const offsetAsPoint = offsetLength > pixelsToHorizon / 2 ?
+            options.offsetAsPoint.mult(pixelsToHorizon / 2 / offsetLength) :
+            options.offsetAsPoint;
+
+        let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
         const locationAtOffset = tr.screenPointToLocation(pointAtOffset);
         const {center, zoom: endZoom} = tr.getConstrained(
             LngLat.convert(options.center || locationAtOffset),
@@ -109,7 +117,7 @@ export class MercatorCameraHelper implements ICameraHelper {
                 tr.interpolatePadding(startPadding, options.padding, k);
                 // When padding is being applied, Transform.centerPoint is changing continuously,
                 // thus we need to recalculate offsetPoint every frame
-                pointAtOffset = tr.centerPoint.add(options.offsetAsPoint);
+                pointAtOffset = tr.centerPoint.add(offsetAsPoint);
             }
 
             if (options.around) {

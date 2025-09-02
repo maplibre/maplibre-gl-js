@@ -909,19 +909,19 @@ describe('easeTo', () => {
     });
 
     test('pans with offset with camera pitch', () => {
-        const camera = createCamera({pitch: 85});
+        const camera = createCamera({pitch: 85, zoom: 10});
         camera.easeTo({center: [0, 0], offset: [0, -100], noMoveStart: true, duration: 0});
         expect(fixedLngLat(camera.getCenter()).lat).toBeLessThan(0);
     });
 
     test('pans with large offset with camera pitch', () => {
-        const camera = createCamera({pitch: 85});
+        const camera = createCamera({pitch: 85, zoom: 10});
         camera.easeTo({center: [0, 0], offset: [0, -500], noMoveStart: true, duration: 0});
         expect(fixedLngLat(camera.getCenter()).lat).toBeLessThan(0);
     });
 
     test('pans with large offset with camera pitch and bearing', () => {
-        const camera = createCamera({pitch: 85, bearing: 135});
+        const camera = createCamera({pitch: 85, bearing: 135, zoom: 10});
         camera.easeTo({center: [0, 0], offset: [0, -500], noMoveStart: true, duration: 0});
         expect(fixedLngLat(camera.getCenter()).lat).toBeGreaterThan(0);
         expect(fixedLngLat(camera.getCenter()).lng).toBeLessThan(0);
