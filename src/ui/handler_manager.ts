@@ -527,6 +527,11 @@ export class HandlerManager {
             around,
         };
 
+        let fixedBearing = false;
+        if (typeof this._map.dragPan._inertiaOptions !== "boolean") {
+            fixedBearing = this._map.dragPan._inertiaOptions.fixedBearing;
+        }
+
         // Pre-zoom location under the mouse cursor is required for accurate mercator panning and zooming
         if (this._map.cameraHelper.useGlobeControls && !tr.isPointOnMapSurface(around)) {
             around = tr.centerPoint;
@@ -541,7 +546,7 @@ export class HandlerManager {
             // Apply zoom, bearing, pitch, roll
             this._map.cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
             // Apply panning
-            this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
+            this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc, fixedBearing);
         } else {
             // Apply zoom, bearing, pitch, roll
             this._map.cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
@@ -555,12 +560,11 @@ export class HandlerManager {
                 // When starting to drag or move, flag it and register moveend to clear flagging
                 this._terrainMovement = true;
                 this._map._elevationFreeze = true;
-                this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
             } else if (combinedEventsInProgress.drag && this._terrainMovement) {
                 // drag map
                 tr.setCenter(tr.screenPointToLocation(tr.centerPoint.sub(panDelta)));
             } else {
-                this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
+                this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc, fixedBearing);
             }
         }
 
