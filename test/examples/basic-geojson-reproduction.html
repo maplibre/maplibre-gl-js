@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Basic Geojson</title>
+        <meta
+            property="og:description"
+            content="Add a GeoJSON line to a map using addSource, then style it using addLayer’s paint properties."
+        />
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="../../dist/maplibre-gl.css" />
+        <script src="../../dist/maplibre-gl-dev.js"></script>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            html,
+            body,
+            #map {
+                height: 100%;
+            }
+            #actions {
+                top: 1rem;
+                right: 1rem;
+                position: absolute;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <div id="actions">
+            <button id="reset">
+                Reset to Initial state (click after each test)
+            </button>
+
+            <button id="add-wait-removeAll">
+                Test 1 : add wait removeAll (expected)
+            </button>
+            <button id="add-and-removeAll">
+                Test 2 : add and removeAll (expected)
+            </button>
+            <button id="add-and-removeAll-with-merging">
+                Test 3 : add and removeAll with merging
+            </button>
+
+            <button id="add-text-wait-removeAll">
+                Test 4 : add Text wait removeAll (expected)
+            </button>
+            <button id="add-text-and-removeAll">
+                Test 5 : add Text and removeAll
+            </button>
+            <button id="add-text-and-removeAll-with-merging">
+                Test 6 : add Text and removeAll with merging
+            </button>
+        </div>
+        <script>
+            function createRectangle(
+                topLeft,
+                width,
+                height,
+                extraProperties = {}
+            ) {
+                return {
+                    id: topLeft.join("-"),
+                    type: "Feature",
+                    geometry: {
+                        type: "Polygon",
+                        coordinates: [
+                            [
+                                topLeft,
+                                [topLeft[0] + width, topLeft[1]],
+                                [topLeft[0] + width, topLeft[1] - height],
+                                [topLeft[0], topLeft[1] - height],
+                                topLeft,
+                            ],
+                        ],
+                    },
+                    properties: {
+                        shape: "rectangle",
+                        ...extraProperties,
+                    },
+                };
+            }
+
+            function createTextFeature() {
+                return {
+                    id: "text",
+                    type: "Feature",
+                    geometry: {
+                        type: "Point",
+                        coordinates: [-2, 0],
+                    },
+                    properties: {
+                        shape: "text",
+                    },
+                };
+            }
+
+            const initialCollection = {
+                type: "FeatureCollection",
+                features: [createRectangle([0, 0], 1, 1)],
+            };
+
+            document.querySelector("#reset")?.addEventListener("click", () => {
+                const source = map.getSource("base");
+                if (!source) return;
+
+                source.setData(initialCollection);
+            });
+
+            document
+                .querySelector("#add-wait-removeAll")
+                ?.addEventListener("click", () => {
+                    const source = map.getSource("base");
+                    if (!source) return;
+
+                    // source.updateData({ add: [createTextFeature()] });
+                    source.updateData({
+                        add: [
+                            createRectangle([-3, 0], 1, 1, {
+                                color: "#ff0000",
+                            }),
+                        ],
+                    });
+
+                    setTimeout(() => {
+                        source.updateData({ removeAll: true });
+                    }, 1000);
+                });
+
+            document
+                .querySelector("#add-and-removeAll")
+                ?.addEventListener("click", () => {
+                    const source = map.getSource("base");
+                    if (!source) return;
+
+                    // source.updateData({ add: [createTextFeature()] });
+                    source.updateData({
+                        add: [
+                            createRectangle([-3, 0], 1, 1, {
+                                color: "#ff0000",
+                            }),
+                        ],
+                    });
+
+                    source.updateData({ removeAll: true });
+                });
+
+            document
+                .querySelector("#add-and-removeAll-with-merging")
+                ?.addEventListener("click", () => {
+                    const source = map.getSource("base");
+                    if (!source) return;
+
+                    // some intensive task that take time into the worker
+                    source.updateData({
+                        add: Array.from({ length: 10000 }).map((_, idx) =>
+                            createRectangle([idx * 0.0001, 0], 1, 1, {
+                                color: "#000000",
+                            })
+                        ),
+                    });
+
+                    // source.updateData({ add: [createTextFeature()] });
+                    source.updateData({
+                        add: [
+                            createRectangle([-3, 0], 1, 1, {
+                                color: "#ff0000",
+                            }),
+                        ],
+                    });
+
+                    source.updateData({ removeAll: true });
+                });
+
+            document
+                .querySelector("#add-text-wait-removeAll")
+                ?.addEventListener("click", () => {
+                    const source = map.getSource("base");
+                    if (!source) return;
+
+                    source.updateData({ add: [createTextFeature()] });
+
+                    setTimeout(() => {
+                        source.updateData({ removeAll: true });
+                    }, 1000);
+                });
+
+            document
+                .querySelector("#add-text-and-removeAll")
+                ?.addEventListener("click", () => {
+                    const source = map.getSource("base");
+                    if (!source) return;
+
+                    source.updateData({ add: [createTextFeature()] });
+                    source.updateData({ removeAll: true });
+                });
+
+            document
+                .querySelector("#add-text-and-removeAll-with-merging")
+                ?.addEventListener("click", () => {
+                    const source = map.getSource("base");
+                    if (!source) return;
+
+                    // some intensive task that take time into the worker
+                    source.updateData({
+                        add: Array.from({ length: 10000 }).map((_, idx) =>
+                            createRectangle([idx * 0.0001, 0], 1, 1, {
+                                color: "#000000",
+                            })
+                        ),
+                    });
+
+                    source.updateData({ add: [createTextFeature()] });
+                    source.updateData({ removeAll: true });
+                });
+
+            const map = new maplibregl.Map({
+                container: "map",
+                style: {
+                    version: 8,
+                    transition: { duration: 0, delay: 0 },
+                    glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+                    sources: {
+                        base: {
+                            type: "geojson",
+                            data: initialCollection,
+                        },
+                    },
+                    layers: [
+                        {
+                            id: "background",
+                            type: "background",
+                            paint: { "background-color": "#f8f4f0" },
+                        },
+                        {
+                            id: "rectangle-fill",
+                            type: "fill",
+                            source: "base",
+                            filter: ["==", ["get", "shape"], "rectangle"],
+                            paint: {
+                                "fill-color": [
+                                    "coalesce",
+                                    ["get", "color"],
+                                    "#00ff00",
+                                ],
+                            },
+                        },
+                        {
+                            id: "text-bug",
+                            type: "symbol",
+                            source: "base",
+                            filter: ["==", ["get", "shape"], "text"],
+                            layout: {
+                                "text-field": "We shouldn't see this message",
+                            },
+                        },
+                    ],
+                },
+                center: [0, 0],
+                zoom: 6,
+            });
+        </script>
+    </body>
+</html>
