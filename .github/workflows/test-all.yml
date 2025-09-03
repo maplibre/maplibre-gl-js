@@ -198,12 +198,14 @@ jobs:
         uses: actions/download-artifact@abefc31eafcfbdf6c5336127c1346fdae79ff41c
         with:
           pattern: coverage-reports-*
+          merge-multiple: true
           path: downloaded
 
       - name: Merge Coverage reports
         shell: bash
         run: | 
           npm i -g nyc
+          ls -ltr downloaded
           nyc report -t ${{ github.workspace }}/downloaded --reporter html --report-dir merged-coverage
 
       - name: Upload merged coverage report
