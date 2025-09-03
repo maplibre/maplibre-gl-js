@@ -398,7 +398,6 @@ describe('mergeSourceDiffs', () => {
         } satisfies GeoJSONSourceDiff;
 
         const merged = mergeSourceDiffs(diff1, diff2);
-        console.log(merged);
         expect(merged.add).toHaveLength(1);
         expect(merged.add[0].geometry).toEqual({type: 'Point', coordinates: [2, 2]});
         expect(merged.add[0].properties).toEqual({param: 2});
