@@ -96,17 +96,24 @@ jobs:
           name: build-dist-${{ matrix.os }}
           path: dist/maplibre-gl.js
       - run: npm run test-integration-ci
+      - name: Move files
+        run: |
+          mkdir -p ${{ github.workspace }}/upload
+          mv ${{ github.workspace }}/coverage/vitest/integration/coverage-final.json ${{ github.workspace }}/upload/coverage-final-integration-${{ matrix.os }}.json
+          mv ${{ github.workspace }}/coverage/query/coverage-final.json ${{ github.workspace }}/upload/coverage-final-query-${{ matrix.os }}.json
       - name: Upload coverage artifact
         if: '!cancelled()'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: coverage-reports-integration-tests-${{ matrix.os }}
-          path: ${{ github.workspace }}/coverage/vitest/integration/coverage-final.json
+          path: |
+            ${{ github.workspace }}/upload/coverage-final-integration-${{ matrix.os }}.json
+            ${{ github.workspace }}/upload/coverage-final-query-${{ matrix.os }}.json
       - name: Upload coverage reports to Codecov
         if: '!cancelled()'
         uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5
         with:
-          files: ${{ github.workspace }}/coverage/vitest/integration/coverage-final.json,${{ github.workspace }}/coverage/query/codecov.json
+          files: ${{ github.workspace }}/upload/coverage-final-integration-${{ matrix.os }}.json,${{ github.workspace }}/upload/coverage-final-query-${{ matrix.os }}.json
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
           disable_search: true
@@ -143,17 +150,21 @@ jobs:
         run: npm run test-render
         env:
           CURRENT_SPLIT_INDEX: ${{ matrix.split }}
+      - name: Move files
+        run: |
+          mkdir -p ${{ github.workspace }}/upload
+          mv ${{ github.workspace }}/coverage/render/coverage-final.json ${{ github.workspace }}/upload/coverage-final-render-${{ matrix.os }}-${{ matrix.split }}.json
       - name: Upload coverage artifact
         if: '!cancelled()'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: coverage-reports-render-tests-${{ matrix.os }}-${{ matrix.split }}
-          path: ${{ github.workspace }}/coverage/render/codecov.json
+          path: ${{ github.workspace }}/upload/coverage-final-render-${{ matrix.os }}-${{ matrix.split }}.json
       - name: Upload coverage reports to Codecov
         if: '!cancelled()'
         uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5
         with:
-          files: ${{ github.workspace }}/coverage/render/codecov.json
+          files: ${{ github.workspace }}/upload/coverage-final-render-${{ matrix.os }}-${{ matrix.split }}.json
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
           disable_search: true
@@ -204,9 +215,8 @@ jobs:
       - name: Merge Coverage reports
         shell: bash
         run: | 
-          npm i -g nyc
           ls -ltr downloaded
-          nyc report -t ${{ github.workspace }}/downloaded --reporter html --report-dir merged-coverage
+          npx nyc report -t ${{ github.workspace }}/downloaded --reporter html --report-dir merged-coverage
 
       - name: Upload merged coverage report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
