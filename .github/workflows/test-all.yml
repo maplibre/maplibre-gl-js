@@ -187,7 +187,7 @@ jobs:
   merge-and-report:
     name: Merge and report
     runs-on: ubuntu-latest
-    needs: [unit-tests, integration-tests, render-tests]
+    needs: [unit-tests, integration-tests]
     steps:
       - name: Download coverage reports
         uses: actions/download-artifact@v4
@@ -196,7 +196,7 @@ jobs:
           path: coverage/downloaded
 
       - name: Merge coverage reports
-        uses: selfagency/merge-coverage@v1
+        uses: selfagency/merge-coverage@e3a2608578f7bc0ce5bdad74c04f8cbdf48d4b91
         with:
           coverage-reports: coverage/downloaded # Path to downloaded reports
           output-folder: merged-coverage
