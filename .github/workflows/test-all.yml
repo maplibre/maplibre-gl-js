@@ -205,6 +205,7 @@ jobs:
         shell: bash
         run: | 
           ls -ltr downloaded
+          find ./downloaded -type f -exec perl -pi -e 's|maplibre-gl-js/maplibre-gl-js/|maplibre-gl-js/|g' {} \;
           find ./downloaded -type f -exec perl -pi -e 's|"/[A-Za-z/]*/maplibre-gl-js/|"|g' {} \;
           npx nyc report -t ${{ github.workspace }}/downloaded --reporter lcov --report-dir coverage-merged
 
