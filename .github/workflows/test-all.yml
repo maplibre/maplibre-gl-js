@@ -97,23 +97,24 @@ jobs:
           path: dist/maplibre-gl.js
       - run: npm run test-integration-ci
       - name: Move files
+        if: runner.os == 'Linux'
         run: |
           mkdir -p ${{ github.workspace }}/upload
-          mv ${{ github.workspace }}/coverage/vitest/integration/coverage-final.json ${{ github.workspace }}/upload/coverage-final-integration-${{ matrix.os }}.json
-          mv ${{ github.workspace }}/coverage/query/coverage-final.json ${{ github.workspace }}/upload/coverage-final-query-${{ matrix.os }}.json
+          mv ${{ github.workspace }}/coverage/vitest/integration/coverage-final.json ${{ github.workspace }}/upload/coverage-final-integration.json
+          mv ${{ github.workspace }}/coverage/query/coverage-final.json ${{ github.workspace }}/upload/coverage-final-query.json
       - name: Upload coverage artifact
-        if: '!cancelled()'
+        if: '!cancelled() && runner.os == "Linux"'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: coverage-reports-integration-tests-${{ matrix.os }}
+          name: coverage-reports-integration-tests
           path: |
-            ${{ github.workspace }}/upload/coverage-final-integration-${{ matrix.os }}.json
-            ${{ github.workspace }}/upload/coverage-final-query-${{ matrix.os }}.json
+            ${{ github.workspace }}/upload/coverage-final-integration.json
+            ${{ github.workspace }}/upload/coverage-final-query.json
       - name: Upload coverage reports to Codecov
-        if: '!cancelled()'
+        if: '!cancelled() && runner.os == "Linux"'
         uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5
         with:
-          files: ${{ github.workspace }}/upload/coverage-final-integration-${{ matrix.os }}.json,${{ github.workspace }}/upload/coverage-final-query-${{ matrix.os }}.json
+          files: ${{ github.workspace }}/upload/coverage-final-integration.json,${{ github.workspace }}/upload/coverage-final-query.json
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
           disable_search: true
@@ -151,20 +152,21 @@ jobs:
         env:
           CURRENT_SPLIT_INDEX: ${{ matrix.split }}
       - name: Move files
+        if: runner.os == 'Linux'
         run: |
           mkdir -p ${{ github.workspace }}/upload
-          mv ${{ github.workspace }}/coverage/render/coverage-final.json ${{ github.workspace }}/upload/coverage-final-render-${{ matrix.os }}-${{ matrix.split }}.json
+          mv ${{ github.workspace }}/coverage/render/coverage-final.json ${{ github.workspace }}/upload/coverage-final-render-${{ matrix.split }}.json
       - name: Upload coverage artifact
         if: '!cancelled()'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: coverage-reports-render-tests-${{ matrix.os }}-${{ matrix.split }}
-          path: ${{ github.workspace }}/upload/coverage-final-render-${{ matrix.os }}-${{ matrix.split }}.json
+          name: coverage-reports-render-tests-${{ matrix.split }}
+          path: ${{ github.workspace }}/upload/coverage-final-render-${{ matrix.split }}.json
       - name: Upload coverage reports to Codecov
-        if: '!cancelled()'
+        if: '!cancelled() && runner.os == "Linux"'
         uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5
         with:
-          files: ${{ github.workspace }}/upload/coverage-final-render-${{ matrix.os }}-${{ matrix.split }}.json
+          files: ${{ github.workspace }}/upload/coverage-final-render-${{ matrix.split }}.json
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
           disable_search: true
@@ -216,6 +218,7 @@ jobs:
         shell: bash
         run: | 
           ls -ltr downloaded
+          find ./downloaded -type f -exec perl -pi -e 's|.*/maplibre-gl-js|/maplibre-gl-js|g' {} \;
           npx nyc report -t ${{ github.workspace }}/downloaded --reporter html --report-dir merged-coverage
 
       - name: Upload merged coverage report
