@@ -6,6 +6,7 @@
 ### 🐞 Bug fixes
 - Fix accuracy circle on locate user control ([#5432](https://github.com/maplibre/maplibre-gl-js/issues/5432))
 - Fix evaluating `global-state` in paint `...-pattern` properties ([6301](https://github.com/maplibre/maplibre-gl-js/pull/6301))
+- Fix evaluation of `text-color` when using `format` within `step` ([#5833](https://github.com/maplibre/maplibre-gl-js/issues/5432))
 - _...Add new stuff here..._
 
 ## 5.7.0
