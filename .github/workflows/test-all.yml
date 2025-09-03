@@ -201,8 +201,8 @@ jobs:
           coverage-reports: coverage/downloaded # Path to downloaded reports
           output-folder: merged-coverage
 
-      - name: Upload merged coverage report
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: merged-coverage-report
-          path: merged-coverage
+      #- name: Upload merged coverage report
+      #  uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      #  with:
+      #    name: merged-coverage-report
+      #    path: merged-coverage
