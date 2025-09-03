@@ -195,14 +195,14 @@ jobs:
           pattern: coverage-reports-*
           path: coverage/downloaded
 
-      #- name: Merge coverage reports
-      #  uses: selfagency/merge-coverage@e3a2608578f7bc0ce5bdad74c04f8cbdf48d4b91
-      #  with:
-      #    coverage-reports: coverage/downloaded # Path to downloaded reports
-      #    output-folder: merged-coverage
+      - name: Merge coverage reports
+        uses: unstoppabledomains/merge-coverage@725872b452f7c9098393ebfaf67c7966202b7adc
+        with:
+          coverage-reports: coverage/downloaded # Path to downloaded reports
+          output-folder: merged-coverage
 
-      #- name: Upload merged coverage report
-      #  uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-      #  with:
-      #    name: merged-coverage-report
-      #    path: merged-coverage
+      - name: Upload merged coverage report
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: merged-coverage-report
+          path: merged-coverage
