@@ -55,7 +55,7 @@ jobs:
       - run: npm run test-unit-ci
       - name: Upload coverage artifact
         if: '!cancelled()'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: coverage-reports-unit-tests
           path: ${{ github.workspace }}/coverage/vitest/unit/coverage-final.json
@@ -98,7 +98,7 @@ jobs:
       - run: npm run test-integration-ci
       - name: Upload coverage artifact
         if: '!cancelled()'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: coverage-reports-integration-tests-${{ matrix.os }}
           path: ${{ github.workspace }}/coverage/vitest/integration/coverage-final.json
@@ -145,7 +145,7 @@ jobs:
           CURRENT_SPLIT_INDEX: ${{ matrix.split }}
       - name: Upload coverage artifact
         if: '!cancelled()'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: coverage-reports-render-tests-${{ matrix.os }}-${{ matrix.split }}
           path: ${{ github.workspace }}/coverage/render/codecov.json
@@ -202,7 +202,7 @@ jobs:
           output-folder: merged-coverage
 
       - name: Upload merged coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: merged-coverage-report
           path: merged-coverage
