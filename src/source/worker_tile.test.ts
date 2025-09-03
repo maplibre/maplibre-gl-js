@@ -78,7 +78,7 @@ describe('worker tile', () => {
             layout: {
                 'line-join': ['global-state', 'test']
             }
-        }]);
+        }], {test: 'bevel'});
 
         const tile = createWorkerTile({
             globalState: {test: 'bevel'}
@@ -96,7 +96,7 @@ describe('worker tile', () => {
             paint: {
                 'fill-extrusion-height': ['global-state', 'test']
             }
-        }]);
+        }], {test: 1});
 
         const tile = createWorkerTile({
             globalState: {test: 1}
@@ -293,6 +293,7 @@ describe('worker tile', () => {
     });
 
     test('WorkerTile.parse passes global-state to layers', async () => {
+        const globalState = {} as any;
         const layerIndex = new StyleLayerIndex([
             {
                 id: 'layer-id',
@@ -302,9 +303,8 @@ describe('worker tile', () => {
                     'text-size': ['global-state', 'size']
                 }
             }
-        ]);
+        ], globalState);
 
-        const globalState = {} as any;
         const tile = createWorkerTile({globalState});
         globalState.size = 12;
         await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);

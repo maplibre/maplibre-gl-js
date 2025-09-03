@@ -593,8 +593,8 @@ describe('Style._load', () => {
         expect(_broadcastSpyOn).toHaveBeenCalled();
         expect(dispatchType).toBe(MessageType.setLayers);
 
-        expect(dispatchData).toHaveLength(1);
-        expect(dispatchData[0].id).toBe('background');
+        expect(dispatchData.layers).toHaveLength(1);
+        expect(dispatchData.layers[0].id).toBe('background');
 
         // cleanup
         _broadcastSpyOn.mockRestore();

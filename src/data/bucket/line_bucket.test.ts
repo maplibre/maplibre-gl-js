@@ -27,7 +27,7 @@ function createLineBucket({id, layout, paint, globalState, availableImages}: Cre
         type: 'line',
         layout,
         paint
-    } as LayerSpecification);
+    } as LayerSpecification, globalState);
     layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory, globalState} as EvaluationParameters,
         availableImages as Array<string>);
 

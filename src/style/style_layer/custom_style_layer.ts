@@ -272,8 +272,8 @@ export class CustomStyleLayer extends StyleLayer {
 
     implementation: CustomLayerInterface;
 
-    constructor(implementation: CustomLayerInterface) {
-        super(implementation, {});
+    constructor(implementation: CustomLayerInterface, globalState: Record<string, any>) {
+        super(implementation, {}, globalState);
         this.implementation = implementation;
     }
 

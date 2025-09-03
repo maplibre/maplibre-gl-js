@@ -45,6 +45,15 @@ export type RemoveSourceParams = {
 export type UpdateLayersParameters = {
     layers: Array<LayerSpecification>;
     removedIds: Array<string>;
+    globalState: Record<string, any>;
+};
+
+/**
+ * Parameters needed to set the layers
+ */
+export type SetLayersParameters = {
+    layers: Array<LayerSpecification>;
+    globalState: Record<string, any>;
 };
 
 /**
@@ -125,7 +134,7 @@ export type RequestResponseMessageMap = {
     [MessageType.getGlyphs]: [GetGlyphsParameters, GetGlyphsResponse];
     [MessageType.getImages]: [GetImagesParameters, GetImagesResponse];
     [MessageType.setImages]: [string[], void];
-    [MessageType.setLayers]: [Array<LayerSpecification>, void];
+    [MessageType.setLayers]: [SetLayersParameters, void];
     [MessageType.updateLayers]: [UpdateLayersParameters, void];
     [MessageType.syncRTLPluginState]: [PluginState, PluginState];
     [MessageType.setReferrer]: [string, void];

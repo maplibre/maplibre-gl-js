@@ -111,11 +111,12 @@ export abstract class StyleLayer extends Evented {
     constructor(layer: LayerSpecification | CustomLayerInterface, properties: Readonly<{
         layout?: Properties<any>;
         paint?: Properties<any>;
-    }>) {
+    }>, globalState: Record<string, any>) {
         super();
 
         this.id = layer.id;
         this.type = layer.type;
+        this._globalState = globalState;
         this._featureFilter = {filter: () => true, needGeometry: false, getGlobalStateRefs: () => new Set<string>()};
 
         if (layer.type === 'custom') return;
@@ -134,11 +135,11 @@ export abstract class StyleLayer extends Evented {
         }
 
         if (properties.layout) {
-            this._unevaluatedLayout = new Layout(properties.layout);
+            this._unevaluatedLayout = new Layout(properties.layout, globalState);
         }
 
         if (properties.paint) {
-            this._transitionablePaint = new Transitionable(properties.paint);
+            this._transitionablePaint = new Transitionable(properties.paint, globalState);
 
             for (const property in layer.paint) {
                 this.setPaintProperty(property, layer.paint[property], {validate: false});
@@ -309,13 +310,6 @@ export abstract class StyleLayer extends Evented {
         }
 
         (this as any).paint = this._transitioningPaint.possiblyEvaluate(parameters, undefined, availableImages);
-    }
-
-    setGlobalState(globalState: Record<string, any>) {
-        this._globalState = globalState;
-        if (this._unevaluatedLayout) {
-            this._unevaluatedLayout.setGlobalState(globalState);
-        }
     }
 
     serialize(): LayerSpecification {
