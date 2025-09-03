@@ -187,18 +187,18 @@ jobs:
   merge-and-report:
     name: Merge and report
     runs-on: ubuntu-latest
-    needs: [unit-tests] #, integration-tests
+    needs: [unit-tests, integration-tests]
     steps:
       - name: Download coverage reports
         uses: actions/download-artifact@abefc31eafcfbdf6c5336127c1346fdae79ff41c
         with:
           pattern: coverage-reports-*
-          path: coverage/downloaded
+          path: downloaded
 
       - name: Merge coverage reports
         uses: unstoppabledomains/merge-coverage@725872b452f7c9098393ebfaf67c7966202b7adc
         with:
-          coverage-reports: coverage/downloaded # Path to downloaded reports
+          coverage-reports: downloaded # Path to downloaded reports
           output-folder: merged-coverage
 
       - name: Upload merged coverage report
