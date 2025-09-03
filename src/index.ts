@@ -194,14 +194,7 @@ function setWorkerUrl(value: string) { config.WORKER_URL = value; }
  */
 function importScriptInWorkers(workerUrl: string) { return getGlobalDispatcher().broadcast(MessageType.importScript, workerUrl); }
 
-function uncoveredMethodForTestingThatNeedsToBeDeleted() {
-    let i = 0;
-    i++;
-    console.log(i);
-}
-
 export {
-    uncoveredMethodForTestingThatNeedsToBeDeleted,
     Map,
     NavigationControl,
     GeolocateControl,
