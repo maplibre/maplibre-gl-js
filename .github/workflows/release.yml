@@ -102,7 +102,7 @@ jobs:
           echo "release_notes=${RELEASE_NOTES_PATH}" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
-        uses: ncipollo/release-action@bcfe5470707e8832e12347755757cec0eb3c22af # v1
+        uses: ncipollo/release-action@1c89adf39833729d8f85a31ccbc451b078733c80 # v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
