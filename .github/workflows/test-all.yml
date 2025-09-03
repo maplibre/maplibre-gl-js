@@ -53,6 +53,12 @@ jobs:
           echo "DISPLAY=:0" >> $GITHUB_ENV
       - run: npm ci
       - run: npm run test-unit-ci
+      - name: Upload coverage artifact
+        if: '!cancelled()'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports-unit-tests
+          path: ${{ github.workspace }}/coverage/vitest/unit/coverage-final.json
       - name: Upload test results to Codecov
         if: '!cancelled()'
         uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1
@@ -65,8 +71,6 @@ jobs:
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
           disable_search: true
-
-
 
   integration-tests:
     name: Integration tests
@@ -92,6 +96,12 @@ jobs:
           name: build-dist-${{ matrix.os }}
           path: dist/maplibre-gl.js
       - run: npm run test-integration-ci
+      - name: Upload coverage artifact
+        if: '!cancelled()'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports-integration-tests-${{ matrix.os }}
+          path: ${{ github.workspace }}/coverage/vitest/integration/coverage-final.json
       - name: Upload coverage reports to Codecov
         if: '!cancelled()'
         uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5
@@ -133,6 +143,12 @@ jobs:
         run: npm run test-render
         env:
           CURRENT_SPLIT_INDEX: ${{ matrix.split }}
+      - name: Upload coverage artifact
+        if: '!cancelled()'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports-render-tests-${{ matrix.os }}-${{ matrix.split }}
+          path: ${{ github.workspace }}/coverage/render/codecov.json
       - name: Upload coverage reports to Codecov
         if: '!cancelled()'
         uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5
@@ -167,3 +183,26 @@ jobs:
       - run: npm ci
       - run: npm run build-dist
       - run: npm run test-build-ci
+
+  merge-and-report:
+    name: Merge and report
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, render-tests]
+    steps:
+      - name: Download coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-reports-*
+          path: coverage/downloaded
+
+      - name: Merge coverage reports
+        uses: selfagency/merge-coverage@v1
+        with:
+          coverage-reports: coverage/downloaded # Path to downloaded reports
+          output-folder: merged-coverage
+
+      - name: Upload merged coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: merged-coverage-report
+          path: merged-coverage
