@@ -142,7 +142,7 @@ describe('query tests', () => {
         const coverageReport = new CoverageReport({
             name: 'MapLibre Coverage Report',
             outputDir: './coverage/query',
-            reports: [['v8'], ['codecov']]
+            reports: [['v8'], ['json']]
         });
         coverageReport.cleanCache();
         
