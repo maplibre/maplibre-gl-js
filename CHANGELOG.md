@@ -6,6 +6,7 @@
 ### 🐞 Bug fixes
 - Fix accuracy circle on locate user control ([#5432](https://github.com/maplibre/maplibre-gl-js/issues/5432))
 - Fix evaluating `global-state` in paint `...-pattern` properties ([6301](https://github.com/maplibre/maplibre-gl-js/pull/6301))
+- Fix pan moving in the wrong direction when map is pitched ([#6111](https://github.com/maplibre/maplibre-gl-js/issues/6111))
 - _...Add new stuff here..._
 
 ## 5.7.0
