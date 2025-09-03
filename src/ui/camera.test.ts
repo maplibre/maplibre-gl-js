@@ -12,11 +12,11 @@ import {GlobeTransform} from '../geo/projection/globe_transform';
 import {getZoomAdjustment} from '../geo/projection/globe_utils';
 import {GlobeCameraHelper} from '../geo/projection/globe_camera_helper';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
+import {getMercatorHorizon} from '../geo/projection/mercator_utils';
+import Point from '@mapbox/point-geometry';
 
 import type {GlobeProjection} from '../geo/projection/globe_projection';
 import type {Terrain} from '../render/terrain';
-import {getMercatorHorizon} from '../geo/projection/mercator_utils';
-import Point from '@mapbox/point-geometry';
 
 beforeEach(() => {
     setMatchMedia();
