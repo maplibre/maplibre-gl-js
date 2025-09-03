@@ -41,7 +41,7 @@ describe('CircleStyleLayer.queryIntersectsFeature', () => {
                 'circle-pitch-scale': pitchScale,
                 'circle-pitch-alignment': pitchAlignment
             }
-        } as LayerSpecification);
+        } as LayerSpecification, {});
         circleLayer.recalculate({} as EvaluationParameters, []);
         return circleLayer;
     }

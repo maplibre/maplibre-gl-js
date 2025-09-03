@@ -26,7 +26,7 @@ function createFillBucket({id, layout, paint, globalState, availableImages}: Cre
         type: 'fill',
         layout,
         paint
-    } as LayerSpecification);
+    } as LayerSpecification, globalState);
     layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory, globalState} as EvaluationParameters,
         availableImages as Array<string>);
 

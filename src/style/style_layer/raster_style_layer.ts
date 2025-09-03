@@ -13,7 +13,7 @@ export class RasterStyleLayer extends StyleLayer {
     _transitioningPaint: Transitioning<RasterPaintProps>;
     paint: PossiblyEvaluated<RasterPaintProps, RasterPaintPropsPossiblyEvaluated>;
 
-    constructor(layer: LayerSpecification) {
-        super(layer, properties);
+    constructor(layer: LayerSpecification, globalState: Record<string, any>) {
+        super(layer, properties, globalState);
     }
 }

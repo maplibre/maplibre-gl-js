@@ -208,7 +208,6 @@ function recalculateLayers(layers: ReadonlyArray<StyleLayer>, zoom: number, avai
     // Layers are shared and may have been used by a WorkerTile with a different zoom.
     const parameters = new EvaluationParameters(zoom);
     for (const layer of layers) {
-        layer.setGlobalState(globalState);
         layer.recalculate(parameters, availableImages);
     }
 }
