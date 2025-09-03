@@ -103,7 +103,7 @@ jobs:
           mv ${{ github.workspace }}/coverage/vitest/integration/coverage-final.json ${{ github.workspace }}/upload/coverage-final-integration.json
           mv ${{ github.workspace }}/coverage/query/coverage-final.json ${{ github.workspace }}/upload/coverage-final-query.json
       - name: Upload coverage artifact
-        if: ${{ !cancelled() && runner.os == "Linux" }}
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: coverage-reports-integration-tests
@@ -111,7 +111,7 @@ jobs:
             ${{ github.workspace }}/upload/coverage-final-integration.json
             ${{ github.workspace }}/upload/coverage-final-query.json
       - name: Upload coverage reports to Codecov
-        if: ${{ !cancelled() && runner.os == "Linux" }}
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
         uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5
         with:
           files: ${{ github.workspace }}/upload/coverage-final-integration.json,${{ github.workspace }}/upload/coverage-final-query.json
@@ -163,7 +163,7 @@ jobs:
           name: coverage-reports-render-tests-${{ matrix.split }}
           path: ${{ github.workspace }}/upload/coverage-final-render-${{ matrix.split }}.json
       - name: Upload coverage reports to Codecov
-        if: ${{ !cancelled() && runner.os == "Linux" }}
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
         uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5
         with:
           files: ${{ github.workspace }}/upload/coverage-final-render-${{ matrix.split }}.json
