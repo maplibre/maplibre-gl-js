@@ -112,14 +112,6 @@ jobs:
             ${{ github.workspace }}/upload/coverage-final-integration.json
             ${{ github.workspace }}/upload/coverage-final-query.json
           retention-days: 1
-      - name: Upload coverage reports to Codecov
-        if: ${{ !cancelled() && runner.os == 'Linux' }}
-        uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5
-        with:
-          files: ${{ github.workspace }}/upload/coverage-final-integration.json,${{ github.workspace }}/upload/coverage-final-query.json
-          verbose: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-          disable_search: true
 
   render-tests:
     name: Render tests
@@ -165,14 +157,6 @@ jobs:
           name: coverage-reports-render-tests-${{ matrix.split }}
           path: ${{ github.workspace }}/upload/coverage-final-render-${{ matrix.split }}.json
           retention-days: 1
-      - name: Upload coverage reports to Codecov
-        if: ${{ !cancelled() && runner.os == 'Linux' }}
-        uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5
-        with:
-          files: ${{ github.workspace }}/upload/coverage-final-render-${{ matrix.split }}.json
-          verbose: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-          disable_search: true
       - name: Upload test results to Codecov
         if: '!cancelled()'
         uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1
@@ -236,3 +220,11 @@ jobs:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           COVERAGE_FILE_PATH: "./coverage-merged/lcov.info"
           COVERAGE_FORMAT: "lcov"
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5
+        with:
+          files: ${{ github.workspace }}/coverage-merged/lcov.info
+          verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          disable_search: true
