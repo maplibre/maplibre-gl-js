@@ -106,6 +106,8 @@ export abstract class StyleLayer extends Evented {
     queryIntersectsFeature?(params: QueryIntersectsFeatureParams): boolean | number;
     createBucket?(parameters: BucketParameters<any>): Bucket;
 
+    private _globalState: Record<string, any>; // reference to global state
+
     constructor(layer: LayerSpecification | CustomLayerInterface, properties: Readonly<{
         layout?: Properties<any>;
         paint?: Properties<any>;
@@ -123,6 +125,8 @@ export abstract class StyleLayer extends Evented {
         this.metadata = layer.metadata;
         this.minzoom = layer.minzoom;
         this.maxzoom = layer.maxzoom;
+
+        this._globalState = {};
 
         if (layer.type !== 'background') {
             this.source = layer.source;
@@ -295,6 +299,7 @@ export abstract class StyleLayer extends Evented {
     }
 
     recalculate(parameters: EvaluationParameters, availableImages: Array<string>) {
+        parameters.globalState = this._globalState;
         if (parameters.getCrossfadeParameters) {
             this._crossfadeParameters = parameters.getCrossfadeParameters();
         }
@@ -304,6 +309,13 @@ export abstract class StyleLayer extends Evented {
         }
 
         (this as any).paint = this._transitioningPaint.possiblyEvaluate(parameters, undefined, availableImages);
+    }
+
+    setGlobalState(globalState: Record<string, any>) {
+        this._globalState = globalState;
+        if (this._unevaluatedLayout) {
+            this._unevaluatedLayout.setGlobalState(globalState);
+        }
     }
 
     serialize(): LayerSpecification {

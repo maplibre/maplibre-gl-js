@@ -6,6 +6,9 @@ import {StyleLayerIndex} from '../style/style_layer_index';
 import {type WorkerTileParameters} from './worker_source';
 import {type VectorTile} from '@mapbox/vector-tile';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
+import {type EvaluationParameters} from '../style/evaluation_parameters';
+import {type PossiblyEvaluated} from '../style/properties';
+import {type SymbolLayoutProps, type SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
 
 function createWorkerTile(params?: {globalState?: Record<string, any>}): WorkerTile {
     return new WorkerTile({
@@ -285,5 +288,27 @@ describe('worker tile', () => {
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'icons'})}), expect.any(Object));
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'patterns'})}), expect.any(Object));
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}})}), expect.any(Object));
+    });
+
+    test('WorkerTile.parse passes global-state to layers', async () => {
+        const layerIndex = new StyleLayerIndex([
+            {
+                id: 'layer-id',
+                type: 'symbol',
+                source: 'source',
+                layout: {
+                    'text-size': ['global-state', 'size']
+                }
+            }
+        ]);
+
+        const globalState = {} as any;
+        const tile = createWorkerTile({globalState});
+        globalState.size = 12;
+        await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
+        const layer = layerIndex._layers['layer-id'];
+        layer.recalculate({} as EvaluationParameters, []);
+        const layout = layer.layout as PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>;
+        expect(layout.get('text-size').evaluate({} as any, {})).toBe(12);
     });
 });
