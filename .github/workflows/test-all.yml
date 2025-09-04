@@ -40,7 +40,7 @@ jobs:
         run: npm run spellcheck
 
   unit-tests:
-    name: Unit tests and Coverage
+    name: Unit tests
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -53,20 +53,18 @@ jobs:
           echo "DISPLAY=:0" >> $GITHUB_ENV
       - run: npm ci
       - run: npm run test-unit-ci
+      - name: Upload coverage artifact
+        if: '!cancelled()'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: coverage-reports-unit-tests
+          path: ${{ github.workspace }}/coverage/vitest/unit/coverage-final.json
+          retention-days: 1
       - name: Upload test results to Codecov
         if: '!cancelled()'
         uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5
-        with:
-          files: ${{ github.workspace }}/coverage/vitest/unit/coverage-final.json
-          verbose: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-          disable_search: true
-
-
 
   integration-tests:
     name: Integration tests
@@ -92,14 +90,21 @@ jobs:
           name: build-dist-${{ matrix.os }}
           path: dist/maplibre-gl.js
       - run: npm run test-integration-ci
-      - name: Upload coverage reports to Codecov
-        if: '!cancelled()'
-        uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5
+      - name: Move files
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p ${{ github.workspace }}/upload
+          mv ${{ github.workspace }}/coverage/vitest/integration/coverage-final.json ${{ github.workspace }}/upload/coverage-final-integration.json
+          mv ${{ github.workspace }}/coverage/query/coverage-final.json ${{ github.workspace }}/upload/coverage-final-query.json
+      - name: Upload coverage artifact
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          files: ${{ github.workspace }}/coverage/vitest/integration/coverage-final.json,${{ github.workspace }}/coverage/query/codecov.json
-          verbose: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-          disable_search: true
+          name: coverage-reports-integration-tests
+          path: |
+            ${{ github.workspace }}/upload/coverage-final-integration.json
+            ${{ github.workspace }}/upload/coverage-final-query.json
+          retention-days: 1
 
   render-tests:
     name: Render tests
@@ -133,14 +138,18 @@ jobs:
         run: npm run test-render
         env:
           CURRENT_SPLIT_INDEX: ${{ matrix.split }}
-      - name: Upload coverage reports to Codecov
-        if: '!cancelled()'
-        uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5
+      - name: Move files
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p ${{ github.workspace }}/upload
+          mv ${{ github.workspace }}/coverage/render/coverage-final.json ${{ github.workspace }}/upload/coverage-final-render-${{ matrix.split }}.json
+      - name: Upload coverage artifact
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          files: ${{ github.workspace }}/coverage/render/codecov.json
-          verbose: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-          disable_search: true
+          name: coverage-reports-render-tests-${{ matrix.split }}
+          path: ${{ github.workspace }}/upload/coverage-final-render-${{ matrix.split }}.json
+          retention-days: 1
       - name: Upload test results to Codecov
         if: '!cancelled()'
         uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1
@@ -167,3 +176,48 @@ jobs:
       - run: npm ci
       - run: npm run build-dist
       - run: npm run test-build-ci
+
+  merge-and-report:
+    name: Merge coverage and report
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, render-tests]
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@abefc31eafcfbdf6c5336127c1346fdae79ff41c
+        with:
+          pattern: coverage-reports-*
+          merge-multiple: true
+          path: downloaded
+
+      - name: Merge Coverage reports
+        shell: bash
+        run: | 
+          find ./downloaded -type f -exec perl -pi -e 's|maplibre-gl-js/maplibre-gl-js/|maplibre-gl-js/|g' {} \;
+          find ./downloaded -type f -exec perl -pi -e 's|"/[A-Za-z/]*/maplibre-gl-js/|"|g' {} \;
+          npx nyc report -t ${{ github.workspace }}/downloaded --reporter lcov --reporter json --report-dir coverage-merged
+
+      - name: Upload merged coverage report
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: merged-coverage-report
+          path: coverage-merged
+
+      - name: Code Coverage Annotation
+        uses: ggilder/codecoverage@7a86e1ba1504dd0d588324fedff7184f4e4dd890
+        with:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          COVERAGE_FILE_PATH: "./coverage-merged/lcov.info"
+          COVERAGE_FORMAT: "lcov"
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5
+        with:
+          files: ${{ github.workspace }}/coverage-merged/coverage-final.json
+          verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          disable_search: true

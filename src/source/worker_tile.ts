@@ -206,8 +206,9 @@ export class WorkerTile {
 
 function recalculateLayers(layers: ReadonlyArray<StyleLayer>, zoom: number, availableImages: Array<string>, globalState: Record<string, any>) {
     // Layers are shared and may have been used by a WorkerTile with a different zoom.
-    const parameters = new EvaluationParameters(zoom, {globalState});
+    const parameters = new EvaluationParameters(zoom);
     for (const layer of layers) {
+        layer.setGlobalState(globalState);
         layer.recalculate(parameters, availableImages);
     }
 }
