@@ -156,7 +156,7 @@ export class SymbolStyleLayer extends StyleLayer {
 
         if (textField.value.kind === 'constant' && textField.value.value instanceof Formatted) {
             checkSections(textField.value.value.sections);
-        } else if (textField.value.kind === 'source') {
+        } else if (textField.value.kind === 'source' || textField.value.kind === 'composite') {
 
             const checkExpression = (expression: Expression) => {
                 if (hasOverrides) return;
