@@ -313,6 +313,9 @@ export abstract class StyleLayer extends Evented {
 
     setGlobalState(globalState: Record<string, any>) {
         this._globalState = globalState;
+        if (this._unevaluatedLayout) {
+            this._unevaluatedLayout.setGlobalState(globalState);
+        }
     }
 
     serialize(): LayerSpecification {

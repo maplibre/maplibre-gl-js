@@ -2,6 +2,7 @@ import {clone, extend, easeCubicInOut} from '../util/util';
 import {interpolates, type Color, type StylePropertySpecification, normalizePropertyExpression,
     type Feature,
     type FeatureState,
+    type GlobalProperties,
     type StylePropertyExpression,
     type SourceExpression,
     type CompositeExpression, type TransitionSpecification,
@@ -71,11 +72,13 @@ export class PropertyValue<T, R> {
     property: Property<T, R>;
     value: PropertyValueSpecification<T> | void;
     expression: StylePropertyExpression;
+    private _evaluate: (parameters: EvaluationParameters) => R; // original evaluate function
 
     constructor(property: Property<T, R>, value: PropertyValueSpecification<T> | void) {
         this.property = property;
         this.value = value;
         this.expression = normalizePropertyExpression(value === undefined ? property.specification.default : value, property.specification);
+        this._evaluate = this.expression.evaluate;
     }
 
     isDataDriven(): boolean {
@@ -92,6 +95,16 @@ export class PropertyValue<T, R> {
         availableImages?: Array<string>
     ): R {
         return this.property.possiblyEvaluate(this, parameters, canonical, availableImages);
+    }
+
+    setGlobalState(globalState: Record<string, any>) {
+        //@ts-ignore
+        this.expression.evaluate = (globals: GlobalProperties, feature?: Feature, featureState?: FeatureState, canonical?: ICanonicalTileID, availableImages?: Array<string>, formattedSection?: FormattedSection) => {
+            // force the use of global state object when evaluating any expression
+            //@ts-ignore
+            globals.globalState = globalState;
+            return this._evaluate.call(this.expression, globals, feature, featureState, canonical, availableImages, formattedSection);
+        };
     }
 }
 
@@ -315,10 +328,12 @@ export class Transitioning<Props> {
 export class Layout<Props> {
     _properties: Properties<Props>;
     _values: {[K in keyof Props]: PropertyValue<any, PossiblyEvaluatedPropertyValue<any>>};
+    private _globalState: Record<string, any>; // reference to global state
 
     constructor(properties: Properties<Props>) {
         this._properties = properties;
         this._values = (Object.create(properties.defaultPropertyValues) as any);
+        this._globalState = {};
     }
 
     hasValue<S extends keyof Props>(name: S) {
@@ -331,6 +346,7 @@ export class Layout<Props> {
 
     setValue<S extends keyof Props>(name: S, value: any) {
         this._values[name] = new PropertyValue(this._values[name].property, value === null ? undefined : clone(value)) as any;
+        this._values[name].setGlobalState(this._globalState);
     }
 
     serialize() {
@@ -354,6 +370,13 @@ export class Layout<Props> {
             result._values[property] = this._values[property].possiblyEvaluate(parameters, canonical, availableImages);
         }
         return result;
+    }
+
+    setGlobalState(globalState: Record<string, any>) {
+        this._globalState = globalState;
+        for (const value of Object.values(this._values)) {
+            (value as PropertyValue<any, PossiblyEvaluatedPropertyValue<any>>).setGlobalState(globalState);
+        }
     }
 }
 
