@@ -65,13 +65,6 @@ jobs:
         uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5
-        with:
-          files: ${{ github.workspace }}/coverage/vitest/unit/coverage-final.json
-          verbose: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-          disable_search: true
 
   integration-tests:
     name: Integration tests
