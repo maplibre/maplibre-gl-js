@@ -40,7 +40,7 @@ jobs:
         run: npm run spellcheck
 
   unit-tests:
-    name: Unit tests and Coverage
+    name: Unit tests
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -65,13 +65,6 @@ jobs:
         uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5
-        with:
-          files: ${{ github.workspace }}/coverage/vitest/unit/coverage-final.json
-          verbose: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-          disable_search: true
 
   integration-tests:
     name: Integration tests
@@ -185,7 +178,7 @@ jobs:
       - run: npm run test-build-ci
 
   merge-and-report:
-    name: Merge and report
+    name: Merge coverage and report
     runs-on: ubuntu-latest
     needs: [unit-tests, integration-tests, render-tests]
     steps:
@@ -206,7 +199,7 @@ jobs:
         run: | 
           find ./downloaded -type f -exec perl -pi -e 's|maplibre-gl-js/maplibre-gl-js/|maplibre-gl-js/|g' {} \;
           find ./downloaded -type f -exec perl -pi -e 's|"/[A-Za-z/]*/maplibre-gl-js/|"|g' {} \;
-          npx nyc report -t ${{ github.workspace }}/downloaded --reporter lcov --report-dir coverage-merged
+          npx nyc report -t ${{ github.workspace }}/downloaded --reporter lcov --reporter json --report-dir coverage-merged
 
       - name: Upload merged coverage report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -224,7 +217,7 @@ jobs:
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5
         with:
-          files: ${{ github.workspace }}/coverage-merged/lcov.info
+          files: ${{ github.workspace }}/coverage-merged/coverage-final.json
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
           disable_search: true
