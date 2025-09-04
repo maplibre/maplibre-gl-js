@@ -452,3 +452,23 @@ describe('StyleLayer.serialize', () => {
         expect(layer.paint).toBeTruthy();
     });
 });
+
+describe('StyleLayer.globalState', () => {
+    test('uses layer global state when recalculating layout properties', () => {
+        const layer = createStyleLayer({
+            id: 'symbol',
+            type: 'symbol',
+            layout: {
+                'text-field': '{text}',
+                'text-size': ['global-state', 'textSize'],
+                'text-transform': ['global-state', 'textTransform']
+            }
+        }  as LayerSpecification) as SymbolStyleLayer;
+        layer.setGlobalState({textSize: 15, textTransform: 'uppercase'});
+
+        layer.recalculate({zoom: 0, zoomHistory: {}, globalState: {textSize: 13, textTransform: 'lowercase'} as Record<string, any>} as EvaluationParameters, undefined);
+
+        expect(layer.layout.get('text-size').evaluate(undefined, {})).toBe(15);
+        expect(layer.layout.get('text-transform').evaluate(undefined, {})).toBe('uppercase');
+    });
+});
