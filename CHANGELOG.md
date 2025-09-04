@@ -6,6 +6,7 @@
 ### 🐞 Bug fixes
 - Fix accuracy circle on locate user control ([#5432](https://github.com/maplibre/maplibre-gl-js/issues/5432))
 - Fix evaluating `global-state` in paint `...-pattern` properties ([6301](https://github.com/maplibre/maplibre-gl-js/pull/6301))
+- Fix pan moving in the wrong direction when map is pitched ([#6111](https://github.com/maplibre/maplibre-gl-js/issues/6111))
 - Fix evaluation of `text-color` when using `format` within `step` ([#5833](https://github.com/maplibre/maplibre-gl-js/issues/5432))
 - Fix regression in `mergeSourceDiffs`: handle add/remove/removeAll ([6342](https://github.com/maplibre/maplibre-gl-js/pull/6342))
 - Fix evaluating `global-state` in layout properties `icon-size` and `text-size` ([#6308](https://github.com/maplibre/maplibre-gl-js/issues/6308))

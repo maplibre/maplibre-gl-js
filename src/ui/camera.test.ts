@@ -12,6 +12,8 @@ import {GlobeTransform} from '../geo/projection/globe_transform';
 import {getZoomAdjustment} from '../geo/projection/globe_utils';
 import {GlobeCameraHelper} from '../geo/projection/globe_camera_helper';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
+import {getMercatorHorizon} from '../geo/projection/mercator_utils';
+import Point from '@mapbox/point-geometry';
 
 import type {GlobeProjection} from '../geo/projection/globe_projection';
 import type {Terrain} from '../render/terrain';
@@ -906,6 +908,24 @@ describe('easeTo', () => {
         const camera = createCamera({bearing: 180});
         camera.easeTo({center: [100, 0], offset: [100, 0], duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 170.3125, lat: 0});
+    });
+
+    test('offset computed from inertia (small) does not cross horizon when pitched', () => {
+        const camera = createCamera({pitch: 85, zoom: 10});
+        const easeOptions = camera.cameraHelper.handlePanInertia(new Point(0, 100), camera.transform);
+        expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.transform)));
+    });
+
+    test('offset computed from inertia (large) does not cross horizon when pitched', () => {
+        const camera = createCamera({pitch: 85, zoom: 10});
+        const easeOptions = camera.cameraHelper.handlePanInertia(new Point(0, 500), camera.transform);
+        expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.transform)));
+    });
+
+    test('offset computed from inertia (large) does not cross horizon when pitched and rotated', () => {
+        const camera = createCamera({pitch: 85, bearing: 135, zoom: 10});
+        const easeOptions = camera.cameraHelper.handlePanInertia(new Point(0, 500), camera.transform);
+        expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.transform)));
     });
 
     test('zooms with specified offset', () => {
@@ -2915,6 +2935,24 @@ describe('easeTo globe projection', () => {
             const camera = createCameraGlobe({bearing: 180});
             camera.easeTo({center: [100, 0], offset: [100, 0], duration: 0});
             expect(fixedLngLat(camera.getCenter())).toEqual({lng: -175.50457909, lat: 0});
+        });
+
+        test('offset computed from inertia (small) does not cross horizon when pitched', () => {
+            const camera = createCameraGlobe({pitch: 85, zoom: 10});
+            const easeOptions = camera.cameraHelper.handlePanInertia(new Point(0, 100), camera.transform);
+            expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.transform)));
+        });
+
+        test('offset computed from inertia (large) does not cross horizon when pitched', () => {
+            const camera = createCameraGlobe({pitch: 85, zoom: 10});
+            const easeOptions = camera.cameraHelper.handlePanInertia(new Point(0, 500), camera.transform);
+            expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.transform)));
+        });
+
+        test('offset computed from inertia (large) does not cross horizon when pitched and rotated', () => {
+            const camera = createCameraGlobe({pitch: 85, bearing: 135, zoom: 10});
+            const easeOptions = camera.cameraHelper.handlePanInertia(new Point(0, 500), camera.transform);
+            expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.transform)));
         });
 
         test('zooms with specified offset', () => {
