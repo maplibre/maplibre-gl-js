@@ -25,7 +25,8 @@ export class MercatorCameraHelper implements ICameraHelper {
         // the horizon, the pan direction is opposite of the intended direction.
         const offsetLength = pan.mag();
         const pixelsToHorizon = Math.abs(getMercatorHorizon(transform));
-        const offsetAsPoint = pan.mult(Math.min(pixelsToHorizon / 2 / offsetLength, 1.0));
+        const horizonFactor = 0.75; // Must be < 1 to prevent the offset from crossing the horizon
+        const offsetAsPoint = pan.mult(Math.min(pixelsToHorizon * horizonFactor / offsetLength, 1.0));
         return {
             easingOffset: offsetAsPoint,
             easingCenter: transform.center,
