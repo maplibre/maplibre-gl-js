@@ -187,7 +187,7 @@ export class LineBucket implements Bucket {
             const {geometry, index, sourceLayerIndex} = bucketFeature;
 
             if (this.hasPattern) {
-                const patternBucketFeature = addPatternDependencies('line', this.layers, bucketFeature, this.zoom, options);
+                const patternBucketFeature = addPatternDependencies('line', this.layers, bucketFeature, {zoom: this.zoom, globalState: this.globalState}, options);
                 // pattern features are added only once the pattern is loaded into the image atlas
                 // so are stored during populate until later updated with positions by tile worker in addFeatures
                 this.patternFeatures.push(patternBucketFeature);
@@ -202,7 +202,10 @@ export class LineBucket implements Bucket {
 
     update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePositionLike}) {
         if (!this.stateDependentLayers.length) return;
-        this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, imagePositions);
+        this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, {
+            imagePositions,
+            globalState: this.globalState
+        });
     }
 
     addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePositionLike}, dashPositions?: {[_: string]: ImagePositionLike}) {
@@ -260,7 +263,7 @@ export class LineBucket implements Bucket {
             this.addLine(line, feature, join, cap, miterLimit, roundLimit, canonical, subdivisionGranularity);
         }
 
-        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, imagePositions, canonical);
+        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {imagePositions, canonical, globalState: this.globalState});
     }
 
     addLine(vertices: Array<Point>, feature: BucketFeature, join: string, cap: string, miterLimit: number, roundLimit: number, canonical: CanonicalTileID | undefined, subdivisionGranularity: SubdivisionGranularitySetting) {

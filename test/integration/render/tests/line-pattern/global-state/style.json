@@ -1,0 +1,133 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 128,
+      "height": 128,
+      "operations": [
+        [
+          "setGlobalStateProperty",
+          "icon",
+          "generic_icon"
+        ],
+        [
+          "wait"
+        ]
+      ]
+    }
+  },
+  "state": {
+    "icon": { "default": "generic_rail" }
+  },
+  "sources": {
+    "a": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  10,
+                  -10
+                ],
+                [
+                  -10,
+                  -10
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "b": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "icon": "generic_metro"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -10,
+                  0
+                ],
+                [
+                  10,
+                  0
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -10,
+                  10
+                ],
+                [
+                  10,
+                  10
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "zoom": 2,
+  "sprite": "local://sprites/emerald",
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "road-a",
+      "type": "line",
+      "source": "a",
+      "paint": {
+        "line-width": 10,
+        "line-pattern": [
+          "global-state",
+          "icon"
+        ]
+      }
+    },
+    {
+      "id": "road-b",
+      "type": "line",
+      "source": "b",
+      "paint": {
+        "line-width": 10,
+        "line-pattern": [
+          "coalesce",
+          [
+            "get",
+            "icon"
+          ],
+          [
+            "global-state",
+            "icon"
+          ]
+        ]
+      }
+    }
+  ]
+}

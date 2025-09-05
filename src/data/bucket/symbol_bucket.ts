@@ -561,8 +561,14 @@ export class SymbolBucket implements Bucket {
 
     update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}) {
         if (!this.stateDependentLayers.length) return;
-        this.text.programConfigurations.updatePaintArrays(states, vtLayer, this.layers, imagePositions);
-        this.icon.programConfigurations.updatePaintArrays(states, vtLayer, this.layers, imagePositions);
+        this.text.programConfigurations.updatePaintArrays(states, vtLayer, this.layers, {
+            imagePositions,
+            globalState: this.globalState
+        });
+        this.icon.programConfigurations.updatePaintArrays(states, vtLayer, this.layers, {
+            imagePositions,
+            globalState: this.globalState
+        });
     }
 
     isEmpty() {
@@ -672,7 +678,7 @@ export class SymbolBucket implements Bucket {
             this.glyphOffsetArray.emplaceBack(glyphOffset[0]);
 
             if (i === quads.length - 1 || sectionIndex !== quads[i + 1].sectionIndex) {
-                arrays.programConfigurations.populatePaintArrays(layoutVertexArray.length, feature, feature.index, {}, canonical, sections && sections[sectionIndex]);
+                arrays.programConfigurations.populatePaintArrays(layoutVertexArray.length, feature, feature.index, {imagePositions: {}, canonical, formattedSection: sections && sections[sectionIndex], globalState: this.globalState});
             }
         }
 

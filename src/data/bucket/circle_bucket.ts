@@ -145,7 +145,10 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
 
     update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}) {
         if (!this.stateDependentLayers.length) return;
-        this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, imagePositions);
+        this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, {
+            imagePositions,
+            globalState: this.globalState
+        });
     }
 
     isEmpty() {
@@ -233,7 +236,7 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
             }
         }
 
-        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {}, canonical);
+        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {imagePositions: {}, canonical, globalState: this.globalState});
     }
 }
 

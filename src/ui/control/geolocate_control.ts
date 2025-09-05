@@ -13,7 +13,7 @@ import {LngLatBounds} from '../../geo/lng_lat_bounds';
 /**
  * The {@link GeolocateControl} options object
  */
-type GeolocateControlOptions = {
+export type GeolocateControlOptions = {
     /**
      * A Geolocation API [PositionOptions](https://developer.mozilla.org/en-US/docs/Web/API/PositionOptions) object.
      * @defaultValue `{enableHighAccuracy: false, timeout: 6000}`
@@ -303,7 +303,10 @@ export class GeolocateControl extends Evented implements IControl {
         }
 
         DOM.remove(this._container);
-        this._map.off('zoom', this._onZoom);
+        this._map.off('zoom', this._onUpdate);
+        this._map.off('move', this._onUpdate);
+        this._map.off('rotate', this._onUpdate);
+        this._map.off('pitch', this._onUpdate);
         this._map = undefined;
         numberOfWatches = 0;
         noTimeout = false;
@@ -450,30 +453,28 @@ export class GeolocateControl extends Evented implements IControl {
             this._accuracyCircleMarker.setLngLat(center).addTo(this._map);
             this._userLocationDotMarker.setLngLat(center).addTo(this._map);
             this._accuracy = position.coords.accuracy;
-            if (this.options.showUserLocation && this.options.showAccuracyCircle) {
-                this._updateCircleRadius();
-            }
+            this._updateCircleRadiusIfNeeded();
         } else {
             this._userLocationDotMarker.remove();
             this._accuracyCircleMarker.remove();
         }
     };
 
-    _updateCircleRadius() {
-        const bounds = this._map.getBounds();
-        const southEastPoint = bounds.getSouthEast();
-        const northEastPoint = bounds.getNorthEast();
-        const mapHeightInMeters = southEastPoint.distanceTo(northEastPoint);
-        const mapHeightInPixels = this._map._container.clientHeight;
-        const circleDiameter = Math.ceil(2 * (this._accuracy / (mapHeightInMeters / mapHeightInPixels)));
-        this._circleElement.style.width = `${circleDiameter}px`;
-        this._circleElement.style.height = `${circleDiameter}px`;
+    _updateCircleRadiusIfNeeded() {
+        const userLocation = this._userLocationDotMarker.getLngLat();
+        if (!this.options.showUserLocation || !this.options.showAccuracyCircle || !this._accuracy || !userLocation) {
+            return;
+        }
+        const screenPosition = this._map.project(userLocation);
+        const userLocationWith100Px = this._map.unproject([screenPosition.x + 100, screenPosition.y]);
+        const pixelsToMeters = userLocation.distanceTo(userLocationWith100Px) / 100;
+        const circleDiameter = 2 * this._accuracy / pixelsToMeters;
+        this._circleElement.style.width = `${circleDiameter.toFixed(2)}px`;
+        this._circleElement.style.height = `${circleDiameter.toFixed(2)}px`;
     }
 
-    _onZoom = () => {
-        if (this.options.showUserLocation && this.options.showAccuracyCircle) {
-            this._updateCircleRadius();
-        }
+    _onUpdate = () => {
+        this._updateCircleRadiusIfNeeded();
     };
 
     _onError = (error: GeolocationPositionError) => {
@@ -571,7 +572,10 @@ export class GeolocateControl extends Evented implements IControl {
 
             if (this.options.trackUserLocation) this._watchState = 'OFF';
 
-            this._map.on('zoom', this._onZoom);
+            this._map.on('zoom', this._onUpdate);
+            this._map.on('move', this._onUpdate);
+            this._map.on('rotate', this._onUpdate);
+            this._map.on('pitch', this._onUpdate);
         }
 
         this._geolocateButton.addEventListener('click', () => this.trigger());
@@ -583,7 +587,7 @@ export class GeolocateControl extends Evented implements IControl {
         if (this.options.trackUserLocation) {
             this._map.on('movestart', (event: any) => {
                 const fromResize = event?.[0] instanceof ResizeObserverEntry;
-                if (!event.geolocateSource && this._watchState === 'ACTIVE_LOCK' && !fromResize) {
+                if (!event.geolocateSource && this._watchState === 'ACTIVE_LOCK' && !fromResize && !this._map.isZooming()) {
                     this._watchState = 'BACKGROUND';
                     this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background');
                     this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-active');
@@ -720,4 +724,3 @@ export class GeolocateControl extends Evented implements IControl {
         }
     }
 }
-

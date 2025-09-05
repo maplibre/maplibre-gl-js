@@ -52,7 +52,7 @@ export type VectorTileSourceOptions = VectorSourceSpecification & {
  * ```ts
  * map.getSource('some id').setTiles(['https://d25uarhxywzl1j.cloudfront.net/v0.1/{z}/{x}/{y}.mvt']);
  * ```
- * @see [Add a vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/vector-source/)
+ * @see [Add a vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-vector-tile-source/)
  */
 export class VectorTileSource extends Evented implements Source {
     type: 'vector';

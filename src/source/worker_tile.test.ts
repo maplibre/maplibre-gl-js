@@ -6,8 +6,11 @@ import {StyleLayerIndex} from '../style/style_layer_index';
 import {type WorkerTileParameters} from './worker_source';
 import {type VectorTile} from '@mapbox/vector-tile';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
+import {type EvaluationParameters} from '../style/evaluation_parameters';
+import {type PossiblyEvaluated} from '../style/properties';
+import {type SymbolLayoutProps, type SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
 
-function createWorkerTile() {
+function createWorkerTile(params?: {globalState?: Record<string, any>}): WorkerTile {
     return new WorkerTile({
         uid: '',
         zoom: 0,
@@ -15,7 +18,8 @@ function createWorkerTile() {
         tileSize: 512,
         source: 'source',
         tileID: new OverscaledTileID(1, 0, 1, 1, 1),
-        overscaling: 1
+        overscaling: 1,
+        globalState: params?.globalState
     } as any as WorkerTileParameters);
 }
 
@@ -23,6 +27,14 @@ function createWrapper() {
     return new GeoJSONWrapper([{
         type: 1,
         geometry: [0, 0],
+        tags: {}
+    } as any as Feature]);
+}
+
+function createLineWrapper() {
+    return new GeoJSONWrapper([{
+        type: 2,
+        geometry: [[0, 0], [1, 1]],
         tags: {}
     } as any as Feature]);
 }
@@ -38,6 +50,58 @@ describe('worker tile', () => {
         const tile = createWorkerTile();
         const result = await tile.parse(createWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
         expect(result.buckets[0]).toBeTruthy();
+    });
+
+    test('WorkerTile.parse layer with layout property', async () => {
+        const layerIndex = new StyleLayerIndex([{
+            id: 'test',
+            source: 'source',
+            type: 'line',
+            layout: {
+                'line-join': 'bevel'
+            }
+        }]);
+
+        const tile = createWorkerTile();
+        const result = await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
+        expect(result.buckets[0]).toBeTruthy();
+        expect(result.buckets[0].layers[0].layout._values['line-join'].value.value).toBe('bevel');
+    });
+
+    test('WorkerTile.parse layer with layout property using global-state', async () => {
+        const layerIndex = new StyleLayerIndex([{
+            id: 'test',
+            source: 'source',
+            type: 'line',
+            layout: {
+                'line-join': ['global-state', 'test']
+            }
+        }]);
+
+        const tile = createWorkerTile({
+            globalState: {test: 'bevel'}
+        });
+        const result = await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
+        expect(result.buckets[0]).toBeTruthy();
+        expect(result.buckets[0].layers[0].layout._values['line-join'].value.value).toBe('bevel');
+    });
+
+    test('WorkerTile.parse layer with paint property using global-state', async () => {
+        const layerIndex = new StyleLayerIndex([{
+            id: 'test',
+            source: 'source',
+            type: 'fill-extrusion',
+            paint: {
+                'fill-extrusion-height': ['global-state', 'test']
+            }
+        }]);
+
+        const tile = createWorkerTile({
+            globalState: {test: 1}
+        });
+        const result = await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
+        expect(result.buckets[0]).toBeTruthy();
+        expect(result.buckets[0].layers[0].paint._values['fill-extrusion-height'].value.value).toBe(1);
     });
 
     test('WorkerTile.parse skips hidden layers', async () => {
@@ -224,5 +288,27 @@ describe('worker tile', () => {
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'icons'})}), expect.any(Object));
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'patterns'})}), expect.any(Object));
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}})}), expect.any(Object));
+    });
+
+    test('WorkerTile.parse passes global-state to layers', async () => {
+        const layerIndex = new StyleLayerIndex([
+            {
+                id: 'layer-id',
+                type: 'symbol',
+                source: 'source',
+                layout: {
+                    'text-size': ['global-state', 'size']
+                }
+            }
+        ]);
+
+        const globalState = {} as any;
+        const tile = createWorkerTile({globalState});
+        globalState.size = 12;
+        await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
+        const layer = layerIndex._layers['layer-id'];
+        layer.recalculate({} as EvaluationParameters, []);
+        const layout = layer.layout as PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>;
+        expect(layout.get('text-size').evaluate({} as any, {})).toBe(12);
     });
 });

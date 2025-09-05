@@ -15,12 +15,12 @@ import type {PointLike} from './camera';
 /**
  * Alignment options of rotation and pitch
  */
-type Alignment = 'map' | 'viewport' | 'auto';
+export type Alignment = 'map' | 'viewport' | 'auto';
 
 /**
  * The {@link Marker} options object
  */
-type MarkerOptions = {
+export type MarkerOptions = {
     /**
      * DOM element to use as a marker. The default is a light blue, droplet-shaped SVG marker.
      */
