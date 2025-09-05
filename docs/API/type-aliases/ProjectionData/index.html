@@ -7985,7 +7985,7 @@
 <blockquote>
 <p><strong>ProjectionData</strong> = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6d02b8fbdd4b0cd2573adbcafb30cbc6e823f4b5/src/geo/projection/projection_data.ts#L8">src/geo/projection/projection_data.ts:8</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/11ef4f7eab6f9ac9de0d3601f9028f116b1e18d5/src/geo/projection/projection_data.ts#L8">src/geo/projection/projection_data.ts:8</a></p>
 <p>This type contains all data necessary to project a tile to screen in MapLibre's shader system.
 Contains data used for both mercator and globe projection.</p>
 <h2 id="properties">Properties</h2>
@@ -7993,7 +7993,7 @@ Contains data used for both mercator and globe projection.</p>
 <blockquote>
 <p><strong>clippingPlane</strong>: [<code>number</code>, <code>number</code>, <code>number</code>, <code>number</code>]</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6d02b8fbdd4b0cd2573adbcafb30cbc6e823f4b5/src/geo/projection/projection_data.ts#L34">src/geo/projection/projection_data.ts:34</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/11ef4f7eab6f9ac9de0d3601f9028f116b1e18d5/src/geo/projection/projection_data.ts#L34">src/geo/projection/projection_data.ts:34</a></p>
 <p>The plane equation for a plane that intersects the planet's horizon.
 Assumes the planet to be a unit sphere.
 Used by globe projection for clipping.
@@ -8003,7 +8003,7 @@ Uniform name: <code>u_projection_clipping_plane</code>.</p>
 <blockquote>
 <p><strong>fallbackMatrix</strong>: <code>mat4</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6d02b8fbdd4b0cd2573adbcafb30cbc6e823f4b5/src/geo/projection/projection_data.ts#L46">src/geo/projection/projection_data.ts:46</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/11ef4f7eab6f9ac9de0d3601f9028f116b1e18d5/src/geo/projection/projection_data.ts#L46">src/geo/projection/projection_data.ts:46</a></p>
 <p>Fallback matrix that projects the current tile according to mercator projection.
 Used by globe projection to fall back to mercator projection in an animated way.
 Uniform name: <code>u_projection_fallback_matrix</code>.</p>
@@ -8012,7 +8012,7 @@ Uniform name: <code>u_projection_fallback_matrix</code>.</p>
 <blockquote>
 <p><strong>mainMatrix</strong>: <code>mat4</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6d02b8fbdd4b0cd2573adbcafb30cbc6e823f4b5/src/geo/projection/projection_data.ts#L14">src/geo/projection/projection_data.ts:14</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/11ef4f7eab6f9ac9de0d3601f9028f116b1e18d5/src/geo/projection/projection_data.ts#L14">src/geo/projection/projection_data.ts:14</a></p>
 <p>The main projection matrix. For mercator projection, it usually projects in-tile coordinates 0..EXTENT to screen,
 for globe projection, it projects a unit sphere planet to screen.
 Uniform name: <code>u_projection_matrix</code>.</p>
@@ -8021,7 +8021,7 @@ Uniform name: <code>u_projection_matrix</code>.</p>
 <blockquote>
 <p><strong>projectionTransition</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6d02b8fbdd4b0cd2573adbcafb30cbc6e823f4b5/src/geo/projection/projection_data.ts#L40">src/geo/projection/projection_data.ts:40</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/11ef4f7eab6f9ac9de0d3601f9028f116b1e18d5/src/geo/projection/projection_data.ts#L40">src/geo/projection/projection_data.ts:40</a></p>
 <p>A value in range 0..1 indicating interpolation between mercator (0) and globe (1) projections.
 Used by globe projection to hide projection transition at high zooms.
 Uniform name: <code>u_projection_transition</code>.</p>
@@ -8030,7 +8030,7 @@ Uniform name: <code>u_projection_transition</code>.</p>
 <blockquote>
 <p><strong>tileMercatorCoords</strong>: [<code>number</code>, <code>number</code>, <code>number</code>, <code>number</code>]</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/6d02b8fbdd4b0cd2573adbcafb30cbc6e823f4b5/src/geo/projection/projection_data.ts#L27">src/geo/projection/projection_data.ts:27</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/11ef4f7eab6f9ac9de0d3601f9028f116b1e18d5/src/geo/projection/projection_data.ts#L27">src/geo/projection/projection_data.ts:27</a></p>
 <p>The extent of current tile in the mercator square.
 Used by globe projection.
 First two components are X and Y offset, last two are X and Y scale.
