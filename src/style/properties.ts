@@ -333,7 +333,6 @@ export class Layout<Props> {
     constructor(properties: Properties<Props>) {
         this._properties = properties;
         this._values = (Object.create(properties.defaultPropertyValues) as any);
-        this._globalState = {};
     }
 
     hasValue<S extends keyof Props>(name: S) {
