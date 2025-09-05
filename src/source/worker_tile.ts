@@ -197,7 +197,7 @@ export class WorkerTile {
                 bucket instanceof FillBucket ||
                 bucket instanceof FillExtrusionBucket)) {
                 recalculateLayers(bucket.layers, this.zoom, availableImages, this.globalState);
-                bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions);
+                bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions, lineAtlas);
             }
         }
 

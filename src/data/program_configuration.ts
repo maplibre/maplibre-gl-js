@@ -18,7 +18,7 @@ import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer';
 import type {CrossfadeParameters} from '../style/evaluation_parameters';
 import type {StructArray, StructArrayMember} from '../util/struct_array';
 import type {VertexBuffer} from '../gl/vertex_buffer';
-import type {ImagePosition, ImagePositionLike} from '../render/image_atlas';
+import type {ImagePositionLike} from '../render/image_atlas';
 import type {
     Feature,
     FeatureState,
@@ -559,7 +559,7 @@ export class ProgramConfiguration {
     populatePaintArrays(newLength: number, feature: Feature, options: PaintOptions) {
         for (const property in this.binders) {
             const binder = this.binders[property];
-            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedCompositeBinder)
+            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedCompositeBinder || binder instanceof CrossFadedDasharrayBinder)
                 (binder as AttributeBinder).populatePaintArray(newLength, feature, options);
         }
     }
