@@ -135,6 +135,8 @@ class CrossFadedConstantBinder implements UniformBinder {
     uniformNames: Array<string>;
     patternFrom: Array<number>;
     patternTo: Array<number>;
+    dashFrom: Array<number>;
+    dashTo: Array<number>;
     pixelRatioFrom: number;
     pixelRatioTo: number;
 
@@ -153,17 +155,23 @@ class CrossFadedConstantBinder implements UniformBinder {
         this.patternTo = posTo.tlbr;
     }
 
+    setConstantDashPositions(posTo: ImagePositionLike, posFrom: ImagePositionLike) {
+        this.dashFrom = posFrom.tlbr;
+        this.dashTo = posTo.tlbr;
+    }
+
     setUniform(uniform: Uniform<any>, globals: GlobalProperties, currentValue: PossiblyEvaluatedPropertyValue<unknown>, uniformName: string) {
-        const pos =
-            uniformName === 'u_pattern_to' ? this.patternTo :
-                uniformName === 'u_pattern_from' ? this.patternFrom :
-                    uniformName === 'u_dasharray_to' ? this.patternTo :
-                        uniformName === 'u_dasharray_from' ? this.patternFrom :
-                            uniformName === 'u_pixel_ratio_to' ? this.pixelRatioTo :
-                                uniformName === 'u_pixel_ratio_from' ? this.pixelRatioFrom :
-                                    uniformName === 'u_dash_pixel_ratio_to' ? this.pixelRatioTo :
-                                        uniformName === 'u_dash_pixel_ratio_from' ? this.pixelRatioFrom : null;
-        if (pos) uniform.set(pos);
+        const uniformMappings = {
+            'u_pattern_to': this.patternTo,
+            'u_pattern_from': this.patternFrom,
+            'u_dasharray_to': this.dashTo,
+            'u_dasharray_from': this.dashFrom,
+            'u_pixel_ratio_to': this.pixelRatioTo,
+            'u_pixel_ratio_from': this.pixelRatioFrom,
+        };
+
+        const value = uniformMappings[uniformName];
+        if (value !== undefined) uniform.set(value);
     }
 
     getBinding(context: Context, location: WebGLUniformLocation, name: string): Partial<Uniform<any>> {
@@ -326,7 +334,7 @@ class CompositeExpressionBinder implements AttributeBinder, UniformBinder {
     }
 }
 
-class CrossFadedCompositeBinder implements AttributeBinder {
+class CrossFadedPatternBinder implements AttributeBinder {
     expression: CompositeExpression;
     type: string;
     useIntegerZoom: boolean;
@@ -537,7 +545,7 @@ export class ProgramConfiguration {
                 this.binders[property] = isCrossFaded ?
                     property === 'line-dasharray' ?
                         new CrossFadedDasharrayBinder(expression as CompositeExpression, type, useIntegerZoom, zoom, StructArrayLayout, layer.id) :
-                        new CrossFadedCompositeBinder(expression as CompositeExpression, type, useIntegerZoom, zoom, StructArrayLayout, layer.id) :
+                        new CrossFadedPatternBinder(expression as CompositeExpression, type, useIntegerZoom, zoom, StructArrayLayout, layer.id) :
                     new SourceExpressionBinder(expression as SourceExpression, names, type, StructArrayLayout);
                 keys.push(`/a_${property}`);
 
@@ -559,15 +567,24 @@ export class ProgramConfiguration {
     populatePaintArrays(newLength: number, feature: Feature, options: PaintOptions) {
         for (const property in this.binders) {
             const binder = this.binders[property];
-            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedCompositeBinder || binder instanceof CrossFadedDasharrayBinder)
+            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedPatternBinder || binder instanceof CrossFadedDasharrayBinder)
                 (binder as AttributeBinder).populatePaintArray(newLength, feature, options);
         }
     }
+
     setConstantPatternPositions(posTo: ImagePositionLike, posFrom: ImagePositionLike) {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof CrossFadedConstantBinder)
                 binder.setConstantPatternPositions(posTo, posFrom);
+        }
+    }
+
+    setConstantDashPositions(posTo: ImagePositionLike, posFrom: ImagePositionLike) {
+        for (const property in this.binders) {
+            const binder = this.binders[property];
+            if (binder instanceof CrossFadedConstantBinder)
+                binder.setConstantDashPositions(posTo, posFrom);
         }
     }
 
@@ -588,7 +605,7 @@ export class ProgramConfiguration {
                 for (const property in this.binders) {
                     const binder = this.binders[property];
                     if ((binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder ||
-                         binder instanceof CrossFadedCompositeBinder || binder instanceof CrossFadedDasharrayBinder) && (binder as any).expression.isStateDependent === true) {
+                         binder instanceof CrossFadedPatternBinder || binder instanceof CrossFadedDasharrayBinder) && (binder as any).expression.isStateDependent === true) {
                         //AHM: Remove after https://github.com/mapbox/mapbox-gl-js/issues/6255
                         const value = (layer.paint as any).get(property);
                         (binder as any).expression = value.value;
@@ -620,7 +637,7 @@ export class ProgramConfiguration {
                 for (let i = 0; i < binder.paintVertexAttributes.length; i++) {
                     result.push(binder.paintVertexAttributes[i].name);
                 }
-            } else if (binder instanceof CrossFadedCompositeBinder) {
+            } else if (binder instanceof CrossFadedPatternBinder) {
                 for (let i = 0; i < patternAttributes.members.length; i++) {
                     result.push(patternAttributes.members[i].name);
                 }
@@ -684,7 +701,7 @@ export class ProgramConfiguration {
 
         for (const property in this.binders) {
             const binder = this.binders[property];
-            if (crossfade && (binder instanceof CrossFadedCompositeBinder || binder instanceof CrossFadedDasharrayBinder)) {
+            if (crossfade && (binder instanceof CrossFadedPatternBinder || binder instanceof CrossFadedDasharrayBinder)) {
                 const patternVertexBuffer = crossfade.fromScale === 2 ? binder.zoomInPaintVertexBuffer : binder.zoomOutPaintVertexBuffer;
                 if (patternVertexBuffer) this._buffers.push(patternVertexBuffer);
 
@@ -697,7 +714,7 @@ export class ProgramConfiguration {
     upload(context: Context) {
         for (const property in this.binders) {
             const binder = this.binders[property];
-            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedCompositeBinder || binder instanceof CrossFadedDasharrayBinder)
+            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedPatternBinder || binder instanceof CrossFadedDasharrayBinder)
                 binder.upload(context);
         }
         this.updatePaintBuffers();
@@ -706,7 +723,7 @@ export class ProgramConfiguration {
     destroy() {
         for (const property in this.binders) {
             const binder = this.binders[property];
-            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedCompositeBinder || binder instanceof CrossFadedDasharrayBinder)
+            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedPatternBinder || binder instanceof CrossFadedDasharrayBinder)
                 binder.destroy();
         }
     }
@@ -779,7 +796,7 @@ function paintAttributeNames(property, type) {
         'text-halo-width': ['halo_width'],
         'icon-halo-width': ['halo_width'],
         'line-gap-width': ['gapwidth'],
-        'line-dasharray': ['dasharray_to', 'dasharray_from', 'dash_pixel_ratio_to', 'dash_pixel_ratio_from'],
+        'line-dasharray': ['dasharray_to', 'dasharray_from'],
         'line-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
         'fill-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
         'fill-extrusion-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
@@ -830,7 +847,7 @@ function layoutType(property, type, binderType) {
 register('ConstantBinder', ConstantBinder);
 register('CrossFadedConstantBinder', CrossFadedConstantBinder);
 register('SourceExpressionBinder', SourceExpressionBinder);
-register('CrossFadedCompositeBinder', CrossFadedCompositeBinder);
+register('CrossFadedCompositeBinder', CrossFadedPatternBinder);
 register('CrossFadedDasharrayBinder', CrossFadedDasharrayBinder);
 register('CompositeExpressionBinder', CompositeExpressionBinder);
 register('ProgramConfiguration', ProgramConfiguration, {omit: ['_buffers']});

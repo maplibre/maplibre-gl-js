@@ -2,7 +2,7 @@ import type {ImagePositionLike} from '../../render/image_atlas';
 import type {GetDashesResponse} from '../../util/actor_messages';
 
 export function createBucketLineAtlas(buckets: {[_: string]: any}, dashes: GetDashesResponse): {[_: string]: ImagePositionLike} {
-    const dasharrayPositions: {[_: string]: ImagePositionLike} = {};
+    const positions: {[_: string]: ImagePositionLike} = {};
 
     for (const key in buckets) {
         const bucket = buckets[key];
@@ -19,9 +19,9 @@ export function createBucketLineAtlas(buckets: {[_: string]: any}, dashes: GetDa
                         const dashMax = dashes[maxKey];
 
                         if (dashMin && dashMid && dashMax) {
-                            dasharrayPositions[minKey] = {tlbr: [0, dashMin.y, dashMin.height, dashMin.width], pixelRatio: 1};
-                            dasharrayPositions[midKey] = {tlbr: [0, dashMid.y, dashMid.height, dashMid.width], pixelRatio: 1};
-                            dasharrayPositions[maxKey] = {tlbr: [0, dashMax.y, dashMax.height, dashMax.width], pixelRatio: 1};
+                            positions[minKey] = {tlbr: [0, dashMin.y, dashMin.height, dashMin.width], pixelRatio: 1};
+                            positions[midKey] = {tlbr: [0, dashMid.y, dashMid.height, dashMid.width], pixelRatio: 1};
+                            positions[maxKey] = {tlbr: [0, dashMax.y, dashMax.height, dashMax.width], pixelRatio: 1};
                         }
                     }
                 }
@@ -29,5 +29,5 @@ export function createBucketLineAtlas(buckets: {[_: string]: any}, dashes: GetDa
         }
     }
 
-    return dasharrayPositions;
+    return positions;
 }
