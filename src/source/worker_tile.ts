@@ -164,14 +164,15 @@ export class WorkerTile {
             getPatternsPromise = actor.sendAsync({type: MessageType.getImages, data: {icons: patterns, source: this.source, tileID: this.tileID, type: 'patterns'}}, abortController);
         }
 
-        let getDashesPromise = Promise.resolve<GetDashesResponse>({} as GetDashesResponse);
-        if (Object.keys(options.dashDependencies).length) {
+        const dasharray = options.dashDependencies;
+        let getDasharrayPromise = Promise.resolve<GetDashesResponse>({} as GetDashesResponse);
+        if (Object.keys(dasharray).length) {
             const abortController = new AbortController();
             this.inFlightDependencies.push(abortController);
-            getDashesPromise = actor.sendAsync({type: MessageType.getDashes, data: {dashes: options.dashDependencies, source: this.source, tileID: this.tileID, type: 'dashes'}}, abortController);
+            getDasharrayPromise = actor.sendAsync({type: MessageType.getDashes, data: {dashes: dasharray, source: this.source, tileID: this.tileID, type: 'dasharray'}}, abortController);
         }
 
-        const [glyphMap, iconMap, patternMap, dasharrayMap] = await Promise.all([getGlyphsPromise, getIconsPromise, getPatternsPromise, getDashesPromise]);
+        const [glyphMap, iconMap, patternMap, dasharrayMap] = await Promise.all([getGlyphsPromise, getIconsPromise, getPatternsPromise, getDasharrayPromise]);
 
         const glyphAtlas = new GlyphAtlas(glyphMap);
         const imageAtlas = new ImageAtlas(iconMap, patternMap);

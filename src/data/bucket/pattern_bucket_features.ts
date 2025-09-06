@@ -42,7 +42,7 @@ export function hasPattern(type: string, layers: PatternStyleLayers, options: Po
 export function addPatternDependencies(type: string, layers: PatternStyleLayers, patternFeature: BucketFeature, parameters: { zoom: number; globalState: Record<string, any> }, options: PopulateParameters) {
     const {zoom, globalState} = parameters;
     const patterns = options.patternDependencies;
-    const dashes = options.dashDependencies;
+    const dasharrays = options.dashDependencies;
 
     for (const layer of layers) {
         const patternProperty = (layer.paint  as PossiblyEvaluated<any, any>).get(`${type}-pattern`);
@@ -78,9 +78,9 @@ export function addPatternDependencies(type: string, layers: PatternStyleLayers,
                 const midKey = JSON.stringify(mid);
                 const maxKey = JSON.stringify(max);
 
-                dashes[minKey] = min;
-                dashes[midKey] = mid;
-                dashes[maxKey] = max;
+                dasharrays[minKey] = min;
+                dasharrays[midKey] = mid;
+                dasharrays[maxKey] = max;
 
                 patternFeature.dashes[layer.id] = {min: minKey, mid: midKey, max: maxKey};
             }
