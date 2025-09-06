@@ -13,7 +13,9 @@ import type {GetImagesResponse} from '../util/actor_messages';
 const IMAGE_PADDING: number = 1;
 export {IMAGE_PADDING};
 
-export class ImagePosition {
+export interface ImagePositionLike {tlbr: number[]; pixelRatio: number}
+
+export class ImagePosition implements ImagePositionLike {
     paddedRect: Rect;
     pixelRatio: number;
     version: number;
