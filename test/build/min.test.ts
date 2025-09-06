@@ -38,7 +38,7 @@ describe('test min build', () => {
         const decreaseQuota = 4096;
 
         // feel free to update this value after you've checked that it has changed on purpose :-)
-        const expectedBytes = 939790;
+        const expectedBytes = 940815;
 
         expect(actualBytes).toBeLessThan(expectedBytes + increaseQuota);
         expect(actualBytes).toBeGreaterThan(expectedBytes - decreaseQuota);

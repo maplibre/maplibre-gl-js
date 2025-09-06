@@ -11,7 +11,7 @@ import {OverscaledTileID} from '../source/tile_id';
 import {fakeServer, type FakeServer} from 'nise';
 
 import {type EvaluationParameters} from './evaluation_parameters';
-import {type Feature, type LayerSpecification, type GeoJSONSourceSpecification, type FilterSpecification, type SourceSpecification, type StyleSpecification, type SymbolLayerSpecification, type SkySpecification} from '@maplibre/maplibre-gl-style-spec';
+import {Color, type Feature, type LayerSpecification, type GeoJSONSourceSpecification, type FilterSpecification, type SourceSpecification, type StyleSpecification, type SymbolLayerSpecification, type SkySpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type GeoJSONSource} from '../source/geojson_source';
 import {StubMap, sleep, waitForEvent} from '../util/test/util';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
@@ -21,6 +21,7 @@ import {type Tile} from '../source/tile';
 import type Point from '@mapbox/point-geometry';
 import {type PossiblyEvaluated} from './properties';
 import {type SymbolLayoutProps, type SymbolLayoutPropsPossiblyEvaluated} from './style_layer/symbol_style_layer_properties.g';
+import {type CirclePaintProps, type CirclePaintPropsPossiblyEvaluated} from './style_layer/circle_style_layer_properties.g';
 
 function createStyleJSON(properties?): StyleSpecification {
     return extend({
@@ -493,14 +494,46 @@ describe('Style.loadJSON', () => {
         );
         await style.once('style.load');
         // tests that reference to globalState is propagated to layers
-        // by changing globalState property and checking if the changed value
+        // by setting globalState property and checking if the new value
         // was used when evaluating the layer
-        const globalState = style.getGlobalState();
-        globalState.size = 12;
+        const globalState = {size: {default: 12}};
+        style.setGlobalState(globalState);
         const layer = style.getLayer('layer-id');
         layer.recalculate({} as EvaluationParameters, []);
         const layout = layer.layout as PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>;
         expect(layout.get('text-size').evaluate({} as Feature, {})).toBe(12);
+    });
+
+    test('propagates global state object to layers added after loading style', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(
+            createStyleJSON({
+                sources: {
+                    'source-id': createGeoJSONSource()
+                },
+                layers: []
+            })
+        );
+        await style.once('style.load');
+        style.addLayer({
+            id: 'layer-id',
+            type: 'circle',
+            source: 'source-id',
+            paint: {
+                'circle-color': ['global-state', 'color'],
+                'circle-radius': ['global-state', 'radius']
+            }
+        });
+        // tests that reference to globalState is propagated to layers
+        // by setting globalState property and checking if the new value
+        // was used when evaluating the layer
+        const globalState = {color: {default: 'red'}, radius: {default: 12}};
+        style.setGlobalState(globalState);
+        const layer = style.getLayer('layer-id');
+        layer.recalculate({} as EvaluationParameters, []);
+        const paint = layer.paint as PossiblyEvaluated<CirclePaintProps, CirclePaintPropsPossiblyEvaluated>;
+        expect(paint.get('circle-color').evaluate({} as Feature, {})).toEqual(new Color(1, 0, 0, 1));
+        expect(paint.get('circle-radius').evaluate({} as Feature, {})).toEqual(12);
     });
 });
 

@@ -100,9 +100,10 @@ export class PropertyValue<T, R> {
     setGlobalState(globalState: Record<string, any>) {
         //@ts-ignore
         this.expression.evaluate = (globals: GlobalProperties, feature?: Feature, featureState?: FeatureState, canonical?: ICanonicalTileID, availableImages?: Array<string>, formattedSection?: FormattedSection) => {
-            // force the use of global state object when evaluating any expression
+            // use `global-state` reference if not provided as parameter to evaluate()
+            // passing an empty object as evaluate() for `global-state` relies on it existing
             //@ts-ignore
-            globals.globalState = globalState;
+            globals.globalState ??= globalState ?? {};
             return this._evaluate.call(this.expression, globals, feature, featureState, canonical, availableImages, formattedSection);
         };
     }
@@ -333,7 +334,6 @@ export class Layout<Props> {
     constructor(properties: Properties<Props>) {
         this._properties = properties;
         this._values = (Object.create(properties.defaultPropertyValues) as any);
-        this._globalState = {};
     }
 
     hasValue<S extends keyof Props>(name: S) {
