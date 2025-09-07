@@ -154,16 +154,21 @@ class CrossFadedConstantBinder implements UniformBinder {
     }
 
     setUniform(uniform: Uniform<any>, globals: GlobalProperties, currentValue: PossiblyEvaluatedPropertyValue<unknown>, uniformName: string) {
-        const pos =
-            uniformName === 'u_pattern_to' ? this.patternTo :
-                uniformName === 'u_pattern_from' ? this.patternFrom :
-                    uniformName === 'u_dasharray_to' ? this.patternTo :
-                        uniformName === 'u_dasharray_from' ? this.patternFrom :
-                            uniformName === 'u_pixel_ratio_to' ? this.pixelRatioTo :
-                                uniformName === 'u_pixel_ratio_from' ? this.pixelRatioFrom :
-                                    uniformName === 'u_dash_pixel_ratio_to' ? this.pixelRatioTo :
-                                        uniformName === 'u_dash_pixel_ratio_from' ? this.pixelRatioFrom : null;
-        if (pos) uniform.set(pos);
+        let value = null;
+
+        if (uniformName === 'u_pattern_to' || uniformName === 'u_dasharray_to') {
+            value = this.patternTo;
+        } else if (uniformName === 'u_pattern_from' || uniformName === 'u_dasharray_from') {
+            value = this.patternFrom;
+        } else if (uniformName === 'u_pixel_ratio_to' || uniformName === 'u_dash_pixel_ratio_to') {
+            value = this.pixelRatioTo;
+        } else if (uniformName === 'u_pixel_ratio_from' || uniformName === 'u_dash_pixel_ratio_from') {
+            value = this.pixelRatioFrom;
+        }
+
+        if (value !== null) {
+            uniform.set(value);
+        }
     }
 
     getBinding(context: Context, location: WebGLUniformLocation, name: string): Partial<Uniform<any>> {
