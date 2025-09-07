@@ -15,10 +15,10 @@ function createFillExtrusionBucket({id, layout, paint, globalState, availableIma
         layout,
         paint
     } as LayerSpecification, globalState);
-    layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory, globalState} as EvaluationParameters,
+    layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters,
         availableImages as Array<string>);
 
-    return new FillExtrusionBucket({layers: [layer], globalState} as BucketParameters<FillExtrusionStyleLayer>);
+    return new FillExtrusionBucket({layers: [layer]} as BucketParameters<FillExtrusionStyleLayer>);
 }
 
 describe('FillExtrusionBucket', () => {

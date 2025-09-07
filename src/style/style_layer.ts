@@ -298,9 +298,6 @@ export abstract class StyleLayer extends Evented {
     }
 
     recalculate(parameters: EvaluationParameters, availableImages: Array<string>) {
-        if (this._globalState) {
-            parameters.globalState = this._globalState;
-        }
         if (parameters.getCrossfadeParameters) {
             this._crossfadeParameters = parameters.getCrossfadeParameters();
         }
