@@ -160,9 +160,9 @@ class CrossFadedConstantBinder implements UniformBinder {
             value = this.patternTo;
         } else if (uniformName === 'u_pattern_from' || uniformName === 'u_dasharray_from') {
             value = this.patternFrom;
-        } else if (uniformName === 'u_pixel_ratio_to' || uniformName === 'u_dash_pixel_ratio_to') {
+        } else if (uniformName === 'u_pixel_ratio_to') {
             value = this.pixelRatioTo;
-        } else if (uniformName === 'u_pixel_ratio_from' || uniformName === 'u_dash_pixel_ratio_from') {
+        } else if (uniformName === 'u_pixel_ratio_from') {
             value = this.pixelRatioFrom;
         }
 
@@ -784,7 +784,7 @@ function paintAttributeNames(property, type) {
         'text-halo-width': ['halo_width'],
         'icon-halo-width': ['halo_width'],
         'line-gap-width': ['gapwidth'],
-        'line-dasharray': ['dasharray_to', 'dasharray_from', 'dash_pixel_ratio_to', 'dash_pixel_ratio_from'],
+        'line-dasharray': ['dasharray_to', 'dasharray_from'],
         'line-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
         'fill-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
         'fill-extrusion-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
