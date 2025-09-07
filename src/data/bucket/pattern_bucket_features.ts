@@ -26,7 +26,6 @@ export function hasPattern(type: string, layers: PatternStyleLayers, options: Po
             patterns[constantPattern.to] =  true;
             patterns[constantPattern.from] =  true;
         }
-
     }
 
     return hasPattern;
@@ -35,7 +34,6 @@ export function hasPattern(type: string, layers: PatternStyleLayers, options: Po
 export function addPatternDependencies(type: string, layers: PatternStyleLayers, patternFeature: BucketFeature, parameters: { zoom: number; globalState: Record<string, any> }, options: PopulateParameters) {
     const {zoom, globalState} = parameters;
     const patterns = options.patternDependencies;
-
     for (const layer of layers) {
         const patternProperty = (layer.paint  as PossiblyEvaluated<any, any>).get(`${type}-pattern`);
 

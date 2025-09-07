@@ -331,7 +331,7 @@ class CompositeExpressionBinder implements AttributeBinder, UniformBinder {
     }
 }
 
-class CrossFadedCompositeBinder implements AttributeBinder {
+abstract class CrossFadedBinder implements AttributeBinder {
     expression: CompositeExpression;
     type: string;
     useIntegerZoom: boolean;
@@ -361,45 +361,37 @@ class CrossFadedCompositeBinder implements AttributeBinder {
         const start = this.zoomInPaintVertexArray.length;
         this.zoomInPaintVertexArray.resize(length);
         this.zoomOutPaintVertexArray.resize(length);
-        this._setPaintValues(start, length, feature.patterns && feature.patterns[this.layerId], options.imagePositions);
+        this._setPaintValues(start, length, this.getFeatureData(feature), options.imagePositions);
     }
 
     updatePaintArray(start: number, end: number, feature: Feature, featureState: FeatureState, options: PaintOptions) {
-        this._setPaintValues(start, end, feature.patterns && feature.patterns[this.layerId], options.imagePositions);
+        this._setPaintValues(start, end, this.getFeatureData(feature), options.imagePositions);
     }
 
-    _setPaintValues(start, end, patterns, positions) {
-        if (!positions || !patterns) return;
+    protected abstract getFeatureData(feature: Feature): any;
+    protected abstract getVertexAttributes(): Array<StructArrayMember>;
+    protected abstract emplaceVertexData(array: StructArray, index: number, midPos: ImagePositionLike, minMaxPos: ImagePositionLike): void;
 
-        const {min, mid, max} = patterns;
-        const imageMin = positions[min];
-        const imageMid = positions[mid];
-        const imageMax = positions[max];
-        if (!imageMin || !imageMid || !imageMax) return;
+    _setPaintValues(start: number, end: number, data: any, positions: {[_: string]: ImagePositionLike}) {
+        if (!positions || !data) return;
 
-        // We populate two paint arrays because, for cross-faded properties, we don't know which direction
-        // we're cross-fading to at layout time. In order to keep vertex attributes to a minimum and not pass
-        // unnecessary vertex data to the shaders, we determine which to upload at draw time.
+        const {min, mid, max} = data;
+        const posMin = positions[min];
+        const posMid = positions[mid];
+        const posMax = positions[max];
+        if (!posMin || !posMid || !posMax) return;
+
         for (let i = start; i < end; i++) {
-            this.zoomInPaintVertexArray.emplace(i,
-                imageMid.tlbr[0], imageMid.tlbr[1], imageMid.tlbr[2], imageMid.tlbr[3],
-                imageMin.tlbr[0], imageMin.tlbr[1], imageMin.tlbr[2], imageMin.tlbr[3],
-                imageMid.pixelRatio,
-                imageMin.pixelRatio,
-            );
-            this.zoomOutPaintVertexArray.emplace(i,
-                imageMid.tlbr[0], imageMid.tlbr[1], imageMid.tlbr[2], imageMid.tlbr[3],
-                imageMax.tlbr[0], imageMax.tlbr[1], imageMax.tlbr[2], imageMax.tlbr[3],
-                imageMid.pixelRatio,
-                imageMax.pixelRatio,
-            );
+            this.emplaceVertexData(this.zoomInPaintVertexArray, i, posMid, posMin);
+            this.emplaceVertexData(this.zoomOutPaintVertexArray, i, posMid, posMax);
         }
     }
 
     upload(context: Context) {
         if (this.zoomInPaintVertexArray && this.zoomInPaintVertexArray.arrayBuffer && this.zoomOutPaintVertexArray && this.zoomOutPaintVertexArray.arrayBuffer) {
-            this.zoomInPaintVertexBuffer = context.createVertexBuffer(this.zoomInPaintVertexArray, patternAttributes.members, this.expression.isStateDependent);
-            this.zoomOutPaintVertexBuffer = context.createVertexBuffer(this.zoomOutPaintVertexArray, patternAttributes.members, this.expression.isStateDependent);
+            const attributes = this.getVertexAttributes();
+            this.zoomInPaintVertexBuffer = context.createVertexBuffer(this.zoomInPaintVertexArray, attributes, this.expression.isStateDependent);
+            this.zoomOutPaintVertexBuffer = context.createVertexBuffer(this.zoomOutPaintVertexArray, attributes, this.expression.isStateDependent);
         }
     }
 
@@ -409,81 +401,39 @@ class CrossFadedCompositeBinder implements AttributeBinder {
     }
 }
 
-class CrossFadedDasharrayBinder implements AttributeBinder {
-    expression: CompositeExpression;
-    type: string;
-    useIntegerZoom: boolean;
-    zoom: number;
-    layerId: string;
-
-    zoomInPaintVertexArray: StructArray;
-    zoomOutPaintVertexArray: StructArray;
-    zoomInPaintVertexBuffer: VertexBuffer;
-    zoomOutPaintVertexBuffer: VertexBuffer;
-    paintVertexAttributes: Array<StructArrayMember>;
-
-    constructor(expression: CompositeExpression, type: string, useIntegerZoom: boolean, zoom: number, PaintVertexArray: {
-        new (...args: any): StructArray;
-    }, layerId: string) {
-        this.expression = expression;
-        this.type = type;
-        this.useIntegerZoom = useIntegerZoom;
-        this.zoom = zoom;
-        this.layerId = layerId;
-
-        this.zoomInPaintVertexArray = new PaintVertexArray();
-        this.zoomOutPaintVertexArray = new PaintVertexArray();
+class CrossFadedCompositeBinder extends CrossFadedBinder {
+    protected getFeatureData(feature: Feature) {
+        return feature.patterns && feature.patterns[this.layerId];
     }
 
-    populatePaintArray(length: number, feature: Feature, {imagePositions}: { imagePositions: {[_: string]: ImagePositionLike}}) {
-        const start = this.zoomInPaintVertexArray.length;
-        this.zoomInPaintVertexArray.resize(length);
-        this.zoomOutPaintVertexArray.resize(length);
-        this._setPaintValues(start, length, feature.dashes && feature.dashes[this.layerId], imagePositions);
+    protected getVertexAttributes(): Array<StructArrayMember> {
+        return patternAttributes.members;
     }
 
-    updatePaintArray(start: number, end: number, feature: Feature, featureState: FeatureState, {imagePositions}: {imagePositions: {[_: string]: ImagePositionLike}}) {
-        this._setPaintValues(start, end, feature.dashes && feature.dashes[this.layerId], imagePositions);
+    protected emplaceVertexData(array: StructArray, index: number, midPos: ImagePositionLike, minMaxPos: ImagePositionLike): void {
+        array.emplace(index,
+            midPos.tlbr[0], midPos.tlbr[1], midPos.tlbr[2], midPos.tlbr[3],
+            minMaxPos.tlbr[0], minMaxPos.tlbr[1], minMaxPos.tlbr[2], minMaxPos.tlbr[3],
+            midPos.pixelRatio,
+            minMaxPos.pixelRatio,
+        );
+    }
+}
+
+class CrossFadedDasharrayBinder extends CrossFadedBinder {
+    protected getFeatureData(feature: Feature) {
+        return feature.dashes && feature.dashes[this.layerId];
     }
 
-    _setPaintValues(start, end, dashes, positions) {
-        if (!positions || !dashes) return;
-
-        const {min, mid, max} = dashes;
-        const dashMin = positions[min];
-        const dashMid = positions[mid];
-        const dashMax = positions[max];
-        if (!dashMin || !dashMid || !dashMax) return;
-
-        // We populate two paint arrays because, for cross-faded properties, we don't know which direction
-        // we're cross-fading to at layout time. In order to keep vertex attributes to a minimum and not pass
-        // unnecessary vertex data to the shaders, we determine which to upload at draw time.
-        for (let i = start; i < end; i++) {
-            this.zoomInPaintVertexArray.emplace(i,
-                dashMid.tlbr[0], dashMid.tlbr[1], dashMid.tlbr[2], dashMid.tlbr[3],
-                dashMin.tlbr[0], dashMin.tlbr[1], dashMin.tlbr[2], dashMin.tlbr[3],
-                dashMid.pixelRatio,
-                dashMin.pixelRatio,
-            );
-            this.zoomOutPaintVertexArray.emplace(i,
-                dashMid.tlbr[0], dashMid.tlbr[1], dashMid.tlbr[2], dashMid.tlbr[3],
-                dashMax.tlbr[0], dashMax.tlbr[1], dashMax.tlbr[2], dashMax.tlbr[3],
-                dashMid.pixelRatio,
-                dashMax.pixelRatio,
-            );
-        }
+    protected getVertexAttributes(): Array<StructArrayMember> {
+        return dashAttributes.members;
     }
 
-    upload(context: Context) {
-        if (this.zoomInPaintVertexArray && this.zoomInPaintVertexArray.arrayBuffer && this.zoomOutPaintVertexArray && this.zoomOutPaintVertexArray.arrayBuffer) {
-            this.zoomInPaintVertexBuffer = context.createVertexBuffer(this.zoomInPaintVertexArray, dashAttributes.members, this.expression.isStateDependent);
-            this.zoomOutPaintVertexBuffer = context.createVertexBuffer(this.zoomOutPaintVertexArray, dashAttributes.members, this.expression.isStateDependent);
-        }
-    }
-
-    destroy() {
-        if (this.zoomOutPaintVertexBuffer) this.zoomOutPaintVertexBuffer.destroy();
-        if (this.zoomInPaintVertexBuffer) this.zoomInPaintVertexBuffer.destroy();
+    protected emplaceVertexData(array: StructArray, index: number, midPos: ImagePositionLike, minMaxPos: ImagePositionLike): void {
+        array.emplace(index,
+            midPos.tlbr[0], midPos.tlbr[1], midPos.tlbr[2], midPos.tlbr[3],
+            minMaxPos.tlbr[0], minMaxPos.tlbr[1], minMaxPos.tlbr[2], minMaxPos.tlbr[3],
+        );
     }
 }
 
@@ -771,7 +721,7 @@ export class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
     }
 }
 
-function paintAttributeNames(property, type) {
+function paintAttributeNames(property: string, type: string) {
     const attributeNameExceptions = {
         'text-opacity': ['opacity'],
         'icon-opacity': ['opacity'],
@@ -793,7 +743,7 @@ function paintAttributeNames(property, type) {
     return attributeNameExceptions[property] || [property.replace(`${type}-`, '').replace(/-/g, '_')];
 }
 
-function getLayoutException(property) {
+function getLayoutException(property: string) {
     const propertyExceptions = {
         'line-pattern': {
             'source': PatternLayoutArray,
@@ -816,7 +766,7 @@ function getLayoutException(property) {
     return propertyExceptions[property];
 }
 
-function layoutType(property, type, binderType) {
+function layoutType(property: string, type: string, binderType: string) {
     const defaultLayouts = {
         'color': {
             'source': StructArrayLayout2f8,
