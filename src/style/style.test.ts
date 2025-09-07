@@ -1508,9 +1508,7 @@ describe('Style.setGlobalState', () => {
         style.sourceCaches['circle-source-id'].reload = vi.fn();
 
         style.setGlobalState({circleColor: {default: 'red'}});
-        style.update({
-            globalState: style.getGlobalState()
-        } as EvaluationParameters);
+        style.update({} as EvaluationParameters);
 
         expect(style.sourceCaches['circle-source-id'].resume).toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).toHaveBeenCalled();
@@ -1570,9 +1568,7 @@ describe('Style.setGlobalState', () => {
         style.sourceCaches['circle-source-id'].reload = vi.fn();
 
         style.setGlobalState({circleColor: {default: 'red'}});
-        style.update({
-            globalState: style.getGlobalState()
-        } as EvaluationParameters);
+        style.update({} as EvaluationParameters);
 
         expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
@@ -1601,9 +1597,7 @@ describe('Style.setGlobalState', () => {
         style.sourceCaches['circle-source-id'].reload = vi.fn();
 
         style.setGlobalState({circleColor: {default: 'red'}});
-        style.update({
-            globalState: style.getGlobalState()
-        } as EvaluationParameters);
+        style.update({} as EvaluationParameters);
 
         expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
@@ -1807,9 +1801,7 @@ describe('Style.setGlobalStateProperty', () => {
         style.sourceCaches['circle-source-id'].reload = vi.fn();
 
         style.setGlobalStateProperty('circleColor', 'red');
-        style.update({
-            globalState: style.getGlobalState()
-        } as EvaluationParameters);
+        style.update({} as EvaluationParameters);
 
         expect(style.sourceCaches['circle-source-id'].resume).toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).toHaveBeenCalled();
@@ -1869,9 +1861,7 @@ describe('Style.setGlobalStateProperty', () => {
         style.sourceCaches['circle-source-id'].reload = vi.fn();
 
         style.setGlobalStateProperty('circleColor', 'red');
-        style.update({
-            globalState: style.getGlobalState()
-        } as EvaluationParameters);
+        style.update({} as EvaluationParameters);
 
         expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
@@ -1900,9 +1890,7 @@ describe('Style.setGlobalStateProperty', () => {
         style.sourceCaches['circle-source-id'].reload = vi.fn();
 
         style.setGlobalStateProperty('circleColor', 'red');
-        style.update({
-            globalState: style.getGlobalState()
-        } as EvaluationParameters);
+        style.update({} as EvaluationParameters);
 
         expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();

@@ -28,10 +28,10 @@ function createLineBucket({id, layout, paint, globalState, availableImages}: Cre
         layout,
         paint
     } as LayerSpecification, globalState);
-    layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory, globalState} as EvaluationParameters,
+    layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters,
         availableImages as Array<string>);
 
-    return new LineBucket({layers: [layer], globalState} as BucketParameters<LineStyleLayer>);
+    return new LineBucket({layers: [layer]} as BucketParameters<LineStyleLayer>);
 }
 
 describe('LineBucket', () => {

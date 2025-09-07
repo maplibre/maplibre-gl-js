@@ -466,7 +466,7 @@ describe('StyleLayer.globalState', () => {
             }
         } as LayerSpecification, {textSize: 15, textTransform: 'uppercase'}) as SymbolStyleLayer;
 
-        layer.recalculate({zoom: 0, zoomHistory: {}, globalState: {textSize: 13, textTransform: 'lowercase'} as Record<string, any>} as EvaluationParameters, undefined);
+        layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
 
         expect(layer.layout.get('text-size').evaluate(undefined, {})).toBe(15);
         expect(layer.layout.get('text-transform').evaluate(undefined, {})).toBe('uppercase');
@@ -482,7 +482,7 @@ describe('StyleLayer.globalState', () => {
             }
         } as LayerSpecification, {radius: 15, color: '#FF0000'}) as CircleStyleLayer;
 
-        layer.recalculate({zoom: 0, globalState: {radius: 15, color: '#FF0000'} as Record<string, any>} as EvaluationParameters, undefined);
+        layer.recalculate({zoom: 0} as EvaluationParameters, undefined);
 
         expect(layer.paint.get('circle-color').evaluate(undefined, {})).toEqual(new Color(1, 0, 0, 1));
         expect(layer.paint.get('circle-radius').evaluate(undefined, {})).toBe(15);

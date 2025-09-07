@@ -17,8 +17,7 @@ export function createSymbolBucket(layerId, font, text, collisionBoxArray) {
         overscaling: 1,
         zoom: 0,
         collisionBoxArray,
-        layers: [layer],
-        globalState: {}
+        layers: [layer]
     } as BucketParameters<SymbolStyleLayer>);
 }
 
