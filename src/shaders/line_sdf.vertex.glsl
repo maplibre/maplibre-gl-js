@@ -19,7 +19,7 @@ uniform lowp float u_device_pixel_ratio;
 uniform vec2 u_units_to_pixels;
 uniform float u_tileratio;
 uniform float u_crossfade_from;
-uniform float u_crossfade_to; // TODO: this is always 1, consider removing it
+uniform float u_crossfade_to;
 uniform float u_lineatlas_height;
 
 out vec2 v_normal;
