@@ -45,7 +45,6 @@ export type LineSDFUniformsType = {
     'u_tileratio': Uniform1f;
     'u_crossfade_from': Uniform1f;
     'u_crossfade_to': Uniform1f;
-    'u_sdfgammaratio': Uniform1f;
     'u_image': Uniform1i;
     'u_mix': Uniform1f;
     'u_lineatlas_width': Uniform1f;
@@ -87,7 +86,6 @@ const lineSDFUniforms = (context: Context, locations: UniformLocations): LineSDF
     'u_image': new Uniform1i(context, locations.u_image),
     'u_mix': new Uniform1f(context, locations.u_mix),
     'u_tileratio': new Uniform1f(context, locations.u_tileratio),
-    'u_sdfgammaratio': new Uniform1f(context, locations.u_sdfgammaratio),
     'u_crossfade_from': new Uniform1f(context, locations.u_crossfade_from),
     'u_crossfade_to': new Uniform1f(context, locations.u_crossfade_to),
     'u_lineatlas_width': new Uniform1f(context, locations.u_lineatlas_width),
@@ -165,7 +163,6 @@ const lineSDFUniformValues = (
         'u_tileratio': tileRatio,
         'u_crossfade_from': crossfade.fromScale,
         'u_crossfade_to': crossfade.toScale,
-        'u_sdfgammaratio': painter.lineAtlas.width / 256,
         'u_image': 0,
         'u_mix': crossfade.t,
         'u_lineatlas_width': painter.lineAtlas.width,

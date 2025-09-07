@@ -1,7 +1,7 @@
 
 uniform lowp float u_device_pixel_ratio;
+uniform lowp float u_lineatlas_width;
 uniform sampler2D u_image;
-uniform float u_sdfgammaratio;
 uniform float u_mix;
 
 in vec2 v_normal;
@@ -42,7 +42,7 @@ void main() {
     float sdfdist_a = texture(u_image, v_tex_a).a;
     float sdfdist_b = texture(u_image, v_tex_b).a;
     float sdfdist = mix(sdfdist_a, sdfdist_b, u_mix);
-    float sdfgamma = u_sdfgammaratio / min(dasharray_from.w, dasharray_to.w);
+    float sdfgamma = (u_lineatlas_width / 256.0) / min(dasharray_from.w, dasharray_to.w);
     alpha *= smoothstep(0.5 - sdfgamma / floorwidth, 0.5 + sdfgamma / floorwidth, sdfdist);
 
     fragColor = color * (alpha * opacity);
