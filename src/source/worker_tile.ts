@@ -7,6 +7,7 @@ import {LineBucket} from '../data/bucket/line_bucket';
 import {FillBucket} from '../data/bucket/fill_bucket';
 import {FillExtrusionBucket} from '../data/bucket/fill_extrusion_bucket';
 import {warnOnce, mapObject} from '../util/util';
+import {createBucketLineAtlas} from '../data/bucket/bucket_line_atlas';
 import {ImageAtlas} from '../render/image_atlas';
 import {GlyphAtlas} from '../render/glyph_atlas';
 import {EvaluationParameters} from '../style/evaluation_parameters';
@@ -22,7 +23,7 @@ import type {
 } from '../source/worker_source';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTile} from '@mapbox/vector-tile';
-import {MessageType, type GetGlyphsResponse, type GetImagesResponse} from '../util/actor_messages';
+import {type GetDashesResponse, MessageType, type GetGlyphsResponse, type GetImagesResponse} from '../util/actor_messages';
 import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 export class WorkerTile {
     tileID: OverscaledTileID;
@@ -79,6 +80,7 @@ export class WorkerTile {
             iconDependencies: {},
             patternDependencies: {},
             glyphDependencies: {},
+            dashDependencies: {},
             availableImages,
             subdivisionGranularity
         };
@@ -162,9 +164,19 @@ export class WorkerTile {
             getPatternsPromise = actor.sendAsync({type: MessageType.getImages, data: {icons: patterns, source: this.source, tileID: this.tileID, type: 'patterns'}}, abortController);
         }
 
-        const [glyphMap, iconMap, patternMap] = await Promise.all([getGlyphsPromise, getIconsPromise, getPatternsPromise]);
+        const dasharray = options.dashDependencies;
+        let getDashesPromise = Promise.resolve<GetDashesResponse>({} as GetDashesResponse);
+        if (Object.keys(dasharray).length) {
+            const abortController = new AbortController();
+            this.inFlightDependencies.push(abortController);
+            getDashesPromise = actor.sendAsync({type: MessageType.getDashes, data: {dashes: dasharray, source: this.source, tileID: this.tileID, type: 'dasharray'}}, abortController);
+        }
+
+        const [glyphMap, iconMap, patternMap, dasharrayMap] = await Promise.all([getGlyphsPromise, getIconsPromise, getPatternsPromise, getDashesPromise]);
+
         const glyphAtlas = new GlyphAtlas(glyphMap);
         const imageAtlas = new ImageAtlas(iconMap, patternMap);
+        const lineAtlas = createBucketLineAtlas(buckets, dasharrayMap);
 
         for (const key in buckets) {
             const bucket = buckets[key];
@@ -185,7 +197,7 @@ export class WorkerTile {
                 bucket instanceof FillBucket ||
                 bucket instanceof FillExtrusionBucket)) {
                 recalculateLayers(bucket.layers, this.zoom, availableImages, this.globalState);
-                bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions);
+                bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions, lineAtlas);
             }
         }
 

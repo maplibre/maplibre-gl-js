@@ -208,6 +208,7 @@ jobs:
           path: coverage-merged
 
       - name: Code Coverage Annotation
+        if: github.event.pull_request.head.repo.full_name == github.repository
         uses: ggilder/codecoverage@7a86e1ba1504dd0d588324fedff7184f4e4dd890
         with:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
