@@ -196,10 +196,7 @@ jobs:
 
       - name: Merge Coverage reports
         shell: bash
-        run: | 
-          find ./downloaded -type f -exec perl -pi -e 's|maplibre-gl-js/maplibre-gl-js/|maplibre-gl-js/|g' {} \;
-          find ./downloaded -type f -exec perl -pi -e 's|"/[A-Za-z/]*/maplibre-gl-js/|"|g' {} \;
-          npx nyc report -t ${{ github.workspace }}/downloaded --reporter lcov --reporter json --report-dir coverage-merged
+        run: npx nyc report -t ${{ github.workspace }}/downloaded --reporter lcov --reporter json --report-dir coverage-merged
 
       - name: Upload merged coverage report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
