@@ -21,10 +21,10 @@ const defaultOptions = {
     subpixelPositioning: false,
     locationOccludedOpacity: undefined,
     popupPadding: {
-        top: 0,
-        right: 0,
-        bottom: 0,
-        left: 0
+        top: '0',
+        right: '0',
+        bottom: '0',
+        left: '0'
     }
 };
 
@@ -102,17 +102,20 @@ export type PopupOptions = {
      */
     locationOccludedOpacity?: number | string;
     /**
-     * A pixel padding applied to the popup's positioning logic.
+     * CSS-style padding applied to the popup's positioning logic.
      * This ensures the popup stays within the map viewport and doesn't overlap padded edges.
      * Useful for UI where parts of the map are visually obstructed (e.g. sidebars, headers).
-     * @example {top: 20, right: 30, bottom: 40, left: 10}
-     * @defaultValue {top: 80, right: 80, bottom: 80, left: 80}
+     *
+     * @example
+     * ```
+     * { top: '20px', right: '30px', bottom: '40px', left: '10px' }
+     * ```
      */
     popupPadding?: {
-        top: number;
-        right: number;
-        bottom: number;
-        left: number;
+        top?: string;
+        right?: string;
+        bottom?: string;
+        left?: string;
     };
 };
 
@@ -185,6 +188,19 @@ const focusQuerySelector = [
  * **Event** `close` of type {@link Event} will be fired when the popup is closed manually or programmatically.
  */
 export class Popup extends Evented {
+    /**
+     * Dynamically set the popup's CSS padding after creation.
+     */
+    setPadding(padding: {top?: string; right?: string; bottom?: string; left?: string}): this {
+        this.options.popupPadding = padding;
+        if (this._container) {
+            if (padding.top) this._container.style.paddingTop = padding.top;
+            if (padding.right) this._container.style.paddingRight = padding.right;
+            if (padding.bottom) this._container.style.paddingBottom = padding.bottom;
+            if (padding.left) this._container.style.paddingLeft = padding.left;
+        }
+        return this;
+    }
     _map: Map;
     options: PopupOptions;
     _content: HTMLElement;
@@ -634,6 +650,14 @@ export class Popup extends Evented {
         if (this.options.maxWidth && this._container.style.maxWidth !== this.options.maxWidth) {
             this._container.style.maxWidth = this.options.maxWidth;
         }
+        // Apply popupPadding as CSS
+        const padding = this.options.popupPadding;
+        if (padding) {
+            if (padding.top) this._container.style.paddingTop = padding.top;
+            if (padding.right) this._container.style.paddingRight = padding.right;
+            if (padding.bottom) this._container.style.paddingBottom = padding.bottom;
+            if (padding.left) this._container.style.paddingLeft = padding.left;
+        }
 
         this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform, this._trackPointer);
 
@@ -651,21 +675,26 @@ export class Popup extends Evented {
         if (!anchor) {
             const width = this._container.offsetWidth;
             const height = this._container.offsetHeight;
-            const padding = this.options.popupPadding;
+            const padding = this.options.popupPadding || {};
+            // Parse CSS string to number (default 0 if not set)
+            const padTop = padding.top ? parseInt(padding.top) : 0;
+            const padRight = padding.right ? parseInt(padding.right) : 0;
+            const padBottom = padding.bottom ? parseInt(padding.bottom) : 0;
+            const padLeft = padding.left ? parseInt(padding.left) : 0;
 
             let anchorComponents;
 
-            if (pos.y + offset.bottom.y < height + padding.top) {
+            if (pos.y + offset.bottom.y < height + padTop) {
                 anchorComponents = ['top'];
-            } else if (pos.y > this._map.transform.height - height - padding.bottom) {
+            } else if (pos.y > this._map.transform.height - height - padBottom) {
                 anchorComponents = ['bottom'];
             } else {
                 anchorComponents = [];
             }
 
-            if (pos.x < width / 2 + padding.left) {
+            if (pos.x < width / 2 + padLeft) {
                 anchorComponents.push('left');
-            } else if (pos.x > this._map.transform.width - width / 2 - padding.right) {
+            } else if (pos.x > this._map.transform.width - width / 2 - padRight) {
                 anchorComponents.push('right');
             }
 
