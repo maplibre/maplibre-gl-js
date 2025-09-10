@@ -105,6 +105,18 @@ jobs:
             ${{ github.workspace }}/upload/coverage-final-integration.json
             ${{ github.workspace }}/upload/coverage-final-query.json
           retention-days: 1
+      - name: Get bundle size
+        if: ${{ !cancelled() && runner.os == 'Linux' && startsWith(github.ref, 'refs/heads/main') }}
+        run: |
+          du -b dist/maplibre-gl.js | cut -f1 > test/build/bundle_size.json
+      - name: Commit bundle size
+        if: ${{ !cancelled() && runner.os == 'Linux' && startsWith(github.ref, 'refs/heads/main') }}
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          git add test/build/bundle_size.json
+          git diff-index --quiet HEAD || git commit -m 'update bundle size'
+          git push
 
   render-tests:
     name: Render tests
