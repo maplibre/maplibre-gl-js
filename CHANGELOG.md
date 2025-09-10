@@ -4,7 +4,8 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- _...Add new stuff here..._
+
+- Fix _retainLoadedChildren not retaining all loaded children ([#5969](https://github.com/maplibre/maplibre-gl-js/issues/5969))
 
 ## 5.7.1
 
