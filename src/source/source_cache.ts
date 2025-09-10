@@ -371,37 +371,32 @@ export class SourceCache extends Evented {
             [_ in any]: OverscaledTileID;
         }
     ) {
-        for (const id in this._tiles) {
-            let tile = this._tiles[id];
+        for (const tileID of Object.values(idealTiles)) {
+            for (const id in this._tiles) {
+                let tile = this._tiles[id];
 
-            // only consider renderable tiles up to maxCoveringZoom
-            if (retain[id] ||
-                !tile.hasData() ||
-                tile.tileID.overscaledZ <= zoom ||
-                tile.tileID.overscaledZ > maxCoveringZoom
-            ) continue;
+                // only consider renderable tiles on higher zoom levels (up to maxCoveringZoom)
+                if (retain[id] || !tile.hasData() || tile.tileID.overscaledZ <= tileID.overscaledZ || tile.tileID.overscaledZ > maxCoveringZoom) continue;
 
-            // loop through parents and retain the topmost loaded one if found
-            let topmostLoadedID = tile.tileID;
-            while (tile && tile.tileID.overscaledZ > zoom + 1) {
-                const parentID = tile.tileID.scaledTo(tile.tileID.overscaledZ - 1);
+                // disregard tiles that are not descendants of the given tile coordinate
+                const z2 = Math.pow(2, tile.tileID.canonical.z - tileID.canonical.z);
+                if (Math.floor(tile.tileID.canonical.x / z2) !== tileID.canonical.x ||
+                    Math.floor(tile.tileID.canonical.y / z2) !== tileID.canonical.y)
+                    continue;
 
-                tile = this._tiles[parentID.key];
+                // found loaded child
+                retain[id] = tile.tileID;
 
-                if (tile && tile.hasData()) {
-                    topmostLoadedID = parentID;
-                }
-            }
+                // loop through parents; retain the topmost loaded one if found
+                while (tile && tile.tileID.overscaledZ - 1 > tileID.overscaledZ) {
+                    const parent = tile.tileID.scaledTo(tile.tileID.overscaledZ - 1);
+                    if (!parent) break;
 
-            // loop through ancestors of the topmost loaded child to see if there's one that needed it
-            let tileID = topmostLoadedID;
-            while (tileID.overscaledZ > zoom) {
-                tileID = tileID.scaledTo(tileID.overscaledZ - 1);
-
-                if (idealTiles[tileID.key] || (idealTiles[tileID.canonical.key])) {
-                    // found a parent that needed a loaded child; retain that child
-                    retain[topmostLoadedID.key] = topmostLoadedID;
-                    break;
+                    tile = this._tiles[parent.key];
+                    if (tile && tile.hasData()) {
+                        delete retain[id];
+                        retain[parent.key] = parent;
+                    }
                 }
             }
         }
