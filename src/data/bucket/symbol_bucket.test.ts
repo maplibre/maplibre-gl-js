@@ -1,8 +1,4 @@
-import {describe, test, expect, vi} from 'vitest';
-import fs from 'fs';
-import path from 'path';
-import Protobuf from 'pbf';
-import {VectorTile} from '@mapbox/vector-tile';
+import {describe, test, expect, vi, beforeAll} from 'vitest';
 import {SymbolBucket} from './symbol_bucket';
 import {CollisionBoxArray} from '../../data/array_types.g';
 import {performSymbolLayout} from '../../symbol/symbol_layout';
@@ -20,10 +16,7 @@ import glyphs from '../../../test/unit/assets/fontstack-glyphs.json' with {type:
 import {type StyleGlyph} from '../../style/style_glyph';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import {MercatorTransform} from '../../geo/projection/mercator_transform';
-
-// Load a point feature from fixture tile.
-const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))));
-const feature = vt.layers.place_label.feature(10);
+import {createPopulateOptions, loadVectorTile} from '../../../test/unit/lib/tile';
 
 /*eslint new-cap: 0*/
 const collisionBoxArray = new CollisionBoxArray();
@@ -60,16 +53,22 @@ function createIndexedFeature(id, index, iconId) {
 }
 
 describe('SymbolBucket', () => {
+    let features;
+    beforeAll(() => {
+        // Load point features from fixture tile.
+        const sourceLayer = loadVectorTile().layers.place_label;
+        features = [{feature: sourceLayer.feature(10)} as IndexedFeature];
+    });
     test('SymbolBucket', () => {
         const bucketA = bucketSetup() as any as SymbolBucket;
         const bucketB = bucketSetup() as any as SymbolBucket;
-        const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
+        const options = createPopulateOptions([]);
         const placement = new Placement(transform, undefined as any, 0, true);
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const crossTileSymbolIndex = new CrossTileSymbolIndex();
 
         // add feature from bucket A
-        bucketA.populate([{feature} as IndexedFeature], options, undefined as any);
+        bucketA.populate(features, options, undefined as any);
         performSymbolLayout(
             {
                 bucket: bucketA,
@@ -83,7 +82,7 @@ describe('SymbolBucket', () => {
         tileA.collisionBoxArray = collisionBoxArray;
 
         // add same feature from bucket B
-        bucketB.populate([{feature} as IndexedFeature], options, undefined as any);
+        bucketB.populate(features, options, undefined as any);
         performSymbolLayout({
             bucket: bucketB, glyphMap: stacks, glyphPositions: {}, subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
         } as any);
@@ -118,7 +117,7 @@ describe('SymbolBucket', () => {
         const bucket = bucketSetup() as any as SymbolBucket;
         const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
 
-        bucket.populate([{feature} as IndexedFeature], options, undefined as any);
+        bucket.populate(features, options, undefined as any);
         const fakeGlyph = {rect: {w: 10, h: 10}, metrics: {left: 10, top: 10, advance: 10}};
         performSymbolLayout({
             bucket,
@@ -149,7 +148,7 @@ describe('SymbolBucket', () => {
             b: new ImagePosition({x: 10, y: 0, w: 10, h: 10}, 1 as any as StyleImage)
         };
         const bucket = createSymbolIconBucket('test', 'icon', collisionBoxArray) as any as SymbolBucket;
-        const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
+        const options = createPopulateOptions([]);
 
         bucket.populate(
             [
@@ -192,7 +191,7 @@ describe('SymbolBucket', () => {
             b: new ImagePosition({x: 10, y: 0, w: 10, h: 10}, 1 as any as StyleImage)
         };
         const bucket = createSymbolIconBucket('test', 'icon', collisionBoxArray) as any as SymbolBucket;
-        const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
+        const options = createPopulateOptions([]);
 
         bucket.populate(
             [
@@ -216,9 +215,9 @@ describe('SymbolBucket', () => {
     test('SymbolBucket detects rtl text', () => {
         const rtlBucket = bucketSetup('مرحبا');
         const ltrBucket = bucketSetup('hello');
-        const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
-        rtlBucket.populate([{feature} as IndexedFeature], options, undefined as any);
-        ltrBucket.populate([{feature} as IndexedFeature], options, undefined as any);
+        const options = createPopulateOptions([]);
+        rtlBucket.populate(features, options, undefined as any);
+        ltrBucket.populate(features, options, undefined as any);
 
         expect(rtlBucket.hasRTLText).toBeTruthy();
         expect(ltrBucket.hasRTLText).toBeFalsy();
@@ -227,9 +226,9 @@ describe('SymbolBucket', () => {
     // Test to prevent symbol bucket with rtl from text being culled by worker serialization.
     test('SymbolBucket with rtl text is NOT empty even though no symbol instances are created', () => {
         const rtlBucket = bucketSetup('مرحبا');
-        const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
+        const options = createPopulateOptions([]);
         rtlBucket.createArrays();
-        rtlBucket.populate([{feature} as IndexedFeature], options, undefined as any);
+        rtlBucket.populate(features, options, undefined as any);
 
         expect(rtlBucket.isEmpty()).toBeFalsy();
         expect(rtlBucket.symbolInstances).toHaveLength(0);
@@ -237,8 +236,8 @@ describe('SymbolBucket', () => {
 
     test('SymbolBucket detects rtl text mixed with ltr text', () => {
         const mixedBucket = bucketSetup('مرحبا translates to hello');
-        const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
-        mixedBucket.populate([{feature} as IndexedFeature], options, undefined as any);
+        const options = createPopulateOptions([]);
+        mixedBucket.populate(features, options, undefined as any);
 
         expect(mixedBucket.hasRTLText).toBeTruthy();
     });

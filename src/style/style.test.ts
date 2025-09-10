@@ -11,7 +11,7 @@ import {OverscaledTileID} from '../source/tile_id';
 import {fakeServer, type FakeServer} from 'nise';
 
 import {type EvaluationParameters} from './evaluation_parameters';
-import {type LayerSpecification, type GeoJSONSourceSpecification, type FilterSpecification, type SourceSpecification, type StyleSpecification, type SymbolLayerSpecification, type SkySpecification} from '@maplibre/maplibre-gl-style-spec';
+import {type Feature, type LayerSpecification, type GeoJSONSourceSpecification, type FilterSpecification, type SourceSpecification, type StyleSpecification, type SymbolLayerSpecification, type SkySpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type GeoJSONSource} from '../source/geojson_source';
 import {StubMap, sleep, waitForEvent} from '../util/test/util';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
@@ -19,6 +19,8 @@ import {MessageType} from '../util/actor_messages';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {type Tile} from '../source/tile';
 import type Point from '@mapbox/point-geometry';
+import {type PossiblyEvaluated} from './properties';
+import {type SymbolLayoutProps, type SymbolLayoutPropsPossiblyEvaluated} from './style_layer/symbol_style_layer_properties.g';
 
 function createStyleJSON(properties?): StyleSpecification {
     return extend({
@@ -468,6 +470,37 @@ describe('Style.loadJSON', () => {
         expect('base' in style.stylesheet.sources).toBeTruthy();
         expect(style.stylesheet.layers[0].id).toBe(previousStyle.layers[0].id);
         expect(style.stylesheet.layers).toHaveLength(1);
+    });
+
+    test('propagates global state object to layers', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(
+            createStyleJSON({
+                sources: {
+                    'source-id': createGeoJSONSource()
+                },
+                layers: [
+                    {
+                        id: 'layer-id',
+                        type: 'symbol',
+                        source: 'source-id',
+                        layout: {
+                            'text-size': ['global-state', 'size']
+                        }
+                    }
+                ]
+            })
+        );
+        await style.once('style.load');
+        // tests that reference to globalState is propagated to layers
+        // by changing globalState property and checking if the changed value
+        // was used when evaluating the layer
+        const globalState = style.getGlobalState();
+        globalState.size = 12;
+        const layer = style.getLayer('layer-id');
+        layer.recalculate({} as EvaluationParameters, []);
+        const layout = layer.layout as PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>;
+        expect(layout.get('text-size').evaluate({} as Feature, {})).toBe(12);
     });
 });
 
@@ -1090,7 +1123,7 @@ describe('Style.removeSource', () => {
             }]
         }));
         await style.once('style.load');
-        style.update(1 as any as EvaluationParameters);
+        style.update({zoom: 1} as EvaluationParameters);
         return style;
     }
 
@@ -1129,6 +1162,54 @@ describe('Style.removeSource', () => {
         style.on('error', () => { expect(false).toBeTruthy(); });
         sourceCache.fire(new Event('data'));
         sourceCache.fire(new Event('error'));
+    });
+});
+
+describe('Style.setProjection', () => {
+    test('does not mutate original input style JSON', async () => {
+        const style = new Style(getStubMap());
+        const inputJson = createStyleJSON({projection: {type: 'mercator'}});
+        const inputJsonString = JSON.stringify(inputJson);
+        const inputProjection = inputJson.projection;
+        style.loadJSON(inputJson);
+        await style.once('style.load');
+
+        style.setProjection({type: 'globe'});
+
+        expect(inputJson.projection).toBe(inputProjection);
+        expect(inputJsonString).toEqual(JSON.stringify(inputJson));
+    });
+});
+
+describe('Style.setSky', () => {
+    test('does not mutate original input style JSON', async () => {
+        const style = new Style(getStubMap());
+        const inputJson = createStyleJSON({sky: {'sky-color': 'fuchsia'}});
+        const inputJsonString = JSON.stringify(inputJson);
+        const inputSky = inputJson.sky;
+        style.loadJSON(inputJson);
+        await style.once('style.load');
+
+        style.setSky({'sky-color': 'magenta'});
+
+        expect(inputJson.sky).toBe(inputSky);
+        expect(inputJsonString).toEqual(JSON.stringify(inputJson));
+    });
+});
+
+describe('Style.setGlyphs', () => {
+    test('does not mutate original input style JSON', async () => {
+        const style = new Style(getStubMap());
+        const inputJson = createStyleJSON({glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf'});
+        const inputJsonString = JSON.stringify(inputJson);
+        const inputGlyphs = inputJson.glyphs;
+        style.loadJSON(inputJson);
+        await style.once('style.load');
+
+        style.setGlyphs('https://foo.maplibre.org/font/{fontstack}/{range}.pbf');
+
+        expect(inputJson.glyphs).toBe(inputGlyphs);
+        expect(inputJsonString).toEqual(JSON.stringify(inputJson));
     });
 });
 
@@ -1177,6 +1258,20 @@ describe('Style.addSprite', () => {
             {id: 'default', url: 'https://example.com/default'},
             {id: 'test', url: 'https://example.com/sprite'}
         ]);
+    });
+
+    test('does not mutate original input style JSON', async () => {
+        const style = new Style(getStubMap());
+        const inputJson = createStyleJSON({sprite: [{id: '0', url: 'https://example.com/sprite-0'}]});
+        const inputJsonString = JSON.stringify(inputJson);
+        const inputSprite = inputJson.sprite;
+        style.loadJSON(inputJson);
+        await style.once('style.load');
+
+        style.addSprite('1', 'https://example.com/sprite-1');
+
+        expect(inputJson.sprite).toBe(inputSprite);
+        expect(JSON.stringify(inputJson)).toEqual(inputJsonString);
     });
 });
 
@@ -1233,6 +1328,36 @@ describe('Style.removeSprite', () => {
         await style.once('style.load');
         style.removeSprite('default');
         expect(style.stylesheet.sprite).toBeUndefined();
+    });
+
+    test('does not mutate original input style JSON', async () => {
+        const style = new Style(getStubMap());
+        const inputJson = createStyleJSON({sprite: 'https://example.com/sprite'});
+        const inputJsonString = JSON.stringify(inputJson);
+        const inputSprite = inputJson.sprite;
+        style.loadJSON(inputJson);
+        await style.once('style.load');
+
+        style.removeSprite('default');
+
+        expect(inputJson.sprite).toBe(inputSprite);
+        expect(inputJsonString).toEqual(JSON.stringify(inputJson));
+    });
+});
+
+describe('Style.setSprite', () => {
+    test('does not mutate original input style JSON', async () => {
+        const style = new Style(getStubMap());
+        const inputJson = createStyleJSON({sprite: [{id: '0', url: 'https://example.com/sprite-0'}]});
+        const inputJsonString = JSON.stringify(inputJson);
+        const inputSprite = inputJson.sprite;
+        style.loadJSON(inputJson);
+        await style.once('style.load');
+
+        style.setSprite([{id: '1', url: 'https://example.com/sprite-1'}]);
+
+        expect(inputJson.sprite).toBe(inputSprite);
+        expect(inputJsonString).toEqual(JSON.stringify(inputJson));
     });
 });
 
@@ -1301,6 +1426,63 @@ describe('Style.setGlobalState', () => {
         expect(style.sourceCaches['fill-source-id'].reload).toHaveBeenCalled();
     });
 
+    test('reloads sources when state property is used in layout property', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'line-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'first-layer-id',
+                type: 'line',
+                source: 'line-source-id',
+                layout: {
+                    'line-join': ['global-state', 'lineJoin']
+                }
+            }]
+        }));
+
+        await style.once('style.load');
+        style.sourceCaches['line-source-id'].resume = vi.fn();
+        style.sourceCaches['line-source-id'].reload = vi.fn();
+
+        style.setGlobalState({lineJoin: {default: 'bevel'}});
+
+        expect(style.sourceCaches['line-source-id'].resume).toHaveBeenCalled();
+        expect(style.sourceCaches['line-source-id'].reload).toHaveBeenCalled();
+    });
+
+    test('reloads sources when a new state property is used in a paint property that affects layout', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'circle-source-id': createGeoJSONSource(),
+                'fill-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'first-layer-id',
+                type: 'circle',
+                source: 'circle-source-id',
+                paint: {
+                    'circle-color': ['coalesce', ['get', 'color'], ['global-state', 'circleColor']]
+                }
+            }]
+        }));
+
+        await style.once('style.load');
+
+        style.sourceCaches['circle-source-id'].resume = vi.fn();
+        style.sourceCaches['circle-source-id'].reload = vi.fn();
+
+        style.setGlobalState({circleColor: {default: 'red'}});
+        style.update({
+            globalState: style.getGlobalState()
+        } as EvaluationParameters);
+
+        expect(style.sourceCaches['circle-source-id'].resume).toHaveBeenCalled();
+        expect(style.sourceCaches['circle-source-id'].reload).toHaveBeenCalled();
+    });
+
     test('does not reload sources when state property is set to the same value as current one', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON({
@@ -1355,9 +1537,73 @@ describe('Style.setGlobalState', () => {
         style.sourceCaches['circle-source-id'].reload = vi.fn();
 
         style.setGlobalState({circleColor: {default: 'red'}});
+        style.update({
+            globalState: style.getGlobalState()
+        } as EvaluationParameters);
 
         expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
+    });
+
+    test('does not reload sources when a new state property is used in a paint property while state property used in filter is unchanged', async() => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'circle-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'first-layer-id',
+                type: 'circle',
+                source: 'circle-source-id',
+                filter: ['global-state', 'showFill'],
+                paint: {
+                    'circle-color': ['global-state', 'circleColor']
+                }
+            }]
+        }));
+
+        await style.once('style.load');
+
+        style.sourceCaches['circle-source-id'].resume = vi.fn();
+        style.sourceCaches['circle-source-id'].reload = vi.fn();
+
+        style.setGlobalState({circleColor: {default: 'red'}});
+        style.update({
+            globalState: style.getGlobalState()
+        } as EvaluationParameters);
+
+        expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
+        expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
+    });
+
+    test('does not reload sources when new state property is used in paint property while state property used in layout is unchanged', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'line-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'first-layer-id',
+                type: 'line',
+                source: 'line-source-id',
+                layout: {
+                    'line-join': ['global-state', 'lineJoin']
+                },
+                paint: {
+                    'line-color': ['global-state', 'lineColor']
+                }
+            }]
+        }));
+
+        await style.once('style.load');
+
+        style.sourceCaches['line-source-id'].resume = vi.fn();
+        style.sourceCaches['line-source-id'].reload = vi.fn();
+
+        style.setGlobalState({lineColor: {default: 'red'}});
+
+        expect(style.sourceCaches['line-source-id'].resume).not.toHaveBeenCalled();
+        expect(style.sourceCaches['line-source-id'].reload).not.toHaveBeenCalled();
     });
 });
 
@@ -1449,6 +1695,93 @@ describe('Style.setGlobalStateProperty', () => {
         expect(style.sourceCaches['fill-source-id'].reload).not.toHaveBeenCalled();
     });
 
+    test('reloads sources when state property is used in layout property', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'line-1-source-id': createGeoJSONSource(),
+                'line-2-source-id': createGeoJSONSource(),
+                'line-3-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'first-layer-id',
+                type: 'line',
+                source: 'line-1-source-id',
+                layout: {
+                    'line-join': ['global-state', 'lineJoin']
+                }
+            }, {
+                id: 'second-layer-id',
+                type: 'line',
+                source: 'line-3-source-id'
+            }, {
+                id: 'third-layer-id',
+                type: 'line',
+                source: 'line-2-source-id',
+                layout: {
+                    'line-join': ['global-state', 'lineJoin']
+                }
+            }, {
+                id: 'fourth-layer-id',
+                type: 'line',
+                source: 'line-3-source-id',
+                layout: {
+                    'line-cap': ['global-state', 'lineCap']
+                }
+            }]
+        }));
+
+        await style.once('style.load');
+
+        style.sourceCaches['line-1-source-id'].resume = vi.fn();
+        style.sourceCaches['line-1-source-id'].reload = vi.fn();
+        style.sourceCaches['line-2-source-id'].resume = vi.fn();
+        style.sourceCaches['line-2-source-id'].reload = vi.fn();
+        style.sourceCaches['line-3-source-id'].resume = vi.fn();
+        style.sourceCaches['line-3-source-id'].reload = vi.fn();
+
+        style.setGlobalStateProperty('lineJoin', 'bevel');
+
+        // sources line-1 and line-2 should be reloaded
+        expect(style.sourceCaches['line-1-source-id'].resume).toHaveBeenCalled();
+        expect(style.sourceCaches['line-1-source-id'].reload).toHaveBeenCalled();
+        expect(style.sourceCaches['line-2-source-id'].resume).toHaveBeenCalled();
+        expect(style.sourceCaches['line-2-source-id'].reload).toHaveBeenCalled();
+        // source line-3 should not be reloaded
+        expect(style.sourceCaches['line-3-source-id'].resume).not.toHaveBeenCalled();
+        expect(style.sourceCaches['line-3-source-id'].reload).not.toHaveBeenCalled();
+    });
+
+    test('reloads sources when state property is used in a paint property that affects layout', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'circle-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'layer-id',
+                type: 'circle',
+                source: 'circle-source-id',
+                paint: {
+                    'circle-color': ['coalesce', ['get', 'color'], ['global-state', 'circleColor']]
+                }
+            }]
+        }));
+
+        await style.once('style.load');
+
+        style.sourceCaches['circle-source-id'].resume = vi.fn();
+        style.sourceCaches['circle-source-id'].reload = vi.fn();
+
+        style.setGlobalStateProperty('circleColor', 'red');
+        style.update({
+            globalState: style.getGlobalState()
+        } as EvaluationParameters);
+
+        expect(style.sourceCaches['circle-source-id'].resume).toHaveBeenCalled();
+        expect(style.sourceCaches['circle-source-id'].reload).toHaveBeenCalled();
+    });
+
     test('does not reload sources when state property is set to the same value as current one', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON({
@@ -1503,9 +1836,73 @@ describe('Style.setGlobalStateProperty', () => {
         style.sourceCaches['circle-source-id'].reload = vi.fn();
 
         style.setGlobalStateProperty('circleColor', 'red');
+        style.update({
+            globalState: style.getGlobalState()
+        } as EvaluationParameters);
 
         expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
+    });
+
+    test('does not reload sources when state property is used in paint property while a different state property used in filter is unchanged', async() => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'circle-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'first-layer-id',
+                type: 'circle',
+                source: 'circle-source-id',
+                filter: ['global-state', 'showFill'],
+                paint: {
+                    'circle-color': ['global-state', 'circleColor']
+                }
+            }]
+        }));
+
+        await style.once('style.load');
+
+        style.sourceCaches['circle-source-id'].resume = vi.fn();
+        style.sourceCaches['circle-source-id'].reload = vi.fn();
+
+        style.setGlobalStateProperty('circleColor', 'red');
+        style.update({
+            globalState: style.getGlobalState()
+        } as EvaluationParameters);
+
+        expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
+        expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
+    });
+
+    test('does not reload sources when state property is used in paint property while a different state property used in layout is unchanged', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'line-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'first-layer-id',
+                type: 'line',
+                source: 'line-source-id',
+                layout: {
+                    'line-join': ['global-state', 'lineJoin']
+                },
+                paint: {
+                    'line-color': ['global-state', 'lineColor']
+                }
+            }]
+        }));
+
+        await style.once('style.load');
+
+        style.sourceCaches['line-source-id'].resume = vi.fn();
+        style.sourceCaches['line-source-id'].reload = vi.fn();
+
+        style.setGlobalStateProperty('lineColor', 'red');
+
+        expect(style.sourceCaches['line-source-id'].resume).not.toHaveBeenCalled();
+        expect(style.sourceCaches['line-source-id'].reload).not.toHaveBeenCalled();
     });
 });
 
@@ -1568,7 +1965,7 @@ describe('Style.addLayer', () => {
         style.loadJSON(createStyleJSON());
         await style.once('style.load');
         const errorPromise = style.once('error');
-            
+
         style.addLayer({
             id: 'background',
             type: 'background',
@@ -1795,9 +2192,9 @@ describe('Style.addLayer', () => {
         }as LayerSpecification;
 
         await style.once('style.load');
-        const errorPromise = style.once('error');      
+        const errorPromise = style.once('error');
         style.addLayer(layer);
-        
+
         const {error} = await errorPromise;
         expect(error.message).toMatch(/does not exist on source/);
     });
@@ -1980,13 +2377,13 @@ describe('Style.setPaintProperty', () => {
         tr.resize(512, 512);
 
         await style.once('style.load');
-        style.update(tr.zoom as any as EvaluationParameters);
+        style.update({zoom: tr.zoom} as EvaluationParameters);
         const sourceCache = style.sourceCaches['geojson'];
         const source = style.getSource('geojson') as GeoJSONSource;
 
         await source.once('data');
         vi.spyOn(sourceCache, 'reload');
-            
+
         source.setData({'type': 'FeatureCollection', 'features': []});
         style.setPaintProperty('circle', 'circle-color', {type: 'identity', property: 'foo'});
         await waitForEvent(source, 'data', (e) => e.sourceDataType === 'content');
@@ -2375,7 +2772,7 @@ describe('Style.setLayerZoomRange', () => {
         vi.spyOn(style, '_reloadSource');
 
         style.setLayerZoomRange('raster', 5, 12);
-        style.update(0 as any as EvaluationParameters);
+        style.update({zoom: 0} as EvaluationParameters);
         expect(style._reloadSource).not.toHaveBeenCalled();
     });
 });
@@ -2524,7 +2921,7 @@ describe('Style.queryRenderedFeatures', () => {
             style.sourceCaches.mapLibre.transform = transform;
             style.sourceCaches.other.transform = transform;
 
-            style.update(0 as any as EvaluationParameters);
+            style.update({zoom: 0} as EvaluationParameters);
             style._updateSources(transform);
             callback();
         });

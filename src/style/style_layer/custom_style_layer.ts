@@ -111,7 +111,7 @@ export type CustomRenderMethodInput = {
  * @param gl - The map's gl context.
  * @param options - Argument object with render inputs like camera properties.
  */
-type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, options: CustomRenderMethodInput) => void;
+export type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, options: CustomRenderMethodInput) => void;
 
 /**
  * Interface for custom style layers. This is a specification for

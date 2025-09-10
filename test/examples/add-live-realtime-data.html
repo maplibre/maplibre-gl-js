@@ -18,9 +18,8 @@
 <script>
     const map = new maplibregl.Map({
         container: 'map',
-        style:
-            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
-        zoom: 0
+        style: 'https://tiles.openfreemap.org/styles/bright',
+        zoom: 2
     });
 
     map.on('load', () => {
@@ -62,7 +61,7 @@
             'type': 'symbol',
             'source': 'drone',
             'layout': {
-                'icon-image': 'rocket_15'
+                'icon-image': 'airport'
             }
         });
     });

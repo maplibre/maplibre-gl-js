@@ -1,8 +1,8 @@
 import {getJSON} from '../util/ajax';
 import {RequestPerformance} from '../util/performance';
 import rewind from '@mapbox/geojson-rewind';
-import {GeoJSONWrapper} from './geojson_wrapper';
-import vtpbf from 'vt-pbf';
+import {fromVectorTileJs, GeoJSONWrapper} from '@maplibre/vt-pbf';
+import {EXTENT} from '../data/extent';
 import Supercluster, {type Options as SuperclusterOptions, type ClusterProperties} from 'supercluster';
 import geojsonvt, {type Options as GeoJSONVTOptions} from 'geojson-vt';
 import {VectorTileWorkerSource} from './vector_tile_worker_source';
@@ -81,11 +81,11 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
             return null;
         }
 
-        const geojsonWrapper = new GeoJSONWrapper(geoJSONTile.features);
+        const geojsonWrapper = new GeoJSONWrapper(geoJSONTile.features, {version: 2, extent: EXTENT});
         // Encode the geojson-vt tile into binary vector tile form.  This
         // is a convenience that allows `FeatureIndex` to operate the same way
         // across `VectorTileSource` and `GeoJSONSource` data.
-        let pbf = vtpbf(geojsonWrapper);
+        let pbf = fromVectorTileJs(geojsonWrapper);
         if (pbf.byteOffset !== 0 || pbf.byteLength !== pbf.buffer.byteLength) {
             // Compatibility with node Buffer (https://github.com/mapbox/pbf/issues/35)
             pbf = new Uint8Array(pbf);
@@ -119,13 +119,15 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
         try {
             this._pendingData = this.loadAndProcessGeoJSON(params, this._pendingRequest);
 
+            const data = await this._pendingData;
+
             this._geoJSONIndex = params.cluster ?
-                new Supercluster(getSuperclusterOptions(params)).load((await this._pendingData as any).features) :
-                geojsonvt(await this._pendingData, params.geojsonVtOptions);
+                new Supercluster(getSuperclusterOptions(params)).load((data as any).features) :
+                geojsonvt(data, params.geojsonVtOptions);
 
             this.loaded = {};
 
-            const result = {} as GeoJSONWorkerSourceLoadDataResult;
+            const result = {data} as GeoJSONWorkerSourceLoadDataResult;
             if (perf) {
                 const resourceTimingData = perf.finish();
                 // it's necessary to eval the result of getEntriesByName() here via parse/stringify

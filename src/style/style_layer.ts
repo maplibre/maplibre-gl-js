@@ -106,6 +106,8 @@ export abstract class StyleLayer extends Evented {
     queryIntersectsFeature?(params: QueryIntersectsFeatureParams): boolean | number;
     createBucket?(parameters: BucketParameters<any>): Bucket;
 
+    private _globalState: Record<string, any>; // reference to global state
+
     constructor(layer: LayerSpecification | CustomLayerInterface, properties: Readonly<{
         layout?: Properties<any>;
         paint?: Properties<any>;
@@ -123,6 +125,8 @@ export abstract class StyleLayer extends Evented {
         this.metadata = layer.metadata;
         this.minzoom = layer.minzoom;
         this.maxzoom = layer.maxzoom;
+
+        this._globalState = {};
 
         if (layer.type !== 'background') {
             this.source = layer.source;
@@ -173,7 +177,7 @@ export abstract class StyleLayer extends Evented {
      * This is used to determine if layer source need to be reloaded when global state property changes.
      *
      */
-    getLayoutAffectingGlobalStateRefs() {
+    getLayoutAffectingGlobalStateRefs(): Set<string> {
         const globalStateRefs = new Set<string>();
 
         if (this._unevaluatedLayout) {
@@ -188,6 +192,29 @@ export abstract class StyleLayer extends Evented {
 
         for (const globalStateRef of this._featureFilter.getGlobalStateRefs()) {
             globalStateRefs.add(globalStateRef);
+        }
+
+        return globalStateRefs;
+    }
+
+    /**
+     * Get list of global state references that are used within paint properties.
+     * This is used to determine if layer needs to be repainted when global state property changes.
+     *
+     */
+    getPaintAffectingGlobalStateRefs(): globalThis.Map<string, Array<{name: string; value: any}>> {
+        const globalStateRefs = new globalThis.Map<string, Array<{name: string; value: any}>>();
+
+        if (this._transitionablePaint) {
+            for (const propertyName in this._transitionablePaint._values) {
+                const value = this._transitionablePaint._values[propertyName].value;
+
+                for (const globalStateRef of value.getGlobalStateRefs()) {
+                    const properties = globalStateRefs.get(globalStateRef) ?? [];
+                    properties.push({name: propertyName, value: value.value});
+                    globalStateRefs.set(globalStateRef, properties);
+                }
+            }
         }
 
         return globalStateRefs;
@@ -272,6 +299,7 @@ export abstract class StyleLayer extends Evented {
     }
 
     recalculate(parameters: EvaluationParameters, availableImages: Array<string>) {
+        parameters.globalState = this._globalState;
         if (parameters.getCrossfadeParameters) {
             this._crossfadeParameters = parameters.getCrossfadeParameters();
         }
@@ -281,6 +309,13 @@ export abstract class StyleLayer extends Evented {
         }
 
         (this as any).paint = this._transitioningPaint.possiblyEvaluate(parameters, undefined, availableImages);
+    }
+
+    setGlobalState(globalState: Record<string, any>) {
+        this._globalState = globalState;
+        if (this._unevaluatedLayout) {
+            this._unevaluatedLayout.setGlobalState(globalState);
+        }
     }
 
     serialize(): LayerSpecification {

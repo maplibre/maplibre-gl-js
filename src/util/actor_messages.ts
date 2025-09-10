@@ -26,6 +26,7 @@ export type GetClusterLeavesParams = ClusterIDAndSource & { limit: number; offse
  * The result of the call to load a geojson source
  */
 export type GeoJSONWorkerSourceLoadDataResult = {
+    data?: GeoJSON.GeoJSON;
     resourceTiming?: {[_: string]: Array<PerformanceResourceTiming>};
     abandoned?: boolean;
 };
