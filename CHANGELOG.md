@@ -5,6 +5,7 @@
 
 ### 🐞 Bug fixes
 - Fix evaluating `global-state` for layers added after loading style ([#6361](https://github.com/maplibre/maplibre-gl-js/issues/6361))
+- Fix mouse events on heatmap features ([#714](https://github.com/maplibre/maplibre-gl-js/issues/714))
 - _...Add new stuff here..._
 
 ## 5.7.1
