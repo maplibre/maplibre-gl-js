@@ -205,7 +205,7 @@ jobs:
           path: coverage-merged
 
       - name: Code Coverage Annotation
-        uses: ggilder/codecoverage@7a86e1ba1504dd0d588324fedff7184f4e4dd890
+        uses: ggilder/codecoverage@597b28d500dbec27ea9d775654c244cf3bdd7205
         with:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           COVERAGE_FILE_PATH: "./coverage-merged/lcov.info"
