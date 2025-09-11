@@ -7,6 +7,7 @@ import {type EvaluationParameters} from './evaluation_parameters';
 import {type TransitionParameters} from './properties';
 import {type BackgroundStyleLayer} from './style_layer/background_style_layer';
 import {type SymbolStyleLayer} from './style_layer/symbol_style_layer';
+import {type CircleStyleLayer} from './style_layer/circle_style_layer';
 
 describe('StyleLayer', () => {
     test('instantiates the correct subclass', () => {
@@ -463,12 +464,28 @@ describe('StyleLayer.globalState', () => {
                 'text-size': ['global-state', 'textSize'],
                 'text-transform': ['global-state', 'textTransform']
             }
-        }  as LayerSpecification) as SymbolStyleLayer;
+        } as LayerSpecification) as SymbolStyleLayer;
         layer.setGlobalState({textSize: 15, textTransform: 'uppercase'});
 
         layer.recalculate({zoom: 0, zoomHistory: {}, globalState: {textSize: 13, textTransform: 'lowercase'} as Record<string, any>} as EvaluationParameters, undefined);
 
         expect(layer.layout.get('text-size').evaluate(undefined, {})).toBe(15);
         expect(layer.layout.get('text-transform').evaluate(undefined, {})).toBe('uppercase');
+    });
+
+    test('uses global state from parameters if not set on layer when recalculating layout properties', () => {
+        const layer = createStyleLayer({
+            id: 'circle',
+            type: 'circle',
+            paint: {
+                'circle-color': ['global-state', 'color'],
+                'circle-radius': ['global-state', 'radius']
+            }
+        } as LayerSpecification) as CircleStyleLayer;
+
+        layer.recalculate({zoom: 0, globalState: {radius: 15, color: '#FF0000'} as Record<string, any>} as EvaluationParameters, undefined);
+
+        expect(layer.paint.get('circle-color').evaluate(undefined, {})).toEqual(new Color(1, 0, 0, 1));
+        expect(layer.paint.get('circle-radius').evaluate(undefined, {})).toBe(15);
     });
 });
