@@ -928,7 +928,7 @@ describe('SourceCache._updateRetainedTiles', () => {
         expect(sourceCache.getIds()).toEqual([idealTile.key]);
     });
 
-    test('retains all loaded children ', () => {
+    test('retains all loaded children  (and parents when coverage is incomplete)', () => {
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'errored';
@@ -963,6 +963,78 @@ describe('SourceCache._updateRetainedTiles', () => {
             idealTile
         ].concat(loadedChildren).map(t => t.key).sort());
 
+    });
+
+    test('retains all loaded children for an ideal tile', () => {
+        const zoom = 3;
+        const maxCoveringZoom = 6;
+
+        const sourceCache = createSourceCache();
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'errored';
+        };
+
+        // create ideal tile at z=2
+        const idealTileID = new OverscaledTileID(2, 0, 2, 1, 1);
+        // add ideal tile to source cache
+        const idealTile = new Tile(idealTileID, undefined);
+        idealTile.state = 'errored';
+        sourceCache._tiles[idealTileID.key] = idealTile;
+
+        // create idealTiles dictionary for passing into _retainLoadedChildren
+        const idealTiles: {[key: string]: OverscaledTileID} = {};
+        idealTiles[idealTileID.key] = idealTileID;
+
+        // calculate expected children
+        const expectedChildren = idealTileID.children(14);
+        for (const child of expectedChildren) {
+            const tile = new Tile(child, undefined);
+            tile.state = 'loaded'; // causes hasData() to be true
+            sourceCache._tiles[child.key] = tile;
+        }
+
+        // create retainment dictionary to pass by reference to _retainLoadedChildren for modification
+        const retain: {[key: string]: OverscaledTileID} = {};
+        sourceCache._retainLoadedChildren(idealTiles, zoom, maxCoveringZoom, retain);
+
+        expect(Object.keys(retain).sort()).toEqual(expectedChildren.map(c => c.key).sort());
+    });
+
+    test('retains only uppermost zoom children when multiple zoom levels are loaded', () => {
+        const zoom = 3;
+        const maxCoveringZoom = 6;
+
+        const sourceCache = createSourceCache();
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'errored';
+        };
+
+        const idealTileID = new OverscaledTileID(2, 0, 2, 1, 1);
+        const idealTiles: {[key: string]: OverscaledTileID} = {[idealTileID.key]: idealTileID};
+
+        // add children at z=3, z=4, and z=5
+        const children = [
+            new OverscaledTileID(3, 0, 3, 2, 2),  //keep
+            new OverscaledTileID(3, 0, 3, 3, 2),  //keep
+            new OverscaledTileID(4, 0, 4, 4, 4),  //discard
+            new OverscaledTileID(5, 0, 5, 8, 8),  //discard
+        ];
+        for (const child of children) {
+            const tile = new Tile(child, undefined);
+            tile.state = 'loaded';
+            sourceCache._tiles[child.key] = tile;
+        }
+
+        // create retainment dictionary to pass by reference to _retainLoadedChildren for modification
+        const retain: {[key: string]: OverscaledTileID} = {};
+        sourceCache._retainLoadedChildren(idealTiles, zoom, maxCoveringZoom, retain);
+
+        const expectedKeys = children
+            .filter(child => child.overscaledZ === 3)
+            .map(child => child.key)
+            .sort();
+
+        expect(Object.keys(retain).sort()).toEqual(expectedKeys);
     });
 
     test('adds parent tile if ideal tile errors and no child tiles are loaded', () => {
