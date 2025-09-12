@@ -526,6 +526,12 @@ export class Map extends Camera {
 
     /**
      * @internal
+     * style to be used when the map loses its context and restores it
+     */
+    private _lostContextStyle: StyleSpecification | null = null;
+
+    /**
+     * @internal
      * image queue throttling handle. To be used later when clean up
      */
     _imageQueueHandle: number;
@@ -3212,10 +3218,18 @@ export class Map extends Camera {
             this._frameRequest.abort();
             this._frameRequest = null;
         }
+        this.painter.destroy();
+        this._lostContextStyle = this.style ? this.getStyle() : null;
+        this.style.destroy();
+        this.style = null;
         this.fire(new Event('webglcontextlost', {originalEvent: event}));
     };
 
     _contextRestored = (event: any) => {
+        if (this._lostContextStyle) {
+            this.setStyle(this._lostContextStyle);
+        }
+
         this._setupPainter();
         this.resize();
         this._update();

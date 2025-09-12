@@ -209,4 +209,17 @@ export class GlyphManager {
             }
         };
     }
+
+    destroy() {
+        for (const stack in this.entries) {
+            const entry = this.entries[stack];
+            if (entry.tinySDF) {
+                entry.tinySDF = null;
+            }
+            entry.glyphs = {};
+            entry.requests = {};
+            entry.ranges = {};
+        }
+        this.entries = {};
+    }
 }
