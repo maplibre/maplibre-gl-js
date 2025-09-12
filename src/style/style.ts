@@ -454,21 +454,23 @@ export class Style extends Evented {
     private _createLayers() {
         const dereferencedLayers = derefLayers(this.stylesheet.layers);
 
+        this.setGlobalState(this.stylesheet.state ?? null);
+
         // Broadcast layers to workers first, so that expensive style processing (createStyleLayer)
         // can happen in parallel on both main and worker threads.
-        this.dispatcher.broadcast(MessageType.setLayers, dereferencedLayers);
+        this.dispatcher.broadcast(MessageType.setLayers, {
+            layers: dereferencedLayers,
+            globalState: this._globalState
+        });
 
         this._order = dereferencedLayers.map((layer) => layer.id);
         this._layers = {};
 
-        this.setGlobalState(this.stylesheet.state ?? null);
-
         // reset serialization field, to be populated only when needed
         this._serializedLayers = null;
         for (const layer of dereferencedLayers) {
-            const styledLayer = createStyleLayer(layer);
+            const styledLayer = createStyleLayer(layer, this._globalState);
             styledLayer.setEventedParent(this, {layer: {id: layer.id}});
-            styledLayer.setGlobalState(this._globalState);
             this._layers[layer.id] = styledLayer;
         }
     }
@@ -779,7 +781,8 @@ export class Style extends Evented {
     _updateWorkerLayers(updatedIds: Array<string>, removedIds: Array<string>) {
         this.dispatcher.broadcast(MessageType.updateLayers, {
             layers: this._serializeByIds(updatedIds, false),
-            removedIds
+            removedIds,
+            globalState: this._globalState
         });
     }
 
@@ -1050,7 +1053,7 @@ export class Style extends Evented {
 
             if (emitValidationErrors(this, validateCustomStyleLayer(layerObject))) return;
 
-            layer = createStyleLayer(layerObject);
+            layer = createStyleLayer(layerObject, this._globalState);
 
         } else {
             if ('source' in layerObject && typeof layerObject.source === 'object') {
@@ -1063,13 +1066,11 @@ export class Style extends Evented {
             if (this._validate(validateStyle.layer,
                 `layers.${id}`, layerObject, {arrayIndex: -1}, options)) return;
 
-            layer = createStyleLayer(layerObject as LayerSpecification | CustomLayerInterface);
+            layer = createStyleLayer(layerObject as LayerSpecification | CustomLayerInterface, this._globalState);
             this._validateLayer(layer);
 
             layer.setEventedParent(this, {layer: {id}});
         }
-
-        layer.setGlobalState(this._globalState);
 
         const index = before ? this._order.indexOf(before) : this._order.length;
         if (before && index === -1) {

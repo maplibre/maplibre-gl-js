@@ -83,14 +83,20 @@ describe('Worker generic testing', () => {
     });
 
     test('isolates different instances\' data', () => {
-        worker.actor.messageHandlers[MessageType.setLayers]('0', [
-            {id: 'one', type: 'circle'} as LayerSpecification
-        ]);
+        worker.actor.messageHandlers[MessageType.setLayers]('0', {
+            layers: [
+                {id: 'one', type: 'circle'} as LayerSpecification
+            ],
+            globalState: {}
+        });
 
-        worker.actor.messageHandlers[MessageType.setLayers]('1', [
-            {id: 'one', type: 'circle'} as LayerSpecification,
-            {id: 'two', type: 'circle'} as LayerSpecification,
-        ]);
+        worker.actor.messageHandlers[MessageType.setLayers]('1', {
+            layers: [
+                {id: 'one', type: 'circle'} as LayerSpecification,
+                {id: 'two', type: 'circle'} as LayerSpecification,
+            ],
+            globalState: {}
+        });
 
         expect(worker.layerIndexes[0]).not.toBe(worker.layerIndexes[1]);
     });
@@ -135,7 +141,7 @@ describe('Worker generic testing', () => {
     });
 
     test('clears resources when map is removed', () => {
-        worker.actor.messageHandlers[MessageType.setLayers]('0', []);
+        worker.actor.messageHandlers[MessageType.setLayers]('0', {layers: [], globalState: {}});
         expect(worker.layerIndexes['0']).toBeDefined();
         worker.actor.messageHandlers[MessageType.removeMap]('0', undefined);
         expect(worker.layerIndexes['0']).toBeUndefined();

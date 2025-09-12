@@ -20,7 +20,6 @@ export class EvaluationParameters {
     fadeDuration: number;
     zoomHistory: ZoomHistory;
     transition: TransitionSpecification;
-    globalState: Record<string, any>;
 
     // "options" may also be another EvaluationParameters to copy, see CrossFadedProperty.possiblyEvaluate
     constructor(zoom: number, options?: any) {
@@ -31,7 +30,6 @@ export class EvaluationParameters {
             this.fadeDuration = options.fadeDuration || 0;
             this.zoomHistory = options.zoomHistory || new ZoomHistory();
             this.transition = options.transition || {};
-            this.globalState = options.globalState;
         } else {
             this.now = 0;
             this.fadeDuration = 0;

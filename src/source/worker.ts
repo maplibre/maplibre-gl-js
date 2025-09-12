@@ -16,12 +16,12 @@ import type {
 } from '../source/worker_source';
 
 import type {WorkerGlobalScopeInterface} from '../util/web_worker';
-import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {
     MessageType,
     type ClusterIDAndSource,
     type GetClusterLeavesParams,
     type RemoveSourceParams,
+    type SetLayersParameters,
     type UpdateLayersParameters
 } from '../util/actor_messages';
 
@@ -170,11 +170,11 @@ export default class Worker {
         });
 
         this.actor.registerMessageHandler(MessageType.updateLayers, async (mapId: string, params: UpdateLayersParameters) => {
-            this._getLayerIndex(mapId).update(params.layers, params.removedIds);
+            this._getLayerIndex(mapId).update(params.layers, params.removedIds, params.globalState);
         });
 
-        this.actor.registerMessageHandler(MessageType.setLayers, async (mapId: string, params: Array<LayerSpecification>) => {
-            this._getLayerIndex(mapId).replace(params);
+        this.actor.registerMessageHandler(MessageType.setLayers, async (mapId: string, params: SetLayersParameters) => {
+            this._getLayerIndex(mapId).replace(params.layers, params.globalState);
         });
     }
 

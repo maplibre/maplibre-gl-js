@@ -64,7 +64,7 @@ describe('drawCustom', () => {
                     args
                 };
             },
-        });
+        }, {});
         const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
         drawCustom(mockPainter, sourceCacheMock, mockLayer, renderOptions);
         expect(result.gl).toBeDefined();
