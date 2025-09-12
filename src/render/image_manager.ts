@@ -69,6 +69,21 @@ export class ImageManager extends Evented {
         this.dirty = true;
     }
 
+    destroy() {
+        // Destroy atlas texture if it exists
+        if (this.atlasTexture) {
+            this.atlasTexture.destroy();
+            this.atlasTexture = null;
+        }
+        // Remove all images and patterns
+        for (const id of Object.keys(this.images)) {
+            this.removeImage(id);
+        }
+
+        this.patterns = {};
+        this.atlasImage = new RGBAImage({width: 1, height: 1});
+        this.dirty = true;
+    }
     isLoaded() {
         return this.loaded;
     }
@@ -90,7 +105,6 @@ export class ImageManager extends Evented {
 
     getImage(id: string): StyleImage {
         const image = this.images[id];
-
         // Extract sprite image data on demand
         if (image && !image.data && image.spriteData) {
             const spriteData = image.spriteData;
@@ -333,5 +347,17 @@ export class ImageManager extends Evented {
                 this.updateImage(id, image);
             }
         }
+    }
+
+    cloneImages() {
+        const clonedImages: Record<string, StyleImage> = {};
+        for (const id in this.images) {
+            const image = this.images[id];
+            clonedImages[id] = {
+                ...image,
+                data: image.data ? image.data.clone() : null
+            };
+        }
+        return clonedImages;
     }
 }

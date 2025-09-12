@@ -531,6 +531,18 @@ export class Map extends Camera {
     _imageQueueHandle: number;
 
     /**
+     * @internal
+     * Used to store the previous style and images when a context loss occurs, so they can be restored.
+     */
+    _oldContextStyle: {
+        style: StyleSpecification | null;
+        images: {[_: string]: StyleImage} | null;
+    } = {
+        style: null,
+        images: null
+    };
+
+    /**
      * The map's {@link ScrollZoomHandler}, which implements zooming in and out with a scroll wheel or trackpad.
      * Find more details and examples using `scrollZoom` in the {@link ScrollZoomHandler} section.
      */
@@ -1994,6 +2006,21 @@ export class Map extends Camera {
     }
 
     /**
+     * @internal
+     * Returns the map's style and cloned images to restore context.
+     * @returns An object containing the style and images.
+     */
+    _getStyleAndImages(): { style: StyleSpecification; images: Record<string, StyleImage> } {
+        if (this.style) {
+            return {
+                style: this.style.serialize(),
+                images: this.style.imageManager.cloneImages()
+            };
+        }
+        return {style: null, images: {}};
+    }
+
+    /**
      * Returns a Boolean indicating whether the map's style is fully loaded.
      *
      * @returns A Boolean indicating whether the style is fully loaded.
@@ -3212,10 +3239,22 @@ export class Map extends Camera {
             this._frameRequest.abort();
             this._frameRequest = null;
         }
+        this.painter.destroy();
+        this._oldContextStyle = this._getStyleAndImages();
+        this.style.destroy();
+        this.style = null;
         this.fire(new Event('webglcontextlost', {originalEvent: event}));
     };
 
     _contextRestored = (event: any) => {
+        if (this._oldContextStyle.style) {
+            this.setStyle(this._oldContextStyle.style, {diff: false});
+        }
+
+        if (this._oldContextStyle.images) {
+            this.style.imageManager.images = this._oldContextStyle.images;
+        }
+
         this._setupPainter();
         this.resize();
         this._update();
