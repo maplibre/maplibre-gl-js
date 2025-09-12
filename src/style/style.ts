@@ -1967,4 +1967,96 @@ export class Style extends Evented {
             }
         }
     }
+
+    /**
+     * Destroys all internal resources of the style (sources, images, layers, etc.)
+     */
+    destroy() {
+        // cancel any pending requests
+        if (this._frameRequest) {
+            this._frameRequest.abort();
+            this._frameRequest = null;
+        }
+        if (this._loadStyleRequest) {
+            this._loadStyleRequest.abort();
+            this._loadStyleRequest = null;
+        }
+        if (this._spriteRequest) {
+            this._spriteRequest.abort();
+            this._spriteRequest = null;
+        }
+
+        // remove sourcecaches
+        for (const id in this.sourceCaches) {
+            const sourceCache = this.sourceCaches[id];
+            sourceCache.setEventedParent(null);
+
+            if (sourceCache._tiles) {
+                for (const tileId in sourceCache._tiles) {
+                    const tile = sourceCache._tiles[tileId];
+                    tile.unloadVectorData();
+                }
+                sourceCache._tiles = {};
+            }
+            sourceCache._cache.reset();
+            sourceCache.onRemove(this.map);
+        }
+        this.sourceCaches = {};
+
+        // Destroy imageManager and clear images
+        if (this.imageManager) {
+            this.imageManager.setEventedParent(null);
+            this.imageManager.destroy();
+            this._availableImages = [];
+            this._spritesImagesIds = {};
+        }
+
+        // Destroy glyphManager
+        if (this.glyphManager) {
+            this.glyphManager.destroy();
+        }
+
+        // Remove layers
+        for (const layerId in this._layers) {
+            const layer = this._layers[layerId];
+            layer.setEventedParent(null);
+            if (layer.onRemove) layer.onRemove(this.map);
+        }
+        this._layers = {};
+        this._order = [];
+        this._serializedLayers = {};
+
+        // Reset other internal state
+        this.stylesheet = null;
+        this.light = null;
+        this.sky = null;
+        if (this.projection) {
+            this.projection.destroy();
+            delete this.projection;
+        }
+        this._loaded = false;
+        this._changed = false;
+        this._updatedLayers = {};
+        this._updatedSources = {};
+        this._changedImages = {};
+        this._glyphsDidChange = false;
+        this._updatedPaintProps = {};
+        this._layerOrderChanged = false;
+        this.crossTileSymbolIndex = new (this.crossTileSymbolIndex?.constructor || Object)();
+        this.pauseablePlacement = undefined;
+        this.placement = undefined;
+        this.z = 0;
+
+        // Clear workers
+        this.dispatcher.workerPool.release(this.map._mapId);
+        this.dispatcher.actors.forEach((actor) => {
+            actor.remove();
+        });
+
+        // Remove event listeners
+        this.setEventedParent(null);
+        this.dispatcher.remove();
+        this._listeners = {};
+        this._oneTimeListeners = {};
+    }
 }

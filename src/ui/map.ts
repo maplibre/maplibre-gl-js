@@ -442,6 +442,14 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     centerClampedToGround: true
 };
 
+let oldContextStyle: {
+    style: StyleSpecification | null;
+    images: {[_: string]: StyleImage} | null;
+} = {
+    style: null,
+    images: null
+};
+
 /**
  * The `Map` object represents the map on your page. It exposes methods
  * and properties that enable you to programmatically change the map,
@@ -1994,6 +2002,21 @@ export class Map extends Camera {
     }
 
     /**
+     * @internal
+     * Returns the map's style and cloned images to restore context.
+     * @returns An object containing the style and images.
+     */
+    _getStyleAndImages(): { style: StyleSpecification; images: Record<string, StyleImage> } {
+        if (this.style) {
+            return {
+                style: this.style.serialize(),
+                images: this.style.imageManager.cloneImages()
+            };
+        }
+        return {style: null, images: {}};
+    }
+
+    /**
      * Returns a Boolean indicating whether the map's style is fully loaded.
      *
      * @returns A Boolean indicating whether the style is fully loaded.
@@ -3212,10 +3235,22 @@ export class Map extends Camera {
             this._frameRequest.abort();
             this._frameRequest = null;
         }
+        this.painter.destroy();
+        oldContextStyle = this._getStyleAndImages();
+        this.style.destroy();
+        this.style = null;
         this.fire(new Event('webglcontextlost', {originalEvent: event}));
     };
 
     _contextRestored = (event: any) => {
+        if (oldContextStyle.style) {
+            this.setStyle(oldContextStyle.style, {diff: false});
+        }
+
+        if (oldContextStyle.images) {
+            this.style.imageManager.images = oldContextStyle.images;
+        }
+
         this._setupPainter();
         this.resize();
         this._update();
