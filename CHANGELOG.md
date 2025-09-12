@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Change the pathway for passing `global-state` object from `Style` to expression ([#6366](https://github.com/maplibre/maplibre-gl-js/pull/6366))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
