@@ -965,6 +965,32 @@ describe('SourceCache._updateRetainedTiles', () => {
 
     });
 
+    test('retains overscaled loaded children with coveringZoom < maxzoom', () => {
+        const sourceCache = createSourceCache({maxzoom: 3});
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'errored';
+        };
+
+        const idealTile = new OverscaledTileID(3, 0, 3, 1, 2);
+        sourceCache._tiles[idealTile.key] = new Tile(idealTile, undefined);
+        sourceCache._tiles[idealTile.key].state = 'errored';
+
+        const loadedChildren = [
+            new OverscaledTileID(4, 0, 3, 1, 2)
+        ];
+
+        for (const t of loadedChildren) {
+            sourceCache._tiles[t.key] = new Tile(t, undefined);
+            sourceCache._tiles[t.key].state = 'loaded';
+        }
+
+        const retained = sourceCache._updateRetainedTiles([idealTile], 2);
+        expect(Object.keys(retained).sort()).toEqual([
+            idealTile
+        ].concat(loadedChildren).map(t => t.key).sort());
+
+    });
+
     test('adds parent tile if ideal tile errors and no child tiles are loaded', () => {
         const stateCache = {};
         const sourceCache = createSourceCache();

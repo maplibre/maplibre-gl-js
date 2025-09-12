@@ -4,6 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix `_updateRetainedTiles` checking for children when children length is 1 overscaled tile "child" ([#6388](https://github.com/maplibre/maplibre-gl-js/pull/6388))
 - Fix evaluating `global-state` for layers added after loading style ([#6361](https://github.com/maplibre/maplibre-gl-js/issues/6361))
 - _...Add new stuff here..._
 
