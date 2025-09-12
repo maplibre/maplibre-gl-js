@@ -126,8 +126,6 @@ export abstract class StyleLayer extends Evented {
         this.minzoom = layer.minzoom;
         this.maxzoom = layer.maxzoom;
 
-        this._globalState = {};
-
         if (layer.type !== 'background') {
             this.source = layer.source;
             this.sourceLayer = layer['source-layer'];
@@ -299,7 +297,9 @@ export abstract class StyleLayer extends Evented {
     }
 
     recalculate(parameters: EvaluationParameters, availableImages: Array<string>) {
-        parameters.globalState = this._globalState;
+        if (this._globalState) {
+            parameters.globalState = this._globalState;
+        }
         if (parameters.getCrossfadeParameters) {
             this._crossfadeParameters = parameters.getCrossfadeParameters();
         }
