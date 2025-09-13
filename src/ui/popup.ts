@@ -189,7 +189,7 @@ const focusQuerySelector = [
  */
 export class Popup extends Evented {
     /**
-     * Dynamically set the popup's CSS padding after creation.
+     * Dynamically set the popup's CSS padding.
      */
     setPadding(padding: {top?: string; right?: string; bottom?: string; left?: string}): this {
         this.options.popupPadding = padding;
