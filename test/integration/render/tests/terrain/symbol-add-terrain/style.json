@@ -2,9 +2,9 @@
     "version": 8,
     "sprite": "local://sprites/sprite",
     "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
-    "timeout": 60000,
     "metadata": {
         "test": {
+            "timeout": 60000,
             "height": 512,
             "width": 512,
             "operations": [
