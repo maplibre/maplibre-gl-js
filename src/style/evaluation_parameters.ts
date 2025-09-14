@@ -2,7 +2,7 @@ import {ZoomHistory} from './zoom_history';
 import {isStringInSupportedScript} from '../util/script_detection';
 import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker';
 
-import type {TransitionSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {GlobalProperties, TransitionSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export type CrossfadeParameters = {
     fromScale: number;
@@ -12,14 +12,20 @@ export type CrossfadeParameters = {
 
 /**
  * @internal
- * A parameter that can be evaluated to a value
+ * A parameter that can be evaluated to a value.
+ * It's main purpose is a parameter to expression `evaluate` methods.
  */
-export class EvaluationParameters {
+export class EvaluationParameters implements GlobalProperties {
     zoom: number;
     now: number;
     fadeDuration: number;
     zoomHistory: ZoomHistory;
     transition: TransitionSpecification;
+    // has to be an own property of an object to be used in expressions
+    // if defined as class method, it'll hidden from operations
+    // that iterate over own enumerable properties
+    // (i..e spread operator (...), Object.keys(), for...in statement, etc.)
+    isSupportedScript: (_: string) => boolean = isSupportedScript;
 
     // "options" may also be another EvaluationParameters to copy, see CrossFadedProperty.possiblyEvaluate
     constructor(zoom: number, options?: any) {
@@ -36,10 +42,6 @@ export class EvaluationParameters {
             this.zoomHistory = new ZoomHistory();
             this.transition = {};
         }
-    }
-
-    isSupportedScript(str: string): boolean {
-        return isStringInSupportedScript(str, rtlWorkerPlugin.getRTLTextPluginStatus() === 'loaded');
     }
 
     crossFadingFactor() {
@@ -59,4 +61,8 @@ export class EvaluationParameters {
             {fromScale: 2, toScale: 1, t: fraction + (1 - fraction) * t} :
             {fromScale: 0.5, toScale: 1, t: 1 - (1 - t) * fraction};
     }
+}
+
+function isSupportedScript(str: string): boolean {
+    return isStringInSupportedScript(str, rtlWorkerPlugin.getRTLTextPluginStatus() === 'loaded');
 }
