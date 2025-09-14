@@ -131,7 +131,7 @@ export abstract class StyleLayer extends Evented {
             this.source = layer.source;
             this.sourceLayer = layer['source-layer'];
             this.filter = layer.filter;
-            this._featureFilter = featureFilter(layer.filter);
+            this._featureFilter = featureFilter(layer.filter, globalState);
         }
 
         if (properties.layout) {
@@ -156,7 +156,7 @@ export abstract class StyleLayer extends Evented {
 
     setFilter(filter: FilterSpecification | void) {
         this.filter = filter;
-        this._featureFilter = featureFilter(filter);
+        this._featureFilter = featureFilter(filter, this._globalState);
     }
 
     getCrossfadeParameters() {

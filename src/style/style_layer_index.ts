@@ -35,7 +35,7 @@ export class StyleLayerIndex {
             this._layerConfigs[layerConfig.id] = layerConfig;
 
             const layer = this._layers[layerConfig.id] = createStyleLayer(layerConfig, globalState);
-            layer._featureFilter = featureFilter(layer.filter);
+            layer._featureFilter = featureFilter(layer.filter, globalState);
             if (this.keyCache[layerConfig.id])
                 delete this.keyCache[layerConfig.id];
         }

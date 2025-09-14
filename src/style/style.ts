@@ -1552,6 +1552,7 @@ export class Style extends Evented {
         const paramsStrict: QueryRenderedFeaturesOptionsStrict = {
             ...params,
             layers: layersAsSet,
+            globalState: this._globalState
         };
 
         for (const id in this.sourceCaches) {
@@ -1593,11 +1594,11 @@ export class Style extends Evented {
         sourceID: string,
         params?: QuerySourceFeatureOptions
     ) {
-        if (params && params.filter) {
+        if (params?.filter) {
             this._validate(validateStyle.filter, 'querySourceFeatures.filter', params.filter, null, params);
         }
         const sourceCache = this.sourceCaches[sourceID];
-        return sourceCache ? querySourceFeatures(sourceCache, params) : [];
+        return sourceCache ? querySourceFeatures(sourceCache, params ? {...params, globalState: this._globalState} : {globalState: this._globalState}) : [];
     }
 
     getLight() {
