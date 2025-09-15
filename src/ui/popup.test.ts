@@ -971,4 +971,72 @@ describe('popup', () => {
         expect(popup.getElement().style.paddingTop).toBe('5px');
         expect(popup.getElement().style.paddingBottom).toBe('15px');
     });
+    
+    test('Popup padding with 1 value CSS shorthand is correctly parsed and applied', () => {
+        const map = createMap();
+        const popup = new Popup()
+            .setLngLat([0, 0])
+            .setText('Test')
+            .addTo(map);
+        
+        // Set padding with 1 value
+        popup.setPadding('10px');
+        
+        // Verify options are updated with parsed object
+        expect(popup.options.popupPadding).toEqual({top: '10px', right: '10px', bottom: '10px', left: '10px'});
+        
+        // Verify style is applied
+        expect(popup.getElement().style.padding).toBe('10px');
+    });
+    
+    test('Popup padding with 2 values CSS shorthand is correctly parsed and applied', () => {
+        const map = createMap();
+        const popup = new Popup()
+            .setLngLat([0, 0])
+            .setText('Test')
+            .addTo(map);
+        
+        // Set padding with 2 values (top/bottom, left/right)
+        popup.setPadding('10px 20px');
+        
+        // Verify options are updated with parsed object
+        expect(popup.options.popupPadding).toEqual({top: '10px', right: '20px', bottom: '10px', left: '20px'});
+        
+        // Verify style is applied
+        expect(popup.getElement().style.padding).toBe('10px 20px');
+    });
+    
+    test('Popup padding with 4 values CSS shorthand is correctly parsed and applied', () => {
+        const map = createMap();
+        const popup = new Popup()
+            .setLngLat([0, 0])
+            .setText('Test')
+            .addTo(map);
+        
+        // Set padding with 4 values (top, right, bottom, left)
+        popup.setPadding('10px 20px 15px 25px');
+        
+        // Verify options are updated with parsed object
+        expect(popup.options.popupPadding).toEqual({top: '10px', right: '20px', bottom: '15px', left: '25px'});
+        
+        // Verify style is applied
+        expect(popup.getElement().style.padding).toBe('10px 20px 15px 25px');
+    });
+    
+    test('Popup padding with string value is applied before adding to map', () => {
+        const map = createMap();
+        const popup = new Popup()
+            .setLngLat([0, 0])
+            .setText('Test');
+        
+        // Set padding with 4 values before adding to map
+        popup.setPadding('5px 10px 15px 20px');
+        
+        // Verify options are updated with parsed object
+        expect(popup.options.popupPadding).toEqual({top: '5px', right: '10px', bottom: '15px', left: '20px'});
+        
+        // Add to map and verify styles are applied
+        popup.addTo(map);
+        expect(popup.getElement().style.padding).toBe('5px 10px 15px 20px');
+    });
 });
