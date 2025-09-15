@@ -713,19 +713,20 @@ export class Popup extends Evented {
         if (this.options.maxWidth && this._container.style.maxWidth !== this.options.maxWidth) {
             this._container.style.maxWidth = this.options.maxWidth;
         }
-        // // Apply popupPadding as CSS
-        // if (this.options.popupPadding) {
-        //     // If popupPadding is a string, apply it directly
-        //     if (typeof this.options.popupPadding === 'string') {
-        //         this._container.style.padding = this.options.popupPadding;
-        //     } else {
-        //         // If popupPadding is an object, apply each side individually
-        //         if (this.options.popupPadding.top) this._container.style.paddingTop = this.options.popupPadding.top;
-        //         if (this.options.popupPadding.right) this._container.style.paddingRight = this.options.popupPadding.right;
-        //         if (this.options.popupPadding.bottom) this._container.style.paddingBottom = this.options.popupPadding.bottom;
-        //         if (this.options.popupPadding.left) this._container.style.paddingLeft = this.options.popupPadding.left;
-        //     }
-        // }
+        
+        // Apply popupPadding as CSS
+        if (this.options.popupPadding) {
+            // If popupPadding is a string, apply it directly
+            if (typeof this.options.popupPadding === 'string') {
+                this._container.style.padding = this.options.popupPadding;
+            } else {
+                // If popupPadding is an object, apply each side individually
+                if (this.options.popupPadding.top) this._container.style.paddingTop = this.options.popupPadding.top;
+                if (this.options.popupPadding.right) this._container.style.paddingRight = this.options.popupPadding.right;
+                if (this.options.popupPadding.bottom) this._container.style.paddingBottom = this.options.popupPadding.bottom;
+                if (this.options.popupPadding.left) this._container.style.paddingLeft = this.options.popupPadding.left;
+            }
+        }
 
         this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform, this._trackPointer);
 
