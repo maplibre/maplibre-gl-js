@@ -1,4 +1,11 @@
 minimumReleaseAge: 1440
+
 minimumReleaseAgeExclude:
-  - "@maplibre/maplibre-gl-style-spec"
-  - "@maplibre/vt-pbf"
+  - '@maplibre/maplibre-gl-style-spec'
+  - '@maplibre/vt-pbf'
+
+onlyBuiltDependencies:
+  - canvas
+  - esbuild
+  - puppeteer
+  - sharp
