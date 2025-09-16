@@ -21,7 +21,7 @@ MapLibre software relies heavily on automated testing, and the project includes 
 
 For new features, it is usually a good idea to start with an issue ticket. If the feature requires changes to the style specification, an issue ticket should be created in the [style specification GitHub repository](https://github.com/maplibre/maplibre-gl-style-spec). Style specification changes are hard to change later, so there will be particularly close scrutiny on changes to the specification.
 
-If possible, it is beneficial to demonstrate proposed new features and assess the performance implications of the proposed change. You can use `npm install <location-of-maplibre-source-code>` to test changes in an npm context, or `npm run build-prod` to build a .js package for this purpose.
+If possible, it is beneficial to demonstrate proposed new features and assess the performance implications of the proposed change. You can use `pnpm install <location-of-maplibre-source-code>` to test changes in an npm context, or `pnpm run build-prod` to build a .js package for this purpose.
 
 For more complex proposed features that require deeper discussion, you should consider bringing it up in the [Technical Steering Committee](https://maplibre.org/categories/steering-committee/) meeting for a video discussion with the team about the proposed change. We find that sometimes it's easier to have a focused, face-to-face discussion for more consequential decisions.
 
@@ -72,7 +72,7 @@ brew install pkg-config cairo pango libpng jpeg giflib librsvg
 Install node module dependencies
 ```bash
 cd maplibre-gl-js &&
-npm install
+pnpm install
 ```
 
 #### Apple silicon
@@ -80,7 +80,7 @@ npm install
 If you have one of the newer arm64 machines, you might find that canvas.node or webgl.node can't be found for your architecture. In that case go to `node_modules/canvas` and `node_modules/gl` and run:
 
 ```
-npm install --build-from-source
+pnpm install --build-from-source
 ```
 
 If you have installed from non-M1 machine to an M1 machine using Migration Assistant and you had `brew` installed before, and you get this error when running tests:
@@ -94,7 +94,7 @@ dlopen(/Users/[...]/common/temp/node_modules/.pnpm/canvas@2.11.0/node_modules/ca
 Try
 - Uninstall then re-install `brew` [brew](https://brew.sh/)
 - Run `arch -arm64 brew install pkg-config cairo pango libpng jpeg giflib librsvg`
-- delete `node_modules` folder and re-run `npm install`
+- delete `node_modules` folder and re-run `pnpm install`
 
 ### Linux (and by extension GitHub codespaces)
 
@@ -128,7 +128,7 @@ git clone git@github.com:maplibre/maplibre-gl-js.git
 Install node module dependencies
 ```bash
 cd maplibre-gl-js &&
-npm install
+pnpm install
 ```
 
 Before you can [run the docs](./docs/README.md), you need to ensure Docker is installed and you have permission to run `docker` commands without `sudo`, as explained [here in the Docker docs](https://docs.docker.com/engine/install/linux-postinstall/).
@@ -148,7 +148,7 @@ git clone git@github.com:maplibre/maplibre-gl-js.git
 Install node module dependencies
 ```bash
 cd maplibre-gl-js
-npm install
+pnpm install
 ```
 
 Install headless-gl dependencies https://github.com/stackgl/headless-gl#windows
@@ -162,8 +162,8 @@ A standalone build allows you to turn the contents of this repository into `mapl
 
 To create a standalone build, run
 ```bash
-npm run build-prod
-npm run build-css
+pnpm run build-prod
+pnpm run build-css
 ```
 Once those commands finish, you will have a standalone build at `dist/maplibre-gl.js` and `dist/maplibre-gl.css`
 
@@ -171,7 +171,7 @@ Once those commands finish, you will have a standalone build at `dist/maplibre-g
 
 MapLibre seeks to keep production bundle sizes small. If your changes involve substantial additions or changes to dependencies, the effects on bundle size can be visualized by running
 ```bash
-npm run bundle-stats
+pnpm run bundle-stats
 ```
 
 ## Testing changes and Writing Documentation
@@ -214,8 +214,8 @@ The conventions for module exports are:
 To keep code uniformly styled and avoid common mistakes, you can check some files with the following scripts:
 
 ```bash
-npm run lint
-npm run lint-css
+pnpm run lint
+pnpm run lint-css
 ```
 
 Additionally, if you're using VSCode, the "Format Document" action or "Editor: Format on Save" should enforce the js, ts, and css formatting for this project by default.

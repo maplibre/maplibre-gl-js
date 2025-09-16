@@ -193,4 +193,4 @@ generateReadme();
 await generateExamplesFolder();
 await generatePluginsPage();
 updateMapLibreVersionForUNPKG();
-console.log('Docs generation completed, to see it in action run\n npm run start-docs');
+console.log('Docs generation completed, to see it in action run\n pnpm run start-docs');

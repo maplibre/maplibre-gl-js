@@ -13,18 +13,18 @@ Then run:
 npm test
 ```
 
-Note that for Linux you'll need to prefix test commands with `xvfb-run -a` for example `xvfb-run -a npm run test`.
-Note that some tests rely on the built project and will not pass until you have run `npm run build-dist`.
-The render tests rely on the dev-build of the project, and they will not pass until you have run `npm run build-dev`. Don't forget to run it after changing your code as well.
+Note that for Linux you'll need to prefix test commands with `xvfb-run -a` for example `xvfb-run -a pnpm run test`.
+Note that some tests rely on the built project and will not pass until you have run `pnpm run build-dist`.
+The render tests rely on the dev-build of the project, and they will not pass until you have run `pnpm run build-dev`. Don't forget to run it after changing your code as well.
 
 To run specific tests:
 
- - Unit test by file name : `npm run test-unit -- draw_symbol.test.ts`
- - Integration test by file name : `npm run test-integration -- browser`
+ - Unit test by file name : `pnpm run test-unit -- draw_symbol.test.ts`
+ - Integration test by file name : `pnpm run test-integration -- browser`
  want to change the headless mode in the test file to be `false` to see what's happening in the browser.
- - Render tests that matches a folder or file names: `npm run test-render -- render-test-name` (e.g. `npm run test-render -- text-rotation-alignment`)
+ - Render tests that matches a folder or file names: `pnpm run test-render -- render-test-name` (e.g. `pnpm run test-render -- text-rotation-alignment`)
 
-To run folders in watch mode, meaning they will run continuously as you make changes to relevant code, (i.e. for test driven development): use `npm run test-watch-roots *folder1* [*folder2*...]` (e.g. `npm run test-watch-roots ./src/ui/control`)
+To run folders in watch mode, meaning they will run continuously as you make changes to relevant code, (i.e. for test driven development): use `pnpm run test-watch-roots *folder1* [*folder2*...]` (e.g. `pnpm run test-watch-roots ./src/ui/control`)
 
 ## Integration Tests
 

@@ -1,0 +1,4 @@
+minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  - "@maplibre/maplibre-gl-style-spec"
+  - "@maplibre/vt-pbf"

@@ -138,7 +138,7 @@
     "generate-typings": "dts-bundle-generator --export-referenced-types=false --umd-module-name=maplibregl -o ./dist/maplibre-gl.d.ts ./src/index.ts",
     "generate-docs": "typedoc && node --no-warnings --loader ts-node/esm build/generate-docs.ts",
     "generate-images": "node --no-warnings --loader ts-node/esm build/generate-doc-images.ts",
-    "build-dist": "npm run build-css && npm run generate-typings && npm run generate-shaders && npm run build-dev && npm run build-csp-dev && npm run build-prod && npm run build-csp",
+    "build-dist": "pnpm run build-css && pnpm run generate-typings && pnpm run generate-shaders && pnpm run build-dev && pnpm run build-csp-dev && pnpm run build-prod && pnpm run build-csp",
     "build-dev": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:dev",
     "watch-dev": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:dev --watch",
     "build-prod": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:production",
@@ -146,7 +146,7 @@
     "build-csp-dev": "rollup --configPlugin @rollup/plugin-typescript -c rollup.config.csp.ts --environment BUILD:dev",
     "build-css": "postcss -o dist/maplibre-gl.css src/css/maplibre-gl.css",
     "watch-css": "postcss --watch -o dist/maplibre-gl.css src/css/maplibre-gl.css",
-    "build-benchmarks": "npm run build-dev && rollup --configPlugin @rollup/plugin-typescript -c test/bench/rollup_config_benchmarks.ts",
+    "build-benchmarks": "pnpm run build-dev && rollup --configPlugin @rollup/plugin-typescript -c test/bench/rollup_config_benchmarks.ts",
     "watch-benchmarks": "rollup --configPlugin @rollup/plugin-typescript -c test/bench/rollup_config_benchmarks.ts --watch",
     "bundle-stats": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:production,BUNDLE:stats",
     "spellcheck": "cspell",
@@ -165,10 +165,10 @@
     "test-build-ci": "vitest run --config vitest.config.build.ts --coverage",
     "test-watch-roots": "vitest --config vitest.config.unit.ts --watch",
     "test-render": "node --no-warnings --loader ts-node/esm test/integration/render/run_render_tests.ts",
-    "codegen": "run-p --print-label generate-dist-package generate-style-code generate-struct-arrays generate-shaders && npm run generate-typings",
+    "codegen": "run-p --print-label generate-dist-package generate-style-code generate-struct-arrays generate-shaders && pnpm run generate-typings",
     "benchmark": "node --no-warnings --loader ts-node/esm test/bench/run-benchmarks.ts",
     "gl-stats": "node --no-warnings --loader ts-node/esm test/bench/gl-stats.ts",
-    "prepare": "npm run codegen",
+    "prepare": "pnpm run codegen",
     "typecheck": "tsc --noEmit && tsc --project tsconfig.dist.json",
     "tsnode": "node --experimental-loader=ts-node/esm --no-warnings"
   },
@@ -178,7 +178,8 @@
     "src/"
   ],
   "engines": {
-    "npm": ">=8.1.0",
-    "node": ">=16.14.0"
-  }
+    "node": ">=16.14.0",
+    "pnpm": "^10.16.1"
+  },
+  "packageManager": "pnpm@10.16.1"
 }

@@ -174,7 +174,7 @@ function emitlayerProperties(locals) {
     } = locals;
 
     output.push(
-        `// This file is generated. Edit build/generate-style-code.ts, then run 'npm run codegen'.
+        `// This file is generated. Edit build/generate-style-code.ts, then run 'pnpm run codegen'.
 /* eslint-disable */
 
 import {latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';

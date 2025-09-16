@@ -4,7 +4,7 @@ Benchmarks help us catch performance regressions and improve performance.
 
 ## Running Benchmarks
 
-Start the benchmark server with `npm run start-bench`.
+Start the benchmark server with `pnpm run start-bench`.
 
 To run all benchmarks, open [the benchmark page, `http://localhost:9966/test/bench/versions/index.html`](http://localhost:9966/test/bench/versions/index.html).
 
@@ -14,14 +14,14 @@ To run a specific benchmark, add its name to the url hash, for example [`http://
 
 By default, the benchmark page will compare the local branch against `main` and the latest release. To change this, include one or more `compare` query parameters in the URL: E.g., [localhost:9966/test/bench/versions/index.html?compare=main](http://localhost:9966/test/bench/versions/index.html?compare=main) or [localhost:9966/test/bench/versions/index.html?compare=main#Layout](http://localhost:9966/test/bench/versions/index.html?compare=main#Layout) to compare only to main, or [localhost:9966/test/bench/versions/index.html?compare=v1.13.1](http://localhost:9966/test/bench/versions/index.html?compare=v1.13.1) to compare to `v1.13.1` (but not `main`).  Versions available for comparison are the ones stored in the `gh-pages` branch, see [here](https://github.com/maplibre/maplibre-gl-js/tree/gh-pages/benchmarks).
 
-To run all benchmarks in headless chromium use `npm run benchmark`. As with the browser you can include one or more `--compare` arguments to change the default comparison, e.g. `npm run benchmark -- --compare main`. You can also run only specific benchmarks by passing their names as positional arguments, e.g. `npm run benchmark -- Layout Paint`.
+To run all benchmarks in headless chromium use `pnpm run benchmark`. As with the browser you can include one or more `--compare` arguments to change the default comparison, e.g. `pnpm run benchmark -- --compare main`. You can also run only specific benchmarks by passing their names as positional arguments, e.g. `pnpm run benchmark -- Layout Paint`.
 
 ## Running Style Benchmarks
 
 Start the benchmark server
 
 ```bash
-MAPLIBRE_STYLES={YOUR STYLES HERE} npm run start-bench
+MAPLIBRE_STYLES={YOUR STYLES HERE} pnpm run start-bench
 ```
 Note: `MAPLIBRE_STYLES` takes a comma-separated list of up to 3 MapLibre styles provided as a style URL or file system path (e.g. `path/to/style-a.json,path/to/style-b.json`)
 
@@ -33,9 +33,9 @@ By default, the style benchmark page will run its benchmarks against `https://ap
 
 ## Generating gl statistics
 
-Build minimized production maplibre-gl-js with `npm run build-prod`.
+Build minimized production maplibre-gl-js with `pnpm run build-prod`.
 
-Gather and output gl statistics from headless chromium with `npm run gl-stats`. The results are output to the terminal and saved in data.json.gz.
+Gather and output gl statistics from headless chromium with `pnpm run gl-stats`. The results are output to the terminal and saved in data.json.gz.
 
 ## Writing a Benchmark
 
@@ -77,7 +77,7 @@ minimum and maximum sample, and sample values at the first quartile, second quar
 We recommend installing a browser extension that can take full-page snapshots, e.g.
 [FireShot](https://chrome.google.com/webstore/detail/take-webpage-screenshots/mcbpblocgmgfnpjjppndjkmgjaogfceg).
 
-Alternatively there is a suitable pdf at [`test/bench/results/all.pdf`](./results/all.pdf) after a successful run of `npm run benchmark`.
+Alternatively there is a suitable pdf at [`test/bench/results/all.pdf`](./results/all.pdf) after a successful run of `pnpm run benchmark`.
 
 ## GitHub Pages and the benchmarks
 

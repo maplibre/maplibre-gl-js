@@ -11,18 +11,23 @@ jobs:
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
+      - name: Set up pnpm
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+
       - name: Use Node.js from nvmrc
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v4
         with:
           node-version-file: '.nvmrc'
+          registry-url: "https://registry.npmjs.org"
+          cache: "pnpm"
 
       - name: Install
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Build benchmarks
         run: |
-          npm run generate-typings
-          npm run build-benchmarks
+          pnpm run generate-typings
+          pnpm run build-benchmarks
 
       - name: Copy benchmarks_generated.js
         run: |

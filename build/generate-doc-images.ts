@@ -69,11 +69,11 @@ if (exampleName === 'all') {
     await createImage(exampleName);
 } else {
     throw new Error(`
-  Usage: npm run generate-images <file-name|all> [serve]
+  Usage: pnpm run generate-images <file-name|all> [serve]
     file-name: the name of the example file in test/examples without the .html extension.
     all: generate images for all examples.
-    serve: use localhost to serve examples - use 'npm run start' with this option, otherwise it will use the latest published version in npm.
-  Example: npm run generate-images 3d-buildings serve`
+    serve: use localhost to serve examples - use 'pnpm run start' with this option, otherwise it will use the latest published version in npm.
+  Example: pnpm run generate-images 3d-buildings serve`
     );
 }
 

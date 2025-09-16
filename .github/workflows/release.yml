@@ -18,15 +18,20 @@ jobs:
           fetch-depth: 0
           ref: main
 
+      - name: Set up pnpm
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+
       - name: Use Node.js from nvmrc
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v4
         with:
           node-version-file: '.nvmrc'
+          registry-url: "https://registry.npmjs.org"
+          cache: "pnpm"
 
       - name: Check if version has been updated
         id: check
         uses: EndBug/version-check@d17247dd94ca7b39d0b0691399be8d7c510622c9 # v2
-          
+
     outputs:
       publish: ${{ steps.check.outputs.changed }}
 
@@ -56,7 +61,7 @@ jobs:
         uses: martinbeentjes/npm-get-version-action@3cf273023a0dda27efcd3164bdfb51908dd46a5b # v1.3.1
 
       - name: Install
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Prepare release
         id: prepare_release
@@ -66,8 +71,8 @@ jobs:
 
       - name: Build
         run: |
-          npm run build-dist
-          npm run build-benchmarks
+          pnpm run build-dist
+          pnpm run build-benchmarks
 
       - name: Publish NPM package (regular)
         if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
@@ -131,7 +136,7 @@ jobs:
 
       - name: Build the Docs
         run: |
-          npm run generate-docs
+          pnpm run generate-docs
           docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build
 
       - name: Publish the docs

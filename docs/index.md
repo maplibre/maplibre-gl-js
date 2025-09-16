@@ -41,7 +41,7 @@ In the examples, we use vector tiles from our [Demo tiles repository](https://gi
 Install the MapLibre GL JS package via [npm](https://www.npmjs.com/package/maplibre-gl).
 
 ```bash
-npm install maplibre-gl
+pnpm install maplibre-gl
 ```
 
 You can then import the MapLibre GL JS module in your project.

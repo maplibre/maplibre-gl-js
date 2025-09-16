@@ -11,7 +11,7 @@ The main differences in term of functionality is the ability to support map rota
 Install MapLibre GL JS and replace Leaflet with MapLibre in your project:
 
 ```
-npm install maplibre-gl
+pnpm install maplibre-gl
 ```
 
 ## Initializing the Map

@@ -423,7 +423,7 @@ register('${structArrayClass}', ${structArrayClass});
 }
 
 fs.writeFileSync('src/data/array_types.g.ts',
-    `// This file is generated. Edit build/generate-struct-arrays.ts, then run \`npm run codegen\`.
+    `// This file is generated. Edit build/generate-struct-arrays.ts, then run \`pnpm run codegen\`.
 
 import {Struct, StructArray} from '../util/struct_array';
 import {register} from '../util/web_worker_transfer';

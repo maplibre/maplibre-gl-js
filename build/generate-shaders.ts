@@ -21,7 +21,7 @@ function glslToTs(code: string): string {
         .replace(/\s?([+-\/*=,])\s?/g, '$1') // strip whitespace around operators
         .replace(/([;\(\),\{\}])\n(?=[^#])/g, '$1'); // strip more line breaks
 
-    return `// This file is generated. Edit build/generate-shaders.ts, then run \`npm run codegen\`.
+    return `// This file is generated. Edit build/generate-shaders.ts, then run \`pnpm run codegen\`.
 export default ${JSON.stringify(code).replaceAll('"', '\'')};\n`;
 }
 

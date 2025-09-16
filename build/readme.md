@@ -1,16 +1,16 @@
 # Build Scripts
 
-This folder holds common build scripts accessed via the various `npm run` commands.
-Codegen is executed when calling `npm install` in order to generate all artifacts needed for the build to pass
+This folder holds common build scripts accessed via the various `pnpm run` commands.
+Codegen is executed when calling `pnpm install` in order to generate all artifacts needed for the build to pass
 
 ## Bundeling all the code
 
 The bundling process can be split into several steps:
 
-`npm run build-css`
+`pnpm run build-css`
 This command will compile the css code and create the css file.
 
-`npm run build-prod` and `npm run build-dev`
+`pnpm run build-prod` and `pnpm run build-dev`
 These commands will use rollup to bundle the code. This is where the magic happens and uses some files in this folder.
 
 `banner.ts` is used to create a banner at the beginning of the output file
@@ -33,7 +33,7 @@ These 3 files are then referenced and used by the `bundle_prelude.js` file. It a
 
 <hr>
 
-### `npm run codegen`
+### `pnpm run codegen`
 
 The `codegen` command runs the following three scripts, to update the corresponding code files based on the `v8.json` style source, and other data files. Contributors should run this command manually when the underlying style data is modified. The generated code files are then committed to the repo.
 

@@ -31,13 +31,13 @@ The "Actual" image of a failed test can be saved and used as the new "Expected" 
 To run the render tests:
 
 ```sh
-npm run test-render
+pnpm run test-render
 ```
 
 To run the integration tests (except the render tests):
 
 ```sh
-npm run test-integration
+pnpm run test-integration
 ```
 
 This includes the browser tests.
@@ -45,13 +45,13 @@ This includes the browser tests.
 To run the build tests
 
 ```
-npm run test-build
+pnpm run test-build
 ```
 
 For running a subset of tests, you may use vitest filters e.g.
 
 ```
-npm run test-integration -- browser
+pnpm run test-integration -- browser
 ```
 
 Additionally, it may be helpful to use a visual frontend ([Vitest UI](https://vitest.dev/guide/ui.html)). Note that since render tests do not use Vitest, these will still have to be run from the command line. The UI can be started by replaceing `run` with `--ui` in package.json:
@@ -67,7 +67,7 @@ Additionally, it may be helpful to use a visual frontend ([Vitest UI](https://vi
 To run a subset of tests or an individual test, you can pass a specific subdirectory to the `test-render` script. For example, to run all the tests for a given property, e.g. `circle-radius`:
 
 ```
-npm run test-render -- circle-radius
+pnpm run test-render -- circle-radius
 ...
 * passed circle-radius/antimeridian
 * passed circle-radius/default
@@ -81,7 +81,7 @@ Done in 2.71s.
 ```
 Or to run a single test:
 ```
-npm run test-render -- circle-radius/literal
+pnpm run test-render -- circle-radius/literal
 ...
 * passed circle-radius/literal
 1 passed (100.0%)
@@ -93,7 +93,7 @@ Done in 2.32s.
 
 Render tests are executed in browser, and by default console messages are hidden. If need to see them, please pass <code>--debug</code> parameter:
 ```
-npm run test-render -- raster-masking/overlapping-zoom --debug
+pnpm run test-render -- raster-masking/overlapping-zoom --debug
 ```
 
 ### Viewing render test results
@@ -102,7 +102,7 @@ During a render test run, the test harness will use puppeteer to drive real brow
 
 By default render tests generate reports in <code>./test/integration/render/</code> directory:
 ```
-npm run test-render
+pnpm run test-render
 ...
 1211 passed (99.8%)
 2 failed (0.2%)
@@ -116,7 +116,7 @@ open ./test/integration/render/results.html
 
 If want to skip the report, please pass <code>--skip-report</code> parameter
 ```
-npm run test-render -- circle-radius/literal --skip-report
+pnpm run test-render -- circle-radius/literal --skip-report
 ```
 
 ### Updating results of render test results
@@ -126,20 +126,20 @@ Note that the CI is running the render tests. If they fail, the `report.html` is
 To run this manually you can use the following commands
 On Linux:
 ```
-xvfb-run -a UPDATE=true npm run test-render
+xvfb-run -a UPDATE=true pnpm run test-render
 ```
 On Mac:
 ```
-UPDATE=true npm run test-render
+UPDATE=true pnpm run test-render
 ```
 Or on Windows with PowerShell:
 ```
-$env:UPDATE=$true; npm run test-render
+$env:UPDATE=$true; pnpm run test-render
 ```
 
 #### Notes on the query integration tests
 
-In test/integration/browser/browser.test.ts a web server is automatically started to expose static assets from the integration folder. In order to start a similar server manually with `npm run start`.
+In test/integration/browser/browser.test.ts a web server is automatically started to expose static assets from the integration folder. In order to start a similar server manually with `pnpm run start`.
 
 We currently run each test in a new tab. Alternatively we might gain some speed by clearing the webgl context instead, and running everything in one tab.
 
@@ -157,7 +157,7 @@ generateDiffLog(fixture.expected, actual);
 
 Query tests can be run in the browser, the server for serving up the test page and test fixtures starts when you run
 ```
-npm run start
+pnpm run start
 ```
 
 ### Running specific tests
@@ -188,11 +188,11 @@ To add a new render test:
 
 3. Generate an `expected.png` image from the given style by running the new test with the `UPDATE` flag enabled:
    ```
-   UPDATE=1 npm run test-render <property-name>/<new-test-name>
+   UPDATE=1 pnpm run test-render <property-name>/<new-test-name>
    ```
    The test will appear to fail, but you'll now see a new `expected.png` in the test directory.
 
-4. Manually inspect `expected.png` to verify it looks as expected, and optionally run the test again without the update flag (`npm run test-render <property-name>/<new-test-name>`) to watch it pass (enjoy that dopamine kick!)
+4. Manually inspect `expected.png` to verify it looks as expected, and optionally run the test again without the update flag (`pnpm run test-render <property-name>/<new-test-name>`) to watch it pass (enjoy that dopamine kick!)
 
 5. Commit the new `style.json` and `expected.png` :rocket:
 
@@ -200,7 +200,7 @@ To add a new render test:
 
 You can update the expected results of query-tests by running them with with the `UPDATE` flag enabled, for example on Linux:
 ```
-UPDATE=true npm run test-query
+UPDATE=true pnpm run test-query
 ```
 Check carefully if all changes are intended.
 

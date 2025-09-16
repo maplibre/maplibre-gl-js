@@ -9,23 +9,23 @@ Besides this README, each other `.md` file in this directory corresponds to a si
 To start a documentation server locally, first, ensure that you have an up-to-date build:
 
 ```bash
-npm run build-prod
-npm run build-css
+pnpm run build-prod
+pnpm run build-css
 ```
 
 Then generate the docs files:
 
 ```bash
-npm run generate-docs
+pnpm run generate-docs
 ```
 
 Finally, run:
 
 ```bash
-npm run start-docs
+pnpm run start-docs
 ```
 
-Navigate to [http://0.0.0.0:8000/](http://0.0.0.0:8000/) to view the docs. After making changes, run `npm run generate-docs` again to apply them.
+Navigate to [http://0.0.0.0:8000/](http://0.0.0.0:8000/) to view the docs. After making changes, run `pnpm run generate-docs` again to apply them.
 
 The examples section of the locally run documentation will use the GL JS version released that has the same version as the in the package.json.
 
@@ -59,13 +59,13 @@ Examples are written as regular HTML files in `test/examples`. Each example shou
 
 When you create a new example, you **must** make an accompanying image.
 
-1. Run `npm run generate-images <example-file-name>`. The script will take a screenshot of the map in the example and save it to `docs/assets/examples/`.
+1. Run `pnpm run generate-images <example-file-name>`. The script will take a screenshot of the map in the example and save it to `docs/assets/examples/`.
 2. Optimize the image with [compresspng](https://compresspng.com/) to reduce the file size. (Optional)
 3. Commit the image.
 
-For some examples, `npm run generate-images` does not generate an ideal image. In these cases, you can interact with the map after running the command before the screenshot is taken, or take a screenshot yourself by running the site locally with `npm start`, take a screenshot and save it in the `docs/assets/examples/` folder.
+For some examples, `pnpm run generate-images` does not generate an ideal image. In these cases, you can interact with the map after running the command before the screenshot is taken, or take a screenshot yourself by running the site locally with `npm start`, take a screenshot and save it in the `docs/assets/examples/` folder.
 
-To regenerate all images, run `npm run generate-images`. Note that this doesn't support interaction and examples that require manual interaction (e.g. popups) will need to be manually redone afterward. This feature is experimental and may crash before successfully generating all examples.
+To regenerate all images, run `pnpm run generate-images`. Note that this doesn't support interaction and examples that require manual interaction (e.g. popups) will need to be manually redone afterward. This feature is experimental and may crash before successfully generating all examples.
 
 ## Committing and Publishing Documentation
 

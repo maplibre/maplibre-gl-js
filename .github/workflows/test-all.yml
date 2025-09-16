@@ -17,19 +17,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v4
         with:
           node-version-file: '.nvmrc'
-      - run: npm ci
-      - run: npm run lint
+          registry-url: "https://registry.npmjs.org"
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint
         if: '!cancelled()'
-      - run: npm run lint-css
+      - run: pnpm run lint-css
         if: '!cancelled()'
-      - run: npm run generate-typings
+      - run: pnpm run generate-typings
         if: '!cancelled()'
-      - run: npm run typecheck
+      - run: pnpm run typecheck
         if: '!cancelled()'
-      - run: npm run generate-docs
+      - run: pnpm run generate-docs
       - name: Build docs using docker and mkdocs-material
         run: |
           rm docs/README.md
@@ -37,7 +41,7 @@ jobs:
           docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build --strict
       - name: Check spelling
         # This need to run after the docs are built
-        run: npm run spellcheck
+        run: pnpm run spellcheck
 
   unit-tests:
     name: Unit tests
@@ -51,8 +55,8 @@ jobs:
       - name: Start display server
         run: nohup Xvfb &
           echo "DISPLAY=:0" >> $GITHUB_ENV
-      - run: npm ci
-      - run: npm run test-unit-ci
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run test-unit-ci
       - name: Upload coverage artifact
         if: '!cancelled()'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -82,14 +86,14 @@ jobs:
       - name: Disable AppArmor
         if: runner.os == 'Linux'
         run: echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns
-      - run: npm ci
-      - run: npm run build-dist
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build-dist
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: '!cancelled()'
         with:
           name: build-dist-${{ matrix.os }}
           path: dist/maplibre-gl.js
-      - run: npm run test-integration-ci
+      - run: pnpm run test-integration-ci
       - name: Move files
         if: runner.os == 'Linux'
         run: |
@@ -128,14 +132,14 @@ jobs:
       - name: Disable AppArmor
         if: runner.os == 'Linux'
         run: echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
       - name: Start display server
         if: runner.os == 'Linux'
         run: nohup Xvfb &
           echo "DISPLAY=:0" >> $GITHUB_ENV
-      - run: npm run build-dist
+      - run: pnpm run build-dist
       - name: Run Render tests
-        run: npm run test-render
+        run: pnpm run test-render
         env:
           CURRENT_SPLIT_INDEX: ${{ matrix.split }}
       - name: Move files
@@ -173,9 +177,9 @@ jobs:
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v4
         with:
           node-version-file: '.nvmrc'
-      - run: npm ci
-      - run: npm run build-dist
-      - run: npm run test-build-ci
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build-dist
+      - run: pnpm run test-build-ci
 
   merge-and-report:
     name: Merge coverage and report

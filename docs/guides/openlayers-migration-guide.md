@@ -8,7 +8,7 @@ This part of the docs is dedicated to the migration from `openlayers` to `maplib
 Install MapLibre GL JS and replace OpenLayers with MapLibre in your project:
 
 ```
-npm install maplibre-gl
+pnpm install maplibre-gl
 ```
 
 ## Initializing the Map
