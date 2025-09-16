@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Add a 3D Gaussian Splatting to map using three plugin</title>
+    <meta property="og:description" content="Use three plugin to add a 3D Gaussian Splatting to the map."/>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css'/>
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body,
+        #map {
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three/+esm",
+            "three/examples/": "https://cdn.jsdelivr.net/npm/three/examples/",
+            "three/addons": "https://cdn.jsdelivr.net/npm/three/examples/jsm/Addons.js",
+            "3d-tiles-renderer": "https://cdn.jsdelivr.net/npm/3d-tiles-renderer/+esm",
+            "3d-tiles-renderer/plugins": "https://cdn.jsdelivr.net/npm/3d-tiles-renderer/src/plugins/index.js",
+            "@dvt3d/maplibre-three-plugin": "https://cdn.jsdelivr.net/npm/@dvt3d/maplibre-three-plugin@1.3.0/+esm",
+            "@spz-loader/core": "https://cdn.jsdelivr.net/npm/@spz-loader/core/+esm",
+            "@dvt3d/examples": "https://dvt3d.github.io/maplibre-three-plugin/examples/src/index.js"
+        }
+    }
+</script>
+
+<div id="map"></div>
+<script type="module">
+    import * as THREE from 'three';
+    import * as MTP from '@dvt3d/maplibre-three-plugin'
+    import {ModelLoader, Tileset} from '@dvt3d/examples'
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://tiles.openfreemap.org/styles/bright',
+        maxPitch: 85,
+        pitch: 60,
+        canvasContextAttributes: {antialias: true} // create the gl context with MSAA antialiasing, so custom layers are antialiased
+    });
+    //init three scene
+    const mapScene = new MTP.MapScene(map)
+    //add light
+    mapScene.addLight(new THREE.AmbientLight())
+    const cesium_key =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI2NTEwZTU2Yi0wOGEyLTQyZjgtOTJjNi04Mzc2NGRlNzA4NTkiLCJpZCI6MjU5LCJpYXQiOjE3NTY4NDExOTJ9._Y3MIsYgGKTVTpkEpKPNT0cQSa_hUocY0DdH7h0U-xM'
+    mapScene.addLight(new THREE.AmbientLight())
+    let tileset = new Tileset(3667783, {
+        lruCache: {
+            minSize: 60,
+            maxSize: 80,
+        },
+        cesiumIon: {
+            apiToken: cesium_key,
+        },
+    })
+    tileset.autoDisableRendererCulling = true
+    tileset.on('loaded', () => {
+        mapScene.addObject(tileset)
+        mapScene.flyTo(tileset)
+    })
+    mapScene
+        .on('preRender', (e) => {
+            tileset.update(e.frameState)
+        })
+        .on('postRender', () => {
+            map.triggerRepaint()
+        })
+
+</script>
+</body>
+
+</html>
