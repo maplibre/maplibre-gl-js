@@ -68,6 +68,11 @@ describe('OverscaledTileID', () => {
             /*eslint no-new: 0*/
             new OverscaledTileID(7, 0, 8, 0, 0);
         }).toThrow();
+        expect(() => {
+            //tile with deeper canonicalZ than overscaledZ
+            new OverscaledTileID(0, 0, 1, 1, 1);
+        }).toThrow();
+        expect(new OverscaledTileID(0, 0, 0, 0, 0) instanceof OverscaledTileID).toBeTruthy();
     });
 
     test('.key', () => {
@@ -98,12 +103,42 @@ describe('OverscaledTileID', () => {
     });
 
     test('.isChildOf', () => {
+        // simple child of root tile
         expect(
             new OverscaledTileID(2, 0, 2, 0, 0).isChildOf(new OverscaledTileID(0, 0, 0, 0, 0))
         ).toBeTruthy();
+        // not a child at a different wrap
         expect(
             new OverscaledTileID(2, 0, 2, 0, 0).isChildOf(new OverscaledTileID(0, 1, 0, 0, 0))
         ).toBeFalsy();
     });
 
+    test('.isChildOf - root tile should not be child of itself', () => {
+        const root = new OverscaledTileID(0, 0, 0, 0, 0);
+        expect(root.isChildOf(root)).toBe(false);
+    });
+
+    test('.isChildOf - child with different coordinates is not child of parent', () => {
+        const parent = new OverscaledTileID(1, 0, 1, 0, 0);
+        const child  = new OverscaledTileID(2, 0, 2, 2, 0);
+        expect(child.isChildOf(parent)).toBe(false);
+    });
+
+    test('.isChildOf - descendant is child of ancestor', () => {
+        const parent = new OverscaledTileID(1, 0, 1, 0, 0);
+        const child  = new OverscaledTileID(4, 0, 4, 3, 5);
+        expect(child.isChildOf(parent)).toBe(true);
+    });
+
+    test('.isChildOf - descendant with different coordinates is not child of ancestor', () => {
+        const parent = new OverscaledTileID(1, 0, 1, 0, 0);
+        const child  = new OverscaledTileID(4, 0, 4, 12, 9);
+        expect(child.isChildOf(parent)).toBe(false);
+    });
+
+    test('.isChildOf - sibling is not a child', () => {
+        const tileA = new OverscaledTileID(4, 0, 4, 4, 2);
+        const tileB = new OverscaledTileID(4, 0, 4, 5, 2);
+        expect(tileA.isChildOf(tileB)).toBe(false);
+    });
 });
