@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Add a 3D model to globe using three.js</title>
+    <meta property="og:description" content="Use a custom style layer with three plugin to add a 3D model to the map." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body,
+        #map {
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <script type="importmap">
+        {
+            "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/",
+            "@dvt3d/maplibre-three-plugin": "https://cdn.jsdelivr.net/npm/@dvt3d/maplibre-three-plugin@1.3.0/+esm"
+            }
+        }
+    </script>
+
+    <div id="map"></div>
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import * as MTP from '@dvt3d/maplibre-three-plugin'
+
+        const map = new maplibregl.Map({
+            container: 'map',
+            style: 'https://tiles.openfreemap.org/styles/bright',
+            zoom: 18,
+            center: [148.9819, -35.3981],
+            pitch: 70,
+            canvasContextAttributes: {antialias: true} // create the gl context with MSAA antialiasing, so custom layers are antialiased
+        });
+        //init three scene
+        const mapScene = new MTP.MapScene(map)
+        //add light
+        mapScene.addLight(new THREE.AmbientLight())
+        // add model
+        const loader = new GLTFLoader()
+        loader.load('https://maplibre.org/maplibre-gl-js/docs/assets/34M_17/34M_17.gltf', (gltf) => {
+            let rtcGroup = MTP.Creator.createRTCGroup([148.9819, -35.39847])
+            rtcGroup.add(gltf.scene)
+            mapScene.addObject(rtcGroup)
+        })
+    </script>
+</body>
+
+</html>
