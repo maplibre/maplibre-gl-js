@@ -96,6 +96,7 @@ jobs:
         with:
           name: build-dist-${{ matrix.os }}
           path: dist/maplibre-gl.js
+      - run: pnpx puppeteer browsers install chrome
       - run: pnpm run test-integration-ci
       - name: Move files
         if: runner.os == 'Linux'
@@ -143,6 +144,7 @@ jobs:
         run: nohup Xvfb &
           echo "DISPLAY=:0" >> $GITHUB_ENV
       - run: pnpm run build-dist
+      - run: pnpx puppeteer browsers install chrome
       - name: Run Render tests
         run: pnpm run test-render
         env:
@@ -209,7 +211,7 @@ jobs:
 
       - name: Merge Coverage reports
         shell: bash
-        run: npx nyc report -t ${{ github.workspace }}/downloaded --reporter lcov --reporter json --report-dir coverage-merged
+        run: pnpx nyc report -t ${{ github.workspace }}/downloaded --reporter lcov --reporter json --report-dir coverage-merged
 
       - name: Upload merged coverage report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

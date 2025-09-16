@@ -209,11 +209,11 @@ Check carefully if all changes are intended.
 Read the contents of an entire vector tile
 
 ```
-npx vt2geojson -z 14 -y 8803 -x 5374 test/integration/assets/tiles/14-8803-5374.mvt
+pnpx vt2geojson -z 14 -y 8803 -x 5374 test/integration/assets/tiles/14-8803-5374.mvt
 ```
 
 Read the contents of a particular layer in a vector tile
 
 ```
-npx vt2geojson --layer poi_label -z 14 -y 8803 -x 5374 test/integration/assets/tiles/14-8803-5374.mvt
+pnpx vt2geojson --layer poi_label -z 14 -y 8803 -x 5374 test/integration/assets/tiles/14-8803-5374.mvt
 ```
