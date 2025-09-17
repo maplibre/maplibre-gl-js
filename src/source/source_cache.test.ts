@@ -11,7 +11,7 @@ import {extend} from '../util/util';
 import {browser} from '../util/browser';
 import {type Dispatcher} from '../util/dispatcher';
 import {TileBounds} from './tile_bounds';
-import {sleep, waitForEvent, logTiles} from '../util/test/util';
+import {sleep, waitForEvent} from '../util/test/util';
 import {type TileCache} from './tile_cache';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {GlobeTransform} from '../geo/projection/globe_transform';
