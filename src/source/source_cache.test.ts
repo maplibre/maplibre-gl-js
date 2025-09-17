@@ -15,7 +15,7 @@ import {sleep, waitForEvent} from '../util/test/util';
 import {type TileCache} from './tile_cache';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {GlobeTransform} from '../geo/projection/globe_transform';
-import {coveringTiles, coveringZoomLevel} from '../geo/projection/covering_tiles';
+import {coveringTiles} from '../geo/projection/covering_tiles';
 
 class SourceMock extends Evented implements Source {
     id: string;
@@ -971,15 +971,8 @@ describe('SourceCache._updateRetainedTiles', () => {
         expect(Object.keys(retained).sort()).toEqual(expectedTiles.map(t => t.key).sort());
     });
 
-    test('retains loaded children for pitched maps', async () => {
-        testPitch(0);
-        testPitch(20);
-        testPitch(40);
-        testPitch(65);
-        testPitch(75);
-        testPitch(85);
-
-        function testPitch(pitch: number) {
+    for (const pitch of [0, 20, 40, 65, 75, 85]) {
+        test(`retains loaded children for pitch: ${pitch}`, () => {
             const transform = new MercatorTransform();
             transform.resize(512, 512);
             transform.setZoom(10);
@@ -1008,26 +1001,19 @@ describe('SourceCache._updateRetainedTiles', () => {
                 sourceCache._tiles[idealID.key] = tile;
             }
 
-            // create retainment dictionary to pass by reference to _retainLoadedChildren for modification
             const retain: {[key: string]: OverscaledTileID} = {};
-
-            // create missing dictionary for ideal tiles for passing into _retainLoadedChildren
             const missingTiles: {[key: string]: OverscaledTileID} = {};
 
             // mark all ideal tiles as retained and also as missing with no data for child retainment
-            idealTileIDs.forEach(idealID => {
+            for (const idealID of idealTileIDs) {
                 retain[idealID.key] = idealID;
                 missingTiles[idealID.key] = idealID;
-            });
-
-            // retain loaded children for the missing ideal tiles
+            }
             sourceCache._retainLoadedChildren(missingTiles, retain);
 
-            expect(Object.keys(retain).sort()).toEqual(
-                idealChildIDs.concat(idealTileIDs).map(id => id.key).sort()
-            );
-        }
-    });
+            expect(Object.keys(retain).sort()).toEqual(idealChildIDs.concat(idealTileIDs).map(id => id.key).sort());
+        });
+    }
 
     test('retains only uppermost zoom children when multiple zoom levels are loaded', () => {
         const sourceCache = createSourceCache();
@@ -1038,7 +1024,6 @@ describe('SourceCache._updateRetainedTiles', () => {
         const idealTileID = new OverscaledTileID(2, 0, 2, 1, 1);
         const idealTiles: {[key: string]: OverscaledTileID} = {[idealTileID.key]: idealTileID};
 
-        // add children at z=3, z=4, and z=5
         const children = [
             new OverscaledTileID(3, 0, 3, 2, 2),  //keep
             new OverscaledTileID(3, 0, 3, 3, 2),  //keep
@@ -1051,7 +1036,6 @@ describe('SourceCache._updateRetainedTiles', () => {
             sourceCache._tiles[child.key] = tile;
         }
 
-        // create retainment dictionary to pass by reference to _retainLoadedChildren for modification
         const retain: {[key: string]: OverscaledTileID} = {};
         sourceCache._retainLoadedChildren(idealTiles, retain);
 
@@ -1083,10 +1067,7 @@ describe('SourceCache._updateRetainedTiles', () => {
         }
 
         const retained = sourceCache._updateRetainedTiles([idealTile], 2);
-        expect(Object.keys(retained).sort()).toEqual([
-            idealTile
-        ].concat(loadedChildren).map(t => t.key).sort());
-
+        expect(Object.keys(retained).sort()).toEqual([idealTile].concat(loadedChildren).map(t => t.key).sort());
     });
 
     test('adds parent tile if ideal tile errors and no child tiles are loaded', () => {

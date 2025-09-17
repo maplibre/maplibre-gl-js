@@ -10,7 +10,6 @@ import {RequestManager} from '../request_manager';
 import {type IReadonlyTransform, type ITransform} from '../../geo/transform_interface';
 import {type Style} from '../../style/style';
 import {type Terrain} from '../../render/terrain';
-import {type OverscaledTileID} from '../../source/tile_id';
 import {Frustum} from '../primitives/frustum';
 import {mat4} from 'gl-matrix';
 
@@ -280,16 +279,3 @@ export function createTestCameraFrustum(fovy: number, aspectRatio: number, zNear
 
     return Frustum.fromInvProjectionMatrix(invProj, 1.0, 0.0);
 }
-
-// export function logTiles(tileIDs: OverscaledTileID[]) {
-//     console.log('key: overscaledZ, wrap, z, x, y');
-//     tileIDs
-//         .slice()
-//         .sort((a, b) => a.key.localeCompare(b.key))
-//         .forEach(id => {
-//             console.log(
-//                 `${id.key}: ${id.overscaledZ}, ${id.wrap}, ${id.canonical.z}, ${id.canonical.x}, ${id.canonical.y}`
-//             );
-//         });
-//     console.log(`total: ${tileIDs.length}\n`);
-// }

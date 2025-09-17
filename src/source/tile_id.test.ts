@@ -64,15 +64,10 @@ describe('CanonicalTileID', () => {
 describe('OverscaledTileID', () => {
     test('constructor', () => {
         expect(new OverscaledTileID(0, 0, 0, 0, 0) instanceof OverscaledTileID).toBeTruthy();
-        expect(() => {
-            /*eslint no-new: 0*/
-            new OverscaledTileID(7, 0, 8, 0, 0);
-        }).toThrow();
-        expect(() => {
-            //tile with deeper canonicalZ than overscaledZ
-            new OverscaledTileID(0, 0, 1, 1, 1);
-        }).toThrow();
-        expect(new OverscaledTileID(0, 0, 0, 0, 0) instanceof OverscaledTileID).toBeTruthy();
+    });
+
+    test('constructor - deeper canonicalZ than overscaledZ disallowed', () => {
+        expect(() => new OverscaledTileID(7, 0, 8, 0, 0)).toThrow();
     });
 
     test('.key', () => {
@@ -102,15 +97,16 @@ describe('OverscaledTileID', () => {
         expect(new OverscaledTileID(1, 0, 0, 0, 0).scaledTo(0)).toEqual(new OverscaledTileID(0, 0, 0, 0, 0));
     });
 
-    test('.isChildOf', () => {
-        // simple child of root tile
-        expect(
-            new OverscaledTileID(2, 0, 2, 0, 0).isChildOf(new OverscaledTileID(0, 0, 0, 0, 0))
-        ).toBeTruthy();
-        // not a child at a different wrap
-        expect(
-            new OverscaledTileID(2, 0, 2, 0, 0).isChildOf(new OverscaledTileID(0, 1, 0, 0, 0))
-        ).toBeFalsy();
+    test('.isChildOf - simple child of root tile', () => {
+        const parent = new OverscaledTileID(0, 0, 0, 0, 0);
+        const child = new OverscaledTileID(2, 0, 2, 0, 0);
+        expect(child.isChildOf(parent)).toBeTruthy();
+    });
+
+    test('.isChildOf - not a child at a different wrap', () => {
+        const parent = new OverscaledTileID(0, 1, 0, 0, 0);
+        const child = new OverscaledTileID(2, 0, 2, 0, 0);
+        expect(child.isChildOf(parent)).toBeFalsy();
     });
 
     test('.isChildOf - root tile should not be child of itself', () => {

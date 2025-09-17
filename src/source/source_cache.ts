@@ -376,40 +376,20 @@ export class SourceCache extends Evented {
      * Analogy: imagine two sheets of paper in 3D space:
      *   - one sheet = ideal tiles at varying overscaledZ
      *   - the second sheet = maxCoveringZoom
-     * With the old approach, the sheets intersected. With the below method, they remain parallel.
      */
 
     _retainLoadedChildren(
         targetTiles: { [_: string]: OverscaledTileID },
         retain: { [_: string]: OverscaledTileID }
     ) {
-        //convert target tiles dictionary to array for code readability and quicker performance below
         const targetTileIDs = Object.values(targetTiles);
+        const loadedDescendents: { [_: string]: Tile[] } = this._getLoadedDescendents(targetTileIDs);
 
-        // create dictionary for the qualified loaded descendents of each target tile
-        const loadedDescendents: { [_: string]: Tile[] } = {};
-
-        // enumerate tiles currently in this source and find the loaded descendents of each target tile
-        for (const sourceKey in this._tiles) {
-            const sourceTile = this._tiles[sourceKey];
-            if (!sourceTile.hasData()) continue;
-
-            // determine if the loaded source tile (hasData) is a qualified descendent of any target tile
-            for (const targetID of targetTileIDs) {
-                if (sourceTile.tileID.isChildOf(targetID)) {
-                    // add the loaded descendent of the target tile to the descendents dictionary
-                    (loadedDescendents[targetID.key] ||= []).push(sourceTile);
-                }
-            }
-        }
-
-        // determine and retain the descendents of target tiles that are the uppermost descendents.
-        // at this point, all descendent tiles have data and are candidates for retainment
+        // retain the uppermost descendents of target tiles
         for (const targetID of targetTileIDs) {
             const descendentTiles = loadedDescendents[targetID.key];
             if (!descendentTiles) continue;
 
-            //calculate the max covering zoom relative to the target tile's overscaledZ (needed for pitched maps)
             const targetTileMaxCoveringZoom = targetID.overscaledZ + SourceCache.maxUnderzooming;
 
             // determine the topmost zoom (overscaledZ) in the set of descendent tiles. (i.e. zoom 4 tiles are topmost relative to zoom 5)
@@ -430,6 +410,28 @@ export class SourceCache extends Evented {
                 }
             }
         }
+    }
+
+    /**
+     * Return dictionary of qualified loaded descendents for each provided target tile id
+     */
+    _getLoadedDescendents(targetTileIDs: OverscaledTileID[]) {
+        const loadedDescendents: { [_: string]: Tile[] } = {};
+
+        // enumerate tiles currently in this source and find the loaded descendents of each target tile
+        for (const sourceKey in this._tiles) {
+            const sourceTile = this._tiles[sourceKey];
+            if (!sourceTile.hasData()) continue;
+
+            // determine if the loaded source tile (hasData) is a qualified descendent of any target tile
+            for (const targetID of targetTileIDs) {
+                if (sourceTile.tileID.isChildOf(targetID)) {
+                    (loadedDescendents[targetID.key] ||= []).push(sourceTile);
+                }
+            }
+        }
+
+        return loadedDescendents;
     }
 
     /**
@@ -729,6 +731,11 @@ export class SourceCache extends Evented {
         }
     }
 
+    /**
+     * Set tiles to be retained on update of this source. For ideal tiles that do not have data, retain their loaded
+     * children so they can be displayed as substitutes pending load of each ideal tile (to reduce flickering).
+     * If no loaded children are available, fallback to seeking loaded parents as an alternative substitute.
+     */
     _updateRetainedTiles(idealTileIDs: Array<OverscaledTileID>, zoom: number): {[_: string]: OverscaledTileID} {
         const retain: {[_: string]: OverscaledTileID} = {};
         const checked: {[_: string]: boolean} = {};
@@ -749,7 +756,6 @@ export class SourceCache extends Evented {
             }
         }
 
-        // retain any loaded children of ideal tiles up to maxCoveringZoom
         this._retainLoadedChildren(missingTiles, retain);
 
         for (const tileID of idealTileIDs) {
