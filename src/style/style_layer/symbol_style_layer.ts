@@ -41,8 +41,8 @@ export class SymbolStyleLayer extends StyleLayer {
     _transitioningPaint: Transitioning<SymbolPaintProps>;
     paint: PossiblyEvaluated<SymbolPaintProps, SymbolPaintPropsPossiblyEvaluated>;
 
-    constructor(layer: LayerSpecification) {
-        super(layer, properties);
+    constructor(layer: LayerSpecification, globalState: Record<string, any>) {
+        super(layer, properties, globalState);
     }
 
     recalculate(parameters: EvaluationParameters, availableImages: Array<string>) {

@@ -36,7 +36,6 @@ export class WorkerTile {
     showCollisionBoxes: boolean;
     collectResourceTiming: boolean;
     returnDependencies: boolean;
-    globalState: Record<string, any>;
 
     status: 'parsing' | 'done';
     data: VectorTile;
@@ -59,7 +58,6 @@ export class WorkerTile {
         this.returnDependencies = !!params.returnDependencies;
         this.promoteId = params.promoteId;
         this.inFlightDependencies = [];
-        this.globalState = params.globalState;
     }
 
     async parse(data: VectorTile, layerIndex: StyleLayerIndex, availableImages: Array<string>, actor: IActor, subdivisionGranularity: SubdivisionGranularitySetting): Promise<WorkerTileResult> {
@@ -113,7 +111,7 @@ export class WorkerTile {
                 if (layer.maxzoom && this.zoom >= layer.maxzoom) continue;
                 if (layer.visibility === 'none') continue;
 
-                recalculateLayers(family, this.zoom, availableImages, this.globalState);
+                recalculateLayers(family, this.zoom, availableImages);
 
                 const bucket = buckets[layer.id] = layer.createBucket({
                     index: featureIndex.bucketLayerIDs.length,
@@ -123,8 +121,7 @@ export class WorkerTile {
                     overscaling: this.overscaling,
                     collisionBoxArray: this.collisionBoxArray,
                     sourceLayerIndex,
-                    sourceID: this.source,
-                    globalState: this.globalState
+                    sourceID: this.source
                 });
 
                 bucket.populate(features, options, this.tileID.canonical);
@@ -169,7 +166,7 @@ export class WorkerTile {
         for (const key in buckets) {
             const bucket = buckets[key];
             if (bucket instanceof SymbolBucket) {
-                recalculateLayers(bucket.layers, this.zoom, availableImages, this.globalState);
+                recalculateLayers(bucket.layers, this.zoom, availableImages);
                 performSymbolLayout({
                     bucket,
                     glyphMap,
@@ -184,7 +181,7 @@ export class WorkerTile {
                 (bucket instanceof LineBucket ||
                 bucket instanceof FillBucket ||
                 bucket instanceof FillExtrusionBucket)) {
-                recalculateLayers(bucket.layers, this.zoom, availableImages, this.globalState);
+                recalculateLayers(bucket.layers, this.zoom, availableImages);
                 bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions);
             }
         }
@@ -204,11 +201,10 @@ export class WorkerTile {
     }
 }
 
-function recalculateLayers(layers: ReadonlyArray<StyleLayer>, zoom: number, availableImages: Array<string>, globalState: Record<string, any>) {
+function recalculateLayers(layers: ReadonlyArray<StyleLayer>, zoom: number, availableImages: Array<string>) {
     // Layers are shared and may have been used by a WorkerTile with a different zoom.
     const parameters = new EvaluationParameters(zoom);
     for (const layer of layers) {
-        layer.setGlobalState(globalState);
         layer.recalculate(parameters, availableImages);
     }
 }
