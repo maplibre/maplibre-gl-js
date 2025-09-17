@@ -106,14 +106,17 @@ export abstract class StyleLayer extends Evented {
     queryIntersectsFeature?(params: QueryIntersectsFeatureParams): boolean | number;
     createBucket?(parameters: BucketParameters<any>): Bucket;
 
+    private _globalState: Record<string, any>; // reference to global state
+
     constructor(layer: LayerSpecification | CustomLayerInterface, properties: Readonly<{
         layout?: Properties<any>;
         paint?: Properties<any>;
-    }>) {
+    }>, globalState: Record<string, any>) {
         super();
 
         this.id = layer.id;
         this.type = layer.type;
+        this._globalState = globalState;
         this._featureFilter = {filter: () => true, needGeometry: false, getGlobalStateRefs: () => new Set<string>()};
 
         if (layer.type === 'custom') return;
@@ -128,15 +131,15 @@ export abstract class StyleLayer extends Evented {
             this.source = layer.source;
             this.sourceLayer = layer['source-layer'];
             this.filter = layer.filter;
-            this._featureFilter = featureFilter(layer.filter);
+            this._featureFilter = featureFilter(layer.filter, globalState);
         }
 
         if (properties.layout) {
-            this._unevaluatedLayout = new Layout(properties.layout);
+            this._unevaluatedLayout = new Layout(properties.layout, globalState);
         }
 
         if (properties.paint) {
-            this._transitionablePaint = new Transitionable(properties.paint);
+            this._transitionablePaint = new Transitionable(properties.paint, globalState);
 
             for (const property in layer.paint) {
                 this.setPaintProperty(property, layer.paint[property], {validate: false});
@@ -153,7 +156,7 @@ export abstract class StyleLayer extends Evented {
 
     setFilter(filter: FilterSpecification | void) {
         this.filter = filter;
-        this._featureFilter = featureFilter(filter);
+        this._featureFilter = featureFilter(filter, this._globalState);
     }
 
     getCrossfadeParameters() {

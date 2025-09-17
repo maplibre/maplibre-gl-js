@@ -6,6 +6,11 @@ import {StyleLayerIndex} from '../style/style_layer_index';
 import {type WorkerTileParameters} from './worker_source';
 import {type VectorTile} from '@mapbox/vector-tile';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
+import {type EvaluationParameters} from '../style/evaluation_parameters';
+import {type PossiblyEvaluated} from '../style/properties';
+import {Color} from '@maplibre/maplibre-gl-style-spec';
+import {type CirclePaintProps, type CirclePaintPropsPossiblyEvaluated} from '../style/style_layer/circle_style_layer_properties.g';
+import {type SymbolLayoutProps, type SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
 
 function createWorkerTile(params?: {globalState?: Record<string, any>}): WorkerTile {
     return new WorkerTile({
@@ -73,7 +78,7 @@ describe('worker tile', () => {
             layout: {
                 'line-join': ['global-state', 'test']
             }
-        }]);
+        }], {test: 'bevel'});
 
         const tile = createWorkerTile({
             globalState: {test: 'bevel'}
@@ -91,7 +96,7 @@ describe('worker tile', () => {
             paint: {
                 'fill-extrusion-height': ['global-state', 'test']
             }
-        }]);
+        }], {test: 1});
 
         const tile = createWorkerTile({
             globalState: {test: 1}
@@ -285,5 +290,49 @@ describe('worker tile', () => {
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'icons'})}), expect.any(Object));
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'patterns'})}), expect.any(Object));
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}})}), expect.any(Object));
+    });
+
+    test('WorkerTile.parse passes global-state to layout properties', async () => {
+        const globalState = {} as any;
+        const layerIndex = new StyleLayerIndex([
+            {
+                id: 'layer-id',
+                type: 'symbol',
+                source: 'source',
+                layout: {
+                    'text-size': ['global-state', 'size']
+                }
+            }
+        ], globalState);
+
+        const tile = createWorkerTile({globalState});
+        globalState.size = 12;
+        await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
+        const layer = layerIndex._layers['layer-id'];
+        layer.recalculate({} as EvaluationParameters, []);
+        const layout = layer.layout as PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>;
+        expect(layout.get('text-size').evaluate({} as any, {})).toBe(12);
+    });
+
+    test('WorkerTile.parse passes global-state to paint properties', async () => {
+        const layerIndex = new StyleLayerIndex([
+            {
+                id: 'circle',
+                type: 'circle',
+                source: 'source',
+                paint: {
+                    'circle-color': ['global-state', 'color'],
+                    'circle-radius': ['global-state', 'radius']
+                }
+            }
+        ], {radius: 15, color: '#FF0000'});
+
+        const tile = createWorkerTile({});
+        await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
+        const layer = layerIndex._layers['circle'];
+        layer.recalculate({zoom: 0} as EvaluationParameters, []);
+        const paint = layer.paint as PossiblyEvaluated<CirclePaintProps, CirclePaintPropsPossiblyEvaluated>;
+        expect(paint.get('circle-color').evaluate({} as any, {})).toEqual(new Color(1, 0, 0, 1));
+        expect(paint.get('circle-radius').evaluate({} as any, {})).toBe(15);
     });
 });

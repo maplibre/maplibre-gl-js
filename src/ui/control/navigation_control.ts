@@ -47,7 +47,7 @@ const defaultOptions: NavigationControlOptions = {
  * let nav = new NavigationControl();
  * map.addControl(nav, 'top-left');
  * ```
- * @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigation/)
+ * @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/display-map-navigation-controls/)
  */
 export class NavigationControl implements IControl {
     _map: Map;

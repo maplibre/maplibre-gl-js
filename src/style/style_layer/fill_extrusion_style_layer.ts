@@ -22,8 +22,8 @@ export class FillExtrusionStyleLayer extends StyleLayer {
     _transitioningPaint: Transitioning<FillExtrusionPaintProps>;
     paint: PossiblyEvaluated<FillExtrusionPaintProps, FillExtrusionPaintPropsPossiblyEvaluated>;
 
-    constructor(layer: LayerSpecification) {
-        super(layer, properties);
+    constructor(layer: LayerSpecification, globalState: Record<string, any>) {
+        super(layer, properties, globalState);
     }
 
     createBucket(parameters: BucketParameters<FillExtrusionStyleLayer>) {

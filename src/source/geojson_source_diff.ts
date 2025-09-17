@@ -183,10 +183,23 @@ export function mergeSourceDiffs(
         return existingDiff;
     }
 
-    const merged: GeoJSONSourceDiff = {...existingDiff};
+    let merged: GeoJSONSourceDiff = {...existingDiff};
 
     if (newDiff.removeAll) {
-        merged.removeAll = true;
+        merged = {removeAll: true};
+    }
+
+    if (newDiff.remove) {
+        const newRemovedSet = new Set(newDiff.remove);
+        if (merged.add) {
+            merged.add = merged.add.filter(f => !newRemovedSet.has(f.id));
+        }
+        if (merged.update) {
+            merged.update = merged.update.filter(f => !newRemovedSet.has(f.id));
+        }
+
+        const existingAddSet = new Set((existingDiff.add ?? []).map((f) => f.id));
+        newDiff.remove = newDiff.remove.filter(id => !existingAddSet.has(id));
     }
 
     if (newDiff.remove) {
@@ -222,6 +235,10 @@ export function mergeSourceDiffs(
         }
 
         merged.update = Array.from(updateMap.values());
+    }
+
+    if (merged.remove && merged.add) {
+        merged.remove = merged.remove.filter(id => merged.add.findIndex((f) => f.id === id) === -1);
     }
 
     return merged;

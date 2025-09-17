@@ -7,6 +7,10 @@ import terser from '@rollup/plugin-terser';
 import strip from '@rollup/plugin-strip';
 import {type Plugin} from 'rollup';
 import json from '@rollup/plugin-json';
+import {visualizer} from 'rollup-plugin-visualizer';
+
+const {BUNDLE} = process.env;
+const stats = BUNDLE === 'stats';
 
 // Common set of plugins/transformations shared across different rollup
 // builds (main maplibre bundle, style-spec package, benchmarks bundle)
@@ -44,7 +48,19 @@ export const plugins = (production: boolean): Plugin[] => [
         // global keyword handling causes Webpack compatibility issues, so we disabled it:
         // https://github.com/mapbox/mapbox-gl-js/pull/6956
         ignoreGlobal: true
-    })
+    }),
+    // generate bundle stats in multiple formats (treemap, sunburst, etc...)
+    ...(stats ? (['treemap', 'sunburst', 'flamegraph', 'network'] as const).map(template =>
+        visualizer({
+            template: template,
+            title: `gl-js-${template}`,
+            filename: `staging/${template}.html`,
+            gzipSize: true,
+            brotliSize: true,
+            sourcemap: true,
+            open: true
+        })
+    ) : [])
 ].filter(Boolean) as Plugin[];
 
 export const watchStagingPlugin: Plugin = {

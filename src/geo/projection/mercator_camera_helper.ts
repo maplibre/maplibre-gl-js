@@ -3,7 +3,7 @@ import {LngLat, type LngLatLike} from '../lng_lat';
 import {cameraForBoxAndBearing, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation, type UpdateRotationArgs} from './camera_helper';
 import {normalizeCenter} from '../transform_helper';
 import {rollPitchBearingEqual, scaleZoom, zoomScale} from '../../util/util';
-import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils';
+import {getMercatorHorizon, projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
 import type {IReadonlyTransform, ITransform} from '../transform_interface';
@@ -21,8 +21,14 @@ export class MercatorCameraHelper implements ICameraHelper {
         easingCenter: LngLat;
         easingOffset: Point;
     } {
+        // Reduce the offset so that it never goes past the horizon. If it goes past
+        // the horizon, the pan direction is opposite of the intended direction.
+        const offsetLength = pan.mag();
+        const pixelsToHorizon = Math.abs(getMercatorHorizon(transform));
+        const horizonFactor = 0.75; // Must be < 1 to prevent the offset from crossing the horizon
+        const offsetAsPoint = pan.mult(Math.min(pixelsToHorizon * horizonFactor / offsetLength, 1.0));
         return {
-            easingOffset: pan,
+            easingOffset: offsetAsPoint,
             easingCenter: transform.center,
         };
     }

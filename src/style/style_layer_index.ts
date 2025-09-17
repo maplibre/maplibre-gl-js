@@ -17,25 +17,25 @@ export class StyleLayerIndex {
     _layerConfigs: LayerConfigs;
     _layers: {[_: string]: StyleLayer};
 
-    constructor(layerConfigs?: Array<LayerSpecification> | null) {
+    constructor(layerConfigs?: Array<LayerSpecification> | null, globalState?: Record<string, any>) {
         this.keyCache = {};
         if (layerConfigs) {
-            this.replace(layerConfigs);
+            this.replace(layerConfigs, globalState);
         }
     }
 
-    replace(layerConfigs: Array<LayerSpecification>) {
+    replace(layerConfigs: Array<LayerSpecification>, globalState?: Record<string, any>) {
         this._layerConfigs = {};
         this._layers = {};
-        this.update(layerConfigs, []);
+        this.update(layerConfigs, [], globalState);
     }
 
-    update(layerConfigs: Array<LayerSpecification>, removedIds: Array<string>) {
+    update(layerConfigs: Array<LayerSpecification>, removedIds: Array<string>, globalState?: Record<string, any>) {
         for (const layerConfig of layerConfigs) {
             this._layerConfigs[layerConfig.id] = layerConfig;
 
-            const layer = this._layers[layerConfig.id] = createStyleLayer(layerConfig);
-            layer._featureFilter = featureFilter(layer.filter);
+            const layer = this._layers[layerConfig.id] = createStyleLayer(layerConfig, globalState);
+            layer._featureFilter = featureFilter(layer.filter, globalState);
             if (this.keyCache[layerConfig.id])
                 delete this.keyCache[layerConfig.id];
         }

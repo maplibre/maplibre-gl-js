@@ -2,6 +2,7 @@
     "version": 8,
     "metadata": {
         "test": {
+            "timeout": 60000,
             "height": 256,
             "width": 256,
             "maxPitch": 120,
@@ -10,7 +11,6 @@
             ]
         }
     },
-    "timeout": 60000,
     "center": [11.52517, 47.34487],
     "zoom": 13,
     "pitch": 80,
