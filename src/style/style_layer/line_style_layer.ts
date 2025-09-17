@@ -46,8 +46,8 @@ export class LineStyleLayer extends StyleLayer {
     _transitioningPaint: Transitioning<LinePaintProps>;
     paint: PossiblyEvaluated<LinePaintProps, LinePaintPropsPossiblyEvaluated>;
 
-    constructor(layer: LayerSpecification) {
-        super(layer, properties);
+    constructor(layer: LayerSpecification, globalState: Record<string, any>) {
+        super(layer, properties, globalState);
         this.gradientVersion = 0;
         if (!lineFloorwidthProperty) {
             lineFloorwidthProperty =

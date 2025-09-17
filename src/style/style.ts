@@ -354,13 +354,16 @@ export class Style extends Evented {
         }
 
         const sourceIdsToReload = new Set<string>();
+        const globalStateChange = {};
 
-        for (const layerId in this._layers) {
-            const layer = this._layers[layerId];
-            const layoutAffectingGlobalStateRefs = layer.getLayoutAffectingGlobalStateRefs();
-            const paintAffectingGlobalStateRefs = layer.getPaintAffectingGlobalStateRefs();
+        for (const ref of globalStateRefs) {
+            globalStateChange[ref] = this._globalState[ref];
 
-            for (const ref of globalStateRefs) {
+            for (const layerId in this._layers) {
+                const layer = this._layers[layerId];
+                const layoutAffectingGlobalStateRefs = layer.getLayoutAffectingGlobalStateRefs();
+                const paintAffectingGlobalStateRefs = layer.getPaintAffectingGlobalStateRefs();
+
                 if (layoutAffectingGlobalStateRefs.has(ref)) {
                     sourceIdsToReload.add(layer.source);
                 }
@@ -371,6 +374,9 @@ export class Style extends Evented {
                 }
             }
         }
+
+        // Propagate global state changes to workers
+        this.dispatcher.broadcast(MessageType.updateGlobalState, globalStateChange);
 
         for (const id in this.sourceCaches) {
             if (sourceIdsToReload.has(id)) {
@@ -454,6 +460,8 @@ export class Style extends Evented {
     private _createLayers() {
         const dereferencedLayers = derefLayers(this.stylesheet.layers);
 
+        this.setGlobalState(this.stylesheet.state ?? null);
+
         // Broadcast layers to workers first, so that expensive style processing (createStyleLayer)
         // can happen in parallel on both main and worker threads.
         this.dispatcher.broadcast(MessageType.setLayers, dereferencedLayers);
@@ -461,14 +469,11 @@ export class Style extends Evented {
         this._order = dereferencedLayers.map((layer) => layer.id);
         this._layers = {};
 
-        this.setGlobalState(this.stylesheet.state ?? null);
-
         // reset serialization field, to be populated only when needed
         this._serializedLayers = null;
         for (const layer of dereferencedLayers) {
-            const styledLayer = createStyleLayer(layer);
+            const styledLayer = createStyleLayer(layer, this._globalState);
             styledLayer.setEventedParent(this, {layer: {id: layer.id}});
-            styledLayer.setGlobalState(this._globalState);
             this._layers[layer.id] = styledLayer;
         }
     }
@@ -1050,7 +1055,7 @@ export class Style extends Evented {
 
             if (emitValidationErrors(this, validateCustomStyleLayer(layerObject))) return;
 
-            layer = createStyleLayer(layerObject);
+            layer = createStyleLayer(layerObject, this._globalState);
 
         } else {
             if ('source' in layerObject && typeof layerObject.source === 'object') {
@@ -1063,13 +1068,11 @@ export class Style extends Evented {
             if (this._validate(validateStyle.layer,
                 `layers.${id}`, layerObject, {arrayIndex: -1}, options)) return;
 
-            layer = createStyleLayer(layerObject as LayerSpecification | CustomLayerInterface);
+            layer = createStyleLayer(layerObject as LayerSpecification | CustomLayerInterface, this._globalState);
             this._validateLayer(layer);
 
             layer.setEventedParent(this, {layer: {id}});
         }
-
-        layer.setGlobalState(this._globalState);
 
         const index = before ? this._order.indexOf(before) : this._order.length;
         if (before && index === -1) {
@@ -1549,6 +1552,7 @@ export class Style extends Evented {
         const paramsStrict: QueryRenderedFeaturesOptionsStrict = {
             ...params,
             layers: layersAsSet,
+            globalState: this._globalState
         };
 
         for (const id in this.sourceCaches) {
@@ -1590,11 +1594,11 @@ export class Style extends Evented {
         sourceID: string,
         params?: QuerySourceFeatureOptions
     ) {
-        if (params && params.filter) {
+        if (params?.filter) {
             this._validate(validateStyle.filter, 'querySourceFeatures.filter', params.filter, null, params);
         }
         const sourceCache = this.sourceCaches[sourceID];
-        return sourceCache ? querySourceFeatures(sourceCache, params) : [];
+        return sourceCache ? querySourceFeatures(sourceCache, params ? {...params, globalState: this._globalState} : {globalState: this._globalState}) : [];
     }
 
     getLight() {

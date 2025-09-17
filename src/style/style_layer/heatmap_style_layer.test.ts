@@ -33,7 +33,7 @@ describe('HeatmapStyleLayer.queryIntersectsFeature', () => {
             paint: {
                 'heatmap-radius': 10
             }
-        } as LayerSpecification);
+        } as LayerSpecification, {});
         heatmapLayer.recalculate({} as EvaluationParameters, []);
         return heatmapLayer;
     }

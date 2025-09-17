@@ -78,7 +78,7 @@ describe('worker tile', () => {
             layout: {
                 'line-join': ['global-state', 'test']
             }
-        }]);
+        }], {test: 'bevel'});
 
         const tile = createWorkerTile({
             globalState: {test: 'bevel'}
@@ -96,7 +96,7 @@ describe('worker tile', () => {
             paint: {
                 'fill-extrusion-height': ['global-state', 'test']
             }
-        }]);
+        }], {test: 1});
 
         const tile = createWorkerTile({
             globalState: {test: 1}
@@ -292,7 +292,8 @@ describe('worker tile', () => {
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}})}), expect.any(Object));
     });
 
-    test('WorkerTile.parse passes global-state to layers', async () => {
+    test('WorkerTile.parse passes global-state to layout properties', async () => {
+        const globalState = {} as any;
         const layerIndex = new StyleLayerIndex([
             {
                 id: 'layer-id',
@@ -302,9 +303,8 @@ describe('worker tile', () => {
                     'text-size': ['global-state', 'size']
                 }
             }
-        ]);
+        ], globalState);
 
-        const globalState = {} as any;
         const tile = createWorkerTile({globalState});
         globalState.size = 12;
         await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
@@ -314,7 +314,7 @@ describe('worker tile', () => {
         expect(layout.get('text-size').evaluate({} as any, {})).toBe(12);
     });
 
-    test('WorkerTile.parse uses global state from parameters if not set on layer when recalculating layout properties', async () => {
+    test('WorkerTile.parse passes global-state to paint properties', async () => {
         const layerIndex = new StyleLayerIndex([
             {
                 id: 'circle',
@@ -325,12 +325,12 @@ describe('worker tile', () => {
                     'circle-radius': ['global-state', 'radius']
                 }
             }
-        ]);
+        ], {radius: 15, color: '#FF0000'});
 
         const tile = createWorkerTile({});
         await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
         const layer = layerIndex._layers['circle'];
-        layer.recalculate({zoom: 0, globalState: {radius: 15, color: '#FF0000'} as Record<string, any>} as EvaluationParameters, []);
+        layer.recalculate({zoom: 0} as EvaluationParameters, []);
         const paint = layer.paint as PossiblyEvaluated<CirclePaintProps, CirclePaintPropsPossiblyEvaluated>;
         expect(paint.get('circle-color').evaluate({} as any, {})).toEqual(new Color(1, 0, 0, 1));
         expect(paint.get('circle-radius').evaluate({} as any, {})).toBe(15);

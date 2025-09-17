@@ -12,31 +12,31 @@ import {CustomStyleLayer, type CustomLayerInterface} from './style_layer/custom_
 
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-export function createStyleLayer(layer: LayerSpecification | CustomLayerInterface) {
+export function createStyleLayer(layer: LayerSpecification | CustomLayerInterface, globalState: Record<string, any>) {
     if (layer.type === 'custom') {
-        return new CustomStyleLayer(layer);
+        return new CustomStyleLayer(layer, globalState);
     }
     switch (layer.type) {
         case 'background':
-            return new BackgroundStyleLayer(layer);
+            return new BackgroundStyleLayer(layer, globalState);
         case 'circle':
-            return new CircleStyleLayer(layer);
+            return new CircleStyleLayer(layer, globalState);
         case 'color-relief':
-            return new ColorReliefStyleLayer(layer);
+            return new ColorReliefStyleLayer(layer, globalState);
         case 'fill':
-            return new FillStyleLayer(layer);
+            return new FillStyleLayer(layer, globalState);
         case 'fill-extrusion':
-            return new FillExtrusionStyleLayer(layer);
+            return new FillExtrusionStyleLayer(layer, globalState);
         case 'heatmap':
-            return new HeatmapStyleLayer(layer);
+            return new HeatmapStyleLayer(layer, globalState);
         case 'hillshade':
-            return new HillshadeStyleLayer(layer);
+            return new HillshadeStyleLayer(layer, globalState);
         case 'line':
-            return new LineStyleLayer(layer);
+            return new LineStyleLayer(layer, globalState);
         case 'raster':
-            return new RasterStyleLayer(layer);
+            return new RasterStyleLayer(layer, globalState);
         case 'symbol':
-            return new SymbolStyleLayer(layer);
+            return new SymbolStyleLayer(layer, globalState);
     }
 }
 

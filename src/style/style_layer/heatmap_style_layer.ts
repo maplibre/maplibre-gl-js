@@ -35,8 +35,8 @@ export class HeatmapStyleLayer extends StyleLayer {
         return new HeatmapBucket(options);
     }
 
-    constructor(layer: LayerSpecification) {
-        super(layer, properties);
+    constructor(layer: LayerSpecification, globalState: Record<string, any>) {
+        super(layer, properties, globalState);
 
         this.heatmapFbos = new Map();
         // make sure color ramp texture is generated for default heatmap color too

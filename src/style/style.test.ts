@@ -1508,9 +1508,7 @@ describe('Style.setGlobalState', () => {
         style.sourceCaches['circle-source-id'].reload = vi.fn();
 
         style.setGlobalState({circleColor: {default: 'red'}});
-        style.update({
-            globalState: style.getGlobalState()
-        } as EvaluationParameters);
+        style.update({} as EvaluationParameters);
 
         expect(style.sourceCaches['circle-source-id'].resume).toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).toHaveBeenCalled();
@@ -1570,9 +1568,7 @@ describe('Style.setGlobalState', () => {
         style.sourceCaches['circle-source-id'].reload = vi.fn();
 
         style.setGlobalState({circleColor: {default: 'red'}});
-        style.update({
-            globalState: style.getGlobalState()
-        } as EvaluationParameters);
+        style.update({} as EvaluationParameters);
 
         expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
@@ -1601,9 +1597,7 @@ describe('Style.setGlobalState', () => {
         style.sourceCaches['circle-source-id'].reload = vi.fn();
 
         style.setGlobalState({circleColor: {default: 'red'}});
-        style.update({
-            globalState: style.getGlobalState()
-        } as EvaluationParameters);
+        style.update({} as EvaluationParameters);
 
         expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
@@ -1807,9 +1801,7 @@ describe('Style.setGlobalStateProperty', () => {
         style.sourceCaches['circle-source-id'].reload = vi.fn();
 
         style.setGlobalStateProperty('circleColor', 'red');
-        style.update({
-            globalState: style.getGlobalState()
-        } as EvaluationParameters);
+        style.update({} as EvaluationParameters);
 
         expect(style.sourceCaches['circle-source-id'].resume).toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).toHaveBeenCalled();
@@ -1869,9 +1861,7 @@ describe('Style.setGlobalStateProperty', () => {
         style.sourceCaches['circle-source-id'].reload = vi.fn();
 
         style.setGlobalStateProperty('circleColor', 'red');
-        style.update({
-            globalState: style.getGlobalState()
-        } as EvaluationParameters);
+        style.update({} as EvaluationParameters);
 
         expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
@@ -1900,9 +1890,7 @@ describe('Style.setGlobalStateProperty', () => {
         style.sourceCaches['circle-source-id'].reload = vi.fn();
 
         style.setGlobalStateProperty('circleColor', 'red');
-        style.update({
-            globalState: style.getGlobalState()
-        } as EvaluationParameters);
+        style.update({} as EvaluationParameters);
 
         expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
@@ -3140,6 +3128,39 @@ describe('Style.query*Features', () => {
         });
         style.querySourceFeatures([{x: 0, y: 0}] as any, {filter: 'invalidFilter' as any, validate: false});
         expect(errors).toBe(0);
+    });
+
+    test('style adds global-state to querySourceFeatures', async () => {
+        const sourceCache = style.sourceCaches['geojson'];
+        const querySourceFeatures = vi.fn().mockReturnValue([]);
+        vi.spyOn(sourceCache, 'getRenderableIds').mockReturnValue(['symbol']);
+        vi.spyOn(sourceCache, 'getTileByID').mockReturnValue({
+            tileID: new OverscaledTileID(0, 0, 0, 0, 0),
+            querySourceFeatures
+        } as unknown as Tile);
+        style.querySourceFeatures('geojson', {filter: '[]' as any, validate: false});
+        expect(querySourceFeatures).toHaveBeenCalled();
+        const params = querySourceFeatures.mock.lastCall[1];
+        expect(params).toHaveProperty('globalState');
+    });
+
+    test('style adds global-state to queryRenderedFeatures', async () => {
+        const sourceCache = style.sourceCaches['geojson'];
+        sourceCache.transform = transform;
+        const queryRenderedFeatures = vi.fn().mockReturnValue([]);
+        vi.spyOn(sourceCache, 'tilesIn').mockReturnValue([{
+            tile: {
+                queryRenderedFeatures
+            } as unknown as Tile,
+            tileID: new OverscaledTileID(0, 0, 0, 0, 0),
+            queryGeometry: [{x: 0, y: 0} as Point],
+            cameraQueryGeometry: [{x: 0, y: 0} as Point],
+            scale: 1,
+        }]);
+        style.queryRenderedFeatures([{x: 0, y: 0} as Point], {filter: '[]' as any, validate: false}, transform);
+        expect(queryRenderedFeatures).toHaveBeenCalled();
+        const params = queryRenderedFeatures.mock.lastCall[6];
+        expect(params).toHaveProperty('globalState');
     });
 
     test('serialized layers should be correctly updated after adding/removing layers', () => {
