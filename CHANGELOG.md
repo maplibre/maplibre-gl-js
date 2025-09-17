@@ -4,12 +4,53 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 5.7.2
+
+### 🐞 Bug fixes
+
+- Fix `_updateRetainedTiles` checking for children when children length is 1 overscaled tile "child" ([#6388](https://github.com/maplibre/maplibre-gl-js/pull/6388))
+- Fix evaluating `global-state` for layers added after loading style ([#6361](https://github.com/maplibre/maplibre-gl-js/issues/6361))
+- Change the pathway for passing `global-state` object from `Style` to expression to fix a hack that was introduced in previous versions ([#6366](https://github.com/maplibre/maplibre-gl-js/pull/6366))
+- Fix triggering `load` and `idle` events when source TileJSON fails to load ([#5430](https://github.com/maplibre/maplibre-gl-js/issues/5430))
+- Fix mouse events on heatmap features ([#714](https://github.com/maplibre/maplibre-gl-js/issues/714))
+
+## 5.7.1
+
+### 🐞 Bug fixes
+
+- Fix accuracy circle on locate user control ([#5432](https://github.com/maplibre/maplibre-gl-js/issues/5432))
+- Fix evaluating `global-state` in paint `...-pattern` properties ([#6301](https://github.com/maplibre/maplibre-gl-js/pull/6301))
+- Fix pan moving in the wrong direction when map is pitched ([#6111](https://github.com/maplibre/maplibre-gl-js/issues/6111))
+- Fix evaluation of `text-color` when using `format` within `step` ([#5833](https://github.com/maplibre/maplibre-gl-js/issues/5833))
+- Fix regression in `mergeSourceDiffs`: handle add/remove/removeAll ([#6342](https://github.com/maplibre/maplibre-gl-js/pull/6342))
+- Fix evaluating `global-state` in layout properties `icon-size` and `text-size` ([#6308](https://github.com/maplibre/maplibre-gl-js/issues/6308))
+
+## 5.7.0
+
+### ✨ Features and improvements
+
+- Pass document's `lang` to Tiny-SDF to render Simplified and Traditional Chinese characters ([#6223](https://github.com/maplibre/maplibre-gl-js/issues/6223))
+- Enable `global-state` expressions in layout properties ([#6209](https://github.com/maplibre/maplibre-gl-js/pull/6209))
+- Align typescript types generation with docs generation and avoid exporting non-exported types ([#6217](https://github.com/maplibre/maplibre-gl-js/pull/6217))
+- Add `coveringTiles` method to the public API of the map object ([#6292](https://github.com/maplibre/maplibre-gl-js/pull/6292))
+
+### 🐞 Bug fixes
+
+- Prevent original input style JSON from being mutated by `Style.set*` methods ([#6216](https://github.com/maplibre/maplibre-gl-js/pull/6216))
+- Fix evaluating `global-state` in paint properties with other subexpressions ([#6048](https://github.com/maplibre/maplibre-gl-js/issues/6048))
+- Fix enabling terrain while transitioning ([#6011](https://github.com/maplibre/maplibre-gl-js/issues/6011))
+
+## 5.6.2
+
+### 🐞 Bug fixes
+
 - Fix white artifacts when using non-zero elevation ([#6032](https://github.com/maplibre/maplibre-gl-js/pull/6032))
-- Fix geolocate control lock loss on window resize ([#3504](https://github.com/maplibre/maplibre-gl-js/issues/3504))
+- Fix geolocate control lock loss on window resize and zoom ([#3504](https://github.com/maplibre/maplibre-gl-js/issues/3504))
 - Fix a memory leak in `GeoJSONSource` when rapidly updating data ([#6163](https://github.com/maplibre/maplibre-gl-js/pull/6163))
 - Fix `Map.setTransformRequest` parameter type to include `null` ([#6179](https://github.com/maplibre/maplibre-gl-js/issues/6179))
-
-- _...Add new stuff here..._
+- Fix typo `_rotatePitchHandler` in the `navigation_control.ts` file ([#6207](https://github.com/maplibre/maplibre-gl-js/issues/6207))
 
 ## 5.6.1
 

@@ -23,18 +23,26 @@
         maxPitch: 95
     });
 
-    map.setStyle('https://api.maptiler.com/maps/hybrid/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL', {
+    map.setStyle('https://tiles.openfreemap.org/styles/bright', {
             transformStyle: (previousStyle, nextStyle) => {
                 nextStyle.projection = {type: 'globe'};
                 nextStyle.sources = {
-                    ...nextStyle.sources, terrainSource: {
+                    ...nextStyle.sources,
+                    satelliteSource: {
+                        type: 'raster',
+                        tiles: [
+                            'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg'
+                        ],
+                        tileSize: 256
+                    },
+                    terrainSource: {
                         type: 'raster-dem',
-                        url: 'https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+                        url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
                         tileSize: 256
                     },
                     hillshadeSource: {
                         type: 'raster-dem',
-                        url: 'https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+                        url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
                         tileSize: 256
                     }
                 }
@@ -61,7 +69,16 @@
                     paint: { 'hillshade-shadow-color': '#473B24' }
                 })
 
-                return nextStyle
+                const firstNonFillLayer = nextStyle.layers.find(layer => layer.type !== 'fill' && layer.type !== 'background');
+                nextStyle.layers.splice(nextStyle.layers.indexOf(firstNonFillLayer), 0, {
+                    id: 'satellite',
+                    type: 'raster',
+                    source: 'satelliteSource',
+                    layout: { visibility: 'visible' },
+                    paint: { 'raster-opacity': 1 }
+                });
+
+                return nextStyle;
             }
         })
 

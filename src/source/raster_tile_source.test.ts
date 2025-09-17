@@ -52,6 +52,17 @@ describe('RasterTileSource', () => {
         expect(transformSpy.mock.calls[0][1]).toBe('Source');
     });
 
+    test('fires "error" event if TileJSON request fails', async () => {
+        server.respondWith('/source.json', [404, {}, '']);
+
+        const source = createSource({url: '/source.json'});
+        const errorEvent = waitForEvent(source, 'error', (e) => e.error.status === 404);
+        server.respond();
+
+        await expect(errorEvent).resolves.toBeDefined();
+        expect(source.loaded()).toBe(true);
+    });
+
     test('respects TileJSON.bounds', async () => {
         const source = createSource({
             minzoom: 0,
@@ -78,7 +89,7 @@ describe('RasterTileSource', () => {
 
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
-        expect(source.tileBounds.bounds).toEqual({_sw: {lng: -47, lat: -7}, _ne: {lng: -45, lat: 90}});  
+        expect(source.tileBounds.bounds).toEqual({_sw: {lng: -47, lat: -7}, _ne: {lng: -45, lat: 90}});
     });
 
     test('respects TileJSON.bounds when loaded from TileJSON', async () => {
@@ -200,7 +211,7 @@ describe('RasterTileSource', () => {
             tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, -5]
         }));
-        server.respondWith('http://example.com/10/5/5.png', 
+        server.respondWith('http://example.com/10/5/5.png',
             [200, {'Content-Type': 'image/png', 'Content-Length': 1, 'Cache-Control': 'max-age=100'}, '0']
         );
         const source = createSource({url: '/source.json'});
@@ -231,7 +242,7 @@ describe('RasterTileSource', () => {
             tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, -5]
         }));
-        server.respondWith('http://example.com/10/5/5.png', 
+        server.respondWith('http://example.com/10/5/5.png',
             [200, {'Content-Type': 'image/png', 'Content-Length': 1, 'Expires': 'Wed, 21 Oct 2015 07:28:00 GMT'}, '0']
         );
         const source = createSource({url: '/source.json'});
@@ -262,7 +273,7 @@ describe('RasterTileSource', () => {
             tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, -5]
         }));
-        server.respondWith('http://example.com/10/5/5.png', 
+        server.respondWith('http://example.com/10/5/5.png',
             [200, {'Content-Type': 'image/png', 'Content-Length': 1, 'Cache-Control': '', 'Expires': 'Wed, 21 Oct 2015 07:28:00 GMT'}, '0']
         );
         const source = createSource({url: '/source.json'});

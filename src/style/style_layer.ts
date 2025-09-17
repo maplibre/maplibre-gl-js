@@ -106,14 +106,17 @@ export abstract class StyleLayer extends Evented {
     queryIntersectsFeature?(params: QueryIntersectsFeatureParams): boolean | number;
     createBucket?(parameters: BucketParameters<any>): Bucket;
 
+    private _globalState: Record<string, any>; // reference to global state
+
     constructor(layer: LayerSpecification | CustomLayerInterface, properties: Readonly<{
         layout?: Properties<any>;
         paint?: Properties<any>;
-    }>) {
+    }>, globalState: Record<string, any>) {
         super();
 
         this.id = layer.id;
         this.type = layer.type;
+        this._globalState = globalState;
         this._featureFilter = {filter: () => true, needGeometry: false, getGlobalStateRefs: () => new Set<string>()};
 
         if (layer.type === 'custom') return;
@@ -128,15 +131,15 @@ export abstract class StyleLayer extends Evented {
             this.source = layer.source;
             this.sourceLayer = layer['source-layer'];
             this.filter = layer.filter;
-            this._featureFilter = featureFilter(layer.filter);
+            this._featureFilter = featureFilter(layer.filter, globalState);
         }
 
         if (properties.layout) {
-            this._unevaluatedLayout = new Layout(properties.layout);
+            this._unevaluatedLayout = new Layout(properties.layout, globalState);
         }
 
         if (properties.paint) {
-            this._transitionablePaint = new Transitionable(properties.paint);
+            this._transitionablePaint = new Transitionable(properties.paint, globalState);
 
             for (const property in layer.paint) {
                 this.setPaintProperty(property, layer.paint[property], {validate: false});
@@ -153,7 +156,7 @@ export abstract class StyleLayer extends Evented {
 
     setFilter(filter: FilterSpecification | void) {
         this.filter = filter;
-        this._featureFilter = featureFilter(filter);
+        this._featureFilter = featureFilter(filter, this._globalState);
     }
 
     getCrossfadeParameters() {
@@ -173,7 +176,7 @@ export abstract class StyleLayer extends Evented {
      * This is used to determine if layer source need to be reloaded when global state property changes.
      *
      */
-    getLayoutAffectingGlobalStateRefs() {
+    getLayoutAffectingGlobalStateRefs(): Set<string> {
         const globalStateRefs = new Set<string>();
 
         if (this._unevaluatedLayout) {
@@ -188,6 +191,29 @@ export abstract class StyleLayer extends Evented {
 
         for (const globalStateRef of this._featureFilter.getGlobalStateRefs()) {
             globalStateRefs.add(globalStateRef);
+        }
+
+        return globalStateRefs;
+    }
+
+    /**
+     * Get list of global state references that are used within paint properties.
+     * This is used to determine if layer needs to be repainted when global state property changes.
+     *
+     */
+    getPaintAffectingGlobalStateRefs(): globalThis.Map<string, Array<{name: string; value: any}>> {
+        const globalStateRefs = new globalThis.Map<string, Array<{name: string; value: any}>>();
+
+        if (this._transitionablePaint) {
+            for (const propertyName in this._transitionablePaint._values) {
+                const value = this._transitionablePaint._values[propertyName].value;
+
+                for (const globalStateRef of value.getGlobalStateRefs()) {
+                    const properties = globalStateRefs.get(globalStateRef) ?? [];
+                    properties.push({name: propertyName, value: value.value});
+                    globalStateRefs.set(globalStateRef, properties);
+                }
+            }
         }
 
         return globalStateRefs;

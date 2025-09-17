@@ -86,7 +86,7 @@ describe('drawSymbol', () => {
                 'text-opacity': 1
             }
         } as SymbolLayerSpecification;
-        const layer = new SymbolStyleLayer(layerSpec);
+        const layer = new SymbolStyleLayer(layerSpec, {});
         layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
@@ -149,7 +149,7 @@ describe('drawSymbol', () => {
                 'text-opacity': 1
             }
         } as SymbolLayerSpecification;
-        const layer = new SymbolStyleLayer(layerSpec);
+        const layer = new SymbolStyleLayer(layerSpec, {});
         layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
@@ -216,7 +216,7 @@ describe('drawSymbol', () => {
                 'text-opacity': 1
             }
         } as SymbolLayerSpecification;
-        const layer = new SymbolStyleLayer(layerSpec);
+        const layer = new SymbolStyleLayer(layerSpec, {});
         layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);

@@ -1,54 +1,75 @@
 import packageJSON from '../package.json' with {type: 'json'};
-import {Map} from './ui/map';
-import {NavigationControl} from './ui/control/navigation_control';
-import {GeolocateControl} from './ui/control/geolocate_control';
-import {AttributionControl} from './ui/control/attribution_control';
-import {LogoControl} from './ui/control/logo_control';
-import {ScaleControl} from './ui/control/scale_control';
-import {FullscreenControl} from './ui/control/fullscreen_control';
+import {Map, type MapOptions, type WebGLContextAttributesWithType} from './ui/map';
+import {NavigationControl, type NavigationControlOptions} from './ui/control/navigation_control';
+import {GeolocateControl, type GeolocateControlOptions} from './ui/control/geolocate_control';
+import {AttributionControl, type AttributionControlOptions} from './ui/control/attribution_control';
+import {LogoControl, type LogoControlOptions} from './ui/control/logo_control';
+import {ScaleControl, type ScaleControlOptions, type Unit} from './ui/control/scale_control';
+import {FullscreenControl, type FullscreenControlOptions} from './ui/control/fullscreen_control';
 import {TerrainControl} from './ui/control/terrain_control';
 import {GlobeControl} from './ui/control/globe_control';
-import {Popup} from './ui/popup';
-import {Marker} from './ui/marker';
-import {Style} from './style/style';
+import {type Offset, Popup, type PopupOptions} from './ui/popup';
+import {type Alignment, Marker, type MarkerOptions} from './ui/marker';
+import {type AddLayerObject, type FeatureIdentifier, Style, type StyleOptions, type StyleSetterOptions, type StyleSwapOptions, type TransformStyleFunction} from './style/style';
 import {LngLat, type LngLatLike} from './geo/lng_lat';
 import {LngLatBounds, type LngLatBoundsLike} from './geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from './geo/mercator_coordinate';
-import {Evented, type ErrorEvent, Event} from './util/evented';
-import {config} from './util/config';
+import {Evented, type ErrorEvent, Event, type Listener} from './util/evented';
+import {type AddProtocolAction, config} from './util/config';
 import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread';
 import {WorkerPool} from './util/worker_pool';
 import {prewarm, clearPrewarmedResources} from './util/global_worker_pool';
-import {AJAXError} from './util/ajax';
-import {GeoJSONSource} from './source/geojson_source';
+import {AJAXError, type ExpiryData, type GetResourceResponse, type RequestParameters} from './util/ajax';
+import {GeoJSONSource, type SetClusterOptions} from './source/geojson_source';
 import {CanvasSource, type CanvasSourceSpecification} from './source/canvas_source';
-import {ImageSource} from './source/image_source';
+import {type CanonicalTileRange, type Coordinates, ImageSource, type UpdateImageOptions} from './source/image_source';
 import {RasterDEMTileSource} from './source/raster_dem_tile_source';
 import {RasterTileSource} from './source/raster_tile_source';
 import {VectorTileSource} from './source/vector_tile_source';
 import {VideoSource} from './source/video_source';
-import {type Source, addSourceType} from './source/source';
+import {type Source, type SourceClass, addSourceType} from './source/source';
 import {addProtocol, removeProtocol} from './source/protocol_crud';
-import {getGlobalDispatcher} from './util/dispatcher';
-import {type IControl} from './ui/control/control';
+import {type Dispatcher, getGlobalDispatcher} from './util/dispatcher';
 import {EdgeInsets, type PaddingOptions} from './geo/edge_insets';
-import {type MapTerrainEvent, type MapStyleImageMissingEvent, type MapStyleDataEvent, type MapSourceDataEvent, type MapLibreZoomEvent, type MapLibreEvent, type MapLayerTouchEvent, type MapLayerMouseEvent, type MapLayerEventType, type MapEventType, type MapDataEvent, type MapContextEvent, MapWheelEvent, MapTouchEvent, MapMouseEvent} from './ui/events';
+import {type MapTerrainEvent, type MapStyleImageMissingEvent, type MapStyleDataEvent, type MapSourceDataEvent, type MapLibreZoomEvent, type MapLibreEvent, type MapLayerTouchEvent, type MapLayerMouseEvent, type MapLayerEventType, type MapEventType, type MapDataEvent, type MapContextEvent, MapWheelEvent, MapTouchEvent, MapMouseEvent, type MapSourceDataType, type MapProjectionEvent} from './ui/events';
 import {BoxZoomHandler} from './ui/handler/box_zoom';
 import {DragRotateHandler} from './ui/handler/shim/drag_rotate';
-import {DragPanHandler} from './ui/handler/shim/drag_pan';
+import {DragPanHandler, type DragPanOptions} from './ui/handler/shim/drag_pan';
 import {ScrollZoomHandler} from './ui/handler/scroll_zoom';
 import {TwoFingersTouchZoomRotateHandler} from './ui/handler/shim/two_fingers_touch';
-import {type CustomLayerInterface} from './style/style_layer/custom_style_layer';
-import {type PointLike} from './ui/camera';
 import {Hash} from './ui/hash';
-import {CooperativeGesturesHandler} from './ui/handler/cooperative_gestures';
+import {CooperativeGesturesHandler, type GestureOptions} from './ui/handler/cooperative_gestures';
 import {DoubleClickZoomHandler} from './ui/handler/shim/dblclick_zoom';
 import {KeyboardHandler} from './ui/handler/keyboard';
-import {TwoFingersTouchPitchHandler, TwoFingersTouchRotateHandler, TwoFingersTouchZoomHandler} from './ui/handler/two_fingers_touch';
-import {MessageType} from './util/actor_messages';
-import {createTileMesh} from './util/create_tile_mesh';
-import type {GeoJSONFeature} from './util/vectortile_to_geojson';
+import {TwoFingersTouchPitchHandler, TwoFingersTouchRotateHandler, TwoFingersTouchZoomHandler, type AroundCenterOptions} from './ui/handler/two_fingers_touch';
+import {MessageType, type ActorMessage, type RequestResponseMessageMap} from './util/actor_messages';
+import {createTileMesh, type CreateTileMeshOptions, type IndicesType, type TileMesh} from './util/create_tile_mesh';
+import type {ControlPosition, IControl} from './ui/control/control';
+import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput} from './style/style_layer/custom_style_layer';
+import type {AnimationOptions, CameraForBoundsOptions, CameraOptions, CameraUpdateTransformFunction, CenterZoomBearing, EaseToOptions, FitBoundsOptions, FlyToOptions, JumpToOptions, PointLike} from './ui/camera';
+import type {DistributiveKeys, DistributiveOmit, GeoJSONFeature, MapGeoJSONFeature} from './util/vectortile_to_geojson';
+import type {Handler, HandlerResult} from './ui/handler_manager';
+import type {Complete, RequireAtLeastOne, Subscription} from './util/util';
+import type {CalculateTileZoomFunction, CoveringTilesOptions} from './geo/projection/covering_tiles';
+import type {StyleImage, StyleImageData, StyleImageInterface, StyleImageMetadata, TextFit} from './style/style_image';
+import type {StyleLayer} from './style/style_layer';
+import type {Tile} from './source/tile';
+import type {GeoJSONFeatureDiff, GeoJSONFeatureId, GeoJSONSourceDiff} from './source/geojson_source_diff';
+import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from './source/query_features';
+import type {RequestTransformFunction, ResourceType} from './util/request_manager';
+import type {OverscaledTileID} from './source/tile_id';
+import type {PositionAnchor} from './ui/anchor';
+import type {ProjectionData} from './geo/projection/projection_data';
+import type {WorkerTileResult} from './source/worker_source';
+import type {Actor, IActor} from './util/actor';
+import type {Bucket} from './data/bucket';
+import type {CollisionBoxArray} from './data/array_types.g';
+import type {AlphaImage} from './util/image';
+import type {GlyphPosition, GlyphPositions} from './render/glyph_atlas';
+import type {ImageAtlas} from './render/image_atlas';
+import type {StyleGlyph} from './style/style_glyph';
+import type {FeatureIndex} from './data/feature_index';
 const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
@@ -217,6 +238,95 @@ export {
     MapWheelEvent,
     MapTouchEvent,
     MapMouseEvent,
+    type Handler,
+    type RequireAtLeastOne,
+    type CameraUpdateTransformFunction,
+    type CustomRenderMethod,
+    type CalculateTileZoomFunction,
+    type MapSourceDataType,
+    type TileMesh,
+    type CreateTileMeshOptions,
+    type ControlPosition,
+    type Subscription,
+    type Complete,
+    type CameraOptions,
+    type CenterZoomBearing,
+    type StyleImage,
+    type StyleImageData,
+    type StyleImageMetadata,
+    type StyleLayer,
+    type GetResourceResponse,
+    type MapGeoJSONFeature,
+    type Alignment,
+    type AddProtocolAction,
+    type SourceClass,
+    type IndicesType,
+    type AttributionControlOptions,
+    type CanonicalTileRange,
+    type Tile,
+    type Listener,
+    type Coordinates,
+    type UpdateImageOptions,
+    type DragPanOptions,
+    type FullscreenControlOptions,
+    type SetClusterOptions,
+    type GeoJSONSourceDiff,
+    type GeolocateControlOptions,
+    type LogoControlOptions,
+    type StyleImageInterface,
+    type AddLayerObject,
+    type StyleSetterOptions,
+    type CameraForBoundsOptions,
+    type EaseToOptions,
+    type FitBoundsOptions,
+    type FlyToOptions,
+    type FeatureIdentifier,
+    type JumpToOptions,
+    type QueryRenderedFeaturesOptions,
+    type QuerySourceFeatureOptions,
+    type AnimationOptions,
+    type StyleSwapOptions,
+    type StyleOptions,
+    type RequestTransformFunction,
+    type MarkerOptions,
+    type NavigationControlOptions,
+    type PopupOptions,
+    type Offset,
+    type OverscaledTileID,
+    type ScaleControlOptions,
+    type Unit,
+    type AroundCenterOptions,
+    type HandlerResult,
+    type CustomRenderMethodInput,
+    type ExpiryData,
+    type PositionAnchor,
+    type ProjectionData,
+    type GeoJSONFeatureId,
+    type GeoJSONFeatureDiff,
+    type TextFit,
+    type TransformStyleFunction,
+    type DistributiveOmit,
+    type DistributiveKeys,
+    type RequestParameters,
+    type RequestResponseMessageMap,
+    type WorkerTileResult,
+    type ResourceType,
+    type Dispatcher,
+    type Actor,
+    type IActor,
+    type ActorMessage,
+    type Bucket,
+    type CollisionBoxArray,
+    type FeatureIndex,
+    type AlphaImage,
+    type GlyphPositions,
+    type GlyphPosition,
+    type ImageAtlas,
+    type MessageType,
+    type StyleGlyph,
+    type MapOptions,
+    type GestureOptions,
+    type WebGLContextAttributesWithType,
     type IControl,
     type CustomLayerInterface,
     type CanvasSourceSpecification,
@@ -225,6 +335,7 @@ export {
     type PointLike,
     type LngLatBoundsLike,
     type Source,
+    type MapProjectionEvent,
     type MapTerrainEvent,
     type MapStyleImageMissingEvent,
     type MapStyleDataEvent,
@@ -239,6 +350,7 @@ export {
     type MapContextEvent,
     type ErrorEvent,
     type GeoJSONFeature,
+    type CoveringTilesOptions,
     setRTLTextPlugin,
     getRTLTextPluginStatus,
     prewarm,
