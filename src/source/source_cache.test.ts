@@ -1008,10 +1008,6 @@ describe('SourceCache._updateRetainedTiles', () => {
                 sourceCache._tiles[idealID.key] = tile;
             }
 
-            // format for zoom and max covering zoom currently used in _updateRetainedTiles
-            const zoom = coveringZoomLevel(transform, sourceCache._source);
-            const maxCoveringZoom = Math.max(zoom + SourceCache.maxUnderzooming,  sourceCache._source.minzoom);
-
             // create retainment dictionary to pass by reference to _retainLoadedChildren for modification
             const retain: {[key: string]: OverscaledTileID} = {};
 
@@ -1025,7 +1021,7 @@ describe('SourceCache._updateRetainedTiles', () => {
             });
 
             // retain loaded children for the missing ideal tiles
-            sourceCache._retainLoadedChildren(missingTiles, zoom, maxCoveringZoom, retain);
+            sourceCache._retainLoadedChildren(missingTiles, retain);
 
             expect(Object.keys(retain).sort()).toEqual(
                 idealChildIDs.concat(idealTileIDs).map(id => id.key).sort()
@@ -1034,9 +1030,6 @@ describe('SourceCache._updateRetainedTiles', () => {
     });
 
     test('retains only uppermost zoom children when multiple zoom levels are loaded', () => {
-        const zoom = 2;
-        const maxCoveringZoom = 6;
-
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'errored';
@@ -1060,7 +1053,7 @@ describe('SourceCache._updateRetainedTiles', () => {
 
         // create retainment dictionary to pass by reference to _retainLoadedChildren for modification
         const retain: {[key: string]: OverscaledTileID} = {};
-        sourceCache._retainLoadedChildren(idealTiles, zoom, maxCoveringZoom, retain);
+        sourceCache._retainLoadedChildren(idealTiles, retain);
 
         const expectedKeys = children
             .filter(child => child.overscaledZ === 3)
