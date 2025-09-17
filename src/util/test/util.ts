@@ -281,15 +281,15 @@ export function createTestCameraFrustum(fovy: number, aspectRatio: number, zNear
     return Frustum.fromInvProjectionMatrix(invProj, 1.0, 0.0);
 }
 
-export function logTiles(tileIDs: OverscaledTileID[]) {
-    console.log('key: overscaledZ, wrap, z, x, y');
-    tileIDs
-        .slice()
-        .sort((a, b) => a.key.localeCompare(b.key))
-        .forEach(id => {
-            console.log(
-                `${id.key}: ${id.overscaledZ}, ${id.wrap}, ${id.canonical.z}, ${id.canonical.x}, ${id.canonical.y}`
-            );
-        });
-    console.log(`total: ${tileIDs.length}\n`);
-}
+// export function logTiles(tileIDs: OverscaledTileID[]) {
+//     console.log('key: overscaledZ, wrap, z, x, y');
+//     tileIDs
+//         .slice()
+//         .sort((a, b) => a.key.localeCompare(b.key))
+//         .forEach(id => {
+//             console.log(
+//                 `${id.key}: ${id.overscaledZ}, ${id.wrap}, ${id.canonical.z}, ${id.canonical.x}, ${id.canonical.y}`
+//             );
+//         });
+//     console.log(`total: ${tileIDs.length}\n`);
+// }
