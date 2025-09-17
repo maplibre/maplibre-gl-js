@@ -8,12 +8,11 @@
 
 ## 5.7.2
 
-### ✨ Features and improvements
-- Change the pathway for passing `global-state` object from `Style` to expression ([#6366](https://github.com/maplibre/maplibre-gl-js/pull/6366))
-
 ### 🐞 Bug fixes
+
 - Fix `_updateRetainedTiles` checking for children when children length is 1 overscaled tile "child" ([#6388](https://github.com/maplibre/maplibre-gl-js/pull/6388))
 - Fix evaluating `global-state` for layers added after loading style ([#6361](https://github.com/maplibre/maplibre-gl-js/issues/6361))
+- Change the pathway for passing `global-state` object from `Style` to expression to fix a hack that was intorduced in previous versions ([#6366](https://github.com/maplibre/maplibre-gl-js/pull/6366))
 - Fix triggering `load` and `idle` events when source TileJSON fails to load ([#5430](https://github.com/maplibre/maplibre-gl-js/issues/5430))
 - Fix mouse events on heatmap features ([#714](https://github.com/maplibre/maplibre-gl-js/issues/714))
 
