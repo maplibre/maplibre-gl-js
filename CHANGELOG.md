@@ -8,7 +8,7 @@
 
 ### 🐞 Bug fixes
 - If a required glyph PBF is unavailable or it lacks a glyph for a character in a `text-field`, try to render it locally instead of crashing. ([#4564](https://github.com/maplibre/maplibre-gl-js/pull/4564))
-- _...Add new stuff here..._
+- Fix blank map after WebGL context restore ([#6242](https://github.com/maplibre/maplibre-gl-js/issues/6242))
 
 ## 5.10.0
 
