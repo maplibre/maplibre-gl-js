@@ -123,6 +123,7 @@ export class VectorTileSource extends Evented implements Source {
             }
         } catch (err) {
             this._tileJSONRequest = null;
+            this._loaded = true; // let's pretend it's loaded so the source will be ignored
             this.fire(new ErrorEvent(err));
         }
     }
@@ -201,8 +202,7 @@ export class VectorTileSource extends Evented implements Source {
             pixelRatio: this.map.getPixelRatio(),
             showCollisionBoxes: this.map.showCollisionBoxes,
             promoteId: this.promoteId,
-            subdivisionGranularity: this.map.style.projection.subdivisionGranularity,
-            globalState: this.map.getGlobalState()
+            subdivisionGranularity: this.map.style.projection.subdivisionGranularity
         };
         params.request.collectResourceTiming = this._collectResourceTiming;
         let messageType: MessageType.loadTile | MessageType.reloadTile = MessageType.reloadTile;

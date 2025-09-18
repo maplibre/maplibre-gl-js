@@ -37,6 +37,7 @@ type QueryParameters = {
         filter?: FilterSpecification;
         layers?: Set<string> | null;
         availableImages?: Array<string>;
+        globalState?: Record<string, any>;
     };
 };
 
@@ -126,7 +127,7 @@ export class FeatureIndex {
 
         const params = args.params;
         const pixelsToTileUnits = EXTENT / args.tileSize / args.scale;
-        const filter = featureFilter(params.filter);
+        const filter = featureFilter(params.filter, params.globalState);
 
         const queryGeometry = args.queryGeometry;
         const queryPadding = args.queryPadding * pixelsToTileUnits;
@@ -274,14 +275,17 @@ export class FeatureIndex {
         serializedLayers: {[_: string]: StyleLayer},
         bucketIndex: number,
         sourceLayerIndex: number,
-        filterSpec: FilterSpecification,
+        filterParams: {
+            filterSpec: FilterSpecification;
+            globalState: Record<string, any>;
+        },
         filterLayerIDs: Set<string> | null,
         availableImages: Array<string>,
         styleLayers: {[_: string]: StyleLayer}): QueryResults {
         const result: QueryResults = {};
         this.loadVTLayers();
 
-        const filter = featureFilter(filterSpec);
+        const filter = featureFilter(filterParams.filterSpec, filterParams.globalState);
 
         for (const symbolFeatureIndex of symbolFeatureIndexes) {
             this.loadMatchingFeature(

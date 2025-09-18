@@ -17,7 +17,7 @@ describe('ColorReliefStyleLayer', () => {
 
     test('default', () => {
         const layerSpec = createColorReliefLayerSpec();
-        const layer = createStyleLayer(layerSpec);
+        const layer = createStyleLayer(layerSpec, {});
         expect(layer).toBeInstanceOf(ColorReliefStyleLayer);
         const colorReliefStyleLayer = layer as ColorReliefStyleLayer;
         expect(colorReliefStyleLayer.paint.get('color-relief-opacity')).toEqual(1);
@@ -39,7 +39,7 @@ describe('ColorReliefStyleLayer', () => {
                 ]
             }
         });
-        const layer = createStyleLayer(layerSpec);
+        const layer = createStyleLayer(layerSpec, {});
         expect(layer).toBeInstanceOf(ColorReliefStyleLayer);
         const colorReliefStyleLayer = layer as ColorReliefStyleLayer;
         const colorRamp = colorReliefStyleLayer._createColorRamp(256);
@@ -61,7 +61,7 @@ describe('ColorReliefStyleLayer', () => {
                 ]
             }
         });
-        const layer = createStyleLayer(layerSpec);
+        const layer = createStyleLayer(layerSpec, {});
         expect(layer).toBeInstanceOf(ColorReliefStyleLayer);
         const colorReliefStyleLayer = layer as ColorReliefStyleLayer;
         const colorRamp = colorReliefStyleLayer._createColorRamp(256);
@@ -83,7 +83,7 @@ describe('ColorReliefStyleLayer', () => {
                 ]
             }
         });
-        const layer = createStyleLayer(layerSpec);
+        const layer = createStyleLayer(layerSpec, {});
         expect(layer).toBeInstanceOf(ColorReliefStyleLayer);
         const colorReliefStyleLayer = layer as ColorReliefStyleLayer;
 
@@ -108,7 +108,7 @@ describe('ColorReliefStyleLayer', () => {
                 ]
             }
         });
-        const layer = createStyleLayer(layerSpec);
+        const layer = createStyleLayer(layerSpec, {});
         expect(layer).toBeInstanceOf(ColorReliefStyleLayer);
         const colorReliefStyleLayer = layer as ColorReliefStyleLayer;
 
