@@ -10,7 +10,7 @@
 - If a required glyph PBF is unavailable or it lacks a glyph for a character in a `text-field`, try to render it locally instead of crashing. ([#4564](https://github.com/maplibre/maplibre-gl-js/pull/4564))
 - Export `now()` function in timeControl API to complete the API and enable external code to read controlled time ([#6644](https://github.com/maplibre/maplibre-gl-js/pull/6644))
 - ScaleControl CSS styling contains `white-space: nowrap` to prevent wrapping ([#6647](https://github.com/maplibre/maplibre-gl-js/pull/6647))
-- _...Add new stuff here..._
+- Fix blank map after WebGL context restore ([#6242](https://github.com/maplibre/maplibre-gl-js/issues/6242))
 
 ## 5.10.0
 
