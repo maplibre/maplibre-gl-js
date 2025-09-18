@@ -25,7 +25,7 @@
 - [route-snapper](https://github.com/dabreegster/route_snapper) - Draw routes and areas snapped to roads.
 - [Terra Draw](https://www.github.com/JamesLMilner/terra-draw) - The library has a MapLibre GL JS adapter to provide drawing and geometry editing functionality to the map
 - [maplibregl-minimap](https://github.com/JabSYsEmb/maplibregl-minimap) - Customizable minimap Control for maplibregl.
-- [map-gl-style-switcher](https://github.com/muimsd/map-gl-style-switcher) - A customizable style switcher control for MapLibre GL JS.
+- [map-gl-style-switcher](https://github.com/muimsd/map-gl-style-switcher) - A customizable style switcher control for MapLibre GL JS, also has a `react-map-gl` wrapper.
 - [maplibre-gl-style-flipper](https://github.com/geoglify/maplibre-gl-style-flipper) - A custom control to switch between different map styles in MapLibre GL JS.
 - [maplibre-google-streetview](https://github.com/rezw4n/maplibre-google-streetview) - Plugin that integrates Google Street View into any MapLibre map.
 - [maplibre-transition](https://github.com/popkinj/maplibre-transition) - A plugin for smooth transitions between map styles. [demo](https://observablehq.com/d/b9a97acdf712a77b)
