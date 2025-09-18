@@ -4,6 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix blank map after WebGL context restore ([#6242](https://github.com/maplibre/maplibre-gl-js/issues/6242))
 - Fix case where retain loaded children does not retain uppermost loaded children ([#6399](https://github.com/maplibre/maplibre-gl-js/pull/6399))
 
 ## 5.7.2
