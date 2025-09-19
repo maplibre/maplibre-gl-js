@@ -11,6 +11,7 @@
 ### ✨ Features and improvements
 
 ### 🐞 Bug fixes
+
 - Fix case where retain loaded children does not retain uppermost loaded children ([#6399](https://github.com/maplibre/maplibre-gl-js/pull/6399))
 
 ## 5.7.2
