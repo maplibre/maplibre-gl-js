@@ -5,6 +5,7 @@
 
 ### 🐞 Bug fixes
 - Fix case where retain loaded children does not retain uppermost loaded children ([#6399](https://github.com/maplibre/maplibre-gl-js/pull/6399))
+- Fix an issue with spread operator that caused issues in Angular and esbuild ([]())
 
 ## 5.7.2
 
