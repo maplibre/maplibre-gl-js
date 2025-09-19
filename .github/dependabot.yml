@@ -29,9 +29,8 @@ updates:
     schedule:
       interval: "daily"
     cooldown:
-      default-days: 5
-      semver-major-days: 5
-      semver-minor-days: 3
-      semver-patch-days: 3
+      default-days: 3
+      # no semver support for github-actions
+      # => no specific configuration for this
       include:
         - "*"
