@@ -677,6 +677,26 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                     case 'pauseSource':
                         map.style.sourceCaches[operation[1]].pause();
                         break;
+                    case 'loseAndRestoreContext': {
+                        const canvas = map.getCanvas();
+                        const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+                        const ext = gl && gl.getExtension('WEBGL_lose_context');
+                        ext?.loseContext();
+                        await new Promise<void>((resolve) => {
+                            setTimeout(() => {
+                                resolve();
+                            }, 50);
+                        });
+                        ext?.restoreContext();
+                        await new Promise<void>(resolve => {
+                            const onRestored = () => {
+                                canvas.removeEventListener('webglcontextrestored', onRestored);
+                                resolve();
+                            };
+                            canvas.addEventListener('webglcontextrestored', onRestored);
+                        });
+                        break;
+                    }
                     default:
                         if (typeof map[operation[0]] === 'function') {
                             map[operation[0]](...operation.slice(1));
