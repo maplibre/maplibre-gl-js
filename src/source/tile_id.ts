@@ -123,6 +123,10 @@ export class OverscaledTileID {
         }
     }
 
+    isOverscaled() {
+        return (this.overscaledZ > this.canonical.z);
+    }
+
     /*
      * calculateScaledKey is an optimization:
      * when withWrap == true, implements the same as this.scaledTo(z).key,
