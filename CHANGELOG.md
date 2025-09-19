@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- ESM bundle ([#6254](https://github.com/maplibre/maplibre-gl-js/pull/6254))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
