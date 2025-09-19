@@ -971,6 +971,31 @@ describe('SourceCache._updateRetainedTiles', () => {
         expect(Object.keys(retained).sort()).toEqual(expectedTiles.map(t => t.key).sort());
     });
 
+    test('_updateRetainedTiles incorrectly retains/requests parents when 2nd generation children are loaded', () => {
+        const sourceCache = createSourceCache();
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'errored';
+        };
+
+        const idealTile = new OverscaledTileID(3, 0, 3, 1, 2);
+        sourceCache._tiles[idealTile.key] = new Tile(idealTile, undefined);
+        sourceCache._tiles[idealTile.key].state = 'errored';
+
+        const secondGeneration = idealTile
+            .children(10)
+            .flatMap(child => child.children(10));
+        expect(secondGeneration.length).toEqual(16);
+
+        for (const id of secondGeneration) {
+            sourceCache._tiles[id.key] = new Tile(id, undefined);
+            sourceCache._tiles[id.key].state = 'loaded';
+        }
+        const expectedTiles = [...secondGeneration, idealTile];
+
+        const retained = sourceCache._updateRetainedTiles([idealTile], 3);
+        expect(Object.keys(retained).sort()).toEqual(expectedTiles.map(t => t.key).sort());
+    });
+
     for (const pitch of [0, 20, 40, 65, 75, 85]) {
         test(`retains loaded children for pitch: ${pitch}`, () => {
             const transform = new MercatorTransform();
