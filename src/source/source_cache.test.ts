@@ -971,7 +971,7 @@ describe('SourceCache._updateRetainedTiles', () => {
         expect(Object.keys(retained).sort()).toEqual(expectedTiles.map(t => t.key).sort());
     });
 
-    test('_updateRetainedTiles incorrectly retains/requests parents when 2nd generation children are loaded', () => {
+    test('_updateRetainedTiles does not retain parents when 2nd generation children are loaded', () => {
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'errored';
@@ -1093,12 +1093,6 @@ describe('SourceCache._updateRetainedTiles', () => {
 
         const retained = sourceCache._updateRetainedTiles([idealTile], 2);
         expect(Object.keys(retained).sort()).toEqual([idealTile].concat(loadedChildren).map(t => t.key).sort());
-    });
-
-    test('_areDescendentsComplete throws if generationZ <= ancestorZ', () => {
-        const sourceCache = createSourceCache();
-        const idealTile = new OverscaledTileID(3, 0, 3, 1, 2);
-        expect(() => sourceCache._areDescendentsComplete([idealTile], 3, 3)).toThrow();
     });
 
     test('_areDescendentsComplete returns true when descendents fully cover a generation', () => {

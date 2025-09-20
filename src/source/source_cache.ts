@@ -446,8 +446,6 @@ export class SourceCache extends Evented {
      * - 2nd generation: need 16 children or 1 overscaled child
      */
     _areDescendentsComplete(generationIDs: OverscaledTileID[], generationZ: number, ancestorZ: number) {
-        if (generationZ <= ancestorZ) throw new Error('provided generation requires higher Z than ancestor');
-
         //if overscaled, seeking 1 tile at generationZ, otherwise seeking a power of 4 for each descending Z
         if (generationIDs.length === 1 && generationIDs[0].isOverscaled()) {
             return generationIDs[0].overscaledZ === generationZ;
