@@ -12,7 +12,7 @@ import type {Map} from './map';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {PointLike} from './camera';
 
-const defaultOptions = {
+const defaultOptions: PopupOptions = {
     closeButton: true,
     closeOnClick: true,
     focusAfterOpen: true,
@@ -20,6 +20,12 @@ const defaultOptions = {
     maxWidth: '240px',
     subpixelPositioning: false,
     locationOccludedOpacity: undefined,
+    popupPadding: {
+        top: '0',
+        right: '0',
+        bottom: '0',
+        left: '0'
+    }
 };
 
 /**
@@ -95,6 +101,36 @@ export type PopupOptions = {
      * @defaultValue undefined
      */
     locationOccludedOpacity?: number | string;
+    /**
+     * CSS-style padding applied to the popup's positioning logic.
+     * This ensures the popup stays within the map viewport and doesn't overlap padded edges.
+     * Useful for UI where parts of the map are visually obstructed (e.g. sidebars, headers).
+     *
+     * Can be a string with 1, 2 or 4 values (similar to CSS padding) or an object with specific side values:
+     * - String form: `'10px'`, `'10px 20px'`, or `'10px 20px 15px 25px'`
+     * - Object form: `{ top: '10px', right: '20px', bottom: '15px', left: '25px' }`
+     *
+     * @example
+     * ```
+     * // String form with 1 value
+     * '20px'
+     *
+     * // String form with 2 values
+     * '10px 20px'
+     *
+     * // String form with 4 values
+     * '10px 20px 15px 25px'
+     *
+     * // Object form
+     * { top: '10px', right: '20px', bottom: '15px', left: '25px' }
+     * ```
+     */
+    popupPadding?: string | {
+        top?: string;
+        right?: string;
+        bottom?: string;
+        left?: string;
+    };
 };
 
 const focusQuerySelector = [
@@ -166,6 +202,68 @@ const focusQuerySelector = [
  * **Event** `close` of type {@link Event} will be fired when the popup is closed manually or programmatically.
  */
 export class Popup extends Evented {
+    /**
+     * Dynamically set the popup's CSS padding after creation.
+     * This method updates the popup's padding options and applies them to the popup container.
+     * It can be called at any time during the popup's lifecycle to change its padding.
+     *
+     * Can be a string with 1, 2 or 4 values (similar to CSS padding) or an object with specific side values:
+     * - String form: `'10px'`, `'10px 20px'`, or `'10px 20px 15px 25px'`
+     * - Object form: `{ top: '10px', right: '20px', bottom: '15px', left: '25px' }`
+     */
+    setPadding(padding: string | {top?: string; right?: string; bottom?: string; left?: string}): this {
+        // Parse CSS string padding to object form for consistency with anchor calculation logic
+        if (typeof padding === 'string') {
+            const values = padding.split(' ').map(value => value.trim());
+            switch (values.length) {
+                case 1: // All sides
+                    this.options.popupPadding = {
+                        top: values[0],
+                        right: values[0],
+                        bottom: values[0],
+                        left: values[0]
+                    };
+                    break;
+                case 2: // Top/bottom, left/right
+                    this.options.popupPadding = {
+                        top: values[0],
+                        right: values[1],
+                        bottom: values[0],
+                        left: values[1]
+                    };
+                    break;
+                case 4: // Top, right, bottom, left
+                    this.options.popupPadding = {
+                        top: values[0],
+                        right: values[1],
+                        bottom: values[2],
+                        left: values[3]
+                    };
+                    break;
+                default:
+                    // If we have an unexpected number of values, store as string
+                    // and let the browser handle it
+                    this.options.popupPadding = padding;
+                    break;
+            }
+        } else {
+            this.options.popupPadding = padding;
+        }
+        
+        if (this._container) {
+            // Apply padding to the container's style
+            if (typeof padding === 'string') {
+                this._container.style.padding = padding;
+            } else {
+                // Apply each side individually
+                if (padding.top) this._container.style.paddingTop = padding.top;
+                if (padding.right) this._container.style.paddingRight = padding.right;
+                if (padding.bottom) this._container.style.paddingBottom = padding.bottom;
+                if (padding.left) this._container.style.paddingLeft = padding.left;
+            }
+        }
+        return this;
+    }
     _map: Map;
     options: PopupOptions;
     _content: HTMLElement;
@@ -615,6 +713,20 @@ export class Popup extends Evented {
         if (this.options.maxWidth && this._container.style.maxWidth !== this.options.maxWidth) {
             this._container.style.maxWidth = this.options.maxWidth;
         }
+        
+        // Apply popupPadding as CSS
+        if (this.options.popupPadding) {
+            // If popupPadding is a string, apply it directly
+            if (typeof this.options.popupPadding === 'string') {
+                this._container.style.padding = this.options.popupPadding;
+            } else {
+                // If popupPadding is an object, apply each side individually
+                if (this.options.popupPadding.top) this._container.style.paddingTop = this.options.popupPadding.top;
+                if (this.options.popupPadding.right) this._container.style.paddingRight = this.options.popupPadding.right;
+                if (this.options.popupPadding.bottom) this._container.style.paddingBottom = this.options.popupPadding.bottom;
+                if (this.options.popupPadding.left) this._container.style.paddingLeft = this.options.popupPadding.left;
+            }
+        }
 
         this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform, this._trackPointer);
 
@@ -632,19 +744,49 @@ export class Popup extends Evented {
         if (!anchor) {
             const width = this._container.offsetWidth;
             const height = this._container.offsetHeight;
+            const popupPadding = this.options.popupPadding || {};
+            
+            // Parse CSS string padding to number values (default 0 if not set)
+            let padTop = 0, padRight = 0, padBottom = 0, padLeft = 0;
+            
+            if (typeof popupPadding === 'string') {
+                // Handle CSS padding shorthand: 1, 2, or 4 values
+                const values = popupPadding.split(' ').map(value => parseInt(value) || 0);
+                switch (values.length) {
+                    case 1: // All sides
+                        padTop = padRight = padBottom = padLeft = values[0];
+                        break;
+                    case 2: // Top/bottom, left/right
+                        padTop = padBottom = values[0];
+                        padRight = padLeft = values[1];
+                        break;
+                    case 4: // Top, right, bottom, left
+                        padTop = values[0];
+                        padRight = values[1];
+                        padBottom = values[2];
+                        padLeft = values[3];
+                        break;
+                }
+            } else {
+                padTop = popupPadding.top ? parseInt(popupPadding.top) : 0;
+                padRight = popupPadding.right ? parseInt(popupPadding.right) : 0;
+                padBottom = popupPadding.bottom ? parseInt(popupPadding.bottom) : 0;
+                padLeft = popupPadding.left ? parseInt(popupPadding.left) : 0;
+            }
+
             let anchorComponents;
 
-            if (pos.y + offset.bottom.y < height) {
+            if (pos.y + offset.bottom.y < height + padTop) {
                 anchorComponents = ['top'];
-            } else if (pos.y > this._map.transform.height - height) {
+            } else if (pos.y > this._map.transform.height - height - padBottom) {
                 anchorComponents = ['bottom'];
             } else {
                 anchorComponents = [];
             }
 
-            if (pos.x < width / 2) {
+            if (pos.x < width / 2 + padLeft) {
                 anchorComponents.push('left');
-            } else if (pos.x > this._map.transform.width - width / 2) {
+            } else if (pos.x > this._map.transform.width - width / 2 - padRight) {
                 anchorComponents.push('right');
             }
 
