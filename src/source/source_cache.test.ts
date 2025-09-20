@@ -971,6 +971,31 @@ describe('SourceCache._updateRetainedTiles', () => {
         expect(Object.keys(retained).sort()).toEqual(expectedTiles.map(t => t.key).sort());
     });
 
+    test('_updateRetainedTiles does not retain parents when 2nd generation children are loaded', () => {
+        const sourceCache = createSourceCache();
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'errored';
+        };
+
+        const idealTile = new OverscaledTileID(3, 0, 3, 1, 2);
+        sourceCache._tiles[idealTile.key] = new Tile(idealTile, undefined);
+        sourceCache._tiles[idealTile.key].state = 'errored';
+
+        const secondGeneration = idealTile
+            .children(10)
+            .flatMap(child => child.children(10));
+        expect(secondGeneration.length).toEqual(16);
+
+        for (const id of secondGeneration) {
+            sourceCache._tiles[id.key] = new Tile(id, undefined);
+            sourceCache._tiles[id.key].state = 'loaded';
+        }
+        const expectedTiles = [...secondGeneration, idealTile];
+
+        const retained = sourceCache._updateRetainedTiles([idealTile], 3);
+        expect(Object.keys(retained).sort()).toEqual(expectedTiles.map(t => t.key).sort());
+    });
+
     for (const pitch of [0, 20, 40, 65, 75, 85]) {
         test(`retains loaded children for pitch: ${pitch}`, () => {
             const transform = new MercatorTransform();
@@ -1068,6 +1093,38 @@ describe('SourceCache._updateRetainedTiles', () => {
 
         const retained = sourceCache._updateRetainedTiles([idealTile], 2);
         expect(Object.keys(retained).sort()).toEqual([idealTile].concat(loadedChildren).map(t => t.key).sort());
+    });
+
+    test('_areDescendentsComplete returns true when descendents fully cover a generation', () => {
+        const sourceCache = createSourceCache();
+        const idealTile = new OverscaledTileID(3, 0, 3, 1, 2);
+
+        const firstGen = idealTile.children(10);
+        expect(sourceCache._areDescendentsComplete(firstGen, 4, 3)).toBe(true);
+
+        const secondGen = idealTile.children(10).flatMap(c => c.children(10));
+        expect(sourceCache._areDescendentsComplete(secondGen, 5, 3)).toBe(true);
+    });
+
+    test('_areDescendentsComplete returns false when descendents are incomplete', () => {
+        const sourceCache = createSourceCache();
+        const idealTile = new OverscaledTileID(3, 0, 3, 1, 2);
+
+        const firstGenPartial = idealTile.children(10).slice(0, 3);
+        expect(sourceCache._areDescendentsComplete(firstGenPartial, 4, 3)).toBe(false);
+
+        const secondGenPartial = idealTile.children(10).flatMap(c => c.children(10)).slice(0, 15);
+        expect(sourceCache._areDescendentsComplete(secondGenPartial, 5, 3)).toBe(false);
+    });
+
+    test('_areDescendentsComplete properly handles overscaled tiles', () => {
+        const sourceCache = createSourceCache();
+
+        const correct = new OverscaledTileID(4, 0, 3, 1, 2);
+        expect(sourceCache._areDescendentsComplete([correct], 4, 3)).toBe(true);
+
+        const wrong = new OverscaledTileID(5, 0, 3, 1, 2);
+        expect(sourceCache._areDescendentsComplete([wrong], 4, 3)).toBe(false);
     });
 
     test('adds parent tile if ideal tile errors and no child tiles are loaded', () => {
@@ -1272,22 +1329,22 @@ describe('SourceCache._updateRetainedTiles', () => {
         };
         const idealTile = new OverscaledTileID(2, 0, 2, 0, 0);
 
-        const getTileSpy = vi.spyOn(sourceCache, 'getTile');
-        const retained = sourceCache._updateRetainedTiles([idealTile], 2);
-
-        expect(getTileSpy.mock.calls.map((c) => { return c[0]; })).toEqual([
-            // overzoomed child
-            new OverscaledTileID(3, 0, 2, 0, 0),
-            // parents
-            new OverscaledTileID(1, 0, 1, 0, 0),
-            new OverscaledTileID(0, 0, 0, 0, 0)
-        ]);
-
-        expect(retained).toEqual({
-            // ideal tile id (2, 0, 0)
-            '022': new OverscaledTileID(2, 0, 2, 0, 0)
+        const loadedTiles = [
+            new OverscaledTileID(3, 0, 2, 0, 0),  // overzoomed child
+            new OverscaledTileID(1, 0, 1, 0, 0),  // parent
+            new OverscaledTileID(0, 0, 0, 0, 0)   // parent
+        ];
+        loadedTiles.forEach(t => {
+            sourceCache._tiles[t.key] = new Tile(t, undefined);
+            sourceCache._tiles[t.key].state = 'loaded';
         });
 
+        const retained = sourceCache._updateRetainedTiles([idealTile], 2);
+
+        expect(retained).toEqual({
+            '022': new OverscaledTileID(2, 0, 2, 0, 0),  // ideal
+            '023': new OverscaledTileID(3, 0, 2, 0, 0)   // overzoomed
+        });
     });
 
     test('don\'t ascend multiple times if a tile is not found', () => {
