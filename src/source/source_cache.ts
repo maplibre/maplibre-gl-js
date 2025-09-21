@@ -384,32 +384,38 @@ export class SourceCache extends Evented {
     ) {
         const targetTileIDs = Object.values(targetTiles);
         const loadedDescendents: { [_: string]: Tile[] } = this._getLoadedDescendents(targetTileIDs);
+        const incomplete: { [_: string]: OverscaledTileID } = {};
 
         // retain the uppermost descendents of target tiles
         for (const targetID of targetTileIDs) {
-            const descendentTiles = loadedDescendents[targetID.key];
-            if (!descendentTiles) continue;
-
-            const targetTileMaxCoveringZoom = targetID.overscaledZ + SourceCache.maxUnderzooming;
-
-            // determine the topmost zoom (overscaledZ) in the set of descendent tiles. (i.e. zoom 4 tiles are topmost relative to zoom 5)
-            let topmostZoom = Infinity;
-            for (const tile of descendentTiles) {
-                const zoom = tile.tileID.overscaledZ;
-                if (zoom <= targetTileMaxCoveringZoom && zoom < topmostZoom) {
-                    topmostZoom = zoom;
-                }
+            const descendents = loadedDescendents[targetID.key];
+            if (!descendents?.length) {
+                incomplete[targetID.key] = targetID;
+                continue;
             }
 
-            // retain all uppermost descendents (with the same overscaledZ) in the topmost zoom below the target tile
-            if (topmostZoom !== Infinity) {
-                for (const tile of descendentTiles) {
-                    if (tile.tileID.overscaledZ === topmostZoom) {
-                        retain[tile.tileID.key] = tile.tileID;
-                    }
-                }
+            // find descendents within the max covering zoom range
+            const maxCoveringZoom = targetID.overscaledZ + SourceCache.maxUnderzooming;
+            const candidates = descendents.filter(t => t.tileID.overscaledZ <= maxCoveringZoom);
+            if (!candidates.length) {
+                incomplete[targetID.key] = targetID;
+                continue;
+            }
+
+            // retain the uppermost descendents in the topmost zoom below the target tile
+            const topZoom = Math.min(...candidates.map(t => t.tileID.overscaledZ));
+            const topIDs = candidates.filter(t => t.tileID.overscaledZ === topZoom).map(t => t.tileID);
+            for (const tileID of topIDs) {
+                retain[tileID.key] = tileID;
+            }
+
+            //determine if the retained generation is fully covered
+            if (!this._areDescendentsComplete(topIDs, topZoom, targetID.overscaledZ)) {
+                incomplete[targetID.key] = targetID;
             }
         }
+
+        return incomplete;
     }
 
     /**
@@ -432,6 +438,21 @@ export class SourceCache extends Evented {
         }
 
         return loadedDescendents;
+    }
+
+    /**
+     * Determine if tile ids fully cover the current generation.
+     * - 1st generation: need 4 children or 1 overscaled child
+     * - 2nd generation: need 16 children or 1 overscaled child
+     */
+    _areDescendentsComplete(generationIDs: OverscaledTileID[], generationZ: number, ancestorZ: number) {
+        //if overscaled, seeking 1 tile at generationZ, otherwise seeking a power of 4 for each descending Z
+        if (generationIDs.length === 1 && generationIDs[0].isOverscaled()) {
+            return generationIDs[0].overscaledZ === generationZ;
+        } else {
+            const expectedTiles = Math.pow(4, generationZ - ancestorZ);  //4, 16, 64 (for first 3 gens)
+            return expectedTiles === generationIDs.length;
+        }
     }
 
     /**
@@ -741,59 +762,29 @@ export class SourceCache extends Evented {
         const checked: {[_: string]: boolean} = {};
         const minCoveringZoom = Math.max(zoom - SourceCache.maxOverzooming, this._source.minzoom);
 
-        const missingTiles = {};
-        for (const tileID of idealTileIDs) {
-            const tile = this._addTile(tileID);
+        let missingIdealTiles = {};
+        for (const idealID of idealTileIDs) {
+            const idealTile = this._addTile(idealID);
 
             // retain the tile even if it's not loaded because it's an ideal tile.
-            retain[tileID.key] = tileID;
+            retain[idealID.key] = idealID;
 
-            if (tile.hasData()) continue;
-
-            if (zoom < this._source.maxzoom) {
-                // save missing tiles that potentially have loaded children
-                missingTiles[tileID.key] = tileID;
+            if (!idealTile.hasData()) {
+                missingIdealTiles[idealID.key] = idealID;
             }
         }
 
-        this._retainLoadedChildren(missingTiles, retain);
+        missingIdealTiles = this._retainLoadedChildren(missingIdealTiles, retain);
 
-        for (const tileID of idealTileIDs) {
-            let tile = this._tiles[tileID.key];
-
-            if (tile.hasData()) continue;
-
-            // The tile we require is not yet loaded or does not exist;
-            // Attempt to find children that fully cover it.
-
-            if (zoom + 1 > this._source.maxzoom) {
-                // We're looking for an overzoomed child tile.
-                const childCoord = tileID.children(this._source.maxzoom)[0];
-                const childTile = this.getTile(childCoord);
-                if (!!childTile && childTile.hasData()) {
-                    retain[childCoord.key] = childCoord;
-                    continue; // tile is covered by overzoomed child
-                }
-            } else {
-                // check if all 4 immediate children are loaded (i.e. the missing ideal tile is covered)
-                const children = tileID.children(this._source.maxzoom);
-
-                if (children.length === 4 &&
-                    retain[children[0].key] &&
-                    retain[children[1].key] &&
-                    retain[children[2].key] &&
-                    retain[children[3].key]) continue; // tile is covered by children
-
-                if (children.length === 1 &&
-                    retain[children[0].key]) continue; // tile is covered by overscaled child
-            }
-
-            // We couldn't find child tiles that entirely cover the ideal tile; look for parents now.
+        // for remaining missing tiles with incomplete child coverage, seek a loaded parent tile
+        for (const idealKey in missingIdealTiles) {
+            const tileID = missingIdealTiles[idealKey];
+            let tile = this._tiles[idealKey];
 
             // As we ascend up the tile pyramid of the ideal tile, we check whether the parent
             // tile has been previously requested (and errored because we only loop over tiles with no data)
             // in order to determine if we need to request its parent.
-            let parentWasRequested = tile.wasRequested();
+            let parentWasRequested = tile?.wasRequested();
 
             for (let overscaledZ = tileID.overscaledZ - 1; overscaledZ >= minCoveringZoom; --overscaledZ) {
                 const parentId = tileID.scaledTo(overscaledZ);
