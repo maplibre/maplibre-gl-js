@@ -558,93 +558,6 @@ export class SourceCache extends Evented {
         }
     }
 
-    _updateCoveredAndRetainedTiles(
-        retain: { [_: string]: OverscaledTileID },
-        minCoveringZoom: number,
-        idealTileIDs: OverscaledTileID[],
-        terrain?: Terrain
-    ) {
-        const tilesForFading: { [_: string]: OverscaledTileID } = {};
-        const fadingTiles = {};
-        const ids = Object.keys(retain);
-        const now = browser.now();
-        for (const id of ids) {
-            const tileID = retain[id];
-
-            const tile = this._tiles[id];
-
-            // when fadeEndTime is 0, the tile is created but registerFadeDuration
-            // has not been called, therefore must be kept in fadingTiles dictionary
-            // for next round of rendering
-            if (!tile || (tile.fadeEndTime !== 0 && tile.fadeEndTime <= now)) {
-                continue;
-            }
-
-            // if the tile is loaded but still fading in, find parents to cross-fade with it
-            const parentTile = this.findLoadedParent(tileID, minCoveringZoom);
-            const siblingTile = this.findLoadedSibling(tileID);
-            const fadeTileRef = parentTile || siblingTile || null;
-            if (fadeTileRef) {
-                this._addTile(fadeTileRef.tileID);
-                tilesForFading[fadeTileRef.tileID.key] = fadeTileRef.tileID;
-            }
-
-            fadingTiles[id] = tileID;
-        }
-
-        // for tiles that are still fading in, also find children to cross-fade with
-        this._retainLoadedChildren(fadingTiles, retain);
-
-        for (const id in tilesForFading) {
-            if (!retain[id]) {
-                // If a tile is only needed for fading, mark it as covered so that it isn't rendered on it's own.
-                this._coveredTiles[id] = true;
-                retain[id] = tilesForFading[id];
-            }
-        }
-
-        // disable fading logic in terrain3D mode to avoid rendering two tiles on the same place
-        if (terrain) {
-            const idealRasterTileIDs: { [_: string]: OverscaledTileID } = {};
-            const missingTileIDs: { [_: string]: OverscaledTileID } = {};
-            for (const tileID of idealTileIDs) {
-                if (this._tiles[tileID.key].hasData())
-                    idealRasterTileIDs[tileID.key] = tileID;
-                else
-                    missingTileIDs[tileID.key] = tileID;
-            }
-            // search for a complete set of children for each missing tile
-            for (const key in missingTileIDs) {
-                const children = missingTileIDs[key].children(this._source.maxzoom);
-                if (this._tiles[children[0].key] && this._tiles[children[1].key] && this._tiles[children[2].key] && this._tiles[children[3].key]) {
-                    idealRasterTileIDs[children[0].key] = retain[children[0].key] = children[0];
-                    idealRasterTileIDs[children[1].key] = retain[children[1].key] = children[1];
-                    idealRasterTileIDs[children[2].key] = retain[children[2].key] = children[2];
-                    idealRasterTileIDs[children[3].key] = retain[children[3].key] = children[3];
-                    delete missingTileIDs[key];
-                }
-            }
-            // search for parent or sibling for each missing tile
-            for (const key in missingTileIDs) {
-                const tileID = missingTileIDs[key];
-                const parentTile = this.findLoadedParent(tileID, this._source.minzoom);
-                const siblingTile = this.findLoadedSibling(tileID);
-                const fadeTileRef = parentTile || siblingTile || null;
-                if (fadeTileRef) {
-                    idealRasterTileIDs[fadeTileRef.tileID.key] = retain[fadeTileRef.tileID.key] = fadeTileRef.tileID;
-                    // remove idealTiles which would be rendered twice
-                    for (const key in idealRasterTileIDs) {
-                        if (idealRasterTileIDs[key].isChildOf(fadeTileRef.tileID)) delete idealRasterTileIDs[key];
-                    }
-                }
-            }
-            // cover all tiles which are not needed
-            for (const key in this._tiles) {
-                if (!idealRasterTileIDs[key]) this._coveredTiles[key] = true;
-            }
-        }
-    }
-
     /**
      * Removes tiles that are outside the viewport and adds new tiles that
      * are inside the viewport.
@@ -686,24 +599,14 @@ export class SourceCache extends Evented {
             }
         }
 
+        // When sourcecache is used for terrain also load parent tiles for complete rendering of 3d terrain levels
+        if (this.usedForTerrain) {
+            idealTileIDs = this._addTerrainIdealTiles(idealTileIDs);
+        }
+
         // Determine the overzooming/underzooming amounts.
         const zoom = coveringZoomLevel(transform, this._source);
         const minCoveringZoom = Math.max(zoom - SourceCache.maxOverzooming, this._source.minzoom);
-
-        // When sourcecache is used for terrain also load parent tiles to avoid flickering when zooming out
-        if (this.usedForTerrain) {
-            const parents = {};
-            for (const tileID of idealTileIDs) {
-                if (tileID.canonical.z > this._source.minzoom) {
-                    const parent = tileID.scaledTo(tileID.canonical.z - 1);
-                    parents[parent.key] = parent;
-                    // load very low zoom to calculate tile visibility in transform.coveringTiles and high zoomlevels correct
-                    const parent2 = tileID.scaledTo(Math.max(this._source.minzoom, Math.min(tileID.canonical.z, 5)));
-                    parents[parent2.key] = parent2;
-                }
-            }
-            idealTileIDs = idealTileIDs.concat(Object.values(parents));
-        }
 
         const noPendingDataEmissions = idealTileIDs.length === 0 && !this._updated && this._didEmitContent;
         this._updated = true;
@@ -718,8 +621,9 @@ export class SourceCache extends Evented {
         // parent or child tiles that are *already* loaded.
         const retain = this._updateRetainedTiles(idealTileIDs, zoom);
 
-        if (isRasterType(this._source.type)) {
-            this._updateCoveredAndRetainedTiles(retain, minCoveringZoom, idealTileIDs, terrain);
+        // enable fading for raster source except when using terrain3D which doesn't currently support fading
+        if (isRasterType(this._source.type) && !terrain) {
+            this._updateFadingTiles(retain, minCoveringZoom);
         }
 
         for (const retainedId in retain) {
@@ -742,6 +646,25 @@ export class SourceCache extends Evented {
         // Construct caches of loaded parents & siblings
         this._updateLoadedParentTileCache();
         this._updateLoadedSiblingTileCache();
+    }
+
+    /**
+     * Add ideal tiles needed for 3D terrain rendering
+     */
+    _addTerrainIdealTiles(idealTileIDs: OverscaledTileID[]): OverscaledTileID[] {
+        const ancestors = [];
+
+        for (const tileID of idealTileIDs) {
+            if (tileID.canonical.z > this._source.minzoom) {
+                const parent = tileID.scaledTo(tileID.canonical.z - 1);
+                ancestors.push(parent);
+                // load very low zoom to calculate tile visibility in transform.coveringTiles and high zoom levels correct
+                const parent2 = tileID.scaledTo(Math.max(this._source.minzoom, Math.min(tileID.canonical.z, 5)));
+                ancestors.push(parent2);
+            }
+        }
+
+        return idealTileIDs.concat(ancestors);
     }
 
     releaseSymbolFadeTiles() {
@@ -811,6 +734,50 @@ export class SourceCache extends Evented {
         }
 
         return retain;
+    }
+
+    _updateFadingTiles(
+        retain: { [_: string]: OverscaledTileID },
+        minCoveringZoom: number
+    ) {
+        const tilesForFading: { [_: string]: OverscaledTileID } = {};
+        const fadingTiles = {};
+        const ids = Object.keys(retain);
+        const now = browser.now();
+        for (const id of ids) {
+            const tileID = retain[id];
+
+            const tile = this._tiles[id];
+
+            // when fadeEndTime is 0, the tile is created but registerFadeDuration
+            // has not been called, therefore must be kept in fadingTiles dictionary
+            // for next round of rendering
+            if (!tile || (tile.fadeEndTime !== 0 && tile.fadeEndTime <= now)) {
+                continue;
+            }
+
+            // if the tile is loaded but still fading in, find parents to cross-fade with it
+            const parentTile = this.findLoadedParent(tileID, minCoveringZoom);
+            const siblingTile = this.findLoadedSibling(tileID);
+            const fadeTileRef = parentTile || siblingTile || null;
+            if (fadeTileRef) {
+                this._addTile(fadeTileRef.tileID);
+                tilesForFading[fadeTileRef.tileID.key] = fadeTileRef.tileID;
+            }
+
+            fadingTiles[id] = tileID;
+        }
+
+        // for tiles that are still fading in, also find children to cross-fade with
+        this._retainLoadedChildren(fadingTiles, retain);
+
+        for (const id in tilesForFading) {
+            if (!retain[id]) {
+                // If a tile is only needed for fading, mark it as covered so that it isn't rendered on it's own.
+                this._coveredTiles[id] = true;
+                retain[id] = tilesForFading[id];
+            }
+        }
     }
 
     _updateLoadedParentTileCache() {
