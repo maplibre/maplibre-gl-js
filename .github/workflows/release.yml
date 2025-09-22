@@ -35,6 +35,10 @@ jobs:
     needs: release-check
     if: ${{ needs.release-check.outputs.publish == 'true' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
     defaults:
       run:
         shell: bash
@@ -94,6 +98,10 @@ jobs:
         run: |
           zip -r dist dist
 
+      - uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3.0.0
+        with:
+          subject-path: dist.zip
+
       - name: Build Release Notes
         id: release_notes
         run: |
@@ -111,7 +119,7 @@ jobs:
           bodyFile: ${{ steps.release_notes.outputs.release_notes }}
           artifacts: "dist.zip"
           artifactContentType: "application/zip"
-          allowUpdates: true
+          allowUpdates: false
           draft: false
           prerelease: ${{ steps.prepare_release.outputs.release_type == 'prerelease' }}
 

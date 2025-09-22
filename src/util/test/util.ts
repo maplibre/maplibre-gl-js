@@ -278,4 +278,4 @@ export function createTestCameraFrustum(fovy: number, aspectRatio: number, zNear
     mat4.invert(invProj, proj);
 
     return Frustum.fromInvProjectionMatrix(invProj, 1.0, 0.0);
-};
+}
