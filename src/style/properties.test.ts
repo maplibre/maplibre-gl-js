@@ -5,8 +5,8 @@ import {type EvaluationParameters} from './evaluation_parameters';
 
 describe('PropertyValue', () => {
     test('set global state', () => {
-        const propertyValue = new PropertyValue(symbolProperties.layout.properties['text-size'], ['global-state', 'size'], {});
-        expect(propertyValue.expression.evaluate({globalState: {size: 17}} as unknown as EvaluationParameters)).toBe(17);
+        const propertyValue = new PropertyValue(symbolProperties.layout.properties['text-size'], ['global-state', 'size'], {size: 17});
+        expect(propertyValue.expression.evaluate({} as EvaluationParameters)).toBe(17);
     });
 });
 
