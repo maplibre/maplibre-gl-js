@@ -8,6 +8,8 @@ import {type VectorTile} from '@mapbox/vector-tile';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 import {type EvaluationParameters} from '../style/evaluation_parameters';
 import {type PossiblyEvaluated} from '../style/properties';
+import {Color} from '@maplibre/maplibre-gl-style-spec';
+import {type CirclePaintProps, type CirclePaintPropsPossiblyEvaluated} from '../style/style_layer/circle_style_layer_properties.g';
 import {type SymbolLayoutProps, type SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
 
 function createWorkerTile(params?: {globalState?: Record<string, any>}): WorkerTile {
@@ -310,5 +312,27 @@ describe('worker tile', () => {
         layer.recalculate({} as EvaluationParameters, []);
         const layout = layer.layout as PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>;
         expect(layout.get('text-size').evaluate({} as any, {})).toBe(12);
+    });
+
+    test('WorkerTile.parse uses global state from parameters if not set on layer when recalculating layout properties', async () => {
+        const layerIndex = new StyleLayerIndex([
+            {
+                id: 'circle',
+                type: 'circle',
+                source: 'source',
+                paint: {
+                    'circle-color': ['global-state', 'color'],
+                    'circle-radius': ['global-state', 'radius']
+                }
+            }
+        ]);
+
+        const tile = createWorkerTile({});
+        await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
+        const layer = layerIndex._layers['circle'];
+        layer.recalculate({zoom: 0, globalState: {radius: 15, color: '#FF0000'} as Record<string, any>} as EvaluationParameters, []);
+        const paint = layer.paint as PossiblyEvaluated<CirclePaintProps, CirclePaintPropsPossiblyEvaluated>;
+        expect(paint.get('circle-color').evaluate({} as any, {})).toEqual(new Color(1, 0, 0, 1));
+        expect(paint.get('circle-radius').evaluate({} as any, {})).toBe(15);
     });
 });

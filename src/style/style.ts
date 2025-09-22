@@ -1074,6 +1074,8 @@ export class Style extends Evented {
             layer.setEventedParent(this, {layer: {id}});
         }
 
+        layer.setGlobalState(this._globalState);
+
         const index = before ? this._order.indexOf(before) : this._order.length;
         if (before && index === -1) {
             this.fire(new ErrorEvent(new Error(`Cannot add layer "${id}" before non-existing layer "${before}".`)));
