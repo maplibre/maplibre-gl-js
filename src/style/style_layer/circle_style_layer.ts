@@ -22,8 +22,8 @@ export class CircleStyleLayer extends StyleLayer {
     _transitioningPaint: Transitioning<CirclePaintProps>;
     paint: PossiblyEvaluated<CirclePaintProps, CirclePaintPropsPossiblyEvaluated>;
 
-    constructor(layer: LayerSpecification) {
-        super(layer, properties);
+    constructor(layer: LayerSpecification, globalState: Record<string, any>) {
+        super(layer, properties, globalState);
     }
 
     createBucket(parameters: BucketParameters<any>) {

@@ -99,7 +99,6 @@ export class LineBucket implements Bucket {
 
     index: number;
     zoom: number;
-    globalState: Record<string, any>;
     overscaling: number;
     layers: Array<LineStyleLayer>;
     layerIds: Array<string>;
@@ -124,7 +123,6 @@ export class LineBucket implements Bucket {
 
     constructor(options: BucketParameters<LineStyleLayer>) {
         this.zoom = options.zoom;
-        this.globalState = options.globalState;
         this.overscaling = options.overscaling;
         this.layers = options.layers;
         this.layerIds = this.layers.map(layer => layer.id);
@@ -157,7 +155,7 @@ export class LineBucket implements Bucket {
             const needGeometry = this.layers[0]._featureFilter.needGeometry;
             const evaluationFeature = toEvaluationFeature(feature, needGeometry);
 
-            if (!this.layers[0]._featureFilter.filter(new EvaluationParameters(this.zoom, {globalState: this.globalState}), evaluationFeature, canonical)) continue;
+            if (!this.layers[0]._featureFilter.filter(new EvaluationParameters(this.zoom), evaluationFeature, canonical)) continue;
 
             const sortKey = sortFeaturesByKey ?
                 lineSortKey.evaluate(evaluationFeature, {}, canonical) :
@@ -191,7 +189,7 @@ export class LineBucket implements Bucket {
                 let processedFeature = bucketFeature;
 
                 if (hasPattern('line', this.layers, options)) {
-                    processedFeature = addPatternDependencies('line', this.layers, processedFeature, {zoom: this.zoom, globalState: this.globalState}, options);
+                    processedFeature = addPatternDependencies('line', this.layers, processedFeature, {zoom: this.zoom}, options);
                 }
 
                 if (hasLineDasharray(this.layers)) {
@@ -213,8 +211,7 @@ export class LineBucket implements Bucket {
     update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePositionLike}) {
         if (!this.stateDependentLayers.length) return;
         this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, {
-            imagePositions,
-            globalState: this.globalState
+            imagePositions
         });
     }
 
@@ -273,7 +270,7 @@ export class LineBucket implements Bucket {
             this.addLine(line, feature, join, cap, miterLimit, roundLimit, canonical, subdivisionGranularity);
         }
 
-        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {imagePositions, canonical, globalState: this.globalState});
+        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {imagePositions, canonical});
     }
 
     addLine(vertices: Array<Point>, feature: BucketFeature, join: string, cap: string, miterLimit: number, roundLimit: number, canonical: CanonicalTileID | undefined, subdivisionGranularity: SubdivisionGranularitySetting) {

@@ -780,8 +780,6 @@ export class Map extends Camera {
      * Sets a global state property that can be retrieved with the [`global-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#global-state).
      * If the value is null, it resets the property to its default value defined in the [`state` style property](https://maplibre.org/maplibre-style-spec/root/#state).
      *
-     * Note that changing `global-state` values defined in layout properties is not supported, and will be ignored.
-     *
      * @param propertyName - The name of the state property to set.
      * @param value - The value of the state property to set.
      */
@@ -3317,8 +3315,7 @@ export class Map extends Camera {
                 now,
                 fadeDuration,
                 zoomHistory: this.style.zoomHistory,
-                transition: this.style.getTransition(),
-                globalState: this.style.getGlobalState()
+                transition: this.style.getTransition()
             });
 
             const factor = parameters.crossFadingFactor();

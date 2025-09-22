@@ -119,6 +119,7 @@ export const enum MessageType {
     getDashes = 'GDA',
     getImages = 'GI',
     setImages = 'SI',
+    updateGlobalState = 'UGS',
     setLayers = 'SL',
     updateLayers = 'UL',
     syncRTLPluginState = 'SRPS',
@@ -148,6 +149,7 @@ export type RequestResponseMessageMap = {
     [MessageType.getGlyphs]: [GetGlyphsParameters, GetGlyphsResponse];
     [MessageType.getImages]: [GetImagesParameters, GetImagesResponse];
     [MessageType.setImages]: [string[], void];
+    [MessageType.updateGlobalState]: [Record<string, any>, void];
     [MessageType.setLayers]: [Array<LayerSpecification>, void];
     [MessageType.updateLayers]: [UpdateLayersParameters, void];
     [MessageType.syncRTLPluginState]: [PluginState, PluginState];
