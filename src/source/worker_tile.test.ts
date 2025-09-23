@@ -1,5 +1,4 @@
 import {describe, test, expect, vi} from 'vitest';
-import Point from '@mapbox/point-geometry';
 import {WorkerTile} from '../source/worker_tile';
 import {type Feature, GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {OverscaledTileID} from '../source/tile_id';
