@@ -181,7 +181,7 @@ export class LineAtlas {
 
         const dashEntry = {
             y: this.nextRow + n,
-            height: 2 * n / this.height,
+            height: 2 * n,
             width: length
         };
 

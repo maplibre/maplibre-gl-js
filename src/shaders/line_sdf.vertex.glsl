@@ -108,9 +108,9 @@ void main() {
     #endif
 
     float u_patternscale_a_x = u_tileratio / dasharray_from.w / u_crossfade_from;
-    float u_patternscale_a_y = -dasharray_from.z / 2.0;
+    float u_patternscale_a_y = -dasharray_from.z / 2.0 / u_lineatlas_height;
     float u_patternscale_b_x = u_tileratio / dasharray_to.w / u_crossfade_to;
-    float u_patternscale_b_y = -dasharray_to.z / 2.0;
+    float u_patternscale_b_y = -dasharray_to.z / 2.0 / u_lineatlas_height;
 
     v_tex_a = vec2(a_linesofar * u_patternscale_a_x / floorwidth, normal.y * u_patternscale_a_y + (float(dasharray_from.y) + 0.5) / u_lineatlas_height);
     v_tex_b = vec2(a_linesofar * u_patternscale_b_x / floorwidth, normal.y * u_patternscale_b_y + (float(dasharray_to.y) + 0.5) / u_lineatlas_height);

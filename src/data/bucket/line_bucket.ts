@@ -626,11 +626,20 @@ function addLineDashDependencies(layers: Array<LineStyleLayer>, bucketFeature: B
     for (const layer of layers) {
         const dasharrayProperty = (layer.paint as PossiblyEvaluated<any, any>).get('line-dasharray');
         if (dasharrayProperty && dasharrayProperty.value.kind !== 'constant') {
-            const round = false;
+            const round = layer.layout.get('line-cap') === 'round';
 
-            const min = {dasharray: dasharrayProperty.value.evaluate({zoom: zoom - 1}, bucketFeature, {}), round};
-            const mid = {dasharray: dasharrayProperty.value.evaluate({zoom}, bucketFeature, {}), round};
-            const max = {dasharray: dasharrayProperty.value.evaluate({zoom: zoom + 1}, bucketFeature, {}), round};
+            const min = {
+                dasharray: dasharrayProperty.value.evaluate({zoom: zoom - 1}, bucketFeature, {}),
+                round
+            };
+            const mid = {
+                dasharray: dasharrayProperty.value.evaluate({zoom}, bucketFeature, {}),
+                round
+            };
+            const max = {
+                dasharray: dasharrayProperty.value.evaluate({zoom: zoom + 1}, bucketFeature, {}),
+                round
+            };
 
             const minKey = JSON.stringify(min);
             const midKey = JSON.stringify(mid);
