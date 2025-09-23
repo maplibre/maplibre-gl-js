@@ -199,7 +199,6 @@ describe('worker tile', () => {
                         id: featureIndex,
                         properties: {
                             name: 'test'
-
                         },
                         loadGeometry () {
                             return [[{x: 0, y: 0}]];
@@ -228,10 +227,10 @@ describe('worker tile', () => {
         const result = await tile.parse(data, layerIndex, ['hello'], actorMock, SubdivisionGranularitySetting.noSubdivision);
         expect(result).toBeDefined();
         expect(sendAsync).toHaveBeenCalledTimes(4); // icons, patterns, glyphs, dashes
-        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'icons'})}), expect.any(Object));
-        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'patterns'})}), expect.any(Object));
-        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}})}), expect.any(Object));
-        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'type': 'dasharray'})}), expect.any(Object));
+        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({type: 'GI', data: expect.objectContaining({'icons': ['hello'], 'type': 'icons'})}), expect.any(Object));
+        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({type: 'GI', data: expect.objectContaining({'icons': ['hello'], 'type': 'patterns'})}), expect.any(Object));
+        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({type: 'GG', data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}})}), expect.any(Object));
+        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({type: 'GDA', data: expect.objectContaining({'dashes': expect.any(Object)})}), expect.any(Object));
     });
 
     test('WorkerTile.parse would cancel and only event once on repeated reparsing', async () => {

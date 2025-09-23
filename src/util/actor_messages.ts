@@ -90,9 +90,6 @@ export type GetDashesParameters = {
         dasharray: Array<number>;
         round: boolean;
     };};
-    source: string;
-    tileID: OverscaledTileID;
-    type: string;
 };
 
 /**

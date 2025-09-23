@@ -386,8 +386,8 @@ abstract class CrossFadedBinder<T> implements AttributeBinder {
     abstract getVertexAttributes(): Array<StructArrayMember>;
 
     protected abstract getPositionIds(feature: Feature): {min: string; mid: string; max: string};
-    protected abstract emplaceVertexData(array: StructArray, index: number, midPos: T, minMaxPos: T): void;
     protected abstract getPositions(options: PaintOptions): {[_: string]: T};
+    protected abstract emplace(array: StructArray, index: number, midPos: T, minMaxPos: T): void;
 
     protected _setPaintValues(start: number, end: number, positionIds: {min: string; mid: string; max: string}, options: PaintOptions) {
         const positions = this.getPositions(options);
@@ -401,8 +401,8 @@ abstract class CrossFadedBinder<T> implements AttributeBinder {
         // we're cross-fading to at layout time. In order to keep vertex attributes to a minimum and not pass
         // unnecessary vertex data to the shaders, we determine which to upload at draw time.
         for (let i = start; i < end; i++) {
-            this.emplaceVertexData(this.zoomInPaintVertexArray, i, mid, min);
-            this.emplaceVertexData(this.zoomOutPaintVertexArray, i, mid, max);
+            this.emplace(this.zoomInPaintVertexArray, i, mid, min);
+            this.emplace(this.zoomOutPaintVertexArray, i, mid, max);
         }
     }
 
@@ -433,7 +433,7 @@ class CrossFadedPatternBinder extends CrossFadedBinder<ImagePosition> {
         return patternAttributes.members;
     }
 
-    protected emplaceVertexData(array: StructArray, index: number, midPos: ImagePosition, minMaxPos: ImagePosition): void {
+    protected emplace(array: StructArray, index: number, midPos: ImagePosition, minMaxPos: ImagePosition): void {
         array.emplace(index,
             midPos.tlbr[0], midPos.tlbr[1], midPos.tlbr[2], midPos.tlbr[3],
             minMaxPos.tlbr[0], minMaxPos.tlbr[1], minMaxPos.tlbr[2], minMaxPos.tlbr[3],
@@ -456,7 +456,7 @@ class CrossFadedDasharrayBinder extends CrossFadedBinder<DashEntry> {
         return dashAttributes.members;
     }
 
-    protected emplaceVertexData(array: StructArray, index: number, midPos: DashEntry, minMaxPos: DashEntry): void {
+    protected emplace(array: StructArray, index: number, midPos: DashEntry, minMaxPos: DashEntry): void {
         array.emplace(index,
             0, midPos.y, midPos.height, midPos.width,
             0, minMaxPos.y, minMaxPos.height, minMaxPos.width,
