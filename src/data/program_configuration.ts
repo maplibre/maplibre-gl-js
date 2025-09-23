@@ -340,7 +340,7 @@ class CompositeExpressionBinder implements AttributeBinder, UniformBinder {
     }
 }
 
-abstract class CrossFadedBinder implements AttributeBinder {
+abstract class CrossFadedBinder<T> implements AttributeBinder {
     expression: CompositeExpression;
     type: string;
     useIntegerZoom: boolean;
@@ -379,8 +379,28 @@ abstract class CrossFadedBinder implements AttributeBinder {
 
     protected abstract getFeatureData(feature: Feature): any;
     protected abstract getVertexAttributes(): Array<StructArrayMember>;
+    protected abstract emplaceVertexData(array: StructArray, index: number, midPos: T, minMaxPos: T): void;
+    protected abstract getPositions(options: PaintOptions): {[_: string]: T};
 
-    abstract _setPaintValues(start: number, end: number, featureData: any, options: PaintOptions): void;
+    protected _setPaintValues(start: number, end: number, data: any, options: PaintOptions) {
+        const positions = this.getPositions(options);
+
+        if (!positions || !data) return;
+
+        const {min, mid, max} = data;
+        const posMin = positions[min];
+        const posMid = positions[mid];
+        const posMax = positions[max];
+        if (!posMin || !posMid || !posMax) return;
+
+        // We populate two paint arrays because, for cross-faded properties, we don't know which direction
+        // we're cross-fading to at layout time. In order to keep vertex attributes to a minimum and not pass
+        // unnecessary vertex data to the shaders, we determine which to upload at draw time.
+        for (let i = start; i < end; i++) {
+            this.emplaceVertexData(this.zoomInPaintVertexArray, i, posMid, posMin);
+            this.emplaceVertexData(this.zoomOutPaintVertexArray, i, posMid, posMax);
+        }
+    }
 
     upload(context: Context) {
         if (this.zoomInPaintVertexArray && this.zoomInPaintVertexArray.arrayBuffer && this.zoomOutPaintVertexArray && this.zoomOutPaintVertexArray.arrayBuffer) {
@@ -396,24 +416,10 @@ abstract class CrossFadedBinder implements AttributeBinder {
     }
 }
 
-class CrossFadedCompositeBinder extends CrossFadedBinder {
-    _setPaintValues(start: number, end: number, data: any, options: PaintOptions) {
-        const positions = options.imagePositions;
-
-        if (!positions || !data) return;
-
-        const {min, mid, max} = data;
-        const posMin = positions[min];
-        const posMid = positions[mid];
-        const posMax = positions[max];
-        if (!posMin || !posMid || !posMax) return;
-
-        for (let i = start; i < end; i++) {
-            this.emplaceVertexData(this.zoomInPaintVertexArray, i, posMid, posMin);
-            this.emplaceVertexData(this.zoomOutPaintVertexArray, i, posMid, posMax);
-        }
+class CrossFadedCompositeBinder extends CrossFadedBinder<ImagePosition> {
+    protected getPositions(options: PaintOptions): {[_: string]: ImagePosition} {
+        return options.imagePositions;
     }
-
     protected getFeatureData(feature: Feature) {
         return feature.patterns && feature.patterns[this.layerId];
     }
@@ -432,22 +438,9 @@ class CrossFadedCompositeBinder extends CrossFadedBinder {
     }
 }
 
-class CrossFadedDasharrayBinder extends CrossFadedBinder {
-    _setPaintValues(start: number, end: number, data: any, options: PaintOptions) {
-        const positions = options.dashPositions;
-
-        if (!positions || !data) return;
-
-        const {min, mid, max} = data;
-        const posMin = positions[min];
-        const posMid = positions[mid];
-        const posMax = positions[max];
-        if (!posMin || !posMid || !posMax) return;
-
-        for (let i = start; i < end; i++) {
-            this.emplaceVertexData(this.zoomInPaintVertexArray, i, posMid, posMin);
-            this.emplaceVertexData(this.zoomOutPaintVertexArray, i, posMid, posMax);
-        }
+class CrossFadedDasharrayBinder extends CrossFadedBinder<DashEntry> {
+    protected getPositions(options: PaintOptions): {[_: string]: DashEntry} {
+        return options.dashPositions;
     }
 
     protected getFeatureData(feature: Feature) {
