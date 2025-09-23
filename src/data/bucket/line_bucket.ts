@@ -190,9 +190,7 @@ export class LineBucket implements Bucket {
 
                 if (hasPattern('line', this.layers, options)) {
                     processedFeature = addPatternDependencies('line', this.layers, processedFeature, {zoom: this.zoom}, options);
-                }
-
-                if (hasLineDasharray(this.layers)) {
+                } else if (hasLineDasharray(this.layers)) {
                     processedFeature = addLineDashDependencies(this.layers, processedFeature, this.zoom, options);
                 }
 

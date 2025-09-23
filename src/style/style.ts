@@ -1891,10 +1891,7 @@ export class Style extends Evented {
     async getDashes(mapId: string | number, params: GetDashesParameters): Promise<GetDashesResponse> {
         const result: GetDashesResponse = {};
         for (const [key, dash] of Object.entries(params.dashes)) {
-            result[key] = {
-                ...dash,
-                ...this.lineAtlas.getDash(dash.dasharray, dash.round)
-            };
+            result[key] = this.lineAtlas.getDash(dash.dasharray, dash.round);
         }
         return result;
     }

@@ -44,4 +44,3 @@ describe('test min build', () => {
         expect(actualBytes).toBeGreaterThan(expectedBytes - decreaseQuota);
     });
 });
-
