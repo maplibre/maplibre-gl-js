@@ -69,14 +69,9 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
 
         } else if (constantDasharray) {
             const round = layer.layout.get('line-cap') === 'round';
-
             const dashTo = painter.lineAtlas.getDash(constantDasharray.to, round);
-            const posTo = {tlbr: [0, dashTo.y, dashTo.height, dashTo.width], pixelRatio: 1};
-
             const dashFrom = painter.lineAtlas.getDash(constantDasharray.from, round);
-            const posFrom = {tlbr: [0, dashFrom.y, dashFrom.height, dashFrom.width], pixelRatio: 1};
-
-            programConfiguration.setConstantPatternPositions(posTo, posFrom);
+            programConfiguration.setConstantDashPositions(dashTo, dashFrom);
         }
 
         const projectionData = transform.getProjectionData({

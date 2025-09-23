@@ -18,7 +18,7 @@ import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer';
 import type {CrossfadeParameters} from '../style/evaluation_parameters';
 import type {StructArray, StructArrayMember} from '../util/struct_array';
 import type {VertexBuffer} from '../gl/vertex_buffer';
-import type {ImagePosition, ImagePositionLike} from '../render/image_atlas';
+import type {ImagePosition} from '../render/image_atlas';
 import type {
     Feature,
     FeatureState,
@@ -139,6 +139,8 @@ class CrossFadedConstantBinder implements UniformBinder {
     uniformNames: Array<string>;
     patternFrom: Array<number>;
     patternTo: Array<number>;
+    dashFrom: Array<number>;
+    dashTo: Array<number>;
     pixelRatioFrom: number;
     pixelRatioTo: number;
 
@@ -150,20 +152,29 @@ class CrossFadedConstantBinder implements UniformBinder {
         this.pixelRatioTo = 1.0;
     }
 
-    setConstantPatternPositions(posTo: ImagePositionLike, posFrom: ImagePositionLike) {
+    setConstantPatternPositions(posTo: ImagePosition, posFrom: ImagePosition) {
         this.pixelRatioFrom = posFrom.pixelRatio;
         this.pixelRatioTo = posTo.pixelRatio;
         this.patternFrom = posFrom.tlbr;
         this.patternTo = posTo.tlbr;
     }
 
+    setConstantDashPositions(dashTo: DashEntry, dashFrom: DashEntry) {
+        this.dashTo = [0, dashTo.y, dashTo.height, dashTo.width];
+        this.dashFrom = [0, dashFrom.y, dashFrom.height, dashFrom.width];
+    }
+
     setUniform(uniform: Uniform<any>, globals: GlobalProperties, currentValue: PossiblyEvaluatedPropertyValue<unknown>, uniformName: string) {
         let value = null;
 
-        if (uniformName === 'u_pattern_to' || uniformName === 'u_dasharray_to') {
+        if (uniformName === 'u_pattern_to') {
             value = this.patternTo;
-        } else if (uniformName === 'u_pattern_from' || uniformName === 'u_dasharray_from') {
+        } else if (uniformName === 'u_pattern_from') {
             value = this.patternFrom;
+        } else if (uniformName === 'u_dasharray_to') {
+            value = this.dashTo;
+        } else if (uniformName === 'u_dasharray_from') {
+            value = this.dashFrom;
         } else if (uniformName === 'u_pixel_ratio_to') {
             value = this.pixelRatioTo;
         } else if (uniformName === 'u_pixel_ratio_from') {
@@ -417,7 +428,7 @@ class CrossFadedCompositeBinder extends CrossFadedBinder {
         return patternAttributes.members;
     }
 
-    protected emplaceVertexData(array: StructArray, index: number, midPos: ImagePositionLike, minMaxPos: ImagePositionLike): void {
+    protected emplaceVertexData(array: StructArray, index: number, midPos: ImagePosition, minMaxPos: ImagePosition): void {
         array.emplace(index,
             midPos.tlbr[0], midPos.tlbr[1], midPos.tlbr[2], midPos.tlbr[3],
             minMaxPos.tlbr[0], minMaxPos.tlbr[1], minMaxPos.tlbr[2], minMaxPos.tlbr[3],
@@ -542,11 +553,19 @@ export class ProgramConfiguration {
                 (binder as AttributeBinder).populatePaintArray(newLength, feature, options);
         }
     }
-    setConstantPatternPositions(posTo: ImagePositionLike, posFrom: ImagePositionLike) {
+    setConstantPatternPositions(posTo: ImagePosition, posFrom: ImagePosition) {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof CrossFadedConstantBinder)
                 binder.setConstantPatternPositions(posTo, posFrom);
+        }
+    }
+
+    setConstantDashPositions(dashTo: DashEntry, dashFrom: DashEntry) {
+        for (const property in this.binders) {
+            const binder = this.binders[property];
+            if (binder instanceof CrossFadedConstantBinder)
+                binder.setConstantDashPositions(dashTo, dashFrom);
         }
     }
 
