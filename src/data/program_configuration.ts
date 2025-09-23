@@ -536,7 +536,7 @@ export class ProgramConfiguration {
     populatePaintArrays(newLength: number, feature: Feature, options: PaintOptions) {
         for (const property in this.binders) {
             const binder = this.binders[property];
-            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedPatternBinder || binder instanceof CrossFadedDasharrayBinder)
+            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedBinder)
                 (binder as AttributeBinder).populatePaintArray(newLength, feature, options);
         }
     }
