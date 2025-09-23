@@ -59,11 +59,6 @@ export type GetImagesParameters = {
 };
 
 /**
- * A response object returned when requesting images
- */
-export type GetImagesResponse = {[_: string]: StyleImage};
-
-/**
  * Parameters needed to get the glyphs
  */
 export type GetGlyphsParameters = {
@@ -81,6 +76,11 @@ export type GetGlyphsResponse = {
         [id: number]: StyleGlyph;
     };
 };
+
+/**
+ * A response object returned when requesting images
+ */
+export type GetImagesResponse = {[_: string]: StyleImage};
 
 /**
  * Parameters needed to get the line dashes
