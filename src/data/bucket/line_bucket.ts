@@ -638,9 +638,9 @@ function addLineDashDependencies(layers: Array<LineStyleLayer>, bucketFeature: B
                 round
             };
 
-            const minKey = JSON.stringify(min);
-            const midKey = JSON.stringify(mid);
-            const maxKey = JSON.stringify(max);
+            const minKey = `${min.dasharray.join(',')},${min.round}`;
+            const midKey = `${mid.dasharray.join(',')},${mid.round}`;
+            const maxKey = `${max.dasharray.join(',')},${max.round}`;
 
             dashes[minKey] = min;
             dashes[midKey] = mid;
