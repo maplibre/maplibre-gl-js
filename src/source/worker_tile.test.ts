@@ -1,4 +1,5 @@
 import {describe, test, expect, vi} from 'vitest';
+import Point from '@mapbox/point-geometry';
 import {WorkerTile} from '../source/worker_tile';
 import {type Feature, GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {OverscaledTileID} from '../source/tile_id';
@@ -175,6 +176,14 @@ describe('worker tile', () => {
                 'text-font': ['StandardFont-Bold'],
                 'text-field': '{name}'
             }
+        }, {
+            id: 'line-layer',
+            type: 'line',
+            source: 'source',
+            'source-layer': 'test',
+            paint: {
+                'line-dasharray': ['case', ['has', 'road_type'], ['literal', [2, 1]], ['literal', [1, 2]]]
+            }
         }]);
 
         const data = {
@@ -186,13 +195,14 @@ describe('worker tile', () => {
                     length: 1,
                     feature: (featureIndex: number) => ({
                         extent: 8192,
-                        type: 1,
+                        type: featureIndex === 0 ? 1 : 2, // Point for symbol, LineString for line
                         id: featureIndex,
                         properties: {
-                            name: 'test'
+                            name: 'test',
+                            road_type: 'highway'
                         },
                         loadGeometry () {
-                            return [[{x: 0, y: 0}]];
+                            return featureIndex === 0 ? [[{x: 0, y: 0}]] : [[new Point(0, 0), new Point(100, 100)]];
                         }
                     })
                 }
@@ -200,21 +210,32 @@ describe('worker tile', () => {
         } as any as VectorTile;
 
         const sendAsync = vi.fn().mockImplementation((message: {type: string; data: any}) => {
-            const response = message.type === 'getImages' ?
-                {'hello': {width: 1, height: 1, data: new Uint8Array([0])}} :
-                {'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}};
-            return Promise.resolve(response);
+            if (message.type === 'getImages') {
+                return Promise.resolve({'hello': {width: 1, height: 1, data: new Uint8Array([0])}});
+            } else if (message.type === 'getGlyphs') {
+                return Promise.resolve({'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}});
+            } else if (message.type === 'getDashes') {
+                return Promise.resolve({
+                    '2,1,false': {y: 0, height: 16, width: 256},
+                    '1,2,false': {y: 16, height: 16, width: 256}
+                });
+            }
+            return Promise.resolve({});
         });
+
+        // Update the data to have multiple features for different layer types
+        data.layers.test.length = 2;
 
         const actorMock = {
             sendAsync
         };
         const result = await tile.parse(data, layerIndex, ['hello'], actorMock, SubdivisionGranularitySetting.noSubdivision);
         expect(result).toBeDefined();
-        expect(sendAsync).toHaveBeenCalledTimes(3);
+        expect(sendAsync).toHaveBeenCalledTimes(4); // icons, patterns, glyphs, dashes
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'icons'})}), expect.any(Object));
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'patterns'})}), expect.any(Object));
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}})}), expect.any(Object));
+        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'type': 'dasharray'})}), expect.any(Object));
     });
 
     test('WorkerTile.parse would cancel and only event once on repeated reparsing', async () => {
