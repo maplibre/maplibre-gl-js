@@ -223,9 +223,6 @@ describe('worker tile', () => {
             return Promise.resolve({});
         });
 
-        // Update the data to have multiple features for different layer types
-        data.layers.test.length = 2;
-
         const actorMock = {
             sendAsync
         };
