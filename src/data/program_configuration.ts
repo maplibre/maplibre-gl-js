@@ -29,6 +29,7 @@ import type {
 } from '@maplibre/maplibre-gl-style-spec';
 import type {FeatureStates} from '../source/source_state';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
+import type {DashEntry} from '../render/line_atlas';
 
 export type BinderUniform = {
     name: string;
@@ -46,6 +47,9 @@ function packColor(color: Color): [number, number] {
 type PaintOptions = {
     imagePositions: {
         [_: string]: ImagePositionLike;
+    };
+    dashPositions?: {
+        [_: string]: DashEntry;
     };
     canonical?: CanonicalTileID;
     formattedSection?: FormattedSection;
@@ -361,31 +365,17 @@ abstract class CrossFadedBinder implements AttributeBinder {
         const start = this.zoomInPaintVertexArray.length;
         this.zoomInPaintVertexArray.resize(length);
         this.zoomOutPaintVertexArray.resize(length);
-        this._setPaintValues(start, length, this.getFeatureData(feature), options.imagePositions);
+        this._setPaintValues(start, length, this.getFeatureData(feature), options);
     }
 
     updatePaintArray(start: number, end: number, feature: Feature, featureState: FeatureState, options: PaintOptions) {
-        this._setPaintValues(start, end, this.getFeatureData(feature), options.imagePositions);
+        this._setPaintValues(start, end, this.getFeatureData(feature), options);
     }
 
     protected abstract getFeatureData(feature: Feature): any;
     protected abstract getVertexAttributes(): Array<StructArrayMember>;
-    protected abstract emplaceVertexData(array: StructArray, index: number, midPos: ImagePositionLike, minMaxPos: ImagePositionLike): void;
 
-    _setPaintValues(start: number, end: number, data: any, positions: {[_: string]: ImagePositionLike}) {
-        if (!positions || !data) return;
-
-        const {min, mid, max} = data;
-        const posMin = positions[min];
-        const posMid = positions[mid];
-        const posMax = positions[max];
-        if (!posMin || !posMid || !posMax) return;
-
-        for (let i = start; i < end; i++) {
-            this.emplaceVertexData(this.zoomInPaintVertexArray, i, posMid, posMin);
-            this.emplaceVertexData(this.zoomOutPaintVertexArray, i, posMid, posMax);
-        }
-    }
+    abstract _setPaintValues(start: number, end: number, featureData: any, options: PaintOptions): void;
 
     upload(context: Context) {
         if (this.zoomInPaintVertexArray && this.zoomInPaintVertexArray.arrayBuffer && this.zoomOutPaintVertexArray && this.zoomOutPaintVertexArray.arrayBuffer) {
@@ -402,6 +392,23 @@ abstract class CrossFadedBinder implements AttributeBinder {
 }
 
 class CrossFadedCompositeBinder extends CrossFadedBinder {
+    _setPaintValues(start: number, end: number, data: any, options: PaintOptions) {
+        const positions = options.imagePositions;
+
+        if (!positions || !data) return;
+
+        const {min, mid, max} = data;
+        const posMin = positions[min];
+        const posMid = positions[mid];
+        const posMax = positions[max];
+        if (!posMin || !posMid || !posMax) return;
+
+        for (let i = start; i < end; i++) {
+            this.emplaceVertexData(this.zoomInPaintVertexArray, i, posMid, posMin);
+            this.emplaceVertexData(this.zoomOutPaintVertexArray, i, posMid, posMax);
+        }
+    }
+
     protected getFeatureData(feature: Feature) {
         return feature.patterns && feature.patterns[this.layerId];
     }
@@ -421,6 +428,23 @@ class CrossFadedCompositeBinder extends CrossFadedBinder {
 }
 
 class CrossFadedDasharrayBinder extends CrossFadedBinder {
+    _setPaintValues(start: number, end: number, data: any, options: PaintOptions) {
+        const positions = options.dashPositions;
+
+        if (!positions || !data) return;
+
+        const {min, mid, max} = data;
+        const posMin = positions[min];
+        const posMid = positions[mid];
+        const posMax = positions[max];
+        if (!posMin || !posMid || !posMax) return;
+
+        for (let i = start; i < end; i++) {
+            this.emplaceVertexData(this.zoomInPaintVertexArray, i, posMid, posMin);
+            this.emplaceVertexData(this.zoomOutPaintVertexArray, i, posMid, posMax);
+        }
+    }
+
     protected getFeatureData(feature: Feature) {
         return feature.dashes && feature.dashes[this.layerId];
     }
@@ -429,10 +453,10 @@ class CrossFadedDasharrayBinder extends CrossFadedBinder {
         return dashAttributes.members;
     }
 
-    protected emplaceVertexData(array: StructArray, index: number, midPos: ImagePositionLike, minMaxPos: ImagePositionLike): void {
+    protected emplaceVertexData(array: StructArray, index: number, midPos: DashEntry, minMaxPos: DashEntry): void {
         array.emplace(index,
-            midPos.tlbr[0], midPos.tlbr[1], midPos.tlbr[2], midPos.tlbr[3],
-            minMaxPos.tlbr[0], minMaxPos.tlbr[1], minMaxPos.tlbr[2], minMaxPos.tlbr[3],
+            0, midPos.y, midPos.height, midPos.width,
+            0, minMaxPos.y, minMaxPos.height, minMaxPos.width,
         );
     }
 }

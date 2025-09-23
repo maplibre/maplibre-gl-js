@@ -35,6 +35,7 @@ import type {VectorTileLayer} from '@mapbox/vector-tile';
 import {subdivideVertexLine} from '../../render/subdivision';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import {type PossiblyEvaluated} from '../../style/properties';
+import {type DashEntry} from '../../render/line_atlas';
 
 // NOTE ON EXTRUDE SCALE:
 // scale the extrusion vector so that the normal length is this value.
@@ -198,7 +199,7 @@ export class LineBucket implements Bucket {
                 // so are stored during populate until later updated with positions by tile worker in addFeatures
                 this.patternFeatures.push(processedFeature);
             } else {
-                this.addFeature(bucketFeature, geometry, index, canonical, {}, options.subdivisionGranularity);
+                this.addFeature(bucketFeature, geometry, index, canonical, {}, options.subdivisionGranularity, {});
             }
 
             const feature = features[index].feature;
@@ -213,10 +214,9 @@ export class LineBucket implements Bucket {
         });
     }
 
-    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePositionLike}, dashPositions?: {[_: string]: ImagePositionLike}) {
-        const allPositions = dashPositions ? {...imagePositions, ...dashPositions} : imagePositions;
+    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePositionLike}, dashPositions?: {[_: string]: DashEntry}) {
         for (const feature of this.patternFeatures) {
-            this.addFeature(feature, feature.geometry, feature.index, canonical, allPositions, options.subdivisionGranularity);
+            this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions, options.subdivisionGranularity, dashPositions);
         }
     }
 
@@ -256,7 +256,7 @@ export class LineBucket implements Bucket {
         }
     }
 
-    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePositionLike}, subdivisionGranularity: SubdivisionGranularitySetting) {
+    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePositionLike}, subdivisionGranularity: SubdivisionGranularitySetting, dashPositions: {[_: string]: DashEntry}) {
         const layout = this.layers[0].layout;
         const join = layout.get('line-join').evaluate(feature, {});
         const cap = layout.get('line-cap');
@@ -268,7 +268,7 @@ export class LineBucket implements Bucket {
             this.addLine(line, feature, join, cap, miterLimit, roundLimit, canonical, subdivisionGranularity);
         }
 
-        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {imagePositions, canonical});
+        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {imagePositions, dashPositions, canonical});
     }
 
     addLine(vertices: Array<Point>, feature: BucketFeature, join: string, cap: string, miterLimit: number, roundLimit: number, canonical: CanonicalTileID | undefined, subdivisionGranularity: SubdivisionGranularitySetting) {
