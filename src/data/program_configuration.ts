@@ -416,7 +416,7 @@ abstract class CrossFadedBinder<T> implements AttributeBinder {
     }
 }
 
-class CrossFadedCompositeBinder extends CrossFadedBinder<ImagePosition> {
+class CrossFadedPatternBinder extends CrossFadedBinder<ImagePosition> {
     protected getPositions(options: PaintOptions): {[_: string]: ImagePosition} {
         return options.imagePositions;
     }
@@ -514,7 +514,7 @@ export class ProgramConfiguration {
                 this.binders[property] = isCrossFaded ?
                     property === 'line-dasharray' ?
                         new CrossFadedDasharrayBinder(expression as CompositeExpression, type, useIntegerZoom, zoom, StructArrayLayout, layer.id) :
-                        new CrossFadedCompositeBinder(expression as CompositeExpression, type, useIntegerZoom, zoom, StructArrayLayout, layer.id) :
+                        new CrossFadedPatternBinder(expression as CompositeExpression, type, useIntegerZoom, zoom, StructArrayLayout, layer.id) :
                     new SourceExpressionBinder(expression as SourceExpression, names, type, StructArrayLayout);
                 keys.push(`/a_${property}`);
 
@@ -536,7 +536,7 @@ export class ProgramConfiguration {
     populatePaintArrays(newLength: number, feature: Feature, options: PaintOptions) {
         for (const property in this.binders) {
             const binder = this.binders[property];
-            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedCompositeBinder || binder instanceof CrossFadedDasharrayBinder)
+            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedPatternBinder || binder instanceof CrossFadedDasharrayBinder)
                 (binder as AttributeBinder).populatePaintArray(newLength, feature, options);
         }
     }
@@ -573,7 +573,7 @@ export class ProgramConfiguration {
                 for (const property in this.binders) {
                     const binder = this.binders[property];
                     if ((binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder ||
-                         binder instanceof CrossFadedCompositeBinder || binder instanceof CrossFadedDasharrayBinder) && (binder as any).expression.isStateDependent === true) {
+                         binder instanceof CrossFadedPatternBinder || binder instanceof CrossFadedDasharrayBinder) && (binder as any).expression.isStateDependent === true) {
                         //AHM: Remove after https://github.com/mapbox/mapbox-gl-js/issues/6255
                         const value = (layer.paint as any).get(property);
                         (binder as any).expression = value.value;
@@ -605,7 +605,7 @@ export class ProgramConfiguration {
                 for (let i = 0; i < binder.paintVertexAttributes.length; i++) {
                     result.push(binder.paintVertexAttributes[i].name);
                 }
-            } else if (binder instanceof CrossFadedCompositeBinder) {
+            } else if (binder instanceof CrossFadedPatternBinder) {
                 for (let i = 0; i < patternAttributes.members.length; i++) {
                     result.push(patternAttributes.members[i].name);
                 }
@@ -669,7 +669,7 @@ export class ProgramConfiguration {
 
         for (const property in this.binders) {
             const binder = this.binders[property];
-            if (crossfade && (binder instanceof CrossFadedCompositeBinder || binder instanceof CrossFadedDasharrayBinder)) {
+            if (crossfade && (binder instanceof CrossFadedPatternBinder || binder instanceof CrossFadedDasharrayBinder)) {
                 const patternVertexBuffer = crossfade.fromScale === 2 ? binder.zoomInPaintVertexBuffer : binder.zoomOutPaintVertexBuffer;
                 if (patternVertexBuffer) this._buffers.push(patternVertexBuffer);
 
@@ -682,7 +682,7 @@ export class ProgramConfiguration {
     upload(context: Context) {
         for (const property in this.binders) {
             const binder = this.binders[property];
-            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedCompositeBinder || binder instanceof CrossFadedDasharrayBinder)
+            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedPatternBinder || binder instanceof CrossFadedDasharrayBinder)
                 binder.upload(context);
         }
         this.updatePaintBuffers();
@@ -691,7 +691,7 @@ export class ProgramConfiguration {
     destroy() {
         for (const property in this.binders) {
             const binder = this.binders[property];
-            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedCompositeBinder || binder instanceof CrossFadedDasharrayBinder)
+            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedPatternBinder || binder instanceof CrossFadedDasharrayBinder)
                 binder.destroy();
         }
     }
@@ -815,7 +815,7 @@ function layoutType(property: string, type: string, binderType: string) {
 register('ConstantBinder', ConstantBinder);
 register('CrossFadedConstantBinder', CrossFadedConstantBinder);
 register('SourceExpressionBinder', SourceExpressionBinder);
-register('CrossFadedCompositeBinder', CrossFadedCompositeBinder);
+register('CrossFadedPatternBinder', CrossFadedPatternBinder);
 register('CrossFadedDasharrayBinder', CrossFadedDasharrayBinder);
 register('CompositeExpressionBinder', CompositeExpressionBinder);
 register('ProgramConfiguration', ProgramConfiguration, {omit: ['_buffers']});
