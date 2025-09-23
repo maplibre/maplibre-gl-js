@@ -376,36 +376,33 @@ abstract class CrossFadedBinder<T> implements AttributeBinder {
         const start = this.zoomInPaintVertexArray.length;
         this.zoomInPaintVertexArray.resize(length);
         this.zoomOutPaintVertexArray.resize(length);
-        this._setPaintValues(start, length, this.getDependencies(feature), options);
+        this._setPaintValues(start, length, this.getPositionIds(feature), options);
     }
 
     updatePaintArray(start: number, end: number, feature: Feature, featureState: FeatureState, options: PaintOptions) {
-        this._setPaintValues(start, end, this.getDependencies(feature), options);
+        this._setPaintValues(start, end, this.getPositionIds(feature), options);
     }
 
     abstract getVertexAttributes(): Array<StructArrayMember>;
 
-    protected abstract getDependencies(feature: Feature): {min: string; mid: string; max: string};
+    protected abstract getPositionIds(feature: Feature): {min: string; mid: string; max: string};
     protected abstract emplaceVertexData(array: StructArray, index: number, midPos: T, minMaxPos: T): void;
     protected abstract getPositions(options: PaintOptions): {[_: string]: T};
 
-    protected _setPaintValues(start: number, end: number, data: any, options: PaintOptions) {
+    protected _setPaintValues(start: number, end: number, positionIds: {min: string; mid: string; max: string}, options: PaintOptions) {
         const positions = this.getPositions(options);
-
-        if (!positions || !data) return;
-
-        const {min, mid, max} = data;
-        const imageMin = positions[min];
-        const imageMid = positions[mid];
-        const imageMax = positions[max];
-        if (!imageMin || !imageMid || !imageMax) return;
+        if (!positions || !positionIds) return;
+        const min = positions[positionIds.min];
+        const mid = positions[positionIds.mid];
+        const max = positions[positionIds.max];
+        if (!min || !mid || !max) return;
 
         // We populate two paint arrays because, for cross-faded properties, we don't know which direction
         // we're cross-fading to at layout time. In order to keep vertex attributes to a minimum and not pass
         // unnecessary vertex data to the shaders, we determine which to upload at draw time.
         for (let i = start; i < end; i++) {
-            this.emplaceVertexData(this.zoomInPaintVertexArray, i, imageMid, imageMin);
-            this.emplaceVertexData(this.zoomOutPaintVertexArray, i, imageMid, imageMax);
+            this.emplaceVertexData(this.zoomInPaintVertexArray, i, mid, min);
+            this.emplaceVertexData(this.zoomOutPaintVertexArray, i, mid, max);
         }
     }
 
@@ -428,7 +425,7 @@ class CrossFadedPatternBinder extends CrossFadedBinder<ImagePosition> {
         return options.imagePositions;
     }
 
-    protected getDependencies(feature: Feature) {
+    protected getPositionIds(feature: Feature) {
         return feature.patterns && feature.patterns[this.layerId];
     }
 
@@ -451,7 +448,7 @@ class CrossFadedDasharrayBinder extends CrossFadedBinder<DashEntry> {
         return options.dashPositions;
     }
 
-    protected getDependencies(feature: Feature) {
+    protected getPositionIds(feature: Feature) {
         return feature.dashes && feature.dashes[this.layerId];
     }
 
