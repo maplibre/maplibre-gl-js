@@ -52,7 +52,7 @@ export type BucketFeature = {
             'max': string;
         };
     };
-    readonly dashes: {
+    readonly dashes?: {
         [_: string]: {
             'min': string;
             'mid': string;

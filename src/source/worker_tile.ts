@@ -189,12 +189,12 @@ export class WorkerTile {
                     canonical: this.tileID.canonical,
                     subdivisionGranularity: options.subdivisionGranularity
                 });
-            } else if (bucket.hasPattern &&
-                (bucket instanceof LineBucket ||
-                bucket instanceof FillBucket ||
-                bucket instanceof FillExtrusionBucket)) {
+            } else if (bucket.hasPattern && bucket instanceof LineBucket) {
                 recalculateLayers(bucket.layers, this.zoom, availableImages);
                 bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions, lineAtlas);
+            } else if (bucket.hasPattern && (bucket instanceof FillBucket || bucket instanceof FillExtrusionBucket)) {
+                recalculateLayers(bucket.layers, this.zoom, availableImages);
+                bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions);
             }
         }
 
