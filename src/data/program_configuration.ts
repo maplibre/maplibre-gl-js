@@ -573,7 +573,7 @@ export class ProgramConfiguration {
                 for (const property in this.binders) {
                     const binder = this.binders[property];
                     if ((binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder ||
-                         binder instanceof CrossFadedPatternBinder || binder instanceof CrossFadedDasharrayBinder) && (binder as any).expression.isStateDependent === true) {
+                         binder instanceof CrossFadedBinder) && (binder as any).expression.isStateDependent === true) {
                         //AHM: Remove after https://github.com/mapbox/mapbox-gl-js/issues/6255
                         const value = (layer.paint as any).get(property);
                         (binder as any).expression = value.value;
