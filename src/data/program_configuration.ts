@@ -165,24 +165,18 @@ class CrossFadedConstantBinder implements UniformBinder {
     }
 
     setUniform(uniform: Uniform<any>, globals: GlobalProperties, currentValue: PossiblyEvaluatedPropertyValue<unknown>, uniformName: string) {
-        let value = null;
-
         if (uniformName === 'u_pattern_to') {
-            value = this.patternTo;
+            uniform.set(this.patternTo);
         } else if (uniformName === 'u_pattern_from') {
-            value = this.patternFrom;
+            uniform.set(this.patternFrom);
         } else if (uniformName === 'u_dasharray_to') {
-            value = this.dashTo;
+            uniform.set(this.dashTo);
         } else if (uniformName === 'u_dasharray_from') {
-            value = this.dashFrom;
+            uniform.set(this.dashFrom);
         } else if (uniformName === 'u_pixel_ratio_to') {
-            value = this.pixelRatioTo;
+            uniform.set(this.pixelRatioTo);
         } else if (uniformName === 'u_pixel_ratio_from') {
-            value = this.pixelRatioFrom;
-        }
-
-        if (value !== null) {
-            uniform.set(value);
+            uniform.set(this.pixelRatioFrom);
         }
     }
 

@@ -183,23 +183,21 @@ export class LineBucket implements Bucket {
             });
         }
 
-        for (const bucketFeature of bucketFeatures) {
+        for (let bucketFeature of bucketFeatures) {
             const {geometry, index, sourceLayerIndex} = bucketFeature;
 
             if (this.hasPattern) {
-                let processedFeature = bucketFeature;
-
                 if (hasPattern('line', this.layers, options)) {
-                    processedFeature = addPatternDependencies('line', this.layers, processedFeature, {zoom: this.zoom}, options);
+                    bucketFeature = addPatternDependencies('line', this.layers, bucketFeature, {zoom: this.zoom}, options);
                 } else if (hasLineDasharray(this.layers)) {
-                    processedFeature = addLineDashDependencies(this.layers, processedFeature, this.zoom, options);
+                    bucketFeature = addLineDashDependencies(this.layers, bucketFeature, this.zoom, options);
                 }
 
                 // pattern features are added only once the pattern is loaded into the image atlas
                 // so are stored during populate until later updated with positions by tile worker in addFeatures
-                this.patternFeatures.push(processedFeature);
+                this.patternFeatures.push(bucketFeature);
             } else {
-                this.addFeature(bucketFeature, geometry, index, canonical, {}, options.subdivisionGranularity, {});
+                this.addFeature(bucketFeature, geometry, index, canonical, {}, {}, options.subdivisionGranularity);
             }
 
             const feature = features[index].feature;
@@ -217,7 +215,7 @@ export class LineBucket implements Bucket {
 
     addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, dashPositions?: {[_: string]: DashEntry}) {
         for (const feature of this.patternFeatures) {
-            this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions, options.subdivisionGranularity, dashPositions);
+            this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions, dashPositions, options.subdivisionGranularity);
         }
     }
 
@@ -257,7 +255,7 @@ export class LineBucket implements Bucket {
         }
     }
 
-    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, subdivisionGranularity: SubdivisionGranularitySetting, dashPositions: {[_: string]: DashEntry}) {
+    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, dashPositions: {[_: string]: DashEntry}, subdivisionGranularity: SubdivisionGranularitySetting) {
         const layout = this.layers[0].layout;
         const join = layout.get('line-join').evaluate(feature, {});
         const cap = layout.get('line-cap');

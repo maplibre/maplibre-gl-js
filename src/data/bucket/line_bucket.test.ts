@@ -113,7 +113,7 @@ describe('LineBucket', () => {
             ], polygon, undefined, undefined, undefined, undefined, undefined, noSubdivision);
 
             const feature = sourceLayer.feature(0);
-            bucket.addFeature(feature as any, feature.loadGeometry(), undefined, undefined, undefined, noSubdivision, undefined);
+            bucket.addFeature(feature as any, feature.loadGeometry(), undefined, undefined, undefined, undefined, noSubdivision);
         }).not.toThrow();
     });
 
@@ -130,10 +130,10 @@ describe('LineBucket', () => {
 
         // first add an initial, small feature to make sure the next one starts at
         // a non-zero offset
-        bucket.addFeature({} as BucketFeature, [createLine(10)], undefined, undefined, undefined, noSubdivision, undefined);
+        bucket.addFeature({} as BucketFeature, [createLine(10)], undefined, undefined, undefined, undefined, noSubdivision);
 
         // add a feature that will break across the group boundary
-        bucket.addFeature({} as BucketFeature, [createLine(128)], undefined, undefined, undefined, noSubdivision, undefined);
+        bucket.addFeature({} as BucketFeature, [createLine(128)], undefined, undefined, undefined, undefined, noSubdivision);
 
         // Each polygon must fit entirely within a segment, so we expect the
         // first segment to include the first feature and the first polygon
