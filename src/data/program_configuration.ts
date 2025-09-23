@@ -377,8 +377,9 @@ abstract class CrossFadedBinder<T> implements AttributeBinder {
         this._setPaintValues(start, end, this.getDependencies(feature), options);
     }
 
+    abstract getVertexAttributes(): Array<StructArrayMember>;
+
     protected abstract getDependencies(feature: Feature): {min: string; mid: string; max: string};
-    protected abstract getVertexAttributes(): Array<StructArrayMember>;
     protected abstract emplaceVertexData(array: StructArray, index: number, midPos: T, minMaxPos: T): void;
     protected abstract getPositions(options: PaintOptions): {[_: string]: T};
 
@@ -388,17 +389,17 @@ abstract class CrossFadedBinder<T> implements AttributeBinder {
         if (!positions || !data) return;
 
         const {min, mid, max} = data;
-        const posMin = positions[min];
-        const posMid = positions[mid];
-        const posMax = positions[max];
-        if (!posMin || !posMid || !posMax) return;
+        const imageMin = positions[min];
+        const imageMid = positions[mid];
+        const imageMax = positions[max];
+        if (!imageMin || !imageMid || !imageMax) return;
 
         // We populate two paint arrays because, for cross-faded properties, we don't know which direction
         // we're cross-fading to at layout time. In order to keep vertex attributes to a minimum and not pass
         // unnecessary vertex data to the shaders, we determine which to upload at draw time.
         for (let i = start; i < end; i++) {
-            this.emplaceVertexData(this.zoomInPaintVertexArray, i, posMid, posMin);
-            this.emplaceVertexData(this.zoomOutPaintVertexArray, i, posMid, posMax);
+            this.emplaceVertexData(this.zoomInPaintVertexArray, i, imageMid, imageMin);
+            this.emplaceVertexData(this.zoomOutPaintVertexArray, i, imageMid, imageMax);
         }
     }
 
@@ -425,7 +426,7 @@ class CrossFadedPatternBinder extends CrossFadedBinder<ImagePosition> {
         return feature.patterns && feature.patterns[this.layerId];
     }
 
-    protected getVertexAttributes(): Array<StructArrayMember> {
+    getVertexAttributes(): Array<StructArrayMember> {
         return patternAttributes.members;
     }
 
@@ -448,7 +449,7 @@ class CrossFadedDasharrayBinder extends CrossFadedBinder<DashEntry> {
         return feature.dashes && feature.dashes[this.layerId];
     }
 
-    protected getVertexAttributes(): Array<StructArrayMember> {
+    getVertexAttributes(): Array<StructArrayMember> {
         return dashAttributes.members;
     }
 
@@ -606,13 +607,10 @@ export class ProgramConfiguration {
                 for (let i = 0; i < binder.paintVertexAttributes.length; i++) {
                     result.push(binder.paintVertexAttributes[i].name);
                 }
-            } else if (binder instanceof CrossFadedPatternBinder) {
-                for (let i = 0; i < patternAttributes.members.length; i++) {
-                    result.push(patternAttributes.members[i].name);
-                }
-            } else if (binder instanceof CrossFadedDasharrayBinder) {
-                for (let i = 0; i < dashAttributes.members.length; i++) {
-                    result.push(dashAttributes.members[i].name);
+            } else if (binder instanceof CrossFadedBinder) {
+                const attributes = binder.getVertexAttributes();
+                for (let i = 0; i < attributes.length; i++) {
+                    result.push(attributes[i].name);
                 }
             }
         }
