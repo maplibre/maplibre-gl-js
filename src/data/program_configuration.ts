@@ -370,14 +370,14 @@ abstract class CrossFadedBinder<T> implements AttributeBinder {
         const start = this.zoomInPaintVertexArray.length;
         this.zoomInPaintVertexArray.resize(length);
         this.zoomOutPaintVertexArray.resize(length);
-        this._setPaintValues(start, length, this.getFeatureData(feature), options);
+        this._setPaintValues(start, length, this.getDependencies(feature), options);
     }
 
     updatePaintArray(start: number, end: number, feature: Feature, featureState: FeatureState, options: PaintOptions) {
-        this._setPaintValues(start, end, this.getFeatureData(feature), options);
+        this._setPaintValues(start, end, this.getDependencies(feature), options);
     }
 
-    protected abstract getFeatureData(feature: Feature): any;
+    protected abstract getDependencies(feature: Feature): {min: string; mid: string; max: string};
     protected abstract getVertexAttributes(): Array<StructArrayMember>;
     protected abstract emplaceVertexData(array: StructArray, index: number, midPos: T, minMaxPos: T): void;
     protected abstract getPositions(options: PaintOptions): {[_: string]: T};
@@ -420,7 +420,8 @@ class CrossFadedPatternBinder extends CrossFadedBinder<ImagePosition> {
     protected getPositions(options: PaintOptions): {[_: string]: ImagePosition} {
         return options.imagePositions;
     }
-    protected getFeatureData(feature: Feature) {
+
+    protected getDependencies(feature: Feature) {
         return feature.patterns && feature.patterns[this.layerId];
     }
 
@@ -443,7 +444,7 @@ class CrossFadedDasharrayBinder extends CrossFadedBinder<DashEntry> {
         return options.dashPositions;
     }
 
-    protected getFeatureData(feature: Feature) {
+    protected getDependencies(feature: Feature) {
         return feature.dashes && feature.dashes[this.layerId];
     }
 
