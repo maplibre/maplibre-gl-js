@@ -12,6 +12,7 @@ import {type PossiblyEvaluated} from '../style/properties';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {type CirclePaintProps, type CirclePaintPropsPossiblyEvaluated} from '../style/style_layer/circle_style_layer_properties.g';
 import {type SymbolLayoutProps, type SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
+import {MessageType} from '../util/actor_messages';
 
 function createWorkerTile(params?: {globalState?: Record<string, any>}): WorkerTile {
     return new WorkerTile({
@@ -195,14 +196,14 @@ describe('worker tile', () => {
                     length: 1,
                     feature: (featureIndex: number) => ({
                         extent: 8192,
-                        type: featureIndex === 0 ? 1 : 2, // Point for symbol, LineString for line
+                        type: 1,
                         id: featureIndex,
                         properties: {
-                            name: 'test',
-                            road_type: 'highway'
+                            name: 'test'
+
                         },
                         loadGeometry () {
-                            return featureIndex === 0 ? [[{x: 0, y: 0}]] : [[new Point(0, 0), new Point(100, 100)]];
+                            return [[{x: 0, y: 0}]];
                         }
                     })
                 }
@@ -210,17 +211,16 @@ describe('worker tile', () => {
         } as any as VectorTile;
 
         const sendAsync = vi.fn().mockImplementation((message: {type: string; data: any}) => {
-            if (message.type === 'getImages') {
+            if (message.type === MessageType.getImages) {
                 return Promise.resolve({'hello': {width: 1, height: 1, data: new Uint8Array([0])}});
-            } else if (message.type === 'getGlyphs') {
+            } else if (message.type === MessageType.getGlyphs) {
                 return Promise.resolve({'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}});
-            } else if (message.type === 'getDashes') {
+            } else if (message.type === MessageType.getDashes) {
                 return Promise.resolve({
                     '2,1,false': {y: 0, height: 16, width: 256},
                     '1,2,false': {y: 16, height: 16, width: 256}
                 });
             }
-            return Promise.resolve({});
         });
 
         const actorMock = {
