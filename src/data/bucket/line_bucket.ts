@@ -183,14 +183,14 @@ export class LineBucket implements Bucket {
             });
         }
 
-        for (let bucketFeature of bucketFeatures) {
+        for (const bucketFeature of bucketFeatures) {
             const {geometry, index, sourceLayerIndex} = bucketFeature;
 
             if (this.hasPattern) {
                 if (hasPattern('line', this.layers, options)) {
-                    bucketFeature = addPatternDependencies('line', this.layers, bucketFeature, {zoom: this.zoom}, options);
+                    addPatternDependencies('line', this.layers, bucketFeature, {zoom: this.zoom}, options);
                 } else if (hasLineDasharray(this.layers)) {
-                    bucketFeature = addLineDashDependencies(this.layers, bucketFeature, this.zoom, options);
+                    addLineDashDependencies(this.layers, bucketFeature, this.zoom, options);
                 }
 
                 // pattern features are added only once the pattern is loaded into the image atlas
@@ -617,7 +617,7 @@ function hasLineDasharray(layers: Array<LineStyleLayer>): boolean {
     return false;
 }
 
-function addLineDashDependencies(layers: Array<LineStyleLayer>, bucketFeature: BucketFeature, zoom: number, options: PopulateParameters): BucketFeature {
+function addLineDashDependencies(layers: Array<LineStyleLayer>, bucketFeature: BucketFeature, zoom: number, options: PopulateParameters) {
     const dashes = options.dashDependencies;
 
     for (const layer of layers) {
@@ -649,5 +649,4 @@ function addLineDashDependencies(layers: Array<LineStyleLayer>, bucketFeature: B
             bucketFeature.dashes[layer.id] = {min: minKey, mid: midKey, max: maxKey};
         }
     }
-    return bucketFeature;
 }
