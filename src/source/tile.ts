@@ -220,7 +220,7 @@ export class Tile {
         if (data.glyphAtlasImage) {
             this.glyphAtlasImage = data.glyphAtlasImage;
         }
-        this.dashPositions = data.dashPositions || {};
+        this.dashPositions = data.dashPositions;
     }
 
     /**
