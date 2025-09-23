@@ -173,4 +173,19 @@ describe('LineBucket', () => {
             test: {min: 'test-pattern', mid: 'test-pattern', max: 'test-pattern'}
         });
     });
+
+    test('LineBucket line-dasharray with global-state', () => {
+        const bucket = createLineBucket({id: 'test',
+            paint: {'line-dasharray': ['coalesce', ['get', 'dasharray'], ['global-state', 'dasharray']]},
+            globalState: {'dasharray': [3, 3]},
+            availableImages: []
+        });
+
+        bucket.populate(getFeaturesFromLayer(sourceLayer), createPopulateOptions([]), undefined);
+
+        expect(bucket.patternFeatures.length).toBeGreaterThan(0);
+        expect(bucket.patternFeatures[0].dashes).toEqual({
+            test: {min: '3,3,false', mid: '3,3,false', max: '3,3,false'}
+        });
+    });
 });
