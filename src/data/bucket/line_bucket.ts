@@ -30,7 +30,7 @@ import type {Texture} from '../../render/texture';
 import type {IndexBuffer} from '../../gl/index_buffer';
 import type {VertexBuffer} from '../../gl/vertex_buffer';
 import type {FeatureStates} from '../../source/source_state';
-import type {ImagePositionLike} from '../../render/image_atlas';
+import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 import {subdivideVertexLine} from '../../render/subdivision';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
@@ -207,14 +207,15 @@ export class LineBucket implements Bucket {
         }
     }
 
-    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePositionLike}) {
+    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}, dashPositions: {[_: string]: DashEntry}) {
         if (!this.stateDependentLayers.length) return;
         this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, {
-            imagePositions
+            imagePositions,
+            dashPositions
         });
     }
 
-    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePositionLike}, dashPositions?: {[_: string]: DashEntry}) {
+    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, dashPositions?: {[_: string]: DashEntry}) {
         for (const feature of this.patternFeatures) {
             this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions, options.subdivisionGranularity, dashPositions);
         }
@@ -256,7 +257,7 @@ export class LineBucket implements Bucket {
         }
     }
 
-    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePositionLike}, subdivisionGranularity: SubdivisionGranularitySetting, dashPositions: {[_: string]: DashEntry}) {
+    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, subdivisionGranularity: SubdivisionGranularitySetting, dashPositions: {[_: string]: DashEntry}) {
         const layout = this.layers[0].layout;
         const join = layout.get('line-join').evaluate(feature, {});
         const cap = layout.get('line-cap');

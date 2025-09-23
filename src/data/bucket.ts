@@ -9,6 +9,7 @@ import type {CanonicalTileID} from '../source/tile_id';
 import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
 import type Point from '@mapbox/point-geometry';
 import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
+import type {DashEntry} from '../render/line_atlas';
 
 export type BucketParameters<Layer extends TypedStyleLayer> = {
     index: number;
@@ -91,7 +92,7 @@ export interface Bucket {
     readonly stateDependentLayers: Array<any>;
     readonly stateDependentLayerIds: Array<string>;
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID): void;
-    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}): void;
+    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}, dashPositions: {[_: string]: DashEntry}): void;
     isEmpty(): boolean;
     upload(context: Context): void;
     uploadPending(): boolean;

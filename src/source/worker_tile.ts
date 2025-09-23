@@ -7,7 +7,6 @@ import {LineBucket} from '../data/bucket/line_bucket';
 import {FillBucket} from '../data/bucket/fill_bucket';
 import {FillExtrusionBucket} from '../data/bucket/fill_extrusion_bucket';
 import {warnOnce, mapObject} from '../util/util';
-import {createBucketLineAtlas} from '../data/bucket/bucket_line_atlas';
 import {ImageAtlas} from '../render/image_atlas';
 import {GlyphAtlas} from '../render/glyph_atlas';
 import {EvaluationParameters} from '../style/evaluation_parameters';
@@ -169,11 +168,10 @@ export class WorkerTile {
             getDashesPromise = actor.sendAsync({type: MessageType.getDashes, data: {dashes: dasharray, source: this.source, tileID: this.tileID, type: 'dasharray'}}, abortController);
         }
 
-        const [glyphMap, iconMap, patternMap, dasharrayMap] = await Promise.all([getGlyphsPromise, getIconsPromise, getPatternsPromise, getDashesPromise]);
+        const [glyphMap, iconMap, patternMap, dashPositions] = await Promise.all([getGlyphsPromise, getIconsPromise, getPatternsPromise, getDashesPromise]);
 
         const glyphAtlas = new GlyphAtlas(glyphMap);
         const imageAtlas = new ImageAtlas(iconMap, patternMap);
-        const lineAtlas = createBucketLineAtlas(buckets, dasharrayMap);
 
         for (const key in buckets) {
             const bucket = buckets[key];
@@ -191,7 +189,7 @@ export class WorkerTile {
                 });
             } else if (bucket.hasPattern && bucket instanceof LineBucket) {
                 recalculateLayers(bucket.layers, this.zoom, availableImages);
-                bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions, lineAtlas);
+                bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions, dashPositions);
             } else if (bucket.hasPattern && (bucket instanceof FillBucket || bucket instanceof FillExtrusionBucket)) {
                 recalculateLayers(bucket.layers, this.zoom, availableImages);
                 bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions);
@@ -205,6 +203,7 @@ export class WorkerTile {
             collisionBoxArray: this.collisionBoxArray,
             glyphAtlasImage: glyphAtlas.image,
             imageAtlas,
+            dashPositions,
             // Only used for benchmarking:
             glyphMap: this.returnDependencies ? glyphMap : null,
             iconMap: this.returnDependencies ? iconMap : null,
