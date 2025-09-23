@@ -669,7 +669,7 @@ export class ProgramConfiguration {
 
         for (const property in this.binders) {
             const binder = this.binders[property];
-            if (crossfade && (binder instanceof CrossFadedPatternBinder || binder instanceof CrossFadedDasharrayBinder)) {
+            if (crossfade && binder instanceof CrossFadedBinder) {
                 const patternVertexBuffer = crossfade.fromScale === 2 ? binder.zoomInPaintVertexBuffer : binder.zoomOutPaintVertexBuffer;
                 if (patternVertexBuffer) this._buffers.push(patternVertexBuffer);
 
@@ -682,7 +682,7 @@ export class ProgramConfiguration {
     upload(context: Context) {
         for (const property in this.binders) {
             const binder = this.binders[property];
-            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedPatternBinder || binder instanceof CrossFadedDasharrayBinder)
+            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedBinder)
                 binder.upload(context);
         }
         this.updatePaintBuffers();
@@ -691,7 +691,7 @@ export class ProgramConfiguration {
     destroy() {
         for (const property in this.binders) {
             const binder = this.binders[property];
-            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedPatternBinder || binder instanceof CrossFadedDasharrayBinder)
+            if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedBinder)
                 binder.destroy();
         }
     }

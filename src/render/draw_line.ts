@@ -46,6 +46,8 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
     const gl = context.gl;
     const transform = painter.transform;
 
+    let firstTile = true;
+
     for (const coord of coords) {
         const tile = sourceCache.getTile(coord);
 
@@ -55,7 +57,9 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
         if (!bucket) continue;
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
+        const prevProgram = painter.context.program.get();
         const program = painter.useProgram(programId, programConfiguration);
+        const programChanged = firstTile || program.program !== prevProgram;
         const terrainData = painter.style.map.terrain &&  painter.style.map.terrain.getTerrainData(coord);
 
         const constantPattern = patternProperty.constantOr(null);
@@ -136,5 +140,8 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
             stencil, colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,
             layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments,
             layer.paint, painter.transform.zoom, programConfiguration, bucket.layoutVertexBuffer2);
+
+        firstTile = false;
+        // once refactored so that bound texture state is managed, we'll also be able to remove this firstTile/programChanged logic
     }
 }
