@@ -475,7 +475,7 @@ export class ProgramConfiguration {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedCompositeBinder)
-                (binder as AttributeBinder).populatePaintArray(newLength, feature, options);
+                binder.populatePaintArray(newLength, feature, options);
         }
     }
     setConstantPatternPositions(posTo: ImagePosition, posFrom: ImagePosition) {
@@ -503,11 +503,11 @@ export class ProgramConfiguration {
                 for (const property in this.binders) {
                     const binder = this.binders[property];
                     if ((binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder ||
-                         binder instanceof CrossFadedCompositeBinder) && (binder as any).expression.isStateDependent === true) {
+                         binder instanceof CrossFadedCompositeBinder) && binder.expression.isStateDependent === true) {
                         //AHM: Remove after https://github.com/mapbox/mapbox-gl-js/issues/6255
                         const value = (layer.paint as any).get(property);
-                        (binder as any).expression = value.value;
-                        (binder as AttributeBinder).updatePaintArray(pos.start, pos.end, feature, featureStates[id], options);
+                        binder.expression = value.value;
+                        binder.updatePaintArray(pos.start, pos.end, feature, featureStates[id], options);
                         dirty = true;
                     }
                 }
