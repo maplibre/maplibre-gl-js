@@ -586,6 +586,29 @@ describe('SourceCache.update', () => {
         expect(sourceCache.getIds()).toEqual([new OverscaledTileID(0, 0, 0, 0, 0).key]);
     });
 
+    test('adds ideal (covering) tiles only once for zoom level on raster maps', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+        transform.setZoom(1);
+
+        const sourceCache = createSourceCache({});
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+
+        // trigger raster fading logic to begin seeking fading tiles - see _updateRetainedTiles
+        (sourceCache._source as any).type = 'raster';
+
+        const addSpy = vi.spyOn(sourceCache, '_addTile');
+        const dataPromise = waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
+        sourceCache.onAdd(undefined);
+        await dataPromise;
+
+        // on update at zoom 1 there should be 4 ideal tiles added through _addTiles
+        sourceCache.update(transform);
+        expect(addSpy).toHaveBeenCalledTimes(4);
+    });
+
     test('respects Source.hasTile method if it is present', async () => {
         const transform = new MercatorTransform();
         transform.resize(511, 511);
