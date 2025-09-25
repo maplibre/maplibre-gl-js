@@ -2,7 +2,7 @@ import type {LngLat, LngLatLike} from './lng_lat';
 import type {LngLatBounds} from './lng_lat_bounds';
 import type {MercatorCoordinate} from './mercator_coordinate';
 import type Point from '@mapbox/point-geometry';
-import type {mat4, mat2, vec3, vec4} from 'gl-matrix';
+import type {mat4, mat2, vec3, vec4, Vec3Tuple, Vec4Tuple} from 'gl-matrix';
 import type {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import type {PaddingOptions} from './edge_insets';
 import type {Terrain} from '../render/terrain';
@@ -225,21 +225,21 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Center is considered to be in the middle of the viewport.
      */
     get cameraToCenterDistance(): number;
-    get modelViewProjectionMatrix(): mat4;
-    get projectionMatrix(): mat4;
+    get modelViewProjectionMatrix(): mat4<Float64Array>;
+    get projectionMatrix(): mat4<Float64Array> | mat4<Float32Array>;
     /**
      * Inverse of matrix from camera space to clip space.
      */
-    get inverseProjectionMatrix(): mat4;
-    get pixelsToClipSpaceMatrix(): mat4;
-    get clipSpaceToPixelsMatrix(): mat4;
+    get inverseProjectionMatrix(): mat4<Float64Array>;
+    get pixelsToClipSpaceMatrix(): mat4<Float64Array>;
+    get clipSpaceToPixelsMatrix(): mat4<Float64Array>;
     get pixelsToGLUnits(): [number, number];
     get centerOffset(): Point;
     /**
      * Gets the transform's width and height in pixels (viewport size). Use {@link resize} to set the transform's size.
      */
     get size(): Point;
-    get rotationMatrix(): mat2;
+    get rotationMatrix(): mat2<Float32Array>;
     /**
      * The center of the screen in pixels with the top-left corner being (0,0)
      * and +y axis pointing downwards. This accounts for padding.
@@ -253,7 +253,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @internal
      * Returns the camera's position transformed to be in the same space as 3D features under this transform's projection. Mostly used for globe + fill-extrusion.
      */
-    get cameraPosition(): vec3;
+    get cameraPosition(): vec3<Float64Array | Vec3Tuple>;
 
     /**
      * Returns if the padding params match
@@ -281,7 +281,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Return the clipping plane, behind which nothing should be rendered. If the camera frustum is sufficient
      * to describe the render geometry (additional clipping is not required), this may be null.
      */
-    getClippingPlane(): vec4 | null;
+    getClippingPlane(): vec4<Float64Array | Vec4Tuple> | null;
 
     /**
      * @internal
@@ -378,7 +378,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      */
     calculateCenterFromCameraLngLatAlt(lngLat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number};
 
-    getRayDirectionFromPixel(p: Point): vec3;
+    getRayDirectionFromPixel(p: Point): vec3<Float64Array>;
 
     /**
      * When the map is pitched, some of the 3D features that intersect a query will not intersect
@@ -408,7 +408,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Currently only supported in mercator projection.
      * @param unwrappedTileID - the tile ID
      */
-    calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4;
+    calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4<Float64Array> | mat4<Float32Array>;
 
     /**
      * @internal
@@ -454,7 +454,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @param dir - The light direction.
      * @returns A new vector with the transformed light direction.
      */
-    transformLightDirection(dir: vec3): vec3;
+    transformLightDirection(dir: vec3): vec3<Float32Array | Vec3Tuple>;
 
     /**
      * @internal
@@ -469,7 +469,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @param location - Location of the model.
      * @param altitude - Altitude of the model. May be undefined.
      */
-    getMatrixForModel(location: LngLatLike, altitude?: number): mat4;
+    getMatrixForModel(location: LngLatLike, altitude?: number): mat4<Float64Array>;
 
     /**
      * Return projection data such that coordinates in mercator projection in range 0..1 will get projected to the map correctly.
@@ -479,7 +479,7 @@ export interface IReadonlyTransform extends ITransformGetters {
     /**
      * Returns a tile-specific projection matrix. Used for symbol placement fast-path for mercator transform.
      */
-    getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 | undefined;
+    getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4<Float64Array> | undefined;
 }
 
 /**

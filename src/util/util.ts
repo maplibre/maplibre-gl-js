@@ -3,7 +3,7 @@ import UnitBezier from '@mapbox/unitbezier';
 import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';
 import type {Size} from './image';
 import type {WorkerGlobalScopeInterface} from './web_worker';
-import {mat3, mat4, quat, vec2, vec3, type vec4} from 'gl-matrix';
+import {mat3, mat4, quat, vec2, vec3, type Vec3Tuple, type vec4} from 'gl-matrix';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
 import {type OverscaledTileID} from '../source/tile_id';
 import type {Event} from './evented';
@@ -11,32 +11,32 @@ import type {Event} from './evented';
 /**
  * Returns a new 64 bit float vec4 of zeroes.
  */
-export function createVec4f64(): vec4 { return new Float64Array(4) as any; }
+export function createVec4f64(): vec4<Float64Array> { return new Float64Array(4)  }
 /**
  * Returns a new 64 bit float vec3 of zeroes.
  */
-export function createVec3f64(): vec3 { return new Float64Array(3) as any; }
+export function createVec3f64(): vec3<Float64Array> { return new Float64Array(3)  }
 /**
  * Returns a new 64 bit float mat4 of zeroes.
  */
-export function createMat4f64(): mat4 { return new Float64Array(16) as any; }
+export function createMat4f64(): mat4<Float64Array> { return new Float64Array(16)  }
 /**
  * Returns a new 32 bit float mat4 of zeroes.
  */
-export function createMat4f32(): mat4 { return new Float32Array(16) as any; }
+export function createMat4f32(): mat4<Float32Array> { return new Float32Array(16)  }
 /**
  * Returns a new 64 bit float mat4 set to identity.
  */
-export function createIdentityMat4f64(): mat4 {
-    const m = new Float64Array(16) as any;
+export function createIdentityMat4f64(): mat4<Float64Array> {
+    const m = new Float64Array(16);
     mat4.identity(m);
     return m;
 }
 /**
  * Returns a new 32 bit float mat4 set to identity.
  */
-export function createIdentityMat4f32(): mat4 {
-    const m = new Float32Array(16) as any;
+export function createIdentityMat4f32(): mat4<Float32Array> {
+    const m = new Float32Array(16);
     mat4.identity(m);
     return m;
 }
@@ -89,22 +89,22 @@ export function pointPlaneSignedDistance(
  * Finds an intersection points of three planes. Returns `null` if no such (single) point exists.
  * The planes *must* be in Hessian normal form - their xyz components must form a unit vector.
  */
-export function threePlaneIntersection(plane0: vec4, plane1: vec4, plane2: vec4): vec3 | null {
+export function threePlaneIntersection(plane0: vec4, plane1: vec4, plane2: vec4): Vec3Tuple | null {
     // https://mathworld.wolfram.com/Plane-PlaneIntersection.html
     const det = mat3.determinant([
         plane0[0], plane0[1], plane0[2],
         plane1[0], plane1[1], plane1[2],
         plane2[0], plane2[1], plane2[2]
-    ] as mat3);
+    ]);
     if (det === 0) {
         return null;
     }
-    const cross12 = vec3.cross([] as any, [plane1[0], plane1[1], plane1[2]], [plane2[0], plane2[1], plane2[2]]);
-    const cross20 = vec3.cross([] as any, [plane2[0], plane2[1], plane2[2]], [plane0[0], plane0[1], plane0[2]]);
-    const cross01 = vec3.cross([] as any, [plane0[0], plane0[1], plane0[2]], [plane1[0], plane1[1], plane1[2]]);
-    const sum = vec3.scale([] as any, cross12, -plane0[3]);
-    vec3.add(sum, sum, vec3.scale([] as any, cross20, -plane1[3]));
-    vec3.add(sum, sum, vec3.scale([] as any, cross01, -plane2[3]));
+    const cross12 = vec3.cross([], [plane1[0], plane1[1], plane1[2]], [plane2[0], plane2[1], plane2[2]]);
+    const cross20 = vec3.cross([], [plane2[0], plane2[1], plane2[2]], [plane0[0], plane0[1], plane0[2]]);
+    const cross01 = vec3.cross([], [plane0[0], plane0[1], plane0[2]], [plane1[0], plane1[1], plane1[2]]);
+    const sum = vec3.scale([], cross12, -plane0[3]);
+    vec3.add(sum, sum, vec3.scale([], cross20, -plane1[3]));
+    vec3.add(sum, sum, vec3.scale([], cross01, -plane2[3]));
     vec3.scale(sum, sum, 1.0 / det);
     return sum;
 }
@@ -977,7 +977,7 @@ export function rollPitchBearingEqual(a: RollPitchBearing, b: RollPitchBearing):
  * @returns roll, pitch, and bearing angles in degrees
  */
 export function getRollPitchBearing(rotation: quat): RollPitchBearing {
-    const m: mat3 = new Float64Array(9) as any;
+    const m: mat3<Float64Array> = new Float64Array(9);
     mat3.fromQuat(m, rotation);
 
     const xAngle = radiansToDegrees(-Math.asin(clamp(m[2], -1, 1)));
@@ -1011,7 +1011,7 @@ export function getAngleDelta(lastPoint: Point, currentPoint: Point, center: Poi
  * @returns The rotation quaternion
  */
 export function rollPitchBearingToQuat(roll: number, pitch: number, bearing: number): quat {
-    const rotation: quat = new Float64Array(4) as any;
+    const rotation = new Float64Array(4);
     quat.fromEuler(rotation, roll, pitch - 90.0, bearing);
     return rotation;
 }

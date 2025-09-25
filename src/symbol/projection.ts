@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
 
-import {mat2, mat4, vec2, vec4} from 'gl-matrix';
+import {mat2, mat4, vec2, vec4, type Vec4Tuple} from 'gl-matrix';
 import * as symbolSize from './symbol_size';
 import {addDynamicAttributes} from '../data/bucket/symbol_bucket';
 
@@ -172,12 +172,12 @@ export function getTileSkewVectors(transform: IReadonlyTransform): {vecEast: vec
  * Uses a fast path if `getElevation` is undefined.
  */
 export function projectWithMatrix(x: number, y: number, matrix: mat4, getElevation?: (x: number, y: number) => number): PointProjection {
-    let pos;
+    let pos: Vec4Tuple;
     if (getElevation) { // slow because of handle z-index
-        pos = [x, y, getElevation(x, y), 1] as vec4;
+        pos = [x, y, getElevation(x, y), 1];
         vec4.transformMat4(pos, pos, matrix);
     } else { // fast because of ignore z-index
-        pos = [x, y, 0, 1] as vec4;
+        pos = [x, y, 0, 1];
         xyTransformMat4(pos, pos, matrix);
     }
     const w = pos[3];
@@ -679,7 +679,7 @@ export function projectTileCoordinatesToLabelPlane(x: number, y: number, project
 
 function projectFromLabelPlaneToClipSpace(x: number, y: number, projectionContext: SymbolProjectionContext, pitchedLabelPlaneMatrixInverse: mat4): {x: number; y: number} {
     if (projectionContext.pitchWithMap) {
-        const pos = [x, y, 0, 1] as vec4;
+        const pos: Vec4Tuple = [x, y, 0, 1];
         vec4.transformMat4(pos, pos, pitchedLabelPlaneMatrixInverse);
         return projectionContext.transform.projectTileCoordinates(pos[0] / pos[3], pos[1] / pos[3], projectionContext.unwrappedTileID, projectionContext.getElevation).point;
     } else {
