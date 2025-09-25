@@ -513,7 +513,7 @@ export class GeolocateControl extends Evented implements IControl {
             // see https://github.com/mapbox/mapbox-gl-js/issues/8214
             // and https://w3c.github.io/geolocation-api/#example-5-forcing-the-user-agent-to-return-a-fresh-cached-position
             return;
-        } else if (this.options.trackUserLocation) {
+        } else {
             this._setErrorState();
         }
 
