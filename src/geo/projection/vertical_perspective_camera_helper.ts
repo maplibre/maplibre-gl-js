@@ -7,7 +7,7 @@ import {type mat4, vec3} from 'gl-matrix';
 import {normalizeCenter} from '../transform_helper';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
-import type {IReadonlyTransform, ITransform} from '../transform_interface';
+import type {ITransform} from '../transform_interface';
 import type {CameraForBoundsOptions} from '../../ui/camera';
 import type {LngLatBounds} from '../lng_lat_bounds';
 import type {PaddingOptions} from '../edge_insets';
@@ -19,10 +19,16 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
 
     get useGlobeControls(): boolean { return true; }
 
-    handlePanInertia(pan: Point, transform: IReadonlyTransform): {
+    handlePanInertia(around: Point, pan: Point, transform: ITransform): {
         easingCenter: LngLat;
         easingOffset: Point;
     } {
+        const cloneTr = transform.clone();
+        const location  = cloneTr.screenPointToLocation(around);
+        const finalPoint = around.add(pan);
+        cloneTr.setLocationAtPoint(location, finalPoint, false);
+        const easingCenter = cloneTr.center;
+
         const panCenter = computeGlobePanCenter(pan, transform);
         if (Math.abs(panCenter.lng - transform.center.lng) > 180) {
             // If easeTo target would be over 180° distant, the animation would move
@@ -31,7 +37,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
             panCenter.lng = transform.center.lng + 179.5 * Math.sign(panCenter.lng - transform.center.lng);
         }
         return {
-            easingCenter: panCenter,
+            easingCenter,
             easingOffset: new Point(0, 0),
         };
     }
@@ -123,19 +129,16 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         tr.setZoom(oldZoom + getZoomAdjustment(oldCenterLat, tr.center.lat));
     }
 
-    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, _preZoomAroundLoc: LngLat): void {
+    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, _preZoomAroundLoc: LngLat, fixedBearing): void {
         if (!deltas.panDelta) {
             return;
         }
 
-        // These are actually very similar to mercator controls, and should converge to them at high zooms.
-        // We avoid using the "grab a place and move it around" approach from mercator here,
-        // since it is not a very pleasant way to pan a globe.
-        const oldLat = tr.center.lat;
-        const oldZoom = tr.zoom;
-        tr.setCenter(computeGlobePanCenter(deltas.panDelta, tr).wrap());
-        // Setting the center might adjust zoom to keep globe size constant, we need to avoid adding this adjustment a second time
-        tr.setZoom(oldZoom + getZoomAdjustment(oldLat, tr.center.lat));
+        if (!tr.isPointOnMapSurface(deltas.around)) {
+            return;
+        }
+        console.log(fixedBearing);
+        tr.setLocationAtPoint(_preZoomAroundLoc, deltas.around, fixedBearing);
     }
 
     cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
