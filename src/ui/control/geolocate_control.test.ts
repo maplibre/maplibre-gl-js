@@ -138,7 +138,7 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('outofmaxbounds event in active lock state', async () => {
-        const geolocate = new GeolocateControl(undefined);
+        const geolocate = new GeolocateControl({trackUserLocation: false});
         map.addControl(geolocate);
         await sleep(0);
         map.setMaxBounds([[0, 0], [10, 10]]);
@@ -172,6 +172,25 @@ describe('GeolocateControl with no options', () => {
         geolocation.send({latitude: 10, longitude: 20, accuracy: 3, timestamp: 4});
         const position = await promise;
         expect(geolocate._watchState).toBe('BACKGROUND_ERROR');
+        expect(position.coords.latitude).toBe(10);
+        expect(position.coords.longitude).toBe(20);
+        expect(position.coords.accuracy).toBe(3);
+        expect(position.timestamp).toBe(4);
+    });
+    
+    test('outofmaxbounds event in normal mode', async () => {
+        const geolocate = new GeolocateControl({trackUserLocation: false});
+        map.addControl(geolocate);
+        await sleep(0);
+        map.setMaxBounds([[0, 0], [10, 10]]);
+
+        const click = new window.Event('click');
+
+        const promise = geolocate.once('outofmaxbounds');
+        geolocate._geolocateButton.dispatchEvent(click);
+        geolocation.send({latitude: 10, longitude: 20, accuracy: 3, timestamp: 4});
+        const position = await promise;
+        expect(geolocate._watchState).toBeUndefined();
         expect(position.coords.latitude).toBe(10);
         expect(position.coords.longitude).toBe(20);
         expect(position.coords.accuracy).toBe(3);
