@@ -7,7 +7,7 @@ import type {PluginState} from '../source/rtl_text_plugin_status';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {OverscaledTileID} from '../source/tile_id';
 import type {GetResourceResponse, RequestParameters} from './ajax';
-import {type DashEntry} from '../render/line_atlas';
+import type {DashEntry} from '../render/line_atlas';
 
 /**
  * The parameters needed in order to get information about the cluster

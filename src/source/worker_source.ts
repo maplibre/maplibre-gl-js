@@ -60,7 +60,7 @@ export type WorkerDEMTileParameters = TileParameters & {
 export type WorkerTileResult = ExpiryData & {
     buckets: Array<Bucket>;
     imageAtlas: ImageAtlas;
-    dashPositions: {[_: string]: DashEntry};
+    dashPositions: Record<string, DashEntry>;
     glyphAtlasImage: AlphaImage;
     featureIndex: FeatureIndex;
     collisionBoxArray: CollisionBoxArray;

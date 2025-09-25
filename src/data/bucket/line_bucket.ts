@@ -147,7 +147,7 @@ export class LineBucket implements Bucket {
     }
 
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
-        this.hasPattern = hasPattern('line', this.layers, options) || hasLineDasharray(this.layers);
+        this.hasPattern = hasPattern('line', this.layers, options) || this.hasLineDasharray(this.layers);
         const lineSortKey = this.layers[0].layout.get('line-sort-key');
         const sortFeaturesByKey = !lineSortKey.isConstant();
         const bucketFeatures: BucketFeature[] = [];
@@ -189,8 +189,8 @@ export class LineBucket implements Bucket {
             if (this.hasPattern) {
                 if (hasPattern('line', this.layers, options)) {
                     addPatternDependencies('line', this.layers, bucketFeature, {zoom: this.zoom}, options);
-                } else if (hasLineDasharray(this.layers)) {
-                    addLineDashDependencies(this.layers, bucketFeature, this.zoom, options);
+                } else if (this.hasLineDasharray(this.layers)) {
+                    this.addLineDashDependencies(this.layers, bucketFeature, this.zoom, options);
                 }
 
                 // pattern features are added only once the pattern is loaded into the image atlas
@@ -603,50 +603,50 @@ export class LineBucket implements Bucket {
         this.distance += prev.dist(next);
         this.updateScaledDistance();
     }
+
+    private hasLineDasharray(layers: Array<LineStyleLayer>): boolean {
+        for (const layer of layers) {
+            const dasharrayProperty = layer.paint.get('line-dasharray');
+            if (dasharrayProperty && !dasharrayProperty.isConstant()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private addLineDashDependencies(layers: Array<LineStyleLayer>, bucketFeature: BucketFeature, zoom: number, options: PopulateParameters) {
+        const dashes = options.dashDependencies;
+
+        for (const layer of layers) {
+            const dasharrayProperty = layer.paint.get('line-dasharray');
+            if (dasharrayProperty && dasharrayProperty.value.kind !== 'constant') {
+                const round = layer.layout.get('line-cap') === 'round';
+
+                const min = {
+                    dasharray: dasharrayProperty.value.evaluate({zoom: zoom - 1}, bucketFeature, {}),
+                    round
+                };
+                const mid = {
+                    dasharray: dasharrayProperty.value.evaluate({zoom}, bucketFeature, {}),
+                    round
+                };
+                const max = {
+                    dasharray: dasharrayProperty.value.evaluate({zoom: zoom + 1}, bucketFeature, {}),
+                    round
+                };
+
+                const minKey = `${min.dasharray.join(',')},${min.round}`;
+                const midKey = `${mid.dasharray.join(',')},${mid.round}`;
+                const maxKey = `${max.dasharray.join(',')},${max.round}`;
+
+                dashes[minKey] = min;
+                dashes[midKey] = mid;
+                dashes[maxKey] = max;
+
+                bucketFeature.dashes[layer.id] = {min: minKey, mid: midKey, max: maxKey};
+            }
+        }
+    }
 }
 
 register('LineBucket', LineBucket, {omit: ['layers', 'patternFeatures']});
-
-function hasLineDasharray(layers: Array<LineStyleLayer>): boolean {
-    for (const layer of layers) {
-        const dasharrayProperty = (layer.paint as PossiblyEvaluated<any, any>).get('line-dasharray');
-        if (dasharrayProperty && !dasharrayProperty.isConstant()) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function addLineDashDependencies(layers: Array<LineStyleLayer>, bucketFeature: BucketFeature, zoom: number, options: PopulateParameters) {
-    const dashes = options.dashDependencies;
-
-    for (const layer of layers) {
-        const dasharrayProperty = (layer.paint as PossiblyEvaluated<any, any>).get('line-dasharray');
-        if (dasharrayProperty && dasharrayProperty.value.kind !== 'constant') {
-            const round = layer.layout.get('line-cap') === 'round';
-
-            const min = {
-                dasharray: dasharrayProperty.value.evaluate({zoom: zoom - 1}, bucketFeature, {}),
-                round
-            };
-            const mid = {
-                dasharray: dasharrayProperty.value.evaluate({zoom}, bucketFeature, {}),
-                round
-            };
-            const max = {
-                dasharray: dasharrayProperty.value.evaluate({zoom: zoom + 1}, bucketFeature, {}),
-                round
-            };
-
-            const minKey = `${min.dasharray.join(',')},${min.round}`;
-            const midKey = `${mid.dasharray.join(',')},${mid.round}`;
-            const maxKey = `${max.dasharray.join(',')},${max.round}`;
-
-            dashes[minKey] = min;
-            dashes[midKey] = mid;
-            dashes[maxKey] = max;
-
-            bucketFeature.dashes[layer.id] = {min: minKey, mid: midKey, max: maxKey};
-        }
-    }
-}
