@@ -352,6 +352,14 @@ export class GeolocateControl extends Evented implements IControl {
                 // turn marker grey
                 break;
             case 'ACTIVE_ERROR':
+            case 'BACKGROUND_ERROR':
+                // already in error state
+                break;
+            case 'OFF':
+            case undefined:
+                // when trackUserLocation is false, watchState is undefined
+                // when trackUserLocation is true but not activated, watchState is 'OFF'
+                // in both cases, no error state transition is needed
                 break;
             default:
                 throw new Error(`Unexpected watchState ${this._watchState}`);
@@ -370,9 +378,7 @@ export class GeolocateControl extends Evented implements IControl {
         }
 
         if (this._isOutOfMapMaxBounds(position)) {
-            if (this._watchState && this._watchState !== 'OFF') {
-                this._setErrorState();
-            }
+            this._setErrorState();
 
             this.fire(new Event('outofmaxbounds', position));
             this._updateMarker();
