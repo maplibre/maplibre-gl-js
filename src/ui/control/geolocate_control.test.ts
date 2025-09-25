@@ -138,7 +138,7 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('outofmaxbounds event in active lock state', async () => {
-        const geolocate = new GeolocateControl({trackUserLocation: false});
+        const geolocate = new GeolocateControl(undefined);
         map.addControl(geolocate);
         await sleep(0);
         map.setMaxBounds([[0, 0], [10, 10]]);
@@ -178,7 +178,7 @@ describe('GeolocateControl with no options', () => {
         expect(position.timestamp).toBe(4);
     });
     
-    test('outofmaxbounds event in normal mode', async () => {
+    test('outofmaxbounds event when trackUserLocation = false', async () => {
         const geolocate = new GeolocateControl({trackUserLocation: false});
         map.addControl(geolocate);
         await sleep(0);
