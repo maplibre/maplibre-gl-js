@@ -370,7 +370,9 @@ export class GeolocateControl extends Evented implements IControl {
         }
 
         if (this._isOutOfMapMaxBounds(position)) {
-            this._setErrorState();
+            if (this._watchState && this._watchState !== 'OFF') {
+                this._setErrorState();
+            }
 
             this.fire(new Event('outofmaxbounds', position));
             this._updateMarker();
