@@ -87,7 +87,7 @@ export type BucketFeature = {
  */
 export interface Bucket {
     layerIds: Array<string>;
-    hasPattern: boolean;
+    hasDependencies: boolean;
     readonly layers: Array<any>;
     readonly stateDependentLayers: Array<any>;
     readonly stateDependentLayerIds: Array<string>;

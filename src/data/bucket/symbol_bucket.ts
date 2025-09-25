@@ -323,7 +323,7 @@ export class SymbolBucket implements Bucket {
     iconsNeedLinear: boolean;
     bucketInstanceId: number;
     justReloaded: boolean;
-    hasPattern: boolean;
+    hasDependencies: boolean;
 
     textSizeData: SizeData;
     iconSizeData: SizeData;
@@ -368,7 +368,7 @@ export class SymbolBucket implements Bucket {
         this.index = options.index;
         this.pixelRatio = options.pixelRatio;
         this.sourceLayerIndex = options.sourceLayerIndex;
-        this.hasPattern = false;
+        this.hasDependencies = false;
         this.hasRTLText = false;
         this.sortKeyRanges = [];
 

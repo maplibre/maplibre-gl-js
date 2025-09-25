@@ -117,7 +117,7 @@ export class LineBucket implements Bucket {
     indexArray: TriangleIndexArray;
     indexBuffer: IndexBuffer;
 
-    hasPattern: boolean;
+    hasDependencies: boolean;
     programConfigurations: ProgramConfigurationSet<LineStyleLayer>;
     segments: SegmentVector;
     uploaded: boolean;
@@ -128,7 +128,7 @@ export class LineBucket implements Bucket {
         this.layers = options.layers;
         this.layerIds = this.layers.map(layer => layer.id);
         this.index = options.index;
-        this.hasPattern = false;
+        this.hasDependencies = false;
         this.patternFeatures = [];
         this.lineClipsArray = [];
         this.gradients = {};
@@ -147,7 +147,7 @@ export class LineBucket implements Bucket {
     }
 
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
-        this.hasPattern = hasPattern('line', this.layers, options) || this.hasLineDasharray(this.layers);
+        this.hasDependencies = hasPattern('line', this.layers, options) || this.hasLineDasharray(this.layers);
         const lineSortKey = this.layers[0].layout.get('line-sort-key');
         const sortFeaturesByKey = !lineSortKey.isConstant();
         const bucketFeatures: BucketFeature[] = [];
@@ -186,7 +186,7 @@ export class LineBucket implements Bucket {
         for (const bucketFeature of bucketFeatures) {
             const {geometry, index, sourceLayerIndex} = bucketFeature;
 
-            if (this.hasPattern) {
+            if (this.hasDependencies) {
                 if (hasPattern('line', this.layers, options)) {
                     addPatternDependencies('line', this.layers, bucketFeature, {zoom: this.zoom}, options);
                 } else if (this.hasLineDasharray(this.layers)) {
