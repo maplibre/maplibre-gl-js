@@ -612,8 +612,8 @@ export class ProgramConfiguration {
                 }
             } else if (binder instanceof CrossFadedBinder) {
                 const attributes = binder.getVertexAttributes();
-                for (let i = 0; i < attributes.length; i++) {
-                    result.push(attributes[i].name);
+                for (const attribute of attributes) {
+                    result.push(attribute.name);
                 }
             }
         }
