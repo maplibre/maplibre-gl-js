@@ -946,7 +946,10 @@ async function closePageAndFinish(page: Page, reportCoverage: boolean) {
     const coverageReport = new CoverageReport({
         name: 'MapLibre Coverage Report',
         outputDir: './coverage/render',
-        reports: [['v8'], ['json']]
+        reports: [['v8'], ['json']],
+        sourcePath: (relativePath)=> {
+            return path.resolve(relativePath);
+        }
     });
     coverageReport.cleanCache();
 

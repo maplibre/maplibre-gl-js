@@ -27,12 +27,11 @@ import type {OverscaledTileID} from './tile_id';
 import type {Framebuffer} from '../gl/framebuffer';
 import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {LayerFeatureStates} from './source_state';
-import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type Point from '@mapbox/point-geometry';
 import type {mat4} from 'gl-matrix';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 import type {ExpiryData} from '../util/ajax';
-import type {QueryRenderedFeaturesOptionsStrict} from './query_features';
+import type {QueryRenderedFeaturesOptionsStrict, QuerySourceFeatureOptionsStrict} from './query_features';
 import type {FeatureIndex, QueryResults} from '../data/feature_index';
 /**
  * The tile's state, can be:
@@ -307,11 +306,7 @@ export class Tile {
         }, layers, serializedLayers, sourceFeatureState);
     }
 
-    querySourceFeatures(result: Array<GeoJSONFeature>, params?: {
-        sourceLayer?: string;
-        filter?: FilterSpecification;
-        validate?: boolean;
-    }) {
+    querySourceFeatures(result: Array<GeoJSONFeature>, params?: QuerySourceFeatureOptionsStrict) {
         const featureIndex = this.latestFeatureIndex;
         if (!featureIndex || !featureIndex.rawTileData) return;
 
@@ -322,7 +317,7 @@ export class Tile {
 
         if (!layer) return;
 
-        const filter = featureFilter(params && params.filter);
+        const filter = featureFilter(params?.filter, params?.globalState);
         const {z, x, y} = this.tileID.canonical;
         const coord = {z, x, y};
 

@@ -311,7 +311,6 @@ export class SymbolBucket implements Bucket {
 
     collisionBoxArray: CollisionBoxArray;
     zoom: number;
-    globalState: Record<string, any>;
     overscaling: number;
     layers: Array<SymbolStyleLayer>;
     layerIds: Array<string>;
@@ -363,7 +362,6 @@ export class SymbolBucket implements Bucket {
     constructor(options: BucketParameters<SymbolStyleLayer>) {
         this.collisionBoxArray = options.collisionBoxArray;
         this.zoom = options.zoom;
-        this.globalState = options.globalState;
         this.overscaling = options.overscaling;
         this.layers = options.layers;
         this.layerIds = this.layers.map(layer => layer.id);
@@ -459,7 +457,7 @@ export class SymbolBucket implements Bucket {
         const icons = options.iconDependencies;
         const stacks = options.glyphDependencies;
         const availableImages = options.availableImages;
-        const globalProperties = new EvaluationParameters(this.zoom, {globalState: this.globalState});
+        const globalProperties = new EvaluationParameters(this.zoom);
 
         for (const {feature, id, index, sourceLayerIndex} of features) {
 
@@ -562,12 +560,10 @@ export class SymbolBucket implements Bucket {
     update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}) {
         if (!this.stateDependentLayers.length) return;
         this.text.programConfigurations.updatePaintArrays(states, vtLayer, this.layers, {
-            imagePositions,
-            globalState: this.globalState
+            imagePositions
         });
         this.icon.programConfigurations.updatePaintArrays(states, vtLayer, this.layers, {
-            imagePositions,
-            globalState: this.globalState
+            imagePositions
         });
     }
 
@@ -678,7 +674,7 @@ export class SymbolBucket implements Bucket {
             this.glyphOffsetArray.emplaceBack(glyphOffset[0]);
 
             if (i === quads.length - 1 || sectionIndex !== quads[i + 1].sectionIndex) {
-                arrays.programConfigurations.populatePaintArrays(layoutVertexArray.length, feature, feature.index, {imagePositions: {}, canonical, formattedSection: sections && sections[sectionIndex], globalState: this.globalState});
+                arrays.programConfigurations.populatePaintArrays(layoutVertexArray.length, feature, feature.index, {imagePositions: {}, canonical, formattedSection: sections && sections[sectionIndex]});
             }
         }
 
