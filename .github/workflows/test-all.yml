@@ -200,7 +200,7 @@ jobs:
           node-version-file: '.nvmrc'
 
       - name: Download coverage reports
-        uses: actions/download-artifact@abefc31eafcfbdf6c5336127c1346fdae79ff41c
+        uses: actions/download-artifact@4a24838f3d5601fd639834081e118c2995d51e1c
         with:
           pattern: coverage-reports-*
           merge-multiple: true

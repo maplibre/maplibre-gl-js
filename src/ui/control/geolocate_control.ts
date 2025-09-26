@@ -352,6 +352,14 @@ export class GeolocateControl extends Evented implements IControl {
                 // turn marker grey
                 break;
             case 'ACTIVE_ERROR':
+            case 'BACKGROUND_ERROR':
+                // already in error state
+                break;
+            case 'OFF':
+            case undefined:
+                // when trackUserLocation is false, watchState is undefined
+                // when trackUserLocation is true but not activated, watchState is 'OFF'
+                // in both cases, no error state transition is needed
                 break;
             default:
                 throw new Error(`Unexpected watchState ${this._watchState}`);
@@ -505,7 +513,7 @@ export class GeolocateControl extends Evented implements IControl {
             // see https://github.com/mapbox/mapbox-gl-js/issues/8214
             // and https://w3c.github.io/geolocation-api/#example-5-forcing-the-user-agent-to-return-a-fresh-cached-position
             return;
-        } else if (this.options.trackUserLocation) {
+        } else {
             this._setErrorState();
         }
 
