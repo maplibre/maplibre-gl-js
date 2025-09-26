@@ -106,7 +106,8 @@ export type MapOptions = {
     /**
      * If set, an {@link AttributionControl} will be added to the map with the provided options.
      * To disable the attribution control, pass `false`.
-     * Note: showing the logo of MapLibre is not required for using MapLibre.
+     * !!! note
+     *     Showing the logo of MapLibre is not required for using MapLibre.
      * @defaultValue compact: true, customAttribution: "MapLibre ...".
      */
     attributionControl?: false | AttributionControlOptions;
@@ -206,7 +207,9 @@ export type MapOptions = {
      */
     trackResize?: boolean;
     /**
-     * The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` Note: MapLibre GL JS uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
+     * The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` 
+     * !!! note
+     *     MapLibre GL JS uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
      * @defaultValue [0, 0]
      */
     center?: LngLatLike;
@@ -2669,10 +2672,11 @@ export class Map extends Camera {
      * and [maximum zoom level](https://maplibre.org/maplibre-style-spec/layers/#maxzoom))
      * at which the layer will be rendered.
      *
-     * Note: For style layers using vector sources, style layers cannot be rendered at zoom levels lower than the
-     * minimum zoom level of the _source layer_ because the data does not exist at those zoom levels. If the minimum
-     * zoom level of the source layer is higher than the minimum zoom level defined in the style layer, the style
-     * layer will not be rendered at all zoom levels in the zoom range.
+     * !!! note
+     *     For style layers using vector sources, style layers cannot be rendered at zoom levels lower than the
+     *     minimum zoom level of the _source layer_ because the data does not exist at those zoom levels. If the minimum
+     *     zoom level of the source layer is higher than the minimum zoom level defined in the style layer, the style
+     *     layer will not be rendered at all zoom levels in the zoom range.
      *
      * @param layerId - The ID of the layer to which the zoom extent will be applied.
      * @param minzoom - The minimum zoom to set (0-24).
@@ -2955,7 +2959,8 @@ export class Map extends Camera {
      * - For vector or GeoJSON sources, using the [`promoteId`](https://maplibre.org/maplibre-style-spec/sources/#promoteid) option at the time the source is defined.
      * - For GeoJSON sources, using the [`generateId`](https://maplibre.org/maplibre-style-spec/sources/#generateid) option to auto-assign an `id` based on the feature's index in the source data. If you change feature data using `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
      *
-     * _Note: You can use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state) to access the values in a feature's state object for the purposes of styling._
+     * !!! note
+     *     You can use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state) to access the values in a feature's state object for the purposes of styling.
      *
      * @param feature - Feature identifier. Feature objects returned from
      * {@link Map.queryRenderedFeatures} or event handlers can be used as feature identifiers.
@@ -3040,7 +3045,8 @@ export class Map extends Camera {
      * A feature's `state` is a set of user-defined key-value pairs that are assigned to a feature at runtime.
      * Features are identified by their `feature.id` attribute, which can be any number or string.
      *
-     * _Note: To access the values in a feature's state object for the purposes of styling the feature, use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state)._
+     * !!! note
+     *     To access the values in a feature's state object for the purposes of styling the feature, use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state).
      *
      * @param feature - Feature identifier. Feature objects returned from
      * {@link Map.queryRenderedFeatures} or event handlers can be used as feature identifiers.
