@@ -34,7 +34,6 @@ import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 import {subdivideVertexLine} from '../../render/subdivision';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import {type PossiblyEvaluated} from '../../style/properties';
 import {type DashEntry} from '../../render/line_atlas';
 
 // NOTE ON EXTRUDE SCALE:
@@ -255,7 +254,7 @@ export class LineBucket implements Bucket {
         }
     }
 
-    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, dashPositions: {[_: string]: DashEntry}, subdivisionGranularity: SubdivisionGranularitySetting) {
+    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, dashPositions: Record<string, DashEntry>, subdivisionGranularity: SubdivisionGranularitySetting) {
         const layout = this.layers[0].layout;
         const join = layout.get('line-join').evaluate(feature, {});
         const cap = layout.get('line-cap');
@@ -615,36 +614,37 @@ export class LineBucket implements Bucket {
     }
 
     private addLineDashDependencies(layers: Array<LineStyleLayer>, bucketFeature: BucketFeature, zoom: number, options: PopulateParameters) {
-        const dashes = options.dashDependencies;
-
         for (const layer of layers) {
             const dasharrayProperty = layer.paint.get('line-dasharray');
-            if (dasharrayProperty && dasharrayProperty.value.kind !== 'constant') {
-                const round = layer.layout.get('line-cap') === 'round';
 
-                const min = {
-                    dasharray: dasharrayProperty.value.evaluate({zoom: zoom - 1}, bucketFeature, {}),
-                    round
-                };
-                const mid = {
-                    dasharray: dasharrayProperty.value.evaluate({zoom}, bucketFeature, {}),
-                    round
-                };
-                const max = {
-                    dasharray: dasharrayProperty.value.evaluate({zoom: zoom + 1}, bucketFeature, {}),
-                    round
-                };
-
-                const minKey = `${min.dasharray.join(',')},${min.round}`;
-                const midKey = `${mid.dasharray.join(',')},${mid.round}`;
-                const maxKey = `${max.dasharray.join(',')},${max.round}`;
-
-                dashes[minKey] = min;
-                dashes[midKey] = mid;
-                dashes[maxKey] = max;
-
-                bucketFeature.dashes[layer.id] = {min: minKey, mid: midKey, max: maxKey};
+            if (!dasharrayProperty || dasharrayProperty.value.kind === 'constant') {
+                continue;
             }
+
+            const round = layer.layout.get('line-cap') === 'round';
+
+            const min = {
+                dasharray: dasharrayProperty.value.evaluate({zoom: zoom - 1}, bucketFeature, {}),
+                round
+            };
+            const mid = {
+                dasharray: dasharrayProperty.value.evaluate({zoom}, bucketFeature, {}),
+                round
+            };
+            const max = {
+                dasharray: dasharrayProperty.value.evaluate({zoom: zoom + 1}, bucketFeature, {}),
+                round
+            };
+
+            const minKey = `${min.dasharray.join(',')},${min.round}`;
+            const midKey = `${mid.dasharray.join(',')},${mid.round}`;
+            const maxKey = `${max.dasharray.join(',')},${max.round}`;
+
+            options.dashDependencies[minKey] = min;
+            options.dashDependencies[midKey] = mid;
+            options.dashDependencies[maxKey] = max;
+
+            bucketFeature.dashes[layer.id] = {min: minKey, mid: midKey, max: maxKey};
         }
     }
 }
