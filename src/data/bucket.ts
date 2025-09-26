@@ -10,6 +10,7 @@ import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
 import type Point from '@mapbox/point-geometry';
 import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 import type {DashEntry} from '../render/line_atlas';
+import type {Feature as StyleFeature} from '@maplibre/maplibre-gl-style-spec';
 
 export type BucketParameters<Layer extends TypedStyleLayer> = {
     index: number;
@@ -27,7 +28,7 @@ export type PopulateParameters = {
     iconDependencies: {};
     patternDependencies: {};
     glyphDependencies: {};
-    dashDependencies: {[key: string]: {round: boolean; dasharray: Array<number>}};
+    dashDependencies: Record<string, {round: boolean; dasharray: Array<number>}>;
     availableImages: Array<string>;
     subdivisionGranularity: SubdivisionGranularitySetting;
 };
@@ -53,13 +54,7 @@ export type BucketFeature = {
             'max': string;
         };
     };
-    readonly dashes?: {
-        [_: string]: {
-            'min': string;
-            'mid': string;
-            'max': string;
-        };
-    };
+    readonly dashes?: NonNullable<StyleFeature['dashes']>;
     sortKey?: number;
 };
 
