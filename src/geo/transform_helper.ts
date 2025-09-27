@@ -12,6 +12,7 @@ import type {PaddingOptions} from './edge_insets';
 import type {IReadonlyTransform, ITransformGetters} from './transform_interface';
 import type {OverscaledTileID} from '../source/tile_id';
 import {Bounds} from './bounds';
+
 /**
  * If a path crossing the antimeridian would be shorter, extend the final coordinate so that
  * interpolating between the two endpoints will cross it.
@@ -113,10 +114,10 @@ export class TransformHelper implements ITransformGetters {
     _unmodified: boolean;
 
     _constraining: boolean;
-    _rotationMatrix: mat2;
+    _rotationMatrix: mat2<Float32Array>;
     _pixelsToGLUnits: [number, number];
-    _pixelsToClipSpaceMatrix: mat4;
-    _clipSpaceToPixelsMatrix: mat4;
+    _pixelsToClipSpaceMatrix: mat4<Float64Array>;
+    _clipSpaceToPixelsMatrix: mat4<Float64Array>;
     _cameraToCenterDistance: number;
 
     _nearZ: number;
@@ -185,8 +186,8 @@ export class TransformHelper implements ITransformGetters {
         this._calcMatrices();
     }
 
-    get pixelsToClipSpaceMatrix(): mat4 { return this._pixelsToClipSpaceMatrix; }
-    get clipSpaceToPixelsMatrix(): mat4 { return this._clipSpaceToPixelsMatrix; }
+    get pixelsToClipSpaceMatrix(): mat4<Float64Array> { return this._pixelsToClipSpaceMatrix; }
+    get clipSpaceToPixelsMatrix(): mat4<Float64Array> { return this._clipSpaceToPixelsMatrix; }
 
     get minElevationForCurrentTile(): number { return this._minElevationForCurrentTile; }
     setMinElevationForCurrentTile(ele: number) {
@@ -286,7 +287,7 @@ export class TransformHelper implements ITransformGetters {
         mat2.rotate(this._rotationMatrix, this._rotationMatrix, -this._bearingInRadians);
     }
 
-    get rotationMatrix(): mat2 { return this._rotationMatrix; }
+    get rotationMatrix(): mat2<Float32Array> { return this._rotationMatrix; }
 
     get pitchInRadians(): number {
         return this._pitchInRadians;
@@ -512,12 +513,12 @@ export class TransformHelper implements ITransformGetters {
         if (this._width && this._height) {
             this._pixelsToGLUnits = [2 / this._width, -2 / this._height];
 
-            let m = mat4.identity(new Float64Array(16) as any);
+            let m = mat4.identity(new Float64Array(16));
             mat4.scale(m, m, [this._width / 2, -this._height / 2, 1]);
             mat4.translate(m, m, [1, -1, 0]);
             this._clipSpaceToPixelsMatrix = m;
 
-            m = mat4.identity(new Float64Array(16) as any);
+            m = mat4.identity(new Float64Array(16));
             mat4.scale(m, m, [1, -1, 1]);
             mat4.translate(m, m, [-1, -1, 0]);
             mat4.scale(m, m, [2 / this._width, 2 / this._height, 1]);

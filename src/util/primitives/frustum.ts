@@ -1,4 +1,4 @@
-import {type mat4, vec3, vec4} from 'gl-matrix';
+import {type mat4, vec3, type Vec3Tuple, vec4, type Vec4Tuple} from 'gl-matrix';
 import {Aabb} from './aabb';
 import {pointPlaneSignedDistance, rayPlaneIntersection} from '../util';
 
@@ -47,15 +47,15 @@ export class Frustum {
         }
 
         const frustumPlanes = frustumPlanePointIndices.map((p: number[]) => {
-            const a = vec3.sub([] as any, frustumCoords[p[0]] as vec3, frustumCoords[p[1]] as vec3);
-            const b = vec3.sub([] as any, frustumCoords[p[2]] as vec3, frustumCoords[p[1]] as vec3);
-            const n = vec3.normalize([] as any, vec3.cross([] as any, a, b)) as any;
-            const d = -vec3.dot(n, frustumCoords[p[1]] as vec3);
+            const a = vec3.sub([], frustumCoords[p[0]], frustumCoords[p[1]]);
+            const b = vec3.sub([], frustumCoords[p[2]], frustumCoords[p[1]]);
+            const n: number[] = vec3.normalize([], vec3.cross([], a, b));
+            const d = -vec3.dot(n, frustumCoords[p[1]]);
             return n.concat(d);
         });
 
-        const min: vec3 = [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY];
-        const max: vec3 = [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY];
+        const min: Vec3Tuple = [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY];
+        const max: Vec3Tuple = [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY];
 
         for (const p of frustumCoords) {
             for (let i = 0; i < 3; i++) {
@@ -68,10 +68,10 @@ export class Frustum {
     }
 }
 
-function unprojectClipSpacePoint(point: vec4 | number[], invProj: mat4, worldSize: number, scale: number): vec4 {
-    const v = vec4.transformMat4([] as any, point as any, invProj) as any;
+function unprojectClipSpacePoint(point: vec4 | number[], invProj: mat4, worldSize: number, scale: number): Vec4Tuple {
+    const v = vec4.transformMat4([], point, invProj);
     const s = 1.0 / v[3] / worldSize * scale;
-    return vec4.mul(v as any, v as any, [s, s, 1.0 / v[3], s] as vec4);
+    return vec4.mul(v, v, [s, s, 1.0 / v[3], s]);
 }
 
 /**
@@ -95,7 +95,7 @@ function adjustFarPlaneByHorizonPlane(frustumCoords: vec4[], nearPlanePointsIndi
     const cornerRayLengths: number[] = [];
     const cornerRayNormalizedDirections: vec3[] = [];
     for (let i = 0; i < 4; i++) {
-        const dir = vec3.sub([] as any, frustumCoords[i + farPlanePointsOffset] as vec3, frustumCoords[i + nearPlanePointsOffset] as vec3);
+        const dir = vec3.sub([] , frustumCoords[i + farPlanePointsOffset], frustumCoords[i + nearPlanePointsOffset]);
         const len = vec3.length(dir);
         vec3.scale(dir, dir, 1.0 / len); // normalize
         cornerRayLengths.push(len);
@@ -103,7 +103,7 @@ function adjustFarPlaneByHorizonPlane(frustumCoords: vec4[], nearPlanePointsIndi
     }
 
     for (let i = 0; i < 4; i++) {
-        const dist = rayPlaneIntersection(frustumCoords[i + nearPlanePointsOffset] as vec3, cornerRayNormalizedDirections[i], horizonPlane);
+        const dist = rayPlaneIntersection(frustumCoords[i + nearPlanePointsOffset], cornerRayNormalizedDirections[i], horizonPlane);
         if (dist !== null && dist >= 0) {
             maxDist = Math.max(maxDist, dist);
         } else {
@@ -120,7 +120,7 @@ function adjustFarPlaneByHorizonPlane(frustumCoords: vec4[], nearPlanePointsIndi
     // that is most distant from the near plane.
     const idealFarPlaneDistanceFromNearPlane = getIdealNearFarPlaneDistance(horizonPlane, nearPlaneNormalized);
     if (idealFarPlaneDistanceFromNearPlane !== null) {
-        const idealCornerRayLength = idealFarPlaneDistanceFromNearPlane / vec3.dot(cornerRayNormalizedDirections[0], nearPlaneNormalized as vec3); // dot(near plane, ray dir) is the same for all 4 corners
+        const idealCornerRayLength = idealFarPlaneDistanceFromNearPlane / vec3.dot(cornerRayNormalizedDirections[0], nearPlaneNormalized); // dot(near plane, ray dir) is the same for all 4 corners
         maxDist = Math.min(maxDist, idealCornerRayLength);
     }
 
@@ -142,11 +142,11 @@ function adjustFarPlaneByHorizonPlane(frustumCoords: vec4[], nearPlanePointsIndi
  * @param nearPlanePointsIndices - Which indices in the `frustumCoords` form the near plane.
  */
 function getNormalizedNearPlane(frustumCoords: vec4[], nearPlanePointsIndices: number[]): vec4 {
-    const nearPlaneA = vec3.sub([] as any, frustumCoords[nearPlanePointsIndices[0]] as vec3, frustumCoords[nearPlanePointsIndices[1]] as vec3);
-    const nearPlaneB = vec3.sub([] as any, frustumCoords[nearPlanePointsIndices[2]] as vec3, frustumCoords[nearPlanePointsIndices[1]] as vec3);
+    const nearPlaneA = vec3.sub([], frustumCoords[nearPlanePointsIndices[0]], frustumCoords[nearPlanePointsIndices[1]]);
+    const nearPlaneB = vec3.sub([], frustumCoords[nearPlanePointsIndices[2]], frustumCoords[nearPlanePointsIndices[1]]);
     const nearPlaneNormalized = [0, 0, 0, 0] as vec4;
-    vec3.normalize(nearPlaneNormalized as vec3, vec3.cross([] as any, nearPlaneA, nearPlaneB)) as any;
-    nearPlaneNormalized[3] = -vec3.dot(nearPlaneNormalized as vec3, frustumCoords[nearPlanePointsIndices[0]] as vec3);
+    vec3.normalize(nearPlaneNormalized, vec3.cross([], nearPlaneA, nearPlaneB));
+    nearPlaneNormalized[3] = -vec3.dot(nearPlaneNormalized, frustumCoords[nearPlanePointsIndices[0]]);
     return nearPlaneNormalized;
 }
 
@@ -155,20 +155,20 @@ function getNormalizedNearPlane(frustumCoords: vec4[], nearPlanePointsIndices: n
  */
 function getIdealNearFarPlaneDistance(horizonPlane: vec4, nearPlaneNormalized: vec4): number | null {
     // Normalize the horizon plane to unit direction
-    const horizonPlaneLen = vec3.len(horizonPlane as vec3);
-    const normalizedHorizonPlane = vec4.scale([] as any, horizonPlane, 1 / horizonPlaneLen);
+    const horizonPlaneLen = vec3.len(horizonPlane);
+    const normalizedHorizonPlane = vec4.scale([], horizonPlane, 1 / horizonPlaneLen);
 
     // Project the view vector onto the horizon plane
-    const projectedViewDirection = vec3.sub([] as any, nearPlaneNormalized as vec3, vec3.scale([] as any, normalizedHorizonPlane as vec3, vec3.dot(nearPlaneNormalized as vec3, normalizedHorizonPlane as vec3)));
+    const projectedViewDirection = vec3.sub([], nearPlaneNormalized ,vec3.scale([], normalizedHorizonPlane, vec3.dot(nearPlaneNormalized, normalizedHorizonPlane)));
     const projectedViewLength = vec3.len(projectedViewDirection);
-    
+
     // projectedViewLength will be 0 if the camera is looking straight down
     if (projectedViewLength > 0) {
         // Find the radius and center of the horizon circle (the horizon circle is the intersection of the planet's sphere and the horizon plane).
         const horizonCircleRadius = Math.sqrt(1 - normalizedHorizonPlane[3] * normalizedHorizonPlane[3]);
-        const horizonCircleCenter = vec3.scale([] as any, normalizedHorizonPlane as vec3, -normalizedHorizonPlane[3]); // The horizon plane normal always points towards the camera.
+        const horizonCircleCenter = vec3.scale([] , normalizedHorizonPlane, -normalizedHorizonPlane[3]); // The horizon plane normal always points towards the camera.
         // Find the furthest point on the horizon circle from the near plane.
-        const pointFurthestOnHorizonCircle = vec3.add([] as any, horizonCircleCenter, vec3.scale([] as any, projectedViewDirection, horizonCircleRadius / projectedViewLength));
+        const pointFurthestOnHorizonCircle = vec3.add([] , horizonCircleCenter, vec3.scale([] , projectedViewDirection, horizonCircleRadius / projectedViewLength));
         // Compute this point's distance from the near plane.
         return pointPlaneSignedDistance(nearPlaneNormalized, pointFurthestOnHorizonCircle);
     } else {

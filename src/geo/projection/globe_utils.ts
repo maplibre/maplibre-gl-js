@@ -33,9 +33,9 @@ export function mercatorCoordinatesToAngularCoordinatesRadians(mercatorX: number
  * @param lngRadians - Longitude in radians.
  * @param latRadians - Latitude in radians.
  */
-export function angularCoordinatesRadiansToVector(lngRadians: number, latRadians: number): vec3 {
+export function angularCoordinatesRadiansToVector(lngRadians: number, latRadians: number): vec3<Float64Array> {
     const len = Math.cos(latRadians);
-    const vec = new Float64Array(3) as any;
+    const vec = new Float64Array(3);
     vec[0] = Math.sin(lngRadians) * len;
     vec[1] = Math.sin(latRadians);
     vec[2] = Math.cos(lngRadians) * len;
@@ -51,7 +51,7 @@ export function angularCoordinatesRadiansToVector(lngRadians: number, latRadians
  * @param tileIdZ - Tile's zoom.
  * @returns A 3D vector - coordinates of the projected point on a unit sphere.
  */
-export function projectTileCoordinatesToSphere(inTileX: number, inTileY: number, tileIdX: number, tileIdY: number, tileIdZ: number): vec3 {
+export function projectTileCoordinatesToSphere(inTileX: number, inTileY: number, tileIdX: number, tileIdY: number, tileIdZ: number): vec3<Float64Array> {
     // This code could be assembled from 3 functions, but this is a hot path for symbol placement,
     // so for optimization purposes everything is inlined by hand.
     //
@@ -66,7 +66,7 @@ export function projectTileCoordinatesToSphere(inTileX: number, inTileY: number,
     const sphericalX = mod(mercatorX * Math.PI * 2.0 + Math.PI, Math.PI * 2);
     const sphericalY = 2.0 * Math.atan(Math.exp(Math.PI - (mercatorY * Math.PI * 2.0))) - Math.PI * 0.5;
     const len = Math.cos(sphericalY);
-    const vec = new Float64Array(3) as any;
+    const vec = new Float64Array(3);
     vec[0] = Math.sin(sphericalX) * len;
     vec[1] = Math.sin(sphericalY);
     vec[2] = Math.cos(sphericalX) * len;
@@ -76,7 +76,7 @@ export function projectTileCoordinatesToSphere(inTileX: number, inTileY: number,
 /**
  * For a given longitude and latitude (note: in degrees) returns the normalized vector from the planet center to the specified place on the surface.
  */
-export function angularCoordinatesToSurfaceVector(lngLat: LngLat): vec3 {
+export function angularCoordinatesToSurfaceVector(lngLat: LngLat): vec3<Float64Array> {
     return angularCoordinatesRadiansToVector(lngLat.lng * Math.PI / 180, lngLat.lat * Math.PI / 180);
 }
 
