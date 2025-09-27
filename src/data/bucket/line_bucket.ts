@@ -34,6 +34,7 @@ import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 import {subdivideVertexLine} from '../../render/subdivision';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
+import {type DashEntry} from '../../render/line_atlas';
 
 // NOTE ON EXTRUDE SCALE:
 // scale the extrusion vector so that the normal length is this value.
@@ -115,7 +116,7 @@ export class LineBucket implements Bucket {
     indexArray: TriangleIndexArray;
     indexBuffer: IndexBuffer;
 
-    hasPattern: boolean;
+    hasDependencies: boolean;
     programConfigurations: ProgramConfigurationSet<LineStyleLayer>;
     segments: SegmentVector;
     uploaded: boolean;
@@ -126,7 +127,7 @@ export class LineBucket implements Bucket {
         this.layers = options.layers;
         this.layerIds = this.layers.map(layer => layer.id);
         this.index = options.index;
-        this.hasPattern = false;
+        this.hasDependencies = false;
         this.patternFeatures = [];
         this.lineClipsArray = [];
         this.gradients = {};
@@ -145,7 +146,7 @@ export class LineBucket implements Bucket {
     }
 
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
-        this.hasPattern = hasPattern('line', this.layers, options);
+        this.hasDependencies = hasPattern('line', this.layers, options) || this.hasLineDasharray(this.layers);
         const lineSortKey = this.layers[0].layout.get('line-sort-key');
         const sortFeaturesByKey = !lineSortKey.isConstant();
         const bucketFeatures: BucketFeature[] = [];
@@ -168,6 +169,7 @@ export class LineBucket implements Bucket {
                 index,
                 geometry: needGeometry ? evaluationFeature.geometry : loadGeometry(feature),
                 patterns: {},
+                dashes: {},
                 sortKey
             };
 
@@ -183,13 +185,18 @@ export class LineBucket implements Bucket {
         for (const bucketFeature of bucketFeatures) {
             const {geometry, index, sourceLayerIndex} = bucketFeature;
 
-            if (this.hasPattern) {
-                const patternBucketFeature = addPatternDependencies('line', this.layers, bucketFeature, {zoom: this.zoom}, options);
+            if (this.hasDependencies) {
+                if (hasPattern('line', this.layers, options)) {
+                    addPatternDependencies('line', this.layers, bucketFeature, {zoom: this.zoom}, options);
+                } else if (this.hasLineDasharray(this.layers)) {
+                    this.addLineDashDependencies(this.layers, bucketFeature, this.zoom, options);
+                }
+
                 // pattern features are added only once the pattern is loaded into the image atlas
                 // so are stored during populate until later updated with positions by tile worker in addFeatures
-                this.patternFeatures.push(patternBucketFeature);
+                this.patternFeatures.push(bucketFeature);
             } else {
-                this.addFeature(bucketFeature, geometry, index, canonical, {}, options.subdivisionGranularity);
+                this.addFeature(bucketFeature, geometry, index, canonical, {}, {}, options.subdivisionGranularity);
             }
 
             const feature = features[index].feature;
@@ -197,16 +204,17 @@ export class LineBucket implements Bucket {
         }
     }
 
-    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}) {
+    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}, dashPositions: {[_: string]: DashEntry}) {
         if (!this.stateDependentLayers.length) return;
         this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, {
-            imagePositions
+            imagePositions,
+            dashPositions
         });
     }
 
-    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}) {
+    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, dashPositions?: {[_: string]: DashEntry}) {
         for (const feature of this.patternFeatures) {
-            this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions, options.subdivisionGranularity);
+            this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions, dashPositions, options.subdivisionGranularity);
         }
     }
 
@@ -246,7 +254,7 @@ export class LineBucket implements Bucket {
         }
     }
 
-    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, subdivisionGranularity: SubdivisionGranularitySetting) {
+    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, dashPositions: Record<string, DashEntry>, subdivisionGranularity: SubdivisionGranularitySetting) {
         const layout = this.layers[0].layout;
         const join = layout.get('line-join').evaluate(feature, {});
         const cap = layout.get('line-cap');
@@ -258,7 +266,7 @@ export class LineBucket implements Bucket {
             this.addLine(line, feature, join, cap, miterLimit, roundLimit, canonical, subdivisionGranularity);
         }
 
-        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {imagePositions, canonical});
+        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {imagePositions, dashPositions, canonical});
     }
 
     addLine(vertices: Array<Point>, feature: BucketFeature, join: string, cap: string, miterLimit: number, roundLimit: number, canonical: CanonicalTileID | undefined, subdivisionGranularity: SubdivisionGranularitySetting) {
@@ -593,6 +601,51 @@ export class LineBucket implements Bucket {
     updateDistance(prev: Point, next: Point) {
         this.distance += prev.dist(next);
         this.updateScaledDistance();
+    }
+
+    private hasLineDasharray(layers: Array<LineStyleLayer>): boolean {
+        for (const layer of layers) {
+            const dasharrayProperty = layer.paint.get('line-dasharray');
+            if (dasharrayProperty && !dasharrayProperty.isConstant()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private addLineDashDependencies(layers: Array<LineStyleLayer>, bucketFeature: BucketFeature, zoom: number, options: PopulateParameters) {
+        for (const layer of layers) {
+            const dasharrayProperty = layer.paint.get('line-dasharray');
+
+            if (!dasharrayProperty || dasharrayProperty.value.kind === 'constant') {
+                continue;
+            }
+
+            const round = layer.layout.get('line-cap') === 'round';
+
+            const min = {
+                dasharray: dasharrayProperty.value.evaluate({zoom: zoom - 1}, bucketFeature, {}),
+                round
+            };
+            const mid = {
+                dasharray: dasharrayProperty.value.evaluate({zoom}, bucketFeature, {}),
+                round
+            };
+            const max = {
+                dasharray: dasharrayProperty.value.evaluate({zoom: zoom + 1}, bucketFeature, {}),
+                round
+            };
+
+            const minKey = `${min.dasharray.join(',')},${min.round}`;
+            const midKey = `${mid.dasharray.join(',')},${mid.round}`;
+            const maxKey = `${max.dasharray.join(',')},${max.round}`;
+
+            options.dashDependencies[minKey] = min;
+            options.dashDependencies[midKey] = mid;
+            options.dashDependencies[maxKey] = max;
+
+            bucketFeature.dashes[layer.id] = {min: minKey, mid: midKey, max: maxKey};
+        }
     }
 }
 

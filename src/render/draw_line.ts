@@ -28,8 +28,9 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
 
     const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
-    
-    const dasharray = layer.paint.get('line-dasharray');
+
+    const dasharrayProperty = layer.paint.get('line-dasharray');
+    const dasharray = dasharrayProperty.constantOr(1 as any);
     const patternProperty = layer.paint.get('line-pattern');
     const image = patternProperty.constantOr(1 as any);
 
@@ -62,11 +63,19 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
         const terrainData = painter.style.map.terrain &&  painter.style.map.terrain.getTerrainData(coord);
 
         const constantPattern = patternProperty.constantOr(null);
+        const constantDasharray = dasharrayProperty && dasharrayProperty.constantOr(null);
+
         if (constantPattern && tile.imageAtlas) {
             const atlas = tile.imageAtlas;
             const posTo = atlas.patternPositions[constantPattern.to.toString()];
             const posFrom = atlas.patternPositions[constantPattern.from.toString()];
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
+
+        } else if (constantDasharray) {
+            const round = layer.layout.get('line-cap') === 'round';
+            const dashTo = painter.lineAtlas.getDash(constantDasharray.to, round);
+            const dashFrom = painter.lineAtlas.getDash(constantDasharray.from, round);
+            programConfiguration.setConstantDashPositions(dashTo, dashFrom);
         }
 
         const projectionData = transform.getProjectionData({
@@ -78,7 +87,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
         const pixelRatio = transform.getPixelScale();
 
         const uniformValues = image ? linePatternUniformValues(painter, tile, layer, pixelRatio, crossfade) :
-            dasharray ? lineSDFUniformValues(painter, tile, layer, pixelRatio, dasharray, crossfade) :
+            dasharray ? lineSDFUniformValues(painter, tile, layer, pixelRatio, crossfade) :
                 gradient ? lineGradientUniformValues(painter, tile, layer, pixelRatio, bucket.lineClipsArray.length) :
                     lineUniformValues(painter, tile, layer, pixelRatio);
 
@@ -86,9 +95,12 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
             context.activeTexture.set(gl.TEXTURE0);
             tile.imageAtlasTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
             programConfiguration.updatePaintBuffers(crossfade);
-        } else if (dasharray && (programChanged || painter.lineAtlas.dirty)) {
-            context.activeTexture.set(gl.TEXTURE0);
-            painter.lineAtlas.bind(context);
+        } else if (dasharray) {
+            if ((programChanged || painter.lineAtlas.dirty)) {
+                context.activeTexture.set(gl.TEXTURE0);
+                painter.lineAtlas.bind(context);
+            }
+            programConfiguration.updatePaintBuffers(crossfade);
         } else if (gradient) {
             const layerGradient = bucket.gradients[layer.id];
             let gradientTexture = layerGradient.texture;
