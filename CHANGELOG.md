@@ -3,6 +3,8 @@
 ### ✨ Features and improvements
 - _...Add new stuff here..._
 
+ - Implement data-driven styling support for `line-dasharray` ([#5812](https://github.com/maplibre/maplibre-gl-js/pull/5812))
+
 ### 🐞 Bug fixes
 - Fix raster flickering when using terrain 3D and optimize terrain logic.
 - Fix issue where parent tiles are retained when deeper descendant tiles already cover the missing ideal tile. ([#6442](https://github.com/maplibre/maplibre-gl-js/pull/6442))
