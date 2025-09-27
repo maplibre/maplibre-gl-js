@@ -1069,9 +1069,10 @@ export abstract class Camera extends Evented {
      * between old and new values. The map will retain its current values for any
      * details not specified in `options`.
      *
-     * Note: The transition will happen instantly if the user has enabled
-     * the `reduced motion` accessibility feature enabled in their operating system,
-     * unless `options` includes `essential: true`.
+     * !!! note "Reduced Motion"
+     *     The transition will happen instantly if the user has enabled
+     *     the `reduced motion` accessibility feature enabled in their operating system,
+     *     unless `options` includes `essential: true`.
      *
      * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, `zoomend`, `pitchstart`,
      * `pitch`, `pitchend`, `rollstart`, `roll`, `rollend`, and `rotate`.
@@ -1351,9 +1352,10 @@ export abstract class Camera extends Evented {
      * evokes flight. The animation seamlessly incorporates zooming and panning to help
      * the user maintain her bearings even after traversing a great distance.
      *
-     * Note: The animation will be skipped, and this will behave equivalently to `jumpTo`
-     * if the user has the `reduced motion` accessibility feature enabled in their operating system,
-     * unless 'options' includes `essential: true`.
+     * !!! note "Reduced Motion"
+     *     The animation will be skipped, and this will behave equivalently to `jumpTo`
+     *     if the user has the `reduced motion` accessibility feature enabled in their operating system,
+     *     unless 'options' includes `essential: true`.
      *
      * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, `zoomend`, `pitchstart`,
      * `pitch`, `pitchend`, `rollstart`, `roll`, `rollend`, and `rotate`.
