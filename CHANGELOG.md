@@ -1,7 +1,8 @@
 ## main
 
 ### ✨ Features and improvements
-- _...Add new stuff here..._
+
+- Enable documentation admonitions in Material for MkDocs. ([#6455](https://github.com/maplibre/maplibre-gl-js/issues/6455))
 
 ### 🐞 Bug fixes
 - Fix raster flickering when using terrain 3D and optimize terrain logic.
