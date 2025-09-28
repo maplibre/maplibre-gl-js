@@ -537,19 +537,30 @@ export class HandlerManager {
             tr.center :
             tr.screenPointToLocation(panDelta ? around.sub(panDelta) : around);
 
+        // Two terrain modes share the same zoom/pitch handling; panning differs depending on projection.
         if (!terrain) {
+            // No terrain – the helper does everything.
             // Apply zoom, bearing, pitch, roll
             this._map.cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
             // Apply panning
             this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
-        } else {
+        } else if (this._map.cameraHelper.useGlobeControls) {
+            // Globe + terrain – always go through the helper so it can keep apparent zoom constant near the poles.
             // Apply zoom, bearing, pitch, roll
             this._map.cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
+            if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
+                this._terrainMovement = true;
+                this._map._elevationFreeze = true;
+            }
+            this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
+        } else {
+            // Mercator terrain path – keep pixel-delta dragging once the gesture is active.
             // when 3d-terrain is enabled act a little different:
             //    - dragging do not drag the picked point itself, instead it drags the map by pixel-delta.
             //      With this approach it is no longer possible to pick a point from somewhere near
             //      the horizon to the center in one move.
             //      So this logic avoids the problem, that in such cases you easily loose orientation.
+            this._map.cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
             if (!this._terrainMovement &&
                 (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
                 // When starting to drag or move, flag it and register moveend to clear flagging
