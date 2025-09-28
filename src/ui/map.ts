@@ -271,6 +271,12 @@ export type MapOptions = {
      */
     transformCameraUpdate?: CameraUpdateTransformFunction | null;
     /**
+     * TODO: Write
+     * Custom ITransform that overrides the transform (MercatorTransform et al)
+     * @defaultValue null
+     */
+    customTransform?: ITransform | null;
+    /**
      * A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
      * @defaultValue null
      */
@@ -432,6 +438,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     maxTileCacheZoomLevels: config.MAX_TILE_CACHE_ZOOM_LEVELS,
     transformRequest: null,
     transformCameraUpdate: null,
+    customTransform: null,
     fadeDuration: 300,
     crossSourceCollisions: true,
     clickTolerance: 3,
@@ -596,6 +603,13 @@ export class Map extends Camera {
      */
     cancelPendingTileRequestsWhileZooming: boolean;
 
+    /**
+     * TODO: Write
+     * The map's custom transform which overrides the ITransform applied by the projection. which determines whether to cancel, or retain, tiles from the current viewport which are still loading but which belong to a farther (smaller) zoom level than the current one.
+     * @defaultValue null
+     */
+    customTransform: ITransform | null;
+
     constructor(options: MapOptions) {
         PerformanceUtils.mark(PerformanceMarkers.create);
 
@@ -659,6 +673,7 @@ export class Map extends Camera {
         this._overridePixelRatio = resolvedOptions.pixelRatio;
         this._maxCanvasSize = resolvedOptions.maxCanvasSize;
         this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
+        this.customTransform = resolvedOptions.customTransform;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
 
         this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
