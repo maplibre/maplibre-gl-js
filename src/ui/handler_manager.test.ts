@@ -12,8 +12,6 @@ import {Event as MapEvent} from '../util/evented';
 
 type ManagerWithInternals = HandlerManager & {
     _handleMapControls(options: MapControlsScenarioOptions): void;
-    _applyGlobeTerrainScenario(options: MapControlsScenarioOptions): void;
-    _applyMercatorTerrainScenario(options: MapControlsScenarioOptions): void;
 };
 
 type CameraHelperStub = Pick<ICameraHelper, 'handleMapControlsRollPitchBearingZoom' | 'handleMapControlsPan'> & {
@@ -146,6 +144,35 @@ describe('HandlerManager terrain scenarios', () => {
             expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
         });
 
+        it('keeps terrain movement state when globe terrain is already active', () => {
+            const {manager, handlePan} = createManager(true);
+            const {options} = createTerrainOptions();
+
+            manager._terrainMovement = true;
+            manager._map._elevationFreeze = true;
+
+            manager._handleMapControls(options);
+
+            expect(manager._terrainMovement).toBe(true);
+            expect(manager._map._elevationFreeze).toBe(true);
+            expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
+        });
+
+        it('activates terrain movement on first drag in mercator terrain', () => {
+            const {manager, handlePan} = createManager(false);
+            const {options, setCenterMock} = createTerrainOptions({combinedEventsInProgress: {drag: true}});
+
+            manager._terrainMovement = false;
+            manager._map._elevationFreeze = false;
+
+            manager._handleMapControls(options);
+
+            expect(manager._terrainMovement).toBe(true);
+            expect(manager._map._elevationFreeze).toBe(true);
+            expect(handlePan).toHaveBeenCalledTimes(1);
+            expect(setCenterMock).not.toHaveBeenCalled();
+        });
+
         it('drags using transform when already moving in mercator terrain', () => {
             const {manager, handlePan} = createManager(false);
             const panDelta = new Point(3, 4);
@@ -165,73 +192,14 @@ describe('HandlerManager terrain scenarios', () => {
             expect(setCenterMock).toHaveBeenCalledWith(screenPointToLocationResult);
             expect(handlePan).not.toHaveBeenCalled();
         });
-    });
 
-    describe('_applyGlobeTerrainScenario', () => {
-        it('enables terrain movement and freezes elevation on new drag or zoom', () => {
-            const {manager, handleZoom, handlePan} = createManager(true);
-            const {options} = createTerrainOptions({combinedEventsInProgress: {drag: true}});
-
-            manager._applyGlobeTerrainScenario(options);
-
-            expect(handleZoom).toHaveBeenCalledWith(options.deltasForHelper, options.tr);
-            expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
-            expect(manager._terrainMovement).toBe(true);
-            expect(manager._map._elevationFreeze).toBe(true);
-        });
-
-        it('keeps terrain movement state when already active', () => {
-            const {manager, handlePan} = createManager(true);
-            const {options} = createTerrainOptions();
-
-            manager._terrainMovement = true;
-            manager._map._elevationFreeze = true;
-            manager._applyGlobeTerrainScenario(options);
-
-            expect(manager._terrainMovement).toBe(true);
-            expect(manager._map._elevationFreeze).toBe(true);
-            expect(handlePan).toHaveBeenCalled();
-        });
-    });
-
-    describe('_applyMercatorTerrainScenario', () => {
-        it('activates terrain movement on first drag or zoom', () => {
-            const {manager, handlePan} = createManager(false);
-            const {options, setCenterMock} = createTerrainOptions({combinedEventsInProgress: {drag: true}});
-
-            manager._applyMercatorTerrainScenario(options);
-
-            expect(manager._terrainMovement).toBe(true);
-            expect(manager._map._elevationFreeze).toBe(true);
-            expect(handlePan).toHaveBeenCalledTimes(1);
-            expect(setCenterMock).not.toHaveBeenCalled();
-        });
-
-        it('drags map using transform when already in terrain movement', () => {
-            const {manager, handlePan} = createManager(false);
-            const panDelta = new Point(2, 3);
-            const screenPointToLocationResult = new LngLat(7, 7);
-            const {options, screenPointToLocationMock, setCenterMock} = createTerrainOptions({
-                combinedEventsInProgress: {drag: true},
-                panDelta,
-                centerPoint: new Point(5, 5),
-                screenPointToLocationResult,
-            });
-
-            manager._terrainMovement = true;
-            manager._applyMercatorTerrainScenario(options);
-
-            expect(screenPointToLocationMock).toHaveBeenCalled();
-            expect(setCenterMock).toHaveBeenCalledWith(screenPointToLocationResult);
-            expect(handlePan).not.toHaveBeenCalled();
-        });
-
-        it('falls back to helper panning when not dragging', () => {
+        it('falls back to helper panning when not dragging in mercator terrain', () => {
             const {manager, handlePan} = createManager(false);
             const {options} = createTerrainOptions({combinedEventsInProgress: {}});
 
             manager._terrainMovement = true;
-            manager._applyMercatorTerrainScenario(options);
+
+            manager._handleMapControls(options);
 
             expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
         });

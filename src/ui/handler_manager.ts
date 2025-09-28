@@ -566,43 +566,36 @@ export class HandlerManager {
 
     }
 
-    _handleMapControls(options: MapControlsScenarioOptions) {
-        if (!options.terrain) {
-            this._applyNoTerrainScenario(options);
+    _handleMapControls({
+        terrain,
+        tr,
+        deltasForHelper,
+        preZoomAroundLoc,
+        combinedEventsInProgress,
+        panDelta}: MapControlsScenarioOptions) {
+
+        const cameraHelper = this._map.cameraHelper;
+
+        cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
+
+        if (!terrain) {
+            cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
             return;
         }
 
-        if (this._map.cameraHelper.useGlobeControls) {
-            this._applyGlobeTerrainScenario(options);
+        if (cameraHelper.useGlobeControls) {
+            if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
+                this._terrainMovement = true;
+                this._map._elevationFreeze = true;
+            }
+            cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
             return;
         }
-
-        this._applyMercatorTerrainScenario(options);
-    }
-
-    _applyNoTerrainScenario({deltasForHelper, tr, preZoomAroundLoc}: MapControlsScenarioOptions) {
-        this._map.cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
-        this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
-    }
-
-    _applyGlobeTerrainScenario({deltasForHelper, tr, preZoomAroundLoc, combinedEventsInProgress}: MapControlsScenarioOptions) {
-        this._map.cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
 
         if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
             this._terrainMovement = true;
             this._map._elevationFreeze = true;
-        }
-
-        this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
-    }
-
-    _applyMercatorTerrainScenario({deltasForHelper, tr, preZoomAroundLoc, combinedEventsInProgress, panDelta}: MapControlsScenarioOptions) {
-        this._map.cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
-
-        if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
-            this._terrainMovement = true;
-            this._map._elevationFreeze = true;
-            this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
+            cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
             return;
         }
 
@@ -611,7 +604,7 @@ export class HandlerManager {
             return;
         }
 
-        this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
+        cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
     }
 
     _fireEvents(newEventsInProgress: EventsInProgress, deactivatedHandlers: {[handlerName: string]: Event}, allowEndAnimation: boolean) {
