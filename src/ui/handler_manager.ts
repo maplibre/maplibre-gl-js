@@ -21,9 +21,9 @@ import {extend, isPointableEvent, isTouchableEvent, isTouchableOrPointableType} 
 import {browser} from '../util/browser';
 import Point from '@mapbox/point-geometry';
 import {type MapControlsDeltas} from '../geo/projection/camera_helper';
-import { LngLat } from '../geo/lng_lat';
-import { ITransform } from '../geo/transform_interface';
-import { Terrain } from '../render/terrain';
+import type {LngLat} from '../geo/lng_lat';
+import type {ITransform} from '../geo/transform_interface';
+import type {Terrain} from '../render/terrain';
 
 const isMoving = (p: EventsInProgress) => p.zoom || p.drag || p.roll || p.pitch || p.rotate;
 
@@ -127,8 +127,8 @@ export type EventsInProgress = {
     drag?: EventInProgress;
 };
 
-type TerrainScenarioOptions = {
-    terrain: Terrain;
+export type TerrainScenarioOptions = {
+    terrain?: Terrain | null;
     tr: ITransform;
     deltasForHelper: MapControlsDeltas;
     preZoomAroundLoc: LngLat;
