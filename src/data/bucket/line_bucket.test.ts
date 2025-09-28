@@ -113,7 +113,7 @@ describe('LineBucket', () => {
             ], polygon, undefined, undefined, undefined, undefined, undefined, noSubdivision);
 
             const feature = sourceLayer.feature(0);
-            bucket.addFeature(feature as any, feature.loadGeometry(), undefined, undefined, undefined, noSubdivision);
+            bucket.addFeature(feature as any, feature.loadGeometry(), undefined, undefined, undefined, undefined, noSubdivision);
         }).not.toThrow();
     });
 
@@ -130,10 +130,10 @@ describe('LineBucket', () => {
 
         // first add an initial, small feature to make sure the next one starts at
         // a non-zero offset
-        bucket.addFeature({} as BucketFeature, [createLine(10)], undefined, undefined, undefined, noSubdivision);
+        bucket.addFeature({} as BucketFeature, [createLine(10)], undefined, undefined, undefined, undefined, noSubdivision);
 
         // add a feature that will break across the group boundary
-        bucket.addFeature({} as BucketFeature, [createLine(128)], undefined, undefined, undefined, noSubdivision);
+        bucket.addFeature({} as BucketFeature, [createLine(128)], undefined, undefined, undefined, undefined, noSubdivision);
 
         // Each polygon must fit entirely within a segment, so we expect the
         // first segment to include the first feature and the first polygon
@@ -171,6 +171,21 @@ describe('LineBucket', () => {
         expect(bucket.patternFeatures.length).toBeGreaterThan(0);
         expect(bucket.patternFeatures[0].patterns).toEqual({
             test: {min: 'test-pattern', mid: 'test-pattern', max: 'test-pattern'}
+        });
+    });
+
+    test('LineBucket line-dasharray with global-state', () => {
+        const bucket = createLineBucket({id: 'test',
+            paint: {'line-dasharray': ['coalesce', ['get', 'dasharray'], ['global-state', 'dasharray']]},
+            globalState: {'dasharray': [3, 3]},
+            availableImages: []
+        });
+
+        bucket.populate(getFeaturesFromLayer(sourceLayer), createPopulateOptions([]), undefined);
+
+        expect(bucket.patternFeatures.length).toBeGreaterThan(0);
+        expect(bucket.patternFeatures[0].dashes).toEqual({
+            test: {min: '3,3,false', mid: '3,3,false', max: '3,3,false'}
         });
     });
 });

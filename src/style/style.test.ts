@@ -3378,4 +3378,33 @@ describe('Style.serialize', () => {
         expect(style.sky.properties.get('fog-color').g).toBe(1);
         expect(style.sky.properties.get('fog-color').r).toBe(0);
     });
+
+    test('Style.getDashes returns line atlas entries for dash patterns', async () => {
+        const style = createStyle();
+
+        const params = {
+            dashes: {
+                '2,1,false': {dasharray: [2, 1], round: false},
+                '4,2,true': {dasharray: [4, 2], round: true}
+            },
+            source: 'test-source',
+            tileID: {z: 1, x: 0, y: 0} as any,
+            type: 'dasharray' as const
+        };
+
+        const result = await style.getDashes('mapId', params);
+
+        expect(result).toBeDefined();
+        expect(Object.keys(result)).toHaveLength(2);
+        expect(result['2,1,false']).toBeDefined();
+        expect(result['4,2,true']).toBeDefined();
+
+        // Verify the entries have the expected atlas properties
+        expect(typeof result['2,1,false'].width).toBe('number');
+        expect(typeof result['2,1,false'].height).toBe('number');
+        expect(typeof result['2,1,false'].y).toBe('number');
+        expect(typeof result['4,2,true'].width).toBe('number');
+        expect(typeof result['4,2,true'].height).toBe('number');
+        expect(typeof result['4,2,true'].y).toBe('number');
+    });
 });
