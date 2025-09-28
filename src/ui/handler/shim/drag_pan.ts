@@ -26,6 +26,11 @@ export type DragPanOptions = {
      * @defaultValue 2500
      */
     maxSpeed?: number;
+    /**
+     * in globe mode, keep the bearing fixed during the drag.
+     * @defaultValue true
+     */
+    fixedBearing?: boolean;
 };
 
 /**
@@ -46,6 +51,7 @@ export class DragPanHandler {
         this._el = el;
         this._mousePan = mousePan;
         this._touchPan = touchPan;
+        this._inertiaOptions = { fixedBearing: false };
     }
 
     /**
