@@ -1,6 +1,6 @@
 import {describe, afterEach, test, expect, vi} from 'vitest';
 import {SourceCache} from './source_cache';
-import {type Map} from '../ui/map';
+import {Map} from '../ui/map';
 import {type Source, addSourceType} from './source';
 import {Tile} from './tile';
 import {CanonicalTileID, OverscaledTileID} from './tile_id';
@@ -104,6 +104,13 @@ function createSourceCache(options?, used?) {
 afterEach(() => {
     vi.clearAllMocks();
 });
+
+class ResizeObserverStub {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+}
+(global as any).ResizeObserver = ResizeObserverStub;
 
 describe('SourceCache.addTile', () => {
     test('loads tile when uncached', () => {
@@ -607,6 +614,37 @@ describe('SourceCache.update', () => {
         // on update at zoom 1 there should be 4 ideal tiles added through _addTiles
         sourceCache.update(transform);
         expect(addSpy).toHaveBeenCalledTimes(4);
+    });
+
+    test('bypasses fading logic when raster fading is disabled', async () => {
+        const map = new Map({
+            container: document.createElement('div'),
+            style: {
+                version: 8,
+                sources: {rasterSource: {type: 'raster', tiles: [], tileSize: 256}},
+                layers: [{id: 'rasterLayer', type: 'raster', source: 'rasterSource',
+                    paint: {'raster-fade-duration': 0}
+                }]
+            },
+            interactive: false
+        });
+        await new Promise(resolve => map.once('styledata', resolve));
+
+        const style: any = (map as any).style;
+        const sourceCache = style.sourceCaches['rasterSource'];
+        const spy = vi.spyOn(sourceCache, '_updateFadingTiles');
+        sourceCache._loadTile = () => {};
+
+        const fakeTile = new Tile(new OverscaledTileID(3, 0, 3, 1, 2), undefined);
+        (fakeTile as any).texture = {bind: () => {}, size: [256, 256]};
+        fakeTile.state = 'loaded';
+        sourceCache._tiles[fakeTile.tileID.key] = fakeTile;
+
+        await map.once('render');
+        map.setZoom(3);
+        await map.once('render');
+
+        expect(spy).not.toHaveBeenCalled();
     });
 
     test('respects Source.hasTile method if it is present', async () => {
