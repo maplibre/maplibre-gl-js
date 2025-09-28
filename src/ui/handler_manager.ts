@@ -127,7 +127,7 @@ export type EventsInProgress = {
     drag?: EventInProgress;
 };
 
-export type TerrainScenarioOptions = {
+export type MapControlsScenarioOptions = {
     terrain?: Terrain | null;
     tr: ITransform;
     deltasForHelper: MapControlsDeltas;
@@ -549,7 +549,7 @@ export class HandlerManager {
             tr.center :
             tr.screenPointToLocation(panDelta ? around.sub(panDelta) : around);
 
-        this._applyTerrainScenario({
+        this._handleMapControls({
             terrain,
             tr,
             deltasForHelper,
@@ -566,7 +566,7 @@ export class HandlerManager {
 
     }
 
-    _applyTerrainScenario(options: TerrainScenarioOptions) {
+    _handleMapControls(options: MapControlsScenarioOptions) {
         if (!options.terrain) {
             this._applyNoTerrainScenario(options);
             return;
@@ -580,12 +580,12 @@ export class HandlerManager {
         this._applyMercatorTerrainScenario(options);
     }
 
-    _applyNoTerrainScenario({deltasForHelper, tr, preZoomAroundLoc}: TerrainScenarioOptions) {
+    _applyNoTerrainScenario({deltasForHelper, tr, preZoomAroundLoc}: MapControlsScenarioOptions) {
         this._map.cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
         this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
     }
 
-    _applyGlobeTerrainScenario({deltasForHelper, tr, preZoomAroundLoc, combinedEventsInProgress}: TerrainScenarioOptions) {
+    _applyGlobeTerrainScenario({deltasForHelper, tr, preZoomAroundLoc, combinedEventsInProgress}: MapControlsScenarioOptions) {
         this._map.cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
 
         if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
@@ -596,7 +596,7 @@ export class HandlerManager {
         this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
     }
 
-    _applyMercatorTerrainScenario({deltasForHelper, tr, preZoomAroundLoc, combinedEventsInProgress, panDelta}: TerrainScenarioOptions) {
+    _applyMercatorTerrainScenario({deltasForHelper, tr, preZoomAroundLoc, combinedEventsInProgress, panDelta}: MapControlsScenarioOptions) {
         this._map.cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
 
         if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {

@@ -2,7 +2,7 @@ import {describe, it, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
 
 import {HandlerManager} from './handler_manager';
-import type {TerrainScenarioOptions, EventsInProgress, EventInProgress} from './handler_manager';
+import type {MapControlsScenarioOptions, EventsInProgress, EventInProgress} from './handler_manager';
 import type {Map} from './map';
 import {LngLat} from '../geo/lng_lat';
 import type {ICameraHelper, MapControlsDeltas} from '../geo/projection/camera_helper';
@@ -47,7 +47,7 @@ type TerrainOptionsParams = {
 };
 
 const createTerrainOptions = (params: TerrainOptionsParams = {}): {
-    options: TerrainScenarioOptions;
+    options: MapControlsScenarioOptions;
     screenPointToLocationMock: ReturnType<typeof vi.fn>;
     setCenterMock: ReturnType<typeof vi.fn>;
 } => {
@@ -73,7 +73,7 @@ const createTerrainOptions = (params: TerrainOptionsParams = {}): {
         around: new Point(0, 0),
     };
 
-    const options: TerrainScenarioOptions = {
+    const options: MapControlsScenarioOptions = {
         terrain,
         tr: transformStub as unknown as ITransform,
         deltasForHelper,
@@ -106,7 +106,7 @@ function createEventInProgress(name: keyof EventsInProgress): EventInProgress {
 }
 
 describe('HandlerManager terrain scenarios', () => {
-    describe('_applyTerrainScenario', () => {
+    describe('_handleMapControls', () => {
         it('delegates to no-terrain scenario when terrain is missing', () => {
             const {manager} = createManager();
             const noTerrain = vi.spyOn(manager, '_applyNoTerrainScenario');
@@ -114,7 +114,7 @@ describe('HandlerManager terrain scenarios', () => {
             const mercatorTerrain = vi.spyOn(manager, '_applyMercatorTerrainScenario');
             const {options} = createTerrainOptions({terrain: undefined});
 
-            manager._applyTerrainScenario(options);
+            manager._handleMapControls(options);
 
             expect(noTerrain).toHaveBeenCalledWith(options);
             expect(globeTerrain).not.toHaveBeenCalled();
@@ -127,7 +127,7 @@ describe('HandlerManager terrain scenarios', () => {
             const mercatorTerrain = vi.spyOn(manager, '_applyMercatorTerrainScenario');
             const {options} = createTerrainOptions();
 
-            manager._applyTerrainScenario(options);
+            manager._handleMapControls(options);
 
             expect(globeTerrain).toHaveBeenCalledWith(options);
             expect(mercatorTerrain).not.toHaveBeenCalled();
@@ -139,7 +139,7 @@ describe('HandlerManager terrain scenarios', () => {
             const mercatorTerrain = vi.spyOn(manager, '_applyMercatorTerrainScenario');
             const {options} = createTerrainOptions();
 
-            manager._applyTerrainScenario(options);
+            manager._handleMapControls(options);
 
             expect(mercatorTerrain).toHaveBeenCalledWith(options);
             expect(globeTerrain).not.toHaveBeenCalled();
