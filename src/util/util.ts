@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import {UnitBezier} from '@birkskyum/unitbezier';
+import UnitBezier from '@birkskyum/unitbezier';
 import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';
 import type {Size} from './image';
 import type {WorkerGlobalScopeInterface} from './web_worker';
