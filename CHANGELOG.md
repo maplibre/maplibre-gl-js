@@ -3,6 +3,7 @@
 ### ✨ Features and improvements
 
 - Enable documentation admonitions in Material for MkDocs. ([#6455](https://github.com/maplibre/maplibre-gl-js/issues/6455))
+- Switch MapEventType from type to interface to allow declaration merging ([#6436](https://github.com/maplibre/maplibre-gl-js/pull/6436))
 
 ### 🐞 Bug fixes
 - Fix raster flickering when using terrain 3D and optimize terrain logic.
