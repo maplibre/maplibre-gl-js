@@ -61,6 +61,7 @@ export default class TileParser {
     layerIndex: StyleLayerIndex;
     icons: any;
     glyphs: any;
+    dashes: any;
     style: Style;
     actor: IActor;
 
@@ -88,6 +89,14 @@ export default class TileParser {
         return this.glyphs[key];
     }
 
+    async loadDashes(params: any) {
+        const key = JSON.stringify(params);
+        if (!this.dashes[key]) {
+            this.dashes[key] = await this.style.getDashes('', params);
+        }
+        return this.dashes[key];
+    }
+
     setup(): Promise<void> {
         const parser = this;
         this.actor = {
@@ -97,6 +106,9 @@ export default class TileParser {
                 }
                 if (message.type === MessageType.getGlyphs) {
                     return parser.loadGlyphs(message.data);
+                }
+                if (message.type === MessageType.getDashes) {
+                    return parser.loadDashes(message.data);
                 }
                 throw new Error(`Invalid action ${message.type}`);
             }

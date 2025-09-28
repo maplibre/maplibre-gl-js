@@ -5,7 +5,7 @@ import type {Context} from '../gl/context';
 /**
  * A dash entry
  */
-type DashEntry = {
+export type DashEntry = {
     y: number;
     height: number;
     width: number;
@@ -180,8 +180,8 @@ export class LineAtlas {
         }
 
         const dashEntry = {
-            y: (this.nextRow + n + 0.5) / this.height,
-            height: 2 * n / this.height,
+            y: this.nextRow + n,
+            height: 2 * n,
             width: length
         };
 

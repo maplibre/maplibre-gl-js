@@ -34,6 +34,7 @@ export function createPopulateOptions(availableImages): PopulateParameters {
         iconDependencies: {},
         patternDependencies: {},
         glyphDependencies: {},
+        dashDependencies: {},
         availableImages,
         subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
     };
