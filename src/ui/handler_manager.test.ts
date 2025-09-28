@@ -10,7 +10,11 @@ import type {Terrain} from '../render/terrain';
 import type {ITransform} from '../geo/transform_interface';
 import {Event as MapEvent} from '../util/evented';
 
-type ManagerWithInternals = HandlerManager & Record<string, unknown>;
+type ManagerWithInternals = HandlerManager & {
+    _handleMapControls(options: MapControlsScenarioOptions): void;
+    _applyGlobeTerrainScenario(options: MapControlsScenarioOptions): void;
+    _applyMercatorTerrainScenario(options: MapControlsScenarioOptions): void;
+};
 
 type CameraHelperStub = Pick<ICameraHelper, 'handleMapControlsRollPitchBearingZoom' | 'handleMapControlsPan'> & {
     readonly useGlobeControls: boolean;
@@ -107,42 +111,59 @@ function createEventInProgress(name: keyof EventsInProgress): EventInProgress {
 
 describe('HandlerManager terrain scenarios', () => {
     describe('_handleMapControls', () => {
-        it('delegates to no-terrain scenario when terrain is missing', () => {
-            const {manager} = createManager();
-            const noTerrain = vi.spyOn(manager, '_applyNoTerrainScenario');
-            const globeTerrain = vi.spyOn(manager, '_applyGlobeTerrainScenario');
-            const mercatorTerrain = vi.spyOn(manager, '_applyMercatorTerrainScenario');
-            const {options} = createTerrainOptions({terrain: undefined});
+        it('keeps terrain movement disabled when terrain is not enabled', () => {
+            const {manager, handleZoom, handlePan} = createManager(false);
+            const {options, setCenterMock} = createTerrainOptions({
+                terrain: null,
+                combinedEventsInProgress: {drag: true},
+            });
+
+            manager._terrainMovement = false;
+            manager._map._elevationFreeze = false;
 
             manager._handleMapControls(options);
 
-            expect(noTerrain).toHaveBeenCalledWith(options);
-            expect(globeTerrain).not.toHaveBeenCalled();
-            expect(mercatorTerrain).not.toHaveBeenCalled();
+            expect(handleZoom).toHaveBeenCalledWith(options.deltasForHelper, options.tr);
+            expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
+            expect(manager._terrainMovement).toBe(false);
+            expect(manager._map._elevationFreeze).toBe(false);
+            expect(setCenterMock).not.toHaveBeenCalled();
         });
 
-        it('delegates to globe terrain scenario when globe controls are active', () => {
-            const {manager} = createManager(true);
-            const globeTerrain = vi.spyOn(manager, '_applyGlobeTerrainScenario');
-            const mercatorTerrain = vi.spyOn(manager, '_applyMercatorTerrainScenario');
-            const {options} = createTerrainOptions();
+        it('enables terrain movement for globe terrain handling', () => {
+            const {manager, handlePan} = createManager(true);
+            const {options} = createTerrainOptions({
+                combinedEventsInProgress: {drag: true},
+            });
+
+            manager._terrainMovement = false;
+            manager._map._elevationFreeze = false;
 
             manager._handleMapControls(options);
 
-            expect(globeTerrain).toHaveBeenCalledWith(options);
-            expect(mercatorTerrain).not.toHaveBeenCalled();
+            expect(manager._terrainMovement).toBe(true);
+            expect(manager._map._elevationFreeze).toBe(true);
+            expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
         });
 
-        it('delegates to mercator terrain scenario when globe controls are inactive', () => {
-            const {manager} = createManager(false);
-            const globeTerrain = vi.spyOn(manager, '_applyGlobeTerrainScenario');
-            const mercatorTerrain = vi.spyOn(manager, '_applyMercatorTerrainScenario');
-            const {options} = createTerrainOptions();
+        it('drags using transform when already moving in mercator terrain', () => {
+            const {manager, handlePan} = createManager(false);
+            const panDelta = new Point(3, 4);
+            const screenPointToLocationResult = new LngLat(9, 10);
+            const {options, screenPointToLocationMock, setCenterMock} = createTerrainOptions({
+                combinedEventsInProgress: {drag: true},
+                panDelta,
+                centerPoint: new Point(1, 2),
+                screenPointToLocationResult,
+            });
+
+            manager._terrainMovement = true;
 
             manager._handleMapControls(options);
 
-            expect(mercatorTerrain).toHaveBeenCalledWith(options);
-            expect(globeTerrain).not.toHaveBeenCalled();
+            expect(screenPointToLocationMock).toHaveBeenCalled();
+            expect(setCenterMock).toHaveBeenCalledWith(screenPointToLocationResult);
+            expect(handlePan).not.toHaveBeenCalled();
         });
     });
 
