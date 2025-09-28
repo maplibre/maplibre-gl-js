@@ -21,6 +21,9 @@ import {extend, isPointableEvent, isTouchableEvent, isTouchableOrPointableType} 
 import {browser} from '../util/browser';
 import Point from '@mapbox/point-geometry';
 import {type MapControlsDeltas} from '../geo/projection/camera_helper';
+import { LngLat } from '../geo/lng_lat';
+import { ITransform } from '../geo/transform_interface';
+import { Terrain } from '../render/terrain';
 
 const isMoving = (p: EventsInProgress) => p.zoom || p.drag || p.roll || p.pitch || p.rotate;
 
@@ -122,6 +125,15 @@ export type EventsInProgress = {
     pitch?: EventInProgress;
     rotate?: EventInProgress;
     drag?: EventInProgress;
+};
+
+type TerrainScenarioOptions = {
+    terrain: Terrain;
+    tr: ITransform;
+    deltasForHelper: MapControlsDeltas;
+    preZoomAroundLoc: LngLat;
+    combinedEventsInProgress: EventsInProgress;
+    panDelta?: Point;
 };
 
 function hasChange(result: HandlerResult) {
@@ -537,43 +549,14 @@ export class HandlerManager {
             tr.center :
             tr.screenPointToLocation(panDelta ? around.sub(panDelta) : around);
 
-        // Two terrain modes share the same zoom/pitch handling; panning differs depending on projection.
-        if (!terrain) {
-            // No terrain – the helper does everything.
-            // Apply zoom, bearing, pitch, roll
-            this._map.cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
-            // Apply panning
-            this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
-        } else if (this._map.cameraHelper.useGlobeControls) {
-            // Globe + terrain – always go through the helper so it can keep apparent zoom constant near the poles.
-            // Apply zoom, bearing, pitch, roll
-            this._map.cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
-            if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
-                this._terrainMovement = true;
-                this._map._elevationFreeze = true;
-            }
-            this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
-        } else {
-            // Mercator terrain path – keep pixel-delta dragging once the gesture is active.
-            // when 3d-terrain is enabled act a little different:
-            //    - dragging do not drag the picked point itself, instead it drags the map by pixel-delta.
-            //      With this approach it is no longer possible to pick a point from somewhere near
-            //      the horizon to the center in one move.
-            //      So this logic avoids the problem, that in such cases you easily loose orientation.
-            this._map.cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
-            if (!this._terrainMovement &&
-                (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
-                // When starting to drag or move, flag it and register moveend to clear flagging
-                this._terrainMovement = true;
-                this._map._elevationFreeze = true;
-                this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
-            } else if (combinedEventsInProgress.drag && this._terrainMovement) {
-                // drag map
-                tr.setCenter(tr.screenPointToLocation(tr.centerPoint.sub(panDelta)));
-            } else {
-                this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
-            }
-        }
+        this._applyTerrainScenario({
+            terrain,
+            tr,
+            deltasForHelper,
+            preZoomAroundLoc,
+            combinedEventsInProgress,
+            panDelta,
+        });
 
         map._applyUpdatedTransform(tr);
 
@@ -581,6 +564,54 @@ export class HandlerManager {
         if (!combinedResult.noInertia) this._inertia.record(combinedResult);
         this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
 
+    }
+
+    _applyTerrainScenario(options: TerrainScenarioOptions) {
+        if (!options.terrain) {
+            this._applyNoTerrainScenario(options);
+            return;
+        }
+
+        if (this._map.cameraHelper.useGlobeControls) {
+            this._applyGlobeTerrainScenario(options);
+            return;
+        }
+
+        this._applyMercatorTerrainScenario(options);
+    }
+
+    _applyNoTerrainScenario({deltasForHelper, tr, preZoomAroundLoc}: TerrainScenarioOptions) {
+        this._map.cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
+        this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
+    }
+
+    _applyGlobeTerrainScenario({deltasForHelper, tr, preZoomAroundLoc, combinedEventsInProgress}: TerrainScenarioOptions) {
+        this._map.cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
+
+        if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
+            this._terrainMovement = true;
+            this._map._elevationFreeze = true;
+        }
+
+        this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
+    }
+
+    _applyMercatorTerrainScenario({deltasForHelper, tr, preZoomAroundLoc, combinedEventsInProgress, panDelta}: TerrainScenarioOptions) {
+        this._map.cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
+
+        if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
+            this._terrainMovement = true;
+            this._map._elevationFreeze = true;
+            this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
+            return;
+        }
+
+        if (combinedEventsInProgress.drag && this._terrainMovement && panDelta) {
+            tr.setCenter(tr.screenPointToLocation(tr.centerPoint.sub(panDelta)));
+            return;
+        }
+
+        this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
     }
 
     _fireEvents(newEventsInProgress: EventsInProgress, deactivatedHandlers: {[handlerName: string]: Event}, allowEndAnimation: boolean) {
