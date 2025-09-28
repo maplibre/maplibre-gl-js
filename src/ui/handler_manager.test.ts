@@ -2,17 +2,18 @@ import {describe, it, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
 
 import {HandlerManager} from './handler_manager';
-import type {TerrainScenarioOptions, EventsInProgress} from './handler_manager';
+import type {TerrainScenarioOptions, EventsInProgress, EventInProgress} from './handler_manager';
 import type {Map} from './map';
 import {LngLat} from '../geo/lng_lat';
 import type {ICameraHelper, MapControlsDeltas} from '../geo/projection/camera_helper';
 import type {Terrain} from '../render/terrain';
 import type {ITransform} from '../geo/transform_interface';
+import {Event as MapEvent} from '../util/evented';
 
 type ManagerWithInternals = HandlerManager & Record<string, unknown>;
 
 type CameraHelperStub = Pick<ICameraHelper, 'handleMapControlsRollPitchBearingZoom' | 'handleMapControlsPan'> & {
-    useGlobeControls: boolean;
+    readonly useGlobeControls: boolean;
 };
 
 const createManager = (useGlobeControls = false) => {
@@ -39,7 +40,7 @@ const createManager = (useGlobeControls = false) => {
 
 type TerrainOptionsParams = {
     terrain?: Terrain | null;
-    combinedEventsInProgress?: EventsInProgress;
+    combinedEventsInProgress?: Partial<Record<keyof EventsInProgress, boolean>>;
     panDelta?: Point;
     centerPoint?: Point;
     screenPointToLocationResult?: LngLat;
@@ -52,8 +53,7 @@ const createTerrainOptions = (params: TerrainOptionsParams = {}): {
 } => {
     const panDelta = params.panDelta;
     const terrain = Object.prototype.hasOwnProperty.call(params, 'terrain') ? params.terrain : ({} as Terrain);
-    const combinedEventsInProgress = Object.prototype.hasOwnProperty.call(params, 'combinedEventsInProgress') ?
-        params.combinedEventsInProgress : {};
+    const combinedEventsInProgressFlags = params.combinedEventsInProgress ?? {};
     const screenPointToLocationMock = vi.fn<(point: Point) => LngLat>(() => params.screenPointToLocationResult ?? new LngLat(1, 1));
     const setCenterMock = vi.fn<(center: LngLat) => void>();
 
@@ -78,7 +78,7 @@ const createTerrainOptions = (params: TerrainOptionsParams = {}): {
         tr: transformStub as unknown as ITransform,
         deltasForHelper,
         preZoomAroundLoc: new LngLat(0, 0),
-        combinedEventsInProgress,
+        combinedEventsInProgress: buildEventsInProgress(combinedEventsInProgressFlags),
         panDelta,
     };
 
@@ -88,6 +88,22 @@ const createTerrainOptions = (params: TerrainOptionsParams = {}): {
         setCenterMock,
     };
 };
+
+function buildEventsInProgress(flags: Partial<Record<keyof EventsInProgress, boolean>>): EventsInProgress {
+    const events: EventsInProgress = {};
+    (Object.keys(flags) as Array<keyof EventsInProgress>).forEach((key) => {
+        if (!flags[key]) return;
+        events[key] = createEventInProgress(key);
+    });
+    return events;
+}
+
+function createEventInProgress(name: keyof EventsInProgress): EventInProgress {
+    return {
+        handlerName: name,
+        originalEvent: new MapEvent(`${String(name)}start`),
+    };
+}
 
 describe('HandlerManager terrain scenarios', () => {
     describe('_applyTerrainScenario', () => {
@@ -123,7 +139,6 @@ describe('HandlerManager terrain scenarios', () => {
             const mercatorTerrain = vi.spyOn(manager, '_applyMercatorTerrainScenario');
             const {options} = createTerrainOptions();
 
-            manager._map.cameraHelper.useGlobeControls = false;
             manager._applyTerrainScenario(options);
 
             expect(mercatorTerrain).toHaveBeenCalledWith(options);
@@ -134,7 +149,7 @@ describe('HandlerManager terrain scenarios', () => {
     describe('_applyGlobeTerrainScenario', () => {
         it('enables terrain movement and freezes elevation on new drag or zoom', () => {
             const {manager, handleZoom, handlePan} = createManager(true);
-            const {options} = createTerrainOptions({combinedEventsInProgress: {drag: {}}});
+            const {options} = createTerrainOptions({combinedEventsInProgress: {drag: true}});
 
             manager._applyGlobeTerrainScenario(options);
 
@@ -161,7 +176,7 @@ describe('HandlerManager terrain scenarios', () => {
     describe('_applyMercatorTerrainScenario', () => {
         it('activates terrain movement on first drag or zoom', () => {
             const {manager, handlePan} = createManager(false);
-            const {options, setCenterMock} = createTerrainOptions({combinedEventsInProgress: {drag: {}}});
+            const {options, setCenterMock} = createTerrainOptions({combinedEventsInProgress: {drag: true}});
 
             manager._applyMercatorTerrainScenario(options);
 
@@ -176,7 +191,7 @@ describe('HandlerManager terrain scenarios', () => {
             const panDelta = new Point(2, 3);
             const screenPointToLocationResult = new LngLat(7, 7);
             const {options, screenPointToLocationMock, setCenterMock} = createTerrainOptions({
-                combinedEventsInProgress: {drag: {}},
+                combinedEventsInProgress: {drag: true},
                 panDelta,
                 centerPoint: new Point(5, 5),
                 screenPointToLocationResult,
