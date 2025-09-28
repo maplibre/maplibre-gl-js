@@ -1,104 +1,289 @@
-import {describe, it, expect, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
 
-import {HandlerManager} from './handler_manager';
-import type {MapControlsScenarioOptions, EventsInProgress, EventInProgress} from './handler_manager';
+import type {HandlerManager, MapControlsScenarioOptions, EventInProgress, EventsInProgress} from './handler_manager';
 import type {Map} from './map';
 import {LngLat} from '../geo/lng_lat';
 import type {ICameraHelper, MapControlsDeltas} from '../geo/projection/camera_helper';
 import type {Terrain} from '../render/terrain';
 import type {ITransform} from '../geo/transform_interface';
 import {Event as MapEvent} from '../util/evented';
+import {beforeMapTest, createMap} from '../util/test/util';
 
-type ManagerWithInternals = HandlerManager & {
-    _handleMapControls(options: MapControlsScenarioOptions): void;
-};
+let map: Map;
+let manager: HandlerManager;
 
-type CameraHelperStub = Pick<ICameraHelper, 'handleMapControlsRollPitchBearingZoom' | 'handleMapControlsPan'> & {
-    readonly useGlobeControls: boolean;
-};
+beforeEach(() => {
+    beforeMapTest();
+    map = createMap();
+    manager = map.handlers as HandlerManager;
+});
 
-const createManager = (useGlobeControls = false) => {
-    const manager = Object.create(HandlerManager.prototype) as ManagerWithInternals;
-    const handleZoom = vi.fn<(deltas: MapControlsDeltas, tr: ITransform) => void>();
-    const handlePan = vi.fn<(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat) => void>();
+afterEach(() => {
+    map.remove();
+    vi.restoreAllMocks();
+});
 
-    const cameraHelper: CameraHelperStub = {
-        handleMapControlsRollPitchBearingZoom: handleZoom,
-        handleMapControlsPan: handlePan,
-        useGlobeControls,
-    };
+describe('HandlerManager terrain scenarios', () => {
+    it('_handleMapControls keeps terrain movement disabled when terrain is not enabled', () => {
+        const handleZoom = vi.fn();
+        const handlePan = vi.fn();
+        map.cameraHelper = {
+            handleMapControlsRollPitchBearingZoom: handleZoom,
+            handleMapControlsPan: handlePan,
+            useGlobeControls: false,
+        } as unknown as ICameraHelper;
 
-    const mapStub: Pick<Map, 'cameraHelper' | '_elevationFreeze'> = {
-        cameraHelper: cameraHelper as unknown as ICameraHelper,
-        _elevationFreeze: false,
-    };
+        const setCenterMock = vi.fn();
+        const transform = {
+            centerPoint: new Point(0, 0),
+            center: new LngLat(0, 0),
+            screenPointToLocation: vi.fn(() => new LngLat(1, 1)),
+            setCenter: setCenterMock,
+        } satisfies Pick<ITransform, 'centerPoint' | 'center' | 'screenPointToLocation' | 'setCenter'>;
+        const deltas: MapControlsDeltas = {
+            panDelta: new Point(0, 0),
+            zoomDelta: 0,
+            rollDelta: 0,
+            pitchDelta: 0,
+            bearingDelta: 0,
+            around: new Point(0, 0),
+        };
+        const combinedEvents: EventsInProgress = {
+            drag: createEventInProgress('drag'),
+        };
+        const options: MapControlsScenarioOptions = {
+            terrain: null,
+            tr: transform as unknown as ITransform,
+            deltasForHelper: deltas,
+            preZoomAroundLoc: new LngLat(0, 0),
+            combinedEventsInProgress: combinedEvents,
+            panDelta: deltas.panDelta,
+        };
 
-    manager._map = mapStub as Map;
-    manager._terrainMovement = false;
+        manager._terrainMovement = false;
+        map._elevationFreeze = false;
 
-    return {manager, handleZoom, handlePan};
-};
+        manager._handleMapControls(options);
 
-type TerrainOptionsParams = {
-    terrain?: Terrain | null;
-    combinedEventsInProgress?: Partial<Record<keyof EventsInProgress, boolean>>;
-    panDelta?: Point;
-    centerPoint?: Point;
-    screenPointToLocationResult?: LngLat;
-};
-
-const createTerrainOptions = (params: TerrainOptionsParams = {}): {
-    options: MapControlsScenarioOptions;
-    screenPointToLocationMock: ReturnType<typeof vi.fn>;
-    setCenterMock: ReturnType<typeof vi.fn>;
-} => {
-    const panDelta = params.panDelta;
-    const terrain = Object.prototype.hasOwnProperty.call(params, 'terrain') ? params.terrain : ({} as Terrain);
-    const combinedEventsInProgressFlags = params.combinedEventsInProgress ?? {};
-    const screenPointToLocationMock = vi.fn<(point: Point) => LngLat>(() => params.screenPointToLocationResult ?? new LngLat(1, 1));
-    const setCenterMock = vi.fn<(center: LngLat) => void>();
-
-    const transformStub = {
-        centerPoint: params.centerPoint ?? new Point(0, 0),
-        center: new LngLat(0, 0),
-        screenPointToLocation: screenPointToLocationMock,
-        setCenter: setCenterMock,
-    } satisfies Pick<ITransform, 'centerPoint' | 'center' | 'screenPointToLocation' | 'setCenter'>;
-
-    const deltasForHelper: MapControlsDeltas = {
-        panDelta: panDelta ?? new Point(0, 0),
-        zoomDelta: 0,
-        rollDelta: 0,
-        pitchDelta: 0,
-        bearingDelta: 0,
-        around: new Point(0, 0),
-    };
-
-    const options: MapControlsScenarioOptions = {
-        terrain,
-        tr: transformStub as unknown as ITransform,
-        deltasForHelper,
-        preZoomAroundLoc: new LngLat(0, 0),
-        combinedEventsInProgress: buildEventsInProgress(combinedEventsInProgressFlags),
-        panDelta,
-    };
-
-    return {
-        options,
-        screenPointToLocationMock,
-        setCenterMock,
-    };
-};
-
-function buildEventsInProgress(flags: Partial<Record<keyof EventsInProgress, boolean>>): EventsInProgress {
-    const events: EventsInProgress = {};
-    (Object.keys(flags) as Array<keyof EventsInProgress>).forEach((key) => {
-        if (!flags[key]) return;
-        events[key] = createEventInProgress(key);
+        expect(handleZoom).toHaveBeenCalledWith(options.deltasForHelper, options.tr);
+        expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
+        expect(map._elevationFreeze).toBe(false);
+        expect(manager._terrainMovement).toBe(false);
+        expect(setCenterMock).not.toHaveBeenCalled();
     });
-    return events;
-}
+
+    it('_handleMapControls enables terrain movement for globe terrain handling', () => {
+        const handleZoom = vi.fn();
+        const handlePan = vi.fn();
+        map.cameraHelper = {
+            handleMapControlsRollPitchBearingZoom: handleZoom,
+            handleMapControlsPan: handlePan,
+            useGlobeControls: true,
+        } as unknown as ICameraHelper;
+
+        const transform = {
+            centerPoint: new Point(0, 0),
+            center: new LngLat(0, 0),
+            screenPointToLocation: vi.fn(() => new LngLat(0, 0)),
+            setCenter: vi.fn(),
+        } satisfies Pick<ITransform, 'centerPoint' | 'center' | 'screenPointToLocation' | 'setCenter'>;
+        const options: MapControlsScenarioOptions = {
+            terrain: {} as Terrain,
+            tr: transform as unknown as ITransform,
+            deltasForHelper: {
+                panDelta: new Point(1, 1),
+                zoomDelta: 0,
+                rollDelta: 0,
+                pitchDelta: 0,
+                bearingDelta: 0,
+                around: new Point(0, 0),
+            },
+            preZoomAroundLoc: new LngLat(0, 0),
+            combinedEventsInProgress: {drag: createEventInProgress('drag')},
+            panDelta: new Point(1, 1),
+        };
+
+        manager._terrainMovement = false;
+        map._elevationFreeze = false;
+
+        manager._handleMapControls(options);
+
+        expect(manager._terrainMovement).toBe(true);
+        expect(map._elevationFreeze).toBe(true);
+        expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
+    });
+
+    it('_handleMapControls keeps terrain movement state when globe terrain is already active', () => {
+        const handleZoom = vi.fn();
+        const handlePan = vi.fn();
+        map.cameraHelper = {
+            handleMapControlsRollPitchBearingZoom: handleZoom,
+            handleMapControlsPan: handlePan,
+            useGlobeControls: true,
+        } as unknown as ICameraHelper;
+
+        const transform = {
+            centerPoint: new Point(0, 0),
+            center: new LngLat(0, 0),
+            screenPointToLocation: vi.fn(() => new LngLat(0, 0)),
+            setCenter: vi.fn(),
+        } satisfies Pick<ITransform, 'centerPoint' | 'center' | 'screenPointToLocation' | 'setCenter'>;
+        const options: MapControlsScenarioOptions = {
+            terrain: {} as Terrain,
+            tr: transform as unknown as ITransform,
+            deltasForHelper: {
+                panDelta: new Point(0, 0),
+                zoomDelta: 0,
+                rollDelta: 0,
+                pitchDelta: 0,
+                bearingDelta: 0,
+                around: new Point(0, 0),
+            },
+            preZoomAroundLoc: new LngLat(0, 0),
+            combinedEventsInProgress: {},
+            panDelta: undefined,
+        };
+
+        manager._terrainMovement = true;
+        map._elevationFreeze = true;
+
+        manager._handleMapControls(options);
+
+        expect(manager._terrainMovement).toBe(true);
+        expect(map._elevationFreeze).toBe(true);
+        expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
+    });
+
+    it('_handleMapControls activates terrain movement on first drag in mercator terrain', () => {
+        const handleZoom = vi.fn();
+        const handlePan = vi.fn();
+        map.cameraHelper = {
+            handleMapControlsRollPitchBearingZoom: handleZoom,
+            handleMapControlsPan: handlePan,
+            useGlobeControls: false,
+        } as unknown as ICameraHelper;
+
+        const setCenterMock = vi.fn();
+        const transform = {
+            centerPoint: new Point(0, 0),
+            center: new LngLat(0, 0),
+            screenPointToLocation: vi.fn(() => new LngLat(5, 5)),
+            setCenter: setCenterMock,
+        } satisfies Pick<ITransform, 'centerPoint' | 'center' | 'screenPointToLocation' | 'setCenter'>;
+        const deltas: MapControlsDeltas = {
+            panDelta: new Point(2, 3),
+            zoomDelta: 0,
+            rollDelta: 0,
+            pitchDelta: 0,
+            bearingDelta: 0,
+            around: new Point(0, 0),
+        };
+        const options: MapControlsScenarioOptions = {
+            terrain: {} as Terrain,
+            tr: transform as unknown as ITransform,
+            deltasForHelper: deltas,
+            preZoomAroundLoc: new LngLat(0, 0),
+            combinedEventsInProgress: {drag: createEventInProgress('drag')},
+            panDelta: deltas.panDelta,
+        };
+
+        manager._terrainMovement = false;
+        map._elevationFreeze = false;
+
+        manager._handleMapControls(options);
+
+        expect(manager._terrainMovement).toBe(true);
+        expect(map._elevationFreeze).toBe(true);
+        expect(handlePan).toHaveBeenCalledTimes(1);
+        expect(setCenterMock).not.toHaveBeenCalled();
+    });
+
+    it('_handleMapControls drags using transform when already moving in mercator terrain', () => {
+        const handleZoom = vi.fn();
+        const handlePan = vi.fn();
+        map.cameraHelper = {
+            handleMapControlsRollPitchBearingZoom: handleZoom,
+            handleMapControlsPan: handlePan,
+            useGlobeControls: false,
+        } as unknown as ICameraHelper;
+
+        const setCenterMock = vi.fn();
+        const screenPointToLocation = vi.fn(() => new LngLat(7, 8));
+        const transform = {
+            centerPoint: new Point(10, 12),
+            center: new LngLat(0, 0),
+            screenPointToLocation,
+            setCenter: setCenterMock,
+        } satisfies Pick<ITransform, 'centerPoint' | 'center' | 'screenPointToLocation' | 'setCenter'>;
+        const options: MapControlsScenarioOptions = {
+            terrain: {} as Terrain,
+            tr: transform as unknown as ITransform,
+            deltasForHelper: {
+                panDelta: new Point(4, 6),
+                zoomDelta: 0,
+                rollDelta: 0,
+                pitchDelta: 0,
+                bearingDelta: 0,
+                around: new Point(0, 0),
+            },
+            preZoomAroundLoc: new LngLat(0, 0),
+            combinedEventsInProgress: {drag: createEventInProgress('drag')},
+            panDelta: new Point(4, 6),
+        };
+
+        manager._terrainMovement = true;
+        map._elevationFreeze = true;
+
+        manager._handleMapControls(options);
+
+        expect(screenPointToLocation).toHaveBeenCalled();
+        expect(setCenterMock).toHaveBeenCalledTimes(1);
+        const centerArg = setCenterMock.mock.calls[0][0] as LngLat;
+        expect(centerArg.lng).toBeCloseTo(7);
+        expect(centerArg.lat).toBeCloseTo(8);
+        expect(handlePan).not.toHaveBeenCalled();
+    });
+
+    it('_handleMapControls falls back to helper panning when not dragging in mercator terrain', () => {
+        const handleZoom = vi.fn();
+        const handlePan = vi.fn();
+        map.cameraHelper = {
+            handleMapControlsRollPitchBearingZoom: handleZoom,
+            handleMapControlsPan: handlePan,
+            useGlobeControls: false,
+        } as unknown as ICameraHelper;
+
+        const transform = {
+            centerPoint: new Point(0, 0),
+            center: new LngLat(0, 0),
+            screenPointToLocation: vi.fn(() => new LngLat(0, 0)),
+            setCenter: vi.fn(),
+        } satisfies Pick<ITransform, 'centerPoint' | 'center' | 'screenPointToLocation' | 'setCenter'>;
+        const options: MapControlsScenarioOptions = {
+            terrain: {} as Terrain,
+            tr: transform as unknown as ITransform,
+            deltasForHelper: {
+                panDelta: new Point(0, 0),
+                zoomDelta: 0,
+                rollDelta: 0,
+                pitchDelta: 0,
+                bearingDelta: 0,
+                around: new Point(0, 0),
+            },
+            preZoomAroundLoc: new LngLat(0, 0),
+            combinedEventsInProgress: {},
+            panDelta: undefined,
+        };
+
+        manager._terrainMovement = true;
+        map._elevationFreeze = true;
+
+        manager._handleMapControls(options);
+
+        expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
+    });
+});
 
 function createEventInProgress(name: keyof EventsInProgress): EventInProgress {
     return {
@@ -106,102 +291,3 @@ function createEventInProgress(name: keyof EventsInProgress): EventInProgress {
         originalEvent: new MapEvent(`${String(name)}start`),
     };
 }
-
-describe('HandlerManager terrain scenarios', () => {
-    describe('_handleMapControls', () => {
-        it('keeps terrain movement disabled when terrain is not enabled', () => {
-            const {manager, handleZoom, handlePan} = createManager(false);
-            const {options, setCenterMock} = createTerrainOptions({
-                terrain: null,
-                combinedEventsInProgress: {drag: true},
-            });
-
-            manager._terrainMovement = false;
-            manager._map._elevationFreeze = false;
-
-            manager._handleMapControls(options);
-
-            expect(handleZoom).toHaveBeenCalledWith(options.deltasForHelper, options.tr);
-            expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
-            expect(manager._terrainMovement).toBe(false);
-            expect(manager._map._elevationFreeze).toBe(false);
-            expect(setCenterMock).not.toHaveBeenCalled();
-        });
-
-        it('enables terrain movement for globe terrain handling', () => {
-            const {manager, handlePan} = createManager(true);
-            const {options} = createTerrainOptions({
-                combinedEventsInProgress: {drag: true},
-            });
-
-            manager._terrainMovement = false;
-            manager._map._elevationFreeze = false;
-
-            manager._handleMapControls(options);
-
-            expect(manager._terrainMovement).toBe(true);
-            expect(manager._map._elevationFreeze).toBe(true);
-            expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
-        });
-
-        it('keeps terrain movement state when globe terrain is already active', () => {
-            const {manager, handlePan} = createManager(true);
-            const {options} = createTerrainOptions();
-
-            manager._terrainMovement = true;
-            manager._map._elevationFreeze = true;
-
-            manager._handleMapControls(options);
-
-            expect(manager._terrainMovement).toBe(true);
-            expect(manager._map._elevationFreeze).toBe(true);
-            expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
-        });
-
-        it('activates terrain movement on first drag in mercator terrain', () => {
-            const {manager, handlePan} = createManager(false);
-            const {options, setCenterMock} = createTerrainOptions({combinedEventsInProgress: {drag: true}});
-
-            manager._terrainMovement = false;
-            manager._map._elevationFreeze = false;
-
-            manager._handleMapControls(options);
-
-            expect(manager._terrainMovement).toBe(true);
-            expect(manager._map._elevationFreeze).toBe(true);
-            expect(handlePan).toHaveBeenCalledTimes(1);
-            expect(setCenterMock).not.toHaveBeenCalled();
-        });
-
-        it('drags using transform when already moving in mercator terrain', () => {
-            const {manager, handlePan} = createManager(false);
-            const panDelta = new Point(3, 4);
-            const screenPointToLocationResult = new LngLat(9, 10);
-            const {options, screenPointToLocationMock, setCenterMock} = createTerrainOptions({
-                combinedEventsInProgress: {drag: true},
-                panDelta,
-                centerPoint: new Point(1, 2),
-                screenPointToLocationResult,
-            });
-
-            manager._terrainMovement = true;
-
-            manager._handleMapControls(options);
-
-            expect(screenPointToLocationMock).toHaveBeenCalled();
-            expect(setCenterMock).toHaveBeenCalledWith(screenPointToLocationResult);
-            expect(handlePan).not.toHaveBeenCalled();
-        });
-
-        it('falls back to helper panning when not dragging in mercator terrain', () => {
-            const {manager, handlePan} = createManager(false);
-            const {options} = createTerrainOptions({combinedEventsInProgress: {}});
-
-            manager._terrainMovement = true;
-
-            manager._handleMapControls(options);
-
-            expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
-        });
-    });
-});
