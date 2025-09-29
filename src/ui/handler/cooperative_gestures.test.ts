@@ -58,7 +58,7 @@ describe('CoopGesturesHandler', () => {
 
         await sleep(200);
 
-        expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen.maplibregl-show')).toBeInstanceOf(HTMLDivElement);
+        expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen.maplibregl-show')).toBeNull();
         map.remove();
     });
 
