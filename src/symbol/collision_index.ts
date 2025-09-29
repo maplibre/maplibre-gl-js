@@ -11,6 +11,7 @@ import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {SingleCollisionBox} from '../data/bucket/symbol_bucket';
 import type {
     GlyphOffsetArray,
+    PlacedSymbol,
     SymbolLineVertexArray
 } from '../data/array_types.g';
 import type {OverlapMode} from '../style/style_layer/overlap_mode';
@@ -184,7 +185,7 @@ export class CollisionIndex {
 
     placeCollisionCircles(
         overlapMode: OverlapMode,
-        symbol: any,
+        symbol: PlacedSymbol,
         lineVertexArray: SymbolLineVertexArray,
         glyphOffsetArray: GlyphOffsetArray,
         fontSize: number,
