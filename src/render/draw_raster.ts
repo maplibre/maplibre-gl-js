@@ -121,7 +121,7 @@ function drawTiles(
                     ];
                 }
             }
-            // second looking to self fade in edge tiles that are not candidates for cross-fading above
+            // second looking to self fade non-loaded tiles that are not candidates for cross-fading above
             else if (tile.selfFading) {
                 fadeValues = getFadeValues(tile, null, fadeDuration);
                 parentScaleBy = 1;
