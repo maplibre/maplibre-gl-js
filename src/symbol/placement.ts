@@ -683,7 +683,7 @@ export class Placement {
             placeText = placedGlyphBoxes && placedGlyphBoxes.placeable;
             offscreen = placedGlyphBoxes && placedGlyphBoxes.offscreen;
 
-            if (symbolInstance.useRuntimeCollisionCircles && symbolInstance.centerJustifiedTextSymbolIndex > 0) {
+            if (symbolInstance.useRuntimeCollisionCircles && symbolInstance.centerJustifiedTextSymbolIndex >= 0) {
                 const placedSymbol = bucket.text.placedSymbolArray.get(symbolInstance.centerJustifiedTextSymbolIndex);
                 const fontSize = symbolSize.evaluateSizeForFeature(bucket.textSizeData, partiallyEvaluatedTextSize, placedSymbol);
 
