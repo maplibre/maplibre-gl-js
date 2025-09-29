@@ -7,16 +7,14 @@ import {DepthMode} from '../gl/depth_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
 import {rasterUniformValues} from './program/raster_program';
 import {EXTENT} from '../data/extent';
-import {coveringZoomLevel} from '../geo/projection/covering_tiles';
+import {FadingRoles} from '../source/tile';
 import Point from '@mapbox/point-geometry';
 
 import type {Painter, RenderOptions} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
 import type {OverscaledTileID} from '../source/tile_id';
-import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {Tile} from '../source/tile';
-import type {Terrain} from './terrain';
 
 const cornerCoords = [
     new Point(0, 0),
@@ -83,40 +81,55 @@ function drawTiles(
 
     const colorMode = painter.colorModeForRenderPass();
     const align = !painter.options.moving;
+    const rasterOpacity = layer.paint.get('raster-opacity');
+    const rasterResampling = layer.paint.get('raster-resampling');
+    const fadeDuration = layer.paint.get('raster-fade-duration');
+    const isTerrain = !!painter.style.map.terrain;
+
+    // update raster fade duration in source cache with the newest layer paint property
+    sourceCache.setRasterFadeDuration(fadeDuration);
 
     // Draw all tiles
     for (const coord of coords) {
         // Set the lower zoom level to sublayer 0, and higher zoom levels to higher sublayers
         // Use gl.LESS to prevent double drawing in areas where tiles overlap.
         const depthMode = painter.getDepthModeForSublayer(coord.overscaledZ - minTileZ,
-            layer.paint.get('raster-opacity') === 1 ? DepthMode.ReadWrite : DepthMode.ReadOnly, gl.LESS);
+            rasterOpacity === 1 ? DepthMode.ReadWrite : DepthMode.ReadOnly, gl.LESS);
 
         const tile = sourceCache.getTile(coord);
+        const textureFilter = rasterResampling === 'nearest' ?  gl.NEAREST : gl.LINEAR;
 
-        tile.registerFadeDuration(layer.paint.get('raster-fade-duration'));
-
-        const parentTile = sourceCache.findLoadedParent(coord, 0);
-        const siblingTile = sourceCache.findLoadedSibling(coord);
-        // Prefer parent tile if present
-        const fadeTileReference = parentTile || siblingTile || null;
-        const fade = getFadeValues(tile, fadeTileReference, sourceCache, layer, painter.transform, painter.style.map.terrain);
-
-        let parentScaleBy, parentTL;
-
-        const textureFilter = layer.paint.get('raster-resampling') === 'nearest' ?  gl.NEAREST : gl.LINEAR;
-
+        // create and bind first texture
         context.activeTexture.set(gl.TEXTURE0);
         tile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
 
+        // create second texture - use either the current tile or fade tile to bind second texture below
         context.activeTexture.set(gl.TEXTURE1);
 
-        if (parentTile) {
-            parentTile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
-            parentScaleBy = Math.pow(2, parentTile.tileID.overscaledZ - tile.tileID.overscaledZ);
-            parentTL = [tile.tileID.canonical.x * parentScaleBy % 1, tile.tileID.canonical.y * parentScaleBy % 1];
-        } else {
-            tile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
+        // calculate tile fading values
+        let parentTile = null, fadeValues = null, parentScaleBy = null, parentTopLeft = null;
+        if (fadeDuration > 0 && !isTerrain) {
+            // first looking to cross-fade with a departing/incoming parent (the parent can be ideal or non-ideal)
+            if (tile.fadingParent) {
+                parentTile = sourceCache._getLoadedTile(tile.fadingParent);
+                if (parentTile) {
+                    fadeValues = getFadeValues(tile, parentTile, fadeDuration);
+                    parentScaleBy = Math.pow(2, parentTile.tileID.overscaledZ - tile.tileID.overscaledZ);
+                    parentTopLeft = [
+                        tile.tileID.canonical.x * parentScaleBy % 1,
+                        tile.tileID.canonical.y * parentScaleBy % 1
+                    ];
+                }
+            }
+            // second looking to self fade in edge tiles that are not candidates for cross-fading above
+            else if (tile.selfFading) {
+                fadeValues = getFadeValues(tile, null, fadeDuration);
+                parentScaleBy = 1;
+                parentTopLeft = [0, 0];
+            }
         }
+        // bind the second texture
+        (parentTile || tile).texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
 
         // Enable anisotropic filtering only when the pitch is greater than 20 degrees
         // to preserve image sharpness on flat or slightly tilted maps.
@@ -127,10 +140,9 @@ function drawTiles(
 
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
         const projectionData = transform.getProjectionData({overscaledTileID: coord, aligned: align, applyGlobeMatrix: !isRenderingToTexture, applyTerrainMatrix: true});
-        const uniformValues = rasterUniformValues(parentTL || [0, 0], parentScaleBy || 1, fade, layer, corners);
+        const uniformValues = rasterUniformValues(parentTopLeft || [0, 0], parentScaleBy || 1, fadeValues || {opacity: 1, mix: 0}, layer, corners);
 
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, allowPoles, 'raster');
-
         const stencilMode = stencilModes ? stencilModes[coord.overscaledZ] : StencilMode.disabled;
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, flipCullfaceMode ? CullFaceMode.frontCCW : CullFaceMode.backCCW,
@@ -139,45 +151,44 @@ function drawTiles(
     }
 }
 
-function getFadeValues(tile: Tile, parentTile: Tile, sourceCache: SourceCache, layer: RasterStyleLayer, transform: IReadonlyTransform, terrain: Terrain) {
-    const fadeDuration = layer.paint.get('raster-fade-duration');
+function getFadeValues(tile: Tile, parentTile: Tile, fadeDuration: number): {opacity: number; mix: number} {
+    if (fadeDuration <= 0) return {opacity: 1, mix: 0};
 
-    if (!terrain && fadeDuration > 0) {
-        const now = browser.now();
-        const sinceTile = (now - tile.timeAdded) / fadeDuration;
-        const sinceParent = parentTile ? (now - parentTile.timeAdded) / fadeDuration : -1;
+    const now = browser.now();
+    const timeSinceTile = (now - tile.timeAdded) / fadeDuration;
 
-        const source = sourceCache.getSource();
-        const idealZ = coveringZoomLevel(transform, {
-            tileSize: source.tileSize,
-            roundZoom: source.roundZoom
-        });
+    // crossfading for parent tile
+    if (parentTile) {
+        const timeSinceParent = (now - parentTile.timeAdded) / fadeDuration;
 
-        // if no parent or parent is older, fade in; if parent is younger, fade out
-        const fadeIn = !parentTile || Math.abs(parentTile.tileID.overscaledZ - idealZ) > Math.abs(tile.tileID.overscaledZ - idealZ);
+        // fade in this tile if it’s closer to ideal zoom than partner, otherwise fade out
+        const doFadeIn = (tile.fadingBaseRole === FadingRoles.Incoming);
 
-        const childOpacity = (fadeIn && tile.refreshedUponExpiration) ? 1 : clamp(fadeIn ? sinceTile : 1 - sinceParent, 0, 1);
+        // set fading opacity based on current fade direction
+        const opacities = [
+            clamp(timeSinceTile, 0, 1),
+            clamp(1 - timeSinceParent, 0, 1)
+        ];
+        tile.fadeOpacity = doFadeIn ? opacities[0] : opacities[1];
+        parentTile.fadeOpacity = doFadeIn ? opacities[1] : opacities[0];
 
-        // we don't crossfade tiles that were just refreshed upon expiring:
-        // once they're old enough to pass the crossfading threshold
-        // (fadeDuration), unset the `refreshedUponExpiration` flag so we don't
-        // incorrectly fail to crossfade them when zooming
-        if (tile.refreshedUponExpiration && sinceTile >= 1) tile.refreshedUponExpiration = false;
-
-        if (parentTile) {
-            return {
-                opacity: 1,
-                mix: 1 - childOpacity
-            };
-        } else {
-            return {
-                opacity: childOpacity,
-                mix: 0
-            };
-        }
-    } else {
+        // when crossfading, this tile is drawn fully opaque, and mix controls partner visibility
         return {
             opacity: 1,
+            mix: 1 - tile.fadeOpacity
+        };
+    }
+    // simple fade-in for tile without partner
+    else {
+        const tileOpacity = clamp(timeSinceTile, 0, 1);
+
+        // clear refresh flag once fade is complete
+        if (tile.refreshedUponExpiration && timeSinceTile >= 1) {
+            tile.refreshedUponExpiration = false;
+        }
+
+        return {
+            opacity: tileOpacity,
             mix: 0
         };
     }

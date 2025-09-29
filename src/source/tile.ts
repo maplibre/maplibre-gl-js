@@ -45,6 +45,11 @@ import type {FeatureIndex, QueryResults} from '../data/feature_index';
  */
 export type TileState = 'loading' | 'loaded' | 'reloading' | 'unloaded' | 'errored' | 'expired';
 
+// raster fading roles - tile is either incoming (fading in) or departing (fading out)
+export enum FadingRoles {
+    Departing, Incoming
+}
+
 /**
  * A tile object is the combination of a Coordinate, which defines
  * its place, as well as a unique ID and data tracking for its content
@@ -66,6 +71,10 @@ export class Tile {
     state: TileState;
     timeAdded: number = 0;
     fadeEndTime: number = 0;
+    fadeOpacity: number = 1;
+    fadingBaseRole: FadingRoles;
+    fadingParent: OverscaledTileID;
+    selfFading: boolean;
     collisionBoxArray: CollisionBoxArray;
     redoWhenDone: boolean;
     showCollisionBoxes: boolean;
@@ -122,14 +131,13 @@ export class Tile {
         this.state = 'loading';
     }
 
-    registerFadeDuration(duration: number) {
-        const fadeEndTime = duration + this.timeAdded;
-
-        if (fadeEndTime < this.fadeEndTime) {
-            return;
-        }
-
-        this.fadeEndTime = fadeEndTime;
+    resetFadeLogic() {
+        this.timeAdded = browser.now();
+        this.fadeEndTime = 0;
+        this.fadeOpacity = 1;
+        this.fadingBaseRole = null;
+        this.fadingParent = null;
+        this.selfFading = false;
     }
 
     wasRequested() {
@@ -431,7 +439,7 @@ export class Tile {
         }
     }
 
-    holdingForFade(): boolean {
+    holdingForSymbolFade(): boolean {
         return this.symbolFadeHoldUntil !== undefined;
     }
 
@@ -439,11 +447,11 @@ export class Tile {
         return !this.symbolFadeHoldUntil || this.symbolFadeHoldUntil < browser.now();
     }
 
-    clearFadeHold() {
+    clearSymbolFadeHold() {
         this.symbolFadeHoldUntil = undefined;
     }
 
-    setHoldDuration(duration: number) {
+    setSymbolHoldDuration(duration: number) {
         this.symbolFadeHoldUntil = browser.now() + duration;
     }
 

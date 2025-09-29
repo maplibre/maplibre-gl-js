@@ -294,7 +294,7 @@ export class Placement {
             pitchedLabelPlaneMatrix,
             scale,
             textPixelRatio,
-            holdingForFade: tile.holdingForFade(),
+            holdingForFade: tile.holdingForSymbolFade(),
             collisionBoxArray,
             partiallyEvaluatedTextSize: symbolSize.evaluateSizeForZoom(symbolBucket.textSizeData, this.transform.zoom),
             collisionGroup: this.collisionGroups.get(symbolBucket.sourceID)
