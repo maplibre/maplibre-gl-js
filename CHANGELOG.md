@@ -10,6 +10,7 @@
 - Fix issue where parent tiles are retained when deeper descendant tiles already cover the missing ideal tile. ([#6442](https://github.com/maplibre/maplibre-gl-js/pull/6442))
 - Fix an issue when GeolocateControl fires outofmaxbounds event with trackUserLocation disabled ([#6464](https://github.com/maplibre/maplibre-gl-js/pull/6464))
 - Fix an issue with globe+terrain "zooming" in when dragging towards the poles ([#6470](https://github.com/maplibre/maplibre-gl-js/pull/6470))
+- Fix integer overflow in symbol placement ([#6476](https://github.com/maplibre/maplibre-gl-js/pull/6476))
 
 ## 5.7.3
 
