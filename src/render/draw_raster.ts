@@ -161,10 +161,8 @@ function getFadeValues(tile: Tile, parentTile: Tile, fadeDuration: number): {opa
     if (parentTile) {
         const timeSinceParent = (now - parentTile.timeAdded) / fadeDuration;
 
-        // fade in this tile if it’s closer to ideal zoom than partner, otherwise fade out
-        const doFadeIn = (tile.fadingBaseRole === FadingRoles.Incoming);
-
         // set fading opacity based on current fade direction
+        const doFadeIn = (tile.fadingBaseRole === FadingRoles.Incoming);
         const opacities = [
             clamp(timeSinceTile, 0, 1),
             clamp(1 - timeSinceParent, 0, 1)
