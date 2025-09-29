@@ -51,7 +51,7 @@ export class FillBucket implements Bucket {
     indexArray2: LineIndexArray;
     indexBuffer2: IndexBuffer;
 
-    hasPattern: boolean;
+    hasDependencies: boolean;
     programConfigurations: ProgramConfigurationSet<FillStyleLayer>;
     segments: SegmentVector;
     segments2: SegmentVector;
@@ -63,7 +63,7 @@ export class FillBucket implements Bucket {
         this.layers = options.layers;
         this.layerIds = this.layers.map(layer => layer.id);
         this.index = options.index;
-        this.hasPattern = false;
+        this.hasDependencies = false;
         this.patternFeatures = [];
 
         this.layoutVertexArray = new FillLayoutArray();
@@ -76,7 +76,7 @@ export class FillBucket implements Bucket {
     }
 
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
-        this.hasPattern = hasPattern('fill', this.layers, options);
+        this.hasDependencies = hasPattern('fill', this.layers, options);
         const fillSortKey = this.layers[0].layout.get('fill-sort-key');
         const sortFeaturesByKey = !fillSortKey.isConstant();
         const bucketFeatures: BucketFeature[] = [];
@@ -112,7 +112,7 @@ export class FillBucket implements Bucket {
         for (const bucketFeature of bucketFeatures) {
             const {geometry, index, sourceLayerIndex} = bucketFeature;
 
-            if (this.hasPattern) {
+            if (this.hasDependencies) {
                 const patternFeature = addPatternDependencies('fill', this.layers, bucketFeature, {zoom: this.zoom}, options);
                 // pattern features are added only once the pattern is loaded into the image atlas
                 // so are stored during populate until later updated with positions by tile worker in addFeatures
