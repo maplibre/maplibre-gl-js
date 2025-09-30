@@ -148,7 +148,7 @@ export type MapLayerEventType = {
  * });
  * ```
  */
-export type MapEventType = {
+export interface MapEventType {
     /**
      * Fired when an error occurs. This is GL JS's primary error reporting
      * mechanism. We use an event instead of `throw` to better accommodate
@@ -754,8 +754,8 @@ export type MapProjectionEvent = {
     type: 'projectiontransition';
     /**
      * Specifies the name of the new projection.
-     * For example: 
-     * 
+     * For example:
+     *
      *  - `globe` to describe globe that has internally switched to mercator
      *  - `vertical-perspective` to describe a globe that doesn't change to mercator
      *  - `mercator` to describe mercator projection
