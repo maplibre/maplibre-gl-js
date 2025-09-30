@@ -2481,6 +2481,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../../interfaces/MapEventType/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MapEventType
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../interfaces/OverscaledTileID/" class="md-nav__link">
         
   
@@ -3112,6 +3135,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../DashEntry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    DashEntry
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../DistributiveKeys/" class="md-nav__link">
         
   
@@ -3693,29 +3739,6 @@
   
   <span class="md-ellipsis">
     MapDataEvent
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../MapEventType/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    MapEventType
     
   </span>
   
@@ -8147,10 +8170,13 @@
 <blockquote>
 <p><strong>MapLayerEventType</strong> = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/8895e414984a6348a1260ed986a0d2d7753367a8/src/ui/events.ts#L49">src/ui/events.ts:49</a></p>
-<p><code>MapLayerEventType</code> - a mapping between the event name and the event.
-<strong>Note:</strong> These events are compatible with the optional <code>layerId</code> parameter.
-If <code>layerId</code> is included as the second argument in <a href="../../classes/Map/#on">Map.on</a>, the event listener will fire only when the
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f71040d141d929a349578dacbdc40e3fd2ae7c6b/src/ui/events.ts#L50">src/ui/events.ts:50</a></p>
+<p><code>MapLayerEventType</code> - a mapping between the event name and the event.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These events are compatible with the optional <code>layerId</code> parameter.</p>
+</div>
+<p>If <code>layerId</code> is included as the second argument in <a href="../../classes/Map/#on">Map.on</a>, the event listener will fire only when the
 event action contains a visible portion of the specified layer.
 The following example can be used for all the events.</p>
 <h2 id="example">Example</h2>
@@ -8166,7 +8192,7 @@ The following example can be used for all the events.</p>
 <blockquote>
 <p><strong>click</strong>: <a href="../MapLayerMouseEvent/"><code>MapLayerMouseEvent</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/8895e414984a6348a1260ed986a0d2d7753367a8/src/ui/events.ts#L56">src/ui/events.ts:56</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f71040d141d929a349578dacbdc40e3fd2ae7c6b/src/ui/events.ts#L57">src/ui/events.ts:57</a></p>
 <p>Fired when a pointing device (usually a mouse) is pressed and released contains a visible portion of the specified layer.</p>
 <h4 id="see">See</h4>
 <ul>
@@ -8178,22 +8204,25 @@ The following example can be used for all the events.</p>
 <blockquote>
 <p><strong>contextmenu</strong>: <a href="../MapLayerMouseEvent/"><code>MapLayerMouseEvent</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/8895e414984a6348a1260ed986a0d2d7753367a8/src/ui/events.ts#L114">src/ui/events.ts:114</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f71040d141d929a349578dacbdc40e3fd2ae7c6b/src/ui/events.ts#L116">src/ui/events.ts:116</a></p>
 <p>Fired when the right button of the mouse is clicked or the context menu key is pressed within visible portion of the specified layer.</p>
 <hr />
 <h3 id="dblclick">dblclick</h3>
 <blockquote>
 <p><strong>dblclick</strong>: <a href="../MapLayerMouseEvent/"><code>MapLayerMouseEvent</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/8895e414984a6348a1260ed986a0d2d7753367a8/src/ui/events.ts#L62">src/ui/events.ts:62</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f71040d141d929a349578dacbdc40e3fd2ae7c6b/src/ui/events.ts#L64">src/ui/events.ts:64</a></p>
 <p>Fired when a pointing device (usually a mouse) is pressed and released twice contains a visible portion of the specified layer.</p>
-<p><strong>Note:</strong> Under normal conditions, this event will be preceded by two <code>click</code> events.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Under normal conditions, this event will be preceded by two <code>click</code> events.</p>
+</div>
 <hr />
 <h3 id="mousedown">mousedown</h3>
 <blockquote>
 <p><strong>mousedown</strong>: <a href="../MapLayerMouseEvent/"><code>MapLayerMouseEvent</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/8895e414984a6348a1260ed986a0d2d7753367a8/src/ui/events.ts#L67">src/ui/events.ts:67</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f71040d141d929a349578dacbdc40e3fd2ae7c6b/src/ui/events.ts#L69">src/ui/events.ts:69</a></p>
 <p>Fired when a pointing device (usually a mouse) is pressed while inside a visible portion of the specified layer.</p>
 <h4 id="see_1">See</h4>
 <p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/">Create a draggable point</a></p>
@@ -8202,7 +8231,7 @@ The following example can be used for all the events.</p>
 <blockquote>
 <p><strong>mouseenter</strong>: <a href="../MapLayerMouseEvent/"><code>MapLayerMouseEvent</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/8895e414984a6348a1260ed986a0d2d7753367a8/src/ui/events.ts#L90">src/ui/events.ts:90</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f71040d141d929a349578dacbdc40e3fd2ae7c6b/src/ui/events.ts#L92">src/ui/events.ts:92</a></p>
 <p>Fired when a pointing device (usually a mouse) enters a visible portion of a specified layer from
 outside that layer or outside the map canvas.</p>
 <h4 id="see_2">See</h4>
@@ -8215,7 +8244,7 @@ outside that layer or outside the map canvas.</p>
 <blockquote>
 <p><strong>mouseleave</strong>: <a href="../MapLayerMouseEvent/"><code>MapLayerMouseEvent</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/8895e414984a6348a1260ed986a0d2d7753367a8/src/ui/events.ts#L98">src/ui/events.ts:98</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f71040d141d929a349578dacbdc40e3fd2ae7c6b/src/ui/events.ts#L100">src/ui/events.ts:100</a></p>
 <p>Fired when a pointing device (usually a mouse) leaves a visible portion of a specified layer, or leaves
 the map canvas.</p>
 <h4 id="see_3">See</h4>
@@ -8228,7 +8257,7 @@ the map canvas.</p>
 <blockquote>
 <p><strong>mousemove</strong>: <a href="../MapLayerMouseEvent/"><code>MapLayerMouseEvent</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/8895e414984a6348a1260ed986a0d2d7753367a8/src/ui/events.ts#L82">src/ui/events.ts:82</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f71040d141d929a349578dacbdc40e3fd2ae7c6b/src/ui/events.ts#L84">src/ui/events.ts:84</a></p>
 <p>Fired when a pointing device (usually a mouse) is moved while the cursor is inside a visible portion of the specified layer.
 As you move the cursor across the layer, the event will fire every time the cursor changes position within that layer.</p>
 <h4 id="see_4">See</h4>
@@ -8243,14 +8272,14 @@ As you move the cursor across the layer, the event will fire every time the curs
 <blockquote>
 <p><strong>mouseout</strong>: <a href="../MapLayerMouseEvent/"><code>MapLayerMouseEvent</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/8895e414984a6348a1260ed986a0d2d7753367a8/src/ui/events.ts#L110">src/ui/events.ts:110</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f71040d141d929a349578dacbdc40e3fd2ae7c6b/src/ui/events.ts#L112">src/ui/events.ts:112</a></p>
 <p>Fired when a point device (usually a mouse) leaves the visible portion of the specified layer.</p>
 <hr />
 <h3 id="mouseover">mouseover</h3>
 <blockquote>
 <p><strong>mouseover</strong>: <a href="../MapLayerMouseEvent/"><code>MapLayerMouseEvent</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/8895e414984a6348a1260ed986a0d2d7753367a8/src/ui/events.ts#L106">src/ui/events.ts:106</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f71040d141d929a349578dacbdc40e3fd2ae7c6b/src/ui/events.ts#L108">src/ui/events.ts:108</a></p>
 <p>Fired when a pointing device (usually a mouse) is moved inside a visible portion of the specified layer.</p>
 <h4 id="see_5">See</h4>
 <ul>
@@ -8263,7 +8292,7 @@ As you move the cursor across the layer, the event will fire every time the curs
 <blockquote>
 <p><strong>mouseup</strong>: <a href="../MapLayerMouseEvent/"><code>MapLayerMouseEvent</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/8895e414984a6348a1260ed986a0d2d7753367a8/src/ui/events.ts#L72">src/ui/events.ts:72</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f71040d141d929a349578dacbdc40e3fd2ae7c6b/src/ui/events.ts#L74">src/ui/events.ts:74</a></p>
 <p>Fired when a pointing device (usually a mouse) is released while inside a visible portion of the specified layer.</p>
 <h4 id="see_6">See</h4>
 <p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/">Create a draggable point</a></p>
@@ -8272,7 +8301,7 @@ As you move the cursor across the layer, the event will fire every time the curs
 <blockquote>
 <p><strong>touchcancel</strong>: <a href="../MapLayerTouchEvent/"><code>MapLayerTouchEvent</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/8895e414984a6348a1260ed986a0d2d7753367a8/src/ui/events.ts#L129">src/ui/events.ts:129</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f71040d141d929a349578dacbdc40e3fd2ae7c6b/src/ui/events.ts#L131">src/ui/events.ts:131</a></p>
 <p>Fired when a <a href="https://developer.mozilla.org/en-US/docs/Web/Events/touchstart"><code>touchstart</code></a> event occurs within the visible portion of the specified layer.</p>
 <h4 id="see_7">See</h4>
 <p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/">Create a draggable point</a></p>
@@ -8281,7 +8310,7 @@ As you move the cursor across the layer, the event will fire every time the curs
 <blockquote>
 <p><strong>touchend</strong>: <a href="../MapLayerTouchEvent/"><code>MapLayerTouchEvent</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/8895e414984a6348a1260ed986a0d2d7753367a8/src/ui/events.ts#L124">src/ui/events.ts:124</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f71040d141d929a349578dacbdc40e3fd2ae7c6b/src/ui/events.ts#L126">src/ui/events.ts:126</a></p>
 <p>Fired when a <a href="https://developer.mozilla.org/en-US/docs/Web/Events/touchend"><code>touchend</code></a> event occurs within the visible portion of the specified layer.</p>
 <h4 id="see_8">See</h4>
 <p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/">Create a draggable point</a></p>
@@ -8290,7 +8319,7 @@ As you move the cursor across the layer, the event will fire every time the curs
 <blockquote>
 <p><strong>touchstart</strong>: <a href="../MapLayerTouchEvent/"><code>MapLayerTouchEvent</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/8895e414984a6348a1260ed986a0d2d7753367a8/src/ui/events.ts#L119">src/ui/events.ts:119</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f71040d141d929a349578dacbdc40e3fd2ae7c6b/src/ui/events.ts#L121">src/ui/events.ts:121</a></p>
 <p>Fired when a <a href="https://developer.mozilla.org/en-US/docs/Web/Events/touchstart"><code>touchstart</code></a> event occurs within the visible portion of the specified layer.</p>
 <h4 id="see_9">See</h4>
 <p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/">Create a draggable point</a></p>
