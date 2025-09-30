@@ -592,9 +592,8 @@ export class SourceCache extends Evented {
             this._updateFadingTiles(idealTileIDs, retain);
         }
 
+        // Make sure retained tiles clear fade holds so if they're removed again their fade timer starts fresh.
         for (const retainedId in retain) {
-            // Make sure retained tiles always clear any existing fade holds
-            // so that if they're removed again their fade timer starts fresh.
             this._tiles[retainedId]?.clearSymbolFadeHold();
         }
 
