@@ -41,15 +41,11 @@ describe('placement', () => {
         const bucket = {
             bucketInstanceId,
             symbolInstances: new SymbolInstanceArray(),
-            collisionArrays: {} as {[_: number]: CollisionBoxArray},
-            text: {
-                placedSymbolArray: new PlacedSymbolArray(),
-            }
+            collisionArrays: {[0]: new CollisionBoxArray()},
         };
         const int16Overflow = Math.pow(2, 15) + 1;
         bucket.symbolInstances.emplaceBack(0, 0, 0, int16Overflow, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0);
         bucket.symbolInstances.get(0).crossTileID = 1;
-        bucket.collisionArrays[0] = new CollisionBoxArray();
         expect(() => {
             placement.placeLayerBucketPart({
                 symbolInstanceStart: 0,
