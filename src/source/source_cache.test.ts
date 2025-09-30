@@ -1,6 +1,6 @@
-import {describe, afterEach, test, expect, vi} from 'vitest';
+import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {SourceCache} from './source_cache';
-import {Map} from '../ui/map';
 import {type Source, addSourceType} from './source';
 import {Tile, FadingRoles} from './tile';
 import {CanonicalTileID, OverscaledTileID} from './tile_id';
@@ -10,7 +10,9 @@ import {Event, ErrorEvent, Evented} from '../util/evented';
 import {extend} from '../util/util';
 import {type Dispatcher} from '../util/dispatcher';
 import {TileBounds} from './tile_bounds';
-import {sleep, waitForEvent} from '../util/test/util';
+import {sleep, waitForEvent, beforeMapTest, createMap as globalCreateMap} from '../util/test/util';
+
+import {type Map} from '../ui/map';
 import {type TileCache} from './tile_cache';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {GlobeTransform} from '../geo/projection/globe_transform';
@@ -35,6 +37,9 @@ class SourceMock extends Evented implements Source {
         this.setEventedParent(eventedParent);
         if (sourceOptions.hasTile) {
             this.hasTile = sourceOptions.hasTile;
+        }
+        if (sourceOptions.raster) {
+            this.type = 'raster';
         }
     }
     loadTile(tile: Tile): Promise<void> {
@@ -97,16 +102,25 @@ function createSourceCache(options?, used?) {
     return scWithTestLogic;
 }
 
+type MapOptions = {
+    style: StyleSpecification;
+};
+
+function createMap(options: MapOptions) {
+    const container = window.document.createElement('div');
+    window.document.body.appendChild(container);
+    Object.defineProperty(container, 'clientWidth', {value: 512});
+    Object.defineProperty(container, 'clientHeight', {value: 512});
+    return globalCreateMap({container, ...options});
+}
+
+beforeEach(() => {
+    beforeMapTest();
+});
+
 afterEach(() => {
     vi.clearAllMocks();
 });
-
-class ResizeObserverStub {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-}
-(global as any).ResizeObserver = ResizeObserverStub;
 
 describe('SourceCache.addTile', () => {
     test('loads tile when uncached', () => {
@@ -594,13 +608,10 @@ describe('SourceCache.update', () => {
         transform.resize(512, 512);
         transform.setZoom(1);
 
-        const sourceCache = createSourceCache({});
+        const sourceCache = createSourceCache({raster: true});
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'loaded';
         };
-
-        // trigger raster fading logic to begin seeking fading tiles - see _updateRetainedTiles
-        (sourceCache._source as any).type = 'raster';
 
         const addSpy = vi.spyOn(sourceCache, '_addTile');
         const dataPromise = waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
@@ -613,23 +624,21 @@ describe('SourceCache.update', () => {
     });
 
     test('bypasses fading logic when raster fading is disabled', async () => {
-        const map = new Map({
-            container: document.createElement('div'),
+        const map = createMap({
             style: {
                 version: 8,
                 sources: {rasterSource: {type: 'raster', tiles: [], tileSize: 256}},
                 layers: [{id: 'rasterLayer', type: 'raster', source: 'rasterSource',
                     paint: {'raster-fade-duration': 0}
                 }]
-            },
-            interactive: false
+            }
         });
         await map.once('styledata');
 
-        const style = (map as any).style;
+        const style = (map as Map).style;
         const sourceCache = style.sourceCaches['rasterSource'];
         const spy = vi.spyOn(sourceCache, '_updateFadingTiles');
-        sourceCache._loadTile = () => {};
+        sourceCache._loadTile = async () => {};
 
         const fakeTile = new Tile(new OverscaledTileID(3, 0, 3, 1, 2), undefined);
         (fakeTile as any).texture = {bind: () => {}, size: [256, 256]};
@@ -847,8 +856,10 @@ describe('SourceCache.update', () => {
         transform.resize(1024, 1024);
         transform.setZoom(10);
 
-        const sourceCache = createSourceCache();
+        const sourceCache = createSourceCache({raster: true});
+        const loadedTiles: {[_: string]: Tile} = {};
         sourceCache._source.loadTile = async (tile) => {
+            loadedTiles[tile.tileID.key] = tile;
             tile.state = 'loaded';
         };
         sourceCache.on('data', (e) => {
@@ -856,23 +867,22 @@ describe('SourceCache.update', () => {
                 sourceCache.update(transform);
             }
         });
-        (sourceCache._source as any).type = 'raster';
-        sourceCache._rasterFadeDuration = 300;
+        sourceCache.setRasterFadeDuration(300);
         sourceCache.onAdd(undefined);
 
         // get default zoom ideal tiles at zoom specified above
-        await Promise.resolve();
+        await sleep(0);
         // ideal tiles will become fading children when zooming out
-        const children: Tile[] = Object.values(sourceCache._tiles);
+        const children: Tile[] = Object.values(loadedTiles);
 
         // zoom out 1 level - ideal tiles (new children) should fade out
         transform.setZoom(9);
         sourceCache.update(transform);
-        await Promise.resolve();
+        await sleep(0);
 
         // ensure that the loaded child was retained and fading logic was applied
         for (const child of children) {
-            expect(sourceCache._tiles).toHaveProperty(child.tileID.key);
+            expect(loadedTiles).toHaveProperty(child.tileID.key);
             expect(child.fadingBaseRole).toEqual(FadingRoles.Departing);
             expect(child).toHaveProperty('fadingParent');
         }
@@ -883,8 +893,10 @@ describe('SourceCache.update', () => {
         transform.resize(512, 512);
         transform.setZoom(10);
 
-        const sourceCache = createSourceCache();
+        const sourceCache = createSourceCache({raster: true});
+        const loadedTiles: {[_: string]: Tile} = {};
         sourceCache._source.loadTile = async (tile) => {
+            loadedTiles[tile.tileID.key] = tile;
             tile.state = 'loaded';
         };
         sourceCache.on('data', (e) => {
@@ -892,23 +904,22 @@ describe('SourceCache.update', () => {
                 sourceCache.update(transform);
             }
         });
-        (sourceCache._source as any).type = 'raster';
-        sourceCache._rasterFadeDuration = 300;
+        sourceCache.setRasterFadeDuration(300);
         sourceCache.onAdd(undefined);
 
         // get default zoom ideal tiles at zoom specified above
-        await Promise.resolve();
+        await sleep(0);
         // ideal tiles will become fading grandchildren when zooming out
-        const grandChildren: Tile[] = Object.values(sourceCache._tiles);
+        const grandChildren: Tile[] = Object.values(loadedTiles);
 
         // zoom out 2 levels - ideal tiles (new grandchildren) should fade out
         transform.setZoom(8);
         sourceCache.update(transform);
-        await Promise.resolve();
+        await sleep(0);
 
         // ensure that the loaded grandchild was retained and fading logic was applied
         for (const grandChild of grandChildren) {
-            expect(sourceCache._tiles).toHaveProperty(grandChild.tileID.key);
+            expect(loadedTiles).toHaveProperty(grandChild.tileID.key);
             expect(grandChild.fadingBaseRole).toEqual(FadingRoles.Departing);
             expect(grandChild).toHaveProperty('fadingParent');
         }
@@ -919,8 +930,10 @@ describe('SourceCache.update', () => {
         transform.resize(512, 512);
         transform.setZoom(10);
 
-        const sourceCache = createSourceCache();
+        const sourceCache = createSourceCache({raster: true});
+        const loadedTiles: {[_: string]: Tile} = {};
         sourceCache._source.loadTile = async (tile) => {
+            loadedTiles[tile.tileID.key] = tile;
             tile.state = 'loaded';
         };
         sourceCache.on('data', (e) => {
@@ -928,29 +941,28 @@ describe('SourceCache.update', () => {
                 sourceCache.update(transform);
             }
         });
-        (sourceCache._source as any).type = 'raster';
-        sourceCache._rasterFadeDuration = 300;
+        sourceCache.setRasterFadeDuration(300);
         sourceCache.onAdd(undefined);
 
         // get default zoom ideal tiles at zoom specified above
-        await Promise.resolve();
+        await sleep(0);
         // ideal tiles will become fading parent when zooming in
-        const parents: Tile[] = Object.values(sourceCache._tiles);
+        const parents: Tile[] = Object.values(loadedTiles);
         const parentKeys = new Set(parents.map(p => p.tileID.key));
 
         // zoom in 1 level - ideal tiles (new parent) should fade out
         transform.setZoom(11);
         sourceCache.update(transform);
-        await Promise.resolve();
+        await sleep(0);
 
         // ensure that the loaded parents were retained and fading logic was applied
         for (const parent of parents) {
-            expect(sourceCache._tiles).toHaveProperty(parent.tileID.key);
+            expect(loadedTiles).toHaveProperty(parent.tileID.key);
             expect(parent.fadeEndTime).toBeGreaterThan(0);
         }
 
         // check incoming tiles
-        const incoming = Object.values(sourceCache._tiles).filter(tile => !parentKeys.has(tile.tileID.key));
+        const incoming = Object.values(loadedTiles).filter(tile => !parentKeys.has(tile.tileID.key));
         for (const tile of incoming) {
             expect(tile.fadingBaseRole).toEqual(FadingRoles.Incoming);
             expect(tile).toHaveProperty('fadingParent');
@@ -962,8 +974,10 @@ describe('SourceCache.update', () => {
         transform.resize(512, 512);
         transform.setZoom(10);
 
-        const sourceCache = createSourceCache();
+        const sourceCache = createSourceCache({raster: true});
+        const loadedTiles: {[_: string]: Tile} = {};
         sourceCache._source.loadTile = async (tile) => {
+            loadedTiles[tile.tileID.key] = tile;
             tile.state = 'loaded';
         };
         sourceCache.on('data', (e) => {
@@ -971,29 +985,28 @@ describe('SourceCache.update', () => {
                 sourceCache.update(transform);
             }
         });
-        (sourceCache._source as any).type = 'raster';
-        sourceCache._rasterFadeDuration = 300;
+        sourceCache.setRasterFadeDuration(300);
         sourceCache.onAdd(undefined);
 
         // get default zoom ideal tiles at zoom specified above
-        await Promise.resolve();
+        await sleep(0);
         // ideal tiles will become fading grandparent when zooming in
-        const grandParents: Tile[] = Object.values(sourceCache._tiles);
+        const grandParents: Tile[] = Object.values(loadedTiles);
         const grandParentKeys = new Set(grandParents.map(p => p.tileID.key));
 
         // zoom in 2 levels - ideal tiles (new grandparent) should fade out
         transform.setZoom(12);
         sourceCache.update(transform);
-        await Promise.resolve();
+        await sleep(0);
 
         // ensure that the loaded grandparents were retained and fading logic was applied
         for (const grandParent of grandParents) {
-            expect(sourceCache._tiles).toHaveProperty(grandParent.tileID.key);
+            expect(loadedTiles).toHaveProperty(grandParent.tileID.key);
             expect(grandParent.fadeEndTime).toBeGreaterThan(0);
         }
 
         // check incoming tiles
-        const incoming = Object.values(sourceCache._tiles).filter(tile => !grandParentKeys.has(tile.tileID.key));
+        const incoming = Object.values(loadedTiles).filter(tile => !grandParentKeys.has(tile.tileID.key));
         for (const tile of incoming) {
             expect(tile.fadingBaseRole).toEqual(FadingRoles.Incoming);
             expect(tile).toHaveProperty('fadingParent');
@@ -2522,5 +2535,83 @@ describe('SourceCache::refreshTiles', () => {
         expect(spy.mock.calls[1][1]).toBe('expired');
         expect(spy.mock.calls[2][1]).toBe('expired');
         expect(spy.mock.calls[3][1]).toBe('expired');
+    });
+});
+
+describe('SourceCache._getEdgeTiles', () => {
+    const makeTile = (z: number, x: number, y: number): Tile => {
+        return {tileID: new OverscaledTileID(z, 0, z, x, y)} as Tile;
+    };
+
+    const keys = (tiles: Tile[]) => {
+        return tiles.map(t => t.tileID.key).sort();
+    };
+
+    test('returns [] for empty input', () => {
+        const sourceCache = createSourceCache();
+        expect(sourceCache._getEdgeTiles([])).toEqual([]);
+    });
+
+    test('returns all edge tiles at same zoom', () => {
+        const sourceCache = createSourceCache();
+        const tiles = [
+            makeTile(2, 0, 0),
+            makeTile(2, 1, 0),
+            makeTile(2, 0, 1),
+            makeTile(2, 1, 1),
+        ];
+        const edges = sourceCache._getEdgeTiles(tiles);
+        expect(keys(edges)).toEqual(keys(tiles));
+    });
+
+    test('returns only edge tiles for a 3x3 block at the same zoom', () => {
+        const sourceCache = createSourceCache();
+
+        // 3x3 block of tiles at z=3
+        const tiles: Tile[] = [];
+        for (let x = 4; x <= 6; x++) {
+            for (let y = 4; y <= 6; y++) {
+                tiles.push(makeTile(3, x, y));
+            }
+        }
+
+        const edges = sourceCache._getEdgeTiles(tiles);
+
+        // expected: 8 perimeter tiles (center tile (5,5) is not on any edge)
+        const expected = tiles.filter(t => {
+            const {x, y} = t.tileID.canonical;
+            return !(x === 5 && y === 5);
+        });
+
+        expect(keys(edges)).toEqual(keys(expected));
+    });
+
+    test('returns only perimeter tiles when mixing coarse and fine', () => {
+        const sourceCache = createSourceCache();
+
+        const coarse = [
+            makeTile(2, 0, 0),
+            makeTile(2, 1, 0),
+            makeTile(2, 0, 1),
+            makeTile(2, 1, 1)
+        ];
+        const fine = [
+            makeTile(3, 4, 4),
+            makeTile(3, 5, 4),
+            makeTile(3, 4, 5),
+            makeTile(3, 5, 5)
+        ];
+
+        const allTiles = [...coarse, ...fine];
+        const edges = sourceCache._getEdgeTiles(allTiles);
+
+        // expected: drop (z=2, x=1, y=1) and (z=3, x=4, y=4)
+        const expected = allTiles.filter(t => {
+            const {x, y, z} = t.tileID.canonical;
+            return !(z === 2 && x === 1 && y === 1) &&
+                   !(z === 3 && x === 4 && y === 4);
+        });
+
+        expect(keys(edges)).toEqual(keys(expected));
     });
 });

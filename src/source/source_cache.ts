@@ -35,13 +35,6 @@ type TileResult = {
     scale: number;
 };
 
-type CrossFadeArgs = {
-    baseTile: Tile;
-    baseFadingRole: FadingRoles;
-    parentTile: Tile;
-    now: number;
-};
-
 /**
  * @internal
  * `SourceCache` is responsible for
@@ -69,7 +62,7 @@ export class SourceCache extends Evented {
     _sourceLoaded: boolean;
 
     _sourceErrored: boolean;
-    _tiles: {[_: string]: Tile};
+    _tiles: Record<string, Tile>;
     _prevLng: number;
     _cache: TileCache;
     _timers: {
@@ -258,13 +251,8 @@ export class SourceCache extends Evented {
         return false;
     }
 
-    _isIdRenderable(id: string, symbolLayer?: boolean) {
-        const tile = this._tiles[id];
-        return (
-            tile?.hasData() &&
-            (!tile.fadeEndTime || tile.fadeOpacity > 0) &&  // raster fading
-            (symbolLayer || !tile.holdingForSymbolFade())   // symbol fading
-        );
+    _isIdRenderable(id: string, symbolLayer: boolean = false) {
+        return this._tiles[id]?.isRenderable(symbolLayer);
     }
 
     reload(sourceDataChanged?: boolean) {
@@ -470,11 +458,12 @@ export class SourceCache extends Evented {
      * Get a loaded tile currently in this source.
      * - loaded tiles exist in this._tiles - a cached tile is not a loaded tile
      */
-    _getLoadedTile(tileID: OverscaledTileID): Tile {
+    _getLoadedTile(tileID: OverscaledTileID): Tile | null {
         const tile = this._tiles[tileID.key];
         if (tile?.hasData()) {
             return tile;
         }
+        return null;
     }
 
     /**
@@ -521,7 +510,7 @@ export class SourceCache extends Evented {
         this._prevLng = lng;
 
         if (wrapDelta) {
-            const tiles: {[_: string]: Tile} = {};
+            const tiles: Record<string, Tile> = {};
             for (const key in this._tiles) {
                 const tile = this._tiles[key];
                 tile.tileID = tile.tileID.unwrapTo(tile.tileID.wrap + wrapDelta);
@@ -606,7 +595,7 @@ export class SourceCache extends Evented {
         for (const retainedId in retain) {
             // Make sure retained tiles always clear any existing fade holds
             // so that if they're removed again their fade timer starts fresh.
-            this._tiles[retainedId].clearSymbolFadeHold();
+            this._tiles[retainedId]?.clearSymbolFadeHold();
         }
 
         // Remove the tiles we don't need anymore.
@@ -658,8 +647,8 @@ export class SourceCache extends Evented {
      * children so they can be displayed as substitutes pending load of each ideal tile (to reduce flickering).
      * If no loaded children are available, fallback to seeking loaded parents as an alternative substitute.
      */
-    _updateRetainedTiles(idealTileIDs: Array<OverscaledTileID>, zoom: number): {[_: string]: OverscaledTileID} {
-        const retain: {[_: string]: OverscaledTileID} = {};
+    _updateRetainedTiles(idealTileIDs: Array<OverscaledTileID>, zoom: number): Record<string, OverscaledTileID> {
+        const retain: Record<string, OverscaledTileID> = {};
         const checked: {[_: string]: boolean} = {};
         const minCoveringZoom = Math.max(zoom - SourceCache.maxOverzooming, this._source.minzoom);
 
@@ -726,20 +715,26 @@ export class SourceCache extends Evented {
      * For a pitched map, the back of the map can have decreasing zooms while the front can have increasing zooms.
      * Fade logic must therefore adapt dynamically based on the previously rendered ideal tile set.
      */
-    _updateFadingTiles(idealTileIDs: OverscaledTileID[], retain: {[_: string]: OverscaledTileID}) {
+    _updateFadingTiles(idealTileIDs: OverscaledTileID[], retain: Record<string, OverscaledTileID>) {
         const now = browser.now();
+        let nonFaders: Tile[] = [];
 
         for (const idealID of idealTileIDs) {
             const idealTile = this._tiles[idealID.key];
+
             const parentIsFader = this._updateFadingParent(idealTile, retain, now);
             const childIsFader = this._updateFadingChildren(idealTile, retain, now);
-            if (!parentIsFader && !childIsFader) {
-                const selfIsFader = this._updateFadingSelf(idealTile, now);
-                if (!selfIsFader) {
-                    // if ideal tile is not a fader - reset fade logic in case it is needed (prevents holes in the grid)
-                    idealTile.resetFadeLogic();
-                }
-            }
+            if (parentIsFader || childIsFader) continue;
+
+            nonFaders.push(idealTile);
+        }
+
+        // fallback to looking for loading edge tiles for the non-faders
+        nonFaders = this._updateFadingEdges(nonFaders, now);
+        
+        // for all remaining non-faders reset the fade logic
+        for (const nonFader of nonFaders) {
+            nonFader.resetFadeLogic();
         }
     }
 
@@ -753,7 +748,7 @@ export class SourceCache extends Evented {
      *                             ┌───┬─┴─┬───┐  ┌───┬─┴─┬───┐  ┌───┬─┴─┬───┐  ┌───┬─┴─┬───┐
      *                             ■   ■   ■   ■  ■   ■   ■   ■  ■   ■   ■   ■  ■   ■   ■   ■
      */
-    _updateFadingParent(idealTile: Tile, retain: {[_: string]: OverscaledTileID}, now: number): boolean {
+    _updateFadingParent(idealTile: Tile, retain: Record<string, OverscaledTileID>, now: number): boolean {
         const {tileID: idealID, fadingBaseRole, fadingParent} = idealTile;
 
         // ideal tile already has fading parent - retain and return
@@ -768,18 +763,17 @@ export class SourceCache extends Evented {
         for (let ancestorZ = idealID.overscaledZ - 1; ancestorZ >= minAncestorZ; ancestorZ--) {
             const ancestorID = idealID.scaledTo(ancestorZ);
             const ancestorTile = this._getLoadedTile(ancestorID);
-            if (ancestorTile) {
-                // set the cross-fade logic with the ideal tile as the base and ancestor tile as the parent
-                this._setCrossFadeLogic({
-                    baseTile: idealTile,                    // fading in
-                    baseFadingRole: FadingRoles.Incoming,
-                    parentTile: ancestorTile,               // fading out
-                    now
-                });
+            if (!ancestorTile) continue;
 
-                retain[ancestorID.key] = ancestorID;
-                return true;
-            }
+            // set the cross-fade logic with the ideal tile as the base and ancestor tile as the parent
+            idealTile.setCrossFadeLogic({
+                baseFadingRole: FadingRoles.Incoming,
+                parentTile: ancestorTile,  // fading out
+                fadeEndTime: now + this._rasterFadeDuration
+            });
+
+            retain[ancestorID.key] = ancestorID;
+            return true;
         }
         return false;
     }
@@ -796,44 +790,16 @@ export class SourceCache extends Evented {
      *
      * Try direct children first. If none found, try grandchildren. Stops as soon as a generation provides a fader.
      */
-    _updateFadingChildren(idealTile: Tile, retain: {[_: string]: OverscaledTileID}, now: number): boolean {
-        const parseChildren = (tileID: OverscaledTileID): boolean => {
-            if (tileID.overscaledZ >= this._source.maxzoom) return false;
-            let foundFader = false;
-
-            // find loaded child tiles to fade with the ideal tile
-            for (const childID of tileID.children(this._source.maxzoom)) {
-                const childTile = this._getLoadedTile(childID);
-                if (childTile) {
-                    const {fadingBaseRole, fadingParent} = childTile;
-
-                    if (fadingBaseRole === FadingRoles.Departing && fadingParent) {
-                        // child is already fading - do nothing
-                    } else {
-                        // set the cross-fade logic with child tile as the base and ideal tile as the parent
-                        this._setCrossFadeLogic({
-                            baseTile: childTile,                    // fading out
-                            baseFadingRole: FadingRoles.Departing,
-                            parentTile: idealTile,                  // fading in
-                            now
-                        });
-                    }
-
-                    retain[childID.key] = childID;
-                    foundFader = true;
-                }
-            }
-
-            return foundFader;
-        };
-
+    _updateFadingChildren(idealTile: Tile, retain: Record<string, OverscaledTileID>, now: number): boolean {
         // search first level of descendents (4 tiles)
-        let hasFader = parseChildren(idealTile.tileID);
+        const idealChildren = idealTile.tileID.children(this._source.maxzoom);
+        let hasFader = this._parseFadingChildren(idealTile, idealChildren, retain, now);
 
         // if none found search second level of descendents (16 tiles)
         if (!hasFader) {
-            for (const childID of idealTile.tileID.children(this._source.maxzoom)) {
-                if (parseChildren(childID)) {
+            for (const childID of idealChildren) {
+                const grandChildIDs = childID.children(this._source.maxzoom);
+                if (this._parseFadingChildren(idealTile, grandChildIDs, retain, now)) {
                     hasFader = true;
                 }
             }
@@ -842,34 +808,88 @@ export class SourceCache extends Evented {
         return hasFader;
     }
 
-    _setCrossFadeLogic({baseTile, baseFadingRole, parentTile, now}: CrossFadeArgs) {
-        baseTile.resetFadeLogic();
-        baseTile.fadingBaseRole = baseFadingRole;
-        baseTile.fadingParent = parentTile.tileID;
-        baseTile.fadeEndTime = now + this._rasterFadeDuration;
+    _parseFadingChildren(idealTile: Tile, childIDs: OverscaledTileID[], retain: Record<string, OverscaledTileID>, now: number): boolean {
+        if (childIDs[0].overscaledZ >= this._source.maxzoom) return false;
+        let foundFader = false;
 
-        parentTile.resetFadeLogic();
-        parentTile.fadeEndTime = now + this._rasterFadeDuration;
+        // find loaded child tiles to fade with the ideal tile
+        for (const childID of childIDs) {
+            const childTile = this._getLoadedTile(childID);
+            if (!childTile) continue;
+
+            if (childTile.fadingBaseRole !== FadingRoles.Departing || !childTile.fadingParent) {
+                // set the cross-fade logic with child tile as the base and ideal tile as the parent
+                childTile.setCrossFadeLogic({
+                    baseFadingRole: FadingRoles.Departing,
+                    parentTile: idealTile,  // fading in
+                    fadeEndTime: now + this._rasterFadeDuration
+                });
+            }
+
+            retain[childID.key] = childID;
+            foundFader = true;
+        }
+
+        return foundFader;
     }
 
     /**
-     * Self fading for unloaded tiles. When loading tiles over gaps it feels more natural for them to fade in, however
-     * if they are already loaded/cached then there is no need to fade as map will look more cohesive with no gaps.
-     * Note that draw_raster determines fade priority, as many-to-one fading above supersedes self fading.
+     * One-to-one self fading for unloaded edge tiles (for panning sideways on map). for loading tiles over gaps it feels
+     * more natural for them to fade in, however if they are already loaded/cached then there is no need to fade as map will
+     * look cohesive with no gaps. Note that draw_raster determines fade priority, as many-to-one fade supersedes edge fading.
      */
-    _updateFadingSelf(idealTile: Tile, now: number): boolean {
-        // tile is already fading
-        if (idealTile.selfFading) {
-            return true;
+    _updateFadingEdges(idealTiles: Tile[], now: number): Tile[] {
+        const edgeTiles: Tile[] = this._getEdgeTiles(idealTiles);
+        const nonFaders: Tile[] = [];
+
+        for (const edgeTile of edgeTiles) {
+            // edge tile is already fading
+            if (edgeTile.selfFading) {
+                continue;
+            }
+            // fading not needed for tiles that are already loaded
+            if (edgeTile.hasData()) {
+                nonFaders.push(edgeTile);
+                continue;
+            }
+
+            // enable fading for loading edges with no data
+            const fadeEndTime = now + this._rasterFadeDuration;
+            edgeTile.setSelfFadeLogic(fadeEndTime);
         }
-        // enable self fading for ideal tiles without data (note at this point the cached has already been checked)
-        if (!idealTile.hasData()) {
-            idealTile.resetFadeLogic();
-            idealTile.selfFading = true;
-            idealTile.fadeEndTime = now + this._rasterFadeDuration;
-            return true;
-        }
-        return false;
+        
+        return nonFaders;
+    }
+
+    _getEdgeTiles(tiles: Tile[]): Tile[] {
+        if (!tiles.length) return [];
+
+        // set a common zoom for calculation (highest zoom) to reproject all tiles to this same zoom
+        const targetZ = Math.max(...tiles.map(t => t.tileID.canonical.z));
+
+        // project all tiles to targetZ while maintaining the reference to the original tile
+        const projected = tiles.map(tile => {
+            const {x, y, z} = tile.tileID.canonical;
+            const scale = Math.pow(2, targetZ - z);
+            return {
+                tile: tile,    // store the original ref
+                x: x * scale,  // new x at targetZ
+                y: y * scale   // new y at targetZ
+            };
+        });
+
+        // find edges at targetZ using the reprojected tile ids
+        const xs = projected.map(p => p.x);
+        const ys = projected.map(p => p.y);
+        const minX = Math.min(...xs);
+        const maxX = Math.max(...xs);
+        const minY = Math.min(...ys);
+        const maxY = Math.max(...ys);
+
+        // select tiles whose projected coords are on the edges
+        return projected
+            .filter(p => p.x === minX || p.x === maxX || p.y === minY || p.y === maxY)
+            .map(p => p.tile);
     }
 
     /**

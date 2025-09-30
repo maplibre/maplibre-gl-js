@@ -481,12 +481,6 @@ export class Style extends Evented {
             const styledLayer = createStyleLayer(layer, this._globalState);
             styledLayer.setEventedParent(this, {layer: {id: layer.id}});
             this._layers[layer.id] = styledLayer;
-
-            // for raster types let the source know fade duration for fade logic
-            if (isRasterStyleLayer(styledLayer) && this.sourceCaches[styledLayer.source]) {
-                const rasterFadeDuration = layer.paint?.['raster-fade-duration'] ?? styledLayer.paint.get('raster-fade-duration');
-                this.sourceCaches[styledLayer.source].setRasterFadeDuration(rasterFadeDuration);
-            }
         }
     }
 

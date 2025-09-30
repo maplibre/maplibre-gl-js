@@ -46,6 +46,12 @@ import type {DashEntry} from '../render/line_atlas';
  */
 export type TileState = 'loading' | 'loaded' | 'reloading' | 'unloaded' | 'errored' | 'expired';
 
+export type CrossFadeArgs = {
+    baseFadingRole: FadingRoles;
+    parentTile: Tile;
+    fadeEndTime: number;
+};
+
 // raster fading roles - tile is either incoming (fading in) or departing (fading out)
 export enum FadingRoles {
     Departing, Incoming
@@ -131,6 +137,35 @@ export class Tile {
         this.expiredRequestCount = 0;
 
         this.state = 'loading';
+    }
+
+    isRenderable(symbolLayer: boolean): boolean {
+        return (
+            this.hasData() &&
+            (!this.fadeEndTime || this.fadeOpacity > 0) &&  // raster fading
+            (symbolLayer || !this.holdingForSymbolFade())   // symbol fading
+        );
+    }
+
+    // many-to-one crossfade between a base tile and parent (ancestor) tile
+    setCrossFadeLogic({baseFadingRole, parentTile, fadeEndTime}: CrossFadeArgs) {
+        this.resetFadeLogic();
+        this.fadingBaseRole = baseFadingRole;
+        this.fadingParent = parentTile.tileID;
+        this.fadeEndTime = fadeEndTime;
+
+        parentTile.resetFadeLogic();
+        parentTile.setFadeEndTime(fadeEndTime);
+    }
+
+    setSelfFadeLogic(fadeEndTime: number) {
+        this.resetFadeLogic();
+        this.selfFading = true;
+        this.fadeEndTime = fadeEndTime;
+    }
+
+    setFadeEndTime(fadeEndTime: number) {
+        this.fadeEndTime = fadeEndTime;
     }
 
     resetFadeLogic() {
