@@ -483,7 +483,6 @@ export interface IReadonlyTransform extends ITransformGetters {
 }
 
 /**
- * @internal
  * The transform stores everything needed to project or otherwise transform points on a map,
  * including most of the map's view state - center, zoom, pitch, etc.
  * A transform is cloneable, which is used when a given map state must be retained for multiple frames, mostly during symbol placement.

@@ -29,8 +29,10 @@ import {Terrain} from '../render/terrain';
 import {RenderToTexture} from '../render/render_to_texture';
 import {config} from '../util/config';
 import {defaultLocale} from './default_locale';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {VerticalPerspectiveTransform} from './geo/projection/vertical_perspective_transform';
+import {GlobeTransform} from './geo/projection/globe_transform';
 import {isAbortError} from '../util/abort_error';
 import {isFramebufferNotCompleteError} from '../util/framebuffer_error';
 import {coveringTiles, type CoveringTilesOptions, createCalculateTileZoomFunction} from '../geo/projection/covering_tiles';
@@ -271,8 +273,8 @@ export type MapOptions = {
      */
     transformCameraUpdate?: CameraUpdateTransformFunction | null;
     /**
-     * TODO: Write
-     * Custom ITransform that overrides the transform (MercatorTransform et al)
+     * A custom {@link ITransform} that overrides the map's automatically assigned transform.
+     * Use {@link MercatorTransform}, {@link VerticalPerspectiveTransform}, or {@link GlobeTransform} to extend an already-implemented `ITransform`.
      * @defaultValue null
      */
     customTransform?: ITransform | null;
@@ -591,7 +593,7 @@ export class Map extends Camera {
 
     /**
      * The map's {@link CooperativeGesturesHandler}, which allows the user to see cooperative gesture info when user tries to zoom in/out.
-     * Find more details and examples using `cooperativeGestures` in the {@link CooperativeGesturesHandler} section.
+     * Find more details and examples us    ing `cooperativeGestures` in the {@link CooperativeGesturesHandler} section.
      */
     cooperativeGestures: CooperativeGesturesHandler;
 
@@ -604,8 +606,7 @@ export class Map extends Camera {
     cancelPendingTileRequestsWhileZooming: boolean;
 
     /**
-     * TODO: Write
-     * The map's custom transform which overrides the ITransform applied by the projection. which determines whether to cancel, or retain, tiles from the current viewport which are still loading but which belong to a farther (smaller) zoom level than the current one.
+     * The map's custom {@link ITransform} that overrides the automatically assigned transform.
      * @defaultValue null
      */
     customTransform: ITransform | null;
