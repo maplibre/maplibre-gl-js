@@ -585,18 +585,35 @@ export class SourceCache extends Evented {
         const zoom: number = coveringZoomLevel(transform, this._source);
         const retain: Record<string, OverscaledTileID> = this._updateRetainedTiles(idealTileIDs, zoom);
 
-        // enable fading for raster source except when using terrain3D which doesn't currently support fading
-        if (isRasterType(this._source.type) && this._rasterFadeDuration > 0 && !terrain) {
+        // enable fading for raster source except when using terrain which doesn't currently support fading
+        const isRaster = isRasterType(this._source.type);
+        if (isRaster && this._rasterFadeDuration > 0 && !terrain) {
             this._updateFadingTiles(idealTileIDs, retain);
         }
 
-        this._cleanUpTiles(retain);
+        // clean up non-retained tiles in this source
+        if (isRaster) {
+            this._cleanUpRasterTiles(retain);
+        } else {
+            this._cleanUpVectorTiles(retain);
+        }
     }
 
     /**
-     * Remove tiles that are no longer retained and also not needed for vector symbol fading
+     * Remove raster tiles that are no longer retained
      */
-    _cleanUpTiles(retain: Record<string, OverscaledTileID>) {
+    _cleanUpRasterTiles(retain: Record<string, OverscaledTileID>) {
+        for (const key in this._tiles) {
+            if (!retain[key]) {
+                this._removeTile(key);
+            }
+        }
+    }
+
+    /**
+     * Remove vector tiles that are no longer retained and also not needed for symbol fading
+     */
+    _cleanUpVectorTiles(retain: Record<string, OverscaledTileID>) {
         for (const key in this._tiles) {
             const tile = this._tiles[key];
 
@@ -606,19 +623,13 @@ export class SourceCache extends Evented {
                 continue;
             }
 
-            // remove non-retained raster tile
-            if (isRasterType(this._source.type)) {
-                this._removeTile(key);
-                continue;
-            }
-
-            // remove non-retained vector tile without symbols
+            // remove non-retained tiles without symbols
             if (!tile.hasSymbolBuckets) {
                 this._removeTile(key);
                 continue;
             }
 
-            // for vector tile with symbols - hold for fade - then remove
+            // for tile with symbols - hold for fade - then remove
             if (!tile.holdingForSymbolFade()) {
                 tile.setSymbolHoldDuration(this.map._fadeDuration);
             } else if (tile.symbolFadeFinished()) {
