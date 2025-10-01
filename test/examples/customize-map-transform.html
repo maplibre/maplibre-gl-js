@@ -28,9 +28,9 @@
 <body>
 <div id='map'></div>
 <table id='listing-group-bottom-left' class='listing-group'>
-    <!-- <tr><td><label for='allow-underzoom'>allowUnderzoom</label></td><td><input type='checkbox' id='allow-underzoom' checked/></td></tr>
-    <tr><td><label for='underzoom-slider' id='underzoom-label'>underzoom</label></td><td><input type='range' id='underzoom-slider' min='0' max='100' step='10' value='80' /></td></tr>
-    <tr><td><label for='overpan-slider' id='overpan-label'>overpan</label></td><td><input type='range' id='overpan-slider' min='0' max='50' step='10' value='0' /></td></tr> -->
+    <tr><td><label for='extend-viewport-bounds'>Extend viewport bounds</label></td><td><input type='checkbox' id='extend-viewport-bounds' checked/></td></tr>
+    <tr><td><label for='extend-scale-slider' id='extend-scale-label'>Extend scale</label></td><td><input type='range' id='extend-scale-slider' min='0' max='100' step='10' value='90' /></td></tr>
+    <tr><td><label for='extend-pan-slider' id='extend-pan-label'>Extend pan</label></td><td><input type='range' id='extend-pan-slider' min='0' max='100' step='10' value='10' /></td></tr>
     <tr><td><label for='max-bounds-select'>maxBounds</label></td>
         <td><select name="max-bounds-select" id="max-bounds-select">
             <option value="undefined">World (undefined)</option>
@@ -82,16 +82,56 @@
     }
 
     class CustomMercatorTransform extends maplibregl.MercatorTransform {
-        extendScalePercent = 90;  // 0–100
-        extendPanPercent = 10;  // 0–100
-        extendViewportBounds = () => !this._helper._renderWorldCopies
+        _extend = () => this.extendViewportBounds && !this._helper._renderWorldCopies;
+        
+        constructor() {
+            super();
+    
+            this._extendViewportBounds = true;
+            this._extendScalePercent = 90;  // 0–100
+            this._extendPanPercent = 10;  // 0–100
+        }
+
+        _refresh() {
+            this._helper._constrain();
+            this._helper._calcMatrices();
+        }
+
+        get extendViewportBounds() {
+            return this._extendViewportBounds
+        }
+
+        set extendViewportBounds(extend) {
+            this._extendViewportBounds = extend;
+            this._refresh();
+        }
+
+        get extendScalePercent() {
+            return this._extendScalePercent
+        }
+
+        set extendScalePercent(scale) {
+            this._extendScalePercent = scale;
+            console.log(scale)
+            this._refresh();
+        }
+
+        get extendPanPercent() {
+            return this._extendPanPercent
+        }
+
+        set extendPanPercent(pan) {
+            this._extendPanPercent = pan;
+            this._refresh();
+        }
+        
 
         // For a single-world map, a user can underzoom the world to see it
         // entirely in the viewport. This works by reducing the viewport's
         // apparent size to a square with a side length equal to the smallest
-        // viewport dimension scaled by the `underzoom` percentage.
+        // viewport dimension scaled by the `extendScale` percentage.
         // The user can also overpan the world bounds up to 50% the viewport
-        // dimensions, limited by the `overpan` percentage.
+        // dimensions, limited by the `extendPan` percentage.
         // _________________________
         // |viewport               |
         // |                       |
@@ -131,7 +171,7 @@
             const {x: screenWidth, y: screenHeight} = this.size;
 
             const underzoom =  // 0-1 (percent as normalized factor of viewport minimum dimension)
-                this.extendViewportBounds() ?
+                this._extend() ?
                     clamp(this.extendScalePercent, 0, 100) / 100 :
                     1.0;
 
@@ -165,7 +205,7 @@
             let modifiedX, modifiedY;
 
             const scale =
-                this.extendViewportBounds() ?
+                this._extend() ?
                     Math.min(scaleX || 0, scaleY || 0) :
                     Math.max(scaleX || 0, scaleY || 0);
 
@@ -185,7 +225,7 @@
             // the overpan to 50% the bounds to match that external limit.
             let lngOverpan = 0.0;
             let latOverpan = 0.0;
-            if (this.extendViewportBounds()) {
+            if (this._extend()) {
                 const overpan = clamp(this.extendPanPercent, 0, 100) / 100;  // 0-1 (percent as a normalized factor from viewport edge to center)
                 const latUnderzoomMinimumPan = 1.0 - ((maxY - minY) / screenHeight);
                 const lngUnderzoomMinimumPan = 1.0 - ((maxX - minX) / screenWidth);
@@ -224,12 +264,17 @@
         }
     }
 
+    const myCustomTransform = new CustomMercatorTransform();
+
     const map = new maplibregl.Map({
         container: 'map',
         renderWorldCopies: false,
-        customTransform: new CustomMercatorTransform(),
+        customTransform: myCustomTransform,
         style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
     });
+
+    // Or set:
+    // map.setCustomTransform(myCustomTransform);
     
     // New York, New York
     const w_north = 40.78;
@@ -260,20 +305,18 @@
     }
 
     const zeroPad = (num, places) => String(num).padStart(places, '0');
-    // function setUnderzoomFromUi() {
-    //     map.setAllowUnderzoom(
-    //         document.getElementById('allow-underzoom').checked
-    //     );
-    //     const underzoom = parseFloat(document.getElementById('underzoom-slider').value);
-    //     map.setUnderzoom(underzoom);
-    //     document.getElementById('underzoom-label').textContent = `underzoom (${zeroPad(underzoom, 3)}%)`;
-    //     map.setZoom(-Infinity);
-    // }
-    // function setOverpanFromUi() {
-    //     const overpan = parseFloat(document.getElementById('overpan-slider').value);
-    //     map.setOverpan(overpan);
-    //     document.getElementById('overpan-label').textContent = `overpan (${zeroPad(overpan, 2)}%)`;
-    // }
+    function setExtendScaleFromUi() {
+        myCustomTransform.extendViewportBounds = document.getElementById('extend-viewport-bounds').checked;
+        const extendScale = parseFloat(document.getElementById('extend-scale-slider').value);
+        myCustomTransform.extendScalePercent = extendScale;
+        document.getElementById('extend-scale-label').textContent = `Extend scale (${zeroPad(extendScale, 2)}%)`;
+        map.setZoom(-Infinity);
+    }
+    function setExtendPanFromUi() {
+        const extendPan = parseFloat(document.getElementById('extend-pan-slider').value);
+        myCustomTransform.extendPanPercent = extendPan;
+        document.getElementById('extend-pan-label').textContent = `Extend pan (${zeroPad(extendPan, 2)}%)`;
+    }
     function selectMaxBoundsFromUi() {
         const option = document.getElementById('max-bounds-select').value;
         map.setMaxBounds(bounds_options[option].bounds);
@@ -336,12 +379,12 @@
                 'line-offset': -2,
             }
         });
-        // document.getElementById('allow-underzoom').addEventListener('change', setUnderzoomFromUi);
-        // document.getElementById('underzoom-slider').addEventListener('input', setUnderzoomFromUi);
-        // document.getElementById('overpan-slider').addEventListener('input', setOverpanFromUi);
+        document.getElementById('extend-viewport-bounds').addEventListener('change', setExtendScaleFromUi);
+        document.getElementById('extend-scale-slider').addEventListener('input', setExtendScaleFromUi);
+        document.getElementById('extend-pan-slider').addEventListener('input', setExtendPanFromUi);
         document.getElementById('max-bounds-select').addEventListener('change', selectMaxBoundsFromUi);
-        // setUnderzoomFromUi();
-        // setOverpanFromUi();
+        setExtendScaleFromUi();
+        setExtendPanFromUi();
         selectMaxBoundsFromUi();
     });
 </script>
