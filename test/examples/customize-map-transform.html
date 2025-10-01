@@ -82,9 +82,30 @@
     }
 
     class CustomMercatorTransform extends maplibregl.MercatorTransform {
-        underzoomPercent = 50;
-        overpanPercent = 100;
-        allowUnderzoom = () => !this._helper._renderWorldCopies
+        extendScalePercent = 90;  // 0–100
+        extendPanPercent = 10;  // 0–100
+        extendViewportBounds = () => !this._helper._renderWorldCopies
+
+        // For a single-world map, a user can underzoom the world to see it
+        // entirely in the viewport. This works by reducing the viewport's
+        // apparent size to a square with a side length equal to the smallest
+        // viewport dimension scaled by the `underzoom` percentage.
+        // The user can also overpan the world bounds up to 50% the viewport
+        // dimensions, limited by the `overpan` percentage.
+        // _________________________
+        // |viewport               |
+        // |                       |
+        // |                       |
+        // |     -———————————-     |
+        // |     |map bounds |     |
+        // |     |           |     |
+        // |·····|···········|<--->| overpan
+        // |     |           |     |
+        // |     -———————————-     |
+        // |·····<----------->·····| underzoom
+        // |                       |
+        // |                       |
+        // |_______________________|
 
         getConstrained(lngLat, zoom) {
             zoom = clamp(+zoom, this.minZoom, this.maxZoom);
@@ -109,30 +130,9 @@
             let scaleX = 0;
             const {x: screenWidth, y: screenHeight} = this.size;
 
-            // For a single-world map, a user can underzoom the world to see it
-            // entirely in the viewport. This works by reducing the viewport's
-            // apparent size to a square with a side length equal to the smallest
-            // viewport dimension scaled by the `underzoom` percentage.
-            // The user can also overpan the world bounds up to 50% the viewport
-            // dimensions, limited by the `overpan` percentage.
-            // _________________________
-            // |viewport               |
-            // |                       |
-            // |                       |
-            // |     -———————————-     |
-            // |     |map bounds |     |
-            // |     |           |     |
-            // |·····|···········|<--->| overpan
-            // |     |           |     |
-            // |     -———————————-     |
-            // |·····<----------->·····| underzoom
-            // |                       |
-            // |                       |
-            // |_______________________|
-
             const underzoom =  // 0-1 (percent as normalized factor of viewport minimum dimension)
-                this.allowUnderzoom() ?
-                    clamp(this.underzoomPercent, 0, 100) / 100 :
+                this.extendViewportBounds() ?
+                    clamp(this.extendScalePercent, 0, 100) / 100 :
                     1.0;
 
             if (this._helper._latRange) {
@@ -165,7 +165,7 @@
             let modifiedX, modifiedY;
 
             const scale =
-                this.allowUnderzoom() ?
+                this.extendViewportBounds() ?
                     Math.min(scaleX || 0, scaleY || 0) :
                     Math.max(scaleX || 0, scaleY || 0);
 
@@ -185,8 +185,8 @@
             // the overpan to 50% the bounds to match that external limit.
             let lngOverpan = 0.0;
             let latOverpan = 0.0;
-            if (this.allowUnderzoom()) {
-                const overpan = 2 * clamp(this.overpanPercent, 0, 50) / 100;  // 0-1 (percent as a normalized factor from viewport edge to center)
+            if (this.extendViewportBounds()) {
+                const overpan = clamp(this.extendPanPercent, 0, 100) / 100;  // 0-1 (percent as a normalized factor from viewport edge to center)
                 const latUnderzoomMinimumPan = 1.0 - ((maxY - minY) / screenHeight);
                 const lngUnderzoomMinimumPan = 1.0 - ((maxX - minX) / screenWidth);
                 lngOverpan = Math.max(lngUnderzoomMinimumPan, overpan);
