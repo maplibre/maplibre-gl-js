@@ -1912,23 +1912,6 @@ export class Map extends Camera {
         return this;
     }
 
-    /**
-     *  Updates the map's customTransform with a new transform
-     *
-     * @param customTransform - A custom transform the map uses instead of the one automatically assigned.
-     * Can be used (for example) to modify the view's behavior.
-     * Expected to implement `ITransform` or extend an existing transform like `MercatorTransform`, `VerticalPerspectiveTransform`, or `GlobeTransform`.
-     *
-     * @example
-     * ```ts
-     * map.setCustomTransform(transform: ITransform);
-     * ```
-     */
-    setCustomTransform(customTransform: ITransform | null): this {
-        this.customTransform = customTransform;
-        return this;
-    }
-
     _getUIString(key: keyof typeof defaultLocale) {
         const str = this._locale[key];
         if (str == null) {
