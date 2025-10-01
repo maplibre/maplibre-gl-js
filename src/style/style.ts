@@ -70,7 +70,6 @@ import {
 import {type Projection} from '../geo/projection/projection';
 import {createProjectionFromName} from '../geo/projection/projection_factory';
 import type {OverscaledTileID} from '../source/tile_id';
-import { MercatorTransform } from '../geo/projection/mercator_transform';
 
 const empty = emptyStyle() as StyleSpecification;
 /**
@@ -1691,17 +1690,6 @@ export class Style extends Evented {
 
     _setProjectionInternal(name: ProjectionSpecification['type']) {
         const projectionObjects = createProjectionFromName(name);
-        // Replace transform here of projectObjects
-        // TODO: Look at how IControl is exported, because we could do ITransform here.
-        // Example:
-        //      myCustomTranform extends MercatorTransform
-        //          getConstrained <- override
-        //          everything else is MercatorTransform
-        //      map {
-        //          customTransform: myCustomTransform()
-        //      }
-        // We somehow need to pull CustomTransform into this function so that we can call it...
-        // projectionObjects.transform = new MercatorTransform()
         projectionObjects.transform = this.map.customTransform ? this.map.customTransform : projectionObjects.transform;
         this.projection = projectionObjects.projection;
         this.map.migrateProjection(projectionObjects.transform, projectionObjects.cameraHelper);
