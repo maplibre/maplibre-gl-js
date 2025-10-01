@@ -15,6 +15,10 @@ import {LngLat, type LngLatLike} from './geo/lng_lat';
 import {LngLatBounds, type LngLatBoundsLike} from './geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from './geo/mercator_coordinate';
+import type {ITransform} from './geo/transform_interface';
+import {MercatorTransform} from './geo/projection/mercator_transform';
+import {VerticalPerspectiveTransform} from './geo/projection/vertical_perspective_transform';
+import {GlobeTransform} from './geo/projection/globe_transform';
 import {Evented, type ErrorEvent, Event, type Listener} from './util/evented';
 import {type AddProtocolAction, config} from './util/config';
 import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread';
@@ -213,6 +217,9 @@ export {
     LngLatBounds,
     Point,
     MercatorCoordinate,
+    MercatorTransform,
+    VerticalPerspectiveTransform,
+    GlobeTransform,
     Evented,
     Event,
     AJAXError,
@@ -329,6 +336,7 @@ export {
     type GestureOptions,
     type WebGLContextAttributesWithType,
     type IControl,
+    type ITransform,
     type CustomLayerInterface,
     type CanvasSourceSpecification,
     type PaddingOptions,
