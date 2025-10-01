@@ -593,7 +593,7 @@ export class Map extends Camera {
 
     /**
      * The map's {@link CooperativeGesturesHandler}, which allows the user to see cooperative gesture info when user tries to zoom in/out.
-     * Find more details and examples us    ing `cooperativeGestures` in the {@link CooperativeGesturesHandler} section.
+     * Find more details and examples using `cooperativeGestures` in the {@link CooperativeGesturesHandler} section.
      */
     cooperativeGestures: CooperativeGesturesHandler;
 
