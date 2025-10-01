@@ -4,7 +4,6 @@ import {Tile, FadingRoles} from './tile';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {TileCache} from './tile_cache';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
-import {keysDifference} from '../util/util';
 import {EXTENT} from '../data/extent';
 import {type Context} from '../gl/context';
 import Point from '@mapbox/point-geometry';
@@ -583,33 +582,47 @@ export class SourceCache extends Evented {
         // Retain is a list of tiles that we shouldn't delete, even if they are not
         // the most ideal tile for the current viewport. This may include tiles like
         // parent or child tiles that are *already* loaded.
-        const zoom = coveringZoomLevel(transform, this._source);
-        const retain = this._updateRetainedTiles(idealTileIDs, zoom);
+        const zoom: number = coveringZoomLevel(transform, this._source);
+        const retain: Record<string, OverscaledTileID> = this._updateRetainedTiles(idealTileIDs, zoom);
 
         // enable fading for raster source except when using terrain3D which doesn't currently support fading
-        const isRaster = isRasterType(this._source.type);
-        if (isRaster && this._rasterFadeDuration > 0 && !terrain) {
+        if (isRasterType(this._source.type) && this._rasterFadeDuration > 0 && !terrain) {
             this._updateFadingTiles(idealTileIDs, retain);
         }
 
-        // Make sure retained tiles clear fade holds so if they're removed again their fade timer starts fresh.
-        for (const retainedId in retain) {
-            this._tiles[retainedId]?.clearSymbolFadeHold();
-        }
+        this._cleanUpTiles(retain);
+    }
 
-        // Remove the tiles we don't need anymore.
-        const remove = keysDifference(this._tiles, retain);
-        for (const key of remove) {
-            if (isRaster) {
+    /**
+     * Remove tiles that are no longer retained and also not needed for vector symbol fading
+     */
+    _cleanUpTiles(retain: Record<string, OverscaledTileID>) {
+        for (const key in this._tiles) {
+            const tile = this._tiles[key];
+
+            // retained - clear fade hold so if it's removed again fade timer starts fresh.
+            if (retain[key]) {
+                tile.clearSymbolFadeHold();
+                continue;
+            }
+
+            // remove non-retained raster tile
+            if (isRasterType(this._source.type)) {
                 this._removeTile(key);
-            } else {
-                //fading for vector tile symbols
-                const tile = this._tiles[key];
-                if (tile.hasSymbolBuckets && !tile.holdingForSymbolFade()) {
-                    tile.setSymbolHoldDuration(this.map._fadeDuration);
-                } else if (!tile.hasSymbolBuckets || tile.symbolFadeFinished()) {
-                    this._removeTile(key);
-                }
+                continue;
+            }
+
+            // remove non-retained vector tile without symbols
+            if (!tile.hasSymbolBuckets) {
+                this._removeTile(key);
+                continue;
+            }
+
+            // for vector tile with symbols - hold for fade - then remove
+            if (!tile.holdingForSymbolFade()) {
+                tile.setSymbolHoldDuration(this.map._fadeDuration);
+            } else if (tile.symbolFadeFinished()) {
+                this._removeTile(key);
             }
         }
     }
