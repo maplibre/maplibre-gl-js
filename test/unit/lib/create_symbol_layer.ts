@@ -3,8 +3,9 @@ import {SymbolStyleLayer} from '../../../src/style/style_layer/symbol_style_laye
 import {featureFilter, type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type EvaluationParameters} from '../../../src/style/evaluation_parameters';
 import {type BucketParameters} from '../../../src/data/bucket';
+import {type CollisionBoxArray} from '../../../src/data/array_types.g';
 
-export function createSymbolBucket(layerId, font, text, collisionBoxArray) {
+export function createSymbolBucket(layerId: string, font: string, text: string,  collisionBoxArray: CollisionBoxArray) {
     const layer = new SymbolStyleLayer({
         id: layerId,
         type: 'symbol',
