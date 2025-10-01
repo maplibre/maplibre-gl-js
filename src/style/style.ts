@@ -7,7 +7,7 @@ import {GlyphManager} from '../render/glyph_manager';
 import {Light} from './light';
 import {Sky} from './sky';
 import {LineAtlas} from '../render/line_atlas';
-import {clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
+import {clone, extend, deepEqual, filterObject, mapObject, clamp, MAX_VALID_LATITUDE} from '../util/util';
 import {coerceSpriteToArray} from '../util/style';
 import {getJSON, getReferrer} from '../util/ajax';
 import {ResourceType} from '../util/request_manager';
@@ -70,6 +70,8 @@ import {
 import {type Projection} from '../geo/projection/projection';
 import {createProjectionFromName} from '../geo/projection/projection_factory';
 import type {OverscaledTileID} from '../source/tile_id';
+import { LngLat } from '../geo/lng_lat';
+import { getZoomAdjustment } from '../geo/projection/globe_utils';
 
 const empty = emptyStyle() as StyleSpecification;
 /**
@@ -1690,7 +1692,19 @@ export class Style extends Evented {
 
     _setProjectionInternal(name: ProjectionSpecification['type']) {
         const projectionObjects = createProjectionFromName(name);
-        projectionObjects.transform = this.map.customTransform ? this.map.customTransform : projectionObjects.transform;
+        // projectionObjects.transform = this.map.customTransform ? this.map.customTransform : projectionObjects.transform;
+        const customTransformConstrain = function (lngLat, zoom) {
+            const constrainedLat = clamp(lngLat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
+            const constrainedZoom = clamp(+zoom, this.minZoom + getZoomAdjustment(0, constrainedLat), this.maxZoom);
+            return {
+                center: new LngLat(
+                    lngLat.lng,
+                    constrainedLat
+                ),
+                zoom: constrainedZoom
+            };
+        }
+        projectionObjects.transform.getConstrained = customTransformConstrain;
         this.projection = projectionObjects.projection;
         this.map.migrateProjection(projectionObjects.transform, projectionObjects.cameraHelper);
         for (const key in this.sourceCaches) {
