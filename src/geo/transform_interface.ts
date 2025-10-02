@@ -13,7 +13,7 @@ import type {Frustum} from '../util/primitives/frustum';
 
 /**
  * The callback defining how the transform constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
- * Used as the `getConstrained` method in implementers of {@link IReadonlyTransform}.
+ * Used as the `getConstrained` method in implementers of map transforms.
  */
 export type TransformConstrainFunction =  (
     lngLat: LngLat,
