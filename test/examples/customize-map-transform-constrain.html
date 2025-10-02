@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <title>Allow underzoom of single-copy world</title>
+    <meta property='og:description' content='Customize the constrain function of the map transform; for example, to allow users to underzoom and overpan the bounds.' />
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: repeating-conic-gradient(#000 0 25%, #444 0 50%) 50% / 32px 32px;
+        }
+        html, body, #map { height: 100%; }
+        .listing-group {
+            font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+<div id='map'></div>
+<table id='listing-group-bottom-left' class='listing-group'>
+    <tr><td><label for='extend-viewport-bounds'>Extend viewport bounds</label></td><td><input type='checkbox' id='extend-viewport-bounds' checked/></td></tr>
+    <tr><td><label for='extend-scale-slider' id='extend-scale-label'>Extend scale</label></td><td><input type='range' id='extend-scale-slider' min='0' max='100' step='10' value='90' /></td></tr>
+    <tr><td><label for='extend-pan-slider' id='extend-pan-label'>Extend pan</label></td><td><input type='range' id='extend-pan-slider' min='0' max='100' step='10' value='10' /></td></tr>
+    <tr><td><label for='max-bounds-select'>maxBounds</label></td>
+        <td><select name="max-bounds-select" id="max-bounds-select">
+            <option value="undefined">World (undefined)</option>
+            <option value="wide">NYC (wide)</option>
+            <option value="tall">Amsterdam (tall)</option>
+        </select></td>
+    </tr>
+</table>
+
+<script>
+
+    function mercatorYfromLat(lat) {
+        return (180 - (180 / Math.PI * Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)))) / 360;
+    }
+
+    function zoomScale(zoom) {
+        return Math.pow(2, zoom);
+    }
+
+    function scaleZoom(scale) {
+        return Math.log(scale) / Math.LN2;
+    }
+
+    function clamp(n, min, max) {
+        return Math.min(max, Math.max(min, n));
+    }
+
+    function wrap(n, min, max) {
+        const d = max - min;
+        const w = ((n - min) % d + d) % d + min;
+        return (w === min) ? max : w;
+    }
+
+    function mercatorXfromLng(lng) {
+        return (180 + lng) / 360;
+    }
+    
+    const MAX_VALID_LATITUDE = 85.051129;
+
+    function projectToWorldCoordinates(worldSize, lnglat) {
+        const lat = clamp(lnglat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
+        return new maplibregl.Point(
+            mercatorXfromLng(lnglat.lng) * worldSize,
+            mercatorYfromLat(lat) * worldSize);
+    }
+
+    function unprojectFromWorldCoordinates(worldSize, point) {
+        return new maplibregl.MercatorCoordinate(point.x / worldSize, point.y / worldSize).toLngLat();
+    }
+
+    const _extend = true;
+    const _extendScalePercent = 70; 
+    const _extendPanPercent = 0;
+
+    function underzoomTransformConstrain(lngLat, zoom) {
+        zoom = clamp(+zoom, this.minZoom, this.maxZoom);
+        const result = {
+            center: new maplibregl.LngLat(lngLat.lng, lngLat.lat),
+            zoom
+        };
+
+        let lngRange = this._helper._lngRange;
+
+        if (!this._helper._renderWorldCopies && lngRange === null) {
+            const almost180 = 180 - 1e-10;
+            lngRange = [-almost180, almost180];
+        }
+
+        const worldSize = this.tileSize * zoomScale(result.zoom); // A world size for the requested zoom level, not the current world size
+        let minY = 0;
+        let maxY = worldSize;
+        let minX = 0;
+        let maxX = worldSize;
+        let scaleY = 0;
+        let scaleX = 0;
+        const {x: screenWidth, y: screenHeight} = this.size;
+
+        const underzoom =  // 0-1 (percent as normalized factor of viewport minimum dimension)
+            _extend ?
+                clamp(_extendScalePercent, 0, 100) / 100 :
+                1.0;
+
+        if (this._helper._latRange) {
+            const latRange = this._helper._latRange;
+            minY = mercatorYfromLat(latRange[1]) * worldSize;
+            maxY = mercatorYfromLat(latRange[0]) * worldSize;
+            const shouldZoomIn = maxY - minY < (underzoom * screenHeight);
+            if (shouldZoomIn) scaleY = underzoom * screenHeight / (maxY - minY);
+        }
+
+        if (lngRange) {
+            minX = wrap(
+                mercatorXfromLng(lngRange[0]) * worldSize,
+                0,
+                worldSize
+            );
+            maxX = wrap(
+                mercatorXfromLng(lngRange[1]) * worldSize,
+                0,
+                worldSize
+            );
+
+            if (maxX < minX) maxX += worldSize;
+
+            const shouldZoomIn = maxX - minX < (underzoom * screenWidth);
+            if (shouldZoomIn) scaleX = underzoom * screenWidth / (maxX - minX);
+        }
+
+        const {x: originalX, y: originalY} = projectToWorldCoordinates(worldSize, lngLat);
+        let modifiedX, modifiedY;
+
+        const scale =
+            _extend ?
+                Math.min(scaleX || 0, scaleY || 0) :
+                Math.max(scaleX || 0, scaleY || 0);
+
+        if (scale) {
+            // zoom in to exclude all beyond the given lng/lat ranges
+            const newPoint = new maplibregl.Point(
+                scaleX ? (maxX + minX) / 2 : originalX,
+                scaleY ? (maxY + minY) / 2 : originalY);
+            if (this._helper._renderWorldCopies) result.center = unprojectFromWorldCoordinates(worldSize, newPoint).wrap();
+            result.zoom += scaleZoom(scale);
+            return result;
+        }
+
+        // Panning up and down in latitude is externally limited by project() with MAX_VALID_LATITUDE.
+        // This limit prevents panning the top and bottom bounds farther than the center of the viewport.
+        // Due to the complexity and consequence of altering project() or MAX_VALID_LATITUDE, we'll simply limit
+        // the overpan to 50% the bounds to match that external limit.
+        let lngOverpan = 0.0;
+        let latOverpan = 0.0;
+        if (_extend) {
+            const overpan = clamp(_extendPanPercent, 0, 100) / 100;  // 0-1 (percent as a normalized factor from viewport edge to center)
+            const latUnderzoomMinimumPan = 1.0 - ((maxY - minY) / screenHeight);
+            const lngUnderzoomMinimumPan = 1.0 - ((maxX - minX) / screenWidth);
+            lngOverpan = Math.max(lngUnderzoomMinimumPan, overpan);
+            latOverpan = Math.max(latUnderzoomMinimumPan, overpan);
+        }
+        const lngPanScale = 1.0 - lngOverpan;
+        const latPanScale = 1.0 - latOverpan;
+
+        if (this._helper._latRange) {
+            const h2 = latPanScale * screenHeight / 2;
+            if (originalY - h2 < minY) modifiedY = minY + h2;
+            if (originalY + h2 > maxY) modifiedY = maxY - h2;
+        }
+
+        if (lngRange) {
+            const centerX = (minX + maxX) / 2;
+            let wrappedX = originalX;
+            if (this._helper._renderWorldCopies) {
+                wrappedX = wrap(originalX, centerX - worldSize / 2, centerX + worldSize / 2);
+            }
+            const w2 = lngPanScale * screenWidth / 2;
+
+            if (wrappedX - w2 < minX) modifiedX = minX + w2;
+            if (wrappedX + w2 > maxX) modifiedX = maxX - w2;
+        }
+
+        // pan the map if the screen goes off the range
+        if (modifiedX !== undefined || modifiedY !== undefined) {
+            const newPoint = new maplibregl.Point(modifiedX ?? originalX, modifiedY ?? originalY);
+            result.center = unprojectFromWorldCoordinates(worldSize, newPoint).wrap();
+            if (this._helper._renderWorldCopies) result.center = result.center.wrap();
+        }
+
+        return result;
+    }
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        renderWorldCopies: false,
+        transformConstrain: underzoomTransformConstrain,
+        style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
+    });
+    
+    // New York, New York
+    const w_north = 40.78;
+    const w_east = -73.81;
+    const w_south = 40.68;
+    const w_west = -74.15;
+    const w_bounds = [[w_west, w_south], [w_east, w_north]];
+    const w_center = [(w_west + w_east) / 2, (w_north + w_south) / 2]
+
+    // Amsterdam, Netherlands
+    const t_north = 52.3676 + 0.5;
+    const t_east = 4.9041 + 0.25;
+    const t_south = 52.3676 - 0.5;
+    const t_west = 4.9041 - 0.25;
+    const t_bounds = [[t_west, t_south], [t_east, t_north]];
+    const t_center = [(t_west + t_east) / 2, (t_north + t_south) / 2]
+
+    const bounds_options = {
+        "undefined": {
+            "bounds": undefined, "center": [0, 0]
+        },
+        "wide": {
+            "bounds": w_bounds, "center": w_center
+        },
+        "tall": {
+            "bounds": t_bounds, "center": t_center
+        },
+    }
+
+    const zeroPad = (num, places) => String(num).padStart(places, '0');
+    function setExtendScaleFromUi() {
+        myCustomTransform.extendViewportBounds = document.getElementById('extend-viewport-bounds').checked;
+        const extendScale = parseFloat(document.getElementById('extend-scale-slider').value);
+        myCustomTransform.extendScalePercent = extendScale;
+        document.getElementById('extend-scale-label').textContent = `Extend scale (${zeroPad(extendScale, 2)}%)`;
+        map.setZoom(-Infinity);
+    }
+    function setExtendPanFromUi() {
+        const extendPan = parseFloat(document.getElementById('extend-pan-slider').value);
+        myCustomTransform.extendPanPercent = extendPan;
+        document.getElementById('extend-pan-label').textContent = `Extend pan (${zeroPad(extendPan, 2)}%)`;
+    }
+    function selectMaxBoundsFromUi() {
+        const option = document.getElementById('max-bounds-select').value;
+        map.setMaxBounds(bounds_options[option].bounds);
+        map.setCenter(bounds_options[option].center);
+        map.setZoom(-Infinity);
+    }
+
+    map.on('load', () => {
+        map.addSource('bounds-wide', {
+            'type': 'geojson',
+            'data': {
+                'type': 'Feature',
+                'properties': {},
+                'geometry': {
+                    'type': 'LineString',
+                    'coordinates': [
+                        [w_west, w_south],
+                        [w_west, w_north],
+                        [w_east, w_north],
+                        [w_east, w_south],
+                        [w_west, w_south],
+                    ]
+                }
+            }
+        });
+        map.addLayer({
+            'id': 'bounds-wide',
+            'type': 'line',
+            'source': 'bounds-wide',
+            'paint': {
+                'line-color': '#ff0000',
+                'line-width': 4,
+                'line-offset': -2,
+            }
+        });
+        map.addSource('bounds-tall', {
+            'type': 'geojson',
+            'data': {
+                'type': 'Feature',
+                'properties': {},
+                'geometry': {
+                    'type': 'LineString',
+                    'coordinates': [
+                        [t_west, t_south],
+                        [t_west, t_north],
+                        [t_east, t_north],
+                        [t_east, t_south],
+                        [t_west, t_south],
+                    ]
+                }
+            }
+        });
+        map.addLayer({
+            'id': 'bounds-tall',
+            'type': 'line',
+            'source': 'bounds-tall',
+            'paint': {
+                'line-color': '#ff0000',
+                'line-width': 4,
+                'line-offset': -2,
+            }
+        });
+        // document.getElementById('extend-viewport-bounds').addEventListener('change', setExtendScaleFromUi);
+        // document.getElementById('extend-scale-slider').addEventListener('input', setExtendScaleFromUi);
+        // document.getElementById('extend-pan-slider').addEventListener('input', setExtendPanFromUi);
+        // document.getElementById('max-bounds-select').addEventListener('change', selectMaxBoundsFromUi);
+        // setExtendScaleFromUi();
+        // setExtendPanFromUi();
+        // selectMaxBoundsFromUi();
+    });
+</script>
+</body>
+</html>

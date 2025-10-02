@@ -11,6 +11,18 @@ import type {ProjectionData, ProjectionDataParams} from './projection/projection
 import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider';
 import type {Frustum} from '../util/primitives/frustum';
 
+/**
+ * The callback defining how the transform constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
+ * Used as the `getConstrained` method in implementers of {@link IReadonlyTransform}.
+ */
+export type TransformConstrainFunction =  (
+    lngLat: LngLat,
+    zoom: number
+) => {
+    center: LngLat;
+    zoom: number;
+};
+
 export interface ITransformGetters {
     get tileSize(): number;
 
@@ -342,7 +354,7 @@ export interface IReadonlyTransform extends ITransformGetters {
     /**
      * Get center lngLat and zoom to ensure that longitude and latitude bounds are respected and regions beyond the map bounds are not displayed.
      */
-    getConstrained(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number};
+    getConstrained: TransformConstrainFunction;
 
     maxPitchScaleFactor(): number;
 

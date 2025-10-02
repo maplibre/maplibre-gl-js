@@ -1692,19 +1692,7 @@ export class Style extends Evented {
 
     _setProjectionInternal(name: ProjectionSpecification['type']) {
         const projectionObjects = createProjectionFromName(name);
-        // projectionObjects.transform = this.map.customTransform ? this.map.customTransform : projectionObjects.transform;
-        const customTransformConstrain = function (lngLat, zoom) {
-            const constrainedLat = clamp(lngLat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
-            const constrainedZoom = clamp(+zoom, this.minZoom + getZoomAdjustment(0, constrainedLat), this.maxZoom);
-            return {
-                center: new LngLat(
-                    lngLat.lng,
-                    constrainedLat
-                ),
-                zoom: constrainedZoom
-            };
-        }
-        projectionObjects.transform.getConstrained = customTransformConstrain;
+        projectionObjects.transform.getConstrained = this.map.transformConstrain ?? projectionObjects.transform.getConstrained;
         this.projection = projectionObjects.projection;
         this.map.migrateProjection(projectionObjects.transform, projectionObjects.cameraHelper);
         for (const key in this.sourceCaches) {

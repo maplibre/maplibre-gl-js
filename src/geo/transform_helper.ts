@@ -9,7 +9,7 @@ import {cameraMercatorCoordinateFromCenterAndRotation} from './projection/mercat
 import {EXTENT} from '../data/extent';
 
 import type {PaddingOptions} from './edge_insets';
-import type {IReadonlyTransform, ITransformGetters} from './transform_interface';
+import type {IReadonlyTransform, ITransformGetters, TransformConstrainFunction} from './transform_interface';
 import type {OverscaledTileID} from '../source/tile_id';
 import {Bounds} from './bounds';
 /**
@@ -55,7 +55,7 @@ export type TransformHelperCallbacks = {
      * 2) a given lngLat is as near the center as possible
      * Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
      */
-    getConstrained: (center: LngLat, zoom: number) => { center: LngLat; zoom: number };
+    getConstrained: TransformConstrainFunction;
 
     /**
      * Updates the underlying transform's internal matrices.
@@ -459,7 +459,7 @@ export class TransformHelper implements ITransformGetters {
         }
     }
 
-    private getConstrained(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
+    private getConstrained: TransformConstrainFunction = (lngLat, zoom) => {
         return this._callbacks.getConstrained(lngLat, zoom);
     }
 

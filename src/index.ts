@@ -15,10 +15,6 @@ import {LngLat, type LngLatLike} from './geo/lng_lat';
 import {LngLatBounds, type LngLatBoundsLike} from './geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from './geo/mercator_coordinate';
-import type {ITransform} from './geo/transform_interface';
-import {MercatorTransform} from './geo/projection/mercator_transform';
-import {VerticalPerspectiveTransform} from './geo/projection/vertical_perspective_transform';
-import {GlobeTransform} from './geo/projection/globe_transform';
 import {Evented, type ErrorEvent, Event, type Listener} from './util/evented';
 import {type AddProtocolAction, config} from './util/config';
 import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread';
@@ -56,6 +52,7 @@ import type {DistributiveKeys, DistributiveOmit, GeoJSONFeature, MapGeoJSONFeatu
 import type {Handler, HandlerResult} from './ui/handler_manager';
 import type {Complete, RequireAtLeastOne, Subscription} from './util/util';
 import type {CalculateTileZoomFunction, CoveringTilesOptions} from './geo/projection/covering_tiles';
+import type {TransformConstrainFunction} from './geo/transform_interface';
 import type {StyleImage, StyleImageData, StyleImageInterface, StyleImageMetadata, TextFit} from './style/style_image';
 import type {StyleLayer} from './style/style_layer';
 import type {Tile} from './source/tile';
@@ -246,6 +243,7 @@ export {
     type Handler,
     type RequireAtLeastOne,
     type CameraUpdateTransformFunction,
+    type TransformConstrainFunction,
     type CustomRenderMethod,
     type CalculateTileZoomFunction,
     type MapSourceDataType,
