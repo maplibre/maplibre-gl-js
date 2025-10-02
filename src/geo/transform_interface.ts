@@ -2,7 +2,7 @@ import type {LngLat, LngLatLike} from './lng_lat';
 import type {LngLatBounds} from './lng_lat_bounds';
 import type {MercatorCoordinate} from './mercator_coordinate';
 import type Point from '@mapbox/point-geometry';
-import type {mat4, mat2, vec3, vec4, Vec3Tuple, Vec4Tuple} from 'gl-matrix';
+import type {mat4, mat2, vec3, vec4, Vec3, Vec4} from 'gl-matrix';
 import type {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import type {PaddingOptions} from './edge_insets';
 import type {Terrain} from '../render/terrain';
@@ -253,7 +253,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @internal
      * Returns the camera's position transformed to be in the same space as 3D features under this transform's projection. Mostly used for globe + fill-extrusion.
      */
-    get cameraPosition(): vec3<Float64Array | Vec3Tuple>;
+    get cameraPosition(): vec3<Float64Array | Vec3.Tuple>;
 
     /**
      * Returns if the padding params match
@@ -281,7 +281,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Return the clipping plane, behind which nothing should be rendered. If the camera frustum is sufficient
      * to describe the render geometry (additional clipping is not required), this may be null.
      */
-    getClippingPlane(): vec4<Float64Array | Vec4Tuple> | null;
+    getClippingPlane(): vec4<Float64Array | Vec4.Tuple> | null;
 
     /**
      * @internal
@@ -454,7 +454,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @param dir - The light direction.
      * @returns A new vector with the transformed light direction.
      */
-    transformLightDirection(dir: vec3): vec3<Float32Array | Vec3Tuple>;
+    transformLightDirection(dir: vec3): vec3<Float32Array | Vec3.Tuple>;
 
     /**
      * @internal

@@ -106,22 +106,22 @@ describe('GlobeTransform', () => {
 
             projectedAngles = mercatorCoordinatesToAngularCoordinatesRadians(0.5, 0.5);
             expectToBeCloseToArray(projectedAngles, [0, 0], precisionDigits);
-            projected = angularCoordinatesRadiansToVector(projectedAngles[0], projectedAngles[1]) as [number, number, number];
+            projected = angularCoordinatesRadiansToVector(projectedAngles[0], projectedAngles[1]);
             expectToBeCloseToArray(projected, [0, 0, 1], precisionDigits);
 
             projectedAngles = mercatorCoordinatesToAngularCoordinatesRadians(0, 0.5);
             expectToBeCloseToArray(projectedAngles, [Math.PI, 0], precisionDigits);
-            projected = angularCoordinatesRadiansToVector(projectedAngles[0], projectedAngles[1]) as [number, number, number];
+            projected = angularCoordinatesRadiansToVector(projectedAngles[0], projectedAngles[1]);
             expectToBeCloseToArray(projected, [0, 0, -1], precisionDigits);
 
             projectedAngles = mercatorCoordinatesToAngularCoordinatesRadians(0.75, 0.5);
             expectToBeCloseToArray(projectedAngles, [Math.PI / 2.0, 0], precisionDigits);
-            projected = angularCoordinatesRadiansToVector(projectedAngles[0], projectedAngles[1]) as [number, number, number];
+            projected = angularCoordinatesRadiansToVector(projectedAngles[0], projectedAngles[1]);
             expectToBeCloseToArray(projected, [1, 0, 0], precisionDigits);
 
             projectedAngles = mercatorCoordinatesToAngularCoordinatesRadians(0.5, 0);
             expectToBeCloseToArray(projectedAngles, [0, 1.4844222297453324], precisionDigits); // ~0.47pi
-            projected = angularCoordinatesRadiansToVector(projectedAngles[0], projectedAngles[1]) as [number, number, number];
+            projected = angularCoordinatesRadiansToVector(projectedAngles[0], projectedAngles[1]);
             expectToBeCloseToArray(projected, [0, 0.99627207622075, 0.08626673833405434], precisionDigits);
         });
 
@@ -590,7 +590,7 @@ describe('GlobeTransform', () => {
         test('change projection and make sure render world copies is kept', () => {
             const globeTransform = createGlobeTransform();
             globeTransform.setRenderWorldCopies(true);
-            
+
             expect(globeTransform.renderWorldCopies).toBeTruthy();
         });
 

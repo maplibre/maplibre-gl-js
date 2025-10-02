@@ -1,11 +1,11 @@
-import {vec3, type Vec3Tuple, type vec4} from 'gl-matrix';
+import {vec3, type Vec3, type vec4} from 'gl-matrix';
 import {type Frustum} from './frustum';
 import {IntersectionResult, type IBoundingVolume} from './bounding_volume';
 
 export class Aabb<TMin extends vec3 = vec3, TMax extends vec3 = vec3> implements IBoundingVolume {
     min: TMin;
     max: TMax;
-    center: vec3<Vec3Tuple>;
+    center: vec3<Vec3.Tuple>;
 
     constructor(min_: TMin, max_: TMax) {
         this.min = min_;

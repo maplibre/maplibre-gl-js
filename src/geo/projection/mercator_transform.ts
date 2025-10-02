@@ -2,7 +2,7 @@ import {LngLat, type LngLatLike} from '../lng_lat';
 import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate';
 import Point from '@mapbox/point-geometry';
 import {wrap, clamp, createIdentityMat4f64, createMat4f64, degreesToRadians, createIdentityMat4f32, zoomScale, scaleZoom} from '../../util/util';
-import {type mat2, mat4, type Mat4Tuple, vec3, type Vec3Tuple, vec4, type Vec4Tuple} from 'gl-matrix';
+import {type mat2, mat4, type Mat4, vec3, type Vec3, vec4, type Vec4} from 'gl-matrix';
 import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID, calculateTileKey} from '../../source/tile_id';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {type PointProjection, xyTransformMat4} from '../../symbol/projection';
@@ -217,12 +217,12 @@ export class MercatorTransform implements ITransform {
     // Implementation of mercator transform
     //
 
-    private _cameraPosition: vec3<Vec3Tuple>;
+    private _cameraPosition: vec3<Vec3.Tuple>;
 
-    private _mercatorMatrix: mat4<Mat4Tuple>;
+    private _mercatorMatrix: mat4<Mat4.Tuple>;
     private _projectionMatrix: mat4<Float32Array>;
     private _viewProjMatrix: mat4<Float64Array>;
-    private _invViewProjMatrix: mat4<Mat4Tuple>;
+    private _invViewProjMatrix: mat4<Mat4.Tuple>;
     private _invProjMatrix: mat4<Float64Array>;
     private _alignedProjMatrix: mat4<Float64Array>;
     private _pixelMatrix: mat4<Float64Array>;
@@ -254,11 +254,11 @@ export class MercatorTransform implements ITransform {
         this._helper.apply(that, constrain, forceOverrideZ);
     }
 
-    public get cameraPosition(): vec3<Vec3Tuple> { return this._cameraPosition; }
+    public get cameraPosition(): vec3<Vec3.Tuple> { return this._cameraPosition; }
     public get projectionMatrix(): mat4<Float32Array> { return this._projectionMatrix; }
     public get modelViewProjectionMatrix(): mat4<Float64Array> { return this._viewProjMatrix; }
     public get inverseProjectionMatrix(): mat4<Float64Array> { return this._invProjMatrix; }
-    public get mercatorMatrix(): mat4<Mat4Tuple> { return this._mercatorMatrix; } // Not part of ITransform interface
+    public get mercatorMatrix(): mat4<Mat4.Tuple> { return this._mercatorMatrix; } // Not part of ITransform interface
 
     getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): Array<UnwrappedTileID> {
         const result = [new UnwrappedTileID(0, tileID)];
@@ -343,8 +343,8 @@ export class MercatorTransform implements ITransform {
         // unproject two points to get a line and then find the point on that
         // line with z=0
 
-        const coord0: Vec4Tuple = [p.x, p.y, 0, 1];
-        const coord1: Vec4Tuple = [p.x, p.y, 1, 1];
+        const coord0: Vec4.Tuple = [p.x, p.y, 0, 1];
+        const coord1: Vec4.Tuple = [p.x, p.y, 1, 1];
 
         vec4.transformMat4(coord0, coord0, this._pixelMatrixInverse);
         vec4.transformMat4(coord1, coord1, this._pixelMatrixInverse);
@@ -374,7 +374,7 @@ export class MercatorTransform implements ITransform {
      * @returns screen point
      */
     coordinatePoint(coord: MercatorCoordinate, elevation: number = 0, pixelMatrix: mat4 = this._pixelMatrix): Point {
-        const p: Vec4Tuple = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1];
+        const p: Vec4.Tuple = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1];
         vec4.transformMat4(p, p, pixelMatrix);
         return new Point(p[0] / p[3], p[1] / p[3]);
     }
@@ -631,7 +631,7 @@ export class MercatorTransform implements ITransform {
         this._viewProjMatrix = m;
         this._invViewProjMatrix = mat4.invert([], m);
 
-        const cameraPos: Vec4Tuple = [0, 0, -1, 1];
+        const cameraPos: Vec4.Tuple = [0, 0, -1, 1];
         vec4.transformMat4(cameraPos, cameraPos, this._invViewProjMatrix);
         this._cameraPosition = [
             cameraPos[0] / cameraPos[3],
@@ -690,7 +690,7 @@ export class MercatorTransform implements ITransform {
         if (!this._pixelMatrixInverse) return 1;
 
         const coord = this.screenPointToMercatorCoordinate(new Point(0, 0));
-        const p: Vec4Tuple = [coord.x * this.worldSize, coord.y * this.worldSize, 0, 1];
+        const p: Vec4.Tuple = [coord.x * this.worldSize, coord.y * this.worldSize, 0, 1];
         const topPoint = vec4.transformMat4(p, p, this._pixelMatrix);
         return topPoint[3] / this._helper.cameraToCenterDistance;
     }
@@ -712,7 +712,7 @@ export class MercatorTransform implements ITransform {
 
     lngLatToCameraDepth(lngLat: LngLat, elevation: number) {
         const coord = MercatorCoordinate.fromLngLat(lngLat);
-        const p: Vec4Tuple = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1];
+        const p: Vec4.Tuple = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1];
         vec4.transformMat4(p, p, this._viewProjMatrix);
         return (p[2] / p[3]);
     }
@@ -765,7 +765,7 @@ export class MercatorTransform implements ITransform {
 
     projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection {
         const matrix = this.calculatePosMatrix(unwrappedTileID);
-        let pos: Vec4Tuple;
+        let pos: Vec4.Tuple;
         if (getElevation) { // slow because of handle z-index
             pos = [x, y, getElevation(x, y), 1];
             vec4.transformMat4(pos, pos, matrix);
@@ -818,7 +818,7 @@ export class MercatorTransform implements ITransform {
         // Since custom layers are expected to supply mercator coordinates [0..1], we need to rescale
         // both matrices by EXTENT. We also need to rescale Z.
 
-        const scale: Vec3Tuple = [EXTENT, EXTENT, this.worldSize / this._helper.pixelsPerMeter];
+        const scale: Vec3.Tuple = [EXTENT, EXTENT, this.worldSize / this._helper.pixelsPerMeter];
 
         // We pass full-precision 64bit float matrices to custom layers to prevent precision loss in case the user wants to do further transformations.
         // Otherwise we get very visible precision-artifacts and twitching for objects that are bulding-scale.

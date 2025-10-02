@@ -5,7 +5,7 @@ import {polygonIntersectsPolygon, polygonIntersectsMultiPolygon} from '../../uti
 import {translateDistance, translate} from '../query_utils';
 import properties, {type FillExtrusionPaintPropsPossiblyEvaluated} from './fill_extrusion_style_layer_properties.g';
 import {type Transitionable, type Transitioning, type PossiblyEvaluated} from '../properties';
-import {type mat4, vec4, type Vec4Tuple} from 'gl-matrix';
+import {type mat4, vec4, type Vec4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {BucketParameters} from '../../data/bucket';
@@ -215,7 +215,7 @@ function projectExtrusion(geometry: Array<Array<Point>>, zBase: number, zTop: nu
 function projectQueryGeometry(queryGeometry: Array<Point>, pixelPosMatrix: mat4, z: number) {
     const projectedQueryGeometry = [];
     for (const p of queryGeometry) {
-        const v: Vec4Tuple = [p.x, p.y, z, 1];
+        const v: Vec4.Tuple = [p.x, p.y, z, 1];
         vec4.transformMat4(v, v, pixelPosMatrix);
         projectedQueryGeometry.push(new Point(v[0] / v[3], v[1] / v[3]));
     }

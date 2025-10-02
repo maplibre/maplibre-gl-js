@@ -1,4 +1,4 @@
-import {type mat4, vec3, type Vec3Tuple, vec4, type Vec4Tuple} from 'gl-matrix';
+import {type mat4, vec3, type Vec3, vec4, type Vec4} from 'gl-matrix';
 import {Aabb} from './aabb';
 import {pointPlaneSignedDistance, rayPlaneIntersection} from '../util';
 
@@ -54,8 +54,8 @@ export class Frustum {
             return n.concat(d);
         });
 
-        const min: Vec3Tuple = [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY];
-        const max: Vec3Tuple = [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY];
+        const min: Vec3.Tuple = [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY];
+        const max: Vec3.Tuple = [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY];
 
         for (const p of frustumCoords) {
             for (let i = 0; i < 3; i++) {
@@ -68,7 +68,7 @@ export class Frustum {
     }
 }
 
-function unprojectClipSpacePoint(point: vec4 | number[], invProj: mat4, worldSize: number, scale: number): Vec4Tuple {
+function unprojectClipSpacePoint(point: vec4 | number[], invProj: mat4, worldSize: number, scale: number): Vec4.Tuple {
     const v = vec4.transformMat4([], point, invProj);
     const s = 1.0 / v[3] / worldSize * scale;
     return vec4.mul(v, v, [s, s, 1.0 / v[3], s]);

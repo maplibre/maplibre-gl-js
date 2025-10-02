@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
 
-import {mat2, mat4, vec2, vec4, type Vec4Tuple} from 'gl-matrix';
+import {mat2, mat4, vec2, vec4, type Vec4} from 'gl-matrix';
 import * as symbolSize from './symbol_size';
 import {addDynamicAttributes} from '../data/bucket/symbol_bucket';
 
@@ -172,7 +172,7 @@ export function getTileSkewVectors(transform: IReadonlyTransform): {vecEast: vec
  * Uses a fast path if `getElevation` is undefined.
  */
 export function projectWithMatrix(x: number, y: number, matrix: mat4, getElevation?: (x: number, y: number) => number): PointProjection {
-    let pos: Vec4Tuple;
+    let pos: Vec4.Tuple;
     if (getElevation) { // slow because of handle z-index
         pos = [x, y, getElevation(x, y), 1];
         vec4.transformMat4(pos, pos, matrix);
@@ -679,7 +679,7 @@ export function projectTileCoordinatesToLabelPlane(x: number, y: number, project
 
 function projectFromLabelPlaneToClipSpace(x: number, y: number, projectionContext: SymbolProjectionContext, pitchedLabelPlaneMatrixInverse: mat4): {x: number; y: number} {
     if (projectionContext.pitchWithMap) {
-        const pos: Vec4Tuple = [x, y, 0, 1];
+        const pos: Vec4.Tuple = [x, y, 0, 1];
         vec4.transformMat4(pos, pos, pitchedLabelPlaneMatrixInverse);
         return projectionContext.transform.projectTileCoordinates(pos[0] / pos[3], pos[1] / pos[3], projectionContext.unwrappedTileID, projectionContext.getElevation).point;
     } else {

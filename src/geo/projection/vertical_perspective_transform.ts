@@ -1,4 +1,4 @@
-import {type mat2, mat4, vec3, type Vec3Tuple, vec4, type Vec4Tuple} from 'gl-matrix';
+import {type mat2, mat4, vec3, type Vec3, vec4, type Vec4} from 'gl-matrix';
 import {TransformHelper} from '../transform_helper';
 import {LngLat, type LngLatLike, earthRadius} from '../lng_lat';
 import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce} from '../../util/util';
@@ -234,7 +234,7 @@ export class VerticalPerspectiveTransform implements ITransform {
     // Implementation of globe transform
     //
 
-    private _cachedClippingPlane: vec4<Float64Array | Vec4Tuple> = createVec4f64();
+    private _cachedClippingPlane: vec4<Float64Array | Vec4.Tuple> = createVec4f64();
     private _cachedFrustum: Frustum;
     private _projectionMatrix: mat4<Float64Array> | mat4<Float32Array> = createIdentityMat4f64();
     private _globeViewProjMatrix32f: mat4<Float32Array> = createIdentityMat4f32(); // Must be 32 bit floats, otherwise WebGL calls in Chrome get very slow.
@@ -303,7 +303,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         };
     }
 
-    private _computeClippingPlane(globeRadiusPixels: number): vec4<Vec4Tuple> {
+    private _computeClippingPlane(globeRadiusPixels: number): vec4<Vec4.Tuple> {
         // We want to compute a plane equation that, when applied to the unit sphere generated
         // in the vertex shader, places all visible parts of the sphere into the positive half-space
         // and all the non-visible parts in the negative half-space.
@@ -373,30 +373,30 @@ export class VerticalPerspectiveTransform implements ITransform {
         return !this.isSurfacePointVisible(angularCoordinatesToSurfaceVector(location));
     }
 
-    public transformLightDirection(dir: vec3): vec3<Vec3Tuple> {
+    public transformLightDirection(dir: vec3): vec3<Vec3.Tuple> {
         const sphereX = this._helper._center.lng * Math.PI / 180.0;
         const sphereY = this._helper._center.lat * Math.PI / 180.0;
 
         const len = Math.cos(sphereY);
-        const spherePos: vec3<Vec3Tuple> = [
+        const spherePos: Vec3.Tuple = [
             Math.sin(sphereX) * len,
             Math.sin(sphereY),
             Math.cos(sphereX) * len
         ];
 
-        const axisRight: vec3<Vec3Tuple> = [spherePos[2], 0.0, -spherePos[0]]; // Equivalent to cross(vec3(0.0, 1.0, 0.0), vec)
-        const axisDown: vec3<Vec3Tuple> = [0, 0, 0];
+        const axisRight: Vec3.Tuple = [spherePos[2], 0.0, -spherePos[0]]; // Equivalent to cross(vec3(0.0, 1.0, 0.0), vec)
+        const axisDown: Vec3.Tuple = [0, 0, 0];
         vec3.cross(axisDown, axisRight, spherePos);
         vec3.normalize(axisRight, axisRight);
         vec3.normalize(axisDown, axisDown);
 
-        const transformed: vec3<Vec3Tuple> = [
+        const transformed: Vec3.Tuple = [
             axisRight[0] * dir[0] + axisDown[0] * dir[1] + spherePos[0] * dir[2],
             axisRight[1] * dir[0] + axisDown[1] * dir[1] + spherePos[1] * dir[2],
             axisRight[2] * dir[0] + axisDown[2] * dir[1] + spherePos[2] * dir[2]
         ];
 
-        const normalized: vec3<Vec3Tuple> = [0, 0, 0];
+        const normalized: Vec3.Tuple = [0, 0, 0];
         vec3.normalize(normalized, transformed);
         return normalized;
     }
@@ -521,7 +521,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         return this._cachedFrustum;
     }
     // NOTE:    this._cachedClippingPlane will never be null AFAICT
-    getClippingPlane(): vec4<Float64Array | Vec4Tuple> | null {
+    getClippingPlane(): vec4<Float64Array | Vec4.Tuple> | null {
         return this._cachedClippingPlane;
     }
     getCoveringTilesDetailsProvider(): CoveringTilesDetailsProvider {

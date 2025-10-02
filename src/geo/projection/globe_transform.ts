@@ -1,4 +1,4 @@
-import type {mat2, mat4, vec3, Vec3Tuple, vec4, Vec4Tuple} from 'gl-matrix';
+import type {mat2, mat4, vec3, Vec3, vec4, Vec4} from 'gl-matrix';
 import {TransformHelper} from '../transform_helper';
 import {MercatorTransform} from './mercator_transform';
 import {VerticalPerspectiveTransform} from './vertical_perspective_transform';
@@ -276,7 +276,7 @@ export class GlobeTransform implements ITransform {
 
     public get inverseProjectionMatrix(): mat4<Float64Array> { return this.currentTransform.inverseProjectionMatrix; }
 
-    public get cameraPosition(): vec3<Float64Array | Vec3Tuple>  { return this.currentTransform.cameraPosition; }
+    public get cameraPosition(): vec3<Float64Array | Vec3.Tuple>  { return this.currentTransform.cameraPosition; }
 
     getProjectionData(params: ProjectionDataParams): ProjectionData {
         const mercatorProjectionData = this._mercatorTransform.getProjectionData(params);
@@ -295,7 +295,7 @@ export class GlobeTransform implements ITransform {
         return this.currentTransform.isLocationOccluded(location);
     }
 
-    public transformLightDirection(dir: vec3): vec3<Float32Array | Vec3Tuple> {
+    public transformLightDirection(dir: vec3): vec3<Float32Array | Vec3.Tuple> {
         return this.currentTransform.transformLightDirection(dir);
     }
 
@@ -350,7 +350,7 @@ export class GlobeTransform implements ITransform {
     getCameraFrustum(): Frustum {
         return this.currentTransform.getCameraFrustum();
     }
-    getClippingPlane(): vec4<Float64Array | Vec4Tuple> {
+    getClippingPlane(): vec4<Float64Array | Vec4.Tuple> {
         return this.currentTransform.getClippingPlane();
     }
     getCoveringTilesDetailsProvider(): CoveringTilesDetailsProvider {
