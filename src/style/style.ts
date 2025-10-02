@@ -1689,8 +1689,7 @@ export class Style extends Evented {
     }
 
     _setProjectionInternal(name: ProjectionSpecification['type']) {
-        const projectionObjects = createProjectionFromName(name);
-        projectionObjects.transform.getConstrained = this.map.transformConstrain ?? projectionObjects.transform.getConstrained;
+        const projectionObjects = createProjectionFromName(name, this.map.transformConstrain);
         this.projection = projectionObjects.projection;
         this.map.migrateProjection(projectionObjects.transform, projectionObjects.cameraHelper);
         for (const key in this.sourceCaches) {

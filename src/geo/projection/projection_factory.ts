@@ -11,10 +11,10 @@ import {VerticalPerspectiveProjection} from './vertical_perspective_projection';
 
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Projection} from './projection';
-import type {ITransform} from '../transform_interface';
+import type {ITransform, TransformConstrainFunction} from '../transform_interface';
 import type {ICameraHelper} from './camera_helper';
 
-export function createProjectionFromName(name: ProjectionSpecification['type']): {
+export function createProjectionFromName(name: ProjectionSpecification['type'], transformConstrain?: TransformConstrainFunction): {
     projection: Projection;
     transform: ITransform;
     cameraHelper: ICameraHelper;
@@ -23,7 +23,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type']):
         const globeProjection = new GlobeProjection({type: name});
         return {
             projection: globeProjection,
-            transform: new GlobeTransform(),
+            transform: new GlobeTransform(transformConstrain),
             cameraHelper: new GlobeCameraHelper(globeProjection),
         };
     }
@@ -32,7 +32,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type']):
         {
             return {
                 projection: new MercatorProjection(),
-                transform: new MercatorTransform(),
+                transform: new MercatorTransform(undefined, undefined, undefined, undefined, undefined, transformConstrain),
                 cameraHelper: new MercatorCameraHelper(),
             };
         }
@@ -49,7 +49,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type']):
             ]});
             return {
                 projection: globeProjection,
-                transform: new GlobeTransform(),
+                transform: new GlobeTransform(transformConstrain),
                 cameraHelper: new GlobeCameraHelper(globeProjection),
             };
         }
@@ -57,7 +57,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type']):
         {
             return {
                 projection: new VerticalPerspectiveProjection(),
-                transform: new VerticalPerspectiveTransform(),
+                transform: new VerticalPerspectiveTransform(transformConstrain),
                 cameraHelper: new VerticalPerspectiveCameraHelper(),
             };
         }
@@ -66,7 +66,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type']):
             warnOnce(`Unknown projection name: ${name}. Falling back to mercator projection.`);
             return {
                 projection: new MercatorProjection(),
-                transform: new MercatorTransform(),
+                transform: new MercatorTransform(undefined, undefined, undefined, undefined, undefined, transformConstrain),
                 cameraHelper: new MercatorCameraHelper(),
             };
         }

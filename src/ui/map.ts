@@ -271,7 +271,8 @@ export type MapOptions = {
      */
     transformCameraUpdate?: CameraUpdateTransformFunction | null;
     /**
-     * A callback that overrides the map transform's default `getConstrained()` method. The callback can be used (for example) to modify how viewport respects the map's bounds.
+     * A callback that overrides the map transform's default `getConstrained()` method. The callback can be used (for example) to modify how the viewport respects the map's bounds.
+     * (See [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/).)
      * Expected to return an object containing center and zoom.
      * @defaultValue null
      */
@@ -314,7 +315,7 @@ export type MapOptions = {
      * font-family for locally overriding generation of Chinese, Japanese, and Korean characters.
      * For these characters, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
      * Set to `false`, to enable font settings from the map's style for these glyph ranges.
-     * The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js/docs/examples/use-locally-generated-ideographs).)
+     * The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js/docs/examples/use-locally-generated-ideographs/).)
      * @defaultValue 'sans-serif'
      */
     localIdeographFontFamily?: string | false;
@@ -636,7 +637,7 @@ export class Map extends Camera {
         // For now we will use a temporary MercatorTransform instance.
         // Transform specialization will later be set by style when it creates its projection instance.
         // When this happens, the new transform will inherit all properties of this temporary transform.
-        const transform = new MercatorTransform();
+        const transform = new MercatorTransform(undefined, undefined, undefined, undefined, undefined, resolvedOptions.transformConstrain);
         const cameraHelper = new MercatorCameraHelper();
         if (resolvedOptions.minZoom !== undefined) {
             transform.setMinZoom(resolvedOptions.minZoom);

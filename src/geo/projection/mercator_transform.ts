@@ -236,7 +236,8 @@ export class MercatorTransform implements ITransform {
 
     private _coveringTilesDetailsProvider;
 
-    constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
+    constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean, transformConstrain?: TransformConstrainFunction) {
+        this.getConstrained = transformConstrain ?? this.getConstrained;
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
             getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }

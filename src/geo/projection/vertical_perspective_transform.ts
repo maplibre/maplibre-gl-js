@@ -251,8 +251,8 @@ export class VerticalPerspectiveTransform implements ITransform {
 
     private _coveringTilesDetailsProvider: GlobeCoveringTilesDetailsProvider;
 
-    public constructor() {
-
+    public constructor(transformConstrain?: TransformConstrainFunction) {
+        this.getConstrained = transformConstrain ?? this.getConstrained;
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
             getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
