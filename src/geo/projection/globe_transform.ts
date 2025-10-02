@@ -394,7 +394,7 @@ export class GlobeTransform implements ITransform {
 
     getConstrained: TransformConstrainFunction = (lngLat, zoom) => {
         return this.currentTransform.getConstrained(lngLat, zoom);
-    }
+    };
 
     calculateCenterFromCameraLngLatAlt(lngLat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
         return this._helper.calculateCenterFromCameraLngLatAlt(lngLat, alt, bearing, pitch);

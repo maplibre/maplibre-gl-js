@@ -461,7 +461,7 @@ export class TransformHelper implements ITransformGetters {
 
     private getConstrained: TransformConstrainFunction = (lngLat, zoom) => {
         return this._callbacks.getConstrained(lngLat, zoom);
-    }
+    };
 
     /**
      * When the map is pitched, some of the 3D features that intersect a query will not intersect

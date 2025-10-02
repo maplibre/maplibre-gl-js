@@ -7,7 +7,7 @@ import {GlyphManager} from '../render/glyph_manager';
 import {Light} from './light';
 import {Sky} from './sky';
 import {LineAtlas} from '../render/line_atlas';
-import {clone, extend, deepEqual, filterObject, mapObject, clamp, MAX_VALID_LATITUDE} from '../util/util';
+import {clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
 import {coerceSpriteToArray} from '../util/style';
 import {getJSON, getReferrer} from '../util/ajax';
 import {ResourceType} from '../util/request_manager';
@@ -70,8 +70,6 @@ import {
 import {type Projection} from '../geo/projection/projection';
 import {createProjectionFromName} from '../geo/projection/projection_factory';
 import type {OverscaledTileID} from '../source/tile_id';
-import { LngLat } from '../geo/lng_lat';
-import { getZoomAdjustment } from '../geo/projection/globe_utils';
 
 const empty = emptyStyle() as StyleSpecification;
 /**
