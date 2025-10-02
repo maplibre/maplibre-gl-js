@@ -81,9 +81,9 @@
         return new maplibregl.MercatorCoordinate(point.x / worldSize, point.y / worldSize).toLngLat();
     }
 
-    const _extend = true;
-    const _extendScalePercent = 70; 
-    const _extendPanPercent = 0;
+    let _extend = true;
+    let _extendScalePercent = 70; 
+    let _extendPanPercent = 0;
 
     function underzoomTransformConstrain(lngLat, zoom) {
         zoom = clamp(+zoom, this.minZoom, this.maxZoom);
@@ -238,16 +238,17 @@
 
     const zeroPad = (num, places) => String(num).padStart(places, '0');
     function setExtendScaleFromUi() {
-        myCustomTransform.extendViewportBounds = document.getElementById('extend-viewport-bounds').checked;
+        _extend = document.getElementById('extend-viewport-bounds').checked;
         const extendScale = parseFloat(document.getElementById('extend-scale-slider').value);
-        myCustomTransform.extendScalePercent = extendScale;
+        _extendScalePercent = extendScale;
         document.getElementById('extend-scale-label').textContent = `Extend scale (${zeroPad(extendScale, 2)}%)`;
         map.setZoom(-Infinity);
     }
     function setExtendPanFromUi() {
         const extendPan = parseFloat(document.getElementById('extend-pan-slider').value);
-        myCustomTransform.extendPanPercent = extendPan;
+        _extendPanPercent = extendPan;
         document.getElementById('extend-pan-label').textContent = `Extend pan (${zeroPad(extendPan, 2)}%)`;
+        map.resize();
     }
     function selectMaxBoundsFromUi() {
         const option = document.getElementById('max-bounds-select').value;
@@ -311,13 +312,13 @@
                 'line-offset': -2,
             }
         });
-        // document.getElementById('extend-viewport-bounds').addEventListener('change', setExtendScaleFromUi);
-        // document.getElementById('extend-scale-slider').addEventListener('input', setExtendScaleFromUi);
-        // document.getElementById('extend-pan-slider').addEventListener('input', setExtendPanFromUi);
-        // document.getElementById('max-bounds-select').addEventListener('change', selectMaxBoundsFromUi);
-        // setExtendScaleFromUi();
-        // setExtendPanFromUi();
-        // selectMaxBoundsFromUi();
+        document.getElementById('extend-viewport-bounds').addEventListener('change', setExtendScaleFromUi);
+        document.getElementById('extend-scale-slider').addEventListener('input', setExtendScaleFromUi);
+        document.getElementById('extend-pan-slider').addEventListener('input', setExtendPanFromUi);
+        document.getElementById('max-bounds-select').addEventListener('change', selectMaxBoundsFromUi);
+        setExtendScaleFromUi();
+        setExtendPanFromUi();
+        selectMaxBoundsFromUi();
     });
 </script>
 </body>
