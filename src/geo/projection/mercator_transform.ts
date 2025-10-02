@@ -19,9 +19,6 @@ import type {PaddingOptions} from '../edge_insets';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
 
-/**
- * MercatorTransform enforces mercator projection.
- */
 export class MercatorTransform implements ITransform {
     private _helper: TransformHelper;
 

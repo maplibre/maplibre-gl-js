@@ -39,9 +39,6 @@ type RaySphereIntersection = {
     tMax: number;
 } | null;
 
-/**
- * VerticalPerspectiveTransform enforces vertical perspective projection.
- */
 export class VerticalPerspectiveTransform implements ITransform {
     private _helper: TransformHelper;
 

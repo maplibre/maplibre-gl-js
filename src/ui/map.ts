@@ -29,10 +29,8 @@ import {Terrain} from '../render/terrain';
 import {RenderToTexture} from '../render/render_to_texture';
 import {config} from '../util/config';
 import {defaultLocale} from './default_locale';
-import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {VerticalPerspectiveTransform} from '../geo/projection/vertical_perspective_transform';
-import {GlobeTransform} from '../geo/projection/globe_transform';
+import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 import {isAbortError} from '../util/abort_error';
 import {isFramebufferNotCompleteError} from '../util/framebuffer_error';
 import {coveringTiles, type CoveringTilesOptions, createCalculateTileZoomFunction} from '../geo/projection/covering_tiles';
@@ -273,11 +271,11 @@ export type MapOptions = {
      */
     transformCameraUpdate?: CameraUpdateTransformFunction | null;
     /**
-     * A custom {@link ITransform} that overrides the map's automatically assigned transform.
-     * Use {@link MercatorTransform}, {@link VerticalPerspectiveTransform}, or {@link GlobeTransform} to extend an already-implemented `ITransform`.
+     * A callback that overrides the map transform's default `getConstrained()` method. The callback can be used (for example) to modify how viewport respects the map's bounds.
+     * Expected to return an object containing center and zoom.
      * @defaultValue null
      */
-    customTransform?: ITransform | null;
+    transformConstrain?: TransformConstrainFunction | null;
     /**
      * A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
      * @defaultValue null
@@ -440,7 +438,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     maxTileCacheZoomLevels: config.MAX_TILE_CACHE_ZOOM_LEVELS,
     transformRequest: null,
     transformCameraUpdate: null,
-    customTransform: null,
+    transformConstrain: null,
     fadeDuration: 300,
     crossSourceCollisions: true,
     clickTolerance: 3,
@@ -606,10 +604,10 @@ export class Map extends Camera {
     cancelPendingTileRequestsWhileZooming: boolean;
 
     /**
-     * The map's custom {@link ITransform} that overrides the automatically assigned transform.
+     * The map transform's `getConstrained()` callback that overrides the default function.
      * @defaultValue null
      */
-    customTransform: ITransform | null;
+    transformConstrain: TransformConstrainFunction | null;
 
     constructor(options: MapOptions) {
         PerformanceUtils.mark(PerformanceMarkers.create);
@@ -674,7 +672,7 @@ export class Map extends Camera {
         this._overridePixelRatio = resolvedOptions.pixelRatio;
         this._maxCanvasSize = resolvedOptions.maxCanvasSize;
         this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
-        this.customTransform = resolvedOptions.customTransform;
+        this.transformConstrain = resolvedOptions.transformConstrain;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
 
         this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
