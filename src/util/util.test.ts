@@ -534,7 +534,7 @@ describe('threePlaneIntersection', () => {
     const precision = 10;
 
     function createPlane(origin: number[], direction: number[]): vec4 {
-        const normalized = vec3.normalize([] as any, direction as vec3);
+        const normalized = vec3.normalize([], direction as vec3);
         const dist = vec3.dot(normalized, origin as vec3);
         return [normalized[0], normalized[1], normalized[2], -dist];
     }

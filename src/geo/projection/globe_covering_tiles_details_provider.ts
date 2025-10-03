@@ -2,7 +2,7 @@ import {EXTENT} from '../../data/extent';
 import {projectTileCoordinatesToSphere} from './globe_utils';
 import {BoundingVolumeCache} from '../../util/primitives/bounding_volume_cache';
 import {coveringZoomLevel, type CoveringTilesOptionsInternal} from './covering_tiles';
-import {vec3, type vec4} from 'gl-matrix';
+import {vec3, type Vec3Tuple, type  Vec4Tuple} from 'gl-matrix';
 import type {IReadonlyTransform} from '../transform_interface';
 import type {MercatorCoordinate} from '../mercator_coordinate';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
@@ -95,7 +95,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
         }
         return 0;
     }
-    
+
     allowVariableZoom(transform: IReadonlyTransform, options: CoveringTilesOptionsInternal): boolean {
         return coveringZoomLevel(transform, options) > 4;
     }
@@ -149,13 +149,13 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             const extremesPoints = [];
 
             for (const c of corners) {
-                extremesPoints.push(vec3.scale([] as any, c, maxElevation));
+                extremesPoints.push(vec3.scale([], c, maxElevation));
             }
 
             if (maxElevation !== minElevation) {
                 // Only add additional points if terrain is enabled and is not flat.
                 for (const c of corners) {
-                    extremesPoints.push(vec3.scale([] as any, c, minElevation));
+                    extremesPoints.push(vec3.scale([], c, minElevation));
                 }
             }
 
@@ -169,8 +169,8 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             }
 
             // Compute a best-fit AABB for the frustum rejection test
-            const aabbMin: vec3 = [1, 1, 1];
-            const aabbMax: vec3 = [-1, -1, -1];
+            const aabbMin: Vec3Tuple = [1, 1, 1];
+            const aabbMax: Vec3Tuple = [-1, -1, -1];
 
             for (const c of extremesPoints) {
                 for (let i = 0; i < 3; i++) {
@@ -189,23 +189,23 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             // Vector "center" (from planet center to tile center) will be our up/down axis.
             const center = projectTileCoordinatesToSphere(EXTENT / 2, EXTENT / 2, tileID.x, tileID.y, tileID.z);
             // Vector to the east of "center".
-            const centerEast = vec3.cross([] as any, [0, 1, 0], center);
+            const centerEast = vec3.cross([], [0, 1, 0], center);
             vec3.normalize(centerEast, centerEast);
             // Vector to the north of "center" will be our north/south axis.
-            const north = vec3.cross([] as any, center, centerEast);
+            const north = vec3.cross([], center, centerEast);
             vec3.normalize(north, north);
 
             // Axes for the east and west edge of our bounding volume.
             // These axes are NOT opposites of each other, they differ!
             // They are also not orthogonal to the up/down and north/south axes.
-            const axisEast = vec3.cross([] as any, corners[2], corners[1]);
+            const axisEast = vec3.cross([], corners[2], corners[1]);
             vec3.normalize(axisEast, axisEast);
-            const axisWest = vec3.cross([] as any, corners[0], corners[3]);
+            const axisWest = vec3.cross([], corners[0], corners[3]);
             vec3.normalize(axisWest, axisWest);
 
             // Now we will expand the extremes point set for bounding volume creation.
             // We will also include the tile center point, since it will always be an extreme for the "center" axis.
-            extremesPoints.push(vec3.scale([] as any, center, maxElevation));
+            extremesPoints.push(vec3.scale([], center, maxElevation));
             // No need to include a minElevation-scaled center, since we already have minElevation corners in the set and these will always lie lower than the center.
 
             // The extremes might also lie on the midpoint of the north or south edge.
@@ -227,15 +227,15 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             // /--                 --\
             //    -----       -----
             //         ---m---
-            
+
             if (tileID.y >= (1 << tileID.z) / 2) {
                 // South hemisphere - include the tile's north edge midpoint
-                extremesPoints.push(vec3.scale([] as any, projectTileCoordinatesToSphere(EXTENT / 2, 0, tileID.x, tileID.y, tileID.z), maxElevation));
+                extremesPoints.push(vec3.scale([], projectTileCoordinatesToSphere(EXTENT / 2, 0, tileID.x, tileID.y, tileID.z), maxElevation));
                 // No need to include minElevation variant of this point, for the same reason why we don't include minElevation center.
             }
             if (tileID.y < (1 << tileID.z) / 2) {
                 // North hemisphere - include the tile's south edge midpoint
-                extremesPoints.push(vec3.scale([] as any, projectTileCoordinatesToSphere(EXTENT / 2, EXTENT, tileID.x, tileID.y, tileID.z), maxElevation));
+                extremesPoints.push(vec3.scale([], projectTileCoordinatesToSphere(EXTENT / 2, EXTENT, tileID.x, tileID.y, tileID.z), maxElevation));
                 // No need to include minElevation variant of this point, for the same reason why we don't include minElevation center.
             }
 
@@ -244,18 +244,18 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             const upDownMinMax = findAxisMinMax(center, extremesPoints);
             const northSouthMinMax = findAxisMinMax(north, extremesPoints);
 
-            const planeUp = [-center[0], -center[1], -center[2], upDownMinMax.max] as vec4;
-            const planeDown = [center[0], center[1], center[2], -upDownMinMax.min] as vec4;
-            const planeNorth = [-north[0], -north[1], -north[2], northSouthMinMax.max] as vec4;
-            const planeSouth = [north[0], north[1], north[2], -northSouthMinMax.min] as vec4;
-            const planeEast = [...axisEast, 0] as vec4;
-            const planeWest = [...axisWest, 0] as vec4;
+            const planeUp: Vec4Tuple = [-center[0], -center[1], -center[2], upDownMinMax.max];
+            const planeDown: Vec4Tuple = [center[0], center[1], center[2], -upDownMinMax.min];
+            const planeNorth: Vec4Tuple = [-north[0], -north[1], -north[2], northSouthMinMax.max];
+            const planeSouth: Vec4Tuple = [north[0], north[1], north[2], -northSouthMinMax.min];
+            const planeEast: Vec4Tuple = [...axisEast, 0];
+            const planeWest: Vec4Tuple = [...axisWest, 0];
 
-            const points: vec3[] = [];
+            const points: Vec3Tuple[] = [];
 
             // North points
             if (tileID.y === 0) {
-                // If the tile borders a pole, then 
+                // If the tile borders a pole, then
                 points.push(
                     threePlaneIntersection(planeWest, planeEast, planeUp),
                     threePlaneIntersection(planeWest, planeEast, planeDown),

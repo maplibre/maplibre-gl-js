@@ -4,7 +4,7 @@ import {PathInterpolator} from './path_interpolator';
 
 import * as intersectionTests from '../util/intersection_tests';
 import {GridIndex} from './grid_index';
-import {mat4, vec4} from 'gl-matrix';
+import {mat4, vec4, type Vec4Tuple} from 'gl-matrix';
 import ONE_EM from '../symbol/one_em';
 
 import type {IReadonlyTransform} from '../geo/transform_interface';
@@ -442,12 +442,12 @@ export class CollisionIndex {
             // This branch is a fast-path for mercator transform.
             // The code here is a copy of MercatorTransform.projectTileCoordinates, slightly modified for extra performance.
             // This has a huge impact for some reason.
-            let pos;
+            let pos: Vec4Tuple;
             if (getElevation) { // slow because of handle z-index
-                pos = [x, y, getElevation(x, y), 1] as vec4;
+                pos = [x, y, getElevation(x, y), 1];
                 vec4.transformMat4(pos, pos, simpleProjectionMatrix);
             } else { // fast because of ignore z-index
-                pos = [x, y, 0, 1] as vec4;
+                pos = [x, y, 0, 1];
                 xyTransformMat4(pos, pos, simpleProjectionMatrix);
             }
             const w = pos[3];
@@ -493,7 +493,7 @@ export class CollisionIndex {
     *   example transformation: clipPos = glCoordMatrix * viewportMatrix * circle_pos
     */
     getViewportMatrix() {
-        const m = mat4.identity([] as any);
+        const m = mat4.identity([]);
         mat4.translate(m, m, [-viewportPadding, -viewportPadding, 0.0]);
         return m;
     }

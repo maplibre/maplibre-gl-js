@@ -10,7 +10,7 @@ describe('CollisionIndex', () => {
         const transform = new MercatorTransform(0, 22, 0, 60, true);
         transform.resize(200, 200);
         const tile = new UnwrappedTileID(0, new CanonicalTileID(0, 0, 0));
-        vi.spyOn(transform, 'calculatePosMatrix').mockImplementation(() => mat4.create());
+        vi.spyOn(transform, 'calculatePosMatrix').mockImplementation(() => new Float64Array(16));
 
         const ci = new CollisionIndex(transform);
         expect(ci.projectAndGetPerspectiveRatio(x, y, tile, null).x).toBeCloseTo(10000212.3456, 10);

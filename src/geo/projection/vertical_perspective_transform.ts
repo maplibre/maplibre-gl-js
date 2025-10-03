@@ -1,4 +1,4 @@
-import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
+import {type mat2, mat4, vec3, type Vec3Tuple, vec4, type Vec4Tuple} from 'gl-matrix';
 import {TransformHelper} from '../transform_helper';
 import {LngLat, type LngLatLike, earthRadius} from '../lng_lat';
 import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce} from '../../util/util';
@@ -46,10 +46,10 @@ export class VerticalPerspectiveTransform implements ITransform {
     // Implementation of transform getters and setters
     //
 
-    get pixelsToClipSpaceMatrix(): mat4 {
+    get pixelsToClipSpaceMatrix(): mat4<Float64Array> {
         return this._helper.pixelsToClipSpaceMatrix;
     }
-    get clipSpaceToPixelsMatrix(): mat4 {
+    get clipSpaceToPixelsMatrix(): mat4<Float64Array> {
         return this._helper.clipSpaceToPixelsMatrix;
     }
     get pixelsToGLUnits(): [number, number] {
@@ -61,7 +61,7 @@ export class VerticalPerspectiveTransform implements ITransform {
     get size(): Point {
         return this._helper.size;
     }
-    get rotationMatrix(): mat2 {
+    get rotationMatrix(): mat2<Float32Array> {
         return this._helper.rotationMatrix;
     }
     get centerPoint(): Point {
@@ -218,14 +218,14 @@ export class VerticalPerspectiveTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
     }
-    public get nearZ(): number { 
-        return this._helper.nearZ; 
+    public get nearZ(): number {
+        return this._helper.nearZ;
     }
-    public get farZ(): number { 
-        return this._helper.farZ; 
+    public get farZ(): number {
+        return this._helper.farZ;
     }
-    public get autoCalculateNearFarZ(): boolean { 
-        return this._helper.autoCalculateNearFarZ; 
+    public get autoCalculateNearFarZ(): boolean {
+        return this._helper.autoCalculateNearFarZ;
     }
     setTransitionState(_value: number): void {
         // Do nothing
@@ -234,15 +234,15 @@ export class VerticalPerspectiveTransform implements ITransform {
     // Implementation of globe transform
     //
 
-    private _cachedClippingPlane: vec4 = createVec4f64();
+    private _cachedClippingPlane: vec4<Float64Array | Vec4Tuple> = createVec4f64();
     private _cachedFrustum: Frustum;
-    private _projectionMatrix: mat4 = createIdentityMat4f64();
-    private _globeViewProjMatrix32f: mat4 = createIdentityMat4f32(); // Must be 32 bit floats, otherwise WebGL calls in Chrome get very slow.
-    private _globeViewProjMatrixNoCorrection: mat4 = createIdentityMat4f64();
-    private _globeViewProjMatrixNoCorrectionInverted: mat4 = createIdentityMat4f64();
-    private _globeProjMatrixInverted: mat4 = createIdentityMat4f64();
+    private _projectionMatrix: mat4<Float64Array> | mat4<Float32Array> = createIdentityMat4f64();
+    private _globeViewProjMatrix32f: mat4<Float32Array> = createIdentityMat4f32(); // Must be 32 bit floats, otherwise WebGL calls in Chrome get very slow.
+    private _globeViewProjMatrixNoCorrection: mat4<Float64Array> = createIdentityMat4f64();
+    private _globeViewProjMatrixNoCorrectionInverted: mat4<Float64Array> = createIdentityMat4f64();
+    private _globeProjMatrixInverted: mat4<Float64Array> = createIdentityMat4f64();
 
-    private _cameraPosition: vec3 = createVec3f64();
+    private _cameraPosition: vec3<Float64Array> = createVec3f64();
     private _globeLatitudeErrorCorrectionRadians: number = 0;
     /**
      * Globe projection can smoothly interpolate between globe view and mercator. This variable controls this interpolation.
@@ -271,13 +271,13 @@ export class VerticalPerspectiveTransform implements ITransform {
         this._helper.apply(that);
     }
 
-    public get projectionMatrix(): mat4 { return this._projectionMatrix; }
+    public get projectionMatrix(): mat4<Float64Array> | mat4<Float32Array> { return this._projectionMatrix; }
 
-    public get modelViewProjectionMatrix(): mat4 { return this._globeViewProjMatrixNoCorrection; }
+    public get modelViewProjectionMatrix(): mat4<Float64Array> { return this._globeViewProjMatrixNoCorrection; }
 
-    public get inverseProjectionMatrix(): mat4 { return this._globeProjMatrixInverted; }
+    public get inverseProjectionMatrix(): mat4<Float64Array> { return this._globeProjMatrixInverted; }
 
-    public get cameraPosition(): vec3 {
+    public get cameraPosition(): vec3<Float64Array> {
         // Return a copy - don't let outside code mutate our precomputed camera position.
         const copy = createVec3f64(); // Ensure the resulting vector is float64s
         copy[0] = this._cameraPosition[0];
@@ -297,13 +297,13 @@ export class VerticalPerspectiveTransform implements ITransform {
         return {
             mainMatrix: this._globeViewProjMatrix32f,
             tileMercatorCoords: mercatorTileCoordinates,
-            clippingPlane: this._cachedClippingPlane as [number, number, number, number],
+            clippingPlane: this._cachedClippingPlane as unknown as [number, number, number, number],
             projectionTransition: applyGlobeMatrix ? 1 : 0,
             fallbackMatrix: this._globeViewProjMatrix32f,
         };
     }
 
-    private _computeClippingPlane(globeRadiusPixels: number): vec4 {
+    private _computeClippingPlane(globeRadiusPixels: number): vec4<Vec4Tuple> {
         // We want to compute a plane equation that, when applied to the unit sphere generated
         // in the vertex shader, places all visible parts of the sphere into the positive half-space
         // and all the non-visible parts in the negative half-space.
@@ -366,37 +366,37 @@ export class VerticalPerspectiveTransform implements ITransform {
         // Normalize the plane vector
         const scale = 1 / vec3.length(planeVector);
         vec3.scale(planeVector, planeVector, scale);
-        return [...planeVector, -tangentPlaneDistanceToC * scale];
+        return [planeVector[0], planeVector[1], planeVector[2], -tangentPlaneDistanceToC * scale];
     }
 
     public isLocationOccluded(location: LngLat): boolean {
         return !this.isSurfacePointVisible(angularCoordinatesToSurfaceVector(location));
     }
 
-    public transformLightDirection(dir: vec3): vec3 {
+    public transformLightDirection(dir: vec3): vec3<Vec3Tuple> {
         const sphereX = this._helper._center.lng * Math.PI / 180.0;
         const sphereY = this._helper._center.lat * Math.PI / 180.0;
 
         const len = Math.cos(sphereY);
-        const spherePos: vec3 = [
+        const spherePos: vec3<Vec3Tuple> = [
             Math.sin(sphereX) * len,
             Math.sin(sphereY),
             Math.cos(sphereX) * len
         ];
 
-        const axisRight: vec3 = [spherePos[2], 0.0, -spherePos[0]]; // Equivalent to cross(vec3(0.0, 1.0, 0.0), vec)
-        const axisDown: vec3 = [0, 0, 0];
+        const axisRight: vec3<Vec3Tuple> = [spherePos[2], 0.0, -spherePos[0]]; // Equivalent to cross(vec3(0.0, 1.0, 0.0), vec)
+        const axisDown: vec3<Vec3Tuple> = [0, 0, 0];
         vec3.cross(axisDown, axisRight, spherePos);
         vec3.normalize(axisRight, axisRight);
         vec3.normalize(axisDown, axisDown);
 
-        const transformed: vec3 = [
+        const transformed: vec3<Vec3Tuple> = [
             axisRight[0] * dir[0] + axisDown[0] * dir[1] + spherePos[0] * dir[2],
             axisRight[1] * dir[0] + axisDown[1] * dir[1] + spherePos[1] * dir[2],
             axisRight[2] * dir[0] + axisDown[2] * dir[1] + spherePos[2] * dir[2]
         ];
 
-        const normalized: vec3 = [0, 0, 0];
+        const normalized: vec3<Vec3Tuple> = [0, 0, 0];
         vec3.normalize(normalized, transformed);
         return normalized;
     }
@@ -456,6 +456,8 @@ export class VerticalPerspectiveTransform implements ITransform {
         const offset = this.centerOffset;
         globeMatrix[8] = -offset.x * 2 / this._helper._width;
         globeMatrix[9] = offset.y * 2 / this._helper._height;
+        // NOTE:    _projectionMatrix is initialized with Float64Array,
+        //          but mat4.clone(...) will return Float32Array
         this._projectionMatrix = mat4.clone(globeMatrix);
 
         this._globeProjMatrixInverted = createMat4f64();
@@ -503,7 +505,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         this._cachedFrustum = Frustum.fromInvProjectionMatrix(matrix, 1, 0, this._cachedClippingPlane, true);
     }
 
-    calculateFogMatrix(_unwrappedTileID: UnwrappedTileID): mat4 {
+    calculateFogMatrix(_unwrappedTileID: UnwrappedTileID): mat4<Float64Array> {
         warnOnce('calculateFogMatrix is not supported on globe projection.');
         const m = createMat4f64();
         mat4.identity(m);
@@ -518,7 +520,8 @@ export class VerticalPerspectiveTransform implements ITransform {
     getCameraFrustum(): Frustum {
         return this._cachedFrustum;
     }
-    getClippingPlane(): vec4 | null {
+    // NOTE:    this._cachedClippingPlane will never be null AFAICT
+    getClippingPlane(): vec4<Float64Array | Vec4Tuple> | null {
         return this._cachedClippingPlane;
     }
     getCoveringTilesDetailsProvider(): CoveringTilesDetailsProvider {
@@ -772,7 +775,7 @@ export class VerticalPerspectiveTransform implements ITransform {
      */
     private _projectSurfacePointToScreen(pos: vec3): Point {
         const projected = createVec4f64();
-        vec4.transformMat4(projected, [...pos, 1] as vec4, this._globeViewProjMatrixNoCorrection);
+        vec4.transformMat4(projected, [...pos, 1], this._globeViewProjMatrixNoCorrection);
         projected[0] /= projected[3];
         projected[1] /= projected[3];
         return new Point(
@@ -809,7 +812,7 @@ export class VerticalPerspectiveTransform implements ITransform {
     /**
      * Computes normalized direction of a ray from the camera to the given screen pixel.
      */
-    getRayDirectionFromPixel(p: Point): vec3 {
+    getRayDirectionFromPixel(p: Point): vec3<Float64Array> {
         const pos = createVec4f64();
         pos[0] = (p.x / this.width) * 2.0 - 1.0;
         pos[1] = ((p.y / this.height) * 2.0 - 1.0) * -1.0;
@@ -823,7 +826,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         ray[0] = pos[0] - this._cameraPosition[0];
         ray[1] = pos[1] - this._cameraPosition[1];
         ray[2] = pos[2] - this._cameraPosition[2];
-        const rayNormalized: vec3 = createVec3f64();
+        const rayNormalized = createVec3f64();
         vec3.normalize(rayNormalized, ray);
         return rayNormalized;
     }
@@ -849,7 +852,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         }
 
         const projected = createVec4f64();
-        vec4.transformMat4(projected, [...vec, 1] as vec4, this._globeViewProjMatrixNoCorrection);
+        vec4.transformMat4(projected, [...vec, 1], this._globeViewProjMatrixNoCorrection);
         projected[0] /= projected[3];
         projected[1] /= projected[3];
         projected[2] /= projected[3];
@@ -967,7 +970,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         return sphereSurfacePointToCoordinates(closestOnHorizon);
     }
 
-    getMatrixForModel(location: LngLatLike, altitude?: number): mat4 {
+    getMatrixForModel(location: LngLatLike, altitude?: number): mat4<Float64Array> {
         const lnglat = LngLat.convert(location);
         const scale = 1.0 / earthRadius;
 
@@ -986,7 +989,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         return globeData;
     }
 
-    getFastPathSimpleProjectionMatrix(_tileID: OverscaledTileID): mat4 {
+    getFastPathSimpleProjectionMatrix(_tileID: OverscaledTileID): mat4<Float64Array> {
         return undefined;
     }
 }

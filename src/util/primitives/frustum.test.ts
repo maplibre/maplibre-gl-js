@@ -4,8 +4,8 @@ import {Frustum} from './frustum';
 
 describe('frustum', () => {
     test('Create a frustum from inverse projection matrix', () => {
-        const proj = new Float64Array(16) as any as mat4;
-        const invProj = new Float64Array(16) as any as mat4;
+        const proj = new Float64Array(16);
+        const invProj = new Float64Array(16);
         mat4.perspective(proj, Math.PI / 2, 1.0, 0.1, 100.0);
         mat4.invert(invProj, proj);
 
