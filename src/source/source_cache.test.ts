@@ -635,7 +635,7 @@ describe('SourceCache.update', () => {
         });
         await map.once('styledata');
 
-        const style = (map as Map).style;
+        const style = map.style;
         const sourceCache = style.sourceCaches['rasterSource'];
         const spy = vi.spyOn(sourceCache, '_updateFadingTiles');
         sourceCache._loadTile = async () => {};
@@ -857,7 +857,7 @@ describe('SourceCache.update', () => {
         transform.setZoom(10);
 
         const sourceCache = createSourceCache({raster: true});
-        const loadedTiles: {[_: string]: Tile} = {};
+        const loadedTiles: Record<string, Tile> = {};
         sourceCache._source.loadTile = async (tile) => {
             loadedTiles[tile.tileID.key] = tile;
             tile.state = 'loaded';
@@ -894,7 +894,7 @@ describe('SourceCache.update', () => {
         transform.setZoom(10);
 
         const sourceCache = createSourceCache({raster: true});
-        const loadedTiles: {[_: string]: Tile} = {};
+        const loadedTiles: Record<string, Tile> = {};
         sourceCache._source.loadTile = async (tile) => {
             loadedTiles[tile.tileID.key] = tile;
             tile.state = 'loaded';
@@ -931,7 +931,7 @@ describe('SourceCache.update', () => {
         transform.setZoom(10);
 
         const sourceCache = createSourceCache({raster: true});
-        const loadedTiles: {[_: string]: Tile} = {};
+        const loadedTiles: Record<string, Tile> = {};
         sourceCache._source.loadTile = async (tile) => {
             loadedTiles[tile.tileID.key] = tile;
             tile.state = 'loaded';
@@ -975,7 +975,7 @@ describe('SourceCache.update', () => {
         transform.setZoom(10);
 
         const sourceCache = createSourceCache({raster: true});
-        const loadedTiles: {[_: string]: Tile} = {};
+        const loadedTiles: Record<string, Tile> = {};
         sourceCache._source.loadTile = async (tile) => {
             loadedTiles[tile.tileID.key] = tile;
             tile.state = 'loaded';
@@ -2539,17 +2539,19 @@ describe('SourceCache::refreshTiles', () => {
 });
 
 describe('SourceCache._getEdgeTiles', () => {
-    const makeTile = (z: number, x: number, y: number): Tile => {
-        return {tileID: new OverscaledTileID(z, 0, z, x, y)} as Tile;
+    const makeTile = (z: number, x: number, y: number): OverscaledTileID => {
+        return new OverscaledTileID(z, 0, z, x, y);
     };
-
-    const keys = (tiles: Tile[]) => {
-        return tiles.map(t => t.tileID.key).sort();
+    const arrayKeys = (tileIDs: OverscaledTileID[]) => {
+        return tileIDs.map(id => id.key).sort();
+    };
+    const setKeys = (tileIDs: Set<OverscaledTileID>) => {
+        return Array.from(tileIDs).map(id => id.key).sort();
     };
 
     test('returns [] for empty input', () => {
         const sourceCache = createSourceCache();
-        expect(sourceCache._getEdgeTiles([])).toEqual([]);
+        expect(sourceCache._getEdgeTiles([])).toEqual(new Set<OverscaledTileID>());
     });
 
     test('returns all edge tiles at same zoom', () => {
@@ -2561,14 +2563,14 @@ describe('SourceCache._getEdgeTiles', () => {
             makeTile(2, 1, 1),
         ];
         const edges = sourceCache._getEdgeTiles(tiles);
-        expect(keys(edges)).toEqual(keys(tiles));
+        expect(setKeys(edges)).toEqual(arrayKeys(tiles));
     });
 
     test('returns only edge tiles for a 3x3 block at the same zoom', () => {
         const sourceCache = createSourceCache();
 
         // 3x3 block of tiles at z=3
-        const tiles: Tile[] = [];
+        const tiles: OverscaledTileID[] = [];
         for (let x = 4; x <= 6; x++) {
             for (let y = 4; y <= 6; y++) {
                 tiles.push(makeTile(3, x, y));
@@ -2578,12 +2580,12 @@ describe('SourceCache._getEdgeTiles', () => {
         const edges = sourceCache._getEdgeTiles(tiles);
 
         // expected: 8 perimeter tiles (center tile (5,5) is not on any edge)
-        const expected = tiles.filter(t => {
-            const {x, y} = t.tileID.canonical;
+        const expected = tiles.filter(id => {
+            const {x, y} = id.canonical;
             return !(x === 5 && y === 5);
         });
 
-        expect(keys(edges)).toEqual(keys(expected));
+        expect(setKeys(edges)).toEqual(arrayKeys(expected));
     });
 
     test('returns only perimeter tiles when mixing coarse and fine', () => {
@@ -2606,12 +2608,12 @@ describe('SourceCache._getEdgeTiles', () => {
         const edges = sourceCache._getEdgeTiles(allTiles);
 
         // expected: drop (z=2, x=1, y=1) and (z=3, x=4, y=4)
-        const expected = allTiles.filter(t => {
-            const {x, y, z} = t.tileID.canonical;
+        const expected = allTiles.filter(id => {
+            const {x, y, z} = id.canonical;
             return !(z === 2 && x === 1 && y === 1) &&
                    !(z === 3 && x === 4 && y === 4);
         });
 
-        expect(keys(edges)).toEqual(keys(expected));
+        expect(setKeys(edges)).toEqual(arrayKeys(expected));
     });
 });

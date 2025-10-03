@@ -83,6 +83,7 @@ export class SourceCache extends Evented {
     _didEmitContent: boolean;
     _updated: boolean;
     _rasterFadeDuration: number;
+    _maxFadingAncestorLevels: number;
 
     static maxUnderzooming: number;
     static maxOverzooming: number;
@@ -112,6 +113,7 @@ export class SourceCache extends Evented {
         this._maxTileCacheSize = null;
         this._maxTileCacheZoomLevels = null;
         this._rasterFadeDuration = 0;
+        this._maxFadingAncestorLevels = 5;
 
         this._state = new SourceFeatureState();
         this._didEmitContent = false;
@@ -739,25 +741,21 @@ export class SourceCache extends Evented {
      * Fade logic must therefore adapt dynamically based on the previously rendered ideal tile set.
      */
     _updateFadingTiles(idealTileIDs: OverscaledTileID[], retain: Record<string, OverscaledTileID>) {
-        const now = browser.now();
-        let nonFaders: Tile[] = [];
+        const now: number = browser.now();
+        const edgeTiles: Set<OverscaledTileID> = this._getEdgeTiles(idealTileIDs);
 
         for (const idealID of idealTileIDs) {
             const idealTile = this._tiles[idealID.key];
 
-            const parentIsFader = this._updateFadingParent(idealTile, retain, now);
-            const childIsFader = this._updateFadingChildren(idealTile, retain, now);
+            const parentIsFader = this._updateFadingAncestor(idealTile, retain, now);
+            const childIsFader = this._updateFadingDescendents(idealTile, retain, now);
             if (parentIsFader || childIsFader) continue;
 
-            nonFaders.push(idealTile);
-        }
+            const edgeIsFader = this._updateFadingEdge(idealTile, edgeTiles, now);
+            if (edgeIsFader) continue;
 
-        // fallback to looking for loading edge tiles for the non-faders
-        nonFaders = this._updateFadingEdges(nonFaders, now);
-        
-        // for all remaining non-faders reset the fade logic
-        for (const nonFader of nonFaders) {
-            nonFader.resetFadeLogic();
+            // for all non-fading ideal tiles reset the fade logic
+            idealTile.resetFadeLogic();
         }
     }
 
@@ -771,7 +769,7 @@ export class SourceCache extends Evented {
      *                             ┌───┬─┴─┬───┐  ┌───┬─┴─┬───┐  ┌───┬─┴─┬───┐  ┌───┬─┴─┬───┐
      *                             ■   ■   ■   ■  ■   ■   ■   ■  ■   ■   ■   ■  ■   ■   ■   ■
      */
-    _updateFadingParent(idealTile: Tile, retain: Record<string, OverscaledTileID>, now: number): boolean {
+    _updateFadingAncestor(idealTile: Tile, retain: Record<string, OverscaledTileID>, now: number): boolean {
         const {tileID: idealID, fadingBaseRole, fadingParent} = idealTile;
 
         // ideal tile already has fading parent - retain and return
@@ -781,8 +779,7 @@ export class SourceCache extends Evented {
         }
 
         // find a loaded parent tile to fade with the ideal tile
-        const maxAncestorLevels = 5;
-        const minAncestorZ = Math.max(idealID.overscaledZ - maxAncestorLevels, this._source.minzoom);
+        const minAncestorZ = Math.max(idealID.overscaledZ - this._maxFadingAncestorLevels, this._source.minzoom);
         for (let ancestorZ = idealID.overscaledZ - 1; ancestorZ >= minAncestorZ; ancestorZ--) {
             const ancestorID = idealID.scaledTo(ancestorZ);
             const ancestorTile = this._getLoadedTile(ancestorID);
@@ -811,27 +808,26 @@ export class SourceCache extends Evented {
      *                             ┌───┬─┴─┬───┐  ┌───┬─┴─┬───┐  ┌───┬─┴─┬───┐  ┌───┬─┴─┬───┐
      * Child tiles - fading out    ■   ■   ■   ■  ■   ■   ■   ■  ■   ■   ■   ■  ■   ■   ■   ■    -- Base Role = Departing
      *
-     * Try direct children first. If none found, try grandchildren. Stops as soon as a generation provides a fader.
+     * Try direct children first. If none found, try grandchildren. Stops at the first generation that provides a fader.
      */
-    _updateFadingChildren(idealTile: Tile, retain: Record<string, OverscaledTileID>, now: number): boolean {
+    _updateFadingDescendents(idealTile: Tile, retain: Record<string, OverscaledTileID>, now: number): boolean {
         // search first level of descendents (4 tiles)
         const idealChildren = idealTile.tileID.children(this._source.maxzoom);
-        let hasFader = this._parseFadingChildren(idealTile, idealChildren, retain, now);
+        let hasFader = this._updateFadingChildren(idealTile, idealChildren, retain, now);
+        if (hasFader) return true;
 
-        // if none found search second level of descendents (16 tiles)
-        if (!hasFader) {
-            for (const childID of idealChildren) {
-                const grandChildIDs = childID.children(this._source.maxzoom);
-                if (this._parseFadingChildren(idealTile, grandChildIDs, retain, now)) {
-                    hasFader = true;
-                }
+        // search second level of descendents (16 tiles)
+        for (const childID of idealChildren) {
+            const grandChildIDs = childID.children(this._source.maxzoom);
+            if (this._updateFadingChildren(idealTile, grandChildIDs, retain, now)) {
+                hasFader = true;
             }
         }
 
         return hasFader;
     }
 
-    _parseFadingChildren(idealTile: Tile, childIDs: OverscaledTileID[], retain: Record<string, OverscaledTileID>, now: number): boolean {
+    _updateFadingChildren(idealTile: Tile, childIDs: OverscaledTileID[], retain: Record<string, OverscaledTileID>, now: number): boolean {
         if (childIDs[0].overscaledZ >= this._source.maxzoom) return false;
         let foundFader = false;
 
@@ -861,58 +857,64 @@ export class SourceCache extends Evented {
      * more natural for them to fade in, however if they are already loaded/cached then there is no need to fade as map will
      * look cohesive with no gaps. Note that draw_raster determines fade priority, as many-to-one fade supersedes edge fading.
      */
-    _updateFadingEdges(idealTiles: Tile[], now: number): Tile[] {
-        const edgeTiles: Tile[] = this._getEdgeTiles(idealTiles);
-        const nonFaders: Tile[] = [];
+    _updateFadingEdge(idealTile: Tile, edgeTiles: Set<OverscaledTileID>, now: number): boolean {
+        const idealID: OverscaledTileID = idealTile.tileID;
 
-        for (const edgeTile of edgeTiles) {
-            // edge tile is already fading
-            if (edgeTile.selfFading) {
-                continue;
-            }
-            // fading not needed for tiles that are already loaded
-            if (edgeTile.hasData()) {
-                nonFaders.push(edgeTile);
-                continue;
-            }
-
-            // enable fading for loading edges with no data
-            const fadeEndTime = now + this._rasterFadeDuration;
-            edgeTile.setSelfFadeLogic(fadeEndTime);
+        // tile is already self fading
+        if (idealTile.selfFading) {
+            return true;
         }
-        
-        return nonFaders;
+
+        // fading not needed for tiles that are already loaded
+        if (idealTile.hasData()) {
+            return false;
+        }
+
+        // enable fading for loading edges with no data
+        if (edgeTiles.has(idealID)) {
+            const fadeEndTime = now + this._rasterFadeDuration;
+            idealTile.setSelfFadeLogic(fadeEndTime);
+            return true;
+        }
+
+        return false;
     }
 
-    _getEdgeTiles(tiles: Tile[]): Tile[] {
-        if (!tiles.length) return [];
+    _getEdgeTiles(tileIDs: OverscaledTileID[]): Set<OverscaledTileID> {
+        if (!tileIDs.length) return new Set<OverscaledTileID>();
 
         // set a common zoom for calculation (highest zoom) to reproject all tiles to this same zoom
-        const targetZ = Math.max(...tiles.map(t => t.tileID.canonical.z));
+        const targetZ = Math.max(...tileIDs.map(id => id.canonical.z));
+
+        // vars to store the min and max tile x/y coordinates for edge finding
+        let minX = Infinity, maxX = -Infinity;
+        let minY = Infinity, maxY = -Infinity;
 
         // project all tiles to targetZ while maintaining the reference to the original tile
-        const projected = tiles.map(tile => {
-            const {x, y, z} = tile.tileID.canonical;
+        const projected: {id: OverscaledTileID; x: number; y: number}[] = [];
+        for (const id of tileIDs) {
+            const {x, y, z} = id.canonical;
             const scale = Math.pow(2, targetZ - z);
-            return {
-                tile: tile,    // store the original ref
-                x: x * scale,  // new x at targetZ
-                y: y * scale   // new y at targetZ
-            };
-        });
+            const px = x * scale;
+            const py = y * scale;
 
-        // find edges at targetZ using the reprojected tile ids
-        const xs = projected.map(p => p.x);
-        const ys = projected.map(p => p.y);
-        const minX = Math.min(...xs);
-        const maxX = Math.max(...xs);
-        const minY = Math.min(...ys);
-        const maxY = Math.max(...ys);
+            projected.push({id, x: px, y: py});
 
-        // select tiles whose projected coords are on the edges
-        return projected
-            .filter(p => p.x === minX || p.x === maxX || p.y === minY || p.y === maxY)
-            .map(p => p.tile);
+            if (px < minX) minX = px;
+            if (px > maxX) maxX = px;
+            if (py < minY) minY = py;
+            if (py > maxY) maxY = py;
+        }
+
+        // find edge tiles using the reprojected tile ids
+        const edgeTiles: Set<OverscaledTileID> = new Set<OverscaledTileID>();
+        for (const p of projected) {
+            if (p.x === minX || p.x === maxX || p.y === minY || p.y === maxY) {
+                edgeTiles.add(p.id);
+            }
+        }
+
+        return edgeTiles;
     }
 
     /**

@@ -112,7 +112,7 @@ function drawTiles(
 
         // create second texture - use either the current tile or fade tile to bind second texture below
         context.activeTexture.set(gl.TEXTURE1);
-        const {parentTile, fadeValues, parentScaleBy, parentTopLeft} = getTileFadeProps(tile, sourceCache, fadeDuration, isTerrain);
+        const {parentTile, fadeValues, parentScaleBy, parentTopLeft} = updateFadeProperties(tile, sourceCache, fadeDuration, isTerrain);
         (parentTile || tile).texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
 
         // Enable anisotropic filtering only when the pitch is greater than 20 degrees
@@ -135,35 +135,37 @@ function drawTiles(
     }
 }
 
-function getTileFadeProps(tile: Tile, sourceCache: SourceCache, fadeDuration: number, isTerrain: boolean): TileFadeProps {
-    let parentTile = null;
-    let fadeValues = null;
-    let parentScaleBy = null;
-    let parentTopLeft = null;
+function updateFadeProperties(tile: Tile, sourceCache: SourceCache, fadeDuration: number, isTerrain: boolean): TileFadeProps {
+    let parentTile: Tile = null;
+    let parentScaleBy: number = null;
+    let parentTopLeft: [number, number] = null;
+    let fadeValues: {opacity: number; mix: number} = null;
+
+    if (fadeDuration === 0 || isTerrain) {
+        return {parentTile, fadeValues, parentScaleBy, parentTopLeft};
+    }
 
     // first looking to cross-fade with a departing/incoming parent, otherwise looking for self fading edge tiles
-    if (fadeDuration > 0 && !isTerrain) {
-        if (tile.fadingParent) {
-            parentTile = sourceCache._getLoadedTile(tile.fadingParent);
-            if (parentTile) {
-                fadeValues = doFadeValues(tile, parentTile, fadeDuration);
-                parentScaleBy = Math.pow(2, parentTile.tileID.overscaledZ - tile.tileID.overscaledZ);
-                parentTopLeft = [
-                    (tile.tileID.canonical.x * parentScaleBy) % 1,
-                    (tile.tileID.canonical.y * parentScaleBy) % 1
-                ];
-            }
-        } else if (tile.selfFading) {
-            fadeValues = doFadeValues(tile, null, fadeDuration);
-            parentScaleBy = 1;
-            parentTopLeft = [0, 0];
+    if (tile.fadingParent) {
+        parentTile = sourceCache._getLoadedTile(tile.fadingParent);
+        if (parentTile) {
+            fadeValues = updateFadeValues(tile, parentTile, fadeDuration);
+            parentScaleBy = Math.pow(2, parentTile.tileID.overscaledZ - tile.tileID.overscaledZ);
+            parentTopLeft = [
+                (tile.tileID.canonical.x * parentScaleBy) % 1,
+                (tile.tileID.canonical.y * parentScaleBy) % 1
+            ];
         }
+    } else if (tile.selfFading) {
+        fadeValues = updateFadeValues(tile, null, fadeDuration);
+        parentScaleBy = 1;
+        parentTopLeft = [0, 0];
     }
 
     return {parentTile, fadeValues, parentScaleBy, parentTopLeft};
 }
 
-function doFadeValues(tile: Tile, parentTile: Tile, fadeDuration: number): {opacity: number; mix: number} {
+function updateFadeValues(tile: Tile, parentTile: Tile, fadeDuration: number): {opacity: number; mix: number} {
     if (fadeDuration <= 0) return {opacity: 1, mix: 0};
 
     const now = browser.now();
@@ -189,6 +191,7 @@ function doFadeValues(tile: Tile, parentTile: Tile, fadeDuration: number): {opac
 
     // simple fade-in for tile without parent (i.e. edge tiles)
     const tileOpacity = clamp(timeSinceTile, 0, 1);
+    tile.fadeOpacity = tileOpacity;
 
     // clear refresh flag once fade is complete
     if (tile.refreshedUponExpiration && timeSinceTile >= 1) {
