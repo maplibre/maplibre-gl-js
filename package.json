@@ -94,7 +94,7 @@
     "glob": "^11.0.3",
     "globals": "^16.4.0",
     "is-builtin-module": "^5.0.0",
-    "jsdom": "^26.1.0",
+    "jsdom": "^27.0.0",
     "junit-report-builder": "^5.1.1",
     "minimist": "^1.2.8",
     "mock-geolocation": "^1.0.11",
