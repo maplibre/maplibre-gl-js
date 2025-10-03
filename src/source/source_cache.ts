@@ -747,12 +747,12 @@ export class SourceCache extends Evented {
         for (const idealID of idealTileIDs) {
             const idealTile = this._tiles[idealID.key];
 
-            // cross-fading with parent/child of the ideal tile
             const parentIsFader = this._updateFadingAncestor(idealTile, retain, now);
-            const childIsFader = this._updateFadingDescendents(idealTile, retain, now);
-            if (parentIsFader || childIsFader) continue;
+            if (parentIsFader) continue;
 
-            // self-fading for ideal tiles at the edges (when panning)
+            const childIsFader = this._updateFadingDescendents(idealTile, retain, now);
+            if (childIsFader) continue;
+
             const edgeIsFader = this._updateFadingEdge(idealTile, edgeTileIDs, now);
             if (edgeIsFader) continue;
 
