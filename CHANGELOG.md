@@ -6,12 +6,45 @@
 ### 🐞 Bug fixes
 - Fix blank map after WebGL context restore ([#6242](https://github.com/maplibre/maplibre-gl-js/issues/6242))
 
+## 5.8.0
+
+### ✨ Features and improvements
+
+- Enable documentation admonitions in Material for MkDocs. ([#6455](https://github.com/maplibre/maplibre-gl-js/issues/6455))
+- Switch MapEventType from type to interface to allow declaration merging ([#6436](https://github.com/maplibre/maplibre-gl-js/pull/6436))
+- Implement data-driven styling support for `line-dasharray` ([#5812](https://github.com/maplibre/maplibre-gl-js/pull/5812))
+
+### 🐞 Bug fixes
+
+- Fix raster flickering when using terrain 3D and optimize terrain logic.
+- Fix issue where parent tiles are retained when deeper descendant tiles already cover the missing ideal tile. ([#6442](https://github.com/maplibre/maplibre-gl-js/pull/6442))
+- Fix an issue when GeolocateControl fires outofmaxbounds event with trackUserLocation disabled ([#6464](https://github.com/maplibre/maplibre-gl-js/pull/6464))
+- Fix an issue with globe+terrain "zooming" in when dragging towards the poles ([#6470](https://github.com/maplibre/maplibre-gl-js/pull/6470))
+- Fix integer overflow in symbol placement ([#6476](https://github.com/maplibre/maplibre-gl-js/pull/6476))
+
+## 5.7.3
+
+### 🐞 Bug fixes
+
+- Fix case where retain loaded children does not retain uppermost loaded children ([#6399](https://github.com/maplibre/maplibre-gl-js/pull/6399))
+- Fix an issue with spread operator that caused issues in Angular and esbuild ([#6438](https://github.com/maplibre/maplibre-gl-js/pull/6438))
+
+## 5.7.2
+
+### 🐞 Bug fixes
+
+- Fix `_updateRetainedTiles` checking for children when children length is 1 overscaled tile "child" ([#6388](https://github.com/maplibre/maplibre-gl-js/pull/6388))
+- Fix evaluating `global-state` for layers added after loading style ([#6361](https://github.com/maplibre/maplibre-gl-js/issues/6361))
+- Change the pathway for passing `global-state` object from `Style` to expression to fix a hack that was introduced in previous versions ([#6366](https://github.com/maplibre/maplibre-gl-js/pull/6366))
+- Fix triggering `load` and `idle` events when source TileJSON fails to load ([#5430](https://github.com/maplibre/maplibre-gl-js/issues/5430))
+- Fix mouse events on heatmap features ([#714](https://github.com/maplibre/maplibre-gl-js/issues/714))
+
 ## 5.7.1
 
 ### 🐞 Bug fixes
 
 - Fix accuracy circle on locate user control ([#5432](https://github.com/maplibre/maplibre-gl-js/issues/5432))
-- Fix evaluating `global-state` in paint `...-pattern` properties ([6301](https://github.com/maplibre/maplibre-gl-js/pull/6301))
+- Fix evaluating `global-state` in paint `...-pattern` properties ([#6301](https://github.com/maplibre/maplibre-gl-js/pull/6301))
 - Fix pan moving in the wrong direction when map is pitched ([#6111](https://github.com/maplibre/maplibre-gl-js/issues/6111))
 - Fix evaluation of `text-color` when using `format` within `step` ([#5833](https://github.com/maplibre/maplibre-gl-js/issues/5833))
 - Fix regression in `mergeSourceDiffs`: handle add/remove/removeAll ([#6342](https://github.com/maplibre/maplibre-gl-js/pull/6342))

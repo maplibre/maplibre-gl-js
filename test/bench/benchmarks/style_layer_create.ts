@@ -19,7 +19,7 @@ export default class StyleLayerCreate extends Benchmark {
 
     bench() {
         for (const layer of this.layers) {
-            createStyleLayer(layer);
+            createStyleLayer(layer, {});
         }
     }
 }

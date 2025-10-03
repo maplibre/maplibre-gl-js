@@ -7,6 +7,7 @@ import type {PluginState} from '../source/rtl_text_plugin_status';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {OverscaledTileID} from '../source/tile_id';
 import type {GetResourceResponse, RequestParameters} from './ajax';
+import type {DashEntry} from '../render/line_atlas';
 
 /**
  * The parameters needed in order to get information about the cluster
@@ -82,6 +83,21 @@ export type GetGlyphsResponse = {
 export type GetImagesResponse = {[_: string]: StyleImage};
 
 /**
+ * Parameters needed to get the line dashes
+ */
+export type GetDashesParameters = {
+    dashes: {[key: string]: {
+        dasharray: Array<number>;
+        round: boolean;
+    };};
+};
+
+/**
+ * A response object returned when requesting line dashes
+ */
+export type GetDashesResponse = {[dashId: string]: DashEntry};
+
+/**
  * All the possible message types that can be sent to and from the worker
  */
 export const enum MessageType {
@@ -94,8 +110,10 @@ export const enum MessageType {
     loadTile = 'LT',
     reloadTile = 'RT',
     getGlyphs = 'GG',
+    getDashes = 'GDA',
     getImages = 'GI',
     setImages = 'SI',
+    updateGlobalState = 'UGS',
     setLayers = 'SL',
     updateLayers = 'UL',
     syncRTLPluginState = 'SRPS',
@@ -125,6 +143,7 @@ export type RequestResponseMessageMap = {
     [MessageType.getGlyphs]: [GetGlyphsParameters, GetGlyphsResponse];
     [MessageType.getImages]: [GetImagesParameters, GetImagesResponse];
     [MessageType.setImages]: [string[], void];
+    [MessageType.updateGlobalState]: [Record<string, any>, void];
     [MessageType.setLayers]: [Array<LayerSpecification>, void];
     [MessageType.updateLayers]: [UpdateLayersParameters, void];
     [MessageType.syncRTLPluginState]: [PluginState, PluginState];
@@ -136,6 +155,7 @@ export type RequestResponseMessageMap = {
     [MessageType.abortTile]: [TileParameters, void];
     [MessageType.removeDEMTile]: [TileParameters, void];
     [MessageType.getResource]: [RequestParameters, GetResourceResponse<any>];
+    [MessageType.getDashes]: [GetDashesParameters, GetDashesResponse];
 };
 
 /**

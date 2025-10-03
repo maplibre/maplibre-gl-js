@@ -34,9 +34,9 @@ describe('selectDebugSource', () => {
     test('Decides on vector source if it exists', () => {
         const layers = {
             '1': new RasterStyleLayer(
-                {id: '1', type: 'raster', source: 'raster_tiles'}),
+                {id: '1', type: 'raster', source: 'raster_tiles'}, {}),
             '2': new FillStyleLayer(
-                {id: '2', type: 'fill', source: 'vector_tiles'}),
+                {id: '2', type: 'fill', source: 'vector_tiles'}, {}),
         };
         const mockStyle = buildMockStyle(layers);
         const source = selectDebugSource(mockStyle, zoom);
@@ -46,9 +46,9 @@ describe('selectDebugSource', () => {
     test('Decides raster if vector source not shown at this zoom', () => {
         const layers = {
             '1': new RasterStyleLayer(
-                {id: '1', type: 'raster', source: 'raster_tiles'}),
+                {id: '1', type: 'raster', source: 'raster_tiles'}, {}),
             '2': new FillStyleLayer(
-                {id: '2', type: 'fill', source: 'vector_tiles', maxzoom: 13}),
+                {id: '2', type: 'fill', source: 'vector_tiles', maxzoom: 13}, {}),
         };
         const mockStyle = buildMockStyle(layers);
         const source = selectDebugSource(mockStyle, zoom);
@@ -58,9 +58,9 @@ describe('selectDebugSource', () => {
     test('Decides raster if vector layer has visibility none', () => {
         const layers = {
             '1': new RasterStyleLayer(
-                {id: '1', type: 'raster', source: 'raster_tiles'}),
+                {id: '1', type: 'raster', source: 'raster_tiles'}, {}),
             '2': new FillStyleLayer(
-                {id: '2', type: 'fill', source: 'vector_tiles', layout: {visibility: 'none'}}),
+                {id: '2', type: 'fill', source: 'vector_tiles', layout: {visibility: 'none'}}, {}),
         };
         const style = buildMockStyle(layers);
         const source = selectDebugSource(style, zoom);
@@ -70,7 +70,7 @@ describe('selectDebugSource', () => {
     test('Decides raster if no vector source exists', () => {
         const layers = {
             '1': new RasterStyleLayer(
-                {id: '1', type: 'raster', source: 'raster_tiles'}),
+                {id: '1', type: 'raster', source: 'raster_tiles'}, {}),
         };
         const mockStyle = buildMockStyle(layers);
         const source = selectDebugSource(mockStyle, zoom);
@@ -90,9 +90,9 @@ describe('selectDebugSource', () => {
         };
         const layers = {
             'fill_11': new FillStyleLayer(
-                {id: 'fill_11', type: 'fill', source: 'vector_11'}),
+                {id: 'fill_11', type: 'fill', source: 'vector_11'}, {}),
             'fill_14': new FillStyleLayer(
-                {id: 'fill_14', type: 'fill', source: 'vector_14'}),
+                {id: 'fill_14', type: 'fill', source: 'vector_14'}, {}),
         };
         const mockStyle = buildMockStyle(layers, sources);
         const source = selectDebugSource(mockStyle, zoom);
@@ -112,9 +112,9 @@ describe('selectDebugSource', () => {
         };
         const layers = {
             'raster_11': new RasterStyleLayer(
-                {id: 'raster_11', type: 'raster', source: 'raster_11'}),
+                {id: 'raster_11', type: 'raster', source: 'raster_11'}, {}),
             'raster_14': new RasterStyleLayer(
-                {id: 'raster_14', type: 'raster', source: 'raster_14'}),
+                {id: 'raster_14', type: 'raster', source: 'raster_14'}, {}),
         };
         const mockStyle = buildMockStyle(layers, sources);
         const source = selectDebugSource(mockStyle, zoom);

@@ -6,12 +6,14 @@
           "width": 512,
           "operations": [
               ["setVerticalFieldOfView", 150],
+              ["wait"],
+              ["setZoom", 16.25],
               ["wait"]
           ]
         }
     },
     "center": [35.372566, 31.556437],
-    "zoom": 16.25,
+    "zoom": 16,
     "pitch": 30,
     "bearing": 22.5,
     "sources": {
@@ -24,6 +26,13 @@
         }
     },
     "layers": [
-        {"id": "repeat", "type": "raster", "source": "repeat"}
+        {
+            "id": "repeat",
+            "type": "raster",
+            "source": "repeat",
+            "paint": {
+                "raster-fade-duration": 1
+            }
+        }
     ]
-} 
+}
