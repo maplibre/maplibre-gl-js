@@ -13,7 +13,7 @@ import {Frustum} from '../../util/primitives/frustum';
 
 import type {Terrain} from '../../render/terrain';
 import type {PointProjection} from '../../symbol/projection';
-import type {IReadonlyTransform, ITransform} from '../transform_interface';
+import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface';
 import type {PaddingOptions} from '../edge_insets';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
@@ -251,8 +251,8 @@ export class VerticalPerspectiveTransform implements ITransform {
 
     private _coveringTilesDetailsProvider: GlobeCoveringTilesDetailsProvider;
 
-    public constructor() {
-
+    public constructor(transformConstrain?: TransformConstrainFunction) {
+        this.getConstrained = transformConstrain ?? this.getConstrained;
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
             getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
@@ -636,7 +636,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         return new LngLatBounds(boundsArray);
     }
 
-    getConstrained(lngLat: LngLat, zoom: number): { center: LngLat; zoom: number } {
+    getConstrained: TransformConstrainFunction = (lngLat, zoom) => {
         // Globe: TODO: respect _lngRange, _latRange
         // It is possible to implement exact constrain for globe, but I don't think it is worth the effort.
         const constrainedLat = clamp(lngLat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
@@ -648,7 +648,7 @@ export class VerticalPerspectiveTransform implements ITransform {
             ),
             zoom: constrainedZoom
         };
-    }
+    };
 
     calculateCenterFromCameraLngLatAlt(lngLat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
         return this._helper.calculateCenterFromCameraLngLatAlt(lngLat, alt, bearing, pitch);

@@ -14,7 +14,7 @@ import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_de
 import {Frustum} from '../../util/primitives/frustum';
 
 import type {Terrain} from '../../render/terrain';
-import type {IReadonlyTransform, ITransform} from '../transform_interface';
+import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface';
 import type {PaddingOptions} from '../edge_insets';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
@@ -236,7 +236,8 @@ export class MercatorTransform implements ITransform {
 
     private _coveringTilesDetailsProvider;
 
-    constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
+    constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean, transformConstrain?: TransformConstrainFunction) {
+        this.getConstrained = transformConstrain ?? this.getConstrained;
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
             getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
@@ -444,7 +445,7 @@ export class MercatorTransform implements ITransform {
      *
      * Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
      */
-    getConstrained(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
+    getConstrained: TransformConstrainFunction = (lngLat, zoom) => {
         zoom = clamp(+zoom, this.minZoom, this.maxZoom);
         const result = {
             center: new LngLat(lngLat.lng, lngLat.lat),
@@ -533,7 +534,7 @@ export class MercatorTransform implements ITransform {
         }
 
         return result;
-    }
+    };
 
     calculateCenterFromCameraLngLatAlt(lnglat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
         return this._helper.calculateCenterFromCameraLngLatAlt(lnglat, alt, bearing, pitch);

@@ -66,7 +66,7 @@ import type {CanvasSourceSpecification} from '../source/canvas_source';
 import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
-import type {ITransform} from '../geo/transform_interface';
+import type {ITransform, TransformConstrainFunction} from '../geo/transform_interface';
 import type {ICameraHelper} from '../geo/projection/camera_helper';
 
 const version = packageJSON.version;
@@ -271,6 +271,13 @@ export type MapOptions = {
      */
     transformCameraUpdate?: CameraUpdateTransformFunction | null;
     /**
+     * A callback that overrides the map transform's default `getConstrained()` method. The callback can be used (for example) to modify how the viewport respects the map's bounds.
+     * (See [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/).)
+     * Expected to return an object containing center and zoom.
+     * @defaultValue null
+     */
+    transformConstrain?: TransformConstrainFunction | null;
+    /**
      * A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
      * @defaultValue null
      */
@@ -308,7 +315,7 @@ export type MapOptions = {
      * font-family for locally overriding generation of Chinese, Japanese, and Korean characters.
      * For these characters, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
      * Set to `false`, to enable font settings from the map's style for these glyph ranges.
-     * The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js/docs/examples/use-locally-generated-ideographs).)
+     * The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js/docs/examples/use-locally-generated-ideographs/).)
      * @defaultValue 'sans-serif'
      */
     localIdeographFontFamily?: string | false;
@@ -432,6 +439,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     maxTileCacheZoomLevels: config.MAX_TILE_CACHE_ZOOM_LEVELS,
     transformRequest: null,
     transformCameraUpdate: null,
+    transformConstrain: null,
     fadeDuration: 300,
     crossSourceCollisions: true,
     clickTolerance: 3,
@@ -596,6 +604,12 @@ export class Map extends Camera {
      */
     cancelPendingTileRequestsWhileZooming: boolean;
 
+    /**
+     * The map transform's `getConstrained()` callback that overrides the default function.
+     * @defaultValue null
+     */
+    transformConstrain: TransformConstrainFunction | null;
+
     constructor(options: MapOptions) {
         PerformanceUtils.mark(PerformanceMarkers.create);
 
@@ -623,7 +637,7 @@ export class Map extends Camera {
         // For now we will use a temporary MercatorTransform instance.
         // Transform specialization will later be set by style when it creates its projection instance.
         // When this happens, the new transform will inherit all properties of this temporary transform.
-        const transform = new MercatorTransform();
+        const transform = new MercatorTransform(undefined, undefined, undefined, undefined, undefined, resolvedOptions.transformConstrain);
         const cameraHelper = new MercatorCameraHelper();
         if (resolvedOptions.minZoom !== undefined) {
             transform.setMinZoom(resolvedOptions.minZoom);
@@ -659,6 +673,7 @@ export class Map extends Camera {
         this._overridePixelRatio = resolvedOptions.pixelRatio;
         this._maxCanvasSize = resolvedOptions.maxCanvasSize;
         this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
+        this.transformConstrain = resolvedOptions.transformConstrain;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
 
         this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());

@@ -12,7 +12,7 @@ import type {LngLatBounds} from '../lng_lat_bounds';
 import type {Frustum} from '../../util/primitives/frustum';
 import type {Terrain} from '../../render/terrain';
 import type {PointProjection} from '../../symbol/projection';
-import type {IReadonlyTransform, ITransform} from '../transform_interface';
+import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface';
 import type {PaddingOptions} from '../edge_insets';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
@@ -246,7 +246,8 @@ export class GlobeTransform implements ITransform {
     private _mercatorTransform: MercatorTransform;
     private _verticalPerspectiveTransform: VerticalPerspectiveTransform;
 
-    public constructor() {
+    public constructor(transformConstrain?: TransformConstrainFunction) {
+        this.getConstrained = transformConstrain ?? this.getConstrained;
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
             getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
@@ -392,9 +393,9 @@ export class GlobeTransform implements ITransform {
         return this.currentTransform.getBounds();
     }
 
-    getConstrained(lngLat: LngLat, zoom: number): { center: LngLat; zoom: number } {
+    getConstrained: TransformConstrainFunction = (lngLat, zoom) => {
         return this.currentTransform.getConstrained(lngLat, zoom);
-    }
+    };
 
     calculateCenterFromCameraLngLatAlt(lngLat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
         return this._helper.calculateCenterFromCameraLngLatAlt(lngLat, alt, bearing, pitch);
