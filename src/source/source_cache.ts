@@ -742,16 +742,18 @@ export class SourceCache extends Evented {
      */
     _updateFadingTiles(idealTileIDs: OverscaledTileID[], retain: Record<string, OverscaledTileID>) {
         const now: number = browser.now();
-        const edgeTiles: Set<OverscaledTileID> = this._getEdgeTiles(idealTileIDs);
+        const edgeTileIDs: Set<OverscaledTileID> = this._getEdgeTiles(idealTileIDs);
 
         for (const idealID of idealTileIDs) {
             const idealTile = this._tiles[idealID.key];
 
+            // cross-fading with parent/child of the ideal tile
             const parentIsFader = this._updateFadingAncestor(idealTile, retain, now);
             const childIsFader = this._updateFadingDescendents(idealTile, retain, now);
             if (parentIsFader || childIsFader) continue;
 
-            const edgeIsFader = this._updateFadingEdge(idealTile, edgeTiles, now);
+            // self-fading for ideal tiles at the edges (when panning)
+            const edgeIsFader = this._updateFadingEdge(idealTile, edgeTileIDs, now);
             if (edgeIsFader) continue;
 
             // for all non-fading ideal tiles reset the fade logic
@@ -770,8 +772,9 @@ export class SourceCache extends Evented {
      *                             ■   ■   ■   ■  ■   ■   ■   ■  ■   ■   ■   ■  ■   ■   ■   ■
      */
     _updateFadingAncestor(idealTile: Tile, retain: Record<string, OverscaledTileID>, now: number): boolean {
-        const {tileID: idealID, fadingBaseRole, fadingParent} = idealTile;
+        if (!idealTile.hasData()) return false;
 
+        const {tileID: idealID, fadingBaseRole, fadingParent} = idealTile;
         // ideal tile already has fading parent - retain and return
         if (fadingBaseRole === FadingRoles.Incoming && fadingParent) {
             retain[fadingParent.key] = fadingParent;
@@ -811,6 +814,8 @@ export class SourceCache extends Evented {
      * Try direct children first. If none found, try grandchildren. Stops at the first generation that provides a fader.
      */
     _updateFadingDescendents(idealTile: Tile, retain: Record<string, OverscaledTileID>, now: number): boolean {
+        if (!idealTile.hasData()) return false;
+
         // search first level of descendents (4 tiles)
         const idealChildren = idealTile.tileID.children(this._source.maxzoom);
         let hasFader = this._updateFadingChildren(idealTile, idealChildren, retain, now);
@@ -857,7 +862,7 @@ export class SourceCache extends Evented {
      * more natural for them to fade in, however if they are already loaded/cached then there is no need to fade as map will
      * look cohesive with no gaps. Note that draw_raster determines fade priority, as many-to-one fade supersedes edge fading.
      */
-    _updateFadingEdge(idealTile: Tile, edgeTiles: Set<OverscaledTileID>, now: number): boolean {
+    _updateFadingEdge(idealTile: Tile, edgeTileIDs: Set<OverscaledTileID>, now: number): boolean {
         const idealID: OverscaledTileID = idealTile.tileID;
 
         // tile is already self fading
@@ -871,7 +876,7 @@ export class SourceCache extends Evented {
         }
 
         // enable fading for loading edges with no data
-        if (edgeTiles.has(idealID)) {
+        if (edgeTileIDs.has(idealID)) {
             const fadeEndTime = now + this._rasterFadeDuration;
             idealTile.setSelfFadeLogic(fadeEndTime);
             return true;
