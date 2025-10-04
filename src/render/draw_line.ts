@@ -38,11 +38,12 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
     const gradient = layer.paint.get('line-gradient');
     const crossfade = layer.getCrossfadeParameters();
 
-    const programId =
-        image ? 'linePattern' :
-            dasharray && gradient ? 'lineGradientSDF' :
-                dasharray ? 'lineSDF' :
-                    gradient ? 'lineGradient' : 'line';
+    let programId: string;
+    if (image) programId = 'linePattern';
+    else if (dasharray && gradient) programId = 'lineGradientSDF';
+    else if (dasharray) programId = 'lineSDF';
+    else if (gradient) programId = 'lineGradient';
+    else programId = 'line';
 
     const context = painter.context;
     const gl = context.gl;
