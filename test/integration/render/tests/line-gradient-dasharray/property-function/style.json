@@ -1,0 +1,81 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 128,
+      "height": 64
+    }
+  },
+  "zoom": 0,
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "dash": 2
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [ [ -40, -18 ], [ 40, -18 ] ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "dash": 4
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [ [ -40, -5 ], [ 40, -5 ] ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "dash": 6
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [ [ -40, 8 ], [ 40, 8 ] ]
+            }
+          }
+        ]
+      },
+      "lineMetrics": true
+    }
+  },
+  "layers": [
+    {
+      "id": "line",
+      "type": "line",
+      "source": "geojson",
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-width": [
+          "match",
+          ["get", "dash"],
+          2, 3,
+          4, 5,
+          6, 7,
+          5
+        ],
+        "line-gradient": [
+          "interpolate",
+          ["linear"],
+          ["line-progress"],
+          0, "blue",
+          0.5, "lime",
+          1, "red"
+        ],
+        "line-dasharray": [3, 1.5]
+      }
+    }
+  ]
+}
