@@ -5,7 +5,8 @@ import {
     lineUniformValues,
     linePatternUniformValues,
     lineSDFUniformValues,
-    lineGradientUniformValues
+    lineGradientUniformValues,
+    lineGradientSDFUniformValues
 } from './program/line_program';
 
 import type {Painter, RenderOptions} from './painter';
@@ -37,10 +38,12 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
     const gradient = layer.paint.get('line-gradient');
     const crossfade = layer.getCrossfadeParameters();
 
-    const programId =
-        image ? 'linePattern' :
-            dasharray ? 'lineSDF' :
-                gradient ? 'lineGradient' : 'line';
+    let programId: string;
+    if (image) programId = 'linePattern';
+    else if (dasharray && gradient) programId = 'lineGradientSDF';
+    else if (dasharray) programId = 'lineSDF';
+    else if (gradient) programId = 'lineGradient';
+    else programId = 'line';
 
     const context = painter.context;
     const gl = context.gl;
@@ -87,13 +90,54 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
         const pixelRatio = transform.getPixelScale();
 
         const uniformValues = image ? linePatternUniformValues(painter, tile, layer, pixelRatio, crossfade) :
-            dasharray ? lineSDFUniformValues(painter, tile, layer, pixelRatio, crossfade) :
-                gradient ? lineGradientUniformValues(painter, tile, layer, pixelRatio, bucket.lineClipsArray.length) :
-                    lineUniformValues(painter, tile, layer, pixelRatio);
+            dasharray && gradient ? lineGradientSDFUniformValues(painter, tile, layer, pixelRatio, crossfade, bucket.lineClipsArray.length) :
+                dasharray ? lineSDFUniformValues(painter, tile, layer, pixelRatio, crossfade) :
+                    gradient ? lineGradientUniformValues(painter, tile, layer, pixelRatio, bucket.lineClipsArray.length) :
+                        lineUniformValues(painter, tile, layer, pixelRatio);
 
         if (image) {
             context.activeTexture.set(gl.TEXTURE0);
             tile.imageAtlasTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+            programConfiguration.updatePaintBuffers(crossfade);
+        } else if (dasharray && gradient) {
+            // Bind gradient texture to TEXTURE0
+            const layerGradient = bucket.gradients[layer.id];
+            let gradientTexture = layerGradient.texture;
+            if (layer.gradientVersion !== layerGradient.version) {
+                let textureResolution = 256;
+                if (layer.stepInterpolant) {
+                    const sourceMaxZoom = sourceCache.getSource().maxzoom;
+                    const potentialOverzoom = coord.canonical.z === sourceMaxZoom ?
+                        Math.ceil(1 << (painter.transform.maxZoom - coord.canonical.z)) : 1;
+                    const lineLength = bucket.maxLineLength / EXTENT;
+                    // Logical pixel tile size is 512px, and 1024px right before current zoom + 1
+                    const maxTilePixelSize = 1024;
+                    // Maximum possible texture coverage heuristic, bound by hardware max texture size
+                    const maxTextureCoverage = lineLength * maxTilePixelSize * potentialOverzoom;
+                    textureResolution = clamp(nextPowerOfTwo(maxTextureCoverage), 256, context.maxTextureSize);
+                }
+                layerGradient.gradient = renderColorRamp({
+                    expression: layer.gradientExpression(),
+                    evaluationKey: 'lineProgress',
+                    resolution: textureResolution,
+                    image: layerGradient.gradient || undefined,
+                    clips: bucket.lineClipsArray
+                });
+                if (layerGradient.texture) {
+                    layerGradient.texture.update(layerGradient.gradient);
+                } else {
+                    layerGradient.texture = new Texture(context, layerGradient.gradient, gl.RGBA);
+                }
+                layerGradient.version = layer.gradientVersion;
+                gradientTexture = layerGradient.texture;
+            }
+            context.activeTexture.set(gl.TEXTURE0);
+            gradientTexture.bind(layer.stepInterpolant ? gl.NEAREST : gl.LINEAR, gl.CLAMP_TO_EDGE);
+
+            // Bind dash atlas to TEXTURE1
+            context.activeTexture.set(gl.TEXTURE1);
+            painter.lineAtlas.bind(context);
+
             programConfiguration.updatePaintBuffers(crossfade);
         } else if (dasharray) {
             if ((programChanged || painter.lineAtlas.dirty)) {
