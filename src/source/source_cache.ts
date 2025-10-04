@@ -1,7 +1,7 @@
 import {create as createSource} from './source';
 
-import {Tile, FadingRoles} from './tile';
-import {Event, ErrorEvent, Evented} from '../util/evented';
+import {Tile, FadingDirections, FadingRoles} from './tile';
+import {ErrorEvent, Event, Evented} from '../util/evented';
 import {TileCache} from './tile_cache';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {EXTENT} from '../data/extent';
@@ -243,7 +243,7 @@ export class SourceCache extends Evented {
 
     hasRenderableParent(tileID: OverscaledTileID) {
         const parentZ = tileID.overscaledZ - 1;
-        if (parentZ > this._source.minzoom) {
+        if (parentZ >= this._source.minzoom) {
             const parentTile = this._getLoadedTile(tileID.scaledTo(parentZ));
             if (parentTile) {
                 return this._isIdRenderable(parentTile.tileID.key);
@@ -379,12 +379,12 @@ export class SourceCache extends Evented {
      */
 
     _retainLoadedChildren(
-        targetTiles: { [_: string]: OverscaledTileID },
-        retain: { [_: string]: OverscaledTileID }
+        targetTiles: Record<string, OverscaledTileID>,
+        retain: Record<string, OverscaledTileID>
     ) {
         const targetTileIDs = Object.values(targetTiles);
-        const loadedDescendents: { [_: string]: Tile[] } = this._getLoadedDescendents(targetTileIDs);
-        const incomplete: { [_: string]: OverscaledTileID } = {};
+        const loadedDescendents: Record<string, Tile[]> = this._getLoadedDescendents(targetTileIDs);
+        const incomplete: Record<string, OverscaledTileID> = {};
 
         // retain the uppermost descendents of target tiles
         for (const targetID of targetTileIDs) {
@@ -422,7 +422,7 @@ export class SourceCache extends Evented {
      * Return dictionary of qualified loaded descendents for each provided target tile id
      */
     _getLoadedDescendents(targetTileIDs: OverscaledTileID[]) {
-        const loadedDescendents: { [_: string]: Tile[] } = {};
+        const loadedDescendents: Record<string, Tile[]> = {};
 
         // enumerate tiles currently in this source and find the loaded descendents of each target tile
         for (const sourceKey in this._tiles) {
@@ -674,7 +674,7 @@ export class SourceCache extends Evented {
      */
     _updateRetainedTiles(idealTileIDs: Array<OverscaledTileID>, zoom: number): Record<string, OverscaledTileID> {
         const retain: Record<string, OverscaledTileID> = {};
-        const checked: {[_: string]: boolean} = {};
+        const checked: Record<string, boolean> = {};
         const minCoveringZoom = Math.max(zoom - SourceCache.maxOverzooming, this._source.minzoom);
 
         let missingIdealTiles = {};
@@ -747,6 +747,11 @@ export class SourceCache extends Evented {
         for (const idealID of idealTileIDs) {
             const idealTile = this._tiles[idealID.key];
 
+            // reset any previously departing(ed) tiles that are now ideal tiles
+            if (idealTile.fadingDirection === FadingDirections.Departing || idealTile.fadeOpacity === 0) {
+                idealTile.resetFadeLogic();
+            }
+
             const parentIsFader = this._updateFadingAncestor(idealTile, retain, now);
             if (parentIsFader) continue;
 
@@ -756,7 +761,7 @@ export class SourceCache extends Evented {
             const edgeIsFader = this._updateFadingEdge(idealTile, edgeTileIDs, now);
             if (edgeIsFader) continue;
 
-            // for all non-fading ideal tiles reset the fade logic
+            // for all remaining non-fading ideal tiles reset the fade logic
             idealTile.resetFadeLogic();
         }
     }
@@ -774,10 +779,10 @@ export class SourceCache extends Evented {
     _updateFadingAncestor(idealTile: Tile, retain: Record<string, OverscaledTileID>, now: number): boolean {
         if (!idealTile.hasData()) return false;
 
-        const {tileID: idealID, fadingBaseRole, fadingParent} = idealTile;
+        const {tileID: idealID, fadingRole, fadingDirection, fadingParentID} = idealTile;
         // ideal tile already has fading parent - retain and return
-        if (fadingBaseRole === FadingRoles.Incoming && fadingParent) {
-            retain[fadingParent.key] = fadingParent;
+        if (fadingRole === FadingRoles.Base && fadingDirection === FadingDirections.Incoming && fadingParentID) {
+            retain[fadingParentID.key] = fadingParentID;
             return true;
         }
 
@@ -788,10 +793,17 @@ export class SourceCache extends Evented {
             const ancestorTile = this._getLoadedTile(ancestorID);
             if (!ancestorTile) continue;
 
-            // set the cross-fade logic with the ideal tile as the base and ancestor tile as the parent
+            // ideal tile (base) is fading in
             idealTile.setCrossFadeLogic({
-                baseFadingRole: FadingRoles.Incoming,
-                parentTile: ancestorTile,  // fading out
+                fadingRole: FadingRoles.Base,
+                fadingDirection: FadingDirections.Incoming,
+                fadingParentID: ancestorTile.tileID,  // fading out
+                fadeEndTime: now + this._rasterFadeDuration
+            });
+            // ancestor tile (parent) is fading out
+            ancestorTile.setCrossFadeLogic({
+                fadingRole: FadingRoles.Parent,
+                fadingDirection: FadingDirections.Departing,
                 fadeEndTime: now + this._rasterFadeDuration
             });
 
@@ -841,11 +853,19 @@ export class SourceCache extends Evented {
             const childTile = this._getLoadedTile(childID);
             if (!childTile) continue;
 
-            if (childTile.fadingBaseRole !== FadingRoles.Departing || !childTile.fadingParent) {
-                // set the cross-fade logic with child tile as the base and ideal tile as the parent
+            const {fadingRole, fadingDirection, fadingParentID} = childTile;
+            if (fadingRole !== FadingRoles.Base || fadingDirection !== FadingDirections.Departing || !fadingParentID) {
+                // child tile (base) is fading out
                 childTile.setCrossFadeLogic({
-                    baseFadingRole: FadingRoles.Departing,
-                    parentTile: idealTile,  // fading in
+                    fadingRole: FadingRoles.Base,
+                    fadingDirection: FadingDirections.Departing,
+                    fadingParentID: idealTile.tileID,
+                    fadeEndTime: now + this._rasterFadeDuration
+                });
+                // ideal tile (parent) is fading in
+                idealTile.setCrossFadeLogic({
+                    fadingRole: FadingRoles.Parent,
+                    fadingDirection: FadingDirections.Incoming,
                     fadeEndTime: now + this._rasterFadeDuration
                 });
             }

@@ -2,7 +2,7 @@ import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {SourceCache} from './source_cache';
 import {type Source, addSourceType} from './source';
-import {Tile, FadingRoles} from './tile';
+import {Tile, FadingRoles, FadingDirections} from './tile';
 import {CanonicalTileID, OverscaledTileID} from './tile_id';
 import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
@@ -883,8 +883,9 @@ describe('SourceCache.update', () => {
         // ensure that the loaded child was retained and fading logic was applied
         for (const child of children) {
             expect(loadedTiles).toHaveProperty(child.tileID.key);
-            expect(child.fadingBaseRole).toEqual(FadingRoles.Departing);
-            expect(child).toHaveProperty('fadingParent');
+            expect(child.fadingRole).toEqual(FadingRoles.Base);
+            expect(child.fadingDirection).toEqual(FadingDirections.Departing);
+            expect(child.fadingParentID).toBeInstanceOf(OverscaledTileID);
         }
     });
 
@@ -920,8 +921,9 @@ describe('SourceCache.update', () => {
         // ensure that the loaded grandchild was retained and fading logic was applied
         for (const grandChild of grandChildren) {
             expect(loadedTiles).toHaveProperty(grandChild.tileID.key);
-            expect(grandChild.fadingBaseRole).toEqual(FadingRoles.Departing);
-            expect(grandChild).toHaveProperty('fadingParent');
+            expect(grandChild.fadingRole).toEqual(FadingRoles.Base);
+            expect(grandChild.fadingDirection).toEqual(FadingDirections.Departing);
+            expect(grandChild.fadingParentID).toBeInstanceOf(OverscaledTileID);
         }
     });
 
@@ -958,14 +960,16 @@ describe('SourceCache.update', () => {
         // ensure that the loaded parents were retained and fading logic was applied
         for (const parent of parents) {
             expect(loadedTiles).toHaveProperty(parent.tileID.key);
-            expect(parent.fadeEndTime).toBeGreaterThan(0);
+            expect(parent.fadingRole).toEqual(FadingRoles.Parent);
+            expect(parent.fadingDirection).toEqual(FadingDirections.Departing);
         }
 
         // check incoming tiles
         const incoming = Object.values(loadedTiles).filter(tile => !parentKeys.has(tile.tileID.key));
         for (const tile of incoming) {
-            expect(tile.fadingBaseRole).toEqual(FadingRoles.Incoming);
-            expect(tile).toHaveProperty('fadingParent');
+            expect(tile.fadingRole).toEqual(FadingRoles.Base);
+            expect(tile.fadingDirection).toEqual(FadingDirections.Incoming);
+            expect(tile.fadingParentID).toBeInstanceOf(OverscaledTileID);
         }
     });
 
@@ -1002,14 +1006,16 @@ describe('SourceCache.update', () => {
         // ensure that the loaded grandparents were retained and fading logic was applied
         for (const grandParent of grandParents) {
             expect(loadedTiles).toHaveProperty(grandParent.tileID.key);
-            expect(grandParent.fadeEndTime).toBeGreaterThan(0);
+            expect(grandParent.fadingRole).toEqual(FadingRoles.Parent);
+            expect(grandParent.fadingDirection).toEqual(FadingDirections.Departing);
         }
 
         // check incoming tiles
         const incoming = Object.values(loadedTiles).filter(tile => !grandParentKeys.has(tile.tileID.key));
         for (const tile of incoming) {
-            expect(tile.fadingBaseRole).toEqual(FadingRoles.Incoming);
-            expect(tile).toHaveProperty('fadingParent');
+            expect(tile.fadingRole).toEqual(FadingRoles.Base);
+            expect(tile.fadingDirection).toEqual(FadingDirections.Incoming);
+            expect(tile.fadingParentID).toBeInstanceOf(OverscaledTileID);
         }
     });
 });

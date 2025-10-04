@@ -47,13 +47,16 @@ import type {DashEntry} from '../render/line_atlas';
 export type TileState = 'loading' | 'loaded' | 'reloading' | 'unloaded' | 'errored' | 'expired';
 
 export type CrossFadeArgs = {
-    baseFadingRole: FadingRoles;
-    parentTile: Tile;
+    fadingRole: FadingRoles;
+    fadingDirection: FadingDirections;
+    fadingParentID?: OverscaledTileID;
     fadeEndTime: number;
 };
 
-// raster fading roles - tile is either incoming (fading in) or departing (fading out)
 export enum FadingRoles {
+    Base, Parent
+}
+export enum FadingDirections {
     Departing, Incoming
 }
 
@@ -77,12 +80,13 @@ export class Tile {
     expirationTime: any;
     expiredRequestCount: number;
     state: TileState;
+    fadingRole: FadingRoles;
+    fadingDirection: FadingDirections;
+    fadingParentID: OverscaledTileID;
+    selfFading: boolean;
     timeAdded: number = 0;
     fadeEndTime: number = 0;
     fadeOpacity: number = 1;
-    fadingBaseRole: FadingRoles;
-    fadingParent: OverscaledTileID;
-    selfFading: boolean;
     collisionBoxArray: CollisionBoxArray;
     redoWhenDone: boolean;
     showCollisionBoxes: boolean;
@@ -148,14 +152,13 @@ export class Tile {
     }
 
     // many-to-one crossfade between a base tile and parent (ancestor) tile
-    setCrossFadeLogic({baseFadingRole, parentTile, fadeEndTime}: CrossFadeArgs) {
+    setCrossFadeLogic({fadingRole, fadingDirection, fadingParentID, fadeEndTime}: CrossFadeArgs) {
         this.resetFadeLogic();
-        this.fadingBaseRole = baseFadingRole;
-        this.fadingParent = parentTile.tileID;
-        this.fadeEndTime = fadeEndTime;
 
-        parentTile.resetFadeLogic();
-        parentTile.setFadeEndTime(fadeEndTime);
+        this.fadingRole = fadingRole;
+        this.fadingDirection = fadingDirection;
+        this.fadingParentID = fadingParentID;
+        this.fadeEndTime = fadeEndTime;
     }
 
     setSelfFadeLogic(fadeEndTime: number) {
@@ -164,17 +167,15 @@ export class Tile {
         this.fadeEndTime = fadeEndTime;
     }
 
-    setFadeEndTime(fadeEndTime: number) {
-        this.fadeEndTime = fadeEndTime;
-    }
-
     resetFadeLogic() {
+        this.fadingRole = null;
+        this.fadingDirection = null;
+        this.fadingParentID = null;
+        this.selfFading = false;
+
         this.timeAdded = browser.now();
         this.fadeEndTime = 0;
         this.fadeOpacity = 1;
-        this.fadingBaseRole = null;
-        this.fadingParent = null;
-        this.selfFading = false;
     }
 
     wasRequested() {

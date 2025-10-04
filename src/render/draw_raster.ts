@@ -7,7 +7,7 @@ import {DepthMode} from '../gl/depth_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
 import {rasterUniformValues} from './program/raster_program';
 import {EXTENT} from '../data/extent';
-import {FadingRoles} from '../source/tile';
+import {FadingDirections} from '../source/tile';
 import Point from '@mapbox/point-geometry';
 
 import type {Painter, RenderOptions} from './painter';
@@ -16,11 +16,17 @@ import type {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
 import type {OverscaledTileID} from '../source/tile_id';
 import type {Tile} from '../source/tile';
 
-type TileFadeProps = {
+type FadeProperties = {
     parentTile: Tile;
-    fadeValues: {opacity: number; mix: number};
     parentScaleBy: number;
     parentTopLeft: [number, number];
+    fadeValues: FadeValues;
+};
+
+type FadeValues = {
+    tileOpacity: number;
+    parentTileOpacity?: number;
+    fadeMix: {opacity: number; mix: number};
 };
 
 const cornerCoords = [
@@ -112,8 +118,15 @@ function drawTiles(
 
         // create second texture - use either the current tile or fade tile to bind second texture below
         context.activeTexture.set(gl.TEXTURE1);
-        const {parentTile, fadeValues, parentScaleBy, parentTopLeft} = updateFadeProperties(tile, sourceCache, fadeDuration, isTerrain);
-        (parentTile || tile).texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
+        const {parentTile, parentScaleBy, parentTopLeft, fadeValues} = getFadeProperties(tile, sourceCache, fadeDuration, isTerrain);
+        if (parentTile) {
+            tile.fadeOpacity = fadeValues.tileOpacity;
+            parentTile.fadeOpacity = fadeValues.parentTileOpacity;
+            parentTile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
+        } else {
+            tile.fadeOpacity = fadeValues.tileOpacity;
+            tile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
+        }
 
         // Enable anisotropic filtering only when the pitch is greater than 20 degrees
         // to preserve image sharpness on flat or slightly tilted maps.
@@ -124,7 +137,7 @@ function drawTiles(
 
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
         const projectionData = transform.getProjectionData({overscaledTileID: coord, aligned: align, applyGlobeMatrix: !isRenderingToTexture, applyTerrainMatrix: true});
-        const uniformValues = rasterUniformValues(parentTopLeft || [0, 0], parentScaleBy || 1, fadeValues || {opacity: 1, mix: 0}, layer, corners);
+        const uniformValues = rasterUniformValues(parentTopLeft, parentScaleBy, fadeValues.fadeMix, layer, corners);
 
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, allowPoles, 'raster');
         const stencilMode = stencilModes ? stencilModes[coord.overscaledZ] : StencilMode.disabled;
@@ -135,71 +148,67 @@ function drawTiles(
     }
 }
 
-function updateFadeProperties(tile: Tile, sourceCache: SourceCache, fadeDuration: number, isTerrain: boolean): TileFadeProps {
+function getFadeProperties(tile: Tile, sourceCache: SourceCache, fadeDuration: number, isTerrain: boolean): FadeProperties {
     let parentTile: Tile = null;
-    let parentScaleBy: number = null;
-    let parentTopLeft: [number, number] = null;
-    let fadeValues: {opacity: number; mix: number} = null;
+    let parentScaleBy: number = 1;
+    let parentTopLeft: [number, number] = [0, 0];
+    let fadeValues: FadeValues = {tileOpacity: 1, parentTileOpacity: 1, fadeMix: {opacity: 1, mix: 0}};
 
     if (fadeDuration === 0 || isTerrain) {
-        return {parentTile, fadeValues, parentScaleBy, parentTopLeft};
+        return {parentTile, parentScaleBy, parentTopLeft, fadeValues};
     }
 
     // first looking to cross-fade with a departing/incoming parent, otherwise looking for self fading edge tiles
-    if (tile.fadingParent) {
-        parentTile = sourceCache._getLoadedTile(tile.fadingParent);
+    if (tile.fadingParentID) {
+        parentTile = sourceCache._getLoadedTile(tile.fadingParentID);
         if (parentTile) {
-            fadeValues = updateFadeValues(tile, parentTile, fadeDuration);
             parentScaleBy = Math.pow(2, parentTile.tileID.overscaledZ - tile.tileID.overscaledZ);
             parentTopLeft = [
                 (tile.tileID.canonical.x * parentScaleBy) % 1,
                 (tile.tileID.canonical.y * parentScaleBy) % 1
             ];
+            fadeValues = getCrossFadeValues(tile, parentTile, fadeDuration);
         }
     } else if (tile.selfFading) {
-        fadeValues = updateFadeValues(tile, null, fadeDuration);
         parentScaleBy = 1;
         parentTopLeft = [0, 0];
+        fadeValues = getSelfFadeValues(tile, fadeDuration);
     }
 
-    return {parentTile, fadeValues, parentScaleBy, parentTopLeft};
+    return {parentTile, parentScaleBy, parentTopLeft, fadeValues};
 }
 
-function updateFadeValues(tile: Tile, parentTile: Tile, fadeDuration: number): {opacity: number; mix: number} {
-    if (fadeDuration <= 0) return {opacity: 1, mix: 0};
-
+function getCrossFadeValues(tile: Tile, parentTile: Tile, fadeDuration: number): FadeValues {
     const now = browser.now();
+
     const timeSinceTile = (now - tile.timeAdded) / fadeDuration;
+    const timeSinceParent = (now - parentTile.timeAdded) / fadeDuration;
 
-    // crossfading for parent tile
-    if (parentTile) {
-        const timeSinceParent = (now - parentTile.timeAdded) / fadeDuration;
+    // get fading opacity based on current fade direction
+    const doFadeIn = (tile.fadingDirection === FadingDirections.Incoming);
+    const opacity1 = clamp(timeSinceTile, 0, 1);
+    const opacity2 = clamp(1 - timeSinceParent, 0, 1);
 
-        // set fading opacity based on current fade direction
-        const doFadeIn = (tile.fadingBaseRole === FadingRoles.Incoming);
-        const opacity1 = clamp(timeSinceTile, 0, 1);
-        const opacity2 = clamp(1 - timeSinceParent, 0, 1);
-        tile.fadeOpacity = doFadeIn ? opacity1 : opacity2;
-        parentTile.fadeOpacity = doFadeIn ? opacity2 : opacity1;
+    const tileOpacity = doFadeIn ? opacity1 : opacity2;
+    const parentTileOpacity = doFadeIn ? opacity2 : opacity1;
+    const fadeMix = {
+        opacity: 1,
+        mix: 1 - tileOpacity
+    };
 
-        // when crossfading mix controls parent visibility
-        return {
-            opacity: 1,
-            mix: 1 - tile.fadeOpacity
-        };
-    }
+    return {tileOpacity, parentTileOpacity, fadeMix};
+}
 
-    // simple fade-in for tile without parent (i.e. edge tiles)
+// simple fade-in for tile without parent (i.e. edge tiles)
+function getSelfFadeValues(tile: Tile, fadeDuration: number): FadeValues {
+    const now = browser.now();
+
+    const timeSinceTile = (now - tile.timeAdded) / fadeDuration;
     const tileOpacity = clamp(timeSinceTile, 0, 1);
-    tile.fadeOpacity = tileOpacity;
-
-    // clear refresh flag once fade is complete
-    if (tile.refreshedUponExpiration && timeSinceTile >= 1) {
-        tile.refreshedUponExpiration = false;
-    }
-
-    return {
+    const fadeMix = {
         opacity: tileOpacity,
         mix: 0
     };
+
+    return {tileOpacity, fadeMix};
 }
