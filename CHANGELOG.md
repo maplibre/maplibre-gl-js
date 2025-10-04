@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- If a glyph PBF is unavailable or lacks a glyph for a character in a `text-field`, try to render it locally instead of crashing. ([#4564](https://github.com/maplibre/maplibre-gl-js/pull/4564))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
