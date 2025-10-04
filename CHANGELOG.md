@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-- _...Add new stuff here..._
+- Support for usage of line-gradient together with line-dasharray
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
