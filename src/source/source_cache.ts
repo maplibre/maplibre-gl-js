@@ -10,6 +10,7 @@ import Point from '@mapbox/point-geometry';
 import {browser} from '../util/browser';
 import {OverscaledTileID} from './tile_id';
 import {SourceFeatureState} from './source_state';
+import {getEdgeTiles} from '../util/util';
 import {config} from '../util/config';
 
 import type {Source} from './source';
@@ -742,7 +743,7 @@ export class SourceCache extends Evented {
      */
     _updateFadingTiles(idealTileIDs: OverscaledTileID[], retain: Record<string, OverscaledTileID>) {
         const now: number = browser.now();
-        const edgeTileIDs: Set<OverscaledTileID> = this._getEdgeTiles(idealTileIDs);
+        const edgeTileIDs: Set<OverscaledTileID> = getEdgeTiles(idealTileIDs);
 
         for (const idealID of idealTileIDs) {
             const idealTile = this._tiles[idealID.key];
@@ -903,43 +904,6 @@ export class SourceCache extends Evented {
         }
 
         return false;
-    }
-
-    _getEdgeTiles(tileIDs: OverscaledTileID[]): Set<OverscaledTileID> {
-        if (!tileIDs.length) return new Set<OverscaledTileID>();
-
-        // set a common zoom for calculation (highest zoom) to reproject all tiles to this same zoom
-        const targetZ = Math.max(...tileIDs.map(id => id.canonical.z));
-
-        // vars to store the min and max tile x/y coordinates for edge finding
-        let minX = Infinity, maxX = -Infinity;
-        let minY = Infinity, maxY = -Infinity;
-
-        // project all tiles to targetZ while maintaining the reference to the original tile
-        const projected: {id: OverscaledTileID; x: number; y: number}[] = [];
-        for (const id of tileIDs) {
-            const {x, y, z} = id.canonical;
-            const scale = Math.pow(2, targetZ - z);
-            const px = x * scale;
-            const py = y * scale;
-
-            projected.push({id, x: px, y: py});
-
-            if (px < minX) minX = px;
-            if (px > maxX) maxX = px;
-            if (py < minY) minY = py;
-            if (py > maxY) maxY = py;
-        }
-
-        // find edge tiles using the reprojected tile ids
-        const edgeTiles: Set<OverscaledTileID> = new Set<OverscaledTileID>();
-        for (const p of projected) {
-            if (p.x === minX || p.x === maxX || p.y === minY || p.y === maxY) {
-                edgeTiles.add(p.id);
-            }
-        }
-
-        return edgeTiles;
     }
 
     /**

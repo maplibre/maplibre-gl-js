@@ -151,7 +151,9 @@ export class Tile {
         );
     }
 
-    // many-to-one crossfade between a base tile and parent (ancestor) tile
+    /**
+     * Many-to-one crossfade between a base tile and parent/ancestor tile (when zooming)
+     */
     setCrossFadeLogic({fadingRole, fadingDirection, fadingParentID, fadeEndTime}: CrossFadeArgs) {
         this.resetFadeLogic();
 
@@ -161,6 +163,9 @@ export class Tile {
         this.fadeEndTime = fadeEndTime;
     }
 
+    /**
+     * Self fading for edge tiles (when panning map)
+     */
     setSelfFadeLogic(fadeEndTime: number) {
         this.resetFadeLogic();
         this.selfFading = true;

@@ -116,12 +116,11 @@ function drawTiles(
         // create second texture - use either the current tile or fade tile to bind second texture below
         context.activeTexture.set(gl.TEXTURE1);
         const {parentTile, parentScaleBy, parentTopLeft, fadeValues} = getFadeProperties(tile, sourceCache, fadeDuration, isTerrain);
+        tile.fadeOpacity = fadeValues.tileOpacity;
         if (parentTile) {
-            tile.fadeOpacity = fadeValues.tileOpacity;
             parentTile.fadeOpacity = fadeValues.parentTileOpacity;
             parentTile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
         } else {
-            tile.fadeOpacity = fadeValues.tileOpacity;
             tile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
         }
 
@@ -145,36 +144,46 @@ function drawTiles(
     }
 }
 
+/**
+ * Get fade properties for current tile - either cross-fading or self-fading properties.
+ */
 function getFadeProperties(tile: Tile, sourceCache: SourceCache, fadeDuration: number, isTerrain: boolean): FadeProperties {
-    let parentTile: Tile = null;
-    let parentScaleBy: number = 1;
-    let parentTopLeft: [number, number] = [0, 0];
-    let fadeValues: FadeValues = {tileOpacity: 1, parentTileOpacity: 1, fadeMix: {opacity: 1, mix: 0}};
+    const defaults: FadeProperties = {
+        parentTile: null,
+        parentScaleBy: 1,
+        parentTopLeft: [0, 0],
+        fadeValues: {tileOpacity: 1, parentTileOpacity: 1, fadeMix: {opacity: 1, mix: 0}}
+    };
 
-    if (fadeDuration === 0 || isTerrain) {
+    if (fadeDuration === 0 || isTerrain) return defaults;
+
+    // cross-fade with parent first if available
+    if (tile.fadingParentID) {
+        const parentTile = sourceCache._getLoadedTile(tile.fadingParentID);
+        if (!parentTile) return defaults;
+
+        const parentScaleBy = Math.pow(2, parentTile.tileID.overscaledZ - tile.tileID.overscaledZ);
+        const parentTopLeft: [number, number] = [
+            (tile.tileID.canonical.x * parentScaleBy) % 1,
+            (tile.tileID.canonical.y * parentScaleBy) % 1
+        ];
+
+        const fadeValues = getCrossFadeValues(tile, parentTile, fadeDuration);
         return {parentTile, parentScaleBy, parentTopLeft, fadeValues};
     }
 
-    // first looking to cross-fade with a departing/incoming parent, otherwise looking for self fading edge tiles
-    if (tile.fadingParentID) {
-        parentTile = sourceCache._getLoadedTile(tile.fadingParentID);
-        if (parentTile) {
-            parentScaleBy = Math.pow(2, parentTile.tileID.overscaledZ - tile.tileID.overscaledZ);
-            parentTopLeft = [
-                (tile.tileID.canonical.x * parentScaleBy) % 1,
-                (tile.tileID.canonical.y * parentScaleBy) % 1
-            ];
-            fadeValues = getCrossFadeValues(tile, parentTile, fadeDuration);
-        }
-    } else if (tile.selfFading) {
-        parentScaleBy = 1;
-        parentTopLeft = [0, 0];
-        fadeValues = getSelfFadeValues(tile, fadeDuration);
+    // self-fade for edge tiles
+    if (tile.selfFading) {
+        const fadeValues = getSelfFadeValues(tile, fadeDuration);
+        return {parentTile: null, parentScaleBy: 1, parentTopLeft: [0, 0], fadeValues};
     }
 
-    return {parentTile, parentScaleBy, parentTopLeft, fadeValues};
+    return defaults;
 }
 
+/**
+ * Cross-fade values for a base tile with a parent tile (for zooming in/out)
+ */
 function getCrossFadeValues(tile: Tile, parentTile: Tile, fadeDuration: number): FadeValues {
     const now = browser.now();
 
@@ -196,7 +205,9 @@ function getCrossFadeValues(tile: Tile, parentTile: Tile, fadeDuration: number):
     return {tileOpacity, parentTileOpacity, fadeMix};
 }
 
-// simple fade-in for tile without parent (i.e. edge tiles)
+/**
+ * Simple fade-in values for a tile without a parent (i.e. edge tiles)
+ */
 function getSelfFadeValues(tile: Tile, fadeDuration: number): FadeValues {
     const now = browser.now();
 
