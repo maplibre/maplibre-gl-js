@@ -206,7 +206,7 @@ function getCrossFadeValues(tile: Tile, parentTile: Tile, fadeDuration: number):
 }
 
 /**
- * Simple fade-in values for a tile without a parent (i.e. edge tiles)
+ * Simple fade-in values for tile without a parent (i.e. edge tiles)
  */
 function getSelfFadeValues(tile: Tile, fadeDuration: number): FadeValues {
     const now = browser.now();
