@@ -99,9 +99,6 @@ function drawTiles(
     const fadeDuration = layer.paint.get('raster-fade-duration');
     const isTerrain = !!painter.style.map.terrain;
 
-    // update raster fade duration in source cache with the newest layer paint property
-    sourceCache.setRasterFadeDuration(fadeDuration);
-
     // Draw all tiles
     for (const coord of coords) {
         // Set the lower zoom level to sublayer 0, and higher zoom levels to higher sublayers

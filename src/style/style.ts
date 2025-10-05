@@ -1,5 +1,6 @@
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {type StyleLayer} from './style_layer';
+import {isRasterStyleLayer} from './style_layer/raster_style_layer';
 import {createStyleLayer} from './create_style_layer';
 import {loadSprite} from './load_sprite';
 import {ImageManager} from '../render/image_manager';
@@ -480,6 +481,11 @@ export class Style extends Evented {
             const styledLayer = createStyleLayer(layer, this._globalState);
             styledLayer.setEventedParent(this, {layer: {id: layer.id}});
             this._layers[layer.id] = styledLayer;
+
+            if (isRasterStyleLayer(styledLayer) && this.sourceCaches[styledLayer.source]) {
+                const rasterFadeDuration = layer.paint?.['raster-fade-duration'] ?? styledLayer.paint.get('raster-fade-duration');
+                this.sourceCaches[styledLayer.source].setRasterFadeDuration(rasterFadeDuration);
+            }
         }
     }
 
@@ -1317,6 +1323,10 @@ export class Style extends Evented {
         const requiresRelayout = layer.setPaintProperty(name, value, options);
         if (requiresRelayout) {
             this._updateLayer(layer);
+        }
+
+        if (isRasterStyleLayer(layer) && name === 'raster-fade-duration') {
+            this.sourceCaches[layer.source].setRasterFadeDuration(value);
         }
 
         this._changed = true;
