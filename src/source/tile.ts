@@ -46,7 +46,8 @@ import type {DashEntry} from '../render/line_atlas';
  */
 export type TileState = 'loading' | 'loaded' | 'reloading' | 'unloaded' | 'errored' | 'expired';
 
-export type CrossFadeArgs = {
+/** @internal */
+type CrossFadeArgs = {
     fadingRole: FadingRoles;
     fadingDirection: FadingDirections;
     fadingParentID?: OverscaledTileID;
