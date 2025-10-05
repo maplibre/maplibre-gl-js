@@ -153,6 +153,7 @@ export class Tile {
     }
 
     /**
+     * @internal
      * Many-to-one crossfade between a base tile and parent/ancestor tile (when zooming)
      */
     setCrossFadeLogic({fadingRole, fadingDirection, fadingParentID, fadeEndTime}: CrossFadeArgs) {
