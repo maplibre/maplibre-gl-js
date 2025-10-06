@@ -157,30 +157,6 @@ export class SourceCache extends Evented {
         return true;
     }
 
-    /** @internal
-     * Handles incoming source data messages (i.e. after the source has been updated via a worker that has fired
-     * to map.ts data event). For sources with mutable data, the 'content' event fires when the underlying data
-     * to a source has changed. (i.e. GeoJSONSource.setData and ImageSource.setCoordinates)
-     */
-    private _dataHandler(e: MapSourceDataEvent) {
-        if (e.dataType !== 'source') return;
-
-        if (e.sourceDataType === 'metadata') {
-            this._sourceLoaded = true;
-            return;
-        }
-
-        if (e.sourceDataType !== 'content' || !this._sourceLoaded || this._paused) {
-            return;
-        }
-
-        this.reload(e.sourceDataChanged);
-        if (this.transform) {
-            this.update(this.transform, this.terrain);
-        }
-        this._didEmitContent = true;
-    }
-
     getSource(): Source {
         return this._source;
     }
@@ -1030,6 +1006,30 @@ export class SourceCache extends Evented {
             this._abortTile(tile);
             this._unloadTile(tile);
         }
+    }
+
+    /** @internal
+     * Handles incoming source data messages (i.e. after the source has been updated via a worker that has fired
+     * to map.ts data event). For sources with mutable data, the 'content' event fires when the underlying data
+     * to a source has changed. (i.e. GeoJSONSource.setData and ImageSource.setCoordinates)
+     */
+    private _dataHandler(e: MapSourceDataEvent) {
+        if (e.dataType !== 'source') return;
+
+        if (e.sourceDataType === 'metadata') {
+            this._sourceLoaded = true;
+            return;
+        }
+
+        if (e.sourceDataType !== 'content' || !this._sourceLoaded || this._paused) {
+            return;
+        }
+
+        this.reload(e.sourceDataChanged);
+        if (this.transform) {
+            this.update(this.transform, this.terrain);
+        }
+        this._didEmitContent = true;
     }
 
     /**
