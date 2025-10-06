@@ -281,7 +281,7 @@ export abstract class StyleLayer extends Evented {
         return false;
     }
 
-    isHidden(zoom: number, roundMinZoom: boolean = false) {
+    isHidden(zoom: number = this.minzoom, roundMinZoom: boolean = false) {
         if (this.minzoom && zoom < (roundMinZoom ? Math.floor(this.minzoom) : this.minzoom)) return true;
         if (this.maxzoom && zoom >= this.maxzoom) return true;
         return this.visibility === 'none';
