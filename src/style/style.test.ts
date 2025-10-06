@@ -1871,6 +1871,34 @@ describe('Style.setGlobalStateProperty', () => {
         expect(style.tileManagers['circle-source-id'].reload).toHaveBeenCalled();
     });
 
+    test('reloads sources when state property is used in visibility', async() => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'circle-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'layer-id',
+                type: 'circle',
+                source: 'circle-source-id',
+                layout: {
+                    'visibility': ['case', ['global-state', 'visibility'], 'visible', 'none']
+                }
+            }]
+        }));
+
+        await style.once('style.load');
+
+        style.tileManagers['circle-source-id'].resume = vi.fn();
+        style.tileManagers['circle-source-id'].reload = vi.fn();
+
+        style.setGlobalStateProperty('visibility', true);
+        style.update({} as EvaluationParameters);
+
+        expect(style.tileManagers['circle-source-id'].resume).toHaveBeenCalled();
+        expect(style.tileManagers['circle-source-id'].reload).toHaveBeenCalled();
+    });
+
     test('does not reload sources when state property is set to the same value as current one', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON({
