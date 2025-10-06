@@ -89,6 +89,6 @@ export class HeatmapStyleLayer extends StyleLayer {
     }
 
     hasOffscreenPass() {
-        return this.paint.get('heatmap-opacity') !== 0 && this.visibility !== 'none';
+        return this.paint.get('heatmap-opacity') !== 0 && !this.isHidden();
     }
 }
