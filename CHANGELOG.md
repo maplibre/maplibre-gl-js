@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-- _...Add new stuff here..._
+- Improve fading - dynamic bi-directional raster cross-fading and self fading ([#6469](https://github.com/maplibre/maplibre-gl-js/pull/6469))
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
@@ -16,7 +16,7 @@
 
 ### 🐞 Bug fixes
 
-- Fix raster flickering when using terrain 3D and optimize terrain logic.
+- Fix raster flickering when using terrain 3D and optimize terrain logic. ([#6446](https://github.com/maplibre/maplibre-gl-js/pull/6446))
 - Fix issue where parent tiles are retained when deeper descendant tiles already cover the missing ideal tile. ([#6442](https://github.com/maplibre/maplibre-gl-js/pull/6442))
 - Fix an issue when GeolocateControl fires outofmaxbounds event with trackUserLocation disabled ([#6464](https://github.com/maplibre/maplibre-gl-js/pull/6464))
 - Fix an issue with globe+terrain "zooming" in when dragging towards the poles ([#6470](https://github.com/maplibre/maplibre-gl-js/pull/6470))
