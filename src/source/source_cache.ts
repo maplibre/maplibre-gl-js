@@ -257,6 +257,10 @@ export class SourceCache extends Evented {
         return this._tiles[id]?.isRenderable(symbolLayer);
     }
 
+    /**
+     * Reload tiles in this source. If source data has changed, reload all tiles using a state of 'expired',
+     * otherwise reload only non-errored tiles using state of 'reloading'.
+     */
     reload(sourceDataChanged?: boolean) {
         if (this._paused) {
             this._shouldReloadOnResume = true;
@@ -1004,24 +1008,28 @@ export class SourceCache extends Evented {
         }
     }
 
-    /** @internal */
+    /** @internal
+     * Handles incoming source data messages (i.e. after the source has been updated via a worker that has fired
+     * to map.ts data event). For sources with mutable data, the 'content' event fires when the underlying data
+     * to a source has changed. (i.e. GeoJSONSource.setData and ImageSource.setCoordinates)
+     */
     private _dataHandler(e: MapSourceDataEvent) {
+        if (e.dataType !== 'source') return;
 
-        const eventSourceDataType = e.sourceDataType;
-        if (e.dataType === 'source' && eventSourceDataType === 'metadata') {
+        if (e.sourceDataType === 'metadata') {
             this._sourceLoaded = true;
+            return;
         }
 
-        // for sources with mutable data, this event fires when the underlying data
-        // to a source is changed. (i.e. GeoJSONSource.setData and ImageSource.serCoordinates)
-        if (this._sourceLoaded && !this._paused && e.dataType === 'source' && eventSourceDataType === 'content') {
-            this.reload(e.sourceDataChanged);
-            if (this.transform) {
-                this.update(this.transform, this.terrain);
-            }
-
-            this._didEmitContent = true;
+        if (e.sourceDataType !== 'content' || !this._sourceLoaded || this._paused) {
+            return;
         }
+
+        this.reload(e.sourceDataChanged);
+        if (this.transform) {
+            this.update(this.transform, this.terrain);
+        }
+        this._didEmitContent = true;
     }
 
     /**
