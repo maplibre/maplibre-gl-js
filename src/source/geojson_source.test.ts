@@ -1,3 +1,4 @@
+import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {describe, test, expect, vi} from 'vitest';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
@@ -12,9 +13,11 @@ import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_s
 import {type ActorMessage, MessageType} from '../util/actor_messages';
 import {type Actor} from '../util/actor';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {sleep, waitForEvent} from '../util/test/util';
+import {sleep, waitForEvent, beforeMapTest, createMap as globalCreateMap} from '../util/test/util';
 import {type MapSourceDataEvent} from '../ui/events';
+import {type Source} from './source';
 import {type GeoJSONSourceDiff} from './geojson_source_diff';
+import type {MapDataEvent} from '../ui/events';
 
 const wrapDispatcher = (dispatcher) => {
     return {
@@ -61,6 +64,18 @@ const hawkHill = {
         }
     }]
 } as GeoJSON.GeoJSON;
+
+type MapOptions = {
+    style: StyleSpecification;
+};
+
+function createMap(options: MapOptions) {
+    const container = window.document.createElement('div');
+    window.document.body.appendChild(container);
+    Object.defineProperty(container, 'clientWidth', {value: 512});
+    Object.defineProperty(container, 'clientHeight', {value: 512});
+    return globalCreateMap({container, ...options});
+}
 
 describe('GeoJSONSource.constructor', () => {
     const mapStub = {
@@ -489,6 +504,58 @@ describe('GeoJSONSource.getData', () => {
 });
 
 describe('GeoJSONSource.updateData', () => {
+    test('Emits sourceDataChanged event boolean when source data is changed', async () => {
+        beforeMapTest();
+        const map = createMap({
+            style: {
+                version: 8,
+                sources: {geojson: {type: 'geojson', data: {type: 'FeatureCollection', features: []}}},
+                layers: [{id: 'geojson', type: 'fill', source: 'geojson'}]
+            }
+        });
+        await map.once('load');
+        const source: GeoJSONSource = map.getSource('geojson');
+
+        let sourceDataChanged = false;
+        (source as Source).fire = (event: MapSourceDataEvent) => {
+            if (event.type === 'data' && event.sourceDataChanged) sourceDataChanged = true;
+        };
+
+        const update: GeoJSONSourceDiff = {
+            add: [{id: '1', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}],
+        };
+        source.updateData(update);
+        await map.once('idle');
+
+        expect(sourceDataChanged).toBe(true);
+    });
+
+    test('Fires data event to update (render) map only once for a single diff update', async () => {
+        beforeMapTest();
+        const map = createMap({
+            style: {
+                version: 8,
+                sources: {geojson: {type: 'geojson', data: {type: 'FeatureCollection', features: []}}},
+                layers: [{id: 'geojson', type: 'fill', source: 'geojson'}]
+            }
+        });
+        await map.once('load');
+        const source: GeoJSONSource = map.getSource('geojson');
+
+        let fireCount = 0;
+        (source as Source).fire = (event: MapDataEvent) => {
+            if (event.type === 'data') fireCount++;
+        };
+        // add one feature
+        const update: GeoJSONSourceDiff = {
+            add: [{id: '1', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}],
+        };
+        source.updateData(update);
+        await map.once('idle');
+
+        expect(fireCount).toBe(1);
+    });
+
     test('queues a second call to updateData', async () => {
         const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
