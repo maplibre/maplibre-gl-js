@@ -212,6 +212,8 @@ export class GeoJSONSource extends Evented implements Source {
     }
 
     async load() {
+        // let SourceCache know it's ok to start requesting tiles
+        this.fire(new Event('data', {dataType: 'source', sourceDataType: 'metadata'}));
         await this._updateWorkerData();
     }
 
@@ -421,15 +423,13 @@ export class GeoJSONSource extends Evented implements Source {
                 resourceTiming = result.resourceTiming[this.id].slice(0);
             }
 
-            const eventData: any = {dataType: 'source'};
-            if (this._collectResourceTiming && resourceTiming && resourceTiming.length > 0) {
-                extend(eventData, {resourceTiming});
-            }
-
-            // although GeoJSON sources contain no metadata, we fire this event to let the SourceCache
-            // know its ok to start requesting tiles.
-            this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
-            this.fire(new Event('data', {...eventData, sourceDataType: 'content'}));
+            const eventData = {
+                dataType: 'source',
+                sourceDataType: 'content',
+                sourceDataChanged: true,
+                ...(this._collectResourceTiming && resourceTiming?.length ? {resourceTiming} : {})
+            };
+            this.fire(new Event('data', eventData));
         } catch (err) {
             this._isUpdatingWorker = false;
             if (this._removed) {

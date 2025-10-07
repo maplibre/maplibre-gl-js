@@ -469,7 +469,7 @@ describe('GeoJSONSource.update', () => {
         } as any;
 
         source.on('data', (e) => {
-            if (e.sourceDataType === 'metadata') {
+            if (e.sourceDataType === 'content') {
                 source.setData({} as GeoJSON.GeoJSON);
                 source.loadTile(new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize));
             }
@@ -571,7 +571,7 @@ describe('GeoJSONSource.updateData', () => {
 
         // Wait for initial data to be loaded
         source.load();
-        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'content');
 
         spy.mockClear();
 
@@ -590,8 +590,8 @@ describe('GeoJSONSource.updateData', () => {
         source.updateData(update2);
 
         // Wait for both updateData calls to be performed
-        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
-        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'content');
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'content');
 
         expect(spy).toHaveBeenCalledTimes(2);
         expect(spy.mock.calls[0][0].data.dataDiff).toEqual(update1);
@@ -630,8 +630,8 @@ describe('GeoJSONSource.updateData', () => {
         source.updateData(update2);
 
         // Wait for the setData and updateData calls to be performed
-        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
-        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'content');
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'content');
 
         expect(spy).toHaveBeenCalledTimes(2);
         expect(spy.mock.calls[0][0].data.data).toEqual(JSON.stringify(data1));
@@ -672,8 +672,8 @@ describe('GeoJSONSource.updateData', () => {
         source.setData(data2);
 
         // Wait for both setData calls to be performed
-        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
-        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'content');
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'content');
 
         expect(spy).toHaveBeenCalledTimes(2);
         expect(spy.mock.calls[0][0].data.data).toEqual(JSON.stringify(data1));
@@ -710,9 +710,9 @@ describe('GeoJSONSource.updateData', () => {
         source.updateData(update1);
 
         // Wait for the calls to be performed
-        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
-        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
-        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'content');
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'content');
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'content');
 
         expect(spy).toHaveBeenCalledTimes(3);
         expect(spy.mock.calls[0][0].data.data).toEqual(JSON.stringify(data1));
@@ -892,7 +892,7 @@ describe('GeoJSONSource.load', () => {
 
         // Wait for initial data to be loaded
         source.load();
-        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'content');
 
         // Run again, with no additional data loaded
         source.load();
