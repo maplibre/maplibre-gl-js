@@ -4,7 +4,7 @@
 - Improve fading - dynamic bi-directional raster cross-fading and self fading ([#6469](https://github.com/maplibre/maplibre-gl-js/pull/6469))
 
 ### 🐞 Bug fixes
-- _...Add new stuff here..._
+- Fix blank map after WebGL context restore ([#6242](https://github.com/maplibre/maplibre-gl-js/issues/6242))
 
 ## 5.8.0
 
