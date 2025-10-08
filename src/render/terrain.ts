@@ -1,6 +1,6 @@
 
 import {type Tile} from '../source/tile';
-import {mat4, vec2} from 'gl-matrix';
+import {mat4, Mat4Tuple, vec2} from 'gl-matrix';
 import {OverscaledTileID} from '../source/tile_id';
 import {RGBAImage} from '../util/image';
 import {warnOnce} from '../util/util';
@@ -129,7 +129,7 @@ export class Terrain {
      */
     _emptyDemUnpack: number[];
     _emptyDemTexture: Texture;
-    _emptyDemMatrix: mat4;
+    _emptyDemMatrix: Mat4Tuple;
     /**
      * as of overzooming of raster-dem tiles in high zoomlevels, this cache contains
      * matrices to transform from vector-tile coords to raster-dem-tile coords.
@@ -163,7 +163,7 @@ export class Terrain {
         if (!dem)
             return 0;
 
-        const pos = vec2.transformMat4([] as any, [x / extent * EXTENT, y / extent * EXTENT], terrain.u_terrain_matrix);
+        const pos = vec2.transformMat4([], [x / extent * EXTENT, y / extent * EXTENT], terrain.u_terrain_matrix);
         const coord = [pos[0] * dem.dim, pos[1] * dem.dim];
 
         // bilinear interpolation
@@ -218,7 +218,7 @@ export class Terrain {
             this._emptyDemUnpack = [0, 0, 0, 0];
             this._emptyDemTexture = new Texture(context, new RGBAImage({width: 1, height: 1}), context.gl.RGBA, {premultiply: false});
             this._emptyDemTexture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
-            this._emptyDemMatrix = mat4.identity([] as any);
+            this._emptyDemMatrix = mat4.identity([]);
         }
         // find covering dem tile and prepare demTexture
         const sourceTile = this.sourceCache.getSourceTile(tileID, true);
@@ -241,7 +241,7 @@ export class Terrain {
             }
             const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
             const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
-            const demMatrix = mat4.fromScaling(new Float64Array(16) as any, [1 / (EXTENT << dz), 1 / (EXTENT << dz), 0]);
+            const demMatrix = mat4.fromScaling(new Float64Array(16), [1 / (EXTENT << dz), 1 / (EXTENT << dz), 0]);
             mat4.translate(demMatrix, demMatrix, [dx * EXTENT, dy * EXTENT, 0]);
             this._demMatrixCache[tileID.key] = {matrix: demMatrix, coord: tileID};
         }

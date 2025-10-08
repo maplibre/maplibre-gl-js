@@ -1,17 +1,17 @@
-import {quat, vec3, type vec4} from 'gl-matrix';
+import {quat, vec3, type Vec3Tuple, type Vec4Tuple, type vec4} from 'gl-matrix';
 import {type Frustum} from './frustum';
 import {IntersectionResult, type IBoundingVolume} from './bounding_volume';
 
 /**
  * A general convex bounding volume, defined by a set of points.
  */
-export class ConvexVolume implements IBoundingVolume {
+export class ConvexVolume<TPoints extends vec3[] = vec3[], TPlanes extends vec4[] = vec4[], TMin extends vec3 = vec3, TMax extends vec3 = vec3> implements IBoundingVolume {
     // Precomputed AABB for rejecting frustum intersection.
-    min: vec3;
-    max: vec3;
+    min: TMin;
+    max: TMax;
 
-    points: vec3[];
-    planes: vec4[];
+    points: TPoints;
+    planes: TPlanes;
 
     /**
      * Creates an instance of a general convex bounding volume.
@@ -24,7 +24,7 @@ export class ConvexVolume implements IBoundingVolume {
      * @param min - The bounding AABB's min point.
      * @param max - The bounding AABB's min point.
      */
-    constructor(points: vec3[], planes: vec4[], min: vec3, max: vec3) {
+    constructor(points: TPoints, planes: TPlanes, min: TMin, max: TMax) {
         this.min = min;
         this.max = max;
         this.points = points;
@@ -36,8 +36,8 @@ export class ConvexVolume implements IBoundingVolume {
      * @param min - The AABB's min point.
      * @param max - The AABB's max point.
      */
-    public static fromAabb(min: vec3, max: vec3): ConvexVolume {
-        const points = [];
+    public static fromAabb<TMin extends vec3, TMax extends vec3>(min: TMin, max: TMax): ConvexVolume<Vec3Tuple[], Vec4Tuple[], TMin, TMax> {
+        const points: Vec3Tuple[] = [];
         for (let i = 0; i < 8; i++) {
             points.push([
                 ((i >> 0) & 1) === 1 ? max[0] : min[0],
@@ -61,14 +61,14 @@ export class ConvexVolume implements IBoundingVolume {
      * @param halfSize - The half-size of the OBB in each axis. The box will extend by this value in each direction for the given axis.
      * @param angles - The rotation of the box. Euler angles, in degrees.
      */
-    public static fromCenterSizeAngles(center: vec3, halfSize: vec3, angles: vec3): ConvexVolume {
-        const q = quat.fromEuler([] as any, angles[0], angles[1], angles[2]);
-        const axisX = vec3.transformQuat([] as any, [halfSize[0], 0, 0], q);
-        const axisY = vec3.transformQuat([] as any, [0, halfSize[1], 0], q);
-        const axisZ = vec3.transformQuat([] as any, [0, 0, halfSize[2]], q);
+    public static fromCenterSizeAngles(center: vec3, halfSize: vec3, angles: vec3): ConvexVolume<Vec3Tuple[], Vec4Tuple[], Vec3Tuple, Vec3Tuple> {
+        const q = quat.fromEuler([], angles[0], angles[1], angles[2]);
+        const axisX = vec3.transformQuat([], [halfSize[0], 0, 0], q);
+        const axisY = vec3.transformQuat([], [0, halfSize[1], 0], q);
+        const axisZ = vec3.transformQuat([], [0, 0, halfSize[2]], q);
         // Find the AABB min/max
-        const min = [...center] as vec3;
-        const max = [...center] as vec3;
+        const min = [...center] as Vec3Tuple;
+        const max = [...center] as Vec3Tuple;
         for (let i = 0; i < 8; i++) {
             for (let axis = 0; axis < 3; axis++) {
                 const point = center[axis]
@@ -79,21 +79,21 @@ export class ConvexVolume implements IBoundingVolume {
                 max[axis] = Math.max(max[axis], point);
             }
         }
-        const points = [];
+        const points: Vec3Tuple[] = [];
         for (let i = 0; i < 8; i++) {
-            const p = [...center] as vec3;
-            vec3.add(p, p, vec3.scale([] as any, axisX, ((i >> 0) & 1) === 1 ? 1 : -1));
-            vec3.add(p, p, vec3.scale([] as any, axisY, ((i >> 1) & 1) === 1 ? 1 : -1));
-            vec3.add(p, p, vec3.scale([] as any, axisZ, ((i >> 2) & 1) === 1 ? 1 : -1));
+            const p = [...center] as Vec3Tuple;
+            vec3.add(p, p, vec3.scale([], axisX, ((i >> 0) & 1) === 1 ? 1 : -1));
+            vec3.add(p, p, vec3.scale([], axisY, ((i >> 1) & 1) === 1 ? 1 : -1));
+            vec3.add(p, p, vec3.scale([], axisZ, ((i >> 2) & 1) === 1 ? 1 : -1));
             points.push(p);
         }
         return new ConvexVolume(points, [
-            [...axisX, -vec3.dot(axisX, points[0])] as vec4,
-            [...axisY, -vec3.dot(axisY, points[0])] as vec4,
-            [...axisZ, -vec3.dot(axisZ, points[0])] as vec4,
-            [-axisX[0], -axisX[1], -axisX[2], -vec3.dot(axisX, points[7])] as vec4,
-            [-axisY[0], -axisY[1], -axisY[2], -vec3.dot(axisY, points[7])] as vec4,
-            [-axisZ[0], -axisZ[1], -axisZ[2], -vec3.dot(axisZ, points[7])] as vec4,
+            [...axisX, -vec3.dot(axisX, points[0])],
+            [...axisY, -vec3.dot(axisY, points[0])],
+            [...axisZ, -vec3.dot(axisZ, points[0])],
+            [-axisX[0], -axisX[1], -axisX[2], -vec3.dot(axisX, points[7])],
+            [-axisY[0], -axisY[1], -axisY[2], -vec3.dot(axisY, points[7])],
+            [-axisZ[0], -axisZ[1], -axisZ[2], -vec3.dot(axisZ, points[7])],
         ], min, max);
     }
 

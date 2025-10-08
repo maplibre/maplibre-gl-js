@@ -266,8 +266,8 @@ export function waitForEvent(evented: Evented, eventName: string, predicate: (e:
 }
 
 export function createTestCameraFrustum(fovy: number, aspectRatio: number, zNear: number, zFar: number, elevation: number, rotation: number): Frustum {
-    const proj = new Float64Array(16) as any as mat4;
-    const invProj = new Float64Array(16) as any as mat4;
+    const proj = new Float64Array(16);
+    const invProj = new Float64Array(16) ;
 
     // Note that left handed coordinate space is used where z goes towards the sky.
     // Y has to be flipped as well because it's part of the projection/camera matrix used in transform.js

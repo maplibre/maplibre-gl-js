@@ -5,8 +5,7 @@ import {
     Uniform2f,
     Uniform3f
 } from '../uniform_binding';
-
-import {mat3, vec3} from 'gl-matrix';
+import {mat3, vec3, type Vec3Tuple} from 'gl-matrix';
 import {extend} from '../../util/util';
 
 import type {Context} from '../../gl/context';
@@ -80,7 +79,7 @@ const fillExtrusionUniformValues = (
 ): UniformValues<FillExtrusionUniformsType> => {
     const light = painter.style.light;
     const _lp = light.properties.get('position');
-    const lightPos = [_lp.x, _lp.y, _lp.z] as vec3;
+    const lightPos: Vec3Tuple = [_lp.x, _lp.y, _lp.z];
     const lightMat = mat3.create();
     if (light.properties.get('anchor') === 'viewport') {
         mat3.fromRotation(lightMat, painter.transform.bearingInRadians);

@@ -1,4 +1,4 @@
-import type {mat2, mat4, vec3, vec4} from 'gl-matrix';
+import type {mat2, mat4, vec3, Vec3Tuple, vec4, Vec4Tuple} from 'gl-matrix';
 import {TransformHelper} from '../transform_helper';
 import {MercatorTransform} from './mercator_transform';
 import {VerticalPerspectiveTransform} from './vertical_perspective_transform';
@@ -27,10 +27,10 @@ export class GlobeTransform implements ITransform {
     // Implementation of transform getters and setters
     //
 
-    get pixelsToClipSpaceMatrix(): mat4 {
+    get pixelsToClipSpaceMatrix(): mat4<Float64Array> {
         return this._helper.pixelsToClipSpaceMatrix;
     }
-    get clipSpaceToPixelsMatrix(): mat4 {
+    get clipSpaceToPixelsMatrix(): mat4<Float64Array> {
         return this._helper.clipSpaceToPixelsMatrix;
     }
     get pixelsToGLUnits(): [number, number] {
@@ -42,7 +42,7 @@ export class GlobeTransform implements ITransform {
     get size(): Point {
         return this._helper.size;
     }
-    get rotationMatrix(): mat2 {
+    get rotationMatrix(): mat2<Float32Array> {
         return this._helper.rotationMatrix;
     }
     get centerPoint(): Point {
@@ -202,14 +202,14 @@ export class GlobeTransform implements ITransform {
     get cameraToCenterDistance(): number {
         return this._helper.cameraToCenterDistance;
     }
-    public get nearZ(): number { 
-        return this._helper.nearZ; 
+    public get nearZ(): number {
+        return this._helper.nearZ;
     }
-    public get farZ(): number { 
-        return this._helper.farZ; 
+    public get farZ(): number {
+        return this._helper.farZ;
     }
-    public get autoCalculateNearFarZ(): boolean { 
-        return this._helper.autoCalculateNearFarZ; 
+    public get autoCalculateNearFarZ(): boolean {
+        return this._helper.autoCalculateNearFarZ;
     }
     //
     // Implementation of globe transform
@@ -234,7 +234,7 @@ export class GlobeTransform implements ITransform {
         this._mercatorTransform.getCoveringTilesDetailsProvider().prepareNextFrame();
     }
 
-    private get currentTransform(): ITransform {
+    private get currentTransform(): VerticalPerspectiveTransform | MercatorTransform {
         return this.isGlobeRendering ? this._verticalPerspectiveTransform : this._mercatorTransform;
     }
 
@@ -270,13 +270,13 @@ export class GlobeTransform implements ITransform {
         this._verticalPerspectiveTransform.apply(this, this._globeLatitudeErrorCorrectionRadians);
     }
 
-    public get projectionMatrix(): mat4 { return this.currentTransform.projectionMatrix; }
+    public get projectionMatrix(): mat4<Float64Array> | mat4<Float32Array> { return this.currentTransform.projectionMatrix; }
 
-    public get modelViewProjectionMatrix(): mat4 { return this.currentTransform.modelViewProjectionMatrix; }
+    public get modelViewProjectionMatrix(): mat4<Float64Array> { return this.currentTransform.modelViewProjectionMatrix; }
 
-    public get inverseProjectionMatrix(): mat4 { return this.currentTransform.inverseProjectionMatrix; }
+    public get inverseProjectionMatrix(): mat4<Float64Array> { return this.currentTransform.inverseProjectionMatrix; }
 
-    public get cameraPosition(): vec3 { return this.currentTransform.cameraPosition; }
+    public get cameraPosition(): vec3<Float64Array | Vec3Tuple>  { return this.currentTransform.cameraPosition; }
 
     getProjectionData(params: ProjectionDataParams): ProjectionData {
         const mercatorProjectionData = this._mercatorTransform.getProjectionData(params);
@@ -295,7 +295,7 @@ export class GlobeTransform implements ITransform {
         return this.currentTransform.isLocationOccluded(location);
     }
 
-    public transformLightDirection(dir: vec3): vec3 {
+    public transformLightDirection(dir: vec3): vec3<Float32Array | Vec3Tuple> {
         return this.currentTransform.transformLightDirection(dir);
     }
 
@@ -339,7 +339,7 @@ export class GlobeTransform implements ITransform {
         this._helper._farZ = this._mercatorTransform.farZ;
     }
 
-    calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {
+    calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4<Float64Array> | mat4<Float32Array> {
         return this.currentTransform.calculateFogMatrix(unwrappedTileID);
     }
 
@@ -350,7 +350,7 @@ export class GlobeTransform implements ITransform {
     getCameraFrustum(): Frustum {
         return this.currentTransform.getCameraFrustum();
     }
-    getClippingPlane(): vec4 | null {
+    getClippingPlane(): vec4<Float64Array | Vec4Tuple> {
         return this.currentTransform.getClippingPlane();
     }
     getCoveringTilesDetailsProvider(): CoveringTilesDetailsProvider {
@@ -434,11 +434,11 @@ export class GlobeTransform implements ITransform {
     /**
      * Computes normalized direction of a ray from the camera to the given screen pixel.
      */
-    getRayDirectionFromPixel(p: Point): vec3 {
+    getRayDirectionFromPixel(p: Point): vec3<Float64Array> {
         return this._verticalPerspectiveTransform.getRayDirectionFromPixel(p);
     }
 
-    getMatrixForModel(location: LngLatLike, altitude?: number): mat4 {
+    getMatrixForModel(location: LngLatLike, altitude?: number): mat4<Float64Array> {
         return this.currentTransform.getMatrixForModel(location, altitude);
     }
 
@@ -454,7 +454,7 @@ export class GlobeTransform implements ITransform {
         return globeData;
     }
 
-    getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 {
+    getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4<Float64Array> {
         return this.currentTransform.getFastPathSimpleProjectionMatrix(tileID);
     }
 }
