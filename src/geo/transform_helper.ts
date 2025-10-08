@@ -114,10 +114,10 @@ export class TransformHelper implements ITransformGetters {
     _unmodified: boolean;
 
     _constraining: boolean;
-    _rotationMatrix: mat2<Float32Array>;
+    _rotationMatrix: Float32Array;
     _pixelsToGLUnits: [number, number];
-    _pixelsToClipSpaceMatrix: mat4<Float64Array>;
-    _clipSpaceToPixelsMatrix: mat4<Float64Array>;
+    _pixelsToClipSpaceMatrix: Float64Array;
+    _clipSpaceToPixelsMatrix: Float64Array;
     _cameraToCenterDistance: number;
 
     _nearZ: number;
@@ -186,8 +186,8 @@ export class TransformHelper implements ITransformGetters {
         this._calcMatrices();
     }
 
-    get pixelsToClipSpaceMatrix(): mat4<Float64Array> { return this._pixelsToClipSpaceMatrix; }
-    get clipSpaceToPixelsMatrix(): mat4<Float64Array> { return this._clipSpaceToPixelsMatrix; }
+    get pixelsToClipSpaceMatrix(): Float64Array { return this._pixelsToClipSpaceMatrix; }
+    get clipSpaceToPixelsMatrix(): Float64Array { return this._clipSpaceToPixelsMatrix; }
 
     get minElevationForCurrentTile(): number { return this._minElevationForCurrentTile; }
     setMinElevationForCurrentTile(ele: number) {
@@ -287,7 +287,7 @@ export class TransformHelper implements ITransformGetters {
         mat2.rotate(this._rotationMatrix, this._rotationMatrix, -this._bearingInRadians);
     }
 
-    get rotationMatrix(): mat2<Float32Array> { return this._rotationMatrix; }
+    get rotationMatrix(): Float32Array { return this._rotationMatrix; }
 
     get pitchInRadians(): number {
         return this._pitchInRadians;

@@ -1,4 +1,4 @@
-import {quat, vec3, type Vec3, type Vec4, type vec4} from 'gl-matrix';
+import {quat, type Tuple, vec3, type vec4} from 'gl-matrix';
 import {type Frustum} from './frustum';
 import {IntersectionResult, type IBoundingVolume} from './bounding_volume';
 
@@ -36,8 +36,8 @@ export class ConvexVolume<TPoints extends vec3[] = vec3[], TPlanes extends vec4[
      * @param min - The AABB's min point.
      * @param max - The AABB's max point.
      */
-    public static fromAabb<TMin extends vec3, TMax extends vec3>(min: TMin, max: TMax): ConvexVolume<Vec3.Tuple[], Vec4.Tuple[], TMin, TMax> {
-        const points: Vec3.Tuple[] = [];
+    public static fromAabb<TMin extends vec3, TMax extends vec3>(min: TMin, max: TMax): ConvexVolume<Tuple.Vec3[], Tuple.Vec4[], TMin, TMax> {
+        const points: Tuple.Vec3[] = [];
         for (let i = 0; i < 8; i++) {
             points.push([
                 ((i >> 0) & 1) === 1 ? max[0] : min[0],
@@ -61,14 +61,14 @@ export class ConvexVolume<TPoints extends vec3[] = vec3[], TPlanes extends vec4[
      * @param halfSize - The half-size of the OBB in each axis. The box will extend by this value in each direction for the given axis.
      * @param angles - The rotation of the box. Euler angles, in degrees.
      */
-    public static fromCenterSizeAngles(center: vec3, halfSize: vec3, angles: vec3): ConvexVolume<Vec3.Tuple[], Vec4.Tuple[], Vec3.Tuple, Vec3.Tuple> {
+    public static fromCenterSizeAngles(center: vec3, halfSize: vec3, angles: vec3): ConvexVolume<Tuple.Vec3[], Tuple.Vec4[], Tuple.Vec3, Tuple.Vec3> {
         const q = quat.fromEuler([], angles[0], angles[1], angles[2]);
         const axisX = vec3.transformQuat([], [halfSize[0], 0, 0], q);
         const axisY = vec3.transformQuat([], [0, halfSize[1], 0], q);
         const axisZ = vec3.transformQuat([], [0, 0, halfSize[2]], q);
         // Find the AABB min/max
-        const min = [...center] as Vec3.Tuple;
-        const max = [...center] as Vec3.Tuple;
+        const min = [...center] as Tuple.Vec3;
+        const max = [...center] as Tuple.Vec3;
         for (let i = 0; i < 8; i++) {
             for (let axis = 0; axis < 3; axis++) {
                 const point = center[axis]
@@ -79,9 +79,9 @@ export class ConvexVolume<TPoints extends vec3[] = vec3[], TPlanes extends vec4[
                 max[axis] = Math.max(max[axis], point);
             }
         }
-        const points: Vec3.Tuple[] = [];
+        const points: Tuple.Vec3[] = [];
         for (let i = 0; i < 8; i++) {
-            const p = [...center] as Vec3.Tuple;
+            const p = [...center] as Tuple.Vec3;
             vec3.add(p, p, vec3.scale([], axisX, ((i >> 0) & 1) === 1 ? 1 : -1));
             vec3.add(p, p, vec3.scale([], axisY, ((i >> 1) & 1) === 1 ? 1 : -1));
             vec3.add(p, p, vec3.scale([], axisZ, ((i >> 2) & 1) === 1 ? 1 : -1));

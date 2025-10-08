@@ -33,7 +33,7 @@ export function mercatorCoordinatesToAngularCoordinatesRadians(mercatorX: number
  * @param lngRadians - Longitude in radians.
  * @param latRadians - Latitude in radians.
  */
-export function angularCoordinatesRadiansToVector(lngRadians: number, latRadians: number): vec3<Float64Array> {
+export function angularCoordinatesRadiansToVector(lngRadians: number, latRadians: number): Float64Array {
     const len = Math.cos(latRadians);
     const vec = new Float64Array(3);
     vec[0] = Math.sin(lngRadians) * len;
@@ -51,7 +51,7 @@ export function angularCoordinatesRadiansToVector(lngRadians: number, latRadians
  * @param tileIdZ - Tile's zoom.
  * @returns A 3D vector - coordinates of the projected point on a unit sphere.
  */
-export function projectTileCoordinatesToSphere(inTileX: number, inTileY: number, tileIdX: number, tileIdY: number, tileIdZ: number): vec3<Float64Array> {
+export function projectTileCoordinatesToSphere(inTileX: number, inTileY: number, tileIdX: number, tileIdY: number, tileIdZ: number): Float64Array {
     // This code could be assembled from 3 functions, but this is a hot path for symbol placement,
     // so for optimization purposes everything is inlined by hand.
     //
@@ -76,7 +76,7 @@ export function projectTileCoordinatesToSphere(inTileX: number, inTileY: number,
 /**
  * For a given longitude and latitude (note: in degrees) returns the normalized vector from the planet center to the specified place on the surface.
  */
-export function angularCoordinatesToSurfaceVector(lngLat: LngLat): vec3<Float64Array> {
+export function angularCoordinatesToSurfaceVector(lngLat: LngLat): Float64Array {
     return angularCoordinatesRadiansToVector(lngLat.lng * Math.PI / 180, lngLat.lat * Math.PI / 180);
 }
 

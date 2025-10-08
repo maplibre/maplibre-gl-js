@@ -149,7 +149,7 @@ class UniformFloatArray extends Uniform<Array<number>> {
     }
 }
 
-const emptyMat4: mat4<Float32Array> = new Float32Array(16);
+const emptyMat4: Float32Array = new Float32Array(16);
 class UniformMatrix4f extends Uniform<mat4> {
     constructor(context: Context, location: WebGLUniformLocation) {
         super(context, location);

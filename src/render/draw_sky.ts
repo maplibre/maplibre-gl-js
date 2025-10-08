@@ -9,7 +9,7 @@ import {atmosphereUniformValues} from './program/atmosphere_program';
 import {type Sky} from '../style/sky';
 import {type Light} from '../style/light';
 import {Mesh} from './mesh';
-import {mat4, vec3, type Vec3, vec4} from 'gl-matrix';
+import {mat4, type Tuple, vec3, vec4} from 'gl-matrix';
 import {type IReadonlyTransform} from '../geo/transform_interface';
 import {ColorMode} from '../gl/color_mode';
 import type {Painter} from './painter';
@@ -57,9 +57,9 @@ export function drawSky(painter: Painter, sky: Sky) {
         mesh.indexBuffer, mesh.segments);
 }
 
-function getSunPos(light: Light, transform: IReadonlyTransform): vec3<Vec3.Tuple> {
+function getSunPos(light: Light, transform: IReadonlyTransform): Tuple.Vec3 {
     const _lp = light.properties.get('position');
-    const lightPos: Vec3.Tuple = [-_lp.x, -_lp.y, -_lp.z];
+    const lightPos: Tuple.Vec3 = [-_lp.x, -_lp.y, -_lp.z];
 
     const lightMat = mat4.identity(new Float64Array(16));
 
@@ -95,7 +95,7 @@ export function drawAtmosphere(painter: Painter, sky: Sky, light: Light) {
 
     const globeRadius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);
     const invProjMatrix = transform.inverseProjectionMatrix;
-    const vec: vec4<Float64Array> = new Float64Array(4);
+    const vec: Float64Array = new Float64Array(4);
     vec[3] = 1;
     vec4.transformMat4(vec, vec, transform.modelViewProjectionMatrix);
     vec[0] /= vec[3];
@@ -107,7 +107,7 @@ export function drawAtmosphere(painter: Painter, sky: Sky, light: Light) {
     vec[1] /= vec[3];
     vec[2] /= vec[3];
     vec[3] = 1;
-    const globePosition: Vec3.Tuple = [vec[0], vec[1], vec[2]];
+    const globePosition: Tuple.Vec3 = [vec[0], vec[1], vec[2]];
 
     const uniformValues = atmosphereUniformValues(sunPos, atmosphereBlend, globePosition, globeRadius, invProjMatrix);
 

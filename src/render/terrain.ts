@@ -1,6 +1,6 @@
 
 import {type Tile} from '../source/tile';
-import {mat4, type Mat4, vec2} from 'gl-matrix';
+import {mat4, type Tuple, vec2} from 'gl-matrix';
 import {OverscaledTileID} from '../source/tile_id';
 import {RGBAImage} from '../util/image';
 import {warnOnce} from '../util/util';
@@ -129,7 +129,7 @@ export class Terrain {
      */
     _emptyDemUnpack: number[];
     _emptyDemTexture: Texture;
-    _emptyDemMatrix: Mat4.Tuple;
+    _emptyDemMatrix: Tuple.Mat4;
     /**
      * as of overzooming of raster-dem tiles in high zoomlevels, this cache contains
      * matrices to transform from vector-tile coords to raster-dem-tile coords.

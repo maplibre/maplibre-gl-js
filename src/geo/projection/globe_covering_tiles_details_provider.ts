@@ -2,7 +2,7 @@ import {EXTENT} from '../../data/extent';
 import {projectTileCoordinatesToSphere} from './globe_utils';
 import {BoundingVolumeCache} from '../../util/primitives/bounding_volume_cache';
 import {coveringZoomLevel, type CoveringTilesOptionsInternal} from './covering_tiles';
-import {vec3, type Vec3, type Vec4} from 'gl-matrix';
+import {type Tuple, vec3} from 'gl-matrix';
 import type {IReadonlyTransform} from '../transform_interface';
 import type {MercatorCoordinate} from '../mercator_coordinate';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
@@ -169,8 +169,8 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             }
 
             // Compute a best-fit AABB for the frustum rejection test
-            const aabbMin: Vec3.Tuple = [1, 1, 1];
-            const aabbMax: Vec3.Tuple = [-1, -1, -1];
+            const aabbMin: Tuple.Vec3 = [1, 1, 1];
+            const aabbMax: Tuple.Vec3 = [-1, -1, -1];
 
             for (const c of extremesPoints) {
                 for (let i = 0; i < 3; i++) {
@@ -244,14 +244,14 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             const upDownMinMax = findAxisMinMax(center, extremesPoints);
             const northSouthMinMax = findAxisMinMax(north, extremesPoints);
 
-            const planeUp: Vec4.Tuple = [-center[0], -center[1], -center[2], upDownMinMax.max];
-            const planeDown: Vec4.Tuple = [center[0], center[1], center[2], -upDownMinMax.min];
-            const planeNorth: Vec4.Tuple = [-north[0], -north[1], -north[2], northSouthMinMax.max];
-            const planeSouth: Vec4.Tuple = [north[0], north[1], north[2], -northSouthMinMax.min];
-            const planeEast: Vec4.Tuple = [...axisEast, 0];
-            const planeWest: Vec4.Tuple = [...axisWest, 0];
+            const planeUp: Tuple.Vec4 = [-center[0], -center[1], -center[2], upDownMinMax.max];
+            const planeDown: Tuple.Vec4 = [center[0], center[1], center[2], -upDownMinMax.min];
+            const planeNorth: Tuple.Vec4 = [-north[0], -north[1], -north[2], northSouthMinMax.max];
+            const planeSouth: Tuple.Vec4 = [north[0], north[1], north[2], -northSouthMinMax.min];
+            const planeEast: Tuple.Vec4 = [...axisEast, 0];
+            const planeWest: Tuple.Vec4 = [...axisWest, 0];
 
-            const points: Vec3.Tuple[] = [];
+            const points: Tuple.Vec3[] = [];
 
             // North points
             if (tileID.y === 0) {

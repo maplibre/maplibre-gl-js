@@ -73,7 +73,7 @@ export function getMercatorHorizon(transform: {pitch: number; cameraToCenterDist
         Math.tan(degreesToRadians(maxMercatorHorizonAngle - transform.pitch)));
 }
 
-export function calculateTileMatrix(unwrappedTileID: UnwrappedTileIDType, worldSize: number): mat4<Float64Array> {
+export function calculateTileMatrix(unwrappedTileID: UnwrappedTileIDType, worldSize: number): Float64Array {
     const canonical = unwrappedTileID.canonical;
     const scale = worldSize / zoomScale(canonical.z);
     const unwrappedX = canonical.x + Math.pow(2, canonical.z) * unwrappedTileID.wrap;
