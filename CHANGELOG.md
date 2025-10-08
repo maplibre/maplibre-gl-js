@@ -4,7 +4,7 @@
 - Improve fading - dynamic bi-directional raster cross-fading and self fading ([#6469](https://github.com/maplibre/maplibre-gl-js/pull/6469))
 
 ### 🐞 Bug fixes
-- _...Add new stuff here..._
+- Added `button` role to marker div to fix accessibility issues with the `aria-label` ([#6435](https://github.com/maplibre/maplibre-gl-js/issues/6435))
 
 ## 5.8.0
 
