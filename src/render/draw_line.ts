@@ -20,6 +20,13 @@ import type {ProgramConfiguration} from '../data/program_configuration';
 import {clamp, nextPowerOfTwo} from '../util/util';
 import {renderColorRamp} from '../util/color_ramp';
 import {EXTENT} from '../data/extent';
+import type {RGBAImage} from '../util/image';
+
+type GradientTexture = {
+    texture?: Texture;
+    gradient?: RGBAImage;
+    version?: number;
+};
 
 function updateGradientTexture(
     painter: Painter,
@@ -29,7 +36,7 @@ function updateGradientTexture(
     layer: LineStyleLayer,
     bucket: LineBucket,
     coord: OverscaledTileID,
-    layerGradient: any
+    layerGradient: GradientTexture
 ): Texture {
     let textureResolution = 256;
     if (layer.stepInterpolant) {
@@ -64,7 +71,7 @@ function bindImagePatternTextures(
     gl: WebGLRenderingContext,
     tile: Tile,
     programConfiguration: ProgramConfiguration,
-    crossfade: any
+    crossfade: ReturnType<LineStyleLayer['getCrossfadeParameters']>
 ) {
     context.activeTexture.set(gl.TEXTURE0);
     tile.imageAtlasTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
@@ -77,7 +84,7 @@ function bindDasharrayTextures(
     gl: WebGLRenderingContext,
     programConfiguration: ProgramConfiguration,
     programChanged: boolean,
-    crossfade: any
+    crossfade: ReturnType<LineStyleLayer['getCrossfadeParameters']>
 ) {
     if (programChanged || painter.lineAtlas.dirty) {
         context.activeTexture.set(gl.TEXTURE0);
@@ -113,7 +120,7 @@ function bindGradientAndDashTextures(
     bucket: LineBucket,
     coord: OverscaledTileID,
     programConfiguration: ProgramConfiguration,
-    crossfade: any
+    crossfade: ReturnType<LineStyleLayer['getCrossfadeParameters']>
 ) {
     // Bind gradient texture to TEXTURE0
     const layerGradient = bucket.gradients[layer.id];
