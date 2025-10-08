@@ -204,7 +204,7 @@ export class Tile {
      * @param justReloaded - `true` to just reload
      */
     loadVectorData(data: WorkerTileResult, painter: any, justReloaded?: boolean | null) {
-        if (this.hasData() && this.latestRawTileData.byteLength === data.rawTileData.byteLength) {
+        if (this.hasData() && data.rawTileData != null && this.latestRawTileData.byteLength === data.rawTileData.byteLength) {
             let equal = true;
             for (let i = 0; i < this.latestRawTileData.byteLength; i++ ){
                 if (this.latestRawTileData[i] !== data.rawTileData[i]) {
