@@ -322,7 +322,9 @@ export class Marker extends Evented {
 
         // aria-label is set either by user or above default, so set role
         // since div is interactive and cannot have aria-label without a role
-        this._element.setAttribute('role', 'button');
+        if (!this._element.hasAttribute('role')) {
+            this._element.setAttribute('role', 'button');
+        }
 
         map.getCanvasContainer().appendChild(this._element);
         map.on('move', this._update);
