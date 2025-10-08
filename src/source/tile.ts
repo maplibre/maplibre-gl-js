@@ -203,19 +203,27 @@ export class Tile {
      * @param painter - the painter
      * @param justReloaded - `true` to just reload
      */
-    loadVectorData(data: WorkerTileResult, painter: any, justReloaded?: boolean | null) {
-        if (this.hasData() && data.rawTileData != null && this.latestRawTileData.byteLength === data.rawTileData.byteLength) {
-            let equal = true;
-            for (let i = 0; i < this.latestRawTileData.byteLength; i++ ){
-                if (this.latestRawTileData[i] !== data.rawTileData[i]) {
-                    equal = false;
-                    break;
-                }
-            }
+    loadVectorData(data: WorkerTileResult | null, painter: any, justReloaded?: boolean | null) {
+        if (this.hasData() && data?.rawTileData != null && this.latestRawTileData !=null){
+            if (this.latestRawTileData.byteLength === data.rawTileData.byteLength) {
+                let equal = true;
 
-            if (equal) {
-                this.state = 'loaded';
-                return;
+                // Create Uint8Array views for byte-by-byte comparison
+                const view1 = new Uint8Array(this.latestRawTileData);
+                const view2 = new Uint8Array(data.rawTileData);
+
+                // Compare each byte
+                for (let i = 0; i < view1.byteLength; i++) {
+                    if (view1[i] !== view2[i]) {
+                        equal = false;
+                        break;
+                    }
+                }
+
+                if (equal) {
+                    this.state = 'loaded';
+                    return;
+                }
             }
         }
 
