@@ -63,8 +63,8 @@ void main() {
     float a_linesofar = (floor(a_data.z / 4.0) + a_data.w * 64.0) * LINE_DISTANCE_SCALE;
 
     // Gradient UV computation
-    highp float texel_height = 1.0 / u_image_height;
-    highp float half_texel_height = 0.5 * texel_height;
+    float texel_height = 1.0 / u_image_height;
+    float half_texel_height = 0.5 * texel_height;
     v_uv = vec2(a_uv_x, a_split_index * texel_height - half_texel_height);
 
     vec2 pos = floor(a_pos_normal * 0.5);
