@@ -14,9 +14,122 @@ import type {SourceCache} from '../source/source_cache';
 import type {LineStyleLayer} from '../style/style_layer/line_style_layer';
 import type {LineBucket} from '../data/bucket/line_bucket';
 import type {OverscaledTileID} from '../source/tile_id';
+import type {Tile} from '../source/tile';
+import type {Context} from '../gl/context';
+import type {ProgramConfiguration} from '../data/program_configuration';
 import {clamp, nextPowerOfTwo} from '../util/util';
 import {renderColorRamp} from '../util/color_ramp';
 import {EXTENT} from '../data/extent';
+
+function updateGradientTexture(
+    painter: Painter,
+    sourceCache: SourceCache,
+    context: Context,
+    gl: WebGLRenderingContext,
+    layer: LineStyleLayer,
+    bucket: LineBucket,
+    coord: OverscaledTileID,
+    layerGradient: any
+): Texture {
+    let textureResolution = 256;
+    if (layer.stepInterpolant) {
+        const sourceMaxZoom = sourceCache.getSource().maxzoom;
+        const potentialOverzoom = coord.canonical.z === sourceMaxZoom ?
+            Math.ceil(1 << (painter.transform.maxZoom - coord.canonical.z)) : 1;
+        const lineLength = bucket.maxLineLength / EXTENT;
+        // Logical pixel tile size is 512px, and 1024px right before current zoom + 1
+        const maxTilePixelSize = 1024;
+        // Maximum possible texture coverage heuristic, bound by hardware max texture size
+        const maxTextureCoverage = lineLength * maxTilePixelSize * potentialOverzoom;
+        textureResolution = clamp(nextPowerOfTwo(maxTextureCoverage), 256, context.maxTextureSize);
+    }
+    layerGradient.gradient = renderColorRamp({
+        expression: layer.gradientExpression(),
+        evaluationKey: 'lineProgress',
+        resolution: textureResolution,
+        image: layerGradient.gradient || undefined,
+        clips: bucket.lineClipsArray
+    });
+    if (layerGradient.texture) {
+        layerGradient.texture.update(layerGradient.gradient);
+    } else {
+        layerGradient.texture = new Texture(context, layerGradient.gradient, gl.RGBA);
+    }
+    layerGradient.version = layer.gradientVersion;
+    return layerGradient.texture;
+}
+
+function bindImagePatternTextures(
+    context: Context,
+    gl: WebGLRenderingContext,
+    tile: Tile,
+    programConfiguration: ProgramConfiguration,
+    crossfade: any
+) {
+    context.activeTexture.set(gl.TEXTURE0);
+    tile.imageAtlasTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+    programConfiguration.updatePaintBuffers(crossfade);
+}
+
+function bindDasharrayTextures(
+    painter: Painter,
+    context: Context,
+    gl: WebGLRenderingContext,
+    programConfiguration: ProgramConfiguration,
+    programChanged: boolean,
+    crossfade: any
+) {
+    if (programChanged || painter.lineAtlas.dirty) {
+        context.activeTexture.set(gl.TEXTURE0);
+        painter.lineAtlas.bind(context);
+    }
+    programConfiguration.updatePaintBuffers(crossfade);
+}
+
+function bindGradientTextures(
+    painter: Painter,
+    sourceCache: SourceCache,
+    context: Context,
+    gl: WebGLRenderingContext,
+    layer: LineStyleLayer,
+    bucket: LineBucket,
+    coord: OverscaledTileID
+) {
+    const layerGradient = bucket.gradients[layer.id];
+    let gradientTexture = layerGradient.texture;
+    if (layer.gradientVersion !== layerGradient.version) {
+        gradientTexture = updateGradientTexture(painter, sourceCache, context, gl, layer, bucket, coord, layerGradient);
+    }
+    context.activeTexture.set(gl.TEXTURE0);
+    gradientTexture.bind(layer.stepInterpolant ? gl.NEAREST : gl.LINEAR, gl.CLAMP_TO_EDGE);
+}
+
+function bindGradientAndDashTextures(
+    painter: Painter,
+    sourceCache: SourceCache,
+    context: Context,
+    gl: WebGLRenderingContext,
+    layer: LineStyleLayer,
+    bucket: LineBucket,
+    coord: OverscaledTileID,
+    programConfiguration: ProgramConfiguration,
+    crossfade: any
+) {
+    // Bind gradient texture to TEXTURE0
+    const layerGradient = bucket.gradients[layer.id];
+    let gradientTexture = layerGradient.texture;
+    if (layer.gradientVersion !== layerGradient.version) {
+        gradientTexture = updateGradientTexture(painter, sourceCache, context, gl, layer, bucket, coord, layerGradient);
+    }
+    context.activeTexture.set(gl.TEXTURE0);
+    gradientTexture.bind(layer.stepInterpolant ? gl.NEAREST : gl.LINEAR, gl.CLAMP_TO_EDGE);
+
+    // Bind dash atlas to TEXTURE1
+    context.activeTexture.set(gl.TEXTURE1);
+    painter.lineAtlas.bind(context);
+
+    programConfiguration.updatePaintBuffers(crossfade);
+}
 
 export function drawLine(painter: Painter, sourceCache: SourceCache, layer: LineStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
@@ -96,88 +209,13 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
                         lineUniformValues(painter, tile, layer, pixelRatio);
 
         if (image) {
-            context.activeTexture.set(gl.TEXTURE0);
-            tile.imageAtlasTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
-            programConfiguration.updatePaintBuffers(crossfade);
+            bindImagePatternTextures(context, gl, tile, programConfiguration, crossfade);
         } else if (dasharray && gradient) {
-            // Bind gradient texture to TEXTURE0
-            const layerGradient = bucket.gradients[layer.id];
-            let gradientTexture = layerGradient.texture;
-            if (layer.gradientVersion !== layerGradient.version) {
-                let textureResolution = 256;
-                if (layer.stepInterpolant) {
-                    const sourceMaxZoom = sourceCache.getSource().maxzoom;
-                    const potentialOverzoom = coord.canonical.z === sourceMaxZoom ?
-                        Math.ceil(1 << (painter.transform.maxZoom - coord.canonical.z)) : 1;
-                    const lineLength = bucket.maxLineLength / EXTENT;
-                    // Logical pixel tile size is 512px, and 1024px right before current zoom + 1
-                    const maxTilePixelSize = 1024;
-                    // Maximum possible texture coverage heuristic, bound by hardware max texture size
-                    const maxTextureCoverage = lineLength * maxTilePixelSize * potentialOverzoom;
-                    textureResolution = clamp(nextPowerOfTwo(maxTextureCoverage), 256, context.maxTextureSize);
-                }
-                layerGradient.gradient = renderColorRamp({
-                    expression: layer.gradientExpression(),
-                    evaluationKey: 'lineProgress',
-                    resolution: textureResolution,
-                    image: layerGradient.gradient || undefined,
-                    clips: bucket.lineClipsArray
-                });
-                if (layerGradient.texture) {
-                    layerGradient.texture.update(layerGradient.gradient);
-                } else {
-                    layerGradient.texture = new Texture(context, layerGradient.gradient, gl.RGBA);
-                }
-                layerGradient.version = layer.gradientVersion;
-                gradientTexture = layerGradient.texture;
-            }
-            context.activeTexture.set(gl.TEXTURE0);
-            gradientTexture.bind(layer.stepInterpolant ? gl.NEAREST : gl.LINEAR, gl.CLAMP_TO_EDGE);
-
-            // Bind dash atlas to TEXTURE1
-            context.activeTexture.set(gl.TEXTURE1);
-            painter.lineAtlas.bind(context);
-
-            programConfiguration.updatePaintBuffers(crossfade);
+            bindGradientAndDashTextures(painter, sourceCache, context, gl, layer, bucket, coord, programConfiguration, crossfade);
         } else if (dasharray) {
-            if ((programChanged || painter.lineAtlas.dirty)) {
-                context.activeTexture.set(gl.TEXTURE0);
-                painter.lineAtlas.bind(context);
-            }
-            programConfiguration.updatePaintBuffers(crossfade);
+            bindDasharrayTextures(painter, context, gl, programConfiguration, programChanged, crossfade);
         } else if (gradient) {
-            const layerGradient = bucket.gradients[layer.id];
-            let gradientTexture = layerGradient.texture;
-            if (layer.gradientVersion !== layerGradient.version) {
-                let textureResolution = 256;
-                if (layer.stepInterpolant) {
-                    const sourceMaxZoom = sourceCache.getSource().maxzoom;
-                    const potentialOverzoom = coord.canonical.z === sourceMaxZoom ?
-                        Math.ceil(1 << (painter.transform.maxZoom - coord.canonical.z)) : 1;
-                    const lineLength = bucket.maxLineLength / EXTENT;
-                    // Logical pixel tile size is 512px, and 1024px right before current zoom + 1
-                    const maxTilePixelSize = 1024;
-                    // Maximum possible texture coverage heuristic, bound by hardware max texture size
-                    const maxTextureCoverage = lineLength * maxTilePixelSize * potentialOverzoom;
-                    textureResolution = clamp(nextPowerOfTwo(maxTextureCoverage), 256, context.maxTextureSize);
-                }
-                layerGradient.gradient = renderColorRamp({
-                    expression: layer.gradientExpression(),
-                    evaluationKey: 'lineProgress',
-                    resolution: textureResolution,
-                    image: layerGradient.gradient || undefined,
-                    clips: bucket.lineClipsArray
-                });
-                if (layerGradient.texture) {
-                    layerGradient.texture.update(layerGradient.gradient);
-                } else {
-                    layerGradient.texture = new Texture(context, layerGradient.gradient, gl.RGBA);
-                }
-                layerGradient.version = layer.gradientVersion;
-                gradientTexture = layerGradient.texture;
-            }
-            context.activeTexture.set(gl.TEXTURE0);
-            gradientTexture.bind(layer.stepInterpolant ? gl.NEAREST : gl.LINEAR, gl.CLAMP_TO_EDGE);
+            bindGradientTextures(painter, sourceCache, context, gl, layer, bucket, coord);
         }
 
         const stencil = painter.stencilModeForClipping(coord);
