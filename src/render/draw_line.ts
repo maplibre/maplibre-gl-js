@@ -202,20 +202,21 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
 
         const pixelRatio = transform.getPixelScale();
 
-        const uniformValues = image ? linePatternUniformValues(painter, tile, layer, pixelRatio, crossfade) :
-            dasharray && gradient ? lineGradientSDFUniformValues(painter, tile, layer, pixelRatio, crossfade, bucket.lineClipsArray.length) :
-                dasharray ? lineSDFUniformValues(painter, tile, layer, pixelRatio, crossfade) :
-                    gradient ? lineGradientUniformValues(painter, tile, layer, pixelRatio, bucket.lineClipsArray.length) :
-                        lineUniformValues(painter, tile, layer, pixelRatio);
-
+        let uniformValues;
         if (image) {
+            uniformValues = linePatternUniformValues(painter, tile, layer, pixelRatio, crossfade);
             bindImagePatternTextures(context, gl, tile, programConfiguration, crossfade);
         } else if (dasharray && gradient) {
+            uniformValues = lineGradientSDFUniformValues(painter, tile, layer, pixelRatio, crossfade, bucket.lineClipsArray.length);
             bindGradientAndDashTextures(painter, sourceCache, context, gl, layer, bucket, coord, programConfiguration, crossfade);
         } else if (dasharray) {
+            uniformValues = lineSDFUniformValues(painter, tile, layer, pixelRatio, crossfade);
             bindDasharrayTextures(painter, context, gl, programConfiguration, programChanged, crossfade);
         } else if (gradient) {
+            uniformValues = lineGradientUniformValues(painter, tile, layer, pixelRatio, bucket.lineClipsArray.length);
             bindGradientTextures(painter, sourceCache, context, gl, layer, bucket, coord);
+        } else {
+            uniformValues = lineUniformValues(painter, tile, layer, pixelRatio);
         }
 
         const stencil = painter.stencilModeForClipping(coord);
