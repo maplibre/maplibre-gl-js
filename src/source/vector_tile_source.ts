@@ -59,8 +59,6 @@ export class VectorTileSource extends Evented implements Source {
     id: string;
     minzoom: number;
     maxzoom: number;
-    // This is basically a hack to allow source cache to request tiles over the native zoom level of the source
-    maxNativeZoom: number;
     url: string;
     scheme: string;
     tileSize: number;
@@ -86,7 +84,6 @@ export class VectorTileSource extends Evented implements Source {
         this.type = 'vector';
         this.minzoom = 0;
         this.maxzoom = 22;
-        this.maxNativeZoom = 22;
         this.scheme = 'xyz';
         this.tileSize = 512;
         this.reparseOverscaled = true;
@@ -116,8 +113,6 @@ export class VectorTileSource extends Evented implements Source {
             this.map.style.sourceCaches[this.id].clearTiles();
             if (tileJSON) {
                 extend(this, tileJSON);
-                this.maxNativeZoom = this.maxzoom;
-                this.maxzoom = this.map.getMaxZoom();
                 if (tileJSON.bounds) this.tileBounds = new TileBounds(tileJSON.bounds, this.minzoom, this.maxzoom);
 
                 // `content` is included here to prevent a race condition where `Style._updateSources` is called
@@ -195,10 +190,10 @@ export class VectorTileSource extends Evented implements Source {
     }
 
     async loadTile(tile: Tile): Promise<void> {
-        const tileAtMaxNativeZoom = tile.tileID.canonical.z > this.maxNativeZoom 
-            ? tile.tileID.scaledTo(this.maxNativeZoom)
+        const tileAtMaxZoom = tile.tileID.canonical.z > this.maxzoom
+            ? tile.tileID.scaledTo(this.maxzoom)
             : tile.tileID;
-        const url = tileAtMaxNativeZoom.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
+        const url = tileAtMaxZoom.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         const params: WorkerTileParameters = {
             request: this.map._requestManager.transformRequest(url, ResourceType.Tile),
             uid: tile.uid,
@@ -211,7 +206,7 @@ export class VectorTileSource extends Evented implements Source {
             showCollisionBoxes: this.map.showCollisionBoxes,
             promoteId: this.promoteId,
             subdivisionGranularity: this.map.style.projection.subdivisionGranularity,
-            maxNativeZoom: this.maxNativeZoom
+            sourceMaxZoom: this.maxzoom
         };
         params.request.collectResourceTiming = this._collectResourceTiming;
         let messageType: MessageType.loadTile | MessageType.reloadTile = MessageType.reloadTile;

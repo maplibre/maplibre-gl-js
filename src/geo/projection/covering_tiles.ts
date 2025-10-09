@@ -51,6 +51,12 @@ export type CoveringTilesOptionsInternal = CoveringTilesOptions & {
      */
     reparseOverscaled?: boolean;
     /**
+     * For vector tiles, geojsonvt is used to increase performance by providing sub-tile grids greater than source
+     * maxzoom, therefore bypassing the need for overscaling past source maxzoom using overscaled tileIDs.
+     * https://github.com/maplibre/maplibre-gl-js/pull/6521
+     */
+    bypassOverscaling?: boolean;
+    /**
      * When terrain is present, tile visibility will be computed in regards to the min and max elevations for each tile.
      */
     terrain?: Terrain;
@@ -191,7 +197,7 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     
     const desiredZ = coveringZoomLevel(transform, options);
     const minZoom = options.minzoom || 0;
-    const maxZoom = options.maxzoom !== undefined ? options.maxzoom : transform.maxZoom;
+    const maxZoom =  options.bypassOverscaling ? transform.maxZoom : options.maxzoom ?? transform.maxZoom;
     const nominalZ = Math.min(Math.max(0, desiredZ), maxZoom);
 
     const numTiles = Math.pow(2, nominalZ);
