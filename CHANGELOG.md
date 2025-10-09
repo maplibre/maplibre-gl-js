@@ -1,9 +1,16 @@
 ## main
 
 ### ✨ Features and improvements
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 5.8.1
+
+### ✨ Features and improvements
 - Improve fading - dynamic bi-directional raster cross-fading and self fading ([#6469](https://github.com/maplibre/maplibre-gl-js/pull/6469))
 - Support for usage of line-gradient together with line-dasharray
-- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Added `button` role to marker div to fix accessibility issues with the `aria-label` ([#6435](https://github.com/maplibre/maplibre-gl-js/issues/6435))
