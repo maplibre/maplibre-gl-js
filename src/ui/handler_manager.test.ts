@@ -303,8 +303,6 @@ describe('Scrollzoom interaction', () => {
         map.on('wheel', spyWheel);
         map.on('contextmenu', spyContextMenu);
         
-
-
         const target = map.getCanvas();
         simulate.mousedown(map.getCanvas(), {target, button: 2, clientX: 10, clientY: 10});
         simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
@@ -313,7 +311,7 @@ describe('Scrollzoom interaction', () => {
         expect(spyWheel).toHaveBeenCalledTimes(1);
         expect(spyContextMenu).toHaveBeenCalledTimes(1);
     });
-})
+});
 
 function createEventInProgress(name: keyof EventsInProgress): EventInProgress {
     return {
