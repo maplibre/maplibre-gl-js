@@ -7,6 +7,7 @@
 
 ### 🐞 Bug fixes
 - Added `button` role to marker div to fix accessibility issues with the `aria-label` ([#6435](https://github.com/maplibre/maplibre-gl-js/issues/6435))
+- Fix a crash on iOS when there are too many symbols to render ([#6526](https://github.com/maplibre/maplibre-gl-js/issues/6526))
 
 ## 5.8.0
 
