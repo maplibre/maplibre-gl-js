@@ -222,7 +222,7 @@ export class SourceCache extends Evented {
      * Return all tile ids ordered with z-order, and cast to numbers
      */
     getIds(): Array<string> {
-        return (Object.values(this._tiles) as any).map((tile: Tile) => tile.tileID).sort(compareTileId).map(id => id.key);
+        return Object.values(this._tiles).map(tile => tile.tileID).sort(compareTileId).map(id => id.key);
     }
 
     getRenderableIds(symbolLayer?: boolean): Array<string> {
@@ -569,7 +569,7 @@ export class SourceCache extends Evented {
             });
 
             if (this._source.hasTile) {
-                idealTileIDs = idealTileIDs.filter((coord) => (this._source.hasTile as any)(coord));
+                idealTileIDs = idealTileIDs.filter((coord) => this._source.hasTile(coord));
             }
         }
 
