@@ -117,7 +117,7 @@ export class VectorTileSource extends Evented implements Source {
             if (tileJSON) {
                 extend(this, tileJSON);
                 this.maxNativeZoom = this.maxzoom;
-                this.maxzoom = 22;
+                this.maxzoom = this.map.getMaxZoom();
                 if (tileJSON.bounds) this.tileBounds = new TileBounds(tileJSON.bounds, this.minzoom, this.maxzoom);
 
                 // `content` is included here to prevent a race condition where `Style._updateSources` is called
