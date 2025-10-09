@@ -1,5 +1,6 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
+import simulate from '../../test/unit/lib/simulate_interaction';
 
 import type {HandlerManager, MapControlsScenarioOptions, EventInProgress, EventsInProgress} from './handler_manager';
 import type {Map} from './map';
@@ -284,6 +285,35 @@ describe('HandlerManager terrain scenarios', () => {
         expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
     });
 });
+
+describe('Scrollzoom interaction', () => {
+    it('contextmenu event triggered directly after scrolling', () => {
+
+        map.dragPan.enable();
+        const spyWheel = vi.fn(function (e) {
+            expect(this).toBe(map);
+            expect(e.type).toBe('wheel');
+        });
+
+        const spyContextMenu = vi.fn(function (e) {
+            expect(this).toBe(map);
+            expect(e.type).toBe('contextmenu');
+        });
+
+        map.on('wheel', spyWheel);
+        map.on('contextmenu', spyContextMenu);
+        
+
+
+        const target = map.getCanvas();
+        simulate.mousedown(map.getCanvas(), {target, button: 2, clientX: 10, clientY: 10});
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        simulate.mouseup(map.getCanvas(), {target, button: 2, clientX: 10, clientY: 10});
+        simulate.contextmenu(map.getCanvas(), {target, button: 2, clientX: 10, clientY: 10});
+        expect(spyWheel).toHaveBeenCalledTimes(1);
+        expect(spyContextMenu).toHaveBeenCalledTimes(1);
+    });
+})
 
 function createEventInProgress(name: keyof EventsInProgress): EventInProgress {
     return {
