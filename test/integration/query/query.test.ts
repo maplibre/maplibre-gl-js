@@ -9,6 +9,7 @@ import type {Page, Browser} from 'puppeteer';
 import type {Server} from 'node:http';
 import type {AddressInfo} from 'node:net';
 
+import {deepEqual} from '../lib/json-diff';
 import {localizeURLs} from '../lib/localize-urls';
 import {launchPuppeteer} from '../lib/puppeteer_config';
 import type {default as MapLibreGL} from '../../../dist/maplibre-gl';
@@ -166,12 +167,14 @@ describe('query tests', () => {
             const fixture = await dirToJson(testCaseRoot, port);
             const actual = await page.evaluate(performQueryOnFixture, fixture);
 
-            if (process.env.UPDATE) {
+            const isEqual = deepEqual(actual, fixture.expected);
+            // update expected.json if UPDATE=true is passed and the test fails
+            if (process.env.UPDATE && !isEqual) {
                 const expectedPath = path.join(testCaseRoot, 'expected.json');
                 console.log('updating', expectedPath);
                 fs.writeFileSync(expectedPath, JSON.stringify(actual, null, 2));
             }
-            expect(fixture.expected).toEqual(actual);
+            expect(isEqual).toBeTruthy();
         });
 
     }
