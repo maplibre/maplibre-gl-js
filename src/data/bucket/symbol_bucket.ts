@@ -363,7 +363,7 @@ export class SymbolBucket implements Bucket {
     constructor(options: BucketParameters<SymbolStyleLayer>) {
         this.collisionBoxArray = options.collisionBoxArray;
         this.zoom = options.zoom;
-        this.overscaling = isSafari(globalThis) ? options.overscaling : Math.min(options.overscaling, 128);
+        this.overscaling = isSafari(globalThis) ? Math.min(options.overscaling, 128) : options.overscaling;
         this.layers = options.layers;
         this.layerIds = this.layers.map(layer => layer.id);
         this.index = options.index;
