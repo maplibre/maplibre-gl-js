@@ -40,6 +40,7 @@ export type WorkerTileParameters = TileParameters & {
     collectResourceTiming?: boolean;
     returnDependencies?: boolean;
     subdivisionGranularity: SubdivisionGranularitySetting;
+    maxNativeZoom?: number;
 };
 
 /**
