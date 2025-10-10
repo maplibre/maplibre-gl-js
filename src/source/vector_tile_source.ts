@@ -252,7 +252,7 @@ export class VectorTileSource extends Evented implements Source {
         return {
             maxZoomTileID,
             overzoomRequest: this.map._requestManager.transformRequest(maxZoomTileUrl, ResourceType.Tile),
-            maxOverzoom: this.map.getZoom(),
+            maxOverzoom: this.map.getMaxZoom(),
             tileSize: this.tileSize
         };
     }
