@@ -57,7 +57,7 @@ describe('getCameraTargetElevation', () => {
         const terrainStub = {} as Terrain;
         map.terrain = terrainStub;
 
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.setElevation(200);
         transform.setCenter(new LngLat(10.0, 50.0));
         transform.setZoom(14);

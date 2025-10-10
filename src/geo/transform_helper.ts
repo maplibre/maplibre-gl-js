@@ -63,6 +63,33 @@ export type TransformHelperCallbacks = {
     calcMatrices: () => void;
 };
 
+export type TransformOptions = {
+    /**
+     * The minimum zoom level of the map.
+     */
+    minZoom?: number;
+    /**
+     * The maximum zoom level of the map.
+     */
+    maxZoom?: number;
+    /**
+     * The minimum pitch of the map.
+     */
+    minPitch?: number;
+    /**
+     * The maximum pitch of the map.
+     */
+    maxPitch?: number;
+    /**
+     * Whether to render multiple copies of the world side by side in the map.
+     */
+    renderWorldCopies?: boolean;
+    /**
+     * An override of the transform's constraining function for respecting its longitude and latitude bounds.
+     */
+    transformConstrain?: TransformConstrainFunction | null;
+};
+
 function getTileZoom(zoom: number): number {
     return Math.max(0, Math.floor(zoom));
 }
@@ -125,18 +152,18 @@ export class TransformHelper implements ITransformGetters {
 
     _transformConstrain: TransformConstrainFunction | null;
 
-    constructor(callbacks: TransformHelperCallbacks, minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean, transformConstrain?: TransformConstrainFunction) {
+    constructor(callbacks: TransformHelperCallbacks, options?: TransformOptions) {
         this._callbacks = callbacks;
         this._tileSize = 512; // constant
 
-        this._renderWorldCopies = renderWorldCopies === undefined ? true : !!renderWorldCopies;
-        this._minZoom = minZoom || 0;
-        this._maxZoom = maxZoom || 22;
+        this._renderWorldCopies = options?.renderWorldCopies === undefined ? true : !!options?.renderWorldCopies;
+        this._minZoom = options?.minZoom || 0;
+        this._maxZoom = options?.maxZoom || 22;
 
-        this._minPitch = (minPitch === undefined || minPitch === null) ? 0 : minPitch;
-        this._maxPitch = (maxPitch === undefined || maxPitch === null) ? 60 : maxPitch;
+        this._minPitch = (options?.minPitch === undefined || options?.minPitch === null) ? 0 : options?.minPitch;
+        this._maxPitch = (options?.maxPitch === undefined || options?.maxPitch === null) ? 60 : options?.maxPitch;
 
-        this._transformConstrain = transformConstrain;
+        this._transformConstrain = options?.transformConstrain;
 
         this.setMaxBounds();
 
@@ -263,7 +290,7 @@ export class TransformHelper implements ITransformGetters {
 
     get transformConstrain(): TransformConstrainFunction | null { return this._transformConstrain; }
     setTransformConstrain(constrain?: TransformConstrainFunction | null) {
-        this._transformConstrain = this.transformConstrain;
+        this._transformConstrain = constrain;
         this._constrain();
         this._calcMatrices();
     }

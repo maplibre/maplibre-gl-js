@@ -8,7 +8,7 @@ const getStubMap = () => new StubMap() as any;
 
 test('Render must not fail with incompletely loaded style', () => {
     const gl = document.createElement('canvas').getContext('webgl');
-    const transform = new MercatorTransform(0, 22, 0, 60, true);
+    const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
     const painter = new Painter(gl, transform);
     const map = getStubMap();
     const style = new Style(map);

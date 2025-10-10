@@ -637,7 +637,7 @@ export class Map extends Camera {
         // For now we will use a temporary MercatorTransform instance.
         // Transform specialization will later be set by style when it creates its projection instance.
         // When this happens, the new transform will inherit all properties of this temporary transform.
-        const transform = new MercatorTransform(undefined, undefined, undefined, undefined, undefined, resolvedOptions.transformConstrain);
+        const transform = new MercatorTransform({transformConstrain: resolvedOptions.transformConstrain});
         const cameraHelper = new MercatorCameraHelper();
         if (resolvedOptions.minZoom !== undefined) {
             transform.setMinZoom(resolvedOptions.minZoom);
