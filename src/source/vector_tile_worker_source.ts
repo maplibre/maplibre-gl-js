@@ -1,20 +1,95 @@
-import {type ExpiryData, getArrayBuffer} from '../util/ajax';
-
 import Protobuf from 'pbf';
+import {VectorTile, VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
+import geojsonvt, {type Feature as GeoJSONVTFeature, type Tile as GeoJSONVTTile} from 'geojson-vt';
+import {fromVectorTileJs} from '@maplibre/vt-pbf';
+import Point from '@mapbox/point-geometry';
+
+import {EXTENT} from '../data/extent';
+import {type ExpiryData, getArrayBuffer} from '../util/ajax';
 import {WorkerTile} from './worker_tile';
+import {BoundedLRUCache} from './tile_cache';
 import {extend} from '../util/util';
 import {RequestPerformance} from '../util/performance';
-
 import type {
     WorkerSource,
     WorkerTileParameters,
     TileParameters,
     WorkerTileResult
 } from '../source/worker_source';
-
+import type {Feature} from 'geojson';
 import type {IActor} from '../util/actor';
+import type {StyleLayer} from '../style/style_layer';
 import type {StyleLayerIndex} from '../style/style_layer_index';
-import {VectorTile} from '@mapbox/vector-tile';
+import type {CanonicalTileID} from './tile_id';
+
+type GeoJSONVT = ReturnType<typeof geojsonvt>;
+
+class FeatureWrapper extends VectorTileFeature {
+    feature: GeoJSONVTFeature;
+
+    constructor(feature: GeoJSONVTFeature, extent: number) {
+        super(new Protobuf(), 0, extent, [], []);
+        this.feature = feature;
+        this.type = feature.type;
+        this.properties = feature.tags ? feature.tags : {};
+
+        // If the feature has a top-level `id` property, copy it over, but only
+        // if it can be coerced to an integer, because this wrapper is used for
+        // serializing geojson feature data into vector tile PBF data, and the
+        // vector tile spec only supports integer values for feature ids --
+        // allowing non-integer values here results in a non-compliant PBF
+        // that causes an exception when it is parsed with vector-tile-js
+        if ('id' in feature) {
+            if (typeof feature.id === 'string') {
+                this.id = parseInt(feature.id, 10);
+            } else if (typeof feature.id === 'number' && !isNaN(feature.id as number)) {
+                this.id = feature.id;
+            }
+        }
+    }
+
+    loadGeometry() {
+        const geometry = [];
+         
+        const rawGeo = this.feature.type === 1 ? [this.feature.geometry] : this.feature.geometry as any as GeoJSON.Geometry[][];
+        for (const ring of rawGeo) {
+            const newRing = [];
+            for (const point of ring) {
+                newRing.push(new Point(point[0], point[1]));
+            }
+            geometry.push(newRing);
+        }
+        return geometry;
+    }
+}
+
+class GeoJSONWrapperLayer extends VectorTileLayer {
+    private _myFeatures: GeoJSONVTFeature[];
+    name: string;
+    extent: number = EXTENT;
+    version: number = 2;
+    length: number;
+
+    constructor(features: GeoJSONVTFeature[], layerName: string) {
+        super(new Protobuf());
+        this._myFeatures = features;
+        this.name = layerName;
+        this.version = 1;
+        this.length = features.length;
+    }
+
+    feature(i: number): VectorTileFeature {
+        return new FeatureWrapper(this._myFeatures[i], this.extent);
+    }
+}
+
+class GeoJSONWrapperWithLayers implements VectorTile {
+    layers: Record<string, VectorTileLayer> = {};
+
+    addLayer(features: GeoJSONVTFeature[], layerName: string) {
+        this.layers[layerName] = new GeoJSONWrapperLayer(features, layerName);
+    }
+}
 
 export type LoadVectorTileResult = {
     vectorTile: VectorTile;
@@ -44,6 +119,7 @@ export class VectorTileWorkerSource implements WorkerSource {
     fetching: {[_: string]: FetchingState };
     loading: {[_: string]: WorkerTile};
     loaded: {[_: string]: WorkerTile};
+    overzoomedTilesCache: BoundedLRUCache<string, GeoJSONVT>;
 
     /**
      * @param loadVectorData - Optional method for custom loading of a VectorTile
@@ -58,6 +134,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         this.fetching = {};
         this.loading = {};
         this.loaded = {};
+        this.overzoomedTilesCache = new BoundedLRUCache<string, GeoJSONVT>(1000);
     }
 
     /**
@@ -92,7 +169,14 @@ export class VectorTileWorkerSource implements WorkerSource {
      * a `params.url` property) for fetching and producing a VectorTile object.
      */
     async loadTile(params: WorkerTileParameters): Promise<WorkerTileResult | null> {
-        const tileUid = params.uid;
+        const {uid: tileUid, overzoomParameters} = params;
+
+        // overzoomParameters are provided when the requested tile has a higher canonical Z than source maxzoom. This allows
+        // the loading of the deepest source tile at source max zoom, using geojsonvt to generate sub tile grids for overzooming.
+        // This provides higher performance on vector layer overscaling. (https://github.com/maplibre/maplibre-gl-js/pull/6521)
+        if (overzoomParameters) {
+            params.request = overzoomParameters.overzoomRequest;
+        }
 
         const perf = (params && params.request && params.request.collectResourceTiming) ?
             new RequestPerformance(params.request) : false;
@@ -107,6 +191,13 @@ export class VectorTileWorkerSource implements WorkerSource {
             delete this.loading[tileUid];
             if (!response) {
                 return null;
+            }
+
+            // if we are seeking a tile deeper than the sources max available canonical tile, get the overzoomed tile
+            if (overzoomParameters) {
+                const overzoomTile = this._getOverzoomTile(params, response.vectorTile);
+                response.rawData = overzoomTile.rawData;
+                response.vectorTile = overzoomTile.vectorTile;
             }
 
             const rawTileData = response.rawData;
@@ -142,6 +233,71 @@ export class VectorTileWorkerSource implements WorkerSource {
             this.loaded[tileUid] = workerTile;
             throw err;
         }
+    }
+
+    private _getOverzoomTile(params: WorkerTileParameters, vectorTile: VectorTile): {vectorTile: VectorTile; rawData: ArrayBufferLike} {
+        const {tileID, source, overzoomParameters} = params;
+        const {maxZoomTileID, maxOverzoom, tileSize} = overzoomParameters;
+
+        const geojsonWrapper: GeoJSONWrapperWithLayers = new GeoJSONWrapperWithLayers();
+        const layerFamilies: Record<string, StyleLayer[][]> = this.layerIndex.familiesBySource[source];
+
+        for (const sourceLayerId in layerFamilies) {
+            const sourceLayer: VectorTileLayer = vectorTile.layers[sourceLayerId];
+            if (!sourceLayer) {
+                continue;
+            }
+
+            // Create and cache the geojsonvt vector tile tree if it does not exist for the overscaled tile
+            const cacheKey = `${maxZoomTileID.key}_${sourceLayerId}_${maxOverzoom}`;
+            let geoJSONIndex: GeoJSONVT = this.overzoomedTilesCache.get(cacheKey);
+            if (!geoJSONIndex) {
+                geoJSONIndex = this._createGeoJSONIndex(sourceLayer, maxZoomTileID, maxOverzoom, tileSize);
+                this.overzoomedTilesCache.set(cacheKey, geoJSONIndex);
+            }
+
+            // Retrieve the overzoom geojson tile from the geojsonvt tile tree
+            const geoJSONTile: GeoJSONVTTile = geoJSONIndex.getTile(tileID.canonical.z, tileID.canonical.x, tileID.canonical.y);
+            if (geoJSONTile?.features.length) {
+                geojsonWrapper.addLayer(geoJSONTile.features, sourceLayerId);
+            }
+        }
+
+        // Encode the geojson-vt tile into binary vector tile form. This is a convenience that allows `FeatureIndex`
+        // to operate the same way across `VectorTileSource` and `GeoJSONSource` data.
+        let pbf: Uint8Array = fromVectorTileJs(geojsonWrapper);
+        if (pbf.byteOffset !== 0 || pbf.byteLength !== pbf.buffer.byteLength) {
+            pbf = new Uint8Array(pbf);  // Compatibility with node Buffer (https://github.com/mapbox/pbf/issues/35)
+        }
+        
+        return {
+            vectorTile: geojsonWrapper,
+            rawData: pbf.buffer
+        };
+    }
+
+    private _createGeoJSONIndex(sourceLayer: VectorTileLayer, maxZoomTileID: CanonicalTileID, maxOverzoom: number, tileSize: number): GeoJSONVT {
+        const geoJSONFeatures: Feature[] = [];
+
+        for (let index = 0; index < sourceLayer.length; index++) {
+            const feature: VectorTileFeature = sourceLayer.feature(index);
+            geoJSONFeatures.push(feature.toGeoJSON(maxZoomTileID.x, maxZoomTileID.y, maxZoomTileID.z));
+        }
+
+        return geojsonvt({
+            type: 'FeatureCollection',
+            features: geoJSONFeatures
+        }, {
+            extent: EXTENT,
+            buffer: this._pixelsToTileUnits(128, tileSize),
+            maxZoom: maxOverzoom,
+            tolerance: 0,           //no simplication for already overscaled tiles
+            indexMaxZoom: 0         //don't pregenerate index - generate tiles on the fly (about 10X faster performance)
+        });
+    }
+
+    private _pixelsToTileUnits(pixelValue: number, tileSize: number): number {
+        return pixelValue * (EXTENT / tileSize);
     }
 
     /**

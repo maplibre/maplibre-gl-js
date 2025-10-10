@@ -19,9 +19,11 @@
         container: 'map',
         style: 'https://tiles.openfreemap.org/styles/bright',
         zoom: 13,
-        center: [-122.447303, 37.753574]
+        center: [-122.447303, 37.753574],
+        hash: true
     });
 
+    map.showTileBoundaries = true;
     map.on('load', () => {
         map.addSource('contours', {
             type: 'vector',
@@ -40,6 +42,21 @@
             'paint': {
                 'line-color': '#ff69b4',
                 'line-width': 1
+            }
+        });
+
+        map.addLayer({
+            'id': 'terrain-labels',
+            'type': 'symbol',
+            'source': 'contours',
+            'source-layer': 'contour',
+            "layout": {
+              "text-field": "{height}",
+              "symbol-placement": "line",
+              "text-font": ["Noto Sans Regular"],
+            },
+            'paint': {
+                'text-color': '#ff69b4',
             }
         });
     });
