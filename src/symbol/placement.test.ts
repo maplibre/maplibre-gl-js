@@ -3,7 +3,7 @@ import {Placement, RetainedQueryData} from './placement';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 import {type EvaluationParameters} from '../style/evaluation_parameters';
-import {CollisionBoxArray, PlacedSymbolArray, SymbolInstanceArray} from '../data/array_types.g';
+import {CollisionBoxArray, SymbolInstanceArray} from '../data/array_types.g';
 import {OverscaledTileID} from '../source/tile_id';
 import {FeatureIndex} from '../data/feature_index';
 

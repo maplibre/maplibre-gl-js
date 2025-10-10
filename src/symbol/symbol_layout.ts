@@ -321,7 +321,7 @@ function addFeature(bucket: SymbolBucket,
         textRepeatDistance = symbolMinDistance / 2;
 
     const iconTextFit = layout.get('icon-text-fit');
-    let verticallyShapedIcon;
+    let verticallyShapedIcon: PositionedIcon | undefined;
     // Adjust shaped icon size when icon-text-fit is used.
     if (shapedIcon && iconTextFit !== 'none') {
         if (bucket.allowVerticalPlacement && shapedTextOrientations.vertical) {
@@ -509,9 +509,9 @@ function addSymbol(bucket: SymbolBucket,
     anchor: Anchor,
     line: Array<Point>,
     shapedTextOrientations: ShapedTextOrientations,
-    shapedIcon: PositionedIcon | void,
+    shapedIcon: PositionedIcon | undefined,
     imageMap: {[_: string]: StyleImage},
-    verticallyShapedIcon: PositionedIcon | void,
+    verticallyShapedIcon: PositionedIcon | undefined,
     layer: SymbolStyleLayer,
     collisionBoxArray: CollisionBoxArray,
     featureIndex: number,
