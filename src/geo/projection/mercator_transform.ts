@@ -107,6 +107,9 @@ export class MercatorTransform implements ITransform {
     setMaxBounds(bounds?: LngLatBounds): void {
         this._helper.setMaxBounds(bounds);
     }
+    setTransformConstrain(constrain?: TransformConstrainFunction | null): void {
+        this._helper.setTransformConstrain(constrain);
+    }
     overrideNearFarZ(nearZ: number, farZ: number): void {
         this._helper.overrideNearFarZ(nearZ, farZ);
     }
@@ -201,6 +204,9 @@ export class MercatorTransform implements ITransform {
     get cameraToCenterDistance(): number { 
         return this._helper.cameraToCenterDistance;
     }
+    get transformConstrain(): TransformConstrainFunction | null {
+        return this._helper.transformConstrain;
+    }
     public get nearZ(): number { 
         return this._helper.nearZ; 
     }
@@ -237,11 +243,10 @@ export class MercatorTransform implements ITransform {
     private _coveringTilesDetailsProvider;
 
     constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean, transformConstrain?: TransformConstrainFunction) {
-        this.getConstrained = transformConstrain ?? this.getConstrained;
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
             getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
-        }, minZoom, maxZoom, minPitch, maxPitch, renderWorldCopies);
+        }, minZoom, maxZoom, minPitch, maxPitch, renderWorldCopies, transformConstrain);
         this._coveringTilesDetailsProvider = new MercatorCoveringTilesDetailsProvider();
     }
 
@@ -446,6 +451,9 @@ export class MercatorTransform implements ITransform {
      * Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
      */
     getConstrained: TransformConstrainFunction = (lngLat, zoom) => {
+        if (this.transformConstrain) {
+            return this.transformConstrain(lngLat, zoom);
+        }
         zoom = clamp(+zoom, this.minZoom, this.maxZoom);
         const result = {
             center: new LngLat(lngLat.lng, lngLat.lat),

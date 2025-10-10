@@ -108,6 +108,9 @@ export class GlobeTransform implements ITransform {
     setMaxBounds(bounds?: LngLatBounds): void {
         this._helper.setMaxBounds(bounds);
     }
+    setTransformConstrain(constrain?: TransformConstrainFunction | null): void {
+        this._helper.setTransformConstrain(constrain);
+    }
     overrideNearFarZ(nearZ: number, farZ: number): void {
         this._helper.overrideNearFarZ(nearZ, farZ);
     }
@@ -202,6 +205,9 @@ export class GlobeTransform implements ITransform {
     get cameraToCenterDistance(): number {
         return this._helper.cameraToCenterDistance;
     }
+    get transformConstrain(): TransformConstrainFunction | null {
+        return this._helper.transformConstrain;
+    }
     public get nearZ(): number { 
         return this._helper.nearZ; 
     }
@@ -247,11 +253,10 @@ export class GlobeTransform implements ITransform {
     private _verticalPerspectiveTransform: VerticalPerspectiveTransform;
 
     public constructor(transformConstrain?: TransformConstrainFunction) {
-        this.getConstrained = transformConstrain ?? this.getConstrained;
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
             getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
-        });
+        }, null, null, null, null, null, transformConstrain);
         this._globeness = 1; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.
         this._mercatorTransform = new MercatorTransform();
         this._verticalPerspectiveTransform = new VerticalPerspectiveTransform();
@@ -394,6 +399,9 @@ export class GlobeTransform implements ITransform {
     }
 
     getConstrained: TransformConstrainFunction = (lngLat, zoom) => {
+        if (this.transformConstrain) {
+            return this.transformConstrain(lngLat, zoom);
+        }
         return this.currentTransform.getConstrained(lngLat, zoom);
     };
 

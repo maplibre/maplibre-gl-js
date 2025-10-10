@@ -123,7 +123,9 @@ export class TransformHelper implements ITransformGetters {
     _farZ: number;
     _autoCalculateNearFarZ: boolean;
 
-    constructor(callbacks: TransformHelperCallbacks, minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
+    _transformConstrain: TransformConstrainFunction | null;
+
+    constructor(callbacks: TransformHelperCallbacks, minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean, transformConstrain?: TransformConstrainFunction) {
         this._callbacks = callbacks;
         this._tileSize = 512; // constant
 
@@ -133,6 +135,8 @@ export class TransformHelper implements ITransformGetters {
 
         this._minPitch = (minPitch === undefined || minPitch === null) ? 0 : minPitch;
         this._maxPitch = (maxPitch === undefined || maxPitch === null) ? 60 : maxPitch;
+
+        this._transformConstrain = transformConstrain;
 
         this.setMaxBounds();
 
@@ -179,6 +183,7 @@ export class TransformHelper implements ITransformGetters {
         this._nearZ = thatI.nearZ;
         this._farZ = thatI.farZ;
         this._autoCalculateNearFarZ = !forceOverrideZ && thatI.autoCalculateNearFarZ;
+        this._transformConstrain = thatI.transformConstrain;
         if (constrain) {
             this._constrain();
         }
@@ -254,6 +259,13 @@ export class TransformHelper implements ITransformGetters {
         }
 
         this._renderWorldCopies = renderWorldCopies;
+    }
+
+    get transformConstrain(): TransformConstrainFunction | null { return this._transformConstrain; }
+    setTransformConstrain(constrain?: TransformConstrainFunction | null) {
+        this._transformConstrain = this.transformConstrain;
+        this._constrain();
+        this._calcMatrices();
     }
 
     get worldSize(): number {
