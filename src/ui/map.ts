@@ -272,6 +272,8 @@ export type MapOptions = {
     transformCameraUpdate?: CameraUpdateTransformFunction | null;
     /**
      * A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
+     * For an example, see https://maplibre.org/maplibre-gl-js/docs/examples/locale-switching/
+     * Alternatively, search the official plugins page for plugins related to localization.
      * @defaultValue null
      */
     locale?: Record<string, string>;
