@@ -580,7 +580,9 @@ const warnOnceHistory: {[key: string]: boolean} = {};
 export function warnOnce(message: string): void {
     if (!warnOnceHistory[message]) {
         // console isn't defined in some WebWorkers, see #2558
-        if (typeof console !== 'undefined') console.warn(message);
+        // use a local reference to console so that minifiers cannot break it
+        const _console = typeof console !== 'undefined' ? console : undefined;
+        _console?.warn(message);
         warnOnceHistory[message] = true;
     }
 }
