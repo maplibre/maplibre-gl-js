@@ -290,9 +290,9 @@ export class VectorTileWorkerSource implements WorkerSource {
         }, {
             extent: EXTENT,
             maxZoom: maxOverzoom,
-            indexMaxZoom: 0,                           //don't pregenerate index - generate tiles on the fly
+            indexMaxZoom: 0,                           //don't pregenerate index - generate tiles on the fly (about 10X faster performance)
             tolerance: 0,                              //no simplication for already overscaled tiles
-            buffer: Math.round(256 / 512 * tileSize),  //fix tile seams (especially when zooming out)
+            buffer: Math.round(256 / 512 * tileSize)   //fix tile seams (especially when zooming out)
         });
     }
 
