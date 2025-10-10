@@ -197,7 +197,7 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     
     const desiredZ = coveringZoomLevel(transform, options);
     const minZoom = options.minzoom || 0;
-    const maxZoom =  options.bypassOverscaling ? transform.maxZoom : options.maxzoom ?? transform.maxZoom;
+    const maxZoom = options.bypassOverscaling ? transform.maxZoom : options.maxzoom ?? transform.maxZoom;
     const nominalZ = Math.min(Math.max(0, desiredZ), maxZoom);
 
     const numTiles = Math.pow(2, nominalZ);
