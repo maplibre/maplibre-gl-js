@@ -7,6 +7,7 @@ import Point from '@mapbox/point-geometry';
 import {EXTENT} from '../data/extent';
 import {type ExpiryData, getArrayBuffer} from '../util/ajax';
 import {WorkerTile} from './worker_tile';
+import {BoundedLRUCache} from './tile_cache';
 import {extend} from '../util/util';
 import {RequestPerformance} from '../util/performance';
 import type {
@@ -118,7 +119,7 @@ export class VectorTileWorkerSource implements WorkerSource {
     fetching: {[_: string]: FetchingState };
     loading: {[_: string]: WorkerTile};
     loaded: {[_: string]: WorkerTile};
-    overzoomedTilesCache: Record<string, GeoJSONVT> = {};
+    overzoomedTilesCache: BoundedLRUCache<string, GeoJSONVT>;
 
     /**
      * @param loadVectorData - Optional method for custom loading of a VectorTile
@@ -133,6 +134,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         this.fetching = {};
         this.loading = {};
         this.loaded = {};
+        this.overzoomedTilesCache = new BoundedLRUCache<string, GeoJSONVT>(1000);
     }
 
     /**
@@ -235,6 +237,8 @@ export class VectorTileWorkerSource implements WorkerSource {
 
     getOverzoomTile(params: WorkerTileParameters, vectorTile: VectorTile): {vectorTile: VectorTile; rawData: ArrayBufferLike} {
         const {tileID, source, overzoomParameters} = params;
+        const {maxZoomTileID, maxOverzoom} = overzoomParameters;
+
         const geojsonWrapper: GeoJSONWrapperWithLayers = new GeoJSONWrapperWithLayers();
         const layerFamilies: Record<string, StyleLayer[][]> = this.layerIndex.familiesBySource[source];
 
@@ -245,11 +249,11 @@ export class VectorTileWorkerSource implements WorkerSource {
             }
 
             // Create and cache the geojsonvt vector tile tree if it does not exist for the overscaled tile
-            const cacheKey = overzoomParameters.maxZoomTileID.key + sourceLayerId;
-            let geoJSONIndex: GeoJSONVT = this.overzoomedTilesCache[cacheKey];
+            const cacheKey = `${maxZoomTileID.key}_${sourceLayerId}_${maxOverzoom}`;
+            let geoJSONIndex: GeoJSONVT = this.overzoomedTilesCache.get(cacheKey);
             if (!geoJSONIndex) {
-                geoJSONIndex = this.createGeoJSONIndex(sourceLayer, overzoomParameters.maxZoomTileID, overzoomParameters.maxOverzoom);
-                this.overzoomedTilesCache[cacheKey] = geoJSONIndex;
+                geoJSONIndex = this.createGeoJSONIndex(sourceLayer, maxZoomTileID, maxOverzoom);
+                this.overzoomedTilesCache.set(cacheKey, geoJSONIndex);
             }
 
             // Retrieve the overzoom geojson tile from the geojsonvt tile tree
