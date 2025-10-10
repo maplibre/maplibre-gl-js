@@ -195,7 +195,7 @@ export class VectorTileWorkerSource implements WorkerSource {
 
             // if we are seeking a tile deeper than the sources max available canonical tile, get the overzoomed tile
             if (overzoomParameters) {
-                const overzoomTile = this.getOverzoomTile(params, response.vectorTile);
+                const overzoomTile = this._getOverzoomTile(params, response.vectorTile);
                 response.rawData = overzoomTile.rawData;
                 response.vectorTile = overzoomTile.vectorTile;
             }
@@ -235,7 +235,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         }
     }
 
-    getOverzoomTile(params: WorkerTileParameters, vectorTile: VectorTile): {vectorTile: VectorTile; rawData: ArrayBufferLike} {
+    private _getOverzoomTile(params: WorkerTileParameters, vectorTile: VectorTile): {vectorTile: VectorTile; rawData: ArrayBufferLike} {
         const {tileID, source, overzoomParameters} = params;
         const {maxZoomTileID, maxOverzoom, tileSize} = overzoomParameters;
 
@@ -252,7 +252,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             const cacheKey = `${maxZoomTileID.key}_${sourceLayerId}_${maxOverzoom}`;
             let geoJSONIndex: GeoJSONVT = this.overzoomedTilesCache.get(cacheKey);
             if (!geoJSONIndex) {
-                geoJSONIndex = this.createGeoJSONIndex(sourceLayer, maxZoomTileID, maxOverzoom, tileSize);
+                geoJSONIndex = this._createGeoJSONIndex(sourceLayer, maxZoomTileID, maxOverzoom, tileSize);
                 this.overzoomedTilesCache.set(cacheKey, geoJSONIndex);
             }
 
@@ -276,7 +276,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         };
     }
 
-    createGeoJSONIndex(sourceLayer: VectorTileLayer, maxZoomTileID: CanonicalTileID, maxOverzoom: number, tileSize: number): GeoJSONVT {
+    private _createGeoJSONIndex(sourceLayer: VectorTileLayer, maxZoomTileID: CanonicalTileID, maxOverzoom: number, tileSize: number): GeoJSONVT {
         const geoJSONFeatures: Feature[] = [];
 
         for (let index = 0; index < sourceLayer.length; index++) {
@@ -289,11 +289,15 @@ export class VectorTileWorkerSource implements WorkerSource {
             features: geoJSONFeatures
         }, {
             extent: EXTENT,
+            buffer: this._pixelsToTileUnits(128, tileSize),
             maxZoom: maxOverzoom,
-            indexMaxZoom: 0,                           //don't pregenerate index - generate tiles on the fly (about 10X faster performance)
-            tolerance: 0,                              //no simplication for already overscaled tiles
-            buffer: Math.round(256 / 512 * tileSize)   //fix tile seams (especially when zooming out)
+            tolerance: 0,           //no simplication for already overscaled tiles
+            indexMaxZoom: 0         //don't pregenerate index - generate tiles on the fly (about 10X faster performance)
         });
+    }
+
+    private _pixelsToTileUnits(pixelValue: number, tileSize: number): number {
+        return pixelValue * (EXTENT / tileSize);
     }
 
     /**
