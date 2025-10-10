@@ -37,6 +37,7 @@ import {EvaluationParameters} from '../../style/evaluation_parameters';
 import {Formatted, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import {rtlWorkerPlugin} from '../../source/rtl_text_plugin_worker';
 import {getOverlapMode} from '../../style/style_layer/overlap_mode';
+import {isSafari} from '../../util/util';
 import type {CanonicalTileID} from '../../source/tile_id';
 import type {
     Bucket,
@@ -362,7 +363,7 @@ export class SymbolBucket implements Bucket {
     constructor(options: BucketParameters<SymbolStyleLayer>) {
         this.collisionBoxArray = options.collisionBoxArray;
         this.zoom = options.zoom;
-        this.overscaling = options.overscaling;
+        this.overscaling = isSafari(globalThis) ? Math.min(options.overscaling, 128) : options.overscaling;
         this.layers = options.layers;
         this.layerIds = this.layers.map(layer => layer.id);
         this.index = options.index;

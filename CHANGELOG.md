@@ -7,6 +7,18 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
+## 5.9.0
+
+### ✨ Features and improvements
+
+- Improve fading - dynamic bi-directional raster cross-fading and self fading ([#6469](https://github.com/maplibre/maplibre-gl-js/pull/6469))
+- Support for usage of line-gradient together with line-dasharray ([#6487](https://github.com/maplibre/maplibre-gl-js/pull/6487))
+
+### 🐞 Bug fixes
+
+- Added `button` role to marker div to fix accessibility issues with the `aria-label` ([#6435](https://github.com/maplibre/maplibre-gl-js/issues/6435))
+- Fix a crash on iOS when there are too many symbols to render ([#6526](https://github.com/maplibre/maplibre-gl-js/issues/6526))
+
 ## 5.8.0
 
 ### ✨ Features and improvements
@@ -17,7 +29,7 @@
 
 ### 🐞 Bug fixes
 
-- Fix raster flickering when using terrain 3D and optimize terrain logic.
+- Fix raster flickering when using terrain 3D and optimize terrain logic. ([#6446](https://github.com/maplibre/maplibre-gl-js/pull/6446))
 - Fix issue where parent tiles are retained when deeper descendant tiles already cover the missing ideal tile. ([#6442](https://github.com/maplibre/maplibre-gl-js/pull/6442))
 - Fix an issue when GeolocateControl fires outofmaxbounds event with trackUserLocation disabled ([#6464](https://github.com/maplibre/maplibre-gl-js/pull/6464))
 - Fix an issue with globe+terrain "zooming" in when dragging towards the poles ([#6470](https://github.com/maplibre/maplibre-gl-js/pull/6470))
