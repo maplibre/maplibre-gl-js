@@ -11,7 +11,7 @@ import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from './tile';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {WorkerTileParameters, WorkerTileResult} from './worker_source';
+import type {WorkerTileParameters, OverzoomParameters, WorkerTileResult} from './worker_source';
 import {MessageType} from '../util/actor_messages';
 
 export type VectorTileSourceOptions = VectorSourceSpecification & {
@@ -190,12 +190,13 @@ export class VectorTileSource extends Evented implements Source {
     }
 
     async loadTile(tile: Tile): Promise<void> {
-        const tileAtMaxZoom = tile.tileID.canonical.z > this.maxzoom
-            ? tile.tileID.scaledTo(this.maxzoom)
-            : tile.tileID;
-        const url = tileAtMaxZoom.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
+        const isTileOverzoomed = tile.tileID.canonical.z > this.maxzoom;
+        const overzoomParameters = isTileOverzoomed ? this._getOverzoomParameters(tile) : null;
+
+        const tileUrl = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
+
         const params: WorkerTileParameters = {
-            request: this.map._requestManager.transformRequest(url, ResourceType.Tile),
+            request: this.map._requestManager.transformRequest(tileUrl, ResourceType.Tile),
             uid: tile.uid,
             tileID: tile.tileID,
             zoom: tile.tileID.overscaledZ,
@@ -206,7 +207,7 @@ export class VectorTileSource extends Evented implements Source {
             showCollisionBoxes: this.map.showCollisionBoxes,
             promoteId: this.promoteId,
             subdivisionGranularity: this.map.style.projection.subdivisionGranularity,
-            sourceMaxZoom: this.maxzoom
+            ...isTileOverzoomed ? {overzoomParameters} : {}
         };
         params.request.collectResourceTiming = this._collectResourceTiming;
         let messageType: MessageType.loadTile | MessageType.reloadTile = MessageType.reloadTile;
@@ -238,6 +239,19 @@ export class VectorTileSource extends Evented implements Source {
             }
             this._afterTileLoadWorkerResponse(tile, null);
         }
+    }
+
+    /**
+     * When the requested tile has a higher canonical Z than source maxzoom, pass overzoom parameters so worker can load the
+     * deepest tile at source max zoom to generate sub tiles using geojsonvt for highest performance on vector overscaling
+     */
+    private _getOverzoomParameters(tile: Tile): OverzoomParameters {
+        const maxZoomTileID = tile.tileID.scaledTo(this.maxzoom).canonical;
+        const maxZoomTileUrl = maxZoomTileID.url(this.tiles, this.map.getPixelRatio(), this.scheme);
+        const overzoomRequest = this.map._requestManager.transformRequest(maxZoomTileUrl, ResourceType.Tile);
+        const maxOverzoom = this.map.getMaxZoom();
+
+        return {overzoomRequest, maxZoomTileID, maxOverzoom};
     }
 
     private _afterTileLoadWorkerResponse(tile: Tile, data: WorkerTileResult) {

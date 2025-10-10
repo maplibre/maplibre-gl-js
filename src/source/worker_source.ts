@@ -2,7 +2,7 @@ import type {ExpiryData, RequestParameters} from '../util/ajax';
 import type {RGBAImage, AlphaImage} from '../util/image';
 import type {GlyphPositions} from '../render/glyph_atlas';
 import type {ImageAtlas} from '../render/image_atlas';
-import type {OverscaledTileID} from './tile_id';
+import type {CanonicalTileID, OverscaledTileID} from './tile_id';
 import type {Bucket} from '../data/bucket';
 import type {FeatureIndex} from '../data/feature_index';
 import type {CollisionBoxArray} from '../data/array_types.g';
@@ -40,7 +40,13 @@ export type WorkerTileParameters = TileParameters & {
     collectResourceTiming?: boolean;
     returnDependencies?: boolean;
     subdivisionGranularity: SubdivisionGranularitySetting;
-    sourceMaxZoom?: number;
+    overzoomParameters?: OverzoomParameters;
+};
+
+export type OverzoomParameters = {
+    overzoomRequest: RequestParameters;
+    maxZoomTileID: CanonicalTileID;
+    maxOverzoom: number;
 };
 
 /**
