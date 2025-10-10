@@ -15,7 +15,7 @@ maplibre-tile-spec
 |  |  |  |-omt \
 |  |  |  |  |-mlt \
 |  |  |  |  |  |-plain
-3. navigate to ./java and follow the instructions in the README → **currently not recomended due to changes to the tile metadata that is not yet supported. example tiles are available in malpibre-gl-js/example_tiles**
+3. navigate to ./java and follow the instructions in the README → **currently not recomended due to changes to the tile metadata that is not yet supported. example tiles are available in [MLT-demotiles](https://github.com/Salkin975/demotiles-mlt)**
     - a guide on how to get and crop mbtiles is here [Create custom map extract](https://openmaptiles.org/docs/generate/create-custom-extract), or download tiles here [maptiler](https://www.maptiler.com/on-prem-datasets/planet/)
     - following commands can be used to create tiles
     - it is recommended to directly generate the tiles in the correct directory:
