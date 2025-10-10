@@ -307,7 +307,7 @@ export class HandlerManager {
             map.keyboard.enable();
         }
 
-        this._add('blockableMapEvent', new BlockableMapEventHandler(map));
+        this._add('blockableMapEvent', new BlockableMapEventHandler(map), ['scrollZoom']);
     }
 
     _add(handlerName: string, handler: Handler, allowed?: Array<string>) {
