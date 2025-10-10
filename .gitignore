@@ -3,7 +3,6 @@
 /dist/
 /dist_type/
 /test/bench/results/
-/docs/assets/examples/*.webp
 /docs/API
 /docs/examples
 /docs/example

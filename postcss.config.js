@@ -5,8 +5,26 @@ const config = {
     plugins: [
         autoprefixer(),
         postcssInlineSvg(),
-        cssnanoPlugin()
-    ]
+        cssnanoPlugin({
+            preset: [
+                'default',
+                {
+                    svgo: {
+                        plugins: [
+                            {
+                                name: 'preset-default',
+                                params: {
+                                    overrides: {
+                                        removeViewBox: false,
+                                    },
+                                },
+                            },
+                        ],
+                    },
+                },
+            ],
+        }),
+    ],
 };
 
 export default config;

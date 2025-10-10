@@ -4,18 +4,9 @@ This directory contains the source for the [MapLibre GL JS docs](https://maplibr
 
 Besides this README, each other `.md` file in this directory corresponds to a site page. Each is converted into an `.html` file by [MkDocs](https://www.mkdocs.org/).
 
-> [!NOTE]
-> To run the docs, you need to ensure Docker is installed and you have permission to run `docker` commands without `sudo`, as explained [here in the Docker docs](https://docs.docker.com/engine/install/linux-postinstall/).
-
 ## Running the Documentation Server Locally
 
-To start a documentation server locally, first, install the dependencies:
-
-```bash
-npm install
-```
-
-Then ensure that you have an up-to-date build:
+To start a documentation server locally, first, ensure that you have an up-to-date build:
 
 ```bash
 npm run build-prod
@@ -34,7 +25,7 @@ Finally, run:
 npm run start-docs
 ```
 
-Navigate to [http://0.0.0.0:8000/](http://0.0.0.0:8000/) to view the docs. After making changes, run `npm run generate-docs` again to apply them.
+Navigate to [http://0.0.0.0:8000/](http://0.0.0.0:8000/) to view the docs. After making changes, run `npm run generate-docs` again to apply them. Some tile service providers of the docs example pages such as MapTiler or Stadia Maps might only send you tiles if the host is localhost. In that case, try http://localhost:8000.
 
 The examples section of the locally run documentation will use the GL JS version released that has the same version as the in the package.json.
 
@@ -57,7 +48,7 @@ API documentation is written as [TSDoc comments](https://tsdoc.org/) and process
 * Member descriptions should document what a member represents or gets and sets. They should also indicate whether the member is read-only.
 * Event descriptions should begin with "Fired when..." and so should describe when the event fires. Event entries should clearly document any data passed to the handler, with a link to MDN documentation of native Event objects when applicable.
 * Lists need an empty line above to be formatted as HTML list.
-* All documentation is spellchecked with [cSpell](https://cspell.org/) as part of the linting process via a [GitHub Action](https://github.com/marketplace/actions/cspell-action). We recommend using the VS Code extension to catch any misspellings before making your PR. You can run `npx cspell "docs/**/*.html" "docs/**/*.md"` from the CLI to check all files. If there's a false-positive (a technical term which isn't in the default dictionary) you can add it to the `.spell.json` file's words array in the root.
+* All documentation is spellchecked with [cSpell](https://cspell.org/) as part of the linting process via a [GitHub Action](https://github.com/marketplace/actions/cspell-action). We recommend using the VS Code extension to catch any misspellings before making your PR. You can run `npx cspell "docs/**/*.html" "docs/**/*.md"` from the CLI to check all files. If there's a false-postitive (a technical term which isn't in the default dictionary) you can add it to the `.spell.json` file's words array in the root.
 
 ## Writing Examples
 

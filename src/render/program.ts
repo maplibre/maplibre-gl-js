@@ -254,7 +254,8 @@ export class Program<Us extends UniformBindings> {
                 drawMode,
                 segment.primitiveLength * primitiveSize,
                 gl.UNSIGNED_SHORT,
-                segment.primitiveOffset * primitiveSize * 2);
+                segment.primitiveOffset * primitiveSize * 2
+            );
         }
     }
 }

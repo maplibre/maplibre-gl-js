@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Display a map</title>
+    <meta property="og:description" content="Initialize a map in an HTML element with MapLibre GL JS." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <!--<script src='https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.js'></script>-->
+    <!--<script src='../../dist/maplibre-gl.js'></script>-->
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<!--<button onclick="">Change vector tiles format</button>-->
+<div id="map"></div>
+<script>
+    const useMvt = false;
+
+    const animationOptions = {
+        duration: 65_000,
+        essential: true,
+        //center: [9.986863499904487, 53.555603571305475], // Hamburg
+        //center: [11.574982163755266, 48.13935981426044], //Munich
+        //center: [15.975940574286094, 45.80619943019115], //Zagreb
+        // center: [8.807197429408136, 53.07538616090757], //Bremen
+        //zoom: 16.4,
+        zoom: 5,
+        //speed: 0.10,
+    };
+    const animationOptions2 = {
+        duration: 20_000,
+        essential: true,
+        center: [11.565188122555286, 48.13980160328512, ], //Stachus Munich
+        //zoom: 16.4,
+        zoom: 5,
+        //speed: 0.10,
+    };
+
+    if(!useMvt){
+        const map = new maplibregl.Map({
+            container: 'map',
+            //style: 'http://192.168.2.141:8081/omt/style.json',
+            //style: 'http://192.168.2.141:8081/omt/style_debug.json',
+            //style: 'http://192.168.2.141:8081/omt/style_line_polygon.json',
+            //style: 'http://192.168.2.141:8081/omt/style_polygon.json',
+            //style: 'http://192.168.2.141:8081/omt/style_polygon_subset.json',
+            //style: 'http://192.168.2.141:8081/omt/style_line.json',
+            //style: 'http://192.168.2.141:8081/omt/style_line_transportation_boundary.json',
+            //style: 'http://localhost:8081/omt/style_line_transportation_boundary_building.json',
+            //style: 'http://localhost:8081/omt/style_unoptimized.json',
+            //style: 'http://localhost:8081/omt/style_unoptimized_gzip.json',
+            //style: 'http://localhost:8081/omt/style.json',
+            //style: 'http://localhost:8081/omt/style_unoptimized_gzip.json',
+            //style: 'http://localhost:8081/omt/style_full.json',
+            //style: 'http://localhost:8081/omt/style_optimized_gzip.json',
+            //style: 'http://localhost:8081/omt/style_optimized_gzip_omt_basic.json',
+            //style: 'http://localhost:8081/omt/style_unoptimized_gzip_omt_basic.json',
+            //style: 'http://localhost:8081/omt/style_optimized_gzip_omt_basic.json',
+            style: 'http://localhost:8081/omt/style_unoptimized_gzip_omt_basic_test.json',
+            center: [11.574982163755266, 48.13935981426044],
+            zoom: 0,
+            //zoom: 14,
+            //zoom: 13,
+            maplibreLogo: true,
+            maxTileCacheSize: 1000,
+            maxTileCacheZoomLevels: 10
+        });
+
+        map.addControl(new maplibregl.NavigationControl());
+    }
+    else{
+        const map = new maplibregl.Map({
+            container: 'map',
+            //style: 'http://192.168.2.141:8081/mvt/style_line_polygon_mvt.json',
+            //style: 'http://192.168.2.141:8081/mvt/style_polygon_mvt.json',
+            //style: 'http://192.168.2.141:8081/mvt/style_debug_mvt.json',
+            //style: 'http://192.168.2.141:8081/mvt/style_polygon_subset_mvt.json',
+            //style: 'http://192.168.2.141:8081/mvt/style_line_transportation_boundary_mvt.json',
+            //style: 'http://192.168.2.141:8081/mvt/style_polygon_subset_mvt.json',
+            //style: 'http://localhost:8081/mvt/style_line_transportation_boundary_building_mvt.json',
+            //style: 'http://localhost:8081/mvt/style.json',
+            //style: 'http://localhost:8081/mvt/style_unoptimized_gzip.json',
+            //style: 'http://localhost:8081/mvt/style.json',
+            //style: 'http://localhost:8081/mvt/style_optimized_gzip.json',
+            //style: 'http://localhost:8081/mvt/style_optimized_gzip_omt_basic.json',
+            //style: 'http://localhost:8081/mvt/style_optimized_gzip_omt_basic.json',
+            style: 'http://localhost:8081/mvt/style_unoptimized_gzip_omt_basic_test.json',
+            center: [11.574982163755266, 48.13935981426044],
+            zoom: 0,
+            //zoom: 14,
+            maplibreLogo: true
+        });
+
+
+        map.on('load', () => {
+            map.flyTo(animationOptions);
+            setTimeout(() => {
+                map.flyTo(animationOptions2);
+            }, animationOptions.duration + 5_000);
+        });
+    }
+</script>
+</body>
+
+</html>

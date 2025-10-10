@@ -28,6 +28,7 @@ import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 import {type CircleGranularity} from '../../render/subdivision_granularity_settings';
+import { FeatureTable } from "@maplibre/mlt";
 
 const VERTEX_MIN_VALUE = -32768; // -(2^15)
 
@@ -79,6 +80,14 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
         this.segments = new SegmentVector();
         this.programConfigurations = new ProgramConfigurationSet(options.layers, options.zoom);
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
+    }
+
+    updateColumnar(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: { [_: string]: ImagePosition; }): void {
+        throw new Error("Method not implemented.");
+    }
+
+    populateColumnar(table: FeatureTable, options: Omit<PopulateParameters, "dashDependencies" | "subdivisionGranularity">, canonical: CanonicalTileID): void {
+        console.info("tried to instanciate columnar bucket in non columnar bucket");
     }
 
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
@@ -232,7 +241,10 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
             }
         }
 
-        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {imagePositions: {}, canonical});
+        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {
+            imagePositions: {},
+            canonical
+        });
     }
 }
 

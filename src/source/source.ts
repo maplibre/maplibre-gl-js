@@ -7,13 +7,14 @@ import {ImageSource} from '../source/image_source';
 import {CanvasSource} from '../source/canvas_source';
 import {type Dispatcher} from '../util/dispatcher';
 
-import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {SourceSpecification, VectorSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Event, Evented} from '../util/evented';
 import type {Map} from '../ui/map';
 import type {Tile} from './tile';
 import type {OverscaledTileID, CanonicalTileID} from './tile_id';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
 import {type CalculateTileZoomFunction} from '../geo/projection/covering_tiles';
+import {MltSource} from "./mlt/mlt_source";
 
 const registeredSources = {} as {[key:string]: SourceClass};
 
@@ -143,7 +144,7 @@ export type SourceClass = {
  */
 export const create = (id: string, specification: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented): Source => {
 
-    const Class = getSourceType(specification.type);
+    const Class = getSourceType(specification.type, specification as SourceSpecification);
     const source = new Class(id, specification, dispatcher, eventedParent);
 
     if (source.id !== id) {
@@ -153,7 +154,7 @@ export const create = (id: string, specification: SourceSpecification | CanvasSo
     return source;
 };
 
-const getSourceType = (name: string): SourceClass => {
+const getSourceType = (name: string, spec?:SourceSpecification): SourceClass => {
     switch (name) {
         case 'geojson':
             return GeoJSONSource;
@@ -164,6 +165,9 @@ const getSourceType = (name: string): SourceClass => {
         case 'raster-dem':
             return RasterDEMTileSource;
         case 'vector':
+            if((spec as VectorSourceSpecification | undefined).encoding === 'mlt'){
+                return MltSource;
+            }
             return VectorTileSource;
         case 'video':
             return VideoSource;

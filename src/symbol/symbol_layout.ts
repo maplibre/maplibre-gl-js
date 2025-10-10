@@ -253,7 +253,8 @@ export function performSymbolLayout(args: {
         const shapedText = getDefaultHorizontalShaping(shapedTextOrientations.horizontal) || shapedTextOrientations.vertical;
         args.bucket.iconsInText = shapedText ? shapedText.iconsInText : false;
         if (shapedText || shapedIcon) {
-            addFeature(args.bucket, feature, shapedTextOrientations, shapedIcon, args.imageMap, sizes, layoutTextSize, layoutIconSize, textOffset, isSDFIcon, args.canonical, args.subdivisionGranularity);
+            addFeature(args.bucket, feature, shapedTextOrientations, shapedIcon, args.imageMap, sizes, layoutTextSize,
+                layoutIconSize, textOffset, isSDFIcon, args.canonical, args.subdivisionGranularity);
         }
     }
 
@@ -333,9 +334,17 @@ function addFeature(bucket: SymbolBucket,
                 layout.get('icon-text-fit-padding'), iconOffset, fontScale);
         }
     }
+    let granularity = 1;
 
-    const granularity = (canonical) ? subdivisionGranularity.line.getGranularityForZoomLevel(canonical.z) : 1;
-
+    if (canonical) {
+        const line = subdivisionGranularity && subdivisionGranularity.line;
+        if (line && typeof line.getGranularityForZoomLevel === 'function') {
+            const val = line.getGranularityForZoomLevel(canonical.z);
+            if (val != null) {
+                granularity = val;
+            }
+        }
+    }
     const addSymbolAtAnchor = (line, anchor) => {
         if (anchor.x < 0 || anchor.x >= EXTENT || anchor.y < 0 || anchor.y >= EXTENT) {
             // Symbol layers are drawn across tile boundaries, We filter out symbols

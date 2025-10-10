@@ -146,8 +146,10 @@ class CrossFadedConstantBinder implements UniformBinder {
 
     constructor(value: unknown, names: Array<string>) {
         this.uniformNames = names.map(name => `u_${name}`);
-        this.patternFrom = null;
-        this.patternTo = null;
+        this.patternFrom = [0, 0, 0, 0];
+        this.patternTo   = [0, 0, 0, 0];
+        this.dashFrom    = [0, 0, 0, 0];
+        this.dashTo      = [0, 0, 0, 0];
         this.pixelRatioFrom = 1.0;
         this.pixelRatioTo = 1.0;
     }

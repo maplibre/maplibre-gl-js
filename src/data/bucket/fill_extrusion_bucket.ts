@@ -33,6 +33,7 @@ import type {ImagePosition} from '../../render/image_atlas';
 import {subdividePolygon, subdivideVertexLine} from '../../render/subdivision';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import {fillLargeMeshArrays} from '../../render/fill_large_mesh_arrays';
+import { FeatureTable } from "@maplibre/mlt";
 
 const FACTOR = Math.pow(2, 13);
 
@@ -96,6 +97,14 @@ export class FillExtrusionBucket implements Bucket {
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
     }
 
+    updateColumnar(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: { [_: string]: ImagePosition; }): void {
+        throw new Error("Method not implemented.");
+    }
+
+    populateColumnar(table: FeatureTable, options: Omit<PopulateParameters, "dashDependencies" | "subdivisionGranularity">, canonical: CanonicalTileID): void {
+        console.info("tried to instanciate columnar bucket in non columnar bucket");
+    }
+
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
         this.features = [];
         this.hasDependencies = hasPattern('fill-extrusion', this.layers, options);
@@ -119,7 +128,7 @@ export class FillExtrusionBucket implements Bucket {
             if (this.hasDependencies) {
                 this.features.push(addPatternDependencies('fill-extrusion', this.layers, bucketFeature, {zoom: this.zoom}, options));
             } else {
-                this.addFeature(bucketFeature, bucketFeature.geometry, index, canonical, {}, options.subdivisionGranularity);
+                this.addFeature(bucketFeature, bucketFeature.geometry, index, canonical, {}, options.subdivisionGranularity as SubdivisionGranularitySetting);
             }
 
             options.featureIndex.insert(feature, bucketFeature.geometry, index, sourceLayerIndex, this.index, true);
@@ -187,7 +196,10 @@ export class FillExtrusionBucket implements Bucket {
             }
         }
 
-        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {imagePositions, canonical});
+        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {
+            imagePositions,
+            canonical
+        });
     }
 
     private processPolygon(

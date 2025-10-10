@@ -1,0 +1,141 @@
+œ
+boundary
+id" 
+geometry* 
+admin:level" 
+disputed" 
+maritime" 
+class" 	c
+name*Y 2
+default	2
+
+de	2
+
+en	2
+int	2
+latin	2
+nonlatin	
+
+claimed:by" 	
+disputed:name" 	
+adm0:l" 	
+adm0:r" 	°
+
+water_name
+id" 
+geometry* 
+class" 	
+intermittent" c
+name*Y 2
+default	2
+
+de	2
+
+en	2
+int	2
+latin	2
+nonlatin	F
+	landcover
+id" 
+geometry* 
+class" 	
+subclass" 	Ä
+place
+id" 
+geometry* 
+class" 	
+rank" 
+iso:a2" 	c
+name*Y 2
+default	2
+
+de	2
+
+en	2
+int	2
+latin	2
+nonlatin	
+capital" F
+water
+id" 
+geometry* 
+class" 	
+intermittent" ˜
+waterway
+id" 
+geometry* 
+class" 	c
+name*Y 2
+default	2
+
+de	2
+
+en	2
+int	2
+latin	2
+nonlatin	¢
+park
+id" 
+geometry* 
+class" 	
+rank" c
+name*Y 2
+default	2
+
+de	2
+
+en	2
+int	2
+latin	2
+nonlatin	j
+transportation
+id" 
+geometry* 
+class" 	
+network" 	
+brunnel" 	
+layer" 2
+landuse
+id" 
+geometry* 
+class" 	ä
+transportation_name
+id" 
+geometry* 
+class" 	
+network" 	
+ref" 	
+
+ref:length" 
+route:1:network" 	
+route:1:ref" 	c
+name*Y 2
+default	2
+
+de	2
+
+en	2
+int	2
+latin	2
+nonlatin	
+route:1:name" 	
+route:2:name" 	
+route:2:network" 	
+route:2:ref" 	
+route:3:name" 	
+route:3:network" 	
+route:3:ref" 	
+route:4:name" 	
+route:4:network" 	
+route:5:name" 	
+route:5:network" 	
+route:6:name" 	
+route:6:network" 	
+route:4:ref" 	
+route:7:name" 	
+route:7:network" 	
+route:5:ref" 	
+route:1:colour" 	
+route:2:colour" 	
+route:3:colour" 	
+route:6:ref" 	

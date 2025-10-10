@@ -1,6 +1,6 @@
 {
     "$schema": "https://typedoc.org/schema.json",
-    "plugin": ["typedoc-plugin-markdown"],
+    "plugin": ["typedoc-plugin-missing-exports", "typedoc-plugin-markdown"],
     "groupOrder": [
         "Main",
         "Markers and Controls",
@@ -12,9 +12,11 @@
     "out": "./docs/API",
     "excludeExternals": true,
     "excludeInternal": true,
+    "placeInternalsInOwningModule": true,
     "excludeNotDocumented": true,
     "treatWarningsAsErrors": true,
     "entryPoints": ["./src/index.ts"],
+    "intentionallyNotExported": ["CollisionBoxArray"],
     "navigation": {
         "includeCategories": false,
         "includeGroups": true
@@ -27,12 +29,5 @@
     "parametersFormat": "table",
     "textContentMappings": {
         "title.memberPage": "{name}"
-    },
-    "externalSymbolLinkMappings": {
-        "@maplibre/maplibre-gl-style-spec": {
-            "ProjectionSpecification": "https://maplibre.org/maplibre-style-spec/projection/",
-            "LayerSpecification": "https://maplibre.org/maplibre-style-spec/layers/",
-            "SourceSpecification": "https://maplibre.org/maplibre-style-spec/sources/"
-        }
     }
   }

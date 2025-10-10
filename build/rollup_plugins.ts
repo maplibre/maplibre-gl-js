@@ -20,7 +20,7 @@ export const nodeResolve = resolve({
     preferBuiltins: false
 });
 
-export const plugins = (production: boolean): Plugin[] => [
+export const plugins = (production: boolean, minified: boolean): Plugin[] => [
     json(),
     // https://github.com/zaach/jison/issues/351
     replace({

@@ -31,6 +31,7 @@ export function hasPattern(type: string, layers: PatternStyleLayers, options: Po
     return hasPattern;
 }
 
+
 export function addPatternDependencies(type: string, layers: PatternStyleLayers, patternFeature: BucketFeature, parameters: { zoom: number }, options: PopulateParameters) {
     const {zoom} = parameters;
     const patterns = options.patternDependencies;

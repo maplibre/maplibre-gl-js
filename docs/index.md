@@ -4,16 +4,16 @@ MapLibre GL JS is a TypeScript library that uses WebGL to render interactive map
 
 ## Quickstart
 
-<iframe src="./examples/display-a-globe-with-a-vector-map.html" width="100%" height="400px" style="border:none"></iframe>
+<iframe src="./examples/simple-map.html" width="100%" height="400px" style="border:none"></iframe>
 
 ```html
 <div id="map"></div>
 <script>
     var map = new maplibregl.Map({
         container: 'map', // container id
-        style: 'https://demotiles.maplibre.org/globe.json', // style URL
+        style: 'https://demotiles.maplibre.org/style.json', // style URL
         center: [0, 0], // starting position [lng, lat]
-        zoom: 2 // starting zoom
+        zoom: 1 // starting zoom
     });
 </script>
 ```
@@ -36,9 +36,9 @@ Each section describes classes or objects as well as their **properties**, **par
 
 In the examples, we use vector tiles from our [Demo tiles repository](https://github.com/maplibre/demotiles) and from [MapTiler](https://maptiler.com). Get your own API key if you want to use MapTiler data in your project.
 
-## npm
+## NPM
 
-Install the MapLibre GL JS package via [npm](https://www.npmjs.com/package/maplibre-gl).
+Install the MapLibre GL JS package via NPM.
 
 ```bash
 npm install maplibre-gl
@@ -56,7 +56,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 
 const map = new maplibregl.Map({
     container: 'map', // container id
-    style: 'https://demotiles.maplibre.org/globe.json', // style URL
+    style: 'https://demotiles.maplibre.org/style.json', // style URL
     center: [0, 0], // starting position [lng, lat]
     zoom: 1 // starting zoom
 });
@@ -91,9 +91,12 @@ Note too that if the CSS isn't available by the first render, as soon as the CSS
 
 ## CDN
 
-MapLibre GL JS is also distributed via UNPKG. Our latest version can installed by adding below tags this in the html `<head>`. Further instructions on how to select specific versions and semver ranges can be found on at [unpkg.com](https://unpkg.com).
+The MapLibre GL JS (`.js` & `.css`) are distributed via [UNPKG.com](https://unpkg.com).
+You can view a listing of all the files in the MapLibre GL JS package by appending a `/` at the end of the MapLibre slug. This is useful to review other revisions or to review the files at UNPKG or the LICENSE. See examples in the following table:
 
-```html
-<script src="https://unpkg.com/maplibre-gl@^5.6.2/dist/maplibre-gl.js"></script>
-<link href="https://unpkg.com/maplibre-gl@^5.6.2/dist/maplibre-gl.css" rel="stylesheet" />
-```
+### Examples
+
+| Use Case  | `.js` | `.css` |
+| :------- | :---: | :----: |
+| `latest` | <https://unpkg.com/maplibre-gl/dist/maplibre-gl.js> | <https://unpkg.com/maplibre-gl/dist/maplibre-gl.css> |
+| Use at least `2.4.x` | <https://unpkg.com/maplibre-gl@^2.4/dist/maplibre-gl.js> | <https://unpkg.com/maplibre-gl@^2.4/dist/maplibre-gl.css> |

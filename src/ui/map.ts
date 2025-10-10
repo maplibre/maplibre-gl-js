@@ -207,7 +207,7 @@ export type MapOptions = {
      */
     trackResize?: boolean;
     /**
-     * The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` 
+     * The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]`
      * !!! note
      *     MapLibre GL JS uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
      * @defaultValue [0, 0]
@@ -600,9 +600,9 @@ export class Map extends Camera {
         PerformanceUtils.mark(PerformanceMarkers.create);
 
         const resolvedOptions = {...defaultOptions, ...options, canvasContextAttributes: {
-            ...defaultOptions.canvasContextAttributes,
-            ...options.canvasContextAttributes
-        }} as CompleteMapOptions;
+                ...defaultOptions.canvasContextAttributes,
+                ...options.canvasContextAttributes
+            }} as CompleteMapOptions;
 
         if (resolvedOptions.minZoom != null && resolvedOptions.maxZoom != null && resolvedOptions.minZoom > resolvedOptions.maxZoom) {
             throw new Error('maxZoom must be greater than or equal to minZoom');
@@ -795,7 +795,7 @@ export class Map extends Camera {
      * Returns the global map state
      *
      * @returns The map state object.
-    */
+     */
     getGlobalState(): Record<string, any> {
         return this.style.getGlobalState();
     }
@@ -886,17 +886,17 @@ export class Map extends Camera {
     }
 
     /**
-    * Returns an array of `OverscaledTileID` objects that cover the current viewport for a given tile size.
-    * This method is useful for determining which tiles are visible in the current viewport.
-    *
-    * @param options - Options for calculating the covering tiles.
-    * @returns An array of `OverscaledTileID` objects.
-    * @example
-    * ```ts
-    * // Get the tiles to cover the view for a 512x512px tile source
-    * const tiles = map.coveringTiles({tileSize: 512});
-    * ```
-    */
+     * Returns an array of `OverscaledTileID` objects that cover the current viewport for a given tile size.
+     * This method is useful for determining which tiles are visible in the current viewport.
+     *
+     * @param options - Options for calculating the covering tiles.
+     * @returns An array of `OverscaledTileID` objects.
+     * @example
+     * ```ts
+     * // Get the tiles to cover the view for a 512x512px tile source
+     * const tiles = map.coveringTiles({tileSize: 512});
+     * ```
+     */
     coveringTiles(options: CoveringTilesOptions): OverscaledTileID[] {
         return coveringTiles(this.transform, options);
     }
@@ -2314,12 +2314,12 @@ export class Map extends Camera {
      * @see Use `ImageData`: [Add a generated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-generated-icon-to-the-map/)
      */
     addImage(id: string,
-        image: HTMLImageElement | ImageBitmap | ImageData | {
-            width: number;
-            height: number;
-            data: Uint8Array | Uint8ClampedArray;
-        } | StyleImageInterface,
-        options: Partial<StyleImageMetadata> = {}): this {
+             image: HTMLImageElement | ImageBitmap | ImageData | {
+                 width: number;
+                 height: number;
+                 data: Uint8Array | Uint8ClampedArray;
+             } | StyleImageInterface,
+             options: Partial<StyleImageMetadata> = {}): this {
         const {
             pixelRatio = 1,
             sdf = false,
@@ -2384,11 +2384,11 @@ export class Map extends Camera {
      * ```
      */
     updateImage(id: string,
-        image: HTMLImageElement | ImageBitmap | ImageData | {
-            width: number;
-            height: number;
-            data: Uint8Array | Uint8ClampedArray;
-        } | StyleImageInterface): this {
+                image: HTMLImageElement | ImageBitmap | ImageData | {
+                    width: number;
+                    height: number;
+                    data: Uint8Array | Uint8ClampedArray;
+                } | StyleImageInterface): this {
 
         const existingImage = this.style.getImage(id);
         if (!existingImage) {

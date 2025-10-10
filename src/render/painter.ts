@@ -54,7 +54,7 @@ import {isSymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 import {isCircleStyleLayer} from '../style/style_layer/circle_style_layer';
 import {isHeatmapStyleLayer} from '../style/style_layer/heatmap_style_layer';
 import {isLineStyleLayer} from '../style/style_layer/line_style_layer';
-import {isFillStyleLayer} from '../style/style_layer/fill_style_layer';
+import {FillStyleLayer, isFillStyleLayer} from '../style/style_layer/fill_style_layer';
 import {isFillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer';
 import {isHillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
 import {isColorReliefStyleLayer} from '../style/style_layer/color_relief_style_layer';

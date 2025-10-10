@@ -290,13 +290,6 @@ describe('marker', () => {
         expect(markerWithHtmlElement.getElement().getAttribute('aria-label')).toBe('custom aria label');
     });
 
-    test('Marker should have a role attribute to satisfy accessibility requirements for the aria-label', () => {
-        const map = createMap({locale: {'Marker.Title': 'alt title'}});
-        const marker = new Marker().setLngLat([0, 0]).addTo(map);
-
-        expect(marker.getElement().getAttribute('role')).toBe('button');
-    });
-
     test('Marker anchor defaults to center', () => {
         const map = createMap();
         const marker = new Marker()

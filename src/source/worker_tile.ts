@@ -189,7 +189,7 @@ export class WorkerTile {
                 });
             } else if (bucket.hasDependencies && (bucket instanceof FillBucket || bucket instanceof FillExtrusionBucket || bucket instanceof LineBucket)) {
                 recalculateLayers(bucket.layers, this.zoom, availableImages);
-                bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions, dashPositions);
+                bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions);
             }
         }
 

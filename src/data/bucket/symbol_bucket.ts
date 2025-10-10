@@ -34,7 +34,7 @@ import {getSizeData, MAX_PACKED_SIZE} from '../../symbol/symbol_size';
 
 import {register} from '../../util/web_worker_transfer';
 import {EvaluationParameters} from '../../style/evaluation_parameters';
-import {Formatted, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
+import {Feature, Formatted, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import {rtlWorkerPlugin} from '../../source/rtl_text_plugin_worker';
 import {getOverlapMode} from '../../style/style_layer/overlap_mode';
 import type {CanonicalTileID} from '../../source/tile_id';
@@ -55,6 +55,7 @@ import type {SizeData} from '../../symbol/symbol_size';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
+import { FeatureTable } from "@maplibre/mlt";
 
 export type SingleCollisionBox = {
     x1: number;
@@ -244,12 +245,12 @@ class CollisionBuffers {
     collisionVertexBuffer: VertexBuffer;
 
     constructor(LayoutArray: {
-        new (...args: any): StructArray;
-    },
-    layoutAttributes: Array<StructArrayMember>,
-    IndexArray: {
-        new (...args: any): TriangleIndexArray | LineIndexArray;
-    }) {
+                    new(...args: any): StructArray;
+                },
+                layoutAttributes: Array<StructArrayMember>,
+                IndexArray: {
+                    new(...args: any): TriangleIndexArray | LineIndexArray;
+                }) {
         this.layoutVertexArray = new LayoutArray();
         this.layoutAttributes = layoutAttributes;
         this.indexArray = new IndexArray();
@@ -337,7 +338,7 @@ export class SymbolBucket implements Bucket {
     sortKeyRanges: Array<SortKeyRange>;
     pixelRatio: number;
     tilePixelRatio: number;
-    compareText: {[_: string]: Array<Point>};
+    compareText: { [_: string]: Array<Point> };
     fadeStartTime: number;
     sortFeaturesByKey: boolean;
     sortFeaturesByY: boolean;
@@ -401,6 +402,14 @@ export class SymbolBucket implements Bucket {
         this.sourceID = options.sourceID;
     }
 
+    updateColumnar(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: { [_: string]: ImagePosition; }): void {
+        throw new Error("Method not implemented.");
+    }
+
+    populateColumnar(table: FeatureTable, options: Omit<PopulateParameters, "dashDependencies" | "subdivisionGranularity">, canonical: CanonicalTileID): void {
+        console.log("tried to instanciate columnar bucket in non columnar bucket");
+    }
+
     createArrays() {
         this.text = new SymbolBuffers(new ProgramConfigurationSet(this.layers, this.zoom, property => /^text/.test(property)));
         this.icon = new SymbolBuffers(new ProgramConfigurationSet(this.layers, this.zoom, property => /^icon/.test(property)));
@@ -444,7 +453,7 @@ export class SymbolBucket implements Bucket {
         // we should always resolve the icon-image value if the property was defined in the style
         // this allows us to fire the styleimagemissing event if image evaluation returns null
         // the only way to distinguish between null returned from a coalesce statement with no valid images
-        // and null returned because icon-image wasn't defined is to check whether or not iconImage.parameters is an empty object
+        // and null returned because icon-image wasn't defined is to check whether iconImage.parameters is an empty object
         const hasIcon = iconImage.value.kind !== 'constant' || !!iconImage.value.value || Object.keys(iconImage.parameters).length > 0;
         const symbolSortKey = layout.get('symbol-sort-key');
 
@@ -462,12 +471,12 @@ export class SymbolBucket implements Bucket {
         for (const {feature, id, index, sourceLayerIndex} of features) {
 
             const needGeometry = layer._featureFilter.needGeometry;
-            const evaluationFeature = toEvaluationFeature(feature, needGeometry);
+            let evaluationFeature = toEvaluationFeature(feature, needGeometry);
             if (!layer._featureFilter.filter(globalProperties, evaluationFeature, canonical)) {
                 continue;
             }
 
-            if (!needGeometry)  evaluationFeature.geometry = loadGeometry(feature);
+            if (!needGeometry) evaluationFeature.geometry = loadGeometry(feature);
 
             let text: Formatted | void;
             if (hasText) {
@@ -674,7 +683,11 @@ export class SymbolBucket implements Bucket {
             this.glyphOffsetArray.emplaceBack(glyphOffset[0]);
 
             if (i === quads.length - 1 || sectionIndex !== quads[i + 1].sectionIndex) {
-                arrays.programConfigurations.populatePaintArrays(layoutVertexArray.length, feature, feature.index, {imagePositions: {}, canonical, formattedSection: sections && sections[sectionIndex]});
+                arrays.programConfigurations.populatePaintArrays(layoutVertexArray.length, feature, feature.index, {
+                    imagePositions: {},
+                    canonical,
+                    formattedSection: sections && sections[sectionIndex]
+                });
             }
         }
 

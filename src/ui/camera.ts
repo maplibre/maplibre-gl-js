@@ -1161,7 +1161,7 @@ export abstract class Camera extends Evented {
     }
 
     _prepareEase(eventData: any, noMoveStart: boolean,
-        currently: { moving?: boolean; zooming?: boolean; rotating?: boolean; pitching?: boolean; rolling?: boolean} = {}) {
+                 currently: { moving?: boolean; zooming?: boolean; rotating?: boolean; pitching?: boolean; rolling?: boolean} = {}) {
         this._moving = true;
         if (!noMoveStart && !currently.moving) {
             this.fire(new Event('movestart', eventData));
@@ -1585,12 +1585,12 @@ export abstract class Camera extends Evented {
     }
 
     _ease(frame: (_: number) => void,
-        finish: () => void,
-        options: {
-            animate?: boolean;
-            duration?: number;
-            easing?: (_: number) => number;
-        }) {
+          finish: () => void,
+          options: {
+              animate?: boolean;
+              duration?: number;
+              easing?: (_: number) => number;
+          }) {
         if (options.animate === false || options.duration === 0) {
             frame(1);
             finish();

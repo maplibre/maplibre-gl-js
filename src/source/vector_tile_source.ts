@@ -56,6 +56,7 @@ export type VectorTileSourceOptions = VectorSourceSpecification & {
  */
 export class VectorTileSource extends Evented implements Source {
     type: 'vector';
+    encoding?: string;
     id: string;
     minzoom: number;
     maxzoom: number;
@@ -80,7 +81,7 @@ export class VectorTileSource extends Evented implements Source {
         super();
         this.id = id;
         this.dispatcher = dispatcher;
-
+        this.encoding = 'mvt';
         this.type = 'vector';
         this.minzoom = 0;
         this.maxzoom = 22;
@@ -191,7 +192,7 @@ export class VectorTileSource extends Evented implements Source {
 
     async loadTile(tile: Tile): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
-        const params: WorkerTileParameters = {
+        const params = {
             request: this.map._requestManager.transformRequest(url, ResourceType.Tile),
             uid: tile.uid,
             tileID: tile.tileID,
@@ -202,8 +203,9 @@ export class VectorTileSource extends Evented implements Source {
             pixelRatio: this.map.getPixelRatio(),
             showCollisionBoxes: this.map.showCollisionBoxes,
             promoteId: this.promoteId,
-            subdivisionGranularity: this.map.style.projection.subdivisionGranularity
-        };
+            subdivisionGranularity: this.map.style.projection.subdivisionGranularity,
+            encoding: 'mvt',
+        } as WorkerTileParameters;
         params.request.collectResourceTiming = this._collectResourceTiming;
         let messageType: MessageType.loadTile | MessageType.reloadTile = MessageType.reloadTile;
         if (!tile.actor || tile.state === 'expired') {

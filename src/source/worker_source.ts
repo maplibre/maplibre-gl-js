@@ -17,6 +17,13 @@ import type {SubdivisionGranularitySetting} from '../render/subdivision_granular
 import type {DashEntry} from '../render/line_atlas';
 
 /**
+ * Supported vector tile encodings.
+ * - 'mvt'  → Mapbox Vector Tile (default)
+ * - 'mlt'  → MapLibre Tile (columnar vector tile Format)
+ */
+export type VectorTileEncoding = 'mvt' | 'mlt';
+
+/**
  * Parameters to identify a tile
  */
 export type TileParameters = {
@@ -40,6 +47,7 @@ export type WorkerTileParameters = TileParameters & {
     collectResourceTiming?: boolean;
     returnDependencies?: boolean;
     subdivisionGranularity: SubdivisionGranularitySetting;
+    encoding?: VectorTileEncoding;
 };
 
 /**

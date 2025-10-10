@@ -35,6 +35,7 @@ import type {VectorTileLayer} from '@mapbox/vector-tile';
 import {subdivideVertexLine} from '../../render/subdivision';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import {type DashEntry} from '../../render/line_atlas';
+import { FeatureTable } from "@maplibre/mlt";
 
 // NOTE ON EXTRUDE SCALE:
 // scale the extrusion vector so that the normal length is this value.
@@ -102,7 +103,7 @@ export class LineBucket implements Bucket {
     overscaling: number;
     layers: Array<LineStyleLayer>;
     layerIds: Array<string>;
-    gradients: {[x: string]: GradientTexture};
+    gradients: { [x: string]: GradientTexture };
     stateDependentLayers: Array<any>;
     stateDependentLayerIds: Array<string>;
     patternFeatures: Array<BucketFeature>;
@@ -143,6 +144,14 @@ export class LineBucket implements Bucket {
         this.maxLineLength = 0;
 
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
+    }
+
+    updateColumnar(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: { [_: string]: ImagePosition; }): void {
+        throw new Error("Method not implemented.");
+    }
+
+    populateColumnar(table: FeatureTable, options: Omit<PopulateParameters, "dashDependencies" | "subdivisionGranularity">, canonical: CanonicalTileID): void {
+        console.log("tried to instanciate columnar bucket in non columnar bucket");
     }
 
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
@@ -266,7 +275,11 @@ export class LineBucket implements Bucket {
             this.addLine(line, feature, join, cap, miterLimit, roundLimit, canonical, subdivisionGranularity);
         }
 
-        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {imagePositions, dashPositions, canonical});
+        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {
+            imagePositions,
+            dashPositions,
+            canonical
+        });
     }
 
     addLine(vertices: Array<Point>, feature: BucketFeature, join: string, cap: string, miterLimit: number, roundLimit: number, canonical: CanonicalTileID | undefined, subdivisionGranularity: SubdivisionGranularitySetting) {

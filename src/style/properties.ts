@@ -221,10 +221,10 @@ class TransitioningPropertyValue<T, R> {
     end: TimePoint;
 
     constructor(property: Property<T, R>,
-        value: PropertyValue<T, R>,
-        prior: TransitioningPropertyValue<T, R>,
-        transition: TransitionSpecification,
-        now: TimePoint) {
+                value: PropertyValue<T, R>,
+                prior: TransitioningPropertyValue<T, R>,
+                transition: TransitionSpecification,
+                now: TimePoint) {
         this.property = property;
         this.value = value;
         this.begin = now + transition.delay || 0;

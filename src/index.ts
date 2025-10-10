@@ -27,6 +27,7 @@ import {type CanonicalTileRange, type Coordinates, ImageSource, type UpdateImage
 import {RasterDEMTileSource} from './source/raster_dem_tile_source';
 import {RasterTileSource} from './source/raster_tile_source';
 import {VectorTileSource} from './source/vector_tile_source';
+import {MltSource} from "./source/mlt/mlt_source";
 import {VideoSource} from './source/video_source';
 import {type Source, type SourceClass, addSourceType} from './source/source';
 import {addProtocol, removeProtocol} from './source/protocol_crud';
@@ -223,6 +224,7 @@ export {
     RasterDEMTileSource,
     RasterTileSource,
     VectorTileSource,
+    MltSource,
     VideoSource,
     EdgeInsets,
     BoxZoomHandler,

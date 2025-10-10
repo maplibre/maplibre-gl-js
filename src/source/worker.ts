@@ -24,6 +24,7 @@ import {
     type RemoveSourceParams,
     type UpdateLayersParameters
 } from '../util/actor_messages';
+import {MltWorkerSource} from "./mlt/mlt_worker_source";
 
 /**
  * The Worker class responsible for background thread related execution
@@ -119,11 +120,11 @@ export default class Worker {
         });
 
         this.actor.registerMessageHandler(MessageType.loadTile, (mapId: string, params: WorkerTileParameters) => {
-            return this._getWorkerSource(mapId, params.type, params.source).loadTile(params);
+            return this._getWorkerSource(mapId, params.type, params.source, params.encoding).loadTile(params);
         });
 
         this.actor.registerMessageHandler(MessageType.reloadTile, (mapId: string, params: WorkerTileParameters) => {
-            return this._getWorkerSource(mapId, params.type, params.source).reloadTile(params);
+            return this._getWorkerSource(mapId, params.type, params.source, params.encoding).reloadTile(params);
         });
 
         this.actor.registerMessageHandler(MessageType.abortTile, (mapId: string, params: TileParameters) => {
@@ -236,9 +237,10 @@ export default class Worker {
      * @param mapId - the mapId
      * @param sourceType - the source type - 'vector' for example
      * @param sourceName - the source name - 'osm' for example
+     * @param encoding - the format for vector tiles
      * @returns a new instance or a cached one
      */
-    private _getWorkerSource(mapId: string, sourceType: string, sourceName: string): WorkerSource {
+    private _getWorkerSource(mapId: string, sourceType: string, sourceName: string, encoding?: string): WorkerSource {
         if (!this.workerSources[mapId])
             this.workerSources[mapId] = {};
         if (!this.workerSources[mapId][sourceType])
@@ -255,7 +257,11 @@ export default class Worker {
             };
             switch (sourceType) {
                 case 'vector':
-                    this.workerSources[mapId][sourceType][sourceName] = new VectorTileWorkerSource(actor, this._getLayerIndex(mapId), this._getAvailableImages(mapId));
+                    if(encoding === 'mlt'){
+                        this.workerSources[mapId][sourceType][sourceName] = new MltWorkerSource(actor, this._getLayerIndex(mapId), this._getAvailableImages(mapId));
+                    }else{
+                        this.workerSources[mapId][sourceType][sourceName] = new VectorTileWorkerSource(actor, this._getLayerIndex(mapId), this._getAvailableImages(mapId));
+                    }
                     break;
                 case 'geojson':
                     this.workerSources[mapId][sourceType][sourceName] = new GeoJSONWorkerSource(actor, this._getLayerIndex(mapId), this._getAvailableImages(mapId));

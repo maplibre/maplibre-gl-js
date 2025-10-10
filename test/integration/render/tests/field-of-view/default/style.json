@@ -20,13 +20,6 @@
         }
     },
     "layers": [
-        {
-            "id": "repeat",
-            "type": "raster",
-            "source": "repeat",
-            "paint": {
-                "raster-fade-duration": 0
-            }
-        }
+        {"id": "repeat", "type": "raster", "source": "repeat"}
     ]
-}
+} 

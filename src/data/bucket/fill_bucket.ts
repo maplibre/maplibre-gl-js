@@ -31,6 +31,8 @@ import type {VectorTileLayer} from '@mapbox/vector-tile';
 import {subdividePolygon} from '../../render/subdivision';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import {fillLargeMeshArrays} from '../../render/fill_large_mesh_arrays';
+import {ColumnarFillBucket} from "./mlt/columnar_fill_bucket";
+import { FeatureTable } from "@maplibre/mlt";
 
 export class FillBucket implements Bucket {
     index: number;
@@ -73,6 +75,14 @@ export class FillBucket implements Bucket {
         this.segments = new SegmentVector();
         this.segments2 = new SegmentVector();
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
+    }
+
+    updateColumnar(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: { [_: string]: ImagePosition; }): void {
+        throw new Error("Method not implemented.");
+    }
+
+    populateColumnar(table: FeatureTable, options: Omit<PopulateParameters, "dashDependencies" | "subdivisionGranularity">, canonical: CanonicalTileID): void {
+        console.info("tried to instanciate columnar bucket in non columnar bucket");
     }
 
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
@@ -192,8 +202,10 @@ export class FillBucket implements Bucket {
                 subdivided.indicesLineList,
             );
         }
-        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {imagePositions, canonical});
+        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {
+            imagePositions,
+            canonical
+        });
     }
 }
-
 register('FillBucket', FillBucket, {omit: ['layers', 'patternFeatures']});

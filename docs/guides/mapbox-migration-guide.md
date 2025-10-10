@@ -1,4 +1,4 @@
-# Mapbox migration guide
+# MapBox migration guide
 
 This part of the docs is dedicated to the migration from `mapbox-gl` to `maplibre-gl`.
 

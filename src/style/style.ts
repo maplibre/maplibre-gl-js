@@ -1,6 +1,5 @@
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {type StyleLayer} from './style_layer';
-import {isRasterStyleLayer} from './style_layer/raster_style_layer';
 import {createStyleLayer} from './create_style_layer';
 import {loadSprite} from './load_sprite';
 import {ImageManager} from '../render/image_manager';
@@ -480,12 +479,7 @@ export class Style extends Evented {
         for (const layer of dereferencedLayers) {
             const styledLayer = createStyleLayer(layer, this._globalState);
             styledLayer.setEventedParent(this, {layer: {id: layer.id}});
-            this._layers[layer.id] = styledLayer;
-
-            if (isRasterStyleLayer(styledLayer) && this.sourceCaches[styledLayer.source]) {
-                const rasterFadeDuration = layer.paint?.['raster-fade-duration'] ?? styledLayer.paint.get('raster-fade-duration');
-                this.sourceCaches[styledLayer.source].setRasterFadeDuration(rasterFadeDuration);
-            }
+            this._layers[layer.id] = styledLayer as StyleLayer;
         }
     }
 
@@ -1080,7 +1074,7 @@ export class Style extends Evented {
                 `layers.${id}`, layerObject, {arrayIndex: -1}, options)) return;
 
             layer = createStyleLayer(layerObject as LayerSpecification | CustomLayerInterface, this._globalState);
-            this._validateLayer(layer);
+            this._validateLayer(layer as StyleLayer);
 
             layer.setEventedParent(this, {layer: {id}});
         }
@@ -1094,7 +1088,7 @@ export class Style extends Evented {
         this._order.splice(index, 0, id);
         this._layerOrderChanged = true;
 
-        this._layers[id] = layer;
+        this._layers[id] = layer as StyleLayer;
 
         if (this._removedLayers[id] && layer.source && layer.type !== 'custom') {
             // If, in the current batch, we have already removed this layer
@@ -1113,7 +1107,7 @@ export class Style extends Evented {
                 this.sourceCaches[layer.source].pause();
             }
         }
-        this._updateLayer(layer);
+        this._updateLayer(layer as StyleLayer);
 
         if (layer.onAdd) {
             layer.onAdd(this.map);
@@ -1323,10 +1317,6 @@ export class Style extends Evented {
         const requiresRelayout = layer.setPaintProperty(name, value, options);
         if (requiresRelayout) {
             this._updateLayer(layer);
-        }
-
-        if (isRasterStyleLayer(layer) && name === 'raster-fade-duration') {
-            this.sourceCaches[layer.source].setRasterFadeDuration(value);
         }
 
         this._changed = true;

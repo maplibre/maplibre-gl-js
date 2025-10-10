@@ -1,7 +1,7 @@
 import {StyleLayer} from '../style_layer';
 
 import {SymbolBucket, type SymbolFeature} from '../../data/bucket/symbol_bucket';
-import {resolveTokens} from '../../util/resolve_tokens';
+import {resolveTokens, resolveTokensMlt} from '../../util/resolve_tokens';
 import properties, {type SymbolLayoutPropsPossiblyEvaluated, type SymbolPaintPropsPossiblyEvaluated} from './symbol_style_layer_properties.g';
 
 import {
@@ -30,6 +30,9 @@ import type {EvaluationParameters} from '../evaluation_parameters';
 import type {Expression, Feature, SourceExpression, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {CanonicalTileID} from '../../source/tile_id';
 import {FormatSectionOverride} from '../format_section_override';
+import {ColumnarSymbolBucket} from "../../data/bucket/mlt/columnar_symbol_bucket";
+import {FeatureTable} from "@maplibre/mlt";
+
 
 export const isSymbolStyleLayer = (layer: StyleLayer): layer is SymbolStyleLayer => layer.type === 'symbol';
 
@@ -98,9 +101,24 @@ export class SymbolStyleLayer extends StyleLayer {
 
         return value;
     }
+    getValueAndResolveTokensMlt(name: any, featureTable: FeatureTable, index: number,  canonical: CanonicalTileID,
+                                availableImages: Array<string>) {
+        const feature = null;
+        const value = this.layout.get(name).evaluate(feature, {}, canonical, availableImages);
+        const unevaluated = this._unevaluatedLayout._values[name];
+        if (!unevaluated.isDataDriven() && !isExpression(unevaluated.value) && value) {
+            return resolveTokensMlt(featureTable, index, value);
+        }
+
+        return value;
+    }
 
     createBucket(parameters: BucketParameters<any>) {
-        return new SymbolBucket(parameters);
+        if(parameters.encoding === 'mlt'){
+            return new ColumnarSymbolBucket(parameters);
+        }else{
+            return new SymbolBucket(parameters);
+        }
     }
 
     queryRadius(): number {

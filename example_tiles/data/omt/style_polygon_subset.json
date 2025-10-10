@@ -1,0 +1,260 @@
+{
+  "id": "basic",
+  "layers": [
+    {
+      "id": "background",
+      "layout": {
+        "visibility": "visible"
+      },
+      "paint": {
+        "background-color": "rgba(243, 245, 247, 1)"
+      },
+      "type": "background"
+    },
+    {
+      "filter": ["all", ["!=", "intermittent", 1], ["!=", "brunnel", "tunnel"]],
+      "id": "water",
+      "layout": {
+        "visibility": "visible"
+      },
+      "metadata": {
+        "mapbox:group": "1444849382550.77"
+      },
+      "paint": {
+        "fill-color": "rgba(153, 213, 255, 1)"
+      },
+      "source": "openmaptiles",
+      "source-layer": "water",
+      "type": "fill"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          ">=",
+          "admin:level",
+          3
+        ],
+        [
+          "<=",
+          "admin:level",
+          8
+        ],
+        [
+          "!=",
+          "maritime",
+          1
+        ]
+      ],
+      "id": "boundary-land-level-4",
+      "layout": {
+        "line-join": "round",
+        "visibility": "visible"
+      },
+      "paint": {
+        "line-color": "#ABBAC4",
+        "line-dasharray": [
+          3,
+          1,
+          1,
+          1
+        ],
+        "line-width": {
+          "base": 1.4,
+          "stops": [
+            [
+              4,
+              0.4
+            ],
+            [
+              5,
+              1
+            ],
+            [
+              12,
+              3
+            ]
+          ]
+        }
+      },
+      "source": "openmaptiles",
+      "source-layer": "boundary",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "!=",
+          "maritime",
+          1
+        ],
+        [
+          "==",
+          "disputed",
+          1
+        ]
+      ],
+      "id": "boundary-land-disputed",
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round",
+        "visibility": "visible"
+      },
+      "paint": {
+        "line-color": "rgba(147, 167, 180, 1)",
+        "line-dasharray": [
+          1,
+          3
+        ],
+        "line-width": {
+          "base": 1,
+          "stops": [
+            [
+              0,
+              0.6
+            ],
+            [
+              4,
+              1.4
+            ],
+            [
+              5,
+              2
+            ],
+            [
+              12,
+              8
+            ]
+          ]
+        }
+      },
+      "source": "openmaptiles",
+      "source-layer": "boundary",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "in",
+          "admin_level",
+          2,
+          4
+        ],
+        [
+          "==",
+          "maritime",
+          1
+        ]
+      ],
+      "id": "boundary-water",
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round",
+        "visibility": "none"
+      },
+      "minzoom": 4,
+      "paint": {
+        "line-color": "rgba(154, 189, 214, 1)",
+        "line-opacity": {
+          "stops": [
+            [
+              6,
+              0.6
+            ],
+            [
+              10,
+              1
+            ]
+          ]
+        },
+        "line-width": {
+          "base": 1,
+          "stops": [
+            [
+              0,
+              0.6
+            ],
+            [
+              4,
+              1.4
+            ],
+            [
+              5,
+              2
+            ],
+            [
+              12,
+              8
+            ]
+          ]
+        }
+      },
+      "source": "openmaptiles",
+      "source-layer": "boundary",
+      "type": "line"
+    },
+    {
+      "id": "highway",
+      "filter": ["==", "$type", "LineString"],
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round",
+        "visibility": "visible"
+      },
+      "paint": {
+        "line-color": "rgba(147, 167, 180, 1)",
+        "line-width": 2.5
+      },
+      "source": "openmaptiles",
+      "source-layer": "transportation",
+      "type": "line"
+    }
+  ],
+  "metadata": {
+    "mapbox:autocomposite": false,
+    "mapbox:groups": {
+      "1444849242106.713": {
+        "collapsed": false,
+        "name": "Places"
+      },
+      "1444849334699.1902": {
+        "collapsed": true,
+        "name": "Bridges"
+      },
+      "1444849345966.4436": {
+        "collapsed": false,
+        "name": "Roads"
+      },
+      "1444849354174.1904": {
+        "collapsed": true,
+        "name": "Tunnels"
+      },
+      "1444849364238.8171": {
+        "collapsed": false,
+        "name": "Buildings"
+      },
+      "1444849382550.77": {
+        "collapsed": false,
+        "name": "Water"
+      },
+      "1444849388993.3071": {
+        "collapsed": false,
+        "name": "Land"
+      }
+    },
+    "mapbox:type": "template",
+    "openmaptiles:mapbox:owner": "openmaptiles",
+    "openmaptiles:mapbox:source:url": "mapbox://openmaptiles.4qljc88t",
+    "openmaptiles:version": "3.x"
+  },
+  "name": "basic",
+  "sources": {
+    "openmaptiles": {
+      "type": "vector",
+      "tiles": ["http://192.168.2.141:8081/omt/{z}/{x}/{y}.mlt"]
+    }
+  },
+  "version": 8
+}

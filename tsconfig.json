@@ -14,7 +14,7 @@
     "resolveJsonModule": true,
     "skipLibCheck": false,
     "strict": false,
-    "target": "ES2016",
+    "target": "ES2020",
     "lib": [
       "ESNext",
       "DOM",
@@ -22,14 +22,29 @@
     ],
     "types": [
       "geojson",
-      "offscreencanvas"
-    ]
+      "offscreencanvas",
+      "jest"
+    ],
+      "baseUrl": ".",
+      "paths": {
+          "pbf": ["node_modules/@maplibre/vt-pbf/node_modules/pbf"],
+          "@types/pbf": ["node_modules/@maplibre/vt-pbf/node_modules/pbf"],
+          "@mapbox/vector-tile": [
+              "node_modules/@maplibre/vt-pbf/node_modules/@mapbox/vector-tile"
+          ],
+          "@mapbox/point-geometry": [
+              "node_modules/@maplibre/vt-pbf/node_modules/@mapbox/point-geometry"
+          ],
+          "@maplibre/maplibre-gl-style-spec": [
+              "node_modules/@maplibre/maplibre-gl-style-spec"
+          ]
+      }
   },
   "ts-node": {
     "experimentalSpecifierResolution": "node",
     "esm": true,
     "compilerOptions": {
-      "target": "es2019",
+      "target": "es2020",
       "types": [
         "node"
       ]
@@ -39,7 +54,8 @@
     "rollup.config.*",
     "src/**/*",
     "test/bench/**/*",
-    "test/integration/**/*"
+    "test/integration/**/*",
+      "src/types"
   ],
   "exclude": [
     "node_modules",

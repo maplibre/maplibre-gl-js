@@ -18,6 +18,7 @@ import {SubdivisionGranularitySetting} from '../../render/subdivision_granularit
 import {MercatorTransform} from '../../geo/projection/mercator_transform';
 import {createPopulateOptions, loadVectorTile} from '../../../test/unit/lib/tile';
 
+/*eslint new-cap: 0*/
 const collisionBoxArray = new CollisionBoxArray();
 const transform = new MercatorTransform();
 transform.resize(100, 100);
@@ -32,7 +33,7 @@ function bucketSetup(text = 'abcde') {
     return createSymbolBucket('test', 'Test', text, collisionBoxArray);
 }
 
-function createIndexedFeature(id: number, index: number, iconId: string): IndexedFeature {
+function createIndexedFeature(id, index, iconId) {
     return {
         feature: {
             extent: 8192,
@@ -41,26 +42,26 @@ function createIndexedFeature(id: number, index: number, iconId: string): Indexe
             properties: {
                 icon: iconId
             },
-            loadGeometry() {
+            loadGeometry () {
                 return [[{x: 0, y: 0}]];
             }
         },
         id,
         index,
         sourceLayerIndex: 0
-    } as any as IndexedFeature;
+    };
 }
 
 describe('SymbolBucket', () => {
-    let features: IndexedFeature[];
+    let features;
     beforeAll(() => {
         // Load point features from fixture tile.
         const sourceLayer = loadVectorTile().layers.place_label;
         features = [{feature: sourceLayer.feature(10)} as IndexedFeature];
     });
     test('SymbolBucket', () => {
-        const bucketA = bucketSetup();
-        const bucketB = bucketSetup();
+        const bucketA = bucketSetup() as any as SymbolBucket;
+        const bucketB = bucketSetup() as any as SymbolBucket;
         const options = createPopulateOptions([]);
         const placement = new Placement(transform, undefined as any, 0, true);
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
@@ -113,7 +114,7 @@ describe('SymbolBucket', () => {
         const spy = vi.spyOn(console, 'warn').mockImplementation(() => { });
         SymbolBucket.MAX_GLYPHS = 5;
 
-        const bucket = bucketSetup();
+        const bucket = bucketSetup() as any as SymbolBucket;
         const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
 
         bucket.populate(features, options, undefined as any);
@@ -146,7 +147,7 @@ describe('SymbolBucket', () => {
             a: new ImagePosition({x: 0, y: 0, w: 10, h: 10}, 1 as any as StyleImage),
             b: new ImagePosition({x: 10, y: 0, w: 10, h: 10}, 1 as any as StyleImage)
         };
-        const bucket = createSymbolIconBucket('test', 'icon', collisionBoxArray);
+        const bucket = createSymbolIconBucket('test', 'icon', collisionBoxArray) as any as SymbolBucket;
         const options = createPopulateOptions([]);
 
         bucket.populate(
@@ -189,7 +190,7 @@ describe('SymbolBucket', () => {
             a: new ImagePosition({x: 0, y: 0, w: 10, h: 10}, 1 as any as StyleImage),
             b: new ImagePosition({x: 10, y: 0, w: 10, h: 10}, 1 as any as StyleImage)
         };
-        const bucket = createSymbolIconBucket('test', 'icon', collisionBoxArray);
+        const bucket = createSymbolIconBucket('test', 'icon', collisionBoxArray) as any as SymbolBucket;
         const options = createPopulateOptions([]);
 
         bucket.populate(

@@ -46,21 +46,6 @@ import type {DashEntry} from '../render/line_atlas';
  */
 export type TileState = 'loading' | 'loaded' | 'reloading' | 'unloaded' | 'errored' | 'expired';
 
-/** @internal */
-type CrossFadeArgs = {
-    fadingRole: FadingRoles;
-    fadingDirection: FadingDirections;
-    fadingParentID?: OverscaledTileID;
-    fadeEndTime: number;
-};
-
-export enum FadingRoles {
-    Base, Parent
-}
-export enum FadingDirections {
-    Departing, Incoming
-}
-
 /**
  * A tile object is the combination of a Coordinate, which defines
  * its place, as well as a unique ID and data tracking for its content
@@ -81,13 +66,8 @@ export class Tile {
     expirationTime: any;
     expiredRequestCount: number;
     state: TileState;
-    fadingRole: FadingRoles;
-    fadingDirection: FadingDirections;
-    fadingParentID: OverscaledTileID;
-    selfFading: boolean;
     timeAdded: number = 0;
     fadeEndTime: number = 0;
-    fadeOpacity: number = 1;
     collisionBoxArray: CollisionBoxArray;
     redoWhenDone: boolean;
     showCollisionBoxes: boolean;
@@ -144,45 +124,14 @@ export class Tile {
         this.state = 'loading';
     }
 
-    isRenderable(symbolLayer: boolean): boolean {
-        return (
-            this.hasData() &&
-            (!this.fadeEndTime || this.fadeOpacity > 0) &&  // raster fading
-            (symbolLayer || !this.holdingForSymbolFade())   // symbol fading
-        );
-    }
+    registerFadeDuration(duration: number) {
+        const fadeEndTime = duration + this.timeAdded;
 
-    /**
-     * @internal
-     * Many-to-one crossfade between a base tile and parent/ancestor tile (when zooming)
-     */
-    setCrossFadeLogic({fadingRole, fadingDirection, fadingParentID, fadeEndTime}: CrossFadeArgs) {
-        this.resetFadeLogic();
+        if (fadeEndTime < this.fadeEndTime) {
+            return;
+        }
 
-        this.fadingRole = fadingRole;
-        this.fadingDirection = fadingDirection;
-        this.fadingParentID = fadingParentID;
         this.fadeEndTime = fadeEndTime;
-    }
-
-    /**
-     * Self fading for edge tiles (when panning map)
-     */
-    setSelfFadeLogic(fadeEndTime: number) {
-        this.resetFadeLogic();
-        this.selfFading = true;
-        this.fadeEndTime = fadeEndTime;
-    }
-
-    resetFadeLogic() {
-        this.fadingRole = null;
-        this.fadingDirection = null;
-        this.fadingParentID = null;
-        this.selfFading = false;
-
-        this.timeAdded = browser.now();
-        this.fadeEndTime = 0;
-        this.fadeOpacity = 1;
     }
 
     wasRequested() {
@@ -489,7 +438,7 @@ export class Tile {
         }
     }
 
-    holdingForSymbolFade(): boolean {
+    holdingForFade(): boolean {
         return this.symbolFadeHoldUntil !== undefined;
     }
 
@@ -497,11 +446,11 @@ export class Tile {
         return !this.symbolFadeHoldUntil || this.symbolFadeHoldUntil < browser.now();
     }
 
-    clearSymbolFadeHold() {
+    clearFadeHold() {
         this.symbolFadeHoldUntil = undefined;
     }
 
-    setSymbolHoldDuration(duration: number) {
+    setHoldDuration(duration: number) {
         this.symbolFadeHoldUntil = browser.now() + duration;
     }
 

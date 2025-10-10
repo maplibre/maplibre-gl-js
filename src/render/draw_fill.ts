@@ -16,6 +16,7 @@ import type {FillBucket} from '../data/bucket/fill_bucket';
 import type {OverscaledTileID} from '../source/tile_id';
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
 import {translatePosition} from '../util/util';
+import {ColumnarFillBucket} from "../data/bucket/mlt/columnar_fill_bucket";
 
 export function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     const color = layer.paint.get('fill-color');
@@ -82,7 +83,9 @@ function drawFillTiles(
         programName = image ? 'fillPattern' : 'fill';
         drawMode = gl.TRIANGLES;
     } else {
-        programName = image && !layer.getPaintProperty('fill-outline-color') ? 'fillOutlinePattern' : 'fillOutline';
+        programName = image && !layer.getPaintProperty('fill-outline-color')
+            ? 'fillOutlinePattern'
+            : 'fillOutline';
         drawMode = gl.LINES;
     }
 
@@ -92,7 +95,7 @@ function drawFillTiles(
         const tile = sourceCache.getTile(coord);
         if (image && !tile.patternsLoaded()) continue;
 
-        const bucket: FillBucket = (tile.getBucket(layer) as any);
+        const bucket = (tile.getBucket(layer) as any);
         if (!bucket) continue;
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
