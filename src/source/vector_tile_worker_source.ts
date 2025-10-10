@@ -237,7 +237,7 @@ export class VectorTileWorkerSource implements WorkerSource {
 
     getOverzoomTile(params: WorkerTileParameters, vectorTile: VectorTile): {vectorTile: VectorTile; rawData: ArrayBufferLike} {
         const {tileID, source, overzoomParameters} = params;
-        const {maxZoomTileID, maxOverzoom} = overzoomParameters;
+        const {maxZoomTileID, maxOverzoom, tileSize} = overzoomParameters;
 
         const geojsonWrapper: GeoJSONWrapperWithLayers = new GeoJSONWrapperWithLayers();
         const layerFamilies: Record<string, StyleLayer[][]> = this.layerIndex.familiesBySource[source];
@@ -252,7 +252,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             const cacheKey = `${maxZoomTileID.key}_${sourceLayerId}_${maxOverzoom}`;
             let geoJSONIndex: GeoJSONVT = this.overzoomedTilesCache.get(cacheKey);
             if (!geoJSONIndex) {
-                geoJSONIndex = this.createGeoJSONIndex(sourceLayer, maxZoomTileID, maxOverzoom);
+                geoJSONIndex = this.createGeoJSONIndex(sourceLayer, maxZoomTileID, maxOverzoom, tileSize);
                 this.overzoomedTilesCache.set(cacheKey, geoJSONIndex);
             }
 
@@ -276,7 +276,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         };
     }
 
-    createGeoJSONIndex(sourceLayer: VectorTileLayer, maxZoomTileID: CanonicalTileID, maxOverzoom: number): GeoJSONVT {
+    createGeoJSONIndex(sourceLayer: VectorTileLayer, maxZoomTileID: CanonicalTileID, maxOverzoom: number, tileSize: number): GeoJSONVT {
         const geoJSONFeatures: Feature[] = [];
 
         for (let index = 0; index < sourceLayer.length; index++) {
@@ -284,7 +284,15 @@ export class VectorTileWorkerSource implements WorkerSource {
             geoJSONFeatures.push(feature.toGeoJSON(maxZoomTileID.x, maxZoomTileID.y, maxZoomTileID.z));
         }
 
-        return geojsonvt({type: 'FeatureCollection', features: geoJSONFeatures}, {maxZoom: maxOverzoom, extent: EXTENT});
+        return geojsonvt({
+            type: 'FeatureCollection',
+            features: geoJSONFeatures
+        }, {
+            extent: EXTENT,
+            maxZoom: maxOverzoom,
+            buffer: Math.round(256 / 512 * tileSize),  // fix tile seams (especially when zooming out)
+            tolerance: 0  //no simplication for already overscaled tiles
+        });
     }
 
     /**

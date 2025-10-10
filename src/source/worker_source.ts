@@ -44,9 +44,10 @@ export type WorkerTileParameters = TileParameters & {
 };
 
 export type OverzoomParameters = {
-    overzoomRequest: RequestParameters;
     maxZoomTileID: CanonicalTileID;
+    overzoomRequest: RequestParameters;
     maxOverzoom: number;
+    tileSize: number;
 };
 
 /**

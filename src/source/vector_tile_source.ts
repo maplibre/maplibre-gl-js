@@ -248,10 +248,13 @@ export class VectorTileSource extends Evented implements Source {
     private _getOverzoomParameters(tile: Tile): OverzoomParameters {
         const maxZoomTileID = tile.tileID.scaledTo(this.maxzoom).canonical;
         const maxZoomTileUrl = maxZoomTileID.url(this.tiles, this.map.getPixelRatio(), this.scheme);
-        const overzoomRequest = this.map._requestManager.transformRequest(maxZoomTileUrl, ResourceType.Tile);
-        const maxOverzoom = this.map.getMaxZoom();
 
-        return {overzoomRequest, maxZoomTileID, maxOverzoom};
+        return {
+            maxZoomTileID,
+            overzoomRequest: this.map._requestManager.transformRequest(maxZoomTileUrl, ResourceType.Tile),
+            maxOverzoom: this.map.getZoom(),
+            tileSize: this.tileSize
+        };
     }
 
     private _afterTileLoadWorkerResponse(tile: Tile, data: WorkerTileResult) {
