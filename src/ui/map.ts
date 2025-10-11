@@ -1278,7 +1278,7 @@ export class Map extends Camera {
      *
      * @param transformConstrain - A {@link TransformConstrainFunction} callback defining how the viewport should respect the bounds.
      * 
-     * `null` clears the callback and unoverrides the map transform's constrain function.
+     * `null` clears the callback and reverses the override of the map transform's constrain function.
      * @example
      * ```ts
      * function customTransformConstrain(lngLat, zoom) {
