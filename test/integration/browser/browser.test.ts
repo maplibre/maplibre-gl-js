@@ -61,6 +61,18 @@ describe('Browser tests', () => {
         }
     }, 40000);
 
+    test('Mousemove events are fired during scrollzoom', {retry: 3, timeout: 20000}, async () => {
+        const mouseMoveFired = await page.evaluate(() => {
+            return new Promise<string>((resolve, _reject) => {
+                map.on('mousemove', (e) => {resolve(e.type);});
+                map.getCanvas().dispatchEvent(new WheelEvent('wheel', {deltaY: 120, bubbles: true}));
+                map.getCanvas().dispatchEvent(new WheelEvent('wheel', {deltaY: 120, bubbles: true}));
+                map.getCanvas().dispatchEvent(new MouseEvent('mousemove', {bubbles: true}));
+            })   
+            });
+        expect(mouseMoveFired).toBe('mousemove');
+    });
+
     test('Load should fire before resize and moveend', {retry: 3, timeout: 20000}, async () => {
         const firstFiredEvent = await page.evaluate(() => {
             const map2 = new maplibregl.Map({
