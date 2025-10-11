@@ -279,9 +279,11 @@ export type MapOptions = {
     transformConstrain?: TransformConstrainFunction | null;
     /**
      * A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
+     * For an example, see https://maplibre.org/maplibre-gl-js/docs/examples/locale-switching/
+     * Alternatively, search the official plugins page for plugins related to localization.
      * @defaultValue null
      */
-    locale?: any;
+    locale?: Record<string, string>;
     /**
      * Controls the duration of the fade-in/fade-out animation for label collisions after initial map load, in milliseconds. This setting affects all symbol layers. This setting does not affect the duration of runtime styling transitions or raster tile cross-fading.
      * @defaultValue 300
@@ -528,7 +530,7 @@ export class Map extends Camera {
     _localIdeographFontFamily: string | false;
     _validateStyle: boolean;
     _requestManager: RequestManager;
-    _locale: typeof defaultLocale;
+    _locale: Record<string, string>;
     _removed: boolean;
     _clickTolerance: number;
     _overridePixelRatio: number | null | undefined;
