@@ -83,3 +83,18 @@ test('Creating a map with style defining globe projection uses Globe transform c
     expect(fixedLngLat(map.getCenter(), 4)).toEqual({lng: 65.7, lat: -38.2});
     expect(fixedNum(map.getZoom(), 3)).toBe(-2);
 });
+
+test('Creating a single-copy map with an identity transform constrain allows the map to underzoom and overpan', () => {
+    const container = window.document.createElement('div');
+    Object.defineProperty(container, 'offsetWidth', {value: 512});
+    Object.defineProperty(container, 'offsetHeight', {value: 512});
+
+    function customTransformConstrain(lngLat, zoom) {
+        return {center: lngLat, zoom: zoom ?? 0};
+    };
+
+    const map = createMap({container, renderWorldCopies: false, zoom: -4, center: [360, 0], transformConstrain: customTransformConstrain});
+
+    expect(fixedLngLat(map.getCenter(), 4)).toEqual({lng: 360, lat: 0});
+    expect(fixedNum(map.getZoom(), 3)).toBe(-4);
+});

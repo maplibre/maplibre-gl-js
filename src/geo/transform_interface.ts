@@ -11,6 +11,19 @@ import type {ProjectionData, ProjectionDataParams} from './projection/projection
 import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider';
 import type {Frustum} from '../util/primitives/frustum';
 
+/**
+ * The callback defining how the transform constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
+ * Used as the `getConstrained` method in implementers of map transforms.
+ * (See [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/).)
+ */
+export type TransformConstrainFunction =  (
+    lngLat: LngLat,
+    zoom: number
+) => {
+    center: LngLat;
+    zoom: number;
+};
+
 export interface ITransformGetters {
     get tileSize(): number;
 
@@ -83,6 +96,8 @@ export interface ITransformGetters {
     get nearZ(): number;
     get farZ(): number;
     get autoCalculateNearFarZ(): boolean;
+
+    get transformConstrain(): TransformConstrainFunction | null;
 }
 
 /**
@@ -193,6 +208,12 @@ interface ITransformMutators {
      * @param bounds - A {@link LngLatBounds} object describing the new geographic boundaries of the map.
      */
     setMaxBounds(bounds?: LngLatBounds | null): void;
+
+    /** Sets or clears the callback overriding the transform's default constrain called by `getConstrained`,
+     * whose responsibility is to respect the longitude and latitude bounds by constraining the viewport's lnglat and zoom.
+     * @param constrain - A {@link TransformConstrainFunction} callback defining how the viewport should respect the bounds.
+     */
+    setTransformConstrain(constrain?: TransformConstrainFunction | null): void;
 
     /**
      * @internal
@@ -342,7 +363,7 @@ export interface IReadonlyTransform extends ITransformGetters {
     /**
      * Get center lngLat and zoom to ensure that longitude and latitude bounds are respected and regions beyond the map bounds are not displayed.
      */
-    getConstrained(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number};
+    getConstrained: TransformConstrainFunction;
 
     maxPitchScaleFactor(): number;
 

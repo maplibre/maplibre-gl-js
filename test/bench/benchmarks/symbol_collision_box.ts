@@ -56,7 +56,7 @@ export default class SymbolCollisionBox extends Benchmark {
                 calculatePosMatrix: (_tileID: UnwrappedTileID) => { return undefined; },
             };
         } else {
-            const tr = new MercatorTransform(0, 22, 0, 60, true);
+            const tr = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
             return {
                 transform: tr,
                 calculatePosMatrix: (tileID: UnwrappedTileID) => { return tr.calculatePosMatrix(tileID, false); },

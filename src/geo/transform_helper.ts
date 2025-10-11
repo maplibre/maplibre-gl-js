@@ -9,7 +9,7 @@ import {cameraMercatorCoordinateFromCenterAndRotation} from './projection/mercat
 import {EXTENT} from '../data/extent';
 
 import type {PaddingOptions} from './edge_insets';
-import type {IReadonlyTransform, ITransformGetters} from './transform_interface';
+import type {IReadonlyTransform, ITransformGetters, TransformConstrainFunction} from './transform_interface';
 import type {OverscaledTileID} from '../source/tile_id';
 import {Bounds} from './bounds';
 /**
@@ -55,12 +55,39 @@ export type TransformHelperCallbacks = {
      * 2) a given lngLat is as near the center as possible
      * Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
      */
-    getConstrained: (center: LngLat, zoom: number) => { center: LngLat; zoom: number };
+    getConstrained: TransformConstrainFunction;
 
     /**
      * Updates the underlying transform's internal matrices.
      */
     calcMatrices: () => void;
+};
+
+export type TransformOptions = {
+    /**
+     * The minimum zoom level of the map.
+     */
+    minZoom?: number;
+    /**
+     * The maximum zoom level of the map.
+     */
+    maxZoom?: number;
+    /**
+     * The minimum pitch of the map.
+     */
+    minPitch?: number;
+    /**
+     * The maximum pitch of the map.
+     */
+    maxPitch?: number;
+    /**
+     * Whether to render multiple copies of the world side by side in the map.
+     */
+    renderWorldCopies?: boolean;
+    /**
+     * An override of the transform's constraining function for respecting its longitude and latitude bounds.
+     */
+    transformConstrain?: TransformConstrainFunction | null;
 };
 
 function getTileZoom(zoom: number): number {
@@ -123,16 +150,20 @@ export class TransformHelper implements ITransformGetters {
     _farZ: number;
     _autoCalculateNearFarZ: boolean;
 
-    constructor(callbacks: TransformHelperCallbacks, minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
+    _transformConstrain: TransformConstrainFunction | null;
+
+    constructor(callbacks: TransformHelperCallbacks, options?: TransformOptions) {
         this._callbacks = callbacks;
         this._tileSize = 512; // constant
 
-        this._renderWorldCopies = renderWorldCopies === undefined ? true : !!renderWorldCopies;
-        this._minZoom = minZoom || 0;
-        this._maxZoom = maxZoom || 22;
+        this._renderWorldCopies = options?.renderWorldCopies === undefined ? true : !!options?.renderWorldCopies;
+        this._minZoom = options?.minZoom || 0;
+        this._maxZoom = options?.maxZoom || 22;
 
-        this._minPitch = (minPitch === undefined || minPitch === null) ? 0 : minPitch;
-        this._maxPitch = (maxPitch === undefined || maxPitch === null) ? 60 : maxPitch;
+        this._minPitch = (options?.minPitch === undefined || options?.minPitch === null) ? 0 : options?.minPitch;
+        this._maxPitch = (options?.maxPitch === undefined || options?.maxPitch === null) ? 60 : options?.maxPitch;
+
+        this._transformConstrain = options?.transformConstrain;
 
         this.setMaxBounds();
 
@@ -179,6 +210,7 @@ export class TransformHelper implements ITransformGetters {
         this._nearZ = thatI.nearZ;
         this._farZ = thatI.farZ;
         this._autoCalculateNearFarZ = !forceOverrideZ && thatI.autoCalculateNearFarZ;
+        this._transformConstrain = thatI.transformConstrain;
         if (constrain) {
             this._constrain();
         }
@@ -254,6 +286,13 @@ export class TransformHelper implements ITransformGetters {
         }
 
         this._renderWorldCopies = renderWorldCopies;
+    }
+
+    get transformConstrain(): TransformConstrainFunction | null { return this._transformConstrain; }
+    setTransformConstrain(constrain?: TransformConstrainFunction | null) {
+        this._transformConstrain = constrain;
+        this._constrain();
+        this._calcMatrices();
     }
 
     get worldSize(): number {
@@ -459,9 +498,9 @@ export class TransformHelper implements ITransformGetters {
         }
     }
 
-    private getConstrained(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
+    private getConstrained: TransformConstrainFunction = (lngLat, zoom) => {
         return this._callbacks.getConstrained(lngLat, zoom);
-    }
+    };
 
     /**
      * When the map is pitched, some of the 3D features that intersect a query will not intersect

@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Add `transformConstrain` callback to the `Map` options to override the transform's `getConstrained` method; add type `TransformConstrainFunction`; refactor transform constructor options to a `TransformOptions` object ([#6484](https://github.com/maplibre/maplibre-gl-js/issues/6484))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
