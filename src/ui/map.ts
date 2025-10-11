@@ -271,7 +271,7 @@ export type MapOptions = {
      */
     transformCameraUpdate?: CameraUpdateTransformFunction | null;
     /**
-     * A callback that overrides the map transform's default `getConstrained()` method. The callback can be used (for example) to modify how the viewport respects the map's bounds.
+     * A callback that overrides how the map constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
      * (See [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/).)
      * Expected to return an object containing center and zoom.
      * @defaultValue null
@@ -639,7 +639,7 @@ export class Map extends Camera {
         // For now we will use a temporary MercatorTransform instance.
         // Transform specialization will later be set by style when it creates its projection instance.
         // When this happens, the new transform will inherit all properties of this temporary transform.
-        const transform = new MercatorTransform({transformConstrain: resolvedOptions.transformConstrain});
+        const transform = new MercatorTransform();
         const cameraHelper = new MercatorCameraHelper();
         if (resolvedOptions.minZoom !== undefined) {
             transform.setMinZoom(resolvedOptions.minZoom);
@@ -655,6 +655,9 @@ export class Map extends Camera {
         }
         if (resolvedOptions.renderWorldCopies !== undefined) {
             transform.setRenderWorldCopies(resolvedOptions.renderWorldCopies);
+        }
+        if (resolvedOptions.transformConstrain !== undefined) {
+            transform.setTransformConstrain(resolvedOptions.transformConstrain);
         }
 
         super(transform, cameraHelper, {bearingSnap: resolvedOptions.bearingSnap});
@@ -1268,6 +1271,25 @@ export class Map extends Camera {
      */
     setRenderWorldCopies(renderWorldCopies?: boolean | null): Map {
         this.transform.setRenderWorldCopies(renderWorldCopies);
+        return this._update();
+    }
+
+    /** Sets or clears the callback overriding how the map constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
+     *
+     * @param transformConstrain - A {@link TransformConstrainFunction} callback defining how the viewport should respect the bounds.
+     * 
+     * `null` clears the callback and unoverrides the map transform's constrain function.
+     * @example
+     * ```ts
+     * function customTransformConstrain(lngLat, zoom) {
+     *   return {center: lngLat, zoom: zoom ?? 0};
+     * };
+     * map.setTransformConstrain(customTransformConstrain);
+     * ```
+     * @see [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/)
+     */
+    setTransformConstrain(transformConstrain?: TransformConstrainFunction | null): Map {
+        this.transform.setTransformConstrain(transformConstrain);
         return this._update();
     }
 
