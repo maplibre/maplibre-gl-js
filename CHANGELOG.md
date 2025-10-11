@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Add time control API (`setNow`, `restoreNow`, `isTimeFrozen`) for deterministic rendering, enabling frame-by-frame video export and deterministic testing
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

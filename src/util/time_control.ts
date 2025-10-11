@@ -1,0 +1,96 @@
+/**
+ * Time control utilities for MapLibre GL JS.
+ * Provides deterministic time control for use cases like video export
+ * where consistent frame-by-frame rendering is required.
+ */
+
+/**
+ * Manages time flow with optional freezing capability for deterministic rendering.
+ */
+class TimeManager {
+    private _realTime = typeof performance !== 'undefined' && performance && performance.now ?
+        performance.now.bind(performance) :
+        Date.now.bind(Date);
+
+    private _frozenAt: number | null = null;
+
+    /**
+     * Gets the current time, either real or frozen.
+     * @returns Current time in milliseconds
+     */
+    getCurrentTime(): number {
+        return this._frozenAt !== null ? this._frozenAt : this._realTime();
+    }
+
+    /**
+     * Freezes time at a specific timestamp.
+     * @param timestamp - Time in milliseconds to freeze at
+     */
+    freezeAt(timestamp: number): void {
+        this._frozenAt = timestamp;
+    }
+
+    /**
+     * Restores normal time flow.
+     */
+    unfreeze(): void {
+        this._frozenAt = null;
+    }
+
+    /**
+     * Returns whether time is currently frozen.
+     * @returns True if time is frozen, false otherwise
+     */
+    isFrozen(): boolean {
+        return this._frozenAt !== null;
+    }
+}
+
+const timeManager = new TimeManager();
+
+/**
+ * Returns the current time in milliseconds.
+ * Uses performance.now() when available, falls back to Date.now().
+ * Time can be frozen using setNow() for deterministic rendering.
+ */
+export function now(): number {
+    return timeManager.getCurrentTime();
+}
+
+/**
+ * Freezes time at a specific timestamp for deterministic rendering.
+ * Useful for frame-by-frame video capture where each frame needs
+ * a consistent time value.
+ *
+ * @param timestamp - Time in milliseconds to freeze at
+ * @example
+ * ```ts
+ * // Freeze time for video export at 60fps
+ * setNow(0);           // First frame
+ * // ... render frame ...
+ * setNow(16.67);       // Second frame
+ * // ... render frame ...
+ * setNow(33.34);       // Third frame
+ * // ... done ...
+ * restoreNow();        // Resume normal time
+ * ```
+ */
+export function setNow(timestamp: number): void {
+    timeManager.freezeAt(timestamp);
+}
+
+/**
+ * Restores normal time flow after freezing with setNow().
+ * Call this after finishing deterministic rendering operations.
+ */
+export function restoreNow(): void {
+    timeManager.unfreeze();
+}
+
+/**
+ * Returns whether time is currently frozen.
+ * @returns True if time is frozen via setNow(), false otherwise
+ */
+export function isTimeFrozen(): boolean {
+    return timeManager.isFrozen();
+}

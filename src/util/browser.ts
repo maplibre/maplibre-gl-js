@@ -1,9 +1,6 @@
 import {createAbortError} from './abort_error';
+import {now, setNow, restoreNow} from './time_control';
 import {subscribe} from './util';
-
-const now = typeof performance !== 'undefined' && performance && performance.now ?
-    performance.now.bind(performance) :
-    Date.now.bind(Date);
 
 let linkEl;
 
@@ -16,6 +13,18 @@ export const browser = {
      * or a fallback to Date.now()
      */
     now,
+
+    /**
+     * Freezes time at a specific timestamp for deterministic rendering.
+     * Useful for frame-by-frame video export.
+     * @param timestamp - Time in milliseconds to freeze at
+     */
+    setNow,
+
+    /**
+     * Restores normal time flow after freezing with setNow().
+     */
+    restoreNow,
 
     frame(abortController: AbortController, fn: (paintStartTimestamp: number) => void, reject: (error: Error) => void): void {
         const frameId = requestAnimationFrame((paintStartTimestamp)=>{
