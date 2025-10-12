@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-- Use geojson-vt to improve over scale vector handling ([#6521](https://github.com/maplibre/maplibre-gl-js/pull/6521))
+- Use geojson-vt to improve over scale vector handling ([#6521](https://github.com/maplibre/maplibre-gl-js/pull/6521)) ⚠️ This is an experimental feature that currently only applies to Safari by default to prevent it from crashing at high zoom levels. This is not enabled by default for all browsers as it changes query render features results in high zoom levels due to tile splitting. It adds the `experimentalOverzoomingWithGeojsonVt` flag to `MapOptions` to allow controlling this behavior if needed.
 - Use styles `isHidden` logic in the worker by adding a new optional `roundMinZoom` parameter ([#6547](https://github.com/maplibre/maplibre-gl-js/pull/6547))
 - _...Add new stuff here..._
 
