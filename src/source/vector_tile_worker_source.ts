@@ -120,7 +120,6 @@ export class VectorTileWorkerSource implements WorkerSource {
                 return null;
             }
 
-            // if we are seeking a tile deeper than the sources max available canonical tile, get the overzoomed tile
             if (overzoomParameters) {
                 const overzoomTile = this._getOverzoomTile(params, response.vectorTile);
                 response.rawData = overzoomTile.rawData;
@@ -162,6 +161,12 @@ export class VectorTileWorkerSource implements WorkerSource {
         }
     }
 
+    /**
+     * If we are seeking a tile deeper than the source's max available canonical tile, get the overzoomed tile
+     * @param params - the worker tile parameters
+     * @param maxZoomVectorTile - the original vector tile at the source's max available canonical zoom
+     * @returns the overzoomed tile and its raw data
+     */
     private _getOverzoomTile(params: WorkerTileParameters, maxZoomVectorTile: VectorTile): LoadVectorTileResult {
         const {tileID, source, overzoomParameters} = params;
         const {maxZoomTileID, maxOverzoom, tileSize} = overzoomParameters;
