@@ -657,7 +657,7 @@ export class Map extends Camera {
         if (resolvedOptions.renderWorldCopies !== undefined) {
             transform.setRenderWorldCopies(resolvedOptions.renderWorldCopies);
         }
-        if (resolvedOptions.transformConstrain !== undefined) {
+        if (resolvedOptions.transformConstrain !== null) {
             transform.setConstrain(resolvedOptions.transformConstrain);
         }
 
