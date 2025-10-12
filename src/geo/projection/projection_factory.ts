@@ -19,7 +19,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
     transform: ITransform;
     cameraHelper: ICameraHelper;
 } {
-    const transformOptions = {transformConstrain: transformConstrain};
+    const transformOptions = {constrain: transformConstrain};
     if (Array.isArray(name)) {
         const globeProjection = new GlobeProjection({type: name});
         return {

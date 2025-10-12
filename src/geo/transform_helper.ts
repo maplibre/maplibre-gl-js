@@ -87,7 +87,7 @@ export type TransformOptions = {
     /**
      * An override of the transform's constraining function for respecting its longitude and latitude bounds.
      */
-    transformConstrain?: TransformConstrainFunction | null;
+    constrain?: TransformConstrainFunction | null;
 };
 
 function getTileZoom(zoom: number): number {
@@ -163,7 +163,7 @@ export class TransformHelper implements ITransformGetters {
         this._minPitch = (options?.minPitch === undefined || options?.minPitch === null) ? 0 : options?.minPitch;
         this._maxPitch = (options?.maxPitch === undefined || options?.maxPitch === null) ? 60 : options?.maxPitch;
 
-        this._constrain = options?.transformConstrain ?? this._callbacks.constrain;
+        this._constrain = options?.constrain ?? this._callbacks.constrain;
 
         this.setMaxBounds();
 
