@@ -1,4 +1,4 @@
-import {extend, warnOnce, uniqueId, isImageBitmap, type Complete, pick, type Subscription} from '../util/util';
+import {extend, warnOnce, uniqueId, isImageBitmap, type Complete, pick, type Subscription, isSafari} from '../util/util';
 import {browser} from '../util/browser';
 import {DOM} from '../util/dom';
 import packageJSON from '../../package.json' with {type: 'json'};
@@ -361,6 +361,15 @@ export type MapOptions = {
      * keep the camera above ground when pitch \> 90 degrees.
      */
     centerClampedToGround?: boolean;
+    /**
+     * Allows overzooming using geojson-vt for vector tile sources. 
+     * If `true`, tiles over the source's maxzoom will be split using geojson-vt into subtiles.
+     * if `false`, tiles will be overzoomed using scaling.
+     * @defaultValue `true` for Safari and false for other browsers due to Safari crash issues.
+     * This may change or be removed in future versions.
+     * @experimental
+     */
+    experimentalOverzoomingWithGeojsonVt?: boolean;
 };
 
 export type AddImageOptions = {
@@ -444,7 +453,8 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096],
     cancelPendingTileRequestsWhileZooming: true,
-    centerClampedToGround: true
+    centerClampedToGround: true,
+    experimentalOverzoomingWithGeojsonVt: isSafari(globalThis) ? true : false
 };
 
 /**
@@ -528,7 +538,8 @@ export class Map extends Camera {
     _overridePixelRatio: number | null | undefined;
     _maxCanvasSize: [number, number];
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
-
+    /** @internal */
+    _overzoomingWithGeojsonVt: boolean;
     /**
      * @internal
      * image queue throttling handle. To be used later when clean up
@@ -660,6 +671,7 @@ export class Map extends Camera {
         this._clickTolerance = resolvedOptions.clickTolerance;
         this._overridePixelRatio = resolvedOptions.pixelRatio;
         this._maxCanvasSize = resolvedOptions.maxCanvasSize;
+        this._overzoomingWithGeojsonVt = resolvedOptions.experimentalOverzoomingWithGeojsonVt === true;
         this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
 
