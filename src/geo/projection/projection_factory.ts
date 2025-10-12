@@ -19,12 +19,12 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
     transform: ITransform;
     cameraHelper: ICameraHelper;
 } {
-    const trOptions = {transformConstrain: transformConstrain};
+    const transformOptions = {transformConstrain: transformConstrain};
     if (Array.isArray(name)) {
         const globeProjection = new GlobeProjection({type: name});
         return {
             projection: globeProjection,
-            transform: new GlobeTransform(trOptions),
+            transform: new GlobeTransform(transformOptions),
             cameraHelper: new GlobeCameraHelper(globeProjection),
         };
     }
@@ -33,7 +33,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
         {
             return {
                 projection: new MercatorProjection(),
-                transform: new MercatorTransform(trOptions),
+                transform: new MercatorTransform(transformOptions),
                 cameraHelper: new MercatorCameraHelper(),
             };
         }
@@ -50,7 +50,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
             ]});
             return {
                 projection: globeProjection,
-                transform: new GlobeTransform(trOptions),
+                transform: new GlobeTransform(transformOptions),
                 cameraHelper: new GlobeCameraHelper(globeProjection),
             };
         }
@@ -58,7 +58,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
         {
             return {
                 projection: new VerticalPerspectiveProjection(),
-                transform: new VerticalPerspectiveTransform(trOptions),
+                transform: new VerticalPerspectiveTransform(transformOptions),
                 cameraHelper: new VerticalPerspectiveCameraHelper(),
             };
         }
@@ -67,7 +67,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
             warnOnce(`Unknown projection name: ${name}. Falling back to mercator projection.`);
             return {
                 projection: new MercatorProjection(),
-                transform: new MercatorTransform(trOptions),
+                transform: new MercatorTransform(transformOptions),
                 cameraHelper: new MercatorCameraHelper(),
             };
         }
