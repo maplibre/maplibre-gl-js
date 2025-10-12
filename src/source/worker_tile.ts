@@ -108,9 +108,9 @@ export class WorkerTile {
                 if (layer.source !== this.source) {
                     warnOnce(`layer.source = ${layer.source} does not equal this.source = ${this.source}`);
                 }
-                if (layer.isHidden(this.zoom)) {
-                    continue;
-                }
+                if (layer.minzoom && this.zoom < Math.floor(layer.minzoom)) continue;
+                if (layer.maxzoom && this.zoom >= layer.maxzoom) continue;
+                if (layer.visibility === 'none') continue;
                 recalculateLayers(family, this.zoom, availableImages);
 
                 const bucket = buckets[layer.id] = layer.createBucket({
