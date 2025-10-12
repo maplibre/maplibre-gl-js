@@ -1277,7 +1277,7 @@ export class Map extends Camera {
 
     /** Sets or clears the callback overriding how the map constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
      *
-     * @param transformConstrain - A {@link TransformConstrainFunction} callback defining how the viewport should respect the bounds.
+     * @param constrain - A {@link TransformConstrainFunction} callback defining how the viewport should respect the bounds.
      * 
      * `null` clears the callback and reverses the override of the map transform's default constrain function.
      * @example
