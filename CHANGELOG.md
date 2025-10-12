@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-- Add time control API (`setNow`, `restoreNow`, `isTimeFrozen`) for deterministic rendering, enabling frame-by-frame video export and deterministic testing
+- Add time control API (`setNow`, `restoreNow`, `isTimeFrozen`) for deterministic rendering, enabling frame-by-frame video export and deterministic testing ([6544](https://github.com/maplibre/maplibre-gl-js/pull/6544))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
