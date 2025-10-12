@@ -400,9 +400,6 @@ export class GlobeTransform implements ITransform {
     }
 
     getConstrained: TransformConstrainFunction = (lngLat, zoom) => {
-        if (this.transformConstrain) {
-            return this.transformConstrain(lngLat, zoom);
-        }
         return this.currentTransform.getConstrained(lngLat, zoom);
     };
 
