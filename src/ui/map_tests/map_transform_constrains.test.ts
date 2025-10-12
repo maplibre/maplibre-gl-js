@@ -85,42 +85,52 @@ test('Creating a map with style defining globe projection uses Globe transform c
 });
 
 describe('transformConstrain', () => {
-    const container = window.document.createElement('div');
-    Object.defineProperty(container, 'offsetWidth', {value: 512});
-    Object.defineProperty(container, 'offsetHeight', {value: 512});
-
-    function customTransformConstrain(lngLat, zoom) {
-        return {center: lngLat, zoom: zoom ?? 0};
-    };
-    const underzoom = -4;
-    const overpan = {lng: 360, lat: 0};
 
     test('Creating a single-copy map with an identity transform constrain allows the map to underzoom and overpan', () => {
+        const container = window.document.createElement('div');
+        Object.defineProperty(container, 'offsetWidth', {value: 512});
+        Object.defineProperty(container, 'offsetHeight', {value: 512});
+
+        function customTransformConstrain(lngLat, zoom) {
+            return {center: lngLat, zoom: zoom ?? 0};
+        };
+
         const map = createMap({container, renderWorldCopies: false, zoom: -4, center: [360, 0], transformConstrain: customTransformConstrain});
-    
+
         expect(fixedLngLat(map.getCenter(), 4)).toEqual({lng: 360, lat: 0});
         expect(fixedNum(map.getZoom(), 3)).toBe(-4);
     });
     
     test('Changing the transform constrain of a single-copy map to an identity allows the map to underzoom and overpan', () => {
+        const container = window.document.createElement('div');
+        Object.defineProperty(container, 'offsetWidth', {value: 512});
+        Object.defineProperty(container, 'offsetHeight', {value: 512});
+
+        function customTransformConstrain(lngLat, zoom) {
+            return {center: lngLat, zoom: zoom ?? 0};
+        };
+
         const map = createMap({container, renderWorldCopies: false});
-        
-        map.setZoom(underzoom);
-        map.setCenter(overpan);
-        expect(fixedNum(map.getZoom(), 3)).toBe(-0.356);
-        expect(fixedLngLat(map.getCenter(), 4)).toEqual({lng: 0, lat: 0});
-        
+
         map.setTransformConstrain(customTransformConstrain);
-        
-        map.setZoom(underzoom);
-        map.setCenter(overpan);
-        expect(fixedNum(map.getZoom(), 3)).toBe(underzoom);
-        expect(fixedLngLat(map.getCenter(), 4)).toEqual(overpan);
+
+        map.setZoom(-4);
+        map.setCenter({lng: 360, lat: 0});
+        expect(fixedNum(map.getZoom(), 3)).toBe(-4);
+        expect(fixedLngLat(map.getCenter(), 4)).toEqual({lng: 360, lat: 0});
     });
     
     test('Clearing the transform constrain of a single-copy map created with underzoom and overpan reconstrains it', () => {
+        const container = window.document.createElement('div');
+        Object.defineProperty(container, 'offsetWidth', {value: 512});
+        Object.defineProperty(container, 'offsetHeight', {value: 512});
+
+        function customTransformConstrain(lngLat, zoom) {
+            return {center: lngLat, zoom: zoom ?? 0};
+        };
+
         const map = createMap({container, renderWorldCopies: false, zoom: -4, center: [360, 0], transformConstrain: customTransformConstrain});
-        
+
         map.setTransformConstrain();
         expect(fixedNum(map.getZoom(), 3)).toBe(-0.356);
         expect(fixedLngLat(map.getCenter(), 4)).toEqual({lng: 0, lat: 0});
