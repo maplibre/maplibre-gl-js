@@ -18,6 +18,10 @@ class FeatureWrapper extends VectorTileFeature {
         this.feature = feature;
         this.type = feature.type;
         this.properties = feature.tags ? feature.tags : {};
+
+        if ('id' in feature && typeof feature.id === 'number') {
+            this.id = feature.id;
+        }
     }
 
     loadGeometry() {
