@@ -18,20 +18,6 @@ class FeatureWrapper extends VectorTileFeature {
         this.feature = feature;
         this.type = feature.type;
         this.properties = feature.tags ? feature.tags : {};
-
-        // If the feature has a top-level `id` property, copy it over, but only
-        // if it can be coerced to an integer, because this wrapper is used for
-        // serializing geojson feature data into vector tile PBF data, and the
-        // vector tile spec only supports integer values for feature ids --
-        // allowing non-integer values here results in a non-compliant PBF
-        // that causes an exception when it is parsed with vector-tile-js
-        if ('id' in feature) {
-            if (typeof feature.id === 'string') {
-                this.id = parseInt(feature.id, 10);
-            } else if (typeof feature.id === 'number' && !isNaN(feature.id as number)) {
-                this.id = feature.id;
-            }
-        }
     }
 
     loadGeometry() {
@@ -60,7 +46,6 @@ class GeoJSONWrapperLayer extends VectorTileLayer {
         super(new Protobuf());
         this._myFeatures = features;
         this.name = layerName;
-        this.version = 1;
         this.length = features.length;
     }
 
