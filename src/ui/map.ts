@@ -272,7 +272,7 @@ export type MapOptions = {
     transformCameraUpdate?: CameraUpdateTransformFunction | null;
     /**
      * A callback that overrides how the map constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
-     * (See [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/).)
+     * @see [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/)
      * Expected to return an object containing center and zoom.
      * @defaultValue null
      */
