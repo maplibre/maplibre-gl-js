@@ -5,6 +5,7 @@
 
 ### 🐞 Bug fixes
 - Contextmenu events not blocked by scrolling ([#5683](https://github.com/maplibre/maplibre-gl-js/issues/5683)
+- Mousemove events are not blocked by scrolling ([#6302](https://github.com/maplibre/maplibre-gl-js/issues/6302))
 
 ## 5.9.0
 
