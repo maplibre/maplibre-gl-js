@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Use styles `isHidden` logic in the worker by adding a new optional `roundMinZoom` parameter ([#6547](https://github.com/maplibre/maplibre-gl-js/pull/6547))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
