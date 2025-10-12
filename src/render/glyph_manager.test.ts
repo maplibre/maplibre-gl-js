@@ -138,6 +138,13 @@ describe('GlyphManager', () => {
         expect(manager._doesCharSupportLocalGlyph(0x3012)).toBe(true);
     });
 
+    test('GlyphManager generates missing PBF locally', async () => {
+        const manager = createGlyphManager('sans-serif');
+
+        const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [0x10e1]});
+        expect(returnedGlyphs['Arial Unicode MS'][0x10e1].metrics.advance).toBe(12);
+    });
+
     test('GlyphManager caches locally generated glyphs', async () => {
 
         const manager = createGlyphManager('sans-serif');
