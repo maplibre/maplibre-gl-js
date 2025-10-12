@@ -295,6 +295,8 @@ export class HandlerManager {
             map.touchZoomRotate.enable(options.touchZoomRotate);
         }
 
+        this._add('blockableMapEvent', new BlockableMapEventHandler(map));
+
         const scrollZoom = map.scrollZoom = new ScrollZoomHandler(map, () => this._triggerRenderFrame());
         this._add('scrollZoom', scrollZoom, ['mousePan']);
         if (options.interactive && options.scrollZoom) {
@@ -306,8 +308,6 @@ export class HandlerManager {
         if (options.interactive && options.keyboard) {
             map.keyboard.enable();
         }
-
-        this._add('blockableMapEvent', new BlockableMapEventHandler(map));
     }
 
     _add(handlerName: string, handler: Handler, allowed?: Array<string>) {
