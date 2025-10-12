@@ -51,9 +51,8 @@ export type CoveringTilesOptionsInternal = CoveringTilesOptions & {
      */
     reparseOverscaled?: boolean;
     /**
-     * For vector tiles, geojsonvt is used to increase performance by providing sub-tile grids greater than source
-     * maxzoom, therefore bypassing the need for overscaling past source maxzoom using overscaled tileIDs.
-     * https://github.com/maplibre/maplibre-gl-js/pull/6521
+     * For vector tiles, geojsonvt is used to increase performance by providing sub-tile grids greater than source maxzoom, 
+     * therefore bypassing the need for overscaling past source maxzoom using overscaled tileIDs.
      */
     bypassOverscaling?: boolean;
     /**

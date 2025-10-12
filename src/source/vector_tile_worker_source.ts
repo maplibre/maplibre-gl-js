@@ -171,9 +171,6 @@ export class VectorTileWorkerSource implements WorkerSource {
     async loadTile(params: WorkerTileParameters): Promise<WorkerTileResult | null> {
         const {uid: tileUid, overzoomParameters} = params;
 
-        // overzoomParameters are provided when the requested tile has a higher canonical Z than source maxzoom. This allows
-        // the loading of the deepest source tile at source max zoom, using geojsonvt to generate sub tile grids for overzooming.
-        // This provides higher performance on vector layer overscaling. (https://github.com/maplibre/maplibre-gl-js/pull/6521)
         if (overzoomParameters) {
             params.request = overzoomParameters.overzoomRequest;
         }
