@@ -2,6 +2,8 @@
 
 ### ✨ Features and improvements
 - Use geojson-vt to improve over scale vector handling ([#6521](https://github.com/maplibre/maplibre-gl-js/pull/6521))
+- Use styles `isHidden` logic in the worker by adding a new optional `roundMinZoom` parameter ([#6547](https://github.com/maplibre/maplibre-gl-js/pull/6547))
+- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Contextmenu events not blocked by scrolling ([#5683](https://github.com/maplibre/maplibre-gl-js/issues/5683)
