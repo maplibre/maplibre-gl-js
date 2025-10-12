@@ -109,8 +109,8 @@ export class GlobeTransform implements ITransform {
     setMaxBounds(bounds?: LngLatBounds): void {
         this._helper.setMaxBounds(bounds);
     }
-    setTransformConstrain(constrain?: TransformConstrainFunction | null): void {
-        this._helper.setTransformConstrain(constrain);
+    setConstrain(constrain?: TransformConstrainFunction | null): void {
+        this._helper.setConstrain(constrain);
     }
     overrideNearFarZ(nearZ: number, farZ: number): void {
         this._helper.overrideNearFarZ(nearZ, farZ);
@@ -206,8 +206,8 @@ export class GlobeTransform implements ITransform {
     get cameraToCenterDistance(): number {
         return this._helper.cameraToCenterDistance;
     }
-    get transformConstrain(): TransformConstrainFunction | null {
-        return this._helper.transformConstrain;
+    get constrain(): TransformConstrainFunction {
+        return this._helper.constrain;
     }
     public get nearZ(): number { 
         return this._helper.nearZ; 
@@ -256,7 +256,7 @@ export class GlobeTransform implements ITransform {
     public constructor(options?: TransformOptions) {
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
-            defaultTransformConstrain: (center, zoom) => { return this.defaultTransformConstrain(center, zoom); }
+            constrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
         }, options);
         this._globeness = 1; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.
         this._mercatorTransform = new MercatorTransform();
@@ -399,12 +399,8 @@ export class GlobeTransform implements ITransform {
         return this.currentTransform.getBounds();
     }
 
-    defaultTransformConstrain: TransformConstrainFunction = (lngLat, zoom) => {
-        return this.currentTransform.getConstrained(lngLat, zoom);
-    };
-
-    getConstrained: TransformConstrainFunction = (lngLat, zoom) => {
-        return this._helper.getConstrained(lngLat, zoom);
+    defaultConstrain: TransformConstrainFunction = (lngLat, zoom) => {
+        return this.currentTransform.defaultConstrain(lngLat, zoom);
     };
 
     calculateCenterFromCameraLngLatAlt(lngLat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {

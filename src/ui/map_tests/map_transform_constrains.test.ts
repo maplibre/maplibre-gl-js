@@ -123,4 +123,20 @@ describe('transformConstrain', () => {
         expect(fixedNum(map.getZoom(), 3)).toBe(-1.356);
         expect(fixedLngLat(map.getCenter(), 4)).toEqual({lng: 0, lat: 0});
     });
+
+    test('Switching the projection keeps the transform constrain', async () => {
+        function customTransformConstrain(lngLat, zoom) {
+            return {center: lngLat, zoom: zoom ?? 0};
+        };
+
+        const map = createMap( {renderWorldCopies: false, transformConstrain: customTransformConstrain, style: {version: 8, sources: {}, layers: [], projection: {type: 'globe'}}});
+
+        await map.once('style.load');
+        map.setProjection({type: 'mercator'});
+
+        map.setZoom(-4);
+        map.setCenter({lng: 360, lat: 0});
+        expect(fixedNum(map.getZoom(), 3)).toBe(-4);
+        expect(fixedLngLat(map.getCenter(), 4)).toEqual({lng: 360, lat: 0});
+    });
 });

@@ -128,8 +128,8 @@ export class VerticalPerspectiveTransform implements ITransform {
     setMaxBounds(bounds?: LngLatBounds): void {
         this._helper.setMaxBounds(bounds);
     }
-    setTransformConstrain(constrain?: TransformConstrainFunction | null): void {
-        this._helper.setTransformConstrain(constrain);
+    setConstrain(constrain?: TransformConstrainFunction | null): void {
+        this._helper.setConstrain(constrain);
     }
     overrideNearFarZ(nearZ: number, farZ: number): void {
         this._helper.overrideNearFarZ(nearZ, farZ);
@@ -222,8 +222,8 @@ export class VerticalPerspectiveTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
     }
-    get transformConstrain(): TransformConstrainFunction | null {
-        return this._helper.transformConstrain;
+    get constrain(): TransformConstrainFunction {
+        return this._helper.constrain;
     }
     public get nearZ(): number { 
         return this._helper.nearZ; 
@@ -261,7 +261,7 @@ export class VerticalPerspectiveTransform implements ITransform {
     public constructor(options?: TransformOptions) {
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
-            defaultTransformConstrain: (center, zoom) => { return this.defaultTransformConstrain(center, zoom); }
+            constrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
         }, options);
         this._coveringTilesDetailsProvider = new GlobeCoveringTilesDetailsProvider();
     }
@@ -642,7 +642,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         return new LngLatBounds(boundsArray);
     }
 
-    defaultTransformConstrain: TransformConstrainFunction = (lngLat, zoom) => {
+    defaultConstrain: TransformConstrainFunction = (lngLat, zoom) => {
         // Globe: TODO: respect _lngRange, _latRange
         // It is possible to implement exact constrain for globe, but I don't think it is worth the effort.
         const constrainedLat = clamp(lngLat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
@@ -654,10 +654,6 @@ export class VerticalPerspectiveTransform implements ITransform {
             ),
             zoom: constrainedZoom
         };
-    };
-
-    getConstrained: TransformConstrainFunction = (lngLat, zoom) => {
-        return this._helper.getConstrained(lngLat, zoom);
     };
 
     calculateCenterFromCameraLngLatAlt(lngLat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {

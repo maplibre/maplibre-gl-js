@@ -608,7 +608,7 @@ export class Map extends Camera {
     cancelPendingTileRequestsWhileZooming: boolean;
 
     /**
-     * The map transform's `getConstrained()` callback that overrides the default function.
+     * The map transform's callback that overrides the default constrain function.
      * @defaultValue null
      */
     transformConstrain: TransformConstrainFunction | null;
@@ -658,7 +658,7 @@ export class Map extends Camera {
             transform.setRenderWorldCopies(resolvedOptions.renderWorldCopies);
         }
         if (resolvedOptions.transformConstrain !== undefined) {
-            transform.setTransformConstrain(resolvedOptions.transformConstrain);
+            transform.setConstrain(resolvedOptions.transformConstrain);
         }
 
         super(transform, cameraHelper, {bearingSnap: resolvedOptions.bearingSnap});
@@ -1279,7 +1279,7 @@ export class Map extends Camera {
      *
      * @param transformConstrain - A {@link TransformConstrainFunction} callback defining how the viewport should respect the bounds.
      * 
-     * `null` clears the callback and reverses the override of the map transform's constrain function.
+     * `null` clears the callback and reverses the override of the map transform's default constrain function.
      * @example
      * ```ts
      * function customTransformConstrain(lngLat, zoom) {
@@ -1289,8 +1289,8 @@ export class Map extends Camera {
      * ```
      * @see [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/)
      */
-    setTransformConstrain(transformConstrain?: TransformConstrainFunction | null): Map {
-        this.transform.setTransformConstrain(transformConstrain);
+    setTransformConstrain(constrain?: TransformConstrainFunction | null): Map {
+        this.transform.setConstrain(constrain);
         return this._update();
     }
 
