@@ -41,13 +41,16 @@ export type WorkerTileParameters = TileParameters & {
     returnDependencies?: boolean;
     subdivisionGranularity: SubdivisionGranularitySetting;
     /**
-     * overzoomParameters are provided when the requested tile has a higher canonical Z than source maxzoom. 
-     * This allows the loading of the deepest source tile at source max zoom, using geojsonvt to generate sub tile grids for overzooming.
+     * Provide this property when the requested tile has a higher canonical Z than source maxzoom.
+     * This allows the loading of the deepest source tile at source max zoom, and then using geojsonvt to generate sub tile grids for overzooming.
      * This provides higher performance on vector layer overscaling.
      */
     overzoomParameters?: OverzoomParameters;
 };
 
+/**
+ * Parameters needed in order to load a tile that is overzoomed from a source tile
+ */
 export type OverzoomParameters = {
     maxZoomTileID: CanonicalTileID;
     overzoomRequest: RequestParameters;
