@@ -121,7 +121,7 @@ export class OverscaledTileID {
      * When targetZ is less than the current canonical z, the canonical coordinates are updated.
      * @param targetZ - the zoom level to scale to. Must be less than or equal to this.overscaledZ
      * @returns a new OverscaledTileID representing the tile at the target zoom level
-     * @throws if targetZ > this.overscaledZ
+     * @throws if targetZ is greater than this.overscaledZ
      */
     scaledTo(targetZ: number) {
         if (targetZ > this.overscaledZ) throw new Error(`targetZ > this.overscaledZ; targetZ = ${targetZ}; overscaledZ = ${this.overscaledZ}`);
