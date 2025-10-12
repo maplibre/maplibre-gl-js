@@ -328,10 +328,32 @@ function shapeText(
             processStyledBidirectionalText(logicalInput.text,
                 logicalInput.sectionIndex,
                 determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, layoutTextSize));
-        for (const line of processedLines) {
+        for (const line of (processedLines as any[])) {
             const taggedLine = new TaggedString();
-            taggedLine.text = line[0];
-            taggedLine.sectionIndex = line[1];
+            let textPart: any;
+            let sectionIndexPart: any;
+
+            if (Array.isArray(line)) {
+                textPart = line[0];
+                sectionIndexPart = line[1];
+            } else {
+                textPart = line && typeof line.text === 'string' ? line.text : '';
+                if (line) {
+                    if (Array.isArray(line.sectionIndex)) {
+                        sectionIndexPart = line.sectionIndex;
+                    } else if (Array.isArray(line.sections)) {
+                        // Some implementations may use "sections" key for section index mapping
+                        sectionIndexPart = line.sections;
+                    } else {
+                        sectionIndexPart = [];
+                    }
+                } else {
+                    sectionIndexPart = [];
+                }
+            }
+
+            taggedLine.text = typeof textPart === 'string' ? textPart : '';
+            taggedLine.sectionIndex = Array.isArray(sectionIndexPart) ? sectionIndexPart : [];
             taggedLine.sections = logicalInput.sections;
             lines.push(taggedLine);
         }
