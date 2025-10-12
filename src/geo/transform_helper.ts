@@ -50,12 +50,12 @@ export type UnwrappedTileIDType = {
 
 export type TransformHelperCallbacks = {
     /**
-     * Get center lngLat and zoom to ensure that
+     * The transform's default getter of center lngLat and zoom to ensure that
      * 1) everything beyond the bounds is excluded
      * 2) a given lngLat is as near the center as possible
      * Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
      */
-    getConstrained: TransformConstrainFunction;
+    defaultTransformConstrain: TransformConstrainFunction;
 
     /**
      * Updates the underlying transform's internal matrices.
@@ -498,8 +498,12 @@ export class TransformHelper implements ITransformGetters {
         }
     }
 
-    private getConstrained: TransformConstrainFunction = (lngLat, zoom) => {
-        return this._callbacks.getConstrained(lngLat, zoom);
+    getConstrained: TransformConstrainFunction = (lngLat, zoom) => {
+        if (this.transformConstrain) {
+            return this.transformConstrain(lngLat, zoom);
+        } else {
+            return this._callbacks.defaultTransformConstrain(lngLat, zoom);
+        }
     };
 
     /**

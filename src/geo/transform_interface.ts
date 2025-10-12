@@ -13,7 +13,6 @@ import type {Frustum} from '../util/primitives/frustum';
 
 /**
  * The callback defining how the transform constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
- * Used as the `getConstrained` method in implementers of map transforms.
  * @see [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/)
  */
 export type TransformConstrainFunction =  (
@@ -361,7 +360,14 @@ export interface IReadonlyTransform extends ITransformGetters {
     isPointOnMapSurface(p: Point, terrain?: Terrain): boolean;
 
     /**
+     * @internal
+     * The tranform's default callback that ensures that longitude and latitude bounds are respected by the viewport.
+     */
+    defaultTransformConstrain: TransformConstrainFunction;
+
+    /**
      * Get center lngLat and zoom to ensure that longitude and latitude bounds are respected and regions beyond the map bounds are not displayed.
+     * Defaults to {@link defaultTransformConstrain} unless a custom {@link transformConstrain} is defined.
      */
     getConstrained: TransformConstrainFunction;
 

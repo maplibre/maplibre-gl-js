@@ -261,7 +261,7 @@ export class VerticalPerspectiveTransform implements ITransform {
     public constructor(options?: TransformOptions) {
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
-            getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
+            defaultTransformConstrain: (center, zoom) => { return this.defaultTransformConstrain(center, zoom); }
         }, options);
         this._coveringTilesDetailsProvider = new GlobeCoveringTilesDetailsProvider();
     }
@@ -642,10 +642,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         return new LngLatBounds(boundsArray);
     }
 
-    getConstrained: TransformConstrainFunction = (lngLat, zoom) => {
-        if (this.transformConstrain) {
-            return this.transformConstrain(lngLat, zoom);
-        };
+    defaultTransformConstrain: TransformConstrainFunction = (lngLat, zoom) => {
         // Globe: TODO: respect _lngRange, _latRange
         // It is possible to implement exact constrain for globe, but I don't think it is worth the effort.
         const constrainedLat = clamp(lngLat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
@@ -657,6 +654,10 @@ export class VerticalPerspectiveTransform implements ITransform {
             ),
             zoom: constrainedZoom
         };
+    };
+
+    getConstrained: TransformConstrainFunction = (lngLat, zoom) => {
+        return this._helper.getConstrained(lngLat, zoom);
     };
 
     calculateCenterFromCameraLngLatAlt(lngLat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
