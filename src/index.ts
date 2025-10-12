@@ -45,6 +45,8 @@ import {KeyboardHandler} from './ui/handler/keyboard';
 import {TwoFingersTouchPitchHandler, TwoFingersTouchRotateHandler, TwoFingersTouchZoomHandler, type AroundCenterOptions} from './ui/handler/two_fingers_touch';
 import {MessageType, type ActorMessage, type RequestResponseMessageMap} from './util/actor_messages';
 import {createTileMesh, type CreateTileMeshOptions, type IndicesType, type TileMesh} from './util/create_tile_mesh';
+import {ImageRequest} from './util/image_request';
+import {Texture} from './render/texture';
 import type {ControlPosition, IControl} from './ui/control/control';
 import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput} from './style/style_layer/custom_style_layer';
 import type {AnimationOptions, CameraForBoundsOptions, CameraOptions, CameraUpdateTransformFunction, CenterZoomBearing, EaseToOptions, FitBoundsOptions, FlyToOptions, JumpToOptions, PointLike} from './ui/camera';
@@ -239,6 +241,8 @@ export {
     MapWheelEvent,
     MapTouchEvent,
     MapMouseEvent,
+    ImageRequest,
+    Texture,
     type Handler,
     type RequireAtLeastOne,
     type CameraUpdateTransformFunction,
