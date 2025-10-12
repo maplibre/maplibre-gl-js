@@ -190,13 +190,10 @@ export class VectorTileSource extends Evented implements Source {
     }
 
     async loadTile(tile: Tile): Promise<void> {
-        const isTileOverzoomed = tile.tileID.canonical.z > this.maxzoom;
-        const overzoomParameters = isTileOverzoomed ? this._getOverzoomParameters(tile) : null;
-
-        const tileUrl = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
+        const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
 
         const params: WorkerTileParameters = {
-            request: this.map._requestManager.transformRequest(tileUrl, ResourceType.Tile),
+            request: this.map._requestManager.transformRequest(url, ResourceType.Tile),
             uid: tile.uid,
             tileID: tile.tileID,
             zoom: tile.tileID.overscaledZ,
@@ -207,7 +204,7 @@ export class VectorTileSource extends Evented implements Source {
             showCollisionBoxes: this.map.showCollisionBoxes,
             promoteId: this.promoteId,
             subdivisionGranularity: this.map.style.projection.subdivisionGranularity,
-            ...isTileOverzoomed ? {overzoomParameters} : {}
+            overzoomParameters: this._getOverzoomParameters(tile),
         };
         params.request.collectResourceTiming = this._collectResourceTiming;
         let messageType: MessageType.loadTile | MessageType.reloadTile = MessageType.reloadTile;
@@ -245,7 +242,10 @@ export class VectorTileSource extends Evented implements Source {
      * When the requested tile has a higher canonical Z than source maxzoom, pass overzoom parameters so worker can load the
      * deepest tile at source max zoom to generate sub tiles using geojsonvt for highest performance on vector overscaling
      */
-    private _getOverzoomParameters(tile: Tile): OverzoomParameters {
+    private _getOverzoomParameters(tile: Tile): OverzoomParameters | undefined {
+        if (tile.tileID.canonical.z <= this.maxzoom) {
+            return undefined;
+        }
         const maxZoomTileID = tile.tileID.scaledTo(this.maxzoom).canonical;
         const maxZoomTileUrl = maxZoomTileID.url(this.tiles, this.map.getPixelRatio(), this.scheme);
 
