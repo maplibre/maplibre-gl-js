@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Improve layer's `isHidden` logic by moving it to a single place ([#6547](https://github.com/maplibre/maplibre-gl-js/pull/6547))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
