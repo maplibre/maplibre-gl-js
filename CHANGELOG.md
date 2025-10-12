@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-- _...Add new stuff here..._
+- Use geojson-vt to improve over scale vector handling ([#6521](https://github.com/maplibre/maplibre-gl-js/pull/6521))
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
