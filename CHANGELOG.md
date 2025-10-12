@@ -4,6 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix crash when using RTL text plugin with empty formatted text sections ([#6444](https://github.com/maplibre/maplibre-gl-js/issues/6444))
 - _...Add new stuff here..._
 
 ## 5.9.0
