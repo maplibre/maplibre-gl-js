@@ -457,14 +457,14 @@ export class MercatorTransform implements ITransform {
             center: new LngLat(lngLat.lng, lngLat.lat),
             zoom
         };
-    
+
         let lngRange = this._helper._lngRange;
-    
+
         if (!this._helper._renderWorldCopies && lngRange === null) {
             const almost180 = 180 - 1e-10;
             lngRange = [-almost180, almost180];
         }
-    
+
         const worldSize = this.tileSize * zoomScale(result.zoom); // A world size for the requested zoom level, not the current world size
         let minY = 0;
         let maxY = worldSize;
@@ -473,7 +473,7 @@ export class MercatorTransform implements ITransform {
         let scaleY = 0;
         let scaleX = 0;
         const {x: screenWidth, y: screenHeight} = this.size;
-    
+
         if (this._helper._latRange) {
             const latRange = this._helper._latRange;
             minY = mercatorYfromLat(latRange[1]) * worldSize;
@@ -481,7 +481,7 @@ export class MercatorTransform implements ITransform {
             const shouldZoomIn = maxY - minY < screenHeight;
             if (shouldZoomIn) scaleY = screenHeight / (maxY - minY);
         }
-    
+
         if (lngRange) {
             minX = wrap(
                 mercatorXfromLng(lngRange[0]) * worldSize,
@@ -493,18 +493,18 @@ export class MercatorTransform implements ITransform {
                 0,
                 worldSize
             );
-    
+
             if (maxX < minX) maxX += worldSize;
-    
+
             const shouldZoomIn = maxX - minX < screenWidth;
             if (shouldZoomIn) scaleX = screenWidth / (maxX - minX);
         }
-    
+
         const {x: originalX, y: originalY} = projectToWorldCoordinates(worldSize, lngLat);
         let modifiedX, modifiedY;
-    
+
         const scale = Math.max(scaleX || 0, scaleY || 0);
-    
+
         if (scale) {
             // zoom in to exclude all beyond the given lng/lat ranges
             const newPoint = new Point(
@@ -514,13 +514,13 @@ export class MercatorTransform implements ITransform {
             result.zoom += scaleZoom(scale);
             return result;
         }
-    
+
         if (this._helper._latRange) {
             const h2 = screenHeight / 2;
             if (originalY - h2 < minY) modifiedY = minY + h2;
             if (originalY + h2 > maxY) modifiedY = maxY - h2;
         }
-    
+
         if (lngRange) {
             const centerX = (minX + maxX) / 2;
             let wrappedX = originalX;
@@ -528,17 +528,17 @@ export class MercatorTransform implements ITransform {
                 wrappedX = wrap(originalX, centerX - worldSize / 2, centerX + worldSize / 2);
             }
             const w2 = screenWidth / 2;
-    
+
             if (wrappedX - w2 < minX) modifiedX = minX + w2;
             if (wrappedX + w2 > maxX) modifiedX = maxX - w2;
         }
-    
+
         // pan the map if the screen goes off the range
         if (modifiedX !== undefined || modifiedY !== undefined) {
             const newPoint = new Point(modifiedX ?? originalX, modifiedY ?? originalY);
             result.center = unprojectFromWorldCoordinates(worldSize, newPoint).wrap();
         }
-    
+
         return result;
     };
 

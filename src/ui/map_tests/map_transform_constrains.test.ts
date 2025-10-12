@@ -96,7 +96,7 @@ describe('transformConstrain', () => {
         expect(fixedLngLat(map.getCenter(), 4)).toEqual({lng: 360, lat: 0});
         expect(fixedNum(map.getZoom(), 3)).toBe(-4);
     });
-    
+
     test('Changing the transform constrain of a single-copy map to an identity allows the map to underzoom and overpan', () => {
         function customTransformConstrain(lngLat, zoom) {
             return {center: lngLat, zoom: zoom ?? 0};
@@ -111,7 +111,7 @@ describe('transformConstrain', () => {
         expect(fixedNum(map.getZoom(), 3)).toBe(-4);
         expect(fixedLngLat(map.getCenter(), 4)).toEqual({lng: 360, lat: 0});
     });
-    
+
     test('Clearing the transform constrain of a single-copy map created with underzoom and overpan reconstrains it', () => {
         function customTransformConstrain(lngLat, zoom) {
             return {center: lngLat, zoom: zoom ?? 0};
