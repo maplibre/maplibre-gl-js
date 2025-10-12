@@ -4,7 +4,8 @@
 - Use geojson-vt to improve over scale vector handling ([#6521](https://github.com/maplibre/maplibre-gl-js/pull/6521))
 
 ### 🐞 Bug fixes
-- _...Add new stuff here..._
+- Contextmenu events not blocked by scrolling ([#5683](https://github.com/maplibre/maplibre-gl-js/issues/5683)
+- Mousemove events are not blocked by scrolling ([#6302](https://github.com/maplibre/maplibre-gl-js/issues/6302))
 
 ## 5.9.0
 
