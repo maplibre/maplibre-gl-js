@@ -64,10 +64,10 @@ describe('Browser tests', () => {
     test('Mousemove events are fired during scrollzoom', {retry: 3, timeout: 20000}, async () => {
         const mouseMoveFired = await page.evaluate(() => {
             return new Promise<Array<number>>((resolve, _reject) => {
-                let mouseMoveCount = 0
-                let wheelCount = 0
+                let mouseMoveCount = 0;
+                let wheelCount = 0;
                 map.on('mousemove', () => {mouseMoveCount++;});
-                map.on('wheel', () => {wheelCount++})
+                map.on('wheel', () => {wheelCount++;});
                 map.getCanvas().dispatchEvent(new WheelEvent('wheel', {deltaY: 120, bubbles: true}));
                 map.getCanvas().dispatchEvent(new WheelEvent('wheel', {deltaY: 120, bubbles: true}));
                 map.getCanvas().dispatchEvent(new MouseEvent('mousemove', {bubbles: true}));
@@ -76,9 +76,9 @@ describe('Browser tests', () => {
                 map.getCanvas().dispatchEvent(new MouseEvent('mousemove', {bubbles: true}));
                 map.getCanvas().dispatchEvent(new WheelEvent('wheel', {deltaY: 120, bubbles: true}));
                 map.getCanvas().dispatchEvent(new MouseEvent('mousemove', {bubbles: true}));
-                resolve([mouseMoveCount, wheelCount])
-            })   
+                resolve([mouseMoveCount, wheelCount]);
             });
+        });
         expect(mouseMoveFired[0]).toBe(4);
         expect(mouseMoveFired[1]).toBe(4);
     });
