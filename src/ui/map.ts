@@ -375,7 +375,7 @@ export type MapOptions = {
      * The default is `false` for most cases as it changes query render features results in high zoom levels due to tile splitting.
      * If `true`, tiles over the source's maxzoom will be split using geojson-vt into subtiles (partitioning).
      * if `false`, tiles will be overzoomed using scaling.
-     * @defaultValue `true` for Safari and `false` for other browsers due to Safari crash issues.
+     * @defaultValue `true` for Safari to prevent crashes and `false` for other browsers
      * This may change or be removed in future versions.
      * @experimental
      */
