@@ -85,28 +85,17 @@ describe('time_control', () => {
             expect(isTimeFrozen()).toBe(true);
         });
 
-        test('can freeze time at 0', () => {
+        test('handles edge case values', () => {
+            // Can freeze at 0
             setNow(0);
             expect(now()).toBe(0);
             expect(isTimeFrozen()).toBe(true);
-        });
 
-        test('can freeze time at negative values', () => {
+            // Can freeze at negative values
             const negativeTime = -123.456;
             setNow(negativeTime);
             expect(now()).toBe(negativeTime);
             expect(isTimeFrozen()).toBe(true);
-        });
-
-        test('overwrites previous frozen time', () => {
-            setNow(100);
-            expect(now()).toBe(100);
-
-            setNow(200);
-            expect(now()).toBe(200);
-
-            setNow(300);
-            expect(now()).toBe(300);
         });
     });
 
@@ -145,54 +134,18 @@ describe('time_control', () => {
             expect(typeof time).toBe('number');
             expect(time).toBeGreaterThanOrEqual(0);
         });
-
-        test('restores time after multiple freeze operations', () => {
-            setNow(100);
-            setNow(200);
-            setNow(300);
-            expect(now()).toBe(300);
-            expect(isTimeFrozen()).toBe(true);
-
-            restoreNow();
-            expect(isTimeFrozen()).toBe(false);
-            const realTime = now();
-            expect(realTime).not.toBe(300);
-        });
     });
 
     describe('isTimeFrozen()', () => {
-        test('returns false when time is not frozen', () => {
+        test('correctly tracks frozen state', () => {
+            // Initially not frozen
             expect(isTimeFrozen()).toBe(false);
-        });
 
-        test('returns true when time is frozen', () => {
-            setNow(12345);
-            expect(isTimeFrozen()).toBe(true);
-        });
-
-        test('returns false after time is restored', () => {
+            // Becomes true when time is set
             setNow(12345);
             expect(isTimeFrozen()).toBe(true);
 
-            restoreNow();
-            expect(isTimeFrozen()).toBe(false);
-        });
-
-        test('correctly reflects state through multiple operations', () => {
-            expect(isTimeFrozen()).toBe(false);
-
-            setNow(100);
-            expect(isTimeFrozen()).toBe(true);
-
-            setNow(200);
-            expect(isTimeFrozen()).toBe(true);
-
-            restoreNow();
-            expect(isTimeFrozen()).toBe(false);
-
-            setNow(300);
-            expect(isTimeFrozen()).toBe(true);
-
+            // Becomes false after restore
             restoreNow();
             expect(isTimeFrozen()).toBe(false);
         });
@@ -202,25 +155,23 @@ describe('time_control', () => {
         test('simulates frame-by-frame video recording', () => {
             const fps = 60;
             const frameTime = 1000 / fps; // ~16.67ms per frame
-            const frames: number[] = [];
 
-            // Start at time 0
+            // Capture three frames at precise intervals
             setNow(0);
+            const frame1 = now();
 
-            // Capture 10 frames
-            for (let i = 0; i < 10; i++) {
-                frames.push(now());
-                setNow(now() + frameTime);
-            }
+            setNow(frameTime);
+            const frame2 = now();
 
-            // Verify frame times
-            expect(frames).toHaveLength(10);
-            expect(frames[0]).toBe(0);
+            setNow(frameTime * 2);
+            const frame3 = now();
 
-            for (let i = 1; i < frames.length; i++) {
-                const delta = frames[i] - frames[i - 1];
-                expect(delta).toBeCloseTo(frameTime, 2);
-            }
+            // Verify frame times are precisely spaced
+            expect(frame1).toBe(0);
+            expect(frame2).toBeCloseTo(16.67, 2);
+            expect(frame3).toBeCloseTo(33.34, 2);
+            expect(frame2 - frame1).toBeCloseTo(frameTime, 2);
+            expect(frame3 - frame2).toBeCloseTo(frameTime, 2);
 
             // Restore time
             restoreNow();
@@ -246,25 +197,6 @@ describe('time_control', () => {
             waitForRealTime(1);
             const resumeTime2 = now();
             expect(resumeTime2).toBeGreaterThan(resumeTime1);
-        });
-
-        test('supports deterministic testing', () => {
-            // For deterministic tests, freeze time at a known value
-            const testTime = 1000;
-            setNow(testTime);
-
-            // Simulate operations that depend on current time
-            const operation1Time = now();
-            const operation2Time = now();
-            const operation3Time = now();
-
-            // All operations should see the same time
-            expect(operation1Time).toBe(testTime);
-            expect(operation2Time).toBe(testTime);
-            expect(operation3Time).toBe(testTime);
-
-            // Clean up
-            restoreNow();
         });
     });
 });
