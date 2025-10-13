@@ -13,7 +13,8 @@ import {Frustum} from '../../util/primitives/frustum';
 
 import type {Terrain} from '../../render/terrain';
 import type {PointProjection} from '../../symbol/projection';
-import type {IReadonlyTransform, ITransform} from '../transform_interface';
+import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface';
+import type {TransformOptions} from '../transform_helper';
 import type {PaddingOptions} from '../edge_insets';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
@@ -127,6 +128,9 @@ export class VerticalPerspectiveTransform implements ITransform {
     setMaxBounds(bounds?: LngLatBounds): void {
         this._helper.setMaxBounds(bounds);
     }
+    setConstrain(constrain?: TransformConstrainFunction | null): void {
+        this._helper.setConstrain(constrain);
+    }
     overrideNearFarZ(nearZ: number, farZ: number): void {
         this._helper.overrideNearFarZ(nearZ, farZ);
     }
@@ -218,6 +222,9 @@ export class VerticalPerspectiveTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
     }
+    get constrain(): TransformConstrainFunction {
+        return this._helper.constrain;
+    }
     public get nearZ(): number { 
         return this._helper.nearZ; 
     }
@@ -251,12 +258,11 @@ export class VerticalPerspectiveTransform implements ITransform {
 
     private _coveringTilesDetailsProvider: GlobeCoveringTilesDetailsProvider;
 
-    public constructor() {
-
+    public constructor(options?: TransformOptions) {
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
-            getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
-        });
+            constrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
+        }, options);
         this._coveringTilesDetailsProvider = new GlobeCoveringTilesDetailsProvider();
     }
 
@@ -636,7 +642,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         return new LngLatBounds(boundsArray);
     }
 
-    getConstrained(lngLat: LngLat, zoom: number): { center: LngLat; zoom: number } {
+    defaultConstrain: TransformConstrainFunction = (lngLat, zoom) => {
         // Globe: TODO: respect _lngRange, _latRange
         // It is possible to implement exact constrain for globe, but I don't think it is worth the effort.
         const constrainedLat = clamp(lngLat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
@@ -648,7 +654,7 @@ export class VerticalPerspectiveTransform implements ITransform {
             ),
             zoom: constrainedZoom
         };
-    }
+    };
 
     calculateCenterFromCameraLngLatAlt(lngLat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
         return this._helper.calculateCenterFromCameraLngLatAlt(lngLat, alt, bearing, pitch);
