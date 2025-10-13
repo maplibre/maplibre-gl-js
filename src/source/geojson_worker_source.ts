@@ -18,7 +18,7 @@ import type {LoadVectorTileResult} from './vector_tile_worker_source';
 import type {RequestParameters} from '../util/ajax';
 import {isUpdateableGeoJSON, type GeoJSONSourceDiff, applySourceDiff, toUpdateable, type GeoJSONFeatureId} from './geojson_source_diff';
 import type {ClusterIDAndSource, GeoJSONWorkerSourceLoadDataResult, RemoveSourceParams} from '../util/actor_messages';
-import {toVirtualVectorTile} from './overzoomed-goejson-vector-tile';
+import {toVirtualVectorTile} from './overzoomed-geojson-vector-tile';
 
 /**
  * The geojson worker options that can be passed to the worker

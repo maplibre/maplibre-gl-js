@@ -8,7 +8,7 @@ import {WorkerTile} from './worker_tile';
 import {BoundedLRUCache} from './tile_cache';
 import {extend} from '../util/util';
 import {RequestPerformance} from '../util/performance';
-import {type GeoJSONVT, OverzoomedGeoJSONVectorTile, toVirtualVectorTile} from './overzoomed-goejson-vector-tile';
+import {type GeoJSONVT, OverzoomedGeoJSONVectorTile, toVirtualVectorTile} from './overzoomed-geojson-vector-tile';
 import type {
     WorkerSource,
     WorkerTileParameters,
