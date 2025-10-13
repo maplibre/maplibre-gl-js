@@ -215,7 +215,7 @@ export class BoundedLRUCache<K, V> {
     private maxEntries: number;
     private map: Map<K, V>;
 
-    constructor(maxEntries: number = 1000) {
+    constructor(maxEntries: number) {
         this.maxEntries = maxEntries;
         this.map = new Map();
     }
