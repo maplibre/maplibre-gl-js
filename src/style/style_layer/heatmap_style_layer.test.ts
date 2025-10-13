@@ -39,7 +39,7 @@ describe('HeatmapStyleLayer.queryIntersectsFeature', () => {
     }
 
     describe('Mercator projection', () => {
-        const transform = new MercatorTransform(0, 22, 0, 85, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
         transform.resize(400, 300);
 
         test('returns `true` when a heatmap intersects a point', () => {

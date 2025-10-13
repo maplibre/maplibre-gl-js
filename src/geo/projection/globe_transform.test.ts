@@ -597,7 +597,7 @@ describe('GlobeTransform', () => {
         test('change transform and make sure render world copies is kept', () => {
             const globeTransform = createGlobeTransform();
             globeTransform.setRenderWorldCopies(true);
-            const mercator = new MercatorTransform(0, 1, 2, 3, false);
+            const mercator = new MercatorTransform({minZoom: 0, maxZoom: 1, minPitch: 2, maxPitch: 3, renderWorldCopies: false});
             mercator.apply(globeTransform);
 
             expect(mercator.renderWorldCopies).toBeTruthy();

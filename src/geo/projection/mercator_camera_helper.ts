@@ -87,7 +87,7 @@ export class MercatorCameraHelper implements ICameraHelper {
 
         let pointAtOffset = tr.centerPoint.add(options.offsetAsPoint);
         const locationAtOffset = tr.screenPointToLocation(pointAtOffset);
-        const {center, zoom: endZoom} = tr.getConstrained(
+        const {center, zoom: endZoom} = tr.constrain(
             LngLat.convert(options.center || locationAtOffset),
             zoom ?? startZoom
         );
@@ -144,7 +144,7 @@ export class MercatorCameraHelper implements ICameraHelper {
         const startZoom = tr.zoom;
 
         // Obtain target center and zoom
-        const constrained = tr.getConstrained(
+        const constrained = tr.constrain(
             LngLat.convert(options.center || options.locationAtOffset),
             optionsZoom ? +options.zoom : startZoom
         );
@@ -166,7 +166,7 @@ export class MercatorCameraHelper implements ICameraHelper {
 
         if (optionsMinZoom) {
             const minZoomPreConstrain = Math.min(+options.minZoom, startZoom, targetZoom);
-            const minZoom = tr.getConstrained(targetCenter, minZoomPreConstrain).zoom;
+            const minZoom = tr.constrain(targetCenter, minZoomPreConstrain).zoom;
             scaleOfMinZoom = zoomScale(minZoom - startZoom);
         }
 
