@@ -1,10 +1,4 @@
 /**
- * Time control utilities for MapLibre GL JS.
- * Provides deterministic time control for use cases like video export
- * where consistent frame-by-frame rendering is required.
- */
-
-/**
  * Manages time flow with optional freezing capability for deterministic rendering.
  */
 class TimeManager {
@@ -82,6 +76,14 @@ export function setNow(timestamp: number): void {
 /**
  * Restores normal time flow after freezing with setNow().
  * Call this after finishing deterministic rendering operations.
+ *
+ * @example
+ * ```ts
+ * // After video export, resume normal time
+ * setNow(0);
+ * // ... export frames ...
+ * restoreNow(); // Map animations resume normally
+ * ```
  */
 export function restoreNow(): void {
     timeManager.unfreeze();
@@ -90,6 +92,13 @@ export function restoreNow(): void {
 /**
  * Returns whether time is currently frozen.
  * @returns True if time is frozen via setNow(), false otherwise
+ * @example
+ * ```ts
+ * setNow(1000);
+ * console.log(isTimeFrozen()); // true
+ * restoreNow();
+ * console.log(isTimeFrozen()); // false
+ * ```
  */
 export function isTimeFrozen(): boolean {
     return timeManager.isFrozen();

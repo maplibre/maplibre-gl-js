@@ -1,19 +1,25 @@
-import {describe, test, expect, beforeEach, afterEach} from 'vitest';
+import {describe, test, expect, afterEach} from 'vitest';
 import {now, setNow, restoreNow, isTimeFrozen} from './time_control';
 
-describe('time_control', () => {
-    // Store original performance.now to ensure we can verify real time advancement
+/**
+ * Helper to wait for real time to advance by at least the specified duration.
+ * Uses busy-wait to ensure real time passes even when test time is frozen.
+ */
+function waitForRealTime(ms: number): void {
     const realPerformanceNow = typeof performance !== 'undefined' && performance && performance.now ?
         performance.now.bind(performance) :
         Date.now.bind(Date);
 
-    beforeEach(() => {
-        // Ensure we start each test with unfrozen time
-        restoreNow();
-    });
+    const start = realPerformanceNow();
+    while (realPerformanceNow() - start < ms) {
+        // busy wait
+    }
+}
+
+describe('time_control', () => {
 
     afterEach(() => {
-        // Clean up after each test
+        // Clean up: restore normal time flow after each test
         restoreNow();
     });
 
@@ -24,10 +30,7 @@ describe('time_control', () => {
             expect(time1).toBeGreaterThanOrEqual(0);
 
             // Small delay to ensure time advances
-            const startReal = realPerformanceNow();
-            while (realPerformanceNow() - startReal < 1) {
-                // busy wait
-            }
+            waitForRealTime(1);
             const time2 = now();
 
             // Time should advance (or at least not go backwards)
@@ -42,11 +45,7 @@ describe('time_control', () => {
             expect(time1).toBe(frozenTime);
 
             // Wait a bit to ensure real time advances
-            const delay = 10;
-            const startReal = realPerformanceNow();
-            while (realPerformanceNow() - startReal < delay) {
-                // busy wait
-            }
+            waitForRealTime(10);
 
             // Time should still be frozen
             const time2 = now();
@@ -129,10 +128,7 @@ describe('time_control', () => {
             expect(time1).toBeGreaterThanOrEqual(0);
 
             // Small delay
-            const startReal = realPerformanceNow();
-            while (realPerformanceNow() - startReal < 1) {
-                // busy wait
-            }
+            waitForRealTime(1);
 
             const time2 = now();
             expect(time2).toBeGreaterThanOrEqual(time1);
@@ -247,10 +243,7 @@ describe('time_control', () => {
             expect(resumeTime1).not.toBe(pauseTime);
 
             // Time should advance normally
-            const startReal = realPerformanceNow();
-            while (realPerformanceNow() - startReal < 1) {
-                // busy wait
-            }
+            waitForRealTime(1);
             const resumeTime2 = now();
             expect(resumeTime2).toBeGreaterThan(resumeTime1);
         });
