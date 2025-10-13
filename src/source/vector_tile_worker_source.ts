@@ -181,7 +181,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             }
 
             // Create and cache the geojsonvt vector tile tree if it does not exist for the overscaled tile
-            const cacheKey = `${maxZoomTileID.key}_${sourceLayerId}`;
+            const cacheKey = `${maxZoomTileID.key}_${sourceLayerId}_${maxOverzoom}`;
             let geoJSONIndex: GeoJSONVT = this.overzoomedTilesCache.get(cacheKey);
             if (!geoJSONIndex) {
                 geoJSONIndex = this._createGeoJSONIndex(sourceLayer, maxZoomTileID, maxOverzoom, tileSize);
