@@ -17,17 +17,17 @@ class TimeManager {
     }
 
     /**
-     * Freezes time at a specific timestamp.
-     * @param timestamp - Time in milliseconds to freeze at
+     * Sets time at a specific timestamp.
+     * @param timestamp - Time in milliseconds to set
      */
-    freezeAt(timestamp: number): void {
+    setNow(timestamp: number): void {
         this._frozenAt = timestamp;
     }
 
     /**
      * Restores normal time flow.
      */
-    unfreeze(): void {
+    restoreNow(): void {
         this._frozenAt = null;
     }
 
@@ -70,7 +70,7 @@ export function now(): number {
  * ```
  */
 export function setNow(timestamp: number): void {
-    timeManager.freezeAt(timestamp);
+    timeManager.setNow(timestamp);
 }
 
 /**
@@ -86,7 +86,7 @@ export function setNow(timestamp: number): void {
  * ```
  */
 export function restoreNow(): void {
-    timeManager.unfreeze();
+    timeManager.restoreNow();
 }
 
 /**
