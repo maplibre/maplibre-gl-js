@@ -1321,7 +1321,7 @@ describe('flyTo', () => {
     });
 
     test('does not throw when cameras current zoom is above maxzoom and an offset creates infinite zoom out factor', () => {
-        const transform = new MercatorTransform(0, 20.9999, 0, 60, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 20.9999, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(512, 512);
         const camera = attachSimulateFrame(new CameraMock(transform, new MercatorCameraHelper(), {} as any))
             .jumpTo({zoom: 21, center: [0, 0]});
@@ -1950,7 +1950,7 @@ describe('flyTo', () => {
     });
 
     test('respects transform\'s maxZoom', async () => {
-        const transform = new MercatorTransform(2, 10, 0, 60, false);
+        const transform = new MercatorTransform({minZoom: 2, maxZoom: 10, minPitch: 0, maxPitch: 60, renderWorldCopies: false});
         transform.resize(512, 512);
 
         const camera = attachSimulateFrame(new CameraMock(transform, new MercatorCameraHelper(), {} as any));
@@ -1975,7 +1975,7 @@ describe('flyTo', () => {
     });
 
     test('respects transform\'s minZoom', async () => {
-        const transform = new MercatorTransform(2, 10, 0, 60, false);
+        const transform = new MercatorTransform({minZoom: 2, maxZoom: 10, minPitch: 0, maxPitch: 60, renderWorldCopies: false});
         transform.resize(512, 512);
 
         const camera = attachSimulateFrame(new CameraMock(transform, new MercatorCameraHelper(), {} as any));
@@ -2344,7 +2344,7 @@ describe('cameraForBounds', () => {
     });
 
     test('asymmetrical transform using LngLatBounds instance', () => {
-        const transform = new MercatorTransform(2, 10, 0, 60, false);
+        const transform = new MercatorTransform({minZoom: 2, maxZoom: 10, minPitch: 0, maxPitch: 60, renderWorldCopies: false});
         transform.resize(2048, 512);
 
         const camera = attachSimulateFrame(new CameraMock(transform, new MercatorCameraHelper(), {} as any));
@@ -2477,7 +2477,7 @@ describe('queryTerrainElevation', () => {
     test('Calls getElevationForLngLatZoom with correct arguments', () => {
         const getElevationForLngLatZoom = vi.fn();
         camera.terrain = {getElevationForLngLatZoom} as any as Terrain;
-        camera.transform = new MercatorTransform(0, 22, 0, 60, true);
+        camera.transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
 
         camera.queryTerrainElevation([1, 2]);
 

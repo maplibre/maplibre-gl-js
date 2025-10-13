@@ -66,7 +66,7 @@ import type {CanvasSourceSpecification} from '../source/canvas_source';
 import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
-import type {ITransform} from '../geo/transform_interface';
+import type {ITransform, TransformConstrainFunction} from '../geo/transform_interface';
 import type {ICameraHelper} from '../geo/projection/camera_helper';
 
 const version = packageJSON.version;
@@ -271,6 +271,13 @@ export type MapOptions = {
      */
     transformCameraUpdate?: CameraUpdateTransformFunction | null;
     /**
+     * A callback that overrides how the map constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
+     * @see [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/)
+     * Expected to return an object containing center and zoom.
+     * @defaultValue null
+     */
+    transformConstrain?: TransformConstrainFunction | null;
+    /**
      * A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
      * For an example, see https://maplibre.org/maplibre-gl-js/docs/examples/locale-switching/
      * Alternatively, search the official plugins page for plugins related to localization.
@@ -310,7 +317,8 @@ export type MapOptions = {
      * font-family for locally overriding generation of Chinese, Japanese, and Korean characters.
      * For these characters, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
      * Set to `false`, to enable font settings from the map's style for these glyph ranges.
-     * The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js/docs/examples/use-locally-generated-ideographs).)
+     * The purpose of this option is to avoid bandwidth-intensive glyph server requests.
+     * @see [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js/docs/examples/use-locally-generated-ideographs/)
      * @defaultValue 'sans-serif'
      */
     localIdeographFontFamily?: string | false;
@@ -445,6 +453,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     maxTileCacheZoomLevels: config.MAX_TILE_CACHE_ZOOM_LEVELS,
     transformRequest: null,
     transformCameraUpdate: null,
+    transformConstrain: null,
     fadeDuration: 300,
     crossSourceCollisions: true,
     clickTolerance: 3,
@@ -611,6 +620,12 @@ export class Map extends Camera {
      */
     cancelPendingTileRequestsWhileZooming: boolean;
 
+    /**
+     * The map transform's callback that overrides the default constrain function.
+     * @defaultValue null
+     */
+    transformConstrain: TransformConstrainFunction | null;
+
     constructor(options: MapOptions) {
         PerformanceUtils.mark(PerformanceMarkers.create);
 
@@ -655,6 +670,9 @@ export class Map extends Camera {
         if (resolvedOptions.renderWorldCopies !== undefined) {
             transform.setRenderWorldCopies(resolvedOptions.renderWorldCopies);
         }
+        if (resolvedOptions.transformConstrain !== null) {
+            transform.setConstrain(resolvedOptions.transformConstrain);
+        }
 
         super(transform, cameraHelper, {bearingSnap: resolvedOptions.bearingSnap});
 
@@ -675,6 +693,7 @@ export class Map extends Camera {
         this._maxCanvasSize = resolvedOptions.maxCanvasSize;
         this._overzoomingWithGeojsonVt = resolvedOptions.experimentalOverzoomingWithGeojsonVt === true;
         this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
+        this.transformConstrain = resolvedOptions.transformConstrain;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
 
         this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
@@ -1267,6 +1286,25 @@ export class Map extends Camera {
      */
     setRenderWorldCopies(renderWorldCopies?: boolean | null): Map {
         this.transform.setRenderWorldCopies(renderWorldCopies);
+        return this._update();
+    }
+
+    /** Sets or clears the callback overriding how the map constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
+     *
+     * @param constrain - A {@link TransformConstrainFunction} callback defining how the viewport should respect the bounds.
+     * 
+     * `null` clears the callback and reverses the override of the map transform's default constrain function.
+     * @example
+     * ```ts
+     * function customTransformConstrain(lngLat, zoom) {
+     *   return {center: lngLat, zoom: zoom ?? 0};
+     * };
+     * map.setTransformConstrain(customTransformConstrain);
+     * ```
+     * @see [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/)
+     */
+    setTransformConstrain(constrain?: TransformConstrainFunction | null): Map {
+        this.transform.setConstrain(constrain);
         return this._update();
     }
 

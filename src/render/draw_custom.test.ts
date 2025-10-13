@@ -23,7 +23,7 @@ vi.mock('../symbol/projection');
 describe('drawCustom', () => {
     test('should return custom render method inputs', () => {
         // same transform setup as in transform.test.ts 'creates a transform', so matrices of transform should be the same
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(500, 500);
         transform.setMinPitch(10);
         transform.setMaxPitch(10);

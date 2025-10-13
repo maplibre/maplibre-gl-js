@@ -4,11 +4,13 @@
 
 - Use geojson-vt to improve over scale vector handling ([#6521](https://github.com/maplibre/maplibre-gl-js/pull/6521)) ⚠️ This is an experimental feature that currently only applies to Safari by default to prevent it from crashing at high zoom levels. This is not enabled by default for all browsers as it changes query render features results in high zoom levels due to tile splitting. It adds the `experimentalOverzoomingWithGeojsonVt` flag to `MapOptions` to allow controlling this behavior if needed. Use `true` for partitioning and `false` for scaling. It seems to have better performance at high zoom levels.
 - Use styles `isHidden` logic in the worker by adding a new optional `roundMinZoom` parameter ([#6547](https://github.com/maplibre/maplibre-gl-js/pull/6547))
+- Add `transformConstrain` callback to the `Map` options to override the transform's `defaultTransformConstrain`; add type `TransformConstrainFunction`; refactor transform constructor options to a `TransformOptions` object ([#6484](https://github.com/maplibre/maplibre-gl-js/issues/6484))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Contextmenu events not blocked by scrolling ([#5683](https://github.com/maplibre/maplibre-gl-js/issues/5683)
 - Mousemove events are not blocked by scrolling ([#6302](https://github.com/maplibre/maplibre-gl-js/issues/6302))
+- Dashed lines have blurry rounded caps ([#6554](https://github.com/maplibre/maplibre-gl-js/pull/6554))
 
 ## 5.9.0
 
