@@ -169,7 +169,7 @@ describe('time_control', () => {
             // Verify frame times are precisely spaced
             expect(frame1).toBe(0);
             expect(frame2).toBeCloseTo(16.67, 2);
-            expect(frame3).toBeCloseTo(33.34, 2);
+            expect(frame3).toBeCloseTo(33.33, 2);
             expect(frame2 - frame1).toBeCloseTo(frameTime, 2);
             expect(frame3 - frame2).toBeCloseTo(frameTime, 2);
 
