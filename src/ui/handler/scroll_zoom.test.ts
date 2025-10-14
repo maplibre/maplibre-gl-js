@@ -341,6 +341,7 @@ describe('ScrollZoomHandler', () => {
 
         expect(map.getZoom() - startZoom).toBe(0.0);
 
+        map.remove();
     });
 
     test('Gracefully handle wheel events that cancel each other out before the first scroll frame', () => {
@@ -364,6 +365,7 @@ describe('ScrollZoomHandler', () => {
         browserNow.mockReturnValue(now);
         map._renderTaskQueue.run();
 
+        map.remove();
     });
 
     test('does not zoom if preventDefault is called on the wheel event', () => {
@@ -433,6 +435,7 @@ describe('ScrollZoomHandler', () => {
         expect(startCount).toBe(1);
         expect(endCount).toBe(1);
 
+        map.remove();
     });
 
     test('emits one zoomstart event and one zoomend event while zooming', async () => {
@@ -481,6 +484,7 @@ describe('ScrollZoomHandler', () => {
         expect(startCount).toBe(1);
         expect(endCount).toBe(1);
 
+        map.remove();
     });
 
     test('Zooms for single mouse wheel tick while in the center of the map, should zoom to center', () => {
@@ -625,6 +629,8 @@ describe('ScrollZoomHandler', () => {
         expect(map.getZoom()).toBeCloseTo(-2.53, 2);
         scrollOutAtLat(map, 0, browserNow);
         expect(map.getZoom()).toBeCloseTo(0, 2);
+
+        map.remove();
     });
 
     test('Clamps zoom at high latitude to keep globe consistent size using mouse wheel', async () => {
@@ -641,6 +647,8 @@ describe('ScrollZoomHandler', () => {
         expect(map.getZoom()).toBeCloseTo(-2.53, 2);
         scrollOutAtLat(map, 0, browserNow, simulate.magicWheelZoomDelta);
         expect(map.getZoom()).toBeCloseTo(0, 2);
+
+        map.remove();
     });
 
     test('Clamps to min/max zoom when using mercator projection', async () => {
@@ -657,5 +665,7 @@ describe('ScrollZoomHandler', () => {
         expect(map.getZoom()).toBeCloseTo(0, 2);
         scrollOutAtLat(map, 0, browserNow);
         expect(map.getZoom()).toBeCloseTo(0, 2);
+
+        map.remove();
     });
 });
