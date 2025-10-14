@@ -937,7 +937,6 @@ export class SourceCache extends Evented {
      * Set a timeout to reload the tile after it expires
      */
     _setTileReloadTimer(id: string, tile: Tile) {
-        if (!this.map?._refreshExpiredTiles) return;
         this._clearTileReloadTimer(id);
 
         const expiryTimeout = tile.getExpiryTimeout();
@@ -959,8 +958,6 @@ export class SourceCache extends Evented {
     }
 
     _resetTileReloadTimers() {
-        if (!this.map?._refreshExpiredTiles) return;
-
         for (const id in this._timers) {
             clearTimeout(this._timers[id]);
             delete this._timers[id];
