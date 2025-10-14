@@ -3,7 +3,7 @@ import createMap from '../lib/create_map';
 import type {Map} from '../../../src/ui/map';
 import type {GeoJSONSource} from '../../../src/source/geojson_source';
 
-let pointCount = 10_000;
+let pointCount = 50_000;
 
 export default class GeoJSONDiff extends Benchmark {
     map: Map;
