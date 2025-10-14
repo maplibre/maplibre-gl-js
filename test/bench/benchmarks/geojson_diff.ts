@@ -3,7 +3,7 @@ import createMap from '../lib/create_map';
 import type {Map} from '../../../src/ui/map';
 import type {GeoJSONSource} from '../../../src/source/geojson_source';
 
-let pointCount = 100;
+let pointCount = 10_000;
 
 export default class GeoJSONDiff extends Benchmark {
     map: Map;
@@ -17,7 +17,7 @@ export default class GeoJSONDiff extends Benchmark {
             width: 512,
             height: 512,
             center: [0, 0],
-            zoom: 0,
+            zoom: 1,
             fadeDuration: 0,
             style: {
                 version: 8,
@@ -65,15 +65,13 @@ export default class GeoJSONDiff extends Benchmark {
         const source = this.map.getSource('points') as GeoJSONSource;
 
         await source.updateData({
-            add: [],
             update: [{
               id: 0,
               newGeometry: {
                     type: 'Point',
                     coordinates: [1, 1],
                 }
-            }],
-            remove: []
+            }]
         });
 
         await new Promise(resolve => {
