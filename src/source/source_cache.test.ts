@@ -216,7 +216,7 @@ describe('SourceCache.addTile', () => {
 
         const sourceCache = createSourceCache();
         sourceCache._setTileReloadTimer = (id) => {
-            sourceCache._timers[id] = setTimeout(() => {}, 0);
+            sourceCache._reloadTimers[id] = setTimeout(() => {}, 0);
         };
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'loaded';
@@ -229,22 +229,22 @@ describe('SourceCache.addTile', () => {
         sourceCache.updateCacheSize(tr);
 
         const id = tileID.key;
-        expect(sourceCache._timers[id]).toBeFalsy();
+        expect(sourceCache._reloadTimers[id]).toBeFalsy();
         expect(sourceCache._cache.has(tileID)).toBeFalsy();
 
         sourceCache._addTile(tileID);
 
-        expect(sourceCache._timers[id]).toBeTruthy();
+        expect(sourceCache._reloadTimers[id]).toBeTruthy();
         expect(sourceCache._cache.has(tileID)).toBeFalsy();
 
         sourceCache._removeTile(tileID.key);
 
-        expect(sourceCache._timers[id]).toBeFalsy();
+        expect(sourceCache._reloadTimers[id]).toBeFalsy();
         expect(sourceCache._cache.has(tileID)).toBeTruthy();
 
         sourceCache._addTile(tileID);
 
-        expect(sourceCache._timers[id]).toBeTruthy();
+        expect(sourceCache._reloadTimers[id]).toBeTruthy();
         expect(sourceCache._cache.has(tileID)).toBeFalsy();
 
     });
@@ -2323,6 +2323,8 @@ describe('SourceCache reloads expiring tiles', () => {
         const expiryDate = new Date();
         expiryDate.setMilliseconds(expiryDate.getMilliseconds() + 50);
         const sourceCache = createSourceCache({expires: expiryDate});
+        const map = {_refreshExpiredTiles: true} as Map;
+        sourceCache.onAdd(map);
 
         const spy = vi.fn();
         sourceCache._reloadTile = spy;
