@@ -65,9 +65,7 @@ export class SourceCache extends Evented {
     _tiles: Record<string, Tile>;
     _prevLng: number;
     _cache: TileCache;
-    _timers: {
-        [_ in any]: ReturnType<typeof setTimeout>;
-    };
+    _reloadTimers: Record<string, ReturnType<typeof setTimeout>>;
     _maxTileCacheSize: number;
     _maxTileCacheZoomLevels: number;
     _paused: boolean;
@@ -106,7 +104,7 @@ export class SourceCache extends Evented {
 
         this._tiles = {};
         this._cache = new TileCache(0, (tile) => this._unloadTile(tile));
-        this._timers = {};
+        this._reloadTimers = {};
         this._maxTileCacheSize = null;
         this._maxTileCacheZoomLevels = null;
         this._rasterFadeDuration = 0;
@@ -520,15 +518,7 @@ export class SourceCache extends Evented {
             }
             this._tiles = tiles;
 
-            // Reset tile reload timers
-            for (const id in this._timers) {
-                clearTimeout(this._timers[id]);
-                delete this._timers[id];
-            }
-            for (const id in this._tiles) {
-                const tile = this._tiles[id];
-                this._setTileReloadTimer(id, tile);
-            }
+            this._resetTileReloadTimers();
         }
     }
 
@@ -943,18 +933,42 @@ export class SourceCache extends Evented {
         return tile;
     }
 
+    /**
+     * Set a timeout to reload the tile after it expires
+     */
     _setTileReloadTimer(id: string, tile: Tile) {
-        if (id in this._timers) {
-            clearTimeout(this._timers[id]);
-            delete this._timers[id];
-        }
+        if (!this.map?._refreshExpiredTiles) return;
+        this._clearTileReloadTimer(id);
 
         const expiryTimeout = tile.getExpiryTimeout();
         if (expiryTimeout) {
-            this._timers[id] = setTimeout(() => {
+            const reload = () => {
                 this._reloadTile(id, 'expired');
-                delete this._timers[id];
-            }, expiryTimeout);
+                delete this._reloadTimers[id];
+            };
+            this._reloadTimers[id] = setTimeout(reload, expiryTimeout);
+        }
+    }
+
+    _clearTileReloadTimer(id: string) {
+        const timeout = this._reloadTimers[id];
+        if (timeout) {
+            clearTimeout(timeout);
+            delete this._reloadTimers[id];
+        }
+    }
+
+    _resetTileReloadTimers() {
+        if (!this.map?._refreshExpiredTiles) return;
+
+        for (const id in this._reloadTimers) {
+            clearTimeout(this._reloadTimers[id]);
+            delete this._reloadTimers[id];
+        }
+
+        for (const id in this._tiles) {
+            const tile = this._tiles[id];
+            this._setTileReloadTimer(id, tile);
         }
     }
 
@@ -982,10 +996,7 @@ export class SourceCache extends Evented {
 
         tile.uses--;
         delete this._tiles[id];
-        if (this._timers[id]) {
-            clearTimeout(this._timers[id]);
-            delete this._timers[id];
-        }
+        this._clearTileReloadTimer(id);
 
         if (tile.uses > 0)
             return;
