@@ -1,9 +1,6 @@
 import {createAbortError} from './abort_error';
+import {now} from './time_control';
 import {subscribe} from './util';
-
-const now = typeof performance !== 'undefined' && performance && performance.now ?
-    performance.now.bind(performance) :
-    Date.now.bind(Date);
 
 let linkEl;
 
