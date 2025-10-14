@@ -962,7 +962,6 @@ export class SourceCache extends Evented {
             clearTimeout(this._timers[id]);
             delete this._timers[id];
         }
-
         for (const id in this._tiles) {
             const tile = this._tiles[id];
             this._setTileReloadTimer(id, tile);

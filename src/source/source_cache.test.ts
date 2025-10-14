@@ -2323,8 +2323,6 @@ describe('SourceCache reloads expiring tiles', () => {
         const expiryDate = new Date();
         expiryDate.setMilliseconds(expiryDate.getMilliseconds() + 50);
         const sourceCache = createSourceCache({expires: expiryDate});
-        const map = {_refreshExpiredTiles: true} as Map;
-        sourceCache.onAdd(map);
 
         const spy = vi.fn();
         sourceCache._reloadTile = spy;
