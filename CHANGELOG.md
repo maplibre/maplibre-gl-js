@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Add time control API (`setNow`, `restoreNow`, `isTimeFrozen`) for deterministic rendering, enabling frame-by-frame video export and deterministic testing ([6544](https://github.com/maplibre/maplibre-gl-js/pull/6544))
 - Use styles `isHidden` logic in the worker by adding a new optional `roundMinZoom` parameter ([#6547](https://github.com/maplibre/maplibre-gl-js/pull/6547))
 - Add `transformConstrain` callback to the `Map` options to override the transform's `constrain` with new type `TransformConstrainFunction`; refactor transform constructor options to a `TransformOptions` object ([#6484](https://github.com/maplibre/maplibre-gl-js/issues/6484))
 - _...Add new stuff here..._
