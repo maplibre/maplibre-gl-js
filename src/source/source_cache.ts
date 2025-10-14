@@ -68,9 +68,6 @@ export class SourceCache extends Evented {
     _timers: {
         [_ in any]: ReturnType<typeof setTimeout>;
     };
-    _cacheTimers: {
-        [_ in any]: ReturnType<typeof setTimeout>;
-    };
     _maxTileCacheSize: number;
     _maxTileCacheZoomLevels: number;
     _paused: boolean;
@@ -110,7 +107,6 @@ export class SourceCache extends Evented {
         this._tiles = {};
         this._cache = new TileCache(0, (tile) => this._unloadTile(tile));
         this._timers = {};
-        this._cacheTimers = {};
         this._maxTileCacheSize = null;
         this._maxTileCacheZoomLevels = null;
         this._rasterFadeDuration = 0;
@@ -929,11 +925,6 @@ export class SourceCache extends Evented {
             // set the tileID because the cached tile could have had a different wrap value
             tile.tileID = tileID;
             this._state.initializeTileState(tile, this.map ? this.map.painter : null);
-            if (this._cacheTimers[tileID.key]) {
-                clearTimeout(this._cacheTimers[tileID.key]);
-                delete this._cacheTimers[tileID.key];
-                this._setTileReloadTimer(tileID.key, tile);
-            }
         }
 
         const cached = tile;
