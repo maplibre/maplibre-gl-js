@@ -24,17 +24,20 @@ describe('time_control', () => {
     });
 
     describe('now()', () => {
-        test('returns current time when not frozen', () => {
-            const time1 = now();
-            expect(typeof time1).toBe('number');
-            expect(time1).toBeGreaterThanOrEqual(0);
+        test('returns a valid number when not frozen', () => {
+            const currentTime = now();
+            expect(typeof currentTime).toBe('number');
+            expect(currentTime).toBeGreaterThanOrEqual(0);
+        });
 
-            // Small delay to ensure time advances
-            waitForRealTime(1);
-            const time2 = now();
+        test('advances over time when not frozen', () => {
+            const timeBeforeDelay = now();
 
-            // Time should advance (or at least not go backwards)
-            expect(time2).toBeGreaterThanOrEqual(time1);
+            const minimalDelayMs = 1;
+            waitForRealTime(minimalDelayMs);
+
+            const timeAfterDelay = now();
+            expect(timeAfterDelay).toBeGreaterThanOrEqual(timeBeforeDelay);
         });
 
         test('returns frozen time when time is set', () => {
@@ -44,10 +47,9 @@ describe('time_control', () => {
             const time1 = now();
             expect(time1).toBe(frozenTime);
 
-            // Wait a bit to ensure real time advances
-            waitForRealTime(10);
+            const realTimeDelayMs = 10;
+            waitForRealTime(realTimeDelayMs);
 
-            // Time should still be frozen
             const time2 = now();
             expect(time2).toBe(frozenTime);
         });
@@ -85,13 +87,13 @@ describe('time_control', () => {
             expect(isTimeFrozen()).toBe(true);
         });
 
-        test('handles edge case values', () => {
-            // Can freeze at 0
+        test('freezes time at zero', () => {
             setNow(0);
             expect(now()).toBe(0);
             expect(isTimeFrozen()).toBe(true);
+        });
 
-            // Can freeze at negative values
+        test('freezes time at negative values', () => {
             const negativeTime = -123.456;
             setNow(negativeTime);
             expect(now()).toBe(negativeTime);
@@ -138,16 +140,16 @@ describe('time_control', () => {
 
     describe('isTimeFrozen()', () => {
         test('correctly tracks frozen state', () => {
-            // Initially not frozen
-            expect(isTimeFrozen()).toBe(false);
+            const initialFrozenState = isTimeFrozen();
+            expect(initialFrozenState).toBe(false);
 
-            // Becomes true when time is set
             setNow(12345);
-            expect(isTimeFrozen()).toBe(true);
+            const frozenStateAfterSet = isTimeFrozen();
+            expect(frozenStateAfterSet).toBe(true);
 
-            // Becomes false after restore
             restoreNow();
-            expect(isTimeFrozen()).toBe(false);
+            const frozenStateAfterRestore = isTimeFrozen();
+            expect(frozenStateAfterRestore).toBe(false);
         });
     });
 
