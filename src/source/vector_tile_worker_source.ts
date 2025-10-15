@@ -15,6 +15,7 @@ import type {
 import type {IActor} from '../util/actor';
 import type {StyleLayerIndex} from '../style/style_layer_index';
 import {VectorTile} from '@mapbox/vector-tile';
+import {MLTVectorTile} from './mlt/mlt_vector_tile';
 
 export type LoadVectorTileResult = {
     vectorTile: VectorTile;
@@ -66,7 +67,9 @@ export class VectorTileWorkerSource implements WorkerSource {
     async loadVectorTile(params: WorkerTileParameters, abortController: AbortController): Promise<LoadVectorTileResult> {
         const response = await getArrayBuffer(params.request, abortController);
         try {
-            const vectorTile = new VectorTile(new Protobuf(response.data));
+            const vectorTile = params.encoding !== 'mlt' 
+                ? new VectorTile(new Protobuf(response.data)) 
+                : new MLTVectorTile(response.data);
             return {
                 vectorTile,
                 rawData: response.data,
