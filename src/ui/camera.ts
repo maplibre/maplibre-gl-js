@@ -1,6 +1,7 @@
 import {extend, wrap, defaultEasing, pick, scaleZoom} from '../util/util';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {browser} from '../util/browser';
+import {now} from '../util/time_control';
 import {LngLat} from '../geo/lng_lat';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
@@ -1595,7 +1596,7 @@ export abstract class Camera extends Evented {
             frame(1);
             finish();
         } else {
-            this._easeStart = browser.now();
+            this._easeStart = now();
             this._easeOptions = options;
             this._onEaseFrame = frame;
             this._onEaseEnd = finish;
@@ -1605,7 +1606,7 @@ export abstract class Camera extends Evented {
 
     // Callback for map._requestRenderFrame
     _renderFrameCallback = () => {
-        const t = Math.min((browser.now() - this._easeStart) / this._easeOptions.duration, 1);
+        const t = Math.min((now() - this._easeStart) / this._easeOptions.duration, 1);
         this._onEaseFrame(this._easeOptions.easing(t));
 
         // if _stop is called during _onEaseFrame from _fireMoveEvents we should avoid a new _requestRenderFrame, checking it by ensuring _easeFrameId was not deleted

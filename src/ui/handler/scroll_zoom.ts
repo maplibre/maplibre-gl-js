@@ -1,7 +1,7 @@
 import {DOM} from '../../util/dom';
 
 import {defaultEasing, bezier, zoomScale, scaleZoom} from '../../util/util';
-import {browser} from '../../util/browser';
+import {now} from '../../util/time_control';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {LngLat} from '../../geo/lng_lat';
 import {TransformProvider} from './transform-provider';
@@ -175,10 +175,10 @@ export class ScrollZoomHandler implements Handler {
             return;
         }
         let value = e.deltaMode === WheelEvent.DOM_DELTA_LINE ? e.deltaY * 40 : e.deltaY;
-        const now = browser.now(),
-            timeDelta = now - (this._lastWheelEventTime || 0);
+        const currentTime = now(),
+            timeDelta = currentTime - (this._lastWheelEventTime || 0);
 
-        this._lastWheelEventTime = now;
+        this._lastWheelEventTime = currentTime;
 
         if (value !== 0 && (value % wheelZoomDelta) === 0) {
             // This one is definitely a mouse wheel event.
@@ -318,7 +318,7 @@ export class ScrollZoomHandler implements Handler {
         let zoom;
 
         if (this._type === 'wheel' && startZoom && easing) {
-            const lastWheelEventTimeDiff = browser.now() - this._lastWheelEventTime;
+            const lastWheelEventTimeDiff = now() - this._lastWheelEventTime;
 
             const t = Math.min((lastWheelEventTimeDiff + wheelEventTimeDiffAdjustment) / 200, 1);
 
@@ -365,7 +365,7 @@ export class ScrollZoomHandler implements Handler {
 
         if (this._prevEase) {
             const currentEase = this._prevEase;
-            const t = (browser.now() - currentEase.start) / currentEase.duration;
+            const t = (now() - currentEase.start) / currentEase.duration;
             const speed = currentEase.easing(t + 0.01) - currentEase.easing(t);
 
             // Quick hack to make new bezier that is continuous with last
@@ -376,7 +376,7 @@ export class ScrollZoomHandler implements Handler {
         }
 
         this._prevEase = {
-            start: browser.now(),
+            start: now(),
             duration,
             easing
         };
