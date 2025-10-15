@@ -1,19 +1,9 @@
 import Point from '@mapbox/point-geometry';
 import {type VectorTile, type VectorTileFeature, type VectorTileLayer} from '@mapbox/vector-tile';
+import {FeatureTable, decodeTile} from '@maplibre/mlt';
 
 type PublicPart<T> = {[K in keyof T]: T[K]};
 
-// HM TODO: replace these when there's a mlt package published.
-class FeatureTable {
-    name: string;
-    numFeatures: number;
-    *[Symbol.iterator](): Iterator<GeoJSON.Feature> {
-    }
-}
-
-function decodeTile(_data: Uint8Array): FeatureTable[] {
-    return [];
-}
 
 class MLTVectorTileFeature implements PublicPart<VectorTileFeature> {
     _featureData: GeoJSON.Feature;
@@ -22,11 +12,26 @@ class MLTVectorTileFeature implements PublicPart<VectorTileFeature> {
     extent: VectorTileFeature['extent'];
     id: VectorTileFeature['id'];
 
-    constructor(feature: GeoJSON.Feature) {
+    constructor(feature: GeoJSON.Feature, extent: number) {
         this._featureData = feature;
         this.properties = this._featureData.properties || {};
-        this.type = this._featureData.geometry ? (this._featureData.geometry.type === 'Point' ? 1 : this._featureData.geometry.type === 'LineString' ? 2 : this._featureData.geometry.type === 'Polygon' ? 3 : 0) : 0;
-        this.extent = 4096;
+        switch (this._featureData.geometry?.type) {
+            case 'Point':
+            case 'MultiPoint':
+                this.type = 1;
+                break;
+            case 'MultiLineString':
+            case 'LineString':
+                this.type = 2;
+                break;
+            case 'Polygon':
+            case 'MultiPolygon':
+                this.type = 3;
+                break;
+            default:
+                this.type = 0;
+        };
+        this.extent = extent;
         this.id = Number(this._featureData.id);
     }
 
@@ -68,10 +73,12 @@ class MLTVectorTileLayer implements PublicPart<VectorTileLayer> {
         this.featureTable = featureTable;
         this.name = featureTable.name;
         this.length = featureTable.numFeatures;
+        this.extent = featureTable.extent;
+        this.version = 2;
     }
 
     feature(i: number): VectorTileFeature {
-        return new MLTVectorTileFeature(this.featureTable[i]) as unknown as VectorTileFeature;
+        return new MLTVectorTileFeature(this.featureTable[i], this.extent) as unknown as VectorTileFeature;
     }
 }
 
