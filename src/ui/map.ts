@@ -1,5 +1,6 @@
 import {extend, warnOnce, uniqueId, isImageBitmap, type Complete, pick, type Subscription} from '../util/util';
 import {browser} from '../util/browser';
+import {now} from '../util/time_control';
 import {DOM} from '../util/dom';
 import packageJSON from '../../package.json' with {type: 'json'};
 import {type GetResourceResponse, getJSON} from '../util/ajax';
@@ -3354,11 +3355,11 @@ export class Map extends Camera {
             this._styleDirty = false;
 
             const zoom = this.transform.zoom;
-            const now = browser.now();
-            this.style.zoomHistory.update(zoom, now);
+            const currentTime = now();
+            this.style.zoomHistory.update(zoom, currentTime);
 
             const parameters = new EvaluationParameters(zoom, {
-                now,
+                now: currentTime,
                 fadeDuration,
                 zoomHistory: this.style.zoomHistory,
                 transition: this.style.getTransition()

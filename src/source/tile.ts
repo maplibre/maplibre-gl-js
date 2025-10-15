@@ -6,7 +6,7 @@ import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
 import {SymbolBucket} from '../data/bucket/symbol_bucket';
 import {CollisionBoxArray} from '../data/array_types.g';
 import {Texture} from '../render/texture';
-import {browser} from '../util/browser';
+import {now} from '../util/time_control';
 import {toEvaluationFeature} from '../data/evaluation_feature';
 import {EvaluationParameters} from '../style/evaluation_parameters';
 import {type SourceFeatureState} from '../source/source_state';
@@ -180,7 +180,7 @@ export class Tile {
         this.fadingParentID = null;
         this.selfFading = false;
 
-        this.timeAdded = browser.now();
+        this.timeAdded = now();
         this.fadeEndTime = 0;
         this.fadeOpacity = 1;
     }
@@ -494,7 +494,7 @@ export class Tile {
     }
 
     symbolFadeFinished(): boolean {
-        return !this.symbolFadeHoldUntil || this.symbolFadeHoldUntil < browser.now();
+        return !this.symbolFadeHoldUntil || this.symbolFadeHoldUntil < now();
     }
 
     clearSymbolFadeHold() {
@@ -502,7 +502,7 @@ export class Tile {
     }
 
     setSymbolHoldDuration(duration: number) {
-        this.symbolFadeHoldUntil = browser.now() + duration;
+        this.symbolFadeHoldUntil = now() + duration;
     }
 
     setDependencies(namespace: string, dependencies: Array<string>) {
