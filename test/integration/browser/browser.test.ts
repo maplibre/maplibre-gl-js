@@ -73,7 +73,7 @@ describe('Browser tests', () => {
                 map.getCanvas().dispatchEvent(new MouseEvent('mouseup', {bubbles: true, button: 2, clientX: 10, clientY: 10}));
             });
         });
-        expect(contextMenuEventFired).toBe('contextmenu');       
+        expect(contextMenuEventFired).toBe('contextmenu');
     });
 
     test('Mousemove events are fired during scrollzoom', {retry: 3, timeout: 20000}, async () => {
@@ -314,65 +314,6 @@ describe('Browser tests', () => {
 
         expect(markerScreenPosition.x).toBeCloseTo(386.5);
         expect(markerScreenPosition.y).toBeCloseTo(378.1);
-    });
-
-    test('Fullscreen control should work in shadowdom as well', {retry: 3, timeout: 20000}, async () => {
-        const fullscreenButtonTitle = await page.evaluate(async () => {
-            function sleepInBrowser(milliseconds: number) {
-                return new Promise(resolve => setTimeout(resolve, milliseconds));
-            }
-
-            let map: Map;
-            class MapLibre extends HTMLElement {
-                async connectedCallback() {
-                    const maplibreCSS = await (await fetch('/../../../../dist/maplibre-gl.css')).text();
-                    const styleSheet = new CSSStyleSheet();
-                    await styleSheet.replace(`${maplibreCSS}
-                      :host, .maplibregl-map {
-                      height: 100%;
-                      width: 100%;
-                    }`);
-                    const shadow = this.attachShadow({
-                        mode: 'open'
-                    });
-                    shadow.adoptedStyleSheets.push(styleSheet);
-                    const container = document.createElement('div');
-                    shadow.appendChild(container);
-                    map = new maplibregl.Map({
-                        container,
-                        style: {
-                            version: 8,
-                            sources: {
-                                osm: {
-                                    attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>',
-                                    type: 'raster',
-                                    tileSize: 256,
-                                    tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png']
-                                }
-                            },
-                            layers: [{
-                                type: 'raster',
-                                id: 'OpenStreetMap',
-                                source: 'osm'
-                            }]
-                        }
-                    });
-                    map.addControl(new maplibregl.FullscreenControl());
-                }
-            }
-            customElements.define('map-libre', MapLibre);
-            document.body.innerHTML = '<map-libre></map-libre>';
-            await sleepInBrowser(100);
-
-            await map.once('idle');
-            const fullscreenButton = document.getElementsByTagName('map-libre')[0].shadowRoot.querySelector('.maplibregl-ctrl-fullscreen') as HTMLButtonElement;
-            fullscreenButton.click();
-            await sleepInBrowser(1000);
-
-            return fullscreenButton.title;
-        });
-
-        expect(fullscreenButtonTitle).toBe('Exit fullscreen');
     });
 
     test('Marker: correct opacity after resize with 3d terrain', {retry: 3, timeout: 20000}, async () => {

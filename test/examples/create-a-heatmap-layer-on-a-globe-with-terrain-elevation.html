@@ -80,26 +80,6 @@
             }
         })
 
-        map.addControl(
-            new maplibregl.NavigationControl({
-                visualizePitch: true,
-                showZoom: true,
-                showCompass: true
-            })
-        );
-
-
-        map.addControl(
-            new maplibregl.GlobeControl()
-        );
-
-        map.addControl(
-            new maplibregl.TerrainControl({
-                source: 'terrainSource',
-                exaggeration: 1
-            })
-        );
-
         map.on('load', () => {
             // Add a geojson point source.
             // Heatmap layers also work with a vector tile source.

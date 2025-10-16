@@ -47,8 +47,6 @@ export function createMap(options?) {
     const defaultOptions = {
         container,
         interactive: false,
-        attributionControl: false,
-        maplibreLogo: false,
         trackResize: true,
         style: {
             'version': 8,

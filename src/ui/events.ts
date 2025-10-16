@@ -247,19 +247,6 @@ export interface MapEventType {
      */
     sourcedataabort: MapSourceDataEvent;
     /**
-     * Fired when the user cancels a "box zoom" interaction, or when the bounding box does not meet the minimum size threshold.
-     * See {@link BoxZoomHandler}.
-     */
-    boxzoomcancel: MapLibreZoomEvent;
-    /**
-     * Fired when a "box zoom" interaction starts. See {@link BoxZoomHandler}.
-     */
-    boxzoomstart: MapLibreZoomEvent;
-    /**
-     * Fired when a "box zoom" interaction ends.  See {@link BoxZoomHandler}.
-     */
-    boxzoomend: MapLibreZoomEvent;
-    /**
      * Fired when a [`touchcancel`](https://developer.mozilla.org/en-US/docs/Web/Events/touchcancel) event occurs within the map.
      */
     touchcancel: MapTouchEvent;
@@ -416,13 +403,6 @@ export interface MapEventType {
      */
     terrain: MapTerrainEvent;
     /**
-     * Fired whenever the cooperativeGestures option prevents a gesture from being handled by the map.
-     * This is useful for showing your own UI when this happens.
-     */
-    cooperativegestureprevented: MapLibreEvent<WheelEvent | TouchEvent> & {
-        gestureType: 'wheel_zoom' | 'touch_pan';
-    };
-    /**
      * Fired when map's projection is modified in other ways than by map being moved.
      */
     projectiontransition: MapProjectionEvent;
@@ -521,7 +501,6 @@ export class MapMouseEvent extends Event implements MapLibreEvent<MouseEvent> {
      *
      *   * On `mousedown` events, the behavior of {@link DragPanHandler}
      *   * On `mousedown` events, the behavior of {@link DragRotateHandler}
-     *   * On `mousedown` events, the behavior of {@link BoxZoomHandler}
      *   * On `dblclick` events, the behavior of {@link DoubleClickZoomHandler}
      *
      */
@@ -672,26 +651,6 @@ export class MapWheelEvent extends Event {
         this._defaultPrevented = false;
     }
 }
-
-/**
- * A `MapLibreZoomEvent` is the event type for the boxzoom-related map events emitted by the {@link BoxZoomHandler}.
- *
- * @group Event Related
- */
-export type MapLibreZoomEvent = {
-    /**
-     * The type of boxzoom event. One of `boxzoomstart`, `boxzoomend` or `boxzoomcancel`
-     */
-    type: 'boxzoomstart' | 'boxzoomend' | 'boxzoomcancel';
-    /**
-     * The `Map` instance that triggered the event
-     */
-    target: Map;
-    /**
-     * The DOM event that triggered the boxzoom event. Can be a `MouseEvent` or `KeyboardEvent`
-     */
-    originalEvent: MouseEvent;
-};
 
 /**
  * A `MapDataEvent` object is emitted with the `data`

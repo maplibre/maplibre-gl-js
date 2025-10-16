@@ -284,11 +284,6 @@ export class TwoFingersTouchPitchHandler extends TwoFingersTouchHandler {
     }
 
     _move(points: [Point, Point], center: Point | null, e: TouchEvent): HandlerResult | void {
-        // If cooperative gestures is enabled, we need a 3-finger minimum for this gesture to register
-        if (this._map.cooperativeGestures.isEnabled() && this._currentTouchCount < 3) {
-            return;
-        }
-
         const vectorA = points[0].sub(this._lastPoints![0]);
         const vectorB = points[1].sub(this._lastPoints![1]);
 

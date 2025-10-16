@@ -848,39 +848,6 @@ export abstract class Camera extends Evented {
             eventData);
     }
 
-    /**
-     * Pans, rotates and zooms the map to to fit the box made by points p0 and p1
-     * once the map is rotated to the specified bearing. To zoom without rotating,
-     * pass in the current map bearing.
-     *
-     * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, `zoomend` and `rotate`.
-     *
-     * @param p0 - First point on screen, in pixel coordinates
-     * @param p1 - Second point on screen, in pixel coordinates
-     * @param bearing - Desired map bearing at end of animation, in degrees
-     * @param options - Options object
-     * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @example
-     * ```ts
-     * let p0 = [220, 400];
-     * let p1 = [500, 900];
-     * map.fitScreenCoordinates(p0, p1, map.getBearing(), {
-     *   padding: {top: 10, bottom:25, left: 15, right: 5}
-     * });
-     * ```
-     * @see Used by {@link BoxZoomHandler}
-     */
-    fitScreenCoordinates(p0: PointLike, p1: PointLike, bearing: number, options?: FitBoundsOptions, eventData?: any): this {
-        return this._fitInternal(
-            this._cameraForBoxAndBearing(
-                this.transform.screenPointToLocation(Point.convert(p0)),
-                this.transform.screenPointToLocation(Point.convert(p1)),
-                bearing,
-                options),
-            options,
-            eventData);
-    }
-
     _fitInternal(calculatedOptions?: CenterZoomBearing, options?: FitBoundsOptions, eventData?: any): this {
         // cameraForBounds warns + returns undefined if unable to fit:
         if (!calculatedOptions) return this;

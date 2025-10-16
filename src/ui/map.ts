@@ -15,8 +15,6 @@ import {Camera, type CameraOptions, type CameraUpdateTransformFunction, type Fit
 import {LngLat} from '../geo/lng_lat';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
-import {AttributionControl, type AttributionControlOptions, defaultAttributionControlOptions} from './control/attribution_control';
-import {LogoControl} from './control/logo_control';
 import {RGBAImage} from '../util/image';
 import {Event, ErrorEvent, type Listener} from '../util/evented';
 import {type MapEventType, type MapLayerEventType, MapMouseEvent, type MapSourceDataEvent, type MapStyleDataEvent} from './events';
@@ -45,12 +43,9 @@ import type {MapDataEvent} from './events';
 import type {StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image';
 import type {PointLike} from './camera';
 import type {ScrollZoomHandler} from './handler/scroll_zoom';
-import type {BoxZoomHandler} from './handler/box_zoom';
 import type {AroundCenterOptions, TwoFingersTouchPitchHandler} from './handler/two_fingers_touch';
 import type {DragRotateHandler} from './handler/shim/drag_rotate';
 import type {DragPanHandler, DragPanOptions} from './handler/shim/drag_pan';
-import type {CooperativeGesturesHandler, GestureOptions} from './handler/cooperative_gestures';
-import type {KeyboardHandler} from './handler/keyboard';
 import type {DoubleClickZoomHandler} from './handler/shim/dblclick_zoom';
 import type {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch';
 import type {TaskID} from '../util/task_queue';
@@ -65,7 +60,6 @@ import type {
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
 import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson';
-import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
 import type {ITransform, TransformConstrainFunction} from '../geo/transform_interface';
 import type {ICameraHelper} from '../geo/projection/camera_helper';
@@ -104,23 +98,6 @@ export type MapOptions = {
      * @defaultValue 7
      */
     bearingSnap?: number;
-    /**
-     * If set, an {@link AttributionControl} will be added to the map with the provided options.
-     * To disable the attribution control, pass `false`.
-     * !!! note
-     *     Showing the logo of MapLibre is not required for using MapLibre.
-     * @defaultValue compact: true, customAttribution: "MapLibre ...".
-     */
-    attributionControl?: false | AttributionControlOptions;
-    /**
-     * If `true`, the MapLibre logo will be shown.
-     */
-    maplibreLogo?: boolean;
-    /**
-     * A string representing the position of the MapLibre wordmark on the map. Valid options are `top-left`,`top-right`, `bottom-left`, or `bottom-right`.
-     * @defaultValue 'bottom-left'
-     */
-    logoPosition?: ControlPosition;
     /**
      * Set of WebGLContextAttributes that are applied to the WebGL context of the map.
      * See https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext for more details.
@@ -163,11 +140,6 @@ export type MapOptions = {
      */
     maxPitch?: number | null;
     /**
-     * If `true`, the "box zoom" interaction is enabled (see {@link BoxZoomHandler}).
-     * @defaultValue true
-     */
-    boxZoom?: boolean;
-    /**
      * If `true`, the "drag to rotate" interaction is enabled (see {@link DragRotateHandler}).
      * @defaultValue true
      */
@@ -177,11 +149,6 @@ export type MapOptions = {
      * @defaultValue true
      */
     dragPan?: boolean | DragPanOptions;
-    /**
-     * If `true`, keyboard shortcuts are enabled (see {@link KeyboardHandler}).
-     * @defaultValue true
-     */
-    keyboard?: boolean;
     /**
      * If `true`, the "double click to zoom" interaction is enabled (see {@link DoubleClickZoomHandler}).
      * @defaultValue true
@@ -198,17 +165,12 @@ export type MapOptions = {
      */
     touchPitch?: boolean | AroundCenterOptions;
     /**
-     * If `true` or set to an options object, the map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture. Cooperative gestures are disabled when a map enters fullscreen using {@link FullscreenControl}.
-     * @defaultValue false
-     */
-    cooperativeGestures?: GestureOptions;
-    /**
      * If `true`, the map will automatically resize when the browser window resizes.
      * @defaultValue true
      */
     trackResize?: boolean;
     /**
-     * The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` 
+     * The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]`
      * !!! note
      *     MapLibre GL JS uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
      * @defaultValue [0, 0]
@@ -401,8 +363,6 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     hash: false,
     interactive: true,
     bearingSnap: 7,
-    attributionControl: defaultAttributionControlOptions,
-    maplibreLogo: false,
     refreshExpiredTiles: true,
 
     canvasContextAttributes: {
@@ -420,14 +380,11 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     minPitch: defaultMinPitch,
     maxPitch: defaultMaxPitch,
 
-    boxZoom: true,
     dragRotate: true,
     dragPan: true,
-    keyboard: true,
     doubleClickZoom: true,
     touchZoomRotate: true,
     touchPitch: true,
-    cooperativeGestures: false,
 
     trackResize: true,
 
@@ -495,8 +452,6 @@ export class Map extends Camera {
 
     _container: HTMLElement;
     _canvasContainer: HTMLElement;
-    _controlContainer: HTMLElement;
-    _controlPositions: Partial<Record<ControlPosition, HTMLElement>>;
     _interactive: boolean;
     _showTileBoundaries: boolean;
     _showCollisionBoxes: boolean;
@@ -527,7 +482,6 @@ export class Map extends Camera {
     _crossFadingFactor = 1;
     _collectResourceTiming: boolean;
     _renderTaskQueue = new TaskQueue();
-    _controls: Array<IControl> = [];
     _mapId = uniqueId();
     _localIdeographFontFamily: string | false;
     _validateStyle: boolean;
@@ -552,12 +506,6 @@ export class Map extends Camera {
     scrollZoom: ScrollZoomHandler;
 
     /**
-     * The map's {@link BoxZoomHandler}, which implements zooming using a drag gesture with the Shift key pressed.
-     * Find more details and examples using `boxZoom` in the {@link BoxZoomHandler} section.
-     */
-    boxZoom: BoxZoomHandler;
-
-    /**
      * The map's {@link DragRotateHandler}, which implements rotating the map while dragging with the right
      * mouse button or with the Control key pressed. Find more details and examples using `dragRotate`
      * in the {@link DragRotateHandler} section.
@@ -569,12 +517,6 @@ export class Map extends Camera {
      * Find more details and examples using `dragPan` in the {@link DragPanHandler} section.
      */
     dragPan: DragPanHandler;
-
-    /**
-     * The map's {@link KeyboardHandler}, which allows the user to zoom, rotate, and pan the map using keyboard
-     * shortcuts. Find more details and examples using `keyboard` in the {@link KeyboardHandler} section.
-     */
-    keyboard: KeyboardHandler;
 
     /**
      * The map's {@link DoubleClickZoomHandler}, which allows the user to zoom by double clicking.
@@ -593,12 +535,6 @@ export class Map extends Camera {
      * Find more details and examples using `touchPitch` in the {@link TwoFingersTouchPitchHandler} section.
      */
     touchPitch: TwoFingersTouchPitchHandler;
-
-    /**
-     * The map's {@link CooperativeGesturesHandler}, which allows the user to see cooperative gesture info when user tries to zoom in/out.
-     * Find more details and examples using `cooperativeGestures` in the {@link CooperativeGesturesHandler} section.
-     */
-    cooperativeGestures: CooperativeGesturesHandler;
 
     /**
      * The map's property which determines whether to cancel, or retain, tiles from the current viewport which are still loading but which belong to a farther (smaller) zoom level than the current one.
@@ -765,12 +701,6 @@ export class Map extends Camera {
 
         if (resolvedOptions.style) this.setStyle(resolvedOptions.style, {localIdeographFontFamily: resolvedOptions.localIdeographFontFamily});
 
-        if (resolvedOptions.attributionControl)
-            this.addControl(new AttributionControl(typeof resolvedOptions.attributionControl === 'boolean' ? undefined : resolvedOptions.attributionControl));
-
-        if (resolvedOptions.maplibreLogo)
-            this.addControl(new LogoControl(), resolvedOptions.logoPosition);
-
         this.on('style.load', () => {
             // If we didn't constrain the camera before, we do it now
             if (!shouldConstrainUsingMercatorTransform) this._resizeTransform();
@@ -820,91 +750,6 @@ export class Map extends Camera {
     */
     getGlobalState(): Record<string, any> {
         return this.style.getGlobalState();
-    }
-
-    /**
-     * Adds an {@link IControl} to the map, calling `control.onAdd(this)`.
-     *
-     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
-     *
-     * @param control - The {@link IControl} to add.
-     * @param position - position on the map to which the control will be added.
-     * Valid values are `'top-left'`, `'top-right'`, `'bottom-left'`, and `'bottom-right'`. Defaults to `'top-right'`.
-     * @example
-     * Add zoom and rotation controls to the map.
-     * ```ts
-     * map.addControl(new NavigationControl());
-     * ```
-     * @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/display-map-navigation-controls/)
-     */
-    addControl(control: IControl, position?: ControlPosition): Map {
-        if (position === undefined) {
-            if (control.getDefaultPosition) {
-                position = control.getDefaultPosition();
-            } else {
-                position = 'top-right';
-            }
-        }
-        if (!control || !control.onAdd) {
-            return this.fire(new ErrorEvent(new Error(
-                'Invalid argument to map.addControl(). Argument must be a control with onAdd and onRemove methods.')));
-        }
-        const controlElement = control.onAdd(this);
-        this._controls.push(control);
-
-        const positionContainer = this._controlPositions[position];
-        if (position.indexOf('bottom') !== -1) {
-            positionContainer.insertBefore(controlElement, positionContainer.firstChild);
-        } else {
-            positionContainer.appendChild(controlElement);
-        }
-        return this;
-    }
-
-    /**
-     * Removes the control from the map.
-     *
-     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
-     *
-     * @param control - The {@link IControl} to remove.
-     * @example
-     * ```ts
-     * // Define a new navigation control.
-     * let navigation = new NavigationControl();
-     * // Add zoom and rotation controls to the map.
-     * map.addControl(navigation);
-     * // Remove zoom and rotation controls from the map.
-     * map.removeControl(navigation);
-     * ```
-     */
-    removeControl(control: IControl): Map {
-        if (!control || !control.onRemove) {
-            return this.fire(new ErrorEvent(new Error(
-                'Invalid argument to map.removeControl(). Argument must be a control with onAdd and onRemove methods.')));
-        }
-        const ci = this._controls.indexOf(control);
-        if (ci > -1) this._controls.splice(ci, 1);
-        control.onRemove(this);
-        return this;
-    }
-
-    /**
-     * Checks if a control exists on the map.
-     *
-     * @param control - The {@link IControl} to check.
-     * @returns true if map contains control.
-     * @example
-     * ```ts
-     * // Define a new navigation control.
-     * let navigation = new NavigationControl();
-     * // Add zoom and rotation controls to the map.
-     * map.addControl(navigation);
-     * // Check that the navigation control exists on the map.
-     * map.hasControl(navigation);
-     * ```
-     */
-    hasControl(control: IControl): boolean {
-        return this._controls.indexOf(control) > -1;
     }
 
     /**
@@ -1279,7 +1124,7 @@ export class Map extends Camera {
     /** Sets or clears the callback overriding how the map constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
      *
      * @param constrain - A {@link TransformConstrainFunction} callback defining how the viewport should respect the bounds.
-     * 
+     *
      * `null` clears the callback and reverses the override of the map transform's default constrain function.
      * @example
      * ```ts
@@ -1483,9 +1328,6 @@ export class Map extends Camera {
      * | `pitchstart`           |                           |
      * | `pitch`                |                           |
      * | `pitchend`             |                           |
-     * | `boxzoomstart`         |                           |
-     * | `boxzoomend`           |                           |
-     * | `boxzoomcancel`        |                           |
      * | `webglcontextlost`     |                           |
      * | `webglcontextrestored` |                           |
      * | `load`                 |                           |
@@ -3181,12 +3023,6 @@ export class Map extends Camera {
         const clampedPixelRatio = this._getClampedPixelRatio(dimensions[0], dimensions[1]);
         this._resizeCanvas(dimensions[0], dimensions[1], clampedPixelRatio);
 
-        const controlContainer = this._controlContainer = DOM.create('div', 'maplibregl-control-container', container);
-        const positions = this._controlPositions = {};
-        ['top-left', 'top-right', 'bottom-left', 'bottom-right'].forEach((positionName) => {
-            positions[positionName] = DOM.create('div', `maplibregl-ctrl-${positionName} `, controlContainer);
-        });
-
         this._container.addEventListener('scroll', this._onMapScroll, false);
     }
 
@@ -3483,9 +3319,6 @@ export class Map extends Camera {
     remove() {
         if (this._hash) this._hash.remove();
 
-        for (const control of this._controls) control.onRemove(this);
-        this._controls = [];
-
         if (this._frameRequest) {
             this._frameRequest.abort();
             this._frameRequest = null;
@@ -3507,7 +3340,6 @@ export class Map extends Camera {
         this._canvas.removeEventListener('webglcontextrestored', this._contextRestored, false);
         this._canvas.removeEventListener('webglcontextlost', this._contextLost, false);
         DOM.remove(this._canvasContainer);
-        DOM.remove(this._controlContainer);
         this._container.removeEventListener('scroll', this._onMapScroll, false);
         this._container.classList.remove('maplibregl-map');
 

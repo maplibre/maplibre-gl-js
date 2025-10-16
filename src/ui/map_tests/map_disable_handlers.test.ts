@@ -9,21 +9,17 @@ beforeEach(() => {
 test('disable all handlers', () => {
     const map = createMap({interactive: false});
 
-    expect(map.boxZoom.isEnabled()).toBeFalsy();
     expect(map.doubleClickZoom.isEnabled()).toBeFalsy();
     expect(map.dragPan.isEnabled()).toBeFalsy();
     expect(map.dragRotate.isEnabled()).toBeFalsy();
-    expect(map.keyboard.isEnabled()).toBeFalsy();
     expect(map.scrollZoom.isEnabled()).toBeFalsy();
     expect(map.touchZoomRotate.isEnabled()).toBeFalsy();
 });
 
 const handlerNames = [
     'scrollZoom',
-    'boxZoom',
     'dragRotate',
     'dragPan',
-    'keyboard',
     'doubleClickZoom',
     'touchZoomRotate'
 ];

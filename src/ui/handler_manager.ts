@@ -3,12 +3,10 @@ import {DOM} from '../util/dom';
 import {type Map, type CompleteMapOptions} from './map';
 import {HandlerInertia} from './handler_inertia';
 import {MapEventHandler, BlockableMapEventHandler} from './handler/map_event';
-import {BoxZoomHandler} from './handler/box_zoom';
 import {TapZoomHandler} from './handler/tap_zoom';
 import {generateMouseRotationHandler, generateMousePitchHandler, generateMousePanHandler, generateMouseRollHandler} from './handler/mouse';
 import {TouchPanHandler} from './handler/touch_pan';
 import {TwoFingersTouchZoomHandler, TwoFingersTouchRotateHandler, TwoFingersTouchPitchHandler} from './handler/two_fingers_touch';
-import {KeyboardHandler} from './handler/keyboard';
 import {ScrollZoomHandler} from './handler/scroll_zoom';
 import {DoubleClickZoomHandler} from './handler/shim/dblclick_zoom';
 import {ClickZoomHandler} from './handler/click_zoom';
@@ -16,7 +14,6 @@ import {TapDragZoomHandler} from './handler/tap_drag_zoom';
 import {DragPanHandler} from './handler/shim/drag_pan';
 import {DragRotateHandler} from './handler/shim/drag_rotate';
 import {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch';
-import {CooperativeGesturesHandler} from './handler/cooperative_gestures';
 import {extend, isPointableEvent, isTouchableEvent, isTouchableOrPointableType} from '../util/util';
 import {browser} from '../util/browser';
 import Point from '@mapbox/point-geometry';
@@ -236,18 +233,6 @@ export class HandlerManager {
         const el = map.getCanvasContainer();
         this._add('mapEvent', new MapEventHandler(map, options));
 
-        const boxZoom = map.boxZoom = new BoxZoomHandler(map, options);
-        this._add('boxZoom', boxZoom);
-        if (options.interactive && options.boxZoom) {
-            boxZoom.enable();
-        }
-
-        const cooperativeGestures = map.cooperativeGestures = new CooperativeGesturesHandler(map, options.cooperativeGestures);
-        this._add('cooperativeGestures', cooperativeGestures);
-        if (options.cooperativeGestures) {
-            cooperativeGestures.enable();
-        }
-
         const tapZoom = new TapZoomHandler(map);
         const clickZoom = new ClickZoomHandler(map);
         map.doubleClickZoom = new DoubleClickZoomHandler(clickZoom, tapZoom);
@@ -301,12 +286,6 @@ export class HandlerManager {
         this._add('scrollZoom', scrollZoom, ['mousePan']);
         if (options.interactive && options.scrollZoom) {
             map.scrollZoom.enable(options.scrollZoom);
-        }
-
-        const keyboard = map.keyboard = new KeyboardHandler(map);
-        this._add('keyboard', keyboard);
-        if (options.interactive && options.keyboard) {
-            map.keyboard.enable();
         }
     }
 

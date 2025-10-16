@@ -20,7 +20,7 @@ async function performQueryOnFixture(fixture)  {
 
     async function handleOperation(map: maplibregl.Map, operation) {
         const opName = operation[0];
-        
+
         switch (opName) {
             case 'wait':
                 while (!map.loaded()) {
@@ -60,7 +60,6 @@ async function performQueryOnFixture(fixture)  {
         container: 'map',
         style,
         interactive: false,
-        attributionControl: false,
         pixelRatio: options.pixelRatio,
         canvasContextAttributes: {preserveDrawingBuffer: true, powerPreference: 'default'},
         fadeDuration: options.fadeDuration || 0,
@@ -114,7 +113,7 @@ describe('query tests', () => {
             <html lang="en">
             <head>
                 <meta charset='utf-8'>
-                
+
             </head>
             <body id='map'></body>
             </html>`);
@@ -138,7 +137,7 @@ describe('query tests', () => {
             }
             return entry;
         });
-        
+
         const coverageReport = new CoverageReport({
             name: 'MapLibre Coverage Report',
             outputDir: './coverage/query',
@@ -148,9 +147,9 @@ describe('query tests', () => {
             }
         });
         coverageReport.cleanCache();
-        
+
         await coverageReport.add(rawV8CoverageData);
-        
+
         await coverageReport.generate();
     }, 60000);
 

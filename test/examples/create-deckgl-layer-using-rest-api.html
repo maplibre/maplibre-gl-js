@@ -34,7 +34,6 @@
           center: [2.343957, 48.862011],
           zoom: 10.5,
       });
-      map.addControl(new maplibregl.NavigationControl(), 'top-right');
 
       // 20 + 1 random colors for all the districts of Paris and outside of the districts
       const colorPalette = [
@@ -106,12 +105,6 @@
                       .addTo(map);
               },
           });
-
-          // Create the overlay
-          const overlay = new deck.MapboxOverlay({
-              layers: [layer],
-          });
-          map.addControl(overlay);
       });
     </script>
   </body>

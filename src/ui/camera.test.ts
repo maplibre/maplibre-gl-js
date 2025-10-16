@@ -1287,7 +1287,7 @@ describe('easeTo', () => {
         stubNow.mockImplementation(() => 0);
 
         camera.easeTo({bearing: 97, duration: 500});
-        
+
         stubNow.mockImplementation(() => 100);
         camera.simulateFrame();
 
@@ -2422,44 +2422,6 @@ describe('fitBounds', () => {
         expect(fixedNum(camera.getZoom(), 3)).toBe(4.163);
     });
 
-});
-
-describe('fitScreenCoordinates', () => {
-    test('bearing 225', () => {
-        const camera = createCamera();
-        const p0 = [128, 128] as PointLike;
-        const p1 = [256, 256] as PointLike;
-        const bearing = 225;
-        camera.fitScreenCoordinates(p0, p1, bearing, {duration: 0});
-
-        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -45, lat: 40.9799});
-        expect(fixedNum(camera.getZoom(), 3)).toBe(1.5);
-        expect(camera.getBearing()).toBe(-135);
-    });
-
-    test('bearing 0', () => {
-        const camera = createCamera();
-        const p0 = [128, 128] as PointLike;
-        const p1 = [256, 256] as PointLike;
-        const bearing = 0;
-        camera.fitScreenCoordinates(p0, p1, bearing, {duration: 0});
-
-        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -45, lat: 40.9799});
-        expect(fixedNum(camera.getZoom(), 3)).toBe(2);
-        expect(camera.getBearing()).toBeCloseTo(0);
-    });
-
-    test('inverted points', () => {
-        const camera = createCamera();
-        const p1 = [128, 128] as PointLike;
-        const p0 = [256, 256] as PointLike;
-        const bearing = 0;
-        camera.fitScreenCoordinates(p0, p1, bearing, {duration: 0});
-
-        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -45, lat: 40.9799});
-        expect(fixedNum(camera.getZoom(), 3)).toBe(2);
-        expect(camera.getBearing()).toBeCloseTo(0);
-    });
 });
 
 describe('queryTerrainElevation', () => {
@@ -3847,43 +3809,5 @@ describe('fitBounds globe projection', () => {
             top: 0,
             bottom: 0
         });
-    });
-});
-
-describe('fitScreenCoordinates globe projection', () => {
-    test('bearing 225', () => {
-        const camera = createCameraGlobeZoomed();
-        const p0 = [128, 128] as PointLike;
-        const p1 = [256, 256] as PointLike;
-        const bearing = 225;
-        camera.fitScreenCoordinates(p0, p1, bearing, {duration: 0});
-
-        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -5.9948, lat: 5.8987});
-        expect(fixedNum(camera.getZoom(), 3)).toBe(4.454);
-        expect(camera.getBearing()).toBe(-135);
-    });
-
-    test('bearing 0', () => {
-        const camera = createCameraGlobeZoomed();
-        const p0 = [128, 128] as PointLike;
-        const p1 = [256, 256] as PointLike;
-        const bearing = 0;
-        camera.fitScreenCoordinates(p0, p1, bearing, {duration: 0});
-
-        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -5.9948, lat: 5.8987});
-        expect(fixedNum(camera.getZoom(), 3)).toBe(4.936);
-        expect(camera.getBearing()).toBeCloseTo(0);
-    });
-
-    test('inverted points', () => {
-        const camera = createCameraGlobeZoomed();
-        const p1 = [128, 128] as PointLike;
-        const p0 = [256, 256] as PointLike;
-        const bearing = 0;
-        camera.fitScreenCoordinates(p0, p1, bearing, {duration: 0});
-
-        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -5.9948, lat: 5.8987});
-        expect(fixedNum(camera.getZoom(), 3)).toBe(4.936);
-        expect(camera.getBearing()).toBeCloseTo(0);
     });
 });

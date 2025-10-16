@@ -730,7 +730,6 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 container: 'map',
                 style,
                 interactive: false,
-                attributionControl: false,
                 maxPitch: options.maxPitch,
                 pixelRatio: options.pixelRatio,
                 canvasContextAttributes: {preserveDrawingBuffer: true, powerPreference: 'default'},

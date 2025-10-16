@@ -56,7 +56,6 @@
           center: [2.345885, 48.860412],
           zoom: 12,
       });
-      map.addControl(new maplibregl.NavigationControl(), 'top-right');
 
       // 5 Beautiful gardens in Paris
       const sampleData = {
@@ -157,13 +156,6 @@
                       .addTo(map);
               },
           });
-
-          // Create the overlay
-          overlay = new deck.MapboxOverlay({
-              layers: [layer],
-          });
-
-          map.addControl(overlay);
       }
 
       let show = true; // Display the layer by default

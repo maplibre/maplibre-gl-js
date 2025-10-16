@@ -23,8 +23,6 @@
         style: 'https://demotiles.maplibre.org/style.json'
     });
 
-    map.addControl(new maplibregl.NavigationControl());
-
     // filters for classifying earthquakes into five categories based on magnitude
     const mag1 = ['<', ['get', 'mag'], 2];
     const mag2 = ['all', ['>=', ['get', 'mag'], 2], ['<', ['get', 'mag'], 3]];

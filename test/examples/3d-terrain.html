@@ -66,21 +66,6 @@
         maxZoom: 18,
         maxPitch: 85
     }));
-
-    map.addControl(
-        new maplibregl.NavigationControl({
-            visualizePitch: true,
-            showZoom: true,
-            showCompass: true
-        })
-    );
-
-    map.addControl(
-        new maplibregl.TerrainControl({
-            source: 'terrainSource',
-            exaggeration: 1
-        })
-    );
 </script>
 </body>
 </html>

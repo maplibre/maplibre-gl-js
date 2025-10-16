@@ -1,13 +1,5 @@
 import packageJSON from '../package.json' with {type: 'json'};
 import {Map, type MapOptions, type WebGLContextAttributesWithType} from './ui/map';
-import {NavigationControl, type NavigationControlOptions} from './ui/control/navigation_control';
-import {GeolocateControl, type GeolocateControlOptions} from './ui/control/geolocate_control';
-import {AttributionControl, type AttributionControlOptions} from './ui/control/attribution_control';
-import {LogoControl, type LogoControlOptions} from './ui/control/logo_control';
-import {ScaleControl, type ScaleControlOptions, type Unit} from './ui/control/scale_control';
-import {FullscreenControl, type FullscreenControlOptions} from './ui/control/fullscreen_control';
-import {TerrainControl} from './ui/control/terrain_control';
-import {GlobeControl} from './ui/control/globe_control';
 import {type Offset, Popup, type PopupOptions} from './ui/popup';
 import {type Alignment, Marker, type MarkerOptions} from './ui/marker';
 import {type AddLayerObject, type FeatureIdentifier, Style, type StyleOptions, type StyleSetterOptions, type StyleSwapOptions, type TransformStyleFunction} from './style/style';
@@ -33,20 +25,16 @@ import {type Source, type SourceClass, addSourceType} from './source/source';
 import {addProtocol, removeProtocol} from './source/protocol_crud';
 import {type Dispatcher, getGlobalDispatcher} from './util/dispatcher';
 import {EdgeInsets, type PaddingOptions} from './geo/edge_insets';
-import {type MapTerrainEvent, type MapStyleImageMissingEvent, type MapStyleDataEvent, type MapSourceDataEvent, type MapLibreZoomEvent, type MapLibreEvent, type MapLayerTouchEvent, type MapLayerMouseEvent, type MapLayerEventType, type MapEventType, type MapDataEvent, type MapContextEvent, MapWheelEvent, MapTouchEvent, MapMouseEvent, type MapSourceDataType, type MapProjectionEvent} from './ui/events';
-import {BoxZoomHandler} from './ui/handler/box_zoom';
+import {type MapTerrainEvent, type MapStyleImageMissingEvent, type MapStyleDataEvent, type MapSourceDataEvent, type MapLibreEvent, type MapLayerTouchEvent, type MapLayerMouseEvent, type MapLayerEventType, type MapEventType, type MapDataEvent, type MapContextEvent, MapWheelEvent, MapTouchEvent, MapMouseEvent, type MapSourceDataType, type MapProjectionEvent} from './ui/events';
 import {DragRotateHandler} from './ui/handler/shim/drag_rotate';
 import {DragPanHandler, type DragPanOptions} from './ui/handler/shim/drag_pan';
 import {ScrollZoomHandler} from './ui/handler/scroll_zoom';
 import {TwoFingersTouchZoomRotateHandler} from './ui/handler/shim/two_fingers_touch';
 import {Hash} from './ui/hash';
-import {CooperativeGesturesHandler, type GestureOptions} from './ui/handler/cooperative_gestures';
 import {DoubleClickZoomHandler} from './ui/handler/shim/dblclick_zoom';
-import {KeyboardHandler} from './ui/handler/keyboard';
 import {TwoFingersTouchPitchHandler, TwoFingersTouchRotateHandler, TwoFingersTouchZoomHandler, type AroundCenterOptions} from './ui/handler/two_fingers_touch';
 import {MessageType, type ActorMessage, type RequestResponseMessageMap} from './util/actor_messages';
 import {createTileMesh, type CreateTileMeshOptions, type IndicesType, type TileMesh} from './util/create_tile_mesh';
-import type {ControlPosition, IControl} from './ui/control/control';
 import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput} from './style/style_layer/custom_style_layer';
 import type {AnimationOptions, CameraForBoundsOptions, CameraOptions, CameraUpdateTransformFunction, CenterZoomBearing, EaseToOptions, FitBoundsOptions, FlyToOptions, JumpToOptions, PointLike} from './ui/camera';
 import type {DistributiveKeys, DistributiveOmit, GeoJSONFeature, MapGeoJSONFeature} from './util/vectortile_to_geojson';
@@ -199,14 +187,6 @@ function importScriptInWorkers(workerUrl: string) { return getGlobalDispatcher()
 
 export {
     Map,
-    NavigationControl,
-    GeolocateControl,
-    AttributionControl,
-    LogoControl,
-    ScaleControl,
-    FullscreenControl,
-    TerrainControl,
-    GlobeControl,
     Hash,
     Popup,
     Marker,
@@ -227,14 +207,11 @@ export {
     VectorTileSource,
     VideoSource,
     EdgeInsets,
-    BoxZoomHandler,
     DragRotateHandler,
     DragPanHandler,
     ScrollZoomHandler,
     TwoFingersTouchZoomRotateHandler,
-    CooperativeGesturesHandler,
     DoubleClickZoomHandler,
-    KeyboardHandler,
     TwoFingersTouchZoomHandler,
     TwoFingersTouchRotateHandler,
     TwoFingersTouchPitchHandler,
@@ -250,7 +227,6 @@ export {
     type MapSourceDataType,
     type TileMesh,
     type CreateTileMeshOptions,
-    type ControlPosition,
     type Subscription,
     type Complete,
     type CameraOptions,
@@ -265,18 +241,14 @@ export {
     type AddProtocolAction,
     type SourceClass,
     type IndicesType,
-    type AttributionControlOptions,
     type CanonicalTileRange,
     type Tile,
     type Listener,
     type Coordinates,
     type UpdateImageOptions,
     type DragPanOptions,
-    type FullscreenControlOptions,
     type SetClusterOptions,
     type GeoJSONSourceDiff,
-    type GeolocateControlOptions,
-    type LogoControlOptions,
     type StyleImageInterface,
     type AddLayerObject,
     type StyleSetterOptions,
@@ -293,12 +265,9 @@ export {
     type StyleOptions,
     type RequestTransformFunction,
     type MarkerOptions,
-    type NavigationControlOptions,
     type PopupOptions,
     type Offset,
     type OverscaledTileID,
-    type ScaleControlOptions,
-    type Unit,
     type AroundCenterOptions,
     type HandlerResult,
     type CustomRenderMethodInput,
@@ -329,9 +298,7 @@ export {
     type MessageType,
     type StyleGlyph,
     type MapOptions,
-    type GestureOptions,
     type WebGLContextAttributesWithType,
-    type IControl,
     type CustomLayerInterface,
     type CanvasSourceSpecification,
     type PaddingOptions,
@@ -344,7 +311,6 @@ export {
     type MapStyleImageMissingEvent,
     type MapStyleDataEvent,
     type MapSourceDataEvent,
-    type MapLibreZoomEvent,
     type MapLibreEvent,
     type MapLayerTouchEvent,
     type MapLayerMouseEvent,
