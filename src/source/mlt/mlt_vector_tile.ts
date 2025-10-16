@@ -1,9 +1,8 @@
 import Point from '@mapbox/point-geometry';
 import {type VectorTile, type VectorTileFeature, type VectorTileLayer} from '@mapbox/vector-tile';
-import {FeatureTable, decodeTile} from '@maplibre/mlt';
+import {type FeatureTable, decodeTile} from '@maplibre/mlt';
 
 type PublicPart<T> = {[K in keyof T]: T[K]};
-
 
 class MLTVectorTileFeature implements PublicPart<VectorTileFeature> {
     _featureData: GeoJSON.Feature;
