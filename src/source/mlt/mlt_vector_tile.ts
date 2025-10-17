@@ -1,4 +1,4 @@
-import Point from '@mapbox/point-geometry';
+import type Point from '@mapbox/point-geometry';
 import {type VectorTile, type VectorTileFeature, type VectorTileLayer} from '@mapbox/vector-tile';
 import {type FeatureTable, decodeTile, type Feature as MLTFeature} from '@maplibre/mlt';
 
