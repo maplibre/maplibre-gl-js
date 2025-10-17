@@ -4,7 +4,7 @@ import {LngLat, type LngLatLike, earthRadius} from '../lng_lat';
 import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce} from '../../util/util';
 import {OverscaledTileID, UnwrappedTileID, type CanonicalTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
-import {MercatorCoordinate} from '../mercator_coordinate';
+import {mercatorZfromAltitude, MercatorCoordinate} from '../mercator_coordinate';
 import {LngLatBounds} from '../lng_lat_bounds';
 import {tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, getZoomAdjustment, horizonPlaneToCenterAndRadius, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, sphereSurfacePointToCoordinates} from './globe_utils';
@@ -225,14 +225,14 @@ export class VerticalPerspectiveTransform implements ITransform {
     get constrain(): TransformConstrainFunction {
         return this._helper.constrain;
     }
-    public get nearZ(): number { 
-        return this._helper.nearZ; 
+    public get nearZ(): number {
+        return this._helper.nearZ;
     }
-    public get farZ(): number { 
-        return this._helper.farZ; 
+    public get farZ(): number {
+        return this._helper.farZ;
     }
-    public get autoCalculateNearFarZ(): boolean { 
-        return this._helper.autoCalculateNearFarZ; 
+    public get autoCalculateNearFarZ(): boolean {
+        return this._helper.autoCalculateNearFarZ;
     }
     setTransitionState(_value: number): void {
         // Do nothing
@@ -507,6 +507,8 @@ export class VerticalPerspectiveTransform implements ITransform {
         const matrix = mat4.clone(this._globeViewProjMatrixNoCorrectionInverted);
         mat4.scale(matrix, matrix, [1, 1, -1]);
         this._cachedFrustum = Frustum.fromInvProjectionMatrix(matrix, 1, 0, this._cachedClippingPlane, true);
+
+        this._helper._pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
     }
 
     calculateFogMatrix(_unwrappedTileID: UnwrappedTileID): mat4 {
