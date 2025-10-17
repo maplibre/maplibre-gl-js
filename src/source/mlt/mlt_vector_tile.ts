@@ -1,30 +1,30 @@
 import Point from '@mapbox/point-geometry';
 import {type VectorTile, type VectorTileFeature, type VectorTileLayer} from '@mapbox/vector-tile';
-import {type FeatureTable, decodeTile} from '@maplibre/mlt';
+import {type FeatureTable, decodeTile, type Feature as MLTFeature} from '@maplibre/mlt';
 
 type PublicPart<T> = {[K in keyof T]: T[K]};
 
 class MLTVectorTileFeature implements PublicPart<VectorTileFeature> {
-    _featureData: GeoJSON.Feature;
+    _featureData: MLTFeature;
     properties: {[_: string]: any};
     type: VectorTileFeature['type'];
     extent: VectorTileFeature['extent'];
     id: VectorTileFeature['id'];
 
-    constructor(feature: GeoJSON.Feature, extent: number) {
+    constructor(feature: MLTFeature, extent: number) {
         this._featureData = feature;
         this.properties = this._featureData.properties || {};
         switch (this._featureData.geometry?.type) {
-            case 'Point':
-            case 'MultiPoint':
+            case 0: // POINT
+            case 3: // MULTI_POINT
                 this.type = 1;
                 break;
-            case 'MultiLineString':
-            case 'LineString':
+            case 1: // LINESTRING
+            case 4: // MULTI_LINESTRING
                 this.type = 2;
                 break;
-            case 'Polygon':
-            case 'MultiPolygon':
+            case 2: // POLYGON
+            case 5: // MULTI_POLYGON
                 this.type = 3;
                 break;
             default:
@@ -35,26 +35,11 @@ class MLTVectorTileFeature implements PublicPart<VectorTileFeature> {
     }
 
     toGeoJSON(_x: number, _y: number, _z: number): GeoJSON.Feature {
-        return this._featureData;
+        throw new Error('MLTVectorTileFeature.toGeoJSON not implemented');
     }
 
     loadGeometry(): Point[][] {
-        switch (this._featureData.geometry?.type) {
-            case 'Point':
-                return [[new Point((this._featureData.geometry.coordinates)[0], (this._featureData.geometry.coordinates)[1])]];
-            case 'MultiPoint':
-                return (this._featureData.geometry.coordinates).map(coord => [new Point(coord[0], coord[1])]);
-            case 'LineString':
-                return [(this._featureData.geometry.coordinates).map(coord => new Point(coord[0], coord[1]))];
-            case 'MultiLineString':
-                return (this._featureData.geometry.coordinates).map(line => line.map(coord => new Point(coord[0], coord[1])));
-            case 'Polygon':
-                return (this._featureData.geometry.coordinates).map(ring => ring.map(coord => new Point(coord[0], coord[1])));
-            case 'MultiPolygon':
-                return (this._featureData.geometry.coordinates).map(polygon => polygon.flatMap(ring => ring.map(coord => new Point(coord[0], coord[1]))));
-            default:
-                return [];
-        }
+        return this._featureData.geometry.coordinates;
     }
     bbox(): number[] {
         return [0, 0, 0, 0];
@@ -67,17 +52,27 @@ class MLTVectorTileLayer implements PublicPart<VectorTileLayer> {
     length: number;
     version: number;
     extent: number;
+    features: MLTFeature[] = [];
 
     constructor(featureTable: FeatureTable) {
         this.featureTable = featureTable;
         this.name = featureTable.name;
-        this.length = featureTable.numFeatures;
         this.extent = featureTable.extent;
         this.version = 2;
+        let index = 0;
+        for (const feature of featureTable) {
+            if (feature.geometry != null && feature.geometry.type !== undefined) {
+                this.features.push(feature);
+            } else {
+                console.log(`Skipping feature with no geometry in layer ${this.name}`, feature, index);
+            }
+            index++;
+        }
+        this.length = this.features.length;
     }
 
     feature(i: number): VectorTileFeature {
-        return new MLTVectorTileFeature(this.featureTable[i], this.extent) as unknown as VectorTileFeature;
+        return new MLTVectorTileFeature(this.features[i], this.extent) as unknown as VectorTileFeature;
     }
 }
 
