@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import {type Tile} from './tile';
-import {TileCache} from './tile_cache';
+import {TileCache, BoundedLRUCache} from './tile_cache';
 import {OverscaledTileID} from './tile_id';
 
 const idA = new OverscaledTileID(10, 0, 10, 0, 1);
@@ -127,5 +127,65 @@ describe('TileCache', () => {
         expect(numRemoved).toBe(2);
         cache.add(idD, tileD);
         expect(numRemoved).toBe(3);
+    });
+});
+
+describe('BoundedLRUCache', () => {
+    test('evicts least-recently-used item when capacity exceeded', () => {
+        const cache = new BoundedLRUCache<string, number>(2);
+
+        cache.set('a', 1);
+        cache.set('b', 2);
+
+        // Access 'a' to make it most-recently-used
+        expect(cache.get('a')).toBe(1);
+
+        // Insert 'c' -> should evict 'b' (the least recently used)
+        cache.set('c', 3);
+
+        expect(cache.get('b')).toBeUndefined();
+        expect(cache.get('a')).toBe(1);
+        expect(cache.get('c')).toBe(3);
+    });
+
+    test('setting an existing key updates value and makes it most-recently-used', () => {
+        const cache = new BoundedLRUCache<string, number>(2);
+
+        cache.set('a', 1);
+        cache.set('b', 2);
+
+        // Update 'a' value and it should become most-recently-used
+        cache.set('a', 10);
+        // Insert 'c' -> should evict 'b'
+        cache.set('c', 3);
+
+        expect(cache.get('b')).toBeUndefined();
+        expect(cache.get('a')).toBe(10);
+        expect(cache.get('c')).toBe(3);
+    });
+
+    test('capacity 1 evicts previous entry on new set', () => {
+        const cache = new BoundedLRUCache<string, string>(1);
+
+        cache.set('x', 'first');
+        expect(cache.get('x')).toBe('first');
+
+        cache.set('y', 'second');
+        expect(cache.get('x')).toBeUndefined();
+        expect(cache.get('y')).toBe('second');
+    });
+
+    test('clear removes all entries', () => {
+        const cache = new BoundedLRUCache<number, string>(3);
+        cache.set(1, 'one');
+        cache.set(2, 'two');
+
+        expect(cache.get(1)).toBe('one');
+        expect(cache.get(2)).toBe('two');
+
+        cache.clear();
+
+        expect(cache.get(1)).toBeUndefined();
+        expect(cache.get(2)).toBeUndefined();
     });
 });

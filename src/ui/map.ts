@@ -1,4 +1,4 @@
-import {extend, warnOnce, uniqueId, isImageBitmap, type Complete, pick, type Subscription} from '../util/util';
+import {extend, warnOnce, uniqueId, isImageBitmap, type Complete, pick, type Subscription, isSafari} from '../util/util';
 import {browser} from '../util/browser';
 import {now} from '../util/time_control';
 import {DOM} from '../util/dom';
@@ -370,6 +370,17 @@ export type MapOptions = {
      * keep the camera above ground when pitch \> 90 degrees.
      */
     centerClampedToGround?: boolean;
+    /**
+     * Allows overzooming using geojson-vt for vector tile sources.
+     * When set to `true` this seems to have better performance at high zoom levels and prevents Safari from crashing.
+     * The default is `false` for most cases as it changes query render features results in high zoom levels due to tile splitting.
+     * If `true`, tiles over the source's maxzoom will be split using geojson-vt into subtiles (partitioning).
+     * if `false`, tiles will be overzoomed using scaling.
+     * @defaultValue `true` for Safari to prevent crashes and `false` for other browsers
+     * This may change or be removed in future versions.
+     * @experimental
+     */
+    experimentalOverzoomingWithGeojsonVt?: boolean;
 };
 
 export type AddImageOptions = {
@@ -454,7 +465,8 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096],
     cancelPendingTileRequestsWhileZooming: true,
-    centerClampedToGround: true
+    centerClampedToGround: true,
+    experimentalOverzoomingWithGeojsonVt: isSafari(globalThis) ? true : false
 };
 
 /**
@@ -538,7 +550,8 @@ export class Map extends Camera {
     _overridePixelRatio: number | null | undefined;
     _maxCanvasSize: [number, number];
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
-
+    /** @internal */
+    _overzoomingWithGeojsonVt: boolean;
     /**
      * @internal
      * image queue throttling handle. To be used later when clean up
@@ -679,6 +692,7 @@ export class Map extends Camera {
         this._clickTolerance = resolvedOptions.clickTolerance;
         this._overridePixelRatio = resolvedOptions.pixelRatio;
         this._maxCanvasSize = resolvedOptions.maxCanvasSize;
+        this._overzoomingWithGeojsonVt = resolvedOptions.experimentalOverzoomingWithGeojsonVt === true;
         this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
         this.transformConstrain = resolvedOptions.transformConstrain;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
