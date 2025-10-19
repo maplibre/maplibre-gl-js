@@ -1,6 +1,7 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["typescript", "import", "react"],
+
   "rules": {
     "no-useless-escape": "off",
     "no-unassigned-vars": "off",
@@ -12,9 +13,7 @@
     "no-this-alias": "off",
     "no-wrapper-object-types": "off"
   },
-  "env": {
-    "builtin": true
-  },
+  "jsPlugins": ["@typescript-eslint/eslint-plugin", "@vitest/eslint-plugin", "@stylistic/eslint-plugin", "eslint-plugin-tsdoc", "eslint-plugin-html"],
   "ignorePatterns": [
     "staging/**",
     "coverage/**",
