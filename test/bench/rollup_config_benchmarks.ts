@@ -5,7 +5,7 @@ import {plugins, nodeResolve} from '../../build/rollup_plugins';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript from '@rollup/plugin-typescript';
 import {execSync} from 'child_process';
-import {RollupOptions} from 'rollup';
+import type {RollupOptions} from 'rollup';
 
 /**
  * This script generates the benchmark bundles for the benchmark suite.
