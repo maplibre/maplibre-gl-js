@@ -1,0 +1,24 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "import", "react"],
+
+  "rules": {
+    "no-useless-escape": "off",
+    "no-unassigned-vars": "off",
+    "no-async-promise-executor": "off",
+    "no-eval": "off",
+    "no-control-regex": "off",
+    "no-unsafe-optional-chaining": "off",
+    "no-non-null-asserted-optional-chain": "off",
+    "no-this-alias": "off",
+    "no-wrapper-object-types": "off"
+  },
+  "jsPlugins": ["@typescript-eslint/eslint-plugin", "@vitest/eslint-plugin", "@stylistic/eslint-plugin", "eslint-plugin-tsdoc", "eslint-plugin-html"],
+  "ignorePatterns": [
+    "staging/**",
+    "coverage/**",
+    "node_modules/**",
+    "docs/**",
+    "dist/**"
+  ]
+}

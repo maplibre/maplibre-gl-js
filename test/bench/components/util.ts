@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
-import {RegressionResults, Summary} from '../lib/statistics';
-import Benchmark from '../lib/benchmark';
+import {type RegressionResults, type Summary} from '../lib/statistics';
+import type Benchmark from '../lib/benchmark';
 
 export type Version = {
     name: string;

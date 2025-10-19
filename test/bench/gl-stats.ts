@@ -1,4 +1,4 @@
-import puppeteer, {Page} from 'puppeteer';
+import puppeteer, {type Page} from 'puppeteer';
 import fs from 'fs';
 import zlib from 'zlib';
 import {execSync} from 'child_process';
