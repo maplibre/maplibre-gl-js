@@ -17,7 +17,7 @@ import type {GeoJSONSourceDiff} from './geojson_source_diff';
 import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
 import type {WorkerTileParameters} from './worker_source';
 import {MessageType} from '../util/actor_messages';
-import {OverscaledTileID} from './tile_id';
+import {Bounds} from '../geo/bounds';
 
 /**
  * Options object for GeoJSONSource.
@@ -464,7 +464,11 @@ export class GeoJSONSource extends Evented implements Source {
         }
 
         // Update all tiles that WILL contain an affected feature going forward
-        // TODO
+        const geometries = [
+            ...diff.update.map(f => f.newGeometry).filter(Boolean),
+            ...diff.add.map(f => f.geometry),
+        ];
+
 
         return false;
     }
