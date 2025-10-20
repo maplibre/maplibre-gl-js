@@ -6,6 +6,7 @@ import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
 import {mergeSourceDiffs} from './geojson_source_diff';
+import {geometryIntersectsTile} from './geometry_tile_intersection';
 
 import type {Source} from './source';
 import type {Map} from '../ui/map';
@@ -469,6 +470,11 @@ export class GeoJSONSource extends Evented implements Source {
             ...diff.add.map(f => f.geometry),
         ];
 
+        for (const geometry of geometries) {
+            if (geometryIntersectsTile(geometry, tile.tileID)) {
+                return true;
+            }
+        }
 
         return false;
     }
