@@ -1,17 +1,23 @@
 import type {OverscaledTileID} from './tile_id';
+import {EXTENT} from '../data/extent';
 
 /**
  * Checks if a GeoJSON geometry intersects with a tile's bounding box.
  * Uses simple point-in-box tests, which may produce false positives for
  * complex geometries (e.g., LineStrings that pass through the tile but
  * have no vertices inside it).
+ *
+ * @param geometry - The GeoJSON geometry to check
+ * @param tileID - The tile ID to check against
+ * @param buffer - Buffer size in tile coordinates (0-EXTENT range, default 0)
  */
-export function geometryIntersectsTile(geometry: GeoJSON.Geometry, tileID: OverscaledTileID): boolean {
+export function geometryIntersectsTile(geometry: GeoJSON.Geometry, tileID: OverscaledTileID, buffer: number = 0): boolean {
     const tilesAtZoom = Math.pow(2, tileID.canonical.z);
-    const tileMinX = tileID.canonical.x / tilesAtZoom;
-    const tileMaxX = (tileID.canonical.x + 1) / tilesAtZoom;
-    const tileMinY = tileID.canonical.y / tilesAtZoom;
-    const tileMaxY = (tileID.canonical.y + 1) / tilesAtZoom;
+    const bufferInTiles = buffer / EXTENT;
+    const tileMinX = tileID.canonical.x / tilesAtZoom - bufferInTiles;
+    const tileMaxX = (tileID.canonical.x + 1) / tilesAtZoom + bufferInTiles;
+    const tileMinY = tileID.canonical.y / tilesAtZoom - bufferInTiles;
+    const tileMaxY = (tileID.canonical.y + 1) / tilesAtZoom + bufferInTiles;
 
     const checkCoordinate = (coord: number[]) => {
         const [lng, lat] = coord;
@@ -45,7 +51,7 @@ export function geometryIntersectsTile(geometry: GeoJSON.Geometry, tileID: Overs
             return checkCoordinates(geometry.coordinates);
         case 'GeometryCollection':
             for (const geom of geometry.geometries) {
-                if (geometryIntersectsTile(geom, tileID)) {
+                if (geometryIntersectsTile(geom, tileID, buffer)) {
                     return true;
                 }
             }

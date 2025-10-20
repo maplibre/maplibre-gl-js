@@ -471,7 +471,7 @@ export class GeoJSONSource extends Evented implements Source {
         ];
 
         for (const geometry of geometries) {
-            if (geometryIntersectsTile(geometry, tile.tileID)) {
+            if (geometryIntersectsTile(geometry, tile.tileID, this.workerOptions.geojsonVtOptions.buffer)) {
                 return true;
             }
         }
