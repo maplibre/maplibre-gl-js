@@ -451,10 +451,10 @@ export class GeoJSONSource extends Evented implements Source {
     shoudReloadTile(tile: Tile, diff: GeoJSONSourceDiff) {
         if (diff.removeAll) return true;
 
-        const affectedIds = new Set(diff.update.map(u => u.id));
+        const affectedIds = new Set([...diff.update.map(u => u.id), ...diff.remove]);
 
+        // Update all tiles that PREVIOUSLY contained an affected feature
         const layers = tile.latestFeatureIndex.loadVTLayers();
-
         for (let i = 0; i < tile.latestFeatureIndex.featureIndexArray.length; i++) {
             const featureIndex = tile.latestFeatureIndex.featureIndexArray.get(i);
             const feature = layers._geojsonTileLayer.feature(featureIndex.featureIndex);
@@ -462,6 +462,9 @@ export class GeoJSONSource extends Evented implements Source {
                 return true;
             }
         }
+
+        // Update all tiles that WILL contain an affected feature going forward
+        // TODO
 
         return false;
     }
