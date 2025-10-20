@@ -73,8 +73,7 @@
 <script>
     const map = new maplibregl.Map({
         container: 'map',
-        style:
-            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        style: 'https://demotiles.maplibre.org/style.json',
         center: [31.4606, 20.7927],
         zoom: 0.5
     });
@@ -168,10 +167,7 @@
                             ['to-string', ['get', 'mag']],
                             'm'
                         ],
-                        'text-font': [
-                            'Open Sans Bold',
-                            'Arial Unicode MS Bold'
-                        ],
+                        'text-font': [ 'Noto Sans Regular' ],
                         'text-size': 12
                     },
                     'paint': {

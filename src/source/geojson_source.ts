@@ -6,6 +6,7 @@ import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
 import {mergeSourceDiffs} from './geojson_source_diff';
+import {geometryIntersectsTile} from './geometry_tile_intersection';
 
 import type {Source} from './source';
 import type {Map} from '../ui/map';
@@ -17,6 +18,7 @@ import type {GeoJSONSourceDiff} from './geojson_source_diff';
 import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
 import type {WorkerTileParameters} from './worker_source';
 import {MessageType} from '../util/actor_messages';
+import {Bounds} from '../geo/bounds';
 
 /**
  * Options object for GeoJSONSource.
@@ -104,10 +106,10 @@ export type SetClusterOptions = {
  *   }]
  * });
  * ```
- * @see [Draw GeoJSON points](https://maplibre.org/maplibre-gl-js/docs/examples/geojson-markers/)
- * @see [Add a GeoJSON line](https://maplibre.org/maplibre-gl-js/docs/examples/geojson-line/)
- * @see [Create a heatmap from points](https://maplibre.org/maplibre-gl-js/docs/examples/heatmap-layer/)
- * @see [Create and style clusters](https://maplibre.org/maplibre-gl-js/docs/examples/cluster/)
+ * @see [Draw GeoJSON points](https://maplibre.org/maplibre-gl-js/docs/examples/draw-geojson-points/)
+ * @see [Add a GeoJSON line](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-geojson-line/)
+ * @see [Create a heatmap from points](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-heatmap-layer/)
+ * @see [Create and style clusters](https://maplibre.org/maplibre-gl-js/docs/examples/create-and-style-clusters/)
  */
 export class GeoJSONSource extends Evented implements Source {
     type: 'geojson';
@@ -429,7 +431,9 @@ export class GeoJSONSource extends Evented implements Source {
             // although GeoJSON sources contain no metadata, we fire this event to let the SourceCache
             // know its ok to start requesting tiles.
             this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
-            this.fire(new Event('data', {...eventData, sourceDataType: 'content'}));
+            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTile: (tile: Tile) =>
+                this.shoudReloadTile(tile, diff)
+            }));
         } catch (err) {
             this._isUpdatingWorker = false;
             if (this._removed) {
@@ -443,6 +447,36 @@ export class GeoJSONSource extends Evented implements Source {
                 this._updateWorkerData();
             }
         }
+    }
+
+    shoudReloadTile(tile: Tile, diff: GeoJSONSourceDiff) {
+        if (diff.removeAll) return true;
+
+        const affectedIds = new Set([...diff.update.map(u => u.id), ...diff.remove]);
+
+        // Update all tiles that PREVIOUSLY contained an affected feature
+        const layers = tile.latestFeatureIndex.loadVTLayers();
+        for (let i = 0; i < tile.latestFeatureIndex.featureIndexArray.length; i++) {
+            const featureIndex = tile.latestFeatureIndex.featureIndexArray.get(i);
+            const feature = layers._geojsonTileLayer.feature(featureIndex.featureIndex);
+            if (affectedIds.has(feature.id)) {
+                return true;
+            }
+        }
+
+        // Update all tiles that WILL contain an affected feature going forward
+        const geometries = [
+            ...diff.update.map(f => f.newGeometry).filter(Boolean),
+            ...diff.add.map(f => f.geometry),
+        ];
+
+        for (const geometry of geometries) {
+            if (geometryIntersectsTile(geometry, tile.tileID, this.workerOptions.geojsonVtOptions.buffer)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     loaded(): boolean {
@@ -463,8 +497,7 @@ export class GeoJSONSource extends Evented implements Source {
             pixelRatio: this.map.getPixelRatio(),
             showCollisionBoxes: this.map.showCollisionBoxes,
             promoteId: this.promoteId,
-            subdivisionGranularity: this.map.style.projection.subdivisionGranularity,
-            globalState: this.map.getGlobalState()
+            subdivisionGranularity: this.map.style.projection.subdivisionGranularity
         };
 
         tile.abortController = new AbortController();

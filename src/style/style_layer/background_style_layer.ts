@@ -13,7 +13,7 @@ export class BackgroundStyleLayer extends StyleLayer {
     _transitioningPaint: Transitioning<BackgroundPaintProps>;
     paint: PossiblyEvaluated<BackgroundPaintProps, BackgroundPaintPropsPossiblyEvaluated>;
 
-    constructor(layer: LayerSpecification) {
-        super(layer, properties);
+    constructor(layer: LayerSpecification, globalState: Record<string, any>) {
+        super(layer, properties, globalState);
     }
 }

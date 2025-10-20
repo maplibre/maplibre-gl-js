@@ -3,7 +3,7 @@ import {Aabb} from '../../util/primitives/aabb';
 import {clamp} from '../../util/util';
 import {type MercatorCoordinate} from '../mercator_coordinate';
 import {type IReadonlyTransform} from '../transform_interface';
-import {type CoveringTilesOptions} from './covering_tiles';
+import {type CoveringTilesOptionsInternal} from './covering_tiles';
 import {type CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
 
 export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetailsProvider {
@@ -25,7 +25,7 @@ export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetail
      * Returns the AABB of the specified tile.
      * @param tileID - Tile x, y and z for zoom.
      */
-    getTileBoundingVolume(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions): Aabb {
+    getTileBoundingVolume(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptionsInternal): Aabb {
         let minElevation = 0;
         let maxElevation = 0;
         if (options?.terrain) {
@@ -39,7 +39,7 @@ export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetail
             [wrap + (tileID.x + 1) / numTiles, (tileID.y + 1) / numTiles, maxElevation]);
     }
     
-    allowVariableZoom(transform: IReadonlyTransform, options: CoveringTilesOptions): boolean {
+    allowVariableZoom(transform: IReadonlyTransform, options: CoveringTilesOptionsInternal): boolean {
         const zfov = transform.fov * (Math.abs(Math.cos(transform.rollInRadians)) * transform.height + Math.abs(Math.sin(transform.rollInRadians)) * transform.width) / transform.height;
         const maxConstantZoomPitch = clamp(78.5 - zfov / 2, 0.0, 60.0);
         return (!!options.terrain || transform.pitch > maxConstantZoomPitch);

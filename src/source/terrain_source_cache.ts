@@ -6,7 +6,7 @@ import {Evented} from '../util/evented';
 import type {ITransform} from '../geo/transform_interface';
 import type {SourceCache} from '../source/source_cache';
 import {type Terrain} from '../render/terrain';
-import {browser} from '../util/browser';
+import {now} from '../util/time_control';
 import {coveringTiles} from '../geo/projection/covering_tiles';
 import {createMat4f64} from '../util/util';
 import {type CanonicalTileRange} from './image_source';
@@ -57,7 +57,7 @@ export class TerrainSourceCache extends Evented {
     /**
      * used to determine whether depth & coord framebuffers need updating
      */
-    _lastTilesetChange: number = browser.now();
+    _lastTilesetChange: number = now();
 
     constructor(sourceCache: SourceCache) {
         super();
@@ -103,7 +103,7 @@ export class TerrainSourceCache extends Evented {
                 tileID.terrainRttPosMatrix32f = new Float64Array(16) as any;
                 mat4.ortho(tileID.terrainRttPosMatrix32f, 0, EXTENT, EXTENT, 0, 0, 1);
                 this._tiles[tileID.key] = new Tile(tileID, this.tileSize);
-                this._lastTilesetChange = browser.now();
+                this._lastTilesetChange = now();
             }
         }
         // free unused tiles

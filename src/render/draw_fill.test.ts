@@ -66,7 +66,7 @@ describe('drawFill', () => {
                 'fill-pattern': 'pattern0'
             }
         } as FillLayerSpecification;
-        const layer = new FillStyleLayer(layerSpec);
+        const layer = new FillStyleLayer(layerSpec, {});
         layer.getCrossfadeParameters = () => ({} as any);
         layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
 

@@ -12,7 +12,7 @@ import {expectToBeCloseToArray} from '../../util/test/util';
 
 describe('transform', () => {
     test('creates a transform', () => {
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(500, 500);
         expect(transform.unmodified).toBe(true);
         expect(transform.tileSize).toBe(512);
@@ -24,7 +24,7 @@ describe('transform', () => {
         expect(transform.bearing === 0 ? 0 : transform.bearing).toBe(0);
         transform.setBearing(1);
         expect(transform.bearing).toBe(1);
-        expect([...transform.rotationMatrix.values()]).toEqual([0.9998477101325989, -0.017452405765652657, 0.017452405765652657, 0.9998477101325989]);
+        expect([...transform.rotationMatrix]).toEqual([0.9998477101325989, -0.017452405765652657, 0.017452405765652657, 0.9998477101325989]);
         transform.setBearing(0);
         expect(transform.bearing).toBe(0);
         expect(transform.unmodified).toBe(false);
@@ -44,14 +44,14 @@ describe('transform', () => {
         expect(transform.height).toBe(500);
         expect(transform.nearZ).toBe(10);
         expect(transform.farZ).toBe(804.8028169246645);
-        expect([...transform.projectionMatrix.values()]).toEqual([3, 0, 0, 0, 0, 3, 0, 0, -0, 0, -1.0251635313034058, -1, 0, 0, -20.25163459777832, 0]);
-        expectToBeCloseToArray([...transform.inverseProjectionMatrix.values()], [0.3333333333333333, 0, 0, 0, 0, 0.3333333333333333, 0, 0, 0, 0, 0, -0.04937872980873673, 0, 0, -1, 0.05062127019126326], 10);
-        expectToBeCloseToArray([...mat4.multiply(new Float64Array(16) as any, transform.projectionMatrix, transform.inverseProjectionMatrix).values()], [
+        expect([...transform.projectionMatrix]).toEqual([3, 0, 0, 0, 0, 3, 0, 0, -0, 0, -1.0251635313034058, -1, 0, 0, -20.25163459777832, 0]);
+        expectToBeCloseToArray([...transform.inverseProjectionMatrix], [0.3333333333333333, 0, 0, 0, 0, 0.3333333333333333, 0, 0, 0, 0, 0, -0.04937872980873673, 0, 0, -1, 0.05062127019126326], 10);
+        expectToBeCloseToArray([...mat4.multiply(new Float64Array(16) as any, transform.projectionMatrix, transform.inverseProjectionMatrix)], [
             1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,
             0, 0, 0, 1], 6);
-        expect([...transform.modelViewProjectionMatrix.values()]).toEqual([3, 0, 0, 0, 0, -2.954423259036624, -0.1780177690666898, -0.17364817766693033, -0, 0.006822967915294533, -0.013222891287479163, -0.012898324631281611, -786432, 774484.3308168967, 47414.91102496082, 46270.827886319785]);
+        expect([...transform.modelViewProjectionMatrix]).toEqual([3, 0, 0, 0, 0, -2.954423259036624, -0.1780177690666898, -0.17364817766693033, -0, 0.006822967915294533, -0.013222891287479163, -0.012898324631281611, -786432, 774484.3308168967, 47414.91102496082, 46270.827886319785]);
         expect(fixedLngLat(transform.screenPointToLocation(new Point(250, 250)))).toEqual({lng: 0, lat: 0});
         expect(fixedCoord(transform.screenPointToMercatorCoordinate(new Point(250, 250)))).toEqual({x: 0.5, y: 0.5, z: 0});
         expect(fixedCoord(transform.screenPointToMercatorCoordinateAtZ(new Point(250, 250), 1))).toEqual({x: 0.5, y: 0.5000000044, z: 1});
@@ -60,14 +60,14 @@ describe('transform', () => {
 
     test('does not throw on bad center', () => {
         expect(() => {
-            const transform = new MercatorTransform(0, 22, 0, 60, true);
+            const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
             transform.resize(500, 500);
             transform.setCenter(new LngLat(50, -90));
         }).not.toThrow();
     });
 
     test('setLocationAt', () => {
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(500, 500);
         transform.setZoom(4);
         expect(transform.center).toEqual({lng: 0, lat: 0});
@@ -76,7 +76,7 @@ describe('transform', () => {
     });
 
     test('setLocationAt tilted', () => {
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(500, 500);
         transform.setZoom(4);
         transform.setPitch(50);
@@ -86,7 +86,7 @@ describe('transform', () => {
     });
 
     test('setLocationAt tilted rolled', () => {
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(500, 500);
         transform.setZoom(4);
         transform.setPitch(50);
@@ -97,26 +97,26 @@ describe('transform', () => {
     });
 
     test('has a default zoom', () => {
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(500, 500);
         expect(transform.tileZoom).toBe(0);
         expect(transform.tileZoom).toBe(transform.zoom);
     });
 
     test('set zoom inits tileZoom with zoom value', () => {
-        const transform = new MercatorTransform(0, 22, 0, 60);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60});
         transform.setZoom(5);
         expect(transform.tileZoom).toBe(5);
     });
 
     test('set zoom clamps tileZoom to non negative value ', () => {
-        const transform = new MercatorTransform(-2, 22, 0, 60);
+        const transform = new MercatorTransform({minZoom: -2, maxZoom: 22, minPitch: 0, maxPitch: 60});
         transform.setZoom(-2);
         expect(transform.tileZoom).toBe(0);
     });
 
     test('set fov', () => {
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.setFov(10);
         expect(transform.fov).toBe(10);
         transform.setFov(10);
@@ -124,7 +124,7 @@ describe('transform', () => {
     });
 
     test('lngRange & latRange constrain zoom and center', () => {
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.setCenter(new LngLat(0, 0));
         transform.setZoom(10);
         transform.resize(500, 500);
@@ -143,7 +143,7 @@ describe('transform', () => {
     });
 
     test('lngRange & latRange constrain zoom and center after cloning', () => {
-        const old = new MercatorTransform(0, 22, 0, 60, true);
+        const old = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         old.setCenter(new LngLat(0, 0));
         old.setZoom(10);
         old.resize(500, 500);
@@ -164,7 +164,7 @@ describe('transform', () => {
     });
 
     test('lngRange can constrain zoom and center across meridian', () => {
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.setCenter(new LngLat(180, 0));
         transform.setZoom(10);
         transform.resize(500, 500);
@@ -196,7 +196,7 @@ describe('transform', () => {
     });
 
     test('clamps pitch', () => {
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
 
         transform.setPitch(45);
         expect(transform.pitch).toBe(45);
@@ -209,7 +209,7 @@ describe('transform', () => {
     });
 
     test('visibleUnwrappedCoordinates', () => {
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(200, 200);
         transform.setZoom(0);
         transform.setCenter(new LngLat(-170.01, 0.01));
@@ -224,7 +224,7 @@ describe('transform', () => {
     });
 
     test('maintains high float precision when calculating matrices', () => {
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(200.25, 200.25);
         transform.setZoom(20.25);
         transform.setPitch(67.25);
@@ -237,7 +237,7 @@ describe('transform', () => {
     });
 
     test('recalculateZoomAndCenter: no change', () => {
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.setElevation(200);
         transform.setCenter(new LngLat(10.0, 50.0));
         transform.setZoom(14);
@@ -264,7 +264,7 @@ describe('transform', () => {
     });
 
     test('recalculateZoomAndCenter: elevation increase', () => {
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.setElevation(200);
         transform.setCenter(new LngLat(10.0, 50.0));
         transform.setZoom(14);
@@ -296,7 +296,7 @@ describe('transform', () => {
     });
 
     test('recalculateZoomAndCenter: elevation decrease', () => {
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.setElevation(200);
         transform.setCenter(new LngLat(10.0, 50.0));
         transform.setZoom(14);
@@ -326,7 +326,7 @@ describe('transform', () => {
     });
 
     test('recalculateZoomAndCenterNoTerrain', () => {
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.setElevation(200);
         transform.setCenter(new LngLat(10.0, 50.0));
         transform.setZoom(14);
@@ -354,7 +354,7 @@ describe('transform', () => {
     });
 
     test('pointCoordinate with terrain when returning null should fall back to 2D', () => {
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(500, 500);
         const terrain = {
             pointCoordinate: () => null
@@ -365,7 +365,7 @@ describe('transform', () => {
     });
 
     test('getBounds with horizon', () => {
-        const transform = new MercatorTransform(0, 22, 0, 85, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
         transform.resize(500, 500);
 
         transform.setPitch(60);
@@ -378,7 +378,7 @@ describe('transform', () => {
     });
 
     test('lngLatToCameraDepth', () => {
-        const transform = new MercatorTransform(0, 22, 0, 85, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
         transform.resize(500, 500);
         transform.setCenter(new LngLat(10.0, 50.0));
 
@@ -389,7 +389,7 @@ describe('transform', () => {
 
     test('projectTileCoordinates', () => {
         const precisionDigits = 10;
-        const transform = new MercatorTransform(0, 22, 0, 85, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
         transform.resize(500, 500);
         transform.setCenter(new LngLat(10.0, 50.0));
         let projection = transform.projectTileCoordinates(1024, 1024, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), (_x, _y) => 0);
@@ -407,7 +407,7 @@ describe('transform', () => {
     });
 
     test('getCameraLngLat', () => {
-        const transform = new MercatorTransform(0, 22, 0, 180, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
         transform.setElevation(200);
         transform.setCenter(new LngLat(15.0, 55.0));
         transform.setZoom(14);
@@ -427,7 +427,7 @@ describe('transform', () => {
     });
 
     test('calculateCenterFromCameraLngLatAlt no pitch no bearing', () => {
-        const transform = new MercatorTransform(0, 22, 0, 180, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
         transform.setPitch(55);
         transform.setBearing(75);
         transform.resize(512, 512);
@@ -445,7 +445,7 @@ describe('transform', () => {
     });
 
     test('calculateCenterFromCameraLngLatAlt no pitch', () => {
-        const transform = new MercatorTransform(0, 22, 0, 180, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
         transform.setPitch(55);
         transform.setBearing(75);
         transform.resize(512, 512);
@@ -465,7 +465,7 @@ describe('transform', () => {
     });
 
     test('calculateCenterFromCameraLngLatAlt', () => {
-        const transform = new MercatorTransform(0, 22, 0, 180, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
         transform.setPitch(55);
         transform.setBearing(75);
         transform.resize(512, 512);
@@ -487,7 +487,7 @@ describe('transform', () => {
     });
 
     test('calculateCenterFromCameraLngLatAlt 89 degrees pitch', () => {
-        const transform = new MercatorTransform(0, 22, 0, 180, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
         transform.setPitch(55);
         transform.setBearing(75);
         transform.resize(512, 512);
@@ -509,7 +509,7 @@ describe('transform', () => {
     });
 
     test('calculateCenterFromCameraLngLatAlt 89.99 degrees pitch', () => {
-        const transform = new MercatorTransform(0, 22, 0, 180, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
         transform.setPitch(55);
         transform.setBearing(75);
         transform.resize(512, 512);
@@ -531,7 +531,7 @@ describe('transform', () => {
     });
 
     test('calculateCenterFromCameraLngLatAlt 90 degrees pitch', () => {
-        const transform = new MercatorTransform(0, 22, 0, 180, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
         transform.setPitch(55);
         transform.setBearing(75);
         transform.resize(512, 512);
@@ -553,7 +553,7 @@ describe('transform', () => {
     });
 
     test('calculateCenterFromCameraLngLatAlt 95 degrees pitch', () => {
-        const transform = new MercatorTransform(0, 22, 0, 180, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
         transform.setPitch(55);
         transform.setBearing(75);
         transform.resize(512, 512);
@@ -575,7 +575,7 @@ describe('transform', () => {
     });
 
     test('calculateCenterFromCameraLngLatAlt 180 degrees pitch', () => {
-        const transform = new MercatorTransform(0, 22, 0, 180, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
         transform.setPitch(55);
         transform.setBearing(75);
         transform.resize(512, 512);

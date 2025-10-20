@@ -146,10 +146,6 @@ describe('browser', () => {
         });
     });
 
-    test('now', () => {
-        expect(typeof browser.now()).toBe('number');
-    });
-
     test('hardwareConcurrency', () => {
         expect(typeof browser.hardwareConcurrency).toBe('number');
     });

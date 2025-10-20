@@ -179,9 +179,9 @@ describe('Find offset line intersections', () => {
         transform.setPitch(45);
         transform.setRoll(45);
 
-        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform, 2).values()],
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform, 2)],
             [0.4330127239227295, -0.4330127239227295, 0, 0, 0.3061862289905548, 0.3061862289905548, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
-        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform, 2).values()],
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform, 2)],
             [0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
     });
 
@@ -191,9 +191,9 @@ describe('Find offset line intersections', () => {
         transform.setPitch(45);
         transform.setRoll(0);
 
-        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform, 2).values()],
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform, 2)],
             [0.3535533845424652, -0.3535533845424652, 0, 0, 0.3535533845424652, 0.3535533845424652, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
-        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform, 2).values()],
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform, 2)],
             [0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
     });
 
@@ -203,9 +203,9 @@ describe('Find offset line intersections', () => {
         transform.setPitch(45);
         transform.setRoll(45);
 
-        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform, 2).values()],
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform, 2)],
             [0.08967986702919006,  -0.5226925611495972, 0, 0, 0.5226925611495972, -0.08967986702919006, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
-        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform, 2).values()],
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform, 2)],
             [0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
     });
 
@@ -216,13 +216,13 @@ describe('Find offset line intersections', () => {
         transform.setPitch(45);
         transform.setRoll(45);
 
-        expectToBeCloseToArray([...getGlCoordMatrix(false, false, transform, 2).values()],
-            [...transform.pixelsToClipSpaceMatrix.values()], 9);
-        expectToBeCloseToArray([...getGlCoordMatrix(false, true, transform, 2).values()],
-            [...transform.pixelsToClipSpaceMatrix.values()], 9);
-        expectToBeCloseToArray([...getGlCoordMatrix(true, false, transform, 2).values()],
+        expectToBeCloseToArray([...getGlCoordMatrix(false, false, transform, 2)],
+            [...transform.pixelsToClipSpaceMatrix], 9);
+        expectToBeCloseToArray([...getGlCoordMatrix(false, true, transform, 2)],
+            [...transform.pixelsToClipSpaceMatrix], 9);
+        expectToBeCloseToArray([...getGlCoordMatrix(true, false, transform, 2)],
             [-0.33820396661758423, 1.9711971282958984, 0, 0, -1.9711971282958984, 0.33820396661758423, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
-        expectToBeCloseToArray([...getGlCoordMatrix(true, true, transform, 2).values()],
+        expectToBeCloseToArray([...getGlCoordMatrix(true, true, transform, 2)],
             [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
     });
 
@@ -232,9 +232,9 @@ describe('Find offset line intersections', () => {
         transform.setPitch(0);
         transform.setRoll(0);
 
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast],
             [0.7071067690849304, 0.7071067690849304]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth],
             [-0.7071067690849304, 0.7071067690849304], 9);
     });
 
@@ -244,9 +244,9 @@ describe('Find offset line intersections', () => {
         transform.setPitch(0);
         transform.setRoll(45);
 
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast],
             [0.7071067690849304, 0.7071067690849304]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth],
             [-0.7071067690849304, 0.7071067690849304], 9);
     });
 
@@ -256,9 +256,9 @@ describe('Find offset line intersections', () => {
         transform.setPitch(45);
         transform.setRoll(0);
 
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast],
             [1.0, 0.0]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth],
             [0.0, 1.0], 9);
     });
 
@@ -268,9 +268,9 @@ describe('Find offset line intersections', () => {
         transform.setPitch(45);
         transform.setRoll(45);
 
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast],
             [-0.16910198330879211, 0.9855985641479492]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth],
             [-0.9855985641479492, 0.16910198330879211], 9);
     });
 
@@ -281,21 +281,21 @@ describe('Find offset line intersections', () => {
         transform.setPitch(89);
         transform.setRoll(0);
 
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast],
             [1, 0]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth],
             [0, 1], 9);
 
         transform.setPitch(90);
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast],
             [0, 0]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth],
             [0, 1], 9);
 
         transform.setBearing(90);
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast],
             [0, 0]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth],
             [-1, 0], 9);
     });
 
@@ -306,15 +306,15 @@ describe('Find offset line intersections', () => {
         transform.setPitch(89);
         transform.setRoll(45);
 
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast],
             [-0.6946603059768677, 0.7193379402160645]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth],
             [-0.7193379402160645, 0.6946603059768677], 9);
 
         transform.setPitch(90);
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast.values()],
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast],
             [-0.7071067690849304, 0.7071067690849304]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth.values()],
+        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth],
             [-0.7071067690849304, 0.7071067690849304], 9);
     });
 

@@ -17,14 +17,15 @@ describe('querySourceFeatures', () => {
         tags: {oneway: true}
     } as any as Feature];
 
-    test('geojson tile', () => {
+    test('not data', () => {
         const tile = new Tile(new OverscaledTileID(3, 0, 2, 1, 2), undefined);
-        let result;
-
-        result = [];
+        const result = [];
         tile.querySourceFeatures(result);
         expect(result).toHaveLength(0);
+    });
 
+    describe('geojson tile', () => {
+        const tile = new Tile(new OverscaledTileID(3, 0, 2, 1, 2), undefined);
         const geojsonWrapper = new GeoJSONWrapper(features);
         geojsonWrapper.name = '_geojsonTileLayer';
         tile.loadVectorData(
@@ -32,24 +33,38 @@ describe('querySourceFeatures', () => {
             createPainter()
         );
 
-        result = [];
-        tile.querySourceFeatures(result);
-        expect(result).toHaveLength(1);
-        expect(result[0].geometry.coordinates[0]).toEqual([-90, 0]);
-        result = [];
-        tile.querySourceFeatures(result, {} as any);
-        expect(result).toHaveLength(1);
-        expect(result[0].properties).toEqual(features[0].tags);
-        result = [];
-        tile.querySourceFeatures(result, {sourceLayer: undefined, filter: ['==', 'oneway', true]});
-        expect(result).toHaveLength(1);
-        result = [];
-        tile.querySourceFeatures(result, {sourceLayer: undefined, filter: ['!=', 'oneway', true]});
-        expect(result).toHaveLength(0);
-        result = [];
-        const polygon = {type: 'Polygon',  coordinates: [[[-91, -1], [-89, -1], [-89, 1], [-91, 1], [-91, -1]]]};
-        tile.querySourceFeatures(result, {sourceLayer: undefined, filter: ['within', polygon]});
-        expect(result).toHaveLength(1);
+        test('query all source features', () => {
+            let result = [];
+            tile.querySourceFeatures(result);
+            expect(result).toHaveLength(1);
+            expect(result[0].geometry.coordinates[0]).toEqual([-90, 0]);
+            result = [];
+            tile.querySourceFeatures(result, {} as any);
+            expect(result).toHaveLength(1);
+            expect(result[0].properties).toEqual(features[0].tags);
+        });
+
+        test('filter source features', () => {
+            let result = [];
+            tile.querySourceFeatures(result, {sourceLayer: undefined, filter: ['==', 'oneway', true]});
+            expect(result).toHaveLength(1);
+            result = [];
+            tile.querySourceFeatures(result, {sourceLayer: undefined, filter: ['!=', 'oneway', true]});
+            expect(result).toHaveLength(0);
+            result = [];
+            const polygon = {type: 'Polygon',  coordinates: [[[-91, -1], [-89, -1], [-89, 1], [-91, 1], [-91, -1]]]} as GeoJSON.GeoJSON;
+            tile.querySourceFeatures(result, {sourceLayer: undefined, filter: ['within', polygon]});
+            expect(result).toHaveLength(1);
+        });
+
+        test('filter with global-state', () => {
+            let result = [];
+            tile.querySourceFeatures(result, {sourceLayer: undefined, filter: ['==', ['get', 'oneway'], ['global-state', 'isOneway']] , globalState: {isOneway: true}});
+            expect(result).toHaveLength(1);
+            result = [];
+            tile.querySourceFeatures(result, {sourceLayer: undefined, filter: ['!=', ['get', 'oneway'], ['global-state', 'isOneway']], globalState: {isOneway: true}});
+            expect(result).toHaveLength(0);
+        });
     });
 
     test('empty geojson tile', () => {

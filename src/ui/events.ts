@@ -8,6 +8,8 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {Map} from './map';
 import type {LngLat} from '../geo/lng_lat';
 import type {ProjectionSpecification, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {CanonicalTileID, OverscaledTileID} from '../source/tile_id';
+import {Tile} from '../source/tile';
 
 /**
  * An event from the mouse relevant to a specific layer.
@@ -30,7 +32,8 @@ export type MapSourceDataType = 'content' | 'metadata' | 'visibility' | 'idle';
 
 /**
  * `MapLayerEventType` - a mapping between the event name and the event.
- * **Note:** These events are compatible with the optional `layerId` parameter.
+ * !!! note
+ *     These events are compatible with the optional `layerId` parameter.
  * If `layerId` is included as the second argument in {@link Map.on}, the event listener will fire only when the
  * event action contains a visible portion of the specified layer.
  * The following example can be used for all the events.
@@ -57,7 +60,8 @@ export type MapLayerEventType = {
     /**
      * Fired when a pointing device (usually a mouse) is pressed and released twice contains a visible portion of the specified layer.
      *
-     * **Note:** Under normal conditions, this event will be preceded by two `click` events.
+     * !!! note
+     *     Under normal conditions, this event will be preceded by two `click` events.
      */
     dblclick: MapLayerMouseEvent;
     /**
@@ -146,7 +150,7 @@ export type MapLayerEventType = {
  * });
  * ```
  */
-export type MapEventType = {
+export interface MapEventType {
     /**
      * Fired when an error occurs. This is GL JS's primary error reporting
      * mechanism. We use an event instead of `throw` to better accommodate
@@ -290,7 +294,8 @@ export type MapEventType = {
     /**
      * Fired when a pointing device (usually a mouse) is pressed and released twice at the same point on the map in rapid succession.
      *
-     * **Note:** Under normal conditions, this event will be preceded by two `click` events.
+     * !!! note
+     *     Under normal conditions, this event will be preceded by two `click` events.
      */
     dblclick: MapMouseEvent;
     /**
@@ -468,6 +473,8 @@ export type MapSourceDataEvent = MapLibreEvent & {
      * the event is related to loading of a tile.
      */
     tile: any;
+
+    shouldReloadTile?: (tile: Tile) => boolean;
 };
 /**
  * `MapMouseEvent` is the event type for mouse-related map events.
@@ -751,8 +758,8 @@ export type MapProjectionEvent = {
     type: 'projectiontransition';
     /**
      * Specifies the name of the new projection.
-     * For example: 
-     * 
+     * For example:
+     *
      *  - `globe` to describe globe that has internally switched to mercator
      *  - `vertical-perspective` to describe a globe that doesn't change to mercator
      *  - `mercator` to describe mercator projection

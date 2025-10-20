@@ -111,6 +111,17 @@ describe('VectorTileSource', () => {
         expect(dataloadingFired).toBeTruthy();
     });
 
+    test('fires "error" event if TileJSON request fails', async () => {
+        server.respondWith('/source.json', [404, {}, '']);
+
+        const source = createSource({url: '/source.json'});
+        const errorEvent = waitForEvent(source, 'error', (e) => e.error.status === 404);
+        server.respond();
+
+        await expect(errorEvent).resolves.toBeDefined();
+        expect(source.loaded()).toBe(true);
+    });
+
     test('serialize URL', () => {
         const source = createSource({
             url: 'http://localhost:2900/source.json'

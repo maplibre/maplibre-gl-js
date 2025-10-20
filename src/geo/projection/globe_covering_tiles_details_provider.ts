@@ -1,7 +1,7 @@
 import {EXTENT} from '../../data/extent';
 import {projectTileCoordinatesToSphere} from './globe_utils';
 import {BoundingVolumeCache} from '../../util/primitives/bounding_volume_cache';
-import {coveringZoomLevel, type CoveringTilesOptions} from './covering_tiles';
+import {coveringZoomLevel, type CoveringTilesOptionsInternal} from './covering_tiles';
 import {vec3, type vec4} from 'gl-matrix';
 import type {IReadonlyTransform} from '../transform_interface';
 import type {MercatorCoordinate} from '../mercator_coordinate';
@@ -96,7 +96,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
         return 0;
     }
     
-    allowVariableZoom(transform: IReadonlyTransform, options: CoveringTilesOptions): boolean {
+    allowVariableZoom(transform: IReadonlyTransform, options: CoveringTilesOptionsInternal): boolean {
         return coveringZoomLevel(transform, options) > 4;
     }
 
@@ -104,11 +104,11 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
         return false;
     }
 
-    getTileBoundingVolume(tileID: { x: number; y: number; z: number }, wrap: number, elevation: number, options: CoveringTilesOptions) {
+    getTileBoundingVolume(tileID: { x: number; y: number; z: number }, wrap: number, elevation: number, options: CoveringTilesOptionsInternal) {
         return this._boundingVolumeCache.getTileBoundingVolume(tileID, wrap, elevation, options);
     }
 
-    private _computeTileBoundingVolume(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions): ConvexVolume {
+    private _computeTileBoundingVolume(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptionsInternal): ConvexVolume {
         let minElevation = 0;
         let maxElevation = 0;
         if (options?.terrain) {

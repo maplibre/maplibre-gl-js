@@ -1,16 +1,17 @@
-import {describe, test, expect} from 'vitest';
-import fs from 'fs';
-import path from 'path';
-import Protobuf from 'pbf';
-import {VectorTile} from '@mapbox/vector-tile';
+import {describe, test, expect, beforeAll} from 'vitest';
 import {loadGeometry} from './load_geometry';
-
-// Load a line feature from fixture tile.
-const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))));
+import {loadVectorTile} from '../../test/unit/lib/tile';
+import {type VectorTileLayer} from '@mapbox/vector-tile';
 
 describe('loadGeometry', () => {
+    let sourceLayer: VectorTileLayer;
+    beforeAll(() => {
+        // Load line features from fixture tile.
+        sourceLayer = loadVectorTile().layers.road;
+    });
+
     test('loadGeometry', () => {
-        const feature = vt.layers.road.feature(0);
+        const feature = sourceLayer.feature(0);
         const originalGeometry = feature.loadGeometry();
         const scaledGeometry = loadGeometry(feature);
         expect(scaledGeometry[0][0].x).toBe(originalGeometry[0][0].x * 2);
@@ -18,7 +19,7 @@ describe('loadGeometry', () => {
     });
 
     test('loadGeometry warns and clamps when exceeding extent', () => {
-        const feature = vt.layers.road.feature(0);
+        const feature = sourceLayer.feature(0);
         feature.extent = 2048;
 
         let numWarnings = 0;

@@ -6,7 +6,6 @@ import type {Context} from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {IReadonlyTransform} from '../../geo/transform_interface';
 import type {Tile} from '../../source/tile';
-import type {CrossFaded} from '../../style/properties';
 import type {LineStyleLayer} from '../../style/style_layer/line_style_layer';
 import type {Painter} from '../painter';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters';
@@ -43,13 +42,29 @@ export type LineSDFUniformsType = {
     'u_ratio': Uniform1f;
     'u_device_pixel_ratio': Uniform1f;
     'u_units_to_pixels': Uniform2f;
-    'u_patternscale_a': Uniform2f;
-    'u_patternscale_b': Uniform2f;
-    'u_sdfgamma': Uniform1f;
+    'u_tileratio': Uniform1f;
+    'u_crossfade_from': Uniform1f;
+    'u_crossfade_to': Uniform1f;
     'u_image': Uniform1i;
-    'u_tex_y_a': Uniform1f;
-    'u_tex_y_b': Uniform1f;
     'u_mix': Uniform1f;
+    'u_lineatlas_width': Uniform1f;
+    'u_lineatlas_height': Uniform1f;
+};
+
+export type LineGradientSDFUniformsType = {
+    'u_translation': Uniform2f;
+    'u_ratio': Uniform1f;
+    'u_device_pixel_ratio': Uniform1f;
+    'u_units_to_pixels': Uniform2f;
+    'u_image': Uniform1i;
+    'u_image_height': Uniform1f;
+    'u_tileratio': Uniform1f;
+    'u_crossfade_from': Uniform1f;
+    'u_crossfade_to': Uniform1f;
+    'u_image_dash': Uniform1i;
+    'u_mix': Uniform1f;
+    'u_lineatlas_width': Uniform1f;
+    'u_lineatlas_height': Uniform1f;
 };
 
 const lineUniforms = (context: Context, locations: UniformLocations): LineUniformsType => ({
@@ -84,13 +99,29 @@ const lineSDFUniforms = (context: Context, locations: UniformLocations): LineSDF
     'u_ratio': new Uniform1f(context, locations.u_ratio),
     'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
     'u_units_to_pixels': new Uniform2f(context, locations.u_units_to_pixels),
-    'u_patternscale_a': new Uniform2f(context, locations.u_patternscale_a),
-    'u_patternscale_b': new Uniform2f(context, locations.u_patternscale_b),
-    'u_sdfgamma': new Uniform1f(context, locations.u_sdfgamma),
     'u_image': new Uniform1i(context, locations.u_image),
-    'u_tex_y_a': new Uniform1f(context, locations.u_tex_y_a),
-    'u_tex_y_b': new Uniform1f(context, locations.u_tex_y_b),
-    'u_mix': new Uniform1f(context, locations.u_mix)
+    'u_mix': new Uniform1f(context, locations.u_mix),
+    'u_tileratio': new Uniform1f(context, locations.u_tileratio),
+    'u_crossfade_from': new Uniform1f(context, locations.u_crossfade_from),
+    'u_crossfade_to': new Uniform1f(context, locations.u_crossfade_to),
+    'u_lineatlas_width': new Uniform1f(context, locations.u_lineatlas_width),
+    'u_lineatlas_height': new Uniform1f(context, locations.u_lineatlas_height)
+});
+
+const lineGradientSDFUniforms = (context: Context, locations: UniformLocations): LineGradientSDFUniformsType => ({
+    'u_translation': new Uniform2f(context, locations.u_translation),
+    'u_ratio': new Uniform1f(context, locations.u_ratio),
+    'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
+    'u_units_to_pixels': new Uniform2f(context, locations.u_units_to_pixels),
+    'u_image': new Uniform1i(context, locations.u_image),
+    'u_image_height': new Uniform1f(context, locations.u_image_height),
+    'u_tileratio': new Uniform1f(context, locations.u_tileratio),
+    'u_crossfade_from': new Uniform1f(context, locations.u_crossfade_from),
+    'u_crossfade_to': new Uniform1f(context, locations.u_crossfade_to),
+    'u_image_dash': new Uniform1i(context, locations.u_image_dash),
+    'u_mix': new Uniform1f(context, locations.u_mix),
+    'u_lineatlas_width': new Uniform1f(context, locations.u_lineatlas_width),
+    'u_lineatlas_height': new Uniform1f(context, locations.u_lineatlas_height)
 });
 
 const lineUniformValues = (
@@ -155,29 +186,43 @@ const lineSDFUniformValues = (
     tile: Tile,
     layer: LineStyleLayer,
     ratioScale: number,
-    dasharray: CrossFaded<Array<number>>,
     crossfade: CrossfadeParameters,
 ): UniformValues<LineSDFUniformsType> => {
     const transform = painter.transform;
-    const lineAtlas = painter.lineAtlas;
     const tileRatio = calculateTileRatio(tile, transform);
 
-    const round = layer.layout.get('line-cap') === 'round';
+    return extend(lineUniformValues(painter, tile, layer, ratioScale), {
+        'u_tileratio': tileRatio,
+        'u_crossfade_from': crossfade.fromScale,
+        'u_crossfade_to': crossfade.toScale,
+        'u_image': 0,
+        'u_mix': crossfade.t,
+        'u_lineatlas_width': painter.lineAtlas.width,
+        'u_lineatlas_height': painter.lineAtlas.height,
+    });
+};
 
-    const posA = lineAtlas.getDash(dasharray.from, round);
-    const posB = lineAtlas.getDash(dasharray.to, round);
-
-    const widthA = posA.width * crossfade.fromScale;
-    const widthB = posB.width * crossfade.toScale;
+const lineGradientSDFUniformValues = (
+    painter: Painter,
+    tile: Tile,
+    layer: LineStyleLayer,
+    ratioScale: number,
+    crossfade: CrossfadeParameters,
+    imageHeight: number,
+): UniformValues<LineGradientSDFUniformsType> => {
+    const transform = painter.transform;
+    const tileRatio = calculateTileRatio(tile, transform);
 
     return extend(lineUniformValues(painter, tile, layer, ratioScale), {
-        'u_patternscale_a': [tileRatio / widthA, -posA.height / 2],
-        'u_patternscale_b': [tileRatio / widthB, -posB.height / 2],
-        'u_sdfgamma': lineAtlas.width / (Math.min(widthA, widthB) * 256 * painter.pixelRatio) / 2,
         'u_image': 0,
-        'u_tex_y_a': posA.y,
-        'u_tex_y_b': posB.y,
-        'u_mix': crossfade.t
+        'u_image_height': imageHeight,
+        'u_tileratio': tileRatio,
+        'u_crossfade_from': crossfade.fromScale,
+        'u_crossfade_to': crossfade.toScale,
+        'u_image_dash': 1,
+        'u_mix': crossfade.t,
+        'u_lineatlas_width': painter.lineAtlas.width,
+        'u_lineatlas_height': painter.lineAtlas.height,
     });
 };
 
@@ -200,8 +245,10 @@ export {
     lineGradientUniforms,
     linePatternUniforms,
     lineSDFUniforms,
+    lineGradientSDFUniforms,
     lineUniformValues,
     lineGradientUniformValues,
     linePatternUniformValues,
-    lineSDFUniformValues
+    lineSDFUniformValues,
+    lineGradientSDFUniformValues
 };

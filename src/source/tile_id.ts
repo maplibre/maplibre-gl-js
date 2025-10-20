@@ -33,7 +33,9 @@ export class CanonicalTileID implements ICanonicalTileID {
         return this.z === id.z && this.x === id.x && this.y === id.y;
     }
 
-    // given a list of urls, choose a url template and return a tile URL
+    /**
+     * given a list of urls, choose a url template and return a tile URL
+     */
     url(urls: Array<string>, pixelRatio: number, scheme?: string | null) {
         const bbox = getTileBBox(this.x, this.y, this.z);
         const quadkey = getQuadkey(this.z, this.x, this.y);
@@ -113,6 +115,14 @@ export class OverscaledTileID {
         return this.overscaledZ === id.overscaledZ && this.wrap === id.wrap && this.canonical.equals(id.canonical);
     }
 
+    /**
+     * Returns a new `OverscaledTileID` representing the tile at the target zoom level.
+     * When targetZ is greater than the current canonical z, the canonical coordinates are unchanged.
+     * When targetZ is less than the current canonical z, the canonical coordinates are updated.
+     * @param targetZ - the zoom level to scale to. Must be less than or equal to this.overscaledZ
+     * @returns a new OverscaledTileID representing the tile at the target zoom level
+     * @throws if targetZ is greater than this.overscaledZ
+     */
     scaledTo(targetZ: number) {
         if (targetZ > this.overscaledZ) throw new Error(`targetZ > this.overscaledZ; targetZ = ${targetZ}; overscaledZ = ${this.overscaledZ}`);
         const zDifference = this.canonical.z - targetZ;
@@ -121,6 +131,10 @@ export class OverscaledTileID {
         } else {
             return new OverscaledTileID(targetZ, this.wrap, targetZ, this.canonical.x >> zDifference, this.canonical.y >> zDifference);
         }
+    }
+
+    isOverscaled() {
+        return (this.overscaledZ > this.canonical.z);
     }
 
     /*
@@ -138,17 +152,22 @@ export class OverscaledTileID {
         }
     }
 
-    isChildOf(parent: OverscaledTileID) {
-        if (parent.wrap !== this.wrap) {
-            // We can't be a child if we're in a different world copy
-            return false;
-        }
-        const zDifference = this.canonical.z - parent.canonical.z;
-        // We're first testing for z == 0, to avoid a 32 bit shift, which is undefined.
-        return parent.overscaledZ === 0 || (
-            parent.overscaledZ < this.overscaledZ &&
-                parent.canonical.x === (this.canonical.x >> zDifference) &&
-                parent.canonical.y === (this.canonical.y >> zDifference));
+    isChildOf(parent: OverscaledTileID): boolean {
+        if (parent.wrap !== this.wrap) return false; // different world copy
+
+        const zDifference = this.overscaledZ - parent.overscaledZ;
+        if (zDifference <= 0) return false; // must be deeper zoom
+
+        //special case for root tile (bitwise math doesn't work for root)
+        if (parent.overscaledZ === 0) return this.overscaledZ > 0;
+
+        const dz = this.canonical.z - parent.canonical.z;
+        if (dz < 0) return false; // parent can't be deeper canonically
+
+        return (
+            parent.canonical.x === (this.canonical.x >> dz) &&
+            parent.canonical.y === (this.canonical.y >> dz)
+        );
     }
 
     children(sourceMaxZoom: number) {

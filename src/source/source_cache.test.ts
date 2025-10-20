@@ -1,20 +1,22 @@
-import {describe, afterEach, test, expect, vi} from 'vitest';
+import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {SourceCache} from './source_cache';
-import {type Map} from '../ui/map';
 import {type Source, addSourceType} from './source';
-import {Tile} from './tile';
+import {Tile, FadingRoles, FadingDirections} from './tile';
 import {CanonicalTileID, OverscaledTileID} from './tile_id';
 import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {extend} from '../util/util';
-import {browser} from '../util/browser';
 import {type Dispatcher} from '../util/dispatcher';
 import {TileBounds} from './tile_bounds';
-import {sleep, waitForEvent} from '../util/test/util';
+import {sleep, waitForEvent, beforeMapTest, createMap as globalCreateMap} from '../util/test/util';
+
+import {type Map} from '../ui/map';
 import {type TileCache} from './tile_cache';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {GlobeTransform} from '../geo/projection/globe_transform';
+import {coveringTiles} from '../geo/projection/covering_tiles';
 
 class SourceMock extends Evented implements Source {
     id: string;
@@ -35,6 +37,9 @@ class SourceMock extends Evented implements Source {
         this.setEventedParent(eventedParent);
         if (sourceOptions.hasTile) {
             this.hasTile = sourceOptions.hasTile;
+        }
+        if (sourceOptions.raster) {
+            this.type = 'raster';
         }
     }
     loadTile(tile: Tile): Promise<void> {
@@ -92,13 +97,26 @@ function createSourceCache(options?, used?) {
         },
         getTiles(): { [_: string]: Tile } {
             return this._tiles;
-        },
-        updateLoadedSiblingTileCache(): void {
-            this._updateLoadedSiblingTileCache();
         }
     });
     return scWithTestLogic;
 }
+
+type MapOptions = {
+    style: StyleSpecification;
+};
+
+function createMap(options: MapOptions) {
+    const container = window.document.createElement('div');
+    window.document.body.appendChild(container);
+    Object.defineProperty(container, 'clientWidth', {value: 512});
+    Object.defineProperty(container, 'clientHeight', {value: 512});
+    return globalCreateMap({container, ...options});
+}
+
+beforeEach(() => {
+    beforeMapTest();
+});
 
 afterEach(() => {
     vi.clearAllMocks();
@@ -585,6 +603,55 @@ describe('SourceCache.update', () => {
         expect(sourceCache.getIds()).toEqual([new OverscaledTileID(0, 0, 0, 0, 0).key]);
     });
 
+    test('adds ideal (covering) tiles only once for zoom level on raster maps', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+        transform.setZoom(1);
+
+        const sourceCache = createSourceCache({raster: true});
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+
+        const addSpy = vi.spyOn(sourceCache, '_addTile');
+        const dataPromise = waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
+        sourceCache.onAdd(undefined);
+        await dataPromise;
+
+        // on update at zoom 1 there should be 4 ideal tiles added through _addTiles
+        sourceCache.update(transform);
+        expect(addSpy).toHaveBeenCalledTimes(4);
+    });
+
+    test('bypasses fading logic when raster fading is disabled', async () => {
+        const map = createMap({
+            style: {
+                version: 8,
+                sources: {rasterSource: {type: 'raster', tiles: [], tileSize: 256}},
+                layers: [{id: 'rasterLayer', type: 'raster', source: 'rasterSource',
+                    paint: {'raster-fade-duration': 0}
+                }]
+            }
+        });
+        await map.once('styledata');
+
+        const style = map.style;
+        const sourceCache = style.sourceCaches['rasterSource'];
+        const spy = vi.spyOn(sourceCache, '_updateFadingTiles');
+        sourceCache._loadTile = async () => {};
+
+        const fakeTile = new Tile(new OverscaledTileID(3, 0, 3, 1, 2), undefined);
+        (fakeTile as any).texture = {bind: () => {}, size: [256, 256]};
+        fakeTile.state = 'loaded';
+        sourceCache._tiles[fakeTile.tileID.key] = fakeTile;
+
+        await map.once('render');
+        map.setZoom(3);
+        await map.once('render');
+
+        expect(spy).not.toHaveBeenCalled();
+    });
+
     test('respects Source.hasTile method if it is present', async () => {
         const transform = new MercatorTransform();
         transform.resize(511, 511);
@@ -690,131 +757,6 @@ describe('SourceCache.update', () => {
         ]);
     });
 
-    test('retains covered child tiles while parent tile is fading in', async () => {
-        const transform = new MercatorTransform();
-        transform.resize(511, 511);
-        transform.setZoom(2);
-
-        const sourceCache = createSourceCache();
-        sourceCache._source.loadTile = async (tile) => {
-            tile.timeAdded = Infinity;
-            tile.state = 'loaded';
-            tile.registerFadeDuration(100);
-        };
-
-        (sourceCache._source as any).type = 'raster';
-
-        const dataPromise = waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
-        sourceCache.onAdd(undefined);
-        await dataPromise;
-        sourceCache.update(transform);
-        expect(sourceCache.getIds()).toEqual([
-            new OverscaledTileID(2, 0, 2, 2, 2).key,
-            new OverscaledTileID(2, 0, 2, 1, 2).key,
-            new OverscaledTileID(2, 0, 2, 2, 1).key,
-            new OverscaledTileID(2, 0, 2, 1, 1).key
-        ]);
-
-        transform.setZoom(0);
-        sourceCache.update(transform);
-
-        expect(sourceCache.getRenderableIds()).toHaveLength(5);
-    });
-
-    test('retains a parent tile for fading even if a tile is partially covered by children', async () => {
-        const transform = new MercatorTransform();
-        transform.resize(511, 511);
-        transform.setZoom(0);
-
-        const sourceCache = createSourceCache();
-        sourceCache._source.loadTile = async (tile) => {
-            tile.timeAdded = Infinity;
-            tile.state = 'loaded';
-            tile.registerFadeDuration(100);
-        };
-
-        (sourceCache._source as any).type = 'raster';
-
-        const dataPromise = waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
-        sourceCache.onAdd(undefined);
-        await dataPromise;
-        sourceCache.update(transform);
-
-        transform.setZoom(2);
-        sourceCache.update(transform);
-
-        transform.setZoom(1);
-        sourceCache.update(transform);
-
-        expect(sourceCache._coveredTiles[(new OverscaledTileID(0, 0, 0, 0, 0).key)]).toBe(true);
-    });
-
-    test('retain children for fading fadeEndTime is 0 (added but registerFadeDuration() is not called yet)', async () => {
-        const transform = new MercatorTransform();
-        transform.resize(511, 511);
-        transform.setZoom(1);
-
-        const sourceCache = createSourceCache();
-        sourceCache._source.loadTile = async (tile) => {
-            // not setting fadeEndTime because class Tile default is 0, and need to be tested
-            tile.timeAdded = Date.now();
-            tile.state = 'loaded';
-        };
-
-        (sourceCache._source as any).type = 'raster';
-
-        const dataPromise = waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
-        sourceCache.onAdd(undefined);
-        await dataPromise;
-        sourceCache.update(transform);
-
-        transform.setZoom(0);
-        sourceCache.update(transform);
-
-        expect(sourceCache.getRenderableIds()).toHaveLength(5);
-    });
-
-    test('retains children when tile.fadeEndTime is in the future', async () => {
-        const transform = new MercatorTransform();
-        transform.resize(511, 511);
-        transform.setZoom(1);
-
-        const fadeTime = 100;
-
-        const start = Date.now();
-        let time = start;
-        vi.spyOn(browser, 'now').mockImplementation(() => time);
-
-        const sourceCache = createSourceCache();
-        sourceCache._source.loadTile = async (tile) => {
-            tile.timeAdded = browser.now();
-            tile.state = 'loaded';
-            tile.fadeEndTime = browser.now() + fadeTime;
-        };
-
-        (sourceCache._source as any).type = 'raster';
-
-        const dataPromise = waitForEvent(sourceCache, 'data', e => e.sourceDataType === 'metadata');
-
-        sourceCache.onAdd(undefined);
-        await dataPromise;
-        // load children
-        sourceCache.update(transform);
-
-        transform.setZoom(0);
-        sourceCache.update(transform);
-
-        expect(sourceCache.getRenderableIds()).toHaveLength(5);
-
-        time = start + 98;
-        sourceCache.update(transform);
-        expect(sourceCache.getRenderableIds()).toHaveLength(5);
-
-        time = start + fadeTime + 1;
-        sourceCache.update(transform);
-        expect(sourceCache.getRenderableIds()).toHaveLength(1);
-    });
-
     test('retains children tiles for pending parents', () => {
         const transform = new GlobeTransform();
         transform.resize(511, 511);
@@ -909,6 +851,173 @@ describe('SourceCache.update', () => {
         expect(sourceCache.getTile(wrappedTileID)).toBe(tile);
     });
 
+    test('retains fading children and applies fading logic when zooming out', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(1024, 1024);
+        transform.setZoom(10);
+
+        const sourceCache = createSourceCache({raster: true});
+        const loadedTiles: Record<string, Tile> = {};
+        sourceCache._source.loadTile = async (tile) => {
+            loadedTiles[tile.tileID.key] = tile;
+            tile.state = 'loaded';
+        };
+        sourceCache.on('data', (e) => {
+            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
+                sourceCache.update(transform);
+            }
+        });
+        sourceCache.setRasterFadeDuration(300);
+        sourceCache.onAdd(undefined);
+
+        // get default zoom ideal tiles at zoom specified above
+        await sleep(0);
+        // ideal tiles will become fading children when zooming out
+        const children: Tile[] = Object.values(loadedTiles);
+
+        // zoom out 1 level - ideal tiles (new children) should fade out
+        transform.setZoom(9);
+        sourceCache.update(transform);
+        await sleep(0);
+
+        // ensure that the loaded child was retained and fading logic was applied
+        for (const child of children) {
+            expect(loadedTiles).toHaveProperty(child.tileID.key);
+            expect(child.fadingRole).toEqual(FadingRoles.Base);
+            expect(child.fadingDirection).toEqual(FadingDirections.Departing);
+            expect(child.fadingParentID).toBeInstanceOf(OverscaledTileID);
+        }
+    });
+
+    test('retains fading grandchildren and applies fading logic when zooming out', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+        transform.setZoom(10);
+
+        const sourceCache = createSourceCache({raster: true});
+        const loadedTiles: Record<string, Tile> = {};
+        sourceCache._source.loadTile = async (tile) => {
+            loadedTiles[tile.tileID.key] = tile;
+            tile.state = 'loaded';
+        };
+        sourceCache.on('data', (e) => {
+            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
+                sourceCache.update(transform);
+            }
+        });
+        sourceCache.setRasterFadeDuration(300);
+        sourceCache.onAdd(undefined);
+
+        // get default zoom ideal tiles at zoom specified above
+        await sleep(0);
+        // ideal tiles will become fading grandchildren when zooming out
+        const grandChildren: Tile[] = Object.values(loadedTiles);
+
+        // zoom out 2 levels - ideal tiles (new grandchildren) should fade out
+        transform.setZoom(8);
+        sourceCache.update(transform);
+        await sleep(0);
+
+        // ensure that the loaded grandchild was retained and fading logic was applied
+        for (const grandChild of grandChildren) {
+            expect(loadedTiles).toHaveProperty(grandChild.tileID.key);
+            expect(grandChild.fadingRole).toEqual(FadingRoles.Base);
+            expect(grandChild.fadingDirection).toEqual(FadingDirections.Departing);
+            expect(grandChild.fadingParentID).toBeInstanceOf(OverscaledTileID);
+        }
+    });
+
+    test('retains fading parent and applies fading logic when zooming in', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+        transform.setZoom(10);
+
+        const sourceCache = createSourceCache({raster: true});
+        const loadedTiles: Record<string, Tile> = {};
+        sourceCache._source.loadTile = async (tile) => {
+            loadedTiles[tile.tileID.key] = tile;
+            tile.state = 'loaded';
+        };
+        sourceCache.on('data', (e) => {
+            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
+                sourceCache.update(transform);
+            }
+        });
+        sourceCache.setRasterFadeDuration(300);
+        sourceCache.onAdd(undefined);
+
+        // get default zoom ideal tiles at zoom specified above
+        await sleep(0);
+        // ideal tiles will become fading parent when zooming in
+        const parents: Tile[] = Object.values(loadedTiles);
+        const parentKeys = new Set(parents.map(p => p.tileID.key));
+
+        // zoom in 1 level - ideal tiles (new parent) should fade out
+        transform.setZoom(11);
+        sourceCache.update(transform);
+        await sleep(0);
+
+        // ensure that the loaded parents were retained and fading logic was applied
+        for (const parent of parents) {
+            expect(loadedTiles).toHaveProperty(parent.tileID.key);
+            expect(parent.fadingRole).toEqual(FadingRoles.Parent);
+            expect(parent.fadingDirection).toEqual(FadingDirections.Departing);
+        }
+
+        // check incoming tiles
+        const incoming = Object.values(loadedTiles).filter(tile => !parentKeys.has(tile.tileID.key));
+        for (const tile of incoming) {
+            expect(tile.fadingRole).toEqual(FadingRoles.Base);
+            expect(tile.fadingDirection).toEqual(FadingDirections.Incoming);
+            expect(tile.fadingParentID).toBeInstanceOf(OverscaledTileID);
+        }
+    });
+
+    test('retains fading grandparent and applies fading logic when zooming in', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+        transform.setZoom(10);
+
+        const sourceCache = createSourceCache({raster: true});
+        const loadedTiles: Record<string, Tile> = {};
+        sourceCache._source.loadTile = async (tile) => {
+            loadedTiles[tile.tileID.key] = tile;
+            tile.state = 'loaded';
+        };
+        sourceCache.on('data', (e) => {
+            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
+                sourceCache.update(transform);
+            }
+        });
+        sourceCache.setRasterFadeDuration(300);
+        sourceCache.onAdd(undefined);
+
+        // get default zoom ideal tiles at zoom specified above
+        await sleep(0);
+        // ideal tiles will become fading grandparent when zooming in
+        const grandParents: Tile[] = Object.values(loadedTiles);
+        const grandParentKeys = new Set(grandParents.map(p => p.tileID.key));
+
+        // zoom in 2 levels - ideal tiles (new grandparent) should fade out
+        transform.setZoom(12);
+        sourceCache.update(transform);
+        await sleep(0);
+
+        // ensure that the loaded grandparents were retained and fading logic was applied
+        for (const grandParent of grandParents) {
+            expect(loadedTiles).toHaveProperty(grandParent.tileID.key);
+            expect(grandParent.fadingRole).toEqual(FadingRoles.Parent);
+            expect(grandParent.fadingDirection).toEqual(FadingDirections.Departing);
+        }
+
+        // check incoming tiles
+        const incoming = Object.values(loadedTiles).filter(tile => !grandParentKeys.has(tile.tileID.key));
+        for (const tile of incoming) {
+            expect(tile.fadingRole).toEqual(FadingRoles.Base);
+            expect(tile.fadingDirection).toEqual(FadingDirections.Incoming);
+            expect(tile.fadingParentID).toBeInstanceOf(OverscaledTileID);
+        }
+    });
 });
 
 describe('SourceCache._updateRetainedTiles', () => {
@@ -928,7 +1037,7 @@ describe('SourceCache._updateRetainedTiles', () => {
         expect(sourceCache.getIds()).toEqual([idealTile.key]);
     });
 
-    test('retains all loaded children ', () => {
+    test('_updateRetainedTiles retains all loaded children (and parent when coverage is incomplete)', () => {
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'errored';
@@ -938,14 +1047,151 @@ describe('SourceCache._updateRetainedTiles', () => {
         sourceCache._tiles[idealTile.key] = new Tile(idealTile, undefined);
         sourceCache._tiles[idealTile.key].state = 'errored';
 
-        const loadedChildren = [
-            new OverscaledTileID(4, 0, 4, 2, 4),
-            new OverscaledTileID(4, 0, 4, 3, 4),
-            new OverscaledTileID(4, 0, 4, 2, 5),
+        const loadedTiles = [
+            // loaded children - topmost zoom partially covered
+            new OverscaledTileID(4, 0, 4, 2, 4),  //topmost child
+            new OverscaledTileID(4, 0, 4, 3, 4),  //topmost child
+            new OverscaledTileID(4, 0, 4, 2, 5),  //topmost child
+            // loaded children - 2nd topmost zoom fully covered
             new OverscaledTileID(5, 0, 5, 6, 10),
             new OverscaledTileID(5, 0, 5, 7, 10),
             new OverscaledTileID(5, 0, 5, 6, 11),
-            new OverscaledTileID(5, 0, 5, 7, 11)
+            new OverscaledTileID(5, 0, 5, 7, 11),
+            // loaded parents - to be requested because ideal tile is not completely covered by children (z=4)
+            new OverscaledTileID(0, 0, 0, 0, 0),
+            new OverscaledTileID(2, 0, 2, 0, 1),  //parent
+            new OverscaledTileID(1, 0, 1, 0, 0)
+        ];
+        for (const t of loadedTiles) {
+            sourceCache._tiles[t.key] = new Tile(t, undefined);
+            sourceCache._tiles[t.key].state = 'loaded';
+        }
+
+        const expectedTiles = [
+            new OverscaledTileID(4, 0, 4, 2, 4),  //topmost child
+            new OverscaledTileID(4, 0, 4, 3, 4),  //topmost child
+            new OverscaledTileID(4, 0, 4, 2, 5),  //topmost child
+            new OverscaledTileID(2, 0, 2, 0, 1),  //parent
+            idealTile
+        ];
+
+        const retained = sourceCache._updateRetainedTiles([idealTile], 3);
+        expect(Object.keys(retained).sort()).toEqual(expectedTiles.map(t => t.key).sort());
+    });
+
+    test('_updateRetainedTiles does not retain parents when 2nd generation children are loaded', () => {
+        const sourceCache = createSourceCache();
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'errored';
+        };
+
+        const idealTile = new OverscaledTileID(3, 0, 3, 1, 2);
+        sourceCache._tiles[idealTile.key] = new Tile(idealTile, undefined);
+        sourceCache._tiles[idealTile.key].state = 'errored';
+
+        const secondGeneration = idealTile
+            .children(10)
+            .flatMap(child => child.children(10));
+        expect(secondGeneration.length).toEqual(16);
+
+        for (const id of secondGeneration) {
+            sourceCache._tiles[id.key] = new Tile(id, undefined);
+            sourceCache._tiles[id.key].state = 'loaded';
+        }
+        const expectedTiles = [...secondGeneration, idealTile];
+
+        const retained = sourceCache._updateRetainedTiles([idealTile], 3);
+        expect(Object.keys(retained).sort()).toEqual(expectedTiles.map(t => t.key).sort());
+    });
+
+    for (const pitch of [0, 20, 40, 65, 75, 85]) {
+        test(`retains loaded children for pitch: ${pitch}`, () => {
+            const transform = new MercatorTransform();
+            transform.resize(512, 512);
+            transform.setZoom(10);
+            transform.setMaxPitch(90);
+            transform.setPitch(pitch);
+
+            const sourceCache = createSourceCache();
+            sourceCache._source.loadTile = async (tile) => {
+                tile.state = 'errored';  //all ideal tiles generated from coveringTiles should be unavailable
+            };
+
+            //see covering tile logic in source_cache.update
+            const idealTileIDs = coveringTiles(transform, {
+                tileSize: sourceCache.usedForTerrain ? sourceCache.tileSize : sourceCache._source.tileSize,
+                minzoom: sourceCache._source.minzoom,
+                maxzoom: sourceCache._source.maxzoom,
+                roundZoom: sourceCache._source.roundZoom,
+                reparseOverscaled: sourceCache._source.reparseOverscaled,
+                calculateTileZoom: sourceCache._source.calculateTileZoom
+            });
+
+            const idealChildIDs = idealTileIDs.flatMap(id => id.children(sourceCache._source.maxzoom));
+            for (const idealID of idealChildIDs) {
+                const tile = new Tile(idealID, undefined);
+                tile.state = 'loaded';  //all children are loaded to be retained for missing ideal tiles
+                sourceCache._tiles[idealID.key] = tile;
+            }
+
+            const retain: {[key: string]: OverscaledTileID} = {};
+            const missingTiles: {[key: string]: OverscaledTileID} = {};
+
+            // mark all ideal tiles as retained and also as missing with no data for child retainment
+            for (const idealID of idealTileIDs) {
+                retain[idealID.key] = idealID;
+                missingTiles[idealID.key] = idealID;
+            }
+            sourceCache._retainLoadedChildren(missingTiles, retain);
+
+            expect(Object.keys(retain).sort()).toEqual(idealChildIDs.concat(idealTileIDs).map(id => id.key).sort());
+        });
+    }
+
+    test('retains only uppermost zoom children when multiple zoom levels are loaded', () => {
+        const sourceCache = createSourceCache();
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'errored';
+        };
+
+        const idealTileID = new OverscaledTileID(2, 0, 2, 1, 1);
+        const idealTiles: {[key: string]: OverscaledTileID} = {[idealTileID.key]: idealTileID};
+
+        const children = [
+            new OverscaledTileID(3, 0, 3, 2, 2),  //keep
+            new OverscaledTileID(3, 0, 3, 3, 2),  //keep
+            new OverscaledTileID(4, 0, 4, 4, 4),  //discard
+            new OverscaledTileID(5, 0, 5, 8, 8),  //discard
+        ];
+        for (const child of children) {
+            const tile = new Tile(child, undefined);
+            tile.state = 'loaded';
+            sourceCache._tiles[child.key] = tile;
+        }
+
+        const retain: {[key: string]: OverscaledTileID} = {};
+        sourceCache._retainLoadedChildren(idealTiles, retain);
+
+        const expectedKeys = children
+            .filter(child => child.overscaledZ === 3)
+            .map(child => child.key)
+            .sort();
+
+        expect(Object.keys(retain).sort()).toEqual(expectedKeys);
+    });
+
+    test('retains overscaled loaded children with coveringZoom < maxzoom', () => {
+        const sourceCache = createSourceCache({maxzoom: 3});
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'errored';
+        };
+
+        const idealTile = new OverscaledTileID(3, 0, 3, 1, 2);
+        sourceCache._tiles[idealTile.key] = new Tile(idealTile, undefined);
+        sourceCache._tiles[idealTile.key].state = 'errored';
+
+        const loadedChildren = [
+            new OverscaledTileID(4, 0, 3, 1, 2)
         ];
 
         for (const t of loadedChildren) {
@@ -953,16 +1199,40 @@ describe('SourceCache._updateRetainedTiles', () => {
             sourceCache._tiles[t.key].state = 'loaded';
         }
 
-        const retained = sourceCache._updateRetainedTiles([idealTile], 3);
-        expect(Object.keys(retained).sort()).toEqual([
-            // parents are requested because ideal ideal tile is not completely covered by
-            // loaded child tiles
-            new OverscaledTileID(0, 0, 0, 0, 0),
-            new OverscaledTileID(2, 0, 2, 0, 1),
-            new OverscaledTileID(1, 0, 1, 0, 0),
-            idealTile
-        ].concat(loadedChildren).map(t => t.key).sort());
+        const retained = sourceCache._updateRetainedTiles([idealTile], 2);
+        expect(Object.keys(retained).sort()).toEqual([idealTile].concat(loadedChildren).map(t => t.key).sort());
+    });
 
+    test('_areDescendentsComplete returns true when descendents fully cover a generation', () => {
+        const sourceCache = createSourceCache();
+        const idealTile = new OverscaledTileID(3, 0, 3, 1, 2);
+
+        const firstGen = idealTile.children(10);
+        expect(sourceCache._areDescendentsComplete(firstGen, 4, 3)).toBe(true);
+
+        const secondGen = idealTile.children(10).flatMap(c => c.children(10));
+        expect(sourceCache._areDescendentsComplete(secondGen, 5, 3)).toBe(true);
+    });
+
+    test('_areDescendentsComplete returns false when descendents are incomplete', () => {
+        const sourceCache = createSourceCache();
+        const idealTile = new OverscaledTileID(3, 0, 3, 1, 2);
+
+        const firstGenPartial = idealTile.children(10).slice(0, 3);
+        expect(sourceCache._areDescendentsComplete(firstGenPartial, 4, 3)).toBe(false);
+
+        const secondGenPartial = idealTile.children(10).flatMap(c => c.children(10)).slice(0, 15);
+        expect(sourceCache._areDescendentsComplete(secondGenPartial, 5, 3)).toBe(false);
+    });
+
+    test('_areDescendentsComplete properly handles overscaled tiles', () => {
+        const sourceCache = createSourceCache();
+
+        const correct = new OverscaledTileID(4, 0, 3, 1, 2);
+        expect(sourceCache._areDescendentsComplete([correct], 4, 3)).toBe(true);
+
+        const wrong = new OverscaledTileID(5, 0, 3, 1, 2);
+        expect(sourceCache._areDescendentsComplete([wrong], 4, 3)).toBe(false);
     });
 
     test('adds parent tile if ideal tile errors and no child tiles are loaded', () => {
@@ -1167,22 +1437,22 @@ describe('SourceCache._updateRetainedTiles', () => {
         };
         const idealTile = new OverscaledTileID(2, 0, 2, 0, 0);
 
-        const getTileSpy = vi.spyOn(sourceCache, 'getTile');
-        const retained = sourceCache._updateRetainedTiles([idealTile], 2);
-
-        expect(getTileSpy.mock.calls.map((c) => { return c[0]; })).toEqual([
-            // overzoomed child
-            new OverscaledTileID(3, 0, 2, 0, 0),
-            // parents
-            new OverscaledTileID(1, 0, 1, 0, 0),
-            new OverscaledTileID(0, 0, 0, 0, 0)
-        ]);
-
-        expect(retained).toEqual({
-            // ideal tile id (2, 0, 0)
-            '022': new OverscaledTileID(2, 0, 2, 0, 0)
+        const loadedTiles = [
+            new OverscaledTileID(3, 0, 2, 0, 0),  // overzoomed child
+            new OverscaledTileID(1, 0, 1, 0, 0),  // parent
+            new OverscaledTileID(0, 0, 0, 0, 0)   // parent
+        ];
+        loadedTiles.forEach(t => {
+            sourceCache._tiles[t.key] = new Tile(t, undefined);
+            sourceCache._tiles[t.key].state = 'loaded';
         });
 
+        const retained = sourceCache._updateRetainedTiles([idealTile], 2);
+
+        expect(retained).toEqual({
+            '022': new OverscaledTileID(2, 0, 2, 0, 0),  // ideal
+            '023': new OverscaledTileID(3, 0, 2, 0, 0)   // overzoomed
+        });
     });
 
     test('don\'t ascend multiple times if a tile is not found', () => {
@@ -2033,191 +2303,6 @@ describe('source cache get ids', () => {
     });
 });
 
-describe('SourceCache.findLoadedParent', () => {
-
-    test('adds from previously used tiles (sourceCache._tiles)', () => {
-        const sourceCache = createSourceCache({});
-        sourceCache.onAdd(undefined);
-        const tr = new MercatorTransform();
-        tr.resize(512, 512);
-        sourceCache.updateCacheSize(tr);
-
-        const tile = {
-            tileID: new OverscaledTileID(1, 0, 1, 0, 0),
-            hasData() { return true; }
-        } as any as Tile;
-
-        sourceCache._tiles[tile.tileID.key] = tile;
-
-        expect(sourceCache.findLoadedParent(new OverscaledTileID(2, 0, 2, 3, 3), 0)).toBeUndefined();
-        expect(sourceCache.findLoadedParent(new OverscaledTileID(2, 0, 2, 0, 0), 0)).toEqual(tile);
-    });
-
-    test('retains parents', () => {
-        const sourceCache = createSourceCache({});
-        sourceCache.onAdd(undefined);
-        const tr = new MercatorTransform();
-        tr.resize(512, 512);
-        sourceCache.updateCacheSize(tr);
-
-        const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
-        sourceCache._cache.add(tile.tileID, tile);
-
-        expect(sourceCache.findLoadedParent(new OverscaledTileID(2, 0, 2, 3, 3), 0)).toBeUndefined();
-        expect(sourceCache.findLoadedParent(new OverscaledTileID(2, 0, 2, 0, 0), 0)).toBe(tile);
-        expect(sourceCache._cache.order).toHaveLength(1);
-
-    });
-
-    test('Search cache for loaded parent tiles', () => {
-        const sourceCache = createSourceCache({});
-        sourceCache.onAdd(undefined);
-        const tr = new MercatorTransform();
-        tr.resize(512, 512);
-        sourceCache.updateCacheSize(tr);
-
-        const mockTile = id => {
-            const tile = {
-                tileID: id,
-                hasData() { return true; }
-            } as any as Tile;
-            sourceCache._tiles[id.key] = tile;
-        };
-
-        const tiles = [
-            new OverscaledTileID(0, 0, 0, 0, 0),
-            new OverscaledTileID(1, 0, 1, 1, 0),
-            new OverscaledTileID(2, 0, 2, 0, 0),
-            new OverscaledTileID(2, 0, 2, 1, 0),
-            new OverscaledTileID(2, 0, 2, 2, 0),
-            new OverscaledTileID(2, 0, 2, 1, 2)
-        ];
-
-        tiles.forEach(t => mockTile(t));
-        sourceCache._updateLoadedParentTileCache();
-
-        // Loaded tiles excluding the root should be in the cache
-        expect(sourceCache.findLoadedParent(tiles[0], 0)).toBeUndefined();
-        expect(sourceCache.findLoadedParent(tiles[1], 0).tileID).toBe(tiles[0]);
-        expect(sourceCache.findLoadedParent(tiles[2], 0).tileID).toBe(tiles[0]);
-        expect(sourceCache.findLoadedParent(tiles[3], 0).tileID).toBe(tiles[0]);
-        expect(sourceCache.findLoadedParent(tiles[4], 0).tileID).toBe(tiles[1]);
-        expect(sourceCache.findLoadedParent(tiles[5], 0).tileID).toBe(tiles[0]);
-
-        expect(tiles[0].key in sourceCache._loadedParentTiles).toBe(false);
-        expect(tiles[1].key in sourceCache._loadedParentTiles).toBe(true);
-        expect(tiles[2].key in sourceCache._loadedParentTiles).toBe(true);
-        expect(tiles[3].key in sourceCache._loadedParentTiles).toBe(true);
-        expect(tiles[4].key in sourceCache._loadedParentTiles).toBe(true);
-        expect(tiles[5].key in sourceCache._loadedParentTiles).toBe(true);
-
-        // Arbitrary tiles should not in the cache
-        const notLoadedTiles = [
-            new OverscaledTileID(2, 1, 2, 0, 0),
-            new OverscaledTileID(2, 0, 2, 3, 0),
-            new OverscaledTileID(2, 0, 2, 3, 3),
-            new OverscaledTileID(3, 0, 3, 2, 1)
-        ];
-
-        expect(sourceCache.findLoadedParent(notLoadedTiles[0], 0)).toBeUndefined();
-        expect(sourceCache.findLoadedParent(notLoadedTiles[1], 0).tileID).toBe(tiles[1]);
-        expect(sourceCache.findLoadedParent(notLoadedTiles[2], 0).tileID).toBe(tiles[0]);
-        expect(sourceCache.findLoadedParent(notLoadedTiles[3], 0).tileID).toBe(tiles[3]);
-
-        expect(notLoadedTiles[0].key in sourceCache._loadedParentTiles).toBe(false);
-        expect(notLoadedTiles[1].key in sourceCache._loadedParentTiles).toBe(false);
-        expect(notLoadedTiles[2].key in sourceCache._loadedParentTiles).toBe(false);
-        expect(notLoadedTiles[3].key in sourceCache._loadedParentTiles).toBe(false);
-
-    });
-
-});
-
-describe('SourceCache.findLoadedSibling', () => {
-
-    test('adds from previously used tiles (sourceCache._tiles)', () => {
-        const sourceCache = createSourceCache({});
-        sourceCache.onAdd(undefined);
-        const tr = new MercatorTransform();
-        tr.resize(512, 512);
-        sourceCache.updateCacheSize(tr);
-
-        const tile = {
-            tileID: new OverscaledTileID(1, 0, 1, 0, 0),
-            hasData() { return true; }
-        } as any as Tile;
-
-        sourceCache.getTiles()[tile.tileID.key] = tile;
-
-        expect(sourceCache.findLoadedSibling(new OverscaledTileID(1, 0, 1, 1, 0))).toBeNull();
-        expect(sourceCache.findLoadedSibling(new OverscaledTileID(1, 0, 1, 0, 0))).toEqual(tile);
-    });
-
-    test('retains siblings', () => {
-        const sourceCache = createSourceCache({});
-        sourceCache.onAdd(undefined);
-        const tr = new MercatorTransform();
-        tr.resize(512, 512);
-        sourceCache.updateCacheSize(tr);
-
-        const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
-        sourceCache.getCache().add(tile.tileID, tile);
-
-        expect(sourceCache.findLoadedSibling(new OverscaledTileID(1, 0, 1, 1, 0))).toBeNull();
-        expect(sourceCache.findLoadedSibling(new OverscaledTileID(1, 0, 1, 0, 0))).toBe(tile);
-        expect(sourceCache.getCache().order).toHaveLength(1);
-    });
-
-    test('Search cache for loaded sibling tiles', () => {
-        const sourceCache = createSourceCache({});
-        sourceCache.onAdd(undefined);
-        const tr = new MercatorTransform();
-        tr.resize(512, 512);
-        sourceCache.updateCacheSize(tr);
-
-        const mockTile = id => {
-            const tile = {
-                tileID: id,
-                hasData() { return true; }
-            } as any as Tile;
-            sourceCache.getTiles()[id.key] = tile;
-        };
-
-        const tiles = [
-            new OverscaledTileID(0, 0, 0, 0, 0),
-            new OverscaledTileID(1, 0, 1, 1, 0),
-            new OverscaledTileID(2, 0, 2, 0, 0),
-            new OverscaledTileID(2, 0, 2, 1, 0),
-            new OverscaledTileID(2, 0, 2, 2, 0),
-            new OverscaledTileID(2, 0, 2, 1, 2)
-        ];
-
-        tiles.forEach(t => mockTile(t));
-        sourceCache.updateLoadedSiblingTileCache();
-
-        // Loaded tiles should be in the cache
-        expect(sourceCache.findLoadedSibling(tiles[0]).tileID).toBe(tiles[0]);
-        expect(sourceCache.findLoadedSibling(tiles[1]).tileID).toBe(tiles[1]);
-        expect(sourceCache.findLoadedSibling(tiles[2]).tileID).toBe(tiles[2]);
-        expect(sourceCache.findLoadedSibling(tiles[3]).tileID).toBe(tiles[3]);
-        expect(sourceCache.findLoadedSibling(tiles[4]).tileID).toBe(tiles[4]);
-        expect(sourceCache.findLoadedSibling(tiles[5]).tileID).toBe(tiles[5]);
-
-        // Arbitrary tiles should not in the cache
-        const notLoadedTiles = [
-            new OverscaledTileID(2, 1, 2, 0, 0),
-            new OverscaledTileID(2, 0, 2, 3, 0),
-            new OverscaledTileID(2, 0, 2, 3, 3),
-            new OverscaledTileID(3, 0, 3, 2, 1)
-        ];
-
-        expect(sourceCache.findLoadedSibling(notLoadedTiles[0])).toBeNull();
-        expect(sourceCache.findLoadedSibling(notLoadedTiles[1])).toBeNull();
-        expect(sourceCache.findLoadedSibling(notLoadedTiles[2])).toBeNull();
-        expect(sourceCache.findLoadedSibling(notLoadedTiles[3])).toBeNull();
-    });
-});
-
 describe('SourceCache.reload', () => {
     test('before loaded', () => {
         const sourceCache = createSourceCache({noLoad: true});
@@ -2457,5 +2542,4 @@ describe('SourceCache::refreshTiles', () => {
         expect(spy.mock.calls[2][1]).toBe('expired');
         expect(spy.mock.calls[3][1]).toBe('expired');
     });
-
 });

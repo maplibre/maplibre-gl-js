@@ -6,7 +6,7 @@ import type {ControlPosition, IControl} from './control';
 /**
  * The {@link LogoControl} options object
  */
-type LogoControlOptions = {
+export type LogoControlOptions = {
     /**
      * If `true`, force a compact logo.
      * If `false`, force the full logo. The default is a responsive logo that collapses when the map is less than 640 pixels wide.

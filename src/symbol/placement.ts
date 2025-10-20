@@ -294,7 +294,7 @@ export class Placement {
             pitchedLabelPlaneMatrix,
             scale,
             textPixelRatio,
-            holdingForFade: tile.holdingForFade(),
+            holdingForFade: tile.holdingForSymbolFade(),
             collisionBoxArray,
             partiallyEvaluatedTextSize: symbolSize.evaluateSizeForZoom(symbolBucket.textSizeData, this.transform.zoom),
             collisionGroup: this.collisionGroups.get(symbolBucket.sourceID)
@@ -683,7 +683,7 @@ export class Placement {
             placeText = placedGlyphBoxes && placedGlyphBoxes.placeable;
             offscreen = placedGlyphBoxes && placedGlyphBoxes.offscreen;
 
-            if (symbolInstance.useRuntimeCollisionCircles) {
+            if (symbolInstance.useRuntimeCollisionCircles && symbolInstance.centerJustifiedTextSymbolIndex >= 0) {
                 const placedSymbol = bucket.text.placedSymbolArray.get(symbolInstance.centerJustifiedTextSymbolIndex);
                 const fontSize = symbolSize.evaluateSizeForFeature(bucket.textSizeData, partiallyEvaluatedTextSize, placedSymbol);
 

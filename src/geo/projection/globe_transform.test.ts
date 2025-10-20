@@ -302,7 +302,8 @@ describe('GlobeTransform', () => {
                 const screenPointFurtherAboveWesternHorizon = screenTopEdgeCenter.sub(new Point(0, -100));
                 const unprojected = globeTransform.screenPointToLocation(screenPointAboveWesternHorizon);
                 const unprojected2 = globeTransform.screenPointToLocation(screenPointFurtherAboveWesternHorizon);
-                expect(unprojected).toEqual(unprojected2);
+                expect(unprojected.lat).toBeCloseTo(unprojected2.lat, 10);
+                expect(unprojected.lng).toBeCloseTo(unprojected2.lng, 10);
             });
         });
 
@@ -596,7 +597,7 @@ describe('GlobeTransform', () => {
         test('change transform and make sure render world copies is kept', () => {
             const globeTransform = createGlobeTransform();
             globeTransform.setRenderWorldCopies(true);
-            const mercator = new MercatorTransform(0, 1, 2, 3, false);
+            const mercator = new MercatorTransform({minZoom: 0, maxZoom: 1, minPitch: 2, maxPitch: 3, renderWorldCopies: false});
             mercator.apply(globeTransform);
 
             expect(mercator.renderWorldCopies).toBeTruthy();

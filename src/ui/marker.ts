@@ -15,12 +15,12 @@ import type {PointLike} from './camera';
 /**
  * Alignment options of rotation and pitch
  */
-type Alignment = 'map' | 'viewport' | 'auto';
+export type Alignment = 'map' | 'viewport' | 'auto';
 
 /**
  * The {@link Marker} options object
  */
-type MarkerOptions = {
+export type MarkerOptions = {
     /**
      * DOM element to use as a marker. The default is a light blue, droplet-shaped SVG marker.
      */
@@ -318,6 +318,12 @@ export class Marker extends Evented {
 
         if (!this._element.hasAttribute('aria-label')) {
             this._element.setAttribute('aria-label', map._getUIString('Marker.Title'));
+        }
+
+        // aria-label is set either by user or above default, so set role
+        // since div is interactive and cannot have aria-label without a role
+        if (!this._element.hasAttribute('role')) {
+            this._element.setAttribute('role', 'button');
         }
 
         map.getCanvasContainer().appendChild(this._element);

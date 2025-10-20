@@ -2,7 +2,7 @@ import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {Map} from '../map';
 import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
-import {browser} from '../../util/browser';
+import * as timeControl from '../../util/time_control';
 import {beforeMapTest} from '../../util/test/util';
 
 let map;
@@ -40,7 +40,7 @@ describe('Map.isRotating', () => {
 
     test('returns true when drag rotating', async () => {
         // Prevent inertial rotation.
-        vi.spyOn(browser, 'now').mockImplementation(() => { return 0; });
+        vi.spyOn(timeControl, 'now').mockImplementation(() => { return 0; });
 
         map.on('rotatestart', () => {
             expect(map.isRotating()).toBe(true);

@@ -22,8 +22,8 @@ describe('GlyphManager', () => {
         });
     };
 
-    const createGlyphManager = (font?) => {
-        const manager = new GlyphManager(identityTransform, font);
+    const createGlyphManager = (font?: string | false, language?: string) => {
+        const manager = new GlyphManager(identityTransform, font, language);
         manager.setURL('https://localhost/fonts/v1/{fontstack}/{range}.pbf');
         return manager;
     };
@@ -150,5 +150,23 @@ describe('GlyphManager', () => {
         expect(returnedGlyphs['Arial Unicode MS'][0x30c6].metrics.advance).toBe(24);
         await manager.getGlyphs({'Arial Unicode MS': [0x30c6]});
         expect(drawSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('GlyphManager passes no language to TinySDF by default', async () => {
+        const langSpy = GlyphManager.TinySDF = vi.fn().mockImplementation(() => ({
+            draw: () => GLYPHS[0]
+        }));
+        const manager = createGlyphManager('sans-serif');
+        await manager.getGlyphs({'Arial Unicode MS': [0x30c6]});
+        expect(langSpy).toHaveBeenCalledWith(expect.not.objectContaining({lang: expect.anything()}));
+    });
+
+    test('GlyphManager sets the language on TinySDF', async () => {
+        const langSpy = GlyphManager.TinySDF = vi.fn().mockImplementation(() => ({
+            draw: () => GLYPHS[0]
+        }));
+        const manager = createGlyphManager('sans-serif', 'zh');
+        await manager.getGlyphs({'Arial Unicode MS': [0x30c6]});
+        expect(langSpy).toHaveBeenCalledWith(expect.objectContaining({lang: 'zh'}));
     });
 });

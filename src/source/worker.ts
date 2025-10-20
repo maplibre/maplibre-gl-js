@@ -59,6 +59,7 @@ export default class Worker {
         };
     };
     referrer: string;
+    globalStates: Map<string, Record<string, any>>;
 
     constructor(self: WorkerGlobalScopeInterface & ActorTarget) {
         this.self = self;
@@ -70,6 +71,8 @@ export default class Worker {
         this.workerSources = {};
         this.demWorkerSources = {};
         this.externalWorkerSourceTypes = {};
+
+        this.globalStates = new Map<string, Record<string, any>>();
 
         this.self.registerWorkerSource = (name: string, WorkerSource: WorkerSourceConstructor) => {
             if (this.externalWorkerSourceTypes[name]) {
@@ -151,6 +154,7 @@ export default class Worker {
             delete this.availableImages[mapId];
             delete this.workerSources[mapId];
             delete this.demWorkerSources[mapId];
+            this.globalStates.delete(mapId);
         });
 
         this.actor.registerMessageHandler(MessageType.setReferrer, async (_mapId: string, params: string) => {
@@ -170,12 +174,28 @@ export default class Worker {
         });
 
         this.actor.registerMessageHandler(MessageType.updateLayers, async (mapId: string, params: UpdateLayersParameters) => {
-            this._getLayerIndex(mapId).update(params.layers, params.removedIds);
+            this._getLayerIndex(mapId).update(params.layers, params.removedIds, this._getGlobalState(mapId));
+        });
+
+        this.actor.registerMessageHandler(MessageType.updateGlobalState, async (mapId: string, params: Record<string, any>) => {
+            const globalState = this._getGlobalState(mapId);
+            for (const key in params) {
+                globalState[key] = params[key];
+            }
         });
 
         this.actor.registerMessageHandler(MessageType.setLayers, async (mapId: string, params: Array<LayerSpecification>) => {
-            this._getLayerIndex(mapId).replace(params);
+            this._getLayerIndex(mapId).replace(params, this._getGlobalState(mapId));
         });
+    }
+
+    private _getGlobalState(mapId: string): Record<string, any> {
+        let state = this.globalStates.get(mapId);
+        if (!state) {
+            state = {};
+            this.globalStates.set(mapId, state);
+        }
+        return state;
     }
 
     private async _setImages(mapId: string, images: Array<string>): Promise<void> {

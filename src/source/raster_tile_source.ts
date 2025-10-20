@@ -107,6 +107,7 @@ export class RasterTileSource extends Evented implements Source {
             }
         } catch (err) {
             this._tileJSONRequest = null;
+            this._loaded = true; // let's pretend it's loaded so the source will be ignored
             this.fire(new ErrorEvent(err));
         }
     }

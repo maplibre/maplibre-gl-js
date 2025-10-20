@@ -21,6 +21,9 @@ import {extend, isPointableEvent, isTouchableEvent, isTouchableOrPointableType} 
 import {browser} from '../util/browser';
 import Point from '@mapbox/point-geometry';
 import {type MapControlsDeltas} from '../geo/projection/camera_helper';
+import type {LngLat} from '../geo/lng_lat';
+import type {ITransform} from '../geo/transform_interface';
+import type {Terrain} from '../render/terrain';
 
 const isMoving = (p: EventsInProgress) => p.zoom || p.drag || p.roll || p.pitch || p.rotate;
 
@@ -122,6 +125,15 @@ export type EventsInProgress = {
     pitch?: EventInProgress;
     rotate?: EventInProgress;
     drag?: EventInProgress;
+};
+
+export type MapControlsScenarioOptions = {
+    terrain?: Terrain | null;
+    tr: ITransform;
+    deltasForHelper: MapControlsDeltas;
+    preZoomAroundLoc: LngLat;
+    combinedEventsInProgress: EventsInProgress;
+    panDelta?: Point;
 };
 
 function hasChange(result: HandlerResult) {
@@ -283,6 +295,8 @@ export class HandlerManager {
             map.touchZoomRotate.enable(options.touchZoomRotate);
         }
 
+        this._add('blockableMapEvent', new BlockableMapEventHandler(map));
+
         const scrollZoom = map.scrollZoom = new ScrollZoomHandler(map, () => this._triggerRenderFrame());
         this._add('scrollZoom', scrollZoom, ['mousePan']);
         if (options.interactive && options.scrollZoom) {
@@ -294,8 +308,6 @@ export class HandlerManager {
         if (options.interactive && options.keyboard) {
             map.keyboard.enable();
         }
-
-        this._add('blockableMapEvent', new BlockableMapEventHandler(map));
     }
 
     _add(handlerName: string, handler: Handler, allowed?: Array<string>) {
@@ -537,32 +549,14 @@ export class HandlerManager {
             tr.center :
             tr.screenPointToLocation(panDelta ? around.sub(panDelta) : around);
 
-        if (!terrain) {
-            // Apply zoom, bearing, pitch, roll
-            this._map.cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
-            // Apply panning
-            this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
-        } else {
-            // Apply zoom, bearing, pitch, roll
-            this._map.cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
-            // when 3d-terrain is enabled act a little different:
-            //    - dragging do not drag the picked point itself, instead it drags the map by pixel-delta.
-            //      With this approach it is no longer possible to pick a point from somewhere near
-            //      the horizon to the center in one move.
-            //      So this logic avoids the problem, that in such cases you easily loose orientation.
-            if (!this._terrainMovement &&
-                (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
-                // When starting to drag or move, flag it and register moveend to clear flagging
-                this._terrainMovement = true;
-                this._map._elevationFreeze = true;
-                this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
-            } else if (combinedEventsInProgress.drag && this._terrainMovement) {
-                // drag map
-                tr.setCenter(tr.screenPointToLocation(tr.centerPoint.sub(panDelta)));
-            } else {
-                this._map.cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
-            }
-        }
+        this._handleMapControls({
+            terrain,
+            tr,
+            deltasForHelper,
+            preZoomAroundLoc,
+            combinedEventsInProgress,
+            panDelta,
+        });
 
         map._applyUpdatedTransform(tr);
 
@@ -570,6 +564,47 @@ export class HandlerManager {
         if (!combinedResult.noInertia) this._inertia.record(combinedResult);
         this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
 
+    }
+
+    _handleMapControls({
+        terrain,
+        tr,
+        deltasForHelper,
+        preZoomAroundLoc,
+        combinedEventsInProgress,
+        panDelta}: MapControlsScenarioOptions) {
+
+        const cameraHelper = this._map.cameraHelper;
+
+        cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
+
+        if (!terrain) {
+            cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
+            return;
+        }
+
+        if (cameraHelper.useGlobeControls) {
+            if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
+                this._terrainMovement = true;
+                this._map._elevationFreeze = true;
+            }
+            cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
+            return;
+        }
+
+        if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
+            this._terrainMovement = true;
+            this._map._elevationFreeze = true;
+            cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
+            return;
+        }
+
+        if (combinedEventsInProgress.drag && this._terrainMovement && panDelta) {
+            tr.setCenter(tr.screenPointToLocation(tr.centerPoint.sub(panDelta)));
+            return;
+        }
+
+        cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
     }
 
     _fireEvents(newEventsInProgress: EventsInProgress, deactivatedHandlers: {[handlerName: string]: Event}, allowEndAnimation: boolean) {
