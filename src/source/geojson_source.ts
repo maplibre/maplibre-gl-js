@@ -17,6 +17,7 @@ import type {GeoJSONSourceDiff} from './geojson_source_diff';
 import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
 import type {WorkerTileParameters} from './worker_source';
 import {MessageType} from '../util/actor_messages';
+import {OverscaledTileID} from './tile_id';
 
 /**
  * Options object for GeoJSONSource.
@@ -429,7 +430,9 @@ export class GeoJSONSource extends Evented implements Source {
             // although GeoJSON sources contain no metadata, we fire this event to let the SourceCache
             // know its ok to start requesting tiles.
             this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
-            this.fire(new Event('data', {...eventData, sourceDataType: 'content'}));
+            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTile: (tile: Tile) =>
+                this.shoudReloadTile(tile, diff)
+            }));
         } catch (err) {
             this._isUpdatingWorker = false;
             if (this._removed) {
@@ -443,6 +446,24 @@ export class GeoJSONSource extends Evented implements Source {
                 this._updateWorkerData();
             }
         }
+    }
+
+    shoudReloadTile(tile: Tile, diff: GeoJSONSourceDiff) {
+        if (diff.removeAll) return true;
+
+        const affectedIds = new Set(diff.update.map(u => u.id));
+
+        const layers = tile.latestFeatureIndex.loadVTLayers();
+
+        for (let i = 0; i < tile.latestFeatureIndex.featureIndexArray.length; i++) {
+            const featureIndex = tile.latestFeatureIndex.featureIndexArray.get(i);
+            const feature = layers._geojsonTileLayer.feature(featureIndex.featureIndex);
+            if (affectedIds.has(feature.id)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     loaded(): boolean {

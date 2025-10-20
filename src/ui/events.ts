@@ -8,6 +8,8 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {Map} from './map';
 import type {LngLat} from '../geo/lng_lat';
 import type {ProjectionSpecification, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {CanonicalTileID, OverscaledTileID} from '../source/tile_id';
+import {Tile} from '../source/tile';
 
 /**
  * An event from the mouse relevant to a specific layer.
@@ -471,6 +473,8 @@ export type MapSourceDataEvent = MapLibreEvent & {
      * the event is related to loading of a tile.
      */
     tile: any;
+
+    shouldReloadTile?: (tile: Tile) => boolean;
 };
 /**
  * `MapMouseEvent` is the event type for mouse-related map events.
