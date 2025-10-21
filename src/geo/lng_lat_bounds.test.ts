@@ -355,4 +355,18 @@ describe('LngLatBounds', () => {
             });
         });
     });
+
+    describe('intersects', () => {
+        test('bounds intersect', () => {
+            const bounds1 = new LngLatBounds([0, 0], [10, 10]);
+            const bounds2 = new LngLatBounds([5, 5], [15, 15]);
+            expect(bounds1.intersects(bounds2)).toBe(true);
+        });
+
+        test('bounds do not intersect', () => {
+            const bounds1 = new LngLatBounds([0, 0], [10, 10]);
+            const bounds2 = new LngLatBounds([20, 20], [30, 30]);
+            expect(bounds1.intersects(bounds2)).toBe(false);
+        });
+    });
 });
