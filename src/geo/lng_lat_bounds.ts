@@ -289,12 +289,51 @@ export class LngLatBounds {
     intersects(other: LngLatBoundsLike): boolean {
         other = LngLatBounds.convert(other);
 
-        return !(
-            other.getWest() > this.getEast() ||
-            other.getEast() < this.getWest() ||
+        const latIntersects = !(
             other.getNorth() < this.getSouth() ||
             other.getSouth() > this.getNorth()
         );
+
+        if (!latIntersects) return false;
+
+        // Normalize longitudes to [-180, 180] range
+        const normalizeWest = (west: number): number => {
+            while (west < -180) west += 360;
+            while (west > 180) west -= 360;
+            return west;
+        };
+
+        const normalizeEast = (east: number): number => {
+            while (east < -180) east += 360;
+            while (east > 180) east -= 360;
+            return east;
+        };
+
+        const thisWest = normalizeWest(this.getWest());
+        const thisEast = normalizeEast(this.getEast());
+        const otherWest = normalizeWest(other.getWest());
+        const otherEast = normalizeEast(other.getEast());
+
+        // Check if either bounds wraps around the antimeridian
+        const thisWraps = thisWest > thisEast;
+        const otherWraps = otherWest > otherEast;
+
+        if (thisWraps && otherWraps) {
+            // Both wrap: they always intersect
+            return true;
+        } else if (thisWraps) {
+            // Only this wraps: intersects if other is outside the gap
+            return otherEast >= thisWest || otherWest <= thisEast;
+        } else if (otherWraps) {
+            // Only other wraps: intersects if this is outside the gap
+            return thisEast >= otherWest || thisWest <= otherEast;
+        } else {
+            // Neither wraps: standard intersection check
+            return !(
+                otherWest > thisEast ||
+                otherEast < thisWest
+            );
+        }
     }
 
     /**

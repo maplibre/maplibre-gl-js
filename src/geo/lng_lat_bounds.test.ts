@@ -368,5 +368,67 @@ describe('LngLatBounds', () => {
             const bounds2 = new LngLatBounds([20, 20], [30, 30]);
             expect(bounds1.intersects(bounds2)).toBe(false);
         });
+
+        describe('dateline crossing', () => {
+            test('both bounds wrap around dateline - always intersect', () => {
+                const bounds1 = new LngLatBounds([170, 0], [-170, 10]);
+                const bounds2 = new LngLatBounds([160, 5], [-160, 15]);
+                expect(bounds1.intersects(bounds2)).toBe(true);
+            });
+
+            test('only first bounds wraps - intersects on east side', () => {
+                const bounds1 = new LngLatBounds([170, 0], [-170, 10]);
+                const bounds2 = new LngLatBounds([165, 0], [175, 10]);
+                expect(bounds1.intersects(bounds2)).toBe(true);
+            });
+
+            test('only first bounds wraps - intersects on west side', () => {
+                const bounds1 = new LngLatBounds([170, 0], [-170, 10]);
+                const bounds2 = new LngLatBounds([-175, 0], [-165, 10]);
+                expect(bounds1.intersects(bounds2)).toBe(true);
+            });
+
+            test('only first bounds wraps - does not intersect (in gap)', () => {
+                const bounds1 = new LngLatBounds([170, 0], [-170, 10]);
+                const bounds2 = new LngLatBounds([0, 0], [10, 10]);
+                expect(bounds1.intersects(bounds2)).toBe(false);
+            });
+
+            test('only second bounds wraps - intersects on east side', () => {
+                const bounds1 = new LngLatBounds([165, 0], [175, 10]);
+                const bounds2 = new LngLatBounds([170, 0], [-170, 10]);
+                expect(bounds1.intersects(bounds2)).toBe(true);
+            });
+
+            test('only second bounds wraps - intersects on west side', () => {
+                const bounds1 = new LngLatBounds([-175, 0], [-165, 10]);
+                const bounds2 = new LngLatBounds([170, 0], [-170, 10]);
+                expect(bounds1.intersects(bounds2)).toBe(true);
+            });
+
+            test('only second bounds wraps - does not intersect (in gap)', () => {
+                const bounds1 = new LngLatBounds([0, 0], [10, 10]);
+                const bounds2 = new LngLatBounds([170, 0], [-170, 10]);
+                expect(bounds1.intersects(bounds2)).toBe(false);
+            });
+
+            test('wrapping bounds at exactly 180/-180', () => {
+                const bounds1 = new LngLatBounds([180, 0], [-180, 10]);
+                const bounds2 = new LngLatBounds([170, 0], [-170, 10]);
+                expect(bounds1.intersects(bounds2)).toBe(true);
+            });
+
+            test('wrapping bounds with no latitude overlap', () => {
+                const bounds1 = new LngLatBounds([170, 0], [-170, 10]);
+                const bounds2 = new LngLatBounds([160, 20], [-160, 30]);
+                expect(bounds1.intersects(bounds2)).toBe(false);
+            });
+
+            test('wrapping tile bounds at dateline intersects with negative longitude bounds', () => {
+                const tileBounds = new LngLatBounds([165.9375, -2.8099995543712595], [182.81112670898438, 13.923403897723347]);
+                const bounds = new LngLatBounds([-185, 10], [-175, 10]);
+                expect(tileBounds.intersects(bounds)).toBe(true);
+            });
+        });
     });
 });

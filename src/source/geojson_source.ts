@@ -448,7 +448,7 @@ export class GeoJSONSource extends Evented implements Source {
         }
     }
 
-    _getShoudReloadTile(diff: GeoJSONSourceDiff): (tile: Tile) => boolean {
+    _getShoudReloadTile(diff?: GeoJSONSourceDiff): (tile: Tile) => boolean {
         if (!diff || diff.removeAll) return undefined;
 
         const {add = [], update = [], remove = []} = (diff || {});

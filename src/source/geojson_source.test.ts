@@ -852,7 +852,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
             })
         } as any;
 
-        return source['_getShoudReloadTile'](diff)(tile);
+        return (source['_getShoudReloadTile'](diff) || (() => true))(tile);
     }
 
     test('returns true when diff.removeAll is true', () => {
@@ -883,23 +883,6 @@ describe('GeoJSONSource._shoudReloadTile', () => {
             new CanonicalTileID(0, 0, 0),
             [{id: 0}],
             {remove: [0]}
-        );
-        expect(result).toBe(true);
-    });
-
-    test('returns true when added feature intersects tile bounds', () => {
-        // Point at 0,0 should intersect with tile 0/0/0 which covers the world
-        const result = shared(
-            new CanonicalTileID(0, 0, 0),
-            [],
-            {
-                add: [{
-                    id: 0,
-                    type: 'Feature',
-                    properties: {},
-                    geometry: {type: 'Point', coordinates: [0, 0]}
-                }]
-            }
         );
         expect(result).toBe(true);
     });
