@@ -8,10 +8,6 @@ let pointCount = 50_000;
 export default class GeoJSONDiff extends Benchmark {
     map: Map;
 
-    getRandomPoint(): GeoJSON.Point {
-        return ;
-    }
-
     async setup() {
         this.map = await createMap({
             width: 512,
@@ -25,19 +21,19 @@ export default class GeoJSONDiff extends Benchmark {
                     points: {
                         type: 'geojson',
                         data: {
-                          type: 'FeatureCollection',
-                          features: new Array(pointCount).fill(0).map((_, id) => ({
-                              type: 'Feature',
-                              id,
-                              geometry: {
-                                  type: 'Point',
-                                  coordinates: id === 0 ? [95, 45] : [
-                                    Math.random() * 360 - 180,
-                                    Math.random() * 180 - 90
-                                ],
-                              }
-                          }))
-                      }
+                            type: 'FeatureCollection',
+                            features: new Array(pointCount).fill(0).map((_, id) => ({
+                                type: 'Feature',
+                                id,
+                                geometry: {
+                                    type: 'Point',
+                                    coordinates: id === 0 ? [95, 45] : [
+                                        Math.random() * 360 - 180,
+                                        Math.random() * 180 - 90
+                                    ],
+                                }
+                            }))
+                        }
                     }
                 },
                 layers: [{
@@ -66,8 +62,8 @@ export default class GeoJSONDiff extends Benchmark {
 
         await source.updateData({
             update: [{
-              id: 0,
-              newGeometry: {
+                id: 0,
+                newGeometry: {
                     type: 'Point',
                     coordinates: [85, 45],
                 }
