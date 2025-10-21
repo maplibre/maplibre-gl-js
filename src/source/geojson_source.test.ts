@@ -834,3 +834,125 @@ describe('GeoJSONSource.load', () => {
         expect(warnSpy).toHaveBeenCalledWith('No data or diff provided to GeoJSONSource id.');
     });
 });
+
+describe('GeoJSONSource._shoudReloadTile', () => {
+    function setupReloadTileTest(tileID: OverscaledTileID, tileFeatures: Array<{id: string | number}>, diff: GeoJSONSourceDiff) {
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.workerOptions = {
+            geojsonVtOptions: {
+                extent: EXTENT,
+                buffer: 128,
+                tolerance: 3,
+                maxZoom: 14,
+                lineMetrics: false
+            }
+        } as any;
+
+        const tile = new Tile(tileID, source.tileSize);
+        tile.latestFeatureIndex = {
+            featureIndexArray: {
+                length: tileFeatures.length,
+                get: (i: number) => ({featureIndex: i})
+            },
+            loadVTLayers: () => ({
+                _geojsonTileLayer: {
+                    feature: (i: number) => tileFeatures[i] || {}
+                }
+            })
+        } as any;
+
+        return source['_shoudReloadTile'](diff, tile);
+    }
+
+    test('returns true when diff.removeAll is true', () => {
+        const result = setupReloadTileTest(
+            new OverscaledTileID(0, 0, 0, 0, 0),
+            [],
+            {removeAll: true}
+        );
+        expect(result).toBe(true);
+    });
+
+    test('returns true when tile contains a feature that is being updated', () => {
+        const result = setupReloadTileTest(
+            new OverscaledTileID(0, 0, 0, 0, 0),
+            [{id: 1}],
+            {
+                update: [{
+                    id: 1,
+                    addOrUpdateProperties: [],
+                    newGeometry: {type: 'Point', coordinates: [0, 0]}
+                }]
+            }
+        );
+        expect(result).toBe(true);
+    });
+
+    test('returns true when tile contains a feature that is being removed', () => {
+        const result = setupReloadTileTest(
+            new OverscaledTileID(0, 0, 0, 0, 0),
+            [{id: 'feature-to-remove'}],
+            {remove: ['feature-to-remove']}
+        );
+        expect(result).toBe(true);
+    });
+
+    test('returns true when added feature intersects tile bounds', () => {
+        // Point at 0,0 should intersect with tile 0/0/0 which covers the world
+        const result = setupReloadTileTest(
+            new OverscaledTileID(0, 0, 0, 0, 0),
+            [],
+            {
+                add: [{
+                    id: 'new-feature',
+                    type: 'Feature',
+                    properties: {},
+                    geometry: {type: 'Point', coordinates: [0, 0]}
+                }]
+            }
+        );
+        expect(result).toBe(true);
+    });
+
+    test('returns true when updated feature new geometry intersects tile bounds', () => {
+        // Feature update with new geometry at 0,0 should intersect with tile 0/0/0
+        const result = setupReloadTileTest(
+            new OverscaledTileID(0, 0, 0, 0, 0),
+            [{id: 'other-feature'}],
+            {
+                update: [{
+                    id: 'moved-feature',
+                    addOrUpdateProperties: [],
+                    newGeometry: {type: 'Point', coordinates: [0, 0]}
+                }]
+            }
+        );
+        expect(result).toBe(true);
+    });
+
+    test('returns false when diff has no changes affecting the tile', () => {
+        // Feature far away from tile bounds
+        const result = setupReloadTileTest(
+            new OverscaledTileID(10, 0, 10, 500, 500),
+            [{id: 'unrelated-feature'}],
+            {
+                add: [{
+                    id: 'far-feature',
+                    type: 'Feature',
+                    properties: {},
+                    geometry: {type: 'Point', coordinates: [-170, -80]}
+                }]
+            }
+        );
+        expect(result).toBe(false);
+    });
+
+    test('returns false when diff is empty', () => {
+        const result = setupReloadTileTest(
+            new OverscaledTileID(0, 0, 0, 0, 0),
+            [],
+            {}
+        );
+        expect(result).toBe(false);
+    });
+});
