@@ -7,7 +7,7 @@ import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {EXTENT} from '../data/extent';
 import {type Context} from '../gl/context';
 import Point from '@mapbox/point-geometry';
-import {browser} from '../util/browser';
+import {now} from '../util/time_control';
 import {OverscaledTileID} from './tile_id';
 import {SourceFeatureState} from './source_state';
 import {getEdgeTiles} from '../util/util';
@@ -291,7 +291,7 @@ export class SourceCache extends Evented {
     }
 
     _tileLoaded(tile: Tile, id: string, previousState: TileState) {
-        tile.timeAdded = browser.now();
+        tile.timeAdded = now();
         if (previousState === 'expired') tile.refreshedUponExpiration = true;
         this._setTileReloadTimer(id, tile);
         if (this.getSource().type === 'raster-dem' && tile.dem) this._backfillDEM(tile);
@@ -732,7 +732,7 @@ export class SourceCache extends Evented {
      * Fade logic must therefore adapt dynamically based on the previously rendered ideal tile set.
      */
     _updateFadingTiles(idealTileIDs: OverscaledTileID[], retain: Record<string, OverscaledTileID>) {
-        const now: number = browser.now();
+        const currentTime: number = now();
         const edgeTileIDs: Set<OverscaledTileID> = getEdgeTiles(idealTileIDs);
 
         for (const idealID of idealTileIDs) {
@@ -743,13 +743,13 @@ export class SourceCache extends Evented {
                 idealTile.resetFadeLogic();
             }
 
-            const parentIsFader = this._updateFadingAncestor(idealTile, retain, now);
+            const parentIsFader = this._updateFadingAncestor(idealTile, retain, currentTime);
             if (parentIsFader) continue;
 
-            const childIsFader = this._updateFadingDescendents(idealTile, retain, now);
+            const childIsFader = this._updateFadingDescendents(idealTile, retain, currentTime);
             if (childIsFader) continue;
 
-            const edgeIsFader = this._updateFadingEdge(idealTile, edgeTileIDs, now);
+            const edgeIsFader = this._updateFadingEdge(idealTile, edgeTileIDs, currentTime);
             if (edgeIsFader) continue;
 
             // for all remaining non-fading ideal tiles reset the fade logic
@@ -1139,10 +1139,10 @@ export class SourceCache extends Evented {
         }
 
         if (isRasterType(this._source.type) && this._rasterFadeDuration > 0) {
-            const now = browser.now();
+            const currentTime = now();
             for (const id in this._tiles) {
                 const tile = this._tiles[id];
-                if (tile.fadeEndTime >= now) {
+                if (tile.fadeEndTime >= currentTime) {
                     return true;
                 }
             }

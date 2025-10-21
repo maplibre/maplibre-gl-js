@@ -19,7 +19,7 @@ jobs:
           ref: main
 
       - name: Use Node.js from nvmrc
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v4
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v4
         with:
           node-version-file: '.nvmrc'
 
@@ -50,7 +50,7 @@ jobs:
           ref: main
 
       - name: Use Node.js from nvmrc
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v4
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v4
         with:
           node-version-file: '.nvmrc'
           registry-url: 'https://registry.npmjs.org'

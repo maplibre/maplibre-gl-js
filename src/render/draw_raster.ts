@@ -1,7 +1,7 @@
 import {clamp} from '../util/util';
 
 import {ImageSource} from '../source/image_source';
-import {browser} from '../util/browser';
+import {now} from '../util/time_control';
 import {StencilMode} from '../gl/stencil_mode';
 import {DepthMode} from '../gl/depth_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
@@ -185,10 +185,10 @@ function getFadeProperties(tile: Tile, sourceCache: SourceCache, fadeDuration: n
  * Cross-fade values for a base tile with a parent tile (for zooming in/out)
  */
 function getCrossFadeValues(tile: Tile, parentTile: Tile, fadeDuration: number): FadeValues {
-    const now = browser.now();
+    const currentTime = now();
 
-    const timeSinceTile = (now - tile.timeAdded) / fadeDuration;
-    const timeSinceParent = (now - parentTile.timeAdded) / fadeDuration;
+    const timeSinceTile = (currentTime - tile.timeAdded) / fadeDuration;
+    const timeSinceParent = (currentTime - parentTile.timeAdded) / fadeDuration;
 
     // get fading opacity based on current fade direction
     const doFadeIn = (tile.fadingDirection === FadingDirections.Incoming);
@@ -209,9 +209,9 @@ function getCrossFadeValues(tile: Tile, parentTile: Tile, fadeDuration: number):
  * Simple fade-in values for tile without a parent (i.e. edge tiles)
  */
 function getSelfFadeValues(tile: Tile, fadeDuration: number): FadeValues {
-    const now = browser.now();
+    const currentTime = now();
 
-    const timeSinceTile = (now - tile.timeAdded) / fadeDuration;
+    const timeSinceTile = (currentTime - tile.timeAdded) / fadeDuration;
     const tileOpacity = clamp(timeSinceTile, 0, 1);
     const fadeMix = {
         opacity: tileOpacity,

@@ -1,4 +1,4 @@
-import {browser} from '../util/browser';
+import {now} from '../util/time_control';
 import {mat4} from 'gl-matrix';
 import {SourceCache} from '../source/source_cache';
 import {EXTENT} from '../data/extent';
@@ -484,7 +484,7 @@ export class Painter {
         this.imageManager = style.imageManager;
         this.glyphManager = style.glyphManager;
 
-        this.symbolFadeChange = style.placement.symbolFadeChange(browser.now());
+        this.symbolFadeChange = style.placement.symbolFadeChange(now());
 
         this.imageManager.beginFrame();
 
