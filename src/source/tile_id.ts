@@ -67,27 +67,18 @@ export class CanonicalTileID implements ICanonicalTileID {
         return `${this.z}/${this.x}/${this.y}`;
     }
 
-    toLngLatBounds(extent: number = EXTENT, buffer: number = 0) {
-        const buffer1 = buffer / extent;
+    toLngLatBounds(extent: number = EXTENT, extentBuffer: number = 0) {
+        const buffer = extentBuffer / extent;
         const width = ((extent - 1) / extent);
 
-        const lngMin = tile2lng(this.x - buffer1, this.z);
-        const lngMax = tile2lng(this.x + width + buffer1, this.z);
-        const latMax = tile2lat(this.y - buffer1, this.z);
-        const latMin = tile2lat(this.y + width + buffer1, this.z);
+        const lngMin = lngFromMercatorX((this.x - buffer) / Math.pow(2, this.z));
+        const latMin = latFromMercatorY((this.y + width + buffer) / Math.pow(2, this.z));
+
+        const lngMax = lngFromMercatorX((this.x + width + buffer) / Math.pow(2, this.z));
+        const latMax = latFromMercatorY((this.y - buffer) / Math.pow(2, this.z));
 
         return new LngLatBounds([lngMin, latMin], [lngMax, latMax]);
     }
-}
-
-function tile2lng(x,z) {
-    return lngFromMercatorX(x / Math.pow(2, z));
-}
-
-function tile2lat(y,z) {
-    // return latFromMercatorY(y / Math.pow(2, z));
-    const n = Math.PI - 2 * Math.PI * y / Math.pow(2, z);
-    return (180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n))));
 }
 
 /**
