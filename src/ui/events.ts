@@ -8,7 +8,6 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {Map} from './map';
 import type {LngLat} from '../geo/lng_lat';
 import type {ProjectionSpecification, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {Tile} from '../source/tile';
 
 /**
  * An event from the mouse relevant to a specific layer.
