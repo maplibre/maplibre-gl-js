@@ -154,7 +154,6 @@ describe('clipLines', () => {
     });
 });
 
-
 describe('clipGeometry', () => {
 
     test('Empty geometry', () => {
@@ -286,4 +285,4 @@ describe('clipGeometry', () => {
         ];
         expect(clipGeometry([polygon], 3, -200, -200, 200, 200)).toEqual(result);
     });
-})
+});

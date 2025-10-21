@@ -81,7 +81,6 @@ export function clipGeometry(geometry: Point[][], type: 0 | 1 | 2 | 3, x1: numbe
     return clippedGeometry;
 }
 
-
 /**
  * On which axis to clip
  */
@@ -92,11 +91,12 @@ const enum AxisType {
 
 /**
  * Clip features between two vertical or horizontal axis-parallel lines:
+ * ```
  *     |        |
  *  ___|___     |     /
  * /   |   \____|____/
  *     |        |
- *
+ *```
  * @param geometry - the geometry to clip
  * @param type - the geometry type (1=POINT, 2=LINESTRING, 3=POLYGON)
  * @param start - the start line coordinate (x or y) to clip against
@@ -114,7 +114,7 @@ function clipGeometryOnAxis(geometry: Point[][], type: 0 | 1 | 2 | 3, start: num
             return clipLines(geometry, start, end, axis, true);
     }
 
-    return []
+    return [];
 }
 
 function clipPoints(geometry: Point[][], start: number, end: number, axis: AxisType): Point[][] {
