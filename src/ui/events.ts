@@ -473,7 +473,12 @@ export type MapSourceDataEvent = MapLibreEvent & {
      */
     tile: any;
 
-    shouldReloadTile?: (tile: Tile) => boolean;
+    /**
+     * Function that can be called to determine whether a tile should be reloaded
+     * after an source diff.
+     * @private
+     */
+    shouldReloadTile?: (tile: any) => boolean;
 };
 /**
  * `MapMouseEvent` is the event type for mouse-related map events.

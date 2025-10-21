@@ -277,11 +277,10 @@ export class GeoJSONSource extends Evented implements Source {
      * @returns a promise which resolves to the source's boundaries
      */
     async getBounds(): Promise<LngLatBounds> {
-        return this._getBounds(await this.getData());
+        return this._getGeoJSONBounds(await this.getData());
     }
 
-    // Factor out to allow reuse in updateData
-    _getBounds(data: GeoJSON.GeoJSON): LngLatBounds {
+    _getGeoJSONBounds(data: GeoJSON.GeoJSON): LngLatBounds {
         const bounds = new LngLatBounds();
         let coordinates: number[];
         switch (data.type) {
@@ -435,9 +434,7 @@ export class GeoJSONSource extends Evented implements Source {
             // although GeoJSON sources contain no metadata, we fire this event to let the SourceCache
             // know its ok to start requesting tiles.
             this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
-            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTile: (tile: Tile) =>
-                this._shoudReloadTile(tile, diff)
-            }));
+            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTile: this._shoudReloadTile.bind(this, diff)}));
         } catch (err) {
             this._isUpdatingWorker = false;
             if (this._removed) {
@@ -453,31 +450,40 @@ export class GeoJSONSource extends Evented implements Source {
         }
     }
 
-    _shoudReloadTile(tile: Tile, diff: GeoJSONSourceDiff) {
+    _shoudReloadTile(diff: GeoJSONSourceDiff, tile: Tile) {
         if (diff.removeAll) return true;
 
-        const affectedIds = new Set([...(diff.update?.map(u => u.id) || []), ...(diff.remove || [])]);
+        const ids = new Set([...(diff.update?.map(u => u.id) || []), ...(diff.remove || [])]);
 
-        // Update all tiles that PREVIOUSLY contained an affected feature
+        // Update all tiles that PREVIOUSLY contained an updated feature.
         const layers = tile.latestFeatureIndex.loadVTLayers();
         for (let i = 0; i < tile.latestFeatureIndex.featureIndexArray.length; i++) {
             const featureIndex = tile.latestFeatureIndex.featureIndexArray.get(i);
             const feature = layers._geojsonTileLayer.feature(featureIndex.featureIndex);
-            if (affectedIds.has(feature.id)) {
+            if (ids.has(feature.id)) {
                 return true;
             }
         }
 
-        // Update all tiles that WILL contain an affected feature going forward
+        // Update all tiles that WILL contain an updated feature.
         const geometries = [
             ...diff.update?.map(f => f.newGeometry) || [],
             ...diff.add?.map(f => f.geometry) || [],
         ];
 
-        const tileBounds = this._getTileBounds(tile.tileID.canonical);
+        const tileId = tile.tileID.canonical;
+        const tileZ2 = Math.pow(2, tileId.z);
+        const tileBuffer = this.workerOptions.geojsonVtOptions.buffer / this.workerOptions.geojsonVtOptions.extent;
+
+        const tileLonMin = lngFromMercatorX(tileId.x / tileZ2 - tileBuffer);
+        const tileLonMax = lngFromMercatorX((tileId.x + 1) / tileZ2 + tileBuffer);
+        const tileLatMax = latFromMercatorY(tileId.y / tileZ2 - tileBuffer);
+        const tileLatMin = latFromMercatorY((tileId.y + 1) / tileZ2 + tileBuffer);
+
+        const tileBounds = new LngLatBounds([tileLonMin, tileLatMin], [tileLonMax, tileLatMax]);
 
         for (const geometry of geometries) {
-            if (tileBounds.intersects(this._getBounds(geometry))) {
+            if (tileBounds.intersects(this._getGeoJSONBounds(geometry))) {
                 return true;
             }
         }
@@ -543,23 +549,6 @@ export class GeoJSONSource extends Evented implements Source {
 
     hasTransition() {
         return false;
-    }
-
-    _getTileBounds(id: CanonicalTileID): LngLatBounds {
-        const z2 = Math.pow(2, id.z);
-        const buffer = this.workerOptions.geojsonVtOptions.buffer / this.workerOptions.geojsonVtOptions.extent;
-
-        const minX = id.x / z2 - buffer;
-        const maxX = (id.x + 1) / z2 + buffer;
-        const minY = id.y / z2 - buffer;
-        const maxY = (id.y + 1) / z2 + buffer;
-
-        const minLon = lngFromMercatorX(minX);
-        const maxLon = lngFromMercatorX(maxX);
-        const minLat = latFromMercatorY(maxY);
-        const maxLat = latFromMercatorY(minY);
-
-        return new LngLatBounds([minLon, minLat], [maxLon, maxLat]);
     }
 }
 
