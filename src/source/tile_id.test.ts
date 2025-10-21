@@ -59,6 +59,32 @@ describe('CanonicalTileID', () => {
         expect(new CanonicalTileID(2, 1, 0).url(['{z}/{x}/{y}/{z}/{x}/{y}.json'], 1)).toBe('2/1/0/2/1/0.json');
     });
 
+    test('.toLngLatBounds - tile 0/0/0 covers the full world', () => {
+        const bounds = new CanonicalTileID(0, 0, 0).toLngLatBounds();
+        expect(bounds.getWest()).toBeCloseTo(-180, 0);
+        expect(bounds.getEast()).toBeCloseTo(180, 0);
+        expect(bounds.getSouth()).toBeCloseTo(-85, 0);
+        expect(bounds.getNorth()).toBeCloseTo(85, 0);
+    });
+
+    test('.toLngLatBounds - tile 1/1/1', () => {
+        const bounds = new CanonicalTileID(1, 1, 1).toLngLatBounds();
+        expect(bounds.getWest()).toBeCloseTo(0, 0);
+        expect(bounds.getEast()).toBeCloseTo(180, 0);
+        expect(bounds.getSouth()).toBeCloseTo(-85, 0);
+        expect(bounds.getNorth()).toBeCloseTo(0, 0);
+    });
+
+    test('.toLngLatBounds - with buffer', () => {
+        const bounds = new CanonicalTileID(1, 0, 0).toLngLatBounds(4096, 512);
+        const boundsNoBuffer = new CanonicalTileID(1, 0, 0).toLngLatBounds(4096, 0);
+
+        // With buffer, bounds should extend beyond the no-buffer bounds
+        expect(bounds.getWest()).toBeLessThan(boundsNoBuffer.getWest());
+        expect(bounds.getEast()).toBeGreaterThan(boundsNoBuffer.getEast());
+        expect(bounds.getSouth()).toBeLessThan(boundsNoBuffer.getSouth());
+        expect(bounds.getNorth()).toBeGreaterThan(boundsNoBuffer.getNorth());
+    });
 });
 
 describe('OverscaledTileID', () => {

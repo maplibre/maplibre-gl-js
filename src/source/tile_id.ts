@@ -85,6 +85,7 @@ function tile2lng(x,z) {
 }
 
 function tile2lat(y,z) {
+    // return latFromMercatorY(y / Math.pow(2, z));
     const n = Math.PI - 2 * Math.PI * y / Math.pow(2, z);
     return (180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n))));
 }
