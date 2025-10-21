@@ -38,6 +38,7 @@ export type LngLatBoundsLike = LngLatBounds | [LngLatLike, LngLatLike] | [number
  * let llb = new LngLatBounds(sw, ne);
  * ```
  */
+
 export class LngLatBounds {
     _ne: LngLat;
     _sw: LngLat;
@@ -286,6 +287,12 @@ export class LngLatBounds {
         return containsLatitude && containsLongitude;
     }
 
+    /**
+     * Checks if this bounding box intersects with another bounding box.
+     *
+     * This method properly handles cases where either or both bounding boxes cross
+     * the antimeridian (date line).
+     */
     intersects(other: LngLatBoundsLike): boolean {
         other = LngLatBounds.convert(other);
 
