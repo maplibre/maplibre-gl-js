@@ -17,6 +17,7 @@ import type {GeoJSONSourceDiff} from './geojson_source_diff';
 import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
 import type {WorkerTileParameters} from './worker_source';
 import {MessageType} from '../util/actor_messages';
+import {MapDataEvent, MapSourceDataEvent} from '../ui/events';
 
 /**
  * Options object for GeoJSONSource.
@@ -432,7 +433,7 @@ export class GeoJSONSource extends Evented implements Source {
             // although GeoJSON sources contain no metadata, we fire this event to let the SourceCache
             // know its ok to start requesting tiles.
             this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
-            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTile: diff ? this._shoudReloadTile.bind(this, diff) : undefined}));
+            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTile: this._getShoudReloadTile(diff)}));
         } catch (err) {
             this._isUpdatingWorker = false;
             if (this._removed) {
@@ -448,47 +449,44 @@ export class GeoJSONSource extends Evented implements Source {
         }
     }
 
-    _shoudReloadTile(diff: GeoJSONSourceDiff, tile: Tile) {
-        if (diff.removeAll) return true;
+    _getShoudReloadTile(diff: GeoJSONSourceDiff): (tile: Tile) => boolean {
+        if (!diff || diff.removeAll) return undefined;
 
-        const {add = [], update = [], remove = []} = diff;
-
-        // For large diffs it's more efficient to reload all tiles.
-        const count = add.length + update.length + remove.length;
-        if (count > 1000) {
-            return true;
-        }
+        const {add = [], update = [], remove = []} = (diff || {});
 
         const ids = new Set([...update.map(u => u.id), ...remove]);
 
-        // Update all tiles that PREVIOUSLY contained an updated feature.
-        const layers = tile.latestFeatureIndex.loadVTLayers();
-        for (let i = 0; i < tile.latestFeatureIndex.featureIndexArray.length; i++) {
-            const featureIndex = tile.latestFeatureIndex.featureIndexArray.get(i);
-            const feature = layers._geojsonTileLayer.feature(featureIndex.featureIndex);
-            if (ids.has(feature.id)) {
-                return true;
-            }
-        }
+        if (ids.size + add.length > 1000) return undefined;
 
-        // Update all tiles that WILL contain an updated feature.
-        const geometries = [
+        const boundsArray = [
             ...update.map(f => f.newGeometry),
-            ...add.map(f => f.geometry),
-        ];
+            ...add.map(f => f.geometry)
+        ].map(g => this._getGeoJSONBounds(g));
 
-        const tileBounds = tile.tileID.canonical.toLngLatBounds(
-            this.workerOptions.geojsonVtOptions.extent,
-            this.workerOptions.geojsonVtOptions.buffer
-        );
-
-        for (const geometry of geometries) {
-            if (tileBounds.intersects(this._getGeoJSONBounds(geometry))) {
-                return true;
+        return (tile: Tile) => {
+            // Update all tiles that PREVIOUSLY contained an updated feature.
+            const layers = tile.latestFeatureIndex.loadVTLayers();
+            for (let i = 0; i < tile.latestFeatureIndex.featureIndexArray.length; i++) {
+                const featureIndex = tile.latestFeatureIndex.featureIndexArray.get(i);
+                const feature = layers._geojsonTileLayer.feature(featureIndex.featureIndex);
+                if (ids.has(feature.id)) {
+                    return true;
+                }
             }
-        }
 
-        return false;
+            const tileBounds = tile.tileID.canonical.toLngLatBounds(
+                this.workerOptions.geojsonVtOptions.extent,
+                this.workerOptions.geojsonVtOptions.buffer
+            );
+
+            for (const bounds of boundsArray) {
+                if (tileBounds.intersects(bounds)) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
     }
 
     loaded(): boolean {
