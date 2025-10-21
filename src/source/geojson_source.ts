@@ -432,7 +432,7 @@ export class GeoJSONSource extends Evented implements Source {
             // although GeoJSON sources contain no metadata, we fire this event to let the SourceCache
             // know its ok to start requesting tiles.
             this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
-            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTile: this._getShoudReloadTile(diff)}));
+            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTile: this._getShouldReloadTile(diff)}));
         } catch (err) {
             this._isUpdatingWorker = false;
             if (this._removed) {
@@ -448,7 +448,7 @@ export class GeoJSONSource extends Evented implements Source {
         }
     }
 
-    _getShoudReloadTile(diff?: GeoJSONSourceDiff): (tile: Tile) => boolean {
+    _getShouldReloadTile(diff?: GeoJSONSourceDiff): (tile: Tile) => boolean {
         if (!diff || diff.removeAll) return undefined;
 
         const {add = [], update = [], remove = []} = (diff || {});
