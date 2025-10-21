@@ -433,7 +433,7 @@ export class GeoJSONSource extends Evented implements Source {
             // although GeoJSON sources contain no metadata, we fire this event to let the SourceCache
             // know its ok to start requesting tiles.
             this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
-            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTile: this._shoudReloadTile.bind(this, diff)}));
+            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTile: diff ? this._shoudReloadTile.bind(this, diff) : undefined}));
         } catch (err) {
             this._isUpdatingWorker = false;
             if (this._removed) {
