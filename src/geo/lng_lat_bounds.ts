@@ -296,23 +296,14 @@ export class LngLatBounds {
 
         if (!latIntersects) return false;
 
-        // Normalize longitudes to [-180, 180] range
-        const normalizeWest = (west: number): number => {
-            while (west < -180) west += 360;
-            while (west > 180) west -= 360;
-            return west;
+        const normalizeLon = (west: number): number => {
+            return ((west + 180) % 360 + 360) % 360 - 180;
         };
 
-        const normalizeEast = (east: number): number => {
-            while (east < -180) east += 360;
-            while (east > 180) east -= 360;
-            return east;
-        };
-
-        const thisWest = normalizeWest(this.getWest());
-        const thisEast = normalizeEast(this.getEast());
-        const otherWest = normalizeWest(other.getWest());
-        const otherEast = normalizeEast(other.getEast());
+        const thisWest = normalizeLon(this.getWest());
+        const thisEast = normalizeLon(this.getEast());
+        const otherWest = normalizeLon(other.getWest());
+        const otherEast = normalizeLon(other.getEast());
 
         // Check if either bounds wraps around the antimeridian
         const thisWraps = thisWest > thisEast;
