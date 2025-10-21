@@ -451,7 +451,15 @@ export class GeoJSONSource extends Evented implements Source {
     _shoudReloadTile(diff: GeoJSONSourceDiff, tile: Tile) {
         if (diff.removeAll) return true;
 
-        const ids = new Set([...(diff.update?.map(u => u.id) || []), ...(diff.remove || [])]);
+        const {add = [], update = [], remove = []} = diff;
+
+        // For large diffs it's more efficient to reload all tiles.
+        const count = add.length + update.length + remove.length;
+        if (count > 1000) {
+            return true;
+        }
+
+        const ids = new Set([...update.map(u => u.id), ...remove]);
 
         // Update all tiles that PREVIOUSLY contained an updated feature.
         const layers = tile.latestFeatureIndex.loadVTLayers();
@@ -465,8 +473,8 @@ export class GeoJSONSource extends Evented implements Source {
 
         // Update all tiles that WILL contain an updated feature.
         const geometries = [
-            ...diff.update?.map(f => f.newGeometry) || [],
-            ...diff.add?.map(f => f.geometry) || [],
+            ...update.map(f => f.newGeometry),
+            ...add.map(f => f.geometry),
         ];
 
         const tileBounds = tile.tileID.canonical.toLngLatBounds(
