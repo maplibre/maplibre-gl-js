@@ -1,6 +1,6 @@
-import type Point from '@mapbox/point-geometry';
+import Point from '@mapbox/point-geometry';
 import {type VectorTile, type VectorTileFeature, type VectorTileLayer} from '@mapbox/vector-tile';
-import {type FeatureTable, decodeTile, type Feature as MLTFeature} from '@maplibre/mlt';
+import {type FeatureTable, decodeTile, type Feature as MLTFeature, GEOMETRY_TYPE} from '@maplibre/mlt';
 
 type PublicPart<T> = {[K in keyof T]: T[K]};
 
@@ -15,16 +15,16 @@ class MLTVectorTileFeature implements PublicPart<VectorTileFeature> {
         this._featureData = feature;
         this.properties = this._featureData.properties || {};
         switch (this._featureData.geometry?.type) {
-            case 0: // POINT
-            case 3: // MULTI_POINT
+            case GEOMETRY_TYPE.POINT:
+            case GEOMETRY_TYPE.MULTIPOINT:
                 this.type = 1;
                 break;
-            case 1: // LINESTRING
-            case 4: // MULTI_LINESTRING
+            case GEOMETRY_TYPE.LINESTRING:
+            case GEOMETRY_TYPE.MULTILINESTRING:
                 this.type = 2;
                 break;
-            case 2: // POLYGON
-            case 5: // MULTI_POLYGON
+            case GEOMETRY_TYPE.POLYGON:
+            case GEOMETRY_TYPE.MULTIPOLYGON:
                 this.type = 3;
                 break;
             default:
@@ -39,7 +39,15 @@ class MLTVectorTileFeature implements PublicPart<VectorTileFeature> {
     }
 
     loadGeometry(): Point[][] {
-        return this._featureData.geometry.coordinates;
+        const points: Point[][] = [];
+        for (const ring of this._featureData.geometry.coordinates) {
+            const pointRing: Point[] = [];
+            for (const coord of ring) {
+                pointRing.push(new Point(coord.x, coord.y));
+            }
+            points.push(pointRing);
+        }
+        return points;
     }
     bbox(): number[] {
         return [0, 0, 0, 0];
@@ -53,21 +61,13 @@ class MLTVectorTileLayer implements PublicPart<VectorTileLayer> {
     version: number;
     extent: number;
     features: MLTFeature[] = [];
-
+    
     constructor(featureTable: FeatureTable) {
         this.featureTable = featureTable;
         this.name = featureTable.name;
         this.extent = featureTable.extent;
         this.version = 2;
-        let index = 0;
-        for (const feature of featureTable) {
-            if (feature.geometry != null && feature.geometry.type !== undefined) {
-                this.features.push(feature);
-            } else {
-                console.log(`Skipping feature with no geometry in layer ${this.name}`, feature, index);
-            }
-            index++;
-        }
+        this.features = featureTable.getFeatures();
         this.length = this.features.length;
     }
 
@@ -83,5 +83,4 @@ export class MLTVectorTile implements VectorTile {
         const features = decodeTile(new Uint8Array(buffer));
         this.layers = features.reduce((acc, f) => ({...acc, [f.name]: new MLTVectorTileLayer(f)}), {});
     }
-
 }
