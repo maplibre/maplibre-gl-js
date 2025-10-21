@@ -17,7 +17,6 @@ import type {GeoJSONSourceDiff} from './geojson_source_diff';
 import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
 import type {WorkerTileParameters} from './worker_source';
 import {MessageType} from '../util/actor_messages';
-import {latFromMercatorY, lngFromMercatorX} from '../geo/mercator_coordinate';
 
 /**
  * Options object for GeoJSONSource.
