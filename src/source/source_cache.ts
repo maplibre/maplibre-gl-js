@@ -26,7 +26,6 @@ import type {CanvasSourceSpecification} from './canvas_source';
 import {coveringTiles, coveringZoomLevel} from '../geo/projection/covering_tiles';
 import {Bounds} from '../geo/bounds';
 import {EXTENT_BOUNDS} from '../data/extent_bounds';
-import {GeoJSONSourceDiff} from './geojson_source_diff';
 
 type TileResult = {
     tile: Tile;

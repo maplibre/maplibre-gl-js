@@ -84,7 +84,7 @@
 
         map.once('idle', () => {
             console.log('------ IDLE -----')
-            document.getElementById('time').innerText += Math.round(performance.now() - start) + "\n"
+            document.getElementById('time').innerText = Math.round(performance.now() - start) + "\n" + document.getElementById('time').innerText
             test();
         })
     }

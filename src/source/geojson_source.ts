@@ -17,6 +17,8 @@ import type {GeoJSONSourceDiff} from './geojson_source_diff';
 import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
 import type {WorkerTileParameters} from './worker_source';
 import {MessageType} from '../util/actor_messages';
+import type {CanonicalTileID} from './tile_id';
+import {latFromMercatorY, lngFromMercatorX} from '../geo/mercator_coordinate';
 
 /**
  * Options object for GeoJSONSource.
@@ -434,7 +436,7 @@ export class GeoJSONSource extends Evented implements Source {
             // know its ok to start requesting tiles.
             this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
             this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTile: (tile: Tile) =>
-                this.shoudReloadTile(tile, diff)
+                this._shoudReloadTile(tile, diff)
             }));
         } catch (err) {
             this._isUpdatingWorker = false;
@@ -451,7 +453,7 @@ export class GeoJSONSource extends Evented implements Source {
         }
     }
 
-    shoudReloadTile(tile: Tile, diff: GeoJSONSourceDiff) {
+    _shoudReloadTile(tile: Tile, diff: GeoJSONSourceDiff) {
         if (diff.removeAll) return true;
 
         const affectedIds = new Set([...(diff.update?.map(u => u.id) || []), ...(diff.remove || [])]);
@@ -467,15 +469,15 @@ export class GeoJSONSource extends Evented implements Source {
         }
 
         // Update all tiles that WILL contain an affected feature going forward
-        const featureBoundsArray = [
+        const geometries = [
             ...diff.update?.map(f => f.newGeometry) || [],
             ...diff.add?.map(f => f.geometry) || [],
-        ].map(f => this._getBounds(f));
+        ];
 
-        const tileBounds = getTileBounds(tile.tileID.canonical.x, tile.tileID.canonical.y, tile.tileID.canonical.z);
+        const tileBounds = this._getTileBounds(tile.tileID.canonical);
 
-        for (const featureBounds of featureBoundsArray) {
-            if (tileBounds.intersects(featureBounds)) {
+        for (const geometry of geometries) {
+            if (tileBounds.intersects(this._getBounds(geometry))) {
                 return true;
             }
         }
@@ -542,29 +544,22 @@ export class GeoJSONSource extends Evented implements Source {
     hasTransition() {
         return false;
     }
+
+    _getTileBounds(id: CanonicalTileID): LngLatBounds {
+        const z2 = Math.pow(2, id.z);
+        const buffer = this.workerOptions.geojsonVtOptions.buffer / this.workerOptions.geojsonVtOptions.extent;
+
+        const minX = id.x / z2 - buffer;
+        const maxX = (id.x + 1) / z2 + buffer;
+        const minY = id.y / z2 - buffer;
+        const maxY = (id.y + 1) / z2 + buffer;
+
+        const minLon = lngFromMercatorX(minX);
+        const maxLon = lngFromMercatorX(maxX);
+        const minLat = latFromMercatorY(maxY);
+        const maxLat = latFromMercatorY(minY);
+
+        return new LngLatBounds([minLon, minLat], [maxLon, maxLat]);
+    }
 }
 
-// TODO factor this out
-function getTileBounds(x: number, y: number, z: number, buffer: number = 0): LngLatBounds {
-    const z2 = Math.pow(2, z);
-    const bufferInTiles = buffer / EXTENT;
-
-    const minX = x / z2 - bufferInTiles;
-    const maxX = (x + 1) / z2 + bufferInTiles;
-    const minY = y / z2 - bufferInTiles;
-    const maxY = (y + 1) / z2 + bufferInTiles;
-
-    const minLon = tileXToLon(minX);
-    const maxLon = tileXToLon(maxX);
-    const minLat = tileYToLat(maxY);
-    const maxLat = tileYToLat(minY);
-
-    return new LngLatBounds([minLon, minLat], [maxLon, maxLat]);
-}
-
-// TODO figure out if these already exist in the codebase
-const tileXToLon = (tx: number) => tx * 360 - 180;
-const tileYToLat = (ty: number) => {
-    const n = Math.PI * (1 - 2 * ty);
-    return (180 / Math.PI) * Math.atan(Math.sinh(n));
-};
