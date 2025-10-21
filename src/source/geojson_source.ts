@@ -470,17 +470,10 @@ export class GeoJSONSource extends Evented implements Source {
             ...diff.add?.map(f => f.geometry) || [],
         ];
 
-        const tileId = tile.tileID.canonical;
-        const {buffer, extent} = this.workerOptions.geojsonVtOptions;
-        const tileBuffer = buffer / extent;
-        const tileWidth = ((extent - 1) / extent);
-
-        const tileLonMin = tile2long(tileId.x - tileBuffer, tileId.z);
-        const tileLonMax = tile2long(tileId.x + tileWidth + tileBuffer, tileId.z);
-        const tileLatMax = tile2lat(tileId.y - tileBuffer, tileId.z);
-        const tileLatMin = tile2lat(tileId.y + tileWidth + tileBuffer, tileId.z);
-
-        const tileBounds = new LngLatBounds([tileLonMin, tileLatMin], [tileLonMax, tileLatMax]);
+        const tileBounds = tile.tileID.canonical.toLngLatBounds(
+            this.workerOptions.geojsonVtOptions.extent,
+            this.workerOptions.geojsonVtOptions.buffer
+        );
 
         for (const geometry of geometries) {
             if (tileBounds.intersects(this._getGeoJSONBounds(geometry))) {
@@ -552,11 +545,3 @@ export class GeoJSONSource extends Evented implements Source {
     }
 }
 
-function tile2long(x,z) {
-    return (x/Math.pow(2,z)*360-180);
-}
-
-function tile2lat(y,z) {
-    var n=Math.PI-2*Math.PI*y/Math.pow(2,z);
-    return (180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n))));
-}

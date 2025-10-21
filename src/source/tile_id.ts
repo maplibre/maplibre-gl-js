@@ -7,6 +7,7 @@ import {type mat4} from 'gl-matrix';
 import {type ICanonicalTileID, type IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
 import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util';
 import {isInBoundsForTileZoomXY} from '../util/world_bounds';
+import {LngLatBounds} from '../geo/lng_lat_bounds';
 
 /**
  * A canonical way to define a tile ID
@@ -64,6 +65,27 @@ export class CanonicalTileID implements ICanonicalTileID {
 
     toString() {
         return `${this.z}/${this.x}/${this.y}`;
+    }
+
+    toLngLatBounds(extent: number = EXTENT, buffer: number = 0) {
+        const buffer1 = buffer / extent;
+        const width = ((extent - 1) / extent);
+
+        const lngMin = tile2lng(this.x - buffer1, this.z);
+        const lngMax = tile2lng(this.x + width + buffer1, this.z);
+        const latMax = tile2lat(this.y - buffer1, this.z);
+        const latMin = tile2lat(this.y + width + buffer1, this.z);
+
+        return new LngLatBounds([lngMin, latMin], [lngMax, latMax]);
+
+        function tile2lng(x,z) {
+            return (x/Math.pow(2,z)*360-180);
+        }
+
+        function tile2lat(y,z) {
+            var n=Math.PI-2*Math.PI*y/Math.pow(2,z);
+            return (180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n))));
+        }
     }
 }
 
