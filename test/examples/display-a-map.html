@@ -22,7 +22,7 @@
     const map = new maplibregl.Map({
         container: 'map',
         style: 'https://demotiles.maplibre.org/style.json',
-        center: [0.2, 0.2],
+        center: [0, 0],
         zoom: 1,
         maplibreLogo: true,
         fadeDuration: 0
@@ -44,7 +44,7 @@
                     id: i,
                     geometry: {
                         type: "Point",
-                        coordinates: i === 0 ? [40, 40] : [
+                        coordinates: [
                             -180 + Math.random() * 360,
                             -85 + Math.random() * 170
                         ]
@@ -78,7 +78,7 @@
         map.getSource('test').updateData({
             update: [{
                 id: 0,
-                newGeometry: {type: 'Point', coordinates: i++ % 2 ? [40, 40] : [45, 45] }
+                newGeometry: {type: 'Point', coordinates: i++ % 2 ? [95, 45] : [85, 45] }
             }]
         });
 

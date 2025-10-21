@@ -471,13 +471,13 @@ export class GeoJSONSource extends Evented implements Source {
         ];
 
         const tileId = tile.tileID.canonical;
-        const tileZ2 = Math.pow(2, tileId.z);
-        const tileBuffer = this.workerOptions.geojsonVtOptions.buffer / this.workerOptions.geojsonVtOptions.extent;
+        const {buffer, extent} = this.workerOptions.geojsonVtOptions;
+        const tileBuffer = buffer / extent;
 
-        const tileLonMin = lngFromMercatorX(tileId.x / tileZ2 - tileBuffer);
-        const tileLonMax = lngFromMercatorX((tileId.x + 1) / tileZ2 + tileBuffer);
-        const tileLatMax = latFromMercatorY(tileId.y / tileZ2 - tileBuffer);
-        const tileLatMin = latFromMercatorY((tileId.y + 1) / tileZ2 + tileBuffer);
+        const tileLonMin = tile2long(tileId.x - tileBuffer, tileId.z);
+        const tileLonMax = tile2long(tileId.x + ((extent - 1) / extent) + tileBuffer, tileId.z);
+        const tileLatMax = tile2lat(tileId.y - tileBuffer, tileId.z);
+        const tileLatMin = tile2lat(tileId.y + ((extent - 1) / extent) + tileBuffer, tileId.z);
 
         const tileBounds = new LngLatBounds([tileLonMin, tileLatMin], [tileLonMax, tileLatMax]);
 
@@ -551,3 +551,11 @@ export class GeoJSONSource extends Evented implements Source {
     }
 }
 
+function tile2long(x,z) {
+    return (x/Math.pow(2,z)*360-180);
+}
+
+function tile2lat(y,z) {
+    var n=Math.PI-2*Math.PI*y/Math.pow(2,z);
+    return (180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n))));
+}

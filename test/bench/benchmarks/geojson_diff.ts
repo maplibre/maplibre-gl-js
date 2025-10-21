@@ -31,7 +31,7 @@ export default class GeoJSONDiff extends Benchmark {
                               id,
                               geometry: {
                                   type: 'Point',
-                                  coordinates: id === 0 ? [0, 0] : [
+                                  coordinates: id === 0 ? [95, 45] : [
                                     Math.random() * 360 - 180,
                                     Math.random() * 180 - 90
                                 ],
@@ -69,7 +69,7 @@ export default class GeoJSONDiff extends Benchmark {
               id: 0,
               newGeometry: {
                     type: 'Point',
-                    coordinates: [1, 1],
+                    coordinates: [85, 45],
                 }
             }]
         });
