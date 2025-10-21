@@ -836,23 +836,14 @@ describe('GeoJSONSource.load', () => {
 });
 
 describe('GeoJSONSource._shoudReloadTile', () => {
-    function setup(tileID: OverscaledTileID, tileFeatures: Array<{id: string | number}>, diff: GeoJSONSourceDiff) {
+    function shared(tileID: OverscaledTileID, tileFeatures: Array<{id: string | number}>, diff: GeoJSONSourceDiff) {
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
-        source.workerOptions = {
-            geojsonVtOptions: {
-                extent: EXTENT,
-                buffer: 128,
-                tolerance: 3,
-                maxZoom: 14,
-                lineMetrics: false
-            }
-        } as any;
 
         const tile = new Tile(tileID, source.tileSize);
         tile.latestFeatureIndex = {
             featureIndexArray: {
                 length: tileFeatures.length,
-                get: (i: number) => ({featureIndex: i})
+                get: (featureIndex: number) => ({featureIndex})
             },
             loadVTLayers: () => ({
                 _geojsonTileLayer: {
@@ -865,7 +856,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
     }
 
     test('returns true when diff.removeAll is true', () => {
-        const result = setup(
+        const result = shared(
             new OverscaledTileID(0, 0, 0, 0, 0),
             [],
             {removeAll: true}
@@ -874,13 +865,12 @@ describe('GeoJSONSource._shoudReloadTile', () => {
     });
 
     test('returns true when tile contains a feature that is being updated', () => {
-        const result = setup(
+        const result = shared(
             new OverscaledTileID(0, 0, 0, 0, 0),
             [{id: 0}],
             {
                 update: [{
                     id: 0,
-                    addOrUpdateProperties: [],
                     newGeometry: {type: 'Point', coordinates: [0, 0]}
                 }]
             }
@@ -889,17 +879,17 @@ describe('GeoJSONSource._shoudReloadTile', () => {
     });
 
     test('returns true when tile contains a feature that is being removed', () => {
-        const result = setup(
+        const result = shared(
             new OverscaledTileID(0, 0, 0, 0, 0),
-            [{id: 2}],
-            {remove: [2]}
+            [{id: 0}],
+            {remove: [0]}
         );
         expect(result).toBe(true);
     });
 
     test('returns true when added feature intersects tile bounds', () => {
         // Point at 0,0 should intersect with tile 0/0/0 which covers the world
-        const result = setup(
+        const result = shared(
             new OverscaledTileID(0, 0, 0, 0, 0),
             [],
             {
@@ -916,13 +906,12 @@ describe('GeoJSONSource._shoudReloadTile', () => {
 
     test('returns true when updated feature new geometry intersects tile bounds', () => {
         // Feature update with new geometry at 0,0 should intersect with tile 0/0/0
-        const result = setup(
+        const result = shared(
             new OverscaledTileID(0, 0, 0, 0, 0),
             [{id: 0}],
             {
                 update: [{
                     id: 0,
-                    addOrUpdateProperties: [],
                     newGeometry: {type: 'Point', coordinates: [0, 0]}
                 }]
             }
@@ -932,7 +921,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
 
     test('returns false when diff has no changes affecting the tile', () => {
         // Feature far away from tile bounds
-        const result = setup(
+        const result = shared(
             new OverscaledTileID(10, 0, 10, 500, 500),
             [{id: 0}],
             {
@@ -948,7 +937,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
     });
 
     test('returns false when diff is empty', () => {
-        const result = setup(
+        const result = shared(
             new OverscaledTileID(0, 0, 0, 0, 0),
             [],
             {}
