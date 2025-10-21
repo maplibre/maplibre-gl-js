@@ -473,11 +473,12 @@ export class GeoJSONSource extends Evented implements Source {
         const tileId = tile.tileID.canonical;
         const {buffer, extent} = this.workerOptions.geojsonVtOptions;
         const tileBuffer = buffer / extent;
+        const tileWidth = ((extent - 1) / extent);
 
         const tileLonMin = tile2long(tileId.x - tileBuffer, tileId.z);
-        const tileLonMax = tile2long(tileId.x + ((extent - 1) / extent) + tileBuffer, tileId.z);
+        const tileLonMax = tile2long(tileId.x + tileWidth + tileBuffer, tileId.z);
         const tileLatMax = tile2lat(tileId.y - tileBuffer, tileId.z);
-        const tileLatMin = tile2lat(tileId.y + ((extent - 1) / extent) + tileBuffer, tileId.z);
+        const tileLatMin = tile2lat(tileId.y + tileWidth + tileBuffer, tileId.z);
 
         const tileBounds = new LngLatBounds([tileLonMin, tileLatMin], [tileLonMax, tileLatMax]);
 
