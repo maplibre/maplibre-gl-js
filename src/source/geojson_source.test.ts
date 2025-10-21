@@ -1,6 +1,6 @@
 import {describe, test, expect, vi} from 'vitest';
 import {Tile} from './tile';
-import {OverscaledTileID} from './tile_id';
+import {CanonicalTileID, OverscaledTileID} from './tile_id';
 import {GeoJSONSource, type GeoJSONSourceOptions} from './geojson_source';
 import {type IReadonlyTransform} from '../geo/transform_interface';
 import {EXTENT} from '../data/extent';
@@ -836,10 +836,10 @@ describe('GeoJSONSource.load', () => {
 });
 
 describe('GeoJSONSource._shoudReloadTile', () => {
-    function shared(tileID: OverscaledTileID, tileFeatures: Array<{id: string | number}>, diff: GeoJSONSourceDiff) {
+    function shared(id: CanonicalTileID, tileFeatures: Array<{id: string | number}>, diff: GeoJSONSourceDiff) {
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
 
-        const tile = new Tile(tileID, source.tileSize);
+        const tile = new Tile(new OverscaledTileID(id.z, 0, id.z, id.x, id.y), source.tileSize);
         tile.latestFeatureIndex = {
             featureIndexArray: {
                 length: tileFeatures.length,
@@ -852,12 +852,12 @@ describe('GeoJSONSource._shoudReloadTile', () => {
             })
         } as any;
 
-        return source['_shoudReloadTile'](diff)(tile);
+        return source['_getShoudReloadTile'](diff)(tile);
     }
 
     test('returns true when diff.removeAll is true', () => {
         const result = shared(
-            new OverscaledTileID(0, 0, 0, 0, 0),
+            new CanonicalTileID(0, 0, 0),
             [],
             {removeAll: true}
         );
@@ -866,7 +866,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
 
     test('returns true when tile contains a feature that is being updated', () => {
         const result = shared(
-            new OverscaledTileID(0, 0, 0, 0, 0),
+            new CanonicalTileID(0, 0, 0),
             [{id: 0}],
             {
                 update: [{
@@ -880,7 +880,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
 
     test('returns true when tile contains a feature that is being removed', () => {
         const result = shared(
-            new OverscaledTileID(0, 0, 0, 0, 0),
+            new CanonicalTileID(0, 0, 0),
             [{id: 0}],
             {remove: [0]}
         );
@@ -890,7 +890,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
     test('returns true when added feature intersects tile bounds', () => {
         // Point at 0,0 should intersect with tile 0/0/0 which covers the world
         const result = shared(
-            new OverscaledTileID(0, 0, 0, 0, 0),
+            new CanonicalTileID(0, 0, 0),
             [],
             {
                 add: [{
@@ -907,7 +907,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
     test('returns true when updated feature new geometry intersects tile bounds', () => {
         // Feature update with new geometry at 0,0 should intersect with tile 0/0/0
         const result = shared(
-            new OverscaledTileID(0, 0, 0, 0, 0),
+            new CanonicalTileID(0, 0, 0),
             [{id: 0}],
             {
                 update: [{
@@ -922,7 +922,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
     test('returns false when diff has no changes affecting the tile', () => {
         // Feature far away from tile bounds
         const result = shared(
-            new OverscaledTileID(10, 0, 10, 500, 500),
+            new CanonicalTileID(10, 500, 500),
             [{id: 0}],
             {
                 add: [{
@@ -938,10 +938,30 @@ describe('GeoJSONSource._shoudReloadTile', () => {
 
     test('returns false when diff is empty', () => {
         const result = shared(
-            new OverscaledTileID(0, 0, 0, 0, 0),
+            new CanonicalTileID(0, 0, 0),
             [],
             {}
         );
         expect(result).toBe(false);
+    });
+
+    test('handles features that span the international date line', () => {
+        const diff: GeoJSONSourceDiff = {
+            add: [{
+                type: 'Feature',
+                properties: {},
+                geometry: {
+                    type: 'LineString',
+                    coordinates: [
+                        [-185, 10],
+                        [-175, 10]
+                    ],
+                }
+            }]
+        };
+
+        expect(shared(new CanonicalTileID(5, 1, 15), [], diff)).toBe(false);
+        expect(shared(new CanonicalTileID(5, 0, 15), [], diff)).toBe(true);
+        expect(shared(new CanonicalTileID(5, 31, 15), [], diff)).toBe(true);
     });
 });
