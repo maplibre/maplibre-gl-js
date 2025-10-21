@@ -891,8 +891,8 @@ describe('GeoJSONSource._shoudReloadTile', () => {
     test('returns true when tile contains a feature that is being removed', () => {
         const result = setupReloadTileTest(
             new OverscaledTileID(0, 0, 0, 0, 0),
-            [{id: 'feature-to-remove'}],
-            {remove: ['feature-to-remove']}
+            [{id: 2}],
+            {remove: [2]}
         );
         expect(result).toBe(true);
     });
@@ -904,7 +904,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
             [],
             {
                 add: [{
-                    id: 'new-feature',
+                    id: 3,
                     type: 'Feature',
                     properties: {},
                     geometry: {type: 'Point', coordinates: [0, 0]}
@@ -918,10 +918,10 @@ describe('GeoJSONSource._shoudReloadTile', () => {
         // Feature update with new geometry at 0,0 should intersect with tile 0/0/0
         const result = setupReloadTileTest(
             new OverscaledTileID(0, 0, 0, 0, 0),
-            [{id: 'other-feature'}],
+            [{id: 4}],
             {
                 update: [{
-                    id: 'moved-feature',
+                    id: 5,
                     addOrUpdateProperties: [],
                     newGeometry: {type: 'Point', coordinates: [0, 0]}
                 }]
@@ -934,10 +934,10 @@ describe('GeoJSONSource._shoudReloadTile', () => {
         // Feature far away from tile bounds
         const result = setupReloadTileTest(
             new OverscaledTileID(10, 0, 10, 500, 500),
-            [{id: 'unrelated-feature'}],
+            [{id: 6}],
             {
                 add: [{
-                    id: 'far-feature',
+                    id: 7,
                     type: 'Feature',
                     properties: {},
                     geometry: {type: 'Point', coordinates: [-170, -80]}
