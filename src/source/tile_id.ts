@@ -1,7 +1,7 @@
 import {getTileBBox} from '@mapbox/whoots-js';
 import {EXTENT} from '../data/extent';
 import Point from '@mapbox/point-geometry';
-import {MercatorCoordinate} from '../geo/mercator_coordinate';
+import {latFromMercatorY, lngFromMercatorX, MercatorCoordinate} from '../geo/mercator_coordinate';
 import {register} from '../util/web_worker_transfer';
 import {type mat4} from 'gl-matrix';
 import {type ICanonicalTileID, type IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
@@ -77,16 +77,16 @@ export class CanonicalTileID implements ICanonicalTileID {
         const latMin = tile2lat(this.y + width + buffer1, this.z);
 
         return new LngLatBounds([lngMin, latMin], [lngMax, latMax]);
-
-        function tile2lng(x,z) {
-            return (x/Math.pow(2,z)*360-180);
-        }
-
-        function tile2lat(y,z) {
-            var n=Math.PI-2*Math.PI*y/Math.pow(2,z);
-            return (180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n))));
-        }
     }
+}
+
+function tile2lng(x,z) {
+    return lngFromMercatorX(x / Math.pow(2, z));
+}
+
+function tile2lat(y,z) {
+    const n = Math.PI - 2 * Math.PI * y / Math.pow(2, z);
+    return (180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n))));
 }
 
 /**
