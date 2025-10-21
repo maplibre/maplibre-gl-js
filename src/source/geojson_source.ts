@@ -548,4 +548,3 @@ export class GeoJSONSource extends Evented implements Source {
         return false;
     }
 }
-

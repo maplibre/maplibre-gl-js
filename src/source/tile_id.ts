@@ -69,12 +69,11 @@ export class CanonicalTileID implements ICanonicalTileID {
 
     toLngLatBounds(extent: number = EXTENT, extentBuffer: number = 0) {
         const buffer = extentBuffer / extent;
-        const width = ((extent - 1) / extent);
 
         const lngMin = lngFromMercatorX((this.x - buffer) / Math.pow(2, this.z));
-        const latMin = latFromMercatorY((this.y + width + buffer) / Math.pow(2, this.z));
+        const latMin = latFromMercatorY((this.y + 1 + buffer) / Math.pow(2, this.z));
 
-        const lngMax = lngFromMercatorX((this.x + width + buffer) / Math.pow(2, this.z));
+        const lngMax = lngFromMercatorX((this.x + 1 + buffer) / Math.pow(2, this.z));
         const latMax = latFromMercatorY((this.y - buffer) / Math.pow(2, this.z));
 
         return new LngLatBounds([lngMin, latMin], [lngMax, latMax]);
