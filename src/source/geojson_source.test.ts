@@ -836,7 +836,7 @@ describe('GeoJSONSource.load', () => {
 });
 
 describe('GeoJSONSource._shoudReloadTile', () => {
-    function setupReloadTileTest(tileID: OverscaledTileID, tileFeatures: Array<{id: string | number}>, diff: GeoJSONSourceDiff) {
+    function setup(tileID: OverscaledTileID, tileFeatures: Array<{id: string | number}>, diff: GeoJSONSourceDiff) {
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.workerOptions = {
             geojsonVtOptions: {
@@ -865,7 +865,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
     }
 
     test('returns true when diff.removeAll is true', () => {
-        const result = setupReloadTileTest(
+        const result = setup(
             new OverscaledTileID(0, 0, 0, 0, 0),
             [],
             {removeAll: true}
@@ -874,12 +874,12 @@ describe('GeoJSONSource._shoudReloadTile', () => {
     });
 
     test('returns true when tile contains a feature that is being updated', () => {
-        const result = setupReloadTileTest(
+        const result = setup(
             new OverscaledTileID(0, 0, 0, 0, 0),
-            [{id: 1}],
+            [{id: 0}],
             {
                 update: [{
-                    id: 1,
+                    id: 0,
                     addOrUpdateProperties: [],
                     newGeometry: {type: 'Point', coordinates: [0, 0]}
                 }]
@@ -889,7 +889,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
     });
 
     test('returns true when tile contains a feature that is being removed', () => {
-        const result = setupReloadTileTest(
+        const result = setup(
             new OverscaledTileID(0, 0, 0, 0, 0),
             [{id: 2}],
             {remove: [2]}
@@ -899,12 +899,12 @@ describe('GeoJSONSource._shoudReloadTile', () => {
 
     test('returns true when added feature intersects tile bounds', () => {
         // Point at 0,0 should intersect with tile 0/0/0 which covers the world
-        const result = setupReloadTileTest(
+        const result = setup(
             new OverscaledTileID(0, 0, 0, 0, 0),
             [],
             {
                 add: [{
-                    id: 3,
+                    id: 0,
                     type: 'Feature',
                     properties: {},
                     geometry: {type: 'Point', coordinates: [0, 0]}
@@ -916,12 +916,12 @@ describe('GeoJSONSource._shoudReloadTile', () => {
 
     test('returns true when updated feature new geometry intersects tile bounds', () => {
         // Feature update with new geometry at 0,0 should intersect with tile 0/0/0
-        const result = setupReloadTileTest(
+        const result = setup(
             new OverscaledTileID(0, 0, 0, 0, 0),
-            [{id: 4}],
+            [{id: 0}],
             {
                 update: [{
-                    id: 5,
+                    id: 0,
                     addOrUpdateProperties: [],
                     newGeometry: {type: 'Point', coordinates: [0, 0]}
                 }]
@@ -932,12 +932,12 @@ describe('GeoJSONSource._shoudReloadTile', () => {
 
     test('returns false when diff has no changes affecting the tile', () => {
         // Feature far away from tile bounds
-        const result = setupReloadTileTest(
+        const result = setup(
             new OverscaledTileID(10, 0, 10, 500, 500),
-            [{id: 6}],
+            [{id: 0}],
             {
                 add: [{
-                    id: 7,
+                    id: 1,
                     type: 'Feature',
                     properties: {},
                     geometry: {type: 'Point', coordinates: [-170, -80]}
@@ -948,7 +948,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
     });
 
     test('returns false when diff is empty', () => {
-        const result = setupReloadTileTest(
+        const result = setup(
             new OverscaledTileID(0, 0, 0, 0, 0),
             [],
             {}
