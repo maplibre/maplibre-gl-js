@@ -11,7 +11,6 @@
 - Contextmenu events not blocked by scrolling ([#5683](https://github.com/maplibre/maplibre-gl-js/issues/5683)
 - Mousemove events are not blocked by scrolling ([#6302](https://github.com/maplibre/maplibre-gl-js/issues/6302))
 - Dashed lines have blurry rounded caps ([#6554](https://github.com/maplibre/maplibre-gl-js/pull/6554))
-- Fix broken image link in README for example 'Animate a series of images'
 
 ## 5.9.0
 
