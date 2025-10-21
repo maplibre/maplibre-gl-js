@@ -552,7 +552,7 @@ export class SourceCache extends Evented {
                 reparseOverscaled: this._source.reparseOverscaled,
                 terrain,
                 calculateTileZoom: this._source.calculateTileZoom,
-                bypassOverscaling: this._source.type === 'vector' && this.map._overzoomingWithGeojsonVt
+                bypassOverscaling: this._source.type === 'vector' && this.map._overzoomingByClippingTiles
             });
 
             if (this._source.hasTile) {

@@ -380,7 +380,7 @@ export type MapOptions = {
      * This may change or be removed in future versions.
      * @experimental
      */
-    experimentalOverzoomingWithGeojsonVt?: boolean;
+    experimentalOverzoomingByClippingTiles?: boolean;
 };
 
 export type AddImageOptions = {
@@ -466,7 +466,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     maxCanvasSize: [4096, 4096],
     cancelPendingTileRequestsWhileZooming: true,
     centerClampedToGround: true,
-    experimentalOverzoomingWithGeojsonVt: isSafari(globalThis) ? true : false
+    experimentalOverzoomingByClippingTiles: isSafari(globalThis) ? true : false
 };
 
 /**
@@ -551,7 +551,7 @@ export class Map extends Camera {
     _maxCanvasSize: [number, number];
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
     /** @internal */
-    _overzoomingWithGeojsonVt: boolean;
+    _overzoomingByClippingTiles: boolean;
     /**
      * @internal
      * image queue throttling handle. To be used later when clean up
@@ -692,7 +692,7 @@ export class Map extends Camera {
         this._clickTolerance = resolvedOptions.clickTolerance;
         this._overridePixelRatio = resolvedOptions.pixelRatio;
         this._maxCanvasSize = resolvedOptions.maxCanvasSize;
-        this._overzoomingWithGeojsonVt = resolvedOptions.experimentalOverzoomingWithGeojsonVt === true;
+        this._overzoomingByClippingTiles = resolvedOptions.experimentalOverzoomingByClippingTiles === true;
         this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
         this.transformConstrain = resolvedOptions.transformConstrain;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
