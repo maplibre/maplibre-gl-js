@@ -286,6 +286,17 @@ export class LngLatBounds {
         return containsLatitude && containsLongitude;
     }
 
+    intersects(other: LngLatBoundsLike): boolean {
+        other = LngLatBounds.convert(other);
+
+        return !(
+            other.getWest() > this.getEast() ||
+            other.getEast() < this.getWest() ||
+            other.getNorth() < this.getSouth() ||
+            other.getSouth() > this.getNorth()
+        );
+    }
+
     /**
      * Converts an array to a `LngLatBounds` object.
      *
