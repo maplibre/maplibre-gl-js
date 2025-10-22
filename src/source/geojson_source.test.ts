@@ -309,9 +309,7 @@ describe('GeoJSONSource.update', () => {
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
                 spy(message);
-                return new Promise((resolve) => {
-                    setTimeout(() => resolve({}), 0);
-                });
+                return Promise.resolve({});
             }
         });
         const source = new GeoJSONSource('id', {
