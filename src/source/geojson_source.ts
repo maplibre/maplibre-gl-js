@@ -309,12 +309,18 @@ export class GeoJSONSource extends Evented implements Source {
      */
     setClusterOptions(options: SetClusterOptions): this {
         this.workerOptions.cluster = options.cluster;
-        if (options) {
-            if (options.clusterRadius !== undefined) this.workerOptions.superclusterOptions.radius = this._pixelsToTileUnits(options.clusterRadius);
-            if (options.clusterMaxZoom !== undefined) {
-                this.workerOptions.superclusterOptions.maxZoom = this._getClusterMaxZoom(options.clusterMaxZoom);
-            }
+        if (options.clusterRadius !== undefined) {
+            this.workerOptions.superclusterOptions.radius = this._pixelsToTileUnits(options.clusterRadius);
         }
+        if (options.clusterMaxZoom !== undefined) {
+            this.workerOptions.superclusterOptions.maxZoom = this._getClusterMaxZoom(options.clusterMaxZoom);
+        }
+
+        // If no pending updates, create an empty diff to trigger a recluster
+        if (this._pendingWorkerUpdate.data === undefined && this._pendingWorkerUpdate.diff === undefined) {
+            this._pendingWorkerUpdate.diff = {};
+        }
+
         this._updateWorkerData();
         return this;
     }

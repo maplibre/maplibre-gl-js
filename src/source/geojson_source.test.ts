@@ -303,17 +303,15 @@ describe('GeoJSONSource.update', () => {
         expect(spy).toHaveBeenCalled();
     });
 
-    test('modifying cluster properties after adding a source', () => {
+    test('modifying cluster properties after adding a source', async () => {
         // test setCluster function on GeoJSONSource
         const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
-                expect(message.type).toBe(MessageType.loadData);
-                expect(message.data.cluster).toBe(true);
-                expect(message.data.superclusterOptions.radius).toBe(80 * EXTENT / source.tileSize);
-                expect(message.data.superclusterOptions.maxZoom).toBe(16);
-                spy();
-                return Promise.resolve({});
+                spy(message);
+                return new Promise((resolve) => {
+                    setTimeout(() => resolve({}), 0);
+                });
             }
         });
         const source = new GeoJSONSource('id', {
@@ -325,8 +323,20 @@ describe('GeoJSONSource.update', () => {
             clusterMinPoints: 3,
             generateId: true
         }, mockDispatcher, undefined);
+
+        // Wait for initial data to be loaded
+        source.load();
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+        spy.mockClear();
+
         source.setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
-        expect(spy).toHaveBeenCalled();
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
+        expect(spy.mock.calls[0][0].data.cluster).toBe(true);
+        expect(spy.mock.calls[0][0].data.superclusterOptions.radius).toBe(80 * EXTENT / source.tileSize);
+        expect(spy.mock.calls[0][0].data.superclusterOptions.maxZoom).toBe(16);
+        expect(spy.mock.calls[0][0].data.dataDiff).toEqual({});
     });
 
     test('forwards Supercluster options with worker request, ignore max zoom of source', () => {
