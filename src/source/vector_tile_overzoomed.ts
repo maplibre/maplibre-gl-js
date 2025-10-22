@@ -57,8 +57,8 @@ export class VectorTileOverzoomed implements VectorTile {
 /**
  * Encodes the virtual tile into binary vector tile form.
  * This is a convenience that allows `FeatureIndex` to operate the same way across `VectorTileSource` and `GeoJSONSource` data.
- * @param virtualVectorTile - a VectorTile created from GeoJSON data using geojson-vt
- * @returns
+ * @param virtualVectorTile - a syntetically created vector tile, this tile should have the relevant layer and features already added to it.
+ * @returns - the encoded vector tile along with the original virtual tile binary data.
  */
 export function toVirtualVectorTile(virtualVectorTile: VectorTile): LoadVectorTileResult {
     let pbf: Uint8Array = fromVectorTileJs(virtualVectorTile);

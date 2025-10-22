@@ -371,10 +371,10 @@ export type MapOptions = {
      */
     centerClampedToGround?: boolean;
     /**
-     * Allows overzooming using geojson-vt for vector tile sources.
-     * When set to `true` this seems to have better performance at high zoom levels and prevents Safari from crashing.
-     * The default is `false` for most cases as it changes query render features results in high zoom levels due to tile splitting.
-     * If `true`, tiles over the source's maxzoom will be split using geojson-vt into subtiles (partitioning).
+     * Allows overzooming using by splitting vector tiles after max zoom.
+     * When set to `true` this has better performance at high zoom levels and prevents Safari from crashing.
+     * The default is `false` for most cases as it changes rendering of polygon features at high zoom levels due to tile splitting.
+     * If `true`, tiles over the source's maxzoom will be split using into subtiles (partitioning).
      * if `false`, tiles will be overzoomed using scaling.
      * @defaultValue `true` for Safari to prevent crashes and `false` for other browsers
      * This may change or be removed in future versions.
