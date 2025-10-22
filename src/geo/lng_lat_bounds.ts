@@ -313,22 +313,26 @@ export class LngLatBounds {
         const thisWraps = thisWest > thisEast;
         const otherWraps = otherWest > otherEast;
 
+        // Both wrap: they always intersect
         if (thisWraps && otherWraps) {
-            // Both wrap: they always intersect
             return true;
-        } else if (thisWraps) {
-            // Only this wraps: intersects if other is outside the gap
+        }
+
+        // Only this wraps: intersects if other is outside the gap
+        if (thisWraps) {
             return otherEast >= thisWest || otherWest <= thisEast;
-        } else if (otherWraps) {
+        }
+
+        if (otherWraps) {
             // Only other wraps: intersects if this is outside the gap
             return thisEast >= otherWest || thisWest <= otherEast;
-        } else {
-            // Neither wraps: standard intersection check
-            return !(
-                otherWest > thisEast ||
-                otherEast < thisWest
-            );
         }
+
+        // Neither wraps: standard intersection check
+        return !(
+            otherWest > thisEast ||
+            otherEast < thisWest
+        );
     }
 
     /**
