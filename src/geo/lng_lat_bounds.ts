@@ -39,7 +39,6 @@ export type LngLatBoundsLike = LngLatBounds | [LngLatLike, LngLatLike] | [number
  * let llb = new LngLatBounds(sw, ne);
  * ```
  */
-
 export class LngLatBounds {
     _ne: LngLat;
     _sw: LngLat;

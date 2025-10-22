@@ -473,11 +473,11 @@ export class GeoJSONSource extends Evented implements Source {
                 }
             }
 
+            // Update all tiles that WILL NOW contain an updated feature.
             const tileBounds = tile.tileID.canonical.toLngLatBounds(
                 this.workerOptions.geojsonVtOptions.extent,
                 this.workerOptions.geojsonVtOptions.buffer
             );
-
             for (const bounds of boundsArray) {
                 if (tileBounds.intersects(bounds)) {
                     return true;
