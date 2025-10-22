@@ -199,6 +199,10 @@ export class GeoJSONSource extends Evented implements Source {
         }
     }
 
+    private _hasPendingWorkerUpdate(): boolean {
+        return this._pendingWorkerUpdate.data !== undefined || this._pendingWorkerUpdate.diff !== undefined;
+    }
+
     private _pixelsToTileUnits(pixelValue: number): number {
         return pixelValue * (EXTENT / this.tileSize);
     }
@@ -317,7 +321,7 @@ export class GeoJSONSource extends Evented implements Source {
         }
 
         // If no pending updates, create an empty diff to trigger a recluster
-        if (this._pendingWorkerUpdate.data === undefined && this._pendingWorkerUpdate.diff === undefined) {
+        if (!this._hasPendingWorkerUpdate()) {
             this._pendingWorkerUpdate.diff = {};
         }
 
@@ -445,14 +449,14 @@ export class GeoJSONSource extends Evented implements Source {
             this.fire(new ErrorEvent(err));
         } finally {
             // If there is more pending data, update worker again.
-            if (this._pendingWorkerUpdate.data || this._pendingWorkerUpdate.diff) {
+            if (this._hasPendingWorkerUpdate()) {
                 this._updateWorkerData();
             }
         }
     }
 
     loaded(): boolean {
-        return !this._isUpdatingWorker && this._pendingWorkerUpdate.data === undefined && this._pendingWorkerUpdate.diff === undefined;
+        return !this._isUpdatingWorker && !this._hasPendingWorkerUpdate();
     }
 
     async loadTile(tile: Tile): Promise<void> {
