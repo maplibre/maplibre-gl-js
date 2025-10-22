@@ -5,7 +5,7 @@ import {WorkerTile} from './worker_tile';
 import {BoundedLRUCache} from './tile_cache';
 import {extend} from '../util/util';
 import {RequestPerformance} from '../util/performance';
-import {OverzoomedVectorTile, sliceTileLayer, toVirtualVectorTile} from './overzoomed-vector-tile';
+import {VectorTileOverzoomed, sliceVectorTileLayer, toVirtualVectorTile} from './vector_tile_overzoomed';
 import type {
     WorkerSource,
     WorkerTileParameters,
@@ -173,7 +173,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             return cachedOverzoomTile;
         }
 
-        const overzoomedVectorTile = new OverzoomedVectorTile();
+        const overzoomedVectorTile = new VectorTileOverzoomed();
         const layerFamilies: Record<string, StyleLayer[][]> = this.layerIndex.familiesBySource[source];
 
         for (const sourceLayerId in layerFamilies) {
@@ -182,7 +182,7 @@ export class VectorTileWorkerSource implements WorkerSource {
                 continue;
             }
 
-            const slicedTileLayer = sliceTileLayer(sourceLayer, maxZoomTileID, tileID.canonical);
+            const slicedTileLayer = sliceVectorTileLayer(sourceLayer, maxZoomTileID, tileID.canonical);
             if (slicedTileLayer.length > 0) {
                 overzoomedVectorTile.addLayer(slicedTileLayer);
             }

@@ -6,7 +6,7 @@ import {clipGeometry} from '../symbol/clip_line';
 import type {LoadVectorTileResult} from './vector_tile_worker_source';
 import type {CanonicalTileID} from './tile_id';
 
-class OverzoomedFeatureWrapper extends VectorTileFeature {
+class VectorTileFeatureOverzoomed extends VectorTileFeature {
     pointsArray: Point[][];
 
     constructor(type: 0 | 1 | 2 | 3, geometry: Point[][], properties: any, id: number, extent: number) {
@@ -26,14 +26,14 @@ class OverzoomedFeatureWrapper extends VectorTileFeature {
     }
 }
 
-class OverzoomedTileLayer extends VectorTileLayer {
-    private _myFeatures: OverzoomedFeatureWrapper[];
+class VectorTileLayerOverzoomed extends VectorTileLayer {
+    private _myFeatures: VectorTileFeatureOverzoomed[];
     name: string;
     extent: number;
     version: number = 2;
     length: number;
 
-    constructor(features: OverzoomedFeatureWrapper[], layerName: string, extent: number) {
+    constructor(features: VectorTileFeatureOverzoomed[], layerName: string, extent: number) {
         super(new Protobuf());
         this._myFeatures = features;
         this.name = layerName;
@@ -46,10 +46,10 @@ class OverzoomedTileLayer extends VectorTileLayer {
     }
 }
 
-export class OverzoomedVectorTile implements VectorTile {
+export class VectorTileOverzoomed implements VectorTile {
     layers: Record<string, VectorTileLayer> = {};
 
-    addLayer(layer: OverzoomedTileLayer) {
+    addLayer(layer: VectorTileLayerOverzoomed) {
         this.layers[layer.name] = layer;
     }
 }
@@ -78,7 +78,7 @@ export function toVirtualVectorTile(virtualVectorTile: VectorTile): LoadVectorTi
  * @param targetTileID - the target tile ID
  * @returns - the overzoomed tile layer
  */
-export function sliceTileLayer(sourceLayer: VectorTileLayer, maxZoomTileID: CanonicalTileID, targetTileID: CanonicalTileID): OverzoomedTileLayer {
+export function sliceVectorTileLayer(sourceLayer: VectorTileLayer, maxZoomTileID: CanonicalTileID, targetTileID: CanonicalTileID): VectorTileLayerOverzoomed {
     const {extent} = sourceLayer;
     const dz = targetTileID.z - maxZoomTileID.z;
     const scale = Math.pow(2, dz);
@@ -88,7 +88,7 @@ export function sliceTileLayer(sourceLayer: VectorTileLayer, maxZoomTileID: Cano
     const offsetX = (targetTileID.x - maxZoomTileID.x * scale) * extent;
     const offsetY = (targetTileID.y - maxZoomTileID.y * scale) * extent;
 
-    const featureWrappers: OverzoomedFeatureWrapper[] = [];
+    const featureWrappers: VectorTileFeatureOverzoomed[] = [];
     for (let index = 0; index < sourceLayer.length; index++) {
         const feature: VectorTileFeature = sourceLayer.feature(index);
         let geometry = feature.loadGeometry();
@@ -107,7 +107,7 @@ export function sliceTileLayer(sourceLayer: VectorTileLayer, maxZoomTileID: Cano
             continue;
         }
         
-        featureWrappers.push(new OverzoomedFeatureWrapper(
+        featureWrappers.push(new VectorTileFeatureOverzoomed(
             feature.type,
             geometry,
             feature.properties,
@@ -115,5 +115,5 @@ export function sliceTileLayer(sourceLayer: VectorTileLayer, maxZoomTileID: Cano
             extent
         ));
     }
-    return new OverzoomedTileLayer(featureWrappers, sourceLayer.name, extent);
+    return new VectorTileLayerOverzoomed(featureWrappers, sourceLayer.name, extent);
 }
