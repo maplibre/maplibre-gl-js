@@ -4,12 +4,16 @@
   const EXTENT = 8192;
   const TILE_SIZE = 256;
   const DEM_MAX_ZOOM = 16; // native DEM max zoom
+  const DEM_CACHE_MAX_AGE_MS = 2 * 60 * 1000; // drop DEM data after inactivity
+  const TEXTURE_UNUSED_FRAME_LIMIT = 240; // frames before GPU textures are released
   
   // Global state variables
   let currentMode = ""; // "normal", "avalanche", "slope", "aspect", "snow", or "shadow"
   const meshCache = new Map();
+  const terrainDEMCache = new Map(); // key -> {dem, tileID, updated, lastUsed}
   let snowAltitude = 3000;
   let snowMaxSlope = 55; // in degrees
+  let mapInstance = null;
   
   // Update UI button states and slider visibility based on current mode
   function updateButtons() {
@@ -48,8 +52,8 @@
   });
   
   // Minimal getTileMesh: create or return cached mesh for a tile
-  function getTileMesh(gl, tile) {
-    const key = `mesh_${tile.tileID.key}`;
+  function getTileMesh(gl, tileID) {
+    const key = `mesh_${tileID.key}`;
     if (meshCache.has(key)) return meshCache.get(key);
     const meshBuffers = maplibregl.createTileMesh({ granularity: 128, generateBorders: false, extent: EXTENT }, '16bit');
     const vertices = new Int16Array(meshBuffers.vertices);
@@ -65,6 +69,31 @@
     meshCache.set(key, mesh);
     return mesh;
   }
+
+  function makeTileCacheKey(tileID) {
+    const canonical = tileID.canonical;
+    return `${tileID.overscaledZ}:${tileID.wrap}:${canonical.z}:${canonical.x}:${canonical.y}`;
+  }
+
+  function getNeighborKey(tileID, dx, dy) {
+    const canonical = tileID.canonical;
+    const dim = Math.pow(2, canonical.z);
+    let nx = canonical.x + dx;
+    let ny = canonical.y + dy;
+    let wrap = tileID.wrap;
+
+    if (ny < 0 || ny >= dim) return null;
+
+    if (nx < 0) {
+      nx += dim;
+      wrap -= 1;
+    } else if (nx >= dim) {
+      nx -= dim;
+      wrap += 1;
+    }
+
+    return `${tileID.overscaledZ}:${wrap}:${canonical.z}:${nx}:${ny}`;
+  }
   
   // Define the custom terrain layer.
   const terrainNormalLayer = {
@@ -73,11 +102,28 @@
     renderingMode: '3d',
     shaderMap: new Map(),
     frameCount: 0,
+    textureCache: new Map(),
     
-    onAdd(mapInstance, gl) { 
-      this.map = mapInstance; 
+    onAdd(mapInstance, gl) {
+      this.map = mapInstance;
       this.gl = gl;
       this.frameCount = 0;
+      this.textureCache = new Map();
+
+      for (const key of terrainDEMCache.keys()) {
+        this.refreshTextureForKey(key);
+      }
+    },
+
+    onRemove() {
+      if (this.gl) {
+        for (const entry of this.textureCache.values()) {
+          this.gl.deleteTexture(entry.texture);
+        }
+      }
+      this.textureCache.clear();
+      this.gl = null;
+      this.map = null;
     },
   
     getShader(gl, shaderDescription) {
@@ -131,9 +177,7 @@
         'u_terrain_unpack',
         'u_terrain_exaggeration',
         'u_zoom',
-        'u_latrange',
-        'u_lightDir',
-        'u_shadowsEnabled'
+        'u_latrange'
       ];
       if (currentMode === "snow") {
         uniforms.push('u_snow_altitude', 'u_snow_maxSlope');
@@ -149,154 +193,240 @@
       return result;
     },
   
-    renderTiles(gl, shader, renderableTiles) {
-      const bindTexture = (texture, unit, uniformName) => {
-        gl.activeTexture(gl.TEXTURE0 + unit);
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.uniform1i(shader.locations[uniformName], unit);
+    createTextureFromDEM(demEntry) {
+      if (!this.gl || !demEntry) return null;
+      const gl = this.gl;
+      const texture = gl.createTexture();
+      if (!texture) return null;
+      const pixels = demEntry.dem.getPixels();
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, pixels.width, pixels.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels.data);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      return {
+        texture,
+        dim: demEntry.dem.dim,
+        unpack: demEntry.dem.getUnpackVector(),
+        tileID: demEntry.tileID,
+        width: pixels.width,
+        height: pixels.height,
+        lastUsedFrame: this.frameCount
       };
-  
-      // Keep track of successfully rendered tiles for debugging
+    },
+
+    refreshTextureForKey(key) {
+      if (!this.gl || !key) return;
+      const demEntry = terrainDEMCache.get(key);
+      if (!demEntry) return;
+
+      let textureEntry = this.textureCache.get(key);
+      const gl = this.gl;
+      const pixels = demEntry.dem.getPixels();
+
+      if (!textureEntry) {
+        textureEntry = this.createTextureFromDEM(demEntry);
+        if (textureEntry) {
+          this.textureCache.set(key, textureEntry);
+        }
+      } else {
+        gl.bindTexture(gl.TEXTURE_2D, textureEntry.texture);
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, pixels.width, pixels.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels.data);
+        textureEntry.dim = demEntry.dem.dim;
+        textureEntry.unpack = demEntry.dem.getUnpackVector();
+        textureEntry.tileID = demEntry.tileID;
+        textureEntry.width = pixels.width;
+        textureEntry.height = pixels.height;
+      }
+    },
+
+    ensureTextureForKey(key) {
+      if (!key) return null;
+      let textureEntry = this.textureCache.get(key);
+      if (!textureEntry) {
+        this.refreshTextureForKey(key);
+        textureEntry = this.textureCache.get(key);
+      }
+      if (textureEntry) {
+        textureEntry.lastUsedFrame = this.frameCount;
+        const demEntry = terrainDEMCache.get(key);
+        if (demEntry) demEntry.lastUsed = Date.now();
+      }
+      return textureEntry;
+    },
+
+    dropTextureForKey(key) {
+      if (!key) return;
+      const entry = this.textureCache.get(key);
+      if (entry && this.gl) {
+        this.gl.deleteTexture(entry.texture);
+      }
+      this.textureCache.delete(key);
+    },
+
+    pruneCaches() {
+      if (!this.gl) return;
+      const cutoff = this.frameCount - TEXTURE_UNUSED_FRAME_LIMIT;
+      for (const [key, entry] of this.textureCache.entries()) {
+        if (entry.lastUsedFrame < cutoff) {
+          this.gl.deleteTexture(entry.texture);
+          this.textureCache.delete(key);
+        }
+      }
+
+      const now = Date.now();
+      for (const [key, entry] of terrainDEMCache.entries()) {
+        const lastUsed = entry.lastUsed || entry.updated;
+        if (now - lastUsed > DEM_CACHE_MAX_AGE_MS) {
+          terrainDEMCache.delete(key);
+          this.dropTextureForKey(key);
+        }
+      }
+    },
+
+    renderTiles(gl, shader, tileIDs, options) {
+      const bindTexture = (textureEntry, unit, uniformName) => {
+        const location = shader.locations[uniformName];
+        if (!textureEntry || location == null) return;
+        gl.activeTexture(gl.TEXTURE0 + unit);
+        gl.bindTexture(gl.TEXTURE_2D, textureEntry.texture);
+        gl.uniform1i(location, unit);
+      };
+
       let renderedCount = 0;
       let skippedCount = 0;
-      
-      for (const tile of renderableTiles) {
-        // Get the source tile to ensure we have the right tile for this position
-        const sourceTile = this.map.terrain.sourceCache.getSourceTile(tile.tileID, true);
-        
-        // Skip if no source tile or if it's a different tile (overscaled)
-        if (!sourceTile || sourceTile.tileID.key !== tile.tileID.key) {
-          if (DEBUG) console.log(`Skipping tile ${tile.tileID.key}: source tile mismatch or overscaled`);
+
+      for (const tileID of tileIDs) {
+        const key = makeTileCacheKey(tileID);
+        const centerTexture = this.ensureTextureForKey(key);
+        if (!centerTexture) {
+          if (DEBUG) console.log(`Skipping tile ${key}: no DEM texture available`);
           skippedCount++;
           continue;
         }
-        
-        // Get terrain data for the exact tile
-        const terrainData = this.map.terrain.getTerrainData(tile.tileID);
-        
-        // Skip if no terrain data or texture
-        if (!terrainData || !terrainData.texture) {
-          if (DEBUG) console.log(`Skipping tile ${tile.tileID.key}: no terrain data or texture`);
-          skippedCount++;
-          continue;
-        }
-        
-        // Skip fallback tiles as they might not align properly
-        if (terrainData.fallback) {
-          if (DEBUG) console.log(`Skipping tile ${tile.tileID.key}: fallback tile`);
-          skippedCount++;
-          continue;
-        }
-        
-        const mesh = getTileMesh(gl, tile);
+
+        const mesh = getTileMesh(gl, tileID);
         if (!mesh) continue;
-        
+
         gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vbo);
         gl.enableVertexAttribArray(shader.attributes.a_pos);
         gl.vertexAttribPointer(shader.attributes.a_pos, 2, gl.SHORT, false, 4, 0);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.ibo);
-        
-        // Only bind texture if it exists
-        if (terrainData.texture) {
-          bindTexture(terrainData.texture, 0, 'u_image');
-        }
-        
+
+        const neighborTextures = {
+          u_image_left: this.ensureTextureForKey(getNeighborKey(tileID, -1, 0)) || centerTexture,
+          u_image_right: this.ensureTextureForKey(getNeighborKey(tileID, 1, 0)) || centerTexture,
+          u_image_top: this.ensureTextureForKey(getNeighborKey(tileID, 0, -1)) || centerTexture,
+          u_image_bottom: this.ensureTextureForKey(getNeighborKey(tileID, 0, 1)) || centerTexture,
+          u_image_topLeft: this.ensureTextureForKey(getNeighborKey(tileID, -1, -1)) || centerTexture,
+          u_image_topRight: this.ensureTextureForKey(getNeighborKey(tileID, 1, -1)) || centerTexture,
+          u_image_bottomLeft: this.ensureTextureForKey(getNeighborKey(tileID, -1, 1)) || centerTexture,
+          u_image_bottomRight: this.ensureTextureForKey(getNeighborKey(tileID, 1, 1)) || centerTexture
+        };
+
+        bindTexture(centerTexture, 0, 'u_image');
+        bindTexture(neighborTextures.u_image_left, 1, 'u_image_left');
+        bindTexture(neighborTextures.u_image_right, 2, 'u_image_right');
+        bindTexture(neighborTextures.u_image_top, 3, 'u_image_top');
+        bindTexture(neighborTextures.u_image_bottom, 4, 'u_image_bottom');
+        bindTexture(neighborTextures.u_image_topLeft, 5, 'u_image_topLeft');
+        bindTexture(neighborTextures.u_image_topRight, 6, 'u_image_topRight');
+        bindTexture(neighborTextures.u_image_bottomLeft, 7, 'u_image_bottomLeft');
+        bindTexture(neighborTextures.u_image_bottomRight, 8, 'u_image_bottomRight');
+
         const projectionData = this.map.transform.getProjectionData({
-          overscaledTileID: tile.tileID,
+          overscaledTileID: tileID,
           applyGlobeMatrix: true
         });
-        
-        gl.uniform4f(shader.locations.u_projection_tile_mercator_coords,
-          ...projectionData.tileMercatorCoords);
-        gl.uniform4f(shader.locations.u_projection_clipping_plane, ...projectionData.clippingPlane);
-        gl.uniform1f(shader.locations.u_projection_transition, projectionData.projectionTransition);
-        gl.uniformMatrix4fv(shader.locations.u_projection_matrix, false, projectionData.mainMatrix);
-        gl.uniformMatrix4fv(shader.locations.u_projection_fallback_matrix, false, projectionData.fallbackMatrix);
-        gl.uniform2f(shader.locations.u_dimension, TILE_SIZE, TILE_SIZE);
-        gl.uniform1i(shader.locations.u_original_vertex_count, mesh.originalVertexCount);
-        gl.uniform1f(shader.locations.u_terrain_exaggeration, 1.0);
-        const rgbaFactors = {
-            r: 65536.0 * 0.1,
-            g: 256.0 * 0.1,
-            b: 0.1,
-            base: 10000.0
-        };
-        gl.uniform4f(
-            shader.locations.u_terrain_unpack,
-            rgbaFactors.r,
-            rgbaFactors.g,
-            rgbaFactors.b,
-            rgbaFactors.base
-        );
-        gl.uniform2f(shader.locations.u_latrange, 47.0, 45.0);
-        gl.uniform1f(shader.locations.u_zoom, tile.tileID.canonical.z);
-        
+
+        if (shader.locations.u_projection_tile_mercator_coords) {
+          gl.uniform4f(shader.locations.u_projection_tile_mercator_coords, ...projectionData.tileMercatorCoords);
+        }
+        if (shader.locations.u_projection_clipping_plane) {
+          gl.uniform4f(shader.locations.u_projection_clipping_plane, ...projectionData.clippingPlane);
+        }
+        if (shader.locations.u_projection_transition) {
+          gl.uniform1f(shader.locations.u_projection_transition, projectionData.projectionTransition);
+        }
+        if (shader.locations.u_projection_matrix) {
+          gl.uniformMatrix4fv(shader.locations.u_projection_matrix, false, projectionData.mainMatrix);
+        }
+        if (shader.locations.u_projection_fallback_matrix) {
+          gl.uniformMatrix4fv(shader.locations.u_projection_fallback_matrix, false, projectionData.fallbackMatrix);
+        }
+        if (shader.locations.u_dimension) {
+          gl.uniform2f(shader.locations.u_dimension, centerTexture.dim, centerTexture.dim);
+        }
+        if (shader.locations.u_original_vertex_count) {
+          gl.uniform1i(shader.locations.u_original_vertex_count, mesh.originalVertexCount);
+        }
+        if (shader.locations.u_terrain_exaggeration) {
+          gl.uniform1f(shader.locations.u_terrain_exaggeration, 1.0);
+        }
+        if (shader.locations.u_terrain_unpack) {
+          const unpack = centerTexture.unpack;
+          gl.uniform4f(shader.locations.u_terrain_unpack, unpack[0], unpack[1], unpack[2], unpack[3]);
+        }
+        if (shader.locations.u_latrange) {
+          gl.uniform2f(shader.locations.u_latrange, 47.0, 45.0);
+        }
+        if (shader.locations.u_zoom) {
+          gl.uniform1f(shader.locations.u_zoom, tileID.canonical.z);
+        }
+
+        if (shader.locations.u_matrix) {
+          gl.uniformMatrix4fv(shader.locations.u_matrix, false, options.modelViewProjectionMatrix);
+        }
+
         if (currentMode === "snow" && shader.locations.u_snow_altitude) {
           gl.uniform1f(shader.locations.u_snow_altitude, snowAltitude);
           gl.uniform1f(shader.locations.u_snow_maxSlope, snowMaxSlope);
         }
         if (currentMode === "shadow" && shader.locations.u_shadowHorizontalScale) {
-          const tileZoom = tile.tileID.canonical.z;
+          const tileZoom = tileID.canonical.z;
           const maxZoom = 16.0;
           const adaptiveStep = parseFloat(document.getElementById('shadowStepSlider').value) * Math.pow(2, (maxZoom - tileZoom));
           gl.uniform1f(shader.locations.u_shadowStepSize, adaptiveStep);
           gl.uniform1f(shader.locations.u_shadowHorizontalScale, parseFloat(document.getElementById('shadowScaleSlider').value));
           gl.uniform1f(shader.locations.u_shadowLengthFactor, parseFloat(document.getElementById('shadowLengthSlider').value));
         }
-        
+
         gl.drawElements(gl.TRIANGLES, mesh.indexCount, gl.UNSIGNED_SHORT, 0);
         renderedCount++;
       }
-      
+
       if (DEBUG && (renderedCount > 0 || skippedCount > 0)) {
         console.log(`Rendered ${renderedCount} tiles, skipped ${skippedCount} tiles`);
       }
     },
-  
-    render(gl, matrix) {
-      // Increment frame counter
+
+    render(gl, options) {
       this.frameCount++;
-      
-      // Skip the first few frames to ensure everything is initialized
-      if (this.frameCount < 3) {
-        this.map.triggerRepaint();
-        return;
-      }
-      
-      // Wait for tiles to stabilize after rapid movement
-      if (this.map.terrain.sourceCache.anyTilesAfterTime(Date.now() - 100)) {
-        this.map.triggerRepaint();
-        return;
-      }
-      
-      const shader = this.getShader(gl, matrix.shaderData);
+
+      const shader = this.getShader(gl, options.shaderData);
       if (!shader) return;
       gl.useProgram(shader.program);
-      
-      const sourceCache = this.map.terrain.sourceCache;
-      const renderableTiles = sourceCache.getRenderableTiles();
-      
-      // Don't render if we have no tiles
-      if (renderableTiles.length === 0) {
-        if (DEBUG) console.log("No renderable tiles available");
+
+      const tileIDs = this.map.coveringTiles({ tileSize: TILE_SIZE, maxzoom: DEM_MAX_ZOOM });
+      if (tileIDs.length === 0) {
+        if (DEBUG) console.log("No covering tiles available");
         this.map.triggerRepaint();
         return;
       }
-      
+
       gl.enable(gl.CULL_FACE);
       gl.cullFace(gl.BACK);
       gl.enable(gl.DEPTH_TEST);
-      
+
       if (currentMode === "snow" || currentMode === "slope") {
         gl.depthFunc(gl.LESS);
         gl.colorMask(false, false, false, false);
         gl.clear(gl.DEPTH_BUFFER_BIT);
-        this.renderTiles(gl, shader, renderableTiles);
-        
+        this.renderTiles(gl, shader, tileIDs, options);
+
         gl.colorMask(true, true, true, true);
         gl.depthFunc(gl.LEQUAL);
         gl.enable(gl.BLEND);
@@ -306,7 +436,7 @@
           gl.ONE,
           gl.ONE_MINUS_SRC_ALPHA
         );
-        this.renderTiles(gl, shader, renderableTiles);
+        this.renderTiles(gl, shader, tileIDs, options);
       } else {
         gl.depthFunc(gl.LEQUAL);
         gl.clear(gl.DEPTH_BUFFER_BIT);
@@ -316,13 +446,36 @@
           gl.enable(gl.BLEND);
           gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
         }
-        this.renderTiles(gl, shader, renderableTiles);
+        this.renderTiles(gl, shader, tileIDs, options);
       }
-      
+
       gl.disable(gl.BLEND);
+      this.pruneCaches();
     }
   };
-  
+
+  function handleTerrainSourceData(event) {
+    if (!event || event.sourceId !== 'terrain' || !event.tile) return;
+    const tile = event.tile;
+    const key = makeTileCacheKey(tile.tileID);
+
+    if (tile.state === 'loaded' && tile.dem) {
+      terrainDEMCache.set(key, {
+        dem: tile.dem,
+        tileID: tile.tileID,
+        updated: Date.now(),
+        lastUsed: Date.now()
+      });
+      terrainNormalLayer.refreshTextureForKey(key);
+      if (mapInstance && mapInstance.getLayer && mapInstance.getLayer('terrain-normal')) {
+        mapInstance.triggerRepaint();
+      }
+    } else if (tile.state === 'unloaded') {
+      terrainDEMCache.delete(key);
+      terrainNormalLayer.dropTextureForKey(key);
+    }
+  }
+
   // Map setup and initialization.
   const map = new maplibregl.Map({
     container: 'map',
@@ -360,13 +513,13 @@
     minZoom: 2,
     fadeDuration: 500
   });
-  
+  mapInstance = map;
+
+  map.on('sourcedata', handleTerrainSourceData);
+
   map.on('load', () => {
     console.log("Map loaded");
     map.setTerrain({ source: 'terrain', exaggeration: 1.0 });
-    if (map.terrain && map.terrain.sourceCache) {
-      map.terrain.sourceCache.deltaZoom = 0;
-    }
     console.log("Terrain layer initialized");
   });
   
@@ -465,5 +618,8 @@
     map.triggerRepaint();
   });
   
-  window.addEventListener('unload', () => { meshCache.clear(); });
+  window.addEventListener('unload', () => {
+    meshCache.clear();
+    terrainDEMCache.clear();
+  });
 })();
