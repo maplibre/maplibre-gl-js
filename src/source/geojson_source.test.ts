@@ -852,7 +852,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
             })
         } as any;
 
-        return (source['_getShoudReloadTile'](diff) || (() => true))(tile);
+        return (source._getShouldReloadTile(diff) || (() => true))(tile);
     }
 
     test('returns true when diff.removeAll is true', () => {
