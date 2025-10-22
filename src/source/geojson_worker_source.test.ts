@@ -305,6 +305,19 @@ describe('loadData', () => {
             }]
         }} as LoadGeoJSONParameters)).resolves.toBeDefined();
     });
+
+    test('loadData should reject as first call with no data', async () => {
+        const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
+
+        await expect(worker.loadData({} as LoadGeoJSONParameters)).rejects.toBeDefined();
+    });
+
+    test('loadData should resolve as subsequent call with no data', async () => {
+        const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
+
+        await worker.loadData({source: 'source1', data: JSON.stringify(updateableGeoJson)} as LoadGeoJSONParameters);
+        await expect(worker.loadData({} as LoadGeoJSONParameters)).resolves.toBeDefined();
+    });
 });
 
 describe('getData', () => {

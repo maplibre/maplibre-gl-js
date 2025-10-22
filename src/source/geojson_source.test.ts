@@ -335,7 +335,6 @@ describe('GeoJSONSource.update', () => {
         expect(spy.mock.calls[0][0].data.cluster).toBe(true);
         expect(spy.mock.calls[0][0].data.superclusterOptions.radius).toBe(80 * EXTENT / source.tileSize);
         expect(spy.mock.calls[0][0].data.superclusterOptions.maxZoom).toBe(16);
-        expect(spy.mock.calls[0][0].data.dataDiff).toEqual({});
     });
 
     test('modifying cluster properties with pending data', async () => {
@@ -887,6 +886,6 @@ describe('GeoJSONSource.load', () => {
         source.load();
 
         expect(spy).toHaveBeenCalledTimes(1);
-        expect(warnSpy).toHaveBeenCalledWith('No data or diff provided to GeoJSONSource id.');
+        expect(warnSpy).toHaveBeenCalledWith('No pending worker updates for GeoJSONSource id.');
     });
 });

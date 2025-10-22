@@ -100,7 +100,10 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     /**
      * Fetches (if appropriate), parses, and index geojson data into tiles. This
      * preparatory method must be called before {@link GeoJSONWorkerSource.loadTile}
-     * can correctly serve up tiles.
+     * can correctly serve up tiles. The first call to this method must contain a valid
+     * {@link params.data}, {@link params.request}, or {@link params.dataDiff}. Subsequent
+     * calls may omit these parameters to reprocess the existing data (such as to update
+     * clustering options).
      *
      * Defers to {@link GeoJSONWorkerSource.loadAndProcessGeoJSON} for the pre-processing.
      *
@@ -117,7 +120,11 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
 
         this._pendingRequest = new AbortController();
         try {
-            this._pendingData = this.loadAndProcessGeoJSON(params, this._pendingRequest);
+            // Load and process data if no data has been loaded previously, or if there is
+            // a new request, data, or dataDiff to process.
+            if (!this._pendingData || params.request || params.data || params.dataDiff) {
+                this._pendingData = this.loadAndProcessGeoJSON(params, this._pendingRequest);
+            }
 
             const data = await this._pendingData;
 
