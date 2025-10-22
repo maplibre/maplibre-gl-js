@@ -38,8 +38,13 @@ export type QueryRenderedFeaturesOptions = {
     validate?: boolean;
 };
 
+/**
+ * @internal
+ * A version of QueryRenderedFeaturesOptions used internally
+ */
 export type QueryRenderedFeaturesOptionsStrict = Omit<QueryRenderedFeaturesOptions, 'layers'> & {
     layers: Set<string> | null;
+    globalState?: Record<string, any>;
 };
 
 /**
@@ -60,6 +65,14 @@ export type QuerySourceFeatureOptions = {
      * @defaultValue true
      */
     validate?: boolean;
+};
+
+/**
+ * @internal
+ * A version of QuerySourceFeatureOptions used internally
+ */
+export type QuerySourceFeatureOptionsStrict = QuerySourceFeatureOptions & {
+    globalState?: Record<string, any>;
 };
 
 export type QueryRenderedFeaturesResults = {
@@ -164,7 +177,10 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
             serializedLayers,
             queryData.bucketIndex,
             queryData.sourceLayerIndex,
-            params.filter,
+            {
+                filterSpec: params.filter,
+                globalState: params.globalState
+            },
             params.layers,
             params.availableImages,
             styleLayers);
@@ -199,7 +215,7 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
     return convertFeaturesToMapFeaturesMultiple(result, styleLayers, sourceCaches);
 }
 
-export function querySourceFeatures(sourceCache: SourceCache, params: QuerySourceFeatureOptions | undefined): GeoJSONFeature[] {
+export function querySourceFeatures(sourceCache: SourceCache, params: QuerySourceFeatureOptionsStrict | undefined): GeoJSONFeature[] {
     const tiles = sourceCache.getRenderableIds().map((id) => {
         return sourceCache.getTileByID(id);
     });

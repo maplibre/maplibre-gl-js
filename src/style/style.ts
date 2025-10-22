@@ -1,5 +1,6 @@
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {type StyleLayer} from './style_layer';
+import {isRasterStyleLayer} from './style_layer/raster_style_layer';
 import {createStyleLayer} from './create_style_layer';
 import {loadSprite} from './load_sprite';
 import {ImageManager} from '../render/image_manager';
@@ -12,6 +13,7 @@ import {coerceSpriteToArray} from '../util/style';
 import {getJSON, getReferrer} from '../util/ajax';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
+import {now} from '../util/time_control';
 import {Dispatcher} from '../util/dispatcher';
 import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
 import {type Source} from '../source/source';
@@ -59,6 +61,8 @@ import type {CanvasSourceSpecification} from '../source/canvas_source';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
 import {
+    type GetDashesParameters,
+    type GetDashesResponse,
     MessageType,
     type GetGlyphsParameters,
     type GetGlyphsResponse,
@@ -247,6 +251,9 @@ export class Style extends Evented {
         this.dispatcher.registerMessageHandler(MessageType.getImages, (mapId, params) => {
             return this.getImages(mapId, params);
         });
+        this.dispatcher.registerMessageHandler(MessageType.getDashes, (mapId, params) => {
+            return this.getDashes(mapId, params);
+        });
         this.imageManager = new ImageManager();
         this.imageManager.setEventedParent(this);
         const glyphLang = map._container?.lang || (typeof document !== 'undefined' && document.documentElement?.lang) || undefined;
@@ -376,13 +383,16 @@ export class Style extends Evented {
         }
 
         const sourceIdsToReload = new Set<string>();
+        const globalStateChange = {};
 
-        for (const layerId in this._layers) {
-            const layer = this._layers[layerId];
-            const layoutAffectingGlobalStateRefs = layer.getLayoutAffectingGlobalStateRefs();
-            const paintAffectingGlobalStateRefs = layer.getPaintAffectingGlobalStateRefs();
+        for (const ref of globalStateRefs) {
+            globalStateChange[ref] = this._globalState[ref];
 
-            for (const ref of globalStateRefs) {
+            for (const layerId in this._layers) {
+                const layer = this._layers[layerId];
+                const layoutAffectingGlobalStateRefs = layer.getLayoutAffectingGlobalStateRefs();
+                const paintAffectingGlobalStateRefs = layer.getPaintAffectingGlobalStateRefs();
+
                 if (layoutAffectingGlobalStateRefs.has(ref)) {
                     sourceIdsToReload.add(layer.source);
                 }
@@ -393,6 +403,9 @@ export class Style extends Evented {
                 }
             }
         }
+
+        // Propagate global state changes to workers
+        this.dispatcher.broadcast(MessageType.updateGlobalState, globalStateChange);
 
         for (const id in this.sourceCaches) {
             if (sourceIdsToReload.has(id)) {
@@ -476,6 +489,8 @@ export class Style extends Evented {
     private _createLayers() {
         const dereferencedLayers = derefLayers(this.stylesheet.layers);
 
+        this.setGlobalState(this.stylesheet.state ?? null);
+
         // Broadcast layers to workers first, so that expensive style processing (createStyleLayer)
         // can happen in parallel on both main and worker threads.
         this.dispatcher.broadcast(MessageType.setLayers, dereferencedLayers);
@@ -483,15 +498,17 @@ export class Style extends Evented {
         this._order = dereferencedLayers.map((layer) => layer.id);
         this._layers = {};
 
-        this.setGlobalState(this.stylesheet.state ?? null);
-
         // reset serialization field, to be populated only when needed
         this._serializedLayers = null;
         for (const layer of dereferencedLayers) {
-            const styledLayer = createStyleLayer(layer);
+            const styledLayer = createStyleLayer(layer, this._globalState);
             styledLayer.setEventedParent(this, {layer: {id: layer.id}});
-            styledLayer.setGlobalState(this._globalState);
             this._layers[layer.id] = styledLayer;
+
+            if (isRasterStyleLayer(styledLayer) && this.sourceCaches[styledLayer.source]) {
+                const rasterFadeDuration = layer.paint?.['raster-fade-duration'] ?? styledLayer.paint.get('raster-fade-duration');
+                this.sourceCaches[styledLayer.source].setRasterFadeDuration(rasterFadeDuration);
+            }
         }
     }
 
@@ -1072,7 +1089,7 @@ export class Style extends Evented {
 
             if (emitValidationErrors(this, validateCustomStyleLayer(layerObject))) return;
 
-            layer = createStyleLayer(layerObject);
+            layer = createStyleLayer(layerObject, this._globalState);
 
         } else {
             if ('source' in layerObject && typeof layerObject.source === 'object') {
@@ -1085,7 +1102,7 @@ export class Style extends Evented {
             if (this._validate(validateStyle.layer,
                 `layers.${id}`, layerObject, {arrayIndex: -1}, options)) return;
 
-            layer = createStyleLayer(layerObject as LayerSpecification | CustomLayerInterface);
+            layer = createStyleLayer(layerObject as LayerSpecification | CustomLayerInterface, this._globalState);
             this._validateLayer(layer);
 
             layer.setEventedParent(this, {layer: {id}});
@@ -1331,6 +1348,10 @@ export class Style extends Evented {
             this._updateLayer(layer);
         }
 
+        if (isRasterStyleLayer(layer) && name === 'raster-fade-duration') {
+            this.sourceCaches[layer.source].setRasterFadeDuration(value);
+        }
+
         this._changed = true;
         this._updatedPaintProps[layer.id] = true;
         // reset serialization field, to be populated only when needed
@@ -1569,6 +1590,7 @@ export class Style extends Evented {
         const paramsStrict: QueryRenderedFeaturesOptionsStrict = {
             ...params,
             layers: layersAsSet,
+            globalState: this._globalState
         };
 
         for (const id in this.sourceCaches) {
@@ -1610,11 +1632,11 @@ export class Style extends Evented {
         sourceID: string,
         params?: QuerySourceFeatureOptions
     ) {
-        if (params && params.filter) {
+        if (params?.filter) {
             this._validate(validateStyle.filter, 'querySourceFeatures.filter', params.filter, null, params);
         }
         const sourceCache = this.sourceCaches[sourceID];
-        return sourceCache ? querySourceFeatures(sourceCache, params) : [];
+        return sourceCache ? querySourceFeatures(sourceCache, params ? {...params, globalState: this._globalState} : {globalState: this._globalState}) : [];
     }
 
     getLight() {
@@ -1635,7 +1657,7 @@ export class Style extends Evented {
         if (!_update) return;
 
         const parameters = {
-            now: browser.now(),
+            now: now(),
             transition: extend({
                 duration: 300,
                 delay: 0
@@ -1687,7 +1709,7 @@ export class Style extends Evented {
         if (!update) return;
 
         const parameters = {
-            now: browser.now(),
+            now: now(),
             transition: extend({
                 duration: 300,
                 delay: 0
@@ -1700,7 +1722,7 @@ export class Style extends Evented {
     }
 
     _setProjectionInternal(name: ProjectionSpecification['type']) {
-        const projectionObjects = createProjectionFromName(name);
+        const projectionObjects = createProjectionFromName(name, this.map.transformConstrain);
         this.projection = projectionObjects.projection;
         this.map.migrateProjection(projectionObjects.transform, projectionObjects.cameraHelper);
         for (const key in this.sourceCaches) {
@@ -1804,7 +1826,7 @@ export class Style extends Evented {
         // tiles will fully display symbols in their first frame
         forceFullPlacement = forceFullPlacement || this._layerOrderChanged || fadeDuration === 0;
 
-        if (forceFullPlacement || !this.pauseablePlacement || (this.pauseablePlacement.isDone() && !this.placement.stillRecent(browser.now(), transform.zoom))) {
+        if (forceFullPlacement || !this.pauseablePlacement || (this.pauseablePlacement.isDone() && !this.placement.stillRecent(now(), transform.zoom))) {
             this.pauseablePlacement = new PauseablePlacement(transform, this.map.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
             this._layerOrderChanged = false;
         }
@@ -1819,7 +1841,7 @@ export class Style extends Evented {
             this.pauseablePlacement.continuePlacement(this._order, this._layers, layerTiles);
 
             if (this.pauseablePlacement.isDone()) {
-                this.placement = this.pauseablePlacement.commit(browser.now());
+                this.placement = this.pauseablePlacement.commit(now());
                 placementCommitted = true;
             }
 
@@ -1840,7 +1862,7 @@ export class Style extends Evented {
         }
 
         // needsRender is false when we have just finished a placement that didn't change the visibility of any symbols
-        const needsRerender = !this.pauseablePlacement.isDone() || this.placement.hasTransitions(browser.now());
+        const needsRerender = !this.pauseablePlacement.isDone() || this.placement.hasTransitions(now());
         return needsRerender;
     }
 
@@ -1897,6 +1919,14 @@ export class Style extends Evented {
         this.stylesheet.glyphs = glyphsUrl;
         this.glyphManager.entries = {};
         this.glyphManager.setURL(glyphsUrl);
+    }
+
+    async getDashes(mapId: string | number, params: GetDashesParameters): Promise<GetDashesResponse> {
+        const result: GetDashesResponse = {};
+        for (const [key, dash] of Object.entries(params.dashes)) {
+            result[key] = this.lineAtlas.getDash(dash.dasharray, dash.round);
+        }
+        return result;
     }
 
     /**

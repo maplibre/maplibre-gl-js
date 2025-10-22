@@ -22,7 +22,7 @@ import type {
 } from '../source/worker_source';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTile} from '@mapbox/vector-tile';
-import {MessageType, type GetGlyphsResponse, type GetImagesResponse} from '../util/actor_messages';
+import {type GetDashesResponse, MessageType, type GetGlyphsResponse, type GetImagesResponse} from '../util/actor_messages';
 import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 export class WorkerTile {
     tileID: OverscaledTileID;
@@ -36,7 +36,6 @@ export class WorkerTile {
     showCollisionBoxes: boolean;
     collectResourceTiming: boolean;
     returnDependencies: boolean;
-    globalState: Record<string, any>;
 
     status: 'parsing' | 'done';
     data: VectorTile;
@@ -59,7 +58,6 @@ export class WorkerTile {
         this.returnDependencies = !!params.returnDependencies;
         this.promoteId = params.promoteId;
         this.inFlightDependencies = [];
-        this.globalState = params.globalState;
     }
 
     async parse(data: VectorTile, layerIndex: StyleLayerIndex, availableImages: Array<string>, actor: IActor, subdivisionGranularity: SubdivisionGranularitySetting): Promise<WorkerTileResult> {
@@ -79,6 +77,7 @@ export class WorkerTile {
             iconDependencies: {},
             patternDependencies: {},
             glyphDependencies: {},
+            dashDependencies: {},
             availableImages,
             subdivisionGranularity
         };
@@ -109,11 +108,8 @@ export class WorkerTile {
                 if (layer.source !== this.source) {
                     warnOnce(`layer.source = ${layer.source} does not equal this.source = ${this.source}`);
                 }
-                if (layer.minzoom && this.zoom < Math.floor(layer.minzoom)) continue;
-                if (layer.maxzoom && this.zoom >= layer.maxzoom) continue;
-                if (layer.visibility === 'none') continue;
-
-                recalculateLayers(family, this.zoom, availableImages, this.globalState);
+                if (layer.isHidden(this.zoom, true)) continue;
+                recalculateLayers(family, this.zoom, availableImages);
 
                 const bucket = buckets[layer.id] = layer.createBucket({
                     index: featureIndex.bucketLayerIDs.length,
@@ -123,8 +119,7 @@ export class WorkerTile {
                     overscaling: this.overscaling,
                     collisionBoxArray: this.collisionBoxArray,
                     sourceLayerIndex,
-                    sourceID: this.source,
-                    globalState: this.globalState
+                    sourceID: this.source
                 });
 
                 bucket.populate(features, options, this.tileID.canonical);
@@ -162,14 +157,23 @@ export class WorkerTile {
             getPatternsPromise = actor.sendAsync({type: MessageType.getImages, data: {icons: patterns, source: this.source, tileID: this.tileID, type: 'patterns'}}, abortController);
         }
 
-        const [glyphMap, iconMap, patternMap] = await Promise.all([getGlyphsPromise, getIconsPromise, getPatternsPromise]);
+        const dashes = options.dashDependencies;
+        let getDashesPromise = Promise.resolve<GetDashesResponse>({} as GetDashesResponse);
+        if (Object.keys(dashes).length) {
+            const abortController = new AbortController();
+            this.inFlightDependencies.push(abortController);
+            getDashesPromise = actor.sendAsync({type: MessageType.getDashes, data: {dashes}}, abortController);
+        }
+
+        const [glyphMap, iconMap, patternMap, dashPositions] = await Promise.all([getGlyphsPromise, getIconsPromise, getPatternsPromise, getDashesPromise]);
+
         const glyphAtlas = new GlyphAtlas(glyphMap);
         const imageAtlas = new ImageAtlas(iconMap, patternMap);
 
         for (const key in buckets) {
             const bucket = buckets[key];
             if (bucket instanceof SymbolBucket) {
-                recalculateLayers(bucket.layers, this.zoom, availableImages, this.globalState);
+                recalculateLayers(bucket.layers, this.zoom, availableImages);
                 performSymbolLayout({
                     bucket,
                     glyphMap,
@@ -180,12 +184,9 @@ export class WorkerTile {
                     canonical: this.tileID.canonical,
                     subdivisionGranularity: options.subdivisionGranularity
                 });
-            } else if (bucket.hasPattern &&
-                (bucket instanceof LineBucket ||
-                bucket instanceof FillBucket ||
-                bucket instanceof FillExtrusionBucket)) {
-                recalculateLayers(bucket.layers, this.zoom, availableImages, this.globalState);
-                bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions);
+            } else if (bucket.hasDependencies && (bucket instanceof FillBucket || bucket instanceof FillExtrusionBucket || bucket instanceof LineBucket)) {
+                recalculateLayers(bucket.layers, this.zoom, availableImages);
+                bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions, dashPositions);
             }
         }
 
@@ -196,6 +197,7 @@ export class WorkerTile {
             collisionBoxArray: this.collisionBoxArray,
             glyphAtlasImage: glyphAtlas.image,
             imageAtlas,
+            dashPositions,
             // Only used for benchmarking:
             glyphMap: this.returnDependencies ? glyphMap : null,
             iconMap: this.returnDependencies ? iconMap : null,
@@ -204,11 +206,10 @@ export class WorkerTile {
     }
 }
 
-function recalculateLayers(layers: ReadonlyArray<StyleLayer>, zoom: number, availableImages: Array<string>, globalState: Record<string, any>) {
+function recalculateLayers(layers: ReadonlyArray<StyleLayer>, zoom: number, availableImages: Array<string>) {
     // Layers are shared and may have been used by a WorkerTile with a different zoom.
     const parameters = new EvaluationParameters(zoom);
     for (const layer of layers) {
-        layer.setGlobalState(globalState);
         layer.recalculate(parameters, availableImages);
     }
 }

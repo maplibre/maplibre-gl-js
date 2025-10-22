@@ -23,8 +23,8 @@ export class ColorReliefStyleLayer extends StyleLayer {
     _transitioningPaint: Transitioning<ColorReliefPaintProps>;
     paint: PossiblyEvaluated<ColorReliefPaintProps, ColorReliefPaintPropsPossiblyEvaluated>;
 
-    constructor(layer: LayerSpecification) {
-        super(layer, properties);
+    constructor(layer: LayerSpecification, globalState: Record<string, any>) {
+        super(layer, properties, globalState);
     }
 
     /**
@@ -73,11 +73,11 @@ export class ColorReliefStyleLayer extends StyleLayer {
         warnOnce(`Too many colors in specification of ${this.id} color-relief layer, may not render properly.`);
         return remappedColorRamp;
     }
-    
+
     _colorRampChanged() : boolean {
         return this.colorRampExpression != this._transitionablePaint._values['color-relief-color'].value.expression;
     }
-    
+
     getColorRampTextures(context: Context, maxLength: number, unpackVector: number[]): ColorRampTextures {
         if (this.colorRampTextures && !this._colorRampChanged()) {
             return this.colorRampTextures;

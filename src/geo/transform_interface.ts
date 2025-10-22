@@ -11,6 +11,18 @@ import type {ProjectionData, ProjectionDataParams} from './projection/projection
 import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider';
 import type {Frustum} from '../util/primitives/frustum';
 
+/**
+ * The callback defining how the transform constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
+ * @see [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/)
+ */
+export type TransformConstrainFunction =  (
+    lngLat: LngLat,
+    zoom: number
+) => {
+    center: LngLat;
+    zoom: number;
+};
+
 export interface ITransformGetters {
     get tileSize(): number;
 
@@ -83,6 +95,10 @@ export interface ITransformGetters {
     get nearZ(): number;
     get farZ(): number;
     get autoCalculateNearFarZ(): boolean;
+    /**
+     * Get center lngLat and zoom to ensure that longitude and latitude bounds are respected and regions beyond the map bounds are not displayed.
+     */
+    get constrain(): TransformConstrainFunction;
 }
 
 /**
@@ -193,6 +209,12 @@ interface ITransformMutators {
      * @param bounds - A {@link LngLatBounds} object describing the new geographic boundaries of the map.
      */
     setMaxBounds(bounds?: LngLatBounds | null): void;
+
+    /** Sets or clears the callback overriding the transform's default constrain,
+     * whose responsibility is to respect the longitude and latitude bounds by constraining the viewport's lnglat and zoom.
+     * @param constrain - A {@link TransformConstrainFunction} callback defining how the viewport should respect the bounds.
+     */
+    setConstrain(constrain?: TransformConstrainFunction | null): void;
 
     /**
      * @internal
@@ -340,9 +362,10 @@ export interface IReadonlyTransform extends ITransformGetters {
     isPointOnMapSurface(p: Point, terrain?: Terrain): boolean;
 
     /**
-     * Get center lngLat and zoom to ensure that longitude and latitude bounds are respected and regions beyond the map bounds are not displayed.
+     * @internal
+     * The tranform's default callback that ensures that longitude and latitude bounds are respected by the viewport.
      */
-    getConstrained(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number};
+    defaultConstrain: TransformConstrainFunction;
 
     maxPitchScaleFactor(): number;
 

@@ -3,7 +3,7 @@ import {extend} from '../../util/util';
 import {Map} from '../map';
 import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
-import {browser} from '../../util/browser';
+import * as timeControl from '../../util/time_control';
 
 import {beforeMapTest} from '../../util/test/util';
 
@@ -21,7 +21,7 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        vi.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
         expect(map.dragRotate.isActive()).toBe(false);
 
@@ -44,7 +44,7 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        vi.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
         const rotatestart = vi.fn();
         const rotate      = vi.fn();
@@ -79,7 +79,7 @@ describe('drag rotate', () => {
         const map = createMap({rollEnabled: true});
 
         // Prevent inertial rotation.
-        vi.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
         const rollstart = vi.fn();
         const roll      = vi.fn();
@@ -114,7 +114,7 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        vi.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
         const spy = vi.fn();
         map.on('rotatestart', spy);
@@ -140,7 +140,7 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        vi.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
         const rotatestart = vi.fn();
         const rotate      = vi.fn();
@@ -175,7 +175,7 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        vi.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
         const pitchstart = vi.fn();
         const pitch      = vi.fn();
@@ -202,7 +202,7 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        vi.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
         const pitchstart = vi.fn();
         const pitch      = vi.fn();
@@ -228,7 +228,7 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        vi.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
         const pitchstart = vi.fn();
         const pitch      = vi.fn();
@@ -320,7 +320,7 @@ describe('drag rotate', () => {
         const map = createMap({bearingSnap: 0});
 
         // Prevent inertial rotation.
-        vi.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
         const movestart = vi.fn();
         const move      = vi.fn();
@@ -348,7 +348,7 @@ describe('drag rotate', () => {
         const map = createMap({bearingSnap: 0});
 
         // Prevent inertial rotation.
-        vi.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
         const rotatestart = vi.fn();
         const rotate      = vi.fn();
@@ -378,7 +378,7 @@ describe('drag rotate', () => {
         const map = createMap({bearingSnap: 0});
 
         // Prevent inertial rotation.
-        vi.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
         const rotatestart = vi.fn();
         const rotate      = vi.fn();
@@ -426,7 +426,7 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        vi.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
         const rotatestart = vi.fn();
         const rotate      = vi.fn();
@@ -453,7 +453,7 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        vi.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
         const mousemove = vi.fn();
         map.on('mousemove', mousemove);
@@ -472,7 +472,7 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        vi.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
         const rotatestart = vi.fn();
         const rotate      = vi.fn();
@@ -499,7 +499,7 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        vi.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
         const rotatestart = vi.fn();
         const rotate      = vi.fn();
@@ -526,7 +526,7 @@ describe('drag rotate', () => {
         const requestRenderFrame = vi.spyOn(map.handlers, '_requestFrame');
 
         // Prevent inertial rotation.
-        vi.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
         simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2});
         simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 10});
@@ -547,7 +547,7 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        vi.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
         const rotatestart = vi.fn();
         const rotate      = vi.fn();
@@ -630,7 +630,7 @@ describe('drag rotate', () => {
         map.dragPan.disable();
 
         // Prevent inertial rotation.
-        vi.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
         const rotatestart = vi.fn();
         const rotate      = vi.fn();
@@ -684,7 +684,7 @@ describe('drag rotate', () => {
         map.dragPan.disable();
 
         // Prevent inertial rotation.
-        vi.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
         const rotatestart = vi.fn();
         const rotate      = vi.fn();
@@ -766,7 +766,7 @@ describe('drag rotate', () => {
         const map = createMap();
 
         // Prevent inertial rotation.
-        vi.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
         const rotatestart = vi.fn();
         const rotate      = vi.fn();
@@ -838,7 +838,7 @@ describe('drag rotate', () => {
         const map = createMap({clickTolerance: 4});
 
         // Prevent inertial rotation.
-        vi.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
         const rotatestart = vi.fn();
         const rotate      = vi.fn();

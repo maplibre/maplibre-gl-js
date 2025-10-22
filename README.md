@@ -47,11 +47,11 @@ Full documentation for this library [is available here](https://maplibre.org/map
 
 Check out the features through [examples](https://maplibre.org/maplibre-gl-js/docs/examples/).
 
-| Showcases                                                                                                  |                                                                                                                            |
-| ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| ![Display a map](https://maplibre.org/maplibre-gl-js/docs/assets/examples/display-a-map.png)               | ![Third party vector tile source](https://maplibre.org/maplibre-gl-js/docs/assets/examples/3d-terrain.png)                 |
-| ![Animate a series of images](https://maplibre.org/maplibre-gl-js/docs/assets/examples/animate-images.png) | ![Create a heatmap layer](https://maplibre.org/maplibre-gl-js/docs/assets/examples/create-a-heatmap-layer.png)             |
-| ![3D buildings](https://maplibre.org/maplibre-gl-js/docs/assets/examples/display-buildings-in-3d.png)      | ![Visualize population density](https://maplibre.org/maplibre-gl-js/docs/assets/examples/visualize-population-density.png) |
+| Showcases                                                                                                              |                                                                                                                            |
+| ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| ![Display a map](https://maplibre.org/maplibre-gl-js/docs/assets/examples/display-a-map.png)                           | ![Third party vector tile source](https://maplibre.org/maplibre-gl-js/docs/assets/examples/3d-terrain.png)                 |
+| ![Animate a series of images](https://maplibre.org/maplibre-gl-js/docs/assets/examples/animate-a-series-of-images.png) | ![Create a heatmap layer](https://maplibre.org/maplibre-gl-js/docs/assets/examples/create-a-heatmap-layer.png)             |
+| ![3D buildings](https://maplibre.org/maplibre-gl-js/docs/assets/examples/display-buildings-in-3d.png)                  | ![Visualize population density](https://maplibre.org/maplibre-gl-js/docs/assets/examples/visualize-population-density.png) |
 
 <br />
 

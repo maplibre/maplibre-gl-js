@@ -3,7 +3,7 @@ import {extend} from '../../util/util';
 import {Map} from '../../ui/map';
 import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
-import {browser} from '../../util/browser';
+import * as timeControl from '../../util/time_control';
 import {beforeMapTest} from '../../util/test/util';
 
 function createMap(options?) {
@@ -20,7 +20,7 @@ describe('mouse rotate', () => {
         const mouseRotate = map.handlers._handlersById.mouseRotate;
 
         // Prevent inertial rotation.
-        vi.spyOn(browser, 'now').mockReturnValue(0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
         expect(mouseRotate.isActive()).toBe(false);
 
         simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 0, clientY: 0});

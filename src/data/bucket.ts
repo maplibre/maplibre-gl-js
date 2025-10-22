@@ -9,6 +9,8 @@ import type {CanonicalTileID} from '../source/tile_id';
 import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
 import type Point from '@mapbox/point-geometry';
 import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
+import type {DashEntry} from '../render/line_atlas';
+import type {Feature as StyleFeature} from '@maplibre/maplibre-gl-style-spec';
 
 export type BucketParameters<Layer extends TypedStyleLayer> = {
     index: number;
@@ -19,7 +21,6 @@ export type BucketParameters<Layer extends TypedStyleLayer> = {
     collisionBoxArray: CollisionBoxArray;
     sourceLayerIndex: number;
     sourceID: string;
-    globalState: Record<string, any>;
 };
 
 export type PopulateParameters = {
@@ -27,6 +28,7 @@ export type PopulateParameters = {
     iconDependencies: {};
     patternDependencies: {};
     glyphDependencies: {};
+    dashDependencies: Record<string, {round: boolean; dasharray: Array<number>}>;
     availableImages: Array<string>;
     subdivisionGranularity: SubdivisionGranularitySetting;
 };
@@ -52,6 +54,7 @@ export type BucketFeature = {
             'max': string;
         };
     };
+    readonly dashes?: NonNullable<StyleFeature['dashes']>;
     sortKey?: number;
 };
 
@@ -79,12 +82,12 @@ export type BucketFeature = {
  */
 export interface Bucket {
     layerIds: Array<string>;
-    hasPattern: boolean;
+    hasDependencies: boolean;
     readonly layers: Array<any>;
     readonly stateDependentLayers: Array<any>;
     readonly stateDependentLayerIds: Array<string>;
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID): void;
-    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}): void;
+    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}, dashPositions: Record<string, DashEntry>): void;
     isEmpty(): boolean;
     upload(context: Context): void;
     uploadPending(): boolean;

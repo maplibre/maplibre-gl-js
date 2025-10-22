@@ -14,7 +14,8 @@ import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_de
 import {Frustum} from '../../util/primitives/frustum';
 
 import type {Terrain} from '../../render/terrain';
-import type {IReadonlyTransform, ITransform} from '../transform_interface';
+import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface';
+import type {TransformOptions} from '../transform_helper';
 import type {PaddingOptions} from '../edge_insets';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
@@ -106,6 +107,9 @@ export class MercatorTransform implements ITransform {
     }
     setMaxBounds(bounds?: LngLatBounds): void {
         this._helper.setMaxBounds(bounds);
+    }
+    setConstrain(constrain?: TransformConstrainFunction | null): void {
+        this._helper.setConstrain(constrain);
     }
     overrideNearFarZ(nearZ: number, farZ: number): void {
         this._helper.overrideNearFarZ(nearZ, farZ);
@@ -201,6 +205,9 @@ export class MercatorTransform implements ITransform {
     get cameraToCenterDistance(): number { 
         return this._helper.cameraToCenterDistance;
     }
+    get constrain(): TransformConstrainFunction {
+        return this._helper.constrain;
+    }
     public get nearZ(): number { 
         return this._helper.nearZ; 
     }
@@ -236,11 +243,11 @@ export class MercatorTransform implements ITransform {
 
     private _coveringTilesDetailsProvider;
 
-    constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
+    constructor(options?: TransformOptions) {
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
-            getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
-        }, minZoom, maxZoom, minPitch, maxPitch, renderWorldCopies);
+            constrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
+        }, options);
         this._coveringTilesDetailsProvider = new MercatorCoveringTilesDetailsProvider();
     }
 
@@ -444,7 +451,7 @@ export class MercatorTransform implements ITransform {
      *
      * Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
      */
-    getConstrained(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
+    defaultConstrain: TransformConstrainFunction = (lngLat, zoom) => {
         zoom = clamp(+zoom, this.minZoom, this.maxZoom);
         const result = {
             center: new LngLat(lngLat.lng, lngLat.lat),
@@ -533,7 +540,7 @@ export class MercatorTransform implements ITransform {
         }
 
         return result;
-    }
+    };
 
     calculateCenterFromCameraLngLatAlt(lnglat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
         return this._helper.calculateCenterFromCameraLngLatAlt(lnglat, alt, bearing, pitch);

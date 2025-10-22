@@ -59,7 +59,6 @@ type CentroidAccumulator = {
 export class FillExtrusionBucket implements Bucket {
     index: number;
     zoom: number;
-    globalState: Record<string, any>;
     overscaling: number;
     layers: Array<FillExtrusionStyleLayer>;
     layerIds: Array<string>;
@@ -75,7 +74,7 @@ export class FillExtrusionBucket implements Bucket {
     indexArray: TriangleIndexArray;
     indexBuffer: IndexBuffer;
 
-    hasPattern: boolean;
+    hasDependencies: boolean;
     programConfigurations: ProgramConfigurationSet<FillExtrusionStyleLayer>;
     segments: SegmentVector;
     uploaded: boolean;
@@ -83,12 +82,11 @@ export class FillExtrusionBucket implements Bucket {
 
     constructor(options: BucketParameters<FillExtrusionStyleLayer>) {
         this.zoom = options.zoom;
-        this.globalState = options.globalState;
         this.overscaling = options.overscaling;
         this.layers = options.layers;
         this.layerIds = this.layers.map(layer => layer.id);
         this.index = options.index;
-        this.hasPattern = false;
+        this.hasDependencies = false;
 
         this.layoutVertexArray = new FillExtrusionLayoutArray();
         this.centroidVertexArray = new PosArray();
@@ -100,13 +98,13 @@ export class FillExtrusionBucket implements Bucket {
 
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
         this.features = [];
-        this.hasPattern = hasPattern('fill-extrusion', this.layers, options);
+        this.hasDependencies = hasPattern('fill-extrusion', this.layers, options);
 
         for (const {feature, id, index, sourceLayerIndex} of features) {
             const needGeometry = this.layers[0]._featureFilter.needGeometry;
             const evaluationFeature = toEvaluationFeature(feature, needGeometry);
 
-            if (!this.layers[0]._featureFilter.filter(new EvaluationParameters(this.zoom, {globalState: this.globalState}), evaluationFeature, canonical)) continue;
+            if (!this.layers[0]._featureFilter.filter(new EvaluationParameters(this.zoom), evaluationFeature, canonical)) continue;
 
             const bucketFeature: BucketFeature = {
                 id,
@@ -118,8 +116,8 @@ export class FillExtrusionBucket implements Bucket {
                 patterns: {}
             };
 
-            if (this.hasPattern) {
-                this.features.push(addPatternDependencies('fill-extrusion', this.layers, bucketFeature, {zoom: this.zoom, globalState: this.globalState}, options));
+            if (this.hasDependencies) {
+                this.features.push(addPatternDependencies('fill-extrusion', this.layers, bucketFeature, {zoom: this.zoom}, options));
             } else {
                 this.addFeature(bucketFeature, bucketFeature.geometry, index, canonical, {}, options.subdivisionGranularity);
             }
@@ -138,8 +136,7 @@ export class FillExtrusionBucket implements Bucket {
     update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}) {
         if (!this.stateDependentLayers.length) return;
         this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, {
-            imagePositions,
-            globalState: this.globalState
+            imagePositions
         });
     }
 
@@ -190,7 +187,7 @@ export class FillExtrusionBucket implements Bucket {
             }
         }
 
-        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {imagePositions, canonical, globalState: this.globalState});
+        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {imagePositions, canonical});
     }
 
     private processPolygon(

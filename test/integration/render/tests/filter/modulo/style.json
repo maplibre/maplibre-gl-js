@@ -1,0 +1,41 @@
+{
+        "version": 8,
+        "name": "error_example",
+        "zoom": 22,
+        "center": [35.116597623673215, 31.77328952295099],
+        "sources": {
+          "Contour": {
+            "type": "vector",
+            "scheme": "xyz",
+            "minzoom": 5,
+            "maxzoom": 12,
+            "tiles": ["local://tiles/contours.mvt"]
+          }
+        },
+        "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+        "layers": [
+          {
+            "id": "contour-label",
+            "type": "symbol",
+            "source": "Contour",
+            "source-layer": "contours",
+            "filter": 
+              ["==", 
+               ["%",
+                ["to-number", ["get", "ele"]],
+                50],
+               0],
+            "layout": {
+              "text-field": "{ele}",
+              "symbol-placement": "line",
+              "text-font": [
+                "Open Sans Semibold",
+                "Arial Unicode MS Bold"
+              ]
+            },
+            "paint": {
+                "text-color": "green"
+            }
+          }
+        ]
+      }

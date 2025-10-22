@@ -11,7 +11,7 @@ import {OverscaledTileID} from '../source/tile_id';
 import {fakeServer, type FakeServer} from 'nise';
 
 import {type EvaluationParameters} from './evaluation_parameters';
-import {type Feature, type LayerSpecification, type GeoJSONSourceSpecification, type FilterSpecification, type SourceSpecification, type StyleSpecification, type SymbolLayerSpecification, type SkySpecification} from '@maplibre/maplibre-gl-style-spec';
+import {Color, type Feature, type LayerSpecification, type GeoJSONSourceSpecification, type FilterSpecification, type SourceSpecification, type StyleSpecification, type SymbolLayerSpecification, type SkySpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type GeoJSONSource} from '../source/geojson_source';
 import {StubMap, sleep, waitForEvent} from '../util/test/util';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
@@ -21,6 +21,7 @@ import {type Tile} from '../source/tile';
 import type Point from '@mapbox/point-geometry';
 import {type PossiblyEvaluated} from './properties';
 import {type SymbolLayoutProps, type SymbolLayoutPropsPossiblyEvaluated} from './style_layer/symbol_style_layer_properties.g';
+import {type CirclePaintProps, type CirclePaintPropsPossiblyEvaluated} from './style_layer/circle_style_layer_properties.g';
 
 function createStyleJSON(properties?): StyleSpecification {
     return extend({
@@ -493,14 +494,46 @@ describe('Style.loadJSON', () => {
         );
         await style.once('style.load');
         // tests that reference to globalState is propagated to layers
-        // by changing globalState property and checking if the changed value
+        // by setting globalState property and checking if the new value
         // was used when evaluating the layer
-        const globalState = style.getGlobalState();
-        globalState.size = 12;
+        const globalState = {size: {default: 12}};
+        style.setGlobalState(globalState);
         const layer = style.getLayer('layer-id');
         layer.recalculate({} as EvaluationParameters, []);
         const layout = layer.layout as PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>;
         expect(layout.get('text-size').evaluate({} as Feature, {})).toBe(12);
+    });
+
+    test('propagates global state object to layers added after loading style', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(
+            createStyleJSON({
+                sources: {
+                    'source-id': createGeoJSONSource()
+                },
+                layers: []
+            })
+        );
+        await style.once('style.load');
+        style.addLayer({
+            id: 'layer-id',
+            type: 'circle',
+            source: 'source-id',
+            paint: {
+                'circle-color': ['global-state', 'color'],
+                'circle-radius': ['global-state', 'radius']
+            }
+        });
+        // tests that reference to globalState is propagated to layers
+        // by setting globalState property and checking if the new value
+        // was used when evaluating the layer
+        const globalState = {color: {default: 'red'}, radius: {default: 12}};
+        style.setGlobalState(globalState);
+        const layer = style.getLayer('layer-id');
+        layer.recalculate({} as EvaluationParameters, []);
+        const paint = layer.paint as PossiblyEvaluated<CirclePaintProps, CirclePaintPropsPossiblyEvaluated>;
+        expect(paint.get('circle-color').evaluate({} as Feature, {})).toEqual(new Color(1, 0, 0, 1));
+        expect(paint.get('circle-radius').evaluate({} as Feature, {})).toEqual(12);
     });
 });
 
@@ -1475,9 +1508,7 @@ describe('Style.setGlobalState', () => {
         style.sourceCaches['circle-source-id'].reload = vi.fn();
 
         style.setGlobalState({circleColor: {default: 'red'}});
-        style.update({
-            globalState: style.getGlobalState()
-        } as EvaluationParameters);
+        style.update({} as EvaluationParameters);
 
         expect(style.sourceCaches['circle-source-id'].resume).toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).toHaveBeenCalled();
@@ -1537,9 +1568,7 @@ describe('Style.setGlobalState', () => {
         style.sourceCaches['circle-source-id'].reload = vi.fn();
 
         style.setGlobalState({circleColor: {default: 'red'}});
-        style.update({
-            globalState: style.getGlobalState()
-        } as EvaluationParameters);
+        style.update({} as EvaluationParameters);
 
         expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
@@ -1568,9 +1597,7 @@ describe('Style.setGlobalState', () => {
         style.sourceCaches['circle-source-id'].reload = vi.fn();
 
         style.setGlobalState({circleColor: {default: 'red'}});
-        style.update({
-            globalState: style.getGlobalState()
-        } as EvaluationParameters);
+        style.update({} as EvaluationParameters);
 
         expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
@@ -1774,9 +1801,7 @@ describe('Style.setGlobalStateProperty', () => {
         style.sourceCaches['circle-source-id'].reload = vi.fn();
 
         style.setGlobalStateProperty('circleColor', 'red');
-        style.update({
-            globalState: style.getGlobalState()
-        } as EvaluationParameters);
+        style.update({} as EvaluationParameters);
 
         expect(style.sourceCaches['circle-source-id'].resume).toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).toHaveBeenCalled();
@@ -1836,9 +1861,7 @@ describe('Style.setGlobalStateProperty', () => {
         style.sourceCaches['circle-source-id'].reload = vi.fn();
 
         style.setGlobalStateProperty('circleColor', 'red');
-        style.update({
-            globalState: style.getGlobalState()
-        } as EvaluationParameters);
+        style.update({} as EvaluationParameters);
 
         expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
@@ -1867,9 +1890,7 @@ describe('Style.setGlobalStateProperty', () => {
         style.sourceCaches['circle-source-id'].reload = vi.fn();
 
         style.setGlobalStateProperty('circleColor', 'red');
-        style.update({
-            globalState: style.getGlobalState()
-        } as EvaluationParameters);
+        style.update({} as EvaluationParameters);
 
         expect(style.sourceCaches['circle-source-id'].resume).not.toHaveBeenCalled();
         expect(style.sourceCaches['circle-source-id'].reload).not.toHaveBeenCalled();
@@ -3109,6 +3130,39 @@ describe('Style.query*Features', () => {
         expect(errors).toBe(0);
     });
 
+    test('style adds global-state to querySourceFeatures', async () => {
+        const sourceCache = style.sourceCaches['geojson'];
+        const querySourceFeatures = vi.fn().mockReturnValue([]);
+        vi.spyOn(sourceCache, 'getRenderableIds').mockReturnValue(['symbol']);
+        vi.spyOn(sourceCache, 'getTileByID').mockReturnValue({
+            tileID: new OverscaledTileID(0, 0, 0, 0, 0),
+            querySourceFeatures
+        } as unknown as Tile);
+        style.querySourceFeatures('geojson', {filter: '[]' as any, validate: false});
+        expect(querySourceFeatures).toHaveBeenCalled();
+        const params = querySourceFeatures.mock.lastCall[1];
+        expect(params).toHaveProperty('globalState');
+    });
+
+    test('style adds global-state to queryRenderedFeatures', async () => {
+        const sourceCache = style.sourceCaches['geojson'];
+        sourceCache.transform = transform;
+        const queryRenderedFeatures = vi.fn().mockReturnValue([]);
+        vi.spyOn(sourceCache, 'tilesIn').mockReturnValue([{
+            tile: {
+                queryRenderedFeatures
+            } as unknown as Tile,
+            tileID: new OverscaledTileID(0, 0, 0, 0, 0),
+            queryGeometry: [{x: 0, y: 0} as Point],
+            cameraQueryGeometry: [{x: 0, y: 0} as Point],
+            scale: 1,
+        }]);
+        style.queryRenderedFeatures([{x: 0, y: 0} as Point], {filter: '[]' as any, validate: false}, transform);
+        expect(queryRenderedFeatures).toHaveBeenCalled();
+        const params = queryRenderedFeatures.mock.lastCall[6];
+        expect(params).toHaveProperty('globalState');
+    });
+
     test('serialized layers should be correctly updated after adding/removing layers', () => {
 
         let serializedStyle = style.serialize();
@@ -3323,5 +3377,34 @@ describe('Style.serialize', () => {
         style.update({transition: {duration: 0, delay: 0}} as EvaluationParameters);
         expect(style.sky.properties.get('fog-color').g).toBe(1);
         expect(style.sky.properties.get('fog-color').r).toBe(0);
+    });
+
+    test('Style.getDashes returns line atlas entries for dash patterns', async () => {
+        const style = createStyle();
+
+        const params = {
+            dashes: {
+                '2,1,false': {dasharray: [2, 1], round: false},
+                '4,2,true': {dasharray: [4, 2], round: true}
+            },
+            source: 'test-source',
+            tileID: {z: 1, x: 0, y: 0} as any,
+            type: 'dasharray' as const
+        };
+
+        const result = await style.getDashes('mapId', params);
+
+        expect(result).toBeDefined();
+        expect(Object.keys(result)).toHaveLength(2);
+        expect(result['2,1,false']).toBeDefined();
+        expect(result['4,2,true']).toBeDefined();
+
+        // Verify the entries have the expected atlas properties
+        expect(typeof result['2,1,false'].width).toBe('number');
+        expect(typeof result['2,1,false'].height).toBe('number');
+        expect(typeof result['2,1,false'].y).toBe('number');
+        expect(typeof result['4,2,true'].width).toBe('number');
+        expect(typeof result['4,2,true'].height).toBe('number');
+        expect(typeof result['4,2,true'].y).toBe('number');
     });
 });

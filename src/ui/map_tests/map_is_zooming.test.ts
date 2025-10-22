@@ -1,5 +1,5 @@
 import {describe, beforeEach, test, expect, vi, afterEach} from 'vitest';
-import {browser} from '../../util/browser';
+import * as timeControl from '../../util/time_control';
 import {Map} from '../map';
 import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
@@ -43,7 +43,7 @@ describe('Map.isZooming', () => {
         const zoomEndPromise = map.once('zoomend');
 
         let now = 0;
-        vi.spyOn(browser, 'now').mockImplementation(() => { return now; });
+        vi.spyOn(timeControl, 'now').mockImplementation(() => { return now; });
 
         simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
         map._renderTaskQueue.run();
@@ -65,7 +65,7 @@ describe('Map.isZooming', () => {
         const zoomEndPromise = map.once('zoomend');
 
         let now = 0;
-        vi.spyOn(browser, 'now').mockImplementation(() => { return now; });
+        vi.spyOn(timeControl, 'now').mockImplementation(() => { return now; });
 
         simulate.dblclick(map.getCanvas());
         map._renderTaskQueue.run();

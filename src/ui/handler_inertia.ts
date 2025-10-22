@@ -1,4 +1,4 @@
-import {browser} from '../util/browser';
+import {now} from '../util/time_control';
 import type {Map} from './map';
 import {bezier, clamp, extend} from '../util/util';
 import Point from '@mapbox/point-geometry';
@@ -60,15 +60,15 @@ export class HandlerInertia {
 
     record(settings: any) {
         this._drainInertiaBuffer();
-        this._inertiaBuffer.push({time: browser.now(), settings});
+        this._inertiaBuffer.push({time: now(), settings});
     }
 
     _drainInertiaBuffer() {
         const inertia = this._inertiaBuffer,
-            now = browser.now(),
+            currentTime = now(),
             cutoff = 160;   //msec
 
-        while (inertia.length > 0 && now - inertia[0].time > cutoff)
+        while (inertia.length > 0 && currentTime - inertia[0].time > cutoff)
             inertia.shift();
     }
 

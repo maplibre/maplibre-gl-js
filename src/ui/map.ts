@@ -1,5 +1,6 @@
 import {extend, warnOnce, uniqueId, isImageBitmap, type Complete, pick, type Subscription} from '../util/util';
 import {browser} from '../util/browser';
+import {now} from '../util/time_control';
 import {DOM} from '../util/dom';
 import packageJSON from '../../package.json' with {type: 'json'};
 import {type GetResourceResponse, getJSON} from '../util/ajax';
@@ -66,7 +67,7 @@ import type {CanvasSourceSpecification} from '../source/canvas_source';
 import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
-import type {ITransform} from '../geo/transform_interface';
+import type {ITransform, TransformConstrainFunction} from '../geo/transform_interface';
 import type {ICameraHelper} from '../geo/projection/camera_helper';
 
 const version = packageJSON.version;
@@ -106,7 +107,8 @@ export type MapOptions = {
     /**
      * If set, an {@link AttributionControl} will be added to the map with the provided options.
      * To disable the attribution control, pass `false`.
-     * Note: showing the logo of MapLibre is not required for using MapLibre.
+     * !!! note
+     *     Showing the logo of MapLibre is not required for using MapLibre.
      * @defaultValue compact: true, customAttribution: "MapLibre ...".
      */
     attributionControl?: false | AttributionControlOptions;
@@ -206,7 +208,9 @@ export type MapOptions = {
      */
     trackResize?: boolean;
     /**
-     * The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` Note: MapLibre GL JS uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
+     * The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` 
+     * !!! note
+     *     MapLibre GL JS uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
      * @defaultValue [0, 0]
      */
     center?: LngLatLike;
@@ -268,10 +272,19 @@ export type MapOptions = {
      */
     transformCameraUpdate?: CameraUpdateTransformFunction | null;
     /**
-     * A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
+     * A callback that overrides how the map constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
+     * @see [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/)
+     * Expected to return an object containing center and zoom.
      * @defaultValue null
      */
-    locale?: any;
+    transformConstrain?: TransformConstrainFunction | null;
+    /**
+     * A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
+     * For an example, see https://maplibre.org/maplibre-gl-js/docs/examples/locale-switching/
+     * Alternatively, search the official plugins page for plugins related to localization.
+     * @defaultValue null
+     */
+    locale?: Record<string, string>;
     /**
      * Controls the duration of the fade-in/fade-out animation for label collisions after initial map load, in milliseconds. This setting affects all symbol layers. This setting does not affect the duration of runtime styling transitions or raster tile cross-fading.
      * @defaultValue 300
@@ -305,7 +318,8 @@ export type MapOptions = {
      * font-family for locally overriding generation of Chinese, Japanese, and Korean characters.
      * For these characters, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
      * Set to `false`, to enable font settings from the map's style for these glyph ranges.
-     * The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js/docs/examples/use-locally-generated-ideographs).)
+     * The purpose of this option is to avoid bandwidth-intensive glyph server requests.
+     * @see [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js/docs/examples/use-locally-generated-ideographs/)
      * @defaultValue 'sans-serif'
      */
     localIdeographFontFamily?: string | false;
@@ -429,6 +443,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     maxTileCacheZoomLevels: config.MAX_TILE_CACHE_ZOOM_LEVELS,
     transformRequest: null,
     transformCameraUpdate: null,
+    transformConstrain: null,
     fadeDuration: 300,
     crossSourceCollisions: true,
     clickTolerance: 3,
@@ -517,7 +532,7 @@ export class Map extends Camera {
     _localIdeographFontFamily: string | false;
     _validateStyle: boolean;
     _requestManager: RequestManager;
-    _locale: typeof defaultLocale;
+    _locale: Record<string, string>;
     _removed: boolean;
     _clickTolerance: number;
     _overridePixelRatio: number | null | undefined;
@@ -605,6 +620,12 @@ export class Map extends Camera {
      */
     cancelPendingTileRequestsWhileZooming: boolean;
 
+    /**
+     * The map transform's callback that overrides the default constrain function.
+     * @defaultValue null
+     */
+    transformConstrain: TransformConstrainFunction | null;
+
     constructor(options: MapOptions) {
         PerformanceUtils.mark(PerformanceMarkers.create);
 
@@ -649,6 +670,9 @@ export class Map extends Camera {
         if (resolvedOptions.renderWorldCopies !== undefined) {
             transform.setRenderWorldCopies(resolvedOptions.renderWorldCopies);
         }
+        if (resolvedOptions.transformConstrain !== null) {
+            transform.setConstrain(resolvedOptions.transformConstrain);
+        }
 
         super(transform, cameraHelper, {bearingSnap: resolvedOptions.bearingSnap});
 
@@ -668,6 +692,7 @@ export class Map extends Camera {
         this._overridePixelRatio = resolvedOptions.pixelRatio;
         this._maxCanvasSize = resolvedOptions.maxCanvasSize;
         this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
+        this.transformConstrain = resolvedOptions.transformConstrain;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
 
         this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
@@ -791,8 +816,6 @@ export class Map extends Camera {
     /**
      * Sets a global state property that can be retrieved with the [`global-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#global-state).
      * If the value is null, it resets the property to its default value defined in the [`state` style property](https://maplibre.org/maplibre-style-spec/root/#state).
-     *
-     * Note that changing `global-state` values defined in layout properties is not supported, and will be ignored.
      *
      * @param propertyName - The name of the state property to set.
      * @param value - The value of the state property to set.
@@ -1262,6 +1285,25 @@ export class Map extends Camera {
      */
     setRenderWorldCopies(renderWorldCopies?: boolean | null): Map {
         this.transform.setRenderWorldCopies(renderWorldCopies);
+        return this._update();
+    }
+
+    /** Sets or clears the callback overriding how the map constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
+     *
+     * @param constrain - A {@link TransformConstrainFunction} callback defining how the viewport should respect the bounds.
+     * 
+     * `null` clears the callback and reverses the override of the map transform's default constrain function.
+     * @example
+     * ```ts
+     * function customTransformConstrain(lngLat, zoom) {
+     *   return {center: lngLat, zoom: zoom ?? 0};
+     * };
+     * map.setTransformConstrain(customTransformConstrain);
+     * ```
+     * @see [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/)
+     */
+    setTransformConstrain(constrain?: TransformConstrainFunction | null): Map {
+        this.transform.setConstrain(constrain);
         return this._update();
     }
 
@@ -2698,10 +2740,11 @@ export class Map extends Camera {
      * and [maximum zoom level](https://maplibre.org/maplibre-style-spec/layers/#maxzoom))
      * at which the layer will be rendered.
      *
-     * Note: For style layers using vector sources, style layers cannot be rendered at zoom levels lower than the
-     * minimum zoom level of the _source layer_ because the data does not exist at those zoom levels. If the minimum
-     * zoom level of the source layer is higher than the minimum zoom level defined in the style layer, the style
-     * layer will not be rendered at all zoom levels in the zoom range.
+     * !!! note
+     *     For style layers using vector sources, style layers cannot be rendered at zoom levels lower than the
+     *     minimum zoom level of the _source layer_ because the data does not exist at those zoom levels. If the minimum
+     *     zoom level of the source layer is higher than the minimum zoom level defined in the style layer, the style
+     *     layer will not be rendered at all zoom levels in the zoom range.
      *
      * @param layerId - The ID of the layer to which the zoom extent will be applied.
      * @param minzoom - The minimum zoom to set (0-24).
@@ -2984,7 +3027,8 @@ export class Map extends Camera {
      * - For vector or GeoJSON sources, using the [`promoteId`](https://maplibre.org/maplibre-style-spec/sources/#promoteid) option at the time the source is defined.
      * - For GeoJSON sources, using the [`generateId`](https://maplibre.org/maplibre-style-spec/sources/#generateid) option to auto-assign an `id` based on the feature's index in the source data. If you change feature data using `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
      *
-     * _Note: You can use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state) to access the values in a feature's state object for the purposes of styling._
+     * !!! note
+     *     You can use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state) to access the values in a feature's state object for the purposes of styling.
      *
      * @param feature - Feature identifier. Feature objects returned from
      * {@link Map.queryRenderedFeatures} or event handlers can be used as feature identifiers.
@@ -3069,7 +3113,8 @@ export class Map extends Camera {
      * A feature's `state` is a set of user-defined key-value pairs that are assigned to a feature at runtime.
      * Features are identified by their `feature.id` attribute, which can be any number or string.
      *
-     * _Note: To access the values in a feature's state object for the purposes of styling the feature, use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state)._
+     * !!! note
+     *     To access the values in a feature's state object for the purposes of styling the feature, use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state).
      *
      * @param feature - Feature identifier. Feature objects returned from
      * {@link Map.queryRenderedFeatures} or event handlers can be used as feature identifiers.
@@ -3349,15 +3394,14 @@ export class Map extends Camera {
             this._styleDirty = false;
 
             const zoom = this.transform.zoom;
-            const now = browser.now();
-            this.style.zoomHistory.update(zoom, now);
+            const currentTime = now();
+            this.style.zoomHistory.update(zoom, currentTime);
 
             const parameters = new EvaluationParameters(zoom, {
-                now,
+                now: currentTime,
                 fadeDuration,
                 zoomHistory: this.style.zoomHistory,
-                transition: this.style.getTransition(),
-                globalState: this.style.getGlobalState()
+                transition: this.style.getTransition()
             });
 
             const factor = parameters.crossFadingFactor();

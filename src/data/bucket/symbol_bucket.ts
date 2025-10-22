@@ -37,6 +37,7 @@ import {EvaluationParameters} from '../../style/evaluation_parameters';
 import {Formatted, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import {rtlWorkerPlugin} from '../../source/rtl_text_plugin_worker';
 import {getOverlapMode} from '../../style/style_layer/overlap_mode';
+import {isSafari} from '../../util/util';
 import type {CanonicalTileID} from '../../source/tile_id';
 import type {
     Bucket,
@@ -311,7 +312,6 @@ export class SymbolBucket implements Bucket {
 
     collisionBoxArray: CollisionBoxArray;
     zoom: number;
-    globalState: Record<string, any>;
     overscaling: number;
     layers: Array<SymbolStyleLayer>;
     layerIds: Array<string>;
@@ -324,7 +324,7 @@ export class SymbolBucket implements Bucket {
     iconsNeedLinear: boolean;
     bucketInstanceId: number;
     justReloaded: boolean;
-    hasPattern: boolean;
+    hasDependencies: boolean;
 
     textSizeData: SizeData;
     iconSizeData: SizeData;
@@ -363,14 +363,13 @@ export class SymbolBucket implements Bucket {
     constructor(options: BucketParameters<SymbolStyleLayer>) {
         this.collisionBoxArray = options.collisionBoxArray;
         this.zoom = options.zoom;
-        this.globalState = options.globalState;
-        this.overscaling = options.overscaling;
+        this.overscaling = isSafari(globalThis) ? Math.min(options.overscaling, 128) : options.overscaling;
         this.layers = options.layers;
         this.layerIds = this.layers.map(layer => layer.id);
         this.index = options.index;
         this.pixelRatio = options.pixelRatio;
         this.sourceLayerIndex = options.sourceLayerIndex;
-        this.hasPattern = false;
+        this.hasDependencies = false;
         this.hasRTLText = false;
         this.sortKeyRanges = [];
 
@@ -459,7 +458,7 @@ export class SymbolBucket implements Bucket {
         const icons = options.iconDependencies;
         const stacks = options.glyphDependencies;
         const availableImages = options.availableImages;
-        const globalProperties = new EvaluationParameters(this.zoom, {globalState: this.globalState});
+        const globalProperties = new EvaluationParameters(this.zoom);
 
         for (const {feature, id, index, sourceLayerIndex} of features) {
 
@@ -562,12 +561,10 @@ export class SymbolBucket implements Bucket {
     update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}) {
         if (!this.stateDependentLayers.length) return;
         this.text.programConfigurations.updatePaintArrays(states, vtLayer, this.layers, {
-            imagePositions,
-            globalState: this.globalState
+            imagePositions
         });
         this.icon.programConfigurations.updatePaintArrays(states, vtLayer, this.layers, {
-            imagePositions,
-            globalState: this.globalState
+            imagePositions
         });
     }
 
@@ -678,7 +675,7 @@ export class SymbolBucket implements Bucket {
             this.glyphOffsetArray.emplaceBack(glyphOffset[0]);
 
             if (i === quads.length - 1 || sectionIndex !== quads[i + 1].sectionIndex) {
-                arrays.programConfigurations.populatePaintArrays(layoutVertexArray.length, feature, feature.index, {imagePositions: {}, canonical, formattedSection: sections && sections[sectionIndex], globalState: this.globalState});
+                arrays.programConfigurations.populatePaintArrays(layoutVertexArray.length, feature, feature.index, {imagePositions: {}, canonical, formattedSection: sections && sections[sectionIndex]});
             }
         }
 

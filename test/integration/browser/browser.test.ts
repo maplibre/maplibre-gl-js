@@ -61,6 +61,43 @@ describe('Browser tests', () => {
         }
     }, 40000);
 
+    test('Contextmenu event triggered during scrollzoom', {retry: 3, timeout: 20000}, async () => {
+        const contextMenuEventFired = await page.evaluate(() => {
+            return new Promise<string>((resolve, _reject) => {
+                map.on('contextmenu', (e) => {resolve(e.type);});
+                map.getCanvas().dispatchEvent(new MouseEvent('mousedown', {bubbles: true, button: 2, clientX: 10, clientY: 10}));
+                map.getCanvas().dispatchEvent(new MouseEvent('contextmenu', {bubbles: true}));
+                map.getCanvas().dispatchEvent(new WheelEvent('wheel', {deltaY: 120, bubbles: true}));
+                map.getCanvas().dispatchEvent(new WheelEvent('wheel', {deltaY: 120, bubbles: true}));
+                map.getCanvas().dispatchEvent(new WheelEvent('wheel', {deltaY: 120, bubbles: true}));
+                map.getCanvas().dispatchEvent(new MouseEvent('mouseup', {bubbles: true, button: 2, clientX: 10, clientY: 10}));
+            });
+        });
+        expect(contextMenuEventFired).toBe('contextmenu');       
+    });
+
+    test('Mousemove events are fired during scrollzoom', {retry: 3, timeout: 20000}, async () => {
+        const mouseMoveFired = await page.evaluate(() => {
+            return new Promise<Array<number>>((resolve, _reject) => {
+                let mouseMoveCount = 0;
+                let wheelCount = 0;
+                map.on('mousemove', () => {mouseMoveCount++;});
+                map.on('wheel', () => {wheelCount++;});
+                map.getCanvas().dispatchEvent(new WheelEvent('wheel', {deltaY: 120, bubbles: true}));
+                map.getCanvas().dispatchEvent(new WheelEvent('wheel', {deltaY: 120, bubbles: true}));
+                map.getCanvas().dispatchEvent(new MouseEvent('mousemove', {bubbles: true}));
+                map.getCanvas().dispatchEvent(new WheelEvent('wheel', {deltaY: 120, bubbles: true}));
+                map.getCanvas().dispatchEvent(new MouseEvent('mousemove', {bubbles: true}));
+                map.getCanvas().dispatchEvent(new MouseEvent('mousemove', {bubbles: true}));
+                map.getCanvas().dispatchEvent(new WheelEvent('wheel', {deltaY: 120, bubbles: true}));
+                map.getCanvas().dispatchEvent(new MouseEvent('mousemove', {bubbles: true}));
+                resolve([mouseMoveCount, wheelCount]);
+            });
+        });
+        expect(mouseMoveFired[0]).toBe(4);
+        expect(mouseMoveFired[1]).toBe(4);
+    });
+
     test('Load should fire before resize and moveend', {retry: 3, timeout: 20000}, async () => {
         const firstFiredEvent = await page.evaluate(() => {
             const map2 = new maplibregl.Map({

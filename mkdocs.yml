@@ -48,6 +48,7 @@ markdown_extensions:
       hardbreak: True
       nbsp: True
   - attr_list
+  - admonition
 
 extra:
   social:
