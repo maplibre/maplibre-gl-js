@@ -463,7 +463,7 @@ export class GeoJSONSource extends Evented implements Source {
         ].map(g => this._getGeoJSONBounds(g));
 
         return (tile: Tile) => {
-            // Update all tiles that PREVIOUSLY contained an updated feature.
+            // Update the tile if it PREVIOUSLY contained an updated feature.
             const layers = tile.latestFeatureIndex.loadVTLayers();
             for (let i = 0; i < tile.latestFeatureIndex.featureIndexArray.length; i++) {
                 const featureIndex = tile.latestFeatureIndex.featureIndexArray.get(i);
@@ -473,7 +473,7 @@ export class GeoJSONSource extends Evented implements Source {
                 }
             }
 
-            // Update all tiles that WILL NOW contain an updated feature.
+            // Update the tile if it WILL NOW contain an updated feature.
             const tileBounds = tile.tileID.canonical.toLngLatBounds(
                 this.workerOptions.geojsonVtOptions.extent,
                 this.workerOptions.geojsonVtOptions.buffer
