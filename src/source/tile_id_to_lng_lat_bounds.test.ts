@@ -20,8 +20,8 @@ describe('tileIdToLngLatBounds', () => {
     });
 
     test('with buffer', () => {
-        const bounds = tileIdToLngLatBounds(new CanonicalTileID(1, 0, 0), 4096, 512);
-        const boundsNoBuffer = tileIdToLngLatBounds(new CanonicalTileID(1, 0, 0), 4096, 0);
+        const bounds = tileIdToLngLatBounds(new CanonicalTileID(1, 0, 0), 0.25);
+        const boundsNoBuffer = tileIdToLngLatBounds(new CanonicalTileID(1, 0, 0), 0);
 
         // With buffer, bounds should extend beyond the no-buffer bounds
         expect(bounds.getWest()).toBeLessThan(boundsNoBuffer.getWest());

@@ -1,15 +1,11 @@
-import {EXTENT} from '../data/extent';
 import {latFromMercatorY, lngFromMercatorX} from '../geo/mercator_coordinate';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
 import type {CanonicalTileID} from './tile_id';
 
 export function tileIdToLngLatBounds(
     {x,y,z}: CanonicalTileID,
-    extent: number = EXTENT,
-    extentBuffer: number = 0
+    buffer: number = 0,
 ): LngLatBounds {
-    const buffer = extentBuffer / extent;
-
     const lngMin = lngFromMercatorX((x - buffer) / Math.pow(2, z));
     const latMin = latFromMercatorY((y + 1 + buffer) / Math.pow(2, z));
 
