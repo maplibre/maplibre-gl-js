@@ -455,8 +455,6 @@ export class GeoJSONSource extends Evented implements Source {
 
         const ids = new Set([...update.map(u => u.id), ...remove]);
 
-        if (ids.size + add.length > 1000) return undefined;
-
         const boundsArray = [
             ...update.map(f => f.newGeometry),
             ...add.map(f => f.geometry)
