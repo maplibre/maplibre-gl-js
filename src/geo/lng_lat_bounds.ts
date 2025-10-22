@@ -1,5 +1,6 @@
 import {LngLat} from './lng_lat';
 import type {LngLatLike} from './lng_lat';
+import {wrap} from '../util/util';
 
 /**
  * A {@link LngLatBounds} object, an array of {@link LngLatLike} objects in [sw, ne] order,
@@ -303,14 +304,11 @@ export class LngLatBounds {
 
         if (!latIntersects) return false;
 
-        const normalizeLon = (west: number): number => {
-            return ((west + 180) % 360 + 360) % 360 - 180;
-        };
-
-        const thisWest = normalizeLon(this.getWest());
-        const thisEast = normalizeLon(this.getEast());
-        const otherWest = normalizeLon(other.getWest());
-        const otherEast = normalizeLon(other.getEast());
+        // Normalize longitudes to [-180, 180] range
+        const thisWest = wrap(this.getWest(), -180, 180);
+        const thisEast = wrap(this.getEast(), -180, 180);
+        const otherWest = wrap(other.getWest(), -180, 180);
+        const otherEast = wrap(other.getEast(), -180, 180);
 
         // Check if either bounds wraps around the antimeridian
         const thisWraps = thisWest > thisEast;
