@@ -202,6 +202,30 @@ describe('loadData', () => {
         properties: {},
     } as GeoJSON.GeoJSON;
 
+    const updateableFeatureCollection = {
+        type: 'FeatureCollection',
+        features: [
+            {
+                type: 'Feature',
+                id: 'point1',
+                geometry: {
+                    type: 'Point',
+                    coordinates: [0, 0],
+                },
+                properties: {},
+            },
+            {
+                type: 'Feature',
+                id: 'point2',
+                geometry: {
+                    type: 'Point',
+                    coordinates: [1, 1],
+                },
+                properties: {},
+            }
+        ]
+    } as GeoJSON.GeoJSON;
+
     const layerIndex = new StyleLayerIndex(layers);
     function createWorker() {
         return new GeoJSONWorkerSource(actor, layerIndex, []);
@@ -317,6 +341,15 @@ describe('loadData', () => {
 
         await worker.loadData({source: 'source1', data: JSON.stringify(updateableGeoJson)} as LoadGeoJSONParameters);
         await expect(worker.loadData({} as LoadGeoJSONParameters)).resolves.toBeDefined();
+    });
+
+    test('loadData should process cluster change with no data', async () => {
+        const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
+
+        await worker.loadData({source: 'source1', data: JSON.stringify(updateableFeatureCollection), cluster: false} as LoadGeoJSONParameters);
+        expect(worker.isClustered()).toBe(false);
+        await expect(worker.loadData({cluster: true} as LoadGeoJSONParameters)).resolves.toBeDefined();
+        expect(worker.isClustered()).toBe(true);
     });
 });
 

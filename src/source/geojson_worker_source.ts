@@ -255,6 +255,10 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
         }
     }
 
+    isClustered(): boolean {
+        return this._geoJSONIndex instanceof Supercluster;
+    }
+
     getClusterExpansionZoom(params: ClusterIDAndSource): number {
         return (this._geoJSONIndex as Supercluster).getClusterExpansionZoom(params.clusterId);
     }
