@@ -836,7 +836,7 @@ describe('GeoJSONSource.load', () => {
 });
 
 describe('GeoJSONSource._shoudReloadTile', () => {
-    function shared(id: CanonicalTileID, tileFeatures: Array<{id: string | number}>, diff: GeoJSONSourceDiff) {
+    function shouldReloadTile(id: CanonicalTileID, tileFeatures: Array<{id: string | number}>, diff: GeoJSONSourceDiff) {
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
 
         const tile = new Tile(new OverscaledTileID(id.z, 0, id.z, id.x, id.y), source.tileSize);
@@ -856,7 +856,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
     }
 
     test('returns true when diff.removeAll is true', () => {
-        const result = shared(
+        const result = shouldReloadTile(
             new CanonicalTileID(0, 0, 0),
             [],
             {removeAll: true}
@@ -865,7 +865,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
     });
 
     test('returns true when tile contains a feature that is being updated', () => {
-        const result = shared(
+        const result = shouldReloadTile(
             new CanonicalTileID(0, 0, 0),
             [{id: 0}],
             {
@@ -879,7 +879,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
     });
 
     test('returns true when tile contains a feature that is being removed', () => {
-        const result = shared(
+        const result = shouldReloadTile(
             new CanonicalTileID(0, 0, 0),
             [{id: 0}],
             {remove: [0]}
@@ -889,7 +889,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
 
     test('returns true when updated feature new geometry intersects tile bounds', () => {
         // Feature update with new geometry at 0,0 should intersect with tile 0/0/0
-        const result = shared(
+        const result = shouldReloadTile(
             new CanonicalTileID(0, 0, 0),
             [{id: 0}],
             {
@@ -904,7 +904,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
 
     test('returns false when diff has no changes affecting the tile', () => {
         // Feature far away from tile bounds
-        const result = shared(
+        const result = shouldReloadTile(
             new CanonicalTileID(10, 500, 500),
             [{id: 0}],
             {
@@ -920,7 +920,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
     });
 
     test('returns false when diff is empty', () => {
-        const result = shared(
+        const result = shouldReloadTile(
             new CanonicalTileID(0, 0, 0),
             [],
             {}
@@ -943,8 +943,8 @@ describe('GeoJSONSource._shoudReloadTile', () => {
             }]
         };
 
-        expect(shared(new CanonicalTileID(5, 1, 15), [], diff)).toBe(false);
-        expect(shared(new CanonicalTileID(5, 0, 15), [], diff)).toBe(true);
-        expect(shared(new CanonicalTileID(5, 31, 15), [], diff)).toBe(true);
+        expect(shouldReloadTile(new CanonicalTileID(5, 1, 15), [], diff)).toBe(false);
+        expect(shouldReloadTile(new CanonicalTileID(5, 0, 15), [], diff)).toBe(true);
+        expect(shouldReloadTile(new CanonicalTileID(5, 31, 15), [], diff)).toBe(true);
     });
 });
