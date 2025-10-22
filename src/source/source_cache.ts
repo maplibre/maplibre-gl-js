@@ -252,8 +252,9 @@ export class SourceCache extends Evented {
     }
 
     /**
-     * Reload tiles in this source. If source data has changed, reload all tiles using a state of 'expired',
-     * otherwise reload only non-errored tiles using state of 'reloading'.
+     * Reload tiles in this source.
+     * @param sourceDataChanged - If `true`, reload all tiles using a state of 'expired', otherwise reload only non-errored tiles using state of 'reloading'.
+     * @param shouldReloadTile - Optional function to "skip" reloading tiles whose data has not changed.
      */
     reload(
         sourceDataChanged?: boolean,
