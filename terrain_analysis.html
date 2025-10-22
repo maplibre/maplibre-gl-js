@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Advanced Terrain Shading with SunCalc</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- MapLibre GL -->
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css" />
+  <script src="https://unpkg.com/maplibre-gl@5.9.0/dist/maplibre-gl.js"></script>
+  <!-- SunCalc library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.8.0/suncalc.min.js"></script>
+  <style>
+    html, body, #map { margin: 0; padding: 0; height: 100%; }
+    #controls {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      font-family: sans-serif;
+    }
+    .control-button {
+      padding: 8px 16px;
+      font-size: 13px;
+      background: #ee8a65;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .control-button.active { background: #d35f34; }
+    .control-button:hover { background: #e67e54; }
+    /* Slider containers */
+    #snowSliderContainer,
+    #shadowControls {
+      margin-left: 10px;
+      color: #fff;
+      font-family: sans-serif;
+      font-size: 13px;
+    }
+    #snowSliderContainer, #shadowControls { display: none; }
+    input[type="range"] { vertical-align: middle; }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <button id="normalBtn" class="control-button">Normal</button>
+    <button id="avalancheBtn" class="control-button">Avalanche</button>
+    <button id="slopeBtn" class="control-button">Slope</button>
+    <button id="aspectBtn" class="control-button">Orientation</button>
+    <button id="snowBtn" class="control-button">Snow</button>
+    <button id="shadowBtn" class="control-button">Shadow</button>
+    <!-- Snow sliders -->
+    <div id="snowSliderContainer">
+      <label for="snowAltitudeSlider">Snow Altitude:</label>
+      <input type="range" id="snowAltitudeSlider" min="0" max="5000" step="50" value="3000">
+      <span id="snowAltitudeValue">3000</span>
+      <label for="snowSlopeSlider">Max Slope (°):</label>
+      <input type="range" id="snowSlopeSlider" min="0" max="90" step="1" value="55">
+      <span id="snowSlopeValue">55</span>
+    </div>
+    <!-- Shadow sliders -->
+    <div id="shadowControls">
+      <div>
+        <label for="shadowStepSlider">Shadow Step:</label>
+        <input type="range" id="shadowStepSlider" min="0.001" max="0.02" step="0.001" value="0.001">
+        <span id="shadowStepValue">0.001</span>
+      </div>
+      <div>
+        <label for="shadowScaleSlider">Shadow Scale:</label>
+        <input type="range" id="shadowScaleSlider" min="0.1" max="2.0" step="0.1" value="0.5">
+        <span id="shadowScaleValue">0.5</span>
+      </div>
+      <div>
+        <label for="shadowLengthSlider">Shadow Length:</label>
+        <input type="range" id="shadowLengthSlider" min="0.1" max="2.0" step="0.1" value="0.5">
+        <span id="shadowLengthValue">0.5</span>
+      </div>
+    </div>
+  </div>
+  <div id="map"></div>
+  <script src="https://unpkg.com/@acalcutt/maplibre-contour-pmtiles@latest/dist/maplibre-contour-pmtiles.min.js"></script>
+  <!-- Include shader definitions first -->
+  <script src="scripts/terrain/terrain-shaders.js"></script>
+  <!-- Main application script -->
+  <script src="scripts/terrain/terrain-analysis.js"></script>
+</body>
+</html>
