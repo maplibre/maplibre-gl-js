@@ -384,6 +384,59 @@ describe('GeoJSONSource.update', () => {
         expect(spy.mock.calls[1][0].data.dataDiff).toBeUndefined();
     });
 
+    test('modifying cluster properties after sending a diff', async () => {
+        const spy = vi.fn();
+        const mockDispatcher = wrapDispatcher({
+            sendAsync(message) {
+                spy(message);
+                return Promise.resolve({});
+            }
+        });
+        const geoJsonData = {
+            'type': 'FeatureCollection',
+            'features': [
+                {
+                    'type': 'Feature',
+                    'id': 1,
+                    'properties': {},
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [-122.48369693756104, 37.83381888486939]
+                    }
+                }
+            ]
+        } as GeoJSON.GeoJSON;
+
+        const source = new GeoJSONSource('id', {
+            type: 'geojson',
+            data: geoJsonData,
+            cluster: false,
+            clusterMaxZoom: 8,
+            clusterRadius: 100,
+            clusterMinPoints: 3,
+            generateId: true
+        }, mockDispatcher, undefined);
+
+        // Wait for initial data to be loaded
+        source.load();
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+        spy.mockReset();
+
+        const diff = {remove: [1]};
+        source.updateData(diff);
+        source.setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
+
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+        expect(spy).toHaveBeenCalledTimes(2);
+        expect(spy.mock.calls[0][0].data.cluster).toBe(false);
+        expect(spy.mock.calls[0][0].data.dataDiff).toEqual(diff);
+        expect(spy.mock.calls[1][0].data.cluster).toEqual(true);
+        expect(spy.mock.calls[1][0].data.data).not.toBeDefined();
+        expect(spy.mock.calls[1][0].data.dataDiff).not.toBeDefined();
+    });
+
     test('forwards Supercluster options with worker request, ignore max zoom of source', () => {
         const spy = vi.fn();
         vi.spyOn(console, 'warn').mockImplementation(() => {});
