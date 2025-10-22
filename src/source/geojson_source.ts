@@ -17,6 +17,7 @@ import type {GeoJSONSourceDiff} from './geojson_source_diff';
 import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
 import type {WorkerTileParameters} from './worker_source';
 import {MessageType} from '../util/actor_messages';
+import {tileIdToLngLatBounds} from './tile_id_to_lng_lat_bounds';
 
 /**
  * Options object for GeoJSONSource.
@@ -472,7 +473,8 @@ export class GeoJSONSource extends Evented implements Source {
             }
 
             // Update the tile if it WILL NOW contain an updated feature.
-            const tileBounds = tile.tileID.canonical.toLngLatBounds(
+            const tileBounds = tileIdToLngLatBounds(
+                tile.tileID.canonical,
                 this.workerOptions.geojsonVtOptions.extent,
                 this.workerOptions.geojsonVtOptions.buffer
             );

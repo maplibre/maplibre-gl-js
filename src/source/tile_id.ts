@@ -1,13 +1,12 @@
 import {getTileBBox} from '@mapbox/whoots-js';
 import {EXTENT} from '../data/extent';
 import Point from '@mapbox/point-geometry';
-import {latFromMercatorY, lngFromMercatorX, MercatorCoordinate} from '../geo/mercator_coordinate';
+import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {register} from '../util/web_worker_transfer';
 import {type mat4} from 'gl-matrix';
 import {type ICanonicalTileID, type IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
 import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util';
 import {isInBoundsForTileZoomXY} from '../util/world_bounds';
-import {LngLatBounds} from '../geo/lng_lat_bounds';
 
 /**
  * A canonical way to define a tile ID
@@ -65,18 +64,6 @@ export class CanonicalTileID implements ICanonicalTileID {
 
     toString() {
         return `${this.z}/${this.x}/${this.y}`;
-    }
-
-    toLngLatBounds(extent: number = EXTENT, extentBuffer: number = 0) {
-        const buffer = extentBuffer / extent;
-
-        const lngMin = lngFromMercatorX((this.x - buffer) / Math.pow(2, this.z));
-        const latMin = latFromMercatorY((this.y + 1 + buffer) / Math.pow(2, this.z));
-
-        const lngMax = lngFromMercatorX((this.x + 1 + buffer) / Math.pow(2, this.z));
-        const latMax = latFromMercatorY((this.y - buffer) / Math.pow(2, this.z));
-
-        return new LngLatBounds([lngMin, latMin], [lngMax, latMax]);
     }
 }
 
