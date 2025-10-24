@@ -831,6 +831,7 @@ describe('GeoJSONSource.load', () => {
         source.load();
 
         expect(spy).toHaveBeenCalledTimes(1);
-        expect(warnSpy).toHaveBeenCalledWith('No data or diff provided to GeoJSONSource id.');
+        expect(warnSpy).toHaveBeenCalledWith('No pending worker updates for GeoJSONSource id.');
     });
 });
+
