@@ -24,6 +24,18 @@ const wrapDispatcher = (dispatcher) => {
     } as Dispatcher;
 };
 
+// Helper to extract messages from spy calls
+const getMessages = (spy: any) => spy.mock.calls.map((a: any[]) => a[0]);
+
+// Filter to loadData ('LD') messages only
+const getLoadData = (spy: any) => getMessages(spy).filter(m => m?.type === MessageType.loadData);
+
+// Filter to messages with actual data (dataDiff or data field), excluding pure options updates
+const getDataMessages = (spy: any) => getLoadData(spy).filter(m => m?.data?.dataDiff || m?.data?.data);
+
+// Filter to setData messages only (have .data field)
+const getSetDataMessages = (spy: any) => getLoadData(spy).filter(m => m?.data?.data);
+
 const mockDispatcher = wrapDispatcher({
     sendAsync() { return Promise.resolve({}); }
 });
@@ -592,10 +604,8 @@ describe('GeoJSONSource.updateData', () => {
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
-        // With the new options-update feature, there may be additional messages.
-        // We're looking for the actual data updates (either setData with .data or updateData with .dataDiff).
-        const messages = spy.mock.calls.map(args => args[0]);
-        const dataMessages = messages.filter(m => m?.type === 'LD' && (m?.data?.dataDiff || m?.data?.data));
+        // Filter to messages with actual data (dataDiff or data fields), excluding options-only updates
+        const dataMessages = getDataMessages(spy);
 
         // First call: setData(data1) - has .data.data field
         // Following calls: updateData(...) - have .data.dataDiff field
@@ -638,10 +648,8 @@ describe('GeoJSONSource.updateData', () => {
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
-        // With the new options-update feature, there may be additional messages.
-        // Filter to messages that actually contain data (data field for setData).
-        const messages = spy.mock.calls.map(args => args[0]);
-        const dataMessages = messages.filter(m => m?.type === 'LD' && m?.data?.data);
+        // Filter to setData messages (data field), excluding options-only updates
+        const dataMessages = getSetDataMessages(spy);
 
         expect(dataMessages.length).toBeGreaterThanOrEqual(2);
         expect(dataMessages[0].data.data).toEqual(JSON.stringify(data1));
