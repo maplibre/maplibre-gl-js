@@ -833,5 +833,48 @@ describe('GeoJSONSource.load', () => {
         expect(spy).toHaveBeenCalledTimes(1);
         expect(warnSpy).toHaveBeenCalledWith('No pending worker updates for GeoJSONSource id.');
     });
-});
 
+    test('setClusterOptions triggers worker update and toggles loaded()', async () => {
+        const calls: any[] = [];
+        const mockDispatcher = wrapDispatcher({
+            sendAsync(message: any) {
+                calls.push(message);
+                // Simuliere sofort erfolgreiche Antwort
+                return Promise.resolve({});
+            }
+        });
+
+        const source = new GeoJSONSource(
+            'id',
+            {
+                type: 'geojson',
+                data: {type: 'FeatureCollection', features: []} as GeoJSON.GeoJSON,
+                cluster: true,
+                clusterRadius: 50
+            },
+            mockDispatcher,
+            undefined
+        );
+
+        // Initiale Ladung
+        await source.load();
+        expect(source.loaded()).toBe(true);
+
+        // Clear vorherige Nachrichten
+        calls.length = 0;
+
+        // Änderung: Radius -> 80
+        source.setClusterOptions({clusterRadius: 80});
+
+        // Sollte genau ein Worker-Update ausgelöst haben
+        expect(calls.length).toBe(1);
+        expect(calls[0].type).toBe(MessageType.loadData);
+        // loaded() sollte während des Updates false sein (direkt nach Aufruf)
+        expect(source.loaded()).toBe(false);
+
+        // simulated "worker done" (sendAsync hat bereits resolved)
+        // kurzer Tick, damit interne Flags umspringen können
+        await new Promise(r => setTimeout(r, 0));
+        expect(source.loaded()).toBe(true);
+    });
+});
