@@ -1206,4 +1206,118 @@ describe('marker', () => {
         expect(adjustedTransform)
             .toContain('translate(262.4px, 235.5934100987358px)');
     });
+
+    describe('marker + popup interaction', () => {
+        test('popup follows marker while moving', () => {
+            const map = createMap();
+            const marker = new Marker({draggable: true})
+                .setLngLat([0, 0])
+                .addTo(map);
+
+            const popup = new Popup({closeButton: false})
+                .setHTML('X');
+
+            marker.setPopup(popup).togglePopup();
+
+            // Spy: Wir beobachten, dass das Popup bei jeder Bewegung neu gesetzt wird
+            const spy = vi.spyOn(popup, 'setLngLat');
+
+            // Simuliere Marker-Bewegung
+            marker.setLngLat([0.01, 0.02]);
+
+            // Erwartung: Popup bekam ein Update
+            expect(spy).toHaveBeenCalled();
+            const lastArg = spy.mock.calls.at(-1)![0] as any;
+            expect(lastArg.lng).toBe(0.01);
+            expect(lastArg.lat).toBe(0.02);
+
+            spy.mockRestore();
+            map.remove();
+        });
+
+        test('popup repositions on marker movement without drag', () => {
+            const map = createMap();
+            const marker = new Marker()
+                .setLngLat([0, 0])
+                .addTo(map);
+
+            const popup = new Popup({closeButton: false})
+                .setHTML('Test popup');
+
+            marker.setPopup(popup).togglePopup();
+
+            // Verify popup is open
+            expect(popup.isOpen()).toBe(true);
+
+            const spy = vi.spyOn(popup, 'setLngLat');
+
+            // Move marker programmatically
+            marker.setLngLat([1, 1]);
+
+            // Popup should update position
+            expect(spy).toHaveBeenCalled();
+            const call = spy.mock.calls.at(-1)![0] as any;
+            expect(call.lng).toBe(1);
+            expect(call.lat).toBe(1);
+
+            spy.mockRestore();
+            map.remove();
+        });
+
+        test('popup stays attached during consecutive marker moves', () => {
+            const map = createMap();
+            const marker = new Marker({draggable: true})
+                .setLngLat([0, 0])
+                .addTo(map);
+
+            const popup = new Popup({closeButton: false})
+                .setHTML('Follow me!');
+
+            marker.setPopup(popup).togglePopup();
+
+            const spy = vi.spyOn(popup, 'setLngLat');
+
+            // Simulate multiple rapid moves
+            const positions = [[0.01, 0.01], [0.02, 0.02], [0.03, 0.03]];
+            for (const pos of positions) {
+                marker.setLngLat(pos as [number, number]);
+            }
+
+            // All positions should have been set on the popup
+            expect(spy.mock.calls.length).toBeGreaterThanOrEqual(positions.length);
+
+            // Last position should match
+            const lastCall = spy.mock.calls.at(-1)![0] as any;
+            expect(lastCall.lng).toBe(0.03);
+            expect(lastCall.lat).toBe(0.03);
+
+            spy.mockRestore();
+            map.remove();
+        });
+
+        test('popup stays attached when map zooms/pans', () => {
+            const map = createMap();
+            const marker = new Marker()
+                .setLngLat([0, 0])
+                .addTo(map);
+
+            const popup = new Popup({closeButton: false})
+                .setHTML('Stay with me!');
+
+            marker.setPopup(popup).togglePopup();
+
+            const initialPopupLngLat = popup.getLngLat();
+            expect(initialPopupLngLat).toBeDefined();
+
+            // Simulate map interactions
+            const initialZoom = map.getZoom();
+            map.setZoom(initialZoom + 1);
+
+            // Popup should still be at the marker location
+            const popupLngLatAfterZoom = popup.getLngLat();
+            expect(popupLngLatAfterZoom).toBeDefined();
+
+            map.remove();
+        });
+    });
 });

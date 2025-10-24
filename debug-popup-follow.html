@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Popup follow marker - Issue #5655</title>
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css">
+  <style>
+    html, body, #map { height: 100%; margin: 0; }
+    body { display: flex; font-family: Arial, sans-serif; }
+    #map { flex: 1; }
+    #log { width: 300px; background: #f0f0f0; padding: 10px; overflow-y: auto; font-size: 12px; }
+    #log p { margin: 4px 0; color: #333; }
+  </style>
+</head>
+<body>
+<div id="map"></div>
+<div id="log">
+  <h3>Drag the marker</h3>
+  <p>Watch if popup stays attached...</p>
+  <div id="events"></div>
+</div>
+
+<script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
+<script>
+  const map = new maplibregl.Map({
+    container: 'map',
+    style: 'https://demotiles.maplibre.org/style.json',
+    center: [13.404954, 52.520008],
+    zoom: 12,
+    pitch: 40
+  });
+
+  const marker = new maplibregl.Marker({draggable: true})
+    .setLngLat([13.404954, 52.520008])
+    .addTo(map);
+
+  const popup = new maplibregl.Popup({closeButton: false, closeOnClick: false})
+    .setHTML('<div style="padding: 10px;"><strong>Hello! 👋</strong><br>Keep me attached!</div>')
+    .setMaxWidth('200px');
+
+  marker.setPopup(popup).togglePopup();
+
+  const eventsDiv = document.getElementById('events');
+  function log(msg) {
+    const p = document.createElement('p');
+    p.textContent = new Date().toLocaleTimeString() + ' - ' + msg;
+    eventsDiv.appendChild(p);
+    eventsDiv.scrollTop = eventsDiv.scrollHeight;
+  }
+
+  marker.on('dragstart', () => log('🔴 dragstart'));
+  marker.on('drag', () => {
+    const pos = marker.getLngLat();
+    log(`📍 drag [${pos.lng.toFixed(4)}, ${pos.lat.toFixed(4)}]`);
+  });
+  marker.on('dragend', () => log('🟢 dragend'));
+
+  // Extra: try map interactions
+  map.on('move', () => log('🗺️ map moved'));
+  map.on('zoomend', () => log('🔍 zoom changed'));
+</script>
+</body>
+</html>
