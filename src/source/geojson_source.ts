@@ -126,7 +126,7 @@ export class GeoJSONSource extends Evented implements Source {
     map: Map;
     actor: Actor;
     _isUpdatingWorker: boolean;
-    _pendingWorkerUpdate: { data?: GeoJSON.GeoJSON | string; diff?: GeoJSONSourceDiff };
+    _pendingWorkerUpdate: { data?: GeoJSON.GeoJSON | string; diff?: GeoJSONSourceDiff; optionsChanged?: boolean };
     _collectResourceTiming: boolean;
     _removed: boolean;
 
@@ -201,6 +201,10 @@ export class GeoJSONSource extends Evented implements Source {
 
     private _pixelsToTileUnits(pixelValue: number): number {
         return pixelValue * (EXTENT / this.tileSize);
+    }
+
+    private _hasPendingWorkerUpdate(): boolean {
+        return this._pendingWorkerUpdate.data !== undefined || this._pendingWorkerUpdate.diff !== undefined || this._pendingWorkerUpdate.optionsChanged;
     }
 
     private _getClusterMaxZoom(clusterMaxZoom: number): number {
@@ -308,13 +312,16 @@ export class GeoJSONSource extends Evented implements Source {
      * ```
      */
     setClusterOptions(options: SetClusterOptions): this {
-        this.workerOptions.cluster = options.cluster;
-        if (options) {
-            if (options.clusterRadius !== undefined) this.workerOptions.superclusterOptions.radius = this._pixelsToTileUnits(options.clusterRadius);
-            if (options.clusterMaxZoom !== undefined) {
-                this.workerOptions.superclusterOptions.maxZoom = this._getClusterMaxZoom(options.clusterMaxZoom);
-            }
+        if (options.cluster !== undefined) {
+            this.workerOptions.cluster = options.cluster;
         }
+        if (options.clusterRadius !== undefined) {
+            this.workerOptions.superclusterOptions.radius = this._pixelsToTileUnits(options.clusterRadius);
+        }
+        if (options.clusterMaxZoom !== undefined) {
+            this.workerOptions.superclusterOptions.maxZoom = this._getClusterMaxZoom(options.clusterMaxZoom);
+        }
+        this._pendingWorkerUpdate.optionsChanged = true;
         this._updateWorkerData();
         return this;
     }
@@ -380,14 +387,12 @@ export class GeoJSONSource extends Evented implements Source {
      * using geojson-vt or supercluster as appropriate.
      */
     async _updateWorkerData(): Promise<void> {
-        if (this._isUpdatingWorker) return;
-
-        const {data, diff} = this._pendingWorkerUpdate;
-
-        if (!data && !diff) {
-            warnOnce(`No data or diff provided to GeoJSONSource ${this.id}.`);
+        if (!this._hasPendingWorkerUpdate()) {
+            warnOnce(`No pending worker updates for GeoJSONSource ${this.id}.`);
             return;
         }
+
+        const {data, diff} = this._pendingWorkerUpdate;
 
         const options: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
         if (data) {
@@ -405,6 +410,8 @@ export class GeoJSONSource extends Evented implements Source {
         }
 
         this._isUpdatingWorker = true;
+        // Reset the flag since this update is using the latest options
+        this._pendingWorkerUpdate.optionsChanged = undefined;
         this.fire(new Event('dataloading', {dataType: 'source'}));
         try {
             const result = await this.actor.sendAsync({type: MessageType.loadData, data: options});
@@ -439,14 +446,14 @@ export class GeoJSONSource extends Evented implements Source {
             this.fire(new ErrorEvent(err));
         } finally {
             // If there is more pending data, update worker again.
-            if (this._pendingWorkerUpdate.data || this._pendingWorkerUpdate.diff) {
+            if (this._hasPendingWorkerUpdate()) {
                 this._updateWorkerData();
             }
         }
     }
 
     loaded(): boolean {
-        return !this._isUpdatingWorker && this._pendingWorkerUpdate.data === undefined && this._pendingWorkerUpdate.diff === undefined;
+        return !this._isUpdatingWorker && !this._hasPendingWorkerUpdate();
     }
 
     async loadTile(tile: Tile): Promise<void> {
@@ -505,3 +512,4 @@ export class GeoJSONSource extends Evented implements Source {
         return false;
     }
 }
+
