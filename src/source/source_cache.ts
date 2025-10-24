@@ -252,10 +252,14 @@ export class SourceCache extends Evented {
     }
 
     /**
-     * Reload tiles in this source. If source data has changed, reload all tiles using a state of 'expired',
-     * otherwise reload only non-errored tiles using state of 'reloading'.
+     * Reload tiles in this source.
+     * @param sourceDataChanged - If `true`, reload all tiles using a state of 'expired', otherwise reload only non-errored tiles using state of 'reloading'.
+     * @param shouldReloadTile - Optional function to "skip" reloading tiles whose data has not changed.
      */
-    reload(sourceDataChanged?: boolean) {
+    reload(
+        sourceDataChanged?: boolean,
+        shouldReloadTile?: (tile: Tile) => boolean
+    ) {
         if (this._paused) {
             this._shouldReloadOnResume = true;
             return;
@@ -264,7 +268,9 @@ export class SourceCache extends Evented {
         this._cache.reset();
 
         for (const i in this._tiles) {
-            if (sourceDataChanged) {
+            if (shouldReloadTile && !shouldReloadTile(this._tiles[i])) {
+                continue;
+            } else if (sourceDataChanged) {
                 this._reloadTile(i, 'expired');
             } else if (this._tiles[i].state !== 'errored') {
                 this._reloadTile(i, 'reloading');
@@ -1023,7 +1029,7 @@ export class SourceCache extends Evented {
             return;
         }
 
-        this.reload(e.sourceDataChanged);
+        this.reload(e.sourceDataChanged, e.shouldReloadTile);
         if (this.transform) {
             this.update(this.transform, this.terrain);
         }

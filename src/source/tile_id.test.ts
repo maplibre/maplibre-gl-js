@@ -58,7 +58,6 @@ describe('CanonicalTileID', () => {
     test('.url replaces {z}/{x}/{y}/{z}/{x}/{y}', () => {
         expect(new CanonicalTileID(2, 1, 0).url(['{z}/{x}/{y}/{z}/{x}/{y}.json'], 1)).toBe('2/1/0/2/1/0.json');
     });
-
 });
 
 describe('OverscaledTileID', () => {

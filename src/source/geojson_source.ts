@@ -17,6 +17,7 @@ import type {GeoJSONSourceDiff} from './geojson_source_diff';
 import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
 import type {WorkerTileParameters} from './worker_source';
 import {MessageType} from '../util/actor_messages';
+import {tileIdToLngLatBounds} from './tile_id_to_lng_lat_bounds';
 
 /**
  * Options object for GeoJSONSource.
@@ -275,8 +276,11 @@ export class GeoJSONSource extends Evented implements Source {
      * @returns a promise which resolves to the source's boundaries
      */
     async getBounds(): Promise<LngLatBounds> {
+        return this._getGeoJSONBounds(await this.getData());
+    }
+
+    _getGeoJSONBounds(data: GeoJSON.GeoJSON): LngLatBounds {
         const bounds = new LngLatBounds();
-        const data = await this.getData();
         let coordinates: number[];
         switch (data.type) {
             case 'FeatureCollection':
@@ -429,7 +433,7 @@ export class GeoJSONSource extends Evented implements Source {
             // although GeoJSON sources contain no metadata, we fire this event to let the SourceCache
             // know its ok to start requesting tiles.
             this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
-            this.fire(new Event('data', {...eventData, sourceDataType: 'content'}));
+            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTile: this._getShouldReloadTile(diff)}));
         } catch (err) {
             this._isUpdatingWorker = false;
             if (this._removed) {
@@ -443,6 +447,45 @@ export class GeoJSONSource extends Evented implements Source {
                 this._updateWorkerData();
             }
         }
+    }
+
+    _getShouldReloadTile(diff?: GeoJSONSourceDiff): (tile: Tile) => boolean {
+        if (!diff || diff.removeAll) return undefined;
+
+        const {add = [], update = [], remove = []} = (diff || {});
+
+        const ids = new Set([...update.map(u => u.id), ...remove]);
+
+        const boundsArray = [
+            ...update.map(f => f.newGeometry),
+            ...add.map(f => f.geometry)
+        ].map(g => this._getGeoJSONBounds(g));
+
+        return (tile: Tile) => {
+            // Update the tile if it PREVIOUSLY contained an updated feature.
+            const layers = tile.latestFeatureIndex.loadVTLayers();
+            for (let i = 0; i < tile.latestFeatureIndex.featureIndexArray.length; i++) {
+                const featureIndex = tile.latestFeatureIndex.featureIndexArray.get(i);
+                const feature = layers._geojsonTileLayer.feature(featureIndex.featureIndex);
+                if (ids.has(feature.id)) {
+                    return true;
+                }
+            }
+
+            // Update the tile if it WILL NOW contain an updated feature.
+            const {buffer, extent} = this.workerOptions.geojsonVtOptions;
+            const tileBounds = tileIdToLngLatBounds(
+                tile.tileID.canonical,
+                buffer / extent
+            );
+            for (const bounds of boundsArray) {
+                if (tileBounds.intersects(bounds)) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
     }
 
     loaded(): boolean {
