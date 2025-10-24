@@ -168,7 +168,7 @@ describe('marker', () => {
             .setLngLat([0,0])
             .setPopup(popup)
             .addTo(map);
-        
+
         // open popup
         marker.togglePopup();
         const spy = vi.fn();

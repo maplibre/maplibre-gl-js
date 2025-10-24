@@ -526,7 +526,7 @@ describe('GeoJSONSource.updateData', () => {
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
-        expect(spy.mock.calls.length).toBeGreaterThanOrEqual(2);
+        expect(spy).toHaveBeenCalledTimes(2);
         expect(spy.mock.calls[0][0].data.dataDiff).toEqual(update1);
         expect(spy.mock.calls[1][0].data.dataDiff).toEqual(update2);
     });
@@ -566,7 +566,7 @@ describe('GeoJSONSource.updateData', () => {
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
-        expect(spy.mock.calls.length).toBeGreaterThanOrEqual(2);
+        expect(spy).toHaveBeenCalledTimes(2);
         expect(spy.mock.calls[0][0].data.data).toEqual(JSON.stringify(data1));
         expect(spy.mock.calls[1][0].data.dataDiff).toEqual({
             remove: ['1', '4'],
@@ -608,7 +608,7 @@ describe('GeoJSONSource.updateData', () => {
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
-        expect(spy.mock.calls.length).toBeGreaterThanOrEqual(2);
+        expect(spy).toHaveBeenCalledTimes(2);
         expect(spy.mock.calls[0][0].data.data).toEqual(JSON.stringify(data1));
         expect(spy.mock.calls[1][0].data.data).toEqual(JSON.stringify(data2));
     });
@@ -878,4 +878,3 @@ describe('GeoJSONSource.load', () => {
         expect(source.loaded()).toBe(true);
     });
 });
-
