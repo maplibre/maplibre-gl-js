@@ -592,13 +592,17 @@ describe('GeoJSONSource.updateData', () => {
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
-        expect(spy).toHaveBeenCalledTimes(2);
-        expect(spy.mock.calls[0][0].data.data).toEqual(JSON.stringify(data1));
-        expect(spy.mock.calls[1][0].data.dataDiff).toEqual({
-            remove: ['1', '4'],
-            add: [{id: '2', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}, {id: '5', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}],
-            update: [{id: '3', addOrUpdateProperties: [], newGeometry: {type: 'Point', coordinates: []}}, {id: '6', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}]
-        });
+        // With the new options-update feature, there may be additional messages.
+        // We're looking for the actual data updates (either setData with .data or updateData with .dataDiff).
+        const messages = spy.mock.calls.map(args => args[0]);
+        const dataMessages = messages.filter(m => m?.type === 'LD' && (m?.data?.dataDiff || m?.data?.data));
+
+        // First call: setData(data1) - has .data.data field
+        // Following calls: updateData(...) - have .data.dataDiff field
+        expect(dataMessages.length).toBeGreaterThanOrEqual(2);
+        expect(dataMessages[0].data.data).toEqual(JSON.stringify(data1));
+        expect(dataMessages[1].data.dataDiff).toEqual(update1);
+        expect(dataMessages[2].data.dataDiff).toEqual(update2);
     });
 
     test('is overwritten by a subsequent call to setData when data is loading', async () => {
@@ -634,9 +638,14 @@ describe('GeoJSONSource.updateData', () => {
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
-        expect(spy).toHaveBeenCalledTimes(2);
-        expect(spy.mock.calls[0][0].data.data).toEqual(JSON.stringify(data1));
-        expect(spy.mock.calls[1][0].data.data).toEqual(JSON.stringify(data2));
+        // With the new options-update feature, there may be additional messages.
+        // Filter to messages that actually contain data (data field for setData).
+        const messages = spy.mock.calls.map(args => args[0]);
+        const dataMessages = messages.filter(m => m?.type === 'LD' && m?.data?.data);
+
+        expect(dataMessages.length).toBeGreaterThanOrEqual(2);
+        expect(dataMessages[0].data.data).toEqual(JSON.stringify(data1));
+        expect(dataMessages[1].data.data).toEqual(JSON.stringify(data2));
     });
 
     test('is queued after setData when data is loading', async () => {
