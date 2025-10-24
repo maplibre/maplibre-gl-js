@@ -162,15 +162,41 @@ describe('GeoJSONSource.setData', () => {
     });
 
     test('only marks source as loaded when there are no pending loads', async () => {
-        const source = createSource();
-        const setDataPromise = source.once('data');
-        source.setData({} as GeoJSON.GeoJSON);
-        source.setData({} as GeoJSON.GeoJSON);
-        await setDataPromise;
-        expect(source.loaded()).toBeFalsy();
-        const setDataPromise2 = source.once('data');
-        await setDataPromise2;
-        expect(source.loaded()).toBeTruthy();
+        const calls: any[] = [];
+        let delayLoadData = false;
+        const pendingResolvers: Array<() => void> = [];
+
+        const mockDispatcher = wrapDispatcher({
+            sendAsync(message: any) {
+                calls.push(message);
+                if (message?.type === MessageType.loadData && delayLoadData) {
+                    return new Promise<void>(resolve => pendingResolvers.push(resolve));
+                }
+                return Promise.resolve({});
+            }
+        });
+
+        const source = new GeoJSONSource('id', {
+            type: 'geojson',
+            data: {type: 'FeatureCollection', features: []} as GeoJSON.GeoJSON
+        }, mockDispatcher, undefined);
+
+        // initial load completes → loaded() true
+        await source.load();
+        expect(source.loaded()).toBe(true);
+
+        // ab hier Worker-Updates verzögern
+        delayLoadData = true;
+
+        // Options-Änderung triggert loadData → sollte loaded() direkt auf false setzen
+        source.setClusterOptions({clusterRadius: 80});
+        expect(source.loaded()).toBe(false);
+
+        // Worker „fertig"
+        pendingResolvers.splice(0).forEach(r => r());
+        await new Promise(r => setTimeout(r, 0));
+
+        expect(source.loaded()).toBe(true);
     });
 
     test('marks source as not loaded before firing "dataloading" event', async () => {
