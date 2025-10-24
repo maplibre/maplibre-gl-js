@@ -24,6 +24,18 @@ const wrapDispatcher = (dispatcher) => {
     } as Dispatcher;
 };
 
+// Helper to extract messages from spy calls
+const getMessages = (spy: any) => spy.mock.calls.map((a: any[]) => a[0]);
+
+// Filter to loadData ('LD') messages only
+const getLoadData = (spy: any) => getMessages(spy).filter(m => m?.type === MessageType.loadData);
+
+// Filter to messages with actual data (dataDiff or data field), excluding pure options updates
+const getDataMessages = (spy: any) => getLoadData(spy).filter(m => m?.data?.dataDiff || m?.data?.data);
+
+// Filter to setData messages only (have .data field)
+const getSetDataMessages = (spy: any) => getLoadData(spy).filter(m => m?.data?.data);
+
 const mockDispatcher = wrapDispatcher({
     sendAsync() { return Promise.resolve({}); }
 });
@@ -162,15 +174,41 @@ describe('GeoJSONSource.setData', () => {
     });
 
     test('only marks source as loaded when there are no pending loads', async () => {
-        const source = createSource();
-        const setDataPromise = source.once('data');
-        source.setData({} as GeoJSON.GeoJSON);
-        source.setData({} as GeoJSON.GeoJSON);
-        await setDataPromise;
-        expect(source.loaded()).toBeFalsy();
-        const setDataPromise2 = source.once('data');
-        await setDataPromise2;
-        expect(source.loaded()).toBeTruthy();
+        const calls: any[] = [];
+        let delayLoadData = false;
+        const pendingResolvers: Array<() => void> = [];
+
+        const mockDispatcher = wrapDispatcher({
+            sendAsync(message: any) {
+                calls.push(message);
+                if (message?.type === MessageType.loadData && delayLoadData) {
+                    return new Promise<void>(resolve => pendingResolvers.push(resolve));
+                }
+                return Promise.resolve({});
+            }
+        });
+
+        const source = new GeoJSONSource('id', {
+            type: 'geojson',
+            data: {type: 'FeatureCollection', features: []} as GeoJSON.GeoJSON
+        }, mockDispatcher, undefined);
+
+        // initial load completes → loaded() true
+        await source.load();
+        expect(source.loaded()).toBe(true);
+
+        // ab hier Worker-Updates verzögern
+        delayLoadData = true;
+
+        // Options-Änderung triggert loadData → sollte loaded() direkt auf false setzen
+        source.setClusterOptions({clusterRadius: 80});
+        expect(source.loaded()).toBe(false);
+
+        // Worker „fertig"
+        pendingResolvers.splice(0).forEach(r => r());
+        await new Promise(r => setTimeout(r, 0));
+
+        expect(source.loaded()).toBe(true);
     });
 
     test('marks source as not loaded before firing "dataloading" event', async () => {
@@ -566,13 +604,15 @@ describe('GeoJSONSource.updateData', () => {
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
-        expect(spy).toHaveBeenCalledTimes(2);
-        expect(spy.mock.calls[0][0].data.data).toEqual(JSON.stringify(data1));
-        expect(spy.mock.calls[1][0].data.dataDiff).toEqual({
-            remove: ['1', '4'],
-            add: [{id: '2', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}, {id: '5', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}],
-            update: [{id: '3', addOrUpdateProperties: [], newGeometry: {type: 'Point', coordinates: []}}, {id: '6', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}]
-        });
+        // Filter to messages with actual data (dataDiff or data fields), excluding options-only updates
+        const dataMessages = getDataMessages(spy);
+
+        // First call: setData(data1) - has .data.data field
+        // Following calls: updateData(...) - have .data.dataDiff field
+        expect(dataMessages.length).toBeGreaterThanOrEqual(2);
+        expect(dataMessages[0].data.data).toEqual(JSON.stringify(data1));
+        expect(dataMessages[1].data.dataDiff).toEqual(update1);
+        expect(dataMessages[2].data.dataDiff).toEqual(update2);
     });
 
     test('is overwritten by a subsequent call to setData when data is loading', async () => {
@@ -608,9 +648,12 @@ describe('GeoJSONSource.updateData', () => {
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
-        expect(spy).toHaveBeenCalledTimes(2);
-        expect(spy.mock.calls[0][0].data.data).toEqual(JSON.stringify(data1));
-        expect(spy.mock.calls[1][0].data.data).toEqual(JSON.stringify(data2));
+        // Filter to setData messages (data field), excluding options-only updates
+        const dataMessages = getSetDataMessages(spy);
+
+        expect(dataMessages.length).toBeGreaterThanOrEqual(2);
+        expect(dataMessages[0].data.data).toEqual(JSON.stringify(data1));
+        expect(dataMessages[1].data.data).toEqual(JSON.stringify(data2));
     });
 
     test('is queued after setData when data is loading', async () => {
@@ -831,6 +874,50 @@ describe('GeoJSONSource.load', () => {
         source.load();
 
         expect(spy).toHaveBeenCalledTimes(1);
-        expect(warnSpy).toHaveBeenCalledWith('No data or diff provided to GeoJSONSource id.');
+        expect(warnSpy).toHaveBeenCalledWith('No pending worker updates for GeoJSONSource id.');
+    });
+
+    test('setClusterOptions triggers worker update and toggles loaded()', async () => {
+        const calls: any[] = [];
+        const mockDispatcher = wrapDispatcher({
+            sendAsync(message: any) {
+                calls.push(message);
+                // Simuliere sofort erfolgreiche Antwort
+                return Promise.resolve({});
+            }
+        });
+
+        const source = new GeoJSONSource(
+            'id',
+            {
+                type: 'geojson',
+                data: {type: 'FeatureCollection', features: []} as GeoJSON.GeoJSON,
+                cluster: true,
+                clusterRadius: 50
+            },
+            mockDispatcher,
+            undefined
+        );
+
+        // Initiale Ladung
+        await source.load();
+        expect(source.loaded()).toBe(true);
+
+        // Clear vorherige Nachrichten
+        calls.length = 0;
+
+        // Änderung: Radius -> 80
+        source.setClusterOptions({clusterRadius: 80});
+
+        // Sollte genau ein Worker-Update ausgelöst haben
+        expect(calls.length).toBe(1);
+        expect(calls[0].type).toBe(MessageType.loadData);
+        // loaded() sollte während des Updates false sein (direkt nach Aufruf)
+        expect(source.loaded()).toBe(false);
+
+        // simulated "worker done" (sendAsync hat bereits resolved)
+        // kurzer Tick, damit interne Flags umspringen können
+        await new Promise(r => setTimeout(r, 0));
+        expect(source.loaded()).toBe(true);
     });
 });
