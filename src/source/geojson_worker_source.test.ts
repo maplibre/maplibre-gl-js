@@ -1,5 +1,5 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source';
+import {createGeoJSONIndex, GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {OverscaledTileID} from './tile_id';
 import perf from '../util/performance';
@@ -344,12 +344,18 @@ describe('loadData', () => {
     });
 
     test('loadData should process cluster change with no data', async () => {
-        const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
+        const spy = vi.fn();
+        const mockCreateGeoJSONIndex = (data: any, params: any) => {
+            spy(params);
+            return createGeoJSONIndex(data, params);
+        };
+
+        const worker = new GeoJSONWorkerSource(actor, layerIndex, [], mockCreateGeoJSONIndex);
 
         await worker.loadData({source: 'source1', data: JSON.stringify(updateableFeatureCollection), cluster: false} as LoadGeoJSONParameters);
-        expect(worker.isClustered()).toBe(false);
+        expect(spy.mock.calls[0][0].cluster).toBe(false);
         await expect(worker.loadData({cluster: true} as LoadGeoJSONParameters)).resolves.toBeDefined();
-        expect(worker.isClustered()).toBe(true);
+        expect(spy.mock.calls[1][0].cluster).toBe(true);
     });
 });
 

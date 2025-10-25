@@ -18,6 +18,8 @@ import type {LoadVectorTileResult} from './vector_tile_worker_source';
 import type {RequestParameters} from '../util/ajax';
 import {isUpdateableGeoJSON, type GeoJSONSourceDiff, applySourceDiff, toUpdateable, type GeoJSONFeatureId} from './geojson_source_diff';
 import type {ClusterIDAndSource, GeoJSONWorkerSourceLoadDataResult, RemoveSourceParams} from '../util/actor_messages';
+import type {IActor} from '../util/actor';
+import type {StyleLayerIndex} from '../style/style_layer_index';
 
 /**
  * The geojson worker options that can be passed to the worker
@@ -68,6 +70,12 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     _pendingRequest: AbortController;
     _geoJSONIndex: GeoJSONIndex;
     _dataUpdateable = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
+    _createGeoJSONIndex: typeof createGeoJSONIndex;
+
+    constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: Array<string>, createGeoJSONIndexFunc: typeof createGeoJSONIndex = createGeoJSONIndex) {
+        super(actor, layerIndex, availableImages);
+        this._createGeoJSONIndex = createGeoJSONIndexFunc;
+    }
 
     override async loadVectorTile(params: WorkerTileParameters, _abortController: AbortController): Promise<LoadVectorTileResult | null> {
         const canonical = params.tileID.canonical;
@@ -128,9 +136,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
 
             const data = await this._pendingData;
 
-            this._geoJSONIndex = params.cluster ?
-                new Supercluster(getSuperclusterOptions(params)).load((data as any).features) :
-                geojsonvt(data, params.geojsonVtOptions);
+            this._geoJSONIndex = this._createGeoJSONIndex(data, params);
 
             this.loaded = {};
 
@@ -255,10 +261,6 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
         }
     }
 
-    isClustered(): boolean {
-        return this._geoJSONIndex instanceof Supercluster;
-    }
-
     getClusterExpansionZoom(params: ClusterIDAndSource): number {
         return (this._geoJSONIndex as Supercluster).getClusterExpansionZoom(params.clusterId);
     }
@@ -274,6 +276,11 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     }): Array<GeoJSON.Feature> {
         return (this._geoJSONIndex as Supercluster).getLeaves(params.clusterId, params.limit, params.offset);
     }
+}
+
+export function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters): GeoJSONIndex {
+    return params.cluster ? new Supercluster(getSuperclusterOptions(params)).load((data as any).features) :
+        geojsonvt(data, params.geojsonVtOptions);
 }
 
 function getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGeoJSONParameters) {
