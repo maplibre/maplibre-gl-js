@@ -345,7 +345,7 @@ describe('loadData', () => {
 
     test('loadData should process cluster change with no data', async () => {
         const spy = vi.fn();
-        const mockCreateGeoJSONIndex = (data: any, params: any) => {
+        const mockCreateGeoJSONIndex: typeof createGeoJSONIndex = (data, params) => {
             spy(params);
             return createGeoJSONIndex(data, params);
         };
