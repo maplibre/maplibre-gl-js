@@ -1287,7 +1287,7 @@ describe('easeTo', () => {
         stubNow.mockImplementation(() => 0);
 
         camera.easeTo({bearing: 97, duration: 500});
-        
+
         stubNow.mockImplementation(() => 100);
         camera.simulateFrame();
 
@@ -2028,6 +2028,15 @@ describe('flyTo', () => {
         const endTime = new Date();
         const timeDiff = endTime.getTime() - startTime.getTime();
         expect(timeDiff >= 0 && timeDiff < 10).toBeTruthy();
+    });
+
+    test('applies the padding option when prefers-reduce-motion:reduce is set', async () => {
+        const camera = createCamera();
+        Object.defineProperty(browser, 'prefersReducedMotion', {value: true});
+
+        camera.flyTo({padding: {top: 50, right: 30}});
+
+        expect(camera.getPadding()).toEqual({top: 50, bottom: 0, left: 0, right: 30});
     });
 
     test('check elevation events freezeElevation=false', async () => {
