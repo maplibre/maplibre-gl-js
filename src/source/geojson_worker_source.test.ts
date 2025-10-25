@@ -344,18 +344,13 @@ describe('loadData', () => {
     });
 
     test('loadData should process cluster change with no data', async () => {
-        const spy = vi.fn();
-        const mockCreateGeoJSONIndex: typeof createGeoJSONIndex = (data, params) => {
-            spy(params);
-            return createGeoJSONIndex(data, params);
-        };
-
+        const mockCreateGeoJSONIndex = vi.fn(createGeoJSONIndex);
         const worker = new GeoJSONWorkerSource(actor, layerIndex, [], mockCreateGeoJSONIndex);
 
         await worker.loadData({source: 'source1', data: JSON.stringify(updateableFeatureCollection), cluster: false} as LoadGeoJSONParameters);
-        expect(spy.mock.calls[0][0].cluster).toBe(false);
+        expect(mockCreateGeoJSONIndex.mock.calls[0][1].cluster).toBe(false);
         await expect(worker.loadData({cluster: true} as LoadGeoJSONParameters)).resolves.toBeDefined();
-        expect(spy.mock.calls[1][0].cluster).toBe(true);
+        expect(mockCreateGeoJSONIndex.mock.calls[1][1].cluster).toBe(true);
     });
 });
 
