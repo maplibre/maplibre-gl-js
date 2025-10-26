@@ -1,5 +1,5 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source';
+import {createGeoJSONIndex, GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {OverscaledTileID} from './tile_id';
 import perf from '../util/performance';
@@ -202,6 +202,30 @@ describe('loadData', () => {
         properties: {},
     } as GeoJSON.GeoJSON;
 
+    const updateableFeatureCollection = {
+        type: 'FeatureCollection',
+        features: [
+            {
+                type: 'Feature',
+                id: 'point1',
+                geometry: {
+                    type: 'Point',
+                    coordinates: [0, 0],
+                },
+                properties: {},
+            },
+            {
+                type: 'Feature',
+                id: 'point2',
+                geometry: {
+                    type: 'Point',
+                    coordinates: [1, 1],
+                },
+                properties: {},
+            }
+        ]
+    } as GeoJSON.GeoJSON;
+
     const layerIndex = new StyleLayerIndex(layers);
     function createWorker() {
         return new GeoJSONWorkerSource(actor, layerIndex, []);
@@ -304,6 +328,29 @@ describe('loadData', () => {
                 properties: {}
             }]
         }} as LoadGeoJSONParameters)).resolves.toBeDefined();
+    });
+
+    test('loadData should reject as first call with no data', async () => {
+        const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
+
+        await expect(worker.loadData({} as LoadGeoJSONParameters)).rejects.toBeDefined();
+    });
+
+    test('loadData should resolve as subsequent call with no data', async () => {
+        const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
+
+        await worker.loadData({source: 'source1', data: JSON.stringify(updateableGeoJson)} as LoadGeoJSONParameters);
+        await expect(worker.loadData({} as LoadGeoJSONParameters)).resolves.toBeDefined();
+    });
+
+    test('loadData should process cluster change with no data', async () => {
+        const mockCreateGeoJSONIndex = vi.fn(createGeoJSONIndex);
+        const worker = new GeoJSONWorkerSource(actor, layerIndex, [], mockCreateGeoJSONIndex);
+
+        await worker.loadData({source: 'source1', data: JSON.stringify(updateableFeatureCollection), cluster: false} as LoadGeoJSONParameters);
+        expect(mockCreateGeoJSONIndex.mock.calls[0][1].cluster).toBe(false);
+        await expect(worker.loadData({cluster: true} as LoadGeoJSONParameters)).resolves.toBeDefined();
+        expect(mockCreateGeoJSONIndex.mock.calls[1][1].cluster).toBe(true);
     });
 });
 
