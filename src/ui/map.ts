@@ -372,15 +372,15 @@ export type MapOptions = {
     centerClampedToGround?: boolean;
     /**
      * Allows overzooming using by splitting vector tiles after max zoom.
-     * When set to `true` this has better performance at high zoom levels and prevents Safari from crashing.
-     * The default is `false` for most cases as it changes rendering of polygon features at high zoom levels due to tile splitting.
-     * If `true`, tiles over the source's maxzoom will be split using into subtiles (partitioning).
-     * if `false`, tiles will be overzoomed using scaling.
-     * @defaultValue `true` for Safari to prevent crashes and `false` for other browsers
+     * This will stop this behavior and use overscaling for the given number of zoom levels specified.
+     * For example, if source maxzoom is 10 and map max zoom is 20, with this option set to 3,
+     * tiles will be clipped at zoom 17 and overscaled from there to 20.
+     * This improves performance at high zoom levels and prevents Safari from crashing.
+     * @defaultValue 4
      * This may change or be removed in future versions.
      * @experimental
      */
-    experimentalOverzoomingByClippingTiles?: boolean;
+    experimentalOverzoomingMaxZoomLevels?: number;
 };
 
 export type AddImageOptions = {
@@ -466,7 +466,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     maxCanvasSize: [4096, 4096],
     cancelPendingTileRequestsWhileZooming: true,
     centerClampedToGround: true,
-    experimentalOverzoomingByClippingTiles: isSafari(globalThis) ? true : false
+    experimentalOverzoomingMaxZoomLevels: 4
 };
 
 /**
@@ -551,7 +551,7 @@ export class Map extends Camera {
     _maxCanvasSize: [number, number];
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
     /** @internal */
-    _overzoomingByClippingTiles: boolean;
+    _overzoomingScalingZoomLevelsNumber: number;
     /**
      * @internal
      * image queue throttling handle. To be used later when clean up
@@ -692,7 +692,7 @@ export class Map extends Camera {
         this._clickTolerance = resolvedOptions.clickTolerance;
         this._overridePixelRatio = resolvedOptions.pixelRatio;
         this._maxCanvasSize = resolvedOptions.maxCanvasSize;
-        this._overzoomingByClippingTiles = resolvedOptions.experimentalOverzoomingByClippingTiles === true;
+        this._overzoomingScalingZoomLevelsNumber = resolvedOptions.experimentalOverzoomingMaxZoomLevels;
         this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
         this.transformConstrain = resolvedOptions.transformConstrain;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;

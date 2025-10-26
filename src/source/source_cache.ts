@@ -547,12 +547,13 @@ export class SourceCache extends Evented {
             idealTileIDs = coveringTiles(transform, {
                 tileSize: this.usedForTerrain ? this.tileSize : this._source.tileSize,
                 minzoom: this._source.minzoom,
-                maxzoom: this._source.maxzoom,
+                maxzoom: (this._source.type === 'vector' && this.map._overzoomingScalingZoomLevelsNumber)
+                    ? transform.maxZoom - this.map._overzoomingScalingZoomLevelsNumber
+                    : this._source.maxzoom,
                 roundZoom: this.usedForTerrain ? false : this._source.roundZoom,
                 reparseOverscaled: this._source.reparseOverscaled,
                 terrain,
                 calculateTileZoom: this._source.calculateTileZoom,
-                bypassOverscaling: this._source.type === 'vector' && this.map._overzoomingByClippingTiles
             });
 
             if (this._source.hasTile) {

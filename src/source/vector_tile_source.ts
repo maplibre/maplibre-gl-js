@@ -238,11 +238,15 @@ export class VectorTileSource extends Evented implements Source {
     }
 
     /**
-     * When the requested tile has a higher canonical Z than source maxzoom, pass overzoom parameters so worker can load the
-     * deepest tile at source max zoom to generate sub tiles using geojsonvt for highest performance on vector overscaling
+     * @See {@link WorkerTileParameters.overzoomParameters}
+     * @param tile - The tile being loaded
+     * @returns the overzoom parameters or undefined if not overzooming
      */
     private _getOverzoomParameters(tile: Tile): OverzoomParameters | undefined {
         if (tile.tileID.canonical.z <= this.maxzoom) {
+            return undefined;
+        }
+        if (this.map._overzoomingScalingZoomLevelsNumber === undefined) {
             return undefined;
         }
         const maxZoomTileID = tile.tileID.scaledTo(this.maxzoom).canonical;
@@ -251,8 +255,6 @@ export class VectorTileSource extends Evented implements Source {
         return {
             maxZoomTileID,
             overzoomRequest: this.map._requestManager.transformRequest(maxZoomTileUrl, ResourceType.Tile),
-            maxOverzoom: this.map.getMaxZoom(),
-            tileSize: this.tileSize
         };
     }
 
