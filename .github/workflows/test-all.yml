@@ -64,11 +64,6 @@ jobs:
           name: coverage-reports-unit-tests
           path: ${{ github.workspace }}/coverage/vitest/unit/coverage-final.json
           retention-days: 1
-      - name: Upload test results to Codecov
-        if: '!cancelled()'
-        uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1.1.1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
 
   integration-tests:
     name: Integration tests
@@ -158,11 +153,6 @@ jobs:
           name: coverage-reports-render-tests-${{ matrix.split }}
           path: ${{ github.workspace }}/upload/coverage-final-render-${{ matrix.split }}.json
           retention-days: 1
-      - name: Upload test results to Codecov
-        if: '!cancelled()'
-        uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1.1.1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload render test failure
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
