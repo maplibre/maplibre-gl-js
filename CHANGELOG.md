@@ -3,11 +3,18 @@
 ### ✨ Features and improvements
 
 - Slice vector tiles to improve over scale vector handling ([#6521](https://github.com/maplibre/maplibre-gl-js/pull/6521)) ⚠️ This is an experimental feature that currently only applies to Safari by default to prevent it from crashing at high zoom levels. This is not enabled by default for all browsers as it changes rendering of polygon features in high zoom levels due to tile splitting. It adds the `experimentalOverzoomingByClippingTiles` flag to `MapOptions` to allow controlling this behavior if needed. Use `true` for partitioning and `false` for scaling. It seems to have better performance at high zoom levels.
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 5.10.0
+
+### ✨ Features and improvements
 - Add time control API (`setNow`, `restoreNow`, `isTimeFrozen`) for deterministic rendering, enabling frame-by-frame video export and deterministic testing ([6544](https://github.com/maplibre/maplibre-gl-js/pull/6544))
 - Use styles `isHidden` logic in the worker by adding a new optional `roundMinZoom` parameter ([#6547](https://github.com/maplibre/maplibre-gl-js/pull/6547))
 - Add `transformConstrain` callback to the `Map` options to override the transform's `constrain` with new type `TransformConstrainFunction`; refactor transform constructor options to a `TransformOptions` object ([#6484](https://github.com/maplibre/maplibre-gl-js/issues/6484))
 - Use timeControl.now() instead of browser.now() ([6573](https://github.com/maplibre/maplibre-gl-js/pull/6573))
-- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Contextmenu events not blocked by scrolling ([#5683](https://github.com/maplibre/maplibre-gl-js/issues/5683)
