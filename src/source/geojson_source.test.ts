@@ -1,6 +1,6 @@
-import {describe, test, expect, vi} from 'vitest';
+import {describe, test, expect, vi, beforeEach} from 'vitest';
 import {Tile} from './tile';
-import {CanonicalTileID, OverscaledTileID} from './tile_id';
+import {OverscaledTileID} from './tile_id';
 import {GeoJSONSource, type GeoJSONSourceOptions} from './geojson_source';
 import {type IReadonlyTransform} from '../geo/transform_interface';
 import {EXTENT} from '../data/extent';
@@ -836,10 +836,14 @@ describe('GeoJSONSource.load', () => {
 });
 
 describe('GeoJSONSource._shoudReloadTile', () => {
-    function shouldReloadTile(id: CanonicalTileID, tileFeatures: Array<{id: string | number}>, diff: GeoJSONSourceDiff) {
-        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+    let source: GeoJSONSource;
 
-        const tile = new Tile(new OverscaledTileID(id.z, 0, id.z, id.x, id.y), source.tileSize);
+    beforeEach(() => {
+        source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+    });
+
+    function getMockTile(z: number, x: number, y: number, tileFeatures: Array<{id: string | number}>) {
+        const tile = new Tile(new OverscaledTileID(z, 0, z, x, y), source.tileSize);
         tile.latestFeatureIndex = {
             featureIndexArray: {
                 length: tileFeatures.length,
@@ -852,79 +856,78 @@ describe('GeoJSONSource._shoudReloadTile', () => {
             })
         } as any;
 
-        return (source._getShouldReloadTile(diff) || (() => true))(tile);
+        return tile;
     }
 
     test('returns true when diff.removeAll is true', () => {
-        const result = shouldReloadTile(
-            new CanonicalTileID(0, 0, 0),
-            [],
-            {removeAll: true}
-        );
-        expect(result).toBe(true);
+        const diff: GeoJSONSourceDiff = {removeAll: true};
+
+        const result = source._getShouldReloadTile(diff);
+
+        expect(result).toBe(undefined);
     });
 
     test('returns true when tile contains a feature that is being updated', () => {
-        const result = shouldReloadTile(
-            new CanonicalTileID(0, 0, 0),
-            [{id: 0}],
-            {
-                update: [{
-                    id: 0,
-                    newGeometry: {type: 'Point', coordinates: [0, 0]}
-                }]
-            }
-        );
+        const tile = getMockTile(0, 0, 0, [{id: 0}]);
+        const diff: GeoJSONSourceDiff = {
+            update: [{
+                id: 0,
+                newGeometry: {type: 'Point', coordinates: [0, 0]}
+            }]
+        };
+
+        const result = source._getShouldReloadTile(diff)?.(tile);
+
         expect(result).toBe(true);
     });
 
     test('returns true when tile contains a feature that is being removed', () => {
-        const result = shouldReloadTile(
-            new CanonicalTileID(0, 0, 0),
-            [{id: 0}],
-            {remove: [0]}
-        );
+        const tile = getMockTile(0, 0, 0, [{id: 0}]);
+        const diff: GeoJSONSourceDiff = {remove: [0]};
+
+        const result = source._getShouldReloadTile(diff)?.(tile);
+
         expect(result).toBe(true);
     });
 
     test('returns true when updated feature new geometry intersects tile bounds', () => {
         // Feature update with new geometry at 0,0 should intersect with tile 0/0/0
-        const result = shouldReloadTile(
-            new CanonicalTileID(0, 0, 0),
-            [{id: 0}],
-            {
-                update: [{
-                    id: 0,
-                    newGeometry: {type: 'Point', coordinates: [0, 0]}
-                }]
-            }
-        );
+        const tile = getMockTile(0, 0, 0, [{id: 0}]);
+        const diff: GeoJSONSourceDiff = {
+            update: [{
+                id: 0,
+                newGeometry: {type: 'Point', coordinates: [0, 0]}
+            }]
+        };
+
+        const result = source._getShouldReloadTile(diff)?.(tile);
+
         expect(result).toBe(true);
     });
 
     test('returns false when diff has no changes affecting the tile', () => {
         // Feature far away from tile bounds
-        const result = shouldReloadTile(
-            new CanonicalTileID(10, 500, 500),
-            [{id: 0}],
-            {
-                add: [{
-                    id: 1,
-                    type: 'Feature',
-                    properties: {},
-                    geometry: {type: 'Point', coordinates: [-170, -80]}
-                }]
-            }
-        );
+        const tile = getMockTile(10, 500, 500, [{id: 0}]);
+        const diff: GeoJSONSourceDiff = {
+            add: [{
+                id: 1,
+                type: 'Feature',
+                properties: {},
+                geometry: {type: 'Point', coordinates: [-170, -80]}
+            }]
+        };
+
+        const result = source._getShouldReloadTile(diff)?.(tile);
+
         expect(result).toBe(false);
     });
 
     test('returns false when diff is empty', () => {
-        const result = shouldReloadTile(
-            new CanonicalTileID(0, 0, 0),
-            [],
-            {}
-        );
+        const tile = getMockTile(0, 0, 0, []);
+        const diff: GeoJSONSourceDiff = {};
+
+        const result = source._getShouldReloadTile(diff)?.(tile);
+
         expect(result).toBe(false);
     });
 
@@ -943,8 +946,8 @@ describe('GeoJSONSource._shoudReloadTile', () => {
             }]
         };
 
-        expect(shouldReloadTile(new CanonicalTileID(5, 1, 15), [], diff)).toBe(false);
-        expect(shouldReloadTile(new CanonicalTileID(5, 0, 15), [], diff)).toBe(true);
-        expect(shouldReloadTile(new CanonicalTileID(5, 31, 15), [], diff)).toBe(true);
+        expect(source._getShouldReloadTile(diff)?.(getMockTile(5, 1, 15, []))).toBe(false);
+        expect(source._getShouldReloadTile(diff)?.(getMockTile(5, 0, 15, []))).toBe(true);
+        expect(source._getShouldReloadTile(diff)?.(getMockTile(5, 31, 15, []))).toBe(true);
     });
 });
