@@ -1,7 +1,11 @@
-import {describe, test, expect} from 'vitest';
+import {describe, test, expect, vi, beforeEach, afterEach} from 'vitest';
 import {createStyleLayer} from '../create_style_layer';
 import {extend} from '../../util/util';
 import {type LineStyleLayer} from './line_style_layer';
+import {type QueryIntersectsFeatureParams} from '../style_layer';
+import {MercatorTransform} from '../../geo/projection/mercator_transform';
+import Point from "@mapbox/point-geometry";
+import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 describe('LineStyleLayer', () => {
     function createLineLayer(layer?) {
@@ -48,4 +52,78 @@ describe('LineStyleLayer', () => {
         lineLayer.setPaintProperty('line-gradient', null);
         expect(lineLayer.gradientVersion).toBeGreaterThan(gradientVersion);
     });
-});
+
+    describe('queryIntersectsFeature', () => {
+
+        const lineLayer = createStyleLayer({'type': 'line', 'id': 'line', 'source': 'line', 'paint': {}}, {}) as LineStyleLayer;
+        const transform = new MercatorTransform();
+        const feature = {
+            properties: {},
+            geometry: {
+                type: 'LineString',
+                coordinates: []
+            },
+            extent: 4096,
+            type: 1,
+            loadGeometry: () => [],
+            toGeoJSON: () => ({})
+        } as unknown as VectorTileFeature;
+
+        afterEach(() => {
+            lineLayer.paint.get('line-offset').evaluate = vi.fn(((feature, featureState) => 0))
+        });
+
+        test('queryIntersectsFeature true for offset line with duplicate points', () => {
+
+            // Mock evaluated value for line-offset
+            lineLayer.paint.get('line-offset').evaluate = vi.fn(((feature, featureState) => 3))
+
+            const params = {
+                queryGeometry: [new Point(0, 3)],
+                feature: feature,
+                featureState: {},
+                geometry: [[new Point(3, 2), new Point(3, 3), new Point(3, 3), new Point(3, 4), new Point(3, 4)]],
+                transform: transform,
+                pixelsToTileUnits: 1
+            } as unknown as QueryIntersectsFeatureParams;
+            const result = lineLayer.queryIntersectsFeature(
+                params
+            )
+            expect(result).toBeTruthy();
+        });
+
+        test('queryIntersectsFeature with line-offset', () => {
+            // Mock evaluated value for line-offset
+            lineLayer.paint.get('line-offset').evaluate = vi.fn(((feature, featureState) => 3))
+
+            const params = {
+                queryGeometry: [new Point(0, 3)],
+                feature: feature,
+                featureState: {},
+                geometry: [[new Point(3, 2), new Point(3, 3), new Point(3, 5), new Point(3, 6), new Point(4, 4)]],
+                transform: transform,
+                pixelsToTileUnits: 1
+            } as unknown as QueryIntersectsFeatureParams;
+            const result = lineLayer.queryIntersectsFeature(
+                params
+            )
+            expect(result).toBeTruthy();
+        });
+
+        test('queryIntersectsFeature with duplicate points', () => {
+            const params = {
+                queryGeometry: [new Point(3, 3)],
+                feature: feature,
+                featureState: {},
+                geometry: [[new Point(3, 2), new Point(3, 3), new Point(3, 3), new Point(3, 5), new Point(3, 5)]],
+                transform: transform,
+                pixelsToTileUnits: 1
+            } as unknown as QueryIntersectsFeatureParams;
+            const result = lineLayer.queryIntersectsFeature(
+                params
+            )
+            expect(result).toBeTruthy();
+        });
+    });
+    });
+
