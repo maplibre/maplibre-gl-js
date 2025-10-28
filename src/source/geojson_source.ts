@@ -41,7 +41,7 @@ export type GeoJSONSourceInternalOptions = {
 /**
  * @internal
  */
-export type GeJSONSourceShouldReloadTileOptions = {
+export type GeoJSONSourceShouldReloadTileOptions = {
     /**
      * Refresh all tiles that WILL contain these bounds.
      */
@@ -443,7 +443,7 @@ export class GeoJSONSource extends Evented implements Source {
         }
     }
 
-    _getShouldReloadTileOptions(diff?: GeoJSONSourceDiff): GeJSONSourceShouldReloadTileOptions | undefined {
+    _getShouldReloadTileOptions(diff?: GeoJSONSourceDiff): GeoJSONSourceShouldReloadTileOptions | undefined {
         if (!diff || diff.removeAll) return undefined;
 
         const {add = [], update = [], remove = []} = (diff || {});
@@ -466,7 +466,7 @@ export class GeoJSONSource extends Evented implements Source {
      * `MapSourceDataChangedEvent`.
      * @internal
      */
-    shouldReloadTile(tile: Tile, {nextBounds, prevIds}: GeJSONSourceShouldReloadTileOptions) : boolean {
+    shouldReloadTile(tile: Tile, {nextBounds, prevIds}: GeoJSONSourceShouldReloadTileOptions) : boolean {
         // Update the tile if it PREVIOUSLY contained an updated feature.
         const layers = tile.latestFeatureIndex.loadVTLayers();
         for (let i = 0; i < tile.latestFeatureIndex.featureIndexArray.length; i++) {
