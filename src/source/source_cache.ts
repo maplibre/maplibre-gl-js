@@ -268,7 +268,7 @@ export class SourceCache extends Evented {
         this._cache.reset();
 
         for (const i in this._tiles) {
-            if (shouldReloadTileOptions && this._source.shouldReloadTile && this._source.shouldReloadTile(this._tiles[i], shouldReloadTileOptions)) {
+            if (shouldReloadTileOptions && this._source.shouldReloadTile && !this._source.shouldReloadTile(this._tiles[i], shouldReloadTileOptions)) {
                 continue;
             } else if (sourceDataChanged) {
                 this._reloadTile(i, 'expired');
@@ -1119,7 +1119,7 @@ export class SourceCache extends Evented {
             bounds.shrinkBy(Math.min(bounds.width(), bounds.height()) * 0.001);
             const projected = bounds.map(project);
 
-            const newBounds = Bounds.fromPoints(transformed); 
+            const newBounds = Bounds.fromPoints(transformed);
 
             if (!newBounds.covers(projected)) {
                 transformed = transformed.map((coord) => coord.x > 0.5 ?
