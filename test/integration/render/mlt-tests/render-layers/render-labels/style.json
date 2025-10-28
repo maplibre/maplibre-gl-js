@@ -1,0 +1,130 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "debug": true,
+            "height": 256,
+            "allowed": 0.0022
+        }
+    },
+    "center": [
+        15.311276,
+        50.821840
+    ],
+    "zoom": 5.7,
+    "sources": {
+        "openmaptiles": {
+            "type": "vector",
+            "encoding": "mlt",
+            "tiles": ["local://tiles/mlt/{z}/{x}/{y}.mlt"],
+            "maxzoom": 14
+        }
+    },
+    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+    "sprite": "local://sprites/sprite",
+    "layers": [
+        {
+            "id": "background",
+            "type": "background",
+            "paint": {"background-color": "hsl(47, 26%, 88%)"}
+        },
+        {
+            "id": "place_label_other",
+            "type": "symbol",
+            "source": "openmaptiles",
+            "source-layer": "place",
+            "minzoom": 8,
+            "filter": [
+                "all",
+                ["==", "$type", "Point"],
+                ["!in", "class", "city", "state", "country", "continent"]
+            ],
+            "layout": {
+                "text-anchor": "center",
+                "text-field": "{name:latin}\n{name:nonlatin}",
+                "text-font": ["Noto Sans Regular"],
+                "text-max-width": 6,
+                "text-size": {"stops": [[6, 10], [12, 14]]},
+                "visibility": "visible"
+            },
+            "paint": {
+                "text-color": "hsl(0, 0%, 25%)",
+                "text-halo-blur": 0,
+                "text-halo-color": "hsl(0, 0%, 100%)",
+                "text-halo-width": 2
+            }
+        },
+        {
+            "id": "place_label_city",
+            "type": "symbol",
+            "source": "openmaptiles",
+            "source-layer": "place",
+            "maxzoom": 16,
+            "filter": ["all", ["==", "$type", "Point"], ["==", "class", "city"]],
+            "layout": {
+                "text-field": "{name:latin}\n{name:nonlatin}",
+                "text-font": ["Noto Sans Regular"],
+                "text-max-width": 10,
+                "text-size": {"stops": [[3, 12], [8, 16]]}
+            },
+            "paint": {
+                "text-color": "hsl(0, 0%, 0%)",
+                "text-halo-blur": 0,
+                "text-halo-color": "hsla(0, 0%, 100%, 0.75)",
+                "text-halo-width": 2
+            }
+        },
+        {
+            "id": "country_label-other",
+            "type": "symbol",
+            "source": "openmaptiles",
+            "source-layer": "place",
+            "maxzoom": 12,
+            "filter": [
+                "all",
+                ["==", "$type", "Point"],
+                ["==", "class", "country"],
+                ["!has", "iso:a2"]
+            ],
+            "layout": {
+                "text-field": "{name:latin}",
+                "text-font": ["Noto Sans Regular"],
+                "text-max-width": 10,
+                "text-size": {"stops": [[3, 12], [8, 22]]},
+                "visibility": "visible"
+            },
+            "paint": {
+                "text-color": "hsl(0, 0%, 13%)",
+                "text-halo-blur": 0,
+                "text-halo-color": "rgba(255,255,255,0.75)",
+                "text-halo-width": 2
+            }
+        },
+        {
+            "id": "country_label",
+            "type": "symbol",
+            "source": "openmaptiles",
+            "source-layer": "place",
+            "maxzoom": 12,
+            "filter": [
+                "all",
+                ["==", "$type", "Point"],
+                ["==", "class", "country"],
+                ["has", "iso:a2"]
+            ],
+            "layout": {
+                "text-field": "{name:latin}",
+                "text-font": ["Noto Sans Bold"],
+                "text-max-width": 10,
+                "text-size": {"stops": [[3, 12], [8, 22]]},
+                "visibility": "visible"
+            },
+            "paint": {
+                "text-color": "hsl(0, 0%, 13%)",
+                "text-halo-blur": 0,
+                "text-halo-color": "rgba(255,255,255,0.75)",
+                "text-halo-width": 2
+            }
+        }
+    ]
+}
