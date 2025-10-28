@@ -37,6 +37,9 @@ export type GeoJSONSourceInternalOptions = {
     generateId?: boolean;
 };
 
+/**
+ * @internal
+ */
 export type GeJSONSourceShouldReloadTileOptions = {
     /**
      * Refresh all tiles that WILL contain these bounds.
@@ -474,21 +477,23 @@ export class GeoJSONSource extends Evented implements Source {
 
         const {add = [], update = [], remove = []} = (diff || {});
 
-        const ids = new Set([...update.map(u => u.id), ...remove]);
+        const prevIds = new Set([...update.map(u => u.id), ...remove]);
 
-        const boundsArray = [
+        const nextBounds = [
             ...update.map(f => f.newGeometry),
             ...add.map(f => f.geometry)
         ].map(g => this._getGeoJSONBounds(g));
 
         return {
-            nextBounds: boundsArray,
-            prevIds: ids
+            nextBounds,
+            prevIds
         };
     }
 
     /**
-     * @private
+     * Determine whether a tile should be reloaded based on a set of options associated with a
+     * `MapSourceDataChangedEvent`.
+     * @internal
      */
     shouldReloadTile(tile: Tile, {nextBounds, prevIds}: GeJSONSourceShouldReloadTileOptions) : boolean {
         // Update the tile if it PREVIOUSLY contained an updated feature.

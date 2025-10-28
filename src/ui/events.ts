@@ -478,7 +478,7 @@ export type MapSourceDataEvent = MapLibreEvent & {
      * This uses the `any` type to make it opaque to the public API,
      * `SourceCache`, and other consumers.
      *
-     * @private
+     * @internal
      */
     shouldReloadTileOptions: any;
 };
