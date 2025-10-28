@@ -1,0 +1,76 @@
+diff --git a/node_modules/kdbush/index.d.ts b/node_modules/kdbush/index.d.ts
+index b874ea6..f9142d9 100644
+--- a/node_modules/kdbush/index.d.ts
++++ b/node_modules/kdbush/index.d.ts
+@@ -41,6 +41,7 @@ export default class KDBush {
+      * @returns {number[]} An array of indices correponding to the found items.
+      */
+     range(minX: number, minY: number, maxX: number, maxY: number): number[];
++    rangeSome(minX: number, minY: number, maxX: number, maxY: number, visit: (value: number) => boolean): void;
+     /**
+      * Search the index for items within a given radius.
+      * @param {number} qx
+diff --git a/node_modules/kdbush/index.js b/node_modules/kdbush/index.js
+index d9a8225..94c9e67 100644
+--- a/node_modules/kdbush/index.js
++++ b/node_modules/kdbush/index.js
+@@ -165,6 +165,59 @@ export default class KDBush {
+         return result;
+     }
+ 
++    // NOTE: This method was added using patch-package to solve https://github.com/maplibre/maplibre-gl-js/issues/6192
++    /**
++	 * Search the index for items within a given bounding box, allows stopping on the once finding a match.
++	 * @param {number} minX
++	 * @param {number} minY
++	 * @param {number} maxX
++	 * @param {number} maxY
++	 * @param {(value: number) => boolean} visit A function that is called for each item found. If it returns `true`, the search is aborted.
++	 */
++	rangeSome(minX, minY, maxX, maxY, visit) {
++		if (!this._finished) throw new Error('Data not yet indexed - call index.finish().');
++
++		const { ids, coords, nodeSize } = this;
++		const stack = [0, ids.length - 1, 0];
++
++		// recursively search for items in range in the kd-sorted arrays
++		while (stack.length) {
++			const axis = stack.pop() || 0;
++			const right = stack.pop() || 0;
++			const left = stack.pop() || 0;
++
++			// if we reached "tree node", search linearly
++			if (right - left <= nodeSize) {
++				for (let i = left; i <= right; i++) {
++					const x = coords[2 * i];
++					const y = coords[2 * i + 1];
++					if (x >= minX && x <= maxX && y >= minY && y <= maxY && visit(ids[i])) return;
++				}
++				continue;
++			}
++
++			// otherwise find the middle index
++			const m = (left + right) >> 1;
++
++			// include the middle item if it's in range
++			const x = coords[2 * m];
++			const y = coords[2 * m + 1];
++			if (x >= minX && x <= maxX && y >= minY && y <= maxY && visit(ids[m])) return;
++
++			// queue search in halves that intersect the query
++			if (axis === 0 ? minX <= x : minY <= y) {
++				stack.push(left);
++				stack.push(m - 1);
++				stack.push(1 - axis);
++			}
++			if (axis === 0 ? maxX >= x : maxY >= y) {
++				stack.push(m + 1);
++				stack.push(right);
++				stack.push(1 - axis);
++			}
++		}
++	}
++
+     /**
+      * Search the index for items within a given radius.
+      * @param {number} qx
