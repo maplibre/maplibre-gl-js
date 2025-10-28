@@ -4,7 +4,7 @@ import {extend} from '../../util/util';
 import {type LineStyleLayer} from './line_style_layer';
 import {type QueryIntersectsFeatureParams} from '../style_layer';
 import {MercatorTransform} from '../../geo/projection/mercator_transform';
-import Point from "@mapbox/point-geometry";
+import Point from '@mapbox/point-geometry';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 describe('LineStyleLayer', () => {
@@ -54,7 +54,9 @@ describe('LineStyleLayer', () => {
     });
 
     describe('queryIntersectsFeature', () => {
-
+        afterEach(() => {
+            lineLayer.paint.get('line-offset').evaluate = vi.fn(((_feature, _featureState) => 0));
+        });
         const lineLayer = createStyleLayer({'type': 'line', 'id': 'line', 'source': 'line', 'paint': {}}, {}) as LineStyleLayer;
         const transform = new MercatorTransform();
         const feature = {
@@ -69,14 +71,10 @@ describe('LineStyleLayer', () => {
             toGeoJSON: () => ({})
         } as unknown as VectorTileFeature;
 
-        afterEach(() => {
-            lineLayer.paint.get('line-offset').evaluate = vi.fn(((feature, featureState) => 0))
-        });
-
         test('queryIntersectsFeature true for offset line with duplicate points', () => {
 
             // Mock evaluated value for line-offset
-            lineLayer.paint.get('line-offset').evaluate = vi.fn(((feature, featureState) => 3))
+            lineLayer.paint.get('line-offset').evaluate = vi.fn(((_feature, _featureState) => 3));
 
             const params = {
                 queryGeometry: [new Point(0, 3)],
@@ -88,13 +86,13 @@ describe('LineStyleLayer', () => {
             } as unknown as QueryIntersectsFeatureParams;
             const result = lineLayer.queryIntersectsFeature(
                 params
-            )
+            );
             expect(result).toBeTruthy();
         });
 
         test('queryIntersectsFeature with line-offset', () => {
             // Mock evaluated value for line-offset
-            lineLayer.paint.get('line-offset').evaluate = vi.fn(((feature, featureState) => 3))
+            lineLayer.paint.get('line-offset').evaluate = vi.fn(((_feature, _featureState) => 3));
 
             const params = {
                 queryGeometry: [new Point(0, 3)],
@@ -106,7 +104,7 @@ describe('LineStyleLayer', () => {
             } as unknown as QueryIntersectsFeatureParams;
             const result = lineLayer.queryIntersectsFeature(
                 params
-            )
+            );
             expect(result).toBeTruthy();
         });
 
@@ -121,9 +119,8 @@ describe('LineStyleLayer', () => {
             } as unknown as QueryIntersectsFeatureParams;
             const result = lineLayer.queryIntersectsFeature(
                 params
-            )
+            );
             expect(result).toBeTruthy();
         });
     });
-    });
-
+});
