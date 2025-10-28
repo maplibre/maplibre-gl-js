@@ -20,6 +20,7 @@ import {isUpdateableGeoJSON, type GeoJSONSourceDiff, applySourceDiff, toUpdateab
 import type {ClusterIDAndSource, GeoJSONWorkerSourceLoadDataResult, RemoveSourceParams} from '../util/actor_messages';
 import type {IActor} from '../util/actor';
 import type {StyleLayerIndex} from '../style/style_layer_index';
+import {getGeoJSONBounds} from '../util/geojson_bounds';
 
 /**
  * The geojson worker options that can be passed to the worker
@@ -140,7 +141,11 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
 
             this.loaded = {};
 
-            const result = {data} as GeoJSONWorkerSourceLoadDataResult;
+            const result: GeoJSONWorkerSourceLoadDataResult = {
+                data,
+                nextBounds: params?.dataDiff && getNextBounds(params.dataDiff)
+            };
+
             if (perf) {
                 const resourceTimingData = perf.finish();
                 // it's necessary to eval the result of getEntriesByName() here via parse/stringify
@@ -320,4 +325,23 @@ function getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGe
     };
 
     return superclusterOptions;
+}
+
+export function getNextBounds({update = [], add = []}: GeoJSONSourceDiff): Float32Array {
+    const geometries = [
+        ...update.map(f => f.newGeometry),
+        ...add.map(f => f.geometry)
+    ];
+
+    const output = new Float32Array(geometries.length * 4);
+
+    geometries.forEach((geometry, i) => {
+        const bounds = getGeoJSONBounds(geometry);
+        output[i * 4 + 0] = bounds.getWest();
+        output[i * 4 + 1] = bounds.getSouth();
+        output[i * 4 + 2] = bounds.getEast();
+        output[i * 4 + 3] = bounds.getNorth();
+    });
+
+    return output;
 }

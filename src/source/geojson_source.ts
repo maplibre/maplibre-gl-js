@@ -4,7 +4,7 @@ import {extend, warnOnce} from '../util/util';
 import {EXTENT} from '../data/extent';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
-import type {LngLatBounds} from '../geo/lng_lat_bounds';
+import {LngLatBounds} from '../geo/lng_lat_bounds';
 import {mergeSourceDiffs} from './geojson_source_diff';
 import {getGeoJSONBounds} from '../util/geojson_bounds';
 
@@ -427,7 +427,7 @@ export class GeoJSONSource extends Evented implements Source {
             // although GeoJSON sources contain no metadata, we fire this event to let the SourceCache
             // know its ok to start requesting tiles.
             this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
-            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTileOptions: this._getShouldReloadTileOptions(diff)}));
+            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTileOptions: this._getShouldReloadTileOptions(result.nextBounds, diff)}));
         } catch (err) {
             this._isUpdatingWorker = false;
             if (this._removed) {
@@ -443,21 +443,24 @@ export class GeoJSONSource extends Evented implements Source {
         }
     }
 
-    _getShouldReloadTileOptions(diff?: GeoJSONSourceDiff): GeJSONSourceShouldReloadTileOptions | undefined {
+    _getShouldReloadTileOptions(nextBoundsF32: Float32Array, diff?: GeoJSONSourceDiff): GeJSONSourceShouldReloadTileOptions | undefined {
         if (!diff || diff.removeAll) return undefined;
 
-        const {add = [], update = [], remove = []} = (diff || {});
+        const {update = [], remove = []} = diff;
 
-        const prevIds = new Set([...update.map(u => u.id), ...remove]);
-
-        const nextBounds = [
-            ...update.map(f => f.newGeometry),
-            ...add.map(f => f.geometry)
-        ].map(g => getGeoJSONBounds(g));
+        const nextBounds: LngLatBounds[] = [];
+        for (let i = 0; i < nextBoundsF32.length / 4; i++) {
+            nextBounds.push(new LngLatBounds([
+                nextBoundsF32[i * 4 + 0],
+                nextBoundsF32[i * 4 + 1],
+                nextBoundsF32[i * 4 + 2],
+                nextBoundsF32[i * 4 + 3]
+            ]));
+        }
 
         return {
-            nextBounds,
-            prevIds
+            nextBounds: nextBounds,
+            prevIds: new Set([...update.map(u => u.id), ...remove])
         };
     }
 
