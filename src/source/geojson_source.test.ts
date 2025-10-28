@@ -943,7 +943,7 @@ describe('GeoJSONSource.load', () => {
     });
 });
 
-describe('GeoJSONSource._shoudReloadTile', () => {
+describe('GeoJSONSource.shoudReloadTile', () => {
     let source: GeoJSONSource;
 
     beforeEach(() => {

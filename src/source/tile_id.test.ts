@@ -136,5 +136,4 @@ describe('OverscaledTileID', () => {
         const tileB = new OverscaledTileID(4, 0, 4, 5, 2);
         expect(tileA.isChildOf(tileB)).toBe(false);
     });
-
 });

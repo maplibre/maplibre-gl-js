@@ -476,7 +476,7 @@ export type MapSourceDataEvent = MapLibreEvent & {
      * Options to determine whether a tile should be reloaded.
      *
      * This uses the `any` type to make it opaque to the public API,
-     * `SourceCache`, and other consumers.
+     * `SourceCache`, and other internal consumers.
      *
      * @internal
      */

@@ -1119,7 +1119,7 @@ export class SourceCache extends Evented {
             bounds.shrinkBy(Math.min(bounds.width(), bounds.height()) * 0.001);
             const projected = bounds.map(project);
 
-            const newBounds = Bounds.fromPoints(transformed);
+            const newBounds = Bounds.fromPoints(transformed); 
 
             if (!newBounds.covers(projected)) {
                 transformed = transformed.map((coord) => coord.x > 0.5 ?

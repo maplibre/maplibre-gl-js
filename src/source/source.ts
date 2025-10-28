@@ -124,6 +124,7 @@ export interface Source {
     /**
      * Optional function to determine whether a tile should be reloaded, given a
      * set of options associated with a `MapSourceDataChangedEvent`.
+     * @internal
      */
     shouldReloadTile?(tile: Tile, options: any): boolean;
 }
