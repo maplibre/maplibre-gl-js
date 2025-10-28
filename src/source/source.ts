@@ -1,7 +1,7 @@
 import {VectorTileSource} from '../source/vector_tile_source';
 import {RasterTileSource} from '../source/raster_tile_source';
 import {RasterDEMTileSource} from '../source/raster_dem_tile_source';
-import {GeoJSONSource} from '../source/geojson_source';
+import {GeoJSONSource, type GeoJSONSourceShouldReloadTileOptions} from '../source/geojson_source';
 import {VideoSource} from '../source/video_source';
 import {ImageSource} from '../source/image_source';
 import {CanvasSource} from '../source/canvas_source';
@@ -126,7 +126,7 @@ export interface Source {
      * set of options associated with a `MapSourceDataChangedEvent`.
      * @internal
      */
-    shouldReloadTile?(tile: Tile, options: any): boolean;
+    shouldReloadTile?(tile: Tile, options: GeoJSONSourceShouldReloadTileOptions): boolean;
 }
 
 /**

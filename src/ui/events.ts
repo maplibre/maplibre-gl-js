@@ -8,6 +8,7 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {Map} from './map';
 import type {LngLat} from '../geo/lng_lat';
 import type {ProjectionSpecification, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {type GeoJSONSourceShouldReloadTileOptions} from '../source/geojson_source';
 
 /**
  * An event from the mouse relevant to a specific layer.
@@ -474,13 +475,9 @@ export type MapSourceDataEvent = MapLibreEvent & {
 
     /**
      * Options to determine whether a tile should be reloaded.
-     *
-     * This uses the `any` type to make it opaque to the public API,
-     * `SourceCache`, and other internal consumers.
-     *
      * @internal
      */
-    shouldReloadTileOptions: any;
+    shouldReloadTileOptions: GeoJSONSourceShouldReloadTileOptions;
 };
 /**
  * `MapMouseEvent` is the event type for mouse-related map events.
