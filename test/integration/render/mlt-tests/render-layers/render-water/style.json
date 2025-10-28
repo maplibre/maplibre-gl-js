@@ -1,0 +1,64 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "debug": true,
+            "height": 256,
+            "allowed": 0.0002
+        }
+    },
+    "center": [
+        14.495088,
+        53.755635
+    ],
+    "zoom": 5.74,
+    "sources": {
+        "openmaptiles": {
+            "type": "vector",
+            "encoding": "mlt",
+            "tiles": ["local://tiles/mlt/{z}/{x}/{y}.mlt"],
+            "maxzoom": 14
+        }
+    },
+    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+    "sprite": "local://sprites/sprite",
+    "layers": [
+        {
+            "id": "background",
+            "type": "background",
+            "paint": {"background-color": "hsl(47, 26%, 88%)"}
+        },
+        {
+            "id": "water",
+            "type": "fill",
+            "source": "openmaptiles",
+            "source-layer": "water",
+            "filter": [
+                "all",
+                ["==", "$type", "Polygon"],
+                ["!=", "intermittent", 1],
+                ["!=", "brunnel", "tunnel"]
+            ],
+            "layout": {"visibility": "visible"},
+            "paint": {"fill-color": "hsl(205, 56%, 73%)"}
+        },
+        {
+            "id": "waterway",
+            "type": "line",
+            "source": "openmaptiles",
+            "source-layer": "waterway",
+            "filter": [
+                "all",
+                ["==", "$type", "LineString"],
+                ["!in", "brunnel", "tunnel", "bridge"],
+                ["!=", "intermittent", 1]
+            ],
+            "layout": {"visibility": "visible"},
+            "paint": {
+                "line-color": "hsl(205, 56%, 73%)",
+                "line-opacity": 1,
+                "line-width": {"base": 1.4, "stops": [[8, 1], [20, 8]]}
+            }
+        }
+    ]
+}

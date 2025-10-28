@@ -1,0 +1,43 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "debug": true,
+            "height": 256,
+            "allowed": 0.0022
+        }
+    },
+    "center": [
+        11.525101,
+        48.144716
+    ],
+    "zoom": 14.92,
+    "sources": {
+        "openmaptiles": {
+            "type": "vector",
+            "encoding": "mlt",
+            "tiles": ["local://tiles/mlt/{z}/{x}/{y}.mlt"]
+        }
+    },
+    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+    "sprite": "local://sprites/sprite",
+    "layers": [
+        {
+            "id": "background",
+            "type": "background",
+            "paint": {"background-color": "hsl(47, 26%, 88%)"}
+        },
+        {
+            "id": "building",
+            "type": "fill",
+            "source": "openmaptiles",
+            "source-layer": "building",
+            "paint": {
+                "fill-antialias": true,
+                "fill-color": "rgb(200, 100, 50)",
+                "fill-opacity": {"base": 1, "stops": [[13, 0], [15, 1]]},
+                "fill-outline-color": "rgb(100, 50, 20)"
+            }
+        }
+    ]
+}
