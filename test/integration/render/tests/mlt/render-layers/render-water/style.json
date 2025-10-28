@@ -20,45 +20,28 @@
             "maxzoom": 14
         }
     },
-    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
     "sprite": "local://sprites/sprite",
     "layers": [
-        {
-            "id": "background",
-            "type": "background",
-            "paint": {"background-color": "hsl(47, 26%, 88%)"}
-        },
         {
             "id": "water",
             "type": "fill",
             "source": "openmaptiles",
             "source-layer": "water",
-            "filter": [
-                "all",
-                ["==", "$type", "Polygon"],
-                ["!=", "intermittent", 1],
-                ["!=", "brunnel", "tunnel"]
-            ],
-            "layout": {"visibility": "visible"},
-            "paint": {"fill-color": "hsl(205, 56%, 73%)"}
+            "filter": ["!=", "intermittent", 1],
+            "paint": {
+                "fill-color": "#F08000"
+            }
         },
         {
             "id": "waterway",
             "type": "line",
             "source": "openmaptiles",
             "source-layer": "waterway",
-            "filter": [
-                "all",
-                ["==", "$type", "LineString"],
-                ["!in", "brunnel", "tunnel", "bridge"],
-                ["!=", "intermittent", 1]
-            ],
-            "layout": {"visibility": "visible"},
+            "filter": ["!=", "intermittent", 1],
             "paint": {
-                "line-color": "hsl(205, 56%, 73%)",
-                "line-opacity": 1,
-                "line-width": {"base": 1.4, "stops": [[8, 1], [20, 8]]}
+                "line-color": "#008000"
             }
         }
     ]
+
 }

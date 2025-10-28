@@ -24,23 +24,18 @@
     "sprite": "local://sprites/sprite",
     "layers": [
         {
-            "id": "background",
-            "type": "background",
-            "paint": {"background-color": "hsl(47, 26%, 88%)"}
-        },
-        {
             "id": "housenumber",
             "type": "symbol",
             "source": "openmaptiles",
             "source-layer": "housenumber",
-            "minzoom": 17,
-            "filter": ["==", "$type", "Point"],
             "layout": {
                 "text-field": "{housenumber}",
                 "text-font": ["Noto Sans Regular"],
                 "text-size": 30
             },
-            "paint": {"text-color": "rgba(255, 0, 0, 1)"}
+            "paint": {
+                "text-color": "#ffffff"
+            }
         }
     ]
 }

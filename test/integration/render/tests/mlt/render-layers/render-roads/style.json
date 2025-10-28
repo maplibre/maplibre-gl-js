@@ -20,14 +20,8 @@
             "maxzoom": 14
         }
     },
-    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
     "sprite": "local://sprites/sprite",
     "layers": [
-        {
-            "id": "background",
-            "type": "background",
-            "paint": {"background-color": "hsl(47, 26%, 88%)"}
-        },
         {
             "id": "road_path",
             "type": "line",
@@ -38,11 +32,8 @@
                 ["==", "$type", "LineString"],
                 ["in", "class", "path", "track"]
             ],
-            "layout": {"line-cap": "square", "line-join": "bevel"},
             "paint": {
-                "line-color": "#00FF00",
-                "line-dasharray": [3, 3],
-                "line-width": {"base": 1.55, "stops": [[4, 1], [20, 12]]}
+                "line-color": "#00FF00"
             }
         },
         {
@@ -50,16 +41,13 @@
             "type": "line",
             "source": "openmaptiles",
             "source-layer": "transportation",
-            "minzoom": 13,
             "filter": [
                 "all",
                 ["==", "$type", "LineString"],
                 ["in", "class", "minor", "service"]
             ],
-            "layout": {"line-cap": "round", "line-join": "round"},
             "paint": {
-                "line-color": "#FFD700",
-                "line-width": {"base": 1.55, "stops": [[4, 1], [20, 12]]}
+                "line-color": "#008000"
             }
         }
     ]
