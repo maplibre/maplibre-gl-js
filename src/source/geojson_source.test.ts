@@ -970,7 +970,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
     test('returns true when diff.removeAll is true', () => {
         const diff: GeoJSONSourceDiff = {removeAll: true};
 
-        const result = source._getShouldReloadTile(diff);
+        const result = source._getShouldReloadTileOptions(diff);
 
         expect(result).toBe(undefined);
     });
@@ -984,7 +984,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
             }]
         };
 
-        const result = source._getShouldReloadTile(diff)?.(tile);
+        const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
 
         expect(result).toBe(true);
     });
@@ -993,7 +993,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
         const tile = getMockTile(0, 0, 0, [{id: 0}]);
         const diff: GeoJSONSourceDiff = {remove: [0]};
 
-        const result = source._getShouldReloadTile(diff)?.(tile);
+        const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
 
         expect(result).toBe(true);
     });
@@ -1008,7 +1008,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
             }]
         };
 
-        const result = source._getShouldReloadTile(diff)?.(tile);
+        const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
 
         expect(result).toBe(true);
     });
@@ -1025,7 +1025,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
             }]
         };
 
-        const result = source._getShouldReloadTile(diff)?.(tile);
+        const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
 
         expect(result).toBe(false);
     });
@@ -1034,7 +1034,7 @@ describe('GeoJSONSource._shoudReloadTile', () => {
         const tile = getMockTile(0, 0, 0, []);
         const diff: GeoJSONSourceDiff = {};
 
-        const result = source._getShouldReloadTile(diff)?.(tile);
+        const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
 
         expect(result).toBe(false);
     });
@@ -1054,8 +1054,8 @@ describe('GeoJSONSource._shoudReloadTile', () => {
             }]
         };
 
-        expect(source._getShouldReloadTile(diff)?.(getMockTile(5, 1, 15, []))).toBe(false);
-        expect(source._getShouldReloadTile(diff)?.(getMockTile(5, 0, 15, []))).toBe(true);
-        expect(source._getShouldReloadTile(diff)?.(getMockTile(5, 31, 15, []))).toBe(true);
+        expect(source.shouldReloadTile(getMockTile(5, 1, 15, []), source._getShouldReloadTileOptions(diff))).toBe(false);
+        expect(source.shouldReloadTile(getMockTile(5, 0, 15, []), source._getShouldReloadTileOptions(diff))).toBe(true);
+        expect(source.shouldReloadTile(getMockTile(5, 31, 15, []), source._getShouldReloadTileOptions(diff))).toBe(true);
     });
 });

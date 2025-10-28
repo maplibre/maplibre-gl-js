@@ -121,6 +121,11 @@ export interface Source {
      * Optional function to redefine how tiles are loaded at high pitch angles.
      */
     calculateTileZoom?: CalculateTileZoomFunction;
+    /**
+     * Optional function to determine whether a tile should be reloaded, given a
+     * set of options associated with a `MapSourceDataChangedEvent`.
+     */
+    shouldReloadTile?(tile: Tile, options: any): boolean;
 }
 
 /**
