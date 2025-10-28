@@ -769,34 +769,16 @@ describe('GeoJSONSource.getBounds', () => {
         }
     } as any;
 
-    test('get bounds from empty geometry', async () => {
+    test('get bounds returns result from getGeoJSONBounds util', async () => {
         const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
             sendAsync(message) {
                 expect(message.type).toBe(MessageType.getData);
                 return Promise.resolve({
                     type: 'LineString',
-                    coordinates: []
-                });
-            }
-        }), undefined);
-        source.map = mapStub;
-        const bounds = await source.getBounds();
-        expect(bounds.isEmpty()).toBeTruthy();
-    });
-
-    test('get bounds from geomerty collection', async () => {
-        const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
-            sendAsync(message) {
-                expect(message.type).toBe(MessageType.getData);
-                return Promise.resolve({
-                    type: 'GeometryCollection',
-                    geometries: [{
-                        type: 'LineString',
-                        coordinates: [
-                            [1.1, 1.2],
-                            [1.3, 1.4]
-                        ]
-                    }]
+                    coordinates: [
+                        [1.1, 1.2],
+                        [1.3, 1.4]
+                    ]
                 });
             }
         }), undefined);
@@ -804,66 +786,6 @@ describe('GeoJSONSource.getBounds', () => {
         const bounds = await source.getBounds();
         expect(bounds.getNorthEast().lat).toBe(1.4);
         expect(bounds.getNorthEast().lng).toBe(1.3);
-        expect(bounds.getSouthWest().lat).toBe(1.2);
-        expect(bounds.getSouthWest().lng).toBe(1.1);
-    });
-
-    test('get bounds from feature', async () => {
-        const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
-            sendAsync(message) {
-                expect(message.type).toBe(MessageType.getData);
-                return Promise.resolve({
-                    type: 'Feature',
-                    geometry: {
-                        type: 'LineString',
-                        coordinates: [
-                            [1.1, 1.2],
-                            [1.3, 1.4]
-                        ]
-                    }
-                });
-            }
-        }), undefined);
-        source.map = mapStub;
-        const bounds = await source.getBounds();
-        expect(bounds.getNorthEast().lat).toBe(1.4);
-        expect(bounds.getNorthEast().lng).toBe(1.3);
-        expect(bounds.getSouthWest().lat).toBe(1.2);
-        expect(bounds.getSouthWest().lng).toBe(1.1);
-    });
-
-    test('get bounds from feature collection', async () => {
-        const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
-            sendAsync(message) {
-                expect(message.type).toBe(MessageType.getData);
-                return Promise.resolve({
-                    type: 'FeatureCollection',
-                    features: [{
-                        type: 'Feature',
-                        geometry: {
-                            type: 'LineString',
-                            coordinates: [
-                                [1.1, 1.2],
-                                [1.3, 1.8]
-                            ]
-                        }
-                    }, {
-                        type: 'Feature',
-                        geometry: {
-                            type: 'LineString',
-                            coordinates: [
-                                [1.5, 1.6],
-                                [1.7, 1.4]
-                            ]
-                        }
-                    }]
-                });
-            }
-        }), undefined);
-        source.map = mapStub;
-        const bounds = await source.getBounds();
-        expect(bounds.getNorthEast().lat).toBe(1.8);
-        expect(bounds.getNorthEast().lng).toBe(1.7);
         expect(bounds.getSouthWest().lat).toBe(1.2);
         expect(bounds.getSouthWest().lng).toBe(1.1);
     });

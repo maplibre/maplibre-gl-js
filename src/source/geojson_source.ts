@@ -4,8 +4,9 @@ import {extend, warnOnce} from '../util/util';
 import {EXTENT} from '../data/extent';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
-import {LngLatBounds} from '../geo/lng_lat_bounds';
+import type {LngLatBounds} from '../geo/lng_lat_bounds';
 import {mergeSourceDiffs} from './geojson_source_diff';
+import {getGeoJSONBounds} from '../util/geojson_bounds';
 
 import type {Source} from './source';
 import type {Map} from '../ui/map';
@@ -282,43 +283,13 @@ export class GeoJSONSource extends Evented implements Source {
         return this.actor.sendAsync({type: MessageType.getData, data: options});
     }
 
-    private getCoordinatesFromGeometry(geometry: GeoJSON.Geometry): number[] {
-        if (geometry.type === 'GeometryCollection') {
-            return geometry.geometries.map((g: Exclude<GeoJSON.Geometry, GeoJSON.GeometryCollection>) => g.coordinates).flat(Infinity) as number[];
-        }
-        return geometry.coordinates.flat(Infinity) as number[];
-    }
-
     /**
      * Allows getting the source's boundaries.
      * If there's a problem with the source's data, it will return an empty {@link LngLatBounds}.
      * @returns a promise which resolves to the source's boundaries
      */
     async getBounds(): Promise<LngLatBounds> {
-        return this._getGeoJSONBounds(await this.getData());
-    }
-
-    _getGeoJSONBounds(data: GeoJSON.GeoJSON): LngLatBounds {
-        const bounds = new LngLatBounds();
-        let coordinates: number[];
-        switch (data.type) {
-            case 'FeatureCollection':
-                coordinates = data.features.map(f => this.getCoordinatesFromGeometry(f.geometry)).flat(Infinity) as number[];
-                break;
-            case 'Feature':
-                coordinates = this.getCoordinatesFromGeometry(data.geometry);
-                break;
-            default:
-                coordinates = this.getCoordinatesFromGeometry(data);
-                break;
-        }
-        if (coordinates.length == 0) {
-            return bounds;
-        }
-        for (let i = 0; i < coordinates.length - 1; i += 2) {
-            bounds.extend([coordinates[i], coordinates[i+1]]);
-        }
-        return bounds;
+        return getGeoJSONBounds(await this.getData());
     }
 
     /**
@@ -482,7 +453,7 @@ export class GeoJSONSource extends Evented implements Source {
         const nextBounds = [
             ...update.map(f => f.newGeometry),
             ...add.map(f => f.geometry)
-        ].map(g => this._getGeoJSONBounds(g));
+        ].map(g => getGeoJSONBounds(g));
 
         return {
             nextBounds,
