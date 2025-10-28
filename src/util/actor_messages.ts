@@ -30,7 +30,6 @@ export type GeoJSONWorkerSourceLoadDataResult = {
     data?: GeoJSON.GeoJSON;
     resourceTiming?: {[_: string]: Array<PerformanceResourceTiming>};
     abandoned?: boolean;
-    nextBounds?: Float32Array;
 };
 
 /**

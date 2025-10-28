@@ -268,7 +268,7 @@ export class SourceCache extends Evented {
         this._cache.reset();
 
         for (const i in this._tiles) {
-            if (shouldReloadTileOptions && this._source.shouldReloadTile && !this._source.shouldReloadTile(this._tiles[i], shouldReloadTileOptions)) {
+            if (shouldReloadTileOptions && this._source.shouldReloadTile && this._source.shouldReloadTile(this._tiles[i], shouldReloadTileOptions)) {
                 continue;
             } else if (sourceDataChanged) {
                 this._reloadTile(i, 'expired');
