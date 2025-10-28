@@ -487,13 +487,16 @@ export class GeoJSONSource extends Evented implements Source {
         };
     }
 
-    shouldReloadTile(tile: Tile, {nextBounds: boundsArray, prevIds: ids}: GeJSONSourceShouldReloadTileOptions) : boolean {
+    /**
+     * @private
+     */
+    shouldReloadTile(tile: Tile, {nextBounds, prevIds}: GeJSONSourceShouldReloadTileOptions) : boolean {
         // Update the tile if it PREVIOUSLY contained an updated feature.
         const layers = tile.latestFeatureIndex.loadVTLayers();
         for (let i = 0; i < tile.latestFeatureIndex.featureIndexArray.length; i++) {
             const featureIndex = tile.latestFeatureIndex.featureIndexArray.get(i);
             const feature = layers._geojsonTileLayer.feature(featureIndex.featureIndex);
-            if (ids.has(feature.id)) {
+            if (prevIds.has(feature.id)) {
                 return true;
             }
         }
@@ -504,7 +507,7 @@ export class GeoJSONSource extends Evented implements Source {
             tile.tileID.canonical,
             buffer / extent
         );
-        for (const bounds of boundsArray) {
+        for (const bounds of nextBounds) {
             if (tileBounds.intersects(bounds)) {
                 return true;
             }
