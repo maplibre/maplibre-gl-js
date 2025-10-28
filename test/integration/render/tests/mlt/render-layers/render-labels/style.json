@@ -28,52 +28,6 @@
             "type": "symbol",
             "source": "openmaptiles",
             "source-layer": "place",
-            "filter": ["!in", "class", "city", "state", "country", "continent"],
-            "layout": {
-                "text-field": "{name:latin}",
-                "text-font": ["Noto Sans Regular"],
-                "text-size": ["interpolate", ["linear"], ["zoom"], 3, 12, 8, 22]
-            },
-            "paint": {
-                "text-color": "#ffffff"
-            }
-        },
-        {
-            "id": "place_label_city",
-            "type": "symbol",
-            "source": "openmaptiles",
-            "source-layer": "place",
-            "filter": ["==", "class", "city"],
-            "layout": {
-                "text-field": "{name:latin}",
-                "text-font": ["Noto Sans Regular"],
-                "text-size": ["interpolate", ["linear"], ["zoom"], 3, 12, 8, 22]
-            },
-            "paint": {
-                "text-color": "#ffffff"
-            }
-        },
-        {
-            "id": "country_label-other",
-            "type": "symbol",
-            "source": "openmaptiles",
-            "source-layer": "place",
-            "filter": ["all", ["==", "class", "country"], ["!has", "iso:a2"]],
-            "layout": {
-                "text-field": "{name:latin}",
-                "text-font": ["Noto Sans Regular"],
-                "text-size": ["interpolate", ["linear"], ["zoom"], 3, 12, 8, 22]
-            },
-            "paint": {
-                "text-color": "#ffffff"
-            }
-        },
-        {
-            "id": "country_label",
-            "type": "symbol",
-            "source": "openmaptiles",
-            "source-layer": "place",
-            "filter": ["all", ["==", "class", "country"], ["has", "iso:a2"]],
             "layout": {
                 "text-field": "{name:latin}",
                 "text-font": ["Noto Sans Regular"],

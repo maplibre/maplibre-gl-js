@@ -23,31 +23,12 @@
     "sprite": "local://sprites/sprite",
     "layers": [
         {
-            "id": "road_path",
+            "id": "road",
             "type": "line",
             "source": "openmaptiles",
             "source-layer": "transportation",
-            "filter": [
-                "all",
-                ["==", "$type", "LineString"],
-                ["in", "class", "path", "track"]
-            ],
             "paint": {
                 "line-color": "#00FF00"
-            }
-        },
-        {
-            "id": "road_minor",
-            "type": "line",
-            "source": "openmaptiles",
-            "source-layer": "transportation",
-            "filter": [
-                "all",
-                ["==", "$type", "LineString"],
-                ["in", "class", "minor", "service"]
-            ],
-            "paint": {
-                "line-color": "#008000"
             }
         }
     ]
