@@ -113,12 +113,12 @@ describe('drawSymbol', () => {
         } as any;
         tile.getBucket = () => bucketMock;
         tile.tileID = tileId;
-        const sourceCacheMock = new TileManager(null, null, null);
-        sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
-        sourceCacheMock.getTile = (_a) => tile;
+        const tileManagerMock = new TileManager(null, null, null);
+        tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
+        tileManagerMock.getTile = (_a) => tile;
 
         const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
-        drawSymbols(painterMock, sourceCacheMock, layer, [tileId], null, renderOptions);
+        drawSymbols(painterMock, tileManagerMock, layer, [tileId], null, renderOptions);
 
         expect(programMock.draw).toHaveBeenCalledTimes(1);
     });
@@ -176,9 +176,9 @@ describe('drawSymbol', () => {
             bind: () => { }
         } as any;
         (tile.getBucket as Mock).mockReturnValue(bucketMock);
-        const sourceCacheMock = new TileManager(null, null, null);
-        (sourceCacheMock.getTile as Mock).mockReturnValue(tile);
-        sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
+        const tileManagerMock = new TileManager(null, null, null);
+        (tileManagerMock.getTile as Mock).mockReturnValue(tile);
+        tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
         painterMock.style = {
             map: {},
             projection: new MercatorProjection()
@@ -186,7 +186,7 @@ describe('drawSymbol', () => {
 
         const spy = vi.spyOn(symbolProjection, 'updateLineLabels');
         const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
-        drawSymbols(painterMock, sourceCacheMock, layer, [tileId], null, renderOptions);
+        drawSymbols(painterMock, tileManagerMock, layer, [tileId], null, renderOptions);
 
         expect(spy.mock.calls[0][7]).toBeFalsy(); // rotateToLine === false
     });
@@ -243,12 +243,12 @@ describe('drawSymbol', () => {
             bind: () => { }
         } as any;
         (tile.getBucket as Mock).mockReturnValue(bucketMock);
-        const sourceCacheMock = new TileManager(null, null, null);
-        (sourceCacheMock.getTile as Mock).mockReturnValue(tile);
-        sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
+        const tileManagerMock = new TileManager(null, null, null);
+        (tileManagerMock.getTile as Mock).mockReturnValue(tile);
+        tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
 
         const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
-        drawSymbols(painterMock, sourceCacheMock, layer, [tileId], null, renderOptions);
+        drawSymbols(painterMock, tileManagerMock, layer, [tileId], null, renderOptions);
 
         expect(programMock.draw).toHaveBeenCalledTimes(0);
     });

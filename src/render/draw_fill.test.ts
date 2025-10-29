@@ -40,12 +40,12 @@ describe('drawFill', () => {
 
         const mockTile = constructMockTile(layer);
 
-        const sourceCacheMock = new TileManager(null as any, null as any, null as any);
-        (sourceCacheMock.getTile as Mock).mockReturnValue(mockTile);
-        sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
+        const tileManagerMock = new TileManager(null as any, null as any, null as any);
+        (tileManagerMock.getTile as Mock).mockReturnValue(mockTile);
+        tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
 
         const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
-        drawFill(painterMock, sourceCacheMock, layer, [mockTile.tileID], renderOptions);
+        drawFill(painterMock, tileManagerMock, layer, [mockTile.tileID], renderOptions);
 
         // twice: first for fill, second for stroke
         expect(programMock.draw).toHaveBeenCalledTimes(2);

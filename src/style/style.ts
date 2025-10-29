@@ -725,11 +725,11 @@ export class Style extends Evented {
         const sourcesUsedBefore = {};
 
         // save 'used' status to sourcesUsedBefore object and reset all tileManagers 'used' field to false
-        for (const sourceCacheId in this.tileManagers) {
-            const tileManager = this.tileManagers[sourceCacheId];
+        for (const tileManagerId in this.tileManagers) {
+            const tileManager = this.tileManagers[tileManagerId];
 
-            // tileManager.used could be undefined, and sourcesUsedBefore[sourceCacheId] is also 'undefined'
-            sourcesUsedBefore[sourceCacheId] = tileManager.used;
+            // tileManager.used could be undefined, and sourcesUsedBefore[tileManagerId] is also 'undefined'
+            sourcesUsedBefore[tileManagerId] = tileManager.used;
             tileManager.used = false;
         }
 
