@@ -252,10 +252,14 @@ export class SourceCache extends Evented {
     }
 
     /**
-     * Reload tiles in this source. If source data has changed, reload all tiles using a state of 'expired',
-     * otherwise reload only non-errored tiles using state of 'reloading'.
+     * Reload tiles in this source.
+     * @param sourceDataChanged - If `true`, reload all tiles using a state of 'expired', otherwise reload only non-errored tiles using state of 'reloading'.
+     * @param shouldReloadTileOptions - Set of options associated with a `MapSourceDataChangedEvent` that can be passed back to the associated `Source` determine whether a tile should be reloaded.
      */
-    reload(sourceDataChanged?: boolean) {
+    reload(
+        sourceDataChanged?: boolean,
+        shouldReloadTileOptions: any = undefined
+    ) {
         if (this._paused) {
             this._shouldReloadOnResume = true;
             return;
@@ -264,7 +268,9 @@ export class SourceCache extends Evented {
         this._cache.reset();
 
         for (const i in this._tiles) {
-            if (sourceDataChanged) {
+            if (shouldReloadTileOptions && this._source.shouldReloadTile && !this._source.shouldReloadTile(this._tiles[i], shouldReloadTileOptions)) {
+                continue;
+            } else if (sourceDataChanged) {
                 this._reloadTile(i, 'expired');
             } else if (this._tiles[i].state !== 'errored') {
                 this._reloadTile(i, 'reloading');
@@ -1023,7 +1029,7 @@ export class SourceCache extends Evented {
             return;
         }
 
-        this.reload(e.sourceDataChanged);
+        this.reload(e.sourceDataChanged, e.shouldReloadTileOptions);
         if (this.transform) {
             this.update(this.transform, this.terrain);
         }
@@ -1113,7 +1119,7 @@ export class SourceCache extends Evented {
             bounds.shrinkBy(Math.min(bounds.width(), bounds.height()) * 0.001);
             const projected = bounds.map(project);
 
-            const newBounds = Bounds.fromPoints(transformed); 
+            const newBounds = Bounds.fromPoints(transformed);
 
             if (!newBounds.covers(projected)) {
                 transformed = transformed.map((coord) => coord.x > 0.5 ?

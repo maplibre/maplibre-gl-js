@@ -1,4 +1,4 @@
-import {describe, test, expect, vi} from 'vitest';
+import {describe, test, expect, vi, beforeEach} from 'vitest';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {GeoJSONSource, type GeoJSONSourceOptions} from './geojson_source';
@@ -769,34 +769,16 @@ describe('GeoJSONSource.getBounds', () => {
         }
     } as any;
 
-    test('get bounds from empty geometry', async () => {
+    test('get bounds returns result from getGeoJSONBounds util', async () => {
         const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
             sendAsync(message) {
                 expect(message.type).toBe(MessageType.getData);
                 return Promise.resolve({
                     type: 'LineString',
-                    coordinates: []
-                });
-            }
-        }), undefined);
-        source.map = mapStub;
-        const bounds = await source.getBounds();
-        expect(bounds.isEmpty()).toBeTruthy();
-    });
-
-    test('get bounds from geomerty collection', async () => {
-        const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
-            sendAsync(message) {
-                expect(message.type).toBe(MessageType.getData);
-                return Promise.resolve({
-                    type: 'GeometryCollection',
-                    geometries: [{
-                        type: 'LineString',
-                        coordinates: [
-                            [1.1, 1.2],
-                            [1.3, 1.4]
-                        ]
-                    }]
+                    coordinates: [
+                        [1.1, 1.2],
+                        [1.3, 1.4]
+                    ]
                 });
             }
         }), undefined);
@@ -804,66 +786,6 @@ describe('GeoJSONSource.getBounds', () => {
         const bounds = await source.getBounds();
         expect(bounds.getNorthEast().lat).toBe(1.4);
         expect(bounds.getNorthEast().lng).toBe(1.3);
-        expect(bounds.getSouthWest().lat).toBe(1.2);
-        expect(bounds.getSouthWest().lng).toBe(1.1);
-    });
-
-    test('get bounds from feature', async () => {
-        const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
-            sendAsync(message) {
-                expect(message.type).toBe(MessageType.getData);
-                return Promise.resolve({
-                    type: 'Feature',
-                    geometry: {
-                        type: 'LineString',
-                        coordinates: [
-                            [1.1, 1.2],
-                            [1.3, 1.4]
-                        ]
-                    }
-                });
-            }
-        }), undefined);
-        source.map = mapStub;
-        const bounds = await source.getBounds();
-        expect(bounds.getNorthEast().lat).toBe(1.4);
-        expect(bounds.getNorthEast().lng).toBe(1.3);
-        expect(bounds.getSouthWest().lat).toBe(1.2);
-        expect(bounds.getSouthWest().lng).toBe(1.1);
-    });
-
-    test('get bounds from feature collection', async () => {
-        const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
-            sendAsync(message) {
-                expect(message.type).toBe(MessageType.getData);
-                return Promise.resolve({
-                    type: 'FeatureCollection',
-                    features: [{
-                        type: 'Feature',
-                        geometry: {
-                            type: 'LineString',
-                            coordinates: [
-                                [1.1, 1.2],
-                                [1.3, 1.8]
-                            ]
-                        }
-                    }, {
-                        type: 'Feature',
-                        geometry: {
-                            type: 'LineString',
-                            coordinates: [
-                                [1.5, 1.6],
-                                [1.7, 1.4]
-                            ]
-                        }
-                    }]
-                });
-            }
-        }), undefined);
-        source.map = mapStub;
-        const bounds = await source.getBounds();
-        expect(bounds.getNorthEast().lat).toBe(1.8);
-        expect(bounds.getNorthEast().lng).toBe(1.7);
         expect(bounds.getSouthWest().lat).toBe(1.2);
         expect(bounds.getSouthWest().lng).toBe(1.1);
     });
@@ -940,5 +862,122 @@ describe('GeoJSONSource.load', () => {
 
         expect(spy).toHaveBeenCalledTimes(1);
         expect(warnSpy).toHaveBeenCalledWith('No pending worker updates for GeoJSONSource id.');
+    });
+});
+
+describe('GeoJSONSource.shoudReloadTile', () => {
+    let source: GeoJSONSource;
+
+    beforeEach(() => {
+        source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+    });
+
+    function getMockTile(z: number, x: number, y: number, tileFeatures: Array<{id: string | number}>) {
+        const tile = new Tile(new OverscaledTileID(z, 0, z, x, y), source.tileSize);
+        tile.latestFeatureIndex = {
+            featureIndexArray: {
+                length: tileFeatures.length,
+                get: (featureIndex: number) => ({featureIndex})
+            },
+            loadVTLayers: () => ({
+                _geojsonTileLayer: {
+                    feature: (i: number) => tileFeatures[i] || {}
+                }
+            })
+        } as any;
+
+        return tile;
+    }
+
+    test('returns true when diff.removeAll is true', () => {
+        const diff: GeoJSONSourceDiff = {removeAll: true};
+
+        const result = source._getShouldReloadTileOptions(diff);
+
+        expect(result).toBe(undefined);
+    });
+
+    test('returns true when tile contains a feature that is being updated', () => {
+        const tile = getMockTile(0, 0, 0, [{id: 0}]);
+        const diff: GeoJSONSourceDiff = {
+            update: [{
+                id: 0,
+                newGeometry: {type: 'Point', coordinates: [0, 0]}
+            }]
+        };
+
+        const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
+
+        expect(result).toBe(true);
+    });
+
+    test('returns true when tile contains a feature that is being removed', () => {
+        const tile = getMockTile(0, 0, 0, [{id: 0}]);
+        const diff: GeoJSONSourceDiff = {remove: [0]};
+
+        const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
+
+        expect(result).toBe(true);
+    });
+
+    test('returns true when updated feature new geometry intersects tile bounds', () => {
+        // Feature update with new geometry at 0,0 should intersect with tile 0/0/0
+        const tile = getMockTile(0, 0, 0, [{id: 0}]);
+        const diff: GeoJSONSourceDiff = {
+            update: [{
+                id: 0,
+                newGeometry: {type: 'Point', coordinates: [0, 0]}
+            }]
+        };
+
+        const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
+
+        expect(result).toBe(true);
+    });
+
+    test('returns false when diff has no changes affecting the tile', () => {
+        // Feature far away from tile bounds
+        const tile = getMockTile(10, 500, 500, [{id: 0}]);
+        const diff: GeoJSONSourceDiff = {
+            add: [{
+                id: 1,
+                type: 'Feature',
+                properties: {},
+                geometry: {type: 'Point', coordinates: [-170, -80]}
+            }]
+        };
+
+        const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
+
+        expect(result).toBe(false);
+    });
+
+    test('returns false when diff is empty', () => {
+        const tile = getMockTile(0, 0, 0, []);
+        const diff: GeoJSONSourceDiff = {};
+
+        const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
+
+        expect(result).toBe(false);
+    });
+
+    test('handles features that span the international date line', () => {
+        const diff: GeoJSONSourceDiff = {
+            add: [{
+                type: 'Feature',
+                properties: {},
+                geometry: {
+                    type: 'LineString',
+                    coordinates: [
+                        [-185, 10],
+                        [-175, 10]
+                    ],
+                }
+            }]
+        };
+
+        expect(source.shouldReloadTile(getMockTile(5, 1, 15, []), source._getShouldReloadTileOptions(diff))).toBe(false);
+        expect(source.shouldReloadTile(getMockTile(5, 0, 15, []), source._getShouldReloadTileOptions(diff))).toBe(true);
+        expect(source.shouldReloadTile(getMockTile(5, 31, 15, []), source._getShouldReloadTileOptions(diff))).toBe(true);
     });
 });

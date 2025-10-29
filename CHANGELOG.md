@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Improve performance of `GeoJSONSource#updateData` when called on small diffs ([#6562](https://github.com/maplibre/maplibre-gl-js/pull/6562))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

@@ -4,8 +4,9 @@ import {extend, warnOnce} from '../util/util';
 import {EXTENT} from '../data/extent';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
-import {LngLatBounds} from '../geo/lng_lat_bounds';
+import type {LngLatBounds} from '../geo/lng_lat_bounds';
 import {mergeSourceDiffs} from './geojson_source_diff';
+import {getGeoJSONBounds} from '../util/geojson_bounds';
 
 import type {Source} from './source';
 import type {Map} from '../ui/map';
@@ -17,6 +18,7 @@ import type {GeoJSONSourceDiff} from './geojson_source_diff';
 import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
 import type {WorkerTileParameters} from './worker_source';
 import {MessageType} from '../util/actor_messages';
+import {tileIdToLngLatBounds} from './tile_id_to_lng_lat_bounds';
 
 /**
  * Options object for GeoJSONSource.
@@ -34,6 +36,21 @@ export type GeoJSONSourceInternalOptions = {
     clusterRadius?: number;
     clusterMinPoints?: number;
     generateId?: boolean;
+};
+
+/**
+ * @internal
+ */
+export type GeoJSONSourceShouldReloadTileOptions = {
+    /**
+     * Refresh all tiles that WILL contain these bounds.
+     */
+    nextBounds: LngLatBounds[];
+
+    /**
+     * Refresh all tiles that PREVIOUSLY DID contain these feature ids.
+     */
+    prevIds: Set<GeoJSON.Feature['id']>;
 };
 
 /**
@@ -266,40 +283,13 @@ export class GeoJSONSource extends Evented implements Source {
         return this.actor.sendAsync({type: MessageType.getData, data: options});
     }
 
-    private getCoordinatesFromGeometry(geometry: GeoJSON.Geometry): number[] {
-        if (geometry.type === 'GeometryCollection') {
-            return geometry.geometries.map((g: Exclude<GeoJSON.Geometry, GeoJSON.GeometryCollection>) => g.coordinates).flat(Infinity) as number[];
-        }
-        return geometry.coordinates.flat(Infinity) as number[];
-    }
-
     /**
      * Allows getting the source's boundaries.
      * If there's a problem with the source's data, it will return an empty {@link LngLatBounds}.
      * @returns a promise which resolves to the source's boundaries
      */
     async getBounds(): Promise<LngLatBounds> {
-        const bounds = new LngLatBounds();
-        const data = await this.getData();
-        let coordinates: number[];
-        switch (data.type) {
-            case 'FeatureCollection':
-                coordinates = data.features.map(f => this.getCoordinatesFromGeometry(f.geometry)).flat(Infinity) as number[];
-                break;
-            case 'Feature':
-                coordinates = this.getCoordinatesFromGeometry(data.geometry);
-                break;
-            default:
-                coordinates = this.getCoordinatesFromGeometry(data);
-                break;
-        }
-        if (coordinates.length == 0) {
-            return bounds;
-        }
-        for (let i = 0; i < coordinates.length - 1; i += 2) {
-            bounds.extend([coordinates[i], coordinates[i+1]]);
-        }
-        return bounds;
+        return getGeoJSONBounds(await this.getData());
     }
 
     /**
@@ -437,7 +427,7 @@ export class GeoJSONSource extends Evented implements Source {
             // although GeoJSON sources contain no metadata, we fire this event to let the SourceCache
             // know its ok to start requesting tiles.
             this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
-            this.fire(new Event('data', {...eventData, sourceDataType: 'content'}));
+            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTileOptions: this._getShouldReloadTileOptions(diff)}));
         } catch (err) {
             this._isUpdatingWorker = false;
             if (this._removed) {
@@ -451,6 +441,54 @@ export class GeoJSONSource extends Evented implements Source {
                 this._updateWorkerData();
             }
         }
+    }
+
+    _getShouldReloadTileOptions(diff?: GeoJSONSourceDiff): GeoJSONSourceShouldReloadTileOptions | undefined {
+        if (!diff || diff.removeAll) return undefined;
+
+        const {add = [], update = [], remove = []} = (diff || {});
+
+        const prevIds = new Set([...update.map(u => u.id), ...remove]);
+
+        const nextBounds = [
+            ...update.map(f => f.newGeometry),
+            ...add.map(f => f.geometry)
+        ].map(g => getGeoJSONBounds(g));
+
+        return {
+            nextBounds,
+            prevIds
+        };
+    }
+
+    /**
+     * Determine whether a tile should be reloaded based on a set of options associated with a {@link MapSourceDataChangedEvent}.
+     * @internal
+     */
+    shouldReloadTile(tile: Tile, {nextBounds, prevIds}: GeoJSONSourceShouldReloadTileOptions) : boolean {
+        // Update the tile if it PREVIOUSLY contained an updated feature.
+        const layers = tile.latestFeatureIndex.loadVTLayers();
+        for (let i = 0; i < tile.latestFeatureIndex.featureIndexArray.length; i++) {
+            const featureIndex = tile.latestFeatureIndex.featureIndexArray.get(i);
+            const feature = layers._geojsonTileLayer.feature(featureIndex.featureIndex);
+            if (prevIds.has(feature.id)) {
+                return true;
+            }
+        }
+
+        // Update the tile if it WILL NOW contain an updated feature.
+        const {buffer, extent} = this.workerOptions.geojsonVtOptions;
+        const tileBounds = tileIdToLngLatBounds(
+            tile.tileID.canonical,
+            buffer / extent
+        );
+        for (const bounds of nextBounds) {
+            if (tileBounds.intersects(bounds)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     loaded(): boolean {
