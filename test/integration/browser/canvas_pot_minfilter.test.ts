@@ -126,5 +126,3 @@ describe('canvas POT texture min filter and blue render', () => {
         expect(b).toBe(255);
     }, 40000);
 });
-
-
