@@ -14,7 +14,7 @@ describe('Map::refreshTiles', () => {
 
         map.addSource('source-id1', {type: 'raster', url: ''});
         const spy = vi.fn();
-        map.style.sourceCaches['source-id1'].refreshTiles = spy;
+        map.style.tileManagers['source-id1'].refreshTiles = spy;
 
         expect(() => {map.refreshTiles('source-id2', [{x: 1024, y: 1023, z: 11}]);})
             .toThrow('There is no source cache with ID "source-id2", cannot refresh tile');
@@ -27,7 +27,7 @@ describe('Map::refreshTiles', () => {
 
         map.addSource('source-id1', {type: 'raster', url: ''});
         const spy = vi.fn();
-        map.style.sourceCaches['source-id1'].refreshTiles = spy;
+        map.style.tileManagers['source-id1'].refreshTiles = spy;
 
         map.refreshTiles('source-id1', [{x: 1024, y: 1023, z: 11}]);
         expect(spy).toHaveBeenCalledOnce();
@@ -40,7 +40,7 @@ describe('Map::refreshTiles', () => {
 
         map.addSource('source-id1', {type: 'raster', url: ''});
         const spy = vi.fn();
-        map.style.sourceCaches['source-id1'].reload = spy;
+        map.style.tileManagers['source-id1'].reload = spy;
 
         map.refreshTiles('source-id1');
         expect(spy).toHaveBeenCalledOnce();

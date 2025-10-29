@@ -1321,7 +1321,7 @@ Everything from the four previous pre-releases:
 
 ### 🐞 Bug fixes
 
-- Dispose source resources on map style removal, it also fixes `cannot read properties of undefined (reading 'sourceCaches')` error ([#1099](https://github.com/maplibre/maplibre-gl-js/pull/1099)).
+- Dispose source resources on map style removal, it also fixes `cannot read properties of undefined (reading 'tileManagers')` error ([#1099](https://github.com/maplibre/maplibre-gl-js/pull/1099)).
 - Add MapGeoJSONFeature type as replacement for MapboxGeoJSONFeature. MapGeoJSONFeature type extends GeoJSONFeature type with layer, source, sourceLayer, and state properties ([#1104](https://github.com/maplibre/maplibre-gl-js/pull/1104)).
 - Fix automatic refreshing of expired raster tiles ([#1106](https://github.com/maplibre/maplibre-gl-js/pull/1106))
 - Fix precision loss in some matrix calculations ([#1105](https://github.com/maplibre/maplibre-gl-js/pull/1105))

@@ -489,15 +489,15 @@ export class Painter {
         this.imageManager.beginFrame();
 
         const layerIds = this.style._order;
-        const sourceCaches = this.style.sourceCaches;
+        const tileManagers = this.style.tileManagers;
 
         const coordsAscending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
         const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: style.projection?.transitionState > 0};
 
-        for (const id in sourceCaches) {
-            const tileManager = sourceCaches[id];
+        for (const id in tileManagers) {
+            const tileManager = tileManagers[id];
             if (tileManager.used) {
                 tileManager.prepare(this.context);
             }
@@ -537,7 +537,7 @@ export class Painter {
             const coords = coordsDescending[layer.source];
             if (layer.type !== 'custom' && !coords.length) continue;
 
-            this.renderLayer(this, sourceCaches[layer.source], layer, coords, renderOptions);
+            this.renderLayer(this, tileManagers[layer.source], layer, coords, renderOptions);
         }
 
         // Execute offscreen GPU tasks of the projection manager
@@ -567,7 +567,7 @@ export class Painter {
 
             for (this.currentLayer = layerIds.length - 1; this.currentLayer >= 0; this.currentLayer--) {
                 const layer = this.style._layers[layerIds[this.currentLayer]];
-                const tileManager = sourceCaches[layer.source];
+                const tileManager = tileManagers[layer.source];
                 const coords = coordsAscending[layer.source];
 
                 this._renderTileClippingMasks(layer, coords, false);
@@ -583,7 +583,7 @@ export class Painter {
 
         for (this.currentLayer = 0; this.currentLayer < layerIds.length; this.currentLayer++) {
             const layer = this.style._layers[layerIds[this.currentLayer]];
-            const tileManager = sourceCaches[layer.source];
+            const tileManager = tileManagers[layer.source];
 
             if (this.renderToTexture && this.renderToTexture.renderLayer(layer, renderOptions)) continue;
 

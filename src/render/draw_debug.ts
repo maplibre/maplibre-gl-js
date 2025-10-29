@@ -128,7 +128,7 @@ export function selectDebugSource(style: Style, zoom: number): SourceCache | nul
     const layers = Object.values(style._layers);
     const sources = layers.flatMap((layer) => {
         if (layer.source && !layer.isHidden(zoom)) {
-            const tileManager = style.sourceCaches[layer.source];
+            const tileManager = style.tileManagers[layer.source];
             return [tileManager];
         } else {
             return [];

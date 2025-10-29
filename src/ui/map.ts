@@ -2107,7 +2107,7 @@ export class Map extends Camera {
      * ```
      */
     isSourceLoaded(id: string): boolean {
-        const source = this.style && this.style.sourceCaches[id];
+        const source = this.style && this.style.tileManagers[id];
         if (source === undefined) {
             this.fire(new ErrorEvent(new Error(`There is no source with ID '${id}'`)));
             return;
@@ -2144,7 +2144,7 @@ export class Map extends Camera {
             }
         } else {
             // add terrain
-            const tileManager = this.style.sourceCaches[options.source];
+            const tileManager = this.style.tileManagers[options.source];
             if (!tileManager) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
             // Update terrain tiles when adding new terrain
             if (this.terrain === null) tileManager.reload();
@@ -2210,7 +2210,7 @@ export class Map extends Camera {
      * ```
      */
     areTilesLoaded(): boolean {
-        const sources = this.style && this.style.sourceCaches;
+        const sources = this.style && this.style.tileManagers;
         for (const id in sources) {
             const source = sources[id];
             const tiles = source._tiles;
@@ -2290,8 +2290,8 @@ export class Map extends Camera {
             }
             source.calculateTileZoom = createCalculateTileZoomFunction(Math.max(1, maxZoomLevelsOnScreen), Math.max(1, tileCountMaxMinRatio));
         } else {
-            for (const id in this.style.sourceCaches) {
-                this.style.sourceCaches[id].getSource().calculateTileZoom = createCalculateTileZoomFunction(Math.max(1, maxZoomLevelsOnScreen), Math.max(1, tileCountMaxMinRatio));
+            for (const id in this.style.tileManagers) {
+                this.style.tileManagers[id].getSource().calculateTileZoom = createCalculateTileZoomFunction(Math.max(1, maxZoomLevelsOnScreen), Math.max(1, tileCountMaxMinRatio));
             }
         }
         this._update(true);
@@ -2309,7 +2309,7 @@ export class Map extends Camera {
      * ```
      */
     refreshTiles(sourceId: string, tileIds?: Array<{x: number; y: number; z: number}>) {
-        const tileManager = this.style.sourceCaches[sourceId];
+        const tileManager = this.style.tileManagers[sourceId];
         if(!tileManager) {
             throw new Error(`There is no source cache with ID "${sourceId}", cannot refresh tile`);
         }

@@ -86,10 +86,10 @@ export class RenderToTexture {
         this._renderableLayerIds = style._order.filter(id => !style._layers[id].isHidden(zoom));
 
         this._coordsAscending = {};
-        for (const id in style.sourceCaches) {
+        for (const id in style.tileManagers) {
             this._coordsAscending[id] = {};
-            const tileIDs = style.sourceCaches[id].getVisibleCoordinates();
-            const source = style.sourceCaches[id].getSource();
+            const tileIDs = style.tileManagers[id].getVisibleCoordinates();
+            const source = style.tileManagers[id].getSource();
             const terrainTileRanges = source instanceof ImageSource ? source.terrainTileRanges : null;
             for (const tileID of tileIDs) {
                 const keys = this.terrain.tileManager.getTerrainCoords(tileID, terrainTileRanges);
@@ -186,7 +186,7 @@ export class RenderToTexture {
                     const coords = layer.source ? this._coordsAscending[layer.source][tile.tileID.key] : [tile.tileID];
                     painter.context.viewport.set([0, 0, obj.fbo.width, obj.fbo.height]);
                     painter._renderTileClippingMasks(layer, coords, true);
-                    painter.renderLayer(painter, painter.style.sourceCaches[layer.source], layer, coords, options);
+                    painter.renderLayer(painter, painter.style.tileManagers[layer.source], layer, coords, options);
                     if (layer.source) tile.rttCoords[layer.source] = this._coordsAscendingStr[layer.source][tile.tileID.key];
                 }
             }

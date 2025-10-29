@@ -636,7 +636,7 @@ describe('SourceCache.update', () => {
         await map.once('styledata');
 
         const style = map.style;
-        const tileManager = style.sourceCaches['rasterSource'];
+        const tileManager = style.tileManagers['rasterSource'];
         const spy = vi.spyOn(tileManager, '_updateFadingTiles');
         tileManager._loadTile = async () => {};
 

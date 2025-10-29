@@ -156,7 +156,7 @@ export function queryRenderedFeatures(
 
 export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
     serializedLayers: {[_: string]: StyleLayer},
-    sourceCaches: {[_: string]: SourceCache},
+    tileManagers: {[_: string]: SourceCache},
     queryGeometry: Array<Point>,
     params: QueryRenderedFeaturesOptionsStrict,
     collisionIndex: CollisionIndex,
@@ -212,7 +212,7 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
         }
     }
 
-    return convertFeaturesToMapFeaturesMultiple(result, styleLayers, sourceCaches);
+    return convertFeaturesToMapFeaturesMultiple(result, styleLayers, tileManagers);
 }
 
 export function querySourceFeatures(tileManager: SourceCache, params: QuerySourceFeatureOptionsStrict | undefined): GeoJSONFeature[] {
@@ -275,12 +275,12 @@ function convertFeaturesToMapFeatures(result: QueryResults, tileManager: SourceC
     return result as QueryRenderedFeaturesResults;
 }
 
-function convertFeaturesToMapFeaturesMultiple(result: QueryResults, styleLayers: {[_: string]: StyleLayer}, sourceCaches: {[_: string]: SourceCache}): QueryRenderedFeaturesResults {
+function convertFeaturesToMapFeaturesMultiple(result: QueryResults, styleLayers: {[_: string]: StyleLayer}, tileManagers: {[_: string]: SourceCache}): QueryRenderedFeaturesResults {
     // Merge state from SourceCache into the results
     for (const layerName in result) {
         for (const featureWrapper of result[layerName]) {
             const layer = styleLayers[layerName];
-            const tileManager = sourceCaches[layer.source];
+            const tileManager = tileManagers[layer.source];
             convertFeatureToMapFeature(featureWrapper, tileManager);
         };
     }

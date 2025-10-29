@@ -20,7 +20,7 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
         _getMapId: () => 1,
         _requestManager: new RequestManager(transformCallback),
         style: {
-            sourceCaches: {id: {clearTiles}},
+            tileManagers: {id: {clearTiles}},
             projection: {
                 get subdivisionGranularity() {
                     return SubdivisionGranularitySetting.noSubdivision;

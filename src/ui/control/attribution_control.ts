@@ -142,9 +142,9 @@ export class AttributionControl implements IControl {
             this.styleId = stylesheet.id;
         }
 
-        const sourceCaches = this._map.style.sourceCaches;
-        for (const id in sourceCaches) {
-            const tileManager = sourceCaches[id];
+        const tileManagers = this._map.style.tileManagers;
+        for (const id in tileManagers) {
+            const tileManager = tileManagers[id];
             if (tileManager.used || tileManager.usedForTerrain) {
                 const source = tileManager.getSource();
                 if (source.attribution && attributions.indexOf(source.attribution) < 0) {

@@ -55,7 +55,7 @@ describe('TerrainSourceCache', () => {
         const source = createSource({url: '/source.json'});
         server.respond();
         style.addSource('terrain', source as any);
-        tsc = new TerrainSourceCache(style.sourceCaches.terrain);
+        tsc = new TerrainSourceCache(style.tileManagers.terrain);
     });
 
     afterAll(() => {
