@@ -1117,7 +1117,7 @@ describe('SourceCache._updateRetainedTiles', () => {
                 tile.state = 'errored';  //all ideal tiles generated from coveringTiles should be unavailable
             };
 
-            //see covering tile logic in source_cache.update
+            //see covering tile logic in tile_manager.update
             const idealTileIDs = coveringTiles(transform, {
                 tileSize: sourceCache.usedForTerrain ? sourceCache.tileSize : sourceCache._source.tileSize,
                 minzoom: sourceCache._source.minzoom,

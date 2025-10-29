@@ -77,7 +77,7 @@ export class Terrain {
      */
     painter: Painter;
     /**
-     * the sourcecache this terrain is based on
+     * the tilemanager this terrain is based on
      */
     sourceCache: TerrainSourceCache;
     /**

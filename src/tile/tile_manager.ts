@@ -565,7 +565,7 @@ export class SourceCache extends Evented {
             }
         }
 
-        // When sourcecache is used for terrain also load parent tiles for complete rendering of 3d terrain levels
+        // When tilemanager is used for terrain also load parent tiles for complete rendering of 3d terrain levels
         if (this.usedForTerrain) {
             idealTileIDs = this._addTerrainIdealTiles(idealTileIDs);
         }
