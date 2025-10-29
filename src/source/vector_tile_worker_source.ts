@@ -15,7 +15,7 @@ import type {
 import type {IActor} from '../util/actor';
 import type {StyleLayerIndex} from '../style/style_layer_index';
 import {VectorTile} from '@mapbox/vector-tile';
-import {MLTVectorTile} from './mlt/mlt_vector_tile';
+import {MLTVectorTile} from './mlt_vector_tile';
 
 export type LoadVectorTileResult = {
     vectorTile: VectorTile;
