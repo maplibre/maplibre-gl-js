@@ -40,10 +40,16 @@ type TileResult = {
  * `TileManager` is responsible for
  *
  *  - creating an instance of `Source`
- *  - forwarding events from `Source`
  *  - caching tiles loaded from an instance of `Source`
+ *  - handling incoming source data events events from `Map` and coordinating updates
+ *  - providing the current renderable tile coordinates to the `Painter`
  *  - loading the tiles needed to render a given viewport
- *  - unloading the cached tiles not needed to render a given viewport
+ *  - retaining the tiles needed as substitutes for pending loading tiles
+ *  - retaining the tiles needed for fading between parents and children (for raster sources)
+ *  - reloading tiles when source data or dependencies change
+ *  - handling tile expiration and refresh timers
+ *  - unloading cached tiles not needed to render a given viewport
+ *  - managing tile state and feature state
  */
 export class TileManager extends Evented {
     id: string;
@@ -252,7 +258,7 @@ export class TileManager extends Evented {
     }
 
     /**
-     * Reload tiles in this source.
+     * Reload tiles based on the current state of the source.
      * @param sourceDataChanged - If `true`, reload all tiles using a state of 'expired', otherwise reload only non-errored tiles using state of 'reloading'.
      * @param shouldReloadTileOptions - Set of options associated with a `MapSourceDataChangedEvent` that can be passed back to the associated `Source` determine whether a tile should be reloaded.
      */
@@ -429,15 +435,15 @@ export class TileManager extends Evented {
     _getLoadedDescendents(targetTileIDs: OverscaledTileID[]) {
         const loadedDescendents: Record<string, Tile[]> = {};
 
-        // enumerate tiles currently in this source and find the loaded descendents of each target tile
-        for (const sourceKey in this._tiles) {
-            const sourceTile = this._tiles[sourceKey];
-            if (!sourceTile.hasData()) continue;
+        // enumerate current tiles and find the loaded descendents of each target tile
+        for (const id in this._tiles) {
+            const tile = this._tiles[id];
+            if (!tile.hasData()) continue;
 
-            // determine if the loaded source tile (hasData) is a qualified descendent of any target tile
+            // determine if the loaded tile (hasData) is a qualified descendent of any target tile
             for (const targetID of targetTileIDs) {
-                if (sourceTile.tileID.isChildOf(targetID)) {
-                    (loadedDescendents[targetID.key] ||= []).push(sourceTile);
+                if (tile.tileID.isChildOf(targetID)) {
+                    (loadedDescendents[targetID.key] ||= []).push(tile);
                 }
             }
         }
@@ -461,8 +467,8 @@ export class TileManager extends Evented {
     }
 
     /**
-     * Get a loaded tile currently in this source.
-     * - loaded tiles exist in this._tiles - a cached tile is not a loaded tile
+     * Get a currently loaded tile.
+     * - a cached tile is not a loaded tile
      */
     _getLoadedTile(tileID: OverscaledTileID): Tile | null {
         const tile = this._tiles[tileID.key];
@@ -590,7 +596,7 @@ export class TileManager extends Evented {
             this._updateFadingTiles(idealTileIDs, retain);
         }
 
-        // clean up non-retained tiles in this source
+        // clean up non-retained tiles that are no longer needed
         if (isRaster) {
             this._cleanUpRasterTiles(retain);
         } else {
@@ -665,7 +671,7 @@ export class TileManager extends Evented {
     }
 
     /**
-     * Set tiles to be retained on update of this source. For ideal tiles that do not have data, retain their loaded
+     * Set tiles to be retained on update of the source. For ideal tiles that do not have data, retain their loaded
      * children so they can be displayed as substitutes pending load of each ideal tile (to reduce flickering).
      * If no loaded children are available, fallback to seeking loaded parents as an alternative substitute.
      */

@@ -722,14 +722,14 @@ export class Style extends Evented {
             this._resetUpdates();
         }
 
-        const sourcesUsedBefore = {};
+        const managersUsedBefore = {};
 
-        // save 'used' status to sourcesUsedBefore object and reset all tileManagers 'used' field to false
-        for (const tileManagerId in this.tileManagers) {
-            const tileManager = this.tileManagers[tileManagerId];
+        // save 'used' status to managersUsedBefore object and reset all tileManagers 'used' field to false
+        for (const id in this.tileManagers) {
+            const tileManager = this.tileManagers[id];
 
-            // tileManager.used could be undefined, and sourcesUsedBefore[tileManagerId] is also 'undefined'
-            sourcesUsedBefore[tileManagerId] = tileManager.used;
+            // tileManager.used could be undefined, and managersUsedBefore[id] is also 'undefined'
+            managersUsedBefore[id] = tileManager.used;
             tileManager.used = false;
         }
 
@@ -744,19 +744,19 @@ export class Style extends Evented {
             }
         }
 
-        // cross check sourcesUsedBefore against updated this.tileManagers dictionary
+        // cross check managersUsedBefore against updated this.tileManagers dictionary
         // if "used" field is different fire visibility event
-        for (const sourcesUsedBeforeId in sourcesUsedBefore) {
-            const tileManager = this.tileManagers[sourcesUsedBeforeId];
+        for (const id in managersUsedBefore) {
+            const tileManager = this.tileManagers[id];
 
             // (undefine !== false) will evaluate to true and fire an useless visibility event
             // need force "falsy" values to boolean to avoid the case above
-            if (!!sourcesUsedBefore[sourcesUsedBeforeId] !== !!tileManager.used) {
+            if (!!managersUsedBefore[id] !== !!tileManager.used) {
                 tileManager.fire(new Event('data',
                     {
                         sourceDataType: 'visibility',
                         dataType: 'source',
-                        sourceId: sourcesUsedBeforeId
+                        sourceId: id
                     }));
             }
         }
