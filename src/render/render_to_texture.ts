@@ -67,7 +67,7 @@ export class RenderToTexture {
     constructor(painter: Painter, terrain: Terrain) {
         this.painter = painter;
         this.terrain = terrain;
-        this.pool = new RenderPool(painter.context, 30, terrain.sourceCache.tileSize * terrain.qualityFactor);
+        this.pool = new RenderPool(painter.context, 30, terrain.tileManager.tileSize * terrain.qualityFactor);
     }
 
     destruct() {
@@ -82,7 +82,7 @@ export class RenderToTexture {
         this._stacks = [];
         this._prevType = null;
         this._rttTiles = [];
-        this._renderableTiles = this.terrain.sourceCache.getRenderableTiles();
+        this._renderableTiles = this.terrain.tileManager.getRenderableTiles();
         this._renderableLayerIds = style._order.filter(id => !style._layers[id].isHidden(zoom));
 
         this._coordsAscending = {};
@@ -92,7 +92,7 @@ export class RenderToTexture {
             const source = style.sourceCaches[id].getSource();
             const terrainTileRanges = source instanceof ImageSource ? source.terrainTileRanges : null;
             for (const tileID of tileIDs) {
-                const keys = this.terrain.sourceCache.getTerrainCoords(tileID, terrainTileRanges);
+                const keys = this.terrain.tileManager.getTerrainCoords(tileID, terrainTileRanges);
                 for (const key in keys) {
                     if (!this._coordsAscending[id][key]) this._coordsAscending[id][key] = [];
                     this._coordsAscending[id][key].push(keys[key]);

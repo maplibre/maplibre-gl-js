@@ -63,15 +63,15 @@ describe('TerrainSourceCache', () => {
     });
 
     test('constructor', () => {
-        expect(tsc.sourceCache.usedForTerrain).toBeTruthy();
-        expect(tsc.sourceCache.tileSize).toBe(tsc.sourceCache._source.tileSize * 2 ** tsc.deltaZoom);
+        expect(tsc.tileManager.usedForTerrain).toBeTruthy();
+        expect(tsc.tileManager.tileSize).toBe(tsc.tileManager._source.tileSize * 2 ** tsc.deltaZoom);
     });
 
     test('getSourceTile', () => {
         const tileID = new OverscaledTileID(5, 0, 5, 17, 11);
         const tile = new Tile(tileID, 256);
         tile.dem = {} as DEMData;
-        tsc.sourceCache._tiles[tileID.key] = tile;
+        tsc.tileManager._tiles[tileID.key] = tile;
         expect(tsc.deltaZoom).toBe(1);
         expect(tsc.getSourceTile(tileID)).toBeFalsy();
         expect(tsc.getSourceTile(tileID.children(12)[0])).toBeTruthy();

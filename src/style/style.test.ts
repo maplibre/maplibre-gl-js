@@ -662,16 +662,16 @@ describe('Style._remove', () => {
         }));
 
         await style.once('style.load');
-        const sourceCache = style.sourceCaches['source-id'];
-        vi.spyOn(sourceCache, 'setEventedParent');
-        vi.spyOn(sourceCache, 'onRemove');
-        vi.spyOn(sourceCache, 'clearTiles');
+        const tileManager = style.sourceCaches['source-id'];
+        vi.spyOn(tileManager, 'setEventedParent');
+        vi.spyOn(tileManager, 'onRemove');
+        vi.spyOn(tileManager, 'clearTiles');
 
         style._remove();
 
-        expect(sourceCache.setEventedParent).toHaveBeenCalledWith(null);
-        expect(sourceCache.onRemove).toHaveBeenCalledWith(style.map);
-        expect(sourceCache.clearTiles).toHaveBeenCalled();
+        expect(tileManager.setEventedParent).toHaveBeenCalledWith(null);
+        expect(tileManager.onRemove).toHaveBeenCalledWith(style.map);
+        expect(tileManager.clearTiles).toHaveBeenCalled();
     });
 
     test('deregisters plugin listener', async () => {
@@ -1127,10 +1127,10 @@ describe('Style.removeSource', () => {
         }));
 
         await style.once('style.load');
-        const sourceCache = style.sourceCaches['source-id'];
-        vi.spyOn(sourceCache, 'clearTiles');
+        const tileManager = style.sourceCaches['source-id'];
+        vi.spyOn(tileManager, 'clearTiles');
         style.removeSource('source-id');
-        expect(sourceCache.clearTiles).toHaveBeenCalledTimes(1);
+        expect(tileManager.clearTiles).toHaveBeenCalledTimes(1);
     });
 
     test('throws on non-existence', async () => {
@@ -1184,17 +1184,17 @@ describe('Style.removeSource', () => {
 
         await style.once('style.load');
         style.addSource('source-id', source);
-        const sourceCache = style.sourceCaches['source-id'];
+        const tileManager = style.sourceCaches['source-id'];
 
         style.removeSource('source-id');
 
         // Suppress error reporting
-        sourceCache.on('error', () => {});
+        tileManager.on('error', () => {});
 
         style.on('data', () => { expect(false).toBeTruthy(); });
         style.on('error', () => { expect(false).toBeTruthy(); });
-        sourceCache.fire(new Event('data'));
-        sourceCache.fire(new Event('error'));
+        tileManager.fire(new Event('data'));
+        tileManager.fire(new Event('error'));
     });
 });
 
@@ -2399,11 +2399,11 @@ describe('Style.setPaintProperty', () => {
 
         await style.once('style.load');
         style.update({zoom: tr.zoom} as EvaluationParameters);
-        const sourceCache = style.sourceCaches['geojson'];
+        const tileManager = style.sourceCaches['geojson'];
         const source = style.getSource('geojson') as GeoJSONSource;
 
         await source.once('data');
-        vi.spyOn(sourceCache, 'reload');
+        vi.spyOn(tileManager, 'reload');
 
         source.setData({'type': 'FeatureCollection', 'features': []});
         style.setPaintProperty('circle', 'circle-color', {type: 'identity', property: 'foo'});
@@ -2412,7 +2412,7 @@ describe('Style.setPaintProperty', () => {
         await sleep(50);
         style.update({} as EvaluationParameters);
 
-        expect(sourceCache.reload).toHaveBeenCalled();
+        expect(tileManager.reload).toHaveBeenCalled();
     });
 
     test('#5802 clones the input', async () => {
@@ -3131,10 +3131,10 @@ describe('Style.query*Features', () => {
     });
 
     test('style adds global-state to querySourceFeatures', async () => {
-        const sourceCache = style.sourceCaches['geojson'];
+        const tileManager = style.sourceCaches['geojson'];
         const querySourceFeatures = vi.fn().mockReturnValue([]);
-        vi.spyOn(sourceCache, 'getRenderableIds').mockReturnValue(['symbol']);
-        vi.spyOn(sourceCache, 'getTileByID').mockReturnValue({
+        vi.spyOn(tileManager, 'getRenderableIds').mockReturnValue(['symbol']);
+        vi.spyOn(tileManager, 'getTileByID').mockReturnValue({
             tileID: new OverscaledTileID(0, 0, 0, 0, 0),
             querySourceFeatures
         } as unknown as Tile);
@@ -3145,10 +3145,10 @@ describe('Style.query*Features', () => {
     });
 
     test('style adds global-state to queryRenderedFeatures', async () => {
-        const sourceCache = style.sourceCaches['geojson'];
-        sourceCache.transform = transform;
+        const tileManager = style.sourceCaches['geojson'];
+        tileManager.transform = transform;
         const queryRenderedFeatures = vi.fn().mockReturnValue([]);
-        vi.spyOn(sourceCache, 'tilesIn').mockReturnValue([{
+        vi.spyOn(tileManager, 'tilesIn').mockReturnValue([{
             tile: {
                 queryRenderedFeatures
             } as unknown as Tile,

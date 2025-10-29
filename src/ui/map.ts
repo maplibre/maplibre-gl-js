@@ -2134,7 +2134,7 @@ export class Map extends Camera {
 
         if (!options) {
             // remove terrain
-            if (this.terrain) this.terrain.sourceCache.destruct();
+            if (this.terrain) this.terrain.tileManager.destruct();
             this.terrain = null;
             if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
             this.painter.renderToTexture = null;
@@ -2144,10 +2144,10 @@ export class Map extends Camera {
             }
         } else {
             // add terrain
-            const sourceCache = this.style.sourceCaches[options.source];
-            if (!sourceCache) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
+            const tileManager = this.style.sourceCaches[options.source];
+            if (!tileManager) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
             // Update terrain tiles when adding new terrain
-            if (this.terrain === null) sourceCache.reload();
+            if (this.terrain === null) tileManager.reload();
             // Warn once if user is using the same source for hillshade/color-relief and terrain
             for (const index in this.style._layers) {
                 const thisLayer = this.style._layers[index];
@@ -2158,13 +2158,13 @@ export class Map extends Camera {
                     warnOnce('You are using the same source for a color-relief layer and for 3D terrain. Please consider using two separate sources to improve rendering quality.');
                 }
             }
-            this.terrain = new Terrain(this.painter, sourceCache, options);
+            this.terrain = new Terrain(this.painter, tileManager, options);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
             this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             this._terrainDataCallback = e => {
                 if (e.dataType === 'style') {
-                    this.terrain.sourceCache.freeRtt();
+                    this.terrain.tileManager.freeRtt();
                 } else if (e.dataType === 'source' && e.tile) {
                     if (e.sourceId === options.source && !this._elevationFreeze) {
                         this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
@@ -2174,9 +2174,9 @@ export class Map extends Camera {
                     }
 
                     if (e.source?.type === 'image') {
-                        this.terrain.sourceCache.freeRtt();
+                        this.terrain.tileManager.freeRtt();
                     } else {
-                        this.terrain.sourceCache.freeRtt(e.tile.tileID);
+                        this.terrain.tileManager.freeRtt(e.tile.tileID);
                     }
                 }
             };
@@ -2309,14 +2309,14 @@ export class Map extends Camera {
      * ```
      */
     refreshTiles(sourceId: string, tileIds?: Array<{x: number; y: number; z: number}>) {
-        const sourceCache = this.style.sourceCaches[sourceId];
-        if(!sourceCache) {
+        const tileManager = this.style.sourceCaches[sourceId];
+        if(!tileManager) {
             throw new Error(`There is no source cache with ID "${sourceId}", cannot refresh tile`);
         }
         if (tileIds === undefined) {
-            sourceCache.reload(true);
+            tileManager.reload(true);
         } else {
-            sourceCache.refreshTiles(tileIds.map((tileId) => {return new CanonicalTileID(tileId.z, tileId.x, tileId.y);}));
+            tileManager.refreshTiles(tileIds.map((tileId) => {return new CanonicalTileID(tileId.z, tileId.x, tileId.y);}));
         }
     }
 
@@ -3388,7 +3388,7 @@ export class Map extends Camera {
 
         // update terrain stuff
         if (this.terrain) {
-            this.terrain.sourceCache.update(this.transform, this.terrain);
+            this.terrain.tileManager.update(this.transform, this.terrain);
             this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             if (!this._elevationFreeze && this._centerClampedToGround) {
                 this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));

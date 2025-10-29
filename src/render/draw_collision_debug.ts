@@ -21,7 +21,7 @@ type TileBatch = {
 
 let quadTriangles: QuadTriangleArray;
 
-export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, isText: boolean) {
+export function drawCollisionDebug(painter: Painter, tileManager: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, isText: boolean) {
     const context = painter.context;
     const transform = painter.transform;
     const gl = context.gl;
@@ -32,7 +32,7 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
 
     for (let i = 0; i < coords.length; i++) {
         const coord = coords[i];
-        const tile = sourceCache.getTile(coord);
+        const tile = tileManager.getTile(coord);
         const bucket: SymbolBucket = (tile.getBucket(layer) as any);
         if (!bucket) {
             continue;

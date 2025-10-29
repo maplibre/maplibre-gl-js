@@ -19,13 +19,13 @@ describe('QueryFeatures.rendered', () => {
 
 describe('QueryFeatures.source', () => {
     test('returns empty result when source has no features', () => {
-        const sourceCache = new SourceCache('test', {
+        const tileManager = new SourceCache('test', {
             type: 'geojson',
             data: {type: 'FeatureCollection', features: []}
         }, {
             getActor() {}
         } as any);
-        const result = querySourceFeatures(sourceCache, {});
+        const result = querySourceFeatures(tileManager, {});
         expect(result).toEqual([]);
     });
 

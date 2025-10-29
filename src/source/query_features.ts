@@ -115,7 +115,7 @@ function queryIncludes3DLayer(layers: Set<string> | undefined, styleLayers: {[_:
 }
 
 export function queryRenderedFeatures(
-    sourceCache: SourceCache,
+    tileManager: SourceCache,
     styleLayers: {[_: string]: StyleLayer},
     serializedLayers: {[_: string]: any},
     queryGeometry: Array<Point>,
@@ -124,9 +124,9 @@ export function queryRenderedFeatures(
     getElevation: undefined | ((id: OverscaledTileID, x: number, y: number) => number)
 ): QueryRenderedFeaturesResults {
 
-    const has3DLayer = queryIncludes3DLayer(params?.layers ?? null, styleLayers, sourceCache.id);
+    const has3DLayer = queryIncludes3DLayer(params?.layers ?? null, styleLayers, tileManager.id);
     const maxPitchScaleFactor = transform.maxPitchScaleFactor();
-    const tilesIn = sourceCache.tilesIn(queryGeometry, maxPitchScaleFactor, has3DLayer);
+    const tilesIn = tileManager.tilesIn(queryGeometry, maxPitchScaleFactor, has3DLayer);
 
     tilesIn.sort(sortTilesIn);
     const renderedFeatureLayers: RenderedFeatureLayer[] = [];
@@ -136,14 +136,14 @@ export function queryRenderedFeatures(
             queryResults: tileIn.tile.queryRenderedFeatures(
                 styleLayers,
                 serializedLayers,
-                sourceCache._state,
+                tileManager._state,
                 tileIn.queryGeometry,
                 tileIn.cameraQueryGeometry,
                 tileIn.scale,
                 params,
                 transform,
                 maxPitchScaleFactor,
-                getPixelPosMatrix(sourceCache.transform, tileIn.tileID),
+                getPixelPosMatrix(tileManager.transform, tileIn.tileID),
                 getElevation ? (x: number, y: number) => getElevation(tileIn.tileID, x, y) : undefined,
             )
         });
@@ -151,7 +151,7 @@ export function queryRenderedFeatures(
 
     const result = mergeRenderedFeatureLayers(renderedFeatureLayers);
 
-    return convertFeaturesToMapFeatures(result, sourceCache);
+    return convertFeaturesToMapFeatures(result, tileManager);
 }
 
 export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
@@ -215,9 +215,9 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
     return convertFeaturesToMapFeaturesMultiple(result, styleLayers, sourceCaches);
 }
 
-export function querySourceFeatures(sourceCache: SourceCache, params: QuerySourceFeatureOptionsStrict | undefined): GeoJSONFeature[] {
-    const tiles = sourceCache.getRenderableIds().map((id) => {
-        return sourceCache.getTileByID(id);
+export function querySourceFeatures(tileManager: SourceCache, params: QuerySourceFeatureOptionsStrict | undefined): GeoJSONFeature[] {
+    const tiles = tileManager.getRenderableIds().map((id) => {
+        return tileManager.getTileByID(id);
     });
 
     const result: GeoJSONFeature[] = [];
@@ -265,11 +265,11 @@ function mergeRenderedFeatureLayers(tiles: RenderedFeatureLayer[]): QueryResults
     return result;
 }
 
-function convertFeaturesToMapFeatures(result: QueryResults, sourceCache: SourceCache): QueryRenderedFeaturesResults {
+function convertFeaturesToMapFeatures(result: QueryResults, tileManager: SourceCache): QueryRenderedFeaturesResults {
     // Merge state from SourceCache into the results
     for (const layerID in result) {
         for (const featureWrapper of result[layerID]) {
-            convertFeatureToMapFeature(featureWrapper, sourceCache);
+            convertFeatureToMapFeature(featureWrapper, tileManager);
         };
     }
     return result as QueryRenderedFeaturesResults;
@@ -280,16 +280,16 @@ function convertFeaturesToMapFeaturesMultiple(result: QueryResults, styleLayers:
     for (const layerName in result) {
         for (const featureWrapper of result[layerName]) {
             const layer = styleLayers[layerName];
-            const sourceCache = sourceCaches[layer.source];
-            convertFeatureToMapFeature(featureWrapper, sourceCache);
+            const tileManager = sourceCaches[layer.source];
+            convertFeatureToMapFeature(featureWrapper, tileManager);
         };
     }
     return result as QueryRenderedFeaturesResults;
 }
 
-function convertFeatureToMapFeature(featureWrapper: QueryResultsItem, sourceCache: SourceCache) {
+function convertFeatureToMapFeature(featureWrapper: QueryResultsItem, tileManager: SourceCache) {
     const feature = featureWrapper.feature as MapGeoJSONFeature;
-    const state = sourceCache.getFeatureState(feature.layer['source-layer'], feature.id);
+    const state = tileManager.getFeatureState(feature.layer['source-layer'], feature.id);
     feature.source = feature.layer.source;
     if (feature.layer['source-layer']) {
         feature.sourceLayer = feature.layer['source-layer'];

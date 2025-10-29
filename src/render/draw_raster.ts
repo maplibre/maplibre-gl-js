@@ -36,13 +36,13 @@ const cornerCoords = [
     new Point(0, EXTENT),
 ];
 
-export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawRaster(painter: Painter, tileManager: SourceCache, layer: RasterStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
     if (layer.paint.get('raster-opacity') === 0) return;
     if (!tileIDs.length) return;
 
     const {isRenderingToTexture} = renderOptions;
-    const source = sourceCache.getSource();
+    const source = tileManager.getSource();
 
     const projection = painter.style.projection;
     const useSubdivision = projection.useSubdivision;
@@ -59,22 +59,22 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
     // Stencil mask and two-pass is not used for ImageSource sources regardless of projection.
     if (source instanceof ImageSource) {
         // Image source - no stencil is used
-        drawTiles(painter, sourceCache, layer, tileIDs, null, false, false, source.tileCoords, source.flippedWindingOrder, isRenderingToTexture);
+        drawTiles(painter, tileManager, layer, tileIDs, null, false, false, source.tileCoords, source.flippedWindingOrder, isRenderingToTexture);
     } else if (useSubdivision) {
         // Two-pass rendering
         const [stencilBorderless, stencilBorders, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
-        drawTiles(painter, sourceCache, layer, coords, stencilBorderless, false, true, cornerCoords, false, isRenderingToTexture); // draw without borders
-        drawTiles(painter, sourceCache, layer, coords, stencilBorders, true, true, cornerCoords, false, isRenderingToTexture); // draw with borders
+        drawTiles(painter, tileManager, layer, coords, stencilBorderless, false, true, cornerCoords, false, isRenderingToTexture); // draw without borders
+        drawTiles(painter, tileManager, layer, coords, stencilBorders, true, true, cornerCoords, false, isRenderingToTexture); // draw with borders
     } else {
         // Simple rendering
         const [stencil, coords] = painter.getStencilConfigForOverlapAndUpdateStencilID(tileIDs);
-        drawTiles(painter, sourceCache, layer, coords, stencil, false, true, cornerCoords, false, isRenderingToTexture);
+        drawTiles(painter, tileManager, layer, coords, stencil, false, true, cornerCoords, false, isRenderingToTexture);
     }
 }
 
 function drawTiles(
     painter: Painter,
-    sourceCache: SourceCache,
+    tileManager: SourceCache,
     layer: RasterStyleLayer,
     coords: Array<OverscaledTileID>,
     stencilModes: {[_: number]: Readonly<StencilMode>} | null,
@@ -106,7 +106,7 @@ function drawTiles(
         const depthMode = painter.getDepthModeForSublayer(coord.overscaledZ - minTileZ,
             rasterOpacity === 1 ? DepthMode.ReadWrite : DepthMode.ReadOnly, gl.LESS);
 
-        const tile = sourceCache.getTile(coord);
+        const tile = tileManager.getTile(coord);
         const textureFilter = rasterResampling === 'nearest' ?  gl.NEAREST : gl.LINEAR;
 
         // create and bind first texture
@@ -115,7 +115,7 @@ function drawTiles(
 
         // create second texture - use either the current tile or fade tile to bind second texture below
         context.activeTexture.set(gl.TEXTURE1);
-        const {parentTile, parentScaleBy, parentTopLeft, fadeValues} = getFadeProperties(tile, sourceCache, fadeDuration, isTerrain);
+        const {parentTile, parentScaleBy, parentTopLeft, fadeValues} = getFadeProperties(tile, tileManager, fadeDuration, isTerrain);
         tile.fadeOpacity = fadeValues.tileOpacity;
         if (parentTile) {
             parentTile.fadeOpacity = fadeValues.parentTileOpacity;
@@ -147,7 +147,7 @@ function drawTiles(
 /**
  * Get fade properties for current tile - either cross-fading or self-fading properties.
  */
-function getFadeProperties(tile: Tile, sourceCache: SourceCache, fadeDuration: number, isTerrain: boolean): FadeProperties {
+function getFadeProperties(tile: Tile, tileManager: SourceCache, fadeDuration: number, isTerrain: boolean): FadeProperties {
     const defaults: FadeProperties = {
         parentTile: null,
         parentScaleBy: 1,
@@ -159,7 +159,7 @@ function getFadeProperties(tile: Tile, sourceCache: SourceCache, fadeDuration: n
 
     // cross-fade with parent first if available
     if (tile.fadingParentID) {
-        const parentTile = sourceCache._getLoadedTile(tile.fadingParentID);
+        const parentTile = tileManager._getLoadedTile(tile.fadingParentID);
         if (!parentTile) return defaults;
 
         const parentScaleBy = Math.pow(2, parentTile.tileID.overscaledZ - tile.tileID.overscaledZ);

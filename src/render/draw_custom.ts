@@ -5,7 +5,7 @@ import type {Painter, RenderOptions} from './painter';
 import type {SourceCache} from '../tile/tile_manager';
 import type {CustomRenderMethodInput, CustomStyleLayer} from '../style/style_layer/custom_style_layer';
 
-export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: CustomStyleLayer, renderOptions: RenderOptions) {
+export function drawCustom(painter: Painter, tileManager: SourceCache, layer: CustomStyleLayer, renderOptions: RenderOptions) {
 
     const {isRenderingGlobe} = renderOptions;
     const context = painter.context;

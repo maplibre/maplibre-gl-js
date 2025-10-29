@@ -281,12 +281,12 @@ export class Style extends Evented {
                 return;
             }
 
-            const sourceCache = this.sourceCaches[event.sourceId];
-            if (!sourceCache) {
+            const tileManager = this.sourceCaches[event.sourceId];
+            if (!tileManager) {
                 return;
             }
 
-            const source = sourceCache.getSource();
+            const source = tileManager.getSource();
             if (!source || !source.vectorLayerIds) {
                 return;
             }
@@ -560,8 +560,8 @@ export class Style extends Evented {
     }
 
     _validateLayer(layer: StyleLayer) {
-        const sourceCache = this.sourceCaches[layer.source];
-        if (!sourceCache) {
+        const tileManager = this.sourceCaches[layer.source];
+        if (!tileManager) {
             return;
         }
 
@@ -570,7 +570,7 @@ export class Style extends Evented {
             return;
         }
 
-        const source = sourceCache.getSource();
+        const source = tileManager.getSource();
         if (source.type === 'geojson' || (source.vectorLayerIds && source.vectorLayerIds.indexOf(sourceLayer) === -1)) {
             this.fire(new ErrorEvent(new Error(
                 `Source layer "${sourceLayer}" ` +
@@ -726,11 +726,11 @@ export class Style extends Evented {
 
         // save 'used' status to sourcesUsedBefore object and reset all sourceCaches 'used' field to false
         for (const sourceCacheId in this.sourceCaches) {
-            const sourceCache = this.sourceCaches[sourceCacheId];
+            const tileManager = this.sourceCaches[sourceCacheId];
 
-            // sourceCache.used could be undefined, and sourcesUsedBefore[sourceCacheId] is also 'undefined'
-            sourcesUsedBefore[sourceCacheId] = sourceCache.used;
-            sourceCache.used = false;
+            // tileManager.used could be undefined, and sourcesUsedBefore[sourceCacheId] is also 'undefined'
+            sourcesUsedBefore[sourceCacheId] = tileManager.used;
+            tileManager.used = false;
         }
 
         // loop all layers and find layers that are not hidden at parameters.zoom
@@ -747,12 +747,12 @@ export class Style extends Evented {
         // cross check sourcesUsedBefore against updated this.sourceCaches dictionary
         // if "used" field is different fire visibility event
         for (const sourcesUsedBeforeId in sourcesUsedBefore) {
-            const sourceCache = this.sourceCaches[sourcesUsedBeforeId];
+            const tileManager = this.sourceCaches[sourcesUsedBeforeId];
 
             // (undefine !== false) will evaluate to true and fire an useless visibility event
             // need force "falsy" values to boolean to avoid the case above
-            if (!!sourcesUsedBefore[sourcesUsedBeforeId] !== !!sourceCache.used) {
-                sourceCache.fire(new Event('data',
+            if (!!sourcesUsedBefore[sourcesUsedBeforeId] !== !!tileManager.used) {
+                tileManager.fire(new Event('data',
                     {
                         sourceDataType: 'visibility',
                         dataType: 'source',
@@ -982,15 +982,15 @@ export class Style extends Evented {
         const shouldValidate = builtIns.indexOf(source.type) >= 0;
         if (shouldValidate && this._validate(validateStyle.source, `sources.${id}`, source, null, options)) return;
         if (this.map && this.map._collectResourceTiming) (source as any).collectResourceTiming = true;
-        const sourceCache = this.sourceCaches[id] = new SourceCache(id, source, this.dispatcher);
-        sourceCache.style = this;
-        sourceCache.setEventedParent(this, () => ({
-            isSourceLoaded: sourceCache.loaded(),
-            source: sourceCache.serialize(),
+        const tileManager = this.sourceCaches[id] = new SourceCache(id, source, this.dispatcher);
+        tileManager.style = this;
+        tileManager.setEventedParent(this, () => ({
+            isSourceLoaded: tileManager.loaded(),
+            source: tileManager.serialize(),
             sourceId: id
         }));
 
-        sourceCache.onAdd(this.map);
+        tileManager.onAdd(this.map);
         this._changed = true;
     }
 
@@ -1011,12 +1011,12 @@ export class Style extends Evented {
             }
         }
 
-        const sourceCache = this.sourceCaches[id];
+        const tileManager = this.sourceCaches[id];
         delete this.sourceCaches[id];
         delete this._updatedSources[id];
-        sourceCache.fire(new Event('data', {sourceDataType: 'metadata', dataType: 'source', sourceId: id}));
-        sourceCache.setEventedParent(null);
-        sourceCache.onRemove(this.map);
+        tileManager.fire(new Event('data', {sourceDataType: 'metadata', dataType: 'source', sourceId: id}));
+        tileManager.setEventedParent(null);
+        tileManager.onRemove(this.map);
         this._changed = true;
     }
 
@@ -1344,13 +1344,13 @@ export class Style extends Evented {
         this._checkLoaded();
         const sourceId = target.source;
         const sourceLayer = target.sourceLayer;
-        const sourceCache = this.sourceCaches[sourceId];
+        const tileManager = this.sourceCaches[sourceId];
 
-        if (sourceCache === undefined) {
+        if (tileManager === undefined) {
             this.fire(new ErrorEvent(new Error(`The source '${sourceId}' does not exist in the map's style.`)));
             return;
         }
-        const sourceType = sourceCache.getSource().type;
+        const sourceType = tileManager.getSource().type;
         if (sourceType === 'geojson' && sourceLayer) {
             this.fire(new ErrorEvent(new Error('GeoJSON sources cannot have a sourceLayer parameter.')));
             return;
@@ -1363,20 +1363,20 @@ export class Style extends Evented {
             this.fire(new ErrorEvent(new Error('The feature id parameter must be provided.')));
         }
 
-        sourceCache.setFeatureState(sourceLayer, target.id, state);
+        tileManager.setFeatureState(sourceLayer, target.id, state);
     }
 
     removeFeatureState(target: FeatureIdentifier, key?: string) {
         this._checkLoaded();
         const sourceId = target.source;
-        const sourceCache = this.sourceCaches[sourceId];
+        const tileManager = this.sourceCaches[sourceId];
 
-        if (sourceCache === undefined) {
+        if (tileManager === undefined) {
             this.fire(new ErrorEvent(new Error(`The source '${sourceId}' does not exist in the map's style.`)));
             return;
         }
 
-        const sourceType = sourceCache.getSource().type;
+        const sourceType = tileManager.getSource().type;
         const sourceLayer = sourceType === 'vector' ? target.sourceLayer : undefined;
 
         if (sourceType === 'vector' && !sourceLayer) {
@@ -1389,20 +1389,20 @@ export class Style extends Evented {
             return;
         }
 
-        sourceCache.removeFeatureState(sourceLayer, target.id, key);
+        tileManager.removeFeatureState(sourceLayer, target.id, key);
     }
 
     getFeatureState(target: FeatureIdentifier) {
         this._checkLoaded();
         const sourceId = target.source;
         const sourceLayer = target.sourceLayer;
-        const sourceCache = this.sourceCaches[sourceId];
+        const tileManager = this.sourceCaches[sourceId];
 
-        if (sourceCache === undefined) {
+        if (tileManager === undefined) {
             this.fire(new ErrorEvent(new Error(`The source '${sourceId}' does not exist in the map's style.`)));
             return;
         }
-        const sourceType = sourceCache.getSource().type;
+        const sourceType = tileManager.getSource().type;
         if (sourceType === 'vector' && !sourceLayer) {
             this.fire(new ErrorEvent(new Error('The sourceLayer parameter must be provided for vector source types.')));
             return;
@@ -1411,7 +1411,7 @@ export class Style extends Evented {
             this.fire(new ErrorEvent(new Error('The feature id parameter must be provided.')));
         }
 
-        return sourceCache.getFeatureState(sourceLayer, target.id);
+        return tileManager.getFeatureState(sourceLayer, target.id);
     }
 
     getTransition() {
@@ -1613,8 +1613,8 @@ export class Style extends Evented {
         if (params?.filter) {
             this._validate(validateStyle.filter, 'querySourceFeatures.filter', params.filter, null, params);
         }
-        const sourceCache = this.sourceCaches[sourceID];
-        return sourceCache ? querySourceFeatures(sourceCache, params ? {...params, globalState: this._globalState} : {globalState: this._globalState}) : [];
+        const tileManager = this.sourceCaches[sourceID];
+        return tileManager ? querySourceFeatures(tileManager, params ? {...params, globalState: this._globalState} : {globalState: this._globalState}) : [];
     }
 
     getLight() {
@@ -1741,9 +1741,9 @@ export class Style extends Evented {
             layer.setEventedParent(null);
         }
         for (const id in this.sourceCaches) {
-            const sourceCache = this.sourceCaches[id];
-            sourceCache.setEventedParent(null);
-            sourceCache.onRemove(this.map);
+            const tileManager = this.sourceCaches[id];
+            tileManager.setEventedParent(null);
+            tileManager.onRemove(this.map);
         }
         this.imageManager.setEventedParent(null);
         this.setEventedParent(null);
@@ -1785,9 +1785,9 @@ export class Style extends Evented {
             if (styleLayer.type !== 'symbol') continue;
 
             if (!layerTiles[styleLayer.source]) {
-                const sourceCache = this.sourceCaches[styleLayer.source];
-                layerTiles[styleLayer.source] = sourceCache.getRenderableIds(true)
-                    .map((id) => sourceCache.getTileByID(id))
+                const tileManager = this.sourceCaches[styleLayer.source];
+                layerTiles[styleLayer.source] = tileManager.getRenderableIds(true)
+                    .map((id) => tileManager.getTileByID(id))
                     .sort((a, b) => (b.tileID.overscaledZ - a.tileID.overscaledZ) || (a.tileID.isLessThan(b.tileID) ? -1 : 1));
             }
 
@@ -1865,20 +1865,20 @@ export class Style extends Evented {
         // - the next frame triggers a reload of this tile even though it already has the latest version
         this._updateTilesForChangedImages();
 
-        const sourceCache = this.sourceCaches[params.source];
-        if (sourceCache) {
-            sourceCache.setDependencies(params.tileID.key, params.type, params.icons);
+        const tileManager = this.sourceCaches[params.source];
+        if (tileManager) {
+            tileManager.setDependencies(params.tileID.key, params.type, params.icons);
         }
         return images;
     }
 
     async getGlyphs(mapId: string | number, params: GetGlyphsParameters): Promise<GetGlyphsResponse> {
         const glyphs = await this.glyphManager.getGlyphs(params.stacks);
-        const sourceCache = this.sourceCaches[params.source];
-        if (sourceCache) {
+        const tileManager = this.sourceCaches[params.source];
+        if (tileManager) {
             // we are not setting stacks as dependencies since for now
             // we just need to know which tiles have glyph dependencies
-            sourceCache.setDependencies(params.tileID.key, params.type, ['']);
+            tileManager.setDependencies(params.tileID.key, params.type, ['']);
         }
         return glyphs;
     }

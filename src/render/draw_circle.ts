@@ -35,7 +35,7 @@ type SegmentsTileRenderState = {
     state: TileRenderState;
 };
 
-export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: CircleStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawCircles(painter: Painter, tileManager: SourceCache, layer: CircleStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
 
     const {isRenderingToTexture} = renderOptions;
@@ -66,7 +66,7 @@ export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: C
     for (let i = 0; i < coords.length; i++) {
         const coord = coords[i];
 
-        const tile = sourceCache.getTile(coord);
+        const tile = tileManager.getTile(coord);
         const bucket: CircleBucket<any> = (tile.getBucket(layer) as any);
         if (!bucket) continue;
 

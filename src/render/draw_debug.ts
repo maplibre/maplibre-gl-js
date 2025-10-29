@@ -59,13 +59,13 @@ function drawDebugSSRect(painter: Painter, x: number, y: number, width: number, 
     gl.disable(gl.SCISSOR_TEST);
 }
 
-export function drawDebug(painter: Painter, sourceCache: SourceCache, coords: Array<OverscaledTileID>) {
+export function drawDebug(painter: Painter, tileManager: SourceCache, coords: Array<OverscaledTileID>) {
     for (let i = 0; i < coords.length; i++) {
-        drawDebugTile(painter, sourceCache, coords[i]);
+        drawDebugTile(painter, tileManager, coords[i]);
     }
 }
 
-function drawDebugTile(painter: Painter, sourceCache: SourceCache, coord: OverscaledTileID) {
+function drawDebugTile(painter: Painter, tileManager: SourceCache, coord: OverscaledTileID) {
     const context = painter.context;
     const gl = context.gl;
 
@@ -79,10 +79,10 @@ function drawDebugTile(painter: Painter, sourceCache: SourceCache, coord: Oversc
 
     context.activeTexture.set(gl.TEXTURE0);
 
-    const tileRawData = sourceCache.getTileByID(coord.key).latestRawTileData;
+    const tileRawData = tileManager.getTileByID(coord.key).latestRawTileData;
     const tileByteLength = (tileRawData && tileRawData.byteLength) || 0;
     const tileSizeKb = Math.floor(tileByteLength / 1024);
-    const tileSize = sourceCache.getTile(coord).tileSize;
+    const tileSize = tileManager.getTile(coord).tileSize;
     const scaleRatio = (512 / Math.min(tileSize, 512) * (coord.overscaledZ / painter.transform.zoom)) * 0.5;
     let tileIdText = coord.canonical.toString();
     if (coord.overscaledZ !== coord.canonical.z) {
@@ -128,8 +128,8 @@ export function selectDebugSource(style: Style, zoom: number): SourceCache | nul
     const layers = Object.values(style._layers);
     const sources = layers.flatMap((layer) => {
         if (layer.source && !layer.isHidden(zoom)) {
-            const sourceCache = style.sourceCaches[layer.source];
-            return [sourceCache];
+            const tileManager = style.sourceCaches[layer.source];
+            return [tileManager];
         } else {
             return [];
         }

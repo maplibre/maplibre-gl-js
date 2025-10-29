@@ -76,7 +76,7 @@ describe('render to texture', () => {
     const map = {painter} as Map;
 
     const tile = new Tile(new OverscaledTileID(3, 0, 2, 1, 2), 512);
-    const sourceCache = {
+    const tileManager = {
         _source: {minzoom: 0, maxzoom: 2},
         getTileByID: (_id) => tile,
         getVisibleCoordinates: () => [tile.tileID]
@@ -101,9 +101,9 @@ describe('render to texture', () => {
     map.style = style;
     style.map = map;
 
-    const terrain = new Terrain(painter, sourceCache, {} as any as TerrainSpecification);
-    terrain.sourceCache.getRenderableTiles = () => [tile];
-    terrain.sourceCache.getTerrainCoords = () => { return {[tile.tileID.key]: tile.tileID}; };
+    const terrain = new Terrain(painter, tileManager, {} as any as TerrainSpecification);
+    terrain.tileManager.getRenderableTiles = () => [tile];
+    terrain.tileManager.getTerrainCoords = () => { return {[tile.tileID.key]: tile.tileID}; };
     map.terrain = terrain;
 
     const rtt = new RenderToTexture(painter, terrain);

@@ -497,14 +497,14 @@ export class Painter {
         const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: style.projection?.transitionState > 0};
 
         for (const id in sourceCaches) {
-            const sourceCache = sourceCaches[id];
-            if (sourceCache.used) {
-                sourceCache.prepare(this.context);
+            const tileManager = sourceCaches[id];
+            if (tileManager.used) {
+                tileManager.prepare(this.context);
             }
 
-            coordsAscending[id] = sourceCache.getVisibleCoordinates(false);
+            coordsAscending[id] = tileManager.getVisibleCoordinates(false);
             coordsDescending[id] = coordsAscending[id].slice().reverse();
-            coordsDescendingSymbol[id] = sourceCache.getVisibleCoordinates(true).reverse();
+            coordsDescendingSymbol[id] = tileManager.getVisibleCoordinates(true).reverse();
         }
 
         this.opaquePassCutoff = Infinity;
@@ -567,11 +567,11 @@ export class Painter {
 
             for (this.currentLayer = layerIds.length - 1; this.currentLayer >= 0; this.currentLayer--) {
                 const layer = this.style._layers[layerIds[this.currentLayer]];
-                const sourceCache = sourceCaches[layer.source];
+                const tileManager = sourceCaches[layer.source];
                 const coords = coordsAscending[layer.source];
 
                 this._renderTileClippingMasks(layer, coords, false);
-                this.renderLayer(this, sourceCache, layer, coords, renderOptions);
+                this.renderLayer(this, tileManager, layer, coords, renderOptions);
             }
         }
 
@@ -583,7 +583,7 @@ export class Painter {
 
         for (this.currentLayer = 0; this.currentLayer < layerIds.length; this.currentLayer++) {
             const layer = this.style._layers[layerIds[this.currentLayer]];
-            const sourceCache = sourceCaches[layer.source];
+            const tileManager = sourceCaches[layer.source];
 
             if (this.renderToTexture && this.renderToTexture.renderLayer(layer, renderOptions)) continue;
 
@@ -602,7 +602,7 @@ export class Painter {
             const coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
 
             this._renderTileClippingMasks(layer, coordsAscending[layer.source], !!this.renderToTexture);
-            this.renderLayer(this, sourceCache, layer, coords, renderOptions);
+            this.renderLayer(this, tileManager, layer, coords, renderOptions);
         }
 
         // Render atmosphere, only for Globe projection
@@ -641,7 +641,7 @@ export class Painter {
         // Update coords/depth-framebuffer on camera movement, or tile reloading
         let doUpdate = this.terrainFacilitator.dirty;
         doUpdate ||= requireExact ? !mat4.exactEquals(prevMatrix, currMatrix) : !mat4.equals(prevMatrix, currMatrix);
-        doUpdate ||= this.style.map.terrain.sourceCache.anyTilesAfterTime(this.terrainFacilitator.renderTime);
+        doUpdate ||= this.style.map.terrain.tileManager.anyTilesAfterTime(this.terrainFacilitator.renderTime);
 
         if (!doUpdate) {
             return;
@@ -654,33 +654,33 @@ export class Painter {
         drawCoords(this, this.style.map.terrain);
     }
 
-    renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+    renderLayer(painter: Painter, tileManager: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
         if (layer.isHidden(this.transform.zoom)) return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;
 
         if (isSymbolStyleLayer(layer)) {
-            drawSymbols(painter, sourceCache, layer, coords, this.style.placement.variableOffsets, renderOptions);
+            drawSymbols(painter, tileManager, layer, coords, this.style.placement.variableOffsets, renderOptions);
         } else if (isCircleStyleLayer(layer)) {
-            drawCircles(painter, sourceCache, layer, coords, renderOptions);
+            drawCircles(painter, tileManager, layer, coords, renderOptions);
         } else if (isHeatmapStyleLayer(layer)) {
-            drawHeatmap(painter, sourceCache, layer, coords, renderOptions);
+            drawHeatmap(painter, tileManager, layer, coords, renderOptions);
         } else if (isLineStyleLayer(layer)) {
-            drawLine(painter, sourceCache, layer, coords, renderOptions);
+            drawLine(painter, tileManager, layer, coords, renderOptions);
         } else if (isFillStyleLayer(layer)) {
-            drawFill(painter, sourceCache, layer, coords, renderOptions);
+            drawFill(painter, tileManager, layer, coords, renderOptions);
         } else if (isFillExtrusionStyleLayer(layer)) {
-            drawFillExtrusion(painter, sourceCache, layer, coords, renderOptions);
+            drawFillExtrusion(painter, tileManager, layer, coords, renderOptions);
         } else if (isHillshadeStyleLayer(layer)) {
-            drawHillshade(painter, sourceCache, layer, coords, renderOptions);
+            drawHillshade(painter, tileManager, layer, coords, renderOptions);
         } else if (isColorReliefStyleLayer(layer)) {
-            drawColorRelief(painter, sourceCache, layer, coords, renderOptions);
+            drawColorRelief(painter, tileManager, layer, coords, renderOptions);
         } else if (isRasterStyleLayer(layer)) {
-            drawRaster(painter, sourceCache, layer, coords, renderOptions);
+            drawRaster(painter, tileManager, layer, coords, renderOptions);
         } else if (isBackgroundStyleLayer(layer)) {
-            drawBackground(painter, sourceCache, layer, coords, renderOptions);
+            drawBackground(painter, tileManager, layer, coords, renderOptions);
         } else if (isCustomStyleLayer(layer)) {
-            drawCustom(painter, sourceCache, layer, renderOptions);
+            drawCustom(painter, tileManager, layer, renderOptions);
         }
     }
 

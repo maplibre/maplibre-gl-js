@@ -19,7 +19,7 @@ function drawDepth(painter: Painter, terrain: Terrain) {
     const tr = painter.transform;
     const colorMode = ColorMode.unblended;
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, [0, 1]);
-    const tiles = terrain.sourceCache.getRenderableTiles();
+    const tiles = terrain.tileManager.getRenderableTiles();
     const program = painter.useProgram('terrainDepth');
     context.bindFramebuffer.set(terrain.getFramebuffer('depth').framebuffer);
     context.viewport.set([0, 0, painter.width  / devicePixelRatio, painter.height / devicePixelRatio]);
@@ -47,7 +47,7 @@ function drawCoords(painter: Painter, terrain: Terrain) {
     const colorMode = ColorMode.unblended;
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, [0, 1]);
     const coords = terrain.getCoordsTexture();
-    const tiles = terrain.sourceCache.getRenderableTiles();
+    const tiles = terrain.tileManager.getRenderableTiles();
 
     // draw tile-coords into framebuffer
     const program = painter.useProgram('terrainCoords');

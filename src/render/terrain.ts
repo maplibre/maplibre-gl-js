@@ -41,10 +41,10 @@ export type TerrainData = {
  * @internal
  * This is the main class which handles most of the 3D Terrain logic. It has the following topics:
  *
- * 1. loads raster-dem tiles via the internal sourceCache this.sourceCache
+ * 1. loads raster-dem tiles via the internal tileManager this.tileManager
  * 2. creates a depth-framebuffer, which is used to calculate the visibility of coordinates
  * 3. creates a coords-framebuffer, which is used the get to tile-coordinate for a screen-pixel
- * 4. stores all render-to-texture tiles in the this.sourceCache._tiles
+ * 4. stores all render-to-texture tiles in the this.tileManager._tiles
  * 5. calculates the elevation for a specific tile-coordinate
  * 6. creates a terrain-mesh
  *
@@ -79,7 +79,7 @@ export class Terrain {
     /**
      * the tilemanager this terrain is based on
      */
-    sourceCache: TerrainSourceCache;
+    tileManager: TerrainSourceCache;
     /**
      * the TerrainSpecification object passed to this instance
      */
@@ -136,9 +136,9 @@ export class Terrain {
      */
     _demMatrixCache: {[_: string]: { matrix: mat4; coord: OverscaledTileID }};
 
-    constructor(painter: Painter, sourceCache: SourceCache, options: TerrainSpecification) {
+    constructor(painter: Painter, tileManager: SourceCache, options: TerrainSpecification) {
         this.painter = painter;
-        this.sourceCache = new TerrainSourceCache(sourceCache);
+        this.tileManager = new TerrainSourceCache(tileManager);
         this.options = options;
         this.exaggeration = typeof options.exaggeration === 'number' ? options.exaggeration : 1.0;
         this.qualityFactor = 2;
@@ -221,7 +221,7 @@ export class Terrain {
             this._emptyDemMatrix = mat4.identity([] as any);
         }
         // find covering dem tile and prepare demTexture
-        const sourceTile = this.sourceCache.getSourceTile(tileID, true);
+        const sourceTile = this.tileManager.getSourceTile(tileID, true);
         if (sourceTile && sourceTile.dem && (!sourceTile.demTexture || sourceTile.needsTerrainPrepare)) {
             const context = this.painter.context;
             sourceTile.demTexture = this.painter.getTileTexture(sourceTile.dem.stride);
@@ -233,7 +233,7 @@ export class Terrain {
         // create matrix for lookup in dem data
         const matrixKey = sourceTile && (sourceTile + sourceTile.tileID.key) + tileID.key;
         if (matrixKey && !this._demMatrixCache[matrixKey]) {
-            const maxzoom = this.sourceCache.sourceCache._source.maxzoom;
+            const maxzoom = this.tileManager.tileManager._source.maxzoom;
             let dz = tileID.canonical.z - sourceTile.tileID.canonical.z;
             if (tileID.overscaledZ > tileID.canonical.z) {
                 if (tileID.canonical.z >= maxzoom) dz =  tileID.canonical.z - maxzoom;
@@ -341,7 +341,7 @@ export class Terrain {
         const x = rgba[0] + ((rgba[2] >> 4) << 8);
         const y = rgba[1] + ((rgba[2] & 15) << 8);
         const tileID = this.coordsIndex[255 - rgba[3]];
-        const tile = tileID && this.sourceCache.getTileByID(tileID);
+        const tile = tileID && this.tileManager.getTileByID(tileID);
 
         if (!tile) {
             return null;
