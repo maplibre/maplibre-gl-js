@@ -37,7 +37,7 @@ type TileResult = {
 
 /**
  * @internal
- * `SourceCache` is responsible for
+ * `TileManager` is responsible for
  *
  *  - creating an instance of `Source`
  *  - forwarding events from `Source`
@@ -45,7 +45,7 @@ type TileResult = {
  *  - loading the tiles needed to render a given viewport
  *  - unloading the cached tiles not needed to render a given viewport
  */
-export class SourceCache extends Evented {
+export class TileManager extends Evented {
     id: string;
     dispatcher: Dispatcher;
     map: Map;
@@ -400,7 +400,7 @@ export class SourceCache extends Evented {
             }
 
             // find descendents within the max covering zoom range
-            const maxCoveringZoom = targetID.overscaledZ + SourceCache.maxUnderzooming;
+            const maxCoveringZoom = targetID.overscaledZ + TileManager.maxUnderzooming;
             const candidates = descendents.filter(t => t.tileID.overscaledZ <= maxCoveringZoom);
             if (!candidates.length) {
                 incomplete[targetID.key] = targetID;
@@ -672,7 +672,7 @@ export class SourceCache extends Evented {
     _updateRetainedTiles(idealTileIDs: Array<OverscaledTileID>, zoom: number): Record<string, OverscaledTileID> {
         const retain: Record<string, OverscaledTileID> = {};
         const checked: Record<string, boolean> = {};
-        const minCoveringZoom = Math.max(zoom - SourceCache.maxOverzooming, this._source.minzoom);
+        const minCoveringZoom = Math.max(zoom - TileManager.maxOverzooming, this._source.minzoom);
 
         let missingIdealTiles = {};
         for (const idealID of idealTileIDs) {
@@ -1210,8 +1210,8 @@ export class SourceCache extends Evented {
     }
 }
 
-SourceCache.maxOverzooming = 10;
-SourceCache.maxUnderzooming = 3;
+TileManager.maxOverzooming = 10;
+TileManager.maxUnderzooming = 3;
 
 function compareTileId(a: OverscaledTileID, b: OverscaledTileID): number {
     // Different copies of the world are sorted based on their distance to the center.

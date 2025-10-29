@@ -1,6 +1,6 @@
 import {describe, test, expect, vi, type Mock} from 'vitest';
 import {OverscaledTileID} from '../tile/tile_id';
-import {SourceCache} from '../tile/tile_manager';
+import {TileManager} from '../tile/tile_manager';
 import {Tile} from '../tile/tile';
 import {Painter, type RenderOptions} from './painter';
 import type {Map} from '../ui/map';
@@ -50,7 +50,7 @@ describe('drawCustom', () => {
         tile.imageAtlasTexture = {
             bind: () => { }
         } as any;
-        const sourceCacheMock = new SourceCache(null, null, null);
+        const sourceCacheMock = new TileManager(null, null, null);
         (sourceCacheMock.getTile as Mock).mockReturnValue(tile);
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
 

@@ -583,7 +583,7 @@
 - Fix different unwanted panning changes at the end of a panning motion, that happen on a large screen ([#3935](https://github.com/maplibre/maplibre-gl-js/issues/3935))
 - Fix image sources not being marked as loaded on error ([#3981](https://github.com/maplibre/maplibre-gl-js/pull/3981))
 - Fix ScaleControl options should be optional. ([#4002](https://github.com/maplibre/maplibre-gl-js/pull/4002))
-- Fix race condition in `SourceCache` that makes unit tests unstable. Eliminate a redundant 'visibility' event fired from Style class. ([#3992](https://github.com/maplibre/maplibre-gl-js/issues/3992))
+- Fix race condition in `TileManager` that makes unit tests unstable. Eliminate a redundant 'visibility' event fired from Style class. ([#3992](https://github.com/maplibre/maplibre-gl-js/issues/3992))
 - Fix paint property not being updated by setPaintProperty ([#2651](https://github.com/maplibre/maplibre-gl-js/issues/2651))
 
 ## 4.1.2
@@ -1344,7 +1344,7 @@ Everything from the four previous pre-releases:
 
 - Add adjustment for glyph rendering, CJK fonts are mainly affected ([#1002](https://github.com/maplibre/maplibre-gl-js/issues/1002)).
 - Improve typings to fix Angular strict mode failure ([#790](https://github.com/maplibre/maplibre-gl-js/issues/790), [#970](https://github.com/maplibre/maplibre-gl-js/issues/970), [#934](https://github.com/maplibre/maplibre-gl-js/issues/934))
-- Fix `SourceCache.loaded()` always returning `true` following a load error ([#1025](https://github.com/maplibre/maplibre-gl-js/issues/1025))
+- Fix `TileManager.loaded()` always returning `true` following a load error ([#1025](https://github.com/maplibre/maplibre-gl-js/issues/1025))
 - Added back csp and dev builds to npm package ([#1042](https://github.com/maplibre/maplibre-gl-js/issues/1042))
 
 ## 2.1.6

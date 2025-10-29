@@ -2,7 +2,7 @@ import {describe, test, expect, vi, type Mock} from 'vitest';
 import {mat4} from 'gl-matrix';
 import {OverscaledTileID} from '../tile/tile_id';
 import {SymbolBucket} from '../data/bucket/symbol_bucket';
-import {SourceCache} from '../tile/tile_manager';
+import {TileManager} from '../tile/tile_manager';
 import {Tile} from '../tile/tile';
 import {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 import {Painter, type RenderOptions} from './painter';
@@ -113,7 +113,7 @@ describe('drawSymbol', () => {
         } as any;
         tile.getBucket = () => bucketMock;
         tile.tileID = tileId;
-        const sourceCacheMock = new SourceCache(null, null, null);
+        const sourceCacheMock = new TileManager(null, null, null);
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
         sourceCacheMock.getTile = (_a) => tile;
 
@@ -176,7 +176,7 @@ describe('drawSymbol', () => {
             bind: () => { }
         } as any;
         (tile.getBucket as Mock).mockReturnValue(bucketMock);
-        const sourceCacheMock = new SourceCache(null, null, null);
+        const sourceCacheMock = new TileManager(null, null, null);
         (sourceCacheMock.getTile as Mock).mockReturnValue(tile);
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
         painterMock.style = {
@@ -243,7 +243,7 @@ describe('drawSymbol', () => {
             bind: () => { }
         } as any;
         (tile.getBucket as Mock).mockReturnValue(bucketMock);
-        const sourceCacheMock = new SourceCache(null, null, null);
+        const sourceCacheMock = new TileManager(null, null, null);
         (sourceCacheMock.getTile as Mock).mockReturnValue(tile);
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
 

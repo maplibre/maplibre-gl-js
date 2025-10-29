@@ -10,7 +10,7 @@ import {
 } from './program/line_program';
 
 import type {Painter, RenderOptions} from './painter';
-import type {SourceCache} from '../tile/tile_manager';
+import type {TileManager} from '../tile/tile_manager';
 import type {LineStyleLayer} from '../style/style_layer/line_style_layer';
 import type {LineBucket} from '../data/bucket/line_bucket';
 import type {OverscaledTileID} from '../tile/tile_id';
@@ -30,7 +30,7 @@ type GradientTexture = {
 
 function updateGradientTexture(
     painter: Painter,
-    tileManager: SourceCache,
+    tileManager: TileManager,
     context: Context,
     gl: WebGLRenderingContext,
     layer: LineStyleLayer,
@@ -95,7 +95,7 @@ function bindDasharrayTextures(
 
 function bindGradientTextures(
     painter: Painter,
-    tileManager: SourceCache,
+    tileManager: TileManager,
     context: Context,
     gl: WebGLRenderingContext,
     layer: LineStyleLayer,
@@ -113,7 +113,7 @@ function bindGradientTextures(
 
 function bindGradientAndDashTextures(
     painter: Painter,
-    tileManager: SourceCache,
+    tileManager: TileManager,
     context: Context,
     gl: WebGLRenderingContext,
     layer: LineStyleLayer,
@@ -138,7 +138,7 @@ function bindGradientAndDashTextures(
     programConfiguration.updatePaintBuffers(crossfade);
 }
 
-export function drawLine(painter: Painter, tileManager: SourceCache, layer: LineStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawLine(painter: Painter, tileManager: TileManager, layer: LineStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
 
     const {isRenderingToTexture} = renderOptions;

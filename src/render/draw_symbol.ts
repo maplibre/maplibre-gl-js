@@ -21,7 +21,7 @@ import {
 } from './program/symbol_program';
 
 import type {Painter, RenderOptions} from './painter';
-import type {SourceCache} from '../tile/tile_manager';
+import type {TileManager} from '../tile/tile_manager';
 import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 
 import type {Texture, TextureFilter} from '../render/texture';
@@ -60,7 +60,7 @@ type SymbolTileRenderState = {
 
 const identityMat4 = mat4.identity(new Float32Array(16));
 
-export function drawSymbols(painter: Painter, tileManager: SourceCache, layer: SymbolStyleLayer, coords: Array<OverscaledTileID>, variableOffsets: {
+export function drawSymbols(painter: Painter, tileManager: TileManager, layer: SymbolStyleLayer, coords: Array<OverscaledTileID>, variableOffsets: {
     [_ in CrossTileID]: VariableOffset;
 }, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
@@ -129,7 +129,7 @@ function calculateVariableRenderShift(
 
 function updateVariableAnchors(coords: Array<OverscaledTileID>,
     painter: Painter,
-    layer:SymbolStyleLayer, tileManager: SourceCache,
+    layer:SymbolStyleLayer, tileManager: TileManager,
     rotationAlignment: SymbolLayerSpecification['layout']['text-rotation-alignment'],
     pitchAlignment: SymbolLayerSpecification['layout']['text-pitch-alignment'],
     translate: [number, number],
@@ -294,7 +294,7 @@ function getSymbolProgramName(isSDF: boolean, isText: boolean, bucket: SymbolBuc
 
 function drawLayerSymbols(
     painter: Painter,
-    tileManager: SourceCache,
+    tileManager: TileManager,
     layer: SymbolStyleLayer,
     coords: Array<OverscaledTileID>,
     isText: boolean,

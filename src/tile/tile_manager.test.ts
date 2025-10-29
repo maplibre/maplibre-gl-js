@@ -1,6 +1,6 @@
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {SourceCache} from './tile_manager';
+import {TileManager} from './tile_manager';
 import {type Source, addSourceType} from '../source/source';
 import {Tile, FadingRoles, FadingDirections} from './tile';
 import {CanonicalTileID, OverscaledTileID} from './tile_id';
@@ -81,7 +81,7 @@ function createSource(id: string, sourceOptions: any, _dispatcher: any, eventedP
 addSourceType('mock-source-type', createSource as any);
 
 function createSourceCache(options?, used?) {
-    const sc = new SourceCache('id', extend({
+    const sc = new TileManager('id', extend({
         tileSize: 512,
         minzoom: 0,
         maxzoom: 14,
@@ -122,7 +122,7 @@ afterEach(() => {
     vi.clearAllMocks();
 });
 
-describe('SourceCache.addTile', () => {
+describe('TileManager.addTile', () => {
     test('loads tile when uncached', () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const tileManager = createSourceCache();
@@ -295,7 +295,7 @@ describe('SourceCache.addTile', () => {
     });
 });
 
-describe('SourceCache.removeTile', () => {
+describe('TileManager.removeTile', () => {
     test('removes tile', async () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const tileManager = createSourceCache({});
@@ -404,7 +404,7 @@ describe('SourceCache.removeTile', () => {
 
 });
 
-describe('SourceCache / Source lifecycle', () => {
+describe('TileManager / Source lifecycle', () => {
     test('does not fire load or change before source load event', async () => {
         const tileManager = createSourceCache({noLoad: true});
         const spy = vi.fn();
@@ -575,7 +575,7 @@ describe('SourceCache / Source lifecycle', () => {
 
 });
 
-describe('SourceCache.update', () => {
+describe('TileManager.update', () => {
     test('loads no tiles if used is false', async () => {
         const transform = new MercatorTransform();
         transform.resize(512, 512);
@@ -1020,7 +1020,7 @@ describe('SourceCache.update', () => {
     });
 });
 
-describe('SourceCache._updateRetainedTiles', () => {
+describe('TileManager._updateRetainedTiles', () => {
 
     test('loads ideal tiles if they exist', () => {
         const stateCache = {};
@@ -1639,7 +1639,7 @@ describe('SourceCache._updateRetainedTiles', () => {
 
 });
 
-describe('SourceCache.clearTiles', () => {
+describe('TileManager.clearTiles', () => {
     test('unloads tiles', () => {
         const coord = new OverscaledTileID(0, 0, 0, 0, 0);
         let abort = 0,
@@ -1665,7 +1665,7 @@ describe('SourceCache.clearTiles', () => {
     });
 });
 
-describe('SourceCache.tilesIn', () => {
+describe('TileManager.tilesIn', () => {
     test('graceful response before source loaded', () => {
         const tr = new MercatorTransform();
         tr.resize(512, 512);
@@ -2128,7 +2128,7 @@ describe('SourceCache.tilesIn', () => {
 });
 
 describe('source cache loaded', () => {
-    test('SourceCache.loaded (no errors)', async () => {
+    test('TileManager.loaded (no errors)', async () => {
         const tileManager = createSourceCache();
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'loaded';
@@ -2147,7 +2147,7 @@ describe('source cache loaded', () => {
         expect(tileManager.loaded()).toBeTruthy();
     });
 
-    test('SourceCache.loaded (with errors)', async () => {
+    test('TileManager.loaded (with errors)', async () => {
         const tileManager = createSourceCache();
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'errored';
@@ -2167,7 +2167,7 @@ describe('source cache loaded', () => {
         expect(tileManager.loaded()).toBeTruthy();
     });
 
-    test('SourceCache.loaded (unused)', async () => {
+    test('TileManager.loaded (unused)', async () => {
         const tileManager = createSourceCache(undefined, false);
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'errored';
@@ -2180,7 +2180,7 @@ describe('source cache loaded', () => {
         expect(tileManager.loaded()).toBeTruthy();
     });
 
-    test('SourceCache.loaded (unusedForTerrain)', async () => {
+    test('TileManager.loaded (unusedForTerrain)', async () => {
         const tileManager = createSourceCache(undefined, false);
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'errored';
@@ -2194,7 +2194,7 @@ describe('source cache loaded', () => {
         expect(tileManager.loaded()).toBeTruthy();
     });
 
-    test('SourceCache.loaded (not loaded when no update)', async () => {
+    test('TileManager.loaded (not loaded when no update)', async () => {
         const tileManager = createSourceCache();
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'errored';
@@ -2207,7 +2207,7 @@ describe('source cache loaded', () => {
         expect(tileManager.loaded()).toBeFalsy();
     });
 
-    test('SourceCache.loaded (on last tile load)', async () => {
+    test('TileManager.loaded (on last tile load)', async () => {
         const tileManager = createSourceCache();
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'loading';
@@ -2237,7 +2237,7 @@ describe('source cache loaded', () => {
         expect(spy.mock.calls.length).toBe(5); // 4 tiles + 1 source loaded
     });
 
-    test('SourceCache.loaded (tiles outside bounds, idle)', async () => {
+    test('TileManager.loaded (tiles outside bounds, idle)', async () => {
         const japan = new TileBounds([122.74, 19.33, 149.0, 45.67]);
         const tileManager = createSourceCache();
         tileManager._source.loadTile = async (tile) => {
@@ -2281,7 +2281,7 @@ describe('source cache loaded', () => {
 });
 
 describe('source cache get ids', () => {
-    test('SourceCache.getIds (ascending order by zoom level)', () => {
+    test('TileManager.getIds (ascending order by zoom level)', () => {
         const ids = [
             new OverscaledTileID(0, 0, 0, 0, 0),
             new OverscaledTileID(3, 0, 3, 0, 0),
@@ -2303,7 +2303,7 @@ describe('source cache get ids', () => {
     });
 });
 
-describe('SourceCache.reload', () => {
+describe('TileManager.reload', () => {
     test('before loaded', () => {
         const tileManager = createSourceCache({noLoad: true});
         tileManager.onAdd(undefined);
@@ -2316,7 +2316,7 @@ describe('SourceCache.reload', () => {
 
 });
 
-describe('SourceCache reloads expiring tiles', () => {
+describe('TileManager reloads expiring tiles', () => {
     test('calls reloadTile when tile expires', async () => {
         const coord = new OverscaledTileID(1, 0, 1, 0, 1);
 
@@ -2335,7 +2335,7 @@ describe('SourceCache reloads expiring tiles', () => {
 
 });
 
-describe('SourceCache sets max cache size correctly', () => {
+describe('TileManager sets max cache size correctly', () => {
     test('sets cache size based on 512 tiles', () => {
         const tileManager = createSourceCache({
             tileSize: 256
@@ -2364,7 +2364,7 @@ describe('SourceCache sets max cache size correctly', () => {
 
 });
 
-describe('SourceCache.onRemove', () => {
+describe('TileManager.onRemove', () => {
     test('clears tiles', () => {
         const tileManager = createSourceCache();
         vi.spyOn(tileManager, 'clearTiles');
@@ -2386,7 +2386,7 @@ describe('SourceCache.onRemove', () => {
     });
 });
 
-describe('SourceCache.usedForTerrain', () => {
+describe('TileManager.usedForTerrain', () => {
     test('loads covering tiles with usedForTerrain with source zoom 0-14', async () => {
         const transform = new MercatorTransform();
         transform.resize(511, 511);
@@ -2458,7 +2458,7 @@ describe('SourceCache.usedForTerrain', () => {
 
 });
     
-describe('SourceCache::refreshTiles', () => {
+describe('TileManager::refreshTiles', () => {
     test('calls reloadTile when tile exists', async () => {
         const coord = new OverscaledTileID(1, 0, 1, 0, 1);
         const tileManager = createSourceCache();

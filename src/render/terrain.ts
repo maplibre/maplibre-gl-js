@@ -13,7 +13,7 @@ import type {Framebuffer} from '../gl/framebuffer';
 import type Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {TerrainSourceCache} from '../tile/terrain_tile_manager';
-import {type SourceCache} from '../tile/tile_manager';
+import {type TileManager} from '../tile/tile_manager';
 import {EXTENT} from '../data/extent';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type LngLat, earthRadius} from '../geo/lng_lat';
@@ -136,7 +136,7 @@ export class Terrain {
      */
     _demMatrixCache: {[_: string]: { matrix: mat4; coord: OverscaledTileID }};
 
-    constructor(painter: Painter, tileManager: SourceCache, options: TerrainSpecification) {
+    constructor(painter: Painter, tileManager: TileManager, options: TerrainSpecification) {
         this.painter = painter;
         this.tileManager = new TerrainSourceCache(tileManager);
         this.options = options;

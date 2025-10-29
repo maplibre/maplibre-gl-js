@@ -1,7 +1,7 @@
 import {describe, test, expect, vi, type Mock} from 'vitest';
 import {mat4} from 'gl-matrix';
 import {OverscaledTileID} from '../tile/tile_id';
-import {SourceCache} from '../tile/tile_manager';
+import {TileManager} from '../tile/tile_manager';
 import {Tile} from '../tile/tile';
 import {Painter, type RenderOptions} from './painter';
 import {Program} from './program';
@@ -40,7 +40,7 @@ describe('drawFill', () => {
 
         const mockTile = constructMockTile(layer);
 
-        const sourceCacheMock = new SourceCache(null as any, null as any, null as any);
+        const sourceCacheMock = new TileManager(null as any, null as any, null as any);
         (sourceCacheMock.getTile as Mock).mockReturnValue(mockTile);
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
 

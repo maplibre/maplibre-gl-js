@@ -14,12 +14,12 @@ import {
 import {HEATMAP_FULL_RENDER_FBO_KEY} from '../style/style_layer/heatmap_style_layer';
 
 import type {Painter, RenderOptions} from './painter';
-import type {SourceCache} from '../tile/tile_manager';
+import type {TileManager} from '../tile/tile_manager';
 import type {HeatmapStyleLayer} from '../style/style_layer/heatmap_style_layer';
 import type {HeatmapBucket} from '../data/bucket/heatmap_bucket';
 import type {OverscaledTileID} from '../tile/tile_id';
 
-export function drawHeatmap(painter: Painter, tileManager: SourceCache, layer: HeatmapStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawHeatmap(painter: Painter, tileManager: TileManager, layer: HeatmapStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (layer.paint.get('heatmap-opacity') === 0) {
         return;
     }
@@ -50,7 +50,7 @@ export function drawHeatmap(painter: Painter, tileManager: SourceCache, layer: H
     }
 }
 
-function prepareHeatmapFlat(painter: Painter, tileManager: SourceCache, layer: HeatmapStyleLayer, coords: Array<OverscaledTileID>) {
+function prepareHeatmapFlat(painter: Painter, tileManager: TileManager, layer: HeatmapStyleLayer, coords: Array<OverscaledTileID>) {
     const context = painter.context;
     const gl = context.gl;
     const transform = painter.transform;

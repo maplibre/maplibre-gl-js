@@ -1,6 +1,6 @@
 import {now} from '../util/time_control';
 import {mat4} from 'gl-matrix';
-import {SourceCache} from '../tile/tile_manager';
+import {TileManager} from '../tile/tile_manager';
 import {EXTENT} from '../data/extent';
 import {SegmentVector} from '../data/segment';
 import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types.g';
@@ -145,7 +145,7 @@ export class Painter {
 
         // Within each layer there are multiple distinct z-planes that can be drawn to.
         // This is implemented using the WebGL depth buffer.
-        this.numSublayers = SourceCache.maxUnderzooming + SourceCache.maxOverzooming + 1;
+        this.numSublayers = TileManager.maxUnderzooming + TileManager.maxOverzooming + 1;
         this.depthEpsilon = 1 / Math.pow(2, 16);
 
         this.crossTileSymbolIndex = new CrossTileSymbolIndex();
@@ -654,7 +654,7 @@ export class Painter {
         drawCoords(this, this.style.map.terrain);
     }
 
-    renderLayer(painter: Painter, tileManager: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+    renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
         if (layer.isHidden(this.transform.zoom)) return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;

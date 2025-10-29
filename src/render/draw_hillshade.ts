@@ -9,11 +9,11 @@ import {
 } from './program/hillshade_program';
 
 import type {Painter, RenderOptions} from './painter';
-import type {SourceCache} from '../tile/tile_manager';
+import type {TileManager} from '../tile/tile_manager';
 import type {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
 import type {OverscaledTileID} from '../tile/tile_id';
 
-export function drawHillshade(painter: Painter, tileManager: SourceCache, layer: HillshadeStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawHillshade(painter: Painter, tileManager: TileManager, layer: HillshadeStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'offscreen' && painter.renderPass !== 'translucent') return;
 
     const {isRenderingToTexture} = renderOptions;
@@ -46,7 +46,7 @@ export function drawHillshade(painter: Painter, tileManager: SourceCache, layer:
 
 function renderHillshade(
     painter: Painter,
-    tileManager: SourceCache,
+    tileManager: TileManager,
     layer: HillshadeStyleLayer,
     coords: Array<OverscaledTileID>,
     stencilModes: {[_: number]: Readonly<StencilMode>},
@@ -93,7 +93,7 @@ function renderHillshade(
 // directions for each pixel, and saves those values to a framebuffer texture in the r and g channels.
 function prepareHillshade(
     painter: Painter,
-    tileManager: SourceCache,
+    tileManager: TileManager,
     tileIDs: Array<OverscaledTileID>,
     layer: HillshadeStyleLayer,
     depthMode: Readonly<DepthMode>,

@@ -10,7 +10,7 @@ import {type Style} from '../style/style';
 import {Tile} from '../tile/tile';
 import {type Map} from '../ui/map';
 import {OverscaledTileID} from '../tile/tile_id';
-import {type SourceCache} from '../tile/tile_manager';
+import {type TileManager} from '../tile/tile_manager';
 import {type TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import {type RasterStyleLayer} from '../style/style_layer/raster_style_layer';
@@ -80,7 +80,7 @@ describe('render to texture', () => {
         _source: {minzoom: 0, maxzoom: 2},
         getTileByID: (_id) => tile,
         getVisibleCoordinates: () => [tile.tileID]
-    } as SourceCache;
+    } as TileManager;
 
     const style = {
         tileManagers: {'maine': {getVisibleCoordinates: () => [tile.tileID], getSource: () => ({})}},

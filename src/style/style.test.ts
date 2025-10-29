@@ -1,6 +1,6 @@
 import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} from 'vitest';
 import {Style} from './style';
-import {SourceCache} from '../tile/tile_manager';
+import {TileManager} from '../tile/tile_manager';
 import {StyleLayer} from './style_layer';
 import {extend} from '../util/util';
 import {Event} from '../util/evented';
@@ -309,7 +309,7 @@ describe('Style.loadJSON', () => {
         }));
 
         await style.once('style.load');
-        expect(style.tileManagers['mapLibre'] instanceof SourceCache).toBeTruthy();
+        expect(style.tileManagers['mapLibre'] instanceof TileManager).toBeTruthy();
     });
 
     test('creates layers', async () => {

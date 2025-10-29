@@ -4,7 +4,7 @@ import {EXTENT} from '../data/extent';
 import {mat4} from 'gl-matrix';
 import {Evented} from '../util/evented';
 import type {ITransform} from '../geo/transform_interface';
-import type {SourceCache} from './tile_manager';
+import type {TileManager} from './tile_manager';
 import {type Terrain} from '../render/terrain';
 import {now} from '../util/time_control';
 import {coveringTiles} from '../geo/projection/covering_tiles';
@@ -25,7 +25,7 @@ export class TerrainSourceCache extends Evented {
     /**
      * source-cache for the raster-dem source.
      */
-    tileManager: SourceCache;
+    tileManager: TileManager;
     /**
      * stores all render-to-texture tiles.
      */
@@ -59,7 +59,7 @@ export class TerrainSourceCache extends Evented {
      */
     _lastTilesetChange: number = now();
 
-    constructor(tileManager: SourceCache) {
+    constructor(tileManager: TileManager) {
         super();
         this.tileManager = tileManager;
         this._tiles = {};

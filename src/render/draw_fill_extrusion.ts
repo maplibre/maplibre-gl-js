@@ -8,7 +8,7 @@ import {
 } from './program/fill_extrusion_program';
 
 import type {Painter, RenderOptions} from './painter';
-import type {SourceCache} from '../tile/tile_manager';
+import type {TileManager} from '../tile/tile_manager';
 import type {FillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer';
 import type {FillExtrusionBucket} from '../data/bucket/fill_extrusion_bucket';
 import type {OverscaledTileID} from '../tile/tile_id';
@@ -16,7 +16,7 @@ import type {OverscaledTileID} from '../tile/tile_id';
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
 import {translatePosition} from '../util/util';
 
-export function drawFillExtrusion(painter: Painter, source: SourceCache, layer: FillExtrusionStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawFillExtrusion(painter: Painter, source: TileManager, layer: FillExtrusionStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     const opacity = layer.paint.get('fill-extrusion-opacity');
     if (opacity === 0) {
         return;
@@ -49,7 +49,7 @@ export function drawFillExtrusion(painter: Painter, source: SourceCache, layer: 
 
 function drawExtrusionTiles(
     painter: Painter,
-    source: SourceCache,
+    source: TileManager,
     layer: FillExtrusionStyleLayer,
     coords: OverscaledTileID[],
     depthMode: DepthMode,

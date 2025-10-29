@@ -6,7 +6,7 @@ import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {ColorMode} from '../gl/color_mode';
 
 import type {Painter} from './painter';
-import type {SourceCache} from '../tile/tile_manager';
+import type {TileManager} from '../tile/tile_manager';
 import type {OverscaledTileID} from '../tile/tile_id';
 import {type Style} from '../style/style';
 
@@ -59,13 +59,13 @@ function drawDebugSSRect(painter: Painter, x: number, y: number, width: number, 
     gl.disable(gl.SCISSOR_TEST);
 }
 
-export function drawDebug(painter: Painter, tileManager: SourceCache, coords: Array<OverscaledTileID>) {
+export function drawDebug(painter: Painter, tileManager: TileManager, coords: Array<OverscaledTileID>) {
     for (let i = 0; i < coords.length; i++) {
         drawDebugTile(painter, tileManager, coords[i]);
     }
 }
 
-function drawDebugTile(painter: Painter, tileManager: SourceCache, coord: OverscaledTileID) {
+function drawDebugTile(painter: Painter, tileManager: TileManager, coord: OverscaledTileID) {
     const context = painter.context;
     const gl = context.gl;
 
@@ -121,10 +121,10 @@ function drawTextToOverlay(painter: Painter, text: string) {
     painter.debugOverlayTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
 }
 
-export function selectDebugSource(style: Style, zoom: number): SourceCache | null {
+export function selectDebugSource(style: Style, zoom: number): TileManager | null {
     // Use vector source with highest maxzoom
     // Else use source with highest maxzoom of any type
-    let selectedSource: SourceCache = null;
+    let selectedSource: TileManager = null;
     const layers = Object.values(style._layers);
     const sources = layers.flatMap((layer) => {
         if (layer.source && !layer.isHidden(zoom)) {
@@ -136,7 +136,7 @@ export function selectDebugSource(style: Style, zoom: number): SourceCache | nul
     });
     const vectorSources = sources.filter((source) => source.getSource().type === 'vector');
     const otherSources = sources.filter((source) => source.getSource().type !== 'vector');
-    const considerSource = (source: SourceCache) => {
+    const considerSource = (source: TileManager) => {
         if (!selectedSource || (selectedSource.getSource().maxzoom < source.getSource().maxzoom)) {
             selectedSource = source;
         }

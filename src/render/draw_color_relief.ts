@@ -8,11 +8,11 @@ import {
 } from './program/color_relief_program';
 
 import type {Painter, RenderOptions} from './painter';
-import type {SourceCache} from '../tile/tile_manager';
+import type {TileManager} from '../tile/tile_manager';
 import type {ColorReliefStyleLayer} from '../style/style_layer/color_relief_style_layer';
 import type {OverscaledTileID} from '../tile/tile_id';
 
-export function drawColorRelief(painter: Painter, tileManager: SourceCache, layer: ColorReliefStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawColorRelief(painter: Painter, tileManager: TileManager, layer: ColorReliefStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
     if (!tileIDs.length) return;
 
@@ -39,7 +39,7 @@ export function drawColorRelief(painter: Painter, tileManager: SourceCache, laye
 
 function renderColorRelief(
     painter: Painter,
-    tileManager: SourceCache,
+    tileManager: TileManager,
     layer: ColorReliefStyleLayer,
     coords: Array<OverscaledTileID>,
     stencilModes: {[_: number]: Readonly<StencilMode>},

@@ -3,7 +3,7 @@ import Point from '@mapbox/point-geometry';
 import {Terrain} from './terrain';
 import {Context} from '../gl/context';
 import {RGBAImage} from '../util/image';
-import type {SourceCache} from '../tile/tile_manager';
+import type {TileManager} from '../tile/tile_manager';
 import {OverscaledTileID} from '../tile/tile_id';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {DEMData} from '../data/dem_data';
@@ -41,7 +41,7 @@ describe('Terrain', () => {
             transform: {center: {lng: 0}},
             maybeDrawDepthAndCoords: vi.fn(),
         } as any as Painter;
-        const tileManager = {_source: {tileSize: 512}} as SourceCache;
+        const tileManager = {_source: {tileSize: 512}} as TileManager;
         const getTileByID = (tileID) : Tile => {
             if (tileID !== 'abcd') {
                 return null as any as Tile;
@@ -76,7 +76,7 @@ describe('Terrain', () => {
             maybeDrawDepthAndCoords: vi.fn(),
             pixelRatio,
         } as any as Painter;
-        const tileManager = {_source: {tileSize: 512}} as SourceCache;
+        const tileManager = {_source: {tileSize: 512}} as TileManager;
         const terrain = new Terrain(painter, tileManager, {} as any as TerrainSpecification);
         const tileIdsToWraps = {a: -1, b: 0, c: 1, d: 2};
         terrain.tileManager.getTileByID = (id) => {
@@ -161,7 +161,7 @@ describe('Terrain', () => {
             getTileByID: () => {
                 return tile;
             },
-        } as any as SourceCache;
+        } as any as TileManager;
         const terrain = new Terrain(
             painter,
             tileManager,
@@ -187,7 +187,7 @@ describe('Terrain', () => {
             _source: {maxzoom: 12, tileSize: 512},
             _cache: {max: 10},
             getTileByID: () => null,
-        } as any as SourceCache;
+        } as any as TileManager;
         const terrain = new Terrain(
             painter,
             tileManager,
@@ -216,7 +216,7 @@ describe('Terrain', () => {
             getTileByID: () => {
                 return tile;
             },
-        } as any as SourceCache;
+        } as any as TileManager;
         const terrain = new Terrain(
             painter,
             tileManager,
@@ -247,7 +247,7 @@ describe('Terrain', () => {
         const tileManager = {
             _source: {maxzoom: 12, tileSize: 512},
             _cache: {max: 10}
-        } as any as SourceCache;
+        } as any as TileManager;
         const terrain = new Terrain(
             painter,
             tileManager,

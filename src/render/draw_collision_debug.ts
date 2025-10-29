@@ -1,5 +1,5 @@
 import type {Painter} from './painter';
-import type {SourceCache} from '../tile/tile_manager';
+import type {TileManager} from '../tile/tile_manager';
 import type {StyleLayer} from '../style/style_layer';
 import type {OverscaledTileID} from '../tile/tile_id';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket';
@@ -21,7 +21,7 @@ type TileBatch = {
 
 let quadTriangles: QuadTriangleArray;
 
-export function drawCollisionDebug(painter: Painter, tileManager: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, isText: boolean) {
+export function drawCollisionDebug(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: Array<OverscaledTileID>, isText: boolean) {
     const context = painter.context;
     const transform = painter.transform;
     const gl = context.gl;

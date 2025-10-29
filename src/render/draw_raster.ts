@@ -11,7 +11,7 @@ import {FadingDirections} from '../tile/tile';
 import Point from '@mapbox/point-geometry';
 
 import type {Painter, RenderOptions} from './painter';
-import type {SourceCache} from '../tile/tile_manager';
+import type {TileManager} from '../tile/tile_manager';
 import type {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
 import type {OverscaledTileID} from '../tile/tile_id';
 import type {Tile} from '../tile/tile';
@@ -36,7 +36,7 @@ const cornerCoords = [
     new Point(0, EXTENT),
 ];
 
-export function drawRaster(painter: Painter, tileManager: SourceCache, layer: RasterStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawRaster(painter: Painter, tileManager: TileManager, layer: RasterStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
     if (layer.paint.get('raster-opacity') === 0) return;
     if (!tileIDs.length) return;
@@ -74,7 +74,7 @@ export function drawRaster(painter: Painter, tileManager: SourceCache, layer: Ra
 
 function drawTiles(
     painter: Painter,
-    tileManager: SourceCache,
+    tileManager: TileManager,
     layer: RasterStyleLayer,
     coords: Array<OverscaledTileID>,
     stencilModes: {[_: number]: Readonly<StencilMode>} | null,
@@ -147,7 +147,7 @@ function drawTiles(
 /**
  * Get fade properties for current tile - either cross-fading or self-fading properties.
  */
-function getFadeProperties(tile: Tile, tileManager: SourceCache, fadeDuration: number, isTerrain: boolean): FadeProperties {
+function getFadeProperties(tile: Tile, tileManager: TileManager, fadeDuration: number, isTerrain: boolean): FadeProperties {
     const defaults: FadeProperties = {
         parentTile: null,
         parentScaleBy: 1,

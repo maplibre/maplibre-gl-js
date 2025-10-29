@@ -232,7 +232,7 @@ export class ImageSource extends Evented implements Source {
         this.terrainTileRanges = this._getOverlappingTileRanges(cornerCoords);
 
         // Constrain min/max zoom to our tile's zoom level in order to force
-        // SourceCache to request this tile (no matter what the map's zoom
+        // TileManager to request this tile (no matter what the map's zoom
         // level)
         this.minzoom = this.maxzoom = this.tileID.z;
 

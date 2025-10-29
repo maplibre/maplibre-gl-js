@@ -10,14 +10,14 @@ import {
 } from './program/fill_program';
 
 import type {Painter, RenderOptions} from './painter';
-import type {SourceCache} from '../tile/tile_manager';
+import type {TileManager} from '../tile/tile_manager';
 import type {FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import type {FillBucket} from '../data/bucket/fill_bucket';
 import type {OverscaledTileID} from '../tile/tile_id';
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
 import {translatePosition} from '../util/util';
 
-export function drawFill(painter: Painter, tileManager: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawFill(painter: Painter, tileManager: TileManager, layer: FillStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     const color = layer.paint.get('fill-color');
     const opacity = layer.paint.get('fill-opacity');
 
@@ -59,7 +59,7 @@ export function drawFill(painter: Painter, tileManager: SourceCache, layer: Fill
 
 function drawFillTiles(
     painter: Painter,
-    tileManager: SourceCache,
+    tileManager: TileManager,
     layer: FillStyleLayer,
     coords: Array<OverscaledTileID>,
     depthMode: Readonly<DepthMode>,
