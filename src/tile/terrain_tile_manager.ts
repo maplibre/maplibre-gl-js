@@ -21,7 +21,7 @@ import {type CanonicalTileRange} from '../source/image_source';
  * - finds all necessary renderToTexture tiles for a OverscaledTileID area
  * - finds the corresponding raster-dem tile for OverscaledTileID
  */
-export class TerrainSourceCache extends Evented {
+export class TerrainTileManager extends Evented {
     /**
      * source-cache for the raster-dem source.
      */

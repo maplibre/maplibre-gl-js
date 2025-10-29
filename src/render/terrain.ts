@@ -12,7 +12,7 @@ import {Texture} from '../render/texture';
 import type {Framebuffer} from '../gl/framebuffer';
 import type Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
-import {TerrainSourceCache} from '../tile/terrain_tile_manager';
+import {TerrainTileManager} from '../tile/terrain_tile_manager';
 import {type TileManager} from '../tile/tile_manager';
 import {EXTENT} from '../data/extent';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -79,7 +79,7 @@ export class Terrain {
     /**
      * the tilemanager this terrain is based on
      */
-    tileManager: TerrainSourceCache;
+    tileManager: TerrainTileManager;
     /**
      * the TerrainSpecification object passed to this instance
      */
@@ -138,7 +138,7 @@ export class Terrain {
 
     constructor(painter: Painter, tileManager: TileManager, options: TerrainSpecification) {
         this.painter = painter;
-        this.tileManager = new TerrainSourceCache(tileManager);
+        this.tileManager = new TerrainTileManager(tileManager);
         this.options = options;
         this.exaggeration = typeof options.exaggeration === 'number' ? options.exaggeration : 1.0;
         this.qualityFactor = 2;

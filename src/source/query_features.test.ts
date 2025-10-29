@@ -9,9 +9,9 @@ import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 describe('QueryFeatures.rendered', () => {
     test('returns empty object if source returns no tiles', () => {
-        const mockSourceCache = {tilesIn () { return []; }} as any as TileManager;
+        const mockTileManager = {tilesIn () { return []; }} as any as TileManager;
         const transform = new MercatorTransform();
-        const result = queryRenderedFeatures(mockSourceCache, {}, undefined, [] as Point[], undefined, transform, undefined);
+        const result = queryRenderedFeatures(mockTileManager, {}, undefined, [] as Point[], undefined, transform, undefined);
         expect(result).toEqual({});
     });
 
