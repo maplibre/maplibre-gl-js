@@ -3428,7 +3428,7 @@ export class Map extends Camera {
         if (this.style && !this._placementDirty) {
             // Since no fade operations are in progress, we can release
             // all tiles held for fading. If we didn't do this, the tiles
-            // would just sit in the SourceCaches until the next render
+            // would just sit in the TileManagers until the next render
             this.style._releaseSymbolFadeTiles();
         }
 
