@@ -1,6 +1,6 @@
 import {now} from '../util/time_control';
 import {mat4} from 'gl-matrix';
-import {SourceCache} from '../source/tile_manager';
+import {SourceCache} from '../tile/tile_manager';
 import {EXTENT} from '../data/extent';
 import {SegmentVector} from '../data/segment';
 import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types.g';
@@ -31,7 +31,7 @@ import {drawBackground} from './draw_background';
 import {drawDebug, drawDebugPadding, selectDebugSource} from './draw_debug';
 import {drawCustom} from './draw_custom';
 import {drawDepth, drawCoords} from './draw_terrain';
-import {type OverscaledTileID} from '../source/tile_id';
+import {type OverscaledTileID} from '../tile/tile_id';
 import {drawSky, drawAtmosphere} from './draw_sky';
 import {Mesh} from './mesh';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection';

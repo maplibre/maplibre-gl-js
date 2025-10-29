@@ -15,11 +15,11 @@ import {MercatorCoordinate} from '../../geo/mercator_coordinate';
 
 import type {Context} from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
-import type {Tile} from '../../source/tile';
+import type {Tile} from '../../tile/tile';
 import type {Painter} from '../painter';
 import type {HillshadeStyleLayer} from '../../style/style_layer/hillshade_style_layer';
 import type {DEMData} from '../../data/dem_data';
-import type {OverscaledTileID} from '../../source/tile_id';
+import type {OverscaledTileID} from '../../tile/tile_id';
 
 export type HillshadeUniformsType = {
     'u_image': Uniform1i;

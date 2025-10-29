@@ -6,8 +6,8 @@ import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {ColorMode} from '../gl/color_mode';
 
 import type {Painter} from './painter';
-import type {SourceCache} from '../source/tile_manager';
-import type {OverscaledTileID} from '../source/tile_id';
+import type {SourceCache} from '../tile/tile_manager';
+import type {OverscaledTileID} from '../tile/tile_id';
 import {type Style} from '../style/style';
 
 const topColor = new Color(1, 0, 0, 1);

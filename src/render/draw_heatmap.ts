@@ -6,7 +6,7 @@ import {ColorMode} from '../gl/color_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
 import {type Context} from '../gl/context';
 import {type Framebuffer} from '../gl/framebuffer';
-import {type Tile} from '../source/tile';
+import {type Tile} from '../tile/tile';
 import {
     heatmapUniformValues,
     heatmapTextureUniformValues
@@ -14,10 +14,10 @@ import {
 import {HEATMAP_FULL_RENDER_FBO_KEY} from '../style/style_layer/heatmap_style_layer';
 
 import type {Painter, RenderOptions} from './painter';
-import type {SourceCache} from '../source/tile_manager';
+import type {SourceCache} from '../tile/tile_manager';
 import type {HeatmapStyleLayer} from '../style/style_layer/heatmap_style_layer';
 import type {HeatmapBucket} from '../data/bucket/heatmap_bucket';
-import type {OverscaledTileID} from '../source/tile_id';
+import type {OverscaledTileID} from '../tile/tile_id';
 
 export function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: HeatmapStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (layer.paint.get('heatmap-opacity') === 0) {

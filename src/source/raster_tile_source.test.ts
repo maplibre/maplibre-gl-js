@@ -1,10 +1,10 @@
 import {describe, beforeEach, afterEach, test, expect, vi, it} from 'vitest';
 import {RasterTileSource} from './raster_tile_source';
-import {OverscaledTileID} from './tile_id';
+import {OverscaledTileID} from '../tile/tile_id';
 import {RequestManager} from '../util/request_manager';
 import {type Dispatcher} from '../util/dispatcher';
 import {fakeServer, type FakeServer} from 'nise';
-import {type Tile} from './tile';
+import {type Tile} from '../tile/tile';
 import {stubAjaxGetImage, waitForEvent} from '../util/test/util';
 import {type MapSourceDataEvent} from '../ui/events';
 

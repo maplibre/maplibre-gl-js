@@ -1,4 +1,4 @@
-import {create as createSource} from './source';
+import {create as createSource} from '../source/source';
 
 import {Tile, FadingDirections, FadingRoles} from './tile';
 import {ErrorEvent, Event, Evented} from '../util/evented';
@@ -9,11 +9,11 @@ import {type Context} from '../gl/context';
 import Point from '@mapbox/point-geometry';
 import {now} from '../util/time_control';
 import {OverscaledTileID} from './tile_id';
-import {SourceFeatureState} from './source_state';
+import {SourceFeatureState} from '../source/source_state';
 import {getEdgeTiles} from '../util/util';
 import {config} from '../util/config';
 
-import type {Source} from './source';
+import type {Source} from '../source/source';
 import type {Map} from '../ui/map';
 import type {Style} from '../style/style';
 import type {Dispatcher} from '../util/dispatcher';
@@ -22,7 +22,7 @@ import type {TileState} from './tile';
 import type {ICanonicalTileID, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapSourceDataEvent} from '../ui/events';
 import type {Terrain} from '../render/terrain';
-import type {CanvasSourceSpecification} from './canvas_source';
+import type {CanvasSourceSpecification} from '../source/canvas_source';
 import {coveringTiles, coveringZoomLevel} from '../geo/projection/covering_tiles';
 import {Bounds} from '../geo/bounds';
 import {EXTENT_BOUNDS} from '../data/extent_bounds';

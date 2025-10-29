@@ -4,7 +4,7 @@ import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 import {type EvaluationParameters} from '../style/evaluation_parameters';
 import {CollisionBoxArray, SymbolInstanceArray} from '../data/array_types.g';
-import {OverscaledTileID} from '../source/tile_id';
+import {OverscaledTileID} from '../tile/tile_id';
 import {FeatureIndex} from '../data/feature_index';
 
 describe('placement', () => {

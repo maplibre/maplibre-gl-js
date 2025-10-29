@@ -4,10 +4,10 @@ import {CullFaceMode} from '../gl/cull_face_mode';
 import {type Program} from './program';
 import {circleUniformValues} from './program/circle_program';
 import {SegmentVector} from '../data/segment';
-import {type OverscaledTileID} from '../source/tile_id';
+import {type OverscaledTileID} from '../tile/tile_id';
 
 import type {Painter, RenderOptions} from './painter';
-import type {SourceCache} from '../source/tile_manager';
+import type {SourceCache} from '../tile/tile_manager';
 import type {CircleStyleLayer} from '../style/style_layer/circle_style_layer';
 import type {CircleBucket} from '../data/bucket/circle_bucket';
 import type {ProgramConfiguration} from '../data/program_configuration';

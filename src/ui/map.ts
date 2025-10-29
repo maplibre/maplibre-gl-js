@@ -35,7 +35,7 @@ import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 import {isAbortError} from '../util/abort_error';
 import {isFramebufferNotCompleteError} from '../util/framebuffer_error';
 import {coveringTiles, type CoveringTilesOptions, createCalculateTileZoomFunction} from '../geo/projection/covering_tiles';
-import {CanonicalTileID, type OverscaledTileID} from '../source/tile_id';
+import {CanonicalTileID, type OverscaledTileID} from '../tile/tile_id';
 
 import type {RequestTransformFunction} from '../util/request_manager';
 import type {LngLatLike} from '../geo/lng_lat';

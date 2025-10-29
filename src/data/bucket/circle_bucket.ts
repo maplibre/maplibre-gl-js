@@ -10,7 +10,7 @@ import {EXTENT} from '../extent';
 import {register} from '../../util/web_worker_transfer';
 import {EvaluationParameters} from '../../style/evaluation_parameters';
 
-import type {CanonicalTileID} from '../../source/tile_id';
+import type {CanonicalTileID} from '../../tile/tile_id';
 import type {
     Bucket,
     BucketParameters,

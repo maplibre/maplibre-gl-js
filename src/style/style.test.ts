@@ -1,13 +1,13 @@
 import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} from 'vitest';
 import {Style} from './style';
-import {SourceCache} from '../source/tile_manager';
+import {SourceCache} from '../tile/tile_manager';
 import {StyleLayer} from './style_layer';
 import {extend} from '../util/util';
 import {Event} from '../util/evented';
 import {RGBAImage} from '../util/image';
 import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread';
 import {browser} from '../util/browser';
-import {OverscaledTileID} from '../source/tile_id';
+import {OverscaledTileID} from '../tile/tile_id';
 import {fakeServer, type FakeServer} from 'nise';
 
 import {type EvaluationParameters} from './evaluation_parameters';
@@ -17,7 +17,7 @@ import {StubMap, sleep, waitForEvent} from '../util/test/util';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
 import {MessageType} from '../util/actor_messages';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {type Tile} from '../source/tile';
+import {type Tile} from '../tile/tile';
 import type Point from '@mapbox/point-geometry';
 import {type PossiblyEvaluated} from './properties';
 import {type SymbolLayoutProps, type SymbolLayoutPropsPossiblyEvaluated} from './style_layer/symbol_style_layer_properties.g';

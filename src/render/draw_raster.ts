@@ -7,14 +7,14 @@ import {DepthMode} from '../gl/depth_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
 import {rasterUniformValues} from './program/raster_program';
 import {EXTENT} from '../data/extent';
-import {FadingDirections} from '../source/tile';
+import {FadingDirections} from '../tile/tile';
 import Point from '@mapbox/point-geometry';
 
 import type {Painter, RenderOptions} from './painter';
-import type {SourceCache} from '../source/tile_manager';
+import type {SourceCache} from '../tile/tile_manager';
 import type {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
-import type {OverscaledTileID} from '../source/tile_id';
-import type {Tile} from '../source/tile';
+import type {OverscaledTileID} from '../tile/tile_id';
+import type {Tile} from '../tile/tile';
 
 type FadeProperties = {
     parentTile: Tile;

@@ -1,4 +1,4 @@
-import {CanonicalTileID} from './tile_id';
+import {CanonicalTileID} from '../tile/tile_id';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {ImageRequest} from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
@@ -9,7 +9,7 @@ import type {Source} from './source';
 import type {CanvasSourceSpecification} from './canvas_source';
 import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
-import type {Tile} from './tile';
+import type {Tile} from '../tile/tile';
 import type {
     ImageSourceSpecification,
     VideoSourceSpecification

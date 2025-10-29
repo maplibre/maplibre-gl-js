@@ -21,11 +21,11 @@ import {
 } from './program/symbol_program';
 
 import type {Painter, RenderOptions} from './painter';
-import type {SourceCache} from '../source/tile_manager';
+import type {SourceCache} from '../tile/tile_manager';
 import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 
 import type {Texture, TextureFilter} from '../render/texture';
-import type {OverscaledTileID, UnwrappedTileID} from '../source/tile_id';
+import type {OverscaledTileID, UnwrappedTileID} from '../tile/tile_id';
 import type {UniformValues} from './uniform_binding';
 import type {SymbolSDFUniformsType} from '../render/program/symbol_program';
 import type {CrossTileID, VariableOffset} from '../symbol/placement';

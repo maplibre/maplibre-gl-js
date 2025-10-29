@@ -10,10 +10,10 @@ import {
 } from './program/fill_program';
 
 import type {Painter, RenderOptions} from './painter';
-import type {SourceCache} from '../source/tile_manager';
+import type {SourceCache} from '../tile/tile_manager';
 import type {FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import type {FillBucket} from '../data/bucket/fill_bucket';
-import type {OverscaledTileID} from '../source/tile_id';
+import type {OverscaledTileID} from '../tile/tile_id';
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
 import {translatePosition} from '../util/util';
 

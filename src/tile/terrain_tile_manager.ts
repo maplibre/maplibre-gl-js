@@ -9,7 +9,7 @@ import {type Terrain} from '../render/terrain';
 import {now} from '../util/time_control';
 import {coveringTiles} from '../geo/projection/covering_tiles';
 import {createMat4f64} from '../util/util';
-import {type CanonicalTileRange} from './image_source';
+import {type CanonicalTileRange} from '../source/image_source';
 
 /**
  * @internal

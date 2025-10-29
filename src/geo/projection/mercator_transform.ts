@@ -3,7 +3,7 @@ import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAlt
 import Point from '@mapbox/point-geometry';
 import {wrap, clamp, createIdentityMat4f64, createMat4f64, degreesToRadians, createIdentityMat4f32, zoomScale, scaleZoom} from '../../util/util';
 import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
-import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID, calculateTileKey} from '../../source/tile_id';
+import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID, calculateTileKey} from '../../tile/tile_id';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {type PointProjection, xyTransformMat4} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';

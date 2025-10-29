@@ -8,9 +8,9 @@ import {
 } from './program/color_relief_program';
 
 import type {Painter, RenderOptions} from './painter';
-import type {SourceCache} from '../source/tile_manager';
+import type {SourceCache} from '../tile/tile_manager';
 import type {ColorReliefStyleLayer} from '../style/style_layer/color_relief_style_layer';
-import type {OverscaledTileID} from '../source/tile_id';
+import type {OverscaledTileID} from '../tile/tile_id';
 
 export function drawColorRelief(painter: Painter, sourceCache: SourceCache, layer: ColorReliefStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;

@@ -1,7 +1,7 @@
 
-import {type Tile} from '../source/tile';
+import {type Tile} from '../tile/tile';
 import {mat4, vec2} from 'gl-matrix';
-import {OverscaledTileID} from '../source/tile_id';
+import {OverscaledTileID} from '../tile/tile_id';
 import {RGBAImage} from '../util/image';
 import {warnOnce} from '../util/util';
 import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g';
@@ -12,8 +12,8 @@ import {Texture} from '../render/texture';
 import type {Framebuffer} from '../gl/framebuffer';
 import type Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
-import {TerrainSourceCache} from '../source/terrain_tile_manager';
-import {type SourceCache} from '../source/tile_manager';
+import {TerrainSourceCache} from '../tile/terrain_tile_manager';
+import {type SourceCache} from '../tile/tile_manager';
 import {EXTENT} from '../data/extent';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type LngLat, earthRadius} from '../geo/lng_lat';

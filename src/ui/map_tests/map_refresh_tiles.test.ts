@@ -1,6 +1,6 @@
 import {beforeEach, test, expect, vi, describe} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
-import {CanonicalTileID} from '../../source/tile_id';
+import {CanonicalTileID} from '../../tile/tile_id';
 
 beforeEach(() => {
     beforeMapTest();

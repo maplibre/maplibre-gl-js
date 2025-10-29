@@ -10,7 +10,7 @@ import {warnOnce, mapObject} from '../util/util';
 import {ImageAtlas} from '../render/image_atlas';
 import {GlyphAtlas} from '../render/glyph_atlas';
 import {EvaluationParameters} from '../style/evaluation_parameters';
-import {OverscaledTileID} from './tile_id';
+import {OverscaledTileID} from '../tile/tile_id';
 
 import type {Bucket} from '../data/bucket';
 import type {IActor} from '../util/actor';

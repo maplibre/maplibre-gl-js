@@ -7,9 +7,9 @@ import {
 } from './program/background_program';
 
 import type {Painter, RenderOptions} from './painter';
-import type {SourceCache} from '../source/tile_manager';
+import type {SourceCache} from '../tile/tile_manager';
 import type {BackgroundStyleLayer} from '../style/style_layer/background_style_layer';
-import {type OverscaledTileID} from '../source/tile_id';
+import {type OverscaledTileID} from '../tile/tile_id';
 import {coveringTiles} from '../geo/projection/covering_tiles';
 
 export function drawBackground(painter: Painter, sourceCache: SourceCache, layer: BackgroundStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {

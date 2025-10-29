@@ -1,7 +1,7 @@
 import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
-import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
+import {CanonicalTileID, UnwrappedTileID} from '../../tile/tile_id';
 import {fixedLngLat, fixedCoord} from '../../../test/unit/lib/fixed';
 import type {Terrain} from '../../render/terrain';
 import {MercatorTransform} from './mercator_transform';

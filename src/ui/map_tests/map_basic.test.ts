@@ -1,8 +1,8 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {Map, type MapOptions} from '../map';
 import {createMap, beforeMapTest, createStyle, createStyleSource} from '../../util/test/util';
-import {Tile} from '../../source/tile';
-import {OverscaledTileID} from '../../source/tile_id';
+import {Tile} from '../../tile/tile';
+import {OverscaledTileID} from '../../tile/tile_id';
 import {fixedLngLat} from '../../../test/unit/lib/fixed';
 import {type RequestTransformFunction, ResourceType} from '../../util/request_manager';
 import {type MapSourceDataEvent} from '../events';

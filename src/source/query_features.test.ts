@@ -3,7 +3,7 @@ import {
     queryRenderedFeatures,
     querySourceFeatures
 } from './query_features';
-import {SourceCache} from './tile_manager';
+import {SourceCache} from '../tile/tile_manager';
 import type Point from '@mapbox/point-geometry';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 

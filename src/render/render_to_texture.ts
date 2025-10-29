@@ -1,7 +1,7 @@
 import {type Painter, type RenderOptions} from './painter';
-import {type Tile} from '../source/tile';
+import {type Tile} from '../tile/tile';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {type OverscaledTileID} from '../source/tile_id';
+import {type OverscaledTileID} from '../tile/tile_id';
 import {drawTerrain} from './draw_terrain';
 import {type Style} from '../style/style';
 import {type Terrain} from './terrain';

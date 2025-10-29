@@ -10,11 +10,11 @@ import {
 } from './program/line_program';
 
 import type {Painter, RenderOptions} from './painter';
-import type {SourceCache} from '../source/tile_manager';
+import type {SourceCache} from '../tile/tile_manager';
 import type {LineStyleLayer} from '../style/style_layer/line_style_layer';
 import type {LineBucket} from '../data/bucket/line_bucket';
-import type {OverscaledTileID} from '../source/tile_id';
-import type {Tile} from '../source/tile';
+import type {OverscaledTileID} from '../tile/tile_id';
+import type {Tile} from '../tile/tile';
 import type {Context} from '../gl/context';
 import type {ProgramConfiguration} from '../data/program_configuration';
 import {clamp, nextPowerOfTwo} from '../util/util';

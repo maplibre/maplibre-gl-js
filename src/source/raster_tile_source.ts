@@ -5,14 +5,14 @@ import {ImageRequest} from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {loadTileJson} from './load_tilejson';
-import {TileBounds} from './tile_bounds';
+import {TileBounds} from '../tile/tile_bounds';
 import {Texture} from '../render/texture';
 
 import type {Source} from './source';
-import type {OverscaledTileID} from './tile_id';
+import type {OverscaledTileID} from '../tile/tile_id';
 import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
-import type {Tile} from './tile';
+import type {Tile} from '../tile/tile';
 import type {
     RasterSourceSpecification,
     RasterDEMSourceSpecification

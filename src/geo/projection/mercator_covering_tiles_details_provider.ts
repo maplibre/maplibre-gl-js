@@ -1,4 +1,4 @@
-import {OverscaledTileID} from '../../source/tile_id';
+import {OverscaledTileID} from '../../tile/tile_id';
 import {Aabb} from '../../util/primitives/aabb';
 import {clamp} from '../../util/util';
 import {type MercatorCoordinate} from '../mercator_coordinate';
