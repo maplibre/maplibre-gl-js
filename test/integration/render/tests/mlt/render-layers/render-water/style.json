@@ -1,0 +1,46 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "debug": true,
+            "height": 256
+        }
+    },
+    "center": [
+        14.495088,
+        53.755635
+    ],
+    "zoom": 5.74,
+    "sources": {
+        "openmaptiles": {
+            "type": "vector",
+            "encoding": "mlt",
+            "tiles": ["local://tiles/mlt/{z}/{x}/{y}.mlt"],
+            "maxzoom": 14
+        }
+    },
+    "sprite": "local://sprites/sprite",
+    "layers": [
+        {
+            "id": "water",
+            "type": "fill",
+            "source": "openmaptiles",
+            "source-layer": "water",
+            "filter": ["!=", "intermittent", 1],
+            "paint": {
+                "fill-color": "#F08000"
+            }
+        },
+        {
+            "id": "waterway",
+            "type": "line",
+            "source": "openmaptiles",
+            "source-layer": "waterway",
+            "filter": ["!=", "intermittent", 1],
+            "paint": {
+                "line-color": "#008000"
+            }
+        }
+    ]
+
+}
