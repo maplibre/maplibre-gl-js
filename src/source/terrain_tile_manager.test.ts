@@ -1,5 +1,5 @@
 import {describe, beforeAll, afterAll, test, expect} from 'vitest';
-import {TerrainSourceCache} from './terrain_source_cache';
+import {TerrainSourceCache} from './terrain_tile_manager';
 import {Style} from '../style/style';
 import {RequestManager} from '../util/request_manager';
 import {type Dispatcher} from '../util/dispatcher';

@@ -4,7 +4,7 @@ import {EXTENT} from '../data/extent';
 import {mat4} from 'gl-matrix';
 import {Evented} from '../util/evented';
 import type {ITransform} from '../geo/transform_interface';
-import type {SourceCache} from '../source/source_cache';
+import type {SourceCache} from './tile_manager';
 import {type Terrain} from '../render/terrain';
 import {now} from '../util/time_control';
 import {coveringTiles} from '../geo/projection/covering_tiles';

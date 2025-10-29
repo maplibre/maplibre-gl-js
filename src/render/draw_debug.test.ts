@@ -1,5 +1,5 @@
 import {describe, test, expect, vi} from 'vitest';
-import {type SourceCache} from '../source/source_cache';
+import {type SourceCache} from '../source/tile_manager';
 import {type RasterSourceSpecification, type SourceSpecification, type VectorSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {Style} from '../style/style';
 import {FillStyleLayer} from '../style/style_layer/fill_style_layer';

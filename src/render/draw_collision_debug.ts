@@ -1,5 +1,5 @@
 import type {Painter} from './painter';
-import type {SourceCache} from '../source/source_cache';
+import type {SourceCache} from '../source/tile_manager';
 import type {StyleLayer} from '../style/style_layer';
 import type {OverscaledTileID} from '../source/tile_id';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket';

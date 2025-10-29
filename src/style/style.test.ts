@@ -1,6 +1,6 @@
 import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} from 'vitest';
 import {Style} from './style';
-import {SourceCache} from '../source/source_cache';
+import {SourceCache} from '../source/tile_manager';
 import {StyleLayer} from './style_layer';
 import {extend} from '../util/util';
 import {Event} from '../util/evented';

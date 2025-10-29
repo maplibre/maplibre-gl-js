@@ -1,6 +1,6 @@
 import {now} from '../util/time_control';
 import {mat4} from 'gl-matrix';
-import {SourceCache} from '../source/source_cache';
+import {SourceCache} from '../source/tile_manager';
 import {EXTENT} from '../data/extent';
 import {SegmentVector} from '../data/segment';
 import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types.g';

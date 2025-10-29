@@ -1,6 +1,6 @@
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {SourceCache} from './source_cache';
+import {SourceCache} from './tile_manager';
 import {type Source, addSourceType} from './source';
 import {Tile, FadingRoles, FadingDirections} from './tile';
 import {CanonicalTileID, OverscaledTileID} from './tile_id';

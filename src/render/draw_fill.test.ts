@@ -1,7 +1,7 @@
 import {describe, test, expect, vi, type Mock} from 'vitest';
 import {mat4} from 'gl-matrix';
 import {OverscaledTileID} from '../source/tile_id';
-import {SourceCache} from '../source/source_cache';
+import {SourceCache} from '../source/tile_manager';
 import {Tile} from '../source/tile';
 import {Painter, type RenderOptions} from './painter';
 import {Program} from './program';
@@ -19,7 +19,7 @@ import type {ProjectionData} from '../geo/projection/projection_data';
 
 vi.mock('./painter');
 vi.mock('./program');
-vi.mock('../source/source_cache');
+vi.mock('../source/tile_manager');
 vi.mock('../source/tile');
 
 vi.mock('../data/bucket/symbol_bucket', () => {
