@@ -2311,7 +2311,7 @@ export class Map extends Camera {
     refreshTiles(sourceId: string, tileIds?: Array<{x: number; y: number; z: number}>) {
         const tileManager = this.style.tileManagers[sourceId];
         if(!tileManager) {
-            throw new Error(`There is no source cache with ID "${sourceId}", cannot refresh tile`);
+            throw new Error(`There is no tile manager with ID "${sourceId}", cannot refresh tile`);
         }
         if (tileIds === undefined) {
             tileManager.reload(true);
@@ -3379,7 +3379,7 @@ export class Map extends Camera {
         this.transform.setTransitionState(this.style.projection?.transitionState, this.style.projection?.latitudeErrorCorrectionRadians);
 
         // If we are in _render for any reason other than an in-progress paint
-        // transition, update source caches to check for and load any tiles we
+        // transition, update tile managers to check for and load any tiles we
         // need for the current transform
         if (this.style && (this._sourcesDirty || globeRenderingChanged)) {
             this._sourcesDirty = false;

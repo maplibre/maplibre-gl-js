@@ -17,7 +17,7 @@ describe('Map::refreshTiles', () => {
         map.style.tileManagers['source-id1'].refreshTiles = spy;
 
         expect(() => {map.refreshTiles('source-id2', [{x: 1024, y: 1023, z: 11}]);})
-            .toThrow('There is no source cache with ID "source-id2", cannot refresh tile');
+            .toThrow('There is no tile manager with ID "source-id2", cannot refresh tile');
         expect(spy).toHaveBeenCalledTimes(0);
     });
 

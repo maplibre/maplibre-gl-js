@@ -540,7 +540,7 @@ describe('TileManager / Source lifecycle', () => {
             }
         });
         tileManager.onAdd(undefined);
-        // we expect the source cache to have five tiles, but only to have reloaded one
+        // we expect the tile manager to have five tiles, but only to have reloaded one
         expect(Object.keys(tileManager._tiles)).toHaveLength(5);
         expect(reloadTileSpy).toHaveBeenCalledTimes(1);
 
@@ -566,7 +566,7 @@ describe('TileManager / Source lifecycle', () => {
             }
         });
         tileManager.onAdd(undefined);
-        // We expect the source cache to have five tiles, and for all of them
+        // We expect the tile manager to have five tiles, and for all of them
         // to be reloaded
         expect(Object.keys(tileManager._tiles)).toHaveLength(5);
         expect(reloadTileSpy).toHaveBeenCalledTimes(5);
@@ -2127,7 +2127,7 @@ describe('TileManager.tilesIn', () => {
     });
 });
 
-describe('source cache loaded', () => {
+describe('tile manager loaded', () => {
     test('TileManager.loaded (no errors)', async () => {
         const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
@@ -2280,7 +2280,7 @@ describe('source cache loaded', () => {
     });
 });
 
-describe('source cache get ids', () => {
+describe('tile manager get ids', () => {
     test('TileManager.getIds (ascending order by zoom level)', () => {
         const ids = [
             new OverscaledTileID(0, 0, 0, 0, 0),
