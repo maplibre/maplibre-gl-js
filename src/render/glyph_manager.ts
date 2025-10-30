@@ -122,16 +122,9 @@ export class GlyphManager {
             response = await entry.requests[range];
         } catch (e) {
             glyph = this._tinySDF(entry, stack, id);
-            const begin = range * 256;
-            const end = begin + 255;
-            const codePoint = id.toString(16).toUpperCase();
-            if (glyph) {
-                warnOnce(`Unable to load glyph range ${range}, ${begin}-${end}. Rendering codepoint U+${codePoint} locally instead. ${e}`);
-                entry.glyphs[id] = glyph;
-                return {stack, id, glyph};
-            } else {
-                warnOnce(`Unable to load glyph range ${range}, ${begin}-${end}, or render codepoint U+${codePoint} locally. ${e}`);
-            }
+            this._warnOnMissingGlyphRange(glyph, range, id, e);
+            entry.glyphs[id] = glyph;
+            return {stack, id, glyph};
         }
         for (const id in response) {
             if (!this.url || !this._charUsesLocalIdeographFontFamily(+id)) {
@@ -140,6 +133,13 @@ export class GlyphManager {
         }
         entry.ranges[range] = true;
         return {stack, id, glyph: response[id] || null};
+    }
+
+    _warnOnMissingGlyphRange(glyph: StyleGlyph, range: number, id: number, err: Error) {
+        const begin = range * 256;
+        const end = begin + 255;
+        const codePoint = id.toString(16).padStart(4, '0').toUpperCase();
+        warnOnce(`Unable to load glyph range ${range}, ${begin}-${end}. Rendering codepoint U+${codePoint} locally instead. ${err}`);
     }
 
     _charUsesLocalIdeographFontFamily(id: number): boolean {
