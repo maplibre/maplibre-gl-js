@@ -25,7 +25,9 @@ type Entry = {
     tinySDF?: TinySDF;
 };
 
-/// The style specification hard-codes some last resort fonts as a default fontstack.
+/**
+ * The style specification hard-codes some last resort fonts as a default fontstack.
+ */
 const defaultStack = v8.layout_symbol['text-font'].default.join(',');
 
 export class GlyphManager {
@@ -174,21 +176,20 @@ export class GlyphManager {
                 fontFamily = this.localIdeographFontFamily;
             }
 
-            let fontWeight = '400';
-            if (/bold/i.test(stack)) {
-                fontWeight = '900';
-            } else if (/medium/i.test(stack)) {
-                fontWeight = '500';
-            } else if (/light/i.test(stack)) {
-                fontWeight = '200';
-            }
+            // Escape and quote the font family list for use in CSS.
+            const fontFamilies = fontFamily.split(',');
+            fontFamily = fontFamilies.map(fontName =>
+                /[-\w]+/.test(fontName) ? fontName : `'${CSS.escape(fontName)}'`
+            ).join(',');
+
             tinySDF = entry.tinySDF = new GlyphManager.TinySDF({
                 fontSize: 24 * textureScale,
                 buffer: 3 * textureScale,
                 radius: 8 * textureScale,
                 cutoff: 0.25,
                 fontFamily: fontFamily,
-                fontWeight: fontWeight,
+                fontWeight: this._fontWeight(fontFamilies[0]),
+                fontStyle: this._fontStyle(fontFamilies[0]),
                 lang: this.lang
             });
         }
@@ -224,5 +225,44 @@ export class GlyphManager {
                 isDoubleResolution: true
             }
         };
+    }
+
+    /**
+     * Sniffs the font style out of a font family name.
+     */
+    _fontStyle(fontFamily: string): string {
+        if (/italic/i.test(fontFamily)) {
+            return 'italic';
+        } else if (/oblique/i.test(fontFamily)) {
+            return 'oblique';
+        }
+        return 'normal';
+    }
+
+    /**
+     * Sniffs the font weight out of a font family name.
+     */
+    _fontWeight(fontFamily: string): string {
+        // Based on the OpenType specification
+        // https://learn.microsoft.com/en-us/typography/opentype/spec/os2#usweightclass
+        const weightsByName = {
+            thin: 100, hairline: 100,
+            'extra light': 200, 'ultra light': 200,
+            light: 300,
+            normal: 400, regular: 400,
+            medium: 500,
+            semibold: 600, demibold: 600,
+            bold: 700,
+            'extra bold': 800, 'ultra bold': 800,
+            black: 900, heavy: 900,
+            'extra black': 950, 'ultra black': 950
+        };
+        let match;
+        for (const [name, weight] of Object.entries(weightsByName)) {
+            if (new RegExp(`\\b${name}\\b`, 'i').test(fontFamily)) {
+                match = `${weight}`;
+            }
+        }
+        return match;
     }
 }

@@ -138,6 +138,25 @@ describe('GlyphManager', () => {
         expect(manager._charUsesLocalIdeographFontFamily(0x3012)).toBe(true);
     });
 
+    test('GlyphManager matches font styles', async () => {
+        const manager = createGlyphManager('sans-serif');
+
+        expect(manager._fontStyle('Swiss Italic')).toBe('italic');
+        expect(manager._fontStyle('Swiss Oblique')).toBe('oblique');
+        expect(manager._fontStyle('Swiss Roman')).toBe('normal');
+        expect(manager._fontStyle('Swiss Cursive')).toBe('normal');
+    });
+
+    test('GlyphManager matches font weights', async () => {
+        const manager = createGlyphManager('sans-serif');
+
+        expect(manager._fontWeight('Swiss Thin')).toBe('100');
+        expect(manager._fontWeight('Swiss Regular')).toBe('400');
+        expect(manager._fontWeight('Swiss Bold')).toBe('700');
+        expect(manager._fontWeight('Swiss Extra Bold')).toBe('800');
+        expect(manager._fontWeight('Swiss Cheese')).toBeUndefined();
+    });
+
     test('GlyphManager generates missing PBF locally', async () => {
         const manager = createGlyphManager('sans-serif');
 
