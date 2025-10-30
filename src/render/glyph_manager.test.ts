@@ -119,23 +119,23 @@ describe('GlyphManager', () => {
         const manager = createGlyphManager('sans-serif');
 
         // Space
-        expect(manager._doesCharSupportLocalGlyph(0x0020)).toBe(false);
+        expect(manager._charUsesLocalIdeographFontFamily(0x0020)).toBe(false);
         // Chinese character píng 平
-        expect(manager._doesCharSupportLocalGlyph(0x5e73)).toBe(true);
+        expect(manager._charUsesLocalIdeographFontFamily(0x5e73)).toBe(true);
         // Chinese character biáng 𰻞
-        expect(manager._doesCharSupportLocalGlyph(0x30EDE)).toBe(true);
+        expect(manager._charUsesLocalIdeographFontFamily(0x30EDE)).toBe(true);
         // Katakana letter te テ
-        expect(manager._doesCharSupportLocalGlyph(0x30c6)).toBe(true);
+        expect(manager._charUsesLocalIdeographFontFamily(0x30c6)).toBe(true);
         // Hiragana letter te て
-        expect(manager._doesCharSupportLocalGlyph(0x3066)).toBe(true);
+        expect(manager._charUsesLocalIdeographFontFamily(0x3066)).toBe(true);
         // Hangul letter a 아
-        expect(manager._doesCharSupportLocalGlyph(0xC544)).toBe(true);
+        expect(manager._charUsesLocalIdeographFontFamily(0xC544)).toBe(true);
         // Japanese full-width dash ー
-        expect(manager._doesCharSupportLocalGlyph(0x30FC)).toBe(true);
+        expect(manager._charUsesLocalIdeographFontFamily(0x30FC)).toBe(true);
         // Halfwidth and Fullwidth Forms: full-width exclamation ！
-        expect(manager._doesCharSupportLocalGlyph(0xFF01)).toBe(true);
+        expect(manager._charUsesLocalIdeographFontFamily(0xFF01)).toBe(true);
         // CJK Symbols and Punctuation: Japanese Post mark 〒
-        expect(manager._doesCharSupportLocalGlyph(0x3012)).toBe(true);
+        expect(manager._charUsesLocalIdeographFontFamily(0x3012)).toBe(true);
     });
 
     test('GlyphManager generates missing PBF locally', async () => {

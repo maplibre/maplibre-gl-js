@@ -9,6 +9,8 @@ import type {StyleGlyph} from '../style/style_glyph';
 import type {RequestManager} from '../util/request_manager';
 import type {GetGlyphsResponse} from '../util/actor_messages';
 
+import {v8} from '@maplibre/maplibre-gl-style-spec';
+
 type Entry = {
     // null means we've requested the range, but the glyph wasn't included in the result.
     glyphs: {
@@ -22,6 +24,9 @@ type Entry = {
     };
     tinySDF?: TinySDF;
 };
+
+/// The style specification hard-codes some last resort fonts as a default fontstack.
+const defaultStack = v8.layout_symbol['text-font'].default.join(',');
 
 export class GlyphManager {
     requestManager: RequestManager;
@@ -88,7 +93,9 @@ export class GlyphManager {
             return {stack, id, glyph};
         }
 
-        glyph = this._tinySDF(entry, stack, id, false);
+        if (!this.url || this._charUsesLocalIdeographFontFamily(id)) {
+            glyph = this._tinySDF(entry, stack, id);
+        }
         if (glyph) {
             entry.glyphs[id] = glyph;
             return {stack, id, glyph};
@@ -103,11 +110,7 @@ export class GlyphManager {
             return {stack, id, glyph};
         }
 
-        if (!this.url) {
-            throw new Error('glyphsUrl is not set');
-        }
-
-        if (!entry.requests[range]) {
+        if (this.url && !entry.requests[range]) {
             const promise = GlyphManager.loadGlyphRange(stack, range, this.url, this.requestManager);
             entry.requests[range] = promise;
         }
@@ -116,7 +119,7 @@ export class GlyphManager {
         try {
             response = await entry.requests[range];
         } catch (e) {
-            glyph = this._tinySDF(entry, stack, id, true);
+            glyph = this._tinySDF(entry, stack, id);
             const begin = range * 256;
             const end = begin + 255;
             const codePoint = id.toString(16).toUpperCase();
@@ -129,7 +132,7 @@ export class GlyphManager {
             }
         }
         for (const id in response) {
-            if (!this._doesCharSupportLocalGlyph(+id)) {
+            if (!this.url || !this._charUsesLocalIdeographFontFamily(+id)) {
                 entry.glyphs[+id] = response[+id];
             }
         }
@@ -137,7 +140,7 @@ export class GlyphManager {
         return {stack, id, glyph: response[id] || null};
     }
 
-    _doesCharSupportLocalGlyph(id: number): boolean {
+    _charUsesLocalIdeographFontFamily(id: number): boolean {
         // The CJK Unified Ideographs blocks and Hangul Syllables blocks are
         // spread across many glyph PBFs and are typically accessed very
         // randomly. Preferring local rendering for these blocks reduces
@@ -158,22 +161,19 @@ export class GlyphManager {
          
     }
 
-    _tinySDF(entry: Entry, stack: string, id: number, force: boolean): StyleGlyph {
-        const fontFamily = this.localIdeographFontFamily;
-        if (!fontFamily) {
-            return;
-        }
-
-        if (!force && !this._doesCharSupportLocalGlyph(id)) {
-            return;
-        }
-
+    _tinySDF(entry: Entry, stack: string, id: number): StyleGlyph {
         // Client-generated glyphs are rendered at 2x texture scale,
         // because CJK glyphs are more detailed than others.
         const textureScale = 2;
 
         let tinySDF = entry.tinySDF;
         if (!tinySDF) {
+            let fontFamily = stack;
+            if (fontFamily == defaultStack && this.localIdeographFontFamily) {
+                // The fallback font specified by the developer takes precedence over the last resort fontstack in the style specification.
+                fontFamily = this.localIdeographFontFamily;
+            }
+
             let fontWeight = '400';
             if (/bold/i.test(stack)) {
                 fontWeight = '900';
@@ -187,9 +187,9 @@ export class GlyphManager {
                 buffer: 3 * textureScale,
                 radius: 8 * textureScale,
                 cutoff: 0.25,
-                lang: this.lang,
-                fontFamily,
-                fontWeight
+                fontFamily: fontFamily,
+                fontWeight: fontWeight,
+                lang: this.lang
             });
         }
 
