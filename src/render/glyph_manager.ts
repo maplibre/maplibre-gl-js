@@ -23,12 +23,17 @@ type Entry = {
         [range: number]: boolean | null;
     };
     tinySDF?: TinySDF;
+    ideographTinySDF?: TinySDF;
 };
 
 /**
  * The style specification hard-codes some last resort fonts as a default fontstack.
  */
 const defaultStack = v8.layout_symbol['text-font'].default.join(',');
+/**
+ * The CSS generic font family closest to `defaultStack`.
+ */
+const defaultGenericFontFamily = 'sans-serif';
 
 export class GlyphManager {
     requestManager: RequestManager;
@@ -164,25 +169,24 @@ export class GlyphManager {
     }
 
     _tinySDF(entry: Entry, stack: string, id: number): StyleGlyph {
+        // The CJK fallback font specified by the developer takes precedence over the last resort fontstack in the style specification.
+        const usesLocalIdeographFontFamily = stack === defaultStack && this.localIdeographFontFamily !== '' && this._charUsesLocalIdeographFontFamily(id);
+        let fontFamily = usesLocalIdeographFontFamily ? this.localIdeographFontFamily : stack;
+
         // Client-generated glyphs are rendered at 2x texture scale,
         // because CJK glyphs are more detailed than others.
         const textureScale = 2;
 
-        let tinySDF = entry.tinySDF;
+        let tinySDF = usesLocalIdeographFontFamily ? entry.ideographTinySDF : entry.tinySDF;
         if (!tinySDF) {
-            let fontFamily = stack;
-            if (fontFamily == defaultStack && this.localIdeographFontFamily) {
-                // The fallback font specified by the developer takes precedence over the last resort fontstack in the style specification.
-                fontFamily = this.localIdeographFontFamily;
-            }
-
             // Escape and quote the font family list for use in CSS.
-            const fontFamilies = fontFamily.split(',');
+            const fontFamilies = fontFamily ? fontFamily.split(',') : [];
+            fontFamilies.push(defaultGenericFontFamily);
             fontFamily = fontFamilies.map(fontName =>
                 /[-\w]+/.test(fontName) ? fontName : `'${CSS.escape(fontName)}'`
             ).join(',');
 
-            tinySDF = entry.tinySDF = new GlyphManager.TinySDF({
+            tinySDF = new GlyphManager.TinySDF({
                 fontSize: 24 * textureScale,
                 buffer: 3 * textureScale,
                 radius: 8 * textureScale,
@@ -192,6 +196,11 @@ export class GlyphManager {
                 fontStyle: this._fontStyle(fontFamilies[0]),
                 lang: this.lang
             });
+            if (usesLocalIdeographFontFamily) {
+                entry.ideographTinySDF = tinySDF;
+            } else {
+                entry.tinySDF = tinySDF;
+            }
         }
 
         const char = tinySDF.draw(String.fromCharCode(id));
