@@ -1,6 +1,6 @@
-import {describe, test, expect, vi, type Mock} from 'vitest';
+import {describe, test, expect, vi} from 'vitest';
 import {OverscaledTileID} from '../tile/tile_id';
-import {TileManager} from '../tile/tile_manager';
+import {type TileManager} from '../tile/tile_manager';
 import {Tile} from '../tile/tile';
 import {Painter, type RenderOptions} from './painter';
 import type {Map} from '../ui/map';
@@ -19,6 +19,13 @@ vi.mock('../data/bucket/symbol_bucket', () => {
     };
 });
 vi.mock('../symbol/projection');
+
+function createMockMap() {
+    return {
+        showCollisionBoxes: false,
+        _fadeDuration: 300
+    } as any as Map;
+}
 
 describe('drawCustom', () => {
     test('should return custom render method inputs', () => {
@@ -50,9 +57,11 @@ describe('drawCustom', () => {
         tile.imageAtlasTexture = {
             bind: () => { }
         } as any;
-        const tileManagerMock = new TileManager(null, null, null);
-        (tileManagerMock.getTile as Mock).mockReturnValue(tile);
-        tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
+
+        const tileManagerMock = {
+            map: createMockMap(),
+            getTile: vi.fn().mockReturnValue(tile)
+        } as any as TileManager;
 
         let result;
         const mockLayer = new CustomStyleLayer({

@@ -226,6 +226,19 @@ export class OverscaledTileID {
     }
 }
 
+/**
+ * Different copies of the world are sorted based on their distance to the center.
+ * Wrap values are converted to unsigned distances by reserving odd number for copies
+ * with negative wrap and even numbers for copies with positive wrap.
+ */
+export function sortTileIDs(tileIDs: OverscaledTileID[]): OverscaledTileID[] {
+    return tileIDs.sort((a: OverscaledTileID, b: OverscaledTileID): number => {
+        const aWrap = Math.abs(a.wrap * 2) - +(a.wrap < 0);
+        const bWrap = Math.abs(b.wrap * 2) - +(b.wrap < 0);
+        return a.overscaledZ - b.overscaledZ || bWrap - aWrap || b.canonical.y - a.canonical.y || b.canonical.x - a.canonical.x;
+    });
+}
+
 export function calculateTileKey(wrap: number, overscaledZ: number, z: number, x: number, y: number): string {
     wrap *= 2;
     if (wrap < 0) wrap = wrap * -1 - 1;

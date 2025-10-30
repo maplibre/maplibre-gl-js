@@ -1004,15 +1004,17 @@ export class Style extends Evented {
         const shouldValidate = builtIns.indexOf(source.type) >= 0;
         if (shouldValidate && this._validate(validateStyle.source, `sources.${id}`, source, null, options)) return;
         if (this.map && this.map._collectResourceTiming) (source as any).collectResourceTiming = true;
-        const tileManager = this.tileManagers[id] = new TileManager(id, source, this.dispatcher);
+
+        const tileManager = new TileManager(id, source as SourceSpecification, this.dispatcher, source.type);
         tileManager.style = this;
         tileManager.setEventedParent(this, () => ({
             isSourceLoaded: tileManager.loaded(),
             source: tileManager.serialize(),
             sourceId: id
         }));
-
         tileManager.onAdd(this.map);
+        this.tileManagers[id] = tileManager;
+
         this._changed = true;
     }
 
@@ -1348,7 +1350,7 @@ export class Style extends Evented {
             this._updateLayer(layer);
         }
 
-        if (isRasterStyleLayer(layer) && name === 'raster-fade-duration') {
+        if (name === 'raster-fade-duration') {
             this.tileManagers[layer.source].setRasterFadeDuration(value);
         }
 
@@ -1594,10 +1596,12 @@ export class Style extends Evented {
         };
 
         for (const id in this.tileManagers) {
+            const tileManager = this.tileManagers[id];
             if (params.layers && !includedSources[id]) continue;
+
             sourceResults.push(
                 queryRenderedFeatures(
-                    this.tileManagers[id],
+                    tileManager,
                     this._layers,
                     serializedLayers,
                     queryGeometry,
