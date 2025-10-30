@@ -1,6 +1,8 @@
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {TileManager} from './tile_manager';
+import {type TileManager} from './tile_manager';
+import {RasterTileManager} from './raster_tile_manager';
+import {VectorTileManager} from './vector_tile_manager';
 import {type Source, addSourceType} from '../source/source';
 import {Tile, FadingRoles, FadingDirections} from './tile';
 import {CanonicalTileID, OverscaledTileID} from './tile_id';
@@ -80,13 +82,21 @@ function createSource(id: string, sourceOptions: any, _dispatcher: any, eventedP
 
 addSourceType('mock-source-type', createSource as any);
 
-function createTileManager(options?, used?) {
-    const sc = new TileManager('id', extend({
+function createTileManager(options?, used?): TileManager {
+    options = extend({
         tileSize: 512,
         minzoom: 0,
         maxzoom: 14,
         type: 'mock-source-type'
-    }, options), {} as Dispatcher);
+    }, options);
+
+    let sc: TileManager;
+    if (options.raster) {
+        sc = new RasterTileManager('id', options, {} as Dispatcher);
+    } else {
+        sc = new VectorTileManager('id', options, {} as Dispatcher);
+    }
+    
     const scWithTestLogic = extend(sc, {
         used: typeof used === 'boolean' ? used : true,
         addTile(tileID: OverscaledTileID): Tile {
@@ -636,7 +646,7 @@ describe('TileManager.update', () => {
         await map.once('styledata');
 
         const style = map.style;
-        const tileManager = style.tileManagers['rasterSource'];
+        const tileManager = style.tileManagers['rasterSource'] as RasterTileManager;
         const spy = vi.spyOn(tileManager, '_updateFadingTiles');
         tileManager._loadTile = async () => {};
 
@@ -856,7 +866,7 @@ describe('TileManager.update', () => {
         transform.resize(1024, 1024);
         transform.setZoom(10);
 
-        const tileManager = createTileManager({raster: true});
+        const tileManager = createTileManager({raster: true}) as RasterTileManager;
         const loadedTiles: Record<string, Tile> = {};
         tileManager._source.loadTile = async (tile) => {
             loadedTiles[tile.tileID.key] = tile;
@@ -894,7 +904,7 @@ describe('TileManager.update', () => {
         transform.resize(512, 512);
         transform.setZoom(10);
 
-        const tileManager = createTileManager({raster: true});
+        const tileManager = createTileManager({raster: true}) as RasterTileManager;
         const loadedTiles: Record<string, Tile> = {};
         tileManager._source.loadTile = async (tile) => {
             loadedTiles[tile.tileID.key] = tile;
@@ -932,7 +942,7 @@ describe('TileManager.update', () => {
         transform.resize(512, 512);
         transform.setZoom(10);
 
-        const tileManager = createTileManager({raster: true});
+        const tileManager = createTileManager({raster: true}) as RasterTileManager;
         const loadedTiles: Record<string, Tile> = {};
         tileManager._source.loadTile = async (tile) => {
             loadedTiles[tile.tileID.key] = tile;
@@ -978,7 +988,7 @@ describe('TileManager.update', () => {
         transform.resize(512, 512);
         transform.setZoom(10);
 
-        const tileManager = createTileManager({raster: true});
+        const tileManager = createTileManager({raster: true}) as RasterTileManager;
         const loadedTiles: Record<string, Tile> = {};
         tileManager._source.loadTile = async (tile) => {
             loadedTiles[tile.tileID.key] = tile;

@@ -144,14 +144,6 @@ export class Tile {
         this.state = 'loading';
     }
 
-    isRenderable(symbolLayer: boolean): boolean {
-        return (
-            this.hasData() &&
-            (!this.fadeEndTime || this.fadeOpacity > 0) &&  // raster fading
-            (symbolLayer || !this.holdingForSymbolFade())   // symbol fading
-        );
-    }
-
     /**
      * @internal
      * Many-to-one crossfade between a base tile and parent/ancestor tile (when zooming)

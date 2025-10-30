@@ -2,7 +2,7 @@ import {describe, test, expect, vi, type Mock} from 'vitest';
 import {mat4} from 'gl-matrix';
 import {OverscaledTileID} from '../tile/tile_id';
 import {SymbolBucket} from '../data/bucket/symbol_bucket';
-import {TileManager} from '../tile/tile_manager';
+import {VectorTileManager} from '../tile/vector_tile_manager';
 import {Tile} from '../tile/tile';
 import {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 import {Painter, type RenderOptions} from './painter';
@@ -113,7 +113,7 @@ describe('drawSymbol', () => {
         } as any;
         tile.getBucket = () => bucketMock;
         tile.tileID = tileId;
-        const tileManagerMock = new TileManager(null, null, null);
+        const tileManagerMock = new VectorTileManager(null, null, null);
         tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
         tileManagerMock.getTile = (_a) => tile;
 
@@ -176,7 +176,7 @@ describe('drawSymbol', () => {
             bind: () => { }
         } as any;
         (tile.getBucket as Mock).mockReturnValue(bucketMock);
-        const tileManagerMock = new TileManager(null, null, null);
+        const tileManagerMock = new VectorTileManager(null, null, null);
         (tileManagerMock.getTile as Mock).mockReturnValue(tile);
         tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
         painterMock.style = {
@@ -243,7 +243,7 @@ describe('drawSymbol', () => {
             bind: () => { }
         } as any;
         (tile.getBucket as Mock).mockReturnValue(bucketMock);
-        const tileManagerMock = new TileManager(null, null, null);
+        const tileManagerMock = new VectorTileManager(null, null, null);
         (tileManagerMock.getTile as Mock).mockReturnValue(tile);
         tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
 

@@ -1,6 +1,6 @@
 import {describe, test, expect, vi, type Mock} from 'vitest';
 import {OverscaledTileID} from '../tile/tile_id';
-import {TileManager} from '../tile/tile_manager';
+import {VectorTileManager} from '../tile/vector_tile_manager';
 import {Tile} from '../tile/tile';
 import {Painter, type RenderOptions} from './painter';
 import type {Map} from '../ui/map';
@@ -50,7 +50,7 @@ describe('drawCustom', () => {
         tile.imageAtlasTexture = {
             bind: () => { }
         } as any;
-        const tileManagerMock = new TileManager(null, null, null);
+        const tileManagerMock = new VectorTileManager(null, null, null);
         (tileManagerMock.getTile as Mock).mockReturnValue(tile);
         tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
 

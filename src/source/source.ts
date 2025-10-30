@@ -1,17 +1,18 @@
 import {VectorTileSource} from '../source/vector_tile_source';
 import {RasterTileSource} from '../source/raster_tile_source';
 import {RasterDEMTileSource} from '../source/raster_dem_tile_source';
-import {GeoJSONSource, type GeoJSONSourceShouldReloadTileOptions} from '../source/geojson_source';
+import {GeoJSONSource} from '../source/geojson_source';
 import {VideoSource} from '../source/video_source';
 import {ImageSource} from '../source/image_source';
 import {CanvasSource} from '../source/canvas_source';
-import {type Dispatcher} from '../util/dispatcher';
 
 import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Event, Evented} from '../util/evented';
+import type {Dispatcher} from '../util/dispatcher';
 import type {Map} from '../ui/map';
 import type {Tile} from '../tile/tile';
 import type {OverscaledTileID, CanonicalTileID} from '../tile/tile_id';
+import type {TileReloadStrategy} from '../tile/tile_reload_strategy';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
 import {type CalculateTileZoomFunction} from '../geo/projection/covering_tiles';
 
@@ -123,10 +124,10 @@ export interface Source {
     calculateTileZoom?: CalculateTileZoomFunction;
     /**
      * Optional function to determine whether a tile should be reloaded, given a
-     * set of options associated with a `MapSourceDataChangedEvent`.
+     * TileReloadStrategy associated with a `MapSourceDataChangedEvent`.
      * @internal
      */
-    shouldReloadTile?(tile: Tile, options: GeoJSONSourceShouldReloadTileOptions): boolean;
+    shouldReloadTile?(tile: Tile, reloadStrategy: TileReloadStrategy): boolean;
 }
 
 /**
