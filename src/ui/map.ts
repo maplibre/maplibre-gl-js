@@ -2107,12 +2107,12 @@ export class Map extends Camera {
      * ```
      */
     isSourceLoaded(id: string): boolean {
-        const manager = this.style && this.style.tileManagers[id];
-        if (manager === undefined) {
+        const tileManager = this.style && this.style.tileManagers[id];
+        if (tileManager === undefined) {
             this.fire(new ErrorEvent(new Error(`There is no tile manager with ID '${id}'`)));
             return;
         }
-        return manager.loaded();
+        return tileManager.loaded();
     }
 
     /**

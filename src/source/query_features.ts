@@ -136,14 +136,14 @@ export function queryRenderedFeatures(
             queryResults: tileIn.tile.queryRenderedFeatures(
                 styleLayers,
                 serializedLayers,
-                tileManager._state,
+                tileManager.getState(),
                 tileIn.queryGeometry,
                 tileIn.cameraQueryGeometry,
                 tileIn.scale,
                 params,
                 transform,
                 maxPitchScaleFactor,
-                getPixelPosMatrix(tileManager.transform, tileIn.tileID),
+                getPixelPosMatrix(transform, tileIn.tileID),
                 getElevation ? (x: number, y: number) => getElevation(tileIn.tileID, x, y) : undefined,
             )
         });

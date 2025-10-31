@@ -159,7 +159,7 @@ function getFadeProperties(tile: Tile, tileManager: TileManager, fadeDuration: n
 
     // cross-fade with parent first if available
     if (tile.fadingParentID) {
-        const parentTile = tileManager._getLoadedTile(tile.fadingParentID);
+        const parentTile = tileManager.getLoadedTile(tile.fadingParentID);
         if (!parentTile) return defaults;
 
         const parentScaleBy = Math.pow(2, parentTile.tileID.overscaledZ - tile.tileID.overscaledZ);

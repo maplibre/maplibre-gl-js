@@ -161,6 +161,10 @@ export class TileManager extends Evented {
         return this._source;
     }
 
+    getState(): SourceFeatureState {
+        return this._state;
+    }
+
     pause() {
         this._paused = true;
     }
@@ -245,7 +249,7 @@ export class TileManager extends Evented {
     hasRenderableParent(tileID: OverscaledTileID) {
         const parentZ = tileID.overscaledZ - 1;
         if (parentZ >= this._source.minzoom) {
-            const parentTile = this._getLoadedTile(tileID.scaledTo(parentZ));
+            const parentTile = this.getLoadedTile(tileID.scaledTo(parentZ));
             if (parentTile) {
                 return this._isIdRenderable(parentTile.tileID.key);
             }
@@ -470,7 +474,7 @@ export class TileManager extends Evented {
      * Get a currently loaded tile.
      * - a cached tile is not a loaded tile
      */
-    _getLoadedTile(tileID: OverscaledTileID): Tile | null {
+    getLoadedTile(tileID: OverscaledTileID): Tile | null {
         const tile = this._tiles[tileID.key];
         if (tile?.hasData()) {
             return tile;
@@ -793,7 +797,7 @@ export class TileManager extends Evented {
         const minAncestorZ = Math.max(idealID.overscaledZ - this._maxFadingAncestorLevels, this._source.minzoom);
         for (let ancestorZ = idealID.overscaledZ - 1; ancestorZ >= minAncestorZ; ancestorZ--) {
             const ancestorID = idealID.scaledTo(ancestorZ);
-            const ancestorTile = this._getLoadedTile(ancestorID);
+            const ancestorTile = this.getLoadedTile(ancestorID);
             if (!ancestorTile) continue;
 
             // ideal tile (base) is fading in
@@ -853,7 +857,7 @@ export class TileManager extends Evented {
 
         // find loaded child tiles to fade with the ideal tile
         for (const childID of childIDs) {
-            const childTile = this._getLoadedTile(childID);
+            const childTile = this.getLoadedTile(childID);
             if (!childTile) continue;
 
             const {fadingRole, fadingDirection, fadingParentID} = childTile;
