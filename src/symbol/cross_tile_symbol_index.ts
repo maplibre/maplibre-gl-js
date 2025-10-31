@@ -120,6 +120,7 @@ class TileLayerIndex {
             }
 
             const scaledSymbolCoord = this.getScaledCoordinates(symbolInstance, newTileID);
+
             if (entry.index) {
                 // Build a map keyed by common symbol instance keys, which are also
                 // used to key indexes. For each symbol index key, build a reverse map
