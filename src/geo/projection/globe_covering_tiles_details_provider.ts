@@ -6,7 +6,7 @@ import {vec3, type vec4} from 'gl-matrix';
 import type {IReadonlyTransform} from '../transform_interface';
 import type {MercatorCoordinate} from '../mercator_coordinate';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
-import {OverscaledTileID} from '../../source/tile_id';
+import {OverscaledTileID} from '../../tile/tile_id';
 import {earthRadius} from '../lng_lat';
 import {ConvexVolume} from '../../util/primitives/convex_volume';
 import {threePlaneIntersection} from '../../util/util';

@@ -3,7 +3,7 @@ import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
 import {getMercatorHorizon, projectToWorldCoordinates, tileCoordinatesToLocation, tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 import {MercatorTransform} from './mercator_transform';
-import {CanonicalTileID} from '../../source/tile_id';
+import {CanonicalTileID} from '../../tile/tile_id';
 import {EXTENT} from '../../data/extent';
 import {createIdentityMat4f32, MAX_VALID_LATITUDE} from '../../util/util';
 

@@ -3,7 +3,7 @@ import type {LngLatBounds} from './lng_lat_bounds';
 import type {MercatorCoordinate} from './mercator_coordinate';
 import type Point from '@mapbox/point-geometry';
 import type {mat4, mat2, vec3, vec4} from 'gl-matrix';
-import type {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
+import type {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../tile/tile_id';
 import type {PaddingOptions} from './edge_insets';
 import type {Terrain} from '../render/terrain';
 import type {PointProjection} from '../symbol/projection';

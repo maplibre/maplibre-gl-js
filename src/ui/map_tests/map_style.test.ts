@@ -385,7 +385,7 @@ describe('getStyle', () => {
         const errorPromise = map.once('error');
         map.isSourceLoaded('geojson');
         const error = await errorPromise;
-        expect(error.error.message).toMatch(/There is no source with ID/);
+        expect(error.error.message).toMatch(/There is no tile manager with ID/);
     });
 
     test('returns the style with added layers', async () => {

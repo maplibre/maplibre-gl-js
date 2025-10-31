@@ -2,8 +2,8 @@ import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {fakeServer, type FakeServer} from 'nise';
 import {type Source} from './source';
 import {VectorTileSource} from './vector_tile_source';
-import {type Tile} from './tile';
-import {OverscaledTileID} from './tile_id';
+import {type Tile} from '../tile/tile';
+import {OverscaledTileID} from '../tile/tile_id';
 import {Evented} from '../util/evented';
 import {RequestManager} from '../util/request_manager';
 import fixturesSource from '../../test/unit/assets/source.json' with {type: 'json'};
@@ -20,7 +20,7 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
         _getMapId: () => 1,
         _requestManager: new RequestManager(transformCallback),
         style: {
-            sourceCaches: {id: {clearTiles}},
+            tileManagers: {id: {clearTiles}},
             projection: {
                 get subdivisionGranularity() {
                     return SubdivisionGranularitySetting.noSubdivision;

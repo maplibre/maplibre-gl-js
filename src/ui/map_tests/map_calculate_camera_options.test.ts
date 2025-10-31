@@ -1,7 +1,7 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
 import {LngLat} from '../../geo/lng_lat';
-import {type OverscaledTileID} from '../../source/tile_id';
+import {type OverscaledTileID} from '../../tile/tile_id';
 import {type CameraOptions} from '../camera';
 import {type Terrain} from '../../render/terrain';
 import {mercatorZfromAltitude} from '../../geo/mercator_coordinate';

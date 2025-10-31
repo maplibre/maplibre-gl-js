@@ -11,14 +11,14 @@ import {getGeoJSONBounds} from '../util/geojson_bounds';
 import type {Source} from './source';
 import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
-import type {Tile} from './tile';
+import type {Tile} from '../tile/tile';
 import type {Actor} from '../util/actor';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {GeoJSONSourceDiff} from './geojson_source_diff';
 import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
 import type {WorkerTileParameters} from './worker_source';
 import {MessageType} from '../util/actor_messages';
-import {tileIdToLngLatBounds} from './tile_id_to_lng_lat_bounds';
+import {tileIdToLngLatBounds} from '../tile/tile_id_to_lng_lat_bounds';
 
 /**
  * Options object for GeoJSONSource.
@@ -424,7 +424,7 @@ export class GeoJSONSource extends Evented implements Source {
                 extend(eventData, {resourceTiming});
             }
 
-            // although GeoJSON sources contain no metadata, we fire this event to let the SourceCache
+            // although GeoJSON sources contain no metadata, we fire this event to let the TileManager
             // know its ok to start requesting tiles.
             this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
             this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTileOptions: this._getShouldReloadTileOptions(diff)}));

@@ -7,10 +7,10 @@ import {Context} from '../gl/context';
 import {ColorMode} from '../gl/color_mode';
 import {Terrain} from './terrain';
 import {type Style} from '../style/style';
-import {Tile} from '../source/tile';
+import {Tile} from '../tile/tile';
 import {type Map} from '../ui/map';
-import {OverscaledTileID} from '../source/tile_id';
-import {type SourceCache} from '../source/source_cache';
+import {OverscaledTileID} from '../tile/tile_id';
+import {type TileManager} from '../tile/tile_manager';
 import {type TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import {type RasterStyleLayer} from '../style/style_layer/raster_style_layer';
@@ -76,14 +76,14 @@ describe('render to texture', () => {
     const map = {painter} as Map;
 
     const tile = new Tile(new OverscaledTileID(3, 0, 2, 1, 2), 512);
-    const sourceCache = {
+    const tileManager = {
         _source: {minzoom: 0, maxzoom: 2},
         getTileByID: (_id) => tile,
         getVisibleCoordinates: () => [tile.tileID]
-    } as SourceCache;
+    } as TileManager;
 
     const style = {
-        sourceCaches: {'maine': {getVisibleCoordinates: () => [tile.tileID], getSource: () => ({})}},
+        tileManagers: {'maine': {getVisibleCoordinates: () => [tile.tileID], getSource: () => ({})}},
         _order: ['maine-fill', 'maine-symbol'],
         _layers: {
             'maine-background': backgroundLayer,
@@ -101,9 +101,9 @@ describe('render to texture', () => {
     map.style = style;
     style.map = map;
 
-    const terrain = new Terrain(painter, sourceCache, {} as any as TerrainSpecification);
-    terrain.sourceCache.getRenderableTiles = () => [tile];
-    terrain.sourceCache.getTerrainCoords = () => { return {[tile.tileID.key]: tile.tileID}; };
+    const terrain = new Terrain(painter, tileManager, {} as any as TerrainSpecification);
+    terrain.tileManager.getRenderableTiles = () => [tile];
+    terrain.tileManager.getTerrainCoords = () => { return {[tile.tileID.key]: tile.tileID}; };
     map.terrain = terrain;
 
     const rtt = new RenderToTexture(painter, terrain);

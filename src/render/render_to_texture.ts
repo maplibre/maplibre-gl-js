@@ -1,7 +1,7 @@
 import {type Painter, type RenderOptions} from './painter';
-import {type Tile} from '../source/tile';
+import {type Tile} from '../tile/tile';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {type OverscaledTileID} from '../source/tile_id';
+import {type OverscaledTileID} from '../tile/tile_id';
 import {drawTerrain} from './draw_terrain';
 import {type Style} from '../style/style';
 import {type Terrain} from './terrain';
@@ -67,7 +67,7 @@ export class RenderToTexture {
     constructor(painter: Painter, terrain: Terrain) {
         this.painter = painter;
         this.terrain = terrain;
-        this.pool = new RenderPool(painter.context, 30, terrain.sourceCache.tileSize * terrain.qualityFactor);
+        this.pool = new RenderPool(painter.context, 30, terrain.tileManager.tileSize * terrain.qualityFactor);
     }
 
     destruct() {
@@ -82,17 +82,17 @@ export class RenderToTexture {
         this._stacks = [];
         this._prevType = null;
         this._rttTiles = [];
-        this._renderableTiles = this.terrain.sourceCache.getRenderableTiles();
+        this._renderableTiles = this.terrain.tileManager.getRenderableTiles();
         this._renderableLayerIds = style._order.filter(id => !style._layers[id].isHidden(zoom));
 
         this._coordsAscending = {};
-        for (const id in style.sourceCaches) {
+        for (const id in style.tileManagers) {
             this._coordsAscending[id] = {};
-            const tileIDs = style.sourceCaches[id].getVisibleCoordinates();
-            const source = style.sourceCaches[id].getSource();
+            const tileIDs = style.tileManagers[id].getVisibleCoordinates();
+            const source = style.tileManagers[id].getSource();
             const terrainTileRanges = source instanceof ImageSource ? source.terrainTileRanges : null;
             for (const tileID of tileIDs) {
-                const keys = this.terrain.sourceCache.getTerrainCoords(tileID, terrainTileRanges);
+                const keys = this.terrain.tileManager.getTerrainCoords(tileID, terrainTileRanges);
                 for (const key in keys) {
                     if (!this._coordsAscending[id][key]) this._coordsAscending[id][key] = [];
                     this._coordsAscending[id][key].push(keys[key]);
@@ -186,7 +186,7 @@ export class RenderToTexture {
                     const coords = layer.source ? this._coordsAscending[layer.source][tile.tileID.key] : [tile.tileID];
                     painter.context.viewport.set([0, 0, obj.fbo.width, obj.fbo.height]);
                     painter._renderTileClippingMasks(layer, coords, true);
-                    painter.renderLayer(painter, painter.style.sourceCaches[layer.source], layer, coords, options);
+                    painter.renderLayer(painter, painter.style.tileManagers[layer.source], layer, coords, options);
                     if (layer.source) tile.rttCoords[layer.source] = this._coordsAscendingStr[layer.source][tile.tileID.key];
                 }
             }
