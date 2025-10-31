@@ -2,7 +2,7 @@
 
 ### ✨ Features and improvements
 - Improve performance of `GeoJSONSource#updateData` when called on small diffs ([#6562](https://github.com/maplibre/maplibre-gl-js/pull/6562))
-- _...Add new stuff here..._
+- Refactor SourceCache to TileManager ([#6635](https://github.com/maplibre/maplibre-gl-js/pull/6635))
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
