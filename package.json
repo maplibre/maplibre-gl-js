@@ -134,7 +134,7 @@
   },
   "scripts": {
     "generate-dist-package": "node --no-warnings --loader ts-node/esm build/generate-dist-package.js",
-    "generate-unicode-data": "node --no-warnings build/generate-unicode-data.ts",
+    "generate-unicode-data": "node --no-warnings --loader ts-node/register build/generate-unicode-data.ts",
     "generate-shaders": "node --no-warnings --loader ts-node/esm build/generate-shaders.ts",
     "generate-struct-arrays": "node --no-warnings --loader ts-node/esm build/generate-struct-arrays.ts",
     "generate-style-code": "node --no-warnings --loader ts-node/esm build/generate-style-code.ts",
