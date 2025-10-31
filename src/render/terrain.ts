@@ -233,7 +233,7 @@ export class Terrain {
         // create matrix for lookup in dem data
         const matrixKey = sourceTile && (sourceTile + sourceTile.tileID.key) + tileID.key;
         if (matrixKey && !this._demMatrixCache[matrixKey]) {
-            const maxzoom = this.tileManager.tileManager.getSource().maxzoom;
+            const maxzoom = this.tileManager.getSource().maxzoom;
             let dz = tileID.canonical.z - sourceTile.tileID.canonical.z;
             if (tileID.overscaledZ > tileID.canonical.z) {
                 if (tileID.canonical.z >= maxzoom) dz =  tileID.canonical.z - maxzoom;

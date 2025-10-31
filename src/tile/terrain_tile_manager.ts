@@ -5,6 +5,7 @@ import {mat4} from 'gl-matrix';
 import {Evented} from '../util/evented';
 import type {ITransform} from '../geo/transform_interface';
 import type {TileManager} from './tile_manager';
+import type {Source} from '../source/source';
 import {type Terrain} from '../render/terrain';
 import {now} from '../util/time_control';
 import {coveringTiles} from '../geo/projection/covering_tiles';
@@ -23,7 +24,7 @@ import {type CanonicalTileRange} from '../source/image_source';
  */
 export class TerrainTileManager extends Evented {
     /**
-     * source-cache for the raster-dem source.
+     * tile manager for the raster-dem source.
      */
     tileManager: TileManager;
     /**
@@ -76,6 +77,10 @@ export class TerrainTileManager extends Evented {
     destruct() {
         this.tileManager.usedForTerrain = false;
         this.tileManager.tileSize = null;
+    }
+
+    getSource(): Source {
+        return this.tileManager._source;
     }
 
     /**
