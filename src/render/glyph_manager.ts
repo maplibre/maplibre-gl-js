@@ -93,6 +93,7 @@ export class GlyphManager {
     }
 
     async _getAndCacheGlyphsPromise(stack: string, id: number): Promise<{stack: string; id: number; glyph: StyleGlyph}> {
+        // Create an entry for this fontstack if it doesn’t already exist.
         let entry = this.entries[stack];
         if (!entry) {
             entry = this.entries[stack] = {
@@ -102,47 +103,55 @@ export class GlyphManager {
             };
         }
 
+        // Try to get the glyph from the cache of client-side glyphs by codepoint.
         let glyph = entry.glyphs[id];
         if (glyph !== undefined) {
             return {stack, id, glyph};
         }
 
+        // If the style hasn’t opted into server-side fonts or this codepoint is CJK, draw the glyph locally and cache it.
         if (!this.url || this._charUsesLocalIdeographFontFamily(id)) {
-            glyph = this._drawGlyph(entry, stack, id);
-            entry.glyphs[id] = glyph;
+            glyph = entry.glyphs[id] = this._drawGlyph(entry, stack, id);
             return {stack, id, glyph};
         }
 
+        return await this._downloadAndCacheRangePromise(stack, id);
+    }
+
+    async _downloadAndCacheRangePromise(stack: string, id: number): Promise<{stack: string; id: number; glyph: StyleGlyph}> {
+        // Avoid requesting astral codepoints from the server because we can’t handle them anyways.
+        // https://github.com/maplibre/maplibre-gl-js/issues/2307
         const range = Math.floor(id / 256);
         if (range * 256 > 65535) {
             throw new Error('glyphs > 65535 not supported');
         }
 
+        // Try to get the glyph from the cache of server-side glyphs by PBF range.
+        const entry = this.entries[stack];
         if (entry.ranges[range]) {
-            return {stack, id, glyph};
+            return {stack, id, glyph: null};
         }
 
-        if (this.url && !entry.requests[range]) {
+        // Start downloading this range unless we’re currently downloading it.
+        if (!entry.requests[range]) {
             const promise = GlyphManager.loadGlyphRange(stack, range, this.url, this.requestManager);
             entry.requests[range] = promise;
         }
 
-        let response;
         try {
-            response = await entry.requests[range];
-        } catch (e) {
-            glyph = this._drawGlyph(entry, stack, id);
-            this._warnOnMissingGlyphRange(glyph, range, id, e);
-            entry.glyphs[id] = glyph;
-            return {stack, id, glyph};
-        }
-        for (const id in response) {
-            if (!this.url || !this._charUsesLocalIdeographFontFamily(+id)) {
+            // Get the response and cache the glyphs from it.
+            const response = await entry.requests[range];
+            for (const id in response) {
                 entry.glyphs[+id] = response[+id];
             }
+            entry.ranges[range] = true;
+            return {stack, id, glyph: response[id] || null};
+        } catch (e) {
+            // Fall back to drawing the glyph locally and caching it.
+            const glyph = entry.glyphs[id] = this._drawGlyph(entry, stack, id);
+            this._warnOnMissingGlyphRange(glyph, range, id, e);
+            return {stack, id, glyph};
         }
-        entry.ranges[range] = true;
-        return {stack, id, glyph: response[id] || null};
     }
 
     _warnOnMissingGlyphRange(glyph: StyleGlyph, range: number, id: number, err: Error) {
