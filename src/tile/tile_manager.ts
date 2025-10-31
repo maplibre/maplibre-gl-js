@@ -3,8 +3,6 @@ import {create as createSource} from '../source/source';
 import {Tile} from './tile';
 import {ErrorEvent, Event, Evented} from '../util/evented';
 import {TileCache} from './tile_cache';
-import {MercatorCoordinate} from '../geo/mercator_coordinate';
-import {EXTENT} from '../data/extent';
 import {type Context} from '../gl/context';
 import Point from '@mapbox/point-geometry';
 import {now} from '../util/time_control';
@@ -24,16 +22,36 @@ import type {MapSourceDataEvent} from '../ui/events';
 import type {Terrain} from '../render/terrain';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
 import {coveringTiles, coveringZoomLevel} from '../geo/projection/covering_tiles';
-import {Bounds} from '../geo/bounds';
-import {EXTENT_BOUNDS} from '../data/extent_bounds';
 
-type TileResult = {
-    tile: Tile;
-    tileID: OverscaledTileID;
-    queryGeometry: Array<Point>;
-    cameraQueryGeometry: Array<Point>;
-    scale: number;
-};
+/**
+ * Strategy interface for tile-type-specific behavior
+ */
+export interface TileManagerStrategy {
+    /**
+     * Process the tile when retrieved from cache
+     */
+    onTileRetrievedFromCache(tile: Tile): void;
+
+    /**
+     * Perform post-update logic
+     */
+    onFinishUpdate(idealTileIDs: OverscaledTileID[], retain: Record<string, OverscaledTileID>): void;
+
+    /**
+     * Clean up tiles that are no longer retained
+     */
+    cleanUpTiles(tiles: Record<string, Tile>, retain: Record<string, OverscaledTileID>, removeTile: (id: string) => void): void;
+
+    /**
+     * Determine whether a tile is renderable
+     */
+    isTileRenderable(tile: Tile, symbolLayer?: boolean): boolean;
+
+    /**
+     * Check if the manager still has tile transitions
+     */
+    hasTransition(source: Source, tiles: Record<string, Tile>): boolean;
+}
 
 /**
  * @internal
@@ -56,6 +74,7 @@ export abstract class TileManager extends Evented {
     map: Map;
     style: Style;
 
+    _strategy: TileManagerStrategy;
     _source: Source;
 
     /**
@@ -90,32 +109,11 @@ export abstract class TileManager extends Evented {
     /**
      * Overridable function for extending classes to process the tile when retrieved from cache
      */
-    protected abstract _onTileRetrievedFromCache(tile: Tile): void;
-
-    /**
-     * Overrideable function for extending classes to perform post-update logic
-     */
-    protected abstract _onFinishUpdate(idealTileIDs: OverscaledTileID[], retain: Record<string, OverscaledTileID>): void;
-
-    /**
-     * Overrideable function for extending classes to clean up tiles.
-     */
-    protected abstract _cleanUpTiles(retain: Record<string, OverscaledTileID>): void;
-
-    /**
-     * Overrideable function for extending classes to determine whether id is renderable.
-     */
-    protected abstract _isIdRenderable(id: string, symbolLayer?: boolean): boolean;
-
-    /**
-     * Overrideable function to let the render pipeline know if the manager still has tile transitions.
-     */
-    abstract hasTransition(): boolean;
-
-    constructor(id: string, options: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher) {
+    constructor(id: string, options: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, strategy: TileManagerStrategy) {
         super();
         this.id = id;
         this.dispatcher = dispatcher;
+        this._strategy = strategy;
 
         this.on('data', (e: MapSourceDataEvent) => this._dataHandler(e));
 
@@ -252,7 +250,10 @@ export abstract class TileManager extends Evented {
     getRenderableIds(symbolLayer?: boolean): Array<string> {
         const renderables: Array<Tile> = [];
         for (const id in this._tiles) {
-            if (this._isIdRenderable(id, symbolLayer)) renderables.push(this._tiles[id]);
+            const tile = this._tiles[id];
+            if (this._strategy.isTileRenderable(tile, symbolLayer)) {
+                renderables.push(tile);
+            }
         }
         if (symbolLayer) {
             return renderables.sort((a_: Tile, b_: Tile) => {
@@ -271,7 +272,7 @@ export abstract class TileManager extends Evented {
         if (parentZ >= this._source.minzoom) {
             const parentTile = this.getLoadedTile(tileID.scaledTo(parentZ));
             if (parentTile) {
-                return this._isIdRenderable(parentTile.tileID.key);
+                return this._strategy.isTileRenderable(parentTile);
             }
         }
         return false;
@@ -610,11 +611,11 @@ export abstract class TileManager extends Evented {
         const zoom: number = coveringZoomLevel(transform, this._source);
         const retain: Record<string, OverscaledTileID> = this._updateRetainedTiles(idealTileIDs, zoom);
 
-        // overrideable function for extending classes
-        this._onFinishUpdate(idealTileIDs, retain);
+        // delegate to strategy for post-update logic
+        this._strategy.onFinishUpdate(idealTileIDs, retain);
 
-        // clean up non-retained tiles that are no longer needed
-        this._cleanUpTiles(retain);
+        // delegate to strategy for tile cleanup
+        this._strategy.cleanUpTiles(this._tiles, retain, (id) => this._removeTile(id));
     }
 
     /**
@@ -707,8 +708,8 @@ export abstract class TileManager extends Evented {
 
         tile = this._cache.getAndRemove(tileID);
         if (tile) {
-            //allow extending classes to process the tile when retrieved from cache
-            this._onTileRetrievedFromCache(tile);
+            //allow strategy to process the tile when retrieved from cache
+            this._strategy.onTileRetrievedFromCache(tile);
 
             // set timer for the reloading of the tile upon expiration
             this._setTileReloadTimer(tileID.key, tile);
@@ -774,10 +775,11 @@ export abstract class TileManager extends Evented {
      */
     refreshTiles(tileIds: Array<ICanonicalTileID>) {
         for (const id in this._tiles) {
-            if (!this._isIdRenderable(id) && this._tiles[id].state != 'errored') {
+            const tile = this._tiles[id];
+            if (!this._strategy.isTileRenderable(tile) && tile.state != 'errored') {
                 continue;
             }
-            if (tileIds.some(tid => tid.equals(this._tiles[id].tileID.canonical))) {
+            if (tileIds.some(tid => tid.equals(tile.tileID.canonical))) {
                 this._reloadTile(id, 'expired');
             }
         }
@@ -844,94 +846,16 @@ export abstract class TileManager extends Evented {
         this._cache.reset();
     }
 
-    /**
-     * Search through our current tiles and attempt to find the tiles that
-     * cover the given bounds.
-     * @param pointQueryGeometry - coordinates of the corners of bounding rectangle
-     * @returns result items have `{tile, minX, maxX, minY, maxY}`, where min/max bounding values are the given bounds transformed in into the coordinate space of this tile.
-     */
-    tilesIn(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean): TileResult[] {
-        const tileResults: TileResult[] = [];
-
-        const transform = this.transform;
-        if (!transform) return tileResults;
-        const allowWorldCopies = transform.getCoveringTilesDetailsProvider().allowWorldCopies();
-
-        const cameraPointQueryGeometry = has3DLayer ?
-            transform.getCameraQueryGeometry(pointQueryGeometry) :
-            pointQueryGeometry;
-
-        const project = (point: Point) => transform.screenPointToMercatorCoordinate(point, this.terrain);
-        const queryGeometry = this.transformBbox(pointQueryGeometry, project, !allowWorldCopies);
-        const cameraQueryGeometry = this.transformBbox(cameraPointQueryGeometry, project, !allowWorldCopies);
-
-        const ids = this.getIds();
-
-        const cameraBounds = Bounds.fromPoints(cameraQueryGeometry);
-
-        for (let i = 0; i < ids.length; i++) {
-            const tile = this._tiles[ids[i]];
-            if (tile.holdingForSymbolFade()) {
-                // Tiles held for fading are covered by tiles that are closer to ideal
-                continue;
-            }
-            // if the projection does not render world copies then we need to explicitly check for the bounding box crossing the antimeridian
-            const tileIDs = allowWorldCopies ? [tile.tileID] : [tile.tileID.unwrapTo(-1), tile.tileID.unwrapTo(0)];
-            const scale = Math.pow(2, transform.zoom - tile.tileID.overscaledZ);
-            const queryPadding = maxPitchScaleFactor * tile.queryPadding * EXTENT / tile.tileSize / scale;
-
-            for (const tileID of tileIDs) {
-
-                const tileSpaceBounds = cameraBounds.map(point => tileID.getTilePoint(new MercatorCoordinate(point.x, point.y)));
-                tileSpaceBounds.expandBy(queryPadding);
-
-                if (tileSpaceBounds.intersects(EXTENT_BOUNDS)) {
-
-                    const tileSpaceQueryGeometry: Array<Point> = queryGeometry.map((c) => tileID.getTilePoint(c));
-                    const tileSpaceCameraQueryGeometry = cameraQueryGeometry.map((c) => tileID.getTilePoint(c));
-
-                    tileResults.push({
-                        tile,
-                        tileID: allowWorldCopies ? tileID : tileID.unwrapTo(0),
-                        queryGeometry: tileSpaceQueryGeometry,
-                        cameraQueryGeometry: tileSpaceCameraQueryGeometry,
-                        scale
-                    });
-                }
-            }
-        }
-
-        return tileResults;
-    }
-
-    private transformBbox(geom: Point[], project: (point: Point) => MercatorCoordinate, checkWrap: boolean): MercatorCoordinate[] {
-        let transformed = geom.map(project);
-        if (checkWrap) {
-            // If the projection does not allow world copies, then a bounding box may span the antimeridian and
-            // instead of a bounding box going from 179°E to 179°W, it goes from 179°W to 179°E and covers the entire
-            // planet except for what should be inside it.
-            const bounds = Bounds.fromPoints(geom);
-            bounds.shrinkBy(Math.min(bounds.width(), bounds.height()) * 0.001);
-            const projected = bounds.map(project);
-
-            const newBounds = Bounds.fromPoints(transformed);
-
-            if (!newBounds.covers(projected)) {
-                transformed = transformed.map((coord) => coord.x > 0.5 ?
-                    new MercatorCoordinate(coord.x - 1, coord.y, coord.z) :
-                    coord
-                );
-            }
-        }
-        return transformed;
-    }
-
     getVisibleCoordinates(symbolLayer?: boolean): Array<OverscaledTileID> {
         const coords = this.getRenderableIds(symbolLayer).map((id) => this._tiles[id].tileID);
         if (this.transform) {
             this.transform.populateCache(coords);
         }
         return coords;
+    }
+
+    hasTransition(): boolean {
+        return this._strategy.hasTransition(this._source, this._tiles);
     }
 
     /**

@@ -1,10 +1,64 @@
-import {TileManager} from './tile_manager';
+import {TileManager, type TileManagerStrategy} from './tile_manager';
 import {type Tile, FadingDirections, FadingRoles} from './tile';
-import {now} from '../util/time_control';
 import {getEdgeTiles} from '../util/util';
+import {now} from '../util/time_control';
 import type {OverscaledTileID} from './tile_id';
 import type {Dispatcher} from '../util/dispatcher';
+import type {Source} from '../source/source';
 import type {RasterSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+
+/**
+ * Raster-specific tile management strategy
+ */
+class RasterTileStrategy implements TileManagerStrategy {
+    private tileManager: RasterTileManager;
+
+    constructor(tileManager: RasterTileManager) {
+        this.tileManager = tileManager;
+    }
+
+    onTileRetrievedFromCache(tile: Tile): void {
+        tile.resetFadeLogic();
+    }
+
+    onFinishUpdate(idealTileIDs: OverscaledTileID[], retain: Record<string, OverscaledTileID>): void {
+        if (this.tileManager._rasterFadeDuration > 0) {
+            this.tileManager._updateFadingTiles(idealTileIDs, retain);
+        }
+    }
+
+    cleanUpTiles(tiles: Record<string, Tile>, retain: Record<string, OverscaledTileID>, removeTile: (id: string) => void): void {
+        for (const key in tiles) {
+            if (!retain[key]) {
+                removeTile(key);
+            }
+        }
+    }
+
+    isTileRenderable(tile: Tile): boolean {
+        return (
+            tile?.hasData() &&
+            (!tile.fadeEndTime || tile.fadeOpacity > 0)
+        );
+    }
+
+    hasTransition(source: Source, tiles: Record<string, Tile>): boolean {
+        if (source.hasTransition()) {
+            return true;
+        }
+
+        if (this.tileManager._rasterFadeDuration > 0) {
+            const currentTime = now();
+            for (const id in tiles) {
+                if (tiles[id].fadeEndTime >= currentTime) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+}
 
 /**
  * @internal
@@ -24,37 +78,14 @@ export class RasterTileManager extends TileManager {
     _maxFadingAncestorLevels: number;
 
     constructor(id: string, options: RasterSourceSpecification, dispatcher: Dispatcher) {
-        super(id, options, dispatcher);
+        super(id, options, dispatcher, null as any);
         this._rasterFadeDuration = 0;
         this._maxFadingAncestorLevels = 5;
+        this._strategy = new RasterTileStrategy(this);
     }
 
     setRasterFadeDuration(fadeDuration: number) {
         this._rasterFadeDuration = fadeDuration;
-    }
-
-    /**
-     * Reset fade logic when retrieving tiles from cache to prevent stale fading data.
-     */
-    override _onTileRetrievedFromCache(tile: Tile) {
-        tile.resetFadeLogic();
-    }
-
-    /**
-     * Update the fading logic for all raster tiles.
-     */
-    override _onFinishUpdate(idealTileIDs: OverscaledTileID[], retain: Record<string, OverscaledTileID>) {
-        if (this._rasterFadeDuration > 0) {
-            this._updateFadingTiles(idealTileIDs, retain);
-        }
-    }
-
-    override _cleanUpTiles(retain: Record<string, OverscaledTileID>) {
-        for (const key in this._tiles) {
-            if (!retain[key]) {
-                this._removeTile(key);
-            }
-        }
     }
 
     /**
@@ -229,32 +260,6 @@ export class RasterTileManager extends TileManager {
             const fadeEndTime = now + this._rasterFadeDuration;
             idealTile.setSelfFadeLogic(fadeEndTime);
             return true;
-        }
-
-        return false;
-    }
-
-    override _isIdRenderable(id: string): boolean {
-        const tile = this._tiles[id];
-        return (
-            tile?.hasData() &&
-            (!tile.fadeEndTime || tile.fadeOpacity > 0)
-        );
-    }
-
-    override hasTransition() {
-        if (this._source.hasTransition()) {
-            return true;
-        }
-
-        if (this._rasterFadeDuration > 0) {
-            const currentTime = now();
-            for (const id in this._tiles) {
-                const tile = this._tiles[id];
-                if (tile.fadeEndTime >= currentTime) {
-                    return true;
-                }
-            }
         }
 
         return false;

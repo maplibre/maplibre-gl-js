@@ -98,16 +98,7 @@ function createTileManager(options?, used?): TileManager {
     }
     
     const scWithTestLogic = extend(sc, {
-        used: typeof used === 'boolean' ? used : true,
-        addTile(tileID: OverscaledTileID): Tile {
-            return this._addTile(tileID);
-        },
-        getCache(): TileCache {
-            return this._cache;
-        },
-        getTiles(): { [_: string]: Tile } {
-            return this._tiles;
-        }
+        used: typeof used === 'boolean' ? used : true
     });
     return scWithTestLogic;
 }
@@ -1679,7 +1670,7 @@ describe('TileManager.tilesIn', () => {
     test('graceful response before source loaded', () => {
         const tr = new MercatorTransform();
         tr.resize(512, 512);
-        const tileManager = createTileManager({noLoad: true});
+        const tileManager = createTileManager({noLoad: true}) as VectorTileManager;
         tileManager.transform = tr;
         tileManager.onAdd(undefined);
         expect(tileManager.tilesIn([
@@ -1701,7 +1692,7 @@ describe('TileManager.tilesIn', () => {
         transform.setZoom(1);
         transform.setCenter(new LngLat(0, 1));
 
-        const tileManager = createTileManager();
+        const tileManager = createTileManager() as VectorTileManager;
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'loaded';
         };
@@ -1743,7 +1734,7 @@ describe('TileManager.tilesIn', () => {
             minzoom: 1,
             maxzoom: 1,
             tileSize: 512
-        });
+        }) as VectorTileManager;
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'loaded';
         };
@@ -1812,7 +1803,7 @@ describe('TileManager.tilesIn', () => {
         transform.setZoom(1.05);
         transform.setCenter(new LngLat(179.9, 0.1));
 
-        const tileManager = createTileManager();
+        const tileManager = createTileManager() as VectorTileManager;
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'loaded';
         };
@@ -1865,7 +1856,7 @@ describe('TileManager.tilesIn', () => {
         transform.setZoom(1.05);
         transform.setCenter(new LngLat(179.9, 0.1));
 
-        const tileManager = createTileManager();
+        const tileManager = createTileManager() as VectorTileManager;
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'loaded';
         };
@@ -1921,7 +1912,7 @@ describe('TileManager.tilesIn', () => {
         transform.setZoom(1.05);
         transform.setCenter(new LngLat(-179.9, 0.1));
 
-        const tileManager = createTileManager();
+        const tileManager = createTileManager() as VectorTileManager;
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'loaded';
         };
@@ -1977,7 +1968,7 @@ describe('TileManager.tilesIn', () => {
         transform.setZoom(1.05);
         transform.setCenter(new LngLat(179.9, 0.1));
 
-        const tileManager = createTileManager();
+        const tileManager = createTileManager() as VectorTileManager;
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'loaded';
         };
@@ -2030,7 +2021,7 @@ describe('TileManager.tilesIn', () => {
         transform.setZoom(1.05);
         transform.setCenter(new LngLat(179.9, 0.1));
 
-        const tileManager = createTileManager();
+        const tileManager = createTileManager() as VectorTileManager;
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'loaded';
         };
@@ -2086,7 +2077,7 @@ describe('TileManager.tilesIn', () => {
         transform.setZoom(1.05);
         transform.setCenter(new LngLat(-179.9, 0.1));
     
-        const tileManager = createTileManager();
+        const tileManager = createTileManager() as VectorTileManager;
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'loaded';
         };

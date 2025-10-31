@@ -1585,10 +1585,14 @@ export class Style extends Evented {
         };
 
         for (const id in this.tileManagers) {
+            const tileManager = this.tileManagers[id];
+            if (!(tileManager instanceof VectorTileManager)) continue;
+
             if (params.layers && !includedSources[id]) continue;
+
             sourceResults.push(
                 queryRenderedFeatures(
-                    this.tileManagers[id],
+                    tileManager,
                     this._layers,
                     serializedLayers,
                     queryGeometry,
