@@ -87,6 +87,10 @@ export class Actor implements IActor {
         this.messageHandlers[type] = handler;
     }
 
+    unregisterMessageHandler<T extends MessageType>(type: T) {
+        delete this.messageHandlers[type];
+    }
+
     /**
      * Sends a message from a main-thread map to a Worker or from a Worker back to
      * a main-thread map instance.

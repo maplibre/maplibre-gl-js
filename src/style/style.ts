@@ -261,15 +261,7 @@ export class Style extends Evented {
         this.lineAtlas = new LineAtlas(256, 512);
         this.crossTileSymbolIndex = new CrossTileSymbolIndex();
 
-        this._spritesImagesIds = {};
-        this._layers = {};
-
-        this._order = [];
-        this.tileManagers = {};
-        this.zoomHistory = new ZoomHistory();
-        this._loaded = false;
-        this._availableImages = [];
-        this._globalState = {};
+        this._setInitialValues();
 
         this._resetUpdates();
 
@@ -298,6 +290,36 @@ export class Style extends Evented {
                 }
             }
         });
+    }
+
+    private _setInitialValues() {
+        this._spritesImagesIds = {};
+        this._layers = {};
+        this._order = [];
+        this.tileManagers = {};
+        this.zoomHistory = new ZoomHistory();
+        this._availableImages = [];
+        this._globalState = {};
+        this._serializedLayers = {};
+        this.stylesheet = null;
+        this.light = null;
+        this.sky = null;
+        if (this.projection) {
+            this.projection.destroy();
+            delete this.projection;
+        }
+        this._loaded = false;
+        this._changed = false;
+        this._updatedLayers = {};
+        this._updatedSources = {};
+        this._changedImages = {};
+        this._glyphsDidChange = false;
+        this._updatedPaintProps = {};
+        this._layerOrderChanged = false;
+        this.crossTileSymbolIndex = new (this.crossTileSymbolIndex?.constructor || Object)();
+        this.pauseablePlacement = undefined;
+        this.placement = undefined;
+        this.z = 0;
     }
 
     _rtlPluginLoaded = () => {
@@ -1996,5 +2018,73 @@ export class Style extends Evented {
                 completion(null);
             }
         }
+    }
+
+    /**
+     * Destroys all internal resources of the style (sources, images, layers, etc.)
+     */
+    destroy() {
+        // cancel any pending requests
+        if (this._frameRequest) {
+            this._frameRequest.abort();
+            this._frameRequest = null;
+        }
+        if (this._loadStyleRequest) {
+            this._loadStyleRequest.abort();
+            this._loadStyleRequest = null;
+        }
+        if (this._spriteRequest) {
+            this._spriteRequest.abort();
+            this._spriteRequest = null;
+        }
+
+        // remove sourcecaches
+        for (const id in this.tileManagers) {
+            const tileManager = this.tileManagers[id];
+            tileManager.setEventedParent(null);
+
+            if (tileManager._tiles) {
+                for (const tileId in tileManager._tiles) {
+                    const tile = tileManager._tiles[tileId];
+                    tile.unloadVectorData();
+                }
+                tileManager._tiles = {};
+            }
+            tileManager._cache.reset();
+            tileManager.onRemove(this.map);
+        }
+        this.tileManagers = {};
+
+        // Destroy imageManager and clear images
+        if (this.imageManager) {
+            this.imageManager.setEventedParent(null);
+            this.imageManager.destroy();
+            this._availableImages = [];
+            this._spritesImagesIds = {};
+        }
+
+        // Destroy glyphManager
+        if (this.glyphManager) {
+            this.glyphManager.destroy();
+        }
+
+        // Remove layers
+        for (const layerId in this._layers) {
+            const layer = this._layers[layerId];
+            layer.setEventedParent(null);
+            if (layer.onRemove) layer.onRemove(this.map);
+        }
+
+        // reset internal state
+        this._setInitialValues();
+
+        // Remove event listeners
+        this.setEventedParent(null);
+        this.dispatcher.unregisterMessageHandler(MessageType.getGlyphs);
+        this.dispatcher.unregisterMessageHandler(MessageType.getImages);
+        this.dispatcher.unregisterMessageHandler(MessageType.getDashes);
+        this.dispatcher.remove(true);
+        this._listeners = {};
+        this._oneTimeListeners = {};
     }
 }
