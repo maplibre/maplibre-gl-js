@@ -87,7 +87,7 @@ export type TextJustify = 'left' | 'center' | 'right';
 const PUAbegin = 0xE000;
 const PUAend = 0xF8FF;
 
-class SectionOptions {
+export class SectionOptions {
     // Text options
     scale: number;
     fontStack: string;
@@ -120,7 +120,7 @@ class SectionOptions {
 
 }
 
-class TaggedString {
+export class TaggedString {
     text: string;
     sectionIndex: Array<number>; // maps each character in 'text' to its corresponding entry in 'sections'
     sections: Array<SectionOptions>;
@@ -147,7 +147,7 @@ class TaggedString {
     }
 
     length(): number {
-        return this.text.length;
+        return [...this.text].length;
     }
 
     getSection(index: number): SectionOptions {
@@ -158,37 +158,33 @@ class TaggedString {
         return this.sectionIndex[index];
     }
 
-    getCharCode(index: number): number {
-        return this.text.charCodeAt(index);
-    }
-
     verticalizePunctuation() {
         this.text = verticalizePunctuation(this.text);
     }
 
     trim() {
-        let beginningWhitespace = 0;
-        for (let i = 0;
-            i < this.text.length && whitespace[this.text.charCodeAt(i)];
-            i++) {
-            beginningWhitespace++;
-        }
-        let trailingWhitespace = this.text.length;
-        for (let i = this.text.length - 1;
-            i >= 0 && i >= beginningWhitespace && whitespace[this.text.charCodeAt(i)];
-            i--) {
-            trailingWhitespace--;
-        }
-        this.text = this.text.substring(beginningWhitespace, trailingWhitespace);
-        this.sectionIndex = this.sectionIndex.slice(beginningWhitespace, trailingWhitespace);
+        const leadingWhitespace = this.text.match(/^\s*/);
+        const leadingLength = leadingWhitespace ? leadingWhitespace[0].length : 0;
+        // Require a preceding non-space character to avoid overlapping leading and trailing matches.
+        const trailingWhitespace = this.text.match(/\S\s*$/);
+        const trailingLength = trailingWhitespace ? trailingWhitespace[0].length - 1 : 0;
+        this.text = this.text.substring(leadingLength, this.text.length - trailingLength);
+        this.sectionIndex = this.sectionIndex.slice(leadingLength, this.sectionIndex.length - trailingLength);
     }
 
     substring(start: number, end: number): TaggedString {
         const substring = new TaggedString();
-        substring.text = this.text.substring(start, end);
+        substring.text = [...this.text].slice(start, end).join('');
         substring.sectionIndex = this.sectionIndex.slice(start, end);
         substring.sections = this.sections;
         return substring;
+    }
+
+    /**
+     * Converts a UTF-16 character index to a UTF-16 code unit (JavaScript character index).
+     */
+    toCodeUnitIndex(unicodeIndex: number): number {
+        return [...this.text].slice(0, unicodeIndex).join('').length;
     }
 
     toString(): string {
@@ -222,7 +218,8 @@ class TaggedString {
         this.text += section.text;
         this.sections.push(SectionOptions.forText(section.scale, section.fontStack || defaultFontStack, section.verticalAlign));
         const index = this.sections.length - 1;
-        for (let i = 0; i < section.text.length; ++i) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        for (const char of section.text) {
             this.sectionIndex.push(index);
         }
     }
@@ -258,15 +255,14 @@ class TaggedString {
 
 function breakLines(input: TaggedString, lineBreakPoints: Array<number>): Array<TaggedString> {
     const lines = [];
-    const text = input.text;
     let start = 0;
     for (const lineBreak of lineBreakPoints) {
         lines.push(input.substring(start, lineBreak));
         start = lineBreak;
     }
 
-    if (start < text.length) {
-        lines.push(input.substring(start, text.length));
+    if (start < input.length()) {
+        lines.push(input.substring(start, input.length()));
     }
     return lines;
 }
@@ -304,18 +300,21 @@ function shapeText(
 
     let lines: Array<TaggedString>;
 
+    let lineBreaks = determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, layoutTextSize);
     const {processBidirectionalText, processStyledBidirectionalText} = rtlWorkerPlugin;
     if (processBidirectionalText && logicalInput.sections.length === 1) {
         // Bidi doesn't have to be style-aware
         lines = [];
+        // ICU operates on code units.
+        lineBreaks = lineBreaks.map(index => logicalInput.toCodeUnitIndex(index));
         const untaggedLines =
-            processBidirectionalText(logicalInput.toString(),
-                determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, layoutTextSize));
+            processBidirectionalText(logicalInput.toString(), lineBreaks);
         for (const line of untaggedLines) {
             const taggedLine = new TaggedString();
             taggedLine.text = line;
             taggedLine.sections = logicalInput.sections;
-            for (let i = 0; i < line.length; i++) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            for (const char of line) {
                 taggedLine.sectionIndex.push(0);
             }
             lines.push(taggedLine);
@@ -324,19 +323,32 @@ function shapeText(
         // Need version of mapbox-gl-rtl-text with style support for combining RTL text
         // with formatting
         lines = [];
+        // ICU operates on code units.
+        lineBreaks = lineBreaks.map(index => logicalInput.toCodeUnitIndex(index));
+
+        // Convert character-based section index to be based on code units.
+        let i = 0;
+        const sectionIndex = [];
+        for (const char of logicalInput.text) {
+            sectionIndex.push(...Array(char.length).fill(logicalInput.sectionIndex[i]));
+            i++;
+        }
+
         const processedLines =
-            processStyledBidirectionalText(logicalInput.text,
-                logicalInput.sectionIndex,
-                determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, layoutTextSize));
+            processStyledBidirectionalText(logicalInput.text, sectionIndex, lineBreaks);
         for (const line of processedLines) {
             const taggedLine = new TaggedString();
             taggedLine.text = line[0];
-            taggedLine.sectionIndex = line[1];
             taggedLine.sections = logicalInput.sections;
+            let elapsedChars = '';
+            for (const char of line[0]) {
+                taggedLine.sectionIndex.push(line[1][elapsedChars.length]);
+                elapsedChars += char;
+            }
             lines.push(taggedLine);
         }
     } else {
-        lines = breakLines(logicalInput, determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, layoutTextSize));
+        lines = breakLines(logicalInput, lineBreaks);
     }
 
     const positionedLines = [];
@@ -436,9 +448,11 @@ function determineAverageLineWidth(logicalInput: TaggedString,
     layoutTextSize: number) {
     let totalWidth = 0;
 
-    for (let index = 0; index < logicalInput.length(); index++) {
+    let index = 0;
+    for (const char of logicalInput.text) {
         const section = logicalInput.getSection(index);
-        totalWidth += getGlyphAdvance(logicalInput.getCharCode(index), section, glyphMap, imagePositions, spacing, layoutTextSize);
+        totalWidth += getGlyphAdvance(char.codePointAt(0), section, glyphMap, imagePositions, spacing, layoutTextSize);
+        index++;
     }
 
     const lineCount = Math.max(1, Math.ceil(totalWidth / maxWidth));
@@ -534,7 +548,7 @@ function leastBadBreaks(lastLineBreak?: Break | null): Array<number> {
     return leastBadBreaks(lastLineBreak.priorBreak).concat(lastLineBreak.index);
 }
 
-function determineLineBreaks(
+export function determineLineBreaks(
     logicalInput: TaggedString,
     spacing: number,
     maxWidth: number,
@@ -556,16 +570,28 @@ function determineLineBreaks(
 
     let currentX = 0;
 
-    for (let i = 0; i < logicalInput.length(); i++) {
+    let i = 0;
+    const chars = logicalInput.text[Symbol.iterator]();
+    let char = chars.next();
+    const nextChars = logicalInput.text[Symbol.iterator]();
+    nextChars.next();
+    let nextChar = nextChars.next();
+    const nextNextChars = logicalInput.text[Symbol.iterator]();
+    nextNextChars.next();
+    nextNextChars.next();
+    let nextNextChar = nextNextChars.next();
+
+    while (!char.done) {
         const section = logicalInput.getSection(i);
-        const codePoint = logicalInput.getCharCode(i);
+        const codePoint = char.value.codePointAt(0);
         if (!whitespace[codePoint]) currentX += getGlyphAdvance(codePoint, section, glyphMap, imagePositions, spacing, layoutTextSize);
 
         // Ideographic characters, spaces, and word-breaking punctuation that often appear without
         // surrounding spaces.
-        if ((i < logicalInput.length() - 1)) {
+        if (!nextChar.done) {
             const ideographicBreak = charAllowsIdeographicBreaking(codePoint);
-            if (breakable[codePoint] || ideographicBreak || section.imageName || (i !== logicalInput.length() - 2 && breakableBefore[logicalInput.getCharCode(i + 1)])) {
+            const nextCodePoint = nextChar.value.codePointAt(0);
+            if (breakable[codePoint] || ideographicBreak || section.imageName || (!nextNextChar.done && breakableBefore[nextCodePoint])) {
 
                 potentialLineBreaks.push(
                     evaluateBreak(
@@ -573,10 +599,14 @@ function determineLineBreaks(
                         currentX,
                         targetWidth,
                         potentialLineBreaks,
-                        calculatePenalty(codePoint, logicalInput.getCharCode(i + 1), ideographicBreak && hasServerSuggestedBreakpoints),
+                        calculatePenalty(codePoint, nextCodePoint, ideographicBreak && hasServerSuggestedBreakpoints),
                         false));
             }
         }
+        i++;
+        char = chars.next();
+        nextChar = nextChars.next();
+        nextNextChar = nextNextChars.next();
     }
 
     return leastBadBreaks(
@@ -733,10 +763,11 @@ function shapeLines(shaping: Shaping,
 
         const lineShapingSize = calculateLineContentSize(imagePositions, line, layoutTextSizeFactor);
 
-        for (let i = 0; i < line.length(); i++) {
+        let i = 0;
+        for (const char of line.text) {
             const section = line.getSection(i);
             const sectionIndex = line.getSectionIndex(i);
-            const codePoint = line.getCharCode(i);
+            const codePoint = char.codePointAt(0);
             const vertical = isLineVertical(writingMode, allowVerticalPlacement, codePoint);
 
             let sectionAttributes: ShapingSectionAttributes;
@@ -777,6 +808,8 @@ function shapeLines(shaping: Shaping,
                 const verticalAdvance = section.imageName ? metrics.advance : ONE_EM;
                 x += verticalAdvance * section.scale + spacing;
             }
+
+            i++;
         }
 
         // Only justify if we placed at least one glyph
