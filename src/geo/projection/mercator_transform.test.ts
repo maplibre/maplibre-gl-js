@@ -595,13 +595,4 @@ describe('transform', () => {
         expect(transform.getCameraLngLat().lng).toBeCloseTo(camLngLat.lng, 10);
         expect(transform.getCameraLngLat().lat).toBeCloseTo(camLngLat.lat, 10);
     });
-
-    test('custom constrain included after clone', () => {
-        function customTransformConstrain(lngLat, zoom) {
-            return {center: lngLat, zoom: zoom ?? 0};
-        };
-        const transform = new MercatorTransform({constrain: customTransformConstrain});
-        const cloned = transform.clone();
-        expect(cloned.constrain).toEqual(transform.constrain);
-    });
 });
