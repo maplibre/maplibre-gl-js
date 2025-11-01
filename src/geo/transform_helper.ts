@@ -163,7 +163,7 @@ export class TransformHelper implements ITransformGetters {
         this._minPitch = (options?.minPitch === undefined || options?.minPitch === null) ? 0 : options?.minPitch;
         this._maxPitch = (options?.maxPitch === undefined || options?.maxPitch === null) ? 60 : options?.maxPitch;
 
-        this._transformConstrain = options?.constrain || null;
+        this._transformConstrain = options?.constrain ?? null;
 
         this.setMaxBounds();
 
