@@ -214,7 +214,7 @@ describe('CrossTileSymbolIndex.addLayer', () => {
 
     });
 
-    test('indexes data for findMatches perf', () => {
+    test('matches ids when indexing', () => {
         const index = new CrossTileSymbolIndex();
 
         const mainID = new OverscaledTileID(6, 0, 6, 8, 8);
@@ -223,9 +223,10 @@ describe('CrossTileSymbolIndex.addLayer', () => {
         const mainInstances: any[] = [];
         const childInstances: any[] = [];
 
-        for (let i = 0; i < KDBUSH_THRESHHOLD + 1; i++) {
-            mainInstances.push(makeSymbolInstance(0, 0, ''));
-            childInstances.push(makeSymbolInstance(0, 0, ''));
+        const INSTANCE_COUNT = KDBUSH_THRESHHOLD + 1;
+        for (let i = 0; i < INSTANCE_COUNT; i++) {
+            mainInstances.push(makeSymbolInstance(i, i, ''));
+            childInstances.push(makeSymbolInstance(i, i, ''));
         }
         const mainTile = makeTile(mainID, mainInstances);
         const childTile = makeTile(childID, childInstances);
@@ -234,7 +235,10 @@ describe('CrossTileSymbolIndex.addLayer', () => {
 
         // check that we matched the parent tile
         expect(childInstances[0].crossTileID).toBe(1);
-
+        // all child instances matched a crossTileID from the parent, otherwise
+        // we would have generated a new crossTileID, and the number would
+        // exceed INSTANCE_COUNT
+        expect(Math.max(...childInstances.map(i => i.crossTileID))).toBe(INSTANCE_COUNT);
     });
 });
 
