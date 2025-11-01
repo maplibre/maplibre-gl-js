@@ -185,6 +185,7 @@ export class TransformHelper implements ITransformGetters {
     }
 
     public apply(thatI: ITransformGetters, constrain?: boolean, forceOverrideZ?: boolean): void {
+        this._constrain = thatI.constrain;
         this._latRange = thatI.latRange;
         this._lngRange = thatI.lngRange;
         this._width = thatI.width;
