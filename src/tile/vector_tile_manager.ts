@@ -27,8 +27,8 @@ type TileResult = {
 export class VectorTileStrategy implements TileManagerStrategy {
     private tileManager: TileManager;
 
-    setManager(manager: TileManager) {
-        this.tileManager = manager;
+    constructor(tileManager: TileManager) {
+        this.tileManager = tileManager;
     }
 
     onTileRetrievedFromCache(_tile: Tile): void {

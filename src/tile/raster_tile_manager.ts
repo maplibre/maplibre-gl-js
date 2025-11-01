@@ -19,8 +19,8 @@ export class RasterTileStrategy implements TileManagerStrategy {
     _rasterFadeDuration: number = 0;
     _maxFadingAncestorLevels: number = 5;
 
-    setManager(manager: TileManager) {
-        this.tileManager = manager;
+    constructor(tileManager: TileManager) {
+        this.tileManager = tileManager;
     }
 
     onTileRetrievedFromCache(tile: Tile): void {

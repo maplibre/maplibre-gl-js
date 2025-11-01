@@ -31,22 +31,20 @@ export function createTileManager(
     dispatcher: Dispatcher,
     type: 'vector' | 'raster' | string
 ): TileManager {
-    const strategy = type === 'raster'
-        ? new RasterTileStrategy()
-        : new VectorTileStrategy();
+    const tileManager = new TileManager(id, options, dispatcher);
 
-    return new TileManager(id, options, dispatcher, strategy);
+    const strategy = type === 'raster'
+        ? new RasterTileStrategy(tileManager)
+        : new VectorTileStrategy(tileManager);
+
+    tileManager.setStrategy(strategy);
+    return tileManager;
 }
 
 /**
  * Strategy interface for tile-type-specific behavior
  */
 export interface TileManagerStrategy {
-    /**
-     * Set the tile manager
-     */
-    setManager(manager: TileManager): void;
-
     /**
      * Process the tile when retrieved from cache
      */
@@ -104,7 +102,7 @@ export class TileManager extends Evented {
     map: Map;
     style: Style;
 
-    _strategy: TileManagerStrategy;
+    _strategy!: TileManagerStrategy;
     _source: Source;
 
     /**
@@ -139,10 +137,8 @@ export class TileManager extends Evented {
     /**
      * Overridable function for extending classes to process the tile when retrieved from cache
      */
-    constructor(id: string, options: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, strategy: TileManagerStrategy) {
+    constructor(id: string, options: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher) {
         super();
-        strategy.setManager(this);
-
         this.id = id;
         this.dispatcher = dispatcher;
 
@@ -168,6 +164,10 @@ export class TileManager extends Evented {
         this._state = new SourceFeatureState();
         this._didEmitContent = false;
         this._updated = false;
+    }
+
+    setStrategy(strategy: TileManagerStrategy) {
+        this._strategy = strategy;
     }
 
     onAdd(map: Map) {
