@@ -84,9 +84,10 @@ export class RasterTileStrategy implements TileManagerStrategy {
     _updateFadingTiles(idealTileIDs: OverscaledTileID[], retain: Record<string, OverscaledTileID>) {
         const currentTime: number = now();
         const edgeTileIDs: Set<OverscaledTileID> = getEdgeTiles(idealTileIDs);
+        const tiles = this.tileManager.getTiles();
 
         for (const idealID of idealTileIDs) {
-            const idealTile = this.tileManager._tiles[idealID.key];
+            const idealTile = tiles[idealID.key];
 
             // reset any previously departing(ed) tiles that are now ideal tiles
             if (idealTile.fadingDirection === FadingDirections.Departing || idealTile.fadeOpacity === 0) {
@@ -128,7 +129,7 @@ export class RasterTileStrategy implements TileManagerStrategy {
         }
 
         // find a loaded parent tile to fade with the ideal tile
-        const minAncestorZ = Math.max(idealID.overscaledZ - this._maxFadingAncestorLevels, this.tileManager._source.minzoom);
+        const minAncestorZ = Math.max(idealID.overscaledZ - this._maxFadingAncestorLevels, this.tileManager.getSourceMinZoom());
         for (let ancestorZ = idealID.overscaledZ - 1; ancestorZ >= minAncestorZ; ancestorZ--) {
             const ancestorID = idealID.scaledTo(ancestorZ);
             const ancestorTile = this.tileManager.getLoadedTile(ancestorID);
@@ -170,13 +171,13 @@ export class RasterTileStrategy implements TileManagerStrategy {
         if (!idealTile.hasData()) return false;
 
         // search first level of descendents (4 tiles)
-        const idealChildren = idealTile.tileID.children(this.tileManager._source.maxzoom);
+        const idealChildren = idealTile.tileID.children(this.tileManager.getSourceMaxZoom());
         let hasFader = this._updateFadingChildren(idealTile, idealChildren, retain, now);
         if (hasFader) return true;
 
         // search second level of descendents (16 tiles)
         for (const childID of idealChildren) {
-            const grandChildIDs = childID.children(this.tileManager._source.maxzoom);
+            const grandChildIDs = childID.children(this.tileManager.getSourceMaxZoom());
             if (this._updateFadingChildren(idealTile, grandChildIDs, retain, now)) {
                 hasFader = true;
             }
@@ -186,7 +187,7 @@ export class RasterTileStrategy implements TileManagerStrategy {
     }
 
     _updateFadingChildren(idealTile: Tile, childIDs: OverscaledTileID[], retain: Record<string, OverscaledTileID>, now: number): boolean {
-        if (childIDs[0].overscaledZ >= this.tileManager._source.maxzoom) return false;
+        if (childIDs[0].overscaledZ >= this.tileManager.getSourceMaxZoom()) return false;
         let foundFader = false;
 
         // find loaded child tiles to fade with the ideal tile

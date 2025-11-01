@@ -180,7 +180,7 @@ describe('TileManager.addTile', () => {
         tr.resize(512, 512);
         tileManager.updateCacheSize(tr);
         tileManager._addTile(tileID);
-        tileManager._removeTile(tileID.key);
+        tileManager.removeTile(tileID.key);
         tileManager._addTile(tileID);
 
         expect(load).toBe(1);
@@ -203,7 +203,7 @@ describe('TileManager.addTile', () => {
         const tile = tileManager._addTile(tileID);
         const updateFeaturesSpy = vi.spyOn(tile, 'setFeatureState');
 
-        tileManager._removeTile(tileID.key);
+        tileManager.removeTile(tileID.key);
         tileManager._addTile(tileID);
 
         expect(updateFeaturesSpy).toHaveBeenCalledTimes(1);
@@ -238,7 +238,7 @@ describe('TileManager.addTile', () => {
         expect(tileManager._timers[id]).toBeTruthy();
         expect(tileManager._cache.has(tileID)).toBeFalsy();
 
-        tileManager._removeTile(tileID.key);
+        tileManager.removeTile(tileID.key);
 
         expect(tileManager._timers[id]).toBeFalsy();
         expect(tileManager._cache.has(tileID)).toBeTruthy();
@@ -302,7 +302,7 @@ describe('TileManager.removeTile', () => {
         const tileManager = createTileManager({});
         tileManager._addTile(tileID);
         await tileManager.once('data');
-        tileManager._removeTile(tileID.key);
+        tileManager.removeTile(tileID.key);
         expect(tileManager._tiles[tileID.key]).toBeFalsy();
     });
 
@@ -319,7 +319,7 @@ describe('TileManager.removeTile', () => {
         tileManager.updateCacheSize(tr);
 
         tileManager._addTile(tileID);
-        tileManager._removeTile(tileID.key);
+        tileManager.removeTile(tileID.key);
 
         expect(tileManager._source.unloadTile).not.toHaveBeenCalled();
     });
@@ -340,19 +340,19 @@ describe('TileManager.removeTile', () => {
         };
 
         tileManager._addTile(tileID);
-        tileManager._removeTile(tileID.key);
+        tileManager.removeTile(tileID.key);
 
         expect(abort).toBe(1);
         expect(unload).toBe(1);
 
     });
 
-    test('_tileLoaded after _removeTile skips tile.added', () => {
+    test('_tileLoaded after removeTile skips tile.added', () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
 
         const tileManager = createTileManager();
         tileManager._source.loadTile = async () => {
-            tileManager._removeTile(tileID.key);
+            tileManager.removeTile(tileID.key);
         };
         tileManager.map = {painter: {crossTileSymbolIndex: '', tileExtentVAO: {}}} as any;
 
@@ -368,7 +368,7 @@ describe('TileManager.removeTile', () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const tile = tileManager._addTile(tileID);
         const abortPromise = tileManager.once('dataabort');
-        tileManager._removeTile(tileID.key);
+        tileManager.removeTile(tileID.key);
         const event = await abortPromise;
         expect(event.dataType).toBe('source');
         expect(event.tile).toBe(tile);
@@ -384,7 +384,7 @@ describe('TileManager.removeTile', () => {
         tileManager._addTile(tileID);
         const onAbort = vi.fn();
         tileManager.once('dataabort', onAbort);
-        tileManager._removeTile(tileID.key);
+        tileManager.removeTile(tileID.key);
         expect(onAbort).toHaveBeenCalledTimes(0);
     });
 
@@ -400,7 +400,7 @@ describe('TileManager.removeTile', () => {
         tileManager.once('data', onData);
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         tileManager._addTile(tileID);
-        tileManager._removeTile(tileID.key);
+        tileManager.removeTile(tileID.key);
     });
 
 });

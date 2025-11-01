@@ -29,7 +29,7 @@ export function createTileManager(
     id: string,
     options: SourceSpecification,
     dispatcher: Dispatcher,
-    type: 'vector' | 'raster' | any | string
+    type: 'vector' | 'raster' | string
 ): TileManager {
     const strategy = type === 'raster'
         ? new RasterTileStrategy()
@@ -406,18 +406,33 @@ export class TileManager extends Evented {
                 tile.neighboringTiles[borderId].backfilled = true;
         }
     }
-    /**
-     * Get a specific tile by TileID
-     */
+
     getTile(tileID: OverscaledTileID): Tile {
         return this.getTileByID(tileID.key);
     }
 
-    /**
-     * Get a specific tile by id
-     */
+    getTiles(): Record<string, Tile> {
+        return this._tiles;
+    }
+
     getTileByID(id: string): Tile {
         return this._tiles[id];
+    }
+    
+    getSourceMaxZoom(): number {
+        return this._source.maxzoom;
+    }
+
+    getSourceMinZoom(): number {
+        return this._source.minzoom;
+    }
+
+    getTransform(): ITransform {
+        return this.transform;
+    }
+
+    getMapFadeDuration(): number {
+        return this.map._fadeDuration;
     }
 
     /**
@@ -646,7 +661,7 @@ export class TileManager extends Evented {
         this._strategy.onFinishUpdate(idealTileIDs, retain);
 
         // delegate to strategy for tile cleanup
-        this._strategy.cleanUpTiles(this._tiles, retain, (id) => this._removeTile(id));
+        this._strategy.cleanUpTiles(this._tiles, retain, (id) => this.removeTile(id));
     }
 
     /**
@@ -819,7 +834,7 @@ export class TileManager extends Evented {
     /**
      * Remove a tile, given its id, from the pyramid
      */
-    _removeTile(id: string) {
+    removeTile(id: string) {
         const tile = this._tiles[id];
         if (!tile)
             return;
@@ -872,7 +887,7 @@ export class TileManager extends Evented {
         this._paused = false;
 
         for (const id in this._tiles)
-            this._removeTile(id);
+            this.removeTile(id);
 
         this._cache.reset();
     }
