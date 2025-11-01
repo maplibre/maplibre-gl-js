@@ -8,6 +8,7 @@
 
 ### 🐞 Bug fixes
 - If a required glyph PBF is unavailable or it lacks a glyph for a character in a `text-field`, try to render it locally instead of crashing. ([#4564](https://github.com/maplibre/maplibre-gl-js/pull/4564))
+- Export `now()` function in timeControl API to complete the API and enable external code to read controlled time ([#6644](https://github.com/maplibre/maplibre-gl-js/pull/6644))
 - _...Add new stuff here..._
 
 ## 5.10.0
