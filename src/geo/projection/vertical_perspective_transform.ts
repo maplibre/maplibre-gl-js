@@ -268,6 +268,7 @@ export class VerticalPerspectiveTransform implements ITransform {
 
     clone(): ITransform {
         const clone = new VerticalPerspectiveTransform();
+        if (this.constrain !== this.defaultConstrain) clone.setConstrain(this.constrain);
         clone.apply(this);
         return clone;
     }

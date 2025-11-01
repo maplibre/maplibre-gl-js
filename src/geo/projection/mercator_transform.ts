@@ -253,6 +253,7 @@ export class MercatorTransform implements ITransform {
 
     public clone(): ITransform {
         const clone = new MercatorTransform();
+        if (this.constrain !== this.defaultConstrain) clone.setConstrain(this.constrain);
         clone.apply(this);
         return clone;
     }

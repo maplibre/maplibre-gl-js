@@ -265,6 +265,7 @@ export class GlobeTransform implements ITransform {
 
     clone(): ITransform {
         const clone = new GlobeTransform();
+        if (this.constrain !== this.defaultConstrain) clone.setConstrain(this.constrain);
         clone._globeness = this._globeness;
         clone._globeLatitudeErrorCorrectionRadians = this._globeLatitudeErrorCorrectionRadians;
         clone.apply(this);
