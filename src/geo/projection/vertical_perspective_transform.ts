@@ -128,8 +128,8 @@ export class VerticalPerspectiveTransform implements ITransform {
     setMaxBounds(bounds?: LngLatBounds): void {
         this._helper.setMaxBounds(bounds);
     }
-    setConstrain(constrain?: TransformConstrainFunction | null): void {
-        this._helper.setConstrain(constrain);
+    setTransformConstrain(constrain?: TransformConstrainFunction | null): void {
+        this._helper.setTransformConstrain(constrain);
     }
     overrideNearFarZ(nearZ: number, farZ: number): void {
         this._helper.overrideNearFarZ(nearZ, farZ);
@@ -222,8 +222,8 @@ export class VerticalPerspectiveTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
     }
-    get constrain(): TransformConstrainFunction {
-        return this._helper.constrain;
+    get transformConstrain(): TransformConstrainFunction {
+        return this._helper.transformConstrain;
     }
     public get nearZ(): number { 
         return this._helper.nearZ; 
@@ -261,7 +261,7 @@ export class VerticalPerspectiveTransform implements ITransform {
     public constructor(options?: TransformOptions) {
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
-            constrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
+            defaultConstrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
         }, options);
         this._coveringTilesDetailsProvider = new GlobeCoveringTilesDetailsProvider();
     }
@@ -654,6 +654,10 @@ export class VerticalPerspectiveTransform implements ITransform {
             ),
             zoom: constrainedZoom
         };
+    };
+
+    getConstrain: TransformConstrainFunction = (lngLat, zoom) => {
+        return this._helper.getConstrain(lngLat, zoom);
     };
 
     calculateCenterFromCameraLngLatAlt(lngLat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
