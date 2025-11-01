@@ -15,8 +15,8 @@ describe('TransformHelper', () => {
     test('apply', () => {
         const original = new TransformHelper(emptyCallbacks);
         original.setConstrain((lngLat, zoom) => {
-            return {center: lngLat, zoom: zoom ?? 0}
-        })
+            return {center: lngLat, zoom: zoom ?? 0};
+        });
         original.setBearing(12);
         original.setCenter(new LngLat(3, 4));
         original.setElevation(5);
