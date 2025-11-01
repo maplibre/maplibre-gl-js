@@ -56,11 +56,11 @@ import type {CalculateTileZoomFunction, CoveringTilesOptions} from './geo/projec
 import type {TransformConstrainFunction} from './geo/transform_interface';
 import type {StyleImage, StyleImageData, StyleImageInterface, StyleImageMetadata, TextFit} from './style/style_image';
 import type {StyleLayer} from './style/style_layer';
-import type {Tile} from './source/tile';
+import type {Tile} from './tile/tile';
 import type {GeoJSONFeatureDiff, GeoJSONFeatureId, GeoJSONSourceDiff} from './source/geojson_source_diff';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from './source/query_features';
 import type {RequestTransformFunction, ResourceType} from './util/request_manager';
-import type {OverscaledTileID} from './source/tile_id';
+import type {OverscaledTileID} from './tile/tile_id';
 import type {PositionAnchor} from './ui/anchor';
 import type {ProjectionData} from './geo/projection/projection_data';
 import type {WorkerTileResult} from './source/worker_source';

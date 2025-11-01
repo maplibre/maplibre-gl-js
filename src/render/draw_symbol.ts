@@ -21,11 +21,11 @@ import {
 } from './program/symbol_program';
 
 import type {Painter, RenderOptions} from './painter';
-import type {SourceCache} from '../source/source_cache';
+import type {TileManager} from '../tile/tile_manager';
 import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 
 import type {Texture, TextureFilter} from '../render/texture';
-import type {OverscaledTileID, UnwrappedTileID} from '../source/tile_id';
+import type {OverscaledTileID, UnwrappedTileID} from '../tile/tile_id';
 import type {UniformValues} from './uniform_binding';
 import type {SymbolSDFUniformsType} from '../render/program/symbol_program';
 import type {CrossTileID, VariableOffset} from '../symbol/placement';
@@ -60,7 +60,7 @@ type SymbolTileRenderState = {
 
 const identityMat4 = mat4.identity(new Float32Array(16));
 
-export function drawSymbols(painter: Painter, sourceCache: SourceCache, layer: SymbolStyleLayer, coords: Array<OverscaledTileID>, variableOffsets: {
+export function drawSymbols(painter: Painter, tileManager: TileManager, layer: SymbolStyleLayer, coords: Array<OverscaledTileID>, variableOffsets: {
     [_ in CrossTileID]: VariableOffset;
 }, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
@@ -74,7 +74,7 @@ export function drawSymbols(painter: Painter, sourceCache: SourceCache, layer: S
     // Compute variable-offsets before painting since icons and text data positioning
     // depend on each other in this case.
     if (hasVariablePlacement) {
-        updateVariableAnchors(coords, painter, layer, sourceCache,
+        updateVariableAnchors(coords, painter, layer, tileManager,
             layer.layout.get('text-rotation-alignment'),
             layer.layout.get('text-pitch-alignment'),
             layer.paint.get('text-translate'),
@@ -84,7 +84,7 @@ export function drawSymbols(painter: Painter, sourceCache: SourceCache, layer: S
     }
 
     if (layer.paint.get('icon-opacity').constantOr(1) !== 0) {
-        drawLayerSymbols(painter, sourceCache, layer, coords, false,
+        drawLayerSymbols(painter, tileManager, layer, coords, false,
             layer.paint.get('icon-translate'),
             layer.paint.get('icon-translate-anchor'),
             layer.layout.get('icon-rotation-alignment'),
@@ -95,7 +95,7 @@ export function drawSymbols(painter: Painter, sourceCache: SourceCache, layer: S
     }
 
     if (layer.paint.get('text-opacity').constantOr(1) !== 0) {
-        drawLayerSymbols(painter, sourceCache, layer, coords, true,
+        drawLayerSymbols(painter, tileManager, layer, coords, true,
             layer.paint.get('text-translate'),
             layer.paint.get('text-translate-anchor'),
             layer.layout.get('text-rotation-alignment'),
@@ -105,9 +105,9 @@ export function drawSymbols(painter: Painter, sourceCache: SourceCache, layer: S
         );
     }
 
-    if (sourceCache.map.showCollisionBoxes) {
-        drawCollisionDebug(painter, sourceCache, layer, coords, true);
-        drawCollisionDebug(painter, sourceCache, layer, coords, false);
+    if (tileManager.map.showCollisionBoxes) {
+        drawCollisionDebug(painter, tileManager, layer, coords, true);
+        drawCollisionDebug(painter, tileManager, layer, coords, false);
     }
 }
 
@@ -129,7 +129,7 @@ function calculateVariableRenderShift(
 
 function updateVariableAnchors(coords: Array<OverscaledTileID>,
     painter: Painter,
-    layer:SymbolStyleLayer, sourceCache: SourceCache,
+    layer:SymbolStyleLayer, tileManager: TileManager,
     rotationAlignment: SymbolLayerSpecification['layout']['text-rotation-alignment'],
     pitchAlignment: SymbolLayerSpecification['layout']['text-pitch-alignment'],
     translate: [number, number],
@@ -141,7 +141,7 @@ function updateVariableAnchors(coords: Array<OverscaledTileID>,
     const pitchWithMap = pitchAlignment === 'map';
 
     for (const coord of coords) {
-        const tile = sourceCache.getTile(coord);
+        const tile = tileManager.getTile(coord);
         const bucket = tile.getBucket(layer) as SymbolBucket;
         if (!bucket || !bucket.text || !bucket.text.segments.get().length) continue;
 
@@ -294,7 +294,7 @@ function getSymbolProgramName(isSDF: boolean, isText: boolean, bucket: SymbolBuc
 
 function drawLayerSymbols(
     painter: Painter,
-    sourceCache: SourceCache,
+    tileManager: TileManager,
     layer: SymbolStyleLayer,
     coords: Array<OverscaledTileID>,
     isText: boolean,
@@ -331,7 +331,7 @@ function drawLayerSymbols(
     const pitchedTextRescaling = transform.getCircleRadiusCorrection();
 
     for (const coord of coords) {
-        const tile = sourceCache.getTile(coord);
+        const tile = tileManager.getTile(coord);
         const bucket = tile.getBucket(layer) as SymbolBucket;
         if (!bucket) continue;
         const buffers = isText ? bucket.text : bucket.icon;

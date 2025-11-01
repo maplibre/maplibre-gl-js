@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'vitest';
-import {CanonicalTileID, OverscaledTileID} from '../source/tile_id';
+import {CanonicalTileID, OverscaledTileID} from './tile_id';
 import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util';
 
 describe('CanonicalTileID', () => {
@@ -58,7 +58,6 @@ describe('CanonicalTileID', () => {
     test('.url replaces {z}/{x}/{y}/{z}/{x}/{y}', () => {
         expect(new CanonicalTileID(2, 1, 0).url(['{z}/{x}/{y}/{z}/{x}/{y}.json'], 1)).toBe('2/1/0/2/1/0.json');
     });
-
 });
 
 describe('OverscaledTileID', () => {

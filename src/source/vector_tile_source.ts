@@ -2,14 +2,14 @@ import {Event, ErrorEvent, Evented} from '../util/evented';
 
 import {extend, pick} from '../util/util';
 import {loadTileJson} from './load_tilejson';
-import {TileBounds} from './tile_bounds';
+import {TileBounds} from '../tile/tile_bounds';
 import {ResourceType} from '../util/request_manager';
 
 import type {Source} from './source';
-import type {OverscaledTileID} from './tile_id';
+import type {OverscaledTileID} from '../tile/tile_id';
 import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
-import type {Tile} from './tile';
+import type {Tile} from '../tile/tile';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {WorkerTileParameters, WorkerTileResult} from './worker_source';
 import {MessageType} from '../util/actor_messages';
@@ -110,7 +110,7 @@ export class VectorTileSource extends Evented implements Source {
             const tileJSON = await loadTileJson(this._options, this.map._requestManager, this._tileJSONRequest);
             this._tileJSONRequest = null;
             this._loaded = true;
-            this.map.style.sourceCaches[this.id].clearTiles();
+            this.map.style.tileManagers[this.id].clearTiles();
             if (tileJSON) {
                 extend(this, tileJSON);
                 if (tileJSON.bounds) this.tileBounds = new TileBounds(tileJSON.bounds, this.minzoom, this.maxzoom);

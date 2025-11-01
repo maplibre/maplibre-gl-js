@@ -1,15 +1,29 @@
 ## main
 
 ### ✨ Features and improvements
+- Improve performance of `GeoJSONSource#updateData` when called on small diffs ([#6562](https://github.com/maplibre/maplibre-gl-js/pull/6562))
+- If the stylesheet lacks a `glyphs` property at the root level, interpret the `text-font` property as a cascading fallback list of font names and render all text using local or system fonts. ([#4564](https://github.com/maplibre/maplibre-gl-js/pull/4564))
+- ⚠️ Refactor SourceCache to TileManager ([#6635](https://github.com/maplibre/maplibre-gl-js/pull/6635)) - this is not a breaking change since SourceCache is not part of the public API, but if you have a plugin that uses internal stuff, it might break...
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- If a required glyph PBF is unavailable or it lacks a glyph for a character in a `text-field`, try to render it locally instead of crashing. ([#4564](https://github.com/maplibre/maplibre-gl-js/pull/4564))
+- _...Add new stuff here..._
+
+## 5.10.0
+
+### ✨ Features and improvements
 - Add time control API (`setNow`, `restoreNow`, `isTimeFrozen`) for deterministic rendering, enabling frame-by-frame video export and deterministic testing ([6544](https://github.com/maplibre/maplibre-gl-js/pull/6544))
 - Use styles `isHidden` logic in the worker by adding a new optional `roundMinZoom` parameter ([#6547](https://github.com/maplibre/maplibre-gl-js/pull/6547))
 - Add `transformConstrain` callback to the `Map` options to override the transform's `constrain` with new type `TransformConstrainFunction`; refactor transform constructor options to a `TransformOptions` object ([#6484](https://github.com/maplibre/maplibre-gl-js/issues/6484))
-- _...Add new stuff here..._
+- Use timeControl.now() instead of browser.now() ([6573](https://github.com/maplibre/maplibre-gl-js/pull/6573))
 
 ### 🐞 Bug fixes
 - Contextmenu events not blocked by scrolling ([#5683](https://github.com/maplibre/maplibre-gl-js/issues/5683)
 - Mousemove events are not blocked by scrolling ([#6302](https://github.com/maplibre/maplibre-gl-js/issues/6302))
 - Dashed lines have blurry rounded caps ([#6554](https://github.com/maplibre/maplibre-gl-js/pull/6554))
+- Preserve flyTo padding when prefers-reduced-motion is enabled ([#6576](https://github.com/maplibre/maplibre-gl-js/issues/6576))
+- Fix setClusterOptions not triggering recluster when no data changes are pending ([#6603](https://github.com/maplibre/maplibre-gl-js/pull/6603))
 
 ## 5.9.0
 

@@ -1,10 +1,10 @@
 import {describe, beforeAll, afterAll, test, expect} from 'vitest';
-import {TerrainSourceCache} from './terrain_source_cache';
+import {TerrainTileManager} from './terrain_tile_manager';
 import {Style} from '../style/style';
 import {RequestManager} from '../util/request_manager';
 import {type Dispatcher} from '../util/dispatcher';
 import {fakeServer, type FakeServer} from 'nise';
-import {RasterDEMTileSource} from './raster_dem_tile_source';
+import {RasterDEMTileSource} from '../source/raster_dem_tile_source';
 import {OverscaledTileID} from './tile_id';
 import {Tile} from './tile';
 import {type DEMData} from '../data/dem_data';
@@ -28,10 +28,10 @@ function createSource(options, transformCallback?) {
     return source;
 }
 
-describe('TerrainSourceCache', () => {
+describe('TerrainTileManager', () => {
     let server: FakeServer;
     let style: Style;
-    let tsc: TerrainSourceCache;
+    let tsc: TerrainTileManager;
 
     beforeAll(async () => {
         global.fetch = null;
@@ -55,7 +55,7 @@ describe('TerrainSourceCache', () => {
         const source = createSource({url: '/source.json'});
         server.respond();
         style.addSource('terrain', source as any);
-        tsc = new TerrainSourceCache(style.sourceCaches.terrain);
+        tsc = new TerrainTileManager(style.tileManagers.terrain);
     });
 
     afterAll(() => {
@@ -63,15 +63,15 @@ describe('TerrainSourceCache', () => {
     });
 
     test('constructor', () => {
-        expect(tsc.sourceCache.usedForTerrain).toBeTruthy();
-        expect(tsc.sourceCache.tileSize).toBe(tsc.sourceCache._source.tileSize * 2 ** tsc.deltaZoom);
+        expect(tsc.tileManager.usedForTerrain).toBeTruthy();
+        expect(tsc.tileManager.tileSize).toBe(tsc.tileManager._source.tileSize * 2 ** tsc.deltaZoom);
     });
 
     test('getSourceTile', () => {
         const tileID = new OverscaledTileID(5, 0, 5, 17, 11);
         const tile = new Tile(tileID, 256);
         tile.dem = {} as DEMData;
-        tsc.sourceCache._tiles[tileID.key] = tile;
+        tsc.tileManager._tiles[tileID.key] = tile;
         expect(tsc.deltaZoom).toBe(1);
         expect(tsc.getSourceTile(tileID)).toBeFalsy();
         expect(tsc.getSourceTile(tileID.children(12)[0])).toBeTruthy();
