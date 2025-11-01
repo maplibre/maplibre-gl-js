@@ -983,21 +983,16 @@ export class Style extends Evented {
         if (shouldValidate && this._validate(validateStyle.source, `sources.${id}`, source, null, options)) return;
         if (this.map && this.map._collectResourceTiming) (source as any).collectResourceTiming = true;
 
-        if (source.type === 'raster') {
-            this.tileManagers[id] = createTileManager(id, source as SourceSpecification, this.dispatcher, 'raster');
-        } else {
-            this.tileManagers[id] = createTileManager(id, source as SourceSpecification, this.dispatcher, 'vector');
-        }
-
-        const tileManager = this.tileManagers[id];
+        const tileManager = createTileManager(id, source as SourceSpecification, this.dispatcher, source.type);
         tileManager.style = this;
         tileManager.setEventedParent(this, () => ({
             isSourceLoaded: tileManager.loaded(),
             source: tileManager.serialize(),
             sourceId: id
         }));
-
         tileManager.onAdd(this.map);
+        this.tileManagers[id] = tileManager;
+
         this._changed = true;
     }
 

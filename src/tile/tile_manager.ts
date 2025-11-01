@@ -279,7 +279,7 @@ export class TileManager extends Evented {
     /**
      * Return all tile ids ordered with z-order, and cast to numbers
      */
-    getIds(): Array<string> {
+    getSortedIds(): Array<string> {
         return Object.values(this._tiles).map(tile => tile.tileID).sort(compareTileId).map(id => id.key);
     }
 

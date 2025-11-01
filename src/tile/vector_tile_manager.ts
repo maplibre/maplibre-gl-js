@@ -102,11 +102,11 @@ export class VectorTileStrategy implements TileManagerStrategy {
         const cameraQueryGeometry = this._transformBbox(cameraPointQueryGeometry, project, !allowWorldCopies);
         const cameraBounds = Bounds.fromPoints(cameraQueryGeometry);
 
-        const ids = this.tileManager.getIds();
+        const sortedIds = this.tileManager.getSortedIds();
         const tiles = this.tileManager.getTiles();
 
-        for (let i = 0; i < ids.length; i++) {
-            const tile = tiles[ids[i]];
+        for (let i = 0; i < sortedIds.length; i++) {
+            const tile = tiles[sortedIds[i]];
             if (tile.holdingForSymbolFade()) {
                 // Tiles held for fading are covered by tiles that are closer to ideal
                 continue;

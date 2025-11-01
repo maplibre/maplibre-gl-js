@@ -580,7 +580,7 @@ describe('TileManager.update', () => {
         tileManager.onAdd(undefined);
         await dataPromise;
         tileManager.update(transform);
-        expect(tileManager.getIds()).toEqual([]);
+        expect(tileManager.getSortedIds()).toEqual([]);
     });
 
     test('loads covering tiles', async () => {
@@ -593,7 +593,7 @@ describe('TileManager.update', () => {
         tileManager.onAdd(undefined);
         await dataPromise;
         tileManager.update(transform);
-        expect(tileManager.getIds()).toEqual([new OverscaledTileID(0, 0, 0, 0, 0).key]);
+        expect(tileManager.getSortedIds()).toEqual([new OverscaledTileID(0, 0, 0, 0, 0).key]);
     });
 
     test('adds ideal (covering) tiles only once for zoom level on raster maps', async () => {
@@ -658,7 +658,7 @@ describe('TileManager.update', () => {
         tileManager.onAdd(undefined);
         await dataPromise;
         tileManager.update(transform);
-        expect(tileManager.getIds().sort()).toEqual([
+        expect(tileManager.getSortedIds().sort()).toEqual([
             new OverscaledTileID(1, 0, 1, 1, 0).key,
             new OverscaledTileID(1, 0, 1, 1, 1).key
         ].sort());
@@ -678,12 +678,12 @@ describe('TileManager.update', () => {
         tileManager.onAdd(undefined);
         await dataPromise;
         tileManager.update(transform);
-        expect(tileManager.getIds()).toEqual([new OverscaledTileID(0, 0, 0, 0, 0).key]);
+        expect(tileManager.getSortedIds()).toEqual([new OverscaledTileID(0, 0, 0, 0, 0).key]);
 
         transform.setZoom(1);
         tileManager.update(transform);
 
-        expect(tileManager.getIds()).toEqual([
+        expect(tileManager.getSortedIds()).toEqual([
             new OverscaledTileID(1, 0, 1, 1, 1).key,
             new OverscaledTileID(1, 0, 1, 0, 1).key,
             new OverscaledTileID(1, 0, 1, 1, 0).key,
@@ -707,12 +707,12 @@ describe('TileManager.update', () => {
         tileManager.onAdd(undefined);
         await dataPromise;
         tileManager.update(transform);
-        expect(tileManager.getIds()).toEqual([new OverscaledTileID(0, 0, 0, 0, 0).key]);
+        expect(tileManager.getSortedIds()).toEqual([new OverscaledTileID(0, 0, 0, 0, 0).key]);
 
         transform.setZoom(1);
         tileManager.update(transform);
 
-        expect(tileManager.getIds()).toEqual([
+        expect(tileManager.getSortedIds()).toEqual([
             new OverscaledTileID(0, 0, 0, 0, 0).key,
             new OverscaledTileID(1, 0, 1, 1, 1).key,
             new OverscaledTileID(1, 0, 1, 0, 1).key,
@@ -736,12 +736,12 @@ describe('TileManager.update', () => {
         tileManager.onAdd(undefined);
         await dataPromise;
         tileManager.update(transform);
-        expect(tileManager.getIds()).toEqual([new OverscaledTileID(0, 1, 0, 0, 0).key]);
+        expect(tileManager.getSortedIds()).toEqual([new OverscaledTileID(0, 1, 0, 0, 0).key]);
 
         transform.setZoom(1);
         tileManager.update(transform);
 
-        expect(tileManager.getIds()).toEqual([
+        expect(tileManager.getSortedIds()).toEqual([
             new OverscaledTileID(0, 1, 0, 0, 0).key,
             new OverscaledTileID(1, 1, 1, 1, 1).key,
             new OverscaledTileID(1, 1, 1, 0, 1).key,
@@ -764,7 +764,7 @@ describe('TileManager.update', () => {
         tileManager.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 tileManager.update(transform);
-                expect(tileManager.getIds()).toEqual([
+                expect(tileManager.getSortedIds()).toEqual([
                     new OverscaledTileID(1, 1, 1, 1, 1).key,
                     new OverscaledTileID(1, 1, 1, 0, 1).key,
                     new OverscaledTileID(1, 1, 1, 1, 0).key,
@@ -774,7 +774,7 @@ describe('TileManager.update', () => {
                 transform.setZoom(0);
                 tileManager.update(transform);
 
-                expect(tileManager.getIds()).toEqual([
+                expect(tileManager.getSortedIds()).toEqual([
                     new OverscaledTileID(0, 1, 0, 0, 0).key,
                     new OverscaledTileID(1, 1, 1, 1, 1).key,
                     new OverscaledTileID(1, 1, 1, 0, 1).key,
@@ -834,13 +834,13 @@ describe('TileManager.update', () => {
         transform.setCenter(new LngLat(360, 0));
         const tileID = new OverscaledTileID(0, 1, 0, 0, 0);
         tileManager.update(transform);
-        expect(tileManager.getIds()).toEqual([tileID.key]);
+        expect(tileManager.getSortedIds()).toEqual([tileID.key]);
         const tile = tileManager.getTile(tileID);
 
         transform.setCenter(new LngLat(0, 0));
         const wrappedTileID = new OverscaledTileID(0, 0, 0, 0, 0);
         tileManager.update(transform);
-        expect(tileManager.getIds()).toEqual([wrappedTileID.key]);
+        expect(tileManager.getSortedIds()).toEqual([wrappedTileID.key]);
         expect(tileManager.getTile(wrappedTileID)).toBe(tile);
     });
 
@@ -1027,7 +1027,7 @@ describe('TileManager._updateRetainedTiles', () => {
         stateCache[idealTile.key] = 'loaded';
         tileManager._updateRetainedTiles([idealTile], 1);
         expect(getTileSpy).not.toHaveBeenCalled();
-        expect(tileManager.getIds()).toEqual([idealTile.key]);
+        expect(tileManager.getSortedIds()).toEqual([idealTile.key]);
     });
 
     test('_updateRetainedTiles retains all loaded children (and parent when coverage is incomplete)', () => {
@@ -1694,7 +1694,7 @@ describe('TileManager.tilesIn', () => {
         await dataPromise;
         tileManager.update(transform);
 
-        expect(tileManager.getIds()).toEqual([
+        expect(tileManager.getSortedIds()).toEqual([
             new OverscaledTileID(1, 0, 1, 1, 1).key,
             new OverscaledTileID(1, 0, 1, 0, 1).key,
             new OverscaledTileID(1, 0, 1, 1, 0).key,
@@ -1739,7 +1739,7 @@ describe('TileManager.tilesIn', () => {
                 transform.setCenter(new LngLat(0, 1));
                 tileManager.update(transform);
 
-                expect(tileManager.getIds()).toEqual([
+                expect(tileManager.getSortedIds()).toEqual([
                     new OverscaledTileID(2, 0, 1, 1, 1).key,
                     new OverscaledTileID(2, 0, 1, 0, 1).key,
                     new OverscaledTileID(2, 0, 1, 1, 0).key,
@@ -1806,7 +1806,7 @@ describe('TileManager.tilesIn', () => {
 
         tileManager.update(transform);
 
-        expect(tileManager.getIds()).toEqual([
+        expect(tileManager.getSortedIds()).toEqual([
             new OverscaledTileID(1, 1, 1, 0, 1).key,
             new OverscaledTileID(1, 1, 1, 0, 0).key,
             new OverscaledTileID(1, 0, 1, 1, 1).key,
@@ -1825,7 +1825,7 @@ describe('TileManager.tilesIn', () => {
         transform.setCenter(new LngLat(-179.9, 0.1));
         tileManager.update(transform);
 
-        expect(tileManager.getIds()).toEqual([
+        expect(tileManager.getSortedIds()).toEqual([
             new OverscaledTileID(1, -1, 1, 1, 1).key,
             new OverscaledTileID(1, -1, 1, 1, 0).key,
             new OverscaledTileID(1, 0, 1, 0, 1).key,
@@ -1971,7 +1971,7 @@ describe('TileManager.tilesIn', () => {
 
         tileManager.update(transform);
 
-        expect(tileManager.getIds()).toEqual([
+        expect(tileManager.getSortedIds()).toEqual([
             new OverscaledTileID(1, 1, 1, 0, 1).key,
             new OverscaledTileID(1, 1, 1, 0, 0).key,
             new OverscaledTileID(1, 0, 1, 1, 1).key,
@@ -1990,7 +1990,7 @@ describe('TileManager.tilesIn', () => {
         transform.setCenter(new LngLat(-179.9, 0.1));
         tileManager.update(transform);
 
-        expect(tileManager.getIds()).toEqual([
+        expect(tileManager.getSortedIds()).toEqual([
             new OverscaledTileID(1, -1, 1, 1, 1).key,
             new OverscaledTileID(1, -1, 1, 1, 0).key,
             new OverscaledTileID(1, 0, 1, 0, 1).key,
@@ -2287,7 +2287,7 @@ describe('tile manager get ids', () => {
         for (let i = 0; i < ids.length; i++) {
             tileManager._tiles[ids[i].key] = {tileID: ids[i]} as any as Tile;
         }
-        expect(tileManager.getIds()).toEqual([
+        expect(tileManager.getSortedIds()).toEqual([
             new OverscaledTileID(0, 0, 0, 0, 0).key,
             new OverscaledTileID(1, 0, 1, 0, 0).key,
             new OverscaledTileID(2, 0, 2, 0, 0).key,

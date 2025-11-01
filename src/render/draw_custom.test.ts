@@ -1,4 +1,4 @@
-import {describe, test, expect, vi, type Mock} from 'vitest';
+import {describe, test, expect, vi} from 'vitest';
 import {OverscaledTileID} from '../tile/tile_id';
 import {type TileManager} from '../tile/tile_manager';
 import {Tile} from '../tile/tile';
