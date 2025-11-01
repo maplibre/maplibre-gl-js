@@ -1,8 +1,6 @@
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {type TileManager} from './tile_manager';
-import {RasterTileManager} from './raster_tile_manager';
-import {VectorTileManager} from './vector_tile_manager';
+import {createTileManager as create, type TileManager} from './tile_manager';
 import {type Source, addSourceType} from '../source/source';
 import {Tile, FadingRoles, FadingDirections} from './tile';
 import {CanonicalTileID, OverscaledTileID} from './tile_id';
@@ -15,7 +13,7 @@ import {TileBounds} from './tile_bounds';
 import {sleep, waitForEvent, beforeMapTest, createMap as globalCreateMap} from '../util/test/util';
 
 import {type Map} from '../ui/map';
-import {type TileCache} from './tile_cache';
+import {type RasterTileStrategy} from './raster_tile_manager';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {GlobeTransform} from '../geo/projection/globe_transform';
 import {coveringTiles} from '../geo/projection/covering_tiles';
@@ -90,13 +88,7 @@ function createTileManager(options?, used?): TileManager {
         type: 'mock-source-type'
     }, options);
 
-    let sc: TileManager;
-    if (options.raster) {
-        sc = new RasterTileManager('id', options, {} as Dispatcher);
-    } else {
-        sc = new VectorTileManager('id', options, {} as Dispatcher);
-    }
-    
+    const sc: TileManager = create('id', options, {} as Dispatcher, options.raster ? 'raster' : 'vector');
     const scWithTestLogic = extend(sc, {
         used: typeof used === 'boolean' ? used : true
     });
@@ -178,7 +170,7 @@ describe('TileManager.addTile', () => {
 
         const tr = new MercatorTransform();
         tr.resize(512, 512);
-        tileManager.updateCacheSize(tr);
+        tileManager._updateCacheSize(tr);
         tileManager._addTile(tileID);
         tileManager.removeTile(tileID.key);
         tileManager._addTile(tileID);
@@ -198,7 +190,7 @@ describe('TileManager.addTile', () => {
 
         const tr = new MercatorTransform();
         tr.resize(512, 512);
-        tileManager.updateCacheSize(tr);
+        tileManager._updateCacheSize(tr);
 
         const tile = tileManager._addTile(tileID);
         const updateFeaturesSpy = vi.spyOn(tile, 'setFeatureState');
@@ -227,7 +219,7 @@ describe('TileManager.addTile', () => {
 
         const tr = new MercatorTransform();
         tr.resize(512, 512);
-        tileManager.updateCacheSize(tr);
+        tileManager._updateCacheSize(tr);
 
         const id = tileID.key;
         expect(tileManager._timers[id]).toBeFalsy();
@@ -316,7 +308,7 @@ describe('TileManager.removeTile', () => {
 
         const tr = new MercatorTransform();
         tr.resize(512, 512);
-        tileManager.updateCacheSize(tr);
+        tileManager._updateCacheSize(tr);
 
         tileManager._addTile(tileID);
         tileManager.removeTile(tileID.key);
@@ -637,8 +629,8 @@ describe('TileManager.update', () => {
         await map.once('styledata');
 
         const style = map.style;
-        const tileManager = style.tileManagers['rasterSource'] as RasterTileManager;
-        const spy = vi.spyOn(tileManager, '_updateFadingTiles');
+        const tileManager = style.tileManagers['rasterSource'];
+        const spy = vi.spyOn(tileManager._strategy as RasterTileStrategy, '_updateFadingTiles');
         tileManager._loadTile = async () => {};
 
         const fakeTile = new Tile(new OverscaledTileID(3, 0, 3, 1, 2), undefined);
@@ -857,7 +849,7 @@ describe('TileManager.update', () => {
         transform.resize(1024, 1024);
         transform.setZoom(10);
 
-        const tileManager = createTileManager({raster: true}) as RasterTileManager;
+        const tileManager = createTileManager({raster: true});
         const loadedTiles: Record<string, Tile> = {};
         tileManager._source.loadTile = async (tile) => {
             loadedTiles[tile.tileID.key] = tile;
@@ -895,7 +887,7 @@ describe('TileManager.update', () => {
         transform.resize(512, 512);
         transform.setZoom(10);
 
-        const tileManager = createTileManager({raster: true}) as RasterTileManager;
+        const tileManager = createTileManager({raster: true});
         const loadedTiles: Record<string, Tile> = {};
         tileManager._source.loadTile = async (tile) => {
             loadedTiles[tile.tileID.key] = tile;
@@ -933,7 +925,7 @@ describe('TileManager.update', () => {
         transform.resize(512, 512);
         transform.setZoom(10);
 
-        const tileManager = createTileManager({raster: true}) as RasterTileManager;
+        const tileManager = createTileManager({raster: true});
         const loadedTiles: Record<string, Tile> = {};
         tileManager._source.loadTile = async (tile) => {
             loadedTiles[tile.tileID.key] = tile;
@@ -979,7 +971,7 @@ describe('TileManager.update', () => {
         transform.resize(512, 512);
         transform.setZoom(10);
 
-        const tileManager = createTileManager({raster: true}) as RasterTileManager;
+        const tileManager = createTileManager({raster: true});
         const loadedTiles: Record<string, Tile> = {};
         tileManager._source.loadTile = async (tile) => {
             loadedTiles[tile.tileID.key] = tile;
@@ -1670,7 +1662,7 @@ describe('TileManager.tilesIn', () => {
     test('graceful response before source loaded', () => {
         const tr = new MercatorTransform();
         tr.resize(512, 512);
-        const tileManager = createTileManager({noLoad: true}) as VectorTileManager;
+        const tileManager = createTileManager({noLoad: true});
         tileManager.transform = tr;
         tileManager.onAdd(undefined);
         expect(tileManager.tilesIn([
@@ -1692,7 +1684,7 @@ describe('TileManager.tilesIn', () => {
         transform.setZoom(1);
         transform.setCenter(new LngLat(0, 1));
 
-        const tileManager = createTileManager() as VectorTileManager;
+        const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'loaded';
         };
@@ -1734,7 +1726,7 @@ describe('TileManager.tilesIn', () => {
             minzoom: 1,
             maxzoom: 1,
             tileSize: 512
-        }) as VectorTileManager;
+        });
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'loaded';
         };
@@ -1803,7 +1795,7 @@ describe('TileManager.tilesIn', () => {
         transform.setZoom(1.05);
         transform.setCenter(new LngLat(179.9, 0.1));
 
-        const tileManager = createTileManager() as VectorTileManager;
+        const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'loaded';
         };
@@ -1856,7 +1848,7 @@ describe('TileManager.tilesIn', () => {
         transform.setZoom(1.05);
         transform.setCenter(new LngLat(179.9, 0.1));
 
-        const tileManager = createTileManager() as VectorTileManager;
+        const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'loaded';
         };
@@ -1912,7 +1904,7 @@ describe('TileManager.tilesIn', () => {
         transform.setZoom(1.05);
         transform.setCenter(new LngLat(-179.9, 0.1));
 
-        const tileManager = createTileManager() as VectorTileManager;
+        const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'loaded';
         };
@@ -1968,7 +1960,7 @@ describe('TileManager.tilesIn', () => {
         transform.setZoom(1.05);
         transform.setCenter(new LngLat(179.9, 0.1));
 
-        const tileManager = createTileManager() as VectorTileManager;
+        const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'loaded';
         };
@@ -2021,7 +2013,7 @@ describe('TileManager.tilesIn', () => {
         transform.setZoom(1.05);
         transform.setCenter(new LngLat(179.9, 0.1));
 
-        const tileManager = createTileManager() as VectorTileManager;
+        const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'loaded';
         };
@@ -2077,7 +2069,7 @@ describe('TileManager.tilesIn', () => {
         transform.setZoom(1.05);
         transform.setCenter(new LngLat(-179.9, 0.1));
     
-        const tileManager = createTileManager() as VectorTileManager;
+        const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'loaded';
         };
@@ -2344,7 +2336,7 @@ describe('TileManager sets max cache size correctly', () => {
 
         const tr = new MercatorTransform();
         tr.resize(512, 512);
-        tileManager.updateCacheSize(tr);
+        tileManager._updateCacheSize(tr);
 
         // Expect max size to be ((512 / tileSize + 1) ^ 2) * 5 => 3 * 3 * 5
         expect(tileManager._cache.max).toBe(45);
@@ -2357,7 +2349,7 @@ describe('TileManager sets max cache size correctly', () => {
 
         const tr = new MercatorTransform();
         tr.resize(512, 512);
-        tileManager.updateCacheSize(tr);
+        tileManager._updateCacheSize(tr);
 
         // Expect max size to be ((512 / tileSize + 1) ^ 2) * 5 => 2 * 2 * 5
         expect(tileManager._cache.max).toBe(20);

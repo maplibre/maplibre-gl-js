@@ -1,6 +1,6 @@
 import {create as createSource} from '../source/source';
 
-import {VectorTileStrategy} from './vector_tile_manager';
+import {VectorTileStrategy, type TileResult} from './vector_tile_manager';
 import {RasterTileStrategy} from './raster_tile_manager';
 import {Tile} from './tile';
 import {TileCache} from './tile_cache';
@@ -46,16 +46,6 @@ export function createTileManager(
  */
 export interface TileManagerStrategy {
     /**
-     * Process the tile when retrieved from cache
-     */
-    onTileRetrievedFromCache(tile: Tile): void;
-
-    /**
-     * Perform post-update logic
-     */
-    onFinishUpdate(idealTileIDs: OverscaledTileID[], retain: Record<string, OverscaledTileID>): void;
-
-    /**
      * Clean up tiles that are no longer retained
      */
     cleanUpTiles(tiles: Record<string, Tile>, retain: Record<string, OverscaledTileID>, removeTile: (id: string) => void): void;
@@ -71,6 +61,16 @@ export interface TileManagerStrategy {
     hasTransition(source: Source, tiles: Record<string, Tile>): boolean;
 
     /**
+     * Process the tile when retrieved from cache
+     */
+    onTileRetrievedFromCache?(tile: Tile): void;
+
+    /**
+     * Perform post-update logic
+     */
+    onFinishUpdate?(idealTileIDs: OverscaledTileID[], retain: Record<string, OverscaledTileID>): void;
+
+    /**
      * Release tiles held for fading (optional, mainly for vector tiles with symbols)
      */
     releaseSymbolFadeTiles?(): void;
@@ -79,6 +79,11 @@ export interface TileManagerStrategy {
      * Set raster fade duration (optional, only for raster tiles)
      */
     setRasterFadeDuration?(fadeDuration: number): void;
+
+    /**
+     * Tiles in a given query geometry
+     */
+    tilesIn?(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean): TileResult[];
 }
 
 /**
@@ -135,7 +140,7 @@ export class TileManager extends Evented {
     static maxOverzooming: number;
 
     /**
-     * Overridable function for extending classes to process the tile when retrieved from cache
+     * Overridable function for extending classes to process the tile when retrieved from cache.
      */
     constructor(id: string, options: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher) {
         super();
@@ -553,7 +558,7 @@ export class TileManager extends Evented {
      * are more likely to be found on devices with more memory and on pages where
      * the map is more important.
      */
-    updateCacheSize(transform: IReadonlyTransform) {
+    _updateCacheSize(transform: IReadonlyTransform) {
         const widthInTiles = Math.ceil(transform.width / this._source.tileSize) + 1;
         const heightInTiles = Math.ceil(transform.height / this._source.tileSize) + 1;
         const approxTilesInView = widthInTiles * heightInTiles;
@@ -566,7 +571,7 @@ export class TileManager extends Evented {
         this._cache.setMaxSize(maxSize);
     }
 
-    handleWrapJump(lng: number) {
+    _handleWrapJump(lng: number) {
         // On top of the regular z/x/y values, TileIDs have a `wrap` value that specify
         // which copy of the world the tile belongs to. For example, at `lng: 10` you
         // might render z/x/y/0 while at `lng: 370` you would render z/x/y/1.
@@ -612,8 +617,8 @@ export class TileManager extends Evented {
         this.transform = transform;
         this.terrain = terrain;
 
-        this.updateCacheSize(transform);
-        this.handleWrapJump(this.transform.center.lng);
+        this._updateCacheSize(transform);
+        this._handleWrapJump(this.transform.center.lng);
 
         let idealTileIDs: OverscaledTileID[];
 
@@ -658,7 +663,7 @@ export class TileManager extends Evented {
         const retain: Record<string, OverscaledTileID> = this._updateRetainedTiles(idealTileIDs, zoom);
 
         // delegate to strategy for post-update logic
-        this._strategy.onFinishUpdate(idealTileIDs, retain);
+        this._strategy.onFinishUpdate?.(idealTileIDs, retain);
 
         // delegate to strategy for tile cleanup
         this._strategy.cleanUpTiles(this._tiles, retain, (id) => this.removeTile(id));
@@ -755,7 +760,7 @@ export class TileManager extends Evented {
         tile = this._cache.getAndRemove(tileID);
         if (tile) {
             //allow strategy to process the tile when retrieved from cache
-            this._strategy.onTileRetrievedFromCache(tile);
+            this._strategy.onTileRetrievedFromCache?.(tile);
 
             // set timer for the reloading of the tile upon expiration
             this._setTileReloadTimer(tileID.key, tile);
@@ -916,6 +921,10 @@ export class TileManager extends Evented {
      */
     setRasterFadeDuration(fadeDuration: number) {
         this._strategy.setRasterFadeDuration?.(fadeDuration);
+    }
+
+    tilesIn(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean): TileResult[] {
+        return this._strategy.tilesIn?.(pointQueryGeometry, maxPitchScaleFactor, has3DLayer) ?? [];
     }
 
     /**

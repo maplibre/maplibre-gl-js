@@ -18,9 +18,7 @@ import {Dispatcher} from '../util/dispatcher';
 import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
 import {type Source} from '../source/source';
 import {type QueryRenderedFeaturesOptions, type QueryRenderedFeaturesOptionsStrict, type QueryRenderedFeaturesResults, type QueryRenderedFeaturesResultsItem, type QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
-import {type TileManager, isRasterType} from '../tile/tile_manager';
-import {VectorTileManager} from '../tile/vector_tile_manager';
-import {RasterTileManager} from '../tile/raster_tile_manager';
+import {createTileManager, type TileManager} from '../tile/tile_manager';
 import {type GeoJSONSource} from '../source/geojson_source';
 import {latest as styleSpec, derefLayers, emptyStyle, diff as diffStyles, type DiffCommand} from '@maplibre/maplibre-gl-style-spec';
 import {getGlobalWorkerPool} from '../util/global_worker_pool';
@@ -31,7 +29,6 @@ import {ZoomHistory} from './zoom_history';
 import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index';
 import {validateCustomStyleLayer} from './style_layer/custom_style_layer';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
-import type {RasterSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type Point from '@mapbox/point-geometry';
 
 // We're skipping validation errors with the `source.canvas` identifier in order
@@ -488,7 +485,7 @@ export class Style extends Evented {
 
             if (isRasterStyleLayer(styledLayer) && this.tileManagers[styledLayer.source]) {
                 const rasterFadeDuration = layer.paint?.['raster-fade-duration'] ?? styledLayer.paint.get('raster-fade-duration');
-                (this.tileManagers[styledLayer.source] as RasterTileManager).setRasterFadeDuration(rasterFadeDuration);
+                this.tileManagers[styledLayer.source].setRasterFadeDuration(rasterFadeDuration);
             }
         }
     }
@@ -986,10 +983,10 @@ export class Style extends Evented {
         if (shouldValidate && this._validate(validateStyle.source, `sources.${id}`, source, null, options)) return;
         if (this.map && this.map._collectResourceTiming) (source as any).collectResourceTiming = true;
 
-        if (isRasterType(source.type)) {
-            this.tileManagers[id] = new RasterTileManager(id, source as RasterSourceSpecification, this.dispatcher);
+        if (source.type === 'raster') {
+            this.tileManagers[id] = createTileManager(id, source as SourceSpecification, this.dispatcher, 'raster');
         } else {
-            this.tileManagers[id] = new VectorTileManager(id, source as SourceSpecification, this.dispatcher);
+            this.tileManagers[id] = createTileManager(id, source as SourceSpecification, this.dispatcher, 'vector');
         }
 
         const tileManager = this.tileManagers[id];
@@ -1336,11 +1333,8 @@ export class Style extends Evented {
             this._updateLayer(layer);
         }
 
-        if (isRasterStyleLayer(layer) && name === 'raster-fade-duration') {
-            const tileManager = this.tileManagers[layer.source];
-            if (tileManager instanceof RasterTileManager) {
-                tileManager.setRasterFadeDuration(value);
-            }
+        if (name === 'raster-fade-duration') {
+            this.tileManagers[layer.source].setRasterFadeDuration(value);
         }
 
         this._changed = true;
@@ -1586,8 +1580,6 @@ export class Style extends Evented {
 
         for (const id in this.tileManagers) {
             const tileManager = this.tileManagers[id];
-            if (!(tileManager instanceof VectorTileManager)) continue;
-
             if (params.layers && !includedSources[id]) continue;
 
             sourceResults.push(
@@ -1863,10 +1855,7 @@ export class Style extends Evented {
 
     _releaseSymbolFadeTiles() {
         for (const id in this.tileManagers) {
-            const tileManager = this.tileManagers[id];
-            if (tileManager instanceof VectorTileManager) {
-                tileManager.releaseSymbolFadeTiles();
-            }
+            this.tileManagers[id].releaseSymbolFadeTiles();
         }
     }
 

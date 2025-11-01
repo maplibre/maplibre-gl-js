@@ -10,7 +10,6 @@ import {browser} from '../util/browser';
 import {OverscaledTileID} from '../tile/tile_id';
 import {fakeServer, type FakeServer} from 'nise';
 
-import {type VectorTileManager} from '../tile/vector_tile_manager';
 import {type EvaluationParameters} from './evaluation_parameters';
 import {Color, type Feature, type LayerSpecification, type GeoJSONSourceSpecification, type FilterSpecification, type SourceSpecification, type StyleSpecification, type SymbolLayerSpecification, type SkySpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type GeoJSONSource} from '../source/geojson_source';
@@ -2927,7 +2926,7 @@ describe('Style.queryRenderedFeatures', () => {
         });
 
         style.on('style.load', () => {
-            (style.tileManagers.mapLibre as VectorTileManager).tilesIn = () => {
+            style.tileManagers.mapLibre.tilesIn = () => {
                 return [{
                     tile: {queryRenderedFeatures: queryMapLibreFeatures} as unknown as Tile,
                     tileID: new OverscaledTileID(0, 0, 0, 0, 0),
@@ -2936,7 +2935,7 @@ describe('Style.queryRenderedFeatures', () => {
                     cameraQueryGeometry: []
                 }];
             };
-            (style.tileManagers.other as VectorTileManager).tilesIn = () => {
+            style.tileManagers.other.tilesIn = () => {
                 return [];
             };
 
@@ -3149,7 +3148,7 @@ describe('Style.query*Features', () => {
         const tileManager = style.tileManagers['geojson'];
         tileManager.transform = transform;
         const queryRenderedFeatures = vi.fn().mockReturnValue([]);
-        vi.spyOn(tileManager as VectorTileManager, 'tilesIn').mockReturnValue([{
+        vi.spyOn(tileManager, 'tilesIn').mockReturnValue([{
             tile: {
                 queryRenderedFeatures
             } as unknown as Tile,

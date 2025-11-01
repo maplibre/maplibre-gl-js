@@ -1,7 +1,6 @@
 import {mat4} from 'gl-matrix';
 import type Point from '@mapbox/point-geometry';
 import type {TileManager} from '../tile/tile_manager';
-import type {VectorTileManager} from '../tile/vector_tile_manager';
 import type {StyleLayer} from '../style/style_layer';
 import type {CollisionIndex} from '../symbol/collision_index';
 import type {IReadonlyTransform} from '../geo/transform_interface';
@@ -116,7 +115,7 @@ function queryIncludes3DLayer(layers: Set<string> | undefined, styleLayers: {[_:
 }
 
 export function queryRenderedFeatures(
-    tileManager: VectorTileManager,
+    tileManager: TileManager,
     styleLayers: {[_: string]: StyleLayer},
     serializedLayers: {[_: string]: any},
     queryGeometry: Array<Point>,

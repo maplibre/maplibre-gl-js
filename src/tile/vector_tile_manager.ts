@@ -8,7 +8,7 @@ import type {OverscaledTileID} from './tile_id';
 import type {Source} from '../source/source';
 import type Point from '@mapbox/point-geometry';
 
-type TileResult = {
+export type TileResult = {
     tile: Tile;
     tileID: OverscaledTileID;
     queryGeometry: Array<Point>;
@@ -29,14 +29,6 @@ export class VectorTileStrategy implements TileManagerStrategy {
 
     constructor(tileManager: TileManager) {
         this.tileManager = tileManager;
-    }
-
-    onTileRetrievedFromCache(_tile: Tile): void {
-        // Vector tiles don't need special cache retrieval handling
-    }
-
-    onFinishUpdate(_idealTileIDs: OverscaledTileID[], _retain: Record<string, OverscaledTileID>): void {
-        // Vector tiles don't need post-update logic
     }
 
     cleanUpTiles(tiles: Record<string, Tile>, retain: Record<string, OverscaledTileID>, removeTile: (id: string) => void): void {
@@ -106,8 +98,8 @@ export class VectorTileStrategy implements TileManagerStrategy {
             pointQueryGeometry;
 
         const project = (point: Point) => transform.screenPointToMercatorCoordinate(point, this.tileManager.terrain);
-        const queryGeometry = this.transformBbox(pointQueryGeometry, project, !allowWorldCopies);
-        const cameraQueryGeometry = this.transformBbox(cameraPointQueryGeometry, project, !allowWorldCopies);
+        const queryGeometry = this._transformBbox(pointQueryGeometry, project, !allowWorldCopies);
+        const cameraQueryGeometry = this._transformBbox(cameraPointQueryGeometry, project, !allowWorldCopies);
         const cameraBounds = Bounds.fromPoints(cameraQueryGeometry);
 
         const ids = this.tileManager.getIds();
@@ -148,7 +140,7 @@ export class VectorTileStrategy implements TileManagerStrategy {
         return tileResults;
     }
 
-    private transformBbox(geom: Point[], project: (point: Point) => MercatorCoordinate, checkWrap: boolean): MercatorCoordinate[] {
+    _transformBbox(geom: Point[], project: (point: Point) => MercatorCoordinate, checkWrap: boolean): MercatorCoordinate[] {
         let transformed = geom.map(project);
         if (checkWrap) {
             // If the projection does not allow world copies, then a bounding box may span the antimeridian and
