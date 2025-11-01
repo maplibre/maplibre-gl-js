@@ -205,9 +205,6 @@ export class MercatorTransform implements ITransform {
     get cameraToCenterDistance(): number { 
         return this._helper.cameraToCenterDistance;
     }
-    get constrain(): TransformConstrainFunction {
-        return this._helper.constrain;
-    }
     get transformConstrain(): TransformConstrainFunction {
         return this._helper.transformConstrain;
     }
@@ -249,7 +246,7 @@ export class MercatorTransform implements ITransform {
     constructor(options?: TransformOptions) {
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
-            constrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
+            defaultConstrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
         }, options);
         this._coveringTilesDetailsProvider = new MercatorCoveringTilesDetailsProvider();
     }
@@ -543,6 +540,10 @@ export class MercatorTransform implements ITransform {
         }
 
         return result;
+    };
+
+    getConstrain: TransformConstrainFunction = (lngLat, zoom) => {
+        return this._helper.getConstrain(lngLat, zoom);
     };
 
     calculateCenterFromCameraLngLatAlt(lnglat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {

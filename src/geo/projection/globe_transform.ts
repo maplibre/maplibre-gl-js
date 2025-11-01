@@ -206,9 +206,6 @@ export class GlobeTransform implements ITransform {
     get cameraToCenterDistance(): number {
         return this._helper.cameraToCenterDistance;
     }
-    get constrain(): TransformConstrainFunction {
-        return this._helper.constrain;
-    }
     get transformConstrain(): TransformConstrainFunction {
         return this._helper.transformConstrain;
     }
@@ -259,7 +256,7 @@ export class GlobeTransform implements ITransform {
     public constructor(options?: TransformOptions) {
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
-            constrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
+            defaultConstrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
         }, options);
         this._globeness = 1; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.
         this._mercatorTransform = new MercatorTransform();
@@ -404,6 +401,10 @@ export class GlobeTransform implements ITransform {
 
     defaultConstrain: TransformConstrainFunction = (lngLat, zoom) => {
         return this.currentTransform.defaultConstrain(lngLat, zoom);
+    };
+
+    getConstrain: TransformConstrainFunction = (lngLat, zoom) => {
+        return this._helper.getConstrain(lngLat, zoom);
     };
 
     calculateCenterFromCameraLngLatAlt(lngLat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {

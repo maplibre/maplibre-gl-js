@@ -95,10 +95,7 @@ export interface ITransformGetters {
     get nearZ(): number;
     get farZ(): number;
     get autoCalculateNearFarZ(): boolean;
-    /**
-     * Get center lngLat and zoom to ensure that longitude and latitude bounds are respected and regions beyond the map bounds are not displayed.
-     */
-    get constrain(): TransformConstrainFunction;
+
     get transformConstrain(): TransformConstrainFunction;
 }
 
@@ -367,6 +364,11 @@ export interface IReadonlyTransform extends ITransformGetters {
      * The tranform's default callback that ensures that longitude and latitude bounds are respected by the viewport.
      */
     defaultConstrain: TransformConstrainFunction;
+
+    /**
+     * Get center lngLat and zoom to ensure that longitude and latitude bounds are respected and regions beyond the map bounds are not displayed.
+     */
+    getConstrain: TransformConstrainFunction;
 
     maxPitchScaleFactor(): number;
 
