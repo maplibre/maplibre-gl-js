@@ -190,16 +190,14 @@ class TileLayerIndex {
                 // paired with any entry in the index.
                 let i = 0;
                 let j = 0;
-                while (i < indexes.length && j < symbolInstancesAtCoordinate.length) {
+                while (i < entry.crossTileIDs.length && j < Math.min(indexes.length, symbolInstancesAtCoordinate.length)) {
                     const crossTileID = entry.crossTileIDs[i];
-                    const symbolInstanceAtCoordinate = symbolInstancesAtCoordinate[j];
-
                     if (!zoomCrossTileIDs[crossTileID]) {
                         // Once we've marked ourselves duplicate against this parent symbol,
                         // don't let any other symbols at the same zoom level duplicate against
                         // the same parent (see issue #5993)
                         zoomCrossTileIDs[crossTileID] = true;
-                        symbolInstanceAtCoordinate.crossTileID = crossTileID;
+                        symbolInstancesAtCoordinate[j].crossTileID = crossTileID;
                         j++;
                     }
                     i++;
