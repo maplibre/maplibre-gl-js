@@ -1,13 +1,15 @@
 import {create as createSource} from '../source/source';
 
+import {VectorTileStrategy} from './vector_tile_manager';
+import {RasterTileStrategy} from './raster_tile_manager';
 import {Tile} from './tile';
-import {ErrorEvent, Event, Evented} from '../util/evented';
 import {TileCache} from './tile_cache';
+import {OverscaledTileID} from './tile_id';
 import {type Context} from '../gl/context';
 import Point from '@mapbox/point-geometry';
 import {now} from '../util/time_control';
-import {OverscaledTileID} from './tile_id';
 import {SourceFeatureState} from '../source/source_state';
+import {ErrorEvent, Event, Evented} from '../util/evented';
 import {config} from '../util/config';
 
 import type {Source} from '../source/source';
@@ -23,10 +25,28 @@ import type {Terrain} from '../render/terrain';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
 import {coveringTiles, coveringZoomLevel} from '../geo/projection/covering_tiles';
 
+export function createTileManager(
+    id: string,
+    options: SourceSpecification,
+    dispatcher: Dispatcher,
+    type: 'vector' | 'raster' | any | string
+): TileManager {
+    const strategy = type === 'raster'
+        ? new RasterTileStrategy()
+        : new VectorTileStrategy();
+
+    return new TileManager(id, options, dispatcher, strategy);
+}
+
 /**
  * Strategy interface for tile-type-specific behavior
  */
 export interface TileManagerStrategy {
+    /**
+     * Set the tile manager
+     */
+    setManager(manager: TileManager): void;
+
     /**
      * Process the tile when retrieved from cache
      */
@@ -51,6 +71,16 @@ export interface TileManagerStrategy {
      * Check if the manager still has tile transitions
      */
     hasTransition(source: Source, tiles: Record<string, Tile>): boolean;
+
+    /**
+     * Release tiles held for fading (optional, mainly for vector tiles with symbols)
+     */
+    releaseSymbolFadeTiles?(): void;
+
+    /**
+     * Set raster fade duration (optional, only for raster tiles)
+     */
+    setRasterFadeDuration?(fadeDuration: number): void;
 }
 
 /**
@@ -68,7 +98,7 @@ export interface TileManagerStrategy {
  *  - unloading cached tiles not needed to render a given viewport
  *  - managing tile state and feature state
  */
-export abstract class TileManager extends Evented {
+export class TileManager extends Evented {
     id: string;
     dispatcher: Dispatcher;
     map: Map;
@@ -111,9 +141,10 @@ export abstract class TileManager extends Evented {
      */
     constructor(id: string, options: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, strategy: TileManagerStrategy) {
         super();
+        strategy.setManager(this);
+
         this.id = id;
         this.dispatcher = dispatcher;
-        this._strategy = strategy;
 
         this.on('data', (e: MapSourceDataEvent) => this._dataHandler(e));
 
@@ -856,6 +887,20 @@ export abstract class TileManager extends Evented {
 
     hasTransition(): boolean {
         return this._strategy.hasTransition(this._source, this._tiles);
+    }
+
+    /**
+     * Release tiles held for symbol fading
+     */
+    releaseSymbolFadeTiles() {
+        this._strategy.releaseSymbolFadeTiles?.();
+    }
+
+    /**
+     * Set raster fade duration
+     */
+    setRasterFadeDuration(fadeDuration: number) {
+        this._strategy.setRasterFadeDuration?.(fadeDuration);
     }
 
     /**

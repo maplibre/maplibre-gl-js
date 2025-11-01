@@ -1,4 +1,4 @@
-import {TileManager, type TileManagerStrategy} from './tile_manager';
+import {type TileManager, type TileManagerStrategy} from './tile_manager';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {EXTENT} from '../data/extent';
 import {Bounds} from '../geo/bounds';
@@ -18,14 +18,17 @@ type TileResult = {
 
 /**
  * Vector-specific tile management strategy
+ *
+ * Responsibilities specific to vector tiles:
+ *  - Managing symbol fade hold duration to prevent label flicker
+ *  - Retaining tiles with symbols for gradual fade out
+ *  - Coordinating symbol placement across tile boundaries
  */
-class VectorTileStrategy implements TileManagerStrategy {
-    private map: any;
+export class VectorTileStrategy implements TileManagerStrategy {
+    private tileManager: TileManager;
 
-    constructor(tileManager: TileManager) {
-        Object.defineProperty(this, 'map', {
-            get: () => tileManager.map
-        });
+    setManager(manager: TileManager) {
+        this.tileManager = manager;
     }
 
     onTileRetrievedFromCache(_tile: Tile): void {
@@ -54,7 +57,7 @@ class VectorTileStrategy implements TileManagerStrategy {
 
             // for tile with symbols - hold for fade - then remove
             if (!tile.holdingForSymbolFade()) {
-                tile.setSymbolHoldDuration(this.map._fadeDuration);
+                tile.setSymbolHoldDuration(this.tileManager.map._fadeDuration);
             } else if (tile.symbolFadeFinished()) {
                 removeTile(key);
             }
@@ -71,32 +74,15 @@ class VectorTileStrategy implements TileManagerStrategy {
     hasTransition(source: Source, _tiles: Record<string, Tile>): boolean {
         return source.hasTransition();
     }
-}
-
-/**
- * @internal
- * `VectorTileManager` extends `TileManager` with vector-specific functionality,
- * primarily handling symbol fade logic for smooth label transitions.
- *
- * Responsibilities specific to vector tiles:
- *  - Managing symbol fade hold duration to prevent label flicker
- *  - Retaining tiles with symbols for gradual fade out
- *  - Coordinating symbol placement across tile boundaries
- */
-export class VectorTileManager extends TileManager {
-    constructor(id: string, options: any, dispatcher: any) {
-        super(id, options, dispatcher, null as any);
-        this._strategy = new VectorTileStrategy(this);
-    }
 
     /**
      * Release all tiles that are held for symbol fading.
      * This is useful when forcing an immediate cleanup without waiting for fade completion.
      */
     releaseSymbolFadeTiles() {
-        for (const id in this._tiles) {
-            if (this._tiles[id].holdingForSymbolFade()) {
-                this._removeTile(id);
+        for (const id in this.tileManager._tiles) {
+            if (this.tileManager._tiles[id].holdingForSymbolFade()) {
+                this.tileManager._removeTile(id);
             }
         }
     }
@@ -110,7 +96,7 @@ export class VectorTileManager extends TileManager {
     tilesIn(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean): TileResult[] {
         const tileResults: TileResult[] = [];
 
-        const transform = this.transform;
+        const transform = this.tileManager.transform;
         if (!transform) return tileResults;
         const allowWorldCopies = transform.getCoveringTilesDetailsProvider().allowWorldCopies();
 
@@ -118,16 +104,16 @@ export class VectorTileManager extends TileManager {
             transform.getCameraQueryGeometry(pointQueryGeometry) :
             pointQueryGeometry;
 
-        const project = (point: Point) => transform.screenPointToMercatorCoordinate(point, this.terrain);
+        const project = (point: Point) => transform.screenPointToMercatorCoordinate(point, this.tileManager.terrain);
         const queryGeometry = this.transformBbox(pointQueryGeometry, project, !allowWorldCopies);
         const cameraQueryGeometry = this.transformBbox(cameraPointQueryGeometry, project, !allowWorldCopies);
 
-        const ids = this.getIds();
+        const ids = this.tileManager.getIds();
 
         const cameraBounds = Bounds.fromPoints(cameraQueryGeometry);
 
         for (let i = 0; i < ids.length; i++) {
-            const tile = this._tiles[ids[i]];
+            const tile = this.tileManager._tiles[ids[i]];
             if (tile.holdingForSymbolFade()) {
                 // Tiles held for fading are covered by tiles that are closer to ideal
                 continue;
