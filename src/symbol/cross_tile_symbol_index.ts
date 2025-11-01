@@ -157,18 +157,19 @@ class TileLayerIndex {
                     }
                 }
             }
-
         }
 
         for (const [symbolKey, coordinateMap] of symbolKeyToScaledCoordinatesToSymbolInstanceMap.entries()) {
             const entry = this._symbolsByKey[symbolKey];
             if (!entry) {
-                // Shouldn't happen
+                // Shouldn't happen, as we only populate keys in this
+                // map above when an entry exists.
                 continue;
             }
 
             if (!entry.index){
-                // Shouldn't happen
+                // Shouldn't happen, as we only populate keys in this
+                // map above when the entry has an index built.
                 continue;
             }
 
@@ -200,7 +201,6 @@ class TileLayerIndex {
                         zoomCrossTileIDs[crossTileID] = true;
                         symbolInstanceAtCoordinate.crossTileID = crossTileID;
                         j++;
-
                     }
                     i++;
                 }
