@@ -16,6 +16,7 @@ import type {Actor} from '../util/actor';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {GeoJSONSourceDiff} from './geojson_source_diff';
 import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
+import type {GeoJSONReloadStrategy} from '../tile/tile_reload_strategy';
 import type {WorkerTileParameters} from './worker_source';
 import {MessageType} from '../util/actor_messages';
 import {tileIdToLngLatBounds} from '../tile/tile_id_to_lng_lat_bounds';
@@ -424,10 +425,13 @@ export class GeoJSONSource extends Evented implements Source {
                 extend(eventData, {resourceTiming});
             }
 
-            // although GeoJSON sources contain no metadata, we fire this event to let the TileManager
+            // Create tile reload strategy for this specific update
+            const tileReloadStrategy = this._createTileReloadStrategy(diff);
+
+            // Although GeoJSON sources contain no metadata, we fire this event to let the TileManager
             // know its ok to start requesting tiles.
             this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
-            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTileOptions: this._getShouldReloadTileOptions(diff)}));
+            this.fire(new Event('data', {...eventData, sourceDataType: 'content', tileReloadStrategy}));
         } catch (err) {
             this._isUpdatingWorker = false;
             if (this._removed) {
@@ -443,7 +447,7 @@ export class GeoJSONSource extends Evented implements Source {
         }
     }
 
-    _getShouldReloadTileOptions(diff?: GeoJSONSourceDiff): GeoJSONSourceShouldReloadTileOptions | undefined {
+    _createTileReloadStrategy(diff?: GeoJSONSourceDiff): GeoJSONReloadStrategy | undefined {
         if (!diff || diff.removeAll) return undefined;
 
         const {add = [], update = [], remove = []} = (diff || {});
@@ -451,11 +455,12 @@ export class GeoJSONSource extends Evented implements Source {
         const prevIds = new Set([...update.map(u => u.id), ...remove]);
 
         const nextBounds = [
-            ...update.map(f => f.newGeometry),
-            ...add.map(f => f.geometry)
-        ].map(g => getGeoJSONBounds(g));
+            ...update.map(f => getGeoJSONBounds(f.newGeometry)),
+            ...add.map(f => getGeoJSONBounds(f.geometry))
+        ];
 
         return {
+            type: 'geojson',
             nextBounds,
             prevIds
         };
@@ -465,7 +470,9 @@ export class GeoJSONSource extends Evented implements Source {
      * Determine whether a tile should be reloaded based on a set of options associated with a {@link MapSourceDataChangedEvent}.
      * @internal
      */
-    shouldReloadTile(tile: Tile, {nextBounds, prevIds}: GeoJSONSourceShouldReloadTileOptions) : boolean {
+    shouldReloadTile(tile: Tile, reloadStrategy: GeoJSONReloadStrategy) : boolean {
+        const {nextBounds, prevIds} = reloadStrategy;
+
         // Update the tile if it PREVIOUSLY contained an updated feature.
         const layers = tile.latestFeatureIndex.loadVTLayers();
         for (let i = 0; i < tile.latestFeatureIndex.featureIndexArray.length; i++) {
