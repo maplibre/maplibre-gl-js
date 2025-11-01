@@ -109,8 +109,8 @@ export class GlobeTransform implements ITransform {
     setMaxBounds(bounds?: LngLatBounds): void {
         this._helper.setMaxBounds(bounds);
     }
-    setConstrain(constrain?: TransformConstrainFunction | null): void {
-        this._helper.setConstrain(constrain);
+    setTransformConstrain(constrain?: TransformConstrainFunction | null): void {
+        this._helper.setTransformConstrain(constrain);
     }
     overrideNearFarZ(nearZ: number, farZ: number): void {
         this._helper.overrideNearFarZ(nearZ, farZ);
@@ -208,6 +208,9 @@ export class GlobeTransform implements ITransform {
     }
     get constrain(): TransformConstrainFunction {
         return this._helper.constrain;
+    }
+    get transformConstrain(): TransformConstrainFunction {
+        return this._helper.transformConstrain;
     }
     public get nearZ(): number { 
         return this._helper.nearZ; 

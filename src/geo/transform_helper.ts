@@ -150,7 +150,7 @@ export class TransformHelper implements ITransformGetters {
     _farZ: number;
     _autoCalculateNearFarZ: boolean;
 
-    _constrain: TransformConstrainFunction;
+    _transformConstrain: TransformConstrainFunction;
 
     constructor(callbacks: TransformHelperCallbacks, options?: TransformOptions) {
         this._callbacks = callbacks;
@@ -163,7 +163,7 @@ export class TransformHelper implements ITransformGetters {
         this._minPitch = (options?.minPitch === undefined || options?.minPitch === null) ? 0 : options?.minPitch;
         this._maxPitch = (options?.maxPitch === undefined || options?.maxPitch === null) ? 60 : options?.maxPitch;
 
-        this._constrain = options?.constrain ?? this._callbacks.constrain;
+        this._transformConstrain = options?.constrain || null;
 
         this.setMaxBounds();
 
@@ -185,6 +185,7 @@ export class TransformHelper implements ITransformGetters {
     }
 
     public apply(thatI: ITransformGetters, constrain?: boolean, forceOverrideZ?: boolean): void {
+        this._transformConstrain = thatI.transformConstrain;
         this._latRange = thatI.latRange;
         this._lngRange = thatI.lngRange;
         this._width = thatI.width;
@@ -286,13 +287,11 @@ export class TransformHelper implements ITransformGetters {
 
         this._renderWorldCopies = renderWorldCopies;
     }
-    
-    get constrain(): TransformConstrainFunction { return this._constrain; }
-    setConstrain(constrain?: TransformConstrainFunction | null) {
-        if (!constrain) {
-            constrain = this._callbacks.constrain;
-        }
-        this._constrain = constrain;
+
+    get transformConstrain(): TransformConstrainFunction { return this._transformConstrain; }
+    setTransformConstrain(constrain?: TransformConstrainFunction | null) {
+        if (this._transformConstrain === constrain) return;
+        this._transformConstrain = constrain;
         this.constrainInternal();
         this._calcMatrices();
     }
@@ -523,6 +522,10 @@ export class TransformHelper implements ITransformGetters {
                 new Point(minX, minY)
             ];
         }
+    }
+
+    get constrain(): TransformConstrainFunction {
+        return this._transformConstrain || this._callbacks.constrain;
     }
 
     /**
