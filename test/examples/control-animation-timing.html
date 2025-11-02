@@ -10,247 +10,124 @@
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
+        .controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 3px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        }
+        .controls button {
+            background: #3386c0;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            margin: 2px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        .controls button:hover { background: #4ea0da; }
+        .controls button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #info {
+            margin-top: 8px;
+            padding: 6px;
+            background: #f0f0f0;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 11px;
+        }
     </style>
 </head>
 <body>
-<style>
-    .control-panel {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        background: white;
-        padding: 15px;
-        border-radius: 3px;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-        font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;
-        font-size: 12px;
-        z-index: 1;
-    }
-
-    .control-panel h3 {
-        margin: 0 0 10px 0;
-        font-size: 14px;
-    }
-
-    .control-panel button {
-        background-color: #3386c0;
-        color: #fff;
-        border: none;
-        padding: 8px 12px;
-        margin: 2px;
-        cursor: pointer;
-        border-radius: 3px;
-        font-size: 11px;
-    }
-
-    .control-panel button:hover {
-        background-color: #4ea0da;
-    }
-
-    .control-panel button:disabled {
-        background-color: #ccc;
-        cursor: not-allowed;
-    }
-
-    .status {
-        margin-top: 10px;
-        padding: 8px;
-        background-color: #f0f0f0;
-        border-radius: 3px;
-    }
-
-    .status.frozen {
-        background-color: #ffe0e0;
-    }
-
-    .time-display {
-        font-family: monospace;
-        font-weight: bold;
-    }
-</style>
-
 <div id="map"></div>
-
-<div class="control-panel">
-    <h3>TimeControl API Demo</h3>
-    <div style="margin-bottom: 10px; font-size: 11px; color: #666;">
-        Continuous animation: Paris ↔ New York
-    </div>
+<div class="controls">
+    <div><strong>TimeControl API</strong></div>
+    <div style="margin: 5px 0; font-size: 11px; color: #666;">Paris → New York (10s)</div>
     <div>
-        <button id="restart-btn">Restart Animation</button>
+        <button onclick="start()" id="start-btn">Start Animation</button>
     </div>
-    <div style="margin-top: 8px;">
-        <button id="jump-1s">Jump to 1s</button>
-        <button id="jump-2s">Jump to 2s</button>
-        <button id="jump-10s">Jump to 10s</button>
+    <div style="margin-top: 5px;">
+        <button onclick="jumpTo(1000)">Jump to 1s</button>
+        <button onclick="jumpTo(2000)">Jump to 2s</button>
+        <button onclick="jumpTo(10000)">Jump to 10s</button>
     </div>
-    <div style="margin-top: 8px;">
-        <button id="resume-btn">Resume Time</button>
+    <div style="margin-top: 5px;">
+        <button onclick="resume()">Resume</button>
     </div>
-    <div class="status" id="status">
-        <div>Status: <span id="time-status">Running</span></div>
-        <div>Elapsed: <span class="time-display" id="time-display">0</span>ms</div>
-        <div style="font-size: 10px; margin-top: 5px; color: #666;">
-            isTimeFrozen(): <span id="frozen-state">false</span>
-        </div>
-    </div>
+    <div id="info">Elapsed: <span id="time">0</span>ms | Frozen: <span id="frozen">false</span></div>
 </div>
 
 <script>
     const map = new maplibregl.Map({
         container: 'map',
         style: 'https://demotiles.maplibre.org/style.json',
-        center: [2.3522, 48.8566], // Start at Paris
+        center: [2.3522, 48.8566],
         zoom: 5
     });
 
-    let timeUpdateInterval = null;
-    let animationStartTime = null;
+    let startTime;
 
-    // Update time display continuously
-    function startTimeDisplay() {
-        if (timeUpdateInterval) return;
-
-        timeUpdateInterval = setInterval(() => {
-            const currentTime = maplibregl.now();
-            const elapsed = animationStartTime ? currentTime - animationStartTime : 0;
-            document.getElementById('time-display').textContent =
-                Math.round(elapsed);
-            document.getElementById('frozen-state').textContent =
-                maplibregl.isTimeFrozen().toString();
-
-            // Update status text
-            if (maplibregl.isTimeFrozen()) {
-                document.getElementById('time-status').textContent = 'Frozen';
-                document.getElementById('status').classList.add('frozen');
-            } else {
-                document.getElementById('time-status').textContent = 'Running';
-                document.getElementById('status').classList.remove('frozen');
-            }
-        }, 50);
-    }
-
-    let isAnimating = false;
-
-    // Animate between Paris and New York continuously
-    function animateLoop() {
-        if (!isAnimating) return;
-
-        // Fly to New York
+    function animate() {
         map.flyTo({
             center: [-74.006, 40.7128],
             zoom: 10,
             duration: 10000
         });
-
-        // After 10 seconds, fly back to Paris
         setTimeout(() => {
-            if (!isAnimating) return;
             map.flyTo({
                 center: [2.3522, 48.8566],
                 zoom: 5,
                 duration: 10000
             });
-
-            // After another 10 seconds, restart the loop
-            setTimeout(() => {
-                animateLoop();
-            }, 10000);
+            setTimeout(animate, 10000);
         }, 10000);
     }
 
-    // Start the animation
-    function startAnimation() {
-        // If time is frozen, restore it first
-        if (maplibregl.isTimeFrozen()) {
-            maplibregl.restoreNow();
-        }
+    function jumpTo(ms) {
+        map.stop();
+        map.jumpTo({ center: [2.3522, 48.8566], zoom: 5 });
 
-        // Reset to Paris
-        map.jumpTo({
-            center: [2.3522, 48.8566],
-            zoom: 5
-        });
+        if (maplibregl.isTimeFrozen()) maplibregl.restoreNow();
 
-        // Store animation start time
-        animationStartTime = maplibregl.now();
-
-        if (!timeUpdateInterval) {
-            startTimeDisplay();
-        }
-
-        // Start continuous animation loop
-        isAnimating = true;
-        animateLoop();
-    }
-
-    // Auto-start animation when map loads
-    map.on('load', () => {
-        startAnimation();
-    });
-
-    // Helper function to jump to a specific time in the animation
-    function jumpToTime(milliseconds) {
-        // Stop the loop to avoid interference
-        isAnimating = false;
-
-        // Restore time first to ensure clean state
-        if (maplibregl.isTimeFrozen()) {
-            maplibregl.restoreNow();
-        }
-
-        // Reset to Paris
-        map.jumpTo({
-            center: [2.3522, 48.8566],
-            zoom: 5
-        });
-
-        // Store new animation start time
-        animationStartTime = maplibregl.now();
-
-        // Start the animation to New York
+        startTime = maplibregl.now();
         map.flyTo({
             center: [-74.006, 40.7128],
             zoom: 10,
             duration: 10000
         });
 
-        // Immediately freeze time at the desired moment
-        maplibregl.setNow(animationStartTime + milliseconds);
+        maplibregl.setNow(startTime + ms);
     }
 
-    // Resume button - restores real time and restarts continuous animation
-    document.getElementById('resume-btn').addEventListener('click', () => {
-        startAnimation();
-    });
+    function start() {
+        map.jumpTo({ center: [2.3522, 48.8566], zoom: 5 });
+        if (maplibregl.isTimeFrozen()) maplibregl.restoreNow();
+        startTime = maplibregl.now();
+        animate();
+        document.getElementById('start-btn').disabled = true;
+    }
 
-    // Jump to 1s - freezes time at 1 second into animation
-    document.getElementById('jump-1s').addEventListener('click', () => {
-        jumpToTime(1000);
-    });
+    function resume() {
+        if (maplibregl.isTimeFrozen()) maplibregl.restoreNow();
+        map.jumpTo({ center: [2.3522, 48.8566], zoom: 5 });
+        startTime = maplibregl.now();
+        animate();
+    }
 
-    // Jump to 2s - freezes time at 2 seconds into animation
-    document.getElementById('jump-2s').addEventListener('click', () => {
-        jumpToTime(2000);
-    });
-
-    // Jump to 10s - freezes time at end of animation
-    document.getElementById('jump-10s').addEventListener('click', () => {
-        jumpToTime(10000);
-    });
-
-    // Restart animation button
-    document.getElementById('restart-btn').addEventListener('click', () => {
-        startAnimation();
-    });
-
-    // Clean up on page unload
-    window.addEventListener('beforeunload', () => {
-        if (timeUpdateInterval) clearInterval(timeUpdateInterval);
-        if (maplibregl.isTimeFrozen()) {
-            maplibregl.restoreNow();
+    // Update display
+    setInterval(() => {
+        if (startTime) {
+            const elapsed = maplibregl.now() - startTime;
+            document.getElementById('time').textContent = Math.round(elapsed);
         }
-    });
+        document.getElementById('frozen').textContent = maplibregl.isTimeFrozen();
+    }, 50);
 </script>
 </body>
 </html>
