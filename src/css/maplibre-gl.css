@@ -602,6 +602,7 @@ a.maplibregl-ctrl-logo.maplibregl-compact {
 .maplibregl-ctrl-scale {
     background-color: rgb(255, 255, 255, 0.75);
     font-size: 10px;
+    white-space: nowrap;
     border-width: medium 2px 2px;
     border-style: none solid solid;
     border-color: #333;
@@ -609,7 +610,6 @@ a.maplibregl-ctrl-logo.maplibregl-compact {
     color: #333;
     box-sizing: border-box;
 }
-
 .maplibregl-popup {
     position: absolute;
     top: 0;
