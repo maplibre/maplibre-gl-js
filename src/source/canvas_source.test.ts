@@ -1,5 +1,5 @@
 import {describe, beforeEach, test, expect, vi, afterEach} from 'vitest';
-import {CanvasSource, CanvasSourceSpecification} from '../source/canvas_source';
+import {CanvasSource, type CanvasSourceSpecification} from '../source/canvas_source';
 import {Event, Evented} from '../util/evented';
 import {extend} from '../util/util';
 import {Tile} from './tile';
@@ -10,7 +10,7 @@ import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {Dispatcher} from '../util/dispatcher';
 import type {MapSourceDataEvent} from '../ui/events';
 
-function createSource(options?: { canvas?: any, eventedParent?: any} & Partial<CanvasSourceSpecification>) {
+function createSource(options?: { canvas?: any; eventedParent?: any} & Partial<CanvasSourceSpecification>) {
     const c = options && options.canvas || window.document.createElement('canvas');
     c.width = 20;
     c.height = 20;
@@ -71,7 +71,7 @@ describe('CanvasSource', () => {
     });
 
     describe('Validations', () => {
-        let errorSpy = vi.fn();
+        const errorSpy = vi.fn();
         let eventedParent: Evented;
         beforeEach(() => {
             eventedParent = new Evented();
@@ -79,7 +79,7 @@ describe('CanvasSource', () => {
         });
         afterEach(() => {
             errorSpy.mockClear();
-        })
+        });
         test('self-validates coordinates array length', () => {
             createSource({coordinates: [], eventedParent} as any);
             expect(errorSpy).toHaveBeenCalled();
@@ -106,8 +106,6 @@ describe('CanvasSource', () => {
             expect(errorSpy).not.toHaveBeenCalled();
         });
     });
-
-    
 
     test('can be initialized with HTML element', async () => {
         const el = document.createElement('canvas');

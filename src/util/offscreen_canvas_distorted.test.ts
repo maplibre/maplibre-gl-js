@@ -10,7 +10,7 @@ describe('Offscreen canvas', () => {
             return new Canvas(width, height);
         }) as any;
         global.OffscreenCanvas = OffscreenCanvasMock;
-    })
+    });
     test('normal operation does not mangle canvas', () => {
         expect(offscreenCanvasSupported()).toBeTruthy();
     });
@@ -18,6 +18,6 @@ describe('Offscreen canvas', () => {
     test('distoreted is false by default', () => {
         expect(isOffscreenCanvasDistorted()).toBeFalsy();
         expect(OffscreenCanvasMock).toHaveBeenCalledTimes(1);
-    })
+    });
 });
 

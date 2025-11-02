@@ -156,7 +156,7 @@ describe('GlyphManager', () => {
         const langSpy = GlyphManager.TinySDF = vi.fn().mockImplementation(function () {
             return {
                 draw: () => GLYPHS[0]
-            }
+            };
         });
         const manager = createGlyphManager('sans-serif');
         await manager.getGlyphs({'Arial Unicode MS': [0x30c6]});
@@ -167,7 +167,7 @@ describe('GlyphManager', () => {
         const langSpy = GlyphManager.TinySDF = vi.fn().mockImplementation(function () {
             return {
                 draw: () => GLYPHS[0]
-            }
+            };
         });
         const manager = createGlyphManager('sans-serif', 'zh');
         await manager.getGlyphs({'Arial Unicode MS': [0x30c6]});

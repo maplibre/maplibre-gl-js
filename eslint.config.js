@@ -79,7 +79,6 @@ export default [
             'no-unused-vars': 'off',
             'no-warning-comments': 'error',
             'object-curly-spacing': ['error', 'never'],
-            'prefer-arrow-callback': 'error',
 
             'prefer-const': ['error', {
                 destructuring: 'all',

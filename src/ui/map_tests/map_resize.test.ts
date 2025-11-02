@@ -39,7 +39,7 @@ describe('resize', () => {
     test('listen to window resize event', () => {
         const spy = vi.fn();
         global.ResizeObserver = vi.fn(class {
-            observe = spy
+            observe = spy;
         }) as any;
 
         createMap();
@@ -51,7 +51,7 @@ describe('resize', () => {
         let observerCallback: Function = null;
         global.ResizeObserver = vi.fn(class {
             constructor(c) { observerCallback = c; }
-            observe = () => { }
+            observe = () => { };
         }) as any;
 
         const map = createMap({trackResize: false});
@@ -71,7 +71,7 @@ describe('resize', () => {
         let observerCallback: Function = null;
         global.ResizeObserver = vi.fn(class {
             constructor(c) { observerCallback = c; }
-            observe = () => { }
+            observe = () => { };
         }) as any;
 
         const map = createMap();
