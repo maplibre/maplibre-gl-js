@@ -66,6 +66,7 @@ export type WorkerTileResult = ExpiryData & {
     featureIndex: FeatureIndex;
     collisionBoxArray: CollisionBoxArray;
     rawTileData?: ArrayBuffer;
+    encoding?: string;
     resourceTiming?: Array<PerformanceResourceTiming>;
     // Only used for benchmarking:
     glyphMap?: {
