@@ -395,7 +395,10 @@ describe('util readImageUsingVideoFrame', () => {
         }),
         close: vi.fn(),
     };
-    (window as any).VideoFrame = vi.fn(() => frame);
+    // return the same frame object each time to allow checking of mock calls
+    global.VideoFrame = vi.fn(function() {
+        return frame;
+    }) as any;
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = 2;
 
@@ -438,7 +441,6 @@ describe('util readImageUsingVideoFrame', () => {
 
     describe('layout/rect', () => {
         beforeEach(() => {
-            (window as any).VideoFrame = vi.fn(() => frame);
             canvas.width = canvas.height = 3;
         });
 
@@ -534,7 +536,7 @@ describe('util readImageUsingVideoFrame', () => {
 
 describe('util readImageDataUsingOffscreenCanvas', () => {
     test('reads pixels from image', async () => {
-        (window as any).OffscreenCanvas = Canvas;
+        global.OffscreenCanvas = Canvas as any;
         const image = new Canvas(2, 2);
         const context = image.getContext('2d');
         context.fillStyle = 'rgb(10,0,0)';

@@ -1081,6 +1081,8 @@ describe('map events', () => {
                 ]
             };
             const map = createMap();
+            const originalWarn = console.warn;
+            console.warn = vi.fn();
             map.setStyle(style);
 
             const errorHandler = vi.fn();
@@ -1090,7 +1092,7 @@ describe('map events', () => {
             await sleep(100);
 
             expect(errorHandler).toHaveBeenCalledTimes(1);
-
+            console.warn = originalWarn;
         });
     });
 

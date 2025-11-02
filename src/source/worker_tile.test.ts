@@ -44,6 +44,8 @@ function createLineWrapper() {
 
 describe('worker tile', () => {
     test('WorkerTile.parse', async () => {
+        const originalWarn = console.warn;
+        console.warn = vi.fn();
         const layerIndex = new StyleLayerIndex([{
             id: 'test',
             source: 'source',
@@ -53,6 +55,7 @@ describe('worker tile', () => {
         const tile = createWorkerTile();
         const result = await tile.parse(createWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
         expect(result.buckets[0]).toBeTruthy();
+        console.warn = originalWarn;
     });
 
     test('WorkerTile.parse layer with layout property', async () => {
