@@ -5,13 +5,9 @@ import {FeatureIndex} from './feature_index';
 import {type Feature, fromVectorTileJs, GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {OverscaledTileID} from '../tile/tile_id';
-import {Tile} from '../tile/tile';
 import {CircleStyleLayer} from '../style/style_layer/circle_style_layer';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 import Point from '@mapbox/point-geometry';
-import {CollisionBoxArray} from '../data/array_types.g';
-import {extend} from '../util/util';
-import {serialize, deserialize} from '../util/web_worker_transfer';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from '../style/evaluation_parameters';
 
@@ -108,16 +104,3 @@ describe('FeatureIndex', () => {
         });
     });
 });
-
-function createVectorData(options?) {
-    const collisionBoxArray = new CollisionBoxArray();
-    return extend({
-        collisionBoxArray: deserialize(serialize(collisionBoxArray)),
-        featureIndex: deserialize(serialize(new FeatureIndex(new OverscaledTileID(1, 0, 1, 1, 1)))),
-        buckets: []
-    }, options);
-}
-
-function createPainter(styleStub = {}) {
-    return {style: styleStub};
-}
