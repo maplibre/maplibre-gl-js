@@ -25,7 +25,7 @@ import type {Map} from '../ui/map';
 import type {StyleSetterOptions} from './style';
 import {type mat4} from 'gl-matrix';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
-import type {UnwrappedTileID} from '../source/tile_id';
+import type {UnwrappedTileID} from '../tile/tile_id';
 
 const TRANSITION_SUFFIX = '-transition';
 

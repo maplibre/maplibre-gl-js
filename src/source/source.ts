@@ -10,8 +10,8 @@ import {type Dispatcher} from '../util/dispatcher';
 import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Event, Evented} from '../util/evented';
 import type {Map} from '../ui/map';
-import type {Tile} from './tile';
-import type {OverscaledTileID, CanonicalTileID} from './tile_id';
+import type {Tile} from '../tile/tile';
+import type {OverscaledTileID, CanonicalTileID} from '../tile/tile_id';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
 import {type CalculateTileZoomFunction} from '../geo/projection/covering_tiles';
 

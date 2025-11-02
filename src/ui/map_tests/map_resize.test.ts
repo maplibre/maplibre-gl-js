@@ -38,9 +38,9 @@ describe('resize', () => {
 
     test('listen to window resize event', () => {
         const spy = vi.fn();
-        global.ResizeObserver = vi.fn().mockImplementation(() => ({
-            observe: spy
-        }));
+        global.ResizeObserver = vi.fn(class {
+            observe = spy;
+        }) as any;
 
         createMap();
 
@@ -49,9 +49,10 @@ describe('resize', () => {
 
     test('do not resize if trackResize is false', () => {
         let observerCallback: Function = null;
-        global.ResizeObserver = vi.fn().mockImplementation((c) => ({
-            observe: () => { observerCallback = c; }
-        }));
+        global.ResizeObserver = vi.fn(class {
+            constructor(c) { observerCallback = c; }
+            observe = () => { };
+        }) as any;
 
         const map = createMap({trackResize: false});
 
@@ -68,9 +69,10 @@ describe('resize', () => {
 
     test('do resize if trackResize is true (default)', async () => {
         let observerCallback: Function = null;
-        global.ResizeObserver = vi.fn().mockImplementation((c) => ({
-            observe: () => { observerCallback = c; }
-        }));
+        global.ResizeObserver = vi.fn(class {
+            constructor(c) { observerCallback = c; }
+            observe = () => { };
+        }) as any;
 
         const map = createMap();
 

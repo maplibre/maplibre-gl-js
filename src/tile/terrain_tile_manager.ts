@@ -4,12 +4,13 @@ import {EXTENT} from '../data/extent';
 import {mat4} from 'gl-matrix';
 import {Evented} from '../util/evented';
 import type {ITransform} from '../geo/transform_interface';
-import type {SourceCache} from '../source/source_cache';
+import type {TileManager} from './tile_manager';
+import type {Source} from '../source/source';
 import {type Terrain} from '../render/terrain';
 import {now} from '../util/time_control';
 import {coveringTiles} from '../geo/projection/covering_tiles';
 import {createMat4f64} from '../util/util';
-import {type CanonicalTileRange} from './image_source';
+import {type CanonicalTileRange} from '../source/image_source';
 
 /**
  * @internal
@@ -21,11 +22,11 @@ import {type CanonicalTileRange} from './image_source';
  * - finds all necessary renderToTexture tiles for a OverscaledTileID area
  * - finds the corresponding raster-dem tile for OverscaledTileID
  */
-export class TerrainSourceCache extends Evented {
+export class TerrainTileManager extends Evented {
     /**
-     * source-cache for the raster-dem source.
+     * tile manager for the raster-dem source.
      */
-    sourceCache: SourceCache;
+    tileManager: TileManager;
     /**
      * stores all render-to-texture tiles.
      */
@@ -59,23 +60,27 @@ export class TerrainSourceCache extends Evented {
      */
     _lastTilesetChange: number = now();
 
-    constructor(sourceCache: SourceCache) {
+    constructor(tileManager: TileManager) {
         super();
-        this.sourceCache = sourceCache;
+        this.tileManager = tileManager;
         this._tiles = {};
         this._renderableTilesKeys = [];
         this._sourceTileCache = {};
         this.minzoom = 0;
         this.maxzoom = 22;
         this.deltaZoom = 1;
-        this.tileSize = sourceCache._source.tileSize * 2 ** this.deltaZoom;
-        sourceCache.usedForTerrain = true;
-        sourceCache.tileSize = this.tileSize;
+        this.tileSize = tileManager._source.tileSize * 2 ** this.deltaZoom;
+        tileManager.usedForTerrain = true;
+        tileManager.tileSize = this.tileSize;
     }
 
     destruct() {
-        this.sourceCache.usedForTerrain = false;
-        this.sourceCache.tileSize = null;
+        this.tileManager.usedForTerrain = false;
+        this.tileManager.tileSize = null;
+    }
+
+    getSource(): Source {
+        return this.tileManager._source;
     }
 
     /**
@@ -85,7 +90,7 @@ export class TerrainSourceCache extends Evented {
      */
     update(transform: ITransform, terrain: Terrain): void {
         // load raster-dem tiles for the current scene.
-        this.sourceCache.update(transform, terrain);
+        this.tileManager.update(transform, terrain);
         // create internal render-to-texture tiles for the current scene.
         this._renderableTilesKeys = [];
         const keys = {};
@@ -95,7 +100,7 @@ export class TerrainSourceCache extends Evented {
             maxzoom: this.maxzoom,
             reparseOverscaled: false,
             terrain,
-            calculateTileZoom: this.sourceCache._source.calculateTileZoom
+            calculateTileZoom: this.tileManager._source.calculateTileZoom
         })) {
             keys[tileID.key] = true;
             this._renderableTilesKeys.push(tileID.key);
@@ -260,18 +265,18 @@ export class TerrainSourceCache extends Evented {
      * @returns the tile
      */
     getSourceTile(tileID: OverscaledTileID, searchForDEM?: boolean): Tile {
-        const source = this.sourceCache._source;
+        const source = this.tileManager._source;
         let z = tileID.overscaledZ - this.deltaZoom;
         if (z > source.maxzoom) z = source.maxzoom;
         if (z < source.minzoom) return null;
         // cache for tileID to terrain-tileID
         if (!this._sourceTileCache[tileID.key])
             this._sourceTileCache[tileID.key] = tileID.scaledTo(z).key;
-        let tile = this.sourceCache.getTileByID(this._sourceTileCache[tileID.key]);
+        let tile = this.tileManager.getTileByID(this._sourceTileCache[tileID.key]);
         // during tile-loading phase look if parent tiles (with loaded dem) are available.
         if (!(tile && tile.dem) && searchForDEM)
             while (z >= source.minzoom && !(tile && tile.dem))
-                tile = this.sourceCache.getTileByID(tileID.scaledTo(z--).key);
+                tile = this.tileManager.getTileByID(tileID.scaledTo(z--).key);
         return tile;
     }
 

@@ -5,7 +5,7 @@ import type {Size} from './image';
 import type {WorkerGlobalScopeInterface} from './web_worker';
 import {mat3, mat4, quat, vec2, vec3, type vec4} from 'gl-matrix';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
-import {type OverscaledTileID} from '../source/tile_id';
+import {type OverscaledTileID} from '../tile/tile_id';
 import type {Event} from './evented';
 
 /**

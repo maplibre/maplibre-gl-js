@@ -2,7 +2,7 @@ import {describe, beforeEach, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate, getEdgeTiles, radiansToDegrees, degreesToRadians, rollPitchBearingToQuat, getRollPitchBearing, getAngleDelta, scaleZoom, zoomScale, threePlaneIntersection, pointPlaneSignedDistance} from './util';
 import {Canvas} from 'canvas';
-import {OverscaledTileID} from '../source/tile_id';
+import {OverscaledTileID} from '../tile/tile_id';
 import {expectToBeCloseToArray} from './test/util';
 import {vec3, type vec4} from 'gl-matrix';
 
@@ -395,7 +395,10 @@ describe('util readImageUsingVideoFrame', () => {
         }),
         close: vi.fn(),
     };
-    (window as any).VideoFrame = vi.fn(() => frame);
+    // return the same frame object each time to allow checking of mock calls
+    global.VideoFrame = vi.fn(function() {
+        return frame;
+    }) as any;
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = 2;
 
@@ -438,7 +441,6 @@ describe('util readImageUsingVideoFrame', () => {
 
     describe('layout/rect', () => {
         beforeEach(() => {
-            (window as any).VideoFrame = vi.fn(() => frame);
             canvas.width = canvas.height = 3;
         });
 
@@ -534,7 +536,7 @@ describe('util readImageUsingVideoFrame', () => {
 
 describe('util readImageDataUsingOffscreenCanvas', () => {
     test('reads pixels from image', async () => {
-        (window as any).OffscreenCanvas = Canvas;
+        global.OffscreenCanvas = Canvas as any;
         const image = new Canvas(2, 2);
         const context = image.getContext('2d');
         context.fillStyle = 'rgb(10,0,0)';

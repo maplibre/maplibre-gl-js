@@ -6,7 +6,7 @@ import {ColorMode} from '../gl/color_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
 import {type Context} from '../gl/context';
 import {type Framebuffer} from '../gl/framebuffer';
-import {type Tile} from '../source/tile';
+import {type Tile} from '../tile/tile';
 import {
     heatmapUniformValues,
     heatmapTextureUniformValues
@@ -14,12 +14,12 @@ import {
 import {HEATMAP_FULL_RENDER_FBO_KEY} from '../style/style_layer/heatmap_style_layer';
 
 import type {Painter, RenderOptions} from './painter';
-import type {SourceCache} from '../source/source_cache';
+import type {TileManager} from '../tile/tile_manager';
 import type {HeatmapStyleLayer} from '../style/style_layer/heatmap_style_layer';
 import type {HeatmapBucket} from '../data/bucket/heatmap_bucket';
-import type {OverscaledTileID} from '../source/tile_id';
+import type {OverscaledTileID} from '../tile/tile_id';
 
-export function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: HeatmapStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawHeatmap(painter: Painter, tileManager: TileManager, layer: HeatmapStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (layer.paint.get('heatmap-opacity') === 0) {
         return;
     }
@@ -28,11 +28,11 @@ export function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: H
 
     if (painter.style.map.terrain) {
         for (const coord of tileIDs) {
-            const tile = sourceCache.getTile(coord);
+            const tile = tileManager.getTile(coord);
             // Skip tiles that have uncovered parents to avoid flickering; we don't need
             // to use complex tile masking here because the change between zoom levels is subtle,
             // so it's fine to simply render the parent until all its 4 children are loaded
-            if (sourceCache.hasRenderableParent(coord)) continue;
+            if (tileManager.hasRenderableParent(coord)) continue;
             if (painter.renderPass === 'offscreen') {
                 prepareHeatmapTerrain(painter, tile, layer, coord, isRenderingGlobe);
             } else if (painter.renderPass === 'translucent') {
@@ -42,7 +42,7 @@ export function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: H
         context.viewport.set([0, 0, painter.width, painter.height]);
     } else {
         if (painter.renderPass === 'offscreen') {
-            prepareHeatmapFlat(painter, sourceCache, layer, tileIDs);
+            prepareHeatmapFlat(painter, tileManager, layer, tileIDs);
         } else if (painter.renderPass === 'translucent') {
             renderHeatmapFlat(painter, layer);
         }
@@ -50,7 +50,7 @@ export function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: H
     }
 }
 
-function prepareHeatmapFlat(painter: Painter, sourceCache: SourceCache, layer: HeatmapStyleLayer, coords: Array<OverscaledTileID>) {
+function prepareHeatmapFlat(painter: Painter, tileManager: TileManager, layer: HeatmapStyleLayer, coords: Array<OverscaledTileID>) {
     const context = painter.context;
     const gl = context.gl;
     const transform = painter.transform;
@@ -71,9 +71,9 @@ function prepareHeatmapFlat(painter: Painter, sourceCache: SourceCache, layer: H
         // Skip tiles that have uncovered parents to avoid flickering; we don't need
         // to use complex tile masking here because the change between zoom levels is subtle,
         // so it's fine to simply render the parent until all its 4 children are loaded
-        if (sourceCache.hasRenderableParent(coord)) continue;
+        if (tileManager.hasRenderableParent(coord)) continue;
 
-        const tile = sourceCache.getTile(coord);
+        const tile = tileManager.getTile(coord);
         const bucket: HeatmapBucket = (tile.getBucket(layer) as any);
         if (!bucket) continue;
 

@@ -1,7 +1,7 @@
 import {describe, test, expect, vi} from 'vitest';
 import {WorkerTile} from '../source/worker_tile';
 import {type Feature, GeoJSONWrapper} from '@maplibre/vt-pbf';
-import {OverscaledTileID} from '../source/tile_id';
+import {OverscaledTileID} from '../tile/tile_id';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {type WorkerTileParameters} from './worker_source';
 import {type VectorTile} from '@mapbox/vector-tile';
@@ -44,6 +44,8 @@ function createLineWrapper() {
 
 describe('worker tile', () => {
     test('WorkerTile.parse', async () => {
+        const originalWarn = console.warn;
+        console.warn = vi.fn();
         const layerIndex = new StyleLayerIndex([{
             id: 'test',
             source: 'source',
@@ -53,6 +55,7 @@ describe('worker tile', () => {
         const tile = createWorkerTile();
         const result = await tile.parse(createWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
         expect(result.buckets[0]).toBeTruthy();
+        console.warn = originalWarn;
     });
 
     test('WorkerTile.parse layer with layout property', async () => {

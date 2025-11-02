@@ -10,7 +10,7 @@ import Protobuf from 'pbf';
 import {GeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import {mapObject, extend} from '../util/util';
-import {type OverscaledTileID} from '../source/tile_id';
+import {type OverscaledTileID} from '../tile/tile_id';
 import {register} from '../util/web_worker_transfer';
 import {EvaluationParameters} from '../style/evaluation_parameters';
 import {type SourceFeatureState} from '../source/source_state';

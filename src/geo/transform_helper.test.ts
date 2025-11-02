@@ -2,7 +2,7 @@ import {describe, expect, test} from 'vitest';
 import {LngLat} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
 import {TransformHelper} from './transform_helper';
-import {OverscaledTileID} from '../source/tile_id';
+import {OverscaledTileID} from '../tile/tile_id';
 import {expectToBeCloseToArray} from '../util/test/util';
 import {EXTENT} from '../data/extent';
 

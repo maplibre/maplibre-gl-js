@@ -1,6 +1,6 @@
 import {describe, test, expect, vi} from 'vitest';
-import {Tile} from '../source/tile';
-import {OverscaledTileID} from '../source/tile_id';
+import {Tile} from '../tile/tile';
+import {OverscaledTileID} from '../tile/tile_id';
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
 import {FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import type {CrossFaded} from '../style/properties';

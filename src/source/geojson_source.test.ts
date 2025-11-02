@@ -1,6 +1,6 @@
 import {describe, test, expect, vi, beforeEach} from 'vitest';
-import {Tile} from './tile';
-import {OverscaledTileID} from './tile_id';
+import {Tile} from '../tile/tile';
+import {OverscaledTileID} from '../tile/tile_id';
 import {GeoJSONSource, type GeoJSONSourceOptions} from './geojson_source';
 import {type IReadonlyTransform} from '../geo/transform_interface';
 import {EXTENT} from '../data/extent';
