@@ -309,9 +309,9 @@ export class TileManager extends Evented {
     _tileLoaded(tile: Tile, id: string, previousState: TileState) {
         tile.timeAdded = now();
         // Since self-fading applies to unloaded tiles, fadeEndTime must be updated upon load
-        // if (tile.selfFading) {
-        //     tile.fadeEndTime = tile.timeAdded + this._rasterFadeDuration;
-        // }
+        if (tile.selfFading) {
+            tile.fadeEndTime = tile.timeAdded + this._rasterFadeDuration;
+        }
 
         if (previousState === 'expired') tile.refreshedUponExpiration = true;
         this._setTileReloadTimer(id, tile);
