@@ -659,7 +659,7 @@ export class Map extends Camera {
             transform.setRenderWorldCopies(resolvedOptions.renderWorldCopies);
         }
         if (resolvedOptions.transformConstrain !== null) {
-            transform.setTransformConstrain(resolvedOptions.transformConstrain);
+            transform.setConstrainOverride(resolvedOptions.transformConstrain);
         }
 
         super(transform, cameraHelper, {bearingSnap: resolvedOptions.bearingSnap});
@@ -1291,7 +1291,7 @@ export class Map extends Camera {
      * @see [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/)
      */
     setTransformConstrain(constrain?: TransformConstrainFunction | null): Map {
-        this.transform.setTransformConstrain(constrain);
+        this.transform.setConstrainOverride(constrain);
         return this._update();
     }
 

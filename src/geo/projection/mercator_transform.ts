@@ -108,8 +108,8 @@ export class MercatorTransform implements ITransform {
     setMaxBounds(bounds?: LngLatBounds): void {
         this._helper.setMaxBounds(bounds);
     }
-    setTransformConstrain(constrain?: TransformConstrainFunction | null): void {
-        this._helper.setTransformConstrain(constrain);
+    setConstrainOverride(constrain?: TransformConstrainFunction | null): void {
+        this._helper.setConstrainOverride(constrain);
     }
     overrideNearFarZ(nearZ: number, farZ: number): void {
         this._helper.overrideNearFarZ(nearZ, farZ);
@@ -205,8 +205,8 @@ export class MercatorTransform implements ITransform {
     get cameraToCenterDistance(): number { 
         return this._helper.cameraToCenterDistance;
     }
-    get transformConstrain(): TransformConstrainFunction {
-        return this._helper.transformConstrain;
+    get constrainOverride(): TransformConstrainFunction {
+        return this._helper.constrainOverride;
     }
     public get nearZ(): number { 
         return this._helper.nearZ; 
@@ -542,8 +542,8 @@ export class MercatorTransform implements ITransform {
         return result;
     };
 
-    getConstrain: TransformConstrainFunction = (lngLat, zoom) => {
-        return this._helper.getConstrain(lngLat, zoom);
+    applyConstrain: TransformConstrainFunction = (lngLat, zoom) => {
+        return this._helper.applyConstrain(lngLat, zoom);
     };
 
     calculateCenterFromCameraLngLatAlt(lnglat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
