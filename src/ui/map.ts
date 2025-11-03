@@ -178,6 +178,11 @@ export type MapOptions = {
      */
     dragPan?: boolean | DragPanOptions;
     /**
+     * If `true`, gesture inertia (such as panning) is disabled. If not provided, gesture inertia defaults to the user's device settings.
+     * @defaultValue undefined
+     */
+    reduceMotion?: boolean | undefined;
+    /**
      * If `true`, keyboard shortcuts are enabled (see {@link KeyboardHandler}).
      * @defaultValue true
      */
@@ -208,7 +213,7 @@ export type MapOptions = {
      */
     trackResize?: boolean;
     /**
-     * The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` 
+     * The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]`
      * !!! note
      *     MapLibre GL JS uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
      * @defaultValue [0, 0]
@@ -682,6 +687,10 @@ export class Map extends Camera {
         this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
         this.transformConstrain = resolvedOptions.transformConstrain;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
+
+        if (resolvedOptions.reduceMotion !== undefined) {
+            browser.prefersReducedMotion = resolvedOptions.reduceMotion;
+        }
 
         this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
 
@@ -1279,7 +1288,7 @@ export class Map extends Camera {
     /** Sets or clears the callback overriding how the map constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
      *
      * @param constrain - A {@link TransformConstrainFunction} callback defining how the viewport should respect the bounds.
-     * 
+     *
      * `null` clears the callback and reverses the override of the map transform's default constrain function.
      * @example
      * ```ts
