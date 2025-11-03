@@ -22,7 +22,7 @@ import {type CanonicalTileRange} from '../source/image_source';
  * - finds all necessary renderToTexture tiles for a OverscaledTileID area
  * - finds the corresponding raster-dem tile for OverscaledTileID
  */
-export class TerrainTileManager extends Evented {
+export class TerrainRenderManager extends Evented {
     /**
      * tile manager for the raster-dem source.
      */

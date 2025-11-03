@@ -232,7 +232,7 @@ export function createTerrain(): Terrain {
         getFramebuffer: () => ({}),
         getCoordsTexture: () => ({}),
         depthAtPoint: () => .9,
-        tileManager: {
+        renderManager: {
             update: () => {},
             getRenderableTiles: () => [],
             anyTilesAfterTime: () => false

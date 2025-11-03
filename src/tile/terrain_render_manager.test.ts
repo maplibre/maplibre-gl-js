@@ -1,5 +1,5 @@
 import {describe, beforeAll, afterAll, test, expect} from 'vitest';
-import {TerrainTileManager} from './terrain_tile_manager';
+import {TerrainRenderManager} from './terrain_render_manager';
 import {Style} from '../style/style';
 import {RequestManager} from '../util/request_manager';
 import {type Dispatcher} from '../util/dispatcher';
@@ -28,10 +28,10 @@ function createSource(options, transformCallback?) {
     return source;
 }
 
-describe('TerrainTileManager', () => {
+describe('TerrainRenderManager', () => {
     let server: FakeServer;
     let style: Style;
-    let tsc: TerrainTileManager;
+    let tsc: TerrainRenderManager;
 
     beforeAll(async () => {
         global.fetch = null;
@@ -55,7 +55,7 @@ describe('TerrainTileManager', () => {
         const source = createSource({url: '/source.json'});
         server.respond();
         style.addSource('terrain', source as any);
-        tsc = new TerrainTileManager(style.tileManagers.terrain);
+        tsc = new TerrainRenderManager(style.tileManagers.terrain);
     });
 
     afterAll(() => {

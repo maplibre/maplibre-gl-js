@@ -57,7 +57,7 @@ describe('Terrain', () => {
             } as any as Tile;
         };
         const terrain = new Terrain(painter, tileManager, {} as any as TerrainSpecification);
-        terrain.tileManager.getTileByID = getTileByID;
+        terrain.renderManager.getTileByID = getTileByID;
         terrain.coordsIndex.push('abcd');
 
         const coordinate = terrain.pointCoordinate(new Point(0, 0));
@@ -79,7 +79,7 @@ describe('Terrain', () => {
         const tileManager = {_source: {tileSize: 512}} as TileManager;
         const terrain = new Terrain(painter, tileManager, {} as any as TerrainSpecification);
         const tileIdsToWraps = {a: -1, b: 0, c: 1, d: 2};
-        terrain.tileManager.getTileByID = (id) => {
+        terrain.renderManager.getTileByID = (id) => {
             return {
                 tileID: {
                     canonical: {x: 0, y: 0, z: 0},
@@ -168,7 +168,7 @@ describe('Terrain', () => {
             {exaggeration: 2} as any as TerrainSpecification,
         );
 
-        terrain.tileManager._tiles[tileID.key] = tile;
+        terrain.renderManager._tiles[tileID.key] = tile;
         const {minElevation, maxElevation} = terrain.getMinMaxElevation(tileID);
 
         expect(minElevation).toBe(0);

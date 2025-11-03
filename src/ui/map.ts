@@ -2188,7 +2188,7 @@ export class Map extends Camera {
 
         if (!options) {
             // remove terrain
-            if (this.terrain) this.terrain.tileManager.destruct();
+            if (this.terrain) this.terrain.renderManager.destruct();
             this.terrain = null;
             if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
             this.painter.renderToTexture = null;
@@ -2218,7 +2218,7 @@ export class Map extends Camera {
             this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             this._terrainDataCallback = e => {
                 if (e.dataType === 'style') {
-                    this.terrain.tileManager.freeRtt();
+                    this.terrain.renderManager.freeRtt();
                 } else if (e.dataType === 'source' && e.tile) {
                     if (e.sourceId === options.source && !this._elevationFreeze) {
                         this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
@@ -2228,9 +2228,9 @@ export class Map extends Camera {
                     }
 
                     if (e.source?.type === 'image') {
-                        this.terrain.tileManager.freeRtt();
+                        this.terrain.renderManager.freeRtt();
                     } else {
-                        this.terrain.tileManager.freeRtt(e.tile.tileID);
+                        this.terrain.renderManager.freeRtt(e.tile.tileID);
                     }
                 }
             };
@@ -3465,7 +3465,7 @@ export class Map extends Camera {
 
         // update terrain stuff
         if (this.terrain) {
-            this.terrain.tileManager.update(this.transform, this.terrain);
+            this.terrain.renderManager.update(this.transform, this.terrain);
             this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             if (!this._elevationFreeze && this._centerClampedToGround) {
                 this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
