@@ -19,6 +19,7 @@
 - If a required glyph PBF is unavailable or it lacks a glyph for a character in a `text-field`, try to render it locally instead of crashing. ([#4564](https://github.com/maplibre/maplibre-gl-js/pull/4564)) (by [@1ec5](https://github.com/1ec5))
 - Export `now()` function in timeControl API to complete the API and enable external code to read controlled time ([#6644](https://github.com/maplibre/maplibre-gl-js/pull/6644)) (by [@bjperson](https://github.com/bjperson))
 - ScaleControl CSS styling contains `white-space: nowrap` to prevent wrapping ([#6647](https://github.com/maplibre/maplibre-gl-js/pull/6647)) (by [@stroebjo](https://github.com/stroebjo))
+- Fix edge fading for unloaded tiles ([#6650](https://github.com/maplibre/maplibre-gl-js/pull/6650)) (by [@wayofthefuture](https://github.com/wayofthefuture))
 
 ## 5.10.0
 
@@ -663,7 +664,7 @@
   - `maplibregl.version` => `getVersion()`
   - `maplibregl.workerCount` => `getWorkerCount()`, `setWorkerCount(...)`
   - `maplibregl.maxParallelImageRequests` => `getMaxParallelImageRequests()`, `setMaxParallelImageRequests(...)`
-  - `maplibregl.workerUrl` => `getWorkerUrl()`, `setWorkerUrl(...)`  
+  - `maplibregl.workerUrl` => `getWorkerUrl()`, `setWorkerUrl(...)`
 
 - ⚠️ Change attribution to be on by default, change `MapOptions.attributionControl` to be the type that the control handles, removed `MapOptions.customAttribution` ([#3618](https://github.com/maplibre/maplibre-gl-js/issues/3618)). Note: showing the logo of MapLibre is not required for using MapLibre.
 - ⚠️ Changed cooperative gesture config and removed the strings from it in favor of the locale variable ([#3621](https://github.com/maplibre/maplibre-gl-js/issues/3621))
@@ -1682,8 +1683,7 @@ This release also fixes several long-standing bugs and unintentional rendering b
 
 ### ✨ Features
 
-- Add `within` expression for testing whether an evaluated feature lies within a given GeoJSON object ([#9352](https://github.com/mapbox/mapbox-gl-js/pull/9352)). - We are aware of an edge case in which points with wrapped coordinates (e.g. longitude -185) are not evaluated properly. See ([#9442](https://github.com/mapbox/mapbox-gl-js/issues/9442)) for more information. - An example of the `within` expression:<br>
-  `"icon-opacity": ["case", ["==", ["within", "some-polygon"], true], 1,
+- Add `within` expression for testing whether an evaluated feature lies within a given GeoJSON object ([#9352](https://github.com/mapbox/mapbox-gl-js/pull/9352)). - We are aware of an edge case in which points with wrapped coordinates (e.g. longitude -185) are not evaluated properly. See ([#9442](https://github.com/mapbox/mapbox-gl-js/issues/9442)) for more information. - An example of the `within` expression:<br> `"icon-opacity": ["case", ["==", ["within", "some-polygon"], true], 1,
 ["==", ["within", "some-polygon"], false], 0]`
 - Map API functions such as `easeTo` and `flyTo` now support `padding: PaddingOptions` which lets developers shift a map's center of perspective when building floating sidebars ([#8638](https://github.com/mapbox/mapbox-gl-js/pull/8638))
 
