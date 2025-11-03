@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.22">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.23">
     
     
       
@@ -2042,6 +2042,29 @@
   
   <span class="md-ellipsis">
     isTimeFrozen()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../functions/now/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    now()
     
   </span>
   
@@ -7532,6 +7555,52 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../examples/style-labels-with-local-fonts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Style labels with local fonts
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/style-labels-with-web-fonts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Style labels with Web fonts
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../examples/style-lines-with-a-data-driven-property/" class="md-nav__link">
         
   
@@ -8133,14 +8202,14 @@
 <blockquote>
 <p><strong>QuerySourceFeatureOptions</strong> = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/93634b011a147666a62887bc61bffd351fa9971d/src/source/query_features.ts#L53">src/source/query_features.ts:53</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/source/query_features.ts#L53">src/source/query_features.ts:53</a></p>
 <p>The options object related to the <a href="../../classes/Map/#querysourcefeatures">Map.querySourceFeatures</a> method</p>
 <h2 id="properties">Properties</h2>
 <h3 id="filter">filter?</h3>
 <blockquote>
 <p><code>optional</code> <strong>filter</strong>: <code>FilterSpecification</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/93634b011a147666a62887bc61bffd351fa9971d/src/source/query_features.ts#L62">src/source/query_features.ts:62</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/source/query_features.ts#L62">src/source/query_features.ts:62</a></p>
 <p>A <a href="https://maplibre.org/maplibre-style-spec/layers/#filter">filter</a>
 to limit query results.</p>
 <hr />
@@ -8148,14 +8217,14 @@ to limit query results.</p>
 <blockquote>
 <p><code>optional</code> <strong>sourceLayer</strong>: <code>string</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/93634b011a147666a62887bc61bffd351fa9971d/src/source/query_features.ts#L57">src/source/query_features.ts:57</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/source/query_features.ts#L57">src/source/query_features.ts:57</a></p>
 <p>The name of the source layer to query. <em>For vector tile sources, this parameter is required.</em> For GeoJSON sources, it is ignored.</p>
 <hr />
 <h3 id="validate">validate?</h3>
 <blockquote>
 <p><code>optional</code> <strong>validate</strong>: <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/93634b011a147666a62887bc61bffd351fa9971d/src/source/query_features.ts#L67">src/source/query_features.ts:67</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/source/query_features.ts#L67">src/source/query_features.ts:67</a></p>
 <p>Whether to check if the [parameters.filter] conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.</p>
 <h4 id="default-value">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kc">true</span>

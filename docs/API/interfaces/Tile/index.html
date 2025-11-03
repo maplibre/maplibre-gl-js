@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.22">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.23">
     
     
       
@@ -2042,6 +2042,29 @@
   
   <span class="md-ellipsis">
     isTimeFrozen()
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../functions/now/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    now()
     
   </span>
   
@@ -7532,6 +7555,52 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../examples/style-labels-with-local-fonts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Style labels with local fonts
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/style-labels-with-web-fonts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Style labels with Web fonts
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../examples/style-lines-with-a-data-driven-property/" class="md-nav__link">
         
   
@@ -8130,7 +8199,7 @@
 
 
 <h1 id="tile">Tile</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/93634b011a147666a62887bc61bffd351fa9971d/src/source/tile.ts#L68">src/source/tile.ts:68</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/tile/tile.ts#L68">src/tile/tile.ts:68</a></p>
 <p>A tile object is the combination of a Coordinate, which defines
 its place, as well as a unique ID and data tracking for its content</p>
 <h2 id="methods">Methods</h2>
@@ -8138,7 +8207,7 @@ its place, as well as a unique ID and data tracking for its content</p>
 <blockquote>
 <p><strong>loadVectorData</strong>(<code>data</code>: <a href="../../type-aliases/WorkerTileResult/"><code>WorkerTileResult</code></a>, <code>painter</code>: <code>any</code>, <code>justReloaded?</code>: <code>boolean</code>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/93634b011a147666a62887bc61bffd351fa9971d/src/source/tile.ts#L206">src/source/tile.ts:206</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/tile/tile.ts#L206">src/tile/tile.ts:206</a></p>
 <p>Given a data object with a 'buffers' property, load it into
 this tile's elementGroups and buffers properties and set loaded
 to true. If the data is null, like in the case of an empty
@@ -8177,7 +8246,7 @@ GeoJSON tile, no-op but still set loaded to true.</p>
 <blockquote>
 <p><strong>setSelfFadeLogic</strong>(<code>fadeEndTime</code>: <code>number</code>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/93634b011a147666a62887bc61bffd351fa9971d/src/source/tile.ts#L171">src/source/tile.ts:171</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/tile/tile.ts#L171">src/tile/tile.ts:171</a></p>
 <p>Self fading for edge tiles (when panning map)</p>
 <h4 id="parameters_1">Parameters</h4>
 <table>
@@ -8201,7 +8270,7 @@ GeoJSON tile, no-op but still set loaded to true.</p>
 <blockquote>
 <p><strong>unloadVectorData</strong>(): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/93634b011a147666a62887bc61bffd351fa9971d/src/source/tile.ts#L280">src/source/tile.ts:280</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/tile/tile.ts#L280">src/tile/tile.ts:280</a></p>
 <p>Release any data or WebGL resources referenced by this tile.</p>
 <h4 id="returns_2">Returns</h4>
 <p><code>void</code></p>
