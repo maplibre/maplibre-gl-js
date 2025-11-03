@@ -137,9 +137,9 @@ describe('Map', () => {
             await map.once('load');
             const fakeTileId = new OverscaledTileID(0, 0, 0, 0, 0);
             map.addSource('geojson', createStyleSource());
-            map.style.tileManagers.geojson._store._tiles[fakeTileId.key] = new Tile(fakeTileId, undefined);
+            map.style.tileManagers.geojson.getStore().addTile(new Tile(fakeTileId, undefined));
             expect(map.areTilesLoaded()).toBe(false);
-            map.style.tileManagers.geojson._store._tiles[fakeTileId.key].state = 'loaded';
+            map.style.tileManagers.geojson.getStore().getTileByID(fakeTileId.key).state = 'loaded';
             expect(map.areTilesLoaded()).toBe(true);
         });
     });

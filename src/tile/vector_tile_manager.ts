@@ -81,7 +81,7 @@ export class VectorTileStrategy implements TileManagerStrategy {
         const tiles = this._store.getTiles();
         for (const id in tiles) {
             if (tiles[id].holdingForSymbolFade()) {
-                this._store.removeTile(id);
+                this._store.removeTileByID(id);
             }
         }
     }
@@ -92,7 +92,7 @@ export class VectorTileStrategy implements TileManagerStrategy {
      * @param pointQueryGeometry - coordinates of the corners of bounding rectangle
      * @returns result items have `{tile, minX, maxX, minY, maxY}`, where min/max bounding values are the given bounds transformed in into the coordinate space of this tile.
      */
-    tilesIn(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean, transform: ITransform | undefined, terrain: Terrain | undefined): TileResult[] {
+    tilesIn(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean, transform: ITransform, terrain: Terrain): TileResult[] {
         const tileResults: TileResult[] = [];
 
         if (!transform) return tileResults;

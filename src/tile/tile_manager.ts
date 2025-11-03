@@ -124,10 +124,7 @@ export class TileManager extends Evented {
      */
     static maxUnderzooming: number = 10;
 
-    /**
-     * Overridable function for extending classes to process the tile when retrieved from cache.
-     */
-    constructor(id: string, options: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, type: 'vector' | 'raster' | string) {
+    constructor(id: string, options: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher) {
         super();
         this.id = id;
         this.dispatcher = dispatcher;
@@ -145,7 +142,7 @@ export class TileManager extends Evented {
 
         this._source = createSource(id, options, dispatcher, this);
         this._store = new TileStore(tile => this._unloadTile(tile));
-        this._strategy = type === 'raster'
+        this._strategy = options.type === 'raster'
             ? new RasterTileStrategy(this._store)
             : new VectorTileStrategy(this._store);
 
@@ -197,6 +194,10 @@ export class TileManager extends Evented {
 
     getSource(): Source {
         return this._source;
+    }
+
+    getStore(): TileStore {
+        return this._store;
     }
 
     getState(): SourceFeatureState {
@@ -399,7 +400,7 @@ export class TileManager extends Evented {
     }
 
     getTile(tileID: OverscaledTileID): Tile {
-        return this._store.getTile(tileID);
+        return this._store.getTileByID(tileID.key);
     }
 
     getTileByID(id: string): Tile {
@@ -708,7 +709,7 @@ export class TileManager extends Evented {
      * Add a tile, given its coordinate, to the pyramid.
      */
     _addTile(tileID: OverscaledTileID): Tile {
-        let tile = this._store.getTile(tileID);
+        let tile = this._store.getTileByID(tileID.key);
         if (tile)
             return tile;
 
@@ -809,7 +810,7 @@ export class TileManager extends Evented {
         if (!tile) return;
 
         tile.uses--;
-        this._store.removeTile(id);
+        this._store.removeTileByID(id);
         this._clearTileReloadTimer(id);
 
         if (tile.uses > 0) return;

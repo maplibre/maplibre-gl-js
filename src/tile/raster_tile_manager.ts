@@ -1,7 +1,6 @@
 import {type TileManagerStrategy} from './tile_manager';
 import {type TileStore} from './tile_store';
 import {type Tile, FadingDirections, FadingRoles} from './tile';
-import {getEdgeTiles} from '../util/util';
 import {now} from '../util/time_control';
 import type {OverscaledTileID} from './tile_id';
 
@@ -80,8 +79,8 @@ export class RasterTileStrategy implements TileManagerStrategy {
      */
     _updateFadingTiles(idealTileIDs: OverscaledTileID[], retain: Record<string, OverscaledTileID>, sourceMinZoom: number, sourceMaxZoom: number) {
         const currentTime: number = now();
-        const edgeTileIDs: Set<OverscaledTileID> = getEdgeTiles(idealTileIDs);
         const tiles = this._store.getTiles();
+        const edgeTileIDs: Set<OverscaledTileID> = this._store.getEdgeTiles(idealTileIDs);
 
         for (const idealID of idealTileIDs) {
             const idealTile = tiles[idealID.key];

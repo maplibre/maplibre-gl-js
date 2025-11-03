@@ -14,7 +14,7 @@ describe('QueryFeatures.rendered', () => {
             data: {type: 'FeatureCollection', features: []}
         }, {
             getActor() {}
-        } as any, 'vector');
+        } as any);
         const transform = new MercatorTransform();
         const result = queryRenderedFeatures(mockTileManager, {}, undefined, [] as Point[], undefined, transform, undefined);
         expect(result).toEqual({});
@@ -29,7 +29,7 @@ describe('QueryFeatures.source', () => {
             data: {type: 'FeatureCollection', features: []}
         }, {
             getActor() {}
-        } as any, 'vector');
+        } as any);
         const result = querySourceFeatures(tileManager, {});
         expect(result).toEqual([]);
     });

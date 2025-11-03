@@ -1005,7 +1005,7 @@ export class Style extends Evented {
         if (shouldValidate && this._validate(validateStyle.source, `sources.${id}`, source, null, options)) return;
         if (this.map && this.map._collectResourceTiming) (source as any).collectResourceTiming = true;
 
-        const tileManager = new TileManager(id, source as SourceSpecification, this.dispatcher, source.type);
+        const tileManager = new TileManager(id, source as SourceSpecification, this.dispatcher);
         tileManager.style = this;
         tileManager.setEventedParent(this, () => ({
             isSourceLoaded: tileManager.loaded(),

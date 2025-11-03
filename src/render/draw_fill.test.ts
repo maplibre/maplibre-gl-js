@@ -1,7 +1,7 @@
 import {describe, test, expect, vi, type Mock} from 'vitest';
 import {mat4} from 'gl-matrix';
 import {OverscaledTileID} from '../tile/tile_id';
-import {type TileManager} from '../tile/tile_manager';
+import {TileManager} from '../tile/tile_manager';
 import {Tile} from '../tile/tile';
 import {Painter, type RenderOptions} from './painter';
 import {Program} from './program';
@@ -29,13 +29,6 @@ vi.mock('../data/bucket/symbol_bucket', () => {
 });
 vi.mock('../symbol/projection');
 
-function createMockMap() {
-    return {
-        showCollisionBoxes: false,
-        _fadeDuration: 300
-    } as any as Map;
-}
-
 describe('drawFill', () => {
     test('should call programConfiguration.setConstantPatternPositions for transitioning fill-pattern', () => {
 
@@ -47,10 +40,9 @@ describe('drawFill', () => {
 
         const mockTile = constructMockTile(layer);
 
-        const tileManagerMock = {
-            map: createMockMap(),
-            getTile: vi.fn().mockReturnValue(mockTile)
-        } as any as TileManager;
+        const tileManagerMock = new TileManager(null, null, null);
+        (tileManagerMock.getTile as Mock).mockReturnValue(mockTile);
+        tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
 
         const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
         drawFill(painterMock, tileManagerMock, layer, [mockTile.tileID], renderOptions);
