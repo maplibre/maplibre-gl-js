@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Add reduceMotion option to Map Options ([#6661](https://github.com/maplibre/maplibre-gl-js/pull/6661))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
