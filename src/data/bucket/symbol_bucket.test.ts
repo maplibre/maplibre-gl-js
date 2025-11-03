@@ -172,8 +172,8 @@ describe('SymbolBucket', () => {
     });
 
     test('SymbolBucket image mismatched sdf', () => {
-        const spy = vi.spyOn(console, 'warn').mockImplementation(() => { });
-        spy.mockReset();
+        const originalWarn = console.warn;
+        console.warn = vi.fn();
 
         const imageMap = {
             a: {
@@ -208,7 +208,8 @@ describe('SymbolBucket', () => {
         performSymbolLayout({bucket, imageMap, imagePositions: imagePos, subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision} as any);
 
         // true SDF and false SDF in same bucket should trigger warning
-        expect(spy).toHaveBeenCalledTimes(1);
+        expect(console.warn).toHaveBeenCalledTimes(1);
+        console.warn = originalWarn;
     });
 
     test('SymbolBucket detects rtl text', () => {
