@@ -9,11 +9,13 @@
 ## 5.11.0
 
 ### ✨ Features and improvements
+
 - Improve performance of `GeoJSONSource#updateData` when called on small diffs ([#6562](https://github.com/maplibre/maplibre-gl-js/pull/6562))
 - If the stylesheet lacks a `glyphs` property at the root level, interpret the `text-font` property as a cascading fallback list of font names and render all text using local or system fonts. ([#4564](https://github.com/maplibre/maplibre-gl-js/pull/4564))
 - ⚠️ Refactor SourceCache to TileManager ([#6635](https://github.com/maplibre/maplibre-gl-js/pull/6635)) - this is not a breaking change since SourceCache is not part of the public API, but if you have a plugin that uses internal stuff, it might break...
 
 ### 🐞 Bug fixes
+
 - If a required glyph PBF is unavailable or it lacks a glyph for a character in a `text-field`, try to render it locally instead of crashing. ([#4564](https://github.com/maplibre/maplibre-gl-js/pull/4564))
 - Export `now()` function in timeControl API to complete the API and enable external code to read controlled time ([#6644](https://github.com/maplibre/maplibre-gl-js/pull/6644))
 - ScaleControl CSS styling contains `white-space: nowrap` to prevent wrapping ([#6647](https://github.com/maplibre/maplibre-gl-js/pull/6647))
@@ -21,12 +23,14 @@
 ## 5.10.0
 
 ### ✨ Features and improvements
+
 - Add time control API (`setNow`, `restoreNow`, `isTimeFrozen`) for deterministic rendering, enabling frame-by-frame video export and deterministic testing ([6544](https://github.com/maplibre/maplibre-gl-js/pull/6544))
 - Use styles `isHidden` logic in the worker by adding a new optional `roundMinZoom` parameter ([#6547](https://github.com/maplibre/maplibre-gl-js/pull/6547))
 - Add `transformConstrain` callback to the `Map` options to override the transform's `constrain` with new type `TransformConstrainFunction`; refactor transform constructor options to a `TransformOptions` object ([#6484](https://github.com/maplibre/maplibre-gl-js/issues/6484))
 - Use timeControl.now() instead of browser.now() ([6573](https://github.com/maplibre/maplibre-gl-js/pull/6573))
 
 ### 🐞 Bug fixes
+
 - Contextmenu events not blocked by scrolling ([#5683](https://github.com/maplibre/maplibre-gl-js/issues/5683)
 - Mousemove events are not blocked by scrolling ([#6302](https://github.com/maplibre/maplibre-gl-js/issues/6302))
 - Dashed lines have blurry rounded caps ([#6554](https://github.com/maplibre/maplibre-gl-js/pull/6554))
