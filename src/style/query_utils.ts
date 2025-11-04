@@ -62,21 +62,47 @@ export function offsetLine(rings: Array<Array<Point>>, offset: number) {
     for (let ringIndex = 0; ringIndex < rings.length; ringIndex++) {
         const ring = rings[ringIndex];
         const newRing: Array<Point> = [];
-        for (let index = 0; index < ring.length; index++) {
-            const a = ring[index - 1];
-            const b = ring[index];
-            const c = ring[index + 1];
-            const aToB = index === 0 ? new Point(0, 0) : b.sub(a)._unit()._perp();
-            const bToC = index === ring.length - 1 ? new Point(0, 0) : c.sub(b)._unit()._perp();
-            const extrude = aToB._add(bToC)._unit();
+        let refPoint;
+        ring.forEach((point, index, ring) => {
+            let aToB: Point;
+            let bToC: Point;
+            let nextPoint: Point;
+            if (index === 0) {
+                // first iteration, set refPoint as current point
+                refPoint = point;
+                aToB = new Point(0, 0);
+            } else if (refPoint.x === point.x && refPoint.y === point.y) {
+                aToB = new Point(0, 0);
+            } else {
+                aToB = point.sub(refPoint)._unit()._perp();
+            }
+            if (index === ring.length - 1) {
+                // final iteration; no next point
+                bToC = new Point(0, 0);
+            } else {
+                nextPoint = ring[index +1];
+                if (point.x === nextPoint.x && nextPoint.y === point.y) {
+                    bToC = new Point(0, 0);
+                } else {
+                    bToC = nextPoint.sub(point)._unit()._perp();
+                }
+            }
+            if (aToB.x === 0 && bToC.x === 0 && aToB.y === 0 && bToC.y === 0) {
+                // no change means final point will be a duplicate of the previous; can be excluded
+                return;
+            } else {
+                const extrude = aToB._add(bToC)._unit();
+                const cosHalfAngle = extrude.x * bToC.x + extrude.y * bToC.y;
+                if (cosHalfAngle !== 0) {
+                    extrude._mult(1 / cosHalfAngle);
+                }
 
-            const cosHalfAngle = extrude.x * bToC.x + extrude.y * bToC.y;
-            if (cosHalfAngle !== 0) {
-                extrude._mult(1 / cosHalfAngle);
+                newRing.push(extrude._mult(offset)._add(point));
             }
 
-            newRing.push(extrude._mult(offset)._add(b));
-        }
+            refPoint = point;
+
+        });
         newRings.push(newRing);
     }
     return newRings;
