@@ -2,7 +2,7 @@
 
 ### ✨ Features and improvements
 
-- Slice vector tiles to improve over scale vector handling ([#6521](https://github.com/maplibre/maplibre-gl-js/pull/6521)) ⚠️ This is an experimental feature that currently only applies to Safari by default to prevent it from crashing at high zoom levels. This is not enabled by default for all browsers as it changes rendering of polygon features in high zoom levels due to tile splitting. It adds the `experimentalOverzoomingByClippingTiles` flag to `MapOptions` to allow controlling this behavior if needed. Use `true` for partitioning and `false` for scaling. It seems to have better performance at high zoom levels.
+- Slice vector tiles to improve over scale vector handling ([#6521](https://github.com/maplibre/maplibre-gl-js/pull/6521)). It adds the `experimentalZoomLevelsToOverscale` flag to `MapOptions` to allow controlling how many zoom levels to slice and how many to scale. It seems to have better performance at high zoom levels. It can prevent Safar crashes in some scnarios by setting it to 4 or less. (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
