@@ -14,7 +14,7 @@ import {sleep, waitForEvent, beforeMapTest, createMap as globalCreateMap} from '
 import {now} from '../util/time_control';
 
 import {type Map} from '../ui/map';
-import {RasterTileStrategy} from './raster_tile_manager';
+import {RasterTileStrategy} from './raster_tile_strategy';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {GlobeTransform} from '../geo/projection/globe_transform';
 import {coveringTiles} from '../geo/projection/covering_tiles';

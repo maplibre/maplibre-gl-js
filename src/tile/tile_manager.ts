@@ -1,7 +1,7 @@
 import {create as createSource} from '../source/source';
 
-import {VectorTileStrategy, type TileResult} from './vector_tile_manager';
-import {RasterTileStrategy} from './raster_tile_manager';
+import {VectorTileStrategy, type TileResult} from './vector_tile_strategy';
+import {RasterTileStrategy} from './raster_tile_strategy';
 import {TileStore} from './tile_store';
 import {OverscaledTileID, sortTileIDs} from './tile_id';
 import {Tile} from './tile';
