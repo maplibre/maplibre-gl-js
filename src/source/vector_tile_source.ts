@@ -245,14 +245,15 @@ export class VectorTileSource extends Evented implements Source {
         if (tile.tileID.canonical.z <= this.maxzoom) {
             return undefined;
         }
+        if (this.map._zoomLevelsToOverscale === undefined) {
+            return undefined;
+        }
         const maxZoomTileID = tile.tileID.scaledTo(this.maxzoom).canonical;
         const maxZoomTileUrl = maxZoomTileID.url(this.tiles, this.map.getPixelRatio(), this.scheme);
 
         return {
             maxZoomTileID,
-            overzoomRequest: this.map._requestManager.transformRequest(maxZoomTileUrl, ResourceType.Tile),
-            maxOverzoom: this.map.getMaxZoom(),
-            tileSize: this.tileSize
+            overzoomRequest: this.map._requestManager.transformRequest(maxZoomTileUrl, ResourceType.Tile)
         };
     }
 

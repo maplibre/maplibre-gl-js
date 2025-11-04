@@ -371,16 +371,17 @@ export type MapOptions = {
      */
     centerClampedToGround?: boolean;
     /**
-     * Allows overzooming using by splitting vector tiles after max zoom.
-     * When set to `true` this has better performance at high zoom levels and prevents Safari from crashing.
-     * The default is `false` for most cases as it changes rendering of polygon features at high zoom levels due to tile splitting.
-     * If `true`, tiles over the source's maxzoom will be split using into subtiles (partitioning).
-     * if `false`, tiles will be overzoomed using scaling.
-     * @defaultValue `true` for Safari to prevent crashes and `false` for other browsers
-     * This may change or be removed in future versions.
+     * Allows overzooming by splitting vector tiles after max zoom.
+     * Defines the number of zoom level that will overscale from map's max zoom and below.
+     * For example if the map's max zoom is 20 and this is set to 3, the zoom levels of 20, 19 and 18 will be overscaled 
+     * and the rest will be split.
+     * When undefined, all zoom levels after source's max zoom will be overscaled.
+     * This can help in reducing the size of the overscaling and improve performance in high zoom levels.
+     * The drawback is that it changes rendering for polygon centered labels and changes the results of query rendered features.
+     * @defaultValue undefined
      * @experimental
      */
-    experimentalOverzoomingByClippingTiles?: boolean;
+    experimentalZoomLevelsToOverscale?: number;
 };
 
 export type AddImageOptions = {
@@ -466,7 +467,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     maxCanvasSize: [4096, 4096],
     cancelPendingTileRequestsWhileZooming: true,
     centerClampedToGround: true,
-    experimentalOverzoomingByClippingTiles: isSafari(globalThis) ? true : false
+    experimentalZoomLevelsToOverscale: undefined
 };
 
 /**
@@ -551,7 +552,7 @@ export class Map extends Camera {
     _maxCanvasSize: [number, number];
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
     /** @internal */
-    _overzoomingByClippingTiles: boolean;
+    _zoomLevelsToOverscale: number | undefined;
     /**
      * @internal
      * image queue throttling handle. To be used later when clean up
@@ -692,7 +693,7 @@ export class Map extends Camera {
         this._clickTolerance = resolvedOptions.clickTolerance;
         this._overridePixelRatio = resolvedOptions.pixelRatio;
         this._maxCanvasSize = resolvedOptions.maxCanvasSize;
-        this._overzoomingByClippingTiles = resolvedOptions.experimentalOverzoomingByClippingTiles === true;
+        this._zoomLevelsToOverscale = resolvedOptions.experimentalZoomLevelsToOverscale;
         this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
         this.transformConstrain = resolvedOptions.transformConstrain;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
