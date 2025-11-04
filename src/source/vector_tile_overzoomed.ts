@@ -4,7 +4,7 @@ import Point from '@mapbox/point-geometry';
 import {fromVectorTileJs} from '@maplibre/vt-pbf';
 import {clipGeometry} from '../symbol/clip_line';
 import type {LoadVectorTileResult} from './vector_tile_worker_source';
-import type {CanonicalTileID} from './tile_id';
+import type {CanonicalTileID} from '../tile/tile_id';
 
 class VectorTileFeatureOverzoomed extends VectorTileFeature {
     pointsArray: Point[][];
