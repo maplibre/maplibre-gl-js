@@ -44,7 +44,7 @@ export class VectorTileWorkerSource implements WorkerSource {
     fetching: {[_: string]: FetchingState };
     loading: {[_: string]: WorkerTile};
     loaded: {[_: string]: WorkerTile};
-    overzoomedTilesCache: BoundedLRUCache<string, LoadVectorTileResult>;
+    overzoomedTileResultCache: BoundedLRUCache<string, LoadVectorTileResult>;
 
     /**
      * @param loadVectorData - Optional method for custom loading of a VectorTile
@@ -59,7 +59,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         this.fetching = {};
         this.loading = {};
         this.loaded = {};
-        this.overzoomedTilesCache = new BoundedLRUCache<string, LoadVectorTileResult>(1000);
+        this.overzoomedTileResultCache = new BoundedLRUCache<string, LoadVectorTileResult>(1000);
     }
 
     /**
@@ -167,7 +167,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         const {maxZoomTileID} = overzoomParameters;
 
         const cacheKey = `${maxZoomTileID.key}_${tileID.key}`;
-        const cachedOverzoomTile = this.overzoomedTilesCache.get(cacheKey);
+        const cachedOverzoomTile = this.overzoomedTileResultCache.get(cacheKey);
         
         if (cachedOverzoomTile) {
             return cachedOverzoomTile;
@@ -188,7 +188,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             }
         }
         const overzoomedVectorTileResult = toVirtualVectorTile(overzoomedVectorTile);
-        this.overzoomedTilesCache.set(cacheKey, overzoomedVectorTileResult);
+        this.overzoomedTileResultCache.set(cacheKey, overzoomedVectorTileResult);
 
         return overzoomedVectorTileResult;
     }
