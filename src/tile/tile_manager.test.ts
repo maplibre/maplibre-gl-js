@@ -11,6 +11,7 @@ import {extend} from '../util/util';
 import {type Dispatcher} from '../util/dispatcher';
 import {TileBounds} from './tile_bounds';
 import {sleep, waitForEvent, beforeMapTest, createMap as globalCreateMap} from '../util/test/util';
+import {now} from '../util/time_control';
 
 import {type Map} from '../ui/map';
 import {type TileCache} from './tile_cache';
@@ -402,6 +403,24 @@ describe('TileManager.removeTile', () => {
         tileManager._removeTile(tileID.key);
     });
 
+    test('resets raster fade timer upon load of unloaded edge tiles', async () => {
+        const tileManager = createTileManager();
+        tileManager._rasterFadeDuration = 300;
+        let tile: Tile;
+        let endMs: number;
+        tileManager._source.loadTile = async (_tile) => {
+            tile = _tile;
+            tile.selfFading = true;
+            tile.fadeEndTime = now() + tileManager._rasterFadeDuration;
+            await sleep(100);
+            endMs = now();
+        };
+        tileManager._addTile(new OverscaledTileID(0, 0, 0, 0, 0));
+        await sleep(200);
+        const deltaMs = tile.fadeEndTime - endMs;
+        expect(deltaMs).toBeGreaterThanOrEqual(290);
+        expect(deltaMs).toBeLessThanOrEqual(310);
+    });
 });
 
 describe('TileManager / Source lifecycle', () => {
