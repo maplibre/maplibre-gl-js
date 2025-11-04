@@ -97,6 +97,11 @@ function getAnchors(line: Array<Point>,
         spacing = labelLength + spacing / 4;
     }
 
+    // Apply additional spacing multiplier for high overscaling to prevent excessive label density
+    // This ensures we don't exceed MAX_GLYPHS even at extreme zoom levels
+    const overscaleFactor = Math.max(1, overscaling / 64);
+    spacing = spacing * overscaleFactor;
+
     // Offset the first anchor by:
     // Either half the label length plus a fixed extra offset if the line is not continued
     // Or half the spacing if the line is continued.
