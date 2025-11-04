@@ -4,10 +4,10 @@ import {EXTENT} from '../data/extent';
 import {type SymbolInstanceArray} from '../data/array_types.g';
 
 import type {SymbolInstance} from '../data/array_types.g';
-import type {OverscaledTileID} from '../source/tile_id';
+import type {OverscaledTileID} from '../tile/tile_id';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket';
 import type {StyleLayer} from '../style/style_layer';
-import type {Tile} from '../source/tile';
+import type {Tile} from '../tile/tile';
 
 /*
     The CrossTileSymbolIndex generally works on the assumption that

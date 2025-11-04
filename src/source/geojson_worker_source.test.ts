@@ -1,7 +1,7 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {createGeoJSONIndex, GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source';
 import {StyleLayerIndex} from '../style/style_layer_index';
-import {OverscaledTileID} from './tile_id';
+import {OverscaledTileID} from '../tile/tile_id';
 import perf from '../util/performance';
 import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type Actor} from '../util/actor';

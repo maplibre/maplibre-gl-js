@@ -10,7 +10,7 @@ import {EXTENT} from '../data/extent';
 
 import type {PaddingOptions} from './edge_insets';
 import type {IReadonlyTransform, ITransformGetters, TransformConstrainFunction} from './transform_interface';
-import type {OverscaledTileID} from '../source/tile_id';
+import type {OverscaledTileID} from '../tile/tile_id';
 import {Bounds} from './bounds';
 /**
  * If a path crossing the antimeridian would be shorter, extend the final coordinate so that

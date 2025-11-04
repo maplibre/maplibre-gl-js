@@ -8,11 +8,11 @@ import {
 } from './program/color_relief_program';
 
 import type {Painter, RenderOptions} from './painter';
-import type {SourceCache} from '../source/source_cache';
+import type {TileManager} from '../tile/tile_manager';
 import type {ColorReliefStyleLayer} from '../style/style_layer/color_relief_style_layer';
-import type {OverscaledTileID} from '../source/tile_id';
+import type {OverscaledTileID} from '../tile/tile_id';
 
-export function drawColorRelief(painter: Painter, sourceCache: SourceCache, layer: ColorReliefStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawColorRelief(painter: Painter, tileManager: TileManager, layer: ColorReliefStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
     if (!tileIDs.length) return;
 
@@ -28,18 +28,18 @@ export function drawColorRelief(painter: Painter, sourceCache: SourceCache, laye
     if (useSubdivision) {
         // Two-pass rendering
         const [stencilBorderless, stencilBorders, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
-        renderColorRelief(painter, sourceCache, layer, coords, stencilBorderless, depthMode, colorMode, false, isRenderingToTexture); // draw without borders
-        renderColorRelief(painter, sourceCache, layer, coords, stencilBorders, depthMode, colorMode, true, isRenderingToTexture); // draw with borders
+        renderColorRelief(painter, tileManager, layer, coords, stencilBorderless, depthMode, colorMode, false, isRenderingToTexture); // draw without borders
+        renderColorRelief(painter, tileManager, layer, coords, stencilBorders, depthMode, colorMode, true, isRenderingToTexture); // draw with borders
     } else {
         // Simple rendering
         const [stencil, coords] = painter.getStencilConfigForOverlapAndUpdateStencilID(tileIDs);
-        renderColorRelief(painter, sourceCache, layer, coords, stencil, depthMode, colorMode, false, isRenderingToTexture);
+        renderColorRelief(painter, tileManager, layer, coords, stencil, depthMode, colorMode, false, isRenderingToTexture);
     }
 }
 
 function renderColorRelief(
     painter: Painter,
-    sourceCache: SourceCache,
+    tileManager: TileManager,
     layer: ColorReliefStyleLayer,
     coords: Array<OverscaledTileID>,
     stencilModes: {[_: number]: Readonly<StencilMode>},
@@ -59,7 +59,7 @@ function renderColorRelief(
     let colorRampSize = 0;
 
     for (const coord of coords) {
-        const tile = sourceCache.getTile(coord);
+        const tile = tileManager.getTile(coord);
         const dem = tile.dem;
         if(firstTile) {
             const maxLength = gl.getParameter(gl.MAX_TEXTURE_SIZE);

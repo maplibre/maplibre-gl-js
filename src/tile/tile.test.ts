@@ -1,7 +1,7 @@
 import {describe, test, expect, vi} from 'vitest';
 import {createSymbolBucket} from '../../test/unit/lib/create_symbol_layer';
-import {Tile} from '../source/tile';
-import {OverscaledTileID} from '../source/tile_id';
+import {Tile} from './tile';
+import {OverscaledTileID} from './tile_id';
 import fs from 'fs';
 import path from 'path';
 import {type Feature, fromVectorTileJs, GeoJSONWrapper} from '@maplibre/vt-pbf';

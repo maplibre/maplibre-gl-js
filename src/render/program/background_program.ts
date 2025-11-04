@@ -13,7 +13,7 @@ import type {Context} from '../../gl/context';
 import type {Color, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {CrossFaded} from '../../style/properties';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters';
-import type {OverscaledTileID} from '../../source/tile_id';
+import type {OverscaledTileID} from '../../tile/tile_id';
 
 export type BackgroundUniformsType = {
     'u_opacity': Uniform1f;

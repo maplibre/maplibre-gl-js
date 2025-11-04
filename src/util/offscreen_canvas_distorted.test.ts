@@ -1,14 +1,23 @@
-import {test, expect, vi} from 'vitest';
+import {test, expect, vi, describe, beforeEach} from 'vitest';
 import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';
 import {Canvas} from 'canvas';
 import {offscreenCanvasSupported} from './offscreen_canvas_supported';
 
-test('normal operation does not mangle canvas', () => {
-    const OffscreenCanvas = (window as any).OffscreenCanvas = vi.fn((width:number, height: number) => {
-        return new Canvas(width, height);
+describe('Offscreen canvas', () => {
+    let OffscreenCanvasMock: any;
+    beforeEach(() => {
+        OffscreenCanvasMock = vi.fn(function (width:number, height: number) {
+            return new Canvas(width, height);
+        }) as any;
+        global.OffscreenCanvas = OffscreenCanvasMock;
     });
-    expect(offscreenCanvasSupported()).toBeTruthy();
-    OffscreenCanvas.mockClear();
-    expect(isOffscreenCanvasDistorted()).toBeFalsy();
-    expect(OffscreenCanvas).toHaveBeenCalledTimes(1);
+    test('normal operation does not mangle canvas', () => {
+        expect(offscreenCanvasSupported()).toBeTruthy();
+    });
+
+    test('distoreted is false by default', () => {
+        expect(isOffscreenCanvasDistorted()).toBeFalsy();
+        expect(OffscreenCanvasMock).toHaveBeenCalledTimes(1);
+    });
 });
+
