@@ -208,7 +208,7 @@ export type MapOptions = {
      */
     trackResize?: boolean;
     /**
-     * The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` 
+     * The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]`
      * !!! note
      *     MapLibre GL JS uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
      * @defaultValue [0, 0]
@@ -399,6 +399,11 @@ type DelegatedListener = {
 
 type Delegate<E extends Event = Event> = (e: E) => void;
 
+type LostContextStyle = {
+    style: StyleSpecification | null;
+    images: {[_: string]: StyleImage} | null;
+};
+
 const defaultMinZoom = -2;
 const defaultMaxZoom = 22;
 
@@ -560,6 +565,15 @@ export class Map extends Camera {
     _imageQueueHandle: number;
 
     /**
+     * @internal
+     * Used to store the previous style and images when a context loss occurs, so they can be restored.
+     */
+    _lostContextStyle: LostContextStyle = {
+        style: null,
+        images: null
+    };
+
+    /**
      * The map's {@link ScrollZoomHandler}, which implements zooming in and out with a scroll wheel or trackpad.
      * Find more details and examples using `scrollZoom` in the {@link ScrollZoomHandler} section.
      */
@@ -673,7 +687,7 @@ export class Map extends Camera {
             transform.setRenderWorldCopies(resolvedOptions.renderWorldCopies);
         }
         if (resolvedOptions.transformConstrain !== null) {
-            transform.setConstrain(resolvedOptions.transformConstrain);
+            transform.setConstrainOverride(resolvedOptions.transformConstrain);
         }
 
         super(transform, cameraHelper, {bearingSnap: resolvedOptions.bearingSnap});
@@ -1294,8 +1308,8 @@ export class Map extends Camera {
     /** Sets or clears the callback overriding how the map constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
      *
      * @param constrain - A {@link TransformConstrainFunction} callback defining how the viewport should respect the bounds.
-     * 
-     * `null` clears the callback and reverses the override of the map transform's default constrain function.
+     *
+     * `null` clears the callback and reverts the constrain to the map transform's default constrain function.
      * @example
      * ```ts
      * function customTransformConstrain(lngLat, zoom) {
@@ -1306,7 +1320,7 @@ export class Map extends Camera {
      * @see [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/)
      */
     setTransformConstrain(constrain?: TransformConstrainFunction | null): Map {
-        this.transform.setConstrain(constrain);
+        this.transform.setConstrainOverride(constrain);
         return this._update();
     }
 
@@ -2048,6 +2062,21 @@ export class Map extends Camera {
         if (this.style) {
             return this.style.serialize();
         }
+    }
+
+    /**
+     * @internal
+     * Returns the map's style and cloned images to restore context.
+     * @returns An object containing the style and images.
+     */
+    _getStyleAndImages(): LostContextStyle {
+        if (this.style) {
+            return {
+                style: this.style.serialize(),
+                images: this.style.imageManager.cloneImages()
+            };
+        }
+        return {style: null, images: {}};
     }
 
     /**
@@ -3272,10 +3301,36 @@ export class Map extends Camera {
             this._frameRequest.abort();
             this._frameRequest = null;
         }
+        this.painter.destroy();
+
+        // check if style contains custom layers to warn user that they can't be restored automatically
+        for (const layer of Object.values(this.style._layers)) {
+            if (layer.type === 'custom') {
+                console.warn(`Custom layer with id '${layer.id}' cannot be restored after WebGL context loss. You will need to re-add it manually after context restoration.`);
+            }
+
+            if (layer._listeners) {
+                for (const [event] of Object.entries(layer._listeners)) {
+                    console.warn(`Custom layer with id '${layer.id}' had event listeners for event '${event}' which cannot be restored after WebGL context loss. You will need to re-add them manually after context restoration.`);
+                }
+            }
+        }
+
+        this._lostContextStyle = this._getStyleAndImages();
+        this.style.destroy();
+        this.style = null;
         this.fire(new Event('webglcontextlost', {originalEvent: event}));
     };
 
     _contextRestored = (event: any) => {
+        if (this._lostContextStyle.style) {
+            this.setStyle(this._lostContextStyle.style, {diff: false});
+        }
+
+        if (this._lostContextStyle.images) {
+            this.style.imageManager.images = this._lostContextStyle.images;
+        }
+
         this._setupPainter();
         this.resize();
         this._update();
