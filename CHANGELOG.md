@@ -4,6 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix missing `constrainOverride` setter in `TransformHelper.apply` ([#6642](https://github.com/maplibre/maplibre-gl-js/pull/6642)) (by [@larsmaxfield](https://github.com/larsmaxfield))
 - _...Add new stuff here..._
 
 ## 5.11.0
