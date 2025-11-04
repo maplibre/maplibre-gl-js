@@ -7,7 +7,7 @@ import type {Tile} from './tile';
  * with hash lookup made possible by keeping a list of keys in parallel to
  * an array of dictionary of values
  *
- * source_cache offloads currently unused tiles to this cache, and when a tile gets used again,
+ * TileManager offloads currently unused tiles to this cache, and when a tile gets used again,
  * it is also removed from this cache. Thus addition is the only operation that counts as "usage"
  * for the purposes of LRU behaviour.
  */

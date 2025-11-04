@@ -6,7 +6,7 @@ import type {CircleBucket} from '../data/bucket/circle_bucket';
 import type {LineBucket} from '../data/bucket/line_bucket';
 import {polygonIntersectsBufferedPoint} from '../util/intersection_tests';
 import type {IReadonlyTransform} from '../geo/transform_interface';
-import type {UnwrappedTileID} from '../source/tile_id';
+import type {UnwrappedTileID} from '../tile/tile_id';
 
 export function getMaximumPaintValue(
     property: string,

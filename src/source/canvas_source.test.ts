@@ -1,16 +1,16 @@
-import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {CanvasSource} from '../source/canvas_source';
+import {describe, beforeEach, test, expect, vi, afterEach} from 'vitest';
+import {CanvasSource, type CanvasSourceSpecification} from '../source/canvas_source';
 import {Event, Evented} from '../util/evented';
 import {extend} from '../util/util';
-import {Tile} from './tile';
-import {OverscaledTileID} from './tile_id';
+import {Tile} from '../tile/tile';
+import {OverscaledTileID} from '../tile/tile_id';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {waitForEvent} from '../util/test/util';
 import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {Dispatcher} from '../util/dispatcher';
 import type {MapSourceDataEvent} from '../ui/events';
 
-function createSource(options?) {
+function createSource(options?: { canvas?: any; eventedParent?: any} & Partial<CanvasSourceSpecification>) {
     const c = options && options.canvas || window.document.createElement('canvas');
     c.width = 20;
     c.height = 20;
@@ -20,7 +20,7 @@ function createSource(options?) {
         coordinates: [[0, 0], [1, 0], [1, 1], [0, 1]],
     }, options);
 
-    const source = new CanvasSource('id', options, {} as Dispatcher, options.eventedParent);
+    const source = new CanvasSource('id', options as CanvasSourceSpecification, {} as Dispatcher, options.eventedParent);
 
     source.canvas = c;
 
@@ -70,33 +70,45 @@ describe('CanvasSource', () => {
         expect(typeof source.play).toBe('function');
     });
 
-    test('self-validates', () => {
-        const stub = vi.spyOn(console, 'error').mockImplementation(() => {});
-        createSource({coordinates: []});
-        expect(stub).toHaveBeenCalled();
-        stub.mockReset();
+    describe('Validations', () => {
+        const errorSpy = vi.fn();
+        let eventedParent: Evented;
+        beforeEach(() => {
+            eventedParent = new Evented();
+            eventedParent.on('error', errorSpy);
+        });
+        afterEach(() => {
+            errorSpy.mockClear();
+        });
+        test('self-validates coordinates array length', () => {
+            createSource({coordinates: [], eventedParent} as any);
+            expect(errorSpy).toHaveBeenCalled();
+        });
 
-        createSource({coordinates: 'asdf'});
-        expect(stub).toHaveBeenCalled();
-        stub.mockReset();
+        test('self-validates coordinates as string', () => {
+            createSource({coordinates: 'asdf', eventedParent} as any);
+            expect(errorSpy).toHaveBeenCalled();
+        });
 
-        createSource({animate: 8});
-        expect(stub).toHaveBeenCalled();
-        stub.mockReset();
+        test('self-validates animate as number', () => {
+            createSource({animate: 8, eventedParent} as any);
+            expect(errorSpy).toHaveBeenCalled();
+        });
 
-        createSource({canvas: {}});
-        expect(stub).toHaveBeenCalled();
-        stub.mockReset();
+        test('self-validates canvas as empty opbject', () => {
+            createSource({canvas: {}, eventedParent} as any);
+            expect(errorSpy).toHaveBeenCalled();
+        });
 
-        const canvasEl = window.document.createElement('canvas');
-        createSource({canvas: canvasEl});
-        expect(stub).not.toHaveBeenCalled();
-        stub.mockReset();
-
+        test('self-validates passes on valid canvas object', () => {
+            const canvasEl = document.createElement('canvas');
+            createSource({canvas: canvasEl, eventedParent});
+            expect(errorSpy).not.toHaveBeenCalled();
+        });
     });
 
     test('can be initialized with HTML element', async () => {
-        const el = window.document.createElement('canvas');
+        const el = document.createElement('canvas');
         const source = createSource({
             canvas: el
         });

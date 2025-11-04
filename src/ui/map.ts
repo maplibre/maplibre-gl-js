@@ -35,7 +35,7 @@ import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
 import {isAbortError} from '../util/abort_error';
 import {isFramebufferNotCompleteError} from '../util/framebuffer_error';
 import {coveringTiles, type CoveringTilesOptions, createCalculateTileZoomFunction} from '../geo/projection/covering_tiles';
-import {CanonicalTileID, type OverscaledTileID} from '../source/tile_id';
+import {CanonicalTileID, type OverscaledTileID} from '../tile/tile_id';
 
 import type {RequestTransformFunction} from '../util/request_manager';
 import type {LngLatLike} from '../geo/lng_lat';
@@ -208,7 +208,7 @@ export type MapOptions = {
      */
     trackResize?: boolean;
     /**
-     * The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` 
+     * The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]`
      * !!! note
      *     MapLibre GL JS uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
      * @defaultValue [0, 0]
@@ -387,6 +387,11 @@ type DelegatedListener = {
 
 type Delegate<E extends Event = Event> = (e: E) => void;
 
+type LostContextStyle = {
+    style: StyleSpecification | null;
+    images: {[_: string]: StyleImage} | null;
+};
+
 const defaultMinZoom = -2;
 const defaultMaxZoom = 22;
 
@@ -546,6 +551,15 @@ export class Map extends Camera {
     _imageQueueHandle: number;
 
     /**
+     * @internal
+     * Used to store the previous style and images when a context loss occurs, so they can be restored.
+     */
+    _lostContextStyle: LostContextStyle = {
+        style: null,
+        images: null
+    };
+
+    /**
      * The map's {@link ScrollZoomHandler}, which implements zooming in and out with a scroll wheel or trackpad.
      * Find more details and examples using `scrollZoom` in the {@link ScrollZoomHandler} section.
      */
@@ -659,7 +673,7 @@ export class Map extends Camera {
             transform.setRenderWorldCopies(resolvedOptions.renderWorldCopies);
         }
         if (resolvedOptions.transformConstrain !== null) {
-            transform.setConstrain(resolvedOptions.transformConstrain);
+            transform.setConstrainOverride(resolvedOptions.transformConstrain);
         }
 
         super(transform, cameraHelper, {bearingSnap: resolvedOptions.bearingSnap});
@@ -1279,8 +1293,8 @@ export class Map extends Camera {
     /** Sets or clears the callback overriding how the map constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
      *
      * @param constrain - A {@link TransformConstrainFunction} callback defining how the viewport should respect the bounds.
-     * 
-     * `null` clears the callback and reverses the override of the map transform's default constrain function.
+     *
+     * `null` clears the callback and reverts the constrain to the map transform's default constrain function.
      * @example
      * ```ts
      * function customTransformConstrain(lngLat, zoom) {
@@ -1291,7 +1305,7 @@ export class Map extends Camera {
      * @see [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/)
      */
     setTransformConstrain(constrain?: TransformConstrainFunction | null): Map {
-        this.transform.setConstrain(constrain);
+        this.transform.setConstrainOverride(constrain);
         return this._update();
     }
 
@@ -2036,6 +2050,21 @@ export class Map extends Camera {
     }
 
     /**
+     * @internal
+     * Returns the map's style and cloned images to restore context.
+     * @returns An object containing the style and images.
+     */
+    _getStyleAndImages(): LostContextStyle {
+        if (this.style) {
+            return {
+                style: this.style.serialize(),
+                images: this.style.imageManager.cloneImages()
+            };
+        }
+        return {style: null, images: {}};
+    }
+
+    /**
      * Returns a Boolean indicating whether the map's style is fully loaded.
      *
      * @returns A Boolean indicating whether the style is fully loaded.
@@ -2107,12 +2136,12 @@ export class Map extends Camera {
      * ```
      */
     isSourceLoaded(id: string): boolean {
-        const source = this.style && this.style.sourceCaches[id];
-        if (source === undefined) {
-            this.fire(new ErrorEvent(new Error(`There is no source with ID '${id}'`)));
+        const tileManager = this.style && this.style.tileManagers[id];
+        if (tileManager === undefined) {
+            this.fire(new ErrorEvent(new Error(`There is no tile manager with ID '${id}'`)));
             return;
         }
-        return source.loaded();
+        return tileManager.loaded();
     }
 
     /**
@@ -2134,7 +2163,7 @@ export class Map extends Camera {
 
         if (!options) {
             // remove terrain
-            if (this.terrain) this.terrain.sourceCache.destruct();
+            if (this.terrain) this.terrain.tileManager.destruct();
             this.terrain = null;
             if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
             this.painter.renderToTexture = null;
@@ -2144,10 +2173,10 @@ export class Map extends Camera {
             }
         } else {
             // add terrain
-            const sourceCache = this.style.sourceCaches[options.source];
-            if (!sourceCache) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
+            const tileManager = this.style.tileManagers[options.source];
+            if (!tileManager) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
             // Update terrain tiles when adding new terrain
-            if (this.terrain === null) sourceCache.reload();
+            if (this.terrain === null) tileManager.reload();
             // Warn once if user is using the same source for hillshade/color-relief and terrain
             for (const index in this.style._layers) {
                 const thisLayer = this.style._layers[index];
@@ -2158,13 +2187,13 @@ export class Map extends Camera {
                     warnOnce('You are using the same source for a color-relief layer and for 3D terrain. Please consider using two separate sources to improve rendering quality.');
                 }
             }
-            this.terrain = new Terrain(this.painter, sourceCache, options);
+            this.terrain = new Terrain(this.painter, tileManager, options);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
             this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             this._terrainDataCallback = e => {
                 if (e.dataType === 'style') {
-                    this.terrain.sourceCache.freeRtt();
+                    this.terrain.tileManager.freeRtt();
                 } else if (e.dataType === 'source' && e.tile) {
                     if (e.sourceId === options.source && !this._elevationFreeze) {
                         this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
@@ -2174,9 +2203,9 @@ export class Map extends Camera {
                     }
 
                     if (e.source?.type === 'image') {
-                        this.terrain.sourceCache.freeRtt();
+                        this.terrain.tileManager.freeRtt();
                     } else {
-                        this.terrain.sourceCache.freeRtt(e.tile.tileID);
+                        this.terrain.tileManager.freeRtt(e.tile.tileID);
                     }
                 }
             };
@@ -2210,7 +2239,7 @@ export class Map extends Camera {
      * ```
      */
     areTilesLoaded(): boolean {
-        const sources = this.style && this.style.sourceCaches;
+        const sources = this.style && this.style.tileManagers;
         for (const id in sources) {
             const source = sources[id];
             const tiles = source._tiles;
@@ -2290,8 +2319,8 @@ export class Map extends Camera {
             }
             source.calculateTileZoom = createCalculateTileZoomFunction(Math.max(1, maxZoomLevelsOnScreen), Math.max(1, tileCountMaxMinRatio));
         } else {
-            for (const id in this.style.sourceCaches) {
-                this.style.sourceCaches[id].getSource().calculateTileZoom = createCalculateTileZoomFunction(Math.max(1, maxZoomLevelsOnScreen), Math.max(1, tileCountMaxMinRatio));
+            for (const id in this.style.tileManagers) {
+                this.style.tileManagers[id].getSource().calculateTileZoom = createCalculateTileZoomFunction(Math.max(1, maxZoomLevelsOnScreen), Math.max(1, tileCountMaxMinRatio));
             }
         }
         this._update(true);
@@ -2309,14 +2338,14 @@ export class Map extends Camera {
      * ```
      */
     refreshTiles(sourceId: string, tileIds?: Array<{x: number; y: number; z: number}>) {
-        const sourceCache = this.style.sourceCaches[sourceId];
-        if(!sourceCache) {
-            throw new Error(`There is no source cache with ID "${sourceId}", cannot refresh tile`);
+        const tileManager = this.style.tileManagers[sourceId];
+        if(!tileManager) {
+            throw new Error(`There is no tile manager with ID "${sourceId}", cannot refresh tile`);
         }
         if (tileIds === undefined) {
-            sourceCache.reload(true);
+            tileManager.reload(true);
         } else {
-            sourceCache.refreshTiles(tileIds.map((tileId) => {return new CanonicalTileID(tileId.z, tileId.x, tileId.y);}));
+            tileManager.refreshTiles(tileIds.map((tileId) => {return new CanonicalTileID(tileId.z, tileId.x, tileId.y);}));
         }
     }
 
@@ -3257,10 +3286,36 @@ export class Map extends Camera {
             this._frameRequest.abort();
             this._frameRequest = null;
         }
+        this.painter.destroy();
+
+        // check if style contains custom layers to warn user that they can't be restored automatically
+        for (const layer of Object.values(this.style._layers)) {
+            if (layer.type === 'custom') {
+                console.warn(`Custom layer with id '${layer.id}' cannot be restored after WebGL context loss. You will need to re-add it manually after context restoration.`);
+            }
+
+            if (layer._listeners) {
+                for (const [event] of Object.entries(layer._listeners)) {
+                    console.warn(`Custom layer with id '${layer.id}' had event listeners for event '${event}' which cannot be restored after WebGL context loss. You will need to re-add them manually after context restoration.`);
+                }
+            }
+        }
+
+        this._lostContextStyle = this._getStyleAndImages();
+        this.style.destroy();
+        this.style = null;
         this.fire(new Event('webglcontextlost', {originalEvent: event}));
     };
 
     _contextRestored = (event: any) => {
+        if (this._lostContextStyle.style) {
+            this.setStyle(this._lostContextStyle.style, {diff: false});
+        }
+
+        if (this._lostContextStyle.images) {
+            this.style.imageManager.images = this._lostContextStyle.images;
+        }
+
         this._setupPainter();
         this.resize();
         this._update();
@@ -3379,7 +3434,7 @@ export class Map extends Camera {
         this.transform.setTransitionState(this.style.projection?.transitionState, this.style.projection?.latitudeErrorCorrectionRadians);
 
         // If we are in _render for any reason other than an in-progress paint
-        // transition, update source caches to check for and load any tiles we
+        // transition, update tile managers to check for and load any tiles we
         // need for the current transform
         if (this.style && (this._sourcesDirty || globeRenderingChanged)) {
             this._sourcesDirty = false;
@@ -3388,7 +3443,7 @@ export class Map extends Camera {
 
         // update terrain stuff
         if (this.terrain) {
-            this.terrain.sourceCache.update(this.transform, this.terrain);
+            this.terrain.tileManager.update(this.transform, this.terrain);
             this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             if (!this._elevationFreeze && this._centerClampedToGround) {
                 this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
@@ -3428,7 +3483,7 @@ export class Map extends Camera {
         if (this.style && !this._placementDirty) {
             // Since no fade operations are in progress, we can release
             // all tiles held for fading. If we didn't do this, the tiles
-            // would just sit in the SourceCaches until the next render
+            // would just sit in the TileManagers until the next render
             this.style._releaseSymbolFadeTiles();
         }
 

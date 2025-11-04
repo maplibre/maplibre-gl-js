@@ -3,7 +3,7 @@ import type {LngLatBounds} from './lng_lat_bounds';
 import type {MercatorCoordinate} from './mercator_coordinate';
 import type Point from '@mapbox/point-geometry';
 import type {mat4, mat2, vec3, vec4} from 'gl-matrix';
-import type {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
+import type {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../tile/tile_id';
 import type {PaddingOptions} from './edge_insets';
 import type {Terrain} from '../render/terrain';
 import type {PointProjection} from '../symbol/projection';
@@ -95,10 +95,8 @@ export interface ITransformGetters {
     get nearZ(): number;
     get farZ(): number;
     get autoCalculateNearFarZ(): boolean;
-    /**
-     * Get center lngLat and zoom to ensure that longitude and latitude bounds are respected and regions beyond the map bounds are not displayed.
-     */
-    get constrain(): TransformConstrainFunction;
+
+    get constrainOverride(): TransformConstrainFunction;
 }
 
 /**
@@ -210,11 +208,11 @@ interface ITransformMutators {
      */
     setMaxBounds(bounds?: LngLatBounds | null): void;
 
-    /** Sets or clears the callback overriding the transform's default constrain,
+    /** Sets or clears the custom callback overriding the transform's default constrain,
      * whose responsibility is to respect the longitude and latitude bounds by constraining the viewport's lnglat and zoom.
      * @param constrain - A {@link TransformConstrainFunction} callback defining how the viewport should respect the bounds.
      */
-    setConstrain(constrain?: TransformConstrainFunction | null): void;
+    setConstrainOverride(constrain?: TransformConstrainFunction | null): void;
 
     /**
      * @internal
@@ -366,6 +364,11 @@ export interface IReadonlyTransform extends ITransformGetters {
      * The tranform's default callback that ensures that longitude and latitude bounds are respected by the viewport.
      */
     defaultConstrain: TransformConstrainFunction;
+
+    /**
+     * Constrain the center lngLat and zoom to ensure that longitude and latitude bounds are respected and regions beyond the map bounds are not displayed.
+     */
+    applyConstrain: TransformConstrainFunction;
 
     maxPitchScaleFactor(): number;
 

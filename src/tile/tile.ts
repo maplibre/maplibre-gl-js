@@ -10,13 +10,13 @@ import {now} from '../util/time_control';
 import {toEvaluationFeature} from '../data/evaluation_feature';
 import {EvaluationParameters} from '../style/evaluation_parameters';
 import {type SourceFeatureState} from '../source/source_state';
-import {rtlMainThreadPluginFactory} from './rtl_text_plugin_main_thread';
+import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread';
 
 const CLOCK_SKEW_RETRY_TIMEOUT = 30000;
 
 import type {Bucket} from '../data/bucket';
 import type {StyleLayer} from '../style/style_layer';
-import type {WorkerTileResult} from './worker_source';
+import type {WorkerTileResult} from '../source/worker_source';
 import type {Actor} from '../util/actor';
 import type {DEMData} from '../data/dem_data';
 import type {AlphaImage} from '../util/image';
@@ -26,12 +26,12 @@ import type {Context} from '../gl/context';
 import type {OverscaledTileID} from './tile_id';
 import type {Framebuffer} from '../gl/framebuffer';
 import type {IReadonlyTransform} from '../geo/transform_interface';
-import type {LayerFeatureStates} from './source_state';
+import type {LayerFeatureStates} from '../source/source_state';
 import type Point from '@mapbox/point-geometry';
 import type {mat4} from 'gl-matrix';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 import type {ExpiryData} from '../util/ajax';
-import type {QueryRenderedFeaturesOptionsStrict, QuerySourceFeatureOptionsStrict} from './query_features';
+import type {QueryRenderedFeaturesOptionsStrict, QuerySourceFeatureOptionsStrict} from '../source/query_features';
 import type {FeatureIndex, QueryResults} from '../data/feature_index';
 import type {DashEntry} from '../render/line_atlas';
 /**

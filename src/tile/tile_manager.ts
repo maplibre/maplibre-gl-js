@@ -1,4 +1,4 @@
-import {create as createSource} from './source';
+import {create as createSource} from '../source/source';
 
 import {Tile, FadingDirections, FadingRoles} from './tile';
 import {ErrorEvent, Event, Evented} from '../util/evented';
@@ -9,11 +9,11 @@ import {type Context} from '../gl/context';
 import Point from '@mapbox/point-geometry';
 import {now} from '../util/time_control';
 import {OverscaledTileID} from './tile_id';
-import {SourceFeatureState} from './source_state';
+import {SourceFeatureState} from '../source/source_state';
 import {getEdgeTiles} from '../util/util';
 import {config} from '../util/config';
 
-import type {Source} from './source';
+import type {Source} from '../source/source';
 import type {Map} from '../ui/map';
 import type {Style} from '../style/style';
 import type {Dispatcher} from '../util/dispatcher';
@@ -22,7 +22,7 @@ import type {TileState} from './tile';
 import type {ICanonicalTileID, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapSourceDataEvent} from '../ui/events';
 import type {Terrain} from '../render/terrain';
-import type {CanvasSourceSpecification} from './canvas_source';
+import type {CanvasSourceSpecification} from '../source/canvas_source';
 import {coveringTiles, coveringZoomLevel} from '../geo/projection/covering_tiles';
 import {Bounds} from '../geo/bounds';
 import {EXTENT_BOUNDS} from '../data/extent_bounds';
@@ -37,15 +37,21 @@ type TileResult = {
 
 /**
  * @internal
- * `SourceCache` is responsible for
+ * `TileManager` is responsible for
  *
  *  - creating an instance of `Source`
- *  - forwarding events from `Source`
  *  - caching tiles loaded from an instance of `Source`
+ *  - handling incoming source data events events from `Map` and coordinating updates
+ *  - providing the current renderable tile coordinates to the `Painter`
  *  - loading the tiles needed to render a given viewport
- *  - unloading the cached tiles not needed to render a given viewport
+ *  - retaining the tiles needed as substitutes for pending loading tiles
+ *  - retaining the tiles needed for fading between parents and children (for raster sources)
+ *  - reloading tiles when source data or dependencies change
+ *  - handling tile expiration and refresh timers
+ *  - unloading cached tiles not needed to render a given viewport
+ *  - managing tile state and feature state
  */
-export class SourceCache extends Evented {
+export class TileManager extends Evented {
     id: string;
     dispatcher: Dispatcher;
     map: Map;
@@ -155,6 +161,10 @@ export class SourceCache extends Evented {
         return this._source;
     }
 
+    getState(): SourceFeatureState {
+        return this._state;
+    }
+
     pause() {
         this._paused = true;
     }
@@ -239,7 +249,7 @@ export class SourceCache extends Evented {
     hasRenderableParent(tileID: OverscaledTileID) {
         const parentZ = tileID.overscaledZ - 1;
         if (parentZ >= this._source.minzoom) {
-            const parentTile = this._getLoadedTile(tileID.scaledTo(parentZ));
+            const parentTile = this.getLoadedTile(tileID.scaledTo(parentZ));
             if (parentTile) {
                 return this._isIdRenderable(parentTile.tileID.key);
             }
@@ -252,10 +262,14 @@ export class SourceCache extends Evented {
     }
 
     /**
-     * Reload tiles in this source. If source data has changed, reload all tiles using a state of 'expired',
-     * otherwise reload only non-errored tiles using state of 'reloading'.
+     * Reload tiles based on the current state of the source.
+     * @param sourceDataChanged - If `true`, reload all tiles using a state of 'expired', otherwise reload only non-errored tiles using state of 'reloading'.
+     * @param shouldReloadTileOptions - Set of options associated with a `MapSourceDataChangedEvent` that can be passed back to the associated `Source` determine whether a tile should be reloaded.
      */
-    reload(sourceDataChanged?: boolean) {
+    reload(
+        sourceDataChanged?: boolean,
+        shouldReloadTileOptions: any = undefined
+    ) {
         if (this._paused) {
             this._shouldReloadOnResume = true;
             return;
@@ -264,7 +278,9 @@ export class SourceCache extends Evented {
         this._cache.reset();
 
         for (const i in this._tiles) {
-            if (sourceDataChanged) {
+            if (shouldReloadTileOptions && this._source.shouldReloadTile && !this._source.shouldReloadTile(this._tiles[i], shouldReloadTileOptions)) {
+                continue;
+            } else if (sourceDataChanged) {
                 this._reloadTile(i, 'expired');
             } else if (this._tiles[i].state !== 'errored') {
                 this._reloadTile(i, 'reloading');
@@ -292,6 +308,11 @@ export class SourceCache extends Evented {
 
     _tileLoaded(tile: Tile, id: string, previousState: TileState) {
         tile.timeAdded = now();
+        // Since self-fading applies to unloaded tiles, fadeEndTime must be updated upon load
+        if (tile.selfFading) {
+            tile.fadeEndTime = tile.timeAdded + this._rasterFadeDuration;
+        }
+
         if (previousState === 'expired') tile.refreshedUponExpiration = true;
         this._setTileReloadTimer(id, tile);
         if (this.getSource().type === 'raster-dem' && tile.dem) this._backfillDEM(tile);
@@ -394,7 +415,7 @@ export class SourceCache extends Evented {
             }
 
             // find descendents within the max covering zoom range
-            const maxCoveringZoom = targetID.overscaledZ + SourceCache.maxUnderzooming;
+            const maxCoveringZoom = targetID.overscaledZ + TileManager.maxUnderzooming;
             const candidates = descendents.filter(t => t.tileID.overscaledZ <= maxCoveringZoom);
             if (!candidates.length) {
                 incomplete[targetID.key] = targetID;
@@ -423,15 +444,15 @@ export class SourceCache extends Evented {
     _getLoadedDescendents(targetTileIDs: OverscaledTileID[]) {
         const loadedDescendents: Record<string, Tile[]> = {};
 
-        // enumerate tiles currently in this source and find the loaded descendents of each target tile
-        for (const sourceKey in this._tiles) {
-            const sourceTile = this._tiles[sourceKey];
-            if (!sourceTile.hasData()) continue;
+        // enumerate current tiles and find the loaded descendents of each target tile
+        for (const id in this._tiles) {
+            const tile = this._tiles[id];
+            if (!tile.hasData()) continue;
 
-            // determine if the loaded source tile (hasData) is a qualified descendent of any target tile
+            // determine if the loaded tile (hasData) is a qualified descendent of any target tile
             for (const targetID of targetTileIDs) {
-                if (sourceTile.tileID.isChildOf(targetID)) {
-                    (loadedDescendents[targetID.key] ||= []).push(sourceTile);
+                if (tile.tileID.isChildOf(targetID)) {
+                    (loadedDescendents[targetID.key] ||= []).push(tile);
                 }
             }
         }
@@ -455,10 +476,10 @@ export class SourceCache extends Evented {
     }
 
     /**
-     * Get a loaded tile currently in this source.
-     * - loaded tiles exist in this._tiles - a cached tile is not a loaded tile
+     * Get a currently loaded tile.
+     * - a cached tile is not a loaded tile
      */
-    _getLoadedTile(tileID: OverscaledTileID): Tile | null {
+    getLoadedTile(tileID: OverscaledTileID): Tile | null {
         const tile = this._tiles[tileID.key];
         if (tile?.hasData()) {
             return tile;
@@ -559,7 +580,7 @@ export class SourceCache extends Evented {
             }
         }
 
-        // When sourcecache is used for terrain also load parent tiles for complete rendering of 3d terrain levels
+        // When tilemanager is used for terrain also load parent tiles for complete rendering of 3d terrain levels
         if (this.usedForTerrain) {
             idealTileIDs = this._addTerrainIdealTiles(idealTileIDs);
         }
@@ -584,7 +605,7 @@ export class SourceCache extends Evented {
             this._updateFadingTiles(idealTileIDs, retain);
         }
 
-        // clean up non-retained tiles in this source
+        // clean up non-retained tiles that are no longer needed
         if (isRaster) {
             this._cleanUpRasterTiles(retain);
         } else {
@@ -659,14 +680,14 @@ export class SourceCache extends Evented {
     }
 
     /**
-     * Set tiles to be retained on update of this source. For ideal tiles that do not have data, retain their loaded
+     * Set tiles to be retained on update of the source. For ideal tiles that do not have data, retain their loaded
      * children so they can be displayed as substitutes pending load of each ideal tile (to reduce flickering).
      * If no loaded children are available, fallback to seeking loaded parents as an alternative substitute.
      */
     _updateRetainedTiles(idealTileIDs: Array<OverscaledTileID>, zoom: number): Record<string, OverscaledTileID> {
         const retain: Record<string, OverscaledTileID> = {};
         const checked: Record<string, boolean> = {};
-        const minCoveringZoom = Math.max(zoom - SourceCache.maxOverzooming, this._source.minzoom);
+        const minCoveringZoom = Math.max(zoom - TileManager.maxOverzooming, this._source.minzoom);
 
         let missingIdealTiles = {};
         for (const idealID of idealTileIDs) {
@@ -781,7 +802,7 @@ export class SourceCache extends Evented {
         const minAncestorZ = Math.max(idealID.overscaledZ - this._maxFadingAncestorLevels, this._source.minzoom);
         for (let ancestorZ = idealID.overscaledZ - 1; ancestorZ >= minAncestorZ; ancestorZ--) {
             const ancestorID = idealID.scaledTo(ancestorZ);
-            const ancestorTile = this._getLoadedTile(ancestorID);
+            const ancestorTile = this.getLoadedTile(ancestorID);
             if (!ancestorTile) continue;
 
             // ideal tile (base) is fading in
@@ -841,7 +862,7 @@ export class SourceCache extends Evented {
 
         // find loaded child tiles to fade with the ideal tile
         for (const childID of childIDs) {
-            const childTile = this._getLoadedTile(childID);
+            const childTile = this.getLoadedTile(childID);
             if (!childTile) continue;
 
             const {fadingRole, fadingDirection, fadingParentID} = childTile;
@@ -1023,7 +1044,7 @@ export class SourceCache extends Evented {
             return;
         }
 
-        this.reload(e.sourceDataChanged);
+        this.reload(e.sourceDataChanged, e.shouldReloadTileOptions);
         if (this.transform) {
             this.update(this.transform, this.terrain);
         }
@@ -1113,7 +1134,7 @@ export class SourceCache extends Evented {
             bounds.shrinkBy(Math.min(bounds.width(), bounds.height()) * 0.001);
             const projected = bounds.map(project);
 
-            const newBounds = Bounds.fromPoints(transformed); 
+            const newBounds = Bounds.fromPoints(transformed);
 
             if (!newBounds.covers(projected)) {
                 transformed = transformed.map((coord) => coord.x > 0.5 ?
@@ -1204,8 +1225,8 @@ export class SourceCache extends Evented {
     }
 }
 
-SourceCache.maxOverzooming = 10;
-SourceCache.maxUnderzooming = 3;
+TileManager.maxOverzooming = 10;
+TileManager.maxUnderzooming = 3;
 
 function compareTileId(a: OverscaledTileID, b: OverscaledTileID): number {
     // Different copies of the world are sorted based on their distance to the center.

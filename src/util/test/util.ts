@@ -99,11 +99,11 @@ export function setMatchMedia() {
 }
 
 function setResizeObserver() {
-    global.ResizeObserver = vi.fn().mockImplementation(() => ({
-        observe: vi.fn(),
-        unobserve: vi.fn(),
-        disconnect: vi.fn(),
-    }));
+    global.ResizeObserver = vi.fn(class {
+        observe = vi.fn();
+        unobserve = vi.fn();
+        disconnect = vi.fn();
+    });
 }
 
 export function beforeMapTest() {
@@ -232,7 +232,7 @@ export function createTerrain(): Terrain {
         getFramebuffer: () => ({}),
         getCoordsTexture: () => ({}),
         depthAtPoint: () => .9,
-        sourceCache: {
+        tileManager: {
             update: () => {},
             getRenderableTiles: () => [],
             anyTilesAfterTime: () => false

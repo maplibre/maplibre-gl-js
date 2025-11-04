@@ -3,7 +3,7 @@ import {ITransform} from '../../../src/geo/transform_interface';
 import {CollisionIndex} from '../../../src/symbol/collision_index';
 import Benchmark from '../lib/benchmark';
 import {OverlapMode} from '../../../src/style/style_layer/overlap_mode';
-import {OverscaledTileID, UnwrappedTileID} from '../../../src/source/tile_id';
+import {OverscaledTileID, UnwrappedTileID} from '../../../src/tile/tile_id';
 import {SingleCollisionBox} from '../../../src/data/bucket/symbol_bucket';
 import {EXTENT} from '../../../src/data/extent';
 import {MercatorTransform} from '../../../src/geo/projection/mercator_transform';

@@ -1,4 +1,4 @@
-import type {CanonicalTileID} from '../../source/tile_id';
+import type {CanonicalTileID} from '../../tile/tile_id';
 import type {PreparedShader} from '../../shaders/shaders';
 import type {Context} from '../../gl/context';
 import type {Mesh} from '../../render/mesh';

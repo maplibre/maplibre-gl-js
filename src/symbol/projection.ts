@@ -15,7 +15,7 @@ import type {
 } from '../data/array_types.g';
 import {WritingMode} from '../symbol/shaping';
 import {findLineIntersection} from '../util/util';
-import {type UnwrappedTileID} from '../source/tile_id';
+import {type UnwrappedTileID} from '../tile/tile_id';
 import {type StructArray} from '../util/struct_array';
 
 /**
