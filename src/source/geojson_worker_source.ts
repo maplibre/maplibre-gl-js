@@ -140,7 +140,8 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
 
             this.loaded = {};
 
-            const result = {data} as GeoJSONWorkerSourceLoadDataResult;
+            const result: GeoJSONWorkerSourceLoadDataResult = params.dataDiff ? {dataDiff: params.dataDiff} : {data};
+
             if (perf) {
                 const resourceTimingData = perf.finish();
                 // it's necessary to eval the result of getEntriesByName() here via parse/stringify

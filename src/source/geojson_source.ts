@@ -5,7 +5,7 @@ import {EXTENT} from '../data/extent';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
-import {mergeSourceDiffs} from './geojson_source_diff';
+import {applySourceDiff, mergeSourceDiffs, toUpdateable} from './geojson_source_diff';
 
 import type {Source} from './source';
 import type {Map} from '../ui/map';
@@ -13,7 +13,7 @@ import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from './tile';
 import type {Actor} from '../util/actor';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {GeoJSONSourceDiff} from './geojson_source_diff';
+import type {GeoJSONFeatureId, GeoJSONSourceDiff} from './geojson_source_diff';
 import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
 import type {WorkerTileParameters} from './worker_source';
 import {MessageType} from '../util/actor_messages';
@@ -129,6 +129,7 @@ export class GeoJSONSource extends Evented implements Source {
     _pendingWorkerUpdate: { data?: GeoJSON.GeoJSON | string; diff?: GeoJSONSourceDiff; optionsChanged?: boolean };
     _collectResourceTiming: boolean;
     _removed: boolean;
+    _dataUpdateable?: globalThis.Map<GeoJSONFeatureId, GeoJSON.Feature>;
 
     /** @internal */
     constructor(id: string, options: GeoJSONSourceOptions, dispatcher: Dispatcher, eventedParent: Evented) {
@@ -231,6 +232,7 @@ export class GeoJSONSource extends Evented implements Source {
      */
     setData(data: GeoJSON.GeoJSON | string): this {
         this._data = data;
+        this._dataUpdateable = undefined;
         this._pendingWorkerUpdate = {data};
         this._updateWorkerData();
         return this;
@@ -422,7 +424,16 @@ export class GeoJSONSource extends Evented implements Source {
                 return;
             }
 
-            this._data = result.data;
+            if (result.dataDiff) {
+                if (!this._dataUpdateable) {
+                    this._dataUpdateable = toUpdateable(this._data as any, undefined);
+                }
+
+                applySourceDiff(this._dataUpdateable, result.dataDiff);
+            } else {
+                this._data = result.data;
+                this._dataUpdateable = undefined;
+            }
 
             let resourceTiming: PerformanceResourceTiming[] = null;
             if (result.resourceTiming && result.resourceTiming[this.id]) {
