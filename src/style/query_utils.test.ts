@@ -82,7 +82,7 @@ describe('offsetLine', () => {
         ]]);
     });
 
-        test('line with more than two consecutive duplicate points', () => {
+    test('line with more than two consecutive duplicate points', () => {
         const line = [
             new Point(0, 1),
             new Point(0, 1),
