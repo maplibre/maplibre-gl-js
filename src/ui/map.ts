@@ -1,4 +1,4 @@
-import {extend, warnOnce, uniqueId, isImageBitmap, type Complete, pick, type Subscription, isSafari} from '../util/util';
+import {extend, warnOnce, uniqueId, isImageBitmap, type Complete, pick, type Subscription} from '../util/util';
 import {browser} from '../util/browser';
 import {now} from '../util/time_control';
 import {DOM} from '../util/dom';
