@@ -63,10 +63,11 @@ export function offsetLine(rings: Array<Array<Point>>, offset: number) {
         const ring = rings[ringIndex];
         const newRing: Array<Point> = [];
         let refPoint: Point;
-        ring.forEach((point, index, ring) => {
+        for (let index = 0; index < ring.length; index++) {
             let aToB: Point;
             let bToC: Point;
             let nextPoint: Point;
+            let point = ring[index];
             if (index === 0) {
                 // first iteration, set refPoint as current point
                 refPoint = point;
@@ -90,7 +91,7 @@ export function offsetLine(rings: Array<Array<Point>>, offset: number) {
             const zeroPoint = new Point(0, 0)
             if (aToB.equals(zeroPoint) && bToC.equals(zeroPoint)) {
                 // no change means final point will be a duplicate of the previous; can be excluded
-                return;
+                continue;
             } else {
                 const extrude = aToB._add(bToC)._unit();
                 const cosHalfAngle = extrude.x * bToC.x + extrude.y * bToC.y;
@@ -102,8 +103,7 @@ export function offsetLine(rings: Array<Array<Point>>, offset: number) {
             }
 
             refPoint = point;
-
-        });
+        }
         newRings.push(newRing);
     }
     return newRings;
