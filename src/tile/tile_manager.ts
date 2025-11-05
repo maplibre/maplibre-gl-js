@@ -308,6 +308,11 @@ export class TileManager extends Evented {
 
     _tileLoaded(tile: Tile, id: string, previousState: TileState) {
         tile.timeAdded = now();
+        // Since self-fading applies to unloaded tiles, fadeEndTime must be updated upon load
+        if (tile.selfFading) {
+            tile.fadeEndTime = tile.timeAdded + this._rasterFadeDuration;
+        }
+
         if (previousState === 'expired') tile.refreshedUponExpiration = true;
         this._setTileReloadTimer(id, tile);
         if (this.getSource().type === 'raster-dem' && tile.dem) this._backfillDEM(tile);
@@ -563,11 +568,13 @@ export class TileManager extends Evented {
             idealTileIDs = coveringTiles(transform, {
                 tileSize: this.usedForTerrain ? this.tileSize : this._source.tileSize,
                 minzoom: this._source.minzoom,
-                maxzoom: this._source.maxzoom,
+                maxzoom: this._source.type === 'vector' && this.map._zoomLevelsToOverscale !== undefined
+                    ? transform.maxZoom - this.map._zoomLevelsToOverscale 
+                    : this._source.maxzoom,
                 roundZoom: this.usedForTerrain ? false : this._source.roundZoom,
                 reparseOverscaled: this._source.reparseOverscaled,
                 terrain,
-                calculateTileZoom: this._source.calculateTileZoom
+                calculateTileZoom: this._source.calculateTileZoom,
             });
 
             if (this._source.hasTile) {

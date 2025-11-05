@@ -479,4 +479,74 @@ describe('Browser tests', () => {
         expect(center.lng).toBeCloseTo(11.39770);
         expect(center.lat).toBeCloseTo(47.29960);
     });
+
+    test('Map canvas is not blank after context lost and restored', {retry: 3, timeout: 20000}, async () => {
+        const pixel = await page.evaluate(async () => {
+            function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+            const canvas = map.getCanvas();
+            const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+            const ext = gl && gl.getExtension('WEBGL_lose_context');
+            // Context loss and restore
+            const restored: Promise<void> = new Promise(resolve => {
+                const onRestored = () => {
+                    canvas.removeEventListener('webglcontextrestored', onRestored);
+                    resolve();
+                };
+                canvas.addEventListener('webglcontextrestored', onRestored);
+            });
+            ext.loseContext();
+            await sleep(50);
+            ext.restoreContext();
+            await restored;
+            await new Promise(res => map.once('render', res));
+
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            gl.finish();
+
+            // Read central pixel from the WebGL framebuffer
+            const dpr = window.devicePixelRatio || 1;
+            const width = canvas.width / dpr;
+            const height = canvas.height / dpr;
+            const x = Math.floor(width / 2);
+            const y = Math.floor(height / 2);
+            const readY = height - y - 1;
+            const rgba = new Uint8Array(4);
+            gl.readPixels(x, readY, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
+
+            return Array.from(rgba);
+        });
+        
+        expect(pixel[0]).toBeGreaterThan(0);
+        expect(pixel[1]).toBeGreaterThan(0);
+        expect(pixel[2]).toBeGreaterThan(0);
+        expect(pixel[3]).toBeGreaterThan(0);
+    });
+        
+    test('Map does not log invalid WebGL warnings on context loss/restore', async () => {
+        const warnings: string[] = [];
+        page.on('console', msg => {
+            if (msg.type() === 'warn' || msg.type() === 'error') {
+                warnings.push(msg.text());
+            }
+        });
+
+        // Simulate context loss
+        await page.evaluate(() => {
+            const canvas = map.getCanvas();
+            const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+            const ext = gl && gl.getExtension('WEBGL_lose_context');
+            if (ext) {
+                ext.loseContext();
+                setTimeout(() => ext.restoreContext(), 50);
+            }
+        });
+
+        // Wait a bit to allow logs to arrive
+        await sleep(500);
+
+        const webglWarnings = warnings.filter(w => w.toLowerCase().includes('webgl'));
+        expect(webglWarnings).to.not.contain('WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context');
+        expect(webglWarnings).to.not.contain('WebGL: INVALID_OPERATION: bindBuffer: object does not belong to this context');
+        expect(webglWarnings).to.not.contain('[.WebGL-0x3e1400107800] GL_INVALID_OPERATION: glDrawElements: Must have element array buffer bound.');
+    });
 });
