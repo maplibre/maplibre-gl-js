@@ -1,4 +1,4 @@
-import {describe, test, expect, vi, beforeEach, afterEach} from 'vitest';
+import {describe, test, expect, vi, beforeEach} from 'vitest';
 import {createStyleLayer} from '../create_style_layer';
 import {extend} from '../../util/util';
 import {type LineStyleLayer} from './line_style_layer';
