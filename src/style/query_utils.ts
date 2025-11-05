@@ -62,7 +62,7 @@ export function offsetLine(rings: Array<Array<Point>>, offset: number) {
     for (let ringIndex = 0; ringIndex < rings.length; ringIndex++) {
         const ring = rings[ringIndex];
         const newRing: Array<Point> = [];
-        let refPoint;
+        let refPoint: Point;
         ring.forEach((point, index, ring) => {
             let aToB: Point;
             let bToC: Point;
@@ -71,7 +71,7 @@ export function offsetLine(rings: Array<Array<Point>>, offset: number) {
                 // first iteration, set refPoint as current point
                 refPoint = point;
                 aToB = new Point(0, 0);
-            } else if (refPoint.x === point.x && refPoint.y === point.y) {
+            } else if (refPoint.equals(point)) {
                 aToB = new Point(0, 0);
             } else {
                 aToB = point.sub(refPoint)._unit()._perp();
@@ -81,13 +81,14 @@ export function offsetLine(rings: Array<Array<Point>>, offset: number) {
                 bToC = new Point(0, 0);
             } else {
                 nextPoint = ring[index +1];
-                if (point.x === nextPoint.x && nextPoint.y === point.y) {
+                if (point.equals(nextPoint)) {
                     bToC = new Point(0, 0);
                 } else {
                     bToC = nextPoint.sub(point)._unit()._perp();
                 }
             }
-            if (aToB.x === 0 && bToC.x === 0 && aToB.y === 0 && bToC.y === 0) {
+            const zeroPoint = new Point(0, 0)
+            if (aToB.equals(zeroPoint) && bToC.equals(zeroPoint)) {
                 // no change means final point will be a duplicate of the previous; can be excluded
                 return;
             } else {
