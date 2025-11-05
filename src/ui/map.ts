@@ -370,6 +370,18 @@ export type MapOptions = {
      * keep the camera above ground when pitch \> 90 degrees.
      */
     centerClampedToGround?: boolean;
+    /**
+     * Allows overzooming by splitting vector tiles after max zoom.
+     * Defines the number of zoom level that will overscale from map's max zoom and below.
+     * For example if the map's max zoom is 20 and this is set to 3, the zoom levels of 20, 19 and 18 will be overscaled 
+     * and the rest will be split.
+     * When undefined, all zoom levels after source's max zoom will be overscaled.
+     * This can help in reducing the size of the overscaling and improve performance in high zoom levels.
+     * The drawback is that it changes rendering for polygon centered labels and changes the results of query rendered features.
+     * @defaultValue undefined
+     * @experimental
+     */
+    experimentalZoomLevelsToOverscale?: number;
 };
 
 export type AddImageOptions = {
@@ -459,7 +471,8 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096],
     cancelPendingTileRequestsWhileZooming: true,
-    centerClampedToGround: true
+    centerClampedToGround: true,
+    experimentalZoomLevelsToOverscale: undefined
 };
 
 /**
@@ -543,7 +556,8 @@ export class Map extends Camera {
     _overridePixelRatio: number | null | undefined;
     _maxCanvasSize: [number, number];
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
-
+    /** @internal */
+    _zoomLevelsToOverscale: number | undefined;
     /**
      * @internal
      * image queue throttling handle. To be used later when clean up
@@ -693,6 +707,7 @@ export class Map extends Camera {
         this._clickTolerance = resolvedOptions.clickTolerance;
         this._overridePixelRatio = resolvedOptions.pixelRatio;
         this._maxCanvasSize = resolvedOptions.maxCanvasSize;
+        this._zoomLevelsToOverscale = resolvedOptions.experimentalZoomLevelsToOverscale;
         this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
         this.transformConstrain = resolvedOptions.transformConstrain;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
