@@ -54,7 +54,7 @@ describe('LineStyleLayer', () => {
     });
 
     describe('queryIntersectsFeature', () => {
-        afterEach(() => {
+        beforeEach(() => {
             lineLayer.paint.get('line-offset').evaluate = vi.fn(((_feature, _featureState) => 0));
         });
         const lineLayer = createStyleLayer({'type': 'line', 'id': 'line', 'source': 'line', 'paint': {}}, {}) as LineStyleLayer;
