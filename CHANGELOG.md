@@ -3,7 +3,7 @@
 ### ✨ Features and improvements
 
 - Slice vector tiles to improve over scale vector handling ([#6521](https://github.com/maplibre/maplibre-gl-js/pull/6521)). It adds the `experimentalZoomLevelsToOverscale` flag to `MapOptions` to allow controlling how many zoom levels to slice and how many to scale. It seems to have better performance at high zoom levels. It can prevent Safar crashes in some scenarios by setting it to 4 or less. (by [@HarelM](https://github.com/HarelM))
-- _...Add new stuff here..._
+- Fix offsetLine handling of duplicate points to avoid null values in output ([#5431](https://github.com/maplibre/maplibre-gl-js/issues/5431))
 
 ### 🐞 Bug fixes
 - Fix missing `constrainOverride` setter in `TransformHelper.apply` ([#6642](https://github.com/maplibre/maplibre-gl-js/pull/6642)) (by [@larsmaxfield](https://github.com/larsmaxfield))
