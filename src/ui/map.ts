@@ -178,11 +178,6 @@ export type MapOptions = {
      */
     dragPan?: boolean | DragPanOptions;
     /**
-     * If `true`, gesture inertia (such as panning) is disabled. If not provided, gesture inertia defaults to the user's device settings.
-     * @defaultValue undefined
-     */
-    reduceMotion?: boolean | undefined;
-    /**
      * If `true`, keyboard shortcuts are enabled (see {@link KeyboardHandler}).
      * @defaultValue true
      */
@@ -346,6 +341,11 @@ export type MapOptions = {
      */
     rollEnabled?: boolean;
     /**
+     * If `true`, gesture inertia (such as panning) is disabled. If not provided, gesture inertia defaults to the user's device settings.
+     * @defaultValue undefined
+     */
+    reduceMotion?: boolean | undefined;
+    /**
      * The pixel ratio.
      * The canvas' `width` attribute will be `container.clientWidth * pixelRatio` and its `height` attribute will be `container.clientHeight * pixelRatio`. Defaults to `devicePixelRatio` if not specified.
      */
@@ -472,6 +472,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     localIdeographFontFamily: 'sans-serif',
     pitchWithRotate: true,
     rollEnabled: false,
+    reduceMotion: undefined,
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096],
