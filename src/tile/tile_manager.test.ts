@@ -398,14 +398,15 @@ describe('TileManager.removeTile', () => {
     });
 
     test('resets raster fade timer upon load of unloaded edge tiles', async () => {
-        const tileManager = createTileManager();
-        tileManager._rasterFadeDuration = 300;
+        const rasterFadeDuration = 300;
+        const tileManager = createTileManager({raster: true});
+        tileManager.setRasterFadeDuration(rasterFadeDuration);
         let tile: Tile;
         let endMs: number;
         tileManager._source.loadTile = async (_tile) => {
             tile = _tile;
             tile.selfFading = true;
-            tile.fadeEndTime = now() + tileManager._rasterFadeDuration;
+            tile.fadeEndTime = now() + rasterFadeDuration;
             await sleep(100);
             endMs = now();
         };

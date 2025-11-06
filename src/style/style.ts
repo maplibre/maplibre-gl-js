@@ -2042,19 +2042,11 @@ export class Style extends Evented {
             this._spriteRequest = null;
         }
 
-        // remove sourcecaches
+        // remove tile managers
         for (const id in this.tileManagers) {
             const tileManager = this.tileManagers[id];
             tileManager.setEventedParent(null);
-
-            if (tileManager._tiles) {
-                for (const tileId in tileManager._tiles) {
-                    const tile = tileManager._tiles[tileId];
-                    tile.unloadVectorData();
-                }
-                tileManager._tiles = {};
-            }
-            tileManager._cache.reset();
+            tileManager.clearVectorData();
             tileManager.onRemove(this.map);
         }
         this.tileManagers = {};

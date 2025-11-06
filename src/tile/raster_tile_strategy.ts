@@ -22,7 +22,14 @@ export class RasterTileStrategy implements TileManagerStrategy {
         this._store = store;
     }
 
-    onTileRetrievedFromCache(tile: Tile): void {
+    onTileLoaded(tile: Tile) {
+        // Since self-fading applies to unloaded tiles, fadeEndTime must be updated upon load
+        if (tile.selfFading) {
+            tile.fadeEndTime = tile.timeAdded + this._rasterFadeDuration;
+        }
+    }
+
+    onTileRetrievedFromCache(tile: Tile) {
         tile.resetFadeLogic();
     }
 

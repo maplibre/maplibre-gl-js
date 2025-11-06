@@ -30,14 +30,9 @@ import {coveringTiles, coveringZoomLevel} from '../geo/projection/covering_tiles
  */
 export interface TileManagerStrategy {
     /**
-     * Determine whether a tile is renderable
+     * Process the tile when loaded
      */
-    isTileRenderable(tile: Tile, symbolLayer?: boolean): boolean;
-
-    /**
-     * Check if the manager still has tile transitions
-     */
-    hasTransition?(): boolean;
+    onTileLoaded?(tile: Tile): void;
 
     /**
      * Process the tile when retrieved from cache
@@ -50,6 +45,21 @@ export interface TileManagerStrategy {
     onFinishUpdate(idealTileIDs: OverscaledTileID[], retain: Record<string, OverscaledTileID>, sourceMinZoom: number, sourceMaxZoom: number, fadeDuration: number): string[];
 
     /**
+     * Determine whether a tile is renderable
+     */
+    isTileRenderable(tile: Tile, symbolLayer?: boolean): boolean;
+
+    /**
+     * Check if the manager still has tile transitions
+     */
+    hasTransition?(): boolean;
+
+    /**
+     * Tiles in a given query geometry
+     */
+    tilesIn?(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean, transform: ITransform, terrain: Terrain): TileResult[];
+
+    /**
      * Release tiles held for fading (optional, mainly for vector tiles with symbols)
      */
     releaseSymbolFadeTiles?(): void;
@@ -58,11 +68,6 @@ export interface TileManagerStrategy {
      * Set raster fade duration (optional, only for raster tiles)
      */
     setRasterFadeDuration?(fadeDuration: number): void;
-
-    /**
-     * Tiles in a given query geometry
-     */
-    tilesIn?(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean, transform: ITransform, terrain: Terrain): TileResult[];
 }
 
 /**
@@ -343,16 +348,18 @@ export class TileManager extends Evented {
 
     _tileLoaded(tile: Tile, id: string, previousState: TileState) {
         tile.timeAdded = now();
-        // Since self-fading applies to unloaded tiles, fadeEndTime must be updated upon load
-        if (tile.selfFading) {
-            tile.fadeEndTime = tile.timeAdded + this._rasterFadeDuration;
+        this._strategy.onTileLoaded?.(tile);
+
+        if (previousState === 'expired') {
+            tile.refreshedUponExpiration = true;
+        }
+        this._setTileReloadTimer(id, tile);
+
+        if (this.getSource().type === 'raster-dem' && tile.dem) {
+            this._backfillDEM(tile);
         }
 
-        if (previousState === 'expired') tile.refreshedUponExpiration = true;
-        this._setTileReloadTimer(id, tile);
-        if (this.getSource().type === 'raster-dem' && tile.dem) this._backfillDEM(tile);
         this._state.initializeTileState(tile, this.map ? this.map.painter : null);
-
         if (!tile.aborted) {
             this._source.fire(new Event('data', {dataType: 'source', tile, coord: tile.tileID}));
         }
@@ -585,7 +592,7 @@ export class TileManager extends Evented {
                 tileSize: this.usedForTerrain ? this.tileSize : this._source.tileSize,
                 minzoom: this._source.minzoom,
                 maxzoom: this._source.type === 'vector' && this.map._zoomLevelsToOverscale !== undefined
-                    ? transform.maxZoom - this.map._zoomLevelsToOverscale 
+                    ? transform.maxZoom - this.map._zoomLevelsToOverscale
                     : this._source.maxzoom,
                 roundZoom: this.usedForTerrain ? false : this._source.roundZoom,
                 reparseOverscaled: this._source.reparseOverscaled,
@@ -821,6 +828,17 @@ export class TileManager extends Evented {
             tile.aborted = true;
             this._abortTile(tile);
             this._unloadTile(tile);
+        }
+    }
+
+    /**
+     * Clear vector data from all tiles currently in the store
+     */
+    clearVectorData() {
+        const tiles = this._store.getTiles();
+        for (const id in tiles) {
+            const tile = tiles[id];
+            tile.unloadVectorData();
         }
     }
 
