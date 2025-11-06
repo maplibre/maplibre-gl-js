@@ -8,12 +8,15 @@ import {EXTENT} from '../data/extent';
 
 const emptyCallbacks = {
     calcMatrices: () => {},
-    constrain: (center, zoom) => { return {center, zoom}; },
+    defaultConstrain: (center, zoom) => { return {center, zoom}; },
 };
 
 describe('TransformHelper', () => {
     test('apply', () => {
         const original = new TransformHelper(emptyCallbacks);
+        original.setConstrainOverride((lngLat, zoom) => {
+            return {center: lngLat, zoom: zoom ?? 0};
+        });
         original.setBearing(12);
         original.setCenter(new LngLat(3, 4));
         original.setElevation(5);
@@ -39,6 +42,7 @@ describe('TransformHelper', () => {
         cloned.apply(original);
 
         // Check all getters from the ITransformGetters interface
+        expect(cloned.constrainOverride).toEqual(original.constrainOverride);
         expect(cloned.tileSize).toEqual(original.tileSize);
         expect(cloned.tileZoom).toEqual(original.tileZoom);
         expect(cloned.scale).toEqual(original.scale);

@@ -61,6 +61,12 @@ export class Dispatcher {
             actor.registerMessageHandler(type, handler);
         }
     }
+
+    public unregisterMessageHandler<T extends MessageType>(type: T) {
+        for (const actor of this.actors) {
+            actor.unregisterMessageHandler(type);
+        }
+    }
 }
 
 let globalDispatcher: Dispatcher;

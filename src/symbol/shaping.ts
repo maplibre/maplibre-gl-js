@@ -1,6 +1,8 @@
 import {
-    charHasUprightVerticalOrientation,
-    charAllowsIdeographicBreaking,
+    codePointAllowsIdeographicBreaking,
+    codePointHasUprightVerticalOrientation
+} from '../util/unicode_properties.g';
+import {
     charInComplexShapingScript
 } from '../util/script_detection';
 import {verticalizePunctuation} from '../util/verticalize_punctuation';
@@ -389,7 +391,7 @@ const breakable: {
     [0x2013]: true, // en dash
     [0x2027]: true  // interpunct
     // Many other characters may be reasonable breakpoints
-    // Consider "neutral orientation" characters at scriptDetection.charHasNeutralVerticalOrientation
+    // Consider "neutral orientation" characters in codePointHasNeutralVerticalOrientation in unicode_properties
     // See https://github.com/mapbox/mapbox-gl-js/issues/3658
 };
 
@@ -564,7 +566,7 @@ function determineLineBreaks(
         // Ideographic characters, spaces, and word-breaking punctuation that often appear without
         // surrounding spaces.
         if ((i < logicalInput.length() - 1)) {
-            const ideographicBreak = charAllowsIdeographicBreaking(codePoint);
+            const ideographicBreak = codePointAllowsIdeographicBreaking(codePoint);
             if (breakable[codePoint] || ideographicBreak || section.imageName || (i !== logicalInput.length() - 2 && breakableBefore[logicalInput.getCharCode(i + 1)])) {
 
                 potentialLineBreaks.push(
@@ -677,7 +679,7 @@ function isLineVertical(
 ): boolean {
     return !(writingMode === WritingMode.horizontal ||
         // Don't verticalize glyphs that have no upright orientation if vertical placement is disabled.
-        (!allowVerticalPlacement && !charHasUprightVerticalOrientation(codePoint)) ||
+        (!allowVerticalPlacement && !codePointHasUprightVerticalOrientation(codePoint)) ||
         // If vertical placement is enabled, don't verticalize glyphs that
         // are from complex text layout script, or whitespaces.
         (allowVerticalPlacement && (whitespace[codePoint] || charInComplexShapingScript(codePoint))));

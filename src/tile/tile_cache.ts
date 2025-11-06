@@ -210,3 +210,38 @@ export class TileCache {
         }
     }
 }
+
+export class BoundedLRUCache<K, V> {
+    private maxEntries: number;
+    private map: Map<K, V>;
+
+    constructor(maxEntries: number) {
+        this.maxEntries = maxEntries;
+        this.map = new Map();
+    }
+
+    get(key: K): V | undefined {
+        const value = this.map.get(key);
+        if (value !== undefined) {
+            // Move key to end (most recently used)
+            this.map.delete(key);
+            this.map.set(key, value);
+        }
+        return value;
+    }
+
+    set(key: K, value: V): void {
+        if (this.map.has(key)) {
+            this.map.delete(key);
+        } else if (this.map.size >= this.maxEntries) {
+            // Delete oldest
+            const oldestKey = this.map.keys().next().value;
+            this.map.delete(oldestKey);
+        }
+        this.map.set(key, value);
+    }
+
+    clear(): void {
+        this.map.clear();
+    }
+}
