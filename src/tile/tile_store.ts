@@ -115,4 +115,8 @@ export class TileStore  {
 
         return edgeTiles;
     }
+
+    getCache() {
+        return this._cache;
+    }
 }

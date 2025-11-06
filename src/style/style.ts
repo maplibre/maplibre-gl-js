@@ -1005,7 +1005,7 @@ export class Style extends Evented {
         if (shouldValidate && this._validate(validateStyle.source, `sources.${id}`, source, null, options)) return;
         if (this.map && this.map._collectResourceTiming) (source as any).collectResourceTiming = true;
 
-        const tileManager = new TileManager(id, source as SourceSpecification, this.dispatcher);
+        const tileManager = new TileManager(id, source, this.dispatcher);
         tileManager.style = this;
         tileManager.setEventedParent(this, () => ({
             isSourceLoaded: tileManager.loaded(),
@@ -2046,7 +2046,6 @@ export class Style extends Evented {
         for (const id in this.tileManagers) {
             const tileManager = this.tileManagers[id];
             tileManager.setEventedParent(null);
-            tileManager.clearVectorData();
             tileManager.onRemove(this.map);
         }
         this.tileManagers = {};

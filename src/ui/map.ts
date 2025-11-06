@@ -2264,7 +2264,7 @@ export class Map extends Camera {
      * ```
      */
     areTilesLoaded(): boolean {
-        const tileManagers = this.style?.tileManagers || [];
+        const tileManagers = this.style?.tileManagers || {};
         for (const id in tileManagers) {
             if (!tileManagers[id].areTilesLoaded()) {
                 return false;

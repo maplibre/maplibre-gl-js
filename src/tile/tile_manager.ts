@@ -170,6 +170,7 @@ export class TileManager extends Evented {
     }
 
     onRemove(map: Map) {
+        this.clearVectorData();
         this.clearTiles();
         if (this._source && this._source.onRemove) {
             this._source.onRemove(map);
@@ -800,6 +801,20 @@ export class TileManager extends Evented {
         }
     }
 
+    /**
+     * Clear vector data from all tiles currently in the store
+     */
+    clearVectorData() {
+        const tiles = this._store.getTiles();
+        for (const id in tiles) {
+            const tile = tiles[id];
+            tile.unloadVectorData();
+        }
+    }
+
+    /**
+     * Remove all tiles from the store and reset the cache
+     */
     clearTiles() {
         this._shouldReloadOnResume = false;
         this._paused = false;
@@ -828,17 +843,6 @@ export class TileManager extends Evented {
             tile.aborted = true;
             this._abortTile(tile);
             this._unloadTile(tile);
-        }
-    }
-
-    /**
-     * Clear vector data from all tiles currently in the store
-     */
-    clearVectorData() {
-        const tiles = this._store.getTiles();
-        for (const id in tiles) {
-            const tile = tiles[id];
-            tile.unloadVectorData();
         }
     }
 
