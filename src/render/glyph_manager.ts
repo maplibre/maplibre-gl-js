@@ -1,7 +1,7 @@
 import {loadGlyphRange} from '../style/load_glyph_range';
 
 import TinySDF from '@mapbox/tiny-sdf';
-import {unicodeBlockLookup} from '../util/is_char_in_unicode_block';
+import {codePointUsesLocalIdeographFontFamily} from '../util/unicode_properties.g';
 import {AlphaImage} from '../util/image';
 import {warnOnce} from '../util/util';
 
@@ -162,24 +162,7 @@ export class GlyphManager {
     }
 
     _charUsesLocalIdeographFontFamily(id: number): boolean {
-        // The CJK Unified Ideographs blocks and Hangul Syllables blocks are
-        // spread across many glyph PBFs and are typically accessed very
-        // randomly. Preferring local rendering for these blocks reduces
-        // wasteful bandwidth consumption. For visual consistency within CJKV
-        // text, also include any other CJKV or siniform ideograph or hangul,
-        // hiragana, or katakana character.
-        return !!this.localIdeographFontFamily &&
-        (/\p{Ideo}|\p{sc=Hang}|\p{sc=Hira}|\p{sc=Kana}/u.test(String.fromCodePoint(id)) ||
-        // fallback: RegExp can't cover all cases. refer Issue #5420
-        unicodeBlockLookup['CJK Unified Ideographs'](id) ||
-        unicodeBlockLookup['Hangul Syllables'](id) ||
-        unicodeBlockLookup['Hiragana'](id) ||
-        unicodeBlockLookup['Katakana'](id) || // includes "ー"
-        // memo: these symbols are not all. others could be added if needed.
-        unicodeBlockLookup['CJK Symbols and Punctuation'](id) || // 、。〃〄々〆〇〈〉《》「...
-        unicodeBlockLookup['Halfwidth and Fullwidth Forms'](id) // ！？＂＃＄％＆...
-        );
-
+        return !!this.localIdeographFontFamily && codePointUsesLocalIdeographFontFamily(id);
     }
 
     /**
