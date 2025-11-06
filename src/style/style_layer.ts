@@ -1,6 +1,6 @@
 import {filterObject} from '../util/util';
 
-import {featureFilter, latest as styleSpec, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
+import {createVisibilityExpression, featureFilter, latest as styleSpec, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 import {
     validateStyle,
     validateLayoutProperty,
@@ -12,9 +12,14 @@ import {Layout, Transitionable, type Transitioning, type Properties, PossiblyEva
 
 import type {Bucket, BucketParameters} from '../data/bucket';
 import type Point from '@mapbox/point-geometry';
-import type {FeatureFilter, FeatureState,
+import type {
+    FeatureFilter,
+    FeatureState,
     LayerSpecification,
-    FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
+    FilterSpecification,
+    ExpressionSpecification,
+    VisibilitySpecification
+} from '@maplibre/maplibre-gl-style-spec';
 import type {TransitionParameters, PropertyValue} from './properties';
 import {type EvaluationParameters} from './evaluation_parameters';
 import type {CrossfadeParameters} from './evaluation_parameters';
@@ -87,7 +92,9 @@ export abstract class StyleLayer extends Evented {
     minzoom: number;
     maxzoom: number;
     filter: FilterSpecification | void;
-    visibility: 'visible' | 'none' | void;
+    visibility: VisibilitySpecification | void;
+    private _visibility: 'visible' | 'none' | void;
+
     _crossfadeParameters: CrossfadeParameters;
 
     _unevaluatedLayout: Layout<any>;
@@ -98,6 +105,8 @@ export abstract class StyleLayer extends Evented {
     readonly paint: unknown;
 
     _featureFilter: FeatureFilter;
+
+    _visibilityExpression: any;
 
     readonly onAdd: ((map: Map) => void);
     readonly onRemove: ((map: Map) => void);
@@ -126,6 +135,8 @@ export abstract class StyleLayer extends Evented {
         this.metadata = layer.metadata;
         this.minzoom = layer.minzoom;
         this.maxzoom = layer.maxzoom;
+
+        this._visibilityExpression = createVisibilityExpression(this.visibility as VisibilitySpecification, globalState);
 
         if (layer.type !== 'background') {
             this.source = layer.source;
@@ -179,6 +190,10 @@ export abstract class StyleLayer extends Evented {
     getLayoutAffectingGlobalStateRefs(): Set<string> {
         const globalStateRefs = new Set<string>();
 
+        for (const globalStateRef of this._visibilityExpression.getGlobalStateRefs()) {
+            globalStateRefs.add(globalStateRef);
+        }
+
         if (this._unevaluatedLayout) {
             for (const propertyName in this._unevaluatedLayout._values) {
                 const value = this._unevaluatedLayout._values[propertyName];
@@ -219,6 +234,14 @@ export abstract class StyleLayer extends Evented {
         return globalStateRefs;
     }
 
+    /**
+     * Get list of global state references that are used within visibility expression.
+     * This is used to determine if layer visibility needs to be updated when global state property changes.
+     */
+    getVisibilityAffectingGlobalStateRefs() {
+        return this._visibilityExpression.getGlobalStateRefs();
+    }
+
     setLayoutProperty(name: string, value: any, options: StyleSetterOptions = {}) {
         if (value !== null && value !== undefined) {
             const key = `layers.${this.id}.layout.${name}`;
@@ -229,6 +252,8 @@ export abstract class StyleLayer extends Evented {
 
         if (name === 'visibility') {
             this.visibility = value;
+            this._visibilityExpression.setValue(value);
+            this.recalculateVisibility();
             return;
         }
 
@@ -283,10 +308,10 @@ export abstract class StyleLayer extends Evented {
         return false;
     }
 
-    isHidden(zoom: number, roundMinZoom: boolean = false) {
+    isHidden(zoom: number = this.minzoom, roundMinZoom: boolean = false) {
         if (this.minzoom && zoom < (roundMinZoom ? Math.floor(this.minzoom) : this.minzoom)) return true;
         if (this.maxzoom && zoom >= this.maxzoom) return true;
-        return this.visibility === 'none';
+        return this.visibility === 'none' || this._visibility === 'none';
     }
 
     updateTransitions(parameters: TransitionParameters) {
@@ -295,6 +320,10 @@ export abstract class StyleLayer extends Evented {
 
     hasTransition() {
         return this._transitioningPaint.hasTransition();
+    }
+
+    recalculateVisibility() {
+        this._visibility = this._visibilityExpression.evaluate();
     }
 
     recalculate(parameters: EvaluationParameters, availableImages: Array<string>) {
@@ -325,7 +354,7 @@ export abstract class StyleLayer extends Evented {
 
         if (this.visibility) {
             output.layout = output.layout || {};
-            output.layout.visibility = this.visibility;
+            output.layout.visibility = this.visibility as ExpressionSpecification;
         }
 
         return filterObject(output, (value, key) => {

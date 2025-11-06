@@ -24,7 +24,7 @@
     "@mapbox/unitbezier": "^0.0.1",
     "@mapbox/vector-tile": "^2.0.4",
     "@mapbox/whoots-js": "^3.1.0",
-    "@maplibre/maplibre-gl-style-spec": "^24.3.1",
+    "@maplibre/maplibre-gl-style-spec": "git+https://github.com/melitele/maplibre-style-spec.git#global-state-visibility-dist",
     "@maplibre/vt-pbf": "^4.0.3",
     "@types/geojson": "^7946.0.16",
     "@types/geojson-vt": "3.2.5",
