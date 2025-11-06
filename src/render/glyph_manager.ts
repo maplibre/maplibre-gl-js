@@ -290,6 +290,9 @@ export class GlyphManager {
             if (entry.tinySDF) {
                 entry.tinySDF = null;
             }
+            if (entry.ideographTinySDF) {
+                entry.ideographTinySDF = null;
+            }
             entry.glyphs = {};
             entry.requests = {};
             entry.ranges = {};
