@@ -3,12 +3,12 @@
 ### ✨ Features and improvements
 - Slice vector tiles to improve over scale vector handling ([#6521](https://github.com/maplibre/maplibre-gl-js/pull/6521)). It adds the `experimentalZoomLevelsToOverscale` flag to `MapOptions` to allow controlling how many zoom levels to slice and how many to scale. It seems to have better performance at high zoom levels. It can prevent Safar crashes in some scenarios by setting it to 4 or less. (by [@HarelM](https://github.com/HarelM))
 - Add reduceMotion option to Map Options ([#6661](https://github.com/maplibre/maplibre-gl-js/pull/6661))
+- Tile Manager Composition Classes, Vector & Raster Tile Strategies, Tile Reload Strategies ([#6638](https://github.com/maplibre/maplibre-gl-js/pull/6638))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Fix missing `constrainOverride` setter in `TransformHelper.apply` ([#6642](https://github.com/maplibre/maplibre-gl-js/pull/6642)) (by [@larsmaxfield](https://github.com/larsmaxfield))
 - Fix blank map after WebGL context restore ([#6242](https://github.com/maplibre/maplibre-gl-js/issues/6242)) (by [@ToHold](https://github.com/ToHold))
-
 - _...Add new stuff here..._
 
 ## 5.11.0
