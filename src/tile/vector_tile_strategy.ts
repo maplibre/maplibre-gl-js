@@ -3,7 +3,7 @@ import {EXTENT_BOUNDS} from '../data/extent_bounds';
 import {Bounds} from '../geo/bounds';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import type {Tile} from './tile';
-import type {TileStore} from './tile_store';
+import type {TileManagerState} from './tile_manager_state';
 import type {TileManagerStrategy} from './tile_manager';
 import type {OverscaledTileID} from './tile_id';
 import type {ITransform} from '../geo/transform_interface';
@@ -27,17 +27,17 @@ export type TileResult = {
  *  - Coordinating symbol placement across tile boundaries
  */
 export class VectorTileStrategy implements TileManagerStrategy {
-    _store: TileStore;
+    _state: TileManagerState;
 
-    constructor(store: TileStore) {
-        this._store = store;
+    constructor(state: TileManagerState) {
+        this._state = state;
     }
 
     /**
      * Post update processing for vector tiles. Returns list of tile IDs that should be removed.
      */
     onFinishUpdate(_idealTileIDs: OverscaledTileID[], retain: Record<string, OverscaledTileID>, _sourceMinZoom: number, _sourceMaxZoom: number, fadeDuration: number): string[] {
-        const tiles = this._store.getTiles();
+        const tiles = this._state.getTiles();
         const removeIds = [];
 
         for (const key in tiles) {
@@ -78,10 +78,10 @@ export class VectorTileStrategy implements TileManagerStrategy {
      * This is useful when forcing an immediate cleanup without waiting for fade completion.
      */
     releaseSymbolFadeTiles() {
-        const tiles = this._store.getTiles();
+        const tiles = this._state.getTiles();
         for (const id in tiles) {
             if (tiles[id].holdingForSymbolFade()) {
-                this._store.removeTileByID(id);
+                this._state.removeTileByID(id);
             }
         }
     }
@@ -107,7 +107,7 @@ export class VectorTileStrategy implements TileManagerStrategy {
         const cameraQueryGeometry = this._transformBbox(cameraPointQueryGeometry, project, !allowWorldCopies);
         const cameraBounds = Bounds.fromPoints(cameraQueryGeometry);
 
-        const sortedTiles = this._store.getTilesSorted();
+        const sortedTiles = this._state.getTilesSorted();
 
         for (const tile of sortedTiles) {
             if (tile.holdingForSymbolFade()) {

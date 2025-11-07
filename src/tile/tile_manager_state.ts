@@ -3,7 +3,7 @@ import {TileCache} from './tile_cache';
 import type {OverscaledTileID} from './tile_id';
 import type {Tile} from './tile';
 
-export class TileStore  {
+export class TileManagerState  {
     _tiles: Record<string, Tile> = {};
     _cache: TileCache;
 

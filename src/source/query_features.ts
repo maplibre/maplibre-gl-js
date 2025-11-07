@@ -136,7 +136,7 @@ export function queryRenderedFeatures(
             queryResults: tileIn.tile.queryRenderedFeatures(
                 styleLayers,
                 serializedLayers,
-                tileManager.getState(),
+                tileManager.getSourceFeatureState(),
                 tileIn.queryGeometry,
                 tileIn.cameraQueryGeometry,
                 tileIn.scale,
