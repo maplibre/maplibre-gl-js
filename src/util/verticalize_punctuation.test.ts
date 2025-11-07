@@ -10,5 +10,6 @@ describe('verticalizePunctuation', () => {
     });
     test('replaces rotatable punctuation marks', () => {
         expect(verticalizePunctuation('(…)')).toEqual('︵︙︶');
+        expect(verticalizePunctuation('（⋯）')).toEqual('︵︙︶');
     });
 });
