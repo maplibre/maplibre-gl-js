@@ -222,7 +222,7 @@ describe('TileManager.addTile', () => {
         const tr = new MercatorTransform();
         tr.resize(512, 512);
         tileManager._updateCacheSize(tr);
-        const cache = tileManager.getState().getCache();
+        const cache = tileManager.getCache();
 
         const id = tileID.key;
         expect(tileManager._timers[id]).toBeFalsy();
@@ -2440,7 +2440,7 @@ describe('TileManager sets max cache size correctly', () => {
         tileManager._updateCacheSize(tr);
 
         // Expect max size to be ((512 / tileSize + 1) ^ 2) * 5 => 3 * 3 * 5
-        expect(tileManager.getState().getCache().max).toBe(45);
+        expect(tileManager.getCache().max).toBe(45);
     });
 
     test('sets cache size based on 256 tiles', () => {
@@ -2453,7 +2453,7 @@ describe('TileManager sets max cache size correctly', () => {
         tileManager._updateCacheSize(tr);
 
         // Expect max size to be ((512 / tileSize + 1) ^ 2) * 5 => 2 * 2 * 5
-        expect(tileManager.getState().getCache().max).toBe(20);
+        expect(tileManager.getCache().max).toBe(20);
     });
 
 });

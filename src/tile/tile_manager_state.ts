@@ -1,15 +1,9 @@
 import {sortTileIDs} from './tile_id';
-import {TileCache} from './tile_cache';
 import type {OverscaledTileID} from './tile_id';
 import type {Tile} from './tile';
 
 export class TileManagerState  {
     _tiles: Record<string, Tile> = {};
-    _cache: TileCache;
-
-    constructor(onCacheRemove: (tile: Tile) => void) {
-        this._cache = new TileCache(0, onCacheRemove);
-    }
 
     addTile(tile: Tile) {
         this._tiles[tile.tileID.key] = tile;
@@ -56,26 +50,6 @@ export class TileManagerState  {
         delete this._tiles[id];
     }
 
-    addTileToCache(tile: Tile) {
-        this._cache.add(tile.tileID, tile, tile.getExpiryTimeout());
-    }
-
-    getTileFromCache(tileID: OverscaledTileID): Tile | null {
-        return this._cache.getAndRemove(tileID);
-    }
-
-    resetCache() {
-        this._cache.reset();
-    }
-
-    setMaxCacheSize(max: number) {
-        this._cache.setMaxSize(max);
-    }
-
-    filterCache(condition: (tile: Tile) => boolean) {
-        this._cache.filter(condition);
-    }
-
     /**
      * For a given set of tile ids, returns the edge tile ids for the bounding box.
      */
@@ -114,9 +88,5 @@ export class TileManagerState  {
         }
 
         return edgeTiles;
-    }
-
-    getCache() {
-        return this._cache;
     }
 }

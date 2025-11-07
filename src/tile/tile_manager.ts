@@ -3,6 +3,7 @@ import {create as createSource} from '../source/source';
 import {VectorTileStrategy, type TileResult} from './vector_tile_strategy';
 import {RasterTileStrategy} from './raster_tile_strategy';
 import {TileManagerState} from './tile_manager_state';
+import {TileCache} from './tile_cache';
 import {OverscaledTileID, sortTileIDs} from './tile_id';
 import {Tile} from './tile';
 import {type Context} from '../gl/context';
@@ -94,6 +95,7 @@ export class TileManager extends Evented {
     _source: Source;
     _state: TileManagerState;
     _strategy: TileManagerStrategy;
+    _cache: TileCache;
 
     /**
      * @internal
@@ -146,7 +148,10 @@ export class TileManager extends Evented {
         });
 
         this._source = createSource(id, options, dispatcher, this);
-        this._state = new TileManagerState(tile => this._unloadTile(tile));
+        this._state = new TileManagerState();
+        this._cache = new TileCache(0, tile => this._unloadTile(tile));
+
+        // Set the stragy for this tile manager to either raster or vector tiles.
         this._strategy = options.type === 'raster'
             ? new RasterTileStrategy(this._state)
             : new VectorTileStrategy(this._state);
@@ -204,6 +209,10 @@ export class TileManager extends Evented {
 
     getState(): TileManagerState {
         return this._state;
+    }
+
+    getCache(): TileCache {
+        return this._cache;
     }
 
     pause() {
@@ -311,7 +320,8 @@ export class TileManager extends Evented {
             return;
         }
 
-        this._state.resetCache();
+        // Reset the tile cache
+        this._cache.reset();
 
         const tiles = this._state.getTiles();
         for (const id in tiles) {
@@ -532,7 +542,7 @@ export class TileManager extends Evented {
         const maxSize = typeof this._maxTileCacheSize === 'number' ?
             Math.min(this._maxTileCacheSize, viewDependentMaxSize) : viewDependentMaxSize;
 
-        this._state.setMaxCacheSize(maxSize);
+        this._cache.setMaxSize(maxSize);
     }
 
     _handleWrapJump(lng: number) {
@@ -717,7 +727,8 @@ export class TileManager extends Evented {
         if (tile)
             return tile;
 
-        tile = this._state.getTileFromCache(tileID);
+        // Check the cache for the tile first
+        tile = this._cache.getAndRemove(tileID);
         if (tile) {
             //allow strategy to process the tile when retrieved from cache
             this._strategy.onTileRetrievedFromCache?.(tile);
@@ -817,7 +828,8 @@ export class TileManager extends Evented {
         for (const id in this._state.getTiles()) {
             this.removeTile(id);
         }
-        this._state.resetCache();
+        // Reset the tile cache
+        this._cache.reset();
     }
 
     /**
@@ -834,7 +846,8 @@ export class TileManager extends Evented {
         if (tile.uses > 0) return;
 
         if (tile.hasData() && tile.state !== 'reloading') {
-            this._state.addTileToCache(tile);
+            // Cache the removed tile
+            this._cache.add(tile.tileID, tile, tile.getExpiryTimeout());
         } else {
             tile.aborted = true;
             this._abortTile(tile);
@@ -962,6 +975,7 @@ export class TileManager extends Evented {
                 this._reloadTile(id, 'reloading');
             }
         }
-        this._state.filterCache(tile => !tile.hasDependency(namespaces, keys));
+        // Clean the tile cache
+        this._cache.filter(tile => !tile.hasDependency(namespaces, keys));
     }
 }
