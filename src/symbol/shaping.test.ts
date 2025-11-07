@@ -1,72 +1,9 @@
 import {describe, test, expect} from 'vitest';
-import {type PositionedIcon, type Box, type Shaping, SectionOptions, TaggedString, determineLineBreaks, applyTextFit, shapeIcon, fitIconToText} from './shaping';
+import {type PositionedIcon, type Box, type Shaping, determineLineBreaks, applyTextFit, shapeIcon, fitIconToText} from './shaping';
+import {TaggedString, type TextSectionOptions} from './tagged_string';
 import {ImagePosition} from '../render/image_atlas';
 import type {StyleGlyph} from '../style/style_glyph';
 import {type StyleImage, TextFit} from '../style/style_image';
-
-describe('TaggedString', () => {
-    describe('length', () => {
-        test('counts a surrogate pair as a single character', () => {
-            const tagged = new TaggedString();
-            tagged.text = '茹𦨭';
-            expect(tagged.length()).toBe(2);
-        });
-    });
-
-    describe('trim', () => {
-        test('turns a whitespace-only string into the empty string', () => {
-            const tagged = new TaggedString();
-            tagged.text = '  \t    \v ';
-            tagged.sections = [new SectionOptions()];
-            tagged.sectionIndex = Array(9).fill(0);
-            tagged.trim();
-            expect(tagged.text).toBe('');
-            expect(tagged.sectionIndex).toHaveLength(0);
-        });
-
-        test('trims whitespace around a surrogate pair', () => {
-            const tagged = new TaggedString();
-            tagged.text = ' 茹𦨭 ';
-            tagged.sections = [new SectionOptions()];
-            tagged.sectionIndex = Array(4).fill(0);
-            tagged.trim();
-            expect(tagged.text).toBe('茹𦨭');
-            expect(tagged.sectionIndex).toHaveLength(2);
-        });
-    });
-
-    describe('substring', () => {
-        test('avoids splitting a surrogate pair', () => {
-            const tagged = new TaggedString();
-            tagged.text = '𰻞𰻞麵𪚥𪚥';
-            tagged.sections = [new SectionOptions()];
-            tagged.sectionIndex = Array(5).fill(0);
-            expect(tagged.substring(0, 1).text).toBe('𰻞');
-            expect(tagged.substring(0, 1).sectionIndex).toEqual([0]);
-            expect(tagged.substring(0, 2).text).toBe('𰻞𰻞');
-            expect(tagged.substring(0, 2).sectionIndex).toEqual([0, 0]);
-            expect(tagged.substring(1, 2).text).toBe('𰻞');
-            expect(tagged.substring(1, 2).sectionIndex).toEqual([0]);
-            expect(tagged.substring(1, 3).text).toBe('𰻞麵');
-            expect(tagged.substring(1, 3).sectionIndex).toEqual([0, 0]);
-            expect(tagged.substring(2, 5).text).toBe('麵𪚥𪚥');
-            expect(tagged.substring(2, 5).sectionIndex).toEqual([0, 0, 0]);
-        });
-    });
-
-    describe('codeUnitIndex', () => {
-        test('splits surrogate pairs', () => {
-            const tagged = new TaggedString();
-            tagged.text = '𰻞𰻞麵𪚥𪚥';
-            expect(tagged.toCodeUnitIndex(0)).toBe(0);
-            expect(tagged.toCodeUnitIndex(1)).toBe(2);
-            expect(tagged.toCodeUnitIndex(2)).toBe(4);
-            expect(tagged.toCodeUnitIndex(3)).toBe(5);
-            expect(tagged.toCodeUnitIndex(4)).toBe(7);
-            expect(tagged.toCodeUnitIndex(5)).toBe(9);
-        });
-    });
-});
 
 describe('determineLineBreaks', () => {
     const metrics = {
@@ -91,26 +28,19 @@ describe('determineLineBreaks', () => {
             '200414': {id: 0x30EDE, metrics, rect},
         } as any as StyleGlyph,
     };
+    const textSection = {
+        scale: 1,
+        verticalAlign: 'bottom',
+        fontStack: 'Test',
+    } as TextSectionOptions;
 
     test('keeps alphabetic characters together', () => {
-        const tagged = new TaggedString();
-        tagged.text = 'abc';
-        const section = new SectionOptions();
-        section.fontStack = 'Test';
-        tagged.sections = [section];
-        tagged.sectionIndex = Array(3).fill(0);
-
+        const tagged = new TaggedString('abc', [textSection], Array(3).fill(0));
         expect(determineLineBreaks(tagged, 0, 300, glyphs, {}, 30)).toEqual([3]);
     });
 
     test('keeps ideographic characters together', () => {
-        const tagged = new TaggedString();
-        tagged.text = '𰻞𰻞麵';
-        const section = new SectionOptions();
-        section.fontStack = 'Test';
-        tagged.sections = [section];
-        tagged.sectionIndex = Array(3).fill(0);
-
+        const tagged = new TaggedString('𰻞𰻞麵', [textSection], Array(3).fill(0));
         expect(determineLineBreaks(tagged, 0, 300, glyphs, {}, 30)).toEqual([3]);
     });
 });
