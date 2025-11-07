@@ -225,19 +225,18 @@ describe('CrossTileSymbolIndex.addLayer', () => {
 
         const INSTANCE_COUNT = KDBUSH_THRESHHOLD + 1;
         for (let i = 0; i < INSTANCE_COUNT; i++) {
-            mainInstances.push(makeSymbolInstance(i, i, ''));
-            childInstances.push(makeSymbolInstance(i, i, ''));
+            mainInstances.push(makeSymbolInstance(0, 0, ''));
+            childInstances.push(makeSymbolInstance(0, 0, ''));
         }
         const mainTile = makeTile(mainID, mainInstances);
         const childTile = makeTile(childID, childInstances);
         index.addLayer(styleLayer, [mainTile], 0);
         index.addLayer(styleLayer, [childTile], 0);
 
-        // check that we matched the parent tile
-        expect(childInstances[0].crossTileID).toBe(1);
         // all child instances matched a crossTileID from the parent, otherwise
         // we would have generated a new crossTileID, and the number would
         // exceed INSTANCE_COUNT
+        expect(childInstances.every(i => i.crossTileID <= INSTANCE_COUNT)).toBeTruthy();
         expect(Math.max(...childInstances.map(i => i.crossTileID))).toBe(INSTANCE_COUNT);
     });
 });

@@ -28,14 +28,18 @@ const roundingFactor = 512 / EXTENT / 2;
 
 export const KDBUSH_THRESHHOLD = 128;
 
+const SymbolKindType = {
+    INDEXED: 0,
+    UNINDEXED: 1,
+} as const;
 interface IndexedSymbolKind  {
-    readonly type: 'indexed';
+    readonly type: typeof SymbolKindType.INDEXED;
     readonly index: KDBush;
     readonly crossTileIDs: number[];
 }
 
 interface UnindexedSymbolKind {
-    readonly type: 'unindexed';
+    readonly type: typeof SymbolKindType.UNINDEXED;
     readonly positions: {x: number; y: number}[];
     readonly crossTileIDs: number[];
 }
@@ -69,9 +73,9 @@ class TileLayerIndex {
                 const index = new KDBush(positions.length, 16, Uint16Array);
                 for (const {x, y} of positions) index.add(x, y);
                 index.finish();
-                this._symbolsByKey[key] = {type: 'indexed', index, crossTileIDs};
+                this._symbolsByKey[key] = {type: SymbolKindType.INDEXED, index, crossTileIDs};
             } else {
-                this._symbolsByKey[key] = {type: 'unindexed', positions, crossTileIDs};
+                this._symbolsByKey[key] = {type: SymbolKindType.UNINDEXED, positions, crossTileIDs};
             }
 
         }
@@ -127,7 +131,7 @@ class TileLayerIndex {
 
             const scaledSymbolCoord = this.getScaledCoordinates(symbolInstance, newTileID);
 
-            if (entry.type === 'indexed') {
+            if (entry.type === SymbolKindType.INDEXED) {
                 // Build a map keyed by common symbol instance keys, which are also
                 // used to key indexes. For each symbol index key, build a reverse map
                 // of the scaled coordinates back to a set of SymbolInstance that
@@ -167,36 +171,22 @@ class TileLayerIndex {
 
         for (const [symbolKey, coordinateMap] of symbolKeyToScaledCoordinatesToSymbolInstanceMap.entries()) {
             const entry = this._symbolsByKey[symbolKey];
-            if (entry && entry.type === 'indexed') {
-                this.findMatchesForInstances(
-                    entry,
-                    coordinateMap,
-                    zoomCrossTileIDs,
-                    tolerance
-                );
+            if (entry && entry.type === SymbolKindType.INDEXED) {
+                for (const [coordinateId, instances] of coordinateMap.entries()) {
+                    const x = coordinateId >>> 16;
+                    const y = coordinateId % (1 << 16);
+                    this.findMatchesForInstancesAtCoordinate(
+                        entry,
+                        instances,
+                        x,
+                        y,
+                        zoomCrossTileIDs,
+                        tolerance,
+                    );
+                }
             }
         }
 
-    }
-
-    private findMatchesForInstances(
-        kind: IndexedSymbolKind,
-        coordinateMap: Map<number, SymbolInstance[]>,
-        zoomCrossTileIDs: {[crossTileID: number]: boolean},
-        tolerance: number
-    ) {
-        for (const [coordinateId, instances] of coordinateMap.entries()) {
-            const x = coordinateId >>> 16;
-            const y = coordinateId % (1 << 16);
-            this.findMatchesForInstancesAtCoordinate(
-                kind,
-                instances,
-                x,
-                y,
-                zoomCrossTileIDs,
-                tolerance,
-            );
-        }
     }
 
     private findMatchesForInstancesAtCoordinate(
@@ -221,8 +211,8 @@ class TileLayerIndex {
         // paired with any entry in the index.
         let i = 0;
         let j = 0;
-        while (i < kind.crossTileIDs.length && j < Math.min(indexes.length, instances.length)) {
-            const crossTileID = kind.crossTileIDs[i];
+        while (i < indexes.length && j < instances.length) {
+            const crossTileID = kind.crossTileIDs[indexes[i]];
             if (!zoomCrossTileIDs[crossTileID]) {
                 // Once we've marked ourselves duplicate against this parent symbol,
                 // don't let any other symbols at the same zoom level duplicate against
