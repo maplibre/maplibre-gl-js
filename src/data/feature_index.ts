@@ -19,7 +19,7 @@ import {PossiblyEvaluated} from '../style/properties';
 import {FeatureIndexArray} from './array_types.g';
 import {type mat4} from 'gl-matrix';
 
-import {MLTVectorTile} from '../source/mlt_vector_tile';
+import {MLTVectorTile} from '../source/vector_tile_mlt';
 import {Bounds} from '../geo/bounds';
 import type {StyleLayer} from '../style/style_layer';
 import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';

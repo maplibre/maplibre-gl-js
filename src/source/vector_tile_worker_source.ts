@@ -6,7 +6,7 @@ import {BoundedLRUCache} from '../tile/tile_cache';
 import {extend} from '../util/util';
 import {RequestPerformance} from '../util/performance';
 import {VectorTileOverzoomed, sliceVectorTileLayer, toVirtualVectorTile} from './vector_tile_overzoomed';
-import {MLTVectorTile} from './mlt_vector_tile';
+import {MLTVectorTile} from './vector_tile_mlt';
 import type {
     WorkerSource,
     WorkerTileParameters,
