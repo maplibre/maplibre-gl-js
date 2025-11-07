@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'vitest';
-import {CrossTileSymbolIndex, KDBUSH_THRESHHOLD} from './cross_tile_symbol_index';
+import {CrossTileSymbolIndex} from './cross_tile_symbol_index';
 import {OverscaledTileID} from '../tile/tile_id';
 import {type StyleLayer} from '../style/style_layer';
 
@@ -30,10 +30,12 @@ const makeTile = (tileID, symbolInstances): any => {
     };
 };
 
+const INDEX_THRESHOLDS = [1, 128];
+
 describe('CrossTileSymbolIndex.addLayer', () => {
 
-    test('matches ids', () => {
-        const index = new CrossTileSymbolIndex();
+    test.each(INDEX_THRESHOLDS)('matches ids: indexThreshold %s', (indexThreshold) => {
+        const index = new CrossTileSymbolIndex(indexThreshold);
 
         const mainID = new OverscaledTileID(6, 0, 6, 8, 8);
         const mainInstances = [
@@ -92,8 +94,8 @@ describe('CrossTileSymbolIndex.addLayer', () => {
 
     });
 
-    test('overwrites ids when re-adding', () => {
-        const index = new CrossTileSymbolIndex();
+    test.each(INDEX_THRESHOLDS)('overwrites ids when re-adding: indexThreshold %s', (indexThreshold) => {
+        const index = new CrossTileSymbolIndex(indexThreshold);
 
         const mainID = new OverscaledTileID(6, 0, 6, 8, 8);
         const mainInstances = [makeSymbolInstance(1000, 1000, 'Detroit')];
@@ -121,7 +123,7 @@ describe('CrossTileSymbolIndex.addLayer', () => {
 
     });
 
-    test('does not duplicate ids within one zoom level', () => {
+    test.each(INDEX_THRESHOLDS)('does not duplicate ids within one zoom level: indexThreshold %s', () => {
         const index = new CrossTileSymbolIndex();
 
         const mainID = new OverscaledTileID(6, 0, 6, 8, 8);
@@ -159,8 +161,8 @@ describe('CrossTileSymbolIndex.addLayer', () => {
 
     });
 
-    test('does not regenerate ids for same zoom', () => {
-        const index = new CrossTileSymbolIndex();
+    test.each(INDEX_THRESHOLDS)('does not regenerate ids for same zoom: indexThreshold %s', (indexThreshold) => {
+        const index = new CrossTileSymbolIndex(indexThreshold);
 
         const tileID = new OverscaledTileID(6, 0, 6, 8, 8);
         const firstInstances = [
@@ -194,8 +196,8 @@ describe('CrossTileSymbolIndex.addLayer', () => {
 
     });
 
-    test('reuses indexes when longitude is wrapped', () => {
-        const index = new CrossTileSymbolIndex();
+    test.each(INDEX_THRESHOLDS)('reuses indexes when longitude is wrapped: indexThreshold %s', (indexThreshold) => {
+        const index = new CrossTileSymbolIndex(indexThreshold);
         const longitude = 370;
 
         const tileID = new OverscaledTileID(6, 1, 6, 8, 8);
@@ -214,8 +216,8 @@ describe('CrossTileSymbolIndex.addLayer', () => {
 
     });
 
-    test('matches ids when indexing', () => {
-        const index = new CrossTileSymbolIndex();
+    test.each(INDEX_THRESHOLDS)('matches ids when indexing: indexThreshold %s', (indexThreshold) => {
+        const index = new CrossTileSymbolIndex(indexThreshold);
 
         const mainID = new OverscaledTileID(6, 0, 6, 8, 8);
         const childID = new OverscaledTileID(7, 0, 7, 16, 16);
@@ -223,7 +225,7 @@ describe('CrossTileSymbolIndex.addLayer', () => {
         const mainInstances: any[] = [];
         const childInstances: any[] = [];
 
-        const INSTANCE_COUNT = KDBUSH_THRESHHOLD + 1;
+        const INSTANCE_COUNT = indexThreshold + 1;
         for (let i = 0; i < INSTANCE_COUNT; i++) {
             mainInstances.push(makeSymbolInstance(0, 0, ''));
             childInstances.push(makeSymbolInstance(0, 0, ''));

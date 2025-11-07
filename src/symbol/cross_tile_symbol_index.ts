@@ -26,8 +26,6 @@ import type {Tile} from '../tile/tile';
 // Round anchor positions to roughly 4 pixel grid
 const roundingFactor = 512 / EXTENT / 2;
 
-export const KDBUSH_THRESHHOLD = 128;
-
 const SymbolKindType = {
     INDEXED: 0,
     UNINDEXED: 1,
@@ -47,7 +45,7 @@ interface UnindexedSymbolKind {
 class TileLayerIndex {
     _symbolsByKey: Record<number, IndexedSymbolKind | UnindexedSymbolKind> = {};
 
-    constructor(public tileID: OverscaledTileID, symbolInstances: SymbolInstanceArray, public bucketInstanceId: number) {
+    constructor(public tileID: OverscaledTileID, symbolInstances: SymbolInstanceArray, public bucketInstanceId: number, readonly indexThreshold: number) {
         // group the symbolInstances by key
         const symbolInstancesByKey = new Map<number, SymbolInstance[]>();
         for (let i = 0; i < symbolInstances.length; i++) {
@@ -69,7 +67,7 @@ class TileLayerIndex {
             const crossTileIDs = symbols.map(v => v.crossTileID);
 
             // once we get too many symbols for a given key, it becomes much faster to index it before queries
-            if (positions.length > KDBUSH_THRESHHOLD) {
+            if (positions.length > indexThreshold) {
                 const index = new KDBush(positions.length, 16, Uint16Array);
                 for (const {x, y} of positions) index.add(x, y);
                 index.finish();
@@ -249,7 +247,7 @@ class CrossTileSymbolLayerIndex {
     };
     lng: number;
 
-    constructor() {
+    constructor(private readonly indexThreshold: number) {
         this.indexes = {};
         this.usedCrossTileIDs = {};
         this.lng = 0;
@@ -335,7 +333,7 @@ class CrossTileSymbolLayerIndex {
         if (this.indexes[tileID.overscaledZ] === undefined) {
             this.indexes[tileID.overscaledZ] = {};
         }
-        this.indexes[tileID.overscaledZ][tileID.key] = new TileLayerIndex(tileID, bucket.symbolInstances, bucket.bucketInstanceId);
+        this.indexes[tileID.overscaledZ][tileID.key] = new TileLayerIndex(tileID, bucket.symbolInstances, bucket.bucketInstanceId, this.indexThreshold);
 
         return true;
     }
@@ -372,7 +370,7 @@ export class CrossTileSymbolIndex {
     maxBucketInstanceId: number;
     bucketsInCurrentPlacement: {[_: number]: boolean};
 
-    constructor() {
+    constructor(private readonly indexThreshold = 128) {
         this.layerIndexes = {};
         this.crossTileIDs = new CrossTileIDs();
         this.maxBucketInstanceId = 0;
@@ -382,7 +380,7 @@ export class CrossTileSymbolIndex {
     addLayer(styleLayer: StyleLayer, tiles: Array<Tile>, lng: number) {
         let layerIndex = this.layerIndexes[styleLayer.id];
         if (layerIndex === undefined) {
-            layerIndex = this.layerIndexes[styleLayer.id] = new CrossTileSymbolLayerIndex();
+            layerIndex = this.layerIndexes[styleLayer.id] = new CrossTileSymbolLayerIndex(this.indexThreshold);
         }
 
         let symbolBucketsChanged = false;
