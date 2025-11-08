@@ -6,6 +6,7 @@ import {BoundedLRUCache} from '../tile/tile_cache';
 import {extend} from '../util/util';
 import {RequestPerformance} from '../util/performance';
 import {VectorTileOverzoomed, sliceVectorTileLayer, toVirtualVectorTile} from './vector_tile_overzoomed';
+import {MLTVectorTile} from './vector_tile_mlt';
 import type {
     WorkerSource,
     WorkerTileParameters,
@@ -68,7 +69,9 @@ export class VectorTileWorkerSource implements WorkerSource {
     async loadVectorTile(params: WorkerTileParameters, abortController: AbortController): Promise<LoadVectorTileResult> {
         const response = await getArrayBuffer(params.request, abortController);
         try {
-            const vectorTile = new VectorTile(new Protobuf(response.data));
+            const vectorTile = params.encoding !== 'mlt' 
+                ? new VectorTile(new Protobuf(response.data)) 
+                : new MLTVectorTile(response.data);
             return {
                 vectorTile,
                 rawData: response.data,
@@ -144,7 +147,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             try {
                 const result = await parsePromise;
                 // Transferring a copy of rawTileData because the worker needs to retain its copy.
-                return extend({rawTileData: rawTileData.slice(0)}, result, cacheControl, resourceTiming);
+                return extend({rawTileData: rawTileData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
             } finally {
                 delete this.fetching[tileUid];
             }
@@ -210,7 +213,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             if (this.fetching[uid]) {
                 const {rawTileData, cacheControl, resourceTiming} = this.fetching[uid];
                 delete this.fetching[uid];
-                parseResult = extend({rawTileData: rawTileData.slice(0)}, result, cacheControl, resourceTiming);
+                parseResult = extend({rawTileData: rawTileData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
             } else {
                 parseResult = result;
             }
