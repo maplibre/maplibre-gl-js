@@ -1,10 +1,54 @@
 /**
+ * GeoJSON Source Diff:
+ *
+ * This module provides an efficient way to update GeoJSON features in a map source without replacing
+ * the entire dataset. It implements a differential update system that allows for incremental changes
+ * to features through `add`, `remove`, and `update` operations.
+ *
+ * Operations are processed in a specific order to ensure predictable behavior:
+ * 1. **Remove operations** (removeAll, remove)
+ * 2. **Add operations** (add)
+ * 3. **Update operations** (update)
+ *
+ * This ordering has important implications for conflict resolution:
+ * - If you `removeAll` and then `add` features in the same diff, the added features will be **kept**.
+ * - If you `remove` a specific feature and then `add` it back in the same diff, the added version will be **kept**.
+ * - Updates only apply to features that exist after removes and adds have been processed.
+ *
+ * Features must have unique identifiers to be updateable. IDs can come from:
+ * - The feature's `id` property (standard GeoJSON)
+ * - A promoted property specified by `promoteId` (e.g., a "name" property)
+ *
+ * ```TypeScript
+ * // Remove all features and add new ones (keeps the new ones)
+ * const diff: GeoJSONSourceDiff = {
+ *   removeAll: true,
+ *   add: [newFeature1, newFeature2]
+ * };
+ *
+ * // Update a feature's properties while keeping its geometry
+ * const diff: GeoJSONSourceDiff = {
+ *   update: [{
+ *     id: 'feature123',
+ *     addOrUpdateProperties: [{key: 'population', value: 5000}]
+ *   }]
+ * };
+ *
+ * // Remove and re-add the same feature (the new version is kept)
+ * const diff: GeoJSONSourceDiff = {
+ *   remove: ['feature123'],
+ *   add: [newVersionOfFeature123]
+ * };
+ * ```
+ */
+
+/**
  * A way to identify a feature, either by string or by number
  */
 export type GeoJSONFeatureId = number | string;
 
 /**
- * The geojson source diff object
+ * The geojson source diff object - processed in the following order: remove, add, update.
  */
 export type GeoJSONSourceDiff = {
     /**
@@ -26,7 +70,7 @@ export type GeoJSONSourceDiff = {
 };
 
 /**
- * A geojson feature diff object
+ * A geojson feature diff object - processed in the following order: new geometry, remove properties, add/update properties.
  */
 export type GeoJSONFeatureDiff = {
     /**
@@ -106,13 +150,14 @@ export function toUpdateable(data: UpdateableGeoJSON, promoteId?: string) {
     return result;
 }
 
-// mutates updateable
+/**
+ * Mutates updateable and applies a GeoJSONSourceDiff, considering the order of operations as specified above (remove, add, update).
+ */
 export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Feature>, diff: GeoJSONSourceDiff, promoteId?: string): void {
     if (diff.removeAll) {
         updateable.clear();
     }
-
-    if (diff.remove) {
+    else if (diff.remove) {
         for (const id of diff.remove) {
             updateable.delete(id);
         }
@@ -121,7 +166,6 @@ export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Featur
     if (diff.add) {
         for (const feature of diff.add) {
             const id = getFeatureId(feature, promoteId);
-
             if (id != null) {
                 updateable.set(id, feature);
             }
@@ -131,115 +175,225 @@ export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Featur
     if (diff.update) {
         for (const update of diff.update) {
             let feature = updateable.get(update.id);
+            if (!feature) continue;
 
-            if (feature == null) {
-                continue;
-            }
+            const changeGeometry = !!update.newGeometry;
 
-            // be careful to clone the feature and/or properties objects to avoid mutating our input
-            const cloneFeature = update.newGeometry || update.removeAllProperties;
-            // note: removeAllProperties gives us a new properties object, so we can skip the clone step
-            const cloneProperties = !update.removeAllProperties && (update.removeProperties?.length > 0 || update.addOrUpdateProperties?.length > 0);
-            if (cloneFeature || cloneProperties) {
-                feature = {...feature};
-                updateable.set(update.id, feature);
-                if (cloneProperties) {
-                    feature.properties = {...feature.properties};
-                }
-            }
+            const changeProps =
+                update.removeAllProperties ||
+                update.removeProperties?.length > 0 ||
+                update.addOrUpdateProperties?.length > 0;
 
-            if (update.newGeometry) {
+            // nothing to do
+            if (!changeGeometry && !changeProps) continue;
+
+            // clone once since we'll mutate
+            feature = {...feature};
+            updateable.set(update.id, feature);
+
+            if (changeGeometry) {
                 feature.geometry = update.newGeometry;
             }
 
-            if (update.removeAllProperties) {
-                feature.properties = {};
-            } else if (update.removeProperties?.length > 0) {
-                for (const prop of update.removeProperties) {
-                    if (Object.prototype.hasOwnProperty.call(feature.properties, prop)) {
-                        delete feature.properties[prop];
+            if (changeProps) {
+                if (update.removeAllProperties) {
+                    feature.properties = {};
+                } else {
+                    feature.properties = {...feature.properties || {}};
+                }
+
+                if (update.removeProperties) {
+                    for (const key of update.removeProperties) {
+                        delete feature.properties[key];
                     }
                 }
-            }
 
-            if (update.addOrUpdateProperties?.length > 0) {
-                for (const {key, value} of update.addOrUpdateProperties) {
-                    feature.properties[key] = value;
+                if (update.addOrUpdateProperties) {
+                    for (const {key, value} of update.addOrUpdateProperties) {
+                        feature.properties[key] = value;
+                    }
                 }
             }
         }
     }
 }
 
+/**
+ * Merge two GeoJSONSourceDiffs, considering the order of operations as specified above (remove, add, update).
+ * Resolve merge conflicts - then merge.
+ *
+ * For `add` features that use promoteId, the feature id will be set to the promoteId value temporarily so that
+ * the merge can be completed, then reverted to the original promoteId state after the merge.
+ */
 export function mergeSourceDiffs(
-    existingDiff: GeoJSONSourceDiff | undefined,
-    newDiff: GeoJSONSourceDiff | undefined
+    prevDiff: GeoJSONSourceDiff | undefined,
+    nextDiff: GeoJSONSourceDiff | undefined,
+    promoteId?: string
 ): GeoJSONSourceDiff {
-    if (!existingDiff) {
-        return newDiff ?? {};
+    if (!prevDiff) return nextDiff || {};
+    if (!nextDiff) return prevDiff || {};
+
+    if (promoteId) {
+        // Temporarily normalize diff.add for features using promoteId
+        promoteFeatureIds(prevDiff.add, promoteId);
+        promoteFeatureIds(nextDiff.add, promoteId);
     }
 
-    if (!newDiff) {
-        return existingDiff;
+    // Hash for o(1) lookups while creating a mutatable copy of the collections
+    const prev = diffToHashed(prevDiff);
+    const next = diffToHashed(nextDiff);
+
+    // Resolve merge conflict - removing all features with added or updated features in previous - and clear no-op removes
+    if (next.removeAll) {
+        prev.add.clear();
+        prev.update.clear();
+        prev.remove.clear();
+        next.remove.clear();
     }
 
-    let merged: GeoJSONSourceDiff = {...existingDiff};
-
-    if (newDiff.removeAll) {
-        merged = {removeAll: true};
+    // Resolve merge conflict - removing features that were added or updated in previous
+    for (const id of next.remove) {
+        prev.add.delete(id);
+        prev.update.delete(id);
     }
 
-    if (newDiff.remove) {
-        const newRemovedSet = new Set(newDiff.remove);
-        if (merged.add) {
-            merged.add = merged.add.filter(f => !newRemovedSet.has(f.id));
+    // Resolve merge conflict - updating features that were updated in previous
+    for (const [id, nextUpdate] of next.update) {
+        const prevUpdate = prev.update.get(id);
+        if (!prevUpdate) continue;
+
+        next.update.set(id, mergeFeatureDiffs(prevUpdate, nextUpdate));
+        prev.update.delete(id);
+    }
+
+    const merged: GeoJSONSourceDiffHashed = {};
+
+    // Merge the two diffs
+    if (prev.removeAll || next.removeAll) merged.removeAll = true;
+    merged.remove = new Set([...prev.remove , ...next.remove]);
+    merged.add    = new Map([...prev.add    , ...next.add]);
+    merged.update = new Map([...prev.update , ...next.update]);
+
+    // Squash the merge - removing then adding the same feature
+    if (merged.remove.size && merged.add.size) {
+        for (const id of merged.add.keys()) {
+            merged.remove.delete(id);
         }
-        if (merged.update) {
-            merged.update = merged.update.filter(f => !newRemovedSet.has(f.id));
-        }
-
-        const existingAddSet = new Set((existingDiff.add ?? []).map((f) => f.id));
-        newDiff.remove = newDiff.remove.filter(id => !existingAddSet.has(id));
     }
 
-    if (newDiff.remove) {
-        const removedSet = new Set(merged.remove ? merged.remove.concat(newDiff.remove) : newDiff.remove);
-        merged.remove = Array.from(removedSet.values());
+    // Convert back to array-based representation
+    const mergedDiff = hashedToDiff(merged);
+
+    if (promoteId) {
+        // Revert diff.add for features using promoteId
+        demoteFeatureIds(mergedDiff.add, promoteId);
     }
 
-    if (newDiff.add) {
-        const combinedAdd = merged.add ? merged.add.concat(newDiff.add) : newDiff.add;
-        const addMap = new Map(combinedAdd.map((feature) => [feature.id, feature]));
-        merged.add = Array.from(addMap.values());
+    return mergedDiff;
+}
+
+/**
+ * Merge two feature diffs for the same feature id, considering the order of operations as specified above (remove, add/update).
+ * Resolve merge conflicts - then merge.
+ */
+function mergeFeatureDiffs(prev: GeoJSONFeatureDiff, next: GeoJSONFeatureDiff): GeoJSONFeatureDiff {
+    const merged: GeoJSONFeatureDiff = {id: prev.id};
+
+    // Resolve merge conflict - removing all properties with added or updated properties in previous - and clear no-op removes
+    if (next.removeAllProperties) {
+        delete prev.removeProperties;
+        delete prev.addOrUpdateProperties;
+        delete next.removeProperties;
     }
 
-    if (newDiff.update) {
-        const updateMap = new Map(merged.update?.map((feature) => [feature.id, feature]));
-        for (const feature of newDiff.update) {
-            const featureUpdate = updateMap.get(feature.id) ?? {id: feature.id} satisfies GeoJSONFeatureDiff;
-
-            if (feature.newGeometry) {
-                featureUpdate.newGeometry = feature.newGeometry;
-            }
-            if (feature.addOrUpdateProperties) {
-                featureUpdate.addOrUpdateProperties = (featureUpdate.addOrUpdateProperties ?? []).concat(feature.addOrUpdateProperties);
-            }
-            if (feature.removeProperties) {
-                featureUpdate.removeProperties = (featureUpdate.removeProperties ?? []).concat(feature.removeProperties);
-            }
-            if (feature.removeAllProperties) {
-                featureUpdate.removeAllProperties = true;
-            }
-
-            updateMap.set(feature.id, featureUpdate);
-        }
-
-        merged.update = Array.from(updateMap.values());
+    // Merge the two diffs
+    if (prev.removeAllProperties || next.removeAllProperties) {
+        merged.removeAllProperties = true;
     }
-
-    if (merged.remove && merged.add) {
-        merged.remove = merged.remove.filter(id => merged.add.findIndex((f) => f.id === id) === -1);
+    if (prev.removeProperties || next.removeProperties) {
+        merged.removeProperties = [...prev.removeProperties || [], ...next.removeProperties || []];
+    }
+    if (prev.addOrUpdateProperties || next.addOrUpdateProperties) {
+        merged.addOrUpdateProperties = [...prev.addOrUpdateProperties || [], ...next.addOrUpdateProperties || []];
+    }
+    if (prev.newGeometry || next.newGeometry) {
+        merged.newGeometry = next.newGeometry || prev.newGeometry;
     }
 
     return merged;
+}
+
+/**
+ * Mutates diff.add and applies a feature id using the promoteId property
+ */
+function promoteFeatureIds(add: Array<GeoJSON.Feature>, promoteId: string) {
+    if (!add) return;
+
+    for (const feature of add) {
+        const id = getFeatureId(feature, promoteId);
+        if (id != null) feature.id = id;
+    }
+}
+
+/**
+ * Mutates diff.add and removes the feature id if using the promoteId property
+ */
+function demoteFeatureIds(add: Array<GeoJSON.Feature>, promoteId: string) {
+    if (!add) return;
+
+    for (const feature of add) {
+        const id = getFeatureId(feature, promoteId);
+        if (id != null) delete feature.id;
+    }
+}
+
+/**
+ * @internal
+ * Internal representation of GeoJSONSourceDiff using Sets and Maps for efficient operations
+ */
+type GeoJSONSourceDiffHashed = {
+    removeAll?: boolean;
+    remove?: Set<GeoJSONFeatureId>;
+    add?: Map<GeoJSONFeatureId, GeoJSON.Feature>;
+    update?: Map<GeoJSONFeatureId, GeoJSONFeatureDiff>;
+};
+
+/**
+ * @internal
+ * Convert a GeoJSONSourceDiff to an idempotent hashed representation using Sets and Maps
+ */
+function diffToHashed(diff: GeoJSONSourceDiff | undefined): GeoJSONSourceDiffHashed {
+    if (!diff) return {};
+
+    const hashed: GeoJSONSourceDiffHashed = {};
+
+    hashed.removeAll = diff.removeAll;
+    hashed.remove = new Set(diff.remove || []);
+    hashed.add    = new Map(diff.add?.map(feature => [feature.id, feature]));
+    hashed.update = new Map(diff.update?.map(update => [update.id, update]));
+
+    return hashed;
+}
+
+/**
+ * @internal
+ * Convert a hashed GeoJSONSourceDiff back to the array-based representation
+ */
+function hashedToDiff(hashed: GeoJSONSourceDiffHashed): GeoJSONSourceDiff {
+    const diff: GeoJSONSourceDiff = {};
+
+    if (hashed.removeAll) {
+        diff.removeAll = hashed.removeAll;
+    }
+    if (hashed.remove) {
+        diff.remove = Array.from(hashed.remove);
+    }
+    if (hashed.add) {
+        diff.add = Array.from(hashed.add.values());
+    }
+    if (hashed.update) {
+        diff.update = Array.from(hashed.update.values());
+    }
+
+    return diff;
 }

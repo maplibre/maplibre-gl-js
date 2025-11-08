@@ -504,9 +504,7 @@ describe('mergeSourceDiffs', () => {
             }],
         } satisfies GeoJSONSourceDiff;
 
-        const merged = mergeSourceDiffs(diff1, diff2);
-        // unremark after fix
-        // const merged = mergeSourceDiffs(diff1, diff2, 'promoted');
+        const merged = mergeSourceDiffs(diff1, diff2, 'promoted');
         expect(merged.add).toHaveLength(1);
         expect(merged.remove).toHaveLength(0);
     });
@@ -528,9 +526,7 @@ describe('mergeSourceDiffs', () => {
             }],
         } satisfies GeoJSONSourceDiff;
 
-        const merged = mergeSourceDiffs(diff1, diff2);
-        // unremark after fix
-        // const merged = mergeSourceDiffs(diff1, diff2, 'promoted');
+        const merged = mergeSourceDiffs(diff1, diff2, 'promoted');
         expect(merged.add).toBeDefined();
         expect(merged.add.length).toBe(2);
     });
