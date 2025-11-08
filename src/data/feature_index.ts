@@ -19,10 +19,11 @@ import {PossiblyEvaluated} from '../style/properties';
 import {FeatureIndexArray} from './array_types.g';
 import {type mat4} from 'gl-matrix';
 
+import {MLTVectorTile} from '../source/vector_tile_mlt';
+import {Bounds} from '../geo/bounds';
 import type {StyleLayer} from '../style/style_layer';
 import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {IReadonlyTransform} from '../geo/transform_interface';
-import {Bounds} from '../geo/bounds';
 
 type QueryParameters = {
     scale: number;
@@ -63,7 +64,7 @@ export class FeatureIndex {
     grid3D: TransferableGridIndex;
     featureIndexArray: FeatureIndexArray;
     promoteId?: PromoteIdSpecification;
-
+    encoding: string;
     rawTileData: ArrayBuffer;
     bucketLayerIDs: Array<Array<string>>;
 
@@ -110,7 +111,9 @@ export class FeatureIndex {
 
     loadVTLayers(): {[_: string]: VectorTileLayer} {
         if (!this.vtLayers) {
-            this.vtLayers = new VectorTile(new Protobuf(this.rawTileData)).layers;
+            this.vtLayers = this.encoding !== 'mlt' 
+                ? new VectorTile(new Protobuf(this.rawTileData)).layers
+                : new MLTVectorTile(this.rawTileData).layers;
             this.sourceLayerCoder = new DictionaryCoder(this.vtLayers ? Object.keys(this.vtLayers).sort() : ['_geojsonTileLayer']);
         }
         return this.vtLayers;
