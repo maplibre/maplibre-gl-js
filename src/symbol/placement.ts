@@ -15,8 +15,7 @@ import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../sty
 import {getOverlapMode, type OverlapMode} from '../style/style_layer/overlap_mode';
 
 import type {Tile} from '../tile/tile';
-import {type SymbolBucket, type CollisionArrays, type SingleCollisionBox, SymbolBuffers} from '../data/bucket/symbol_bucket';
-
+import type {SymbolBucket, CollisionArrays, SingleCollisionBox, SymbolBuffers} from '../data/bucket/symbol_bucket';
 import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance, TextAnchorOffset} from '../data/array_types.g';
 import type {FeatureIndex} from '../data/feature_index';
 import type {OverscaledTileID, UnwrappedTileID} from '../tile/tile_id';
