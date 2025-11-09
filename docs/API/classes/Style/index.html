@@ -1534,6 +1534,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#destroy" class="md-nav__link">
+    <span class="md-ellipsis">
+      destroy()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#getfilter" class="md-nav__link">
     <span class="md-ellipsis">
       getFilter()
@@ -6691,6 +6700,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../examples/display-a-map-with-mlt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Display a map with MLT
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../examples/display-a-map/" class="md-nav__link">
         
   
@@ -8346,6 +8378,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#destroy" class="md-nav__link">
+    <span class="md-ellipsis">
+      destroy()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#getfilter" class="md-nav__link">
     <span class="md-ellipsis">
       getFilter()
@@ -8541,7 +8582,7 @@
 
 
 <h1 id="style">Style</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/style/style.ts#L205">src/style/style.ts:205</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/style/style.ts#L205">src/style/style.ts:205</a></p>
 <p>The Style base class</p>
 <h2 id="extends">Extends</h2>
 <ul>
@@ -8552,7 +8593,7 @@
 <blockquote>
 <p><strong>addLayer</strong>(<code>layerObject</code>: <a href="../../type-aliases/AddLayerObject/"><code>AddLayerObject</code></a>, <code>before?</code>: <code>string</code>, <code>options?</code>: <a href="../../type-aliases/StyleSetterOptions/"><code>StyleSetterOptions</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/style/style.ts#L1055">src/style/style.ts:1055</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/style/style.ts#L1077">src/style/style.ts:1077</a></p>
 <p>Add a layer to the map style. The layer will be inserted before the layer with
 ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 <h4 id="parameters">Parameters</h4>
@@ -8589,7 +8630,7 @@ ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 <blockquote>
 <p><strong>addSprite</strong>(<code>id</code>: <code>string</code>, <code>url</code>: <code>string</code>, <code>options</code>: <a href="../../type-aliases/StyleSetterOptions/"><code>StyleSetterOptions</code></a>, <code>completion?</code>: (<code>err</code>: <code>Error</code>) =&gt; <code>void</code>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/style/style.ts#L1918">src/style/style.ts:1918</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/style/style.ts#L1940">src/style/style.ts:1940</a></p>
 <p>Add a sprite.</p>
 <h4 id="parameters_1">Parameters</h4>
 <table>
@@ -8626,11 +8667,20 @@ ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 <h4 id="returns_1">Returns</h4>
 <p><code>void</code></p>
 <hr />
+<h3 id="destroy">destroy()</h3>
+<blockquote>
+<p><strong>destroy</strong>(): <code>void</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/style/style.ts#L2026">src/style/style.ts:2026</a></p>
+<p>Destroys all internal resources of the style (sources, images, layers, etc.)</p>
+<h4 id="returns_2">Returns</h4>
+<p><code>void</code></p>
+<hr />
 <h3 id="getfilter">getFilter()</h3>
 <blockquote>
 <p><strong>getFilter</strong>(<code>layer</code>: <code>string</code>): <code>void</code> | <code>FilterSpecification</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/style/style.ts#L1274">src/style/style.ts:1274</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/style/style.ts#L1296">src/style/style.ts:1296</a></p>
 <p>Get a layer's filter object</p>
 <h4 id="parameters_2">Parameters</h4>
 <table>
@@ -8649,7 +8699,7 @@ ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_2">Returns</h4>
+<h4 id="returns_3">Returns</h4>
 <p><code>void</code> | <code>FilterSpecification</code></p>
 <p>the layer's filter, if any</p>
 <hr />
@@ -8657,7 +8707,7 @@ ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 <blockquote>
 <p><strong>getLayer</strong>(<code>id</code>: <code>string</code>): <a href="../../interfaces/StyleLayer/"><code>StyleLayer</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/style/style.ts#L1199">src/style/style.ts:1199</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/style/style.ts#L1221">src/style/style.ts:1221</a></p>
 <p>Return the style layer object with the given <code>id</code>.</p>
 <h4 id="parameters_3">Parameters</h4>
 <table>
@@ -8676,7 +8726,7 @@ ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_3">Returns</h4>
+<h4 id="returns_4">Returns</h4>
 <p><a href="../../interfaces/StyleLayer/"><code>StyleLayer</code></a></p>
 <p>a layer, if one with the given <code>id</code> exists</p>
 <hr />
@@ -8684,9 +8734,9 @@ ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 <blockquote>
 <p><strong>getLayersOrder</strong>(): <code>string</code>[]</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/style/style.ts#L1208">src/style/style.ts:1208</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/style/style.ts#L1230">src/style/style.ts:1230</a></p>
 <p>Return the ids of all layers currently in the style, including custom layers, in order.</p>
-<h4 id="returns_4">Returns</h4>
+<h4 id="returns_5">Returns</h4>
 <p><code>string</code>[]</p>
 <p>ids of layers, in order</p>
 <hr />
@@ -8694,7 +8744,7 @@ ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 <blockquote>
 <p><strong>getLayoutProperty</strong>(<code>layerId</code>: <code>string</code>, <code>name</code>: <code>string</code>): <code>any</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/style/style.ts#L1299">src/style/style.ts:1299</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/style/style.ts#L1321">src/style/style.ts:1321</a></p>
 <p>Get a layout property's value from a given layer</p>
 <h4 id="parameters_4">Parameters</h4>
 <table>
@@ -8718,7 +8768,7 @@ ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_5">Returns</h4>
+<h4 id="returns_6">Returns</h4>
 <p><code>any</code></p>
 <p>the property value</p>
 <hr />
@@ -8726,7 +8776,7 @@ ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 <blockquote>
 <p><strong>getSource</strong>(<code>id</code>: <code>string</code>): <a href="../../interfaces/Source/"><code>Source</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/style/style.ts#L1044">src/style/style.ts:1044</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/style/style.ts#L1066">src/style/style.ts:1066</a></p>
 <p>Get a source by ID.</p>
 <h4 id="parameters_5">Parameters</h4>
 <table>
@@ -8745,7 +8795,7 @@ ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_6">Returns</h4>
+<h4 id="returns_7">Returns</h4>
 <p><a href="../../interfaces/Source/"><code>Source</code></a></p>
 <p>source</p>
 <hr />
@@ -8753,9 +8803,9 @@ ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 <blockquote>
 <p><strong>getSprite</strong>(): <code>object</code>[]</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/style/style.ts#L1971">src/style/style.ts:1971</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/style/style.ts#L1993">src/style/style.ts:1993</a></p>
 <p>Get the current sprite value.</p>
-<h4 id="returns_7">Returns</h4>
+<h4 id="returns_8">Returns</h4>
 <p><code>object</code>[]</p>
 <p>empty array when no sprite is set; id-url pairs otherwise</p>
 <hr />
@@ -8763,7 +8813,7 @@ ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 <blockquote>
 <p><strong>hasLayer</strong>(<code>id</code>: <code>string</code>): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/style/style.ts#L1218">src/style/style.ts:1218</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/style/style.ts#L1240">src/style/style.ts:1240</a></p>
 <p>Checks if a specific layer is present within the style.</p>
 <h4 id="parameters_6">Parameters</h4>
 <table>
@@ -8782,7 +8832,7 @@ ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_8">Returns</h4>
+<h4 id="returns_9">Returns</h4>
 <p><code>boolean</code></p>
 <p>a boolean specifying if the given layer is present</p>
 <hr />
@@ -8790,7 +8840,7 @@ ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 <blockquote>
 <p><strong>listens</strong>(<code>type</code>: <code>string</code>): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/util/evented.ts#L165">src/util/evented.ts:165</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/util/evented.ts#L165">src/util/evented.ts:165</a></p>
 <p>Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.</p>
 <h4 id="parameters_7">Parameters</h4>
 <table>
@@ -8809,7 +8859,7 @@ ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_9">Returns</h4>
+<h4 id="returns_10">Returns</h4>
 <p><code>boolean</code></p>
 <p><code>true</code> if there is at least one registered listener for specified event type, <code>false</code> otherwise</p>
 <h4 id="inherited-from">Inherited from</h4>
@@ -8819,7 +8869,7 @@ ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 <blockquote>
 <p><strong>moveLayer</strong>(<code>id</code>: <code>string</code>, <code>before?</code>: <code>string</code>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/style/style.ts#L1130">src/style/style.ts:1130</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/style/style.ts#L1152">src/style/style.ts:1152</a></p>
 <p>Moves a layer to a different z-position. The layer will be inserted before the layer with
 ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 <h4 id="parameters_8">Parameters</h4>
@@ -8844,14 +8894,14 @@ ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_10">Returns</h4>
+<h4 id="returns_11">Returns</h4>
 <p><code>void</code></p>
 <hr />
 <h3 id="off">off()</h3>
 <blockquote>
 <p><strong>off</strong>(<code>type</code>: <code>string</code>, <code>listener</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <code>Style</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/util/evented.ts#L90">src/util/evented.ts:90</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/util/evented.ts#L90">src/util/evented.ts:90</a></p>
 <p>Removes a previously registered event listener.</p>
 <h4 id="parameters_9">Parameters</h4>
 <table>
@@ -8875,7 +8925,7 @@ ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_11">Returns</h4>
+<h4 id="returns_12">Returns</h4>
 <p><code>Style</code></p>
 <h4 id="inherited-from_1">Inherited from</h4>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#off"><code>off</code></a></p>
@@ -8884,7 +8934,7 @@ ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 <blockquote>
 <p><strong>on</strong>(<code>type</code>: <code>string</code>, <code>listener</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <a href="../../interfaces/Subscription/"><code>Subscription</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/util/evented.ts#L73">src/util/evented.ts:73</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/util/evented.ts#L73">src/util/evented.ts:73</a></p>
 <p>Adds a listener to a specified event type.</p>
 <h4 id="parameters_10">Parameters</h4>
 <table>
@@ -8908,7 +8958,7 @@ ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_12">Returns</h4>
+<h4 id="returns_13">Returns</h4>
 <p><a href="../../interfaces/Subscription/"><code>Subscription</code></a></p>
 <h4 id="inherited-from_2">Inherited from</h4>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#on"><code>on</code></a></p>
@@ -8917,7 +8967,7 @@ ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 <blockquote>
 <p><strong>once</strong>(<code>type</code>: <code>string</code>, <code>listener?</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <code>Promise</code>&lt;<code>any</code>&gt; | <code>Style</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/util/evented.ts#L106">src/util/evented.ts:106</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/util/evented.ts#L106">src/util/evented.ts:106</a></p>
 <p>Adds a listener that will be called only once to a specified event type.</p>
 <p>The listener will be called first time the event fires after the listener is registered.</p>
 <h4 id="parameters_11">Parameters</h4>
@@ -8942,7 +8992,7 @@ ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_13">Returns</h4>
+<h4 id="returns_14">Returns</h4>
 <p><code>Promise</code>&lt;<code>any</code>&gt; | <code>Style</code></p>
 <p><code>this</code> or a promise if a listener is not provided</p>
 <h4 id="inherited-from_3">Inherited from</h4>
@@ -8952,7 +9002,7 @@ ID <code>before</code>, or appended if <code>before</code> is omitted.</p>
 <blockquote>
 <p><strong>removeLayer</strong>(<code>id</code>: <code>string</code>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/style/style.ts#L1163">src/style/style.ts:1163</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/style/style.ts#L1185">src/style/style.ts:1185</a></p>
 <p>Remove the layer with the given id from the style.
 A <a href="../../interfaces/ErrorEvent/">ErrorEvent</a> event will be fired if no such layer exists.</p>
 <h4 id="parameters_12">Parameters</h4>
@@ -8972,14 +9022,14 @@ A <a href="../../interfaces/ErrorEvent/">ErrorEvent</a> event will be fired if n
 </tr>
 </tbody>
 </table>
-<h4 id="returns_14">Returns</h4>
+<h4 id="returns_15">Returns</h4>
 <p><code>void</code></p>
 <hr />
 <h3 id="removesource">removeSource()</h3>
 <blockquote>
 <p><strong>removeSource</strong>(<code>id</code>: <code>string</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/style/style.ts#L1002">src/style/style.ts:1002</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/style/style.ts#L1024">src/style/style.ts:1024</a></p>
 <p>Remove a source from this stylesheet, given its id.</p>
 <h4 id="parameters_13">Parameters</h4>
 <table>
@@ -8998,7 +9048,7 @@ A <a href="../../interfaces/ErrorEvent/">ErrorEvent</a> event will be fired if n
 </tr>
 </tbody>
 </table>
-<h4 id="returns_15">Returns</h4>
+<h4 id="returns_16">Returns</h4>
 <p><code>this</code></p>
 <h4 id="throws">Throws</h4>
 <p>if no source is found with the given ID</p>
@@ -9007,7 +9057,7 @@ A <a href="../../interfaces/ErrorEvent/">ErrorEvent</a> event will be fired if n
 <blockquote>
 <p><strong>removeSprite</strong>(<code>id</code>: <code>string</code>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/style/style.ts#L1939">src/style/style.ts:1939</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/style/style.ts#L1961">src/style/style.ts:1961</a></p>
 <p>Remove a sprite by its id. When the last sprite is removed, the whole <code>this.stylesheet.sprite</code> object becomes
 <code>undefined</code>. This falsy <code>undefined</code> value later prevents attempts to load the sprite when it's absent.</p>
 <h4 id="parameters_14">Parameters</h4>
@@ -9027,14 +9077,14 @@ A <a href="../../interfaces/ErrorEvent/">ErrorEvent</a> event will be fired if n
 </tr>
 </tbody>
 </table>
-<h4 id="returns_16">Returns</h4>
+<h4 id="returns_17">Returns</h4>
 <p><code>void</code></p>
 <hr />
 <h3 id="seteventedparent">setEventedParent()</h3>
 <blockquote>
 <p><strong>setEventedParent</strong>(<code>parent?</code>: <a href="../Evented/"><code>Evented</code></a>, <code>data?</code>: <code>any</code>): <code>Style</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/util/evented.ts#L176">src/util/evented.ts:176</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/util/evented.ts#L176">src/util/evented.ts:176</a></p>
 <p>Bubble all events fired by this instance of Evented to this parent instance of Evented.</p>
 <h4 id="parameters_15">Parameters</h4>
 <table>
@@ -9055,7 +9105,7 @@ A <a href="../../interfaces/ErrorEvent/">ErrorEvent</a> event will be fired if n
 </tr>
 </tbody>
 </table>
-<h4 id="returns_17">Returns</h4>
+<h4 id="returns_18">Returns</h4>
 <p><code>Style</code></p>
 <h4 id="inherited-from_4">Inherited from</h4>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#seteventedparent"><code>setEventedParent</code></a></p>
@@ -9064,7 +9114,7 @@ A <a href="../../interfaces/ErrorEvent/">ErrorEvent</a> event will be fired if n
 <blockquote>
 <p><strong>setGeoJSONSourceData</strong>(<code>id</code>: <code>string</code>, <code>data</code>: <code>string</code> | <code>GeoJSON</code>&lt;<code>Geometry</code>, {[<code>name</code>: <code>string</code>]: <code>any</code>; }&gt;): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/style/style.ts#L1028">src/style/style.ts:1028</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/style/style.ts#L1050">src/style/style.ts:1050</a></p>
 <p>Set the data of a GeoJSON source, given its id.</p>
 <h4 id="parameters_16">Parameters</h4>
 <table>
@@ -9088,14 +9138,14 @@ A <a href="../../interfaces/ErrorEvent/">ErrorEvent</a> event will be fired if n
 </tr>
 </tbody>
 </table>
-<h4 id="returns_18">Returns</h4>
+<h4 id="returns_19">Returns</h4>
 <p><code>void</code></p>
 <hr />
 <h3 id="setsprite">setSprite()</h3>
 <blockquote>
 <p><strong>setSprite</strong>(<code>sprite</code>: <code>SpriteSpecification</code>, <code>options</code>: <a href="../../type-aliases/StyleSetterOptions/"><code>StyleSetterOptions</code></a>, <code>completion?</code>: (<code>err</code>: <code>Error</code>) =&gt; <code>void</code>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/style/style.ts#L1982">src/style/style.ts:1982</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/style/style.ts#L2004">src/style/style.ts:2004</a></p>
 <p>Set a new value for the style's sprite.</p>
 <h4 id="parameters_17">Parameters</h4>
 <table>
@@ -9124,14 +9174,14 @@ A <a href="../../interfaces/ErrorEvent/">ErrorEvent</a> event will be fired if n
 </tr>
 </tbody>
 </table>
-<h4 id="returns_19">Returns</h4>
+<h4 id="returns_20">Returns</h4>
 <p><code>void</code></p>
 <hr />
 <h3 id="setstate">setState()</h3>
 <blockquote>
 <p><strong>setState</strong>(<code>nextState</code>: <code>StyleSpecification</code>, <code>options</code>: <a href="../../type-aliases/StyleSwapOptions/"><code>StyleSwapOptions</code></a> &amp; <a href="../../type-aliases/StyleSetterOptions/"><code>StyleSetterOptions</code></a>): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/style/style.ts#L825">src/style/style.ts:825</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/style/style.ts#L847">src/style/style.ts:847</a></p>
 <p>Update this style's state to match the given style JSON, performing only
 the necessary mutations.</p>
 <p>May throw an Error ('Unimplemented: METHOD') if the mapbox-gl-style-spec
@@ -9155,7 +9205,7 @@ diff algorithm produces an operation that is not supported.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_20">Returns</h4>
+<h4 id="returns_21">Returns</h4>
 <p><code>boolean</code></p>
 <p>true if any changes were made; false otherwise</p>
 

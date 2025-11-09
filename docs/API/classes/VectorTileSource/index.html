@@ -6742,6 +6742,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../examples/display-a-map-with-mlt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Display a map with MLT
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../examples/display-a-map/" class="md-nav__link">
         
   
@@ -8643,8 +8666,8 @@
 
 
 <h1 id="vectortilesource">VectorTileSource</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/source/vector_tile_source.ts#L57">src/source/vector_tile_source.ts:57</a></p>
-<p>A source containing vector tiles in <a href="https://docs.mapbox.com/vector-tiles/reference/">Mapbox Vector Tile format</a>.
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/source/vector_tile_source.ts#L57">src/source/vector_tile_source.ts:57</a></p>
+<p>A source containing vector tiles in <a href="https://maplibre.org/maplibre-tile-spec/">Maplibre Vector Tile format</a> or <a href="https://docs.mapbox.com/vector-tiles/reference/">Mapbox Vector Tile format</a>.
 (See the <a href="https://maplibre.org/maplibre-style-spec/">Style Specification</a> for detailed documentation of options.)</p>
 <h2 id="examples">Examples</h2>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">addSource</span><span class="p">(</span><span class="s1">&#39;some id&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
@@ -8678,7 +8701,7 @@
 <blockquote>
 <p><strong>abortTile</strong>(<code>tile</code>: <a href="../../interfaces/Tile/"><code>Tile</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/source/vector_tile_source.ts#L256">src/source/vector_tile_source.ts:256</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/source/vector_tile_source.ts#L279">src/source/vector_tile_source.ts:279</a></p>
 <p>Allows to abort a tile loading.</p>
 <h4 id="parameters">Parameters</h4>
 <table>
@@ -8706,7 +8729,7 @@
 <blockquote>
 <p><strong>hasTile</strong>(<code>tileID</code>: <a href="../../interfaces/OverscaledTileID/"><code>OverscaledTileID</code></a>): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/source/vector_tile_source.ts#L135">src/source/vector_tile_source.ts:135</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/source/vector_tile_source.ts#L136">src/source/vector_tile_source.ts:136</a></p>
 <p>True is the tile is part of the source, false otherwise.</p>
 <h4 id="parameters_1">Parameters</h4>
 <table>
@@ -8734,7 +8757,7 @@
 <blockquote>
 <p><strong>hasTransition</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/source/vector_tile_source.ts#L282">src/source/vector_tile_source.ts:282</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/source/vector_tile_source.ts#L305">src/source/vector_tile_source.ts:305</a></p>
 <p>True if the source has transition, false otherwise.</p>
 <h4 id="returns_2">Returns</h4>
 <p><code>boolean</code></p>
@@ -8745,7 +8768,7 @@
 <blockquote>
 <p><strong>listens</strong>(<code>type</code>: <code>string</code>): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/util/evented.ts#L165">src/util/evented.ts:165</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/util/evented.ts#L165">src/util/evented.ts:165</a></p>
 <p>Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.</p>
 <h4 id="parameters_2">Parameters</h4>
 <table>
@@ -8774,7 +8797,7 @@
 <blockquote>
 <p><strong>loaded</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/source/vector_tile_source.ts#L131">src/source/vector_tile_source.ts:131</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/source/vector_tile_source.ts#L132">src/source/vector_tile_source.ts:132</a></p>
 <p>True if the source is loaded, false otherwise.</p>
 <h4 id="returns_4">Returns</h4>
 <p><code>boolean</code></p>
@@ -8785,7 +8808,7 @@
 <blockquote>
 <p><strong>loadTile</strong>(<code>tile</code>: <a href="../../interfaces/Tile/"><code>Tile</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/source/vector_tile_source.ts#L192">src/source/vector_tile_source.ts:192</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/source/vector_tile_source.ts#L193">src/source/vector_tile_source.ts:193</a></p>
 <p>This method does the heavy lifting of loading a tile.
 In most cases it will defer the work to the relevant worker source.</p>
 <h4 id="parameters_3">Parameters</h4>
@@ -8814,7 +8837,7 @@ In most cases it will defer the work to the relevant worker source.</p>
 <blockquote>
 <p><strong>off</strong>(<code>type</code>: <code>string</code>, <code>listener</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <code>VectorTileSource</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/util/evented.ts#L90">src/util/evented.ts:90</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/util/evented.ts#L90">src/util/evented.ts:90</a></p>
 <p>Removes a previously registered event listener.</p>
 <h4 id="parameters_4">Parameters</h4>
 <table>
@@ -8847,7 +8870,7 @@ In most cases it will defer the work to the relevant worker source.</p>
 <blockquote>
 <p><strong>on</strong>(<code>type</code>: <code>string</code>, <code>listener</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <a href="../../interfaces/Subscription/"><code>Subscription</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/util/evented.ts#L73">src/util/evented.ts:73</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/util/evented.ts#L73">src/util/evented.ts:73</a></p>
 <p>Adds a listener to a specified event type.</p>
 <h4 id="parameters_5">Parameters</h4>
 <table>
@@ -8880,7 +8903,7 @@ In most cases it will defer the work to the relevant worker source.</p>
 <blockquote>
 <p><strong>onAdd</strong>(<code>map</code>: <a href="../Map/"><code>Map</code></a>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/source/vector_tile_source.ts#L139">src/source/vector_tile_source.ts:139</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/source/vector_tile_source.ts#L140">src/source/vector_tile_source.ts:140</a></p>
 <p>This method is called when the source is added to the map.</p>
 <h4 id="parameters_6">Parameters</h4>
 <table>
@@ -8908,7 +8931,7 @@ In most cases it will defer the work to the relevant worker source.</p>
 <blockquote>
 <p><strong>once</strong>(<code>type</code>: <code>string</code>, <code>listener?</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <code>Promise</code>&lt;<code>any</code>&gt; | <code>VectorTileSource</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/util/evented.ts#L106">src/util/evented.ts:106</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/util/evented.ts#L106">src/util/evented.ts:106</a></p>
 <p>Adds a listener that will be called only once to a specified event type.</p>
 <p>The listener will be called first time the event fires after the listener is registered.</p>
 <h4 id="parameters_7">Parameters</h4>
@@ -8943,7 +8966,7 @@ In most cases it will defer the work to the relevant worker source.</p>
 <blockquote>
 <p><strong>onRemove</strong>(): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/source/vector_tile_source.ts#L181">src/source/vector_tile_source.ts:181</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/source/vector_tile_source.ts#L182">src/source/vector_tile_source.ts:182</a></p>
 <p>This method is called when the source is removed from the map.</p>
 <h4 id="returns_10">Returns</h4>
 <p><code>void</code></p>
@@ -8954,7 +8977,7 @@ In most cases it will defer the work to the relevant worker source.</p>
 <blockquote>
 <p><strong>serialize</strong>(): <code>VectorSourceSpecification</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/source/vector_tile_source.ts#L188">src/source/vector_tile_source.ts:188</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/source/vector_tile_source.ts#L189">src/source/vector_tile_source.ts:189</a></p>
 <h4 id="returns_11">Returns</h4>
 <p><code>VectorSourceSpecification</code></p>
 <p>A plain (stringifiable) JS object representing the current state of the source.
@@ -8967,7 +8990,7 @@ equivalent to this one.</p>
 <blockquote>
 <p><strong>setEventedParent</strong>(<code>parent?</code>: <a href="../Evented/"><code>Evented</code></a>, <code>data?</code>: <code>any</code>): <code>VectorTileSource</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/util/evented.ts#L176">src/util/evented.ts:176</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/util/evented.ts#L176">src/util/evented.ts:176</a></p>
 <p>Bubble all events fired by this instance of Evented to this parent instance of Evented.</p>
 <h4 id="parameters_8">Parameters</h4>
 <table>
@@ -8997,7 +9020,7 @@ equivalent to this one.</p>
 <blockquote>
 <p><strong>setTiles</strong>(<code>tiles</code>: <code>string</code>[]): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/source/vector_tile_source.ts#L159">src/source/vector_tile_source.ts:159</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/source/vector_tile_source.ts#L160">src/source/vector_tile_source.ts:160</a></p>
 <p>Sets the source <code>tiles</code> property and re-renders the map.</p>
 <h4 id="parameters_9">Parameters</h4>
 <table>
@@ -9023,7 +9046,7 @@ equivalent to this one.</p>
 <blockquote>
 <p><strong>setUrl</strong>(<code>url</code>: <code>string</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/source/vector_tile_source.ts#L172">src/source/vector_tile_source.ts:172</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/source/vector_tile_source.ts#L173">src/source/vector_tile_source.ts:173</a></p>
 <p>Sets the source <code>url</code> property and re-renders the map.</p>
 <h4 id="parameters_10">Parameters</h4>
 <table>
@@ -9049,7 +9072,7 @@ equivalent to this one.</p>
 <blockquote>
 <p><strong>unloadTile</strong>(<code>tile</code>: <a href="../../interfaces/Tile/"><code>Tile</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/source/vector_tile_source.ts#L269">src/source/vector_tile_source.ts:269</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/source/vector_tile_source.ts#L292">src/source/vector_tile_source.ts:292</a></p>
 <p>Allows to unload a tile.</p>
 <h4 id="parameters_11">Parameters</h4>
 <table>
@@ -9077,7 +9100,7 @@ equivalent to this one.</p>
 <blockquote>
 <p><strong>id</strong>: <code>string</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/source/vector_tile_source.ts#L59">src/source/vector_tile_source.ts:59</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/source/vector_tile_source.ts#L59">src/source/vector_tile_source.ts:59</a></p>
 <p>The id for the source. Must not be used by any existing source.</p>
 <h4 id="implementation-of_9">Implementation of</h4>
 <p><a href="../../interfaces/Source/"><code>Source</code></a>.<a href="../../interfaces/Source/#id"><code>id</code></a></p>
@@ -9086,7 +9109,7 @@ equivalent to this one.</p>
 <blockquote>
 <p><strong>isTileClipped</strong>: <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/source/vector_tile_source.ts#L75">src/source/vector_tile_source.ts:75</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/source/vector_tile_source.ts#L76">src/source/vector_tile_source.ts:76</a></p>
 <p><code>false</code> if tiles can be drawn outside their boundaries, <code>true</code> if they cannot.</p>
 <h4 id="implementation-of_10">Implementation of</h4>
 <p><a href="../../interfaces/Source/"><code>Source</code></a>.<a href="../../interfaces/Source/#istileclipped"><code>isTileClipped</code></a></p>
@@ -9095,7 +9118,7 @@ equivalent to this one.</p>
 <blockquote>
 <p><strong>maxzoom</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/source/vector_tile_source.ts#L61">src/source/vector_tile_source.ts:61</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/source/vector_tile_source.ts#L61">src/source/vector_tile_source.ts:61</a></p>
 <p>The maximum zoom level for the source.</p>
 <h4 id="implementation-of_11">Implementation of</h4>
 <p><a href="../../interfaces/Source/"><code>Source</code></a>.<a href="../../interfaces/Source/#maxzoom"><code>maxzoom</code></a></p>
@@ -9104,7 +9127,7 @@ equivalent to this one.</p>
 <blockquote>
 <p><strong>minzoom</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/source/vector_tile_source.ts#L60">src/source/vector_tile_source.ts:60</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/source/vector_tile_source.ts#L60">src/source/vector_tile_source.ts:60</a></p>
 <p>The minimum zoom level for the source.</p>
 <h4 id="implementation-of_12">Implementation of</h4>
 <p><a href="../../interfaces/Source/"><code>Source</code></a>.<a href="../../interfaces/Source/#minzoom"><code>minzoom</code></a></p>
@@ -9113,7 +9136,7 @@ equivalent to this one.</p>
 <blockquote>
 <p><strong>reparseOverscaled</strong>: <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/source/vector_tile_source.ts#L74">src/source/vector_tile_source.ts:74</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/source/vector_tile_source.ts#L75">src/source/vector_tile_source.ts:75</a></p>
 <p><code>true</code> if tiles should be sent back to the worker for each overzoomed zoom level, <code>false</code> if not.</p>
 <h4 id="implementation-of_13">Implementation of</h4>
 <p><a href="../../interfaces/Source/"><code>Source</code></a>.<a href="../../interfaces/Source/#reparseoverscaled"><code>reparseOverscaled</code></a></p>
@@ -9122,7 +9145,7 @@ equivalent to this one.</p>
 <blockquote>
 <p><strong>tileSize</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/25d189b0b13391614d3a6e7d4308095a5c960423/src/source/vector_tile_source.ts#L64">src/source/vector_tile_source.ts:64</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/370565ba1eef0f270347585f9d8f964e002de73f/src/source/vector_tile_source.ts#L65">src/source/vector_tile_source.ts:65</a></p>
 <p>The tile size for the source.</p>
 <h4 id="implementation-of_14">Implementation of</h4>
 <p><a href="../../interfaces/Source/"><code>Source</code></a>.<a href="../../interfaces/Source/#tilesize"><code>tileSize</code></a></p>
