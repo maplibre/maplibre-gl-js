@@ -73,6 +73,7 @@ export class Tile {
     buckets: {[_: string]: Bucket};
     latestFeatureIndex: FeatureIndex;
     latestRawTileData: ArrayBuffer;
+    latestEncoding: string;
     imageAtlas: ImageAtlas;
     imageAtlasTexture: Texture;
     dashPositions: {[_: string]: DashEntry};
@@ -215,10 +216,12 @@ export class Tile {
                 // 'reloadTile'
                 this.latestRawTileData = data.rawTileData;
                 this.latestFeatureIndex.rawTileData = data.rawTileData;
+                this.latestFeatureIndex.encoding = data.encoding;
             } else if (this.latestRawTileData) {
                 // If rawTileData hasn't updated, hold onto a pointer to the last
                 // one we received
                 this.latestFeatureIndex.rawTileData = this.latestRawTileData;
+                this.latestFeatureIndex.encoding = this.latestEncoding;
             }
         }
         this.collisionBoxArray = data.collisionBoxArray;
