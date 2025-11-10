@@ -214,6 +214,213 @@ describe('CrossTileSymbolIndex.addLayer', () => {
 
     });
 
+});
+
+describe('CrossTileSymbolIndex.addLayer with a scale that causes indexing', () => {
+    test('matches ids', () => {
+        const index = new CrossTileSymbolIndex();
+        const INSTANCE_COUNT = KDBUSH_THRESHHOLD + 1;
+
+        const mainID = new OverscaledTileID(6, 0, 6, 8, 8);
+        const mainInstances = Array.from({length: INSTANCE_COUNT}, () => makeSymbolInstance(1000, 1000, 'Detroit'));
+        mainInstances.push(makeSymbolInstance(2000, 2000, 'Toronto'));
+        const mainTile = makeTile(mainID, mainInstances);
+
+        index.addLayer(styleLayer, [mainTile], 0);
+        // Assigned new IDs
+        for (let i = 1; i <= INSTANCE_COUNT + 1; i++) {
+            expect(mainInstances.find(j => j.crossTileID === i)).not.toBeUndefined();
+        }
+
+        const childID = new OverscaledTileID(7, 0, 7, 16, 16);
+        const childInstances = Array.from({length: INSTANCE_COUNT}, () => makeSymbolInstance(2000, 2000, 'Detroit'));
+        childInstances.push(makeSymbolInstance(2000, 2000, 'Windsor'));
+        childInstances.push(makeSymbolInstance(3000, 3000, 'Toronto'));
+        childInstances.push(makeSymbolInstance(4001, 4001, 'Toronto'));
+        const childTile = makeTile(childID, childInstances);
+
+        index.addLayer(styleLayer, [mainTile, childTile], 0);
+        // matched parent tile for all Detroit
+        const detroitChildren = childInstances.filter(i => i.key === 'Detroit');
+        for (let i = 1; i <= INSTANCE_COUNT; i++) {
+            expect(detroitChildren.find(j => j.crossTileID === i)).not.toBeUndefined();
+        }
+
+        // does not match Windsor because of different key
+        const windsorInstance = childInstances.find(i => i.key === 'Windsor');
+        expect(windsorInstance.crossTileID).toEqual(131);
+
+        // does not match Toronto @ 3000 because of different location
+        const toronto3000Instance = childInstances.find(i => i.key === 'Toronto' && i.anchorX === 3000);
+        expect(toronto3000Instance.crossTileID).toEqual(132);
+
+        // matches Toronto @ 4001 even though it has a slightly updated location
+        const toronto4001Instance = childInstances.find(i => i.key === 'Toronto' && i.anchorX === 4001);
+        expect(toronto4001Instance.crossTileID).toBeLessThanOrEqual(INSTANCE_COUNT + 1);
+
+        const parentID = new OverscaledTileID(5, 0, 5, 4, 4);
+        const parentInstances = Array.from({length: INSTANCE_COUNT}, () => makeSymbolInstance(500, 500, 'Detroit'));
+        const parentTile = makeTile(parentID, parentInstances);
+
+        index.addLayer(styleLayer, [mainTile, childTile, parentTile], 0);
+        // matched Detroit children tiles from parent
+        for (let i = 1; i < INSTANCE_COUNT; i++) {
+            expect(parentInstances.find(j => j.crossTileID === i)).not.toBeUndefined();
+        }
+
+        const grandchildID = new OverscaledTileID(8, 0, 8, 32, 32);
+        const grandchildInstances = Array.from({length: INSTANCE_COUNT}, () => makeSymbolInstance(4000, 4000, 'Detroit'));
+        grandchildInstances.push(makeSymbolInstance(4000, 4000, 'Windsor'));
+        const grandchildTile = makeTile(grandchildID, grandchildInstances);
+
+        index.addLayer(styleLayer, [mainTile], 0);
+        index.addLayer(styleLayer, [mainTile, grandchildTile], 0);
+        // matches Detroit grandchildren with mainBucket
+        const detroitGrandchildren = grandchildInstances.filter(i => i.key === 'Detroit');
+        for (let i = 1; i <= INSTANCE_COUNT; i++) {
+            expect(detroitGrandchildren.find(j => j.crossTileID === i)).not.toBeUndefined();
+        }
+
+        // Does not match the Windsor value because that was removed
+        const windsorGrandchild = grandchildInstances.find(i => i.key === 'Windsor');
+        expect(windsorGrandchild.crossTileID).toEqual(133);
+    });
+
+    test('overwrites ids when re-adding', () => {
+        const index = new CrossTileSymbolIndex();
+        const INSTANCE_COUNT = KDBUSH_THRESHHOLD + 1;
+
+        const mainID = new OverscaledTileID(6, 0, 6, 8, 8);
+        const mainInstances = Array.from({length: INSTANCE_COUNT}, () => makeSymbolInstance(1000, 1000, 'Detroit'));
+        const mainTile = makeTile(mainID, mainInstances);
+
+        const childID = new OverscaledTileID(7, 0, 7, 16, 16);
+        const childInstances = Array.from({length: INSTANCE_COUNT}, () => makeSymbolInstance(2000, 2000, 'Detroit'));
+        const childTile = makeTile(childID, childInstances);
+
+        // Assigns new ids 1 -> INSTANCE_COUNT
+        index.addLayer(styleLayer, [mainTile], 0);
+        expect(Math.max(...mainInstances.map(i => i.crossTileID))).toBe(INSTANCE_COUNT);
+
+        // Removes the layer
+        index.addLayer(styleLayer, [], 0);
+
+        // Assigns new ids INSTANCE_COUNT + 1 -> 2 * INSTANCE_COUNT
+        index.addLayer(styleLayer, [childTile], 0);
+        expect(Math.min(...childInstances.map(i => i.crossTileID))).toBe(INSTANCE_COUNT + 1);
+        expect(Math.max(...childInstances.map(i => i.crossTileID))).toBe(2 * INSTANCE_COUNT);
+
+        // Expect all to have a crossTileID
+        expect(mainInstances.some(i => i.crossTileID === 0)).toBeFalsy();
+        expect(childInstances.some(i => i.crossTileID === 0)).toBeFalsy();
+
+        // Overwrites the old id to match the already-added tile
+        index.addLayer(styleLayer, [mainTile, childTile], 0);
+        expect(Math.min(...mainInstances.map(i => i.crossTileID))).toBe(INSTANCE_COUNT + 1);
+        expect(Math.max(...mainInstances.map(i => i.crossTileID))).toBe(2 * INSTANCE_COUNT);
+        expect(Math.min(...childInstances.map(i => i.crossTileID))).toBe(INSTANCE_COUNT + 1);
+        expect(Math.max(...childInstances.map(i => i.crossTileID))).toBe(2 * INSTANCE_COUNT);
+    });
+
+    test('does not duplicate ids within one zoom level', () => {
+        const index = new CrossTileSymbolIndex();
+        const INSTANCE_COUNT = KDBUSH_THRESHHOLD + 1;
+
+        const mainID = new OverscaledTileID(6, 0, 6, 8, 8);
+        const mainInstances = Array.from({length: INSTANCE_COUNT}, () => makeSymbolInstance(1000, 1000, ''));
+        const mainTile = makeTile(mainID, mainInstances);
+
+        const childID = new OverscaledTileID(7, 0, 7, 16, 16);
+        const childInstances = Array.from({length: INSTANCE_COUNT + 1}, () => makeSymbolInstance(2000, 2000, ''));
+        const childTile = makeTile(childID, childInstances);
+
+        // Assigns new ids 1 -> INSTANCE_COUNT
+        index.addLayer(styleLayer, [mainTile], 0);
+        expect(mainInstances.some(i => i.crossTileID === 0)).toBeFalsy();
+        expect(Math.min(...mainInstances.map(i => i.crossTileID))).toBe(1);
+        expect(Math.max(...mainInstances.map(i => i.crossTileID))).toBe(INSTANCE_COUNT);
+
+        const layerIndex = index.layerIndexes[styleLayer.id];
+        expect(Object.keys(layerIndex.usedCrossTileIDs[6]).length).toEqual(INSTANCE_COUNT);
+        for (let i = 1; i <= INSTANCE_COUNT; i++) {
+            expect(layerIndex.usedCrossTileIDs[6][String(i)]).not.toBeUndefined();
+        }
+
+        // copies parent ids without duplicate ids in this tile
+        index.addLayer(styleLayer, [childTile], 0);
+        for (let i = 1; i <= INSTANCE_COUNT; i++) {
+            // 1 -> INSTANCE_COUNT are copied
+            expect(childInstances.find(j => j.crossTileID === i)).not.toBeUndefined();
+        }
+        // We have one new key generated for INSTANCE_COUNT + 1
+        expect(Math.max(...childInstances.map(i => i.crossTileID))).toBe(INSTANCE_COUNT + 1);
+
+        // Updates per-zoom usedCrossTileIDs
+        expect(Object.keys(layerIndex.usedCrossTileIDs[6])).toEqual([]);
+        for (let i = 1; i <= INSTANCE_COUNT + 1; i++) {
+            expect(layerIndex.usedCrossTileIDs[7][String(i)]).not.toBeUndefined();
+        }
+    });
+
+    test('does not regenerate ids for same zoom', () => {
+        const index = new CrossTileSymbolIndex();
+        const INSTANCE_COUNT = KDBUSH_THRESHHOLD + 1;
+
+        const tileID = new OverscaledTileID(6, 0, 6, 8, 8);
+        const firstInstances = Array.from({length: INSTANCE_COUNT}, () => makeSymbolInstance(1000, 1000, ''));
+        const firstTile = makeTile(tileID, firstInstances);
+
+        const secondInstances = Array.from({length: INSTANCE_COUNT + 1}, () => makeSymbolInstance(1000, 1000, ''));
+        const secondTile = makeTile(tileID, secondInstances);
+
+        // Assigns new ids 1 -> INSTANCE_COUNT
+        index.addLayer(styleLayer, [firstTile], 0);
+        expect(firstInstances.some(i => i.crossTileID === 0)).toBeFalsy();
+        expect(Math.min(...firstInstances.map(i => i.crossTileID))).toBe(1);
+        expect(Math.max(...firstInstances.map(i => i.crossTileID))).toBe(INSTANCE_COUNT);
+
+        const layerIndex = index.layerIndexes[styleLayer.id];
+        for (let i = 1; i <= INSTANCE_COUNT; i++) {
+            expect(layerIndex.usedCrossTileIDs[6][String(i)]).not.toBeUndefined();
+        }
+
+        // Uses same ids when tile gets updated
+        index.addLayer(styleLayer, [secondTile], 0);
+        for (let i = 1; i <= INSTANCE_COUNT; i++) {
+            // 1 -> INSTANCE_COUNT are copied
+            expect(secondInstances.find(j => j.crossTileID === i)).not.toBeUndefined();
+        }
+        // We have one new key generated for INSTANCE_COUNT + 1
+        expect(Math.max(...secondInstances.map(i => i.crossTileID))).toBe(INSTANCE_COUNT + 1);
+
+        // Updates usedCrossTileIDs
+        for (let i = 1; i <= INSTANCE_COUNT + 1; i++) {
+            expect(layerIndex.usedCrossTileIDs[6][String(i)]).not.toBeUndefined();
+        }
+    });
+
+    test('reuses indexes when longitude is wrapped', () => {
+        const index = new CrossTileSymbolIndex();
+        const INSTANCE_COUNT = KDBUSH_THRESHHOLD + 1;
+        const longitude = 370;
+
+        const tileID = new OverscaledTileID(6, 1, 6, 8, 8);
+        const instances = Array.from({length: INSTANCE_COUNT}, () => makeSymbolInstance(1000, 1000, ''));
+        const tile = makeTile(tileID, instances);
+
+        index.addLayer(styleLayer, [tile], longitude);
+        for (let i = 1; i <= INSTANCE_COUNT; i++) {
+            expect(instances.find(j => j.crossTileID === i)).not.toBeUndefined();
+        }
+
+        tile.tileID = tileID.wrapped();
+
+        index.addLayer(styleLayer, [tile], longitude % 360);
+        for (let i = 1; i <= INSTANCE_COUNT; i++) {
+            expect(instances.find(j => j.crossTileID === i)).not.toBeUndefined();
+        }
+    });
+
     test('indexes data for findMatches perf', () => {
         const index = new CrossTileSymbolIndex();
 
