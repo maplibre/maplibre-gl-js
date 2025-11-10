@@ -229,7 +229,7 @@ describe('CrossTileSymbolIndex.addLayer with a scale that causes indexing', () =
         index.addLayer(styleLayer, [mainTile], 0);
         // Assigned new IDs
         for (let i = 1; i <= INSTANCE_COUNT + 1; i++) {
-            expect(mainInstances.find(j => j.crossTileID === i)).not.toBeUndefined();
+            expect(mainInstances.find(j => j.crossTileID === i)).toBeDefined();
         }
 
         const childID = new OverscaledTileID(7, 0, 7, 16, 16);
@@ -243,7 +243,7 @@ describe('CrossTileSymbolIndex.addLayer with a scale that causes indexing', () =
         // matched parent tile for all Detroit
         const detroitChildren = childInstances.filter(i => i.key === 'Detroit');
         for (let i = 1; i <= INSTANCE_COUNT; i++) {
-            expect(detroitChildren.find(j => j.crossTileID === i)).not.toBeUndefined();
+            expect(detroitChildren.find(j => j.crossTileID === i)).toBeDefined();
         }
 
         // does not match Windsor because of different key
@@ -265,7 +265,7 @@ describe('CrossTileSymbolIndex.addLayer with a scale that causes indexing', () =
         index.addLayer(styleLayer, [mainTile, childTile, parentTile], 0);
         // matched Detroit children tiles from parent
         for (let i = 1; i < INSTANCE_COUNT; i++) {
-            expect(parentInstances.find(j => j.crossTileID === i)).not.toBeUndefined();
+            expect(parentInstances.find(j => j.crossTileID === i)).toBeDefined();
         }
 
         const grandchildID = new OverscaledTileID(8, 0, 8, 32, 32);
@@ -278,7 +278,7 @@ describe('CrossTileSymbolIndex.addLayer with a scale that causes indexing', () =
         // matches Detroit grandchildren with mainBucket
         const detroitGrandchildren = grandchildInstances.filter(i => i.key === 'Detroit');
         for (let i = 1; i <= INSTANCE_COUNT; i++) {
-            expect(detroitGrandchildren.find(j => j.crossTileID === i)).not.toBeUndefined();
+            expect(detroitGrandchildren.find(j => j.crossTileID === i)).toBeDefined();
         }
 
         // Does not match the Windsor value because that was removed
@@ -343,14 +343,14 @@ describe('CrossTileSymbolIndex.addLayer with a scale that causes indexing', () =
         const layerIndex = index.layerIndexes[styleLayer.id];
         expect(Object.keys(layerIndex.usedCrossTileIDs[6]).length).toEqual(INSTANCE_COUNT);
         for (let i = 1; i <= INSTANCE_COUNT; i++) {
-            expect(layerIndex.usedCrossTileIDs[6][String(i)]).not.toBeUndefined();
+            expect(layerIndex.usedCrossTileIDs[6][String(i)]).toBeDefined();
         }
 
         // copies parent ids without duplicate ids in this tile
         index.addLayer(styleLayer, [childTile], 0);
         for (let i = 1; i <= INSTANCE_COUNT; i++) {
             // 1 -> INSTANCE_COUNT are copied
-            expect(childInstances.find(j => j.crossTileID === i)).not.toBeUndefined();
+            expect(childInstances.find(j => j.crossTileID === i)).toBeDefined();
         }
         // We have one new key generated for INSTANCE_COUNT + 1
         expect(Math.max(...childInstances.map(i => i.crossTileID))).toBe(INSTANCE_COUNT + 1);
@@ -358,7 +358,7 @@ describe('CrossTileSymbolIndex.addLayer with a scale that causes indexing', () =
         // Updates per-zoom usedCrossTileIDs
         expect(Object.keys(layerIndex.usedCrossTileIDs[6])).toEqual([]);
         for (let i = 1; i <= INSTANCE_COUNT + 1; i++) {
-            expect(layerIndex.usedCrossTileIDs[7][String(i)]).not.toBeUndefined();
+            expect(layerIndex.usedCrossTileIDs[7][String(i)]).toBeDefined();
         }
     });
 
@@ -381,21 +381,21 @@ describe('CrossTileSymbolIndex.addLayer with a scale that causes indexing', () =
 
         const layerIndex = index.layerIndexes[styleLayer.id];
         for (let i = 1; i <= INSTANCE_COUNT; i++) {
-            expect(layerIndex.usedCrossTileIDs[6][String(i)]).not.toBeUndefined();
+            expect(layerIndex.usedCrossTileIDs[6][String(i)]).toBeDefined();
         }
 
         // Uses same ids when tile gets updated
         index.addLayer(styleLayer, [secondTile], 0);
         for (let i = 1; i <= INSTANCE_COUNT; i++) {
             // 1 -> INSTANCE_COUNT are copied
-            expect(secondInstances.find(j => j.crossTileID === i)).not.toBeUndefined();
+            expect(secondInstances.find(j => j.crossTileID === i)).toBeDefined();
         }
         // We have one new key generated for INSTANCE_COUNT + 1
         expect(Math.max(...secondInstances.map(i => i.crossTileID))).toBe(INSTANCE_COUNT + 1);
 
         // Updates usedCrossTileIDs
         for (let i = 1; i <= INSTANCE_COUNT + 1; i++) {
-            expect(layerIndex.usedCrossTileIDs[6][String(i)]).not.toBeUndefined();
+            expect(layerIndex.usedCrossTileIDs[6][String(i)]).toBeDefined();
         }
     });
 
@@ -410,14 +410,14 @@ describe('CrossTileSymbolIndex.addLayer with a scale that causes indexing', () =
 
         index.addLayer(styleLayer, [tile], longitude);
         for (let i = 1; i <= INSTANCE_COUNT; i++) {
-            expect(instances.find(j => j.crossTileID === i)).not.toBeUndefined();
+            expect(instances.find(j => j.crossTileID === i)).toBeDefined();
         }
 
         tile.tileID = tileID.wrapped();
 
         index.addLayer(styleLayer, [tile], longitude % 360);
         for (let i = 1; i <= INSTANCE_COUNT; i++) {
-            expect(instances.find(j => j.crossTileID === i)).not.toBeUndefined();
+            expect(instances.find(j => j.crossTileID === i)).toBeDefined();
         }
     });
 
