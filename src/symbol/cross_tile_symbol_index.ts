@@ -199,49 +199,58 @@ class TileLayerIndex {
         zoomCrossTileIDs: {[crossTileID: number]: boolean},
         tolerance: number
     ): void {
-        // Map instances by their scaled coordinate
-        const instancesByScaledCoordinate = new Map<number, SymbolInstance[]>();
+        // Map instances by their scaled coordinate. The map is keyed by X,
+        // then keyed by Y coordinate.
+        const instancesByScaledCoordinate = new Map<number,Map<number,SymbolInstance[]>>();
         for (const symbolInstance of symbolInstances) {
             const scaledSymbolCoord = this.getScaledCoordinates(symbolInstance, newTileID);
-            const scaledCoordinateId = scaledSymbolCoord.x << 16 | scaledSymbolCoord.y;
 
-            if (instancesByScaledCoordinate.has(scaledCoordinateId)) {
-                instancesByScaledCoordinate.get(scaledCoordinateId).push(symbolInstance);
+            const xMap = instancesByScaledCoordinate.get(scaledSymbolCoord.x);
+            if (xMap) {
+                const yMap = xMap.get(scaledSymbolCoord.y);
+                if (yMap) {
+                    yMap.push(symbolInstance);
+                } else {
+                    xMap.set(scaledSymbolCoord.y, [symbolInstance]);
+                }
             } else {
-                instancesByScaledCoordinate.set(scaledCoordinateId, [symbolInstance]);
+                instancesByScaledCoordinate.set(
+                    scaledSymbolCoord.x,
+                    new Map([[scaledSymbolCoord.y, [symbolInstance]]])
+                );
             }
         }
 
         // For each scaled coordinate, match instances with indexed results
         // at the same location.
-        for (const [coordinateId, instances] of instancesByScaledCoordinate.entries()) {
-            const x = coordinateId >>> 16;
-            const y = coordinateId % (1 << 16);
-            const indexes = entry.index.range(
-                x - tolerance,
-                y - tolerance,
-                x + tolerance,
-                y + tolerance);
+        for (const [x, yMap] of instancesByScaledCoordinate.entries()) {
+            for (const [y, instances] of yMap.entries()) {
+                const indexes = entry.index.range(
+                    x - tolerance,
+                    y - tolerance,
+                    x + tolerance,
+                    y + tolerance);
 
-            // Iterate through cross tile entries at this quadrant _and_
-            // symbol instances and pair them up until one of the lists
-            // runs out. This is faster than re-running a range query
-            // for every symbol instance, as each of these symbol
-            // instances already have the same key, and thus can be
-            // paired with any entry in the index.
-            let i = 0;
-            let j = 0;
-            while (i < indexes.length && j < instances.length) {
-                const crossTileID = entry.crossTileIDs[indexes[i]];
-                if (!zoomCrossTileIDs[crossTileID]) {
-                // Once we've marked ourselves duplicate against this parent symbol,
-                // don't let any other symbols at the same zoom level duplicate against
-                // the same parent (see issue #5993)
-                    zoomCrossTileIDs[crossTileID] = true;
-                    instances[j].crossTileID = crossTileID;
-                    j++;
+                // Iterate through cross tile entries at this quadrant _and_
+                // symbol instances and pair them up until one of the lists
+                // runs out. This is faster than re-running a range query
+                // for every symbol instance, as each of these symbol
+                // instances already have the same key, and thus can be
+                // paired with any entry in the index.
+                let i = 0;
+                let j = 0;
+                while (i < indexes.length && j < instances.length) {
+                    const crossTileID = entry.crossTileIDs[indexes[i]];
+                    if (!zoomCrossTileIDs[crossTileID]) {
+                        // Once we've marked ourselves duplicate against this parent symbol,
+                        // don't let any other symbols at the same zoom level duplicate against
+                        // the same parent (see issue #5993)
+                        zoomCrossTileIDs[crossTileID] = true;
+                        instances[j].crossTileID = crossTileID;
+                        j++;
+                    }
+                    i++;
                 }
-                i++;
             }
         }
     }
