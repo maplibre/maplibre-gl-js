@@ -5,7 +5,7 @@ import {EXTENT} from '../data/extent';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
 import type {LngLatBounds} from '../geo/lng_lat_bounds';
-import {applySourceDiff, mergeSourceDiffs, toUpdateable} from './geojson_source_diff';
+import {applySourceDiff, isUpdateableGeoJSON, mergeSourceDiffs, toUpdateable} from './geojson_source_diff';
 import {getGeoJSONBounds} from '../util/geojson_bounds';
 
 import type {Source} from './source';
@@ -415,8 +415,18 @@ export class GeoJSONSource extends Evented implements Source {
             }
 
             if (result.dataDiff) {
+                const data = this._data;
+
+                if (typeof data === 'string') {
+                    throw new Error('This should never happen.');
+                }
+
+                if (!isUpdateableGeoJSON(data, typeof this.promoteId === 'string' ? this.promoteId : undefined)) {
+                    throw new Error('This should never happen.');
+                }
+
                 if (!this._dataUpdateable) {
-                    this._dataUpdateable = toUpdateable(this._data as any, undefined);
+                    this._dataUpdateable = toUpdateable(data, undefined);
                 }
 
                 applySourceDiff(this._dataUpdateable, result.dataDiff);
