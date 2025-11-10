@@ -71,7 +71,7 @@ export class Tile {
     uses: number;
     tileSize: number;
     buckets: {[_: string]: Bucket};
-    latestFeatureIndex: FeatureIndex;
+    latestFeatureIndex: FeatureIndex | null;
     latestRawTileData: ArrayBuffer;
     latestEncoding: string;
     imageAtlas: ImageAtlas;
