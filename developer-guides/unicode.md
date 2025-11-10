@@ -2,7 +2,6 @@
 
 MapLibre GL&nbsp;JS supports rendering Unicode text with the following caveats:
 
-* Codepoints beyond the Basic Multilingual Plane (up to U+FFFF) are not supported.
 * A single codepoint is incorrectly assumed to correspond to a single glyph in any font, and vice versa.
 * Complex text shaping is not yet implemented.
 * Right-to-left writing systems, such as Arabic and Hebrew, require a separate [mapbox-gl-rtl-text](https://github.com/mapbox/mapbox-gl-rtl-text/) plugin.

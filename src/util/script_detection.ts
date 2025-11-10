@@ -5,23 +5,27 @@ import {
     codePointRequiresComplexTextShaping
 } from '../util/unicode_properties.g';
 
+export function charIsWhitespace(char: number) {
+    return /\s/u.test(String.fromCodePoint(char));
+}
+
 export function allowsIdeographicBreaking(chars: string) {
     for (const char of chars) {
-        if (!codePointAllowsIdeographicBreaking(char.charCodeAt(0))) return false;
+        if (!codePointAllowsIdeographicBreaking(char.codePointAt(0))) return false;
     }
     return true;
 }
 
 export function allowsVerticalWritingMode(chars: string) {
     for (const char of chars) {
-        if (codePointHasUprightVerticalOrientation(char.charCodeAt(0))) return true;
+        if (codePointHasUprightVerticalOrientation(char.codePointAt(0))) return true;
     }
     return false;
 }
 
 export function allowsLetterSpacing(chars: string) {
     for (const char of chars) {
-        if (!charAllowsLetterSpacing(char.charCodeAt(0))) return false;
+        if (!charAllowsLetterSpacing(char.codePointAt(0))) return false;
     }
     return true;
 }
@@ -147,7 +151,7 @@ export function charInSupportedScript(char: number, canRenderRTL: boolean) {
 
 export function stringContainsRTLText(chars: string): boolean {
     for (const char of chars) {
-        if (charInRTLScript(char.charCodeAt(0))) {
+        if (charInRTLScript(char.codePointAt(0))) {
             return true;
         }
     }
@@ -156,7 +160,7 @@ export function stringContainsRTLText(chars: string): boolean {
 
 export function isStringInSupportedScript(chars: string, canRenderRTL: boolean) {
     for (const char of chars) {
-        if (!charInSupportedScript(char.charCodeAt(0), canRenderRTL)) {
+        if (!charInSupportedScript(char.codePointAt(0), canRenderRTL)) {
             return false;
         }
     }
