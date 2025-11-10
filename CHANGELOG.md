@@ -12,7 +12,7 @@
 
 ### ✨ Features and improvements
 
-- Add support for MapLibre Tiles (MLT) by using `encoding: 'mlt'` in vector source definition ([#6570](https://github.com/maplibre/maplibre-gl-js/pull/6570)) (by [@Salkin975](https://github.com/Salkin975) and [@HarelM](https://github.com/HArelM))
+- Add support for MapLibre Tiles (MLT) by using `encoding: 'mlt'` in vector source definition ([#6570](https://github.com/maplibre/maplibre-gl-js/pull/6570)) (by [@Salkin975](https://github.com/Salkin975) and [@HarelM](https://github.com/HArelM)) 
 - Slice vector tiles to improve over scale vector handling ([#6521](https://github.com/maplibre/maplibre-gl-js/pull/6521)). It adds the `experimentalZoomLevelsToOverscale` flag to `MapOptions` to allow controlling how many zoom levels to slice and how many to scale. It seems to have better performance at high zoom levels. It can prevent Safari crashes in some scenarios by setting it to 4 or less. (by [@HarelM](https://github.com/HarelM))
 - Add reduceMotion option to Map Options ([#6661](https://github.com/maplibre/maplibre-gl-js/pull/6661)) (by [@wayofthefuture](https://github.com/wayofthefuture))
 
