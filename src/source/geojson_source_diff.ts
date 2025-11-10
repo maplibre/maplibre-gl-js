@@ -3,48 +3,10 @@
  *
  * This module provides an efficient way to update GeoJSON features in a map source without replacing
  * the entire dataset. It implements a differential update system that allows for incremental changes
- * to features through `add`, `remove`, and `update` operations.
- *
- * Operations are processed in a specific order to ensure predictable behavior:
- * 1. **Remove operations** (removeAll, remove)
- * 2. **Add operations** (add)
- * 3. **Update operations** (update)
- *
- * This ordering has important implications for conflict resolution:
- * - If you `removeAll` and then `add` features in the same diff, the added features will be **kept**.
- * - If you `remove` a specific feature and then `add` it back in the same diff, the added version will be **kept**.
- * - Updates only apply to features that exist after removes and adds have been processed.
- *
- * Features must have unique identifiers to be updateable. IDs can come from:
- * - The feature's `id` property (standard GeoJSON)
- * - A promoted property specified by `promoteId` (e.g., a "name" property)
- *
- * ```TypeScript
- * // Remove all features and add new ones (keeps the new ones)
- * const diff: GeoJSONSourceDiff = {
- *   removeAll: true,
- *   add: [newFeature1, newFeature2]
- * };
- *
- * // Update a feature's properties while keeping its geometry
- * const diff: GeoJSONSourceDiff = {
- *   update: [{
- *     id: 'feature123',
- *     addOrUpdateProperties: [{key: 'population', value: 5000}]
- *   }]
- * };
- *
- * // Remove and re-add the same feature (the new version is kept)
- * const diff: GeoJSONSourceDiff = {
- *   remove: ['feature123'],
- *   add: [newVersionOfFeature123]
- * };
- * ```
+ * to features through `add`, `remove`, and `update` operations. These operations are performed in a
+ * specific order to ensure predictable behavior: removeAll, remove, add, update.
  */
 
-/**
- * A way to identify a feature, either by string or by number
- */
 export type GeoJSONFeatureId = number | string;
 
 /**
@@ -101,6 +63,13 @@ function getFeatureId(feature: GeoJSON.Feature, promoteId?: string): GeoJSONFeat
     return promoteId ? feature.properties[promoteId] : feature.id;
 }
 
+/**
+ * Returns true if the data is a valid GeoJSON object that can be updated.
+ *
+ * Features must have unique identifiers to be updateable. IDs can come from:
+ * - The feature's `id` property (standard GeoJSON)
+ * - A promoted property specified by `promoteId` (e.g., a "name" property)
+ */
 export function isUpdateableGeoJSON(data: GeoJSON.GeoJSON | undefined, promoteId?: string): data is UpdateableGeoJSON {
     // null can be updated
     if (data == null) {
@@ -151,7 +120,10 @@ export function toUpdateable(data: UpdateableGeoJSON, promoteId?: string) {
 }
 
 /**
- * Mutates updateable and applies a GeoJSONSourceDiff, considering the order of operations as specified above (remove, add, update).
+ * Mutates updateable and applies a GeoJSONSourceDiff. Operations are processed in a specific order to ensure predictable behavior:
+ * 1. Remove operations (removeAll, remove)
+ * 2. Add operations (add)
+ * 3. Update operations (update)
  */
 export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Feature>, diff: GeoJSONSourceDiff, promoteId?: string): void {
     if (diff.removeAll) {
@@ -220,7 +192,6 @@ export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Featur
 
 /**
  * Merge two GeoJSONSourceDiffs, considering the order of operations as specified above (remove, add, update).
- * Resolve merge conflicts - then merge.
  *
  * For `add` features that use promoteId, the feature id will be set to the promoteId value temporarily so that
  * the merge can be completed, then reverted to the original promoteId state after the merge.
@@ -243,32 +214,11 @@ export function mergeSourceDiffs(
     const prev = diffToHashed(prevDiff);
     const next = diffToHashed(nextDiff);
 
-    // Resolve merge conflict - removing all features with added or updated features in previous - and clear no-op removes
-    if (next.removeAll) {
-        prev.add.clear();
-        prev.update.clear();
-        prev.remove.clear();
-        next.remove.clear();
-    }
+    // Resolve merge conflicts
+    resolveMergeConflicts(prev, next);
 
-    // Resolve merge conflict - removing features that were added or updated in previous
-    for (const id of next.remove) {
-        prev.add.delete(id);
-        prev.update.delete(id);
-    }
-
-    // Resolve merge conflict - updating features that were updated in previous
-    for (const [id, nextUpdate] of next.update) {
-        const prevUpdate = prev.update.get(id);
-        if (!prevUpdate) continue;
-
-        next.update.set(id, mergeFeatureDiffs(prevUpdate, nextUpdate));
-        prev.update.delete(id);
-    }
-
+    // Simply merge the two diffs now that conflicts have been resolved
     const merged: GeoJSONSourceDiffHashed = {};
-
-    // Merge the two diffs
     if (prev.removeAll || next.removeAll) merged.removeAll = true;
     merged.remove = new Set([...prev.remove , ...next.remove]);
     merged.add    = new Map([...prev.add    , ...next.add]);
@@ -293,8 +243,38 @@ export function mergeSourceDiffs(
 }
 
 /**
+ * Resolve merge conflicts between two GeoJSONSourceDiffs considering the ordering above (remove/add/update).
+ *
+ * - If you `removeAll` and then `add` features in the same diff, the added features will be kept.
+ * - Updates only apply to features that exist after removes and adds have been processed.
+ */
+function resolveMergeConflicts(prev: GeoJSONSourceDiffHashed, next: GeoJSONSourceDiffHashed) {
+    // Removing all features with added or updated features in previous - and clear no-op removes
+    if (next.removeAll) {
+        prev.add.clear();
+        prev.update.clear();
+        prev.remove.clear();
+        next.remove.clear();
+    }
+
+    // Removing features that were added or updated in previous
+    for (const id of next.remove) {
+        prev.add.delete(id);
+        prev.update.delete(id);
+    }
+
+    // Updating features that were updated in previous
+    for (const [id, nextUpdate] of next.update) {
+        const prevUpdate = prev.update.get(id);
+        if (!prevUpdate) continue;
+
+        next.update.set(id, mergeFeatureDiffs(prevUpdate, nextUpdate));
+        prev.update.delete(id);
+    }
+}
+
+/**
  * Merge two feature diffs for the same feature id, considering the order of operations as specified above (remove, add/update).
- * Resolve merge conflicts - then merge.
  */
 function mergeFeatureDiffs(prev: GeoJSONFeatureDiff, next: GeoJSONFeatureDiff): GeoJSONFeatureDiff {
     const merged: GeoJSONFeatureDiff = {id: prev.id};

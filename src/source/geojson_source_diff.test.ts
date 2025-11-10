@@ -362,6 +362,47 @@ describe('applySourceDiff', () => {
         expect(updateable.size).toBe(1);
         expect(Object.keys(updateable.get('point')?.properties!)).toHaveLength(0);
     });
+
+    test('adds a feature with properties, removes the feature, then adds it back with different geometry and properties', () => {
+        const updateable = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
+
+        const add1: GeoJSON.Feature = {
+            type: 'Feature',
+            id: 'feature1',
+            geometry: {
+                type: 'LineString',
+                coordinates: [[0, 0], [1, 1]]
+            },
+            properties: {test1: 'test1'}
+        };
+        const add2: GeoJSON.Feature = {
+            type: 'Feature',
+            id: 'feature1',
+            geometry: {
+                type: 'Point',
+                coordinates: [1, 1]
+            },
+            properties: {test2: 'test2'}
+        };
+
+        applySourceDiff(updateable, {
+            add: [add1]
+        });
+        applySourceDiff(updateable, {
+            remove: ['feature1']
+        });
+        applySourceDiff(updateable, {
+            add: [add2]
+        });
+
+        expect(updateable.size).toBe(1);
+        expect(updateable.has('feature1')).toBeTruthy();
+
+        const feature = updateable.get('feature1');
+        expect(feature.geometry).toEqual({type: 'Point', coordinates: [1, 1]});
+        expect(feature.properties.test1).toBeUndefined();
+        expect(feature.properties.test2).toBe('test2');
+    });
 });
 
 describe('mergeSourceDiffs', () => {
