@@ -1,5 +1,16 @@
 import {describe, test, expect} from 'vitest';
-import {charAllowsLetterSpacing, charInComplexShapingScript, charInRTLScript} from './script_detection';
+import {charIsWhitespace, charAllowsLetterSpacing, charInComplexShapingScript, charInRTLScript} from './script_detection';
+
+describe('charIsWhitespace', () => {
+    test('detects whitespace', () => {
+        expect(charIsWhitespace(' '.codePointAt(0))).toBe(true);
+        expect(charIsWhitespace('\t'.codePointAt(0))).toBe(true);
+        expect(charIsWhitespace('\v'.codePointAt(0))).toBe(true);
+        expect(charIsWhitespace('\f'.codePointAt(0))).toBe(true);
+        expect(charIsWhitespace('\r'.codePointAt(0))).toBe(true);
+        expect(charIsWhitespace('\n'.codePointAt(0))).toBe(true);
+    });
+});
 
 describe('charAllowsLetterSpacing', () => {
     test('allows letter spacing of Latin text', () => {
