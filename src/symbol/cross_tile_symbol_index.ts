@@ -192,7 +192,7 @@ class TileLayerIndex {
         const tolerance = this.tileID.canonical.z < newTileID.canonical.z ? 1 : Math.pow(2, this.tileID.canonical.z - newTileID.canonical.z);
 
         // Map instances by their scaled coordinate
-        const instancesByScaledCoordinate = new  Map<number, SymbolInstance[]>();
+        const instancesByScaledCoordinate = new Map<number, SymbolInstance[]>();
         for (const symbolInstance of symbolInstances) {
             const scaledSymbolCoord = this.getScaledCoordinates(symbolInstance, newTileID);
             const scaledCoordinateId = scaledSymbolCoord.x << 16 | scaledSymbolCoord.y;
