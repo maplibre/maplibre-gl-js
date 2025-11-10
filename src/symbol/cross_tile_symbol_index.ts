@@ -113,23 +113,8 @@ class TileLayerIndex {
     findMatches(symbolInstances: SymbolInstanceArray, newTileID: OverscaledTileID, zoomCrossTileIDs: {
         [crossTileID: number]: boolean;
     }) {
-        // Group symbol instances by key
-        const instancesByKey = new Map<number, SymbolInstance[]>();
-        for (let i = 0; i < symbolInstances.length; i++) {
-            const symbolInstance = symbolInstances.get(i);
-            if (symbolInstance.crossTileID) {
-                // already has a match, skip
-                continue;
-            }
-
-            if (instancesByKey.has(symbolInstance.key)) {
-                instancesByKey.get(symbolInstance.key).push(symbolInstance);
-            } else {
-                instancesByKey.set(symbolInstance.key, [symbolInstance]);
-            }
-        }
-
         const tolerance = this.tileID.canonical.z < newTileID.canonical.z ? 1 : Math.pow(2, this.tileID.canonical.z - newTileID.canonical.z);
+        const instancesByKey = this.groupSymbolInstancesByKey(symbolInstances);
 
         // For each key, find the entry, then match the symbol instances
         // to the entry contents
@@ -147,6 +132,30 @@ class TileLayerIndex {
                 this.matchForUnindexedEntry(entry, instances, newTileID, zoomCrossTileIDs, tolerance);
             }
         }
+    }
+
+    /**
+     * Groups all symbol instances by common key.
+     *
+     * @returns A map keyed by {@link SymbolInstance.key} to an array of
+     * {@link SymbolInstance}.
+     */
+    private groupSymbolInstancesByKey(symbolInstances: SymbolInstanceArray): Map<number, SymbolInstance[]> {
+        const instancesByKey = new Map<number, SymbolInstance[]>();
+        for (let i = 0; i < symbolInstances.length; i++) {
+            const symbolInstance = symbolInstances.get(i);
+            if (symbolInstance.crossTileID) {
+                // already has a match, skip
+                continue;
+            }
+
+            if (instancesByKey.has(symbolInstance.key)) {
+                instancesByKey.get(symbolInstance.key).push(symbolInstance);
+            } else {
+                instancesByKey.set(symbolInstance.key, [symbolInstance]);
+            }
+        }
+        return instancesByKey;
     }
 
     /**
