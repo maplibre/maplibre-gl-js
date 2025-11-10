@@ -414,7 +414,7 @@ export class GeoJSONSource extends Evented implements Source {
                 return;
             }
 
-            if (result.dataDiff) {
+            if (diff) {
                 const data = this._data;
                 const promoteId = typeof this.promoteId === 'string' ? this.promoteId : undefined;
 
@@ -423,7 +423,7 @@ export class GeoJSONSource extends Evented implements Source {
                         this._dataUpdateable = toUpdateable(data, promoteId);
                     }
 
-                    applySourceDiff(this._dataUpdateable, result.dataDiff, promoteId);
+                    applySourceDiff(this._dataUpdateable, diff, promoteId);
                 }
             } else {
                 this._data = result.data;
