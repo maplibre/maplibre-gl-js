@@ -205,13 +205,13 @@ class TileLayerIndex {
         for (const symbolInstance of symbolInstances) {
             const scaledSymbolCoord = this.getScaledCoordinates(symbolInstance, newTileID);
 
-            const xMap = instancesByScaledCoordinate.get(scaledSymbolCoord.x);
-            if (xMap) {
-                const yMap = xMap.get(scaledSymbolCoord.y);
-                if (yMap) {
-                    yMap.push(symbolInstance);
+            const xInstances = instancesByScaledCoordinate.get(scaledSymbolCoord.x);
+            if (xInstances) {
+                const xyInstances = xInstances.get(scaledSymbolCoord.y);
+                if (xyInstances) {
+                    xyInstances.push(symbolInstance);
                 } else {
-                    xMap.set(scaledSymbolCoord.y, [symbolInstance]);
+                    xInstances.set(scaledSymbolCoord.y, [symbolInstance]);
                 }
             } else {
                 instancesByScaledCoordinate.set(
