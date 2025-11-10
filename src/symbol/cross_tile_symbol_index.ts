@@ -148,7 +148,10 @@ class TileLayerIndex {
     }
 
     /**
-     * Finds matches for entries without an index built
+     * Finds matches for entries without an index built. This method modifies
+     * instances within {@link symbolInstances} as well as adds entries to
+     * {@link zoomCrossTileIDs} when it finds a symbol within {@link entry}
+     * that can be matched with a {@link symbolInstances} instance.
      */
     private matchForUnindexedEntry(
         entry: UnindexedSymbolKind,
@@ -181,7 +184,11 @@ class TileLayerIndex {
     }
 
     /**
-     * Find matches for entries with an index built
+     * Finds matches for entries with an index built. This method modifies
+     * instances within {@link symbolInstances} as well as adds entries to
+     * {@link zoomCrossTileIDs} when it finds a symbol from the index within
+     * {@link entry} that can be matched with a {@link symbolInstances}
+     * instance.
      */
     private matchForIndexedEntry(
         entry: IndexedSymbolKind,
