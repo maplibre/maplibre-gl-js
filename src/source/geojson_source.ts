@@ -418,6 +418,8 @@ export class GeoJSONSource extends Evented implements Source {
                 const data = this._data;
                 const promoteId = typeof this.promoteId === 'string' ? this.promoteId : undefined;
 
+                // This expression should always return `true`. The worker would not pass `shouldApplyDiff: true`
+                // if a diff was not provided or the data is not updateable.
                 if (diff && typeof data !== 'string' && isUpdateableGeoJSON(data, promoteId)) {
                     if (!this._dataUpdateable) {
                         this._dataUpdateable = toUpdateable(data, promoteId);
