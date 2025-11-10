@@ -5,8 +5,8 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- _...Add new stuff here..._
 - Fix runtime exception when calling `GeoJSONSource#updateData` after unloading a vector tile ([#6689](https://github.com/maplibre/maplibre-gl-js/pull/6689) (by [@lucaswoj](https://github.com/lucaswoj)))
+- _...Add new stuff here..._
 
 ## 5.12.0
 
