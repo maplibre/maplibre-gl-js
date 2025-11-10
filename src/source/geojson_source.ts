@@ -484,6 +484,8 @@ export class GeoJSONSource extends Evented implements Source {
      * @internal
      */
     shouldReloadTile(tile: Tile, {nextBounds, prevIds}: GeoJSONSourceShouldReloadTileOptions) : boolean {
+        if (!tile.latestFeatureIndex) return false;
+
         // Update the tile if it PREVIOUSLY contained an updated feature.
         const layers = tile.latestFeatureIndex.loadVTLayers();
         for (let i = 0; i < tile.latestFeatureIndex.featureIndexArray.length; i++) {
