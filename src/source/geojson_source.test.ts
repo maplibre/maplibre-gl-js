@@ -202,6 +202,19 @@ describe('GeoJSONSource.setData', () => {
         await promise;
         expect(source.loaded()).toBeTruthy();
     });
+
+    test('setData with waitForCompletion=true returns promise that resolves to this', async () => {
+        const source = new GeoJSONSource('id', {} as any, wrapDispatcher({
+            sendAsync(_message: ActorMessage<MessageType>) {
+                return new Promise((resolve) => {
+                    setTimeout(() => resolve({abandoned: true}), 0);
+                });
+            }
+        }), undefined);
+        const result = source.setData({} as GeoJSON.GeoJSON, true);
+        expect(result).toBeInstanceOf(Promise);
+        expect(await result).toBe(source);
+    });
 });
 
 describe('GeoJSONSource.onRemove', () => {
@@ -759,6 +772,19 @@ describe('GeoJSONSource.updateData', () => {
         expect(spy.mock.calls[0][0].data.data).toEqual(JSON.stringify(data1));
         expect(spy.mock.calls[1][0].data.data).toEqual(JSON.stringify(data2));
         expect(spy.mock.calls[2][0].data.dataDiff).toEqual(update1);
+    });
+
+    test('updateData with waitForCompletion=true returns promise that resolves to this', async () => {
+        const source = new GeoJSONSource('id', {} as any, wrapDispatcher({
+            sendAsync(_message: ActorMessage<MessageType>) {
+                return new Promise((resolve) => {
+                    setTimeout(() => resolve({abandoned: true}), 0);
+                });
+            }
+        }), undefined);
+        const result = source.updateData({add: []} as GeoJSONSourceDiff, true);
+        expect(result).toBeInstanceOf(Promise);
+        expect(await result).toBe(source);
     });
 });
 
