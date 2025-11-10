@@ -134,7 +134,7 @@ class TileLayerIndex {
         for (const key of instancesByKey.keys()) {
             const entry = this._symbolsByKey[key];
             if (!entry) {
-            // No symbol with this key in this bucket
+                // No symbol with this key in this bucket
                 continue;
             }
 
