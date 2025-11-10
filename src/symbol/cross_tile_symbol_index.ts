@@ -129,6 +129,8 @@ class TileLayerIndex {
             }
         }
 
+        const tolerance = this.tileID.canonical.z < newTileID.canonical.z ? 1 : Math.pow(2, this.tileID.canonical.z - newTileID.canonical.z);
+
         // For each key, find the entry, then match the symbol instances
         // to the entry contents
         for (const key of instancesByKey.keys()) {
@@ -140,9 +142,9 @@ class TileLayerIndex {
 
             const instances = instancesByKey.get(key);
             if (entry.type === SymbolKindType.INDEXED) {
-                this.matchForIndexedEntry(entry, instances, newTileID, zoomCrossTileIDs);
+                this.matchForIndexedEntry(entry, instances, newTileID, zoomCrossTileIDs, tolerance);
             } else {
-                this.matchForUnindexedEntry(entry, instances, newTileID, zoomCrossTileIDs);
+                this.matchForUnindexedEntry(entry, instances, newTileID, zoomCrossTileIDs, tolerance);
             }
         }
     }
@@ -157,9 +159,9 @@ class TileLayerIndex {
         entry: UnindexedSymbolKind,
         symbolInstances: SymbolInstance[],
         newTileID: OverscaledTileID,
-        zoomCrossTileIDs: {[crossTileID: number]: boolean}
+        zoomCrossTileIDs: {[crossTileID: number]: boolean},
+        tolerance: number
     ): void {
-        const tolerance = this.tileID.canonical.z < newTileID.canonical.z ? 1 : Math.pow(2, this.tileID.canonical.z - newTileID.canonical.z);
         for (const symbolInstance of symbolInstances) {
             const scaledSymbolCoord = this.getScaledCoordinates(symbolInstance, newTileID);
 
@@ -194,10 +196,9 @@ class TileLayerIndex {
         entry: IndexedSymbolKind,
         symbolInstances: SymbolInstance[],
         newTileID: OverscaledTileID,
-        zoomCrossTileIDs: {[crossTileID: number]: boolean}
+        zoomCrossTileIDs: {[crossTileID: number]: boolean},
+        tolerance: number
     ): void {
-        const tolerance = this.tileID.canonical.z < newTileID.canonical.z ? 1 : Math.pow(2, this.tileID.canonical.z - newTileID.canonical.z);
-
         // Map instances by their scaled coordinate
         const instancesByScaledCoordinate = new Map<number, SymbolInstance[]>();
         for (const symbolInstance of symbolInstances) {
