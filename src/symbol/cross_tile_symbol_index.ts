@@ -140,9 +140,9 @@ class TileLayerIndex {
 
             const instances = instancesByKey.get(key);
             if (entry.type === SymbolKindType.INDEXED) {
-                this.findMatchesForIndexedEntry(entry, instances, newTileID, zoomCrossTileIDs);
+                this.matchForIndexedEntry(entry, instances, newTileID, zoomCrossTileIDs);
             } else {
-                this.findMatchesForUnindexedEntry(entry, instances, newTileID, zoomCrossTileIDs);
+                this.matchForUnindexedEntry(entry, instances, newTileID, zoomCrossTileIDs);
             }
         }
     }
@@ -150,12 +150,12 @@ class TileLayerIndex {
     /**
      * Finds matches for entries without an index built
      */
-    private findMatchesForUnindexedEntry(
+    private matchForUnindexedEntry(
         entry: UnindexedSymbolKind,
         symbolInstances: SymbolInstance[],
         newTileID: OverscaledTileID,
         zoomCrossTileIDs: {[crossTileID: number]: boolean}
-    ) {
+    ): void {
         const tolerance = this.tileID.canonical.z < newTileID.canonical.z ? 1 : Math.pow(2, this.tileID.canonical.z - newTileID.canonical.z);
         for (const symbolInstance of symbolInstances) {
             const scaledSymbolCoord = this.getScaledCoordinates(symbolInstance, newTileID);
@@ -183,12 +183,12 @@ class TileLayerIndex {
     /**
      * Find matches for entries with an index built
      */
-    private findMatchesForIndexedEntry(
+    private matchForIndexedEntry(
         entry: IndexedSymbolKind,
         symbolInstances: SymbolInstance[],
         newTileID: OverscaledTileID,
         zoomCrossTileIDs: {[crossTileID: number]: boolean}
-    ) {
+    ): void {
         const tolerance = this.tileID.canonical.z < newTileID.canonical.z ? 1 : Math.pow(2, this.tileID.canonical.z - newTileID.canonical.z);
 
         // Map instances by their scaled coordinate
