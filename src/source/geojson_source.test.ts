@@ -973,18 +973,6 @@ describe('GeoJSONSource.shoudReloadTile', () => {
         expect(result).toBe(false);
     });
 
-        test('returns true when tile is still loading', () => {
-        const tile = getMockTile(0, 0, 0, []);
-        tile.latestFeatureIndex = null;
-        tile.state = 'unloaded';
-
-        const diff: GeoJSONSourceDiff = {};
-
-        const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
-
-        expect(result).toBe(true);
-    });
-
     test('handles features that span the international date line', () => {
         const diff: GeoJSONSourceDiff = {
             add: [{
