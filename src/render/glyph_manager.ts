@@ -1,7 +1,7 @@
 import {loadGlyphRange} from '../style/load_glyph_range';
 
 import TinySDF from '@mapbox/tiny-sdf';
-import {unicodeBlockLookup} from '../util/is_char_in_unicode_block';
+import {codePointUsesLocalIdeographFontFamily} from '../util/unicode_properties.g';
 import {AlphaImage} from '../util/image';
 import {warnOnce} from '../util/util';
 
@@ -119,15 +119,9 @@ export class GlyphManager {
     }
 
     async _downloadAndCacheRangePromise(stack: string, id: number): Promise<{stack: string; id: number; glyph: StyleGlyph}> {
-        // Avoid requesting astral codepoints from the server because we can’t handle them anyways.
-        // https://github.com/maplibre/maplibre-gl-js/issues/2307
-        const range = Math.floor(id / 256);
-        if (range * 256 > 65535) {
-            throw new Error('glyphs > 65535 not supported');
-        }
-
         // Try to get the glyph from the cache of server-side glyphs by PBF range.
         const entry = this.entries[stack];
+        const range = Math.floor(id / 256);
         if (entry.ranges[range]) {
             return {stack, id, glyph: null};
         }
@@ -161,25 +155,11 @@ export class GlyphManager {
         warnOnce(`Unable to load glyph range ${range}, ${begin}-${end}. Rendering codepoint U+${codePoint} locally instead. ${err}`);
     }
 
+    /**
+     * Returns whether the given codepoint should be rendered locally.
+     */
     _charUsesLocalIdeographFontFamily(id: number): boolean {
-        // The CJK Unified Ideographs blocks and Hangul Syllables blocks are
-        // spread across many glyph PBFs and are typically accessed very
-        // randomly. Preferring local rendering for these blocks reduces
-        // wasteful bandwidth consumption. For visual consistency within CJKV
-        // text, also include any other CJKV or siniform ideograph or hangul,
-        // hiragana, or katakana character.
-        return !!this.localIdeographFontFamily &&
-        (/\p{Ideo}|\p{sc=Hang}|\p{sc=Hira}|\p{sc=Kana}/u.test(String.fromCodePoint(id)) ||
-        // fallback: RegExp can't cover all cases. refer Issue #5420
-        unicodeBlockLookup['CJK Unified Ideographs'](id) ||
-        unicodeBlockLookup['Hangul Syllables'](id) ||
-        unicodeBlockLookup['Hiragana'](id) ||
-        unicodeBlockLookup['Katakana'](id) || // includes "ー"
-        // memo: these symbols are not all. others could be added if needed.
-        unicodeBlockLookup['CJK Symbols and Punctuation'](id) || // 、。〃〄々〆〇〈〉《》「...
-        unicodeBlockLookup['Halfwidth and Fullwidth Forms'](id) // ！？＂＃＄％＆...
-        );
-
+        return !!this.localIdeographFontFamily && codePointUsesLocalIdeographFontFamily(id);
     }
 
     /**
@@ -192,7 +172,7 @@ export class GlyphManager {
         // Keep a separate TinySDF instance for when we need to apply the localIdeographFontFamily fallback to keep the font selection from bleeding into non-CJK text.
         const tinySDFKey = usesLocalIdeographFontFamily ? 'ideographTinySDF' : 'tinySDF';
         entry[tinySDFKey] ||= this._createTinySDF(usesLocalIdeographFontFamily ? this.localIdeographFontFamily : stack);
-        const char = entry[tinySDFKey].draw(String.fromCharCode(id));
+        const char = entry[tinySDFKey].draw(String.fromCodePoint(id));
 
         /**
          * TinySDF's "top" is the distance from the alphabetic baseline to the top of the glyph.
@@ -289,6 +269,9 @@ export class GlyphManager {
             const entry = this.entries[stack];
             if (entry.tinySDF) {
                 entry.tinySDF = null;
+            }
+            if (entry.ideographTinySDF) {
+                entry.ideographTinySDF = null;
             }
             entry.glyphs = {};
             entry.requests = {};

@@ -11,7 +11,7 @@ import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from '../tile/tile';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {WorkerTileParameters, WorkerTileResult} from './worker_source';
+import type {WorkerTileParameters, OverzoomParameters, WorkerTileResult} from './worker_source';
 import {MessageType} from '../util/actor_messages';
 
 export type VectorTileSourceOptions = VectorSourceSpecification & {
@@ -20,7 +20,7 @@ export type VectorTileSourceOptions = VectorSourceSpecification & {
 };
 
 /**
- * A source containing vector tiles in [Mapbox Vector Tile format](https://docs.mapbox.com/vector-tiles/reference/).
+ * A source containing vector tiles in [Maplibre Vector Tile format](https://maplibre.org/maplibre-tile-spec/) or [Mapbox Vector Tile format](https://docs.mapbox.com/vector-tiles/reference/).
  * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)
  *
  * @group Sources
@@ -61,6 +61,7 @@ export class VectorTileSource extends Evented implements Source {
     maxzoom: number;
     url: string;
     scheme: string;
+    encoding: string;
     tileSize: number;
     promoteId: PromoteIdSpecification;
 
@@ -90,7 +91,7 @@ export class VectorTileSource extends Evented implements Source {
         this.isTileClipped = true;
         this._loaded = false;
 
-        extend(this, pick(options, ['url', 'scheme', 'tileSize', 'promoteId']));
+        extend(this, pick(options, ['url', 'scheme', 'tileSize', 'promoteId', 'encoding']));
         this._options = extend({type: 'vector'}, options);
 
         this._collectResourceTiming = options.collectResourceTiming;
@@ -202,7 +203,9 @@ export class VectorTileSource extends Evented implements Source {
             pixelRatio: this.map.getPixelRatio(),
             showCollisionBoxes: this.map.showCollisionBoxes,
             promoteId: this.promoteId,
-            subdivisionGranularity: this.map.style.projection.subdivisionGranularity
+            subdivisionGranularity: this.map.style.projection.subdivisionGranularity,
+            encoding: this.encoding,
+            overzoomParameters: this._getOverzoomParameters(tile),
         };
         params.request.collectResourceTiming = this._collectResourceTiming;
         let messageType: MessageType.loadTile | MessageType.reloadTile = MessageType.reloadTile;
@@ -234,6 +237,26 @@ export class VectorTileSource extends Evented implements Source {
             }
             this._afterTileLoadWorkerResponse(tile, null);
         }
+    }
+
+    /**
+     * When the requested tile has a higher canonical Z than source maxzoom, pass overzoom parameters so worker can load the
+     * deepest tile at source max zoom to generate sub tiles using geojsonvt for highest performance on vector overscaling
+     */
+    private _getOverzoomParameters(tile: Tile): OverzoomParameters | undefined {
+        if (tile.tileID.canonical.z <= this.maxzoom) {
+            return undefined;
+        }
+        if (this.map._zoomLevelsToOverscale === undefined) {
+            return undefined;
+        }
+        const maxZoomTileID = tile.tileID.scaledTo(this.maxzoom).canonical;
+        const maxZoomTileUrl = maxZoomTileID.url(this.tiles, this.map.getPixelRatio(), this.scheme);
+
+        return {
+            maxZoomTileID,
+            overzoomRequest: this.map._requestManager.transformRequest(maxZoomTileUrl, ResourceType.Tile)
+        };
     }
 
     private _afterTileLoadWorkerResponse(tile: Tile, data: WorkerTileResult) {

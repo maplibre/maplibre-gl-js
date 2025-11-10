@@ -1,20 +1,21 @@
 import {
-    charHasUprightVerticalOrientation,
-    charAllowsIdeographicBreaking,
+    codePointHasUprightVerticalOrientation
+} from '../util/unicode_properties.g';
+import {
+    charIsWhitespace,
     charInComplexShapingScript
 } from '../util/script_detection';
-import {verticalizePunctuation} from '../util/verticalize_punctuation';
 import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker';
 import ONE_EM from './one_em';
-import {warnOnce} from '../util/util';
 
+import {TaggedString, type TextSectionOptions, type ImageSectionOptions} from './tagged_string';
 import type {StyleGlyph, GlyphMetrics} from '../style/style_glyph';
 import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf';
 import {TextFit} from '../style/style_image';
 import type {ImagePosition} from '../render/image_atlas';
 import {IMAGE_PADDING} from '../render/image_atlas';
 import type {Rect, GlyphPosition} from '../render/glyph_atlas';
-import {type Formatted, type FormattedSection, type VerticalAlign} from '@maplibre/maplibre-gl-style-spec';
+import type {Formatted, VerticalAlign} from '@maplibre/maplibre-gl-style-spec';
 
 enum WritingMode {
     none = 0,
@@ -82,191 +83,16 @@ function isEmpty(positionedLines: Array<PositionedLine>) {
 export type SymbolAnchor = 'center' | 'left' | 'right' | 'top' | 'bottom' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 export type TextJustify = 'left' | 'center' | 'right';
 
-// Max number of images in label is 6401 U+E000–U+F8FF that covers
-// Basic Multilingual Plane Unicode Private Use Area (PUA).
-const PUAbegin = 0xE000;
-const PUAend = 0xF8FF;
-
-class SectionOptions {
-    // Text options
-    scale: number;
-    fontStack: string;
-    // Image options
-    imageName: string | null;
-    // Common options
-    verticalAlign: VerticalAlign;
-
-    constructor() {
-        this.scale = 1.0;
-        this.fontStack = '';
-        this.imageName = null;
-        this.verticalAlign = 'bottom';
-    }
-
-    static forText(scale: number | null, fontStack: string, verticalAlign: VerticalAlign | null) {
-        const textOptions = new SectionOptions();
-        textOptions.scale = scale || 1;
-        textOptions.fontStack = fontStack;
-        textOptions.verticalAlign = verticalAlign || 'bottom';
-        return textOptions;
-    }
-
-    static forImage(imageName: string, verticalAlign: VerticalAlign | null) {
-        const imageOptions = new SectionOptions();
-        imageOptions.imageName = imageName;
-        imageOptions.verticalAlign = verticalAlign || 'bottom';
-        return imageOptions;
-    }
-
-}
-
-class TaggedString {
-    text: string;
-    sectionIndex: Array<number>; // maps each character in 'text' to its corresponding entry in 'sections'
-    sections: Array<SectionOptions>;
-    imageSectionID: number | null;
-
-    constructor() {
-        this.text = '';
-        this.sectionIndex = [];
-        this.sections = [];
-        this.imageSectionID = null;
-    }
-
-    static fromFeature(text: Formatted, defaultFontStack: string) {
-        const result = new TaggedString();
-        for (let i = 0; i < text.sections.length; i++) {
-            const section = text.sections[i];
-            if (!section.image) {
-                result.addTextSection(section, defaultFontStack);
-            } else {
-                result.addImageSection(section);
-            }
-        }
-        return result;
-    }
-
-    length(): number {
-        return this.text.length;
-    }
-
-    getSection(index: number): SectionOptions {
-        return this.sections[this.sectionIndex[index]];
-    }
-
-    getSectionIndex(index: number): number {
-        return this.sectionIndex[index];
-    }
-
-    getCharCode(index: number): number {
-        return this.text.charCodeAt(index);
-    }
-
-    verticalizePunctuation() {
-        this.text = verticalizePunctuation(this.text);
-    }
-
-    trim() {
-        let beginningWhitespace = 0;
-        for (let i = 0;
-            i < this.text.length && whitespace[this.text.charCodeAt(i)];
-            i++) {
-            beginningWhitespace++;
-        }
-        let trailingWhitespace = this.text.length;
-        for (let i = this.text.length - 1;
-            i >= 0 && i >= beginningWhitespace && whitespace[this.text.charCodeAt(i)];
-            i--) {
-            trailingWhitespace--;
-        }
-        this.text = this.text.substring(beginningWhitespace, trailingWhitespace);
-        this.sectionIndex = this.sectionIndex.slice(beginningWhitespace, trailingWhitespace);
-    }
-
-    substring(start: number, end: number): TaggedString {
-        const substring = new TaggedString();
-        substring.text = this.text.substring(start, end);
-        substring.sectionIndex = this.sectionIndex.slice(start, end);
-        substring.sections = this.sections;
-        return substring;
-    }
-
-    toString(): string {
-        return this.text;
-    }
-
-    getMaxScale() {
-        return this.sectionIndex.reduce((max, index) => Math.max(max, this.sections[index].scale), 0);
-    }
-
-    getMaxImageSize(imagePositions: {[_: string]: ImagePosition}): {
-        maxImageWidth: number;
-        maxImageHeight: number;
-    } {
-        let maxImageWidth = 0;
-        let maxImageHeight = 0;
-        for (let i = 0; i < this.length(); i++) {
-            const section = this.getSection(i);
-            if (section.imageName) {
-                const imagePosition = imagePositions[section.imageName];
-                if (!imagePosition) continue;
-                const size = imagePosition.displaySize;
-                maxImageWidth = Math.max(maxImageWidth, size[0]);
-                maxImageHeight = Math.max(maxImageHeight, size[1]);
-            }
-        }
-        return {maxImageWidth, maxImageHeight};
-    }
-
-    addTextSection(section: FormattedSection, defaultFontStack: string) {
-        this.text += section.text;
-        this.sections.push(SectionOptions.forText(section.scale, section.fontStack || defaultFontStack, section.verticalAlign));
-        const index = this.sections.length - 1;
-        for (let i = 0; i < section.text.length; ++i) {
-            this.sectionIndex.push(index);
-        }
-    }
-
-    addImageSection(section: FormattedSection) {
-        const imageName = section.image ? section.image.name : '';
-        if (imageName.length === 0) {
-            warnOnce('Can\'t add FormattedSection with an empty image.');
-            return;
-        }
-
-        const nextImageSectionCharCode = this.getNextImageSectionCharCode();
-        if (!nextImageSectionCharCode) {
-            warnOnce(`Reached maximum number of images ${PUAend - PUAbegin + 2}`);
-            return;
-        }
-
-        this.text += String.fromCharCode(nextImageSectionCharCode);
-        this.sections.push(SectionOptions.forImage(imageName, section.verticalAlign));
-        this.sectionIndex.push(this.sections.length - 1);
-    }
-
-    getNextImageSectionCharCode(): number | null {
-        if (!this.imageSectionID) {
-            this.imageSectionID = PUAbegin;
-            return this.imageSectionID;
-        }
-
-        if (this.imageSectionID >= PUAend) return null;
-        return ++this.imageSectionID;
-    }
-}
-
 function breakLines(input: TaggedString, lineBreakPoints: Array<number>): Array<TaggedString> {
     const lines = [];
-    const text = input.text;
     let start = 0;
     for (const lineBreak of lineBreakPoints) {
         lines.push(input.substring(start, lineBreak));
         start = lineBreak;
     }
 
-    if (start < text.length) {
-        lines.push(input.substring(start, text.length));
+    if (start < input.length()) {
+        lines.push(input.substring(start, input.length()));
     }
     return lines;
 }
@@ -304,39 +130,47 @@ function shapeText(
 
     let lines: Array<TaggedString>;
 
+    let lineBreaks = logicalInput.determineLineBreaks(spacing, maxWidth, glyphMap, imagePositions, layoutTextSize);
     const {processBidirectionalText, processStyledBidirectionalText} = rtlWorkerPlugin;
     if (processBidirectionalText && logicalInput.sections.length === 1) {
         // Bidi doesn't have to be style-aware
         lines = [];
+        // ICU operates on code units.
+        lineBreaks = lineBreaks.map(index => logicalInput.toCodeUnitIndex(index));
         const untaggedLines =
-            processBidirectionalText(logicalInput.toString(),
-                determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, layoutTextSize));
+            processBidirectionalText(logicalInput.toString(), lineBreaks);
         for (const line of untaggedLines) {
-            const taggedLine = new TaggedString();
-            taggedLine.text = line;
-            taggedLine.sections = logicalInput.sections;
-            for (let i = 0; i < line.length; i++) {
-                taggedLine.sectionIndex.push(0);
-            }
-            lines.push(taggedLine);
+            const sectionIndex = [...line].map(() => 0);
+            lines.push(new TaggedString(line, logicalInput.sections, sectionIndex));
         }
     } else if (processStyledBidirectionalText) {
         // Need version of mapbox-gl-rtl-text with style support for combining RTL text
         // with formatting
         lines = [];
+        // ICU operates on code units.
+        lineBreaks = lineBreaks.map(index => logicalInput.toCodeUnitIndex(index));
+
+        // Convert character-based section index to be based on code units.
+        let i = 0;
+        const sectionIndex = [];
+        for (const char of logicalInput.text) {
+            sectionIndex.push(...Array(char.length).fill(logicalInput.sectionIndex[i]));
+            i++;
+        }
+
         const processedLines =
-            processStyledBidirectionalText(logicalInput.text,
-                logicalInput.sectionIndex,
-                determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, layoutTextSize));
+            processStyledBidirectionalText(logicalInput.text, sectionIndex, lineBreaks);
         for (const line of processedLines) {
-            const taggedLine = new TaggedString();
-            taggedLine.text = line[0];
-            taggedLine.sectionIndex = line[1];
-            taggedLine.sections = logicalInput.sections;
-            lines.push(taggedLine);
+            const sectionIndex = [];
+            let elapsedChars = '';
+            for (const char of line[0]) {
+                sectionIndex.push(line[1][elapsedChars.length]);
+                elapsedChars += char;
+            }
+            lines.push(new TaggedString(line[0], logicalInput.sections, sectionIndex));
         }
     } else {
-        lines = breakLines(logicalInput, determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, layoutTextSize));
+        lines = breakLines(logicalInput, lineBreaks);
     }
 
     const positionedLines = [];
@@ -356,237 +190,6 @@ function shapeText(
     if (isEmpty(positionedLines)) return false;
 
     return shaping;
-}
-
-// using computed properties due to https://github.com/facebook/flow/issues/380
-/* eslint no-useless-computed-key: 0 */
-
-const whitespace: {
-    [_: number]: boolean;
-} = {
-    [0x09]: true, // tab
-    [0x0a]: true, // newline
-    [0x0b]: true, // vertical tab
-    [0x0c]: true, // form feed
-    [0x0d]: true, // carriage return
-    [0x20]: true, // space
-};
-
-const breakable: {
-    [_: number]: boolean;
-} = {
-    [0x0a]: true, // newline
-    [0x20]: true, // space
-    [0x26]: true, // ampersand
-    [0x29]: true, // right parenthesis
-    [0x2b]: true, // plus sign
-    [0x2d]: true, // hyphen-minus
-    [0x2f]: true, // solidus
-    [0xad]: true, // soft hyphen
-    [0xb7]: true, // middle dot
-    [0x200b]: true, // zero-width space
-    [0x2010]: true, // hyphen
-    [0x2013]: true, // en dash
-    [0x2027]: true  // interpunct
-    // Many other characters may be reasonable breakpoints
-    // Consider "neutral orientation" characters at scriptDetection.charHasNeutralVerticalOrientation
-    // See https://github.com/mapbox/mapbox-gl-js/issues/3658
-};
-
-// Allow breaks depending on the following character
-const breakableBefore: {
-    [_: number]: boolean;
-} = {
-    [0x28]: true, // left parenthesis
-};
-
-function getGlyphAdvance(
-    codePoint: number,
-    section: SectionOptions,
-    glyphMap: {
-        [_: string]: {
-            [_: number]: StyleGlyph;
-        };
-    },
-    imagePositions: {[_: string]: ImagePosition},
-    spacing: number,
-    layoutTextSize: number
-): number {
-    if (!section.imageName) {
-        const positions = glyphMap[section.fontStack];
-        const glyph = positions && positions[codePoint];
-        if (!glyph) return 0;
-        return glyph.metrics.advance * section.scale + spacing;
-    } else {
-        const imagePosition = imagePositions[section.imageName];
-        if (!imagePosition) return 0;
-        return imagePosition.displaySize[0] * section.scale * ONE_EM / layoutTextSize + spacing;
-    }
-}
-
-function determineAverageLineWidth(logicalInput: TaggedString,
-    spacing: number,
-    maxWidth: number,
-    glyphMap: {
-        [_: string]: {
-            [_: number]: StyleGlyph;
-        };
-    },
-    imagePositions: {[_: string]: ImagePosition},
-    layoutTextSize: number) {
-    let totalWidth = 0;
-
-    for (let index = 0; index < logicalInput.length(); index++) {
-        const section = logicalInput.getSection(index);
-        totalWidth += getGlyphAdvance(logicalInput.getCharCode(index), section, glyphMap, imagePositions, spacing, layoutTextSize);
-    }
-
-    const lineCount = Math.max(1, Math.ceil(totalWidth / maxWidth));
-    return totalWidth / lineCount;
-}
-
-function calculateBadness(lineWidth: number,
-    targetWidth: number,
-    penalty: number,
-    isLastBreak: boolean) {
-    const raggedness = Math.pow(lineWidth - targetWidth, 2);
-    if (isLastBreak) {
-        // Favor finals lines shorter than average over longer than average
-        if (lineWidth < targetWidth) {
-            return raggedness / 2;
-        } else {
-            return raggedness * 2;
-        }
-    }
-
-    return raggedness + Math.abs(penalty) * penalty;
-}
-
-function calculatePenalty(codePoint: number, nextCodePoint: number, penalizableIdeographicBreak: boolean) {
-    let penalty = 0;
-    // Force break on newline
-    if (codePoint === 0x0a) {
-        penalty -= 10000;
-    }
-    // Penalize breaks between characters that allow ideographic breaking because
-    // they are less preferable than breaks at spaces (or zero width spaces).
-    if (penalizableIdeographicBreak) {
-        penalty += 150;
-    }
-
-    // Penalize open parenthesis at end of line
-    if (codePoint === 0x28 || codePoint === 0xff08) {
-        penalty += 50;
-    }
-
-    // Penalize close parenthesis at beginning of line
-    if (nextCodePoint === 0x29 || nextCodePoint === 0xff09) {
-        penalty += 50;
-    }
-    return penalty;
-}
-
-type Break = {
-    index: number;
-    x: number;
-    priorBreak: Break;
-    badness: number;
-};
-
-function evaluateBreak(
-    breakIndex: number,
-    breakX: number,
-    targetWidth: number,
-    potentialBreaks: Array<Break>,
-    penalty: number,
-    isLastBreak: boolean
-): Break {
-    // We could skip evaluating breaks where the line length (breakX - priorBreak.x) > maxWidth
-    //  ...but in fact we allow lines longer than maxWidth (if there's no break points)
-    //  ...and when targetWidth and maxWidth are close, strictly enforcing maxWidth can give
-    //     more lopsided results.
-
-    let bestPriorBreak: Break = null;
-    let bestBreakBadness = calculateBadness(breakX, targetWidth, penalty, isLastBreak);
-
-    for (const potentialBreak of potentialBreaks) {
-        const lineWidth = breakX - potentialBreak.x;
-        const breakBadness =
-            calculateBadness(lineWidth, targetWidth, penalty, isLastBreak) + potentialBreak.badness;
-        if (breakBadness <= bestBreakBadness) {
-            bestPriorBreak = potentialBreak;
-            bestBreakBadness = breakBadness;
-        }
-    }
-
-    return {
-        index: breakIndex,
-        x: breakX,
-        priorBreak: bestPriorBreak,
-        badness: bestBreakBadness
-    };
-}
-
-function leastBadBreaks(lastLineBreak?: Break | null): Array<number> {
-    if (!lastLineBreak) {
-        return [];
-    }
-    return leastBadBreaks(lastLineBreak.priorBreak).concat(lastLineBreak.index);
-}
-
-function determineLineBreaks(
-    logicalInput: TaggedString,
-    spacing: number,
-    maxWidth: number,
-    glyphMap: {
-        [_: string]: {
-            [_: number]: StyleGlyph;
-        };
-    },
-    imagePositions: {[_: string]: ImagePosition},
-    layoutTextSize: number
-): Array<number> {
-    if (!logicalInput)
-        return [];
-
-    const potentialLineBreaks = [];
-    const targetWidth = determineAverageLineWidth(logicalInput, spacing, maxWidth, glyphMap, imagePositions, layoutTextSize);
-
-    const hasServerSuggestedBreakpoints = logicalInput.text.indexOf('\u200b') >= 0;
-
-    let currentX = 0;
-
-    for (let i = 0; i < logicalInput.length(); i++) {
-        const section = logicalInput.getSection(i);
-        const codePoint = logicalInput.getCharCode(i);
-        if (!whitespace[codePoint]) currentX += getGlyphAdvance(codePoint, section, glyphMap, imagePositions, spacing, layoutTextSize);
-
-        // Ideographic characters, spaces, and word-breaking punctuation that often appear without
-        // surrounding spaces.
-        if ((i < logicalInput.length() - 1)) {
-            const ideographicBreak = charAllowsIdeographicBreaking(codePoint);
-            if (breakable[codePoint] || ideographicBreak || section.imageName || (i !== logicalInput.length() - 2 && breakableBefore[logicalInput.getCharCode(i + 1)])) {
-
-                potentialLineBreaks.push(
-                    evaluateBreak(
-                        i + 1,
-                        currentX,
-                        targetWidth,
-                        potentialLineBreaks,
-                        calculatePenalty(codePoint, logicalInput.getCharCode(i + 1), ideographicBreak && hasServerSuggestedBreakpoints),
-                        false));
-            }
-        }
-    }
-
-    return leastBadBreaks(
-        evaluateBreak(
-            logicalInput.length(),
-            currentX,
-            targetWidth,
-            potentialLineBreaks,
-            0,
-            true));
 }
 
 function getAnchorAlignment(anchor: SymbolAnchor) {
@@ -655,7 +258,7 @@ function getRectAndMetrics(
             [_: number]: StyleGlyph;
         };
     },
-    section: SectionOptions,
+    section: TextSectionOptions,
     codePoint: number
 ): GlyphPosition | null {
     if (glyphPosition && glyphPosition.rect) {
@@ -677,10 +280,10 @@ function isLineVertical(
 ): boolean {
     return !(writingMode === WritingMode.horizontal ||
         // Don't verticalize glyphs that have no upright orientation if vertical placement is disabled.
-        (!allowVerticalPlacement && !charHasUprightVerticalOrientation(codePoint)) ||
+        (!allowVerticalPlacement && !codePointHasUprightVerticalOrientation(codePoint)) ||
         // If vertical placement is enabled, don't verticalize glyphs that
         // are from complex text layout script, or whitespaces.
-        (allowVerticalPlacement && (whitespace[codePoint] || charInComplexShapingScript(codePoint))));
+        (allowVerticalPlacement && (charIsWhitespace(codePoint) || charInComplexShapingScript(codePoint))));
 }
 
 function shapeLines(shaping: Shaping,
@@ -733,50 +336,58 @@ function shapeLines(shaping: Shaping,
 
         const lineShapingSize = calculateLineContentSize(imagePositions, line, layoutTextSizeFactor);
 
-        for (let i = 0; i < line.length(); i++) {
+        let i = 0;
+        for (const char of line.text) {
             const section = line.getSection(i);
-            const sectionIndex = line.getSectionIndex(i);
-            const codePoint = line.getCharCode(i);
+            const codePoint = char.codePointAt(0);
             const vertical = isLineVertical(writingMode, allowVerticalPlacement, codePoint);
+            const positionedGlyph: PositionedGlyph = {
+                glyph: codePoint,
+                imageName: null,
+                x,
+                y: y + SHAPING_DEFAULT_OFFSET,
+                vertical,
+                scale: 1,
+                fontStack: '',
+                sectionIndex: line.getSectionIndex(i),
+                metrics: null,
+                rect: null
+            };
 
             let sectionAttributes: ShapingSectionAttributes;
-
-            if (!section.imageName) {
+            if ('fontStack' in section) {
                 sectionAttributes = shapeTextSection(section, codePoint, vertical, lineShapingSize, glyphMap, glyphPositions);
                 if (!sectionAttributes) continue;
+                positionedGlyph.fontStack = section.fontStack;
             } else {
                 shaping.iconsInText = true;
                 // If needed, allow to set scale factor for an image using
                 // alias "image-scale" that could be alias for "font-scale"
                 // when FormattedSection is an image section.
-                section.scale = section.scale * layoutTextSizeFactor;
+                section.scale *= layoutTextSizeFactor;
 
                 sectionAttributes = shapeImageSection(section, vertical, lineMaxScale, lineShapingSize, imagePositions);
                 if (!sectionAttributes) continue;
                 imageOffset = Math.max(imageOffset, sectionAttributes.imageOffset);
+                positionedGlyph.imageName = section.imageName;
             }
 
             const {rect, metrics, baselineOffset} = sectionAttributes;
-            positionedGlyphs.push({
-                glyph: codePoint,
-                imageName: section.imageName,
-                x,
-                y: y + baselineOffset + SHAPING_DEFAULT_OFFSET,
-                vertical,
-                scale: section.scale,
-                fontStack: section.fontStack,
-                sectionIndex,
-                metrics,
-                rect
-            });
+            positionedGlyph.y += baselineOffset;
+            positionedGlyph.scale = section.scale;
+            positionedGlyph.metrics = metrics;
+            positionedGlyph.rect = rect;
+            positionedGlyphs.push(positionedGlyph);
 
             if (!vertical) {
                 x += metrics.advance * section.scale + spacing;
             } else {
                 shaping.verticalizable = true;
-                const verticalAdvance = section.imageName ? metrics.advance : ONE_EM;
+                const verticalAdvance = 'imageName' in section ? metrics.advance : ONE_EM;
                 x += verticalAdvance * section.scale + spacing;
             }
+
+            i++;
         }
 
         // Only justify if we placed at least one glyph
@@ -808,7 +419,7 @@ function shapeLines(shaping: Shaping,
 }
 
 function shapeTextSection(
-    section: SectionOptions,
+    section: TextSectionOptions,
     codePoint: number,
     vertical: boolean,
     lineShapingSize: LineShapingSize,
@@ -846,7 +457,7 @@ function shapeTextSection(
 }
 
 function shapeImageSection(
-    section: SectionOptions,
+    section: ImageSectionOptions,
     vertical: boolean,
     lineMaxScale: number,
     lineShapingSize: LineShapingSize,

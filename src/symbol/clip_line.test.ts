@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {clipLine} from './clip_line';
+import {clipGeometry, clipLine} from './clip_line';
 
 describe('clipLines', () => {
 
@@ -151,5 +151,138 @@ describe('clipLines', () => {
         ];
 
         expect(clipLineTest([line])).toEqual([result]);
+    });
+});
+
+describe('clipGeometry', () => {
+
+    test('Empty geometry', () => {
+        expect(clipGeometry([], 2, -300, -200, 300, 200)).toEqual([]);
+    });
+
+    test('unknown geometry type', () => {
+        expect(clipGeometry([], 0, -300, -200, 300, 200)).toEqual([]);
+    });
+
+    test('point fully inside', () => {
+        const point = [
+            new Point(100, 100)
+        ];
+
+        expect(clipGeometry([point], 1, -300, -200, 300, 200)).toEqual([point]);
+    });
+
+    test('point fully outside', () => {
+        const point = [
+            new Point(400, 100)
+        ];
+
+        expect(clipGeometry([point], 1, -300, -200, 300, 200)).toEqual([]);
+    });
+
+    test('Line fully inside', () => {
+        const line = [
+            new Point(-100, -100),
+            new Point(-40, -100),
+            new Point(200, 0),
+            new Point(-80, 195)
+        ];
+
+        expect(clipGeometry([line], 2, -300, -200, 300, 200)).toEqual([line]);
+    });
+
+    test('Line fully outside', () => {
+        const line = [
+            new Point(-400, 0),
+            new Point(-350, 0),
+            new Point(-300, 0)
+        ];
+
+        expect(clipGeometry([line], 2, -299, -200, 300, 200)).toEqual([]);
+    });
+
+    test('Intersect with borders', () => {
+        const line = [
+            new Point(-400, 0),
+            new Point(0, 0),
+            new Point(400, 0)
+        ];
+
+        const result = [
+            [
+                new Point(-300, 0),
+                new Point(0, 0),
+                new Point(300, 0)
+            ]
+        ];
+
+        expect(clipGeometry([line], 2, -300, -200, 300, 200)).toEqual(result);
+    });
+
+    test('Line can be split into multiple segments', () => {
+        const line = [
+            new Point(-80, 150),
+            new Point(-80, 350),
+            new Point(120, 1000),
+            new Point(120, 0)
+        ];
+
+        const result = [
+            [
+                new Point(-80, 150),
+                new Point(-80, 200),
+            ],
+            [
+                new Point(120, 200),
+                new Point(120, 0),
+            ]
+        ];
+
+        expect(clipGeometry([line], 2, -300, -200, 300, 200)).toEqual(result);
+    });
+
+    test('Polygon fully inside', () => {
+        const polygon = [
+            new Point(-100, -100),
+            new Point(100, -100),
+            new Point(100, 100),
+            new Point(-100, 100),
+            new Point(-100, -100)
+        ];
+
+        expect(clipGeometry([polygon], 3, -300, -200, 300, 200)).toEqual([polygon]);
+    });
+
+    test('Polygon fully outside', () => {
+        const polygon = [
+            new Point(-400, -300),
+            new Point(-350, -300),
+            new Point(-350, -250),
+            new Point(-400, -250),
+            new Point(-400, -300)
+        ];
+
+        expect(clipGeometry([polygon], 3, -300, -200, 300, 200)).toEqual([]);
+    });
+
+    test('Intersect polygon with borders', () => {
+        const polygon = [
+            new Point(-400, -400),
+            new Point(400, -400),
+            new Point(400, 400),
+            new Point(-400, 400),
+            new Point(-400, -400)
+        ];
+
+        const result = [
+            [
+                new Point(200, -200),
+                new Point(200, 200),
+                new Point(-200, 200),
+                new Point(-200, -200),
+                new Point(200, -200)
+            ]
+        ];
+        expect(clipGeometry([polygon], 3, -200, -200, 200, 200)).toEqual(result);
     });
 });

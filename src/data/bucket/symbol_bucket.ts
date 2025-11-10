@@ -37,7 +37,6 @@ import {EvaluationParameters} from '../../style/evaluation_parameters';
 import {Formatted, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import {rtlWorkerPlugin} from '../../source/rtl_text_plugin_worker';
 import {getOverlapMode} from '../../style/style_layer/overlap_mode';
-import {isSafari} from '../../util/util';
 import type {CanonicalTileID} from '../../tile/tile_id';
 import type {
     Bucket,
@@ -363,7 +362,7 @@ export class SymbolBucket implements Bucket {
     constructor(options: BucketParameters<SymbolStyleLayer>) {
         this.collisionBoxArray = options.collisionBoxArray;
         this.zoom = options.zoom;
-        this.overscaling = isSafari(globalThis) ? Math.min(options.overscaling, 128) : options.overscaling;
+        this.overscaling = options.overscaling;
         this.layers = options.layers;
         this.layerIds = this.layers.map(layer => layer.id);
         this.index = options.index;
@@ -419,12 +418,12 @@ export class SymbolBucket implements Bucket {
         allowVerticalPlacement: boolean,
         doesAllowVerticalWritingMode: boolean) {
 
-        for (let i = 0; i < text.length; i++) {
-            stack[text.charCodeAt(i)] = true;
+        for (const char of text) {
+            stack[char.codePointAt(0)] = true;
             if ((textAlongLine || allowVerticalPlacement) && doesAllowVerticalWritingMode) {
-                const verticalChar = verticalizedCharacterMap[text.charAt(i)];
+                const verticalChar = verticalizedCharacterMap[char];
                 if (verticalChar) {
-                    stack[verticalChar.charCodeAt(0)] = true;
+                    stack[verticalChar.codePointAt(0)] = true;
                 }
             }
         }
