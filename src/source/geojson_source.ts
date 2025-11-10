@@ -416,20 +416,15 @@ export class GeoJSONSource extends Evented implements Source {
 
             if (result.dataDiff) {
                 const data = this._data;
+                const promoteId = typeof this.promoteId === 'string' ? this.promoteId : undefined;
 
-                if (typeof data === 'string') {
-                    throw new Error('This should never happen.');
+                if (typeof data !== 'string' && isUpdateableGeoJSON(data, promoteId)) {
+                    if (!this._dataUpdateable) {
+                        this._dataUpdateable = toUpdateable(data, promoteId);
+                    }
+
+                    applySourceDiff(this._dataUpdateable, result.dataDiff, promoteId);
                 }
-
-                if (!isUpdateableGeoJSON(data, typeof this.promoteId === 'string' ? this.promoteId : undefined)) {
-                    throw new Error('This should never happen.');
-                }
-
-                if (!this._dataUpdateable) {
-                    this._dataUpdateable = toUpdateable(data, undefined);
-                }
-
-                applySourceDiff(this._dataUpdateable, result.dataDiff);
             } else {
                 this._data = result.data;
                 this._dataUpdateable = undefined;
