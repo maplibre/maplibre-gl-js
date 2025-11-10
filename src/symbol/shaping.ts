@@ -1,14 +1,14 @@
 import {
-    codePointAllowsIdeographicBreaking,
     codePointHasUprightVerticalOrientation
 } from '../util/unicode_properties.g';
 import {
+    charIsWhitespace,
     charInComplexShapingScript
 } from '../util/script_detection';
 import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker';
 import ONE_EM from './one_em';
 
-import {TaggedString, type SectionOptions, type TextSectionOptions, type ImageSectionOptions} from './tagged_string';
+import {TaggedString, type TextSectionOptions, type ImageSectionOptions} from './tagged_string';
 import type {StyleGlyph, GlyphMetrics} from '../style/style_glyph';
 import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf';
 import {TextFit} from '../style/style_image';
@@ -130,7 +130,7 @@ function shapeText(
 
     let lines: Array<TaggedString>;
 
-    let lineBreaks = determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, layoutTextSize);
+    let lineBreaks = logicalInput.determineLineBreaks(spacing, maxWidth, glyphMap, imagePositions, layoutTextSize);
     const {processBidirectionalText, processStyledBidirectionalText} = rtlWorkerPlugin;
     if (processBidirectionalText && logicalInput.sections.length === 1) {
         // Bidi doesn't have to be style-aware
@@ -190,255 +190,6 @@ function shapeText(
     if (isEmpty(positionedLines)) return false;
 
     return shaping;
-}
-
-// using computed properties due to https://github.com/facebook/flow/issues/380
-/* eslint no-useless-computed-key: 0 */
-
-const whitespace: {
-    [_: number]: boolean;
-} = {
-    [0x09]: true, // tab
-    [0x0a]: true, // newline
-    [0x0b]: true, // vertical tab
-    [0x0c]: true, // form feed
-    [0x0d]: true, // carriage return
-    [0x20]: true, // space
-};
-
-const breakable: {
-    [_: number]: boolean;
-} = {
-    [0x0a]: true, // newline
-    [0x20]: true, // space
-    [0x26]: true, // ampersand
-    [0x29]: true, // right parenthesis
-    [0x2b]: true, // plus sign
-    [0x2d]: true, // hyphen-minus
-    [0x2f]: true, // solidus
-    [0xad]: true, // soft hyphen
-    [0xb7]: true, // middle dot
-    [0x200b]: true, // zero-width space
-    [0x2010]: true, // hyphen
-    [0x2013]: true, // en dash
-    [0x2027]: true  // interpunct
-    // Many other characters may be reasonable breakpoints
-    // Consider "neutral orientation" characters in codePointHasNeutralVerticalOrientation in unicode_properties
-    // See https://github.com/mapbox/mapbox-gl-js/issues/3658
-};
-
-// Allow breaks depending on the following character
-const breakableBefore: {
-    [_: number]: boolean;
-} = {
-    [0x28]: true, // left parenthesis
-};
-
-function getGlyphAdvance(
-    codePoint: number,
-    section: SectionOptions,
-    glyphMap: {
-        [_: string]: {
-            [_: number]: StyleGlyph;
-        };
-    },
-    imagePositions: {[_: string]: ImagePosition},
-    spacing: number,
-    layoutTextSize: number
-): number {
-    if ('fontStack' in section) {
-        const positions = glyphMap[section.fontStack];
-        const glyph = positions && positions[codePoint];
-        if (!glyph) return 0;
-        return glyph.metrics.advance * section.scale + spacing;
-    } else {
-        const imagePosition = imagePositions[section.imageName];
-        if (!imagePosition) return 0;
-        return imagePosition.displaySize[0] * section.scale * ONE_EM / layoutTextSize + spacing;
-    }
-}
-
-function determineAverageLineWidth(logicalInput: TaggedString,
-    spacing: number,
-    maxWidth: number,
-    glyphMap: {
-        [_: string]: {
-            [_: number]: StyleGlyph;
-        };
-    },
-    imagePositions: {[_: string]: ImagePosition},
-    layoutTextSize: number) {
-    let totalWidth = 0;
-
-    let index = 0;
-    for (const char of logicalInput.text) {
-        const section = logicalInput.getSection(index);
-        totalWidth += getGlyphAdvance(char.codePointAt(0), section, glyphMap, imagePositions, spacing, layoutTextSize);
-        index++;
-    }
-
-    const lineCount = Math.max(1, Math.ceil(totalWidth / maxWidth));
-    return totalWidth / lineCount;
-}
-
-function calculateBadness(lineWidth: number,
-    targetWidth: number,
-    penalty: number,
-    isLastBreak: boolean) {
-    const raggedness = Math.pow(lineWidth - targetWidth, 2);
-    if (isLastBreak) {
-        // Favor finals lines shorter than average over longer than average
-        if (lineWidth < targetWidth) {
-            return raggedness / 2;
-        } else {
-            return raggedness * 2;
-        }
-    }
-
-    return raggedness + Math.abs(penalty) * penalty;
-}
-
-function calculatePenalty(codePoint: number, nextCodePoint: number, penalizableIdeographicBreak: boolean) {
-    let penalty = 0;
-    // Force break on newline
-    if (codePoint === 0x0a) {
-        penalty -= 10000;
-    }
-    // Penalize breaks between characters that allow ideographic breaking because
-    // they are less preferable than breaks at spaces (or zero width spaces).
-    if (penalizableIdeographicBreak) {
-        penalty += 150;
-    }
-
-    // Penalize open parenthesis at end of line
-    if (codePoint === 0x28 || codePoint === 0xff08) {
-        penalty += 50;
-    }
-
-    // Penalize close parenthesis at beginning of line
-    if (nextCodePoint === 0x29 || nextCodePoint === 0xff09) {
-        penalty += 50;
-    }
-    return penalty;
-}
-
-type Break = {
-    index: number;
-    x: number;
-    priorBreak: Break;
-    badness: number;
-};
-
-function evaluateBreak(
-    breakIndex: number,
-    breakX: number,
-    targetWidth: number,
-    potentialBreaks: Array<Break>,
-    penalty: number,
-    isLastBreak: boolean
-): Break {
-    // We could skip evaluating breaks where the line length (breakX - priorBreak.x) > maxWidth
-    //  ...but in fact we allow lines longer than maxWidth (if there's no break points)
-    //  ...and when targetWidth and maxWidth are close, strictly enforcing maxWidth can give
-    //     more lopsided results.
-
-    let bestPriorBreak: Break = null;
-    let bestBreakBadness = calculateBadness(breakX, targetWidth, penalty, isLastBreak);
-
-    for (const potentialBreak of potentialBreaks) {
-        const lineWidth = breakX - potentialBreak.x;
-        const breakBadness =
-            calculateBadness(lineWidth, targetWidth, penalty, isLastBreak) + potentialBreak.badness;
-        if (breakBadness <= bestBreakBadness) {
-            bestPriorBreak = potentialBreak;
-            bestBreakBadness = breakBadness;
-        }
-    }
-
-    return {
-        index: breakIndex,
-        x: breakX,
-        priorBreak: bestPriorBreak,
-        badness: bestBreakBadness
-    };
-}
-
-function leastBadBreaks(lastLineBreak?: Break | null): Array<number> {
-    if (!lastLineBreak) {
-        return [];
-    }
-    return leastBadBreaks(lastLineBreak.priorBreak).concat(lastLineBreak.index);
-}
-
-export function determineLineBreaks(
-    logicalInput: TaggedString,
-    spacing: number,
-    maxWidth: number,
-    glyphMap: {
-        [_: string]: {
-            [_: number]: StyleGlyph;
-        };
-    },
-    imagePositions: {[_: string]: ImagePosition},
-    layoutTextSize: number
-): Array<number> {
-    if (!logicalInput)
-        return [];
-
-    const potentialLineBreaks = [];
-    const targetWidth = determineAverageLineWidth(logicalInput, spacing, maxWidth, glyphMap, imagePositions, layoutTextSize);
-
-    const hasZeroWidthSpaces = logicalInput.hasZeroWidthSpaces();
-
-    let currentX = 0;
-
-    let i = 0;
-    const chars = logicalInput.text[Symbol.iterator]();
-    let char = chars.next();
-    const nextChars = logicalInput.text[Symbol.iterator]();
-    nextChars.next();
-    let nextChar = nextChars.next();
-    const nextNextChars = logicalInput.text[Symbol.iterator]();
-    nextNextChars.next();
-    nextNextChars.next();
-    let nextNextChar = nextNextChars.next();
-
-    while (!char.done) {
-        const section = logicalInput.getSection(i);
-        const codePoint = char.value.codePointAt(0);
-        if (!whitespace[codePoint]) currentX += getGlyphAdvance(codePoint, section, glyphMap, imagePositions, spacing, layoutTextSize);
-
-        // Ideographic characters, spaces, and word-breaking punctuation that often appear without
-        // surrounding spaces.
-        if (!nextChar.done) {
-            const ideographicBreak = codePointAllowsIdeographicBreaking(codePoint);
-            const nextCodePoint = nextChar.value.codePointAt(0);
-            if (breakable[codePoint] || ideographicBreak || 'imageName' in section || (!nextNextChar.done && breakableBefore[nextCodePoint])) {
-
-                potentialLineBreaks.push(
-                    evaluateBreak(
-                        i + 1,
-                        currentX,
-                        targetWidth,
-                        potentialLineBreaks,
-                        calculatePenalty(codePoint, nextCodePoint, ideographicBreak && hasZeroWidthSpaces),
-                        false));
-            }
-        }
-        i++;
-        char = chars.next();
-        nextChar = nextChars.next();
-        nextNextChar = nextNextChars.next();
-    }
-
-    return leastBadBreaks(
-        evaluateBreak(
-            logicalInput.length(),
-            currentX,
-            targetWidth,
-            potentialLineBreaks,
-            0,
-            true));
 }
 
 function getAnchorAlignment(anchor: SymbolAnchor) {
@@ -532,7 +283,7 @@ function isLineVertical(
         (!allowVerticalPlacement && !codePointHasUprightVerticalOrientation(codePoint)) ||
         // If vertical placement is enabled, don't verticalize glyphs that
         // are from complex text layout script, or whitespaces.
-        (allowVerticalPlacement && (whitespace[codePoint] || charInComplexShapingScript(codePoint))));
+        (allowVerticalPlacement && (charIsWhitespace(codePoint) || charInComplexShapingScript(codePoint))));
 }
 
 function shapeLines(shaping: Shaping,

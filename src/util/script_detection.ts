@@ -5,6 +5,10 @@ import {
     codePointRequiresComplexTextShaping
 } from '../util/unicode_properties.g';
 
+export function charIsWhitespace(char: number) {
+    return /\s/u.test(String.fromCodePoint(char));
+}
+
 export function allowsIdeographicBreaking(chars: string) {
     for (const char of chars) {
         if (!codePointAllowsIdeographicBreaking(char.codePointAt(0))) return false;
