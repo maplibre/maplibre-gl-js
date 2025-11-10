@@ -279,11 +279,18 @@ function resolveMergeConflicts(prev: GeoJSONSourceDiffHashed, next: GeoJSONSourc
 function mergeFeatureDiffs(prev: GeoJSONFeatureDiff, next: GeoJSONFeatureDiff): GeoJSONFeatureDiff {
     const merged: GeoJSONFeatureDiff = {id: prev.id};
 
-    // Resolve merge conflict - removing all properties with added or updated properties in previous - and clear no-op removes
+    // Removing all properties with added or updated properties in previous - and clear no-op removes
     if (next.removeAllProperties) {
         delete prev.removeProperties;
         delete prev.addOrUpdateProperties;
         delete next.removeProperties;
+    }
+    // Removing properties that were added or updated in previous
+    if (next.removeProperties) {
+        for (const key of next.removeProperties) {
+            const index = prev.addOrUpdateProperties.findIndex(prop => prop.key === key);
+            if (index > -1) prev.addOrUpdateProperties.splice(index, 1);
+        }
     }
 
     // Merge the two diffs

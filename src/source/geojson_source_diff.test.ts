@@ -586,6 +586,35 @@ describe('mergeSourceDiffs', () => {
         expect(merged.remove).toHaveLength(1);
     });
 
+    test('merges two diffs update feature properties then remove feature properties - and retains the remove', () => {
+        const diff1 = {
+            update: [{id: 'feature1', addOrUpdateProperties: [{key: 'prop1', value: 'value'}]}]
+        } satisfies GeoJSONSourceDiff;
+
+        const diff2 = {
+            update: [{id: 'feature1', removeProperties: ['prop1']}]
+        } satisfies GeoJSONSourceDiff;
+
+        const merged = mergeSourceDiffs(diff1, diff2);
+        expect(merged.update[0].addOrUpdateProperties).toHaveLength(0);
+        // Since a feature with the same id could have been added to the source previously, retain the remove.
+        expect(merged.update[0].removeProperties).toHaveLength(1);
+    });
+
+    test('merges two diffs remove feature properties then update feature properties - retains both operations', () => {
+        const diff1 = {
+            update: [{id: 'feature1', removeProperties: ['prop1']}]
+        } satisfies GeoJSONSourceDiff;
+
+        const diff2 = {
+            update: [{id: 'feature1', addOrUpdateProperties: [{key: 'prop1', value: 'value'}]}]
+        } satisfies GeoJSONSourceDiff;
+
+        const merged = mergeSourceDiffs(diff1, diff2);
+        expect(merged.update[0].removeProperties).toHaveLength(1);
+        expect(merged.update[0].addOrUpdateProperties).toHaveLength(1);
+    });
+
     test('merges two diffs add feature then remove - and retains the remove', () => {
         const diff1 = {
             add: [{type: 'Feature', id: 'feature1', geometry: {type: 'Point', coordinates: [1, 1]}, properties: {}}],
