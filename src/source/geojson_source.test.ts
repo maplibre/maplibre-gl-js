@@ -2,19 +2,20 @@ import {describe, test, expect, vi, beforeEach} from 'vitest';
 import {Tile} from '../tile/tile';
 import {OverscaledTileID} from '../tile/tile_id';
 import {GeoJSONSource, type GeoJSONSourceOptions} from './geojson_source';
-import {type IReadonlyTransform} from '../geo/transform_interface';
 import {EXTENT} from '../data/extent';
 import {LngLat} from '../geo/lng_lat';
 import {extend} from '../util/util';
-import {type Dispatcher} from '../util/dispatcher';
-import {type RequestManager} from '../util/request_manager';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
-import {type ActorMessage, MessageType} from '../util/actor_messages';
-import {type Actor} from '../util/actor';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {sleep, waitForEvent} from '../util/test/util';
-import {type MapSourceDataEvent} from '../ui/events';
-import {type GeoJSONSourceDiff} from './geojson_source_diff';
+import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
+import {type ActorMessage, MessageType} from '../util/actor_messages';
+import type {IReadonlyTransform} from '../geo/transform_interface';
+import type {Dispatcher} from '../util/dispatcher';
+import type {RequestManager} from '../util/request_manager';
+import type {Actor} from '../util/actor';
+import type {MapSourceDataEvent} from '../ui/events';
+import type {GeoJSONSourceDiff} from './geojson_source_diff';
 
 const wrapDispatcher = (dispatcher) => {
     return {
@@ -880,7 +881,7 @@ describe('GeoJSONSource.shoudReloadTile', () => {
                 get: (featureIndex: number) => ({featureIndex})
             },
             loadVTLayers: () => ({
-                _geojsonTileLayer: {
+                [GEOJSON_TILE_LAYER_NAME]: {
                     feature: (i: number) => tileFeatures[i] || {}
                 }
             })
