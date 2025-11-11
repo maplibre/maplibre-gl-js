@@ -1,13 +1,15 @@
 import {Event, ErrorEvent, Evented} from '../util/evented';
-
 import {extend, warnOnce} from '../util/util';
 import {EXTENT} from '../data/extent';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
-import type {LngLatBounds} from '../geo/lng_lat_bounds';
 import {mergeSourceDiffs} from './geojson_source_diff';
 import {getGeoJSONBounds} from '../util/geojson_bounds';
+import {MessageType} from '../util/actor_messages';
+import {tileIdToLngLatBounds} from '../tile/tile_id_to_lng_lat_bounds';
+import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
 
+import type {LngLatBounds} from '../geo/lng_lat_bounds';
 import type {Source} from './source';
 import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
@@ -17,8 +19,6 @@ import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@maplibre
 import type {GeoJSONSourceDiff} from './geojson_source_diff';
 import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
 import type {WorkerTileParameters} from './worker_source';
-import {MessageType} from '../util/actor_messages';
-import {tileIdToLngLatBounds} from '../tile/tile_id_to_lng_lat_bounds';
 
 /**
  * Options object for GeoJSONSource.
@@ -472,7 +472,7 @@ export class GeoJSONSource extends Evented implements Source {
         const layers = tile.latestFeatureIndex.loadVTLayers();
         for (let i = 0; i < tile.latestFeatureIndex.featureIndexArray.length; i++) {
             const featureIndex = tile.latestFeatureIndex.featureIndexArray.get(i);
-            const feature = layers._geojsonTileLayer.feature(featureIndex.featureIndex);
+            const feature = layers[GEOJSON_TILE_LAYER_NAME].feature(featureIndex.featureIndex);
             if (prevIds.has(feature.id)) {
                 return true;
             }

@@ -14,6 +14,7 @@ import {config} from '../util/config';
 import {coveringTiles, coveringZoomLevel} from '../geo/projection/covering_tiles';
 import {Bounds} from '../geo/bounds';
 import {EXTENT_BOUNDS} from '../data/extent_bounds';
+import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
 
 import type {Context} from '../gl/context';
 import type {Source} from '../source/source';
@@ -1177,7 +1178,7 @@ export class TileManager extends Evented {
      * Set the value of a particular state for a feature
      */
     setFeatureState(sourceLayer: string, featureId: number | string, state: any) {
-        sourceLayer = sourceLayer || '_geojsonTileLayer';
+        sourceLayer = sourceLayer || GEOJSON_TILE_LAYER_NAME;
         this._state.updateState(sourceLayer, featureId, state);
     }
 
@@ -1185,7 +1186,7 @@ export class TileManager extends Evented {
      * Resets the value of a particular state key for a feature
      */
     removeFeatureState(sourceLayer?: string, featureId?: number | string, key?: string) {
-        sourceLayer = sourceLayer || '_geojsonTileLayer';
+        sourceLayer = sourceLayer || GEOJSON_TILE_LAYER_NAME;
         this._state.removeFeatureState(sourceLayer, featureId, key);
     }
 
@@ -1193,7 +1194,7 @@ export class TileManager extends Evented {
      * Get the entire state object for a feature
      */
     getFeatureState(sourceLayer: string, featureId: number | string) {
-        sourceLayer = sourceLayer || '_geojsonTileLayer';
+        sourceLayer = sourceLayer || GEOJSON_TILE_LAYER_NAME;
         return this._state.getState(sourceLayer, featureId);
     }
 

@@ -5,7 +5,7 @@ import {OverscaledTileID} from './tile_id';
 import fs from 'fs';
 import path from 'path';
 import {type Feature, fromVectorTileJs, GeoJSONWrapper} from '@maplibre/vt-pbf';
-import {FeatureIndex} from '../data/feature_index';
+import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
 import {CollisionBoxArray} from '../data/array_types.g';
 import {extend} from '../util/util';
 import {serialize, deserialize} from '../util/web_worker_transfer';
@@ -27,9 +27,9 @@ describe('querySourceFeatures', () => {
     describe('geojson tile', () => {
         const tile = new Tile(new OverscaledTileID(3, 0, 2, 1, 2), undefined);
         const geojsonWrapper = new GeoJSONWrapper(features);
-        geojsonWrapper.name = '_geojsonTileLayer';
+        geojsonWrapper.name = GEOJSON_TILE_LAYER_NAME;
         tile.loadVectorData(
-            createVectorData({rawTileData: fromVectorTileJs({layers: {'_geojsonTileLayer': geojsonWrapper}})}),
+            createVectorData({rawTileData: fromVectorTileJs({layers: {[GEOJSON_TILE_LAYER_NAME]: geojsonWrapper}})}),
             createPainter()
         );
 
@@ -76,7 +76,7 @@ describe('querySourceFeatures', () => {
         expect(result).toHaveLength(0);
 
         const geojsonWrapper = new GeoJSONWrapper([]);
-        geojsonWrapper.name = '_geojsonTileLayer';
+        geojsonWrapper.name = GEOJSON_TILE_LAYER_NAME;
 
         result = [];
         expect(() => { tile.querySourceFeatures(result); }).not.toThrow();
