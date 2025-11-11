@@ -17,32 +17,38 @@
 <div id="map"></div>
 <div id="time"></div>
 <script>
-    const COUNT = 100_000;
+    const COUNT = 10_000;
+
+    const size = 1;
+
     const GEOMETRIES = [
-        {type: 'Point', coordinates: [-10, 45]},
-        {type: 'Point', coordinates: [10, 45]}
+        getGeometry(0.01 * size, 45),
+        getGeometry(2 * size, 45),
     ]
+
+    function getGeometry(lon = -180 + Math.random() * 360, lat = -85 + Math.random() * 170) {
+        const size = 1;
+        return {
+            type: "Polygon",
+            coordinates: [[
+                [lon - size/2, lat - size * Math.sqrt(3)/6],
+                [lon + size/2, lat - size * Math.sqrt(3)/6],
+                [lon, lat + size * Math.sqrt(3)/3],
+                [lon - size/2, lat - size * Math.sqrt(3)/6]
+            ]]
+        }
+    }
 
     const map = new maplibregl.Map({
         container: 'map',
         style: 'https://demotiles.maplibre.org/style.json',
-        center: [0.2, 0.2],
-        zoom: 1,
+        center: [0, 45],
+        zoom: 5,
         maplibreLogo: true,
         fadeDuration: 0
     });
 
     map.showTileBoundaries = true;
-
-    function getRandomGeometry() {
-        return {
-            type: "Point",
-            coordinates: [
-                -180 + Math.random() * 360,
-                -85 + Math.random() * 170
-            ]
-        }
-    }
 
     map.on('load', () => {
         map.addSource('test', {
@@ -52,19 +58,18 @@
                 features: new Array(COUNT).fill(0).map((_, i) => ({
                     type: "Feature",
                     id: i,
-                    geometry: i === 0 ? GEOMETRIES[0] : getRandomGeometry(),
+                    geometry: i === 0 ? GEOMETRIES[0] : getGeometry(),
                 }))
             }
         });
 
         map.addLayer({
             id: 'test',
-            type: 'circle',
+            type: 'fill',
             source: 'test',
             paint: {
-                'circle-radius': ['case', ['==', ['id'], 0], 4, 1],
-                'circle-color': ['case', ['==', ['id'], 0], 'red', 'blue'],
-                'circle-opacity': ['case', ['==', ['id'], 0], 1, 0.2]
+                'fill-color': ['case', ['==', ['id'], 0], 'red', 'blue'],
+                'fill-opacity': ['case', ['==', ['id'], 0], 1, 0.2]
             }
         });
 
@@ -88,7 +93,9 @@
         map.once('idle', () => {
             console.log('------ IDLE -----')
             document.getElementById('time').innerText += Math.round(performance.now() - start) + "\n"
-            test();
+            if (i < 5) {
+                test();
+            }
         })
     }
 </script>
