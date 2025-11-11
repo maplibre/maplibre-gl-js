@@ -448,7 +448,10 @@ export class GeoJSONSource extends Evented implements Source {
 
         const {add = [], update = [], remove = []} = (diff || {});
 
-        const prevIds = new Set([...update.map(u => u.id), ...remove]);
+        const prevIds = new Set([...update.map(u => u.id), ...remove]
+            // Convert all feature ids to numbers
+            .map((id) => +id)
+        );
 
         const nextBounds = [
             ...update.map(f => f.newGeometry),
