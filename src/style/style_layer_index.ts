@@ -1,7 +1,7 @@
 import {createStyleLayer} from './create_style_layer';
 import {featureFilter, groupByLayout} from '@maplibre/maplibre-gl-style-spec';
+import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
 import type {StyleLayer} from './style_layer';
-
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export type LayerConfigs = {[_: string]: LayerSpecification};
@@ -63,7 +63,7 @@ export class StyleLayerIndex {
                 sourceGroup = this.familiesBySource[sourceId] = {};
             }
 
-            const sourceLayerId = layer.sourceLayer || '_geojsonTileLayer';
+            const sourceLayerId = layer.sourceLayer || GEOJSON_TILE_LAYER_NAME;
             let sourceLayerFamilies = sourceGroup[sourceLayerId];
             if (!sourceLayerFamilies) {
                 sourceLayerFamilies = sourceGroup[sourceLayerId] = [];
