@@ -247,6 +247,8 @@ export class GeoJSONSource extends Evented implements Source {
      * @param data - A GeoJSON data object or a URL to one. The latter is preferable in the case of large GeoJSON files.
      * @param waitForCompletion - If true, the method will return a promise that resolves when set data is complete.
      */
+    setData(data: GeoJSON.GeoJSON | string, waitForCompletion: true): Promise<this>;
+    setData(data: GeoJSON.GeoJSON | string, waitForCompletion?: false): this;
     setData(data: GeoJSON.GeoJSON | string, waitForCompletion?: boolean): this | Promise<this> {
         this._data = data;
         this._pendingWorkerUpdate = {data};
@@ -270,6 +272,8 @@ export class GeoJSONSource extends Evented implements Source {
      * @param diff - The changes that need to be applied.
      * @param waitForCompletion - If true, the method will return a promise that resolves when the update is complete.
      */
+    updateData(diff: GeoJSONSourceDiff, waitForCompletion: true): Promise<this>;
+    updateData(diff: GeoJSONSourceDiff, waitForCompletion?: false): this;
     updateData(diff: GeoJSONSourceDiff, waitForCompletion?: boolean): this | Promise<this> {
         this._pendingWorkerUpdate.diff = mergeSourceDiffs(this._pendingWorkerUpdate.diff, diff);
         const updatePromise = this._updateWorkerData();
