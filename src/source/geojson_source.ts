@@ -449,8 +449,8 @@ export class GeoJSONSource extends Evented implements Source {
         const {add = [], update = [], remove = []} = (diff || {});
 
         const prevIds = new Set([...update.map(u => u.id), ...remove]
-            // Convert all feature ids to numbers
-            .map((id) => +id)
+            // Cast all feature ids to numbers. Arbitrary string feature ids are not supported per #1043
+            .map((id) => typeof id === 'number' ? id : parseInt(id, 10))
         );
 
         const nextBounds = [
