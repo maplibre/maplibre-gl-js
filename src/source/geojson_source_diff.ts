@@ -1,11 +1,3 @@
-/**
- * GeoJSON Source Diff:
- *
- * This module provides an efficient way to update GeoJSON features in a map source without replacing
- * the entire dataset. It implements a differential update system that allows for incremental changes
- * to features through `add`, `remove`, and `update` operations. These operations are performed in a
- * specific order to ensure predictable behavior: removeAll, remove, add, update.
- */
 
 /**
  * A way to identify a feature, either by string or by number
@@ -13,7 +5,8 @@
 export type GeoJSONFeatureId = number | string;
 
 /**
- * The geojson source diff object - processed in the following order: remove, add, update.
+ * The geojson source diff object - processed in the following order: remove, add, update. Provides an efficient
+ * way to update GeoJSON data in a map source without having to replace the entire dataset.
  */
 export type GeoJSONSourceDiff = {
     /**
@@ -36,6 +29,7 @@ export type GeoJSONSourceDiff = {
 
 /**
  * A geojson feature diff object - processed in the following order: new geometry, remove properties, add/update properties.
+ * Provides an efficient way to update GeoJSON features in a map source without replacing the entire feature.
  */
 export type GeoJSONFeatureDiff = {
     /**
