@@ -247,13 +247,13 @@ export class GeoJSONSource extends Evented implements Source {
      * @param data - A GeoJSON data object or a URL to one. The latter is preferable in the case of large GeoJSON files.
      * @param waitForCompletion - If true, the method will return a promise that resolves when set data is complete.
      */
-    setData(data: GeoJSON.GeoJSON | string, waitForCompletion: true): Promise<this>;
+    setData(data: GeoJSON.GeoJSON | string, waitForCompletion: true): Promise<void>;
     setData(data: GeoJSON.GeoJSON | string, waitForCompletion?: false): this;
-    setData(data: GeoJSON.GeoJSON | string, waitForCompletion?: boolean): this | Promise<this> {
+    setData(data: GeoJSON.GeoJSON | string, waitForCompletion?: boolean): this | Promise<void> {
         this._data = data;
         this._pendingWorkerUpdate = {data};
         const updatePromise = this._updateWorkerData();
-        if (waitForCompletion) return updatePromise.then(() => this);
+        if (waitForCompletion) return updatePromise;
         return this;
     }
 

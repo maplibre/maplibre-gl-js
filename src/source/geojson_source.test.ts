@@ -213,7 +213,6 @@ describe('GeoJSONSource.setData', () => {
         }), undefined);
         const result = source.setData({} as GeoJSON.GeoJSON, true);
         expect(result).toBeInstanceOf(Promise);
-        expect(await result).toBe(source);
     });
 });
 
@@ -784,7 +783,6 @@ describe('GeoJSONSource.updateData', () => {
         }), undefined);
         const result = source.updateData({add: []} as GeoJSONSourceDiff, true);
         expect(result).toBeInstanceOf(Promise);
-        expect(await result).toBe(source);
     });
 });
 
