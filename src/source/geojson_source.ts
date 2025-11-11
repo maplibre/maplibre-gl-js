@@ -426,6 +426,8 @@ export class GeoJSONSource extends Evented implements Source {
                     }
 
                     applySourceDiff(this._dataUpdateable, diff, promoteId);
+                } else {
+                    warnOnce('Cannot apply GeoJSONSource#updateData due to internal error');
                 }
             } else {
                 this._data = result.data;
