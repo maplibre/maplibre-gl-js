@@ -396,21 +396,20 @@ export class TileManager extends Evented {
      * Analogy: imagine two sheets of paper in 3D space:
      *   - one sheet = ideal tiles at varying overscaledZ
      *   - the second sheet = maxCoveringZoom
+     * 
+     * @param retainTileMap - this parameters will be updated with the child tiles to keep
+     * @param idealTilesWithoutData - which of the ideal tiles currently does not have loaded data
+     * @return a set of tiles that need to be loaded
      */
-
-    _retainLoadedChildren(
-        targetTiles: Record<string, OverscaledTileID>,
-        retain: Record<string, OverscaledTileID>
-    ) {
-        const targetTileIDs = Object.values(targetTiles);
-        const loadedDescendents: Record<string, Tile[]> = this._getLoadedDescendents(targetTileIDs);
-        const incomplete: Record<string, OverscaledTileID> = {};
+    _retainLoadedChildren(retainTileMap: Record<string, OverscaledTileID>, idealTilesWithoutData: Set<OverscaledTileID>): Set<OverscaledTileID> {
+        const loadedDescendents: Record<string, Tile[]> = this._getLoadedDescendents(idealTilesWithoutData);
+        const incomplete = new Set<OverscaledTileID>();
 
         // retain the uppermost descendents of target tiles
-        for (const targetID of targetTileIDs) {
+        for (const targetID of idealTilesWithoutData) {
             const descendents = loadedDescendents[targetID.key];
             if (!descendents?.length) {
-                incomplete[targetID.key] = targetID;
+                incomplete.add(targetID);
                 continue;
             }
 
@@ -418,7 +417,7 @@ export class TileManager extends Evented {
             const maxCoveringZoom = targetID.overscaledZ + TileManager.maxOverzooming;
             const candidates = descendents.filter(t => t.tileID.overscaledZ <= maxCoveringZoom);
             if (!candidates.length) {
-                incomplete[targetID.key] = targetID;
+                incomplete.add(targetID);
                 continue;
             }
 
@@ -426,12 +425,12 @@ export class TileManager extends Evented {
             const topZoom = Math.min(...candidates.map(t => t.tileID.overscaledZ));
             const topIDs = candidates.filter(t => t.tileID.overscaledZ === topZoom).map(t => t.tileID);
             for (const tileID of topIDs) {
-                retain[tileID.key] = tileID;
+                retainTileMap[tileID.key] = tileID;
             }
 
             //determine if the retained generation is fully covered
             if (!this._areDescendentsComplete(topIDs, topZoom, targetID.overscaledZ)) {
-                incomplete[targetID.key] = targetID;
+                incomplete.add(targetID);
             }
         }
 
@@ -441,7 +440,7 @@ export class TileManager extends Evented {
     /**
      * Return dictionary of qualified loaded descendents for each provided target tile id
      */
-    _getLoadedDescendents(targetTileIDs: OverscaledTileID[]) {
+    _getLoadedDescendents(targetTileIDs: Set<OverscaledTileID>) {
         const loadedDescendents: Record<string, Tile[]> = {};
 
         // enumerate current tiles and find the loaded descendents of each target tile
@@ -687,26 +686,24 @@ export class TileManager extends Evented {
      * If no loaded children are available, fallback to seeking loaded parents as an alternative substitute.
      */
     _updateRetainedTiles(idealTileIDs: Array<OverscaledTileID>, zoom: number): Record<string, OverscaledTileID> {
-        // retain the tile even if it's not loaded because it's an ideal tile.
-        const retainTileMap: Record<string, OverscaledTileID> = idealTileIDs.reduce((acc, t) => acc[t.key] = t, {});
-
-        let idealTilesWithoutDataMap: Record<string, OverscaledTileID> = {};
+        let idealTilesWithoutData = new Set<OverscaledTileID>();
         for (const idealID of idealTileIDs) {
             const idealTile = this._addTile(idealID);
 
             if (!idealTile.hasData()) {
-                idealTilesWithoutDataMap[idealID.key] = idealID;
+                idealTilesWithoutData.add(idealID);
             }
         }
 
-        idealTilesWithoutDataMap = this._retainLoadedChildren(idealTilesWithoutDataMap, retainTileMap);
+        // retain the tile even if it's not loaded because it's an ideal tile.
+        const retainTileMap: Record<string, OverscaledTileID> = idealTileIDs.reduce((acc, t) => { acc[t.key] = t; return acc}, {});
+        const tileIdsWithoutData = this._retainLoadedChildren(retainTileMap, idealTilesWithoutData);
 
         // for remaining missing tiles with incomplete child coverage, seek a loaded parent tile
         const checked: Record<string, boolean> = {};
         const minCoveringZoom = Math.max(zoom - TileManager.maxUnderzooming, this._source.minzoom);
-        for (const idealKey in idealTilesWithoutDataMap) {
-            const tileID = idealTilesWithoutDataMap[idealKey];
-            let tile = this._tiles[idealKey];
+        for (const tileID of tileIdsWithoutData) {
+            let tile = this._tiles[tileID.key];
 
             // As we ascend up the tile pyramid of the ideal tile, we check whether the parent
             // tile has been previously requested (and errored because we only loop over tiles with no data)
