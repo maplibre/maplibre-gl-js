@@ -137,7 +137,7 @@ export class GeoJSONSource extends Evented implements Source {
 
     isTileClipped: boolean;
     reparseOverscaled: boolean;
-    _data: GeoJSON.GeoJSON | string | undefined;
+    _data: GeoJSON.GeoJSON | string | undefined | globalThis.Map<GeoJSONFeatureId, GeoJSON.Feature>;
     _options: GeoJSONSourceInternalOptions;
     workerOptions: GeoJSONWorkerOptions;
     map: Map;
@@ -146,7 +146,6 @@ export class GeoJSONSource extends Evented implements Source {
     _pendingWorkerUpdate: { data?: GeoJSON.GeoJSON | string; diff?: GeoJSONSourceDiff; optionsChanged?: boolean };
     _collectResourceTiming: boolean;
     _removed: boolean;
-    _dataUpdateable?: globalThis.Map<GeoJSONFeatureId, GeoJSON.Feature>;
 
     /** @internal */
     constructor(id: string, options: GeoJSONSourceOptions, dispatcher: Dispatcher, eventedParent: Evented) {
@@ -249,7 +248,6 @@ export class GeoJSONSource extends Evented implements Source {
      */
     setData(data: GeoJSON.GeoJSON | string): this {
         this._data = data;
-        this._dataUpdateable = undefined;
         this._pendingWorkerUpdate = {data};
         this._updateWorkerData();
         return this;
@@ -415,23 +413,21 @@ export class GeoJSONSource extends Evented implements Source {
             }
 
             if (result.shouldApplyDiff) {
-                const data = this._data;
                 const promoteId = typeof this.promoteId === 'string' ? this.promoteId : undefined;
 
                 // This expression should always return `true`. The worker would not pass `shouldApplyDiff: true`
                 // if a diff was not provided or the data is not updateable.
-                if (diff && typeof data !== 'string' && isUpdateableGeoJSON(data, promoteId)) {
-                    if (!this._dataUpdateable) {
-                        this._dataUpdateable = toUpdateable(data, promoteId);
-                    }
+                if (diff && typeof this._data !== 'string' && !(this._data instanceof globalThis.Map) && isUpdateableGeoJSON(this._data, promoteId)) {
+                    this._data = toUpdateable(this._data, promoteId);
+                }
 
-                    applySourceDiff(this._dataUpdateable, diff, promoteId);
-                } else {
+                if (!(this._data instanceof globalThis.Map)) {
                     warnOnce('Cannot apply GeoJSONSource#updateData due to internal error');
+                } else {
+                    applySourceDiff(this._data, diff, promoteId);
                 }
             } else {
                 this._data = result.data;
-                this._dataUpdateable = undefined;
             }
 
             let resourceTiming: PerformanceResourceTiming[] = null;
@@ -565,7 +561,10 @@ export class GeoJSONSource extends Evented implements Source {
     serialize(): GeoJSONSourceSpecification {
         return extend({}, this._options, {
             type: this.type,
-            data: this._data
+            data: this._data instanceof globalThis.Map ? {
+                type: 'FeatureCollection',
+                features: Array.from(this._data.values())
+            } : this._data
         });
     }
 
