@@ -582,7 +582,7 @@ export class TileManager extends Evented {
         }
 
         // When tilemanager is used for terrain also load parent tiles for complete rendering of 3d terrain levels
-        if (this.usedForTerrain) { // HM TODO: this probably needs to be part of covering tiles?
+        if (this.usedForTerrain) {
             idealTileIDs = this._addTerrainIdealTiles(idealTileIDs);
         }
 
